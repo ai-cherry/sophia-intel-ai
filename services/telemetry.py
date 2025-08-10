@@ -1,43 +1,48 @@
 import logging
 import json
+import os
+from datetime import datetime
 
-class JSONLogFormatter(logging.Formatter):
+class JsonFormatter(logging.Formatter):
     def format(self, record):
         log_record = {
-            "timestamp": self.formatTime(record, self.datefmt),
+            "timestamp": datetime.utcfromtimestamp(record.created).isoformat() + "Z",
             "level": record.levelname,
             "message": record.getMessage(),
-            "name": record.name,
+            "logger_name": record.name,
         }
         if record.exc_info:
             log_record['exc_info'] = self.formatException(record.exc_info)
         return json.dumps(log_record)
 
-def setup_logging():
+def setup_telemetry():
     """
-    Sets up JSON logging.
+    Sets up telemetry with JSON logging.
+    In a real application, this would also configure metrics and traces
+    to be sent to a backend like LGTM/Grafana.
     """
-    logger = logging.getLogger()
-    logger.setLevel(logging.INFO)
-    
     # Remove any existing handlers
-    for handler in logger.handlers[:]:
-        logger.removeHandler(handler)
+    root_logger = logging.getLogger()
+    if root_logger.hasHandlers():
+        root_logger.handlers.clear()
 
-    # Create a new handler
+    # Add our JSON formatter
     handler = logging.StreamHandler()
-    formatter = JSONLogFormatter()
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
+    handler.setFormatter(JsonFormatter())
+    logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO"), handlers=[handler])
 
-# In a real application, you would configure exporters for LGTM (Loki, Grafana, Tempo, Mimir).
-# For now, we will just set up the JSON logging.
+    print("Telemetry configured with JSON logger.")
+    # Placeholder for metrics and tracing initialization
+    # from opentelemetry import trace
+    # from opentelemetry.sdk.trace import TracerProvider
+    # ... etc.
+    print("Metrics and tracing providers would be configured here.")
 
-if __name__ == '__main__':
-    setup_logging()
-    logging.info("Telemetry service initialized.")
+if __name__ == "__main__":
+    setup_telemetry()
+    logging.info("This is an informational message.")
     logging.warning("This is a warning message.")
     try:
         1 / 0
     except ZeroDivisionError:
-        logging.exception("A division by zero error occurred.")
+        logging.error("Caught an exception.", exc_info=True)

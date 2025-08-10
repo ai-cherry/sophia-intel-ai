@@ -1,70 +1,88 @@
-import docker
+import subprocess
 import os
-from typing import List
+from dataclasses import dataclass
+from typing import List, Tuple
+
+@dataclass
+class SandboxResult:
+    exit_code: int
+    stdout: str
+    stderr: str
 
 class Sandbox:
-    def __init__(self, image: str = "python:3.11-slim", network_mode: str = "host"):
-        self.client = docker.from_env()
+    def __init__(self, image: str = "python:3.11-slim", cpu_limit: float = 0.5, mem_limit: str = "512m", egress_allowlist: List[str] = None):
+        """
+        Initializes the sandbox environment.
+        In a real implementation, this would configure a container runtime
+        like Docker or Podman.
+        """
         self.image = image
-        self.network_mode = network_mode
+        self.cpu_limit = cpu_limit
+        self.mem_limit = mem_limit
+        self.egress_allowlist = egress_allowlist or []
+        print(f"Sandbox initialized with image: {self.image}")
 
-    def run_command(self, command: List[str], working_dir: str = "/app", volumes: dict = None) -> str:
+    def run(self, command: List[str]) -> SandboxResult:
         """
-        Runs a command in a sandboxed Docker container.
+        Runs a command in the sandbox.
+        This is a placeholder implementation that runs the command on the host.
+        A real implementation would use a container runtime to isolate the process.
         """
-        if volumes is None:
-            # By default, mount the current working directory into the container
-            volumes = {os.getcwd(): {"bind": "/app", "mode": "rw"}}
+        print(f"Running command in sandbox: {' '.join(command)}")
+
+        # Placeholder for egress filtering. In a real containerized setup,
+        # this would be enforced by network policies.
+        if not self._check_egress(command):
+            return SandboxResult(1, "", "Egress blocked by sandbox policy.")
 
         try:
-            container = self.client.containers.run(
-                self.image,
+            # In a real implementation, this would be `docker run ...` or similar
+            process = subprocess.run(
                 command,
-                working_dir=working_dir,
-                volumes=volumes,
-                network_mode=self.network_mode,
-                detach=True,
+                capture_output=True,
+                text=True,
+                timeout=60
             )
-            result = container.wait()
-            logs = container.logs().decode("utf-8")
-            container.remove()
-            
-            if result["StatusCode"] != 0:
-                raise Exception(f"Command failed with exit code {result['StatusCode']}:\n{logs}")
-                
-            return logs
-        except docker.errors.ImageNotFound:
-            print(f"Pulling image {self.image}...")
-            self.client.images.pull(self.image)
-            return self.run_command(command, working_dir, volumes)
+            return SandboxResult(
+                exit_code=process.returncode,
+                stdout=process.stdout,
+                stderr=process.stderr
+            )
+        except FileNotFoundError:
+            return SandboxResult(1, "", f"Command not found: {command[0]}")
+        except subprocess.TimeoutExpired:
+            return SandboxResult(1, "", "Command timed out.")
+        except Exception as e:
+            return SandboxResult(1, "", f"An unexpected error occurred: {e}")
 
-    def run_pytests(self, path: str = ".") -> str:
-        """Runs pytest in the sandbox."""
-        return self.run_command(["pytest", path])
+    def _check_egress(self, command: List[str]) -> bool:
+        """
+        A simple check for disallowed network access in the command.
+        This is a placeholder and not a secure way to control egress.
+        """
+        for arg in command:
+            if "curl" in arg or "wget" in arg:
+                # A more sophisticated check would parse the URL and check against the allowlist
+                print(f"Potential egress detected in command: {arg}")
+                # Return False if not in allowlist (simplified for now)
+        return True
 
-    def run_ruff(self, path: str = ".") -> str:
-        """Runs ruff in the sandbox."""
-        return self.run_command(["ruff", "check", path])
-
-    def run_black_check(self, path: str = ".") -> str:
-        """Runs black in check mode in the sandbox."""
-        return self.run_command(["black", "--check", path])
-
-# Example usage
 if __name__ == "__main__":
+    # Example usage
     sandbox = Sandbox()
-    
-    print("--- Running a simple command ---")
-    output = sandbox.run_command(["echo", "hello from the sandbox"])
-    print(output)
 
-    # To run the following examples, you would need to have the respective
-    # tools (pytest, ruff, black) installed in the Docker image or provide
-    # a custom Dockerfile. For now, these are commented out.
+    # Test a safe command
+    result = sandbox.run(["echo", "Hello from the sandbox"])
+    print(f"Result: {result}")
+    assert result.exit_code == 0
+    assert "Hello" in result.stdout
 
-    # print("\n--- Running pytest ---")
-    # try:
-    #     pytest_output = sandbox.run_pytests()
-    #     print(pytest_output)
-    # except Exception as e:
-    #     print(f"Could not run pytest: {e}")
+    # Test a command that would be blocked in a real sandbox
+    result = sandbox.run(["curl", "-I", "https://example.com"])
+    print(f"Result: {result}")
+    # In this placeholder, it will likely run. In a real sandbox, it would be blocked.
+
+    # Test a non-existent command
+    result = sandbox.run(["nonexistentcommand"])
+    print(f"Result: {result}")
+    assert result.exit_code != 0

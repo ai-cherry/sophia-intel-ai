@@ -1,0 +1,20 @@
+name: checks
+on:
+  pull_request:
+  push:
+    branches: [ feat/autonomous-agent ]
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      ESC_TOKEN: ${{ secrets.ESC_TOKEN }}
+      ESC_ENV:   ${{ secrets.ESC_ENV }}
+      GH_FINE_GRAINED_TOKEN: ${{ secrets.GH_FINE_GRAINED_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install -r requirements.txt
+      - run: python tools/smoke_env_check.py

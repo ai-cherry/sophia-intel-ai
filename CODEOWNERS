@@ -1,0 +1,11 @@
+# Default
+*                                   @ai-cherry/maintainers
+
+# Sensitive areas
+/services/**                        @ai-cherry/platform
+/mcp_servers/**                     @ai-cherry/ai
+/config/**                          @ai-cherry/platform
+/.devcontainer/**                   @ai-cherry/platform
+/.github/**                         @ai-cherry/platform
+/backend/**                         @ai-cherry/backend
+/agents/**                          @ai-cherry/ai

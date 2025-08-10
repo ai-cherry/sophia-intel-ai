@@ -19,3 +19,4 @@ PyJWT
 pulumi
 docker
 sentence-transformers
+temporalio

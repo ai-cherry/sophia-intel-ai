@@ -1,82 +1,109 @@
-import asyncio
-import logging
+import httpx
+from dataclasses import dataclass
 from typing import Dict, Any, Optional
 
-from connectors.github_conn import GitHubConnector
-from services.config_loader import load_config
+@dataclass
+class GitHubApproval:
+    check_run_id: int
+    status: str = "pending"
 
 class GitHubApprovalService:
     def __init__(self, config: Dict[str, Any]):
-        self.config = config
-        self.github_connector = GitHubConnector(config)
-
-    async def require_approval(
-        self, owner: str, repo: str, pr_number: int, action: str, plan_artifact: Optional[str] = None
-    ) -> bool:
         """
-        Requires approval for a given action on a pull request.
-        This is a simplified implementation. A real implementation would involve:
-        1. Creating a GitHub Check Run.
-        2. Posting a comment to the PR with the plan.
-        3. Waiting for an "Approved" review or a specific comment.
-        4. Updating the Check Run with the result.
+        Initializes the GitHub approval service.
         """
-        logging.info(f"Requiring approval for action '{action}' on PR {pr_number}")
-
-        # For now, we'll simulate the approval process by checking for an "APPROVED" review.
-        # In a real-world scenario, this would be a more robust check,
-        # possibly involving a loop with a timeout.
-
-        try:
-            pr_details = await self.github_connector.get_pr_details(owner, repo, pr_number)
-            reviews = await self._get_pr_reviews(owner, repo, pr_number)
-
-            allowed_users = self.config.get("approvals", {}).get("allowed_users", [])
-
-            for review in reviews:
-                if (
-                    review["state"] == "APPROVED" and
-                    review["user"]["login"] in allowed_users
-                ):
-                    logging.info(f"Approval received from {review['user']['login']}")
-                    return True
-            
-            logging.warning("No approval found.")
-            return False
-
-        finally:
-            await self.github_connector.close()
-
-    async def _get_pr_reviews(self, owner: str, repo: str, pr_number: int) -> list:
-        headers = await self.github_connector._get_auth_headers()
-        response = await self.github_connector.client.get(
-            f"/repos/{owner}/{repo}/pulls/{pr_number}/reviews", headers=headers
+        github_config = config.get("github", {})
+        self.token = github_config.get("token")
+        self.repo = os.getenv("GITHUB_REPOSITORY") # e.g., "my-org/my-repo"
+        self.client = httpx.AsyncClient(
+            base_url="https://api.github.com",
+            headers={
+                "Authorization": f"Bearer {self.token}",
+                "Accept": "application/vnd.github.v3+json",
+            },
         )
-        response.raise_for_status()
-        return response.json()
 
-async def main():
-    """Example usage of the approval service."""
-    logging.basicConfig(level=logging.INFO)
-    
-    # This is a mock PR number. In a real workflow, this would be dynamic.
-    pr_number = 1 
-    
-    config = load_config()
-    approval_service = GitHubApprovalService(config)
-    
-    approved = await approval_service.require_approval(
-        "ai-cherry", "sophia-intel", pr_number, "pulumi-up"
-    )
-    
-    if approved:
-        print("Action approved!")
-    else:
-        print("Action not approved.")
+    async def create_guarded_action_check(self, sha: str, action_id: str) -> Optional[GitHubApproval]:
+        """
+        Creates a pending GitHub Check for a guarded action.
+        """
+        if not self.token or not self.repo:
+            print("GitHub token or repository not configured. Skipping check creation.")
+            return None
+
+        print(f"Creating 'Guarded Action' check for SHA {sha} and action {action_id}...")
+        response = await self.client.post(
+            f"/repos/{self.repo}/check-runs",
+            json={
+                "name": f"Guarded Action: {action_id}",
+                "head_sha": sha,
+                "status": "in_progress",
+                "output": {
+                    "title": "Approval Required",
+                    "summary": f"This action requires manual approval. To approve, comment `/approve action={action_id}` on the pull request.",
+                },
+            },
+        )
+        if response.status_code == 201:
+            check_run = response.json()
+            print(f"Created check run with ID: {check_run['id']}")
+            return GitHubApproval(check_run_id=check_run['id'])
+        else:
+            print(f"Failed to create check run: {response.text}")
+            return None
+
+    async def update_check_status(self, check_run_id: int, approved: bool):
+        """
+        Updates the status of the GitHub Check based on approval.
+        """
+        conclusion = "success" if approved else "failure"
+        summary = "Action approved and executed." if approved else "Action rejected."
+
+        print(f"Updating check run {check_run_id} to {conclusion}...")
+        await self.client.patch(
+            f"/repos/{self.repo}/check-runs/{check_run_id}",
+            json={
+                "status": "completed",
+                "conclusion": conclusion,
+                "output": {
+                    "title": f"Action {conclusion.capitalize()}",
+                    "summary": summary,
+                },
+            },
+        )
+        print("Check run updated.")
 
 if __name__ == "__main__":
-    # This example requires a GitHub token and a valid PR number.
-    if os.getenv("GH_FINE_GRAINED_TOKEN"):
+    import os
+    import asyncio
+
+    # Example usage (requires GitHub credentials and a real SHA)
+    mock_config = {
+        "github": {
+            "token": os.getenv("GH_FINE_GRAINED_TOKEN")
+        }
+    }
+    # Make sure to set GITHUB_REPOSITORY, e.g., "your-org/your-repo"
+    # and a valid SHA for GITHUB_SHA
+    os.environ["GITHUB_REPOSITORY"] = os.getenv("GITHUB_REPOSITORY", "ai-cherry/sophia-intel")
+    GITHUB_SHA = os.getenv("GITHUB_SHA", "a6df717") # Use a recent commit for testing
+
+    approval_service = GitHubApprovalService(mock_config)
+
+    async def main():
+        if not GITHUB_SHA:
+            print("GITHUB_SHA environment variable not set. Skipping example.")
+            return
+
+        approval = await approval_service.create_guarded_action_check(GITHUB_SHA, "pulumi-up")
+        if approval:
+            print(f"Created approval gate: {approval}")
+            # Simulate waiting for approval
+            await asyncio.sleep(5)
+            # Simulate approval
+            await approval_service.update_check_status(approval.check_run_id, approved=True)
+
+    if approval_service.token:
         asyncio.run(main())
     else:
-        print("GH_FINE_GRAINED_TOKEN environment variable not set. Skipping example.")
+        print("GH_FINE_GRAINED_TOKEN not set, skipping example.")

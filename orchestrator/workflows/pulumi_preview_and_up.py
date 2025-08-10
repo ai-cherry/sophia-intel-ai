@@ -1,79 +1,89 @@
 import asyncio
-from temporalio import activity, workflow
-from temporalio.client import Client
+from temporalio import workflow
 from datetime import timedelta
-
-from services.config_loader import load_config
-from connectors.pulumi_conn import PulumiConnector
+from services.sandbox import Sandbox, SandboxResult
 from services.approvals_github import GitHubApprovalService
 
-@activity.defn
-async def pulumi_preview(stack_name: str, project_name: str, work_dir: str) -> str:
-    """Activity to run pulumi preview."""
-    config = load_config()
-    connector = PulumiConnector(config, project_name, work_dir)
-    return await connector.preview(stack_name)
+# Import activities from other services
+# For example:
+# from services.pulumi_conn import run_pulumi_preview, run_pulumi_up
 
-@activity.defn
-async def pulumi_up(stack_name: str, project_name: str, work_dir: str) -> str:
-    """Activity to run pulumi up."""
-    config = load_config()
-    connector = PulumiConnector(config, project_name, work_dir)
-    return await connector.up(stack_name)
+@workflow.activity
+async def run_sandbox_tests() -> SandboxResult:
+    # In a real scenario, this would be a more complex activity
+    sandbox = Sandbox()
+    return await sandbox.run(["pytest", "tests/"])
 
-@activity.defn
-async def require_approval(owner: str, repo: str, pr_number: int, action: str) -> bool:
-    """Activity to require approval on a PR."""
-    config = load_config()
-    approval_service = GitHubApprovalService(config)
-    return await approval_service.require_approval(owner, repo, pr_number, action)
+@workflow.activity
+async def run_pulumi_preview_activity(stack: str) -> str:
+    # This would use the pulumi_conn service
+    # For now, returning a placeholder
+    return f"Pulumi preview for stack: {stack}\n...plan..."
 
-@workflow.defn
+@workflow.activity
+async def run_pulumi_up_activity(stack: str) -> str:
+    # This would use the pulumi_conn service
+    return f"Pulumi up for stack: {stack}\n...success..."
+
+@workflow.activity
+async def create_approval_gate(sha: str, action_id: str) -> int:
+    # This would use the approvals_github service
+    # For now, returning a placeholder check_run_id
+    return 12345
+
+@workflow.activity
+async def update_approval_gate(check_run_id: int, approved: bool):
+    # This would use the approvals_github service
+    print(f"Updating approval gate {check_run_id} to approved={approved}")
+
+@workflow.define
 class PulumiPreviewAndUpWorkflow:
     @workflow.run
-    async def run(self, owner: str, repo: str, pr_number: int, stack_name: str, project_name: str, work_dir: str) -> str:
-        """Workflow to run pulumi preview and then up after approval."""
-        
-        preview_output = await workflow.execute_activity(
-            pulumi_preview,
-            args=[stack_name, project_name, work_dir],
+    async def run(self, sha: str, stack: str) -> str:
+        # 1. Run tests in sandbox
+        test_result = await workflow.execute_activity(
+            run_sandbox_tests,
             start_to_close_timeout=timedelta(minutes=5),
         )
-        
-        approved = await workflow.execute_activity(
-            require_approval,
-            args=[owner, repo, pr_number, "pulumi-up"],
-            start_to_close_timeout=timedelta(minutes=30),
+        if test_result.exit_code != 0:
+            return f"Sandbox tests failed:\n{test_result.stderr}"
+
+        # 2. Run pulumi preview
+        preview = await workflow.execute_activity(
+            run_pulumi_preview_activity,
+            args=[stack],
+            start_to_close_timeout=timedelta(minutes=10),
         )
-        
+        workflow.logger.info(f"Pulumi preview:\n{preview}")
+
+        # 3. Create approval gate
+        action_id = f"pulumi-up-{stack}"
+        check_run_id = await workflow.execute_activity(
+            create_approval_gate,
+            args=[sha, action_id],
+            start_to_close_timeout=timedelta(seconds=30),
+        )
+
+        # 4. Wait for approval
+        try:
+            await workflow.wait_for_signal("approval_received", timeout=timedelta(hours=24))
+            approved = True
+        except asyncio.TimeoutError:
+            approved = False
+
+        # 5. Update approval gate and execute pulumi up if approved
+        await workflow.execute_activity(
+            update_approval_gate,
+            args=[check_run_id, approved],
+            start_to_close_timeout=timedelta(seconds=30),
+        )
+
         if approved:
-            up_output = await workflow.execute_activity(
-                pulumi_up,
-                args=[stack_name, project_name, work_dir],
+            result = await workflow.execute_activity(
+                run_pulumi_up_activity,
+                args=[stack],
                 start_to_close_timeout=timedelta(minutes=15),
             )
-            return f"Pulumi up completed successfully:\n{up_output}"
+            return result
         else:
-            return "Pulumi up was not approved."
-
-async def main():
-    """Entry point to run the workflow."""
-    client = await Client.connect("localhost:7233")
-    
-    # This is a mock PR number. In a real workflow, this would be dynamic.
-    pr_number = 1
-    
-    result = await client.execute_workflow(
-        PulumiPreviewAndUpWorkflow.run,
-        "ai-cherry", "sophia-intel", pr_number, "dev", "my-project", "./pulumi_project",
-        id="pulumi-preview-and-up-workflow",
-        task_queue="my-task-queue",
-    )
-    print(f"Workflow result: {result}")
-
-if __name__ == "__main__":
-    # This example requires a Pulumi and GitHub access token to be set.
-    if os.getenv("PULUMI_ACCESS_TOKEN") and os.getenv("GH_FINE_GRAINED_TOKEN"):
-        asyncio.run(main())
-    else:
-        print("PULUMI_ACCESS_TOKEN or GH_FINE_GRAINED_TOKEN not set. Skipping example.")
+            return "Approval timed out or was rejected."

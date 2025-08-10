@@ -16,9 +16,12 @@ async def main():
     # The worker listens to a task queue and executes workflows and activities.
     worker = Worker(
         client,
-        task_queue="my-task-queue",
+        task_queue="agno-task-queue",
         # workflows=[HelloWorld],
         # activities=[...],
+        # Enable Update-with-Start
+        build_id="1.0",
+        identity="agno-worker-1"
     )
 
     # Start the worker

@@ -1,0 +1,116 @@
+name: hygiene-bot
+on:
+  schedule:
+    - cron: "23 4 * * *"  # nightly UTC
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: hygiene-bot-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  hygiene:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh -s -- -y
+      - name: Add uv to PATH
+        run: echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Install deps (project)
+        run: uv pip install --system -r requirements.txt
+
+      - name: Install dev tools
+        run: |
+          uv pip install --system ruff black pip-audit deptry pyyaml
+          npm i -g jscpd@4
+
+      # Run fixers directly (fast)…
+      - name: Hygiene (format/imports)
+        run: |
+          ruff check --fix .
+          black .
+
+      - name: Deps (lock + check)
+        run: |
+          uv pip compile -q -o requirements.lock.txt requirements.txt || true
+          uv pip check || true
+
+      # Config sync (local fallback)
+      - name: Config sync (local fallback)
+        run: |
+          python - <<'PY'
+import os, re, pathlib, yaml
+keys=set()
+for p in pathlib.Path(".").rglob("*.py"):
+    try: txt=p.read_text(encoding="utf-8", errors="ignore")
+    except: continue
+    keys.update(re.findall(r"os\.getenv\([\"']([A-Z0-9_]+)[\"']\)", txt))
+env=pathlib.Path(".env.example")
+env_map={}
+if env.exists():
+    for line in env.read_text().splitlines():
+        if "=" in line and not line.strip().startswith("#"):
+            k,v=line.split("=",1); env_map[k.strip()]=v
+changed=False
+for k in sorted(keys):
+    if k not in env_map: env_map[k]="CHANGE_ME"; changed=True
+if env_map:
+    env.write_text("\n".join(f"{k}={env_map[k]}" for k in sorted(env_map))+"\n")
+cfgp=pathlib.Path("config/sophia.yaml")
+cfg=yaml.safe_load(cfgp.read_text()) if cfgp.exists() else {}
+for k in sorted(keys):
+    if k not in cfg: cfg[k]=""
+if cfg:
+    cfgp.write_text(yaml.safe_dump(cfg, sort_keys=True))
+PY
+
+      - name: Dupes threshold (report only)
+        run: jscpd --silent --threshold 10 --reporters consoleFull . || true
+
+      - name: Stop if nothing changed
+        id: changes
+        run: |
+          if git diff --quiet; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Close previous bot PRs for same topic
+        if: steps.changes.outputs.changed == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const {data:prs} = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              head: `${context.repo.owner}:bot/hygiene-`
+            });
+            for (const pr of prs) {
+              await github.rest.pulls.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pr.number,
+                state: 'closed'
+              });
+              console.log(`Closed previous hygiene PR #${pr.number}`);
+            }
+
+      - name: Create PR
+        if: steps.changes.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: "chore(hygiene): format/imports, lockfile, config sync"
+          branch: bot/hygiene-${{ github.run_id }}
+          title: "chore(hygiene): format/imports, lockfile, config sync"
+          body: "Automated hygiene patch. Safe to review; small scoped diffs."
+          labels: bot,hygiene,safe-auto-merge
+          signoff: true

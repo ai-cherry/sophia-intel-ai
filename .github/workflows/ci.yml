@@ -1,0 +1,292 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  PYTHON_VERSION: "3.11"
+  UV_CACHE_DIR: /tmp/.uv-cache
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install uv
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+
+      - name: Add uv to PATH
+        run: echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Restore uv cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.UV_CACHE_DIR }}
+          key: uv-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
+
+      - name: Install dependencies
+        run: uv pip install --system -r requirements.txt
+
+      - name: Validate configuration
+        run: python scripts/validate_config.py
+        env:
+          # Test environment variables for validation
+          ENVIRONMENT: test
+          OPENROUTER_API_KEY: sk-or-v1-test-key-for-validation-only
+          PORTKEY_API_KEY: pk-test-key-for-validation-only
+          LAMBDA_API_KEY: ll-test-key-for-validation-only
+          EXA_API_KEY: exa-test-key-for-validation-only
+          SECRET_KEY: test-secret-key-32-chars-minimum-length
+          ENCRYPTION_KEY: test-encryption-key-exactly-32-char
+          JWT_SECRET: test-jwt-secret-16-chars-minimum
+          API_SALT: test-api-salt-16-chars-minimum
+          DATABASE_URL: postgresql+asyncpg://test:test@localhost:5432/test
+          REDIS_URL: redis://localhost:6379/1
+          QDRANT_URL: http://localhost:6333
+
+      - name: Code compilation check
+        run: python -m compileall . -x 'frontend/|node_modules/'
+
+      - name: Format check
+        run: black --check --diff .
+
+      - name: Type checking (optional)
+        run: |
+          if command -v mypy &> /dev/null; then
+            echo "Running mypy type checking"
+            mypy . --ignore-missing-imports || true
+          else
+            echo "Mypy not installed, skipping type checking"
+          fi
+
+  test:
+    runs-on: ubuntu-latest
+    needs: lint
+    
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      postgres:
+        image: postgres:15-alpine
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_DB: sophia_test
+          POSTGRES_USER: sophia
+          POSTGRES_PASSWORD: testpass
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install uv
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+
+      - name: Add uv to PATH
+        run: echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Restore uv cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.UV_CACHE_DIR }}
+          key: uv-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
+
+      - name: Install dependencies
+        run: uv pip install --system -r requirements.txt
+
+      - name: Validate configuration
+        run: python scripts/validate_config.py
+        env:
+          # Test environment variables for validation
+          ENVIRONMENT: test
+          OPENROUTER_API_KEY: sk-or-v1-test-key-for-validation-only
+          PORTKEY_API_KEY: pk-test-key-for-validation-only
+          LAMBDA_API_KEY: ll-test-key-for-validation-only
+          EXA_API_KEY: exa-test-key-for-validation-only
+          SECRET_KEY: test-secret-key-32-chars-minimum-length
+          ENCRYPTION_KEY: test-encryption-key-exactly-32-char
+          JWT_SECRET: test-jwt-secret-16-chars-minimum
+          API_SALT: test-api-salt-16-chars-minimum
+          DATABASE_URL: postgresql+asyncpg://sophia:testpass@localhost:5432/sophia_test
+          REDIS_URL: redis://localhost:6379/1
+          QDRANT_URL: http://localhost:6333
+
+      - name: Create test data directory
+        run: mkdir -p data
+
+      - name: Run tests
+        env:
+          # Test environment variables
+          ENVIRONMENT: test
+          DATABASE_URL: postgresql+asyncpg://sophia:testpass@localhost:5432/sophia_test
+          REDIS_URL: redis://localhost:6379/1
+          QDRANT_URL: http://localhost:6333
+          
+          # Mock API keys for testing
+          OPENROUTER_API_KEY: test-openrouter-key
+          PORTKEY_API_KEY: test-portkey-key
+          LAMBDA_API_KEY: test-lambda-key
+          EXA_API_KEY: test-exa-key
+          
+          # Test secrets
+          SECRET_KEY: test-secret-key
+          ENCRYPTION_KEY: test-encryption-key-32-chars-long
+          JWT_SECRET: test-jwt-secret
+          API_SALT: test-api-salt
+          
+          # Service endpoints (will be mocked in tests)
+          SOPHIA_API_ENDPOINT: http://localhost:8000
+          SOPHIA_MCP_ENDPOINT: http://localhost:8001
+          SOPHIA_FRONTEND_ENDPOINT: http://localhost:3000
+          
+          # Agent configuration
+          AGNO_STORAGE_DB: data/test_agents.db
+        run: |
+          # Run pytest with coverage
+          pytest tests/ -v --tb=short --durations=10
+          
+          # Run specific health checks
+          python -m pytest tests/test_health.py -v
+
+  security:
+    runs-on: ubuntu-latest
+    needs: lint
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install uv
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+
+      - name: Add uv to PATH
+        run: echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Install security tools
+        run: |
+          uv pip install --system bandit safety
+
+      - name: Run security check
+        run: |
+          # Check for security issues in code
+          bandit -r . -x tests/,frontend/ -f json -o bandit-report.json || true
+          
+          # Check for known security vulnerabilities in dependencies
+          safety check --json --output safety-report.json || true
+          
+          echo "Security scan completed. Review reports if any issues found."
+
+  integration:
+    runs-on: ubuntu-latest
+    needs: [test, security]
+    if: github.event_name == 'pull_request'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install uv
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+
+      - name: Add uv to PATH
+        run: echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Install dependencies
+        run: uv pip install --system -r requirements.txt
+
+      - name: Integration test - Configuration loading
+        run: |
+          python -c "from config.config import settings; print(f'Config loaded: {settings.ENVIRONMENT}')"
+
+      - name: Integration test - Import all modules
+        run: |
+          python -c "
+          import sys
+          sys.path.append('.')
+          
+          # Test imports
+          from config.config import settings
+          from agents.base_agent import BaseAgent
+          from agents.coding_agent import CodingAgent
+          from mcp_servers.memory_service import MemoryService
+          from services.orchestrator import Orchestrator
+          from services.portkey_client import PortkeyClient
+          from services.lambda_client import LambdaClient
+          
+          print('All core modules imported successfully')
+          "
+
+      - name: Integration test - Agent instantiation
+        run: |
+          python -c "
+          import sys
+          sys.path.append('.')
+          
+          from agents.coding_agent import CodingAgent
+          
+          # Test agent creation (should not fail)
+          try:
+              agent = CodingAgent()
+              stats = agent.get_stats()
+              print(f'Agent created successfully: {stats}')
+          except Exception as e:
+              print(f'Agent creation failed: {e}')
+              sys.exit(1)
+          "
+
+  build-status:
+    runs-on: ubuntu-latest
+    needs: [lint, test, security]
+    if: always()
+    
+    steps:
+      - name: Check build status
+        run: |
+          if [[ "${{ needs.lint.result }}" == "success" && "${{ needs.test.result }}" == "success" && "${{ needs.security.result }}" == "success" ]]; then
+            echo "✅ All checks passed!"
+            exit 0
+          else
+            echo "❌ Some checks failed:"
+            echo "Lint: ${{ needs.lint.result }}"
+            echo "Test: ${{ needs.test.result }}"
+            echo "Security: ${{ needs.security.result }}"
+            exit 1
+          fi

@@ -250,3 +250,7 @@ qdrant_storage/
 
 # Redis dump
 dump.rdb
+# Roo/Cline temporary files
+.roo*
+.cline*
+.vscode-shell*

@@ -1,20 +1,33 @@
-name: checks
+name: CI Checks
+
 on:
   pull_request:
+    branches: [ main ]
   push:
-    branches: [ feat/autonomous-agent ]
+    branches: [ main ]
+
 jobs:
-  checks:
+  lint-format-test:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    env:
-      ESC_TOKEN: ${{ secrets.ESC_TOKEN }}
-      ESC_ENV:   ${{ secrets.ESC_ENV }}
-      GH_FINE_GRAINED_TOKEN: ${{ secrets.GH_FINE_GRAINED_TOKEN }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with: { python-version: "3.11" }
-      - run: pip install -r requirements.txt
-      - run: python tools/smoke_env_check.py
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements.dev.txt
+
+      - name: Run linters
+        run: |
+          ruff check .
+          black --check .
+
+      - name: Run tests
+        run: pytest

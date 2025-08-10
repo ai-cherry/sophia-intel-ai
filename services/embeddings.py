@@ -1,32 +1,80 @@
-from sentence_transformers import SentenceTransformer
-from typing import List
+import httpx
+from typing import List, Optional, Dict, Any
 
-class EmbeddingService:
-    def __init__(self, model_name: str = 'all-MiniLM-L6-v2'):
+class EmbeddingsClient:
+    def __init__(self, config: Dict[str, Any]):
         """
-        Initializes the embedding service with a sentence-transformer model.
+        Initializes the embeddings client with configuration.
         """
-        self.model = SentenceTransformer(model_name)
+        self.config = config
+        self.qdrant_url = config.get("qdrant", {}).get("url")
+        self.qdrant_api_key = config.get("qdrant", {}).get("api_key")
+        self.llm_keys = config.get("llm_keys", {})
+        self.client = httpx.AsyncClient()
 
-    def generate_embeddings(self, texts: List[str]) -> List[List[float]]:
+    async def get_embeddings(self, texts: List[str], model: str = "text-embedding-3-small") -> List[List[float]]:
         """
-        Generates embeddings for a list of texts.
+        Generates embeddings for a list of texts, trying providers in a fallback sequence.
         """
-        return self.model.encode(texts, convert_to_tensor=False).tolist()
+        # 1. Try Qdrant Cloud Inference (if configured)
+        if self.qdrant_url and "cloud.qdrant.io" in self.qdrant_url:
+            try:
+                # This is a placeholder for the actual Qdrant inference API call
+                print("Attempting to generate embeddings with Qdrant Cloud Inference...")
+                # response = await self.client.post(...)
+                # For now, we'll just simulate a success and move to the next provider
+                # raise NotImplementedError("Qdrant Cloud Inference not yet implemented.")
+            except Exception as e:
+                print(f"Qdrant Cloud Inference failed: {e}")
 
-# Example usage
+        # 2. Try OpenRouter as a fallback
+        if "openrouter" in self.llm_keys:
+            try:
+                print("Attempting to generate embeddings with OpenRouter...")
+                # response = await self._request_openrouter(texts, model)
+                # return response
+                raise NotImplementedError("OpenRouter embeddings not yet implemented.")
+            except Exception as e:
+                print(f"OpenRouter failed: {e}")
+
+        # 3. Try Portkey as another fallback
+        if "portkey" in self.llm_keys:
+            try:
+                print("Attempting to generate embeddings with Portkey...")
+                # response = await self._request_portkey(texts, model)
+                # return response
+                raise NotImplementedError("Portkey embeddings not yet implemented.")
+            except Exception as e:
+                print(f"Portkey failed: {e}")
+
+        raise RuntimeError("All embedding providers failed.")
+
+    async def _request_openrouter(self, texts: List[str], model: str):
+        # Implementation for OpenRouter API call
+        pass
+
+    async def _request_portkey(self, texts: List[str], model: str):
+        # Implementation for Portkey API call
+        pass
+
 if __name__ == "__main__":
-    embedding_service = EmbeddingService()
-    
-    sample_texts = [
-        "This is the first document.",
-        "This document is the second document.",
-        "And this is the third one.",
-        "Is this the first document?",
-    ]
-    
-    embeddings = embedding_service.generate_embeddings(sample_texts)
-    
-    print(f"Generated {len(embeddings)} embeddings.")
-    print("Sample embedding (first 5 dimensions):")
-    print(embeddings[0][:5])
+    import asyncio
+
+    # Example usage
+    mock_config = {
+        "qdrant": {"url": "https://my-cluster.cloud.qdrant.io", "api_key": "test_key"},
+        "llm_keys": {
+            "openrouter": "test_openrouter_key",
+            "portkey": "test_portkey_key"
+        }
+    }
+    embeddings_client = EmbeddingsClient(mock_config)
+
+    async def main():
+        try:
+            embeddings = await embeddings_client.get_embeddings(["hello world", "another text"])
+            print(f"Generated embeddings: {embeddings}")
+        except (RuntimeError, NotImplementedError) as e:
+            print(f"Embeddings generation failed as expected in placeholder: {e}")
+
+    asyncio.run(main())

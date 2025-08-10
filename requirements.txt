@@ -17,3 +17,5 @@ pytest-mock
 black
 PyJWT
 pulumi
+docker
+sentence-transformers

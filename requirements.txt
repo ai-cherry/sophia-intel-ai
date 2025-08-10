@@ -15,3 +15,5 @@ pytest-asyncio
 pytest-httpx
 pytest-mock
 black
+PyJWT
+pulumi

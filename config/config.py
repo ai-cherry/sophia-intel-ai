@@ -1,9 +1,10 @@
 # config/config.py
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from typing import Optional
 import os
 import yaml
 from dotenv import load_dotenv
+
 
 class Settings(BaseModel):
     # Environment Configuration
@@ -62,21 +63,22 @@ class Settings(BaseModel):
     METRICS_PORT: int = 9090
     LOG_LEVEL: str = "INFO"
 
+
 def load_settings() -> Settings:
     """Load settings from YAML file with environment variable overrides."""
     load_dotenv()  # loads .env if present
-    
+
     with open("config/sophia.yaml", "r") as f:
         data = yaml.safe_load(f) or {}
-    
+
     # Apply environment variable overrides with proper type conversion
     for key, value in data.items():
         if key in os.environ:
             env_value = os.environ[key]
-            
+
             # Type conversion based on original value type
             if isinstance(value, bool):
-                data[key] = env_value.lower() in ('true', '1', 'yes', 'on')
+                data[key] = env_value.lower() in ("true", "1", "yes", "on")
             elif isinstance(value, int):
                 try:
                     data[key] = int(env_value)
@@ -89,7 +91,8 @@ def load_settings() -> Settings:
                     data[key] = value  # Keep original if conversion fails
             else:
                 data[key] = env_value
-    
+
     return Settings(**data)
+
 
 settings = load_settings()

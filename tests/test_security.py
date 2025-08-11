@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import patch, MagicMock
 from connectors.github_conn import GitHubConnector
 from services.sandbox import Sandbox
-import docker
+
 
 @pytest.mark.asyncio
 async def test_github_connector_classic_pat_write_restriction():
@@ -12,14 +12,14 @@ async def test_github_connector_classic_pat_write_restriction():
     mock_config = {
         "github": {
             "mode": "classic_pat",
-            "classic_pat_token": "ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+            "classic_pat_token": "ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
         }
     }
     connector = GitHubConnector(mock_config)
-    
+
     # We expect this to fail, but since we don't have a real classic PAT,
     # we'll mock the http client to simulate a forbidden error.
-    with patch.object(connector.client, 'post', new_callable=MagicMock) as mock_post:
+    with patch.object(connector.client, "post", new_callable=MagicMock) as mock_post:
         mock_response = MagicMock()
         mock_response.status_code = 403
         mock_response.raise_for_status.side_effect = Exception("403 Forbidden")
@@ -30,14 +30,16 @@ async def test_github_connector_classic_pat_write_restriction():
 
     await connector.close()
 
+
 def test_sandbox_egress_allowlist():
     """
     Tests that the sandbox can't access disallowed hosts.
     This is a conceptual test, as true network isolation is complex to test here.
     We will simulate it by checking the network mode of the container.
     """
-    sandbox = Sandbox(network_mode="none") # Using 'none' to disable networking
+    sandbox = Sandbox(network_mode="none")  # Using 'none' to disable networking
     assert sandbox.network_mode == "none"
+
 
 @pytest.mark.asyncio
 async def test_connector_missing_token():
@@ -46,9 +48,9 @@ async def test_connector_missing_token():
     """
     mock_config = {"github": {"mode": "pat", "fine_grained_token": None}}
     connector = GitHubConnector(mock_config)
-    
+
     # Without a token, the connector should raise an error when trying to get headers.
     with pytest.raises(Exception):
         await connector._get_auth_headers()
-        
+
     await connector.close()

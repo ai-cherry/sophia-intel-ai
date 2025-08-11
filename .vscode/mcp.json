@@ -1,0 +1,24 @@
+{
+  "mcpServers": {
+    "sophia-memory": {
+      "command": "uvicorn",
+      "args": ["mcp_servers.unified_mcp_server:app", "--host", "0.0.0.0", "--port", "8001"],
+      "env": {
+        "QDRANT_URL": "${env:QDRANT_URL}",
+        "ENVIRONMENT": "development"
+      }
+    },
+    "lambda-gateway": {
+      "command": "python",
+      "args": ["-m", "scripts.lambda_gateway"],
+      "env": {
+        "LAMBDA_API_KEY": "${env:LAMBDA_API_KEY}",
+        "MCP_PORT": "8002"
+      }
+    }
+  },
+  "client": {
+    "name": "sophia-intel",
+    "version": "0.1.0"
+  }
+}

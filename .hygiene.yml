@@ -1,0 +1,25 @@
+size_budgets:
+  max_files: 25
+  max_lines: 200
+
+format:
+  black_line_length: 100
+  ruff_select: ["E","F","I"]
+
+duplicates:
+  threshold_percent: 10
+  ignore_paths: ["tests/fixtures","**/generated/**"]
+
+deps:
+  compile_lock: true
+  allow_unpinned: false
+  audit_strict: false   # comment-only unless critical
+
+ignore:
+  paths: ["**/node_modules/**","**/.venv/**","**/dist/**","**/__pycache__/**"]
+
+auto_merge:
+  labels: ["bot","hygiene","safe-auto-merge"]
+
+release_freeze:
+  label: "release:freeze"

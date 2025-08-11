@@ -1,4 +1,5 @@
 # GitHub CLI Health Check and Authentication
+
 .PHONY: gh-doctor
 gh-doctor:
 	@echo "🔍 GitHub CLI Health Check..."
@@ -67,10 +68,17 @@ docker-down:
 docker-logs:
 	docker-compose logs -f
 
+# Environment check
+.PHONY: doctor
+doctor:
+	@echo "🩺 Running Sophia environment check..."
+	@python -m tools.smoke_env_check
+
 # Help
 .PHONY: help
 help:
 	@echo "Available targets:"
+	@echo "  doctor      - Check environment and secrets configuration"
 	@echo "  gh-doctor    - Check GitHub CLI authentication and configuration"
 	@echo "  auth-doctor  - Quick auth check (lightweight version)"
 	@echo "  gh-login     - Authenticate GitHub CLI with token"

@@ -1,9 +1,9 @@
 """Basic health check tests for the Sophia platform."""
-import pytest
-import httpx
+
 from fastapi.testclient import TestClient
 from backend.main import app
 from mcp_servers.unified_mcp_server import app as mcp_app
+
 
 def test_backend_health():
     """Test backend health endpoint."""
@@ -15,6 +15,7 @@ def test_backend_health():
     assert data["status"] == "ok"
     assert "env" in data
 
+
 def test_backend_metrics():
     """Test backend metrics endpoint."""
     client = TestClient(app)
@@ -22,11 +23,13 @@ def test_backend_metrics():
     assert response.status_code == 200
     assert "text/plain" in response.headers["content-type"]
 
+
 def test_mcp_server_docs():
     """Test MCP server documentation endpoint."""
     client = TestClient(mcp_app)
     response = client.get("/docs")
     assert response.status_code == 200
+
 
 # TODO: Add more comprehensive tests
 # - Test agent execution

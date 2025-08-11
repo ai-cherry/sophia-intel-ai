@@ -3,6 +3,7 @@ import json
 import os
 from datetime import datetime
 
+
 class JsonFormatter(logging.Formatter):
     def format(self, record):
         log_record = {
@@ -12,8 +13,9 @@ class JsonFormatter(logging.Formatter):
             "logger_name": record.name,
         }
         if record.exc_info:
-            log_record['exc_info'] = self.formatException(record.exc_info)
+            log_record["exc_info"] = self.formatException(record.exc_info)
         return json.dumps(log_record)
+
 
 def setup_telemetry():
     """
@@ -37,6 +39,7 @@ def setup_telemetry():
     # from opentelemetry.sdk.trace import TracerProvider
     # ... etc.
     print("Metrics and tracing providers would be configured here.")
+
 
 if __name__ == "__main__":
     setup_telemetry()

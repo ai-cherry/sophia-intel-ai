@@ -2,6 +2,7 @@ import json
 from dataclasses import dataclass
 from typing import List, Dict, Any
 
+
 @dataclass
 class Guardrails:
     max_budget: float
@@ -17,12 +18,16 @@ class Guardrails:
             return False
 
         if current_spend > self.max_budget:
-            print(f"Guardrail check failed: Budget exceeded ({current_spend} > {self.max_budget}).")
+            print(
+                f"Guardrail check failed: Budget exceeded ({current_spend} > {self.max_budget})."
+            )
             return False
 
         # This is a simplified check. A real implementation would be more robust.
-        if 'path' in request_data and not self._is_path_allowed(request_data['path']):
-            print(f"Guardrail check failed: Path '{request_data['path']}' is not in the allowlist.")
+        if "path" in request_data and not self._is_path_allowed(request_data["path"]):
+            print(
+                f"Guardrail check failed: Path '{request_data['path']}' is not in the allowlist."
+            )
             return False
 
         return True
@@ -42,6 +47,7 @@ class Guardrails:
                 return True
         return False
 
+
 def load_guardrails_from_config(config: Dict[str, Any]) -> Guardrails:
     """
     Loads guardrails from a configuration dictionary.
@@ -50,9 +56,12 @@ def load_guardrails_from_config(config: Dict[str, Any]) -> Guardrails:
     guardrails_config = config.get("guardrails", {})
     return Guardrails(
         max_budget=guardrails_config.get("max_budget", 100.0),
-        path_allowlist=guardrails_config.get("path_allowlist", ["/workspaces/sophia-intel/"]),
-        json_only=guardrails_config.get("json_only", True)
+        path_allowlist=guardrails_config.get(
+            "path_allowlist", ["/workspaces/sophia-intel/"]
+        ),
+        json_only=guardrails_config.get("json_only", True),
     )
+
 
 if __name__ == "__main__":
     # Example usage
@@ -60,7 +69,7 @@ if __name__ == "__main__":
         "guardrails": {
             "max_budget": 50.0,
             "path_allowlist": ["/safe/path/", "/another/safe/path/"],
-            "json_only": True
+            "json_only": True,
         }
     }
     guardrails = load_guardrails_from_config(mock_config)
@@ -70,7 +79,7 @@ if __name__ == "__main__":
     compliant_request = {"action": "read", "path": "/safe/path/file.txt"}
     assert guardrails.check_request(compliant_request, 25.0)
 
-    non_json_request = {"data": {1, 2, 3}} # A set is not JSON serializable
+    non_json_request = {"data": {1, 2, 3}}  # A set is not JSON serializable
     assert not guardrails.check_request(non_json_request, 25.0)
 
     budget_exceeded_request = {"action": "write"}

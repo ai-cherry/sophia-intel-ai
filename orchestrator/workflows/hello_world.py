@@ -1,10 +1,12 @@
 from temporalio import activity, workflow
 from datetime import timedelta
 
+
 @activity.defn
 async def say_hello(name: str) -> str:
     """A simple activity that returns a greeting."""
     return f"Hello, {name}!"
+
 
 @workflow.defn
 class HelloWorld:

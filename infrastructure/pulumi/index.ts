@@ -170,7 +170,7 @@ const mcpTargetGroup = new aws.lb.TargetGroup("sophia-mcp-tg", {
 // ALB Listener
 const albListener = new aws.lb.Listener("sophia-alb-listener", {
     loadBalancerArn: alb.arn,
-    port: "443",
+    port: 443,
     protocol: "HTTPS",
     sslPolicy: "ELBSecurityPolicy-TLS-1-2-2017-01",
     certificateArn: "arn:aws:acm:us-west-2:123456789012:certificate/12345678-1234-1234-1234-123456789012", // Replace with actual cert
@@ -183,11 +183,6 @@ const albListener = new aws.lb.Listener("sophia-alb-listener", {
 // ECS Cluster for MCP Services
 const cluster = new aws.ecs.Cluster("sophia-cluster", {
     name: "sophia-cluster",
-    capacityProviders: ["FARGATE"],
-    defaultCapacityProviderStrategies: [{
-        capacityProvider: "FARGATE",
-        weight: 1
-    }],
     tags: commonTags
 });
 
@@ -296,9 +291,8 @@ const mcpService = new aws.ecs.Service("sophia-mcp-service", {
         containerName: "sophia-mcp-server",
         containerPort: 8001
     }],
-    dependsOn: [albListener],
     tags: commonTags
-});
+}, { dependsOn: [albListener] });
 
 // Lambda Labs Integration (Custom Resource)
 const lambdaLabsInstance = new aws.lambda.Function("sophia-lambda-labs", {

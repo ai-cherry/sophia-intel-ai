@@ -1,0 +1,54 @@
+ENVIRONMENT: development
+API_HOST: 0.0.0.0
+API_PORT: 8000
+
+# Database Configuration (local Docker for development)
+DATABASE_URL: postgresql+asyncpg://sophia:devpass@localhost:5432/sophia
+REDIS_URL: redis://localhost:6379/0
+
+# Qdrant Cloud Configuration (update with your cloud instance)
+QDRANT_URL: https://your-cluster-id.us-east1-0.gcp.cloud.qdrant.io:6333
+QDRANT_API_KEY: ""
+
+# MCP Server Configuration
+MCP_PORT: 8001
+MCP_GATEWAY_PORT: 8002
+
+# LLM Provider Configuration
+LLM_PROVIDER: openrouter
+CACHE_TTL_SECONDS: 300
+MAX_TOKENS: 4096
+TEMPERATURE: 0.7
+
+# API Keys (override in .env)
+OPENROUTER_API_KEY: ""
+PORTKEY_API_KEY: ""
+LAMBDA_API_KEY: ""
+EXA_API_KEY: ""
+
+# Security Configuration (generate new keys for production)
+SECRET_KEY: "dev-secret-key-replace-in-production"
+ENCRYPTION_KEY: "dev-encryption-key-32-chars-long"
+JWT_SECRET: "dev-jwt-secret-replace-in-production"
+API_SALT: "dev-api-salt-replace-in-production"
+
+# Service Endpoints
+SOPHIA_API_ENDPOINT: http://localhost:8000
+SOPHIA_MCP_ENDPOINT: http://localhost:8001
+SOPHIA_FRONTEND_ENDPOINT: http://localhost:3000
+LAMBDA_GATEWAY_ENDPOINT: http://localhost:8002
+
+# Agent Configuration
+AGNO_STORAGE_DB: data/agents.db
+AGENT_CONCURRENCY: 2
+AGENT_TIMEOUT_SECONDS: 300
+
+# Memory Configuration
+MEMORY_COLLECTION_NAME: code_memory
+EMBEDDING_DIMENSION: 1536
+MAX_CONTEXT_LENGTH: 10000
+
+# Monitoring Configuration
+ENABLE_METRICS: true
+METRICS_PORT: 9090
+LOG_LEVEL: INFO

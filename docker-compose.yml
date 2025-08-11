@@ -1,0 +1,26 @@
+version: '3.8'
+services:
+  vault:
+    image: hashicorp/vault:1.15
+    container_name: vault
+    ports:
+      - "8200:8200"
+    environment:
+      - VAULT_DEV_ROOT_TOKEN_ID=root
+      - VAULT_DEV_LISTEN_ADDRESS=0.0.0.0:8200
+    cap_add:
+      - IPC_LOCK
+    command: "server -dev"
+
+  temporal:
+    image: temporalio/auto-setup:1.21.0
+    container_name: temporal
+    ports:
+      - "7233:7233" # gRPC
+      - "8233:8233" # Web UI
+    environment:
+      - DB=sqlite3
+      - TEMPORAL_TLS_SERVER_CERT_PATH=/etc/temporal/certs/server.crt
+      - TEMPORAL_TLS_SERVER_KEY_PATH=/etc/temporal/certs/server.key
+      - TEMPORAL_TLS_CLIENT_CA_PATH=/etc/temporal/certs/ca.crt
+      - TEMPORAL_TLS_REQUIRE_CLIENT_AUTH=true

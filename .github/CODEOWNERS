@@ -1,0 +1,32 @@
+# GitHub CODEOWNERS
+# These users/teams will be automatically requested for review when someone opens a PR that modifies matching files
+# Order matters - last matching pattern takes precedence
+
+# Default owners for everything in the repo
+* @scoobyjava
+
+# Critical infrastructure components require careful review
+/orchestrator/**     @scoobyjava
+/connectors/**       @scoobyjava  
+/services/**         @scoobyjava
+/agents/**           @scoobyjava
+
+# Security and configuration
+/config/**                    @scoobyjava
+/config/security-policies.md  @scoobyjava
+/.github/**                   @scoobyjava
+/scripts/**                   @scoobyjava
+
+# CI/CD and workflows
+/.github/workflows/**         @scoobyjava
+/orchestrator/workflows/**    @scoobyjava
+
+# Documentation can be reviewed by anyone
+/docs/**             @scoobyjava
+*.md                 @scoobyjava
+
+# MCP servers and integrations
+/mcp_servers/**      @scoobyjava
+
+# Testing
+/tests/**            @scoobyjava

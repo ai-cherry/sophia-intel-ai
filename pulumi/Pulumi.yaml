@@ -1,0 +1,7 @@
+name: sophia-intel-infra
+description: Sophia Intel Infrastructure as Code
+runtime: nodejs
+config:
+  pulumi:tags:
+    value:
+      pulumi:template: typescript

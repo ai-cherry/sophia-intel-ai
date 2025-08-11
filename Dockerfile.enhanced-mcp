@@ -1,4 +1,6 @@
-# Dockerfile for Sophia Intel Enhanced MCP Server
+# Sophia Intel Enhanced MCP Server - Production Docker Image
+# Optimized for Lambda Labs GPU infrastructure
+
 FROM python:3.11-slim
 
 # Set working directory
@@ -8,39 +10,39 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y \
     curl \
     git \
+    build-essential \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for better caching
 COPY requirements.txt .
 
 # Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Install additional dependencies for enhanced server
-RUN pip install --no-cache-dir \
-    loguru \
-    aiohttp \
-    numpy \
-    python-dotenv
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY . .
 
 # Create non-root user for security
-RUN useradd -m -u 1000 sophia && chown -R sophia:sophia /app
+RUN useradd --create-home --shell /bin/bash sophia && \
+    chown -R sophia:sophia /app
+
+# Switch to non-root user
 USER sophia
+
+# Environment variables
+ENV PYTHONPATH=/app
+ENV PYTHONUNBUFFERED=1
+ENV MCP_PORT=8001
+ENV LOG_LEVEL=INFO
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:8001/health || exit 1
 
 # Expose port
 EXPOSE 8001
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8001/health || exit 1
-
-# Set environment variables
-ENV PYTHONPATH=/app
-ENV ENVIRONMENT=production
-
-# Run the simplified test server for now
-CMD ["python", "test_server_simple.py"]
+# Start the Enhanced MCP Server
+CMD ["python", "mcp_servers/enhanced_unified_server.py", "--host", "0.0.0.0", "--port", "8001"]
 

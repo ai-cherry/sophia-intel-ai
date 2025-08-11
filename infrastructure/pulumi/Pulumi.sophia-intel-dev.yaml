@@ -6,7 +6,7 @@ config:
   secrets:ANTHROPIC_API_KEY:
     secure: v1:OuOZt/s5VnpqwKDC:tZJmj37VLAl93+eHsytWCNJpLWh06ckinSLqejGSSjaLCwO+vlRtkvc=
   secrets:LAMBDA_API_KEY:
-    secure: v1:HE78gQXYRUq2YSU+:d+mhaErFrOKV3c0t1WmltM6HjDxWxGZIGkcDgbK8YCn6i23amFY=
+    secure: v1:UbSLQI4Nrx9uYRBJ:kUJRPV4LIgJ/OuKsaOiTtL4ZUE/KqzcCJs/5cHq0mJaiCIgrtf86LCExPRarKTs8R3h6vGHy33l8D0WvNeMJJqhrzdkV/QVfgLlRbl0Y3KEBJDZf2qCDrbTZx+zBOUd0Mcs0SyCC
   sophia-intel-infrastructure:environment: dev
   secrets:GEMINI_API_KEY:
     secure: v1:QSB0dyUjoJ9KQPf+:OD6FDt+X2xJIBDjmVHEFh23Ub2jlt1v5OhpEzr6x25DawQl9A3g=
@@ -29,7 +29,7 @@ config:
   secrets:DOCKER_PERSONAL_ACCESS_TOKEN:
     secure: v1:5JAi2uZVljRRPwjg:1ePg33iEnXyhE+qdcXewigcgK/e2IZmNDkRGjx7ZSbCKLUj3XNYyYQ==
   secrets:LAMBDA_CLOUD_API_KEY:
-    secure: v1:FuXT4KL4YqHLNt0M:7f6utAAS6M9LO911YqHXt5Jw7Uf3iCjfg4DauzEPflx1EGAh/d9TNdfvgeY=
+    secure: v1:M51ovZxmdiY9UneI:EPKXJm9kOJJ0PB7tgeB1ivEHRxS+XMjX0SpNdEgGSF5gDok/Gp2JTZCHmaa5xvjgYDhItpBgOraohmLkzKt6raP1dSLweFD96j9pknZLdTnypqIRLBtHjV2o8J2WN83RTwWqerEX2w==
   secrets:HUGGINGFACE_API_TOKEN:
     secure: v1:GUyO3Un7f0j2BNjL:f9+s5uqYK71WAB7YI7W65+OUOBZTl0Ljp4G7b3IeA5PcsoPs
   secrets:PHANTOM_BUSTER_API_KEY:

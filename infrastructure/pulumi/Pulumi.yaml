@@ -1,0 +1,15 @@
+name: sophia-intel-infrastructure
+runtime: nodejs
+description: Sophia Intel Infrastructure as Code - Complete AI Development Platform
+template:
+  config:
+    aws:region:
+      description: AWS region for resources
+      default: us-west-2
+    lambda:region:
+      description: Lambda Labs region
+      default: us-west-1
+    environment:
+      description: Deployment environment (dev/staging/prod)
+      default: dev
+

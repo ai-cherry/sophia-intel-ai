@@ -1,5 +1,6 @@
 import httpx
-from typing import List, Optional, Dict, Any
+from typing import List, Dict, Any
+
 
 class EmbeddingsClient:
     def __init__(self, config: Dict[str, Any]):
@@ -12,7 +13,9 @@ class EmbeddingsClient:
         self.llm_keys = config.get("llm_keys", {})
         self.client = httpx.AsyncClient()
 
-    async def get_embeddings(self, texts: List[str], model: str = "text-embedding-3-small") -> List[List[float]]:
+    async def get_embeddings(
+        self, texts: List[str], model: str = "text-embedding-3-small"
+    ) -> List[List[float]]:
         """
         Generates embeddings for a list of texts, trying providers in a fallback sequence.
         """
@@ -20,7 +23,9 @@ class EmbeddingsClient:
         if self.qdrant_url and "cloud.qdrant.io" in self.qdrant_url:
             try:
                 # This is a placeholder for the actual Qdrant inference API call
-                print("Attempting to generate embeddings with Qdrant Cloud Inference...")
+                print(
+                    "Attempting to generate embeddings with Qdrant Cloud Inference..."
+                )
                 # response = await self.client.post(...)
                 # For now, we'll just simulate a success and move to the next provider
                 # raise NotImplementedError("Qdrant Cloud Inference not yet implemented.")
@@ -57,6 +62,7 @@ class EmbeddingsClient:
         # Implementation for Portkey API call
         pass
 
+
 if __name__ == "__main__":
     import asyncio
 
@@ -65,14 +71,16 @@ if __name__ == "__main__":
         "qdrant": {"url": "https://my-cluster.cloud.qdrant.io", "api_key": "test_key"},
         "llm_keys": {
             "openrouter": "test_openrouter_key",
-            "portkey": "test_portkey_key"
-        }
+            "portkey": "test_portkey_key",
+        },
     }
     embeddings_client = EmbeddingsClient(mock_config)
 
     async def main():
         try:
-            embeddings = await embeddings_client.get_embeddings(["hello world", "another text"])
+            embeddings = await embeddings_client.get_embeddings(
+                ["hello world", "another text"]
+            )
             print(f"Generated embeddings: {embeddings}")
         except (RuntimeError, NotImplementedError) as e:
             print(f"Embeddings generation failed as expected in placeholder: {e}")

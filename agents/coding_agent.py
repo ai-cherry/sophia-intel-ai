@@ -2,11 +2,12 @@
 Coding Agent implementation using Agno framework.
 Provides code analysis, modification, and generation capabilities.
 """
+
 from .base_agent import BaseAgent
 from agno.agent import Agent
 from agno.models.openai import OpenAIChat
 from agno.storage.sqlite import SqliteStorage
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 from loguru import logger
 import httpx
 import json
@@ -14,39 +15,42 @@ import asyncio
 import difflib
 from config.config import settings
 
+
 class CodingAgent(BaseAgent):
     """
     Agent specialized in code-related tasks using Agno framework.
     Integrates with MCP memory service for context-aware responses.
     """
-    
-    def __init__(
-        self,
-        concurrency: int = None,
-        timeout_seconds: int = None
-    ):
+
+    def __init__(self, concurrency: int = None, timeout_seconds: int = None):
         """Initialize the coding agent with Agno backend."""
         super().__init__(
             name="CodingAgent",
             concurrency=concurrency or settings.AGENT_CONCURRENCY,
-            timeout_seconds=timeout_seconds or settings.AGENT_TIMEOUT_SECONDS
+            timeout_seconds=timeout_seconds or settings.AGENT_TIMEOUT_SECONDS,
         )
-        
+
         # Initialize Agno agent
         self.agno = Agent(
             name="Sophia Coding Agent",
             model=OpenAIChat(
                 id="gpt-4o",
                 api_key=settings.OPENROUTER_API_KEY,
-                base_url="https://api.portkey.ai/v1" if settings.PORTKEY_API_KEY else None,
-                extra_headers={
-                    "X-ROUTER-TARGET": "openrouter",
-                    "X-PORTKEY-API-KEY": settings.PORTKEY_API_KEY
-                } if settings.PORTKEY_API_KEY else {}
+                base_url=(
+                    "https://api.portkey.ai/v1" if settings.PORTKEY_API_KEY else None
+                ),
+                extra_headers=(
+                    {
+                        "X-ROUTER-TARGET": "openrouter",
+                        "X-PORTKEY-API-KEY": settings.PORTKEY_API_KEY,
+                    }
+                    if settings.PORTKEY_API_KEY
+                    else {}
+                ),
             ),
             storage=SqliteStorage(
                 table_name="coding_agent_conversations",
-                db_file=settings.AGNO_STORAGE_DB
+                db_file=settings.AGNO_STORAGE_DB,
             ),
             instructions=[
                 "You are an expert software engineer and code analyst.",
@@ -56,20 +60,22 @@ class CodingAgent(BaseAgent):
                 "Make minimal, targeted changes that solve the specific problem.",
                 "If no changes are needed, return empty string for patch.",
                 "Include proper context lines (3 lines before/after) in diffs.",
-                "Focus on code quality, best practices, and maintainability."
+                "Focus on code quality, best practices, and maintainability.",
             ],
             add_datetime_to_instructions=True,
             add_history_to_messages=True,
             num_history_responses=5,
             markdown=False,
             response_model=None,  # We'll handle JSON parsing ourselves
-            show_tool_calls=False
+            show_tool_calls=False,
         )
 
-    async def _process_task_impl(self, task_id: str, task_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def _process_task_impl(
+        self, task_id: str, task_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """
         Process coding task with context from MCP memory service.
-        
+
         Expected task_data format:
         {
             "session_id": str,
@@ -84,38 +90,34 @@ class CodingAgent(BaseAgent):
         query = task_data.get("query", "Analyze and improve this code")
         file_path = task_data.get("file_path", "")
         language = task_data.get("language", "")
-        
+
         logger.info(f"Processing coding task for session {session_id}")
-        
+
         # Fetch relevant context from MCP memory
         context_results = await self._fetch_memory_context(session_id, query)
-        
+
         # Build comprehensive prompt
         prompt = self._build_prompt(code, query, context_results, file_path, language)
-        
+
         # Store current task context in MCP
         await self._store_task_context(session_id, task_id, code, query)
-        
+
         # Execute via Agno (run in thread pool since Agno is sync)
         loop = asyncio.get_event_loop()
         response = await loop.run_in_executor(
-            None,
-            lambda: self.agno.run(prompt, session_id=session_id)
+            None, lambda: self.agno.run(prompt, session_id=session_id)
         )
-        
+
         # Parse and validate response
         result = self._parse_response(str(response), code)
-        
+
         # Store result context in MCP
         await self._store_result_context(session_id, task_id, result)
-        
+
         return result
 
     async def _fetch_memory_context(
-        self,
-        session_id: str,
-        query: str,
-        top_k: int = 3
+        self, session_id: str, query: str, top_k: int = 3
     ) -> List[Dict[str, Any]]:
         """Fetch relevant context from MCP memory service."""
         try:
@@ -127,8 +129,8 @@ class CodingAgent(BaseAgent):
                         "query": query,
                         "top_k": top_k,
                         "global_search": False,
-                        "threshold": 0.7
-                    }
+                        "threshold": 0.7,
+                    },
                 )
                 response.raise_for_status()
                 return response.json().get("results", [])
@@ -137,11 +139,7 @@ class CodingAgent(BaseAgent):
             return []
 
     async def _store_task_context(
-        self,
-        session_id: str,
-        task_id: str,
-        code: str,
-        query: str
+        self, session_id: str, task_id: str, code: str, query: str
     ) -> None:
         """Store task context in MCP memory."""
         try:
@@ -154,18 +152,15 @@ class CodingAgent(BaseAgent):
                         "metadata": {
                             "task_id": task_id,
                             "context_type": "coding_task",
-                            "query": query
-                        }
-                    }
+                            "query": query,
+                        },
+                    },
                 )
         except Exception as e:
             logger.warning(f"Failed to store task context: {e}")
 
     async def _store_result_context(
-        self,
-        session_id: str,
-        task_id: str,
-        result: Dict[str, Any]
+        self, session_id: str, task_id: str, result: Dict[str, Any]
     ) -> None:
         """Store result context in MCP memory."""
         try:
@@ -178,9 +173,9 @@ class CodingAgent(BaseAgent):
                         "metadata": {
                             "task_id": task_id,
                             "context_type": "coding_result",
-                            "summary": result["summary"]
-                        }
-                    }
+                            "summary": result["summary"],
+                        },
+                    },
                 )
         except Exception as e:
             logger.warning(f"Failed to store result context: {e}")
@@ -191,42 +186,46 @@ class CodingAgent(BaseAgent):
         query: str,
         context: List[Dict[str, Any]],
         file_path: str = "",
-        language: str = ""
+        language: str = "",
     ) -> str:
         """Build comprehensive prompt for the coding task."""
         prompt_parts = []
-        
+
         # Add context if available
         if context:
             prompt_parts.append("## Relevant Context:")
             for ctx in context:
                 prompt_parts.append(f"- {ctx.get('content', '')[:200]}...")
-        
+
         # Add task description
-        prompt_parts.append(f"## Task:")
+        prompt_parts.append("## Task:")
         prompt_parts.append(query)
-        
+
         # Add file info if available
         if file_path:
-            prompt_parts.append(f"## File Path:")
+            prompt_parts.append("## File Path:")
             prompt_parts.append(file_path)
-        
+
         if language:
-            prompt_parts.append(f"## Language:")
+            prompt_parts.append("## Language:")
             prompt_parts.append(language)
-        
+
         # Add code
-        prompt_parts.append(f"## Code to Analyze:")
+        prompt_parts.append("## Code to Analyze:")
         prompt_parts.append(f"```{language}")
         prompt_parts.append(code)
         prompt_parts.append("```")
-        
+
         # Add instructions
         prompt_parts.append("\n## Instructions:")
-        prompt_parts.append("Analyze the code and provide improvements according to the task.")
-        prompt_parts.append("Return ONLY a valid JSON response with 'summary' and 'patch' fields.")
+        prompt_parts.append(
+            "Analyze the code and provide improvements according to the task."
+        )
+        prompt_parts.append(
+            "Return ONLY a valid JSON response with 'summary' and 'patch' fields."
+        )
         prompt_parts.append("Use unified diff format for the patch field.")
-        
+
         return "\n".join(prompt_parts)
 
     def _parse_response(self, response: str, original_code: str) -> Dict[str, Any]:
@@ -234,57 +233,53 @@ class CodingAgent(BaseAgent):
         try:
             # Try to extract JSON from response
             response = response.strip()
-            
+
             # Handle potential markdown wrapping
             if response.startswith("```json"):
                 response = response[7:]
             if response.endswith("```"):
                 response = response[:-3]
-            
+
             # Parse JSON
             result = json.loads(response)
-            
+
             # Validate required fields
             if not isinstance(result, dict):
                 raise ValueError("Response is not a dictionary")
-            
+
             if "summary" not in result or "patch" not in result:
                 raise ValueError("Missing required fields (summary, patch)")
-            
+
             # Validate types
             if not isinstance(result["summary"], str):
                 raise ValueError("Summary must be a string")
-            
+
             if not isinstance(result["patch"], str):
                 raise ValueError("Patch must be a string")
-            
+
             # If patch is empty, that's valid (no changes needed)
-            return {
-                "summary": result["summary"],
-                "patch": result["patch"]
-            }
-            
+            return {"summary": result["summary"], "patch": result["patch"]}
+
         except Exception as e:
             logger.error(f"Failed to parse agent response: {e}")
             logger.debug(f"Raw response: {response}")
-            
-            # Return fallback response
-            return {
-                "summary": f"Failed to parse agent response: {e}",
-                "patch": ""
-            }
 
-    def _generate_unified_diff(self, original: str, modified: str, filename: str = "file") -> str:
+            # Return fallback response
+            return {"summary": f"Failed to parse agent response: {e}", "patch": ""}
+
+    def _generate_unified_diff(
+        self, original: str, modified: str, filename: str = "file"
+    ) -> str:
         """Generate unified diff format patch."""
         original_lines = original.splitlines(keepends=True)
         modified_lines = modified.splitlines(keepends=True)
-        
+
         diff = difflib.unified_diff(
             original_lines,
             modified_lines,
             fromfile=f"a/{filename}",
             tofile=f"b/{filename}",
-            lineterm=""
+            lineterm="",
         )
-        
+
         return "".join(diff)

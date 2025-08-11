@@ -1,40 +1,51 @@
 version: '3.8'
-services:
-  # Database Services
-  postgres:
-    image: postgres:15
-    container_name: sophia-postgres
-    ports:
-      - "5432:5432"
-    environment:
-      - POSTGRES_USER=sophia
-      - POSTGRES_PASSWORD=devpass
-      - POSTGRES_DB=sophia
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U sophia"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
 
+services:
+  # Redis Cache
   redis:
-    image: redis:7
-    container_name: sophia-redis
+    image: redis:7-alpine
+    container_name: sophia-intel-redis
+    restart: unless-stopped
     ports:
       - "6379:6379"
     volumes:
       - redis_data:/data
+    command: redis-server --appendonly yes
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - sophia-network
 
-  # Vector Database for Embeddings
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: sophia-intel-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: sophia_intel
+      POSTGRES_USER: sophia
+      POSTGRES_PASSWORD: sophia_secure_2025
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sophia -d sophia_intel"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - sophia-network
+
+  # Qdrant Vector Database
   qdrant:
-    image: qdrant/qdrant:v1.6.0
-    container_name: sophia-qdrant
+    image: qdrant/qdrant:latest
+    container_name: sophia-intel-qdrant
+    restart: unless-stopped
     ports:
       - "6333:6333"
       - "6334:6334"
@@ -42,71 +53,141 @@ services:
       - qdrant_data:/qdrant/storage
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:6333/health"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - sophia-network
 
-  # Workflow Orchestration
-  temporal:
-    image: temporalio/auto-setup:1.21.0
-    container_name: sophia-temporal
-    ports:
-      - "7233:7233" # gRPC
-      - "8233:8233" # Web UI
-    environment:
-      - DB=sqlite3
-    volumes:
-      - temporal_data:/etc/temporal/sqlite
-
-  # MCP Server
+  # Enhanced MCP Server
   mcp-server:
     build:
       context: .
-      dockerfile: Dockerfile
-    container_name: sophia-mcp-server
-    depends_on:
-      - postgres
-      - redis
-      - qdrant
-      - temporal
+      dockerfile: Dockerfile.enhanced-mcp
+    container_name: sophia-intel-mcp-server
+    restart: unless-stopped
     ports:
-      - "8001:8001" # MCP Port
-      - "8002:8002" # MCP Gateway Port
+      - "8001:8001"
     environment:
-      - ESC_ENV=sophia/dev
-      - API_HOST=0.0.0.0
-      - API_PORT=8000
-      - MCP_PORT=8001
-      - MCP_GATEWAY_PORT=8002
-      - POSTGRES_HOST=postgres
-      - REDIS_URL=redis://redis:6379/0
+      - LAMBDA_API_KEY=${LAMBDA_API_KEY}
+      - LAMBDA_CLOUD_API_KEY=${LAMBDA_CLOUD_API_KEY}
+      - REDIS_URL=redis://redis:6379
+      - DATABASE_URL=postgresql://sophia:sophia_secure_2025@postgres:5432/sophia_intel
       - QDRANT_URL=http://qdrant:6333
+      - MCP_PORT=8001
+      - ENVIRONMENT=production
       - LOG_LEVEL=INFO
-    command: python -m mcp_servers.unified_mcp_server
-    volumes:
-      - ./data:/app/data
-    restart: unless-stopped
-
-  # Orchestrator Worker
-  orchestrator:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: sophia-orchestrator
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
+      - GROK_API_KEY=${GROK_API_KEY}
     depends_on:
-      - temporal
-      - mcp-server
-    environment:
-      - ESC_ENV=sophia/dev
-      - TEMPORAL_HOST=temporal:7233
-      - LOG_LEVEL=INFO
-    command: python -m orchestrator.app
-    volumes:
-      - ./data:/app/data
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - sophia-network
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: sophia-intel-nginx
     restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./config/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./config/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - mcp-server
+    networks:
+      - sophia-network
+
+  # Prometheus Monitoring
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: sophia-intel-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - sophia-network
+
+  # Grafana Visualization
+  grafana:
+    image: grafana/grafana:latest
+    container_name: sophia-intel-grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=sophia_admin_2025
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./config/grafana/provisioning:/etc/grafana/provisioning
+    depends_on:
+      - prometheus
+    networks:
+      - sophia-network
+
+  # Lambda Labs API Test
+  lambda-test:
+    image: node:18-alpine
+    container_name: sophia-intel-lambda-test
+    restart: "no"
+    environment:
+      - LAMBDA_API_KEY=${LAMBDA_API_KEY}
+      - LAMBDA_CLOUD_API_KEY=${LAMBDA_CLOUD_API_KEY}
+    command: >
+      sh -c "
+        apk add --no-cache curl &&
+        echo 'Testing Lambda Labs API connectivity...' &&
+        curl -u $$LAMBDA_API_KEY: https://cloud.lambda.ai/api/v1/instances &&
+        echo 'Lambda Labs API test completed'
+      "
+    networks:
+      - sophia-network
 
 volumes:
-  postgres_data:
   redis_data:
+    driver: local
+  postgres_data:
+    driver: local
   qdrant_data:
-  temporal_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+
+networks:
+  sophia-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+          gateway: 172.20.0.1

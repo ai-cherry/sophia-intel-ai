@@ -1,7 +1,7 @@
 import httpx
-import jwt
 import time
 from typing import Optional, Dict, Any
+
 
 class GitHubConnector:
     def __init__(self, config: Dict[str, Any]):
@@ -30,26 +30,34 @@ class GitHubConnector:
         # This part will be implemented later when the GitHub App is ready
         raise NotImplementedError("GitHub App authentication is not yet implemented.")
 
-    async def get_pr_details(self, owner: str, repo: str, pr_number: int) -> Dict[str, Any]:
+    async def get_pr_details(
+        self, owner: str, repo: str, pr_number: int
+    ) -> Dict[str, Any]:
         headers = await self._get_auth_headers()
-        response = await self.client.get(f"/repos/{owner}/{repo}/pulls/{pr_number}", headers=headers)
+        response = await self.client.get(
+            f"/repos/{owner}/{repo}/pulls/{pr_number}", headers=headers
+        )
         response.raise_for_status()
         return response.json()
 
-    async def read_file(self, owner: str, repo: str, path: str, ref: Optional[str] = None) -> bytes:
+    async def read_file(
+        self, owner: str, repo: str, path: str, ref: Optional[str] = None
+    ) -> bytes:
         headers = await self._get_auth_headers()
         url = f"/repos/{owner}/{repo}/contents/{path}"
         if ref:
             url += f"?ref={ref}"
-        
+
         # Add 'Accept' header to get raw content
         headers["Accept"] = "application/vnd.github.v3.raw"
-        
+
         response = await self.client.get(url, headers=headers)
         response.raise_for_status()
         return response.content
 
-    async def create_pr(self, owner: str, repo: str, title: str, body: str, head: str, base: str) -> Dict[str, Any]:
+    async def create_pr(
+        self, owner: str, repo: str, title: str, body: str, head: str, base: str
+    ) -> Dict[str, Any]:
         headers = await self._get_auth_headers()
         data = {
             "title": title,
@@ -57,7 +65,9 @@ class GitHubConnector:
             "head": head,
             "base": base,
         }
-        response = await self.client.post(f"/repos/{owner}/{repo}/pulls", headers=headers, json=data)
+        response = await self.client.post(
+            f"/repos/{owner}/{repo}/pulls", headers=headers, json=data
+        )
         response.raise_for_status()
         return response.json()
 

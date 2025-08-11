@@ -2,11 +2,11 @@ import asyncio
 from temporalio import workflow
 from datetime import timedelta
 from services.sandbox import Sandbox, SandboxResult
-from services.approvals_github import GitHubApprovalService
 
 # Import activities from other services
 # For example:
 # from services.pulumi_conn import run_pulumi_preview, run_pulumi_up
+
 
 @workflow.activity
 async def run_sandbox_tests() -> SandboxResult:
@@ -14,16 +14,19 @@ async def run_sandbox_tests() -> SandboxResult:
     sandbox = Sandbox()
     return await sandbox.run(["pytest", "tests/"])
 
+
 @workflow.activity
 async def run_pulumi_preview_activity(stack: str) -> str:
     # This would use the pulumi_conn service
     # For now, returning a placeholder
     return f"Pulumi preview for stack: {stack}\n...plan..."
 
+
 @workflow.activity
 async def run_pulumi_up_activity(stack: str) -> str:
     # This would use the pulumi_conn service
     return f"Pulumi up for stack: {stack}\n...success..."
+
 
 @workflow.activity
 async def create_approval_gate(sha: str, action_id: str) -> int:
@@ -31,10 +34,12 @@ async def create_approval_gate(sha: str, action_id: str) -> int:
     # For now, returning a placeholder check_run_id
     return 12345
 
+
 @workflow.activity
 async def update_approval_gate(check_run_id: int, approved: bool):
     # This would use the approvals_github service
     print(f"Updating approval gate {check_run_id} to approved={approved}")
+
 
 @workflow.define
 class PulumiPreviewAndUpWorkflow:
@@ -66,7 +71,9 @@ class PulumiPreviewAndUpWorkflow:
 
         # 4. Wait for approval
         try:
-            await workflow.wait_for_signal("approval_received", timeout=timedelta(hours=24))
+            await workflow.wait_for_signal(
+                "approval_received", timeout=timedelta(hours=24)
+            )
             approved = True
         except asyncio.TimeoutError:
             approved = False

@@ -1,0 +1,43 @@
+# Sophia Dev Environment for Pulumi ESC
+# This file defines environment variables for the development environment
+# Usage: esc env init --file config/esc/sophia-dev.yaml sophia/dev
+
+# Sensitive values are placeholder/empty - set with `esc env set sophia/dev KEY VALUE`
+# after initializing the environment
+
+# GitHub Configuration
+GH_FINE_GRAINED_TOKEN: ""
+
+# Pulumi Configuration
+PULUMI_ACCESS_TOKEN: ""
+
+# Qdrant Configuration
+QDRANT_URL: "https://your-cluster-id.us-east1-0.gcp.cloud.qdrant.io:6333"
+QDRANT_API_KEY: ""
+
+# LLM Provider Configuration
+OPENROUTER_API_KEY: ""
+PORTKEY_API_KEY: ""
+ANTHROPIC_API_KEY: ""
+OPENAI_API_KEY: ""
+DEEPSEEK_API_KEY: ""
+
+# Service Settings
+API_HOST: "0.0.0.0"
+API_PORT: "8000"
+MCP_PORT: "8001"
+MCP_GATEWAY_PORT: "8002"
+
+# Database Configuration
+DATABASE_URL: "postgresql+asyncpg://sophia:devpass@localhost:5432/sophia"
+REDIS_URL: "redis://localhost:6379/0"
+
+# Agent Configuration
+AGNO_STORAGE_DB: "data/agents.db"
+AGENT_CONCURRENCY: "2"
+AGENT_TIMEOUT_SECONDS: "300"
+
+# Monitoring Configuration
+ENABLE_METRICS: "true"
+METRICS_PORT: "9090"
+LOG_LEVEL: "INFO"

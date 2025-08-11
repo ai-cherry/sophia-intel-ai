@@ -1,4 +1,4 @@
 # Configuration package
 from .config import settings
 
-__all__ = ['settings']
+__all__ = ["settings"]

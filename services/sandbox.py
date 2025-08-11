@@ -1,7 +1,7 @@
 import subprocess
-import os
 from dataclasses import dataclass
-from typing import List, Tuple
+from typing import List
+
 
 @dataclass
 class SandboxResult:
@@ -9,8 +9,15 @@ class SandboxResult:
     stdout: str
     stderr: str
 
+
 class Sandbox:
-    def __init__(self, image: str = "python:3.11-slim", cpu_limit: float = 0.5, mem_limit: str = "512m", egress_allowlist: List[str] = None):
+    def __init__(
+        self,
+        image: str = "python:3.11-slim",
+        cpu_limit: float = 0.5,
+        mem_limit: str = "512m",
+        egress_allowlist: List[str] = None,
+    ):
         """
         Initializes the sandbox environment.
         In a real implementation, this would configure a container runtime
@@ -38,15 +45,12 @@ class Sandbox:
         try:
             # In a real implementation, this would be `docker run ...` or similar
             process = subprocess.run(
-                command,
-                capture_output=True,
-                text=True,
-                timeout=60
+                command, capture_output=True, text=True, timeout=60
             )
             return SandboxResult(
                 exit_code=process.returncode,
                 stdout=process.stdout,
-                stderr=process.stderr
+                stderr=process.stderr,
             )
         except FileNotFoundError:
             return SandboxResult(1, "", f"Command not found: {command[0]}")
@@ -66,6 +70,7 @@ class Sandbox:
                 print(f"Potential egress detected in command: {arg}")
                 # Return False if not in allowlist (simplified for now)
         return True
+
 
 if __name__ == "__main__":
     # Example usage

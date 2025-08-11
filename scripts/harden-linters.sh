@@ -37,7 +37,7 @@ jobs:
       - name: GitHub CLI auth smoke
         run: |
           gh auth status || (echo "::warning::gh not logged in in CI context (fine for PRs from forks)"; exit 0)
-
+          
       - name: Run linters (BLOCKING)
         run: |
           ruff check .

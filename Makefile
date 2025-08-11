@@ -1,4 +1,5 @@
 # GitHub CLI Health Check and Authentication
+
 .PHONY: gh-doctor
 gh-doctor:
 	@echo "🔍 GitHub CLI Health Check..."

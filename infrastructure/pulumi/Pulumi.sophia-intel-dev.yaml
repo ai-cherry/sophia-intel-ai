@@ -1,0 +1,10 @@
+encryptionsalt: v1:xmt4JK3PyA0=:v1:p4T9CmSnXkKTE8Jm:Lf13BYt+tIPAbyuGHAaF///MaVg75Q==
+config:
+  aws:region: us-west-2
+  secrets:OPENAI_API_KEY:
+    secure: v1:Ju6RdPLcvK4RvF5C:9xFjRxaO5AMi/CBa6dpCpr2oKAGM807CA/V5xKgUag==
+  secrets:ANTHROPIC_API_KEY:
+    secure: v1:XM85oHd9EQT/laYR:FMuYjTiuuFmA2Hs2vAnc5UqmgCbnKbP8YTt0c2t4B2ru1A==
+  secrets:LAMBDA_API_KEY:
+    secure: v1:jHokWse+6vYWWM78:Wp7VyOQR01N2DJIMqHA8ZTL4Ir7AFXBXC0OrwEXkUg==
+  sophia-intel-infrastructure:environment: dev

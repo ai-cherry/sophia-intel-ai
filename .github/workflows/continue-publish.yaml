@@ -1,0 +1,25 @@
+name: Publish to Continue Hub
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "config.yaml"
+      - ".github/workflows/continue-publish.yaml"
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Publish to Continue Hub
+        uses: continuedev/continue-publish-action@v1
+        with:
+          config_path: ./config.yaml
+        env:
+          CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
+          OWNER_SLUG: "sophia" # Update with your Continue org slug

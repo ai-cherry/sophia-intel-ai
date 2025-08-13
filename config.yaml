@@ -1,0 +1,199 @@
+# Continue.dev project configuration for SOPHIA
+# Reads premium access from CONTINUE_API_KEY (never hardcode secrets).
+
+version: 1
+
+# --- Auth / Hub --------------------------------------------------------------
+hub:
+  apiKey: ${CONTINUE_API_KEY}
+
+# --- MCP Servers (autostart in Continue) -------------------------------------
+mcpServers:
+  - name: "sophia-code"
+    command: "python"
+    args: ["mcp/code_context/server.py"]
+    autoStart: true
+    provides:
+      - tools
+      - prompts
+      - resources
+  
+  - name: "sophia-github"
+    command: "npx"
+    args: ["@modelcontextprotocol/server-github"]
+    autoStart: true
+    env:
+      GITHUB_TOKEN: "${GH_API_TOKEN}"
+    provides:
+      - tools
+
+# --- Global System Prompt ----------------------------------------------------
+systemMessage: |
+  You are a senior engineer working on Project SOPHIA (PayReady).
+  Non-negotiables:
+  - Stability > Resilience > Performance > Quality > Cost/Security.
+  - MCP-first: agents never call external APIs directly; only via MCP servers or shared clients in libs/.
+  - Python is fully type-hinted and documented with Google-style docstrings.
+  - All HTTP results use the standard envelope:
+      success:true|false; error:{type,message,status,detail?}; pagination:{page_size,cursor} with meta:{has_more,next_cursor}.
+  - Every server exposes GET /health or /healthz -> {status:"healthy",timestamp,service:"<name>"}.
+  - Handle 429/5xx with exponential backoff (max 3) and respect Retry-After.
+  - Never print or log secrets. Read from .env.sophia via existing patterns only.
+
+# --- Models (use slugs as shown on hub.continue.dev) -------------------------
+# Default chat is precise; tab autocomplete is fast/local if available.
+models:
+  # Primary deep-reasoning chat (OpenRouter via Continue Hub)
+  - title: "Claude 4 Opus"
+    provider: openrouter
+    model: "anthropic/claude-4-opus"
+
+  # Fast follow-up / cost-aware chat
+  - title: "Claude 4 Sonnet"
+    provider: openrouter
+    model: "anthropic/claude-4-sonnet"
+
+  # Large codegen / refactors
+  - title: "Qwen3 Coder"
+    provider: openrouter
+    model: "qwen/qwen-3-coder-32b"
+
+  # Local codegen for autocomplete (fallbacks to API if Ollama not present)
+  - title: "qwen2.5-coder 7b"
+    provider: ollama
+    model: "qwen2.5-coder:7b"
+
+  # General reasoning / data synthesis
+  - title: "Gemini 2.5 Pro Beta"
+    provider: google
+    model: "gemini-2.5-pro-exp-02-05"
+
+  # Specialized coding model for tests/scaffolding
+  - title: "Codestral"
+    provider: mistral
+    model: "codestral/latest"
+
+  # Context-rich coding model (OpenRouter)
+  - title: "Kimi K2"
+    provider: openrouter
+    model: "moonshot/kimi-k2"
+
+defaultModel: "Claude 4 Opus"
+
+tabAutocompleteModel:
+  # Prefer local autocomplete; Continue will fall back to default chat if unavailable
+  title: "qwen2.5-coder 7b"
+  provider: ollama
+  model: "qwen2.5-coder:7b"
+
+# --- Routing Hints -----------------------------------------------------------
+routing:
+  # Choose best model per command/category; Continue treats these as preferences.
+  commands:
+    "/test": "Codestral"
+    "/docstring": "Claude 4 Sonnet"
+    "/refactor": "Qwen3 Coder"
+    "/mission": "Claude 4 Opus"
+
+# --- Context Providers -------------------------------------------------------
+# Keep SOPHIA's rules/contracts at the model's fingertips.
+contextProviders:
+  - path: "schemas"
+    type: "filesystem"
+    recursive: true
+  - path: "mcp"
+    type: "filesystem"
+    recursive: true
+  - path: "agents"
+    type: "filesystem"
+    recursive: true
+  - path: "docs"
+    type: "filesystem"
+    recursive: true
+  - path: "CONTRIBUTING.md"
+    type: "filesystem"
+  - path: "README.md"
+    type: "filesystem"
+
+# --- Custom Slash Commands ---------------------------------------------------
+customCommands:
+  - name: "test"
+    description: "Generate pytest tests (fixtures, mocks, happy/edge cases) for the selected code"
+    useSelection: true
+    model: "Codestral"
+    prompt: |
+      You are generating fast, deterministic pytest tests for the selected SOPHIA code.
+      Requirements:
+      - Use pytest style tests; no unittest classes.
+      - Include fixtures and mocks for I/O, network (httpx), env, and time where appropriate.
+      - Cover: happy path, validation errors, 429/5xx backoff behavior (with monkeypatch), and envelope parsing.
+      - Keep tests under 1s; avoid real network and file writes.
+      - Respect repo layout: tests/ mirrors package paths; name files test_<module>.py.
+      - Output ONLY the code for the test file; do not include explanations.
+      Selected code:
+      {{selection}}
+
+  - name: "docstring"
+    description: "Write a complete Google-style docstring for the selected function/class"
+    useSelection: true
+    model: "Claude 4 Sonnet"
+    prompt: |
+      Write a precise Google-style docstring for the selected symbol.
+      - Include Args, Returns, Raises, Examples.
+      - Keep it truthful to current behavior and types; do not invent params.
+      - If function is async, document awaited behavior and timeouts.
+      Output ONLY the docstring content (no code changes).
+      Selected code:
+      {{selection}}
+
+  - name: "refactor"
+    description: "Refactor selected code to SOPHIA standards (MCP-first, types, envelope, backoff)"
+    useSelection: true
+    model: "Qwen3 Coder"
+    prompt: |
+      Refactor the selected code to SOPHIA architectural standards.
+      Must:
+      - Enforce MCP-first (no direct external API calls from agents).
+      - Add full type hints and Google-style docstrings.
+      - Use shared error envelopes and pagination meta where applicable.
+      - Implement 429/5xx exponential backoff (max 3, respect Retry-After).
+      - Keep imports and logging consistent with repo patterns.
+      Return a unified diff against the current file.
+      Selected code:
+      {{selection}}
+
+  - name: "mission"
+    description: "Create a new missions/<NNN>_new_mission.md from selected brief"
+    useSelection: true
+    model: "Claude 4 Opus"
+    prompt: |
+      Transform the selected text into a SOPHIA Mission file with sections:
+      - Goal
+      - Scope (bullet list)
+      - Requirements (bullet list)
+      - Definition_of_Done
+      - Quality_Gates (tests, lint, envelopes, health, backoff)
+      - Plan (Planner -> Coder -> Reviewer loop)
+      Choose next mission number by scanning missions/ and incrementing.
+      Return a unified diff that adds missions/<NNN>_new_mission.md with the content.
+      Selected text:
+      {{selection}}
+
+  - name: "health"
+    description: "Check health of MCP servers and system status"
+    useSelection: false
+    model: "Claude 4 Sonnet"
+    prompt: |
+      Check the health of all configured MCP servers:
+      
+      1. Code MCP: Run the code_index tool and return stats
+      2. GitHub MCP: Check repository metadata
+      
+      Return a health report for each server and overall system status.
+      If any server is unavailable, provide troubleshooting steps.
+
+# --- Safeguards --------------------------------------------------------------
+policies:
+  blockSecretLogging: true
+  maxTokens: 4000
+  refuseIfNoContext: false

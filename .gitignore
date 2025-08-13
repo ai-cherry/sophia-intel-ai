@@ -14,6 +14,10 @@ __pycache__/
 # VSCode
 .vscode/
 
+# Continue.dev
+.continue/cache/
+.continue/*.sqlite
+
 # General
 *.log
 *.sqlite3
@@ -281,3 +285,10 @@ dump.rdb
 .roo*
 .cline*
 .vscode-shell*
+
+# SOPHIA infra
+infra/__pycache__/
+.backups/
+infra/venv/
+.continue/cache/
+**/*.retry

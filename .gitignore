@@ -289,8 +289,6 @@ dump.rdb
 # SOPHIA infra
 infra/__pycache__/
 .backups/
-**/.pytest_cache/
-**/__pycache__/
-**/*.retry
 infra/venv/
 .continue/cache/
+**/*.retry

@@ -14,6 +14,10 @@ __pycache__/
 # VSCode
 .vscode/
 
+# Continue.dev
+.continue/cache/
+.continue/*.sqlite
+
 # General
 *.log
 *.sqlite3

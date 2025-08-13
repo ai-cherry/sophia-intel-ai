@@ -18,8 +18,8 @@ import aiohttp
 import uvicorn
 
 from config.config import settings
-from .memory_service import MemoryService
-from .ai_router import AIRouter, TaskRequest, TaskType, RoutingDecision
+from mcp_servers.memory_service import MemoryService
+from mcp_servers.ai_router import AIRouter, TaskRequest, TaskType, RoutingDecision
 from agents.base_agent import BaseAgent
 
 
@@ -27,18 +27,29 @@ from agents.base_agent import BaseAgent
 class AIRequest(BaseModel):
     """Enhanced AI request with routing capabilities"""
     prompt: str = Field(..., description="The prompt to send to the AI")
-    task_type: TaskType = Field(default=TaskType.GENERAL_CHAT, description="Type of task")
-    max_tokens: Optional[int] = Field(default=None, description="Maximum tokens to generate")
-    temperature: float = Field(default=0.7, ge=0.0, le=2.0, description="Temperature for generation")
-    stream: bool = Field(default=False, description="Whether to stream the response")
+    task_type: TaskType = Field(
+        default=TaskType.GENERAL_CHAT, description="Type of task")
+    max_tokens: Optional[int] = Field(
+        default=None, description="Maximum tokens to generate")
+    temperature: float = Field(
+        default=0.7, ge=0.0, le=2.0, description="Temperature for generation")
+    stream: bool = Field(
+        default=False, description="Whether to stream the response")
     priority: str = Field(default="normal", description="Request priority")
-    cost_preference: str = Field(default="balanced", description="Cost optimization preference")
-    latency_requirement: str = Field(default="normal", description="Latency requirement")
-    quality_requirement: str = Field(default="high", description="Quality requirement")
-    session_id: Optional[str] = Field(default=None, description="Session ID for context")
-    use_context: bool = Field(default=True, description="Whether to use session context")
-    context_query: Optional[str] = Field(default=None, description="Specific context query")
-    metadata: Optional[Dict[str, Any]] = Field(default={}, description="Additional metadata")
+    cost_preference: str = Field(
+        default="balanced", description="Cost optimization preference")
+    latency_requirement: str = Field(
+        default="normal", description="Latency requirement")
+    quality_requirement: str = Field(
+        default="high", description="Quality requirement")
+    session_id: Optional[str] = Field(
+        default=None, description="Session ID for context")
+    use_context: bool = Field(
+        default=True, description="Whether to use session context")
+    context_query: Optional[str] = Field(
+        default=None, description="Specific context query")
+    metadata: Optional[Dict[str, Any]] = Field(
+        default={}, description="Additional metadata")
 
 
 class AIResponse(BaseModel):
@@ -58,16 +69,20 @@ class ContextRequest(BaseModel):
     """Context management request"""
     session_id: str = Field(..., description="Session identifier")
     content: str = Field(..., description="Content to store")
-    metadata: Optional[Dict[str, Any]] = Field(default={}, description="Additional metadata")
-    context_type: Optional[str] = Field(default="general", description="Type of context")
+    metadata: Optional[Dict[str, Any]] = Field(
+        default={}, description="Additional metadata")
+    context_type: Optional[str] = Field(
+        default="general", description="Type of context")
 
 
 class ContextQueryRequest(BaseModel):
     """Context query request"""
     session_id: str = Field(..., description="Session identifier")
     query: str = Field(..., description="Query string for context search")
-    top_k: int = Field(default=5, ge=1, le=20, description="Number of results to return")
-    threshold: float = Field(default=0.7, ge=0.0, le=1.0, description="Similarity threshold")
+    top_k: int = Field(default=5, ge=1, le=20,
+                       description="Number of results to return")
+    threshold: float = Field(default=0.7, ge=0.0, le=1.0,
+                             description="Similarity threshold")
 
 
 class AgentTaskRequest(BaseModel):
@@ -84,14 +99,14 @@ class EnhancedUnifiedMCPServer:
     Enhanced MCP server that provides comprehensive AI development capabilities
     including intelligent model routing, context management, and agent orchestration.
     """
-    
+
     def __init__(self):
         self.app = FastAPI(
             title="Sophia Intel Enhanced MCP Server",
             version="2.0.0",
             description="Enhanced Model Context Protocol server with AI Router and comprehensive capabilities",
         )
-        
+
         # Initialize services
         self.memory_service = MemoryService()
         self.ai_router = AIRouter()
@@ -104,7 +119,7 @@ class EnhancedUnifiedMCPServer:
             "avg_response_time": 0.0,
             "total_cost": 0.0
         }
-        
+
         # Setup middleware
         self.app.add_middleware(
             CORSMiddleware,
@@ -113,30 +128,30 @@ class EnhancedUnifiedMCPServer:
             allow_methods=["*"],
             allow_headers=["*"],
         )
-        
+
         # Setup routes
         self._setup_routes()
-        
+
         # Initialize AI provider clients
         self.ai_clients = {}
         asyncio.create_task(self._initialize_ai_clients())
-    
+
     def _setup_routes(self):
         """Setup all API routes"""
-        
+
         @self.app.get("/health")
         async def health():
             """Comprehensive health check"""
             try:
                 # Check memory service
                 memory_health = await self.memory_service.health_check()
-                
+
                 # Check AI router
                 router_health = await self.ai_router.health_check()
-                
+
                 # Check AI providers
                 provider_health = await self._check_provider_health()
-                
+
                 return {
                     "status": "healthy",
                     "timestamp": time.time(),
@@ -151,21 +166,22 @@ class EnhancedUnifiedMCPServer:
                 }
             except Exception as e:
                 logger.error(f"Health check failed: {e}")
-                raise HTTPException(status_code=503, detail="Service unhealthy")
-        
+                raise HTTPException(
+                    status_code=503, detail="Service unhealthy")
+
         @self.app.post("/ai/chat", response_model=AIResponse)
         async def ai_chat(request: AIRequest, background_tasks: BackgroundTasks):
             """Enhanced AI chat with intelligent routing"""
             start_time = time.time()
-            
+
             try:
                 # Update metrics
                 self.performance_metrics["total_requests"] += 1
-                
+
                 # Get session context if requested
                 context_content = ""
                 context_used = []
-                
+
                 if request.use_context and request.session_id:
                     context_query = request.context_query or request.prompt[:100]
                     context_results = await self.memory_service.query_context(
@@ -174,16 +190,17 @@ class EnhancedUnifiedMCPServer:
                         top_k=5,
                         threshold=0.7
                     )
-                    
+
                     if context_results:
-                        context_content = "\n".join([r.get("content", "") for r in context_results])
+                        context_content = "\n".join(
+                            [r.get("content", "") for r in context_results])
                         context_used = context_results
-                
+
                 # Prepare enhanced prompt with context
                 enhanced_prompt = request.prompt
                 if context_content:
                     enhanced_prompt = f"Context:\n{context_content}\n\nUser: {request.prompt}"
-                
+
                 # Create task request for AI router
                 task_request = TaskRequest(
                     prompt=enhanced_prompt,
@@ -197,17 +214,17 @@ class EnhancedUnifiedMCPServer:
                     context=context_content,
                     metadata=request.metadata
                 )
-                
+
                 # Get routing decision
                 routing_decision = await self.ai_router.route_request(task_request)
-                
+
                 # Execute AI request
                 ai_response = await self._execute_ai_request(
-                    routing_decision, 
-                    enhanced_prompt, 
+                    routing_decision,
+                    enhanced_prompt,
                     request
                 )
-                
+
                 # Store interaction in context if session provided
                 if request.session_id:
                     background_tasks.add_task(
@@ -217,7 +234,7 @@ class EnhancedUnifiedMCPServer:
                         ai_response["content"],
                         routing_decision
                     )
-                
+
                 # Record performance
                 response_time = time.time() - start_time
                 background_tasks.add_task(
@@ -228,16 +245,16 @@ class EnhancedUnifiedMCPServer:
                     response_time,
                     routing_decision.estimated_cost
                 )
-                
+
                 # Update metrics
                 self.performance_metrics["successful_requests"] += 1
                 self.performance_metrics["avg_response_time"] = (
-                    (self.performance_metrics["avg_response_time"] * 
+                    (self.performance_metrics["avg_response_time"] *
                      (self.performance_metrics["successful_requests"] - 1) + response_time) /
                     self.performance_metrics["successful_requests"]
                 )
                 self.performance_metrics["total_cost"] += routing_decision.estimated_cost
-                
+
                 return AIResponse(
                     success=True,
                     content=ai_response["content"],
@@ -252,26 +269,27 @@ class EnhancedUnifiedMCPServer:
                     session_id=request.session_id,
                     context_used=context_used
                 )
-                
+
             except Exception as e:
                 logger.error(f"AI chat request failed: {e}")
                 self.performance_metrics["failed_requests"] += 1
-                
+
                 # Record failure
                 if 'routing_decision' in locals():
                     await self.ai_router.record_failure(
                         routing_decision.selected_provider,
                         routing_decision.selected_model
                     )
-                
+
                 raise HTTPException(status_code=500, detail=str(e))
-        
+
         @self.app.post("/ai/stream")
         async def ai_stream(request: AIRequest):
             """Streaming AI response"""
             if not request.stream:
-                raise HTTPException(status_code=400, detail="Stream must be enabled for this endpoint")
-            
+                raise HTTPException(
+                    status_code=400, detail="Stream must be enabled for this endpoint")
+
             # Get routing decision
             task_request = TaskRequest(
                 prompt=request.prompt,
@@ -284,15 +302,15 @@ class EnhancedUnifiedMCPServer:
                 quality_requirement=request.quality_requirement,
                 metadata=request.metadata
             )
-            
+
             routing_decision = await self.ai_router.route_request(task_request)
-            
+
             # Stream response
             return StreamingResponse(
                 self._stream_ai_response(routing_decision, request),
                 media_type="text/plain"
             )
-        
+
         @self.app.post("/context/store")
         async def store_context(request: ContextRequest):
             """Store context in memory service"""
@@ -300,9 +318,10 @@ class EnhancedUnifiedMCPServer:
                 result = await self.memory_service.store_context(
                     session_id=request.session_id,
                     content=request.content,
-                    metadata={**request.metadata, "context_type": request.context_type}
+                    metadata={**request.metadata,
+                              "context_type": request.context_type}
                 )
-                
+
                 return {
                     "success": True,
                     "id": str(result["id"]),
@@ -311,7 +330,7 @@ class EnhancedUnifiedMCPServer:
             except Exception as e:
                 logger.error(f"Failed to store context: {e}")
                 raise HTTPException(status_code=500, detail=str(e))
-        
+
         @self.app.post("/context/query")
         async def query_context(request: ContextQueryRequest):
             """Query context from memory service"""
@@ -322,7 +341,7 @@ class EnhancedUnifiedMCPServer:
                     top_k=request.top_k,
                     threshold=request.threshold
                 )
-                
+
                 return {
                     "success": True,
                     "results": results,
@@ -332,7 +351,7 @@ class EnhancedUnifiedMCPServer:
             except Exception as e:
                 logger.error(f"Failed to query context: {e}")
                 raise HTTPException(status_code=500, detail=str(e))
-        
+
         @self.app.delete("/context/session/{session_id}")
         async def clear_session_context(session_id: str):
             """Clear all context for a session"""
@@ -345,16 +364,16 @@ class EnhancedUnifiedMCPServer:
             except Exception as e:
                 logger.error(f"Failed to clear session context: {e}")
                 raise HTTPException(status_code=500, detail=str(e))
-        
+
         @self.app.post("/agents/execute")
         async def execute_agent_task(request: AgentTaskRequest):
             """Execute task using specialized agent"""
             try:
                 agent = self._get_agent(request.agent_type)
                 task_id = f"{request.agent_type}_{int(time.time())}"
-                
+
                 result = await agent.execute(task_id, request.task_data)
-                
+
                 # Store result in context if session provided
                 if request.session_id:
                     await self.memory_service.store_context(
@@ -366,29 +385,29 @@ class EnhancedUnifiedMCPServer:
                             "task_id": task_id
                         }
                     )
-                
+
                 return result
-                
+
             except Exception as e:
                 logger.error(f"Agent task execution failed: {e}")
                 raise HTTPException(status_code=500, detail=str(e))
-        
+
         @self.app.get("/stats")
         async def get_stats():
             """Get comprehensive system statistics"""
             try:
                 # Get AI router stats
                 router_stats = await self.ai_router.get_model_stats()
-                
+
                 # Get memory service stats
                 memory_stats = await self.memory_service.get_stats()
-                
+
                 # Get agent stats
                 agent_stats = {
-                    name: agent.get_stats() 
+                    name: agent.get_stats()
                     for name, agent in self.agents.items()
                 }
-                
+
                 return {
                     "system": self.performance_metrics,
                     "ai_router": router_stats,
@@ -399,7 +418,7 @@ class EnhancedUnifiedMCPServer:
             except Exception as e:
                 logger.error(f"Failed to get stats: {e}")
                 raise HTTPException(status_code=500, detail=str(e))
-        
+
         @self.app.get("/models")
         async def get_available_models():
             """Get available AI models and their capabilities"""
@@ -408,13 +427,13 @@ class EnhancedUnifiedMCPServer:
             except Exception as e:
                 logger.error(f"Failed to get models: {e}")
                 raise HTTPException(status_code=500, detail=str(e))
-    
+
     async def _initialize_ai_clients(self):
         """Initialize AI provider clients"""
         try:
             # Initialize HTTP session
             self.session = aiohttp.ClientSession()
-            
+
             # Initialize provider-specific clients
             self.ai_clients = {
                 "openai": self._create_openai_client(),
@@ -424,12 +443,12 @@ class EnhancedUnifiedMCPServer:
                 "deepseek": self._create_deepseek_client(),
                 "grok": self._create_grok_client()
             }
-            
+
             logger.info("AI clients initialized successfully")
-            
+
         except Exception as e:
             logger.error(f"Failed to initialize AI clients: {e}")
-    
+
     def _create_openai_client(self):
         """Create OpenAI client configuration"""
         return {
@@ -439,7 +458,7 @@ class EnhancedUnifiedMCPServer:
                 "Content-Type": "application/json"
             }
         }
-    
+
     def _create_anthropic_client(self):
         """Create Anthropic client configuration"""
         return {
@@ -450,7 +469,7 @@ class EnhancedUnifiedMCPServer:
                 "anthropic-version": "2023-06-01"
             }
         }
-    
+
     def _create_google_client(self):
         """Create Google AI client configuration"""
         return {
@@ -460,7 +479,7 @@ class EnhancedUnifiedMCPServer:
             },
             "api_key": settings.GEMINI_API_KEY
         }
-    
+
     def _create_groq_client(self):
         """Create Groq client configuration"""
         return {
@@ -470,7 +489,7 @@ class EnhancedUnifiedMCPServer:
                 "Content-Type": "application/json"
             }
         }
-    
+
     def _create_deepseek_client(self):
         """Create DeepSeek client configuration"""
         return {
@@ -480,7 +499,7 @@ class EnhancedUnifiedMCPServer:
                 "Content-Type": "application/json"
             }
         }
-    
+
     def _create_grok_client(self):
         """Create Grok client configuration"""
         return {
@@ -490,18 +509,19 @@ class EnhancedUnifiedMCPServer:
                 "Content-Type": "application/json"
             }
         }
-    
-    async def _execute_ai_request(self, routing_decision: RoutingDecision, 
-                                prompt: str, request: AIRequest) -> Dict[str, Any]:
+
+    async def _execute_ai_request(self, routing_decision: RoutingDecision,
+                                  prompt: str, request: AIRequest) -> Dict[str, Any]:
         """Execute AI request using the selected provider"""
         provider = routing_decision.selected_provider.value
         model = routing_decision.selected_model
-        
+
         if provider not in self.ai_clients:
-            raise HTTPException(status_code=500, detail=f"Provider {provider} not available")
-        
+            raise HTTPException(
+                status_code=500, detail=f"Provider {provider} not available")
+
         client_config = self.ai_clients[provider]
-        
+
         # Prepare request payload based on provider
         if provider in ["openai", "groq", "deepseek"]:
             payload = {
@@ -511,7 +531,7 @@ class EnhancedUnifiedMCPServer:
                 "temperature": request.temperature
             }
             endpoint = f"{client_config['base_url']}/chat/completions"
-            
+
         elif provider == "anthropic":
             payload = {
                 "model": model,
@@ -520,7 +540,7 @@ class EnhancedUnifiedMCPServer:
                 "messages": [{"role": "user", "content": prompt}]
             }
             endpoint = f"{client_config['base_url']}/messages"
-            
+
         elif provider == "google":
             payload = {
                 "contents": [{"parts": [{"text": prompt}]}],
@@ -530,7 +550,7 @@ class EnhancedUnifiedMCPServer:
                 }
             }
             endpoint = f"{client_config['base_url']}/models/{model}:generateContent?key={client_config['api_key']}"
-            
+
         elif provider == "grok":
             payload = {
                 "model": model,
@@ -539,7 +559,7 @@ class EnhancedUnifiedMCPServer:
                 "temperature": request.temperature
             }
             endpoint = f"{client_config['base_url']}/chat/completions"
-        
+
         # Make API request
         async with self.session.post(
             endpoint,
@@ -552,9 +572,9 @@ class EnhancedUnifiedMCPServer:
                     status_code=response.status,
                     detail=f"Provider API error: {error_text}"
                 )
-            
+
             result = await response.json()
-            
+
             # Extract content based on provider response format
             if provider in ["openai", "groq", "deepseek", "grok"]:
                 content = result["choices"][0]["message"]["content"]
@@ -565,13 +585,13 @@ class EnhancedUnifiedMCPServer:
             elif provider == "google":
                 content = result["candidates"][0]["content"]["parts"][0]["text"]
                 usage = result.get("usageMetadata", {})
-            
+
             return {
                 "content": content,
                 "usage": usage,
                 "raw_response": result
             }
-    
+
     async def _stream_ai_response(self, routing_decision: RoutingDecision, request: AIRequest):
         """Stream AI response"""
         # Implementation for streaming responses
@@ -579,9 +599,9 @@ class EnhancedUnifiedMCPServer:
         yield f"data: Streaming from {routing_decision.selected_provider.value}:{routing_decision.selected_model}\n\n"
         yield f"data: {request.prompt}\n\n"
         yield "data: [DONE]\n\n"
-    
-    async def _store_interaction(self, session_id: str, user_prompt: str, 
-                               ai_response: str, routing_decision: RoutingDecision):
+
+    async def _store_interaction(self, session_id: str, user_prompt: str,
+                                 ai_response: str, routing_decision: RoutingDecision):
         """Store interaction in context memory"""
         try:
             interaction = {
@@ -591,7 +611,7 @@ class EnhancedUnifiedMCPServer:
                 "model": routing_decision.selected_model,
                 "timestamp": datetime.now().isoformat()
             }
-            
+
             await self.memory_service.store_context(
                 session_id=session_id,
                 content=json.dumps(interaction),
@@ -603,7 +623,7 @@ class EnhancedUnifiedMCPServer:
             )
         except Exception as e:
             logger.error(f"Failed to store interaction: {e}")
-    
+
     def _get_agent(self, agent_type: str) -> BaseAgent:
         """Get or create agent instance"""
         if agent_type not in self.agents:
@@ -612,14 +632,15 @@ class EnhancedUnifiedMCPServer:
                 from agents.coding_agent import CodingAgent
                 self.agents[agent_type] = CodingAgent()
             else:
-                raise HTTPException(status_code=400, detail=f"Unknown agent type: {agent_type}")
-        
+                raise HTTPException(
+                    status_code=400, detail=f"Unknown agent type: {agent_type}")
+
         return self.agents[agent_type]
-    
+
     async def _check_provider_health(self) -> Dict[str, Any]:
         """Check health of AI providers"""
         health_status = {}
-        
+
         for provider, client_config in self.ai_clients.items():
             try:
                 # Simple health check - attempt to make a minimal request
@@ -632,9 +653,9 @@ class EnhancedUnifiedMCPServer:
                     health_status[provider] = "healthy"
             except Exception as e:
                 health_status[provider] = f"unhealthy: {str(e)}"
-        
+
         return health_status
-    
+
     async def shutdown(self):
         """Cleanup resources"""
         if self.session:
@@ -653,4 +674,3 @@ if __name__ == "__main__":
         port=settings.MCP_PORT,
         reload=True
     )
-

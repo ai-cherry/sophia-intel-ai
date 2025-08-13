@@ -1,0 +1,12 @@
+version: 1.0
+model_used: gpt-4o
+purpose: coding_agent_base
+expected_output_schema:
+  type: json
+  fields:
+    summary:
+      type: string
+      description: Brief description of changes made
+    patch:
+      type: string
+      description: Unified diff format patch

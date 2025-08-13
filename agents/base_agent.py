@@ -19,6 +19,13 @@ class BaseAgent(ABC):
     Provides status tracking, concurrency control, and standardized execution.
     """
 
+    # Standard system prompt rules that all agents must follow
+    SYSTEM_PROMPT_RULES = [
+        "Your output must be completely honest, no bullshit, no hyperbole, and only factual.",
+        "You must never provide timeline estimations. Report progress exclusively in Stages and Phases.",
+        "You must not produce high-level guesses about revenue or efficiency impacts unless they are derived from verifiable data via a trusted tool."
+    ]
+
     def __init__(self, name: str, concurrency: int = 2, timeout_seconds: int = 300):
         """
         Initialize base agent.
@@ -166,6 +173,29 @@ class BaseAgent(ABC):
             "average_duration": avg_duration,
             "total_duration": self.total_duration,
         }
+
+    def apply_system_prompt_rules(self, instructions: list) -> list:
+        """
+        Apply the No Bullshit policy and other system rules to agent instructions.
+
+        Args:
+            instructions: List of instruction strings to be augmented
+
+        Returns:
+            Augmented list of instructions with system rules applied
+        """
+        # Create a copy to avoid modifying the original
+        augmented_instructions = list(instructions)
+
+        # Add a section header for clarity
+        augmented_instructions.append(
+            "\n### SOPHIA OUTPUT QUALITY STANDARDS (REQUIRED) ###")
+
+        # Add each system rule
+        for rule in self.SYSTEM_PROMPT_RULES:
+            augmented_instructions.append(rule)
+
+        return augmented_instructions
 
     async def health_check(self) -> Dict[str, Any]:
         """Check agent health status."""

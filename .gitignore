@@ -285,3 +285,12 @@ dump.rdb
 .roo*
 .cline*
 .vscode-shell*
+
+# SOPHIA infra
+infra/__pycache__/
+.backups/
+**/.pytest_cache/
+**/__pycache__/
+**/*.retry
+infra/venv/
+.continue/cache/

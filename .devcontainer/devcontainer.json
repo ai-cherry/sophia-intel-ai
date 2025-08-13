@@ -11,6 +11,7 @@
     7233
   ],
   "postCreateCommand": "uv venv && uv sync --all-extras && chmod -R 555 .venv/lib/python*/site-packages",
+  "postStartCommand": "npm i -g @modelcontextprotocol/server-github && mkdir -p .continue/cache && chmod +x mcp/code_context/server.py && chmod +x scripts/run_code_mcp.sh && bash scripts/check_continue_env.sh",
   "customizations": {
     "vscode": {
       "settings": {

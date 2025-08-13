@@ -6,7 +6,7 @@ This document tracks the migration of direct API clients to the Model Context Pr
 
 | Service    | Status          | Legacy Path                   | New MCP Path                | Completion Date |
 |------------|-----------------|------------------------------|----------------------------|----------------|
-| Gong       | A1 ✅ (refined) | `integrations/gong_client.py` | `libs/mcp_client/gong.py`  | Pending A2     |
+| Gong       | A1/A2 Complete | `integrations/gong_client.py` (replaced by `integrations/gong_client_shim.py` # DEPRECATED) | `libs/mcp_client/gong.py`  | TBD (remove shim when no callers remain) |
 
 ## Gong Migration
 
@@ -23,9 +23,9 @@ The Gong integration has been migrated from a direct API client to an MCP server
 
 1. ✅ Create MCP server, client, and schemas (A1)
 2. ✅ Apply backoff consistency, error normalization, health mode, pagination compliance (A1 refinements)
-3. ⬜ Update all consumers to use the new MCP client (A2)
-4. ⬜ Add temporary import shim for backward compatibility
-5. ⬜ Remove legacy client once all consumers are migrated
+3. ✅ Update all consumers to use the new MCP client (A2)
+4. ✅ Add temporary import shim for backward compatibility (`integrations/gong_client_shim.py`) — **DEPRECATED**
+5. ⬜ Remove legacy shim once all consumers are migrated (track via code search & telemetry)
 
 ### Consumers to Update
 

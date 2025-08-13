@@ -1,5 +1,7 @@
 # Contributing to SOPHIA-CORE
 
+> The guiding principle for all architectural decisions is: Stability > Resilience > Performance > Quality > Cost/Security (within reason).
+
 ## Environment Policy: "Sealed & Versioned" Artifact
 
 **The Python environment is immutable and version-controlled.**

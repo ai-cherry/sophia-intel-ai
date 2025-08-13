@@ -30,7 +30,21 @@ class CodingAgent(BaseAgent):
             timeout_seconds=timeout_seconds or settings.AGENT_TIMEOUT_SECONDS,
         )
 
-        # Initialize Agno agent
+        # Initialize Agno agent with base instructions
+        base_instructions = [
+            "You are an expert software engineer and code analyst.",
+            "Always respond with valid JSON in this exact format:",
+            '{"summary": "Brief description of changes made", "patch": "unified diff format patch"}',
+            "For the patch field, use unified diff format (--- +++ @@ syntax).",
+            "Make minimal, targeted changes that solve the specific problem.",
+            "If no changes are needed, return empty string for patch.",
+            "Include proper context lines (3 lines before/after) in diffs.",
+            "Focus on code quality, best practices, and maintainability.",
+        ]
+
+        # Apply the No Bullshit policy and other system rules
+        final_instructions = self.apply_system_prompt_rules(base_instructions)
+
         self.agno = Agent(
             name="Sophia Coding Agent",
             model=OpenAIChat(
@@ -52,16 +66,7 @@ class CodingAgent(BaseAgent):
                 table_name="coding_agent_conversations",
                 db_file=settings.AGNO_STORAGE_DB,
             ),
-            instructions=[
-                "You are an expert software engineer and code analyst.",
-                "Always respond with valid JSON in this exact format:",
-                '{"summary": "Brief description of changes made", "patch": "unified diff format patch"}',
-                "For the patch field, use unified diff format (--- +++ @@ syntax).",
-                "Make minimal, targeted changes that solve the specific problem.",
-                "If no changes are needed, return empty string for patch.",
-                "Include proper context lines (3 lines before/after) in diffs.",
-                "Focus on code quality, best practices, and maintainability.",
-            ],
+            instructions=final_instructions,
             add_datetime_to_instructions=True,
             add_history_to_messages=True,
             num_history_responses=5,
@@ -97,7 +102,8 @@ class CodingAgent(BaseAgent):
         context_results = await self._fetch_memory_context(session_id, query)
 
         # Build comprehensive prompt
-        prompt = self._build_prompt(code, query, context_results, file_path, language)
+        prompt = self._build_prompt(
+            code, query, context_results, file_path, language)
 
         # Store current task context in MCP
         await self._store_task_context(session_id, task_id, code, query)

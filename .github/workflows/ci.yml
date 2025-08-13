@@ -14,6 +14,16 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
+      - name: Check for Forbidden Environment Directories
+        run: |
+          if [ -d ".venv" ]; then
+            echo "Error: The .venv directory should not be committed to the repository."
+            exit 1
+          fi
+      - name: Dependency Audit
+        run: |
+          uv sync --all-extras
+          uv lock --check
       - name: Checkout code
         uses: actions/checkout@v4
 

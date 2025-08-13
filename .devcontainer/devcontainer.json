@@ -10,7 +10,7 @@
     7777,
     7233
   ],
-  "postCreateCommand": "pip install --upgrade pip && pip install -r requirements.txt",
+  "postCreateCommand": "uv venv && uv sync --all-extras && chmod -R 555 .venv/lib/python*/site-packages",
   "customizations": {
     "vscode": {
       "settings": {

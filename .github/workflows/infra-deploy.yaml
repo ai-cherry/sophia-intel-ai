@@ -1,0 +1,56 @@
+name: Infrastructure Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+
+permissions:
+  id-token: write   # Required for OIDC
+  contents: read    # Required to checkout the code
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      # Configure AWS credentials via OIDC
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      # TODO: Add similar steps for Azure/GCP OIDC if needed
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Install Pulumi CLI
+        uses: pulumi/setup-pulumi@v2
+
+      - name: Install Dependencies
+        run: |
+          cd pulumi
+          npm install
+
+      - name: Pulumi Deploy
+        run: |
+          cd pulumi
+          pulumi stack select ${{ github.event.inputs.environment }}
+          pulumi up --yes
+        env:
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}

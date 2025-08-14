@@ -132,9 +132,10 @@ class EnhancedUnifiedMCPServer:
         # Setup routes
         self._setup_routes()
 
-        # Initialize AI provider clients
+        # Initialize AI provider clients (will be initialized on startup)
         self.ai_clients = {}
-        asyncio.create_task(self._initialize_ai_clients())
+        self.session = None
+        self._initialized = False
 
     def _setup_routes(self):
         """Setup all API routes"""

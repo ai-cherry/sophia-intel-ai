@@ -18,6 +18,7 @@ customModes:
       - - edit
         - fileRegex: \.(py|ts|tsx|js|json|md|toml|ya?ml|sh)$
           description: "Source, configs, docs, scripts"
+          excludeRegex: (Pipfile.lock|package-lock.json|pnpm-lock.yaml|poetry.lock|secrets.(ya?ml|json)|.env(.sophia)?|.venv/|node_modules/)
       - command
       - mcp
 
@@ -39,6 +40,7 @@ customModes:
       - - edit
         - fileRegex: \.(py|ts|tsx|js|json|md|ya?ml|toml|sh)$
           description: "Implement features & wiring"
+          excludeRegex: (Pipfile.lock|package-lock.json|pnpm-lock.yaml|poetry.lock|secrets.(ya?ml|json)|.env(.sophia)?|.venv/|node_modules/)
       - command
       - browser
       - mcp
@@ -60,6 +62,7 @@ customModes:
       - - edit
         - fileRegex: \.(py|json|md|ya?ml|sh)$
           description: "Tests, fixtures, config, scripts"
+          excludeRegex: (Pipfile.lock|package-lock.json|pnpm-lock.yaml|poetry.lock|secrets.(ya?ml|json)|.env(.sophia)?|.venv/|node_modules/)
       - command
       - mcp
 
@@ -80,5 +83,25 @@ customModes:
       - - edit
         - fileRegex: \.(ya?ml|json|py|ts|md|toml|sh)$
           description: "Pipelines, IaC, docs, scripts"
+          excludeRegex: (Pipfile.lock|package-lock.json|pnpm-lock.yaml|poetry.lock|secrets.(ya?ml|json)|.env(.sophia)?|.venv/|node_modules/)
+      - command
+      - mcp
+
+  - slug: debugger
+    name: "🔍 Debugger"
+    description: "Diagnose MCP/modes/runtime issues; logs + quick fixes."
+    roleDefinition: "You are a diagnostics engineer."
+    whenToUse: "MCP errors, mode loading fails, perf issues."
+    customInstructions: |
+      1. Tail MCP logs and run health checks.
+      2. Propose minimal fixes as diffs; don't apply blindly.
+      3. Restart scripts and verify.
+      4. Update troubleshooting docs.
+    groups:
+      - read
+      - - edit
+        - fileRegex: \.(log|json|md|sh|ya?ml)$
+          description: "Logs, configs, docs, scripts"
+          excludeRegex: (Pipfile.lock|package-lock.json|pnpm-lock.yaml|poetry.lock|secrets.(ya?ml|json)|.env(.sophia)?|.venv/|node_modules/)
       - command
       - mcp

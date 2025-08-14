@@ -1,41 +1,20 @@
 #!/usr/bin/env bash
-
-set -e
+set -euo pipefail
 
 echo "=== Stopping MCP Servers ==="
 
-# Directory for PID files
-PIDDIR="./.mcp_pids"
-
-# Stop code_context MCP server
-if [ -f "$PIDDIR/code_context.pid" ]; then
-    PID=$(cat "$PIDDIR/code_context.pid")
-    if ps -p $PID > /dev/null; then
-        echo "Stopping code_context MCP server (PID: $PID)..."
-        kill $PID
-        echo "✅ Stopped code_context MCP server"
-    else
-        echo "⚠️ code_context MCP server not running"
-    fi
-    rm "$PIDDIR/code_context.pid"
-else
-    echo "⚠️ No PID file found for code_context MCP server"
+# Check for manually started code_context MCP server
+if [[ -f .pids/mcp_code_context.pid ]]; then
+  PID=$(cat .pids/mcp_code_context.pid || true)
+  if [[ -n "${PID}" ]] && kill -0 "${PID}" 2>/dev/null; then
+    kill "${PID}" || true
+    echo "stopped code-context (${PID})"
+  fi
+  rm -f .pids/mcp_code_context.pid
 fi
 
-# Stop docs_search MCP server
-if [ -f "$PIDDIR/docs_search.pid" ]; then
-    PID=$(cat "$PIDDIR/docs_search.pid")
-    if ps -p $PID > /dev/null; then
-        echo "Stopping docs_search MCP server (PID: $PID)..."
-        kill $PID
-        echo "✅ Stopped docs_search MCP server"
-    else
-        echo "⚠️ docs_search MCP server not running"
-    fi
-    rm "$PIDDIR/docs_search.pid"
-else
-    echo "⚠️ No PID file found for docs_search MCP server"
-fi
-
+echo "nothing else to stop."
+echo
+echo "MCP servers have been stopped."
 echo
 echo "MCP servers have been stopped."

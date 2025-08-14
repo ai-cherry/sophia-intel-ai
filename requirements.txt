@@ -1,9 +1,9 @@
-langgraph>=0.2.40
 haystack-ai
 haystack-integrations[qdrant]
-qdrant-client>=1.13.0
-mem0ai
-redis
-langchain-openai
 langchain-community
+langchain-openai
+langgraph>=0.2.40
+mem0ai
+qdrant-client>=1.13.0
+redis
 sentence-transformers

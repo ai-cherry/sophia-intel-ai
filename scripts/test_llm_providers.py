@@ -200,7 +200,7 @@ def test_lambda_labs_llm():
     """Test Lambda Labs LLM API if available"""
     print("\n=== Testing Lambda Labs LLM API ===")
     
-    api_key = os.environ.get('LAMBDA_CLOUD_API_KEY') or os.environ.get('LAMBDA_API_KEY')
+    api_key = os.environ.get('LAMBDA_CLOUD_API_KEY') or os.environ.get('LAMBDA_CLOUD_API_KEY')
     
     if not api_key:
         return {"status": "NOT_CONFIGURED", "message": "No Lambda Labs API key found"}

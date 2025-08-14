@@ -1,7 +1,5 @@
 # Sophia Intel - AI Agent Platform
 
-A comprehensive AI agent platform built for **GitHub Codespaces** featuring **Agno** agents, **unified MCP server** with **Qdrant** memory, **Portkey/OpenRouter** LLM access, and **uv** dependency management.
-
 ## 🏗️ Architecture
 
 ```mermaid
@@ -19,7 +17,6 @@ graph TB
         
         subgraph "Service Layer"
             ORCH[Orchestrator Service]
-            PORTKEY[Portkey/OpenRouter Client]
             LAMBDA[Lambda Labs Client]
         end
         
@@ -56,8 +53,7 @@ graph TB
    ```bash
    # Required API keys for full functionality
    OPENROUTER_API_KEY=sk-or-v1-your-openrouter-key-here
-   PORTKEY_API_KEY=pk-your-portkey-key-here  # Optional but recommended
-   LAMBDA_API_KEY=ll-your-lambda-labs-key-here  # Optional for GPU features
+   LAMBDA_CLOUD_API_KEY=ll-your-lambda-labs-key-here  # Optional for GPU features
    
    # Update Qdrant URL if using cloud instance
    QDRANT_URL=https://your-cluster-id.us-east1-0.gcp.cloud.qdrant.io:6333
@@ -210,7 +206,6 @@ sophia-intel/
 │   ├── memory_service.py      # Async Qdrant vector storage with health checks
 │   └── unified_mcp_server.py  # FastAPI MCP server with full API spec
 ├── services/                   # External service clients
-│   ├── portkey_client.py      # Async LLM client with retries and fallbacks
 │   ├── lambda_client.py       # GPU resource management client
 │   └── orchestrator.py        # Request routing with circuit breakers
 ├── scripts/                    # Utility scripts
@@ -244,7 +239,6 @@ The platform uses a sophisticated configuration system with multiple override la
 | | `REDIS_URL` | Redis connection string | Local Docker |
 | | `QDRANT_URL` | Qdrant vector database URL | Cloud instance |
 | **LLM** | `OPENROUTER_API_KEY` | OpenRouter API access | Required |
-| | `PORTKEY_API_KEY` | Portkey gateway (optional) | Optional |
 | | `TEMPERATURE` | LLM sampling temperature | `0.7` |
 | | `MAX_TOKENS` | Maximum tokens per request | `4096` |
 | **Agent** | `AGENT_CONCURRENCY` | Max concurrent agent tasks | `2` |
@@ -415,22 +409,15 @@ curl -X DELETE http://localhost:8001/context/session/coding-session-123
 
 ## 🔌 External Integrations
 
-### Portkey + OpenRouter Integration
-
-The [`PortkeyClient`](services/portkey_client.py) provides robust LLM access:
-
 **Features:**
 - **Async implementation** with proper timeout handling
 - **Automatic retries** with exponential backoff
-- **Fallback support** (Portkey → Direct OpenRouter)
 - **Usage tracking** and performance metrics
 - **Model routing** through OpenRouter's unified API
 
 **Usage Example:**
 ```python
-from services.portkey_client import PortkeyClient
 
-client = PortkeyClient()
 response = await client.chat(
     messages=[{"role": "user", "content": "Explain async/await"}],
     model="anthropic/claude-3-sonnet",
@@ -669,7 +656,6 @@ print(f'Qdrant: {settings.QDRANT_URL}')
 "
 
 # Check environment variables
-env | grep -E "(OPENROUTER|PORTKEY|QDRANT)" | sort
 ```
 
 **3. Agent execution failures:**
@@ -752,7 +738,6 @@ QDRANT_URL=https://prod-cluster.qdrant.tech:6333
 
 # Production API keys (via secrets management)
 OPENROUTER_API_KEY=${SECRET_OPENROUTER_KEY}
-PORTKEY_API_KEY=${SECRET_PORTKEY_KEY}
 
 # Enhanced security
 SECRET_KEY=${SECRET_APP_KEY}

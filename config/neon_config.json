@@ -1,0 +1,14 @@
+{
+  "service": "Neon PostgreSQL",
+  "project": "sophia",
+  "region": "AWS US West 2 (Oregon)",
+  "api_token": "napi_5rvzi31qllpu0zrlhgjwfhz9308k8y0yudw3oz23h2ix5no1yr3roin7wtp9vqu7",
+  "connection_template": "postgresql://username:password@ep-endpoint.us-west-2.aws.neon.tech/sophia?sslmode=require",
+  "notes": [
+    "1. Log into Neon console at https://console.neon.tech/",
+    "2. Go to your 'sophia' project",
+    "3. Navigate to Connection Details",
+    "4. Copy the connection string",
+    "5. Replace the template with the actual connection string"
+  ]
+}

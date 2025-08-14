@@ -69,7 +69,7 @@ services:
     ports:
       - "8001:8001"
     environment:
-      - LAMBDA_API_KEY=${LAMBDA_API_KEY}
+      - LAMBDA_CLOUD_API_KEY=${LAMBDA_CLOUD_API_KEY}
       - LAMBDA_CLOUD_API_KEY=${LAMBDA_CLOUD_API_KEY}
       - REDIS_URL=redis://redis:6379
       - DATABASE_URL=postgresql://sophia:sophia_secure_2025@postgres:5432/sophia_intel
@@ -160,13 +160,13 @@ services:
     container_name: sophia-intel-lambda-test
     restart: "no"
     environment:
-      - LAMBDA_API_KEY=${LAMBDA_API_KEY}
+      - LAMBDA_CLOUD_API_KEY=${LAMBDA_CLOUD_API_KEY}
       - LAMBDA_CLOUD_API_KEY=${LAMBDA_CLOUD_API_KEY}
     command: >
       sh -c "
         apk add --no-cache curl &&
         echo 'Testing Lambda Labs API connectivity...' &&
-        curl -u $$LAMBDA_API_KEY: https://cloud.lambda.ai/api/v1/instances &&
+        curl -u $$LAMBDA_CLOUD_API_KEY: https://cloud.lambda.ai/api/v1/instances &&
         echo 'Lambda Labs API test completed'
       "
     networks:

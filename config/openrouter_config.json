@@ -1,0 +1,26 @@
+{
+  "openrouter": {
+    "api_key_env": "OPENROUTER_API_KEY",
+    "base_url": "https://openrouter.ai/api/v1",
+    "default_model": "anthropic/claude-3.5-sonnet",
+    "recommended_models": {
+      "reasoning": "anthropic/claude-3.5-sonnet",
+      "coding": "anthropic/claude-3.5-sonnet",
+      "creative": "anthropic/claude-3-opus",
+      "fast": "anthropic/claude-3-haiku",
+      "cost_effective": "meta-llama/llama-3.1-8b-instruct:free",
+      "multimodal": "anthropic/claude-3.5-sonnet",
+      "long_context": "anthropic/claude-3.5-sonnet"
+    },
+    "retry_config": {
+      "max_retries": 3,
+      "backoff_factor": 2,
+      "timeout": 30
+    },
+    "cost_tracking": {
+      "enabled": true,
+      "daily_limit": 10.0,
+      "alert_threshold": 8.0
+    }
+  }
+}

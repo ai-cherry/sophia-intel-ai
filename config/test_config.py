@@ -41,7 +41,7 @@ class TestSettings(BaseModel):
     DEEPSEEK_API_KEY: str = "test-deepseek-key"
     OPENROUTER_API_KEY: str = "test-openrouter-key"
     PORTKEY_API_KEY: str = "test-portkey-key"
-    LAMBDA_API_KEY: str = "test-lambda-key"
+    LAMBDA_CLOUD_API_KEY: str = "test-lambda-key"
     EXA_API_KEY: str = "test-exa-key"
 
     # Security Configuration (using test values)

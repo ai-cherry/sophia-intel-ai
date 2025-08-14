@@ -364,7 +364,7 @@ git status --porcelain
 ## Outstanding Issues Requiring Attention
 
 ### 1. Environment Variable Naming - HIGH PRIORITY ⚠️
-**Issue:** Inconsistent naming (LAMBDA_API_KEY vs LAMBDA_CLOUD_API_KEY)
+**Issue:** Inconsistent naming (LAMBDA_CLOUD_API_KEY vs LAMBDA_CLOUD_API_KEY)
 **Impact:** Prevents full Pulumi infrastructure deployment
 **Recommendation:** Standardize environment variable names across all systems
 **Timeline:** 1-2 days

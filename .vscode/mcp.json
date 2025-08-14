@@ -8,6 +8,16 @@
         "mcp/code_context/server.py"
       ]
     },
+    "docs-mcp": {
+      "type": "stdio", 
+      "command": "python",
+      "args": [
+        "-m",
+        "mcp.docs_search.server",
+        "--config",
+        "mcp/docs-mcp.config.json"
+      ]
+    },
     "github-remote": {
       "type": "http",
       "url": "https://api.githubcopilot.com/mcp/"

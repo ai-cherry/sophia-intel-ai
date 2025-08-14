@@ -132,7 +132,6 @@ jobs:
           DNSIMPLE_API_KEY: ${{ secrets.DNSIMPLE_API_KEY }}
           DNSIMPLE_ACCOUNT: ${{ secrets.DNSIMPLE_ACCOUNT }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-          PORTKEY_API_KEY: ${{ secrets.PORTKEY_API_KEY }}
           QDRANT_API_KEY: ${{ secrets.QDRANT_API_KEY }}
           GITHUB_PAT: ${{ secrets.GITHUB_PAT }}
 
@@ -172,7 +171,6 @@ jobs:
           DNSIMPLE_API_KEY: ${{ secrets.DNSIMPLE_API_KEY }}
           DNSIMPLE_ACCOUNT: ${{ secrets.DNSIMPLE_ACCOUNT }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-          PORTKEY_API_KEY: ${{ secrets.PORTKEY_API_KEY }}
           QDRANT_API_KEY: ${{ secrets.QDRANT_API_KEY }}
           REDIS_URL: ${{ secrets.REDIS_URL }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}

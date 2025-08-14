@@ -55,8 +55,6 @@ class SecretsManager:
             
             # LLM providers
             'OPENROUTER_API_KEY': None,
-            'PORTKEY_API_KEY': None,
-            'PORTKEY_CONFIG': None,
             
             # Additional AI services
             'TOGETHER_AI_API_KEY': None,

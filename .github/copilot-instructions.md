@@ -27,7 +27,6 @@ All agents MUST return responses in this exact JSON structure:
 ### Architecture Guidelines
 
 - **Single responsibility**: One orchestrator, one base agent, one coding agent, one MCP memory service
-- **LLM routing**: Always via Portkey → OpenRouter integration
 - **Vector memory**: Qdrant cloud instances preferred
 - **Agent framework**: Use Agno for conversation history and model integration
 - **MCP servers**: Deploy to Lambda Labs behind API gateway

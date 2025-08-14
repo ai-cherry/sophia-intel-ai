@@ -110,7 +110,6 @@ Store the final solution in MCP memory:
 
 **Agent Not Responding:**
 - Check Agno storage database connection
-- Verify OpenRouter/Portkey API keys
 - Test MCP memory service connectivity
 - Review agent timeout configurations
 

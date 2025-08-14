@@ -1,0 +1,15 @@
+{
+  "project": {
+    "name": "sophia",
+    "region": "AWS US West 2 (Oregon)",
+    "created_at": "Aug 1, 2025 6:16 am",
+    "storage": "32.63 MB",
+    "postgres_version": "16"
+  },
+  "connection": {
+    "host": "pg.neon.tech",
+    "database": "sophia",
+    "ssl_mode": "require",
+    "note": "Full connection string needs to be retrieved from Neon console"
+  }
+}

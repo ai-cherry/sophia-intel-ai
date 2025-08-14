@@ -1,0 +1,13 @@
+{
+  "strategy": {
+    "mode": "single"
+  },
+  "targets": [
+    {
+      "provider": "openai",
+      "api_key": "{{OPENAI_API_KEY}}",
+      "override_params": {}
+    }
+  ]
+}
+

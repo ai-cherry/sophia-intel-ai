@@ -1,0 +1,47 @@
+{
+  "timestamp": 1755199126.0568073,
+  "results": {
+    "qdrant": {
+      "status": "ERROR",
+      "message": "All Qdrant configurations failed"
+    },
+    "redis": {
+      "status": "NOT_CONFIGURED",
+      "message": "Redis not configured"
+    },
+    "postgresql": {
+      "status": "NOT_CONFIGURED",
+      "message": "PostgreSQL not configured"
+    },
+    "estuary": {
+      "status": "ERROR",
+      "message": "All Estuary endpoints failed"
+    }
+  },
+  "fixes": [
+    {
+      "service": "Qdrant",
+      "issue": "Authentication or connection failed",
+      "fix": "Verify API key and endpoint URL in Qdrant cloud console",
+      "priority": "HIGH"
+    },
+    {
+      "service": "Redis",
+      "issue": "No Redis instance configured",
+      "fix": "Provision Redis Cloud instance and add REDIS_URL to environment",
+      "priority": "HIGH"
+    },
+    {
+      "service": "PostgreSQL",
+      "issue": "No database configured",
+      "fix": "Provision Neon PostgreSQL database and add DATABASE_URL to environment",
+      "priority": "HIGH"
+    },
+    {
+      "service": "Estuary Flow",
+      "issue": "API endpoint not accessible",
+      "fix": "Verify access token and correct API endpoint URL",
+      "priority": "MEDIUM"
+    }
+  ]
+}

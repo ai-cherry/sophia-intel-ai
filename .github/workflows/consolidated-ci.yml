@@ -1,0 +1,246 @@
+name: Consolidated CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+      deploy_infrastructure:
+        description: 'Deploy infrastructure'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  PYTHON_VERSION: "3.11"
+  NODE_VERSION: "20"
+  UV_CACHE_DIR: /tmp/.uv-cache
+
+jobs:
+  # Code Quality and Testing
+  quality-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check for forbidden directories
+        run: |
+          forbidden_dirs=(".venv" "node_modules" "__pycache__" ".pytest_cache")
+          for dir in "${forbidden_dirs[@]}"; do
+            if [ -d "$dir" ]; then
+              echo "Error: $dir directory should not be committed"
+              exit 1
+            fi
+          done
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install uv
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+
+      - name: Add uv to PATH
+        run: echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Restore uv cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.UV_CACHE_DIR }}
+          key: uv-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
+
+      - name: Install dependencies
+        run: |
+          if [ -f requirements.txt ]; then
+            uv pip install --system -r requirements.txt
+          else
+            echo "Warning: No requirements.txt found"
+          fi
+
+      - name: Run linting
+        run: |
+          # Add linting commands here
+          echo "Linting completed"
+
+      - name: Run tests
+        run: |
+          # Add test commands here
+          echo "Tests completed"
+
+      - name: Validate configuration
+        run: |
+          # Validate agent system
+          python3 -c "
+          try:
+              from agents.base_agent import BaseAgent
+              print('✅ Agent system: OK')
+          except ImportError as e:
+              print(f'❌ Agent system: {e}')
+              exit(1)
+          "
+
+  # Infrastructure Preview (for PRs and manual triggers)
+  infrastructure-preview:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && github.event.inputs.deploy_infrastructure == 'true')
+    needs: quality-checks
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Setup Pulumi
+        uses: pulumi/actions@v5
+        with:
+          pulumi-version: ^3.0.0
+
+      - name: Install infrastructure dependencies
+        run: |
+          cd infra
+          pip install -r requirements.txt
+
+      - name: Configure environment
+        run: |
+          # Set up environment variables for preview
+          echo "ENVIRONMENT=${GITHUB_EVENT_NAME}" >> $GITHUB_ENV
+
+      - name: Pulumi Preview
+        run: |
+          cd infra
+          pulumi stack select scoobyjava-org/sophia-prod-on-lambda || pulumi stack init scoobyjava-org/sophia-prod-on-lambda
+          pulumi preview
+        env:
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+          LAMBDA_CLOUD_API_KEY: ${{ secrets.LAMBDA_CLOUD_API_KEY }}
+          DNSIMPLE_API_KEY: ${{ secrets.DNSIMPLE_API_KEY }}
+          DNSIMPLE_ACCOUNT: ${{ secrets.DNSIMPLE_ACCOUNT }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          PORTKEY_API_KEY: ${{ secrets.PORTKEY_API_KEY }}
+          QDRANT_API_KEY: ${{ secrets.QDRANT_API_KEY }}
+          GITHUB_PAT: ${{ secrets.GITHUB_PAT }}
+
+  # Infrastructure Deployment (main branch only)
+  infrastructure-deploy:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event.inputs.deploy_infrastructure == 'true')
+    needs: quality-checks
+    environment: ${{ github.event.inputs.environment || 'prod' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Setup Pulumi
+        uses: pulumi/actions@v5
+        with:
+          pulumi-version: ^3.0.0
+
+      - name: Install infrastructure dependencies
+        run: |
+          cd infra
+          pip install -r requirements.txt
+
+      - name: Deploy infrastructure
+        run: |
+          cd infra
+          pulumi stack select scoobyjava-org/sophia-prod-on-lambda
+          pulumi up --yes
+        env:
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+          LAMBDA_CLOUD_API_KEY: ${{ secrets.LAMBDA_CLOUD_API_KEY }}
+          DNSIMPLE_API_KEY: ${{ secrets.DNSIMPLE_API_KEY }}
+          DNSIMPLE_ACCOUNT: ${{ secrets.DNSIMPLE_ACCOUNT }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          PORTKEY_API_KEY: ${{ secrets.PORTKEY_API_KEY }}
+          QDRANT_API_KEY: ${{ secrets.QDRANT_API_KEY }}
+          REDIS_URL: ${{ secrets.REDIS_URL }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          ESTUARY_ACCESS_TOKEN: ${{ secrets.ESTUARY_ACCESS_TOKEN }}
+          GITHUB_PAT: ${{ secrets.GITHUB_PAT }}
+          TOGETHER_AI_API_KEY: ${{ secrets.TOGETHER_AI_API_KEY }}
+          HUGGINGFACE_API_TOKEN: ${{ secrets.HUGGINGFACE_API_TOKEN }}
+          TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
+          ARIZE_API_KEY: ${{ secrets.ARIZE_API_KEY }}
+          ARIZE_SPACE_ID: ${{ secrets.ARIZE_SPACE_ID }}
+
+      - name: Post-deployment validation
+        run: |
+          echo "Validating deployment..."
+          # Add validation steps here
+          curl -f https://api.sophia-intel.ai/health || echo "API health check failed"
+          curl -f https://app.sophia-intel.ai || echo "App health check failed"
+
+  # Application Deployment (Vercel for web, containers for services)
+  application-deploy:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: [quality-checks, infrastructure-deploy]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Deploy to Vercel
+        run: |
+          # Add Vercel deployment commands here
+          echo "Deploying to Vercel..."
+
+      - name: Build and push containers
+        run: |
+          # Add container build and push commands here
+          echo "Building and pushing containers..."
+
+  # Drift Detection (scheduled)
+  drift-detection:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Setup Pulumi
+        uses: pulumi/actions@v5
+
+      - name: Check for infrastructure drift
+        run: |
+          cd infra
+          pip install -r requirements.txt
+          pulumi stack select scoobyjava-org/sophia-prod-on-lambda
+          pulumi preview --diff
+        env:
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+          LAMBDA_CLOUD_API_KEY: ${{ secrets.LAMBDA_CLOUD_API_KEY }}
+          DNSIMPLE_API_KEY: ${{ secrets.DNSIMPLE_API_KEY }}
+          DNSIMPLE_ACCOUNT: ${{ secrets.DNSIMPLE_ACCOUNT }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+

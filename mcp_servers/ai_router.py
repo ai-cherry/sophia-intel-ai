@@ -479,6 +479,59 @@ class AIRouter:
         
         return decision
     
+    async def execute_task(self, request: TaskRequest, decision: RoutingDecision) -> Dict[str, Any]:
+        """
+        Execute a task using the selected model from routing decision
+        
+        Args:
+            request: The original task request
+            decision: The routing decision with selected model
+            
+        Returns:
+            Task execution result
+        """
+        try:
+            start_time = time.time()
+            
+            # For now, return a structured response indicating the routing
+            # In a full implementation, this would make the actual API call to the selected model
+            result = {
+                "status": "success",
+                "provider": decision.selected_provider.value,
+                "model": decision.selected_model,
+                "confidence": decision.confidence_score,
+                "estimated_cost": decision.estimated_cost,
+                "estimated_latency": decision.estimated_latency,
+                "reasoning": decision.reasoning,
+                "response": f"Task '{request.task_type.value}' routed to {decision.selected_model}",
+                "execution_time": time.time() - start_time
+            }
+            
+            # Record successful execution
+            await self.record_performance(
+                decision.selected_provider,
+                decision.selected_model,
+                success=True,
+                response_time=time.time() - start_time,
+                cost=decision.estimated_cost
+            )
+            
+            logger.info(f"Task executed successfully using {decision.selected_model}")
+            return result
+            
+        except Exception as e:
+            # Record failure
+            await self.record_failure(decision.selected_provider, decision.selected_model)
+            logger.error(f"Task execution failed: {e}")
+            
+            return {
+                "status": "error",
+                "provider": decision.selected_provider.value,
+                "model": decision.selected_model,
+                "error": str(e),
+                "execution_time": time.time() - start_time if 'start_time' in locals() else 0.0
+            }
+    
     async def _score_model(self, model: ModelCapability, request: TaskRequest) -> float:
         """Score a model's suitability for a given request"""
         score = 0.0

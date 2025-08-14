@@ -2,7 +2,7 @@
 
 from fastapi.testclient import TestClient
 from backend.main import app
-from mcp_servers.unified_mcp_server import app as mcp_app
+from mcp_servers.enhanced_unified_server import app as mcp_app
 
 
 def test_backend_health():

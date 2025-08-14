@@ -57,7 +57,7 @@ graph TB
    # Required API keys for full functionality
    OPENROUTER_API_KEY=sk-or-v1-your-openrouter-key-here
    PORTKEY_API_KEY=pk-your-portkey-key-here  # Optional but recommended
-   LAMBDA_API_KEY=ll-your-lambda-labs-key-here  # Optional for GPU features
+   LAMBDA_CLOUD_API_KEY=ll-your-lambda-labs-key-here  # Optional for GPU features
    
    # Update Qdrant URL if using cloud instance
    QDRANT_URL=https://your-cluster-id.us-east1-0.gcp.cloud.qdrant.io:6333

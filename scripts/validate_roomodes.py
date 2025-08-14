@@ -73,8 +73,8 @@ class RooModesValidator:
                 sys.exit(1)
             
             for j, group in enumerate(mode['groups']):
-                if not isinstance(group, dict) or 'slug' not in group:
-                    print(f"❌ Mode '{mode_name}': group {j+1} must be an object with 'slug' field")
+                if not isinstance(group, str):
+                    print(f"❌ Mode '{mode_name}': group {j+1} must be a string")
                     sys.exit(1)
             
             # Validate slug format
@@ -193,7 +193,7 @@ echo "🔄 Extension should reload automatically with new modes"
         modes = data['customModes']
         print(f"\n📊 Mode Summary ({len(modes)} modes):")
         for mode in modes:
-            groups = [g['slug'] for g in mode['groups']]
+            groups = mode['groups']
             print(f"  • {mode['name']} ({mode['slug']}) → groups: {', '.join(groups)}")
         
         return data

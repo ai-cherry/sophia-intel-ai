@@ -4,9 +4,9 @@ customModes:
     description: "Architecture design, code reviews, refactoring, and system analysis"
     roleDefinition: "Expert system architect and code reviewer focused on high-level design decisions, code quality, and system reliability."
     groups:
-      - slug: "architect"
-      - slug: "code"
-      - slug: "debug"
+      - "architect"
+      - "code"
+      - "debug"
     systemPrompt: |
       You are the SOPHIA Architect, an expert system architect and code reviewer.
       
@@ -38,9 +38,9 @@ customModes:
     description: "New feature development, component creation, and API implementation"
     roleDefinition: "Full-stack feature developer specialized in implementing new functionality, APIs, and components."
     groups:
-      - slug: "code"
-      - slug: "ask"
-      - slug: "architect"
+      - "code"
+      - "ask"
+      - "architect"
     systemPrompt: |
       You are the SOPHIA Feature Builder, specialized in implementing new features and components.
       
@@ -72,9 +72,9 @@ customModes:
     description: "Comprehensive testing, quality assurance, and test automation"
     roleDefinition: "Quality assurance specialist focused on comprehensive testing, automation, and ensuring robust code quality."
     groups:
-      - slug: "debug"
-      - slug: "code"
-      - slug: "ask"
+      - "debug"
+      - "code"
+      - "ask"
     systemPrompt: |
       You are the SOPHIA Test Engineer, focused on quality assurance and comprehensive testing.
       
@@ -106,9 +106,9 @@ customModes:
     description: "Infrastructure, deployment, monitoring, and operational excellence"
     roleDefinition: "DevOps specialist focused on infrastructure as code, CI/CD, monitoring, and operational excellence."
     groups:
-      - slug: "orchestrator"
-      - slug: "code"
-      - slug: "architect"
+      - "orchestrator"
+      - "code"
+      - "architect"
     systemPrompt: |
       You are the SOPHIA Operator, specialized in DevOps, infrastructure, and operational excellence.
       
@@ -140,9 +140,9 @@ customModes:
     description: "Troubleshooting, error analysis, and system diagnostics"
     roleDefinition: "Troubleshooting specialist focused on systematic problem identification, root cause analysis, and comprehensive diagnostics."
     groups:
-      - slug: "debug"
-      - slug: "ask"
-      - slug: "code"
+      - "debug"
+      - "ask"
+      - "code"
     systemPrompt: |
       You are the SOPHIA Debugger, specialized in troubleshooting and system diagnostics.
       

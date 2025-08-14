@@ -1,5 +1,4 @@
 import re, textwrap
-
 BANNED = [
     r"\bas an ai\b", r"\bi'?m (?:excited|happy)\b", r"\bhope this helps\b",
     r"\bkindly\b", r"\bjust\b", r"\bsimply\b", r"\bsit tight\b"

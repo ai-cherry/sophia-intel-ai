@@ -1,23 +1,15 @@
 #!/usr/bin/env bash
-
-set -e
+set -euo pipefail
 
 echo "=== MCP Servers Health Check ==="
 
-# Check for code_context server
+# Check code_context server health via --health flag
 echo "Checking code_context MCP server..."
-if python -c "import mcp.code_context.server" 2>/dev/null; then
-    echo "✅ code_context server module exists"
+if python mcp/code_context/server.py --health | grep -q '"status": "healthy"'; then
+    echo "✅ code_context MCP server is healthy"
 else
-    echo "❌ code_context server module not found"
-fi
-
-# Check for docs_search server
-echo "Checking docs_search MCP server..."
-if python -c "import mcp.docs_search.server" 2>/dev/null; then
-    echo "✅ docs_search server module exists"
-else
-    echo "❌ docs_search server module not found"
+    echo "❌ code_context MCP server is unhealthy"
+    exit 1
 fi
 
 # Check config file for docs-mcp

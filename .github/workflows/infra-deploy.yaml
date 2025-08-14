@@ -27,7 +27,7 @@ jobs:
 
       # Configure AWS credentials via OIDC
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v2
+        uses: # Lambda Labs authentication via API key
         with:
           role-to-assume: ${{ vars.AWS_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
@@ -44,12 +44,12 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          cd pulumi
-          npm install
+          cd infra
+          pip install -r requirements.txt
 
       - name: Pulumi Deploy
         run: |
-          cd pulumi
+          cd infra
           pulumi stack select ${{ github.event.inputs.environment }}
           pulumi up --yes
         env:

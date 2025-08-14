@@ -479,7 +479,7 @@ class AIRouter:
         
         return decision
     
-    async def execute_task(self, request: TaskRequest, decision: RoutingDecision) -> Dict[str, Any]:
+    async def execute_task(self, request: TaskRequest, decision: RoutingDecision) -> Any:
         """
         Execute a task using the selected model from routing decision
         
@@ -490,22 +490,12 @@ class AIRouter:
         Returns:
             Task execution result
         """
+        start_time = time.time()
         try:
-            start_time = time.time()
             
             # For now, return a structured response indicating the routing
             # In a full implementation, this would make the actual API call to the selected model
-            result = {
-                "status": "success",
-                "provider": decision.selected_provider.value,
-                "model": decision.selected_model,
-                "confidence": decision.confidence_score,
-                "estimated_cost": decision.estimated_cost,
-                "estimated_latency": decision.estimated_latency,
-                "reasoning": decision.reasoning,
-                "response": f"Task '{request.task_type.value}' routed to {decision.selected_model}",
-                "execution_time": time.time() - start_time
-            }
+            response_content = f"Task '{request.task_type.value}' routed to {decision.selected_model}"
             
             # Record successful execution
             await self.record_performance(
@@ -517,20 +507,47 @@ class AIRouter:
             )
             
             logger.info(f"Task executed successfully using {decision.selected_model}")
-            return result
+            
+            # Return an object that Swarm can access with .content attribute
+            class TaskResult:
+                def __init__(self, content, provider, model, confidence, cost, reasoning, execution_time):
+                    self.content = content
+                    self.provider = provider
+                    self.model = model
+                    self.confidence = confidence
+                    self.cost = cost
+                    self.reasoning = reasoning
+                    self.execution_time = execution_time
+                    self.status = "success"
+            
+            return TaskResult(
+                content=response_content,
+                provider=decision.selected_provider.value,
+                model=decision.selected_model,
+                confidence=decision.confidence_score,
+                cost=decision.estimated_cost,
+                reasoning=decision.reasoning,
+                execution_time=time.time() - start_time
+            )
             
         except Exception as e:
+            execution_time = time.time() - start_time
+            
             # Record failure
             await self.record_failure(decision.selected_provider, decision.selected_model)
             logger.error(f"Task execution failed: {e}")
             
-            return {
-                "status": "error",
-                "provider": decision.selected_provider.value,
-                "model": decision.selected_model,
-                "error": str(e),
-                "execution_time": time.time() - start_time if 'start_time' in locals() else 0.0
-            }
+            # Return error result as object with content attribute for Swarm compatibility
+            class ErrorResult:
+                def __init__(self, error_msg, provider, model, execution_time):
+                    self.content = f"Error: {error_msg}"
+                    self.status = "error"
+                    self.provider = provider
+                    self.model = model
+                    self.error = error_msg
+                    self.execution_time = execution_time
+            
+            return ErrorResult(str(e), decision.selected_provider.value, decision.selected_model, execution_time)
     
     async def _score_model(self, model: ModelCapability, request: TaskRequest) -> float:
         """Score a model's suitability for a given request"""

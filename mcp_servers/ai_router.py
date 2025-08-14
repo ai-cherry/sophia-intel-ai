@@ -42,6 +42,9 @@ class ModelProvider(str, Enum):
     GROQ = "groq"
     DEEPSEEK = "deepseek"
     GROK = "grok"
+    QWEN = "qwen"
+    KIMI = "kimi"
+    ZHIPUAI = "z-ai"
 
 
 @dataclass
@@ -130,6 +133,19 @@ class AIRouter:
                 supports_structured_output=True,
                 rate_limit_rpm=30000
             ),
+            "gpt-4.1-mini": ModelCapability(
+                provider=ModelProvider.OPENAI,
+                model_name="gpt-4.1-mini",
+                max_tokens=4096,
+                cost_per_1k_tokens=0.0012,
+                avg_response_time=1.5,
+                quality_score=0.91,
+                specialties=[TaskType.CODE_GENERATION, TaskType.GENERAL_CHAT, TaskType.FUNCTION_CALLING],
+                context_window=200000,
+                supports_function_calling=True,
+                supports_structured_output=True,
+                rate_limit_rpm=40000
+            ),
             
             # Anthropic Models
             "claude-3-5-sonnet": ModelCapability(
@@ -144,6 +160,32 @@ class AIRouter:
                 supports_function_calling=True,
                 supports_structured_output=True,
                 rate_limit_rpm=5000
+            ),
+            "claude-4-sonnet": ModelCapability(
+                provider=ModelProvider.ANTHROPIC,
+                model_name="claude-4-sonnet",
+                max_tokens=8192,
+                cost_per_1k_tokens=0.018,
+                avg_response_time=2.8,
+                quality_score=0.98,
+                specialties=[TaskType.CODE_GENERATION, TaskType.CODE_REVIEW, TaskType.REASONING, TaskType.ANALYSIS],
+                context_window=300000,
+                supports_function_calling=True,
+                supports_structured_output=True,
+                rate_limit_rpm=4000
+            ),
+            "claude-4-opus-4.1": ModelCapability(
+                provider=ModelProvider.ANTHROPIC,
+                model_name="claude-4-opus-4.1",
+                max_tokens=8192,
+                cost_per_1k_tokens=0.045,
+                avg_response_time=4.2,
+                quality_score=0.99,
+                specialties=[TaskType.REASONING, TaskType.CREATIVE_WRITING, TaskType.CODE_GENERATION, TaskType.MATH],
+                context_window=500000,
+                supports_function_calling=True,
+                supports_structured_output=True,
+                rate_limit_rpm=2000
             ),
             "claude-3-haiku": ModelCapability(
                 provider=ModelProvider.ANTHROPIC,
@@ -173,8 +215,34 @@ class AIRouter:
                 supports_structured_output=True,
                 rate_limit_rpm=8000
             ),
+            "gemini-2.5-pro": ModelCapability(
+                provider=ModelProvider.GOOGLE,
+                model_name="gemini-2.5-pro",
+                max_tokens=8192,
+                cost_per_1k_tokens=0.014,
+                avg_response_time=2.5,
+                quality_score=0.95,
+                specialties=[TaskType.REASONING, TaskType.MATH, TaskType.CODE_GENERATION, TaskType.ANALYSIS],
+                context_window=2000000,
+                supports_function_calling=True,
+                supports_structured_output=True,
+                rate_limit_rpm=10000
+            ),
             
             # Groq Models (Fast inference)
+            "llama-3.3-70b": ModelCapability(
+                provider=ModelProvider.GROQ,
+                model_name="llama-3.3-70b-versatile",
+                max_tokens=4096,
+                cost_per_1k_tokens=0.0009,
+                avg_response_time=0.4,
+                quality_score=0.88,
+                specialties=[TaskType.GENERAL_CHAT, TaskType.CODE_GENERATION],
+                context_window=131072,
+                supports_function_calling=True,
+                supports_structured_output=True,
+                rate_limit_rpm=35000
+            ),
             "llama-3.1-70b": ModelCapability(
                 provider=ModelProvider.GROQ,
                 model_name="llama-3.1-70b-versatile",
@@ -188,8 +256,34 @@ class AIRouter:
                 supports_structured_output=False,
                 rate_limit_rpm=30000
             ),
+            "mixtral-8x7b": ModelCapability(
+                provider=ModelProvider.GROQ,
+                model_name="mixtral-8x7b-32768",
+                max_tokens=4096,
+                cost_per_1k_tokens=0.0005,
+                avg_response_time=0.3,
+                quality_score=0.82,
+                specialties=[TaskType.GENERAL_CHAT, TaskType.DOCUMENTATION],
+                context_window=32768,
+                supports_function_calling=False,
+                supports_structured_output=False,
+                rate_limit_rpm=50000
+            ),
             
             # DeepSeek Models (Code specialist)
+            "deepseek-v3": ModelCapability(
+                provider=ModelProvider.DEEPSEEK,
+                model_name="deepseek-v3",
+                max_tokens=8192,
+                cost_per_1k_tokens=0.0010,
+                avg_response_time=1.8,
+                quality_score=0.94,
+                specialties=[TaskType.CODE_GENERATION, TaskType.CODE_REVIEW, TaskType.REASONING, TaskType.MATH],
+                context_window=64000,
+                supports_function_calling=True,
+                supports_structured_output=True,
+                rate_limit_rpm=25000
+            ),
             "deepseek-coder": ModelCapability(
                 provider=ModelProvider.DEEPSEEK,
                 model_name="deepseek-coder",
@@ -217,6 +311,120 @@ class AIRouter:
                 supports_function_calling=False,
                 supports_structured_output=False,
                 rate_limit_rpm=5000
+            ),
+            
+            # Qwen Models (Alibaba - Code specialist)
+            "qwen-coder-3": ModelCapability(
+                provider=ModelProvider.QWEN,
+                model_name="qwen-coder-3",
+                max_tokens=8192,
+                cost_per_1k_tokens=0.0008,
+                avg_response_time=1.6,
+                quality_score=0.90,
+                specialties=[TaskType.CODE_GENERATION, TaskType.CODE_REVIEW, TaskType.DOCUMENTATION],
+                context_window=32768,
+                supports_function_calling=True,
+                supports_structured_output=True,
+                rate_limit_rpm=30000
+            ),
+            "qwen-2.5-coder-7b": ModelCapability(
+                provider=ModelProvider.QWEN,
+                model_name="qwen-2.5-coder-7b",
+                max_tokens=4096,
+                cost_per_1k_tokens=0.0005,
+                avg_response_time=1.2,
+                quality_score=0.86,
+                specialties=[TaskType.CODE_GENERATION, TaskType.GENERAL_CHAT],
+                context_window=131072,
+                supports_function_calling=False,
+                supports_structured_output=False,
+                rate_limit_rpm=40000
+            ),
+            
+            # Kimi Models (Moonshot AI - Long context specialist)
+            "kimi-moonshot-2": ModelCapability(
+                provider=ModelProvider.KIMI,
+                model_name="moonshot-v1-128k",
+                max_tokens=8192,
+                cost_per_1k_tokens=0.0012,
+                avg_response_time=2.2,
+                quality_score=0.87,
+                specialties=[TaskType.ANALYSIS, TaskType.DOCUMENTATION, TaskType.GENERAL_CHAT],
+                context_window=128000,
+                supports_function_calling=True,
+                supports_structured_output=False,
+                rate_limit_rpm=20000
+            ),
+            "kimi-moonshot-2-32k": ModelCapability(
+                provider=ModelProvider.KIMI,
+                model_name="moonshot-v1-32k",
+                max_tokens=4096,
+                cost_per_1k_tokens=0.0008,
+                avg_response_time=1.8,
+                quality_score=0.84,
+                specialties=[TaskType.GENERAL_CHAT, TaskType.CREATIVE_WRITING],
+                context_window=32768,
+                supports_function_calling=False,
+                supports_structured_output=False,
+                rate_limit_rpm=25000
+            ),
+            
+            # New OpenAI Models (GPT-5 Series)
+            "gpt-5": ModelCapability(
+                provider=ModelProvider.OPENAI,
+                model_name="openai/gpt-5",
+                max_tokens=8192,
+                cost_per_1k_tokens=0.06,
+                avg_response_time=3.8,
+                quality_score=0.99,
+                specialties=[TaskType.REASONING, TaskType.ANALYSIS, TaskType.CREATIVE_WRITING, TaskType.CODE_GENERATION],
+                context_window=256000,
+                supports_function_calling=True,
+                supports_structured_output=True,
+                rate_limit_rpm=5000
+            ),
+            "gpt-5-mini": ModelCapability(
+                provider=ModelProvider.OPENAI,
+                model_name="openai/gpt-5-mini",
+                max_tokens=4096,
+                cost_per_1k_tokens=0.002,
+                avg_response_time=2.0,
+                quality_score=0.92,
+                specialties=[TaskType.GENERAL_CHAT, TaskType.DOCUMENTATION, TaskType.CODE_GENERATION],
+                context_window=200000,
+                supports_function_calling=True,
+                supports_structured_output=True,
+                rate_limit_rpm=25000
+            ),
+            
+            # New Google Models (Gemini 2.5 Series)
+            "gemini-2.5-flash": ModelCapability(
+                provider=ModelProvider.GOOGLE,
+                model_name="google/gemini-2.5-flash",
+                max_tokens=4096,
+                cost_per_1k_tokens=0.001,
+                avg_response_time=0.8,
+                quality_score=0.89,
+                specialties=[TaskType.GENERAL_CHAT, TaskType.ANALYSIS, TaskType.DOCUMENTATION],
+                context_window=1000000,
+                supports_function_calling=True,
+                supports_structured_output=True,
+                rate_limit_rpm=45000
+            ),
+            
+            # ZhipuAI Models (Chinese multilingual specialist)
+            "glm-4.5": ModelCapability(
+                provider=ModelProvider.ZHIPUAI,
+                model_name="z-ai/glm-4.5",
+                max_tokens=8192,
+                cost_per_1k_tokens=0.0018,
+                avg_response_time=2.5,
+                quality_score=0.90,
+                specialties=[TaskType.CREATIVE_WRITING, TaskType.ANALYSIS, TaskType.GENERAL_CHAT],
+                context_window=128000,
+                supports_function_calling=True,
+                supports_structured_output=True,
+                rate_limit_rpm=20000
             )
         }
     

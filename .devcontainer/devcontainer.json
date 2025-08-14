@@ -11,7 +11,7 @@
     7233
   ],
   "postCreateCommand": "uv venv && uv sync --all-extras && chmod -R 555 .venv/lib/python*/site-packages",
-  "postStartCommand": "npm i -g @modelcontextprotocol/server-github && chmod +x mcp/code_context/server.py && chmod +x scripts/mcp/healthcheck.sh && chmod +x scripts/start_all_mcps.sh && chmod +x scripts/stop_all_mcps.sh",
+  "postStartCommand": "npm i -g @modelcontextprotocol/server-github && chmod +x scripts/roo_setup.sh && bash scripts/roo_setup.sh",
   "customizations": {
     "vscode": {
       "settings": {

@@ -1,0 +1,24 @@
+name: Tooling Smoke
+on: [push, pull_request]
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate modes file
+        run: test -f .roomodes && grep -q "customModes:" .roomodes
+      - name: Python
+        uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - name: Healthcheck Code MCP
+        run: |
+          printf '{"jsonrpc":"2.0","id":1,"method":"health/get","params":{}}\n' | \
+          python mcp/code_context/server.py | head -n1 | grep -q '"status": "healthy"'
+      - name: Run tests (if any)
+        run: |
+          if compgen -G "tests/test_*.py" > /dev/null; then
+            pip install -U pytest
+            pytest -q
+          else
+            echo "No tests found; skipping."
+          fi

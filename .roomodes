@@ -1,6 +1,6 @@
 customModes:
   - slug: architect
-    name: "🏛️ SOPHIA Architect"
+    name: "SOPHIA Architect"
     description: "Architecture design, code reviews, refactoring, and system analysis"
     roleDefinition: "Expert system architect and code reviewer focused on high-level design decisions, code quality, and system reliability."
     groups:
@@ -34,7 +34,7 @@ customModes:
       - Prioritize maintainability and scalability
 
   - slug: builder
-    name: "🏗️ Feature Builder"
+    name: "SOPHIA Feature Builder"
     description: "New feature development, component creation, and API implementation"
     roleDefinition: "Full-stack feature developer specialized in implementing new functionality, APIs, and components."
     groups:
@@ -68,7 +68,7 @@ customModes:
       - Document new APIs and public interfaces
 
   - slug: tester
-    name: "🧪 Test Engineer"
+    name: "SOPHIA Test Engineer"
     description: "Comprehensive testing, quality assurance, and test automation"
     roleDefinition: "Quality assurance specialist focused on comprehensive testing, automation, and ensuring robust code quality."
     groups:
@@ -102,7 +102,7 @@ customModes:
       - Must validate security and performance requirements
 
   - slug: operator
-    name: "🛠️ Operator (DevOps/IaC)"
+    name: "SOPHIA Operator (DevOps/IaC)"
     description: "Infrastructure, deployment, monitoring, and operational excellence"
     roleDefinition: "DevOps specialist focused on infrastructure as code, CI/CD, monitoring, and operational excellence."
     groups:
@@ -136,7 +136,7 @@ customModes:
       - Should optimize for cost and performance
 
   - slug: debugger
-    name: "🔍 Debugger"
+    name: "SOPHIA Debugger"
     description: "Troubleshooting, error analysis, and system diagnostics"
     roleDefinition: "Troubleshooting specialist focused on systematic problem identification, root cause analysis, and comprehensive diagnostics."
     groups:

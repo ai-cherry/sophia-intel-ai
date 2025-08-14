@@ -12,12 +12,14 @@ Welcome to the comprehensive documentation for the Sophia Intel AI platform. Thi
 
 ### 🏗️ Architecture & Design
 - **[Estuary Flow Integration](estuary_flow_integration.md)** - Real-time data streaming and ETL
+- **[Enhanced MCP Server](../mcp_servers/enhanced_unified_server.py)** - Unified Model Context Protocol server
+- **[AI Router](../mcp_servers/ai_router.py)** - Intelligent model selection and routing
 - **[Agent Architecture](../agents/README.md)** - AI agent system design and implementation
-- **[MCP Servers](../mcp_servers/README.md)** - Model Context Protocol server architecture
 - **[Services](../services/README.md)** - Core platform services and orchestration
 
 ### 💻 Development
 - **[Contributing Guide](development/CONTRIBUTING.md)** - How to contribute to the project
+- **[Approved Models](development/models.md)** - Approved AI models and their specifications
 - **[Development Setup](development/setup.md)** - Local development environment setup
 - **[Testing Guide](development/testing.md)** - Testing strategies and best practices
 - **[Code Style Guide](development/style.md)** - Coding standards and conventions
@@ -27,13 +29,6 @@ Welcome to the comprehensive documentation for the Sophia Intel AI platform. Thi
 - **[Infrastructure Report](deployment/INFRASTRUCTURE_REMEDIATION_REPORT.md)** - Infrastructure remediation details
 - **[Ship Checklist](deployment/SHIP_CHECKLIST.md)** - Pre-deployment verification checklist
 - **[CI/CD Configuration](deployment/cicd.md)** - Continuous integration and deployment setup
-
-### 🔧 Troubleshooting
-- **[Troubleshooting Guide](troubleshooting/README.md)** - Common issues and solutions
-- **[ROO Configuration](troubleshooting/ROO_CONFIGURATION_GUIDE.md)** - ROO system configuration
-- **[ROO Troubleshooting](troubleshooting/ROO_TROUBLESHOOTING_SOLUTION.md)** - ROO-specific issues
-- **[Quick Start Prompt](troubleshooting/ROO_QUICK_START_PROMPT.md)** - Quick ROO setup
-- **[Cache Reset](troubleshooting/ROO_CACHE_RESET_SUMMARY.md)** - Cache management
 
 ## 🎯 Quick Start
 
@@ -45,7 +40,7 @@ Welcome to the comprehensive documentation for the Sophia Intel AI platform. Thi
    
    # Setup dependencies with uv
    uv venv
-   source .venv/bin/activate
+   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
    uv sync --dev
    ```
 
@@ -87,8 +82,9 @@ Welcome to the comprehensive documentation for the Sophia Intel AI platform. Thi
 
 ### Core Services
 - **API Server** (`backend/`) - FastAPI-based REST API
-- **Agent System** (`agents/`) - AI agent orchestration
-- **MCP Servers** (`mcp_servers/`) - Model Context Protocol servers
+- **Enhanced MCP Server** (`mcp_servers/enhanced_unified_server.py`) - Unified Model Context Protocol server
+- **AI Router** (`mcp_servers/ai_router.py`) - Intelligent model selection with approved models only
+- **Agent System** (`agents/`) - AI agent orchestration with LangGraph
 - **Orchestrator** (`services/`) - Service coordination and management
 
 ### Data & Storage
@@ -100,7 +96,7 @@ Welcome to the comprehensive documentation for the Sophia Intel AI platform. Thi
 ### Infrastructure
 - **Lambda Labs** - Compute infrastructure
 - **Pulumi** - Infrastructure as Code
-- **GitHub Actions** - CI/CD pipelines
+- **GitHub Actions** - CI/CD pipelines with uv integration
 - **Docker** - Containerization
 
 ## 🛠️ Development Workflow
@@ -165,5 +161,6 @@ This project is licensed under the MIT License - see the [LICENSE](../LICENSE) f
 
 **Last Updated**: August 2025  
 **Version**: 1.0.0  
+**Architecture**: Enhanced MCP Server + AI Router + LangGraph Agents  
 **Maintainers**: Sophia Intel Team
 

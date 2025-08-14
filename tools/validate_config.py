@@ -68,7 +68,7 @@ class ConfigValidator:
         required_keys = {
             "OPENROUTER_API_KEY": "sk-or-v1-",
             "PORTKEY_API_KEY": "pk-",
-            "LAMBDA_API_KEY": "ll-",
+            "LAMBDA_CLOUD_API_KEY": "ll-",
             "EXA_API_KEY": "exa-",
         }
 
@@ -109,7 +109,7 @@ class ConfigValidator:
                 self.errors.append(
                     f"❌ {key_name} should start with '{expected_prefix}', got: {value[:10]}..."
                 )
-            elif key_name == "LAMBDA_API_KEY" and not value.startswith(expected_prefix):
+            elif key_name == "LAMBDA_CLOUD_API_KEY" and not value.startswith(expected_prefix):
                 self.errors.append(
                     f"❌ {key_name} should start with '{expected_prefix}', got: {value[:10]}..."
                 )

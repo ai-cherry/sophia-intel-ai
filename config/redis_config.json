@@ -1,0 +1,13 @@
+{
+  "service": "Redis Cloud",
+  "account_id": "scoobyjava #2384302",
+  "api_account_key": "A4mmxx43yms087hucu51sxbau5mi9hmnz6u33k43mpauhof6rz2",
+  "api_user_key": "S2ujqhjd8evq894cdaxnli4fp667s7cn31fmah0lqqvp4foszo4",
+  "connection_template": "redis://default:PASSWORD@ENDPOINT:PORT",
+  "notes": [
+    "1. Log into Redis Cloud console at https://cloud.redis.io/",
+    "2. Create a new database or use existing one",
+    "3. Get the endpoint, port, and password from the database details",
+    "4. Replace ENDPOINT, PORT, and PASSWORD in the connection string"
+  ]
+}

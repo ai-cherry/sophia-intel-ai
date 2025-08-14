@@ -199,7 +199,6 @@ metadata:
 type: Opaque
 data:
   OPENROUTER_API_KEY: "{base64_encoded_key}"
-  PORTKEY_API_KEY: "{base64_encoded_key}"
   SECRET_KEY: "{base64_encoded_key}"
 ```
 

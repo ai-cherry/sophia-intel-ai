@@ -3,12 +3,12 @@
 const axios = require('axios');
 
 // Lambda Labs API Configuration
-const LAMBDA_API_KEY = process.env.LAMBDA_API_KEY;
+const LAMBDA_CLOUD_API_KEY = process.env.LAMBDA_CLOUD_API_KEY;
 const LAMBDA_CLOUD_API_KEY = process.env.LAMBDA_CLOUD_API_KEY;
 
-if (!LAMBDA_API_KEY || !LAMBDA_CLOUD_API_KEY) {
+if (!LAMBDA_CLOUD_API_KEY || !LAMBDA_CLOUD_API_KEY) {
     console.error('❌ Missing Lambda Labs API keys');
-    console.error('   LAMBDA_API_KEY:', LAMBDA_API_KEY ? '✅ Set' : '❌ Missing');
+    console.error('   LAMBDA_CLOUD_API_KEY:', LAMBDA_CLOUD_API_KEY ? '✅ Set' : '❌ Missing');
     console.error('   LAMBDA_CLOUD_API_KEY:', LAMBDA_CLOUD_API_KEY ? '✅ Set' : '❌ Missing');
     process.exit(1);
 }
@@ -25,8 +25,8 @@ async function testLambdaAPI() {
     console.log('🧪 Testing Lambda Labs API connectivity...\n');
 
     // Test with primary API key
-    await testEndpoint('Primary API', LAMBDA_API_KEY, ENDPOINTS.instances);
-    await testEndpoint('Primary API', LAMBDA_API_KEY, ENDPOINTS.instanceTypes);
+    await testEndpoint('Primary API', LAMBDA_CLOUD_API_KEY, ENDPOINTS.instances);
+    await testEndpoint('Primary API', LAMBDA_CLOUD_API_KEY, ENDPOINTS.instanceTypes);
     
     // Test with cloud API key
     await testEndpoint('Cloud API', LAMBDA_CLOUD_API_KEY, ENDPOINTS.instances);
@@ -71,7 +71,7 @@ async function createInstance() {
     try {
         const response = await axios.post(ENDPOINTS.instances, instanceConfig, {
             auth: {
-                username: LAMBDA_API_KEY,
+                username: LAMBDA_CLOUD_API_KEY,
                 password: ''
             },
             headers: {
@@ -99,7 +99,7 @@ async function listInstanceTypes() {
     try {
         const response = await axios.get(ENDPOINTS.instanceTypes, {
             auth: {
-                username: LAMBDA_API_KEY,
+                username: LAMBDA_CLOUD_API_KEY,
                 password: ''
             },
             timeout: 10000,

@@ -1,3 +1,5 @@
+aiohttp>=3.8.0
+asyncio-throttle>=1.0.0
 haystack-ai
 haystack-integrations[qdrant]
 langchain-community

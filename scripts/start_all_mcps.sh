@@ -1,31 +1,23 @@
 #!/usr/bin/env bash
-
-set -e
+set -euo pipefail
 
 echo "=== Starting MCP Servers ==="
 
-# Directory for PID files
-PIDDIR="./.mcp_pids"
-mkdir -p "$PIDDIR"
+# Create directories
+mkdir -p .pids logs
 
-# Start code_context MCP server
-echo "Starting code_context MCP server..."
-python -m mcp.code_context.server > ./code_context_mcp.log 2>&1 &
-CODE_CONTEXT_PID=$!
-echo $CODE_CONTEXT_PID > "$PIDDIR/code_context.pid"
-echo "✅ Started code_context MCP server (PID: $CODE_CONTEXT_PID)"
-echo "   Logs: ./code_context_mcp.log"
+# Preflight: check code server import & health
+python mcp/code_context/server.py --health >/dev/null
+echo "✅ code-context MCP ready (VS Code will launch it via stdio)."
 
-# Start docs_search MCP server
-echo "Starting docs_search MCP server..."
-python -m mcp.docs_search.server --config mcp/docs-mcp.config.json > ./docs_search_mcp.log 2>&1 &
-DOCS_SEARCH_PID=$!
-echo $DOCS_SEARCH_PID > "$PIDDIR/docs_search.pid"
-echo "✅ Started docs_search MCP server (PID: $DOCS_SEARCH_PID)"
-echo "   Logs: ./docs_search_mcp.log"
+# Optional: standalone debug launcher (commented)
+# nohup python mcp/code_context/server.py > logs/mcp_code_context.log 2>&1 &
+# echo $! > .pids/mcp_code_context.pid
+# echo "spawned code-context pid $(cat .pids/mcp_code_context.pid)"
 
 echo
-echo "MCP servers are now running."
-echo "To stop servers: bash scripts/stop_all_mcps.sh"
-echo 
+echo "MCP servers are ready to be used by VS Code."
+echo "NOTE: VS Code will automatically launch the stdio MCP server when needed."
+echo "To stop any manually started servers: bash scripts/stop_all_mcps.sh"
+echo
 echo "NOTE: VS Code can also manage these servers via the MCP view."

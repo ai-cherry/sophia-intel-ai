@@ -5,51 +5,12 @@
       "type": "stdio",
       "command": "python",
       "args": [
-        "-m",
-        "mcp.code_context.server"
-      ]
-    },
-    "docs-mcp": {
-      "type": "stdio",
-      "command": "python",
-      "args": [
-        "-m",
-        "mcp.docs_search.server",
-        "--config",
-        "mcp/docs-mcp.config.json"
+        "mcp/code_context/server.py"
       ]
     },
     "github-remote": {
       "type": "http",
       "url": "https://api.githubcopilot.com/mcp/"
-    },
-    "sophia-memory": {
-      "type": "stdio",
-      "command": "python",
-      "args": [
-        "uvicorn",
-        "mcp_servers.unified_mcp_server:app",
-        "--host",
-        "0.0.0.0",
-        "--port",
-        "8001"
-      ],
-      "env": {
-        "QDRANT_URL": "${env:QDRANT_URL}",
-        "ENVIRONMENT": "development"
-      }
-    },
-    "lambda-gateway": {
-      "type": "stdio",
-      "command": "python",
-      "args": [
-        "-m",
-        "scripts.lambda_gateway"
-      ],
-      "env": {
-        "LAMBDA_API_KEY": "${env:LAMBDA_API_KEY}",
-        "MCP_PORT": "8002"
-      }
     }
   }
 }

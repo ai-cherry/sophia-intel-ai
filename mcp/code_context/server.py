@@ -1,235 +1,278 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
-SOPHIA Code Context MCP (stdio)
+Code Context MCP Server (stdio JSON-RPC)
 
-Purpose:
-  Provide Continue.dev with fast, local code context tools via MCP:
-    - code_index(globs)            -> (re)builds an in-memory code index
-    - code_search(query, top_k)    -> ranked file+snippets (BM25 + ripgrep)
-    - symbol_search(query, top_k)  -> symbols from a lightweight tag index
-    - file_read(path)              -> bounded, safe file read
-    - grep(pattern, glob?, max)    -> ripgrep lines
+Features:
+- health/get
+- fs/file_read
+- code/grep         : fast ripgrep if available, pure-Python fallback
+- code/code_search  : literal search (multi-file) with path filters
+- code/symbol_search: simple regex-based symbol scan (py/ts/js)
+Resilience:
+- Path allowlist (repo root), ignores vendor dirs
+- Timeouts, retries, and graceful errors
+- No external deps; optional ripgrep binary if installed
 
-Protocol:
-  Model Context Protocol over stdio (JSON-RPC 2.0). No HTTP server.
-  Autostarted by Continue "mcpServers" config.
+Run (health only):
+  python mcp/code_context/server.py --health
+Run (stdio JSON-RPC loop):
+  python mcp/code_context/server.py
 """
+
 from __future__ import annotations
-import os
-import sys
+import asyncio
 import json
+import os
 import re
-import subprocess
-import pathlib
+import sys
 import time
-import threading
+import traceback
+import subprocess
+import shlex
+from dataclasses import dataclass
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-ROOT = pathlib.Path(os.environ.get("SOPHIA_WORKDIR", ".")).resolve()
-MAX_FILE_BYTES = int(os.environ.get(
-    "SOPHIA_CODE_MCP_MAX_FILE_BYTES", "524288"))  # 512KB
-DEFAULT_GLOBS = os.environ.get(
-    "SOPHIA_CODE_MCP_GLOBS", "agents/**,apps/**,libs/**,mcp/**,schemas/**,docs/**,*.md").split(",")
+# .../mcp/code_context/server.py -> repo root
+REPO_ROOT = Path(__file__).resolve().parents[2]
+IGNORE_DIRS = {".git", ".hg", ".svn", "node_modules", ".venv", "__pycache__",
+               ".mypy_cache", ".ruff_cache", ".pytest_cache", "dist", "build"}
+MAX_FILE_BYTES = 1_048_576  # 1MB read limit
+RG_BIN = os.environ.get("RG_BIN", "rg")
+REQUEST_TIMEOUT = float(os.environ.get("MCP_REQ_TIMEOUT", "8.0"))
+GREP_WORKERS = int(os.environ.get("MCP_GREP_WORKERS", "4"))
 
-# --- Minimal in-process indices ------------------------------------------------
-_FILE_LIST: List[pathlib.Path] = []
-_SYMBOLS: List[Tuple[str, str]] = []  # (symbol, file:line)
+
+@dataclass
+class RPCError(Exception):
+    code: int
+    message: str
+    data: Optional[Any] = None
 
 
-def _list_files(globs: List[str]) -> List[pathlib.Path]:
-    files: List[pathlib.Path] = []
-    for g in globs:
-        for p in ROOT.glob(g.strip()):
+def log(*a: Any) -> None:
+    ts = time.strftime("%Y-%m-%d %H:%M:%S")
+    print(f"[{ts}]", " ".join(map(str, a)), file=sys.stderr, flush=True)
+
+
+def safe_path(p: str) -> Path:
+    path = (REPO_ROOT / p).resolve()
+    if REPO_ROOT not in path.parents and path != REPO_ROOT:
+        raise RPCError(-32001, f"path outside repo: {p}")
+    return path
+
+
+def is_vendor(path: Path) -> bool:
+    parts = set(path.parts)
+    return any(d in parts for d in IGNORE_DIRS)
+
+
+def list_files(root: Path) -> List[Path]:
+    paths: List[Path] = []
+    for base, dirs, files in os.walk(root):
+        base_path = Path(base)
+        # prune ignored dirs
+        dirs[:] = [d for d in dirs if d not in IGNORE_DIRS]
+        for f in files:
+            p = base_path / f
             if p.is_file():
-                files.append(p)
-    # filter obvious junk
-    filtered = []
-    for p in files:
-        s = str(p)
-        if any(s.endswith(x) for x in [".png", ".jpg", ".jpeg", ".webp", ".pdf", ".lock", ".zip", ".tar", ".gz", ".ico"]):
-            continue
-        if any(seg.startswith(".") for seg in p.parts if seg != "."):
-            # allow .env.sophia but generally skip hidden trees; adjust below if needed
-            pass
-        filtered.append(p)
-    return filtered
+                paths.append(p)
+    return paths
 
 
-def _index_symbols(paths: List[pathlib.Path]) -> List[Tuple[str, str]]:
-    # Lightweight Python/TS symbol scrape (quick & dirty; no new deps)
-    out: List[Tuple[str, str]] = []
-    func_re = re.compile(
-        r"^(async\s+def|def)\s+([a-zA-Z_][a-zA-Z0-9_]*)\(", re.M)
-    cls_re = re.compile(r"^class\s+([a-zA-Z_][a-zA-Z0-9_]*)\(", re.M)
-    ts_fn = re.compile(
-        r"function\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(|([a-zA-Z_][a-zA-Z0-9_]*)\s*=\s*\(", re.M)
-    for f in paths:
-        try:
-            if f.stat().st_size > MAX_FILE_BYTES:  # skip huge files for symbol pass
-                continue
-            text = f.read_text(errors="ignore")
-        except Exception:
-            continue
-        lines = text.splitlines()
-        for m in func_re.finditer(text):
-            name = m.group(2)
-            line = text.count("\n", 0, m.start()) + 1
-            out.append((name, f"{f}:{line}"))
-        for m in cls_re.finditer(text):
-            name = m.group(1)
-            line = text.count("\n", 0, m.start()) + 1
-            out.append((name, f"{f}:{line}"))
-        for m in ts_fn.finditer(text):
-            name = m.group(1) or m.group(2)
-            if name:
-                line = text.count("\n", 0, m.start()) + 1
-                out.append((name, f"{f}:{line}"))
-    return out
-
-
-def _bm25_rank(query: str, files: List[pathlib.Path], top_k: int = 10) -> List[Tuple[float, pathlib.Path]]:
-    # Very simple term count scoring; ripgrep augments precision later.
-    q = [t.lower() for t in re.findall(r"[a-zA-Z0-9_]+", query)]
-    scores: List[Tuple[float, pathlib.Path]] = []
-    for f in files:
-        try:
-            if f.stat().st_size > MAX_FILE_BYTES:  # skip large
-                continue
-            text = f.read_text(errors="ignore").lower()
-        except Exception:
-            continue
-        score = sum(text.count(t) for t in q)
-        if score > 0:
-            scores.append((float(score), f))
-    scores.sort(key=lambda x: x[0], reverse=True)
-    return scores[:top_k]
-
-
-def _ripgrep(pattern: str, glob: Optional[str], max_results: int) -> List[Dict[str, Any]]:
-    args = ["rg", "--line-number", "--no-heading",
-            "--color", "never", pattern, str(ROOT)]
-    if glob:
-        args = ["rg", "--line-number", "--no-heading",
-                "--color", "never", "-g", glob, pattern, str(ROOT)]
+async def run_ripgrep(pattern: str, cwd: Path, literal: bool = False) -> List[Tuple[str, int, str]]:
+    args = [RG_BIN, "-n", "--hidden", "--no-heading"]
+    if literal:
+        args.append("-F")
+    args += [pattern, "."]
     try:
-        proc = subprocess.run(args, stdout=subprocess.PIPE,
-                              stderr=subprocess.DEVNULL, check=False, text=True)
-        lines = proc.stdout.splitlines()
-    except FileNotFoundError:
-        return [{"file": "<ripgrep not installed>", "line": 0, "text": ""}]
-    out = []
-    for ln in lines[:max_results]:
-        # /abs/path:lineno:content
+        proc = await asyncio.create_subprocess_exec(
+            *args, cwd=str(cwd),
+            stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+        )
         try:
-            file_part, line_part, text = ln.split(":", 2)
-            out.append(
-                {"file": file_part, "line": int(line_part), "text": text})
-        except ValueError:
-            continue
-    return out
-
-
-# --- MCP plumbing (very small JSON-RPC loop) ----------------------------------
-_ID = 0
-
-
-def _resp(id: int, result: Any = None, error: Dict[str, Any] | None = None) -> None:
-    msg = {"jsonrpc": "2.0", "id": id}
-    if error:
-        msg["error"] = error
-    else:
-        msg["result"] = result
-    sys.stdout.write(json.dumps(msg) + "\n")
-    sys.stdout.flush()
-
-
-def _result_ok(data: Any) -> Dict[str, Any]:
-    return {"success": True, "data": data}
-
-
-def _err(msg: str, code: int = -32000) -> Dict[str, Any]:
-    return {"code": code, "message": msg}
-
-
-def handle(method: str, params: Dict[str, Any]) -> Dict[str, Any]:
-    global _FILE_LIST, _SYMBOLS
-    if method == "tools/list":
-        return {
-            "tools": [
-                {"name": "code_index", "description": "(Re)index repo files and symbols", "inputSchema": {
-                    "type": "object", "properties": {"globs": {"type": "array", "items": {"type": "string"}}}}},
-                {"name": "code_search", "description": "Search code (BM25 + ripgrep)", "inputSchema": {
-                    "type": "object", "properties": {"query": {"type": "string"}, "top_k": {"type": "integer"}}}},
-                {"name": "symbol_search", "description": "Search symbols (functions/classes)", "inputSchema": {
-                    "type": "object", "properties": {"query": {"type": "string"}, "top_k": {"type": "integer"}}}},
-                {"name": "file_read", "description": "Read a file (size-limited)", "inputSchema": {
-                    "type": "object", "properties": {"path": {"type": "string"}}}},
-                {"name": "grep", "description": "ripgrep lines", "inputSchema": {"type": "object", "properties": {
-                    "pattern": {"type": "string"}, "glob": {"type": "string"}, "max_results": {"type": "integer"}}}}
-            ]
-        }
-    if method == "tools/call":
-        name = params.get("name")
-        args = params.get("arguments") or {}
-        if name == "code_index":
-            globs = args.get("globs") or DEFAULT_GLOBS
-            _FILE_LIST = _list_files(globs)
-            _SYMBOLS = _index_symbols(_FILE_LIST)
-            return _result_ok({"files": len(_FILE_LIST), "symbols": len(_SYMBOLS)})
-        if name == "code_search":
-            query = args.get("query", "").strip()
-            top_k = int(args.get("top_k", 10))
-            ranked = _bm25_rank(query, _FILE_LIST or _list_files(
-                DEFAULT_GLOBS), top_k=top_k)
-            # add a ripgrep pass for snippet evidence
-            rg = _ripgrep(query, None, max_results=top_k*5) if query else []
-            return _result_ok({
-                "files": [{"score": s, "path": str(p)} for s, p in ranked],
-                "snippets": rg
-            })
-        if name == "symbol_search":
-            query = args.get("query", "").lower()
-            top_k = int(args.get("top_k", 10))
-            hits = [s for s in _SYMBOLS if query in s[0].lower()][:top_k]
-            return _result_ok([{"symbol": s, "location": loc} for s, loc in hits])
-        if name == "file_read":
-            path = args.get("path", "")
-            p = (ROOT / path).resolve()
-            if not str(p).startswith(str(ROOT)):
-                return {"success": False, "error": {"type": "path_error", "message": "Outside repo root"}}
+            out, err = await asyncio.wait_for(proc.communicate(), timeout=REQUEST_TIMEOUT)
+        except asyncio.TimeoutError:
+            proc.kill()
+            raise RPCError(-32003, "ripgrep timeout")
+        if proc.returncode not in (0, 1):  # 1 = no matches
+            raise RPCError(-32004,
+                           f"ripgrep failed: {err.decode('utf-8','ignore')[:200]}")
+        lines = out.decode("utf-8", "ignore").splitlines()
+        results = []
+        for line in lines:
+            # format: path:line:match
             try:
+                path, lno, text = line.split(":", 2)
+                results.append((path, int(lno), text))
+            except Exception:
+                continue
+        return results
+    except FileNotFoundError:
+        return []  # ripgrep not installed
+
+
+async def py_grep(pattern: str, cwd: Path, flags: int = 0) -> List[Tuple[str, int, str]]:
+    rx = re.compile(pattern, flags)
+    results: List[Tuple[str, int, str]] = []
+    files = list_files(cwd)
+    sem = asyncio.Semaphore(GREP_WORKERS)
+
+    async def scan_file(p: Path):
+        if is_vendor(p):
+            return
+        try:
+            async with sem:
                 if p.stat().st_size > MAX_FILE_BYTES:
-                    return {"success": False, "error": {"type": "size_limit", "message": "File too large"}}
-                return _result_ok({"path": str(p.relative_to(ROOT)), "text": p.read_text(errors="ignore")})
-            except Exception as e:
-                return {"success": False, "error": {"type": "io_error", "message": str(e)}}
-        if name == "grep":
-            patt = args.get("pattern", "")
-            glob = args.get("glob")
-            maxr = int(args.get("max_results", 50))
-            return _result_ok(_ripgrep(patt, glob, maxr))
-        return {"success": False, "error": {"type": "unknown_tool", "message": name}}
+                    return
+                with open(p, "r", encoding="utf-8", errors="ignore") as fh:
+                    for i, line in enumerate(fh, 1):
+                        if rx.search(line):
+                            rel = p.relative_to(cwd).as_posix()
+                            results.append((rel, i, line.rstrip("\n")))
+        except Exception:
+            pass
+    await asyncio.gather(*(scan_file(p) for p in files))
+    return results
+
+
+def python_symbols(text: str) -> List[Tuple[str, int, str]]:
+    res = []
+    for i, line in enumerate(text.splitlines(), 1):
+        if re.match(r"^\s*def\s+\w+\s*\(", line) or re.match(r"^\s*class\s+\w+\s*[:\(]", line):
+            res.append(("python", i, line.strip()))
+    return res
+
+
+def ts_js_symbols(text: str) -> List[Tuple[str, int, str]]:
+    res = []
+    for i, line in enumerate(text.splitlines(), 1):
+        if re.search(r"\bfunction\s+\w+\s*\(", line) or re.search(r"\bclass\s+\w+\s*", line) or re.search(r"^\s*export\s+(const|function|class)\s+\w+", line):
+            res.append(("ts/js", i, line.strip()))
+    return res
+
+
+async def handle(method: str, params: Dict[str, Any]) -> Any:
     if method == "health/get":
-        return {"status": "healthy", "service": "sophia-code-mcp", "timestamp": int(time.time())}
-    return {"error": _err(f"Unknown method: {method}", -32601)}
+        return {"status": "healthy"}
+
+    if method == "fs/file_read":
+        # params: path (relative to repo root), max_bytes?
+        p = safe_path(params["path"])
+        if not p.exists() or not p.is_file():
+            raise RPCError(-32010, f"file not found: {p}")
+        if p.stat().st_size > MAX_FILE_BYTES:
+            raise RPCError(-32011, "file too large")
+        with open(p, "r", encoding="utf-8", errors="ignore") as fh:
+            return {"path": str(p.relative_to(REPO_ROOT)), "content": fh.read()}
+
+    if method == "code/grep":
+        # params: pattern (regex), case_sensitive (bool, default True), literal (bool, default False), dir (optional)
+        pattern = params["pattern"]
+        case_sensitive = bool(params.get("case_sensitive", True))
+        literal = bool(params.get("literal", False))
+        cwd = safe_path(params.get("dir", "."))
+        if is_vendor(cwd):
+            cwd = REPO_ROOT
+        # try ripgrep first
+        hits = await run_ripgrep(pattern, cwd, literal=literal)
+        if hits:
+            return [{"path": h[0], "line": h[1], "text": h[2]} for h in hits]
+        # fallback to pure Python regex
+        flags = 0 if case_sensitive else re.IGNORECASE
+        hits = await py_grep(pattern if not literal else re.escape(pattern), cwd, flags=flags)
+        return [{"path": h[0], "line": h[1], "text": h[2]} for h in hits]
+
+    if method == "code/code_search":
+        # alias for literal search
+        q = params["query"]
+        cwd = safe_path(params.get("dir", "."))
+        hits = await run_ripgrep(q, cwd, literal=True)
+        if not hits:
+            hits = await py_grep(re.escape(q), cwd, flags=0)
+        return [{"path": h[0], "line": h[1], "text": h[2]} for h in hits]
+
+    if method == "code/symbol_search":
+        # params: dir (optional)
+        cwd = safe_path(params.get("dir", "."))
+        results = []
+        for p in list_files(cwd):
+            if p.suffix not in {".py", ".ts", ".tsx", ".js"}:
+                continue
+            if p.stat().st_size > MAX_FILE_BYTES:
+                continue
+            try:
+                with open(p, "r", encoding="utf-8", errors="ignore") as fh:
+                    text = fh.read()
+                if p.suffix == ".py":
+                    for _, ln, snip in python_symbols(text):
+                        results.append(
+                            {"path": str(p.relative_to(cwd)), "line": ln, "symbol": snip})
+                else:
+                    for _, ln, snip in ts_js_symbols(text):
+                        results.append(
+                            {"path": str(p.relative_to(cwd)), "line": ln, "symbol": snip})
+            except Exception:
+                continue
+        return results
+
+    raise RPCError(-32601, f"unknown method: {method}")
+
+
+async def rpc_loop() -> None:
+    # Simple line-delimited JSON-RPC 2.0 over stdio
+    while True:
+        line = await asyncio.get_event_loop().run_in_executor(None, sys.stdin.readline)
+        if not line:
+            await asyncio.sleep(0.01)
+            continue
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            req = json.loads(line)
+            method = req.get("method")
+            params = req.get("params", {}) or {}
+            req_id = req.get("id")
+            try:
+                result = await asyncio.wait_for(handle(method, params), timeout=REQUEST_TIMEOUT)
+                resp = {"jsonrpc": "2.0", "id": req_id, "result": result}
+            except RPCError as e:
+                resp = {"jsonrpc": "2.0", "id": req_id, "error": {
+                    "code": e.code, "message": e.message, "data": e.data}}
+            except Exception as e:
+                log("Unhandled error:", repr(e))
+                log(traceback.format_exc())
+                resp = {"jsonrpc": "2.0", "id": req_id, "error": {
+                    "code": -32000, "message": "internal error"}}
+            sys.stdout.write(json.dumps(resp) + "\n")
+            sys.stdout.flush()
+        except Exception as e:
+            log("Bad JSON:", line[:200])
+            err = {"jsonrpc": "2.0", "id": None, "error": {
+                "code": -32700, "message": "parse error"}}
+            sys.stdout.write(json.dumps(err) + "\n")
+            sys.stdout.flush()
+
+
+def cli_health() -> int:
+    try:
+        # Quick filesystem probe
+        _ = REPO_ROOT.exists()
+        print(json.dumps({"status": "healthy"}))
+        return 0
+    except Exception as e:
+        print(json.dumps({"status": "unhealthy", "error": str(e)}))
+        return 1
 
 
 def main() -> None:
-    # Send a ready banner for clients that expect initial info
-    sys.stdout.write(json.dumps(
-        {"jsonrpc": "2.0", "method": "health/event", "params": {"status": "starting"}})+"\n")
-    sys.stdout.flush()
-    for line in sys.stdin:
-        try:
-            req = json.loads(line)
-        except Exception:
-            continue
-        if "method" in req and "id" in req:
-            res = handle(req["method"], req.get("params") or {})
-            _resp(req["id"], res if "error" not in res else None,
-                  res.get("error"))
-        elif "id" in req:
-            _resp(req["id"], error=_err("Invalid request", -32600))
+    if len(sys.argv) > 1 and sys.argv[1] == "--health":
+        raise SystemExit(cli_health())
+    try:
+        asyncio.run(rpc_loop())
+    except KeyboardInterrupt:
+        pass
 
 
 if __name__ == "__main__":

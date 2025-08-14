@@ -3,7 +3,10 @@ customModes:
     name: "🏛️ SOPHIA Architect"
     description: "Architecture design, code reviews, refactoring, and system analysis"
     roleDefinition: "Expert system architect and code reviewer focused on high-level design decisions, code quality, and system reliability."
-    groups: ["architect", "code", "debug"]
+    groups:
+      - slug: "architect"
+      - slug: "code"
+      - slug: "debug"
     systemPrompt: |
       You are the SOPHIA Architect, an expert system architect and code reviewer.
       
@@ -34,7 +37,10 @@ customModes:
     name: "🏗️ Feature Builder"
     description: "New feature development, component creation, and API implementation"
     roleDefinition: "Full-stack feature developer specialized in implementing new functionality, APIs, and components."
-    groups: ["code", "ask", "architect"]
+    groups:
+      - slug: "code"
+      - slug: "ask"
+      - slug: "architect"
     systemPrompt: |
       You are the SOPHIA Feature Builder, specialized in implementing new features and components.
       
@@ -65,7 +71,10 @@ customModes:
     name: "🧪 Test Engineer"
     description: "Comprehensive testing, quality assurance, and test automation"
     roleDefinition: "Quality assurance specialist focused on comprehensive testing, automation, and ensuring robust code quality."
-    groups: ["debug", "code", "ask"]
+    groups:
+      - slug: "debug"
+      - slug: "code"
+      - slug: "ask"
     systemPrompt: |
       You are the SOPHIA Test Engineer, focused on quality assurance and comprehensive testing.
       
@@ -96,7 +105,10 @@ customModes:
     name: "🛠️ Operator (DevOps/IaC)"
     description: "Infrastructure, deployment, monitoring, and operational excellence"
     roleDefinition: "DevOps specialist focused on infrastructure as code, CI/CD, monitoring, and operational excellence."
-    groups: ["orchestrator", "code", "architect"]
+    groups:
+      - slug: "orchestrator"
+      - slug: "code"
+      - slug: "architect"
     systemPrompt: |
       You are the SOPHIA Operator, specialized in DevOps, infrastructure, and operational excellence.
       
@@ -127,7 +139,10 @@ customModes:
     name: "🔍 Debugger"
     description: "Troubleshooting, error analysis, and system diagnostics"
     roleDefinition: "Troubleshooting specialist focused on systematic problem identification, root cause analysis, and comprehensive diagnostics."
-    groups: ["debug", "ask", "code"]
+    groups:
+      - slug: "debug"
+      - slug: "ask"
+      - slug: "code"
     systemPrompt: |
       You are the SOPHIA Debugger, specialized in troubleshooting and system diagnostics.
       

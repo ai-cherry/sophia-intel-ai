@@ -54,7 +54,7 @@ jobs:
           ENVIRONMENT: test
           OPENROUTER_API_KEY: sk-or-v1-test-key-for-validation-only
           PORTKEY_API_KEY: pk-test-key-for-validation-only
-          LAMBDA_API_KEY: ll-test-key-for-validation-only
+          LAMBDA_CLOUD_API_KEY: ll-test-key-for-validation-only
           EXA_API_KEY: exa-test-key-for-validation-only
           SECRET_KEY: test-secret-key-32-chars-minimum-length
           ENCRYPTION_KEY: test-encryption-key-exactly-32-char
@@ -139,7 +139,7 @@ jobs:
           ENVIRONMENT: test
           OPENROUTER_API_KEY: sk-or-v1-test-key-for-validation-only
           PORTKEY_API_KEY: pk-test-key-for-validation-only
-          LAMBDA_API_KEY: ll-test-key-for-validation-only
+          LAMBDA_CLOUD_API_KEY: ll-test-key-for-validation-only
           EXA_API_KEY: exa-test-key-for-validation-only
           SECRET_KEY: test-secret-key-32-chars-minimum-length
           ENCRYPTION_KEY: test-encryption-key-exactly-32-char
@@ -163,7 +163,7 @@ jobs:
           # Mock API keys for testing
           OPENROUTER_API_KEY: test-openrouter-key
           PORTKEY_API_KEY: test-portkey-key
-          LAMBDA_API_KEY: test-lambda-key
+          LAMBDA_CLOUD_API_KEY: test-lambda-key
           EXA_API_KEY: test-exa-key
           
           # Test secrets

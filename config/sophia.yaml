@@ -23,7 +23,7 @@ TEMPERATURE: 0.7
 # API Keys (override in .env)
 OPENROUTER_API_KEY: ""
 PORTKEY_API_KEY: ""
-LAMBDA_API_KEY: ""
+LAMBDA_CLOUD_API_KEY: ""
 EXA_API_KEY: ""
 
 # Security Configuration (generate new keys for production)

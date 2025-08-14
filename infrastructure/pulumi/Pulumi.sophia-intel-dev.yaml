@@ -5,7 +5,7 @@ config:
     secure: v1:taclJj018eGjOwP3:dyVhjhDlzLAR0CLr2ui2s2tEXH0Ig8dFKwYKr893MBg38nRHm5o=
   secrets:ANTHROPIC_API_KEY:
     secure: v1:OuOZt/s5VnpqwKDC:tZJmj37VLAl93+eHsytWCNJpLWh06ckinSLqejGSSjaLCwO+vlRtkvc=
-  secrets:LAMBDA_API_KEY:
+  secrets:LAMBDA_CLOUD_API_KEY:
     secure: v1:UbSLQI4Nrx9uYRBJ:kUJRPV4LIgJ/OuKsaOiTtL4ZUE/KqzcCJs/5cHq0mJaiCIgrtf86LCExPRarKTs8R3h6vGHy33l8D0WvNeMJJqhrzdkV/QVfgLlRbl0Y3KEBJDZf2qCDrbTZx+zBOUd0Mcs0SyCC
   sophia-intel-infrastructure:environment: dev
   secrets:GEMINI_API_KEY:

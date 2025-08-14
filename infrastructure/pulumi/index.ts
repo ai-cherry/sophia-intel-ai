@@ -6,7 +6,7 @@ import * as random from "@pulumi/random";
 const config = new pulumi.Config();
 
 // Lambda Labs Configuration
-const lambdaApiKey = config.requireSecret("secrets:LAMBDA_API_KEY");
+const lambdaApiKey = config.requireSecret("secrets:LAMBDA_CLOUD_API_KEY");
 const lambdaCloudApiKey = config.requireSecret("secrets:LAMBDA_CLOUD_API_KEY");
 
 // Application Configuration
@@ -141,7 +141,7 @@ const mcpServerContainer = new docker.Container("mcp-server", {
         external: 8001,
     }],
     envs: [
-        pulumi.interpolate`LAMBDA_API_KEY=${lambdaApiKey}`,
+        pulumi.interpolate`LAMBDA_CLOUD_API_KEY=${lambdaApiKey}`,
         pulumi.interpolate`LAMBDA_CLOUD_API_KEY=${lambdaCloudApiKey}`,
         "REDIS_URL=redis://redis:6379",
         "DATABASE_URL=postgresql://sophia:sophia_secure_2025@postgres:5432/sophia_intel",
@@ -202,7 +202,7 @@ const lambdaTestScript = new docker.Container("lambda-test", {
         name: sophiaNetwork.name,
     }],
     envs: [
-        pulumi.interpolate`LAMBDA_API_KEY=${lambdaApiKey}`,
+        pulumi.interpolate`LAMBDA_CLOUD_API_KEY=${lambdaApiKey}`,
         pulumi.interpolate`LAMBDA_CLOUD_API_KEY=${lambdaCloudApiKey}`,
     ],
     command: [
@@ -210,7 +210,7 @@ const lambdaTestScript = new docker.Container("lambda-test", {
         `
         apk add --no-cache curl &&
         echo "Testing Lambda Labs API connectivity..." &&
-        curl -u $LAMBDA_API_KEY: https://cloud.lambda.ai/api/v1/instances &&
+        curl -u $LAMBDA_CLOUD_API_KEY: https://cloud.lambda.ai/api/v1/instances &&
         echo "Lambda Labs API test completed"
         `
     ],

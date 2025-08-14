@@ -18,7 +18,7 @@ class LambdaClient:
     """
 
     def __init__(self):
-        self.api_key = settings.LAMBDA_API_KEY
+        self.api_key = settings.LAMBDA_CLOUD_API_KEY
         self.base_url = "https://cloud.lambdalabs.com/api/v1"
 
         # Request configuration
@@ -113,7 +113,7 @@ class LambdaClient:
         self.stats["total_requests"] += 1
 
         if not self.api_key:
-            raise ValueError("LAMBDA_API_KEY is not set")
+            raise ValueError("LAMBDA_CLOUD_API_KEY is not set")
 
         headers = {
             "Authorization": f"Bearer {self.api_key}",

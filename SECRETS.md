@@ -61,7 +61,7 @@ graph TB
 | Secret | Format | Description | Example |
 |--------|--------|-------------|---------|
 | `PORTKEY_API_KEY` | `pk-*` | Portkey AI gateway (optional) | `pk-1234567890abcdef...` |
-| `LAMBDA_API_KEY` | `ll-*` | Lambda Labs GPU access | `ll-1234567890abcdef...` |
+| `LAMBDA_CLOUD_API_KEY` | `ll-*` | Lambda Labs GPU access | `ll-1234567890abcdef...` |
 | `EXA_API_KEY` | `exa-*` | Exa search integration | `exa-1234567890abcdef...` |
 | `QDRANT_API_KEY` | Any | Qdrant Cloud authentication | `your-qdrant-cloud-key` |
 
@@ -101,7 +101,7 @@ cp .env.example .env
 #### Lambda Labs API Key (Optional - GPU Features)
 1. Visit [Lambda Labs Cloud](https://cloud.lambdalabs.com/)
 2. Create account and generate API key (starts with `ll-`)
-3. Add to `.env`: `LAMBDA_API_KEY=ll-your-key-here`
+3. Add to `.env`: `LAMBDA_CLOUD_API_KEY=ll-your-key-here`
 
 ### **Step 3: Generate Security Keys**
 
@@ -195,7 +195,7 @@ JWT_SECRET=production-jwt-secret-16-chars-minimum
 
 # Recommended secrets  
 PORTKEY_API_KEY=pk-production-portkey-key
-LAMBDA_API_KEY=ll-production-lambda-key
+LAMBDA_CLOUD_API_KEY=ll-production-lambda-key
 EXA_API_KEY=exa-production-search-key
 
 # Production database URLs

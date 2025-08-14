@@ -1,0 +1,15 @@
+# Applied only if LETSENCRYPT_EMAIL is provided in the workflow.
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-http01
+spec:
+  acme:
+    email: ${LETSENCRYPT_EMAIL}
+    server: https://acme-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: le-account-key
+    solvers:
+      - http01:
+          ingress:
+            class: nginx

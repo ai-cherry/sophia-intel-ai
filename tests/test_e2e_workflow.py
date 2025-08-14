@@ -30,13 +30,13 @@ class TestE2EWorkflow:
     @pytest.fixture
     async def memory_service(self):
         """Create memory service with mocked dependencies."""
-        with patch("mcp_servers.memory_service.PortkeyClient") as mock_portkey:
+        with patch("mcp_servers.memory_service.openrouterClient") as mock_openrouter:
             # Mock the embeddings response
-            mock_portkey.return_value.embeddings.return_value = {
+            mock_openrouter.return_value.embeddings.return_value = {
                 "data": [{"embedding": [0.1] * 1536}]  # Mock 1536-dim embedding
             }
             # Mock the chat response for summarization
-            mock_portkey.return_value.chat.return_value = {
+            mock_openrouter.return_value.chat.return_value = {
                 "choices": [{"message": {"content": "Test Context Summary"}}]
             }
 
@@ -66,7 +66,7 @@ class TestE2EWorkflow:
         Test complete workflow: Request → Orchestrator → Agent → MCP → Response
         """
         # Mock external API calls
-        with patch.object(orchestrator.portkey, "chat") as mock_chat, patch.object(
+        with patch.object(orchestrator.openrouter, "chat") as mock_chat, patch.object(
             orchestrator.lambda_client, "quota"
         ) as mock_quota, patch("httpx.AsyncClient") as mock_client:
 
@@ -185,8 +185,8 @@ class TestE2EWorkflow:
         """
         Test chat requests through the orchestrator.
         """
-        # Mock Portkey client response
-        with patch.object(orchestrator.portkey, "chat") as mock_chat:
+        # Mock openrouter client response
+        with patch.object(orchestrator.openrouter, "chat") as mock_chat:
             mock_chat.return_value = {
                 "choices": [
                     {"message": {"content": "This is a test response from the LLM"}}
@@ -286,7 +286,7 @@ class TestE2EWorkflow:
         initial_total = initial_stats["request_stats"]["total_requests"]
 
         # Make a successful request
-        with patch.object(orchestrator.portkey, "chat") as mock_chat:
+        with patch.object(orchestrator.openrouter, "chat") as mock_chat:
             mock_chat.return_value = {"choices": [{"message": {"content": "test"}}]}
 
             await orchestrator.handle_request(
@@ -381,7 +381,7 @@ class TestE2EWorkflow:
         Test end-to-end performance and response times.
         """
         # Mock all external dependencies
-        with patch.object(orchestrator.portkey, "chat") as mock_chat, patch(
+        with patch.object(orchestrator.openrouter, "chat") as mock_chat, patch(
             "httpx.AsyncClient"
         ) as mock_client:
 
@@ -423,7 +423,7 @@ class TestE2EWorkflow:
         """
         # Test embedding fallback when OpenRouter fails
         with patch.object(
-            memory_service.portkey_client, "embeddings"
+            memory_service.openrouter_client, "embeddings"
         ) as mock_embeddings:
             # Make embeddings fail
             mock_embeddings.side_effect = Exception("OpenRouter API failed")

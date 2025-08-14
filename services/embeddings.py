@@ -42,15 +42,15 @@ class EmbeddingsClient:
             except Exception as e:
                 print(f"OpenRouter failed: {e}")
 
-        # 3. Try Portkey as another fallback
-        if "portkey" in self.llm_keys:
+        # 3. Try openrouter as another fallback
+        if "openrouter" in self.llm_keys:
             try:
-                print("Attempting to generate embeddings with Portkey...")
-                # response = await self._request_portkey(texts, model)
+                print("Attempting to generate embeddings with openrouter...")
+                # response = await self._request_openrouter(texts, model)
                 # return response
-                raise NotImplementedError("Portkey embeddings not yet implemented.")
+                raise NotImplementedError("openrouter embeddings not yet implemented.")
             except Exception as e:
-                print(f"Portkey failed: {e}")
+                print(f"openrouter failed: {e}")
 
         raise RuntimeError("All embedding providers failed.")
 
@@ -58,8 +58,8 @@ class EmbeddingsClient:
         # Implementation for OpenRouter API call
         pass
 
-    async def _request_portkey(self, texts: List[str], model: str):
-        # Implementation for Portkey API call
+    async def _request_openrouter(self, texts: List[str], model: str):
+        # Implementation for openrouter API call
         pass
 
 
@@ -71,7 +71,7 @@ if __name__ == "__main__":
         "qdrant": {"url": "https://my-cluster.cloud.qdrant.io", "api_key": "test_key"},
         "llm_keys": {
             "openrouter": "test_openrouter_key",
-            "portkey": "test_portkey_key",
+            "openrouter": "test_openrouter_key",
         },
     }
     embeddings_client = EmbeddingsClient(mock_config)

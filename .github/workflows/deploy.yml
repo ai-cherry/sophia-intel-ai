@@ -1,0 +1,188 @@
+name: Deploy SOPHIA
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch: {}
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_API: ghcr.io/${{ github.repository_owner }}/sophia-api
+  IMAGE_DASH: ghcr.io/${{ github.repository_owner }}/sophia-dashboard
+  IMAGE_MCP_CODE: ghcr.io/${{ github.repository_owner }}/sophia-mcp-code
+
+jobs:
+  deploy:
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      packages: write
+      id-token: write   # for Pulumi OIDC if configured
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Preflight env checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          missing=()
+          [[ -z "${GH_API_TOKEN:-}" && -z "${{ github.token }}" ]] && missing+=("GH_API_TOKEN or GITHUB_TOKEN")
+          if [[ ${#missing[@]} -gt 0 ]]; then
+            echo "::error::Missing required env/secrets: ${missing[*]}"
+            exit 1
+          fi
+          echo "OK: registry push token present."
+
+      - name: Setup Node (for Helm plugin installs if needed)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Setup Pulumi
+        uses: pulumi/actions@v5
+        with:
+          pulumi-version: 3.x
+
+      - name: Login to Pulumi backend
+        shell: bash
+        env:
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [[ -n "${PULUMI_ACCESS_TOKEN:-}" ]]; then
+            echo "Using Pulumi Cloud backend"
+          else
+            echo "Using local Pulumi backend (file://)."
+            pulumi login --cloud-url file://$HOME/.pulumi-local
+          fi
+
+      - name: Build & push images to GHCR
+        env:
+          CR_PAT: ${{ secrets.GH_API_TOKEN }}
+        run: |
+          set -euo pipefail
+          TOKEN="${CR_PAT:-${{ github.token }}}"
+          echo "${TOKEN}" | docker login $REGISTRY -u ${{ github.actor }} --password-stdin
+
+          docker build -t $IMAGE_API:sha-${{ github.sha }} -f apps/api/Dockerfile .
+          docker push $IMAGE_API:sha-${{ github.sha }}
+
+          docker build -t $IMAGE_DASH:sha-${{ github.sha }} -f apps/dashboard/Dockerfile .
+          docker push $IMAGE_DASH:sha-${{ github.sha }}
+
+          docker build -t $IMAGE_MCP_CODE:sha-${{ github.sha }} -f mcp/code_context/Dockerfile .
+          docker push $IMAGE_MCP_CODE:sha-${{ github.sha }}
+
+      - name: Pulumi stack select/init
+        working-directory: infra
+        run: |
+          set -euo pipefail
+          pulumi stack select dev || pulumi stack init dev
+
+      - name: Install infra deps
+        working-directory: infra
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Pulumi up (create/update infra)
+        working-directory: infra
+        env:
+          LAMBDA_CLOUD_API_KEY: ${{ secrets.LAMBDA_CLOUD_API_KEY }}
+          ALLOWED_SSH_CIDR: ${{ vars.ALLOWED_SSH_CIDR }}
+        run: |
+          set -euo pipefail
+          pulumi up --yes
+
+      - name: Extract kubeconfig from Pulumi
+        id: kube
+        working-directory: infra
+        run: |
+          set -euo pipefail
+          pulumi stack output kubeconfig --show-secrets > $GITHUB_WORKSPACE/kubeconfig
+          echo "KUBECONFIG=$GITHUB_WORKSPACE/kubeconfig" >> $GITHUB_OUTPUT
+
+      - name: Setup kubectl and helm
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'v1.29.6'
+      - uses: azure/setup-helm@v4
+        with:
+          version: 'v3.14.4'
+
+      - name: Use kubeconfig
+        run: |
+          echo "KUBECONFIG=$GITHUB_WORKSPACE/kubeconfig" >> $GITHUB_ENV
+
+      - name: Create namespace
+        run: kubectl apply -f k8s/namespace.yaml
+
+      - name: Install cert-manager (CRDs + controller)
+        run: |
+          set -euo pipefail
+          kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.14.4/cert-manager.crds.yaml
+          helm repo add jetstack https://charts.jetstack.io --force-update
+          helm upgrade --install cert-manager jetstack/cert-manager \
+            --namespace cert-manager --create-namespace \
+            --version v1.14.4
+          kubectl -n cert-manager rollout status deploy/cert-manager --timeout=180s
+
+      - name: Install NGINX Ingress
+        run: |
+          helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx --force-update
+          helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx \
+            --namespace ingress-nginx --create-namespace
+          kubectl -n ingress-nginx rollout status deploy/ingress-nginx-controller --timeout=240s
+
+      - name: Optional Let’s Encrypt ClusterIssuer
+        if: ${{ env.LETSENCRYPT_EMAIL != '' }}
+        env:
+          LETSENCRYPT_EMAIL: ${{ secrets.LETSENCRYPT_EMAIL }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${LETSENCRYPT_EMAIL:-}" ]]; then
+            echo "LETSENCRYPT_EMAIL not provided; skipping ACME issuer."
+            exit 0
+          fi
+          envsubst < k8s/base/cert-manager/cluster-issuer-letsencrypt.yaml | kubectl apply -f -
+
+      - name: Always apply self-signed issuer (safe default)
+        run: kubectl apply -f k8s/base/cert-manager/cluster-issuer-selfsigned.yaml
+
+      - name: Render app manifests with image tags
+        env:
+          IMAGE_API_TAG: ${{ env.IMAGE_API }}:sha-${{ github.sha }}
+          IMAGE_DASH_TAG: ${{ env.IMAGE_DASH }}:sha-${{ github.sha }}
+          INGRESS_DOMAIN: ${{ vars.INGRESS_DOMAIN }}
+        run: |
+          set -euo pipefail
+          mkdir -p k8s/rendered/api k8s/rendered/dashboard k8s/rendered/mcp k8s/rendered/ingress
+          export IMAGE_API="$IMAGE_API_TAG"
+          export IMAGE_DASH="$IMAGE_DASH_TAG"
+          envsubst < k8s/apps/api/deployment.tmpl.yaml > k8s/rendered/api/deployment.yaml
+          cp k8s/apps/api/service.yaml k8s/apps/api/hpa.yaml k8s/rendered/api/
+          envsubst < k8s/apps/dashboard/deployment.tmpl.yaml > k8s/rendered/dashboard/deployment.yaml
+          cp k8s/apps/dashboard/service.yaml k8s/apps/dashboard/hpa.yaml k8s/rendered/dashboard/
+          if [[ -n "${INGRESS_DOMAIN:-}" ]]; then
+            export INGRESS_HOST="$INGRESS_DOMAIN"
+            envsubst < k8s/base/ingress/ingress.tmpl.yaml > k8s/rendered/ingress/ingress.yaml
+          fi
+
+      - name: Apply app manifests
+        run: |
+          kubectl apply -f k8s/rendered/api/
+          kubectl apply -f k8s/rendered/dashboard/
+          if [[ -f k8s/rendered/ingress/ingress.yaml ]]; then
+            kubectl apply -f k8s/rendered/ingress/ingress.yaml
+          fi
+
+      - name: Verify live
+        run: |
+          bash scripts/verify_live_deployment.sh

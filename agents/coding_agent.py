@@ -51,14 +51,14 @@ class CodingAgent(BaseAgent):
                 id="gpt-4o",
                 api_key=settings.OPENROUTER_API_KEY,
                 base_url=(
-                    "https://api.portkey.ai/v1" if settings.PORTKEY_API_KEY else None
+                    "https://api.openrouter.ai/v1" if settings.openrouter_API_KEY else None
                 ),
                 extra_headers=(
                     {
                         "X-ROUTER-TARGET": "openrouter",
-                        "X-PORTKEY-API-KEY": settings.PORTKEY_API_KEY,
+                        "X-openrouter-API-KEY": settings.openrouter_API_KEY,
                     }
-                    if settings.PORTKEY_API_KEY
+                    if settings.openrouter_API_KEY
                     else {}
                 ),
             ),

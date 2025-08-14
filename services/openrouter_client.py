@@ -1,6 +1,6 @@
 """
 Optimized OpenRouter client for Sophia AI
-Direct integration without Portkey middleware
+Direct integration without openrouter middleware
 """
 import asyncio
 import aiohttp

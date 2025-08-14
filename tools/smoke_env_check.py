@@ -82,7 +82,7 @@ def check_env_vars():
         "Qdrant": ["QDRANT_URL", "QDRANT_API_KEY"],
         "LLM": [
             "OPENROUTER_API_KEY",
-            "PORTKEY_API_KEY",
+            "openrouter_API_KEY",
             "ANTHROPIC_API_KEY",
             "OPENAI_API_KEY",
             "GROQ_API_KEY",

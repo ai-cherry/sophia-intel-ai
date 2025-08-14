@@ -5,11 +5,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Validate modes file
-        run: test -f .roomodes && grep -q "customModes:" .roomodes
       - name: Python
         uses: actions/setup-python@v5
         with: { python-version: '3.11' }
+      - name: Install YAML dependencies
+        run: pip install PyYAML
+      - name: Comprehensive .roomodes validation
+        run: python scripts/validate_roomodes.py --json
       - name: Healthcheck Code MCP
         run: |
           printf '{"jsonrpc":"2.0","id":1,"method":"health/get","params":{}}\n' | \

@@ -77,10 +77,17 @@ else
   EXIT_CODE=1
 fi
 
-# Check Roo modes
+# Check Roo modes with comprehensive validation
 if [[ -f .roomodes ]]; then
-  MODE_COUNT=$(grep -c "slug:" .roomodes || echo "0")
-  echo -e "${GREEN}✓ Roo modes file exists${NC} (${MODE_COUNT} modes)"
+  echo -e "${YELLOW}Validating .roomodes file...${NC}"
+  if python3 scripts/validate_roomodes.py --json > /dev/null 2>&1; then
+    MODE_COUNT=$(python3 scripts/validate_roomodes.py --json | jq -r '.modes' 2>/dev/null || grep -c "slug:" .roomodes)
+    echo -e "${GREEN}✓ .roomodes file is valid${NC} (${MODE_COUNT} modes)"
+  else
+    echo -e "${RED}❌ .roomodes file validation failed${NC}"
+    echo "   Run: python3 scripts/validate_roomodes.py for details"
+    EXIT_CODE=1
+  fi
 else
   echo -e "${RED}❌ .roomodes file missing${NC}"
   EXIT_CODE=1

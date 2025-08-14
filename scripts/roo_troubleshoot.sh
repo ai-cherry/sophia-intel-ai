@@ -23,11 +23,16 @@ else
   exit 1
 fi
 
-# Check .roomodes file
-echo -e "\n${YELLOW}Checking .roomodes file...${NC}"
+# Check .roomodes file with comprehensive validation
+echo -e "\n${YELLOW}Validating .roomodes file...${NC}"
 if [ -f .roomodes ]; then
-  MODE_COUNT=$(grep -c "slug:" .roomodes || echo "0")
-  echo -e "${GREEN}✓ .roomodes file exists with ${MODE_COUNT} modes${NC}"
+  if python3 scripts/validate_roomodes.py; then
+    echo -e "${GREEN}✓ .roomodes file is valid and properly formatted${NC}"
+  else
+    echo -e "${RED}❌ .roomodes file validation failed!${NC}"
+    echo -e "   Run 'python3 scripts/validate_roomodes.py' for detailed errors"
+    exit 1
+  fi
 else
   echo -e "${RED}❌ .roomodes file missing!${NC}"
   exit 1
@@ -111,6 +116,14 @@ for AUTH_PATH in "${GITHUB_AUTH_PATHS[@]}"; do
 done
 
 echo -e "\n${GREEN}Cleanup complete!${NC}"
+
+# Auto-generate reload scripts with change detection
+echo -e "\n${YELLOW}Creating Roo reload automation...${NC}"
+if python3 scripts/validate_roomodes.py --auto-reload; then
+  echo -e "${GREEN}✓ Reload scripts updated${NC}"
+else
+  echo -e "${RED}❌ Failed to create reload scripts${NC}"
+fi
 
 # Check if we're in a Codespace
 if [ "${CODESPACES:-false}" = "true" ]; then

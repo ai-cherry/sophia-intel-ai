@@ -1,0 +1,50 @@
+#!/bin/sh
+# Pre-commit hook for validating .roomodes file
+# This prevents commits with invalid .roomodes configurations
+
+echo "🔍 Pre-commit: Validating .roomodes file..."
+
+# Check if .roomodes file exists
+if [ ! -f .roomodes ]; then
+    echo "❌ Error: .roomodes file is missing!"
+    echo "   This file is required for Roo custom modes to work."
+    exit 1
+fi
+
+# Run comprehensive validation
+if ! python3 scripts/validate_roomodes.py; then
+    echo ""
+    echo "❌ Commit blocked: .roomodes validation failed!"
+    echo "   Fix the validation errors above before committing."
+    echo "   Run 'python3 scripts/validate_roomodes.py' for details."
+    exit 1
+fi
+
+# Check for non-ASCII characters that could cause Roo loading issues
+if ! python3 -c "
+with open('.roomodes', 'r', encoding='utf-8') as f:
+    content = f.read()
+    if not content.isascii():
+        print('❌ Error: Non-ASCII characters found in .roomodes')
+        print('   This can cause Roo extension loading issues.')
+        exit(1)
+"; then
+    exit 1
+fi
+
+# Auto-generate reload scripts on changes
+python3 scripts/validate_roomodes.py --auto-reload > /dev/null 2>&1
+
+echo "✅ Pre-commit: .roomodes validation passed!"
+
+# Check if this is a .roomodes change and remind about cache clearing
+if git diff --cached --name-only | grep -q "^\.roomodes$"; then
+    echo ""
+    echo "📌 Note: .roomodes file was modified in this commit."
+    echo "   After pushing, you may need to clear Roo extension cache:"
+    echo "   1. Run: ./scripts/roo_force_reload.sh"
+    echo "   2. Or manually reload VSCode (Ctrl+Shift+P → 'Developer: Reload Window')"
+    echo ""
+fi
+
+exit 0

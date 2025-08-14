@@ -1,0 +1,39 @@
+{
+  "python.interpreter": "/workspaces/sophia-intel/venv/bin/python",
+  "python.defaultInterpreterPath": "/workspaces/sophia-intel/venv/bin/python",
+  "python.terminal.activateEnvironment": true,
+  "python.terminal.activateEnvInCurrentTerminal": true,
+  "terminal.integrated.defaultProfile.linux": "bash",
+  "terminal.integrated.cwd": "/workspaces/sophia-intel",
+  "terminal.integrated.shellIntegration.enabled": true,
+  "terminal.integrated.shellIntegration.decorationsEnabled": "both",
+  "terminal.integrated.shellIntegration.history": 100,
+  "terminal.integrated.shellIntegration.suggestEnabled": true,
+  "terminal.integrated.inheritEnv": true,
+  "terminal.integrated.env.linux": {
+    "PYTHONPATH": "/workspaces/sophia-intel:/workspaces/sophia-intel/venv/lib/python3.11/site-packages",
+    "VIRTUAL_ENV": "/workspaces/sophia-intel/venv",
+    "PATH": "/workspaces/sophia-intel/venv/bin:${env:PATH}"
+  },
+  "terminal.integrated.profiles.linux": {
+    "bash": {
+      "path": "bash",
+      "args": [
+        "-l"
+      ],
+      "env": {
+        "PYTHONPATH": "/workspaces/sophia-intel:/workspaces/sophia-intel/venv/lib/python3.11/site-packages",
+        "VIRTUAL_ENV": "/workspaces/sophia-intel/venv",
+        "PATH": "/workspaces/sophia-intel/venv/bin:${env:PATH}"
+      }
+    }
+  },
+  "files.autoSave": "afterDelay",
+  "files.autoSaveDelay": 1000,
+  "workbench.startupEditor": "none",
+  "python.analysis.extraPaths": [
+    "/workspaces/sophia-intel",
+    "/workspaces/sophia-intel/venv/lib/python3.11/site-packages"
+  ],
+  "python.analysis.autoImportCompletions": true
+}

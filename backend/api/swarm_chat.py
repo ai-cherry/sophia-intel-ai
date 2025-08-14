@@ -7,7 +7,8 @@ from fastapi import APIRouter, Body, HTTPException
 from pydantic import BaseModel
 from typing import Dict, Any, Optional
 
-from integrations.roo_chat import process_roo_message, reset_conversation
+# TODO: Replace with proper agent integration
+# from integrations.agent_chat import process_agent_message, reset_conversation
 
 # Define the router
 router = APIRouter(
@@ -36,7 +37,9 @@ async def chat_with_swarm(request: SwarmChatRequest):
     Process a chat message with the Swarm system
     """
     try:
-        response = process_roo_message(request.message)
+        # TODO: Replace with proper agent integration
+        # response = process_agent_message(request.message)
+        response = {"response": "Agent integration pending", "metadata": {"status": "placeholder"}}
         return response
     except Exception as e:
         raise HTTPException(

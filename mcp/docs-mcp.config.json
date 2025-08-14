@@ -1,0 +1,9 @@
+{
+  "sources": [
+    { "type": "github", "repo": "ai-cherry/sophia-intel", "include": ["README.md", "docs/**/*.md", "docs/**/*.rst"] },
+    { "type": "website", "url": "https://docs.roocode.com/", "scope": "path", "allowRobots": true },
+    { "type": "pypi", "package": "fastapi" },
+    { "type": "npm", "package": "react" }
+  ],
+  "updateIntervalHours": 24
+}

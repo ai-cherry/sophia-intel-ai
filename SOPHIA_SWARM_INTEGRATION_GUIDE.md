@@ -39,29 +39,44 @@ Your `.roomodes` file defines 5 custom modes that directly integrate with the SO
 **MCP Tools**: Logs, error tracking, system diagnostics  
 **Usage**: Troubleshooting, error resolution, system analysis
 
-## 🤖 Dynamic LLM Model Selection
+## 🤖 Advanced AI Router System
 
-Based on `swarm/ai_integration.py`, your system includes:
+Based on `mcp_servers/ai_router.py`, your system includes a sophisticated **AI Router** with 20+ models:
 
-### **Tier 1 Models** (Latest & Most Capable)
-- **GPT-5** - Primary reasoning, architecture
-- **GPT-5 Turbo** - Fast analysis, testing  
-- **Claude Opus 4.1** - Complex reasoning, debugging
-- **Claude Sonnet 3.5** - Balanced performance
+### **Premium Tier** (Highest Quality)
+- **GPT-5** (0.99 quality) - Ultimate reasoning, architecture
+- **Claude 4 Opus 4.1** (0.99 quality) - Complex reasoning, creative writing, math
+- **Claude 4 Sonnet** (0.98 quality) - Code generation, analysis
+- **Claude 3.5 Sonnet** (0.97 quality) - Code review, analysis
 
-### **Tier 2 Models** (Specialized)
-- **DeepSeek Coder V2** - Code generation specialist
-- **Gemini Pro 1.5** - Long context, operations
-- **Groq Llama 3.1 70B** - Fast inference
+### **Performance Tier** (Balanced)
+- **GPT-4o** (0.95 quality) - Code generation, reasoning
+- **Gemini 2.5 Pro** (0.95 quality) - Reasoning, math, analysis
+- **DeepSeek V3** (0.94 quality) - Code specialist, reasoning
+- **GPT-5 Mini** (0.92 quality) - General chat, documentation
+- **Gemini 1.5 Pro** (0.92 quality) - Long context analysis
 
-### **Model Selection Logic**
+### **Speed Tier** (Fast Inference)
+- **Groq Llama 3.3 70B** (0.4s response) - General chat, code
+- **Groq Llama 3.1 70B** (0.5s response) - General chat
+- **Gemini 2.5 Flash** (0.8s response) - Analysis, documentation
+
+### **Specialist Models**
+- **Qwen Coder 3** (0.90 quality) - Code generation specialist
+- **Qwen 2.5 Coder 7B** (0.86 quality) - Code generation
+- **DeepSeek Coder** (0.91 quality) - Code review
+- **Kimi Moonshot 2** (128k context) - Long context analysis
+
+### **Multi-Criteria Model Selection**
 ```python
-# Stage-specific optimization
-architect → GPT-5/Claude Opus (complex reasoning)
-builder → GPT-5/DeepSeek Coder (code generation) 
-tester → GPT-5 Turbo (fast analysis)
-operator → GPT-4o/Gemini Pro (efficient docs)
-debugger → GPT-5/Claude Opus (deep analysis)
+# Sophisticated scoring algorithm considers:
+- Task type specialties (code_generation, reasoning, analysis, etc.)
+- Quality requirements (basic, good, high, premium)
+- Cost preferences (cost_optimized, balanced, performance_optimized)
+- Latency requirements (low_latency, normal, batch)
+- Function calling & structured output needs
+- Historical performance & availability tracking
+- Dynamic failure penalties & success bonuses
 ```
 
 ## 🔌 MCP Server Integration

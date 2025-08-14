@@ -20,11 +20,13 @@ I need you to help me initialize and test the complete SOPHIA Swarm development 
 - Verify GitHub remote MCP connection
 - Test MCP semantic search functionality
 
-**Step 3: Swarm Integration Test**
+**Step 3: AI Router & Swarm Integration Test**
+- Test AI Router with different task types: `python -c "import asyncio; from mcp_servers.ai_router import ai_router, TaskRequest, TaskType; print(asyncio.run(ai_router.route_request(TaskRequest('test code generation', TaskType.CODE_GENERATION))))`
+- Verify AI Router has 20+ models available with sophisticated selection
 - Test swarm chat interface with a simple query
 - Verify all 4 swarm agents are responding (architect, builder, tester, operator)
-- Validate dynamic AI model selection is working
-- Test swarm → MCP → code context flow
+- Validate dynamic model selection integrates with swarm agents
+- Test swarm → AI Router → MCP → code context flow
 
 **Step 4: Full Integration Test**
 - Create a simple test task that exercises all modes:
@@ -55,14 +57,44 @@ Please run through all these steps and report status of each component, then pro
 ## Quick Commands to Test:
 
 ```bash
+# Test AI Router (20+ models with sophisticated selection)
+python -c "
+import asyncio
+from mcp_servers.ai_router import ai_router, TaskRequest, TaskType
+async def test():
+    decision = await ai_router.route_request(TaskRequest('Generate Python code for file parsing', TaskType.CODE_GENERATION))
+    print(f'Selected: {decision.selected_model} (confidence: {decision.confidence_score:.3f})')
+    print(f'Reasoning: {decision.reasoning}')
+    stats = await ai_router.get_model_stats()
+    print(f'Total models available: {len(stats)}')
+asyncio.run(test())
+"
+
 # Test MCP server
 python mcp/code_context/server.py --health
 
-# Test swarm integration  
+# Test swarm integration
 python -c "from swarm.chat_interface import chat_with_swarm; print(chat_with_swarm('Hello swarm')['success'])"
 
 # Test MCP tools
 python -c "from integrations.mcp_tools import mcp_semantic_search; print(len(mcp_semantic_search('test', k=3)))"
+
+# Test different AI Router task types
+python -c "
+import asyncio
+from mcp_servers.ai_router import ai_router, TaskRequest, TaskType
+async def test_types():
+    tasks = [
+        ('Complex architectural analysis', TaskType.REASONING),
+        ('Generate REST API code', TaskType.CODE_GENERATION),
+        ('Review this code for bugs', TaskType.CODE_REVIEW),
+        ('Write technical documentation', TaskType.DOCUMENTATION)
+    ]
+    for prompt, task_type in tasks:
+        decision = await ai_router.route_request(TaskRequest(prompt, task_type))
+        print(f'{task_type.value}: {decision.selected_model} ({decision.confidence_score:.2f})')
+asyncio.run(test_types())
+"
 ```
 
 ## 5 Roo Modes:

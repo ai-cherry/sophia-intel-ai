@@ -1,0 +1,8 @@
+repos:
+- repo: local
+  hooks:
+  - id: tone-lint
+    name: No-BS tone linter
+    entry: python scripts/tone_lint.py
+    language: system
+    files: ^(\.roo/|\.roomodes/|docs/|prompts/).+\.(md|json|ya?ml)$

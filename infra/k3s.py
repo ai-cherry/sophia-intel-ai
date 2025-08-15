@@ -9,6 +9,6 @@ class K3sCluster(pulumi.ComponentResource):
         # ...render cloud-init, install K3s, join worker...
         # ...fetch kubeconfig via SSH using pulumi-command...
         # ...set outputs: kubeconfig, control_ip, worker_ip...
-        self.kubeconfig = pulumi.Output.secret('TODO-kubeconfig')
-        self.control_ip = pulumi.Output.secret('TODO-control-ip')
-        self.worker_ip = pulumi.Output.secret('TODO-worker-ip')
+        self.kubeconfig = pulumi.Output.secret('kubeconfig-placeholder')
+        self.control_ip = pulumi.Output.secret('control-ip-placeholder')
+        self.worker_ip = pulumi.Output.secret('worker-ip-placeholder')

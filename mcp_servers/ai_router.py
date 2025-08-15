@@ -105,169 +105,148 @@ class AIRouter:
         self.session = None
         
     def _initialize_model_registry(self) -> Dict[str, ModelCapability]:
-        """Initialize the model registry with Lambda Inference API and OpenRouter models"""
+        """Initialize the model registry with Claude Sonnet 4 as primary model"""
         return {
-            # Lambda Inference API Models - Primary for cost-effective inference
-            "lambda-lfm-40b": ModelCapability(
-                provider=ModelProvider.OPENROUTER,  # Using OpenRouter enum for Lambda API
-                model_name="lfm-40b",
-                max_tokens=8192,
-                cost_per_1k_tokens=0.001,  # Very cost-effective
-                avg_response_time=1.2,
-                quality_score=0.85,
-                specialties=[TaskType.CODE_GENERATION, TaskType.GENERAL_CHAT],
-                context_window=32768,
-                supports_function_calling=False,
-                supports_structured_output=True,
-                rate_limit_rpm=60000
-            ),
-            "lambda-qwen3-32b-fp8": ModelCapability(
+            # Primary Model - Claude Sonnet 4 (Anthropic)
+            "claude-sonnet-4": ModelCapability(
                 provider=ModelProvider.OPENROUTER,
-                model_name="qwen3-32b-fp8",
-                max_tokens=4096,
-                cost_per_1k_tokens=0.0008,
-                avg_response_time=0.9,
-                quality_score=0.82,
-                specialties=[TaskType.ANALYSIS, TaskType.REASONING],
-                context_window=32768,
-                supports_function_calling=False,
-                supports_structured_output=True,
-                rate_limit_rpm=60000
-            ),
-            "lambda-deepseek-r1-671b": ModelCapability(
-                provider=ModelProvider.OPENROUTER,
-                model_name="deepseek-r1-671b",
-                max_tokens=8192,
-                cost_per_1k_tokens=0.002,
-                avg_response_time=2.8,
-                quality_score=0.92,
-                specialties=[TaskType.REASONING, TaskType.MATH, TaskType.CODE_REVIEW],
-                context_window=65536,
-                supports_function_calling=False,
-                supports_structured_output=True,
-                rate_limit_rpm=30000
-            ),
-            
-            # OpenRouter Models - Premium options for specialized tasks
-            "openrouter-gpt-4o": ModelCapability(
-                provider=ModelProvider.OPENROUTER,
-                model_name="openai/gpt-4o",
-                max_tokens=4096,
-                cost_per_1k_tokens=0.005,
-                avg_response_time=2.2,
-                quality_score=0.95,
-                specialties=[TaskType.CODE_GENERATION, TaskType.FUNCTION_CALLING, TaskType.STRUCTURED_OUTPUT],
-                context_window=128000,
-                supports_function_calling=True,
-                supports_structured_output=True,
-                rate_limit_rpm=10000
-            ),
-            "openrouter-claude-3-5-sonnet": ModelCapability(
-                provider=ModelProvider.OPENROUTER,
-                model_name="anthropic/claude-3.5-sonnet",
+                model_name="anthropic/claude-sonnet-4",
                 max_tokens=8192,
                 cost_per_1k_tokens=0.003,
                 avg_response_time=2.0,
-                quality_score=0.93,
-                specialties=[TaskType.CREATIVE_WRITING, TaskType.ANALYSIS, TaskType.DOCUMENTATION],
-                context_window=200000,
+                quality_score=0.98,
+                specialties=[TaskType.CODE_GENERATION, TaskType.REASONING, TaskType.ANALYSIS, 
+                           TaskType.CREATIVE_WRITING, TaskType.DOCUMENTATION, TaskType.FUNCTION_CALLING],
+                context_window=500000,  # 500B tokens
                 supports_function_calling=True,
                 supports_structured_output=True,
                 rate_limit_rpm=15000
             ),
-            "openrouter-deepseek-r1": ModelCapability(
+            
+            # Embedding Specialist - For vector search and semantic tasks only
+            "embedding-model": ModelCapability(
                 provider=ModelProvider.OPENROUTER,
-                model_name="deepseek/deepseek-r1",
+                model_name="text-embedding-3-large",
+                max_tokens=8192,
+                cost_per_1k_tokens=0.00013,
+                avg_response_time=0.5,
+                quality_score=0.85,
+                specialties=[TaskType.EMBEDDING, TaskType.SEMANTIC_SEARCH],
+                context_window=8192,
+                supports_function_calling=False,
+                supports_structured_output=False,
+                rate_limit_rpm=100000
+            ),
+            
+            # Fallback Models - Only for specific edge cases
+            "deepseek-v3-fallback": ModelCapability(
+                provider=ModelProvider.OPENROUTER,
+                model_name="deepseek/deepseek-v3-0324",
                 max_tokens=8192,
                 cost_per_1k_tokens=0.0014,
                 avg_response_time=1.8,
                 quality_score=0.90,
-                specialties=[TaskType.REASONING, TaskType.MATH, TaskType.CODE_GENERATION],
-                context_window=65536,
+                specialties=[TaskType.MATH, TaskType.CODE_REVIEW],
+                context_window=173000,  # 173B tokens
                 supports_function_calling=False,
                 supports_structured_output=True,
                 rate_limit_rpm=30000
             ),
             
-            # OpenAI Models - Fallback for critical tasks requiring function calling
-            "gpt-4o": ModelCapability(
-                provider=ModelProvider.OPENAI,
-                model_name="gpt-4o",
-                max_tokens=4096,
-                cost_per_1k_tokens=0.03,
-                avg_response_time=2.5,
-                quality_score=0.95,
-                specialties=[TaskType.CODE_GENERATION, TaskType.REASONING, TaskType.ANALYSIS],
-                context_window=128000,
-                supports_function_calling=True,
-                supports_structured_output=True,
-                rate_limit_rpm=10000
-            ),
-            "gpt-4o-mini": ModelCapability(
-                provider=ModelProvider.OPENAI,
-                model_name="gpt-4o-mini",
-                max_tokens=4096,
-                cost_per_1k_tokens=0.0015,
-                avg_response_time=1.8,
+            "gemini-flash-fallback": ModelCapability(
+                provider=ModelProvider.OPENROUTER,
+                model_name="google/gemini-2.0-flash",
+                max_tokens=8192,
+                cost_per_1k_tokens=0.0002,
+                avg_response_time=1.2,
                 quality_score=0.88,
-                specialties=[TaskType.GENERAL_CHAT, TaskType.DOCUMENTATION],
-                context_window=128000,
+                specialties=[TaskType.GENERAL_CHAT, TaskType.QUICK_TASKS],
+                context_window=272000,  # 272B tokens
                 supports_function_calling=True,
                 supports_structured_output=True,
-                rate_limit_rpm=30000
+                rate_limit_rpm=60000
             ),
         }
     
     async def route_request(self, request: TaskRequest) -> RoutingDecision:
         """
-        Route a request to the optimal AI model based on task characteristics
-        and performance requirements.
+        Route request to the optimal model with Claude Sonnet 4 as primary choice
         """
         logger.info(f"Routing request for task type: {request.task_type}")
         
-        # Score all available models
-        model_scores = {}
-        for model_id, model in self.models.items():
-            score = await self._score_model(model, request)
-            model_scores[model_id] = score
-        
-        # Sort by score (highest first)
-        sorted_models = sorted(
-            model_scores.items(), 
-            key=lambda x: x[1], 
-            reverse=True
-        )
-        
-        # Select primary model and fallbacks
-        primary_model_id = sorted_models[0][0]
-        primary_model = self.models[primary_model_id]
-        
-        fallback_options = [
-            (self.models[model_id].provider, self.models[model_id].model_name)
-            for model_id, _ in sorted_models[1:4]  # Top 3 fallbacks
-        ]
-        
-        # Calculate estimates
-        estimated_cost = self._estimate_cost(primary_model, request)
-        estimated_latency = self._estimate_latency(primary_model, request)
-        
-        # Generate reasoning
-        reasoning = self._generate_reasoning(primary_model, request, model_scores[primary_model_id])
-        
-        decision = RoutingDecision(
-            selected_provider=primary_model.provider,
-            selected_model=primary_model.model_name,
-            confidence_score=model_scores[primary_model_id],
-            reasoning=reasoning,
-            estimated_cost=estimated_cost,
-            estimated_latency=estimated_latency,
-            fallback_options=fallback_options
-        )
-        
-        logger.info(f"Selected {primary_model.provider.value}:{primary_model.model_name} "
-                   f"with confidence {decision.confidence_score:.3f}")
-        
-        return decision
+        try:
+            # Special case: Embedding tasks go to embedding model
+            if request.task_type == TaskType.EMBEDDING or request.task_type == TaskType.SEMANTIC_SEARCH:
+                selected_model = "embedding-model"
+                confidence = 1.0
+                reasoning = "Specialized embedding model for vector search tasks"
+            
+            # Special case: Pure math tasks can use DeepSeek V3 for cost optimization
+            elif (request.task_type == TaskType.MATH and 
+                  request.preferences.cost_preference == CostPreference.MINIMAL and
+                  len(request.prompt) < 4000):  # Only for shorter math problems
+                selected_model = "deepseek-v3-fallback"
+                confidence = 0.85
+                reasoning = "Cost-optimized DeepSeek V3 for mathematical computations"
+            
+            # Special case: Very simple, quick tasks can use Gemini Flash
+            elif (request.task_type == TaskType.GENERAL_CHAT and 
+                  request.preferences.cost_preference == CostPreference.MINIMAL and
+                  len(request.prompt) < 500):  # Very short prompts only
+                selected_model = "gemini-flash-fallback"
+                confidence = 0.80
+                reasoning = "Fast and cost-effective Gemini Flash for simple queries"
+            
+            # Default: Claude Sonnet 4 for everything else (95%+ of use cases)
+            else:
+                selected_model = "claude-sonnet-4"
+                confidence = 0.98
+                reasoning = "Claude Sonnet 4 - Primary model for comprehensive AI capabilities"
+            
+            # Get model capability
+            model_capability = self.model_registry[selected_model]
+            
+            # Calculate estimated cost and latency
+            estimated_tokens = len(request.prompt.split()) * 1.3  # Rough token estimation
+            estimated_cost = (estimated_tokens / 1000) * model_capability.cost_per_1k_tokens
+            estimated_latency = model_capability.avg_response_time * 1000  # Convert to ms
+            
+            # Create fallback chain (always Claude Sonnet 4 first, then others)
+            fallback_options = []
+            if selected_model != "claude-sonnet-4":
+                fallback_options.append(("openrouter", "anthropic/claude-sonnet-4"))
+            if selected_model != "deepseek-v3-fallback":
+                fallback_options.append(("openrouter", "deepseek/deepseek-v3-0324"))
+            if selected_model != "gemini-flash-fallback":
+                fallback_options.append(("openrouter", "google/gemini-2.0-flash"))
+            
+            decision = RoutingDecision(
+                selected_provider=model_capability.provider.value,
+                selected_model=model_capability.model_name,
+                confidence_score=confidence,
+                reasoning=reasoning,
+                estimated_cost=estimated_cost,
+                estimated_latency_ms=int(estimated_latency),
+                fallback_options=fallback_options[:2]  # Limit to 2 fallbacks
+            )
+            
+            logger.info(f"Selected {model_capability.provider.value}:{model_capability.model_name} "
+                       f"with confidence {confidence:.3f}")
+            
+            return decision
+            
+        except Exception as e:
+            logger.error(f"Error in routing decision: {e}")
+            # Emergency fallback to Claude Sonnet 4
+            return RoutingDecision(
+                selected_provider="openrouter",
+                selected_model="anthropic/claude-sonnet-4",
+                confidence_score=0.95,
+                reasoning="Emergency fallback to Claude Sonnet 4 due to routing error",
+                estimated_cost=0.01,
+                estimated_latency_ms=2000,
+                fallback_options=[("openrouter", "google/gemini-2.0-flash")]
+            )
     
     async def execute_task(self, request: TaskRequest, decision: RoutingDecision) -> Any:
         """

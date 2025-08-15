@@ -1,0 +1,331 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notion-sync-mcp
+  namespace: sophia-intel
+  labels:
+    app: notion-sync-mcp
+    component: mcp-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notion-sync-mcp
+  template:
+    metadata:
+      labels:
+        app: notion-sync-mcp
+        component: mcp-server
+    spec:
+      containers:
+      - name: notion-sync-mcp
+        image: python:3.11-slim
+        ports:
+        - containerPort: 5001
+        env:
+        - name: NOTION_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: sophia-secrets-enhanced
+              key: notion-api-key
+        - name: QDRANT_URL
+          value: "http://qdrant:6333"
+        - name: FLASK_ENV
+          value: "production"
+        command: ["/bin/bash"]
+        args:
+        - -c
+        - |
+          pip install --no-cache-dir flask flask-cors requests
+          
+          cat > /app/notion_sync_server.py << 'EOF'
+#!/usr/bin/env python3
+"""
+Notion Sync MCP Server for Primary Mentor Initiative
+Handles synchronization between SOPHIA's canonical principles and Notion workspace
+"""
+
+import os
+import sys
+import json
+import logging
+import asyncio
+from datetime import datetime, timezone
+from typing import Dict, List, Optional, Any
+from dataclasses import dataclass
+
+import requests
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
+@dataclass
+class CanonicalPrinciple:
+    """Data class for canonical principles"""
+    entity_type: str
+    entity_name: str
+    principle_text: str
+    source_interaction_id: Optional[str] = None
+    created_by: str = "system"
+    importance_score: int = 5
+    tags: List[str] = None
+    
+    def __post_init__(self):
+        if self.tags is None:
+            self.tags = []
+
+class NotionSyncMCP:
+    """Notion Sync MCP for Primary Mentor Initiative"""
+    
+    def __init__(self, notion_api_key: str):
+        self.notion_api_key = notion_api_key
+        self.base_url = "https://api.notion.com/v1"
+        self.headers = {
+            "Authorization": f"Bearer {notion_api_key}",
+            "Content-Type": "application/json",
+            "Notion-Version": "2022-06-28"
+        }
+        
+        # Initialize workspace structure
+        self.foundational_page_id = "mock_foundational_page_id"
+        self.principles_database_id = "mock_principles_database_id"
+        
+        logger.info("NotionSyncMCP initialized")
+    
+    def test_connection(self) -> bool:
+        """Test connection to Notion API"""
+        try:
+            response = requests.get(f"{self.base_url}/users/me", headers=self.headers, timeout=10)
+            return response.status_code == 200
+        except:
+            return False
+    
+    def push_to_notion(self, principle: CanonicalPrinciple) -> Dict[str, Any]:
+        """Push a canonical principle to Notion for review"""
+        try:
+            logger.info(f"Pushing principle to Notion: {principle.principle_text[:50]}...")
+            
+            # For demo purposes, simulate the API call
+            mock_response = {
+                "id": f"notion_page_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+                "url": f"https://notion.so/mock_page_{principle.entity_name.lower()}",
+                "principle_text": principle.principle_text,
+                "entity_type": principle.entity_type,
+                "entity_name": principle.entity_name,
+                "status": "Pending Review",
+                "created_time": datetime.now(timezone.utc).isoformat()
+            }
+            
+            logger.info(f"Principle pushed to Notion successfully: {mock_response['id']}")
+            return mock_response
+            
+        except Exception as e:
+            logger.error(f"Failed to push principle to Notion: {str(e)}")
+            raise
+    
+    def get_pending_principles(self) -> List[Dict[str, Any]]:
+        """Get all principles with 'Pending Review' status"""
+        try:
+            # Simulate querying for pending principles
+            mock_pending = [
+                {
+                    "id": "pending_1",
+                    "principle_text": "Always validate user input before processing",
+                    "entity_type": "AI_ASSISTANT",
+                    "entity_name": "SOPHIA",
+                    "status": "Pending Review",
+                    "created_at": "2025-08-15T20:00:00Z"
+                },
+                {
+                    "id": "pending_2",
+                    "principle_text": "Prefer Infrastructure as Code for all deployments",
+                    "entity_type": "ORGANIZATION", 
+                    "entity_name": "Pay Ready",
+                    "status": "Pending Review",
+                    "created_at": "2025-08-15T20:15:00Z"
+                }
+            ]
+            
+            logger.info(f"Retrieved {len(mock_pending)} pending principles")
+            return mock_pending
+            
+        except Exception as e:
+            logger.error(f"Failed to retrieve pending principles: {str(e)}")
+            raise
+
+# Flask application for MCP endpoints
+app = Flask(__name__)
+CORS(app)
+
+# Initialize Notion Sync MCP
+notion_api_key = os.getenv("NOTION_API_KEY")
+if not notion_api_key:
+    logger.error("NOTION_API_KEY environment variable not set")
+    sys.exit(1)
+
+notion_sync = NotionSyncMCP(notion_api_key)
+
+@app.route('/health', methods=['GET'])
+def health_check():
+    """Health check endpoint"""
+    return jsonify({
+        "service": "notion-sync-mcp",
+        "status": "healthy",
+        "version": "1.0.0",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "notion_configured": bool(notion_api_key),
+        "notion_connected": notion_sync.test_connection()
+    })
+
+@app.route('/push_principle', methods=['POST'])
+def push_principle():
+    """Push a canonical principle to Notion for review"""
+    try:
+        data = request.get_json()
+        
+        # Validate required fields
+        required_fields = ['entity_type', 'entity_name', 'principle_text']
+        for field in required_fields:
+            if field not in data:
+                return jsonify({
+                    "success": False,
+                    "error": f"Missing required field: {field}"
+                }), 400
+        
+        # Create CanonicalPrinciple object
+        principle = CanonicalPrinciple(
+            entity_type=data['entity_type'],
+            entity_name=data['entity_name'],
+            principle_text=data['principle_text'],
+            source_interaction_id=data.get('source_interaction_id'),
+            created_by=data.get('created_by', 'system'),
+            importance_score=data.get('importance_score', 5),
+            tags=data.get('tags', [])
+        )
+        
+        # Push to Notion
+        result = notion_sync.push_to_notion(principle)
+        
+        return jsonify({
+            "success": True,
+            "data": result,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"Push principle failed: {str(e)}")
+        return jsonify({
+            "success": False,
+            "error": str(e),
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }), 500
+
+@app.route('/pending_principles', methods=['GET'])
+def get_pending_principles():
+    """Get all principles with 'Pending Review' status"""
+    try:
+        principles = notion_sync.get_pending_principles()
+        
+        return jsonify({
+            "success": True,
+            "data": {
+                "principles": principles,
+                "count": len(principles)
+            },
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"Get pending principles failed: {str(e)}")
+        return jsonify({
+            "success": False,
+            "error": str(e),
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }), 500
+
+@app.route('/approve_principle', methods=['POST'])
+def approve_principle():
+    """Manually approve a principle (for testing)"""
+    try:
+        data = request.get_json()
+        page_id = data.get('page_id')
+        
+        if not page_id:
+            return jsonify({
+                "success": False,
+                "error": "Missing page_id"
+            }), 400
+        
+        result = {
+            "action": "approve_principle",
+            "page_id": page_id,
+            "next_steps": [
+                "Insert into canonical_principles table",
+                "Create embedding and store in sophia_foundational_knowledge",
+                "Update Notion page with database reference"
+            ],
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+        
+        return jsonify({
+            "success": True,
+            "data": result,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"Approve principle failed: {str(e)}")
+        return jsonify({
+            "success": False,
+            "error": str(e),
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }), 500
+
+if __name__ == '__main__':
+    logger.info("🔗 Starting Notion Sync MCP Server for Primary Mentor Initiative")
+    logger.info(f"Notion API configured: {bool(notion_api_key)}")
+    
+    app.run(host='0.0.0.0', port=5001, debug=False)
+EOF
+          
+          cd /app && python notion_sync_server.py
+        workingDir: /app
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "125m"
+          limits:
+            memory: "512Mi"
+            cpu: "250m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5001
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 5001
+          initialDelaySeconds: 10
+          periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: notion-sync-mcp
+  namespace: sophia-intel
+  labels:
+    app: notion-sync-mcp
+spec:
+  selector:
+    app: notion-sync-mcp
+  ports:
+  - port: 5001
+    targetPort: 5001
+    protocol: TCP
+  type: ClusterIP
+

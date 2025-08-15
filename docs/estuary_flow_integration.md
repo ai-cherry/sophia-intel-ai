@@ -1,5 +1,75 @@
 # Estuary Flow Integration
 
+## Current Status: BLOCKED - DNS Resolution Failure
+
+### Issue Summary
+Estuary Flow integration is currently blocked due to DNS resolution failure for the API endpoint.
+
+### Evidence
+```bash
+# DNS Resolution Test
+nslookup api.estuary.dev
+# Output: ** server can't find api.estuary.dev: NXDOMAIN
+
+# API Connection Test  
+python scripts/estuary/estuary_check.py
+# Output: ConnectError('[Errno -2] Name or service not known')
+```
+
+### Technical Details
+- **API Base URL**: `https://api.estuary.dev`
+- **DNS Status**: NXDOMAIN (domain does not exist)
+- **Token Format**: Valid JWT (1129 characters)
+- **Refresh Token**: Present and valid format
+
+### Credentials Available
+- ✅ **ESTUARY_ACCESS_TOKEN**: JWT format, 1129 characters
+- ✅ **ESTUARY_REFRESH_TOKEN**: Base64 encoded, valid format
+- ❌ **API Endpoint**: DNS resolution fails
+
+### Root Cause Analysis
+The domain `api.estuary.dev` does not resolve to any IP address, indicating either:
+1. **Service Discontinued**: Estuary Flow service may have been discontinued
+2. **Domain Changed**: API endpoint may have moved to different domain
+3. **Network Restrictions**: Sandbox environment may have DNS restrictions
+4. **Temporary Outage**: DNS servers may be temporarily unavailable
+
+### Attempted Solutions
+1. **Multiple DNS Servers**: Tested with default DNS (8.8.8.8)
+2. **Network Tools**: Installed dnsutils and iputils-ping
+3. **Alternative Endpoints**: No alternative endpoints documented
+4. **Token Validation**: Tokens appear valid but cannot be tested due to DNS failure
+
+### Next Steps
+1. **Verify Service Status**: Check if Estuary Flow is still operational
+2. **Alternative Endpoints**: Research current API endpoints for Estuary
+3. **Contact Support**: Reach out to Estuary team for current API documentation
+4. **Alternative Solutions**: Consider alternative data streaming platforms
+
+### Implementation Status
+- ✅ **Integration Scripts**: Complete and ready for testing
+- ✅ **Authentication**: JWT tokens available and properly formatted
+- ✅ **Error Handling**: Comprehensive error capture and logging
+- ❌ **Connectivity**: Blocked by DNS resolution failure
+
+### Files Created
+- `scripts/estuary/estuary_check.py`: Complete integration test script
+- `config/estuary/`: Directory structure ready for flow configurations
+- `docs/estuary_flow_integration.md`: This documentation
+
+### Recommendation
+**DEFER ESTUARY INTEGRATION** until DNS/connectivity issues are resolved. Focus on other integrations (OpenRouter, Qdrant, Neon, Redis) that are accessible.
+
+---
+
+**Last Updated**: August 14, 2025  
+**Status**: BLOCKED - DNS Resolution Failure  
+**Next Review**: After service status verification
+
+---
+
+## Original Integration Plan
+
 This document describes the Estuary Flow integration for the Sophia Intel platform, providing real-time data streaming and ETL capabilities.
 
 ## Overview

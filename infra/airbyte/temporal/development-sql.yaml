@@ -1,0 +1,16 @@
+# Temporal dynamic configuration for development
+system.forceSearchAttributesCacheRefreshOnRead:
+  - value: true
+    constraints: {}
+
+system.enableCrossNamespaceCommands:
+  - value: true
+    constraints: {}
+
+limit.maxIDLength:
+  - value: 1000
+    constraints: {}
+
+system.enableLoggerRateLimiting:
+  - value: false
+    constraints: {}

@@ -1,0 +1,164 @@
+{
+  "timestamp": "2025-08-15T04:54:07.963218",
+  "repository": "ai-cherry/sophia-intel",
+  "total_tests": 10,
+  "passed_tests": 10,
+  "success_rate": 100.0,
+  "results": [
+    {
+      "test": "Configuration",
+      "success": true,
+      "timestamp": "2025-08-15T04:54:01.508688",
+      "details": "Configuration validation: 4/4 passed",
+      "data": {
+        "tests": [
+          {
+            "name": "GitHub PAT",
+            "passed": true
+          },
+          {
+            "name": "GitHub API Base",
+            "passed": true
+          },
+          {
+            "name": "Default Repository",
+            "passed": true
+          },
+          {
+            "name": "Repository Access",
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "test": "Repository Access",
+      "success": true,
+      "timestamp": "2025-08-15T04:54:01.844227",
+      "details": "Access to ai-cherry/sophia-intel: Granted",
+      "data": null
+    },
+    {
+      "test": "Repository Info",
+      "success": true,
+      "timestamp": "2025-08-15T04:54:02.834442",
+      "details": "Retrieved info for ai-cherry/sophia-intel",
+      "data": {
+        "name": "sophia-intel",
+        "private": false,
+        "default_branch": "main",
+        "languages": [
+          "Python",
+          "Shell",
+          "TypeScript"
+        ]
+      }
+    },
+    {
+      "test": "Repository Structure",
+      "success": true,
+      "timestamp": "2025-08-15T04:54:04.214511",
+      "details": "Retrieved structure for branch main",
+      "data": {
+        "total_files": 327,
+        "total_directories": 86,
+        "sample_files": [
+          ".devcontainer/devcontainer.json",
+          ".env.example",
+          ".githooks/pre-commit",
+          ".github/CODEOWNERS",
+          ".github/copilot-instructions.md"
+        ]
+      }
+    },
+    {
+      "test": "File Reading (README.md)",
+      "success": true,
+      "timestamp": "2025-08-15T04:54:04.622416",
+      "details": "Read 25006 bytes",
+      "data": {
+        "file_path": "README.md",
+        "size": 25006,
+        "sha": "74b35aa0",
+        "content_preview": "# Sophia Intel - AI Agent Platform\n\n## \ud83c\udfd7\ufe0f Architecture\n\n```mermaid\ngraph TB\n    subgraph \"GitHub Cod..."
+      }
+    },
+    {
+      "test": "File Reading (pyproject.toml)",
+      "success": true,
+      "timestamp": "2025-08-15T04:54:05.128797",
+      "details": "Read 2229 bytes",
+      "data": {
+        "file_path": "pyproject.toml",
+        "size": 2229,
+        "sha": "3f27473b",
+        "content_preview": "[project]\nname = \"sophia-intel\"\nversion = \"0.1.0\"\ndescription = \"Sophia Intel - AI Agent Platform\"\na..."
+      }
+    },
+    {
+      "test": "File Reading (requirements.txt)",
+      "success": true,
+      "timestamp": "2025-08-15T04:54:05.510840",
+      "details": "Read 193 bytes",
+      "data": {
+        "file_path": "requirements.txt",
+        "size": 193,
+        "sha": "b8222a63",
+        "content_preview": "aiohttp>=3.8.0\nasyncio-throttle>=1.0.0\nhaystack-ai\nhaystack-integrations[qdrant]\nlangchain-community..."
+      }
+    },
+    {
+      "test": "Multiple File Reading",
+      "success": true,
+      "timestamp": "2025-08-15T04:54:06.278941",
+      "details": "Read 4/4 files successfully",
+      "data": {
+        "successful_files": [
+          "README.md",
+          "pyproject.toml",
+          "requirements.txt",
+          "config/config.py"
+        ],
+        "error_files": [],
+        "success_rate": "100.0%"
+      }
+    },
+    {
+      "test": "Branch Operations",
+      "success": true,
+      "timestamp": "2025-08-15T04:54:07.349372",
+      "details": "Branch creation logic validated (source SHA: fbae5a1b)",
+      "data": {
+        "default_branch": "main",
+        "source_sha": "fbae5a1b",
+        "ref": "refs/heads/main"
+      }
+    },
+    {
+      "test": "Pull Request Listing",
+      "success": true,
+      "timestamp": "2025-08-15T04:54:07.962860",
+      "details": "Found 23 pull requests",
+      "data": {
+        "total_prs": 23,
+        "recent_prs": [
+          {
+            "number": 23,
+            "title": "feat(PR-C): Connectivity Smoke Tests - Real API va...",
+            "state": "open"
+          },
+          {
+            "number": 22,
+            "title": "feat(PR-B): Cleanup & Allow-List Enforcement - Com...",
+            "state": "closed"
+          },
+          {
+            "number": 21,
+            "title": "feat(PR-A): uv & Dependency Truth - Production rea...",
+            "state": "closed"
+          }
+        ]
+      }
+    }
+  ]
+}

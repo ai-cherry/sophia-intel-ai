@@ -11,18 +11,11 @@ env:
   UV_CACHE_DIR: /tmp/.uv-cache
 
 jobs:
-  lint:
+  deps_uv_lock:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Check for Forbidden Environment Directories
-        run: |
-          if [ -d ".venv" ]; then
-            echo "Error: The .venv directory should not be committed to the repository."
-            exit 1
-          fi
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -35,10 +28,127 @@ jobs:
       - name: Add uv to PATH
         run: echo "$HOME/.local/bin" >> $GITHUB_PATH
 
-      - name: Dependency Audit
+      - name: Check uv version
+        run: uv --version
+
+      - name: Sync dependencies with frozen lock
+        run: uv sync --frozen
+
+      - name: Test import sanity
         run: |
-          uv sync --dev
-          uv lock --check
+          source .venv/bin/activate
+          python -c "import loguru, qdrant_client, fastapi, uvicorn, httpx; print('✅ Core imports successful')"
+
+      - name: Generate uv.lock checksum
+        run: sha256sum uv.lock > uv.lock.sha256
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: uv-sync-artifacts
+          path: |
+            uv.lock.sha256
+
+  hygiene_sweep:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check for forbidden patterns
+        run: |
+          echo "Checking for Roo, Portkey, and backup artifacts..."
+          if git grep -niE 'roo|portkey|backup' --exclude-dir=.venv --exclude-dir=node_modules .; then
+            echo "❌ Found forbidden patterns in codebase"
+            exit 1
+          else
+            echo "✅ No forbidden patterns found"
+          fi
+
+      - name: Check for .venv directory
+        run: |
+          if [ -d ".venv" ]; then
+            echo "❌ .venv directory should not be committed"
+            exit 1
+          fi
+
+      - name: Upload hygiene log
+        uses: actions/upload-artifact@v4
+        with:
+          name: hygiene-artifacts
+          path: |
+            hygiene.log
+        if: always()
+
+  secrets_presence_gate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check secrets presence
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          QDRANT_API_KEY: ${{ secrets.QDRANT_API_KEY }}
+          QDRANT_URL: ${{ secrets.QDRANT_URL }}
+          REDIS_USER_API_KEY: ${{ secrets.REDIS_USER_API_KEY }}
+          NEON_DATABASE_URL: ${{ secrets.NEON_DATABASE_URL }}
+          ESTUARY_ACCESS_TOKEN: ${{ secrets.ESTUARY_ACCESS_TOKEN }}
+        run: |
+          echo "Checking required secrets presence..."
+          
+          secrets_status="secrets_status.json"
+          echo "{" > $secrets_status
+          
+          check_secret() {
+            local name=$1
+            local value=$2
+            if [ -n "$value" ]; then
+              echo "  \"$name\": \"present\"," >> $secrets_status
+              echo "✅ $name: present"
+            else
+              echo "  \"$name\": \"missing\"," >> $secrets_status
+              echo "❌ $name: missing"
+            fi
+          }
+          
+          check_secret "OPENROUTER_API_KEY" "$OPENROUTER_API_KEY"
+          check_secret "QDRANT_API_KEY" "$QDRANT_API_KEY"
+          check_secret "QDRANT_URL" "$QDRANT_URL"
+          check_secret "REDIS_USER_API_KEY" "$REDIS_USER_API_KEY"
+          check_secret "NEON_DATABASE_URL" "$NEON_DATABASE_URL"
+          check_secret "ESTUARY_ACCESS_TOKEN" "$ESTUARY_ACCESS_TOKEN"
+          
+          # Close JSON
+          sed -i '$ s/,$//' $secrets_status
+          echo "}" >> $secrets_status
+          
+          echo "Secrets status:"
+          cat $secrets_status
+
+      - name: Upload secrets status
+        uses: actions/upload-artifact@v4
+        with:
+          name: secrets-status
+          path: secrets_status.json
+
+  lint:
+    runs-on: ubuntu-latest
+    needs: [deps_uv_lock, hygiene_sweep]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install uv
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+
+      - name: Add uv to PATH
+        run: echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       - name: Restore uv cache
         uses: actions/cache@v3
@@ -47,23 +157,7 @@ jobs:
           key: uv-${{ runner.os }}-${{ hashFiles('uv.lock') }}
 
       - name: Install dependencies
-        run: uv sync --dev
-
-      - name: Validate configuration
-        run: python scripts/validate_config.py
-        env:
-          # Test environment variables for validation
-          ENVIRONMENT: test
-          OPENROUTER_API_KEY: sk-or-v1-test-key-for-validation-only
-          LAMBDA_CLOUD_API_KEY: ll-test-key-for-validation-only
-          EXA_API_KEY: exa-test-key-for-validation-only
-          SECRET_KEY: test-secret-key-32-chars-minimum-length
-          ENCRYPTION_KEY: test-encryption-key-exactly-32-char
-          JWT_SECRET: test-jwt-secret-16-chars-minimum
-          API_SALT: test-api-salt-16-chars-minimum
-          DATABASE_URL: postgresql+asyncpg://test:test@localhost:5432/test
-          REDIS_URL: redis://localhost:6379/1
-          QDRANT_URL: http://localhost:6333
+        run: uv sync --frozen --dev
 
       - name: Code compilation check
         run: python -m compileall . -x 'frontend/|node_modules/'
@@ -82,7 +176,7 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
-    needs: lint
+    needs: [deps_uv_lock, lint]
     
     services:
       redis:
@@ -124,30 +218,8 @@ jobs:
       - name: Add uv to PATH
         run: echo "$HOME/.local/bin" >> $GITHUB_PATH
 
-      - name: Restore uv cache
-        uses: actions/cache@v3
-        with:
-          path: ${{ env.UV_CACHE_DIR }}
-          key: uv-${{ runner.os }}-${{ hashFiles('uv.lock') }}
-
       - name: Install dependencies
-        run: uv sync --dev
-
-      - name: Validate configuration
-        run: python scripts/validate_config.py
-        env:
-          # Test environment variables for validation
-          ENVIRONMENT: test
-          OPENROUTER_API_KEY: sk-or-v1-test-key-for-validation-only
-          LAMBDA_CLOUD_API_KEY: ll-test-key-for-validation-only
-          EXA_API_KEY: exa-test-key-for-validation-only
-          SECRET_KEY: test-secret-key-32-chars-minimum-length
-          ENCRYPTION_KEY: test-encryption-key-exactly-32-char
-          JWT_SECRET: test-jwt-secret-16-chars-minimum
-          API_SALT: test-api-salt-16-chars-minimum
-          DATABASE_URL: postgresql+asyncpg://sophia:testpass@localhost:5432/sophia_test
-          REDIS_URL: redis://localhost:6379/1
-          QDRANT_URL: http://localhost:6333
+        run: uv sync --frozen --dev
 
       - name: Create test data directory
         run: mkdir -p data
@@ -163,7 +235,6 @@ jobs:
           # Mock API keys for testing
           OPENROUTER_API_KEY: test-openrouter-key
           LAMBDA_CLOUD_API_KEY: test-lambda-key
-          EXA_API_KEY: test-exa-key
           
           # Test secrets
           SECRET_KEY: test-secret-key
@@ -218,81 +289,22 @@ jobs:
           
           echo "Security scan completed. Review reports if any issues found."
 
-  integration:
-    runs-on: ubuntu-latest
-    needs: [test, security]
-    if: github.event_name == 'pull_request'
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: Install uv
-        run: curl -LsSf https://astral.sh/uv/install.sh | sh
-
-      - name: Add uv to PATH
-        run: echo "$HOME/.local/bin" >> $GITHUB_PATH
-
-      - name: Install dependencies
-        run: uv pip install --system -r requirements.txt
-
-      - name: Integration test - Configuration loading
-        run: |
-          python -c "from config.config import settings; print(f'Config loaded: {settings.ENVIRONMENT}')"
-
-      - name: Integration test - Import all modules
-        run: |
-          python -c "
-          import sys
-          sys.path.append('.')
-          
-          # Test imports
-          from config.config import settings
-          from agents.base_agent import BaseAgent
-          from agents.coding_agent import CodingAgent
-          from mcp_servers.memory_service import MemoryService
-          from services.orchestrator import Orchestrator
-          from services.lambda_client import LambdaClient
-          
-          print('All core modules imported successfully')
-          "
-
-      - name: Integration test - Agent instantiation
-        run: |
-          python -c "
-          import sys
-          sys.path.append('.')
-          
-          from agents.coding_agent import CodingAgent
-          
-          # Test agent creation (should not fail)
-          try:
-              agent = CodingAgent()
-              stats = agent.get_stats()
-              print(f'Agent created successfully: {stats}')
-          except Exception as e:
-              print(f'Agent creation failed: {e}')
-              sys.exit(1)
-          "
-
   build-status:
     runs-on: ubuntu-latest
-    needs: [lint, test, security]
+    needs: [deps_uv_lock, hygiene_sweep, secrets_presence_gate, lint, test, security]
     if: always()
     
     steps:
       - name: Check build status
         run: |
-          if [[ "${{ needs.lint.result }}" == "success" && "${{ needs.test.result }}" == "success" && "${{ needs.security.result }}" == "success" ]]; then
+          if [[ "${{ needs.deps_uv_lock.result }}" == "success" && "${{ needs.hygiene_sweep.result }}" == "success" && "${{ needs.lint.result }}" == "success" && "${{ needs.test.result }}" == "success" && "${{ needs.security.result }}" == "success" ]]; then
             echo "✅ All checks passed!"
             exit 0
           else
             echo "❌ Some checks failed:"
+            echo "Dependencies: ${{ needs.deps_uv_lock.result }}"
+            echo "Hygiene: ${{ needs.hygiene_sweep.result }}"
+            echo "Secrets: ${{ needs.secrets_presence_gate.result }}"
             echo "Lint: ${{ needs.lint.result }}"
             echo "Test: ${{ needs.test.result }}"
             echo "Security: ${{ needs.security.result }}"

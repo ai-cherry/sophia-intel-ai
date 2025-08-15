@@ -4,6 +4,7 @@ import time
 import sys
 from flask import Flask, jsonify, Response, request, send_from_directory
 from flask_cors import CORS
+from functools import wraps
 
 # Add services to path
 sys.path.insert(0, os.path.dirname(__file__))
@@ -11,9 +12,24 @@ sys.path.insert(0, os.path.dirname(__file__))
 from services.health import check_all_components
 from services.mcp_client import plan_mission, run_mission_stream
 from services.models import get_allowed_models_filtered
+from services.airbyte import list_workspaces, list_connections, trigger_sync, get_job_status, list_jobs
 
 app = Flask(__name__, static_folder="static", static_url_path="/")
 CORS(app)
+
+# API Token for protected operations
+API_TOKEN = os.getenv("DASHBOARD_API_TOKEN")
+
+def requires_token(f):
+    """Decorator to require API token for mutating operations"""
+    @wraps(f)
+    def _wrapped(*args, **kwargs):
+        if not API_TOKEN:
+            return f(*args, **kwargs)  # Allow if not set (dev mode)
+        if request.headers.get("X-Auth-Token") != API_TOKEN:
+            return jsonify({"error": "unauthorized"}), 401
+        return f(*args, **kwargs)
+    return _wrapped
 
 @app.route("/api/health")
 def api_health():
@@ -103,6 +119,45 @@ def api_swarm_jobs():
             }
         ]
     })
+
+# Airbyte Pipeline Management Endpoints
+
+@app.route("/api/pipelines/workspaces")
+def api_airbyte_workspaces():
+    """List Airbyte workspaces"""
+    return jsonify(list_workspaces())
+
+@app.route("/api/pipelines/connections")
+def api_airbyte_connections():
+    """List Airbyte connections"""
+    workspace_id = request.args.get("workspaceId") or os.getenv("AIRBYTE_WORKSPACE_ID")
+    return jsonify(list_connections(workspace_id))
+
+@app.route("/api/pipelines/sync", methods=["POST"])
+@requires_token
+def api_airbyte_sync():
+    """Trigger a manual sync for a connection"""
+    try:
+        connection_id = request.json.get("connectionId")
+        if not connection_id:
+            return jsonify({"error": "missing connectionId"}), 400
+        
+        data = trigger_sync(connection_id)
+        return jsonify(data)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/pipelines/jobs/<int:job_id>")
+def api_airbyte_job(job_id: int):
+    """Get status of a specific Airbyte job"""
+    return jsonify(get_job_status(job_id))
+
+@app.route("/api/pipelines/jobs")
+def api_airbyte_jobs():
+    """List recent Airbyte jobs"""
+    connection_id = request.args.get("connectionId")
+    limit = int(request.args.get("limit", "10"))
+    return jsonify(list_jobs(connection_id, limit))
 
 # Serve frontend build
 @app.route("/", defaults={"path": ""})

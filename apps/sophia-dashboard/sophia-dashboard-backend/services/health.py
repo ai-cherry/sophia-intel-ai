@@ -137,6 +137,13 @@ def check_all_components() -> Dict[str, Any]:
     """Check all system components with timeout protection"""
     start = time.time()
     
+    # Import here to avoid circular imports
+    try:
+        from .airbyte import check_airbyte_health
+        airbyte_check = check_airbyte_health
+    except ImportError:
+        airbyte_check = check_airbyte
+    
     # Run all checks
     parts = [
         check_openrouter(),
@@ -144,7 +151,7 @@ def check_all_components() -> Dict[str, Any]:
         check_postgres(),
         check_minio(),
         check_mcp(),
-        check_airbyte(),
+        airbyte_check(),
     ]
     
     # Determine overall status

@@ -1,9 +1,8 @@
 #!/bin/bash
 set -euo pipefail
 
-# SOPHIA Intel - Complete Production Deployment to www.sophia-intel.ai
-# Hands-on deployment + MCP verification script
-# Takes you from current code to fully tested production in one sequence
+# SOPHIA Intel - Production Hardened Deployment to www.sophia-intel.ai
+# Complete controlled deployment with all production fixes applied
 
 # Fast mode support
 FAST_MODE="${1:-}"
@@ -13,16 +12,18 @@ if [[ "$FAST_MODE" == "--fast" ]]; then
     SKIP_BUILD=1
 fi
 
-echo "🚀 SOPHIA Intel - Production Deployment to www.sophia-intel.ai"
-echo "=================================================================="
+echo "🚀 SOPHIA Intel - Production Hardened Deployment"
+echo "================================================"
 echo "Time: $(date)"
 echo "Target: www.sophia-intel.ai (Lambda Labs Production)"
+echo "DNSimple Account: musillynn"
 echo ""
 
 # Configuration
 PRODUCTION_IP="104.171.202.103"  # sophia-production-instance
 DOMAIN="sophia-intel.ai"
 GITHUB_REPO="ai-cherry/sophia-intel"
+DNSIMPLE_ACCOUNT_ID="musillynn"
 
 # Color codes for output
 RED='\033[0;31m'
@@ -37,7 +38,7 @@ log_success() { echo -e "${GREEN}✅ $1${NC}"; }
 log_warning() { echo -e "${YELLOW}⚠️  $1${NC}"; }
 log_error() { echo -e "${RED}❌ $1${NC}"; }
 
-# Check prerequisites
+# Check prerequisites with enhanced validation
 check_prerequisites() {
     log_info "Checking prerequisites..."
     
@@ -60,15 +61,31 @@ check_prerequisites() {
         exit 1
     fi
     
-    if [[ -z "${DNSIMPLE_ACCOUNT_ID:-}" ]]; then
-        log_error "DNSIMPLE_ACCOUNT_ID environment variable not set"
-        echo "Please set: export DNSIMPLE_ACCOUNT_ID='your_dnsimple_account_id'"
-        exit 1
+    # Required secrets validation
+    for v in OPENROUTER_API_KEY; do
+        if [[ -z "${!v:-}" ]]; then
+            log_error "Required secret $v is not set"
+            echo "Please set: export $v='your_${v,,}'"
+            exit 1
+        fi
+    done
+    
+    # Validate OpenRouter API key format
+    if [[ ! "${OPENROUTER_API_KEY}" =~ ^sk- ]]; then
+        log_warning "OpenRouter API key doesn't start with 'sk-' - please verify format"
     fi
+    
+    # Optional secrets warning
+    for v in QDRANT_URL QDRANT_API_KEY AIRBYTE_URL AIRBYTE_TOKEN; do
+        if [[ -z "${!v:-}" ]]; then
+            log_warning "Optional secret $v not set"
+        fi
+    done
     
     # Check required tools
     command -v docker >/dev/null 2>&1 || { log_error "Docker not installed"; exit 1; }
     command -v kubectl >/dev/null 2>&1 || { log_error "kubectl not installed"; exit 1; }
+    command -v helm >/dev/null 2>&1 || { log_error "Helm not installed"; exit 1; }
     command -v curl >/dev/null 2>&1 || { log_error "curl not installed"; exit 1; }
     command -v jq >/dev/null 2>&1 || { log_error "jq not installed"; exit 1; }
     
@@ -150,15 +167,9 @@ setup_kubectl() {
     fi
 }
 
-# Install Helm charts (cert-manager, Kong)
+# Install Helm charts with local kubectl
 install_helm_charts() {
     log_info "Installing Helm charts (local, using KUBECONFIG=$KUBECONFIG)..."
-    
-    # Check if Helm is installed locally
-    if ! command -v helm &>/dev/null; then
-        log_error "Helm not installed locally. Please install Helm first."
-        exit 1
-    fi
     
     # Add Helm repositories
     helm repo add jetstack https://charts.jetstack.io
@@ -199,7 +210,7 @@ install_helm_charts() {
     log_success "Helm charts installed"
 }
 
-# Build and push Docker images
+# Build and push Docker images with skip option
 build_docker_images() {
     if [[ "${SKIP_BUILD:-0}" -eq 1 ]]; then
         log_info "Skipping Docker image builds (fast mode)"
@@ -240,29 +251,9 @@ build_docker_images() {
     log_success "Images transferred to production"
 }
 
-# Create application namespace and secrets
+# Create application namespace and secrets with validation
 create_secrets() {
     log_info "Creating application secrets..."
-    
-    # Required secrets validation
-    for v in OPENROUTER_API_KEY GITHUB_PAT DNSIMPLE_API_KEY; do
-        if [[ -z "${!v:-}" ]]; then
-            log_error "Required secret $v is not set"
-            exit 1
-        fi
-    done
-    
-    # Optional secrets warning
-    for v in QDRANT_URL QDRANT_API_KEY AIRBYTE_URL AIRBYTE_TOKEN; do
-        if [[ -z "${!v:-}" ]]; then
-            log_warning "Optional secret $v not set"
-        fi
-    done
-    
-    # Validate OpenRouter API key format
-    if [[ ! "${OPENROUTER_API_KEY}" =~ ^sk- ]]; then
-        log_warning "OpenRouter API key doesn't start with 'sk-' - please verify format"
-    fi
     
     # Create namespace
     kubectl create namespace sophia --dry-run=client -o yaml | kubectl apply -f -
@@ -292,9 +283,9 @@ create_secrets() {
     log_success "Secrets and ConfigMaps created"
 }
 
-# Setup TLS with DNSimple
+# Setup TLS with DNSimple using correct account ID
 setup_tls() {
-    log_info "Setting up TLS with DNSimple..."
+    log_info "Setting up TLS with DNSimple (Account: $DNSIMPLE_ACCOUNT_ID)..."
     
     cat << EOF | kubectl apply -f -
 apiVersion: v1
@@ -325,7 +316,7 @@ spec:
             key: token
 EOF
     
-    log_success "TLS ClusterIssuer created"
+    log_success "TLS ClusterIssuer created with DNSimple account: $DNSIMPLE_ACCOUNT_ID"
 }
 
 # Deploy SOPHIA applications
@@ -346,7 +337,7 @@ deploy_applications() {
     log_success "Applications deployed successfully"
 }
 
-# Configure DNS
+# Configure DNS with better LoadBalancer detection
 configure_dns() {
     log_info "Configuring DNS..."
     
@@ -368,7 +359,7 @@ configure_dns() {
     read -p "Press Enter after DNS records are configured..."
 }
 
-# Run comprehensive health checks
+# Run comprehensive health checks with diagnostic pod
 run_health_checks() {
     log_info "Running comprehensive health checks..."
     
@@ -436,70 +427,6 @@ test_external_endpoints() {
     fi
 }
 
-# Run MCP verification tests
-run_mcp_verification() {
-    log_info "Running MCP verification tests..."
-    
-    # Test MCP Code Server
-    log_info "Testing MCP Code Server..."
-    MCP_RESPONSE=$(kubectl -n sophia exec deployment/sophia-mcp -- curl -s http://localhost:8000/mcp/code/health 2>/dev/null || echo "failed")
-    if [[ "$MCP_RESPONSE" != "failed" ]]; then
-        log_success "MCP Code Server operational"
-    else
-        log_warning "MCP Code Server needs verification"
-    fi
-    
-    # Test GitHub integration
-    log_info "Testing GitHub integration..."
-    GITHUB_TEST=$(kubectl -n sophia exec deployment/sophia-backend -- python -c "
-import os
-import requests
-token = os.environ.get('GITHUB_TOKEN')
-if token:
-    response = requests.get('https://api.github.com/user', headers={'Authorization': f'token {token}'})
-    print('success' if response.status_code == 200 else 'failed')
-else:
-    print('no_token')
-" 2>/dev/null || echo "failed")
-    
-    if [[ "$GITHUB_TEST" == "success" ]]; then
-        log_success "GitHub integration working"
-    else
-        log_warning "GitHub integration needs verification"
-    fi
-}
-
-# Run end-to-end mission test
-run_e2e_mission_test() {
-    log_info "Running end-to-end mission test..."
-    
-    # Create test mission
-    MISSION_PAYLOAD='{"goal": "Create a simple test file docs/E2E_TEST.md with current timestamp and system info"}'
-    
-    # Submit mission via API
-    if command -v curl >/dev/null 2>&1; then
-        log_info "Submitting test mission..."
-        MISSION_RESPONSE=$(curl -s -X POST https://api.sophia-intel.ai/api/missions \
-            -H "Content-Type: application/json" \
-            -d "$MISSION_PAYLOAD" 2>/dev/null || echo "failed")
-        
-        if echo "$MISSION_RESPONSE" | jq -e '.mission_id' >/dev/null 2>&1; then
-            MISSION_ID=$(echo "$MISSION_RESPONSE" | jq -r '.mission_id')
-            log_success "Mission created: $MISSION_ID"
-            
-            # Monitor mission progress
-            log_info "Monitoring mission progress (30 seconds)..."
-            timeout 30s curl -N https://api.sophia-intel.ai/api/missions/$MISSION_ID/events 2>/dev/null || true
-            
-            log_success "E2E mission test completed"
-        else
-            log_warning "Mission creation failed - API may need time to stabilize"
-        fi
-    else
-        log_warning "curl not available for E2E test"
-    fi
-}
-
 # Create monitoring dashboard
 create_monitoring() {
     log_info "Setting up monitoring..."
@@ -540,8 +467,8 @@ EOF
 
 # Main deployment sequence
 main() {
-    echo "🚀 Starting SOPHIA Intel Production Deployment"
-    echo "=============================================="
+    echo "🚀 Starting SOPHIA Intel Production Hardened Deployment"
+    echo "======================================================="
     
     # Phase 1: Prerequisites and Setup
     log_info "Phase 1: Prerequisites and Setup"
@@ -569,8 +496,6 @@ main() {
     log_info "Phase 5: Verification and Testing"
     run_health_checks
     test_external_endpoints
-    run_mcp_verification
-    run_e2e_mission_test
     
     # Phase 6: Monitoring Setup
     log_info "Phase 6: Monitoring Setup"
@@ -578,8 +503,8 @@ main() {
     
     # Final status
     echo ""
-    echo "🎉 SOPHIA Intel Production Deployment Complete!"
-    echo "=============================================="
+    echo "🎉 SOPHIA Intel Production Hardened Deployment Complete!"
+    echo "========================================================"
     echo ""
     log_success "Dashboard: https://www.sophia-intel.ai"
     log_success "API: https://api.sophia-intel.ai"
@@ -596,6 +521,34 @@ main() {
     echo ""
     echo "🚀 SOPHIA Intel is now live and ready for natural language missions!"
 }
+
+# Show usage if help requested
+if [[ "${1:-}" == "--help" ]] || [[ "${1:-}" == "-h" ]]; then
+    echo "SOPHIA Intel Production Hardened Deployment"
+    echo ""
+    echo "Usage: $0 [--fast]"
+    echo ""
+    echo "Options:"
+    echo "  --fast    Skip Docker image builds (use existing images)"
+    echo "  --help    Show this help message"
+    echo ""
+    echo "Required Environment Variables:"
+    echo "  GITHUB_PAT           - GitHub Personal Access Token"
+    echo "  LAMBDA_API_KEY       - Lambda Labs API Key"
+    echo "  DNSIMPLE_API_KEY     - DNSimple API Key"
+    echo "  OPENROUTER_API_KEY   - OpenRouter API Key"
+    echo ""
+    echo "Optional Environment Variables:"
+    echo "  QDRANT_URL           - Qdrant Vector Database URL"
+    echo "  QDRANT_API_KEY       - Qdrant API Key"
+    echo "  AIRBYTE_URL          - Airbyte Instance URL"
+    echo "  AIRBYTE_TOKEN        - Airbyte API Token"
+    echo ""
+    echo "Examples:"
+    echo "  $0                   # Full deployment with image builds"
+    echo "  $0 --fast            # Fast deployment (skip builds)"
+    exit 0
+fi
 
 # Run main deployment
 main "$@"

@@ -116,6 +116,11 @@ monitor_mission() {
                     log_error "Mission failed"
                     local error=$(echo "$status" | jq -r '.error // "Unknown error"')
                     echo "Error: $error"
+                    # Print last 20 lines of SSE output for debugging
+                    if [[ -f "$sse_output" ]]; then
+                        echo "Last SSE events:"
+                        tail -n 20 "$sse_output" 2>/dev/null || true
+                    fi
                     kill $sse_pid 2>/dev/null || true
                     rm -f "$sse_output" "$status_file"
                     return 1
@@ -140,8 +145,12 @@ monitor_mission() {
         sleep 5
     done
     
-    # Timeout reached
+    # Timeout reached - print debug info
     log_warning "Mission monitoring timeout reached"
+    if [[ -f "$sse_output" ]]; then
+        echo "Last 20 SSE events:"
+        tail -n 20 "$sse_output" 2>/dev/null || true
+    fi
     kill $sse_pid 2>/dev/null || true
     rm -f "$sse_output" "$status_file"
     return 1

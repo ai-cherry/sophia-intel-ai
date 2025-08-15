@@ -1,0 +1,90 @@
+{
+  "timestamp": "2025-08-15T05:07:41.757351",
+  "system_metrics": {
+    "cpu_percent": 2.2,
+    "memory_percent": 47.3,
+    "disk_percent": 59.159881840402704,
+    "network_io": {
+      "bytes_sent": 1163847069,
+      "bytes_recv": 10378365293,
+      "packets_sent": 1753925,
+      "packets_recv": 6841377
+    },
+    "process_count": 197,
+    "uptime_seconds": 857246.758607626,
+    "timestamp": "2025-08-15T05:07:42.758610"
+  },
+  "components": {
+    "airbyte_server": {
+      "name": "airbyte_server",
+      "status": "unhealthy",
+      "response_time_ms": null,
+      "last_check": "2025-08-15T05:07:42.761596",
+      "error_message": "Cannot connect to host localhost:8000 ssl:default [Multiple exceptions: [Errno 111] Connect call failed ('::1', 8000, 0, 0), [Errno 111] Connect call failed ('127.0.0.1', 8000)]",
+      "metadata": {
+        "url": "http://localhost:8000/api/v1/health"
+      }
+    },
+    "airbyte_webapp": {
+      "name": "airbyte_webapp",
+      "status": "unhealthy",
+      "response_time_ms": null,
+      "last_check": "2025-08-15T05:07:42.762607",
+      "error_message": "Cannot connect to host localhost:8080 ssl:default [Multiple exceptions: [Errno 111] Connect call failed ('::1', 8080, 0, 0), [Errno 111] Connect call failed ('127.0.0.1', 8080)]",
+      "metadata": {
+        "url": "http://localhost:8080"
+      }
+    },
+    "minio": {
+      "name": "minio",
+      "status": "healthy",
+      "response_time_ms": 1.5170574188232422,
+      "last_check": "2025-08-15T05:07:42.764141",
+      "error_message": null,
+      "metadata": {
+        "status_code": 200,
+        "url": "http://localhost:9000/minio/health/live"
+      }
+    },
+    "qdrant": {
+      "name": "qdrant",
+      "status": "unknown",
+      "response_time_ms": null,
+      "last_check": "2025-08-15T05:07:42.969232",
+      "error_message": "Qdrant URL not configured",
+      "metadata": null
+    },
+    "docker_client": {
+      "name": "docker_client",
+      "status": "unhealthy",
+      "response_time_ms": null,
+      "last_check": "2025-08-15T05:07:42.968889",
+      "error_message": "Docker client not available",
+      "metadata": null
+    },
+    "neon_postgres": {
+      "name": "neon_postgres",
+      "status": "unknown",
+      "response_time_ms": null,
+      "last_check": "2025-08-15T05:07:42.969204",
+      "error_message": "asyncpg not available",
+      "metadata": null
+    },
+    "mcp_servers": {
+      "name": "mcp_servers",
+      "status": "unknown",
+      "response_time_ms": null,
+      "last_check": "2025-08-15T05:07:42.985921",
+      "error_message": "No MCP server processes found",
+      "metadata": null
+    }
+  },
+  "summary": {
+    "total_components": 8,
+    "healthy": 1,
+    "degraded": 1,
+    "unhealthy": 3,
+    "unknown": 3,
+    "overall_health_score": 18.75
+  }
+}

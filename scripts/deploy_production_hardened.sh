@@ -23,7 +23,7 @@ echo ""
 PRODUCTION_IP="104.171.202.103"  # sophia-production-instance
 DOMAIN="sophia-intel.ai"
 GITHUB_REPO="ai-cherry/sophia-intel"
-DNSIMPLE_ACCOUNT_ID="musillynn"
+DNSIMPLE_ACCOUNT_ID="162809"  # Numeric account ID from DNSimple API
 
 # Color codes for output
 RED='\033[0;31m'
@@ -334,12 +334,20 @@ deploy_applications() {
     kubectl -n sophia wait --for=condition=available --timeout=300s deployment/sophia-dashboard
     kubectl -n sophia wait --for=condition=available --timeout=300s deployment/sophia-mcp
     
+    # Ensure TLS annotations are set
+    log_info "Verifying TLS configuration..."
+    kubectl -n sophia annotate ingress sophia --overwrite cert-manager.io/cluster-issuer=letsencrypt-dnsimple
+    
+    # Check certificate status
+    log_info "Checking certificate status..."
+    kubectl -n sophia get certificates
+    
     log_success "Applications deployed successfully"
 }
 
-# Configure DNS with better LoadBalancer detection
+# Configure DNS with automated DNSimple API calls
 configure_dns() {
-    log_info "Configuring DNS..."
+    log_info "Configuring DNS via DNSimple API..."
     
     # Get LoadBalancer IP with fallback
     LB_IP=$(kubectl -n ingress-kong get svc kong-kong-proxy -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null)
@@ -350,13 +358,25 @@ configure_dns() {
         log_success "LoadBalancer IP detected: $LB_IP"
     fi
     
-    log_warning "Please manually configure DNS records:"
-    echo "A www.sophia-intel.ai -> $LB_IP"
-    echo "A api.sophia-intel.ai -> $LB_IP"
-    echo "A mcp.sophia-intel.ai -> $LB_IP"
-    echo "Ports: 80/443 (Kong proxy)"
+    # Create DNS A records automatically
+    log_info "Creating DNS A records..."
+    for name in "www" "api" "mcp"; do
+        RESPONSE=$(curl -s -X POST \
+            -H "Authorization: Bearer $DNSIMPLE_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d "{\"type\":\"A\",\"name\":\"$name\",\"content\":\"$LB_IP\",\"ttl\":60}" \
+            "https://api.dnsimple.com/v2/${DNSIMPLE_ACCOUNT_ID}/zones/${DOMAIN}/records" 2>/dev/null || echo '{"error":"failed"}')
+        
+        if echo "$RESPONSE" | grep -q '"data"'; then
+            log_success "Created A record: $name.${DOMAIN} -> $LB_IP"
+        else
+            log_warning "A record creation failed or already exists: $name.${DOMAIN}"
+        fi
+    done
     
-    read -p "Press Enter after DNS records are configured..."
+    log_success "DNS configuration complete"
+    log_info "Waiting 30 seconds for DNS propagation..."
+    sleep 30
 }
 
 # Run comprehensive health checks with diagnostic pod

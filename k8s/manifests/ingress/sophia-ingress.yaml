@@ -1,51 +1,26 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: sophia-ingress
-  namespace: sophia-mvp
+  name: sophia
+  namespace: sophia
   labels:
     app: sophia-intel
     component: ingress
   annotations:
-    kubernetes.io/ingress.class: "traefik"
-    cert-manager.io/cluster-issuer: "letsencrypt-prod"
-    traefik.ingress.kubernetes.io/redirect-entry-point: https
-    traefik.ingress.kubernetes.io/frontend-rule-type: PathPrefixStrip
+    kubernetes.io/ingress.class: "kong"
+    cert-manager.io/cluster-issuer: "letsencrypt-dnsimple"
+    konghq.com/strip-path: "true"
+    konghq.com/preserve-host: "true"
 spec:
   tls:
   - hosts:
-    - sophia-intel.ai
     - www.sophia-intel.ai
-    - app.sophia-intel.ai
     - api.sophia-intel.ai
+    - mcp.sophia-intel.ai
     secretName: sophia-tls-cert
   rules:
-  # Main domain - redirect to www
-  - host: sophia-intel.ai
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: sophia-dashboard
-            port:
-              number: 80
-  
   # WWW domain - main dashboard
   - host: www.sophia-intel.ai
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: sophia-dashboard
-            port:
-              number: 80
-  
-  # App subdomain - main application
-  - host: app.sophia-intel.ai
     http:
       paths:
       - path: /
@@ -64,30 +39,19 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: sophia-api
+            name: sophia-backend
             port:
               number: 5000
-      - path: /mcp
+  
+  # MCP subdomain - MCP services
+  - host: mcp.sophia-intel.ai
+    http:
+      paths:
+      - path: /
         pathType: Prefix
         backend:
           service:
             name: sophia-mcp
             port:
               number: 8000
-
----
-apiVersion: cert-manager.io/v1
-kind: ClusterIssuer
-metadata:
-  name: letsencrypt-prod
-spec:
-  acme:
-    server: https://acme-v02.api.letsencrypt.org/directory
-    email: admin@sophia-intel.ai
-    privateKeySecretRef:
-      name: letsencrypt-prod
-    solvers:
-    - http01:
-        ingress:
-          class: traefik
 

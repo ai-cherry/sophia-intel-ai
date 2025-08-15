@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
 """
-Lambda Labs API Integration for SOPHIA MVP
-Direct API calls since Pulumi provider not available
+Lambda Labs API Integration for SOPHIA Intel - Async Implementation
+Direct API calls with async/await for better performance in async contexts
 """
 import os
 import json
 import time
-import requests
+import asyncio
+import aiohttp
 from typing import Dict, List, Any, Optional
 
 class LambdaLabsAPI:
-    """Lambda Labs API client"""
+    """Async Lambda Labs API client"""
     
     def __init__(self, api_key: str):
         self.api_key = api_key
@@ -20,19 +21,23 @@ class LambdaLabsAPI:
             "Content-Type": "application/json"
         }
     
-    def list_instance_types(self) -> List[Dict[str, Any]]:
+    async def list_instance_types(self) -> List[Dict[str, Any]]:
         """List available instance types"""
-        response = requests.get(f"{self.base_url}/instance-types", headers=self.headers)
-        response.raise_for_status()
-        return response.json().get("data", [])
+        async with aiohttp.ClientSession() as session:
+            async with session.get(f"{self.base_url}/instance-types", headers=self.headers) as response:
+                response.raise_for_status()
+                data = await response.json()
+                return data.get("data", [])
     
-    def list_instances(self) -> List[Dict[str, Any]]:
+    async def list_instances(self) -> List[Dict[str, Any]]:
         """List all instances"""
-        response = requests.get(f"{self.base_url}/instances", headers=self.headers)
-        response.raise_for_status()
-        return response.json().get("data", [])
+        async with aiohttp.ClientSession() as session:
+            async with session.get(f"{self.base_url}/instances", headers=self.headers) as response:
+                response.raise_for_status()
+                data = await response.json()
+                return data.get("data", [])
     
-    def create_instance(self, 
+    async def create_instance(self, 
                        instance_type: str,
                        region: str,
                        ssh_key_names: List[str],
@@ -45,42 +50,49 @@ class LambdaLabsAPI:
             "name": name
         }
         
-        response = requests.post(f"{self.base_url}/instance-operations/launch", 
-                               headers=self.headers, json=data)
-        response.raise_for_status()
-        return response.json().get("data", {})
+        async with aiohttp.ClientSession() as session:
+            async with session.post(f"{self.base_url}/instance-operations/launch", 
+                                   headers=self.headers, json=data) as response:
+                response.raise_for_status()
+                result = await response.json()
+                return result.get("data", {})
     
-    def terminate_instance(self, instance_id: str) -> bool:
+    async def terminate_instance(self, instance_id: str) -> bool:
         """Terminate an instance"""
-        response = requests.post(f"{self.base_url}/instance-operations/terminate",
-                               headers=self.headers, 
-                               json={"instance_ids": [instance_id]})
-        return response.status_code == 200
+        async with aiohttp.ClientSession() as session:
+            async with session.post(f"{self.base_url}/instance-operations/terminate",
+                                   headers=self.headers, 
+                                   json={"instance_ids": [instance_id]}) as response:
+                return response.status == 200
     
-    def list_ssh_keys(self) -> List[Dict[str, Any]]:
+    async def list_ssh_keys(self) -> List[Dict[str, Any]]:
         """List SSH keys"""
-        response = requests.get(f"{self.base_url}/ssh-keys", headers=self.headers)
-        response.raise_for_status()
-        return response.json().get("data", [])
+        async with aiohttp.ClientSession() as session:
+            async with session.get(f"{self.base_url}/ssh-keys", headers=self.headers) as response:
+                response.raise_for_status()
+                data = await response.json()
+                return data.get("data", [])
     
-    def add_ssh_key(self, name: str, public_key: str) -> Dict[str, Any]:
+    async def add_ssh_key(self, name: str, public_key: str) -> Dict[str, Any]:
         """Add SSH key"""
         data = {
             "name": name,
             "public_key": public_key
         }
         
-        response = requests.post(f"{self.base_url}/ssh-keys", 
-                               headers=self.headers, json=data)
-        response.raise_for_status()
-        return response.json().get("data", {})
+        async with aiohttp.ClientSession() as session:
+            async with session.post(f"{self.base_url}/ssh-keys", 
+                                   headers=self.headers, json=data) as response:
+                response.raise_for_status()
+                result = await response.json()
+                return result.get("data", {})
     
-    def wait_for_instance_running(self, instance_id: str, timeout: int = 300) -> bool:
+    async def wait_for_instance_running(self, instance_id: str, timeout: int = 300) -> bool:
         """Wait for instance to be running"""
         start_time = time.time()
         
         while time.time() - start_time < timeout:
-            instances = self.list_instances()
+            instances = await self.list_instances()
             for instance in instances:
                 if instance.get("id") == instance_id:
                     status = instance.get("status")
@@ -89,7 +101,7 @@ class LambdaLabsAPI:
                     elif status in ["terminated", "error"]:
                         return False
             
-            time.sleep(10)
+            await asyncio.sleep(10)
         
         return False
 
@@ -115,9 +127,10 @@ def create_ssh_key_pair() -> tuple[str, str]:
         
         return private_key, public_key
 
-def provision_k3s_instance(api_key: str) -> Dict[str, Any]:
-    """Provision K3s instance on Lambda Labs"""
-    print("🚀 Provisioning K3s instance on Lambda Labs...")
+def provision_cpu_cluster_instance(api_key: str) -> Dict[str, Any]:
+    """Provision CPU-optimized K3s instance on Lambda Labs for API-first architecture"""
+    print("🚀 Provisioning CPU-optimized K3s instance on Lambda Labs...")
+    print("   Strategy: API-first architecture with cost-effective CPU instances")
     
     client = LambdaLabsAPI(api_key)
     
@@ -134,10 +147,11 @@ def provision_k3s_instance(api_key: str) -> Dict[str, Any]:
     print("📋 Checking available instance types...")
     instance_types = client.list_instance_types()
     
-    # Find suitable instance type (prefer GPU for AI workloads)
+    # Find suitable instance type (prioritize CPU for cost-effective API-first architecture)
     suitable_types = [
-        "gpu_1x_a10", "gpu_1x_rtx6000", "gpu_1x_a6000", 
-        "cpu_4x", "cpu_8x"
+        "cpu.c2-2", "cpu.c2-4", "cpu.c2-8",  # Prioritize CPU instances
+        "cpu_4x", "cpu_8x", "cpu_16x",       # Fallback CPU options
+        "gpu_1x_a10", "gpu_1x_rtx6000"       # GPU only as last resort
     ]
     
     available_type = None
@@ -155,14 +169,14 @@ def provision_k3s_instance(api_key: str) -> Dict[str, Any]:
     if not available_type:
         raise Exception("No suitable instance types available")
     
-    print(f"🖥️  Creating instance: {available_type} in {region}")
+    print(f"🖥️  Creating CPU instance: {available_type} in {region}")
     
     # Create instance
     instance_result = client.create_instance(
         instance_type=available_type,
         region=region,
         ssh_key_names=[ssh_key_name],
-        name="sophia-mvp-k3s"
+        name="sophia-cpu-k3s-cluster"
     )
     
     instance_id = instance_result.get("instance_ids", [None])[0]
@@ -207,8 +221,8 @@ if __name__ == "__main__":
         exit(1)
     
     try:
-        result = provision_k3s_instance(api_key)
-        print(f"🎉 Success: {json.dumps(result, indent=2)}")
+        result = provision_cpu_cluster_instance(api_key)
+        print(f"🎉 CPU Cluster Success: {json.dumps(result, indent=2)}")
     except Exception as e:
         print(f"❌ Error: {e}")
         exit(1)

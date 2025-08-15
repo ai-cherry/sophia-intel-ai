@@ -1,13 +1,14 @@
 """
 AI Router - Intelligent Model Selection and Routing
 Implements sophisticated AI model routing based on task characteristics,
-performance requirements, and cost optimization.
+performance requirements, and cost optimization with Lambda Inference API and OpenRouter.
 """
 
 import asyncio
 import time
 import json
 import hashlib
+import os
 from typing import Dict, List, Optional, Any, Tuple
 from dataclasses import dataclass, asdict
 from enum import Enum
@@ -104,9 +105,91 @@ class AIRouter:
         self.session = None
         
     def _initialize_model_registry(self) -> Dict[str, ModelCapability]:
-        """Initialize the model registry with approved models only"""
+        """Initialize the model registry with Lambda Inference API and OpenRouter models"""
         return {
-            # OpenAI Models - Approved and Tested
+            # Lambda Inference API Models - Primary for cost-effective inference
+            "lambda-lfm-40b": ModelCapability(
+                provider=ModelProvider.OPENROUTER,  # Using OpenRouter enum for Lambda API
+                model_name="lfm-40b",
+                max_tokens=8192,
+                cost_per_1k_tokens=0.001,  # Very cost-effective
+                avg_response_time=1.2,
+                quality_score=0.85,
+                specialties=[TaskType.CODE_GENERATION, TaskType.GENERAL_CHAT],
+                context_window=32768,
+                supports_function_calling=False,
+                supports_structured_output=True,
+                rate_limit_rpm=60000
+            ),
+            "lambda-qwen3-32b-fp8": ModelCapability(
+                provider=ModelProvider.OPENROUTER,
+                model_name="qwen3-32b-fp8",
+                max_tokens=4096,
+                cost_per_1k_tokens=0.0008,
+                avg_response_time=0.9,
+                quality_score=0.82,
+                specialties=[TaskType.ANALYSIS, TaskType.REASONING],
+                context_window=32768,
+                supports_function_calling=False,
+                supports_structured_output=True,
+                rate_limit_rpm=60000
+            ),
+            "lambda-deepseek-r1-671b": ModelCapability(
+                provider=ModelProvider.OPENROUTER,
+                model_name="deepseek-r1-671b",
+                max_tokens=8192,
+                cost_per_1k_tokens=0.002,
+                avg_response_time=2.8,
+                quality_score=0.92,
+                specialties=[TaskType.REASONING, TaskType.MATH, TaskType.CODE_REVIEW],
+                context_window=65536,
+                supports_function_calling=False,
+                supports_structured_output=True,
+                rate_limit_rpm=30000
+            ),
+            
+            # OpenRouter Models - Premium options for specialized tasks
+            "openrouter-gpt-4o": ModelCapability(
+                provider=ModelProvider.OPENROUTER,
+                model_name="openai/gpt-4o",
+                max_tokens=4096,
+                cost_per_1k_tokens=0.005,
+                avg_response_time=2.2,
+                quality_score=0.95,
+                specialties=[TaskType.CODE_GENERATION, TaskType.FUNCTION_CALLING, TaskType.STRUCTURED_OUTPUT],
+                context_window=128000,
+                supports_function_calling=True,
+                supports_structured_output=True,
+                rate_limit_rpm=10000
+            ),
+            "openrouter-claude-3-5-sonnet": ModelCapability(
+                provider=ModelProvider.OPENROUTER,
+                model_name="anthropic/claude-3.5-sonnet",
+                max_tokens=8192,
+                cost_per_1k_tokens=0.003,
+                avg_response_time=2.0,
+                quality_score=0.93,
+                specialties=[TaskType.CREATIVE_WRITING, TaskType.ANALYSIS, TaskType.DOCUMENTATION],
+                context_window=200000,
+                supports_function_calling=True,
+                supports_structured_output=True,
+                rate_limit_rpm=15000
+            ),
+            "openrouter-deepseek-r1": ModelCapability(
+                provider=ModelProvider.OPENROUTER,
+                model_name="deepseek/deepseek-r1",
+                max_tokens=8192,
+                cost_per_1k_tokens=0.0014,
+                avg_response_time=1.8,
+                quality_score=0.90,
+                specialties=[TaskType.REASONING, TaskType.MATH, TaskType.CODE_GENERATION],
+                context_window=65536,
+                supports_function_calling=False,
+                supports_structured_output=True,
+                rate_limit_rpm=30000
+            ),
+            
+            # OpenAI Models - Fallback for critical tasks requiring function calling
             "gpt-4o": ModelCapability(
                 provider=ModelProvider.OPENAI,
                 model_name="gpt-4o",
@@ -188,7 +271,7 @@ class AIRouter:
     
     async def execute_task(self, request: TaskRequest, decision: RoutingDecision) -> Any:
         """
-        Execute a task using the selected model from routing decision
+        Execute a task using the selected model from routing decision with real API calls
         
         Args:
             request: The original task request
@@ -199,43 +282,96 @@ class AIRouter:
         """
         start_time = time.time()
         try:
+            # Determine API endpoint and headers based on provider
+            if decision.selected_model.startswith("lambda-"):
+                # Lambda Inference API
+                api_url = "https://api.lambda.ai/v1/chat/completions"
+                headers = {
+                    "Authorization": f"Bearer {os.getenv('LAMBDA_API_KEY')}",
+                    "Content-Type": "application/json"
+                }
+                # Map lambda model names to actual API model names
+                model_name = decision.selected_model.replace("lambda-", "")
+            else:
+                # OpenRouter API
+                api_url = "https://openrouter.ai/api/v1/chat/completions"
+                headers = {
+                    "Authorization": f"Bearer {os.getenv('OPENROUTER_API_KEY')}",
+                    "Content-Type": "application/json",
+                    "HTTP-Referer": "https://sophia-intel.ai",
+                    "X-Title": "SOPHIA Intel AI Router"
+                }
+                model_name = decision.selected_model
             
-            # For now, return a structured response indicating the routing
-            # In a full implementation, this would make the actual API call to the selected model
-            response_content = f"Task '{request.task_type.value}' routed to {decision.selected_model}"
+            # Prepare the API request payload
+            payload = {
+                "model": model_name,
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": request.prompt
+                    }
+                ],
+                "max_tokens": request.max_tokens or 2000,
+                "temperature": request.temperature,
+                "stream": False
+            }
             
-            # Record successful execution
-            await self.record_performance(
-                decision.selected_provider,
-                decision.selected_model,
-                success=True,
-                response_time=time.time() - start_time,
-                cost=decision.estimated_cost
-            )
+            # Add context if provided
+            if request.context:
+                payload["messages"].insert(0, {
+                    "role": "system",
+                    "content": request.context
+                })
             
-            logger.info(f"Task executed successfully using {decision.selected_model}")
-            
-            # Return an object that Swarm can access with .content attribute
-            class TaskResult:
-                def __init__(self, content, provider, model, confidence, cost, reasoning, execution_time):
-                    self.content = content
-                    self.provider = provider
-                    self.model = model
-                    self.confidence = confidence
-                    self.cost = cost
-                    self.reasoning = reasoning
-                    self.execution_time = execution_time
-                    self.status = "success"
-            
-            return TaskResult(
-                content=response_content,
-                provider=decision.selected_provider.value,
-                model=decision.selected_model,
-                confidence=decision.confidence_score,
-                cost=decision.estimated_cost,
-                reasoning=decision.reasoning,
-                execution_time=time.time() - start_time
-            )
+            # Make the API call
+            async with aiohttp.ClientSession() as session:
+                async with session.post(api_url, headers=headers, json=payload) as response:
+                    if response.status == 200:
+                        result = await response.json()
+                        response_content = result["choices"][0]["message"]["content"]
+                        
+                        # Calculate actual cost based on usage
+                        usage = result.get("usage", {})
+                        actual_cost = self._calculate_actual_cost(usage, decision)
+                        
+                        # Record successful execution
+                        await self.record_performance(
+                            decision.selected_provider,
+                            decision.selected_model,
+                            success=True,
+                            response_time=time.time() - start_time,
+                            cost=actual_cost
+                        )
+                        
+                        logger.info(f"Task executed successfully using {decision.selected_model}")
+                        
+                        # Return structured result
+                        class TaskResult:
+                            def __init__(self, content, provider, model, confidence, cost, reasoning, execution_time, usage):
+                                self.content = content
+                                self.provider = provider
+                                self.model = model
+                                self.confidence = confidence
+                                self.cost = cost
+                                self.reasoning = reasoning
+                                self.execution_time = execution_time
+                                self.usage = usage
+                                self.status = "success"
+                        
+                        return TaskResult(
+                            content=response_content,
+                            provider=decision.selected_provider.value,
+                            model=decision.selected_model,
+                            confidence=decision.confidence_score,
+                            cost=actual_cost,
+                            reasoning=decision.reasoning,
+                            execution_time=time.time() - start_time,
+                            usage=usage
+                        )
+                    else:
+                        error_text = await response.text()
+                        raise Exception(f"API call failed with status {response.status}: {error_text}")
             
         except Exception as e:
             execution_time = time.time() - start_time
@@ -244,7 +380,26 @@ class AIRouter:
             await self.record_failure(decision.selected_provider, decision.selected_model)
             logger.error(f"Task execution failed: {e}")
             
-            # Return error result as object with content attribute for Swarm compatibility
+            # Try fallback if available
+            if decision.fallback_options:
+                logger.info(f"Attempting fallback to {decision.fallback_options[0]}")
+                fallback_provider, fallback_model = decision.fallback_options[0]
+                
+                # Create fallback decision
+                fallback_decision = RoutingDecision(
+                    selected_provider=fallback_provider,
+                    selected_model=fallback_model,
+                    confidence_score=0.5,
+                    reasoning="Fallback due to primary model failure",
+                    estimated_cost=decision.estimated_cost,
+                    estimated_latency=decision.estimated_latency,
+                    fallback_options=decision.fallback_options[1:]
+                )
+                
+                # Recursive call with fallback
+                return await self.execute_task(request, fallback_decision)
+            
+            # Return error result if no fallbacks available
             class ErrorResult:
                 def __init__(self, error_msg, provider, model, execution_time):
                     self.content = f"Error: {error_msg}"
@@ -255,6 +410,25 @@ class AIRouter:
                     self.execution_time = execution_time
             
             return ErrorResult(str(e), decision.selected_provider.value, decision.selected_model, execution_time)
+    
+    def _calculate_actual_cost(self, usage: Dict[str, Any], decision: RoutingDecision) -> float:
+        """Calculate actual cost based on API usage response"""
+        if not usage:
+            return decision.estimated_cost
+        
+        prompt_tokens = usage.get("prompt_tokens", 0)
+        completion_tokens = usage.get("completion_tokens", 0)
+        total_tokens = prompt_tokens + completion_tokens
+        
+        # Get model cost per 1k tokens
+        model_key = f"{decision.selected_provider.value}:{decision.selected_model}"
+        if model_key in self.models:
+            cost_per_1k = self.models[model_key].cost_per_1k_tokens
+        else:
+            # Fallback to estimated cost
+            return decision.estimated_cost
+        
+        return (total_tokens / 1000) * cost_per_1k
     
     async def _score_model(self, model: ModelCapability, request: TaskRequest) -> float:
         """Score a model's suitability for a given request"""

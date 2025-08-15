@@ -244,12 +244,13 @@ pip install -r requirements.txt
 echo "🧪 Running tests..."
 python -m pytest tests/ || echo "⚠️ Tests failed or no tests found"
 
-# Deploy to Vercel (if configured)
-if command -v vercel &> /dev/null; then
-    echo "🌐 Deploying to Vercel..."
-    vercel --prod
+# Deploy to K3s cluster (CPU-optimized Lambda Labs infrastructure)
+echo "🚢 Deploying to K3s cluster..."
+if [ -f "k8s/manifests/deployments/api-deployment.yaml" ]; then
+    kubectl apply -f k8s/manifests/
+    echo "✅ Deployed to K3s cluster successfully"
 else
-    echo "⚠️ Vercel CLI not found, skipping web deployment"
+    echo "⚠️ K8s manifests not found, skipping cluster deployment"
 fi
 
 echo "✅ Application deployment completed!"

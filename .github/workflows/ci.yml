@@ -53,12 +53,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
-
+         uses: actions/checkout@v4
       - name: Check for forbidden patterns
         run: |
           echo "Checking for Roo, Portkey, and backup artifacts..."
-          if git grep -niE 'roo|portkey|backup' --exclude-dir=.venv --exclude-dir=node_modules .; then
+          if git grep -niE 'roo|portkey|backup' . | grep -v '.venv' | grep -v 'node_modules' | grep -v '.github/workflows'; then
             echo "❌ Found forbidden patterns in codebase"
             exit 1
           else
@@ -80,6 +79,41 @@ jobs:
             hygiene.log
         if: always()
 
+  router_allowlist_test:
+    runs-on: ubuntu-latest
+    needs: [deps_uv_lock]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install uv
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+
+      - name: Add uv to PATH
+        run: echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Test router allowlist enforcement
+        run: |
+          source .venv/bin/activate
+          python scripts/test_router_allowlist.py
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: router-allowlist-test-results
+          path: |
+            router_allowlist_test.log
+        if: always()
+
+>>>>>>> merge-pr-b
   secrets_presence_gate:
     runs-on: ubuntu-latest
     steps:
@@ -291,22 +325,24 @@ jobs:
 
   build-status:
     runs-on: ubuntu-latest
-    needs: [deps_uv_lock, hygiene_sweep, secrets_presence_gate, lint, test, security]
+    needs: [deps_uv_lock, hygiene_sweep, router_allowlist_test, secrets_presence_gate, lint, test, security]
     if: always()
     
     steps:
       - name: Check build status
         run: |
-          if [[ "${{ needs.deps_uv_lock.result }}" == "success" && "${{ needs.hygiene_sweep.result }}" == "success" && "${{ needs.lint.result }}" == "success" && "${{ needs.test.result }}" == "success" && "${{ needs.security.result }}" == "success" ]]; then
+          if [[ "${{ needs.deps_uv_lock.result }}" == "success" && "${{ needs.hygiene_sweep.result }}" == "success" && "${{ needs.router_allowlist_test.result }}" == "success" && "${{ needs.lint.result }}" == "success" && "${{ needs.test.result }}" == "success" && "${{ needs.security.result }}" == "success" ]]; then
             echo "✅ All checks passed!"
             exit 0
           else
             echo "❌ Some checks failed:"
             echo "Dependencies: ${{ needs.deps_uv_lock.result }}"
             echo "Hygiene: ${{ needs.hygiene_sweep.result }}"
+            echo "Router Allowlist: ${{ needs.router_allowlist_test.result }}"
             echo "Secrets: ${{ needs.secrets_presence_gate.result }}"
             echo "Lint: ${{ needs.lint.result }}"
             echo "Test: ${{ needs.test.result }}"
             echo "Security: ${{ needs.security.result }}"
             exit 1
           fi
+

@@ -112,10 +112,10 @@ echo "Database services configured successfully"
                 'api_key': self.secrets.get('OPENROUTER_API_KEY'),
                 'base_url': 'https://openrouter.ai/api/v1'
             },
-            'portkey': {
-                'enabled': self.secrets.get('PORTKEY_API_KEY') is not None,
-                'api_key': self.secrets.get('PORTKEY_API_KEY'),
-                'config': self.secrets.get('PORTKEY_CONFIG')
+            'openrouter': {
+                'enabled': self.secrets.get('openrouter_API_KEY') is not None,
+                'api_key': self.secrets.get('openrouter_API_KEY'),
+                'config': self.secrets.get('openrouter_CONFIG')
             },
             'lambda_labs': {
                 'enabled': True,

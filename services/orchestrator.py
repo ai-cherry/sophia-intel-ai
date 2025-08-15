@@ -11,7 +11,7 @@ import asyncio
 import time
 from datetime import datetime
 
-from .portkey_client import PortkeyClient
+from .openrouter_client import OpenRouterClient
 from .lambda_client import LambdaClient
 from config.config import settings
 
@@ -37,7 +37,7 @@ class Orchestrator:
     """
 
     def __init__(self):
-        self.portkey = PortkeyClient()
+        self.openrouter = OpenRouterClient()
         self.lambda_client = LambdaClient()
 
         # Service endpoints
@@ -144,15 +144,15 @@ class Orchestrator:
     async def _handle_chat_request(
         self, payload: Dict[str, Any], timeout: int, retries: int
     ) -> Dict[str, Any]:
-        """Handle chat requests via Portkey client."""
+        """Handle chat requests via OpenRouter client."""
         messages = payload.get("messages", [])
         model = payload.get("model", "openrouter/auto")
 
         try:
-            response = await self.portkey.chat(messages, model)
+            response = await self.openrouter.chat(messages, model)
             return response
         except Exception as e:
-            logger.error(f"Portkey chat request failed: {e}")
+            logger.error(f"OpenRouter chat request failed: {e}")
             raise
 
     async def _handle_gpu_request(

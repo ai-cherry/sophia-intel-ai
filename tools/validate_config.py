@@ -67,7 +67,7 @@ class ConfigValidator:
         # Required API keys with their expected prefixes
         required_keys = {
             "OPENROUTER_API_KEY": "sk-or-v1-",
-            "PORTKEY_API_KEY": "pk-",
+            "openrouter_API_KEY": "pk-",
             "LAMBDA_CLOUD_API_KEY": "ll-",
             "EXA_API_KEY": "exa-",
         }
@@ -103,7 +103,7 @@ class ConfigValidator:
                 self.errors.append(
                     f"❌ {key_name} should start with '{expected_prefix}', got: {value[:10]}..."
                 )
-            elif key_name == "PORTKEY_API_KEY" and not value.startswith(
+            elif key_name == "openrouter_API_KEY" and not value.startswith(
                 expected_prefix
             ):
                 self.errors.append(

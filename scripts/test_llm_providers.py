@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 LLM providers testing and validation script
-Tests OpenRouter, Portkey, Lambda Labs, and other AI service providers
+Tests OpenRouter, openrouter, Lambda Labs, and other AI service providers
 """
 
 import os
@@ -114,12 +114,12 @@ def test_openrouter():
         print(f"❌ OpenRouter test failed: {str(e)}")
         return {"status": "ERROR", "message": str(e)}
 
-def test_portkey():
-    """Test Portkey AI gateway functionality"""
-    print("\n=== Testing Portkey AI Gateway ===")
+def test_openrouter():
+    """Test openrouter AI gateway functionality"""
+    print("\n=== Testing openrouter AI Gateway ===")
     
-    api_key = os.environ.get('PORTKEY_API_KEY')
-    config = os.environ.get('PORTKEY_CONFIG')
+    api_key = os.environ.get('openrouter_API_KEY')
+    config = os.environ.get('openrouter_CONFIG')
     
     if not api_key:
         return {"status": "NOT_CONFIGURED", "message": "No API key found"}
@@ -133,16 +133,16 @@ def test_portkey():
     }
     
     if config:
-        headers["x-portkey-config"] = config
+        headers["x-openrouter-config"] = config
     
     try:
-        # Test Portkey gateway
-        print("Testing Portkey gateway...")
+        # Test openrouter gateway
+        print("Testing openrouter gateway...")
         
-        # Try different Portkey endpoints
+        # Try different openrouter endpoints
         endpoints_to_test = [
-            "https://api.portkey.ai/v1/chat/completions",
-            "https://api.portkey.ai/v1/models"
+            "https://api.openrouter.ai/v1/chat/completions",
+            "https://api.openrouter.ai/v1/models"
         ]
         
         for endpoint in endpoints_to_test:
@@ -155,7 +155,7 @@ def test_portkey():
                 chat_data = {
                     "model": "gpt-3.5-turbo",
                     "messages": [
-                        {"role": "user", "content": "Hello from Sophia AI via Portkey!"}
+                        {"role": "user", "content": "Hello from Sophia AI via openrouter!"}
                     ],
                     "max_tokens": 50
                 }
@@ -165,7 +165,7 @@ def test_portkey():
             
             if response.status_code == 200:
                 result = response.json()
-                print(f"✅ Portkey endpoint working: {endpoint}")
+                print(f"✅ openrouter endpoint working: {endpoint}")
                 
                 if "chat/completions" in endpoint:
                     message = result['choices'][0]['message']['content']
@@ -190,10 +190,10 @@ def test_portkey():
             else:
                 print(f"❌ Failed: {response.text[:200]}")
         
-        return {"status": "ERROR", "message": "All Portkey endpoints failed"}
+        return {"status": "ERROR", "message": "All openrouter endpoints failed"}
         
     except Exception as e:
-        print(f"❌ Portkey test failed: {str(e)}")
+        print(f"❌ openrouter test failed: {str(e)}")
         return {"status": "ERROR", "message": str(e)}
 
 def test_lambda_labs_llm():
@@ -329,12 +329,12 @@ def generate_llm_fixes(results: Dict[str, Any]):
             "priority": "HIGH"
         })
     
-    # Portkey fixes
-    if results['portkey']['status'] != 'OK':
+    # openrouter fixes
+    if results['openrouter']['status'] != 'OK':
         fixes.append({
-            "service": "Portkey",
-            "issue": f"Portkey gateway {results['portkey']['status'].lower()}",
-            "fix": "Verify API key and config at https://portkey.ai/",
+            "service": "openrouter",
+            "issue": f"openrouter gateway {results['openrouter']['status'].lower()}",
+            "fix": "Verify API key and config at https://openrouter.ai/",
             "priority": "HIGH"
         })
     
@@ -377,7 +377,7 @@ def main():
     # Run tests
     results = {
         'openrouter': test_openrouter(),
-        'portkey': test_portkey(),
+        'openrouter': test_openrouter(),
         'lambda_labs': test_lambda_labs_llm(),
         'other_providers': test_other_providers()
     }

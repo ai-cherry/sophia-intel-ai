@@ -1,0 +1,133 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: sophia-intel-ingress
+  namespace: sophia-intel
+  labels:
+    app: sophia-intel
+  annotations:
+    kubernetes.io/ingress.class: kong
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    konghq.com/strip-path: "false"
+    konghq.com/preserve-host: "true"
+    konghq.com/protocols: https
+    konghq.com/https-redirect-status-code: "301"
+spec:
+  tls:
+  - hosts:
+    - sophia-intel.ai
+    - www.sophia-intel.ai
+    - api.sophia-intel.ai
+    - dashboard.sophia-intel.ai
+    secretName: sophia-intel-tls
+  rules:
+  # Main domain - redirect to dashboard
+  - host: sophia-intel.ai
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: sophia-dashboard-service
+            port:
+              number: 80
+  # WWW domain - redirect to dashboard
+  - host: www.sophia-intel.ai
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: sophia-dashboard-service
+            port:
+              number: 80
+  # API subdomain
+  - host: api.sophia-intel.ai
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: sophia-api-service
+            port:
+              number: 80
+  # Dashboard subdomain
+  - host: dashboard.sophia-intel.ai
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: sophia-dashboard-service
+            port:
+              number: 80
+---
+# Kong plugins for rate limiting and security
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: rate-limiting
+  namespace: sophia-intel
+config:
+  minute: 100
+  hour: 1000
+  policy: local
+plugin: rate-limiting
+---
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: cors
+  namespace: sophia-intel
+config:
+  origins:
+  - "https://sophia-intel.ai"
+  - "https://www.sophia-intel.ai"
+  - "https://dashboard.sophia-intel.ai"
+  methods:
+  - GET
+  - POST
+  - PUT
+  - DELETE
+  - OPTIONS
+  headers:
+  - Accept
+  - Accept-Version
+  - Content-Length
+  - Content-MD5
+  - Content-Type
+  - Date
+  - Authorization
+  exposed_headers:
+  - X-Auth-Token
+  credentials: true
+  max_age: 3600
+plugin: cors
+---
+# Apply plugins to ingress
+apiVersion: configuration.konghq.com/v1
+kind: KongIngress
+metadata:
+  name: sophia-intel-kong-ingress
+  namespace: sophia-intel
+upstream:
+  healthchecks:
+    active:
+      http_path: "/api/health"
+      healthy:
+        interval: 10
+        successes: 3
+      unhealthy:
+        interval: 10
+        http_failures: 3
+proxy:
+  connect_timeout: 10000
+  read_timeout: 60000
+  write_timeout: 60000
+route:
+  preserve_host: true
+

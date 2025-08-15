@@ -1,187 +1,105 @@
-# 🚀 SHIP CHECKLIST - Security Baseline
+# Sophia Intel Deployment Ship Checklist
 
-## ✅ Pre-Merge Validation
+## Pre-Deployment Validation
 
-```bash
-# Run all checks locally
-make auth-doctor                                    # ✓ Auth verification
-test -f .git/hooks/pre-commit && echo "✓ Hook"     # ✓ Secret detection
-test -f .github/CODEOWNERS && echo "✓ CODEOWNERS"  # ✓ Code ownership
-```
+### ✅ CI/CD Pipeline Status
+All CI jobs must be green before deployment:
 
-## 📦 What's Included
+1. **Dependencies & Lock File** (`deps_uv_lock`)
+   - ✅ uv sync --frozen completes successfully
+   - ✅ Core imports (loguru, qdrant_client, fastapi, uvicorn, httpx) work
+   - 📁 Artifacts: `uv.lock.sha256`
 
-### Security Infrastructure
-- [x] **CI/CD Pipeline** - `.github/workflows/checks.yml`
-  - GitHub CLI auth smoke check (non-blocking)
-  - Linters (currently non-blocking, script to harden)
-  - Tests with fail-fast configuration
-  
-- [x] **Pre-commit Hooks** - `.git/hooks/pre-commit`
-  - Blocks commits with secrets (ghp_*, ghu_*, api_key, etc.)
-  - Tested and operational
+2. **Code Hygiene** (`hygiene_sweep`)
+   - ✅ No forbidden patterns (roo|portkey|backup) in codebase
+   - ✅ No .venv directory committed
+   - 📁 Artifacts: `hygiene.log`
 
-- [x] **Code Ownership** - `.github/CODEOWNERS`
-  - Critical paths require @scoobyjava review
-  - Covers /orchestrator, /connectors, /services, etc.
+3. **Router Allow-List Enforcement** (`router_allowlist_test`)
+   - ✅ Only approved models (gpt-4o, gpt-4o-mini) allowed
+   - ✅ Unapproved models correctly rejected
+   - 📁 Artifacts: `router-allowlist-test-results`
 
-- [x] **Branch Protection** - `scripts/setup-branch-protection.sh`
-  - Requires CI checks to pass
-  - Requires 1 PR approval
-  - Requires CODEOWNER reviews
-  - Enforces for admins
+4. **Secrets Presence Gate** (`secrets_presence_gate`)
+   - ✅ OPENROUTER_API_KEY present
+   - ✅ QDRANT_API_KEY present
+   - ✅ QDRANT_URL present
+   - ✅ NEON_DATABASE_URL present
+   - ✅ REDIS_URL present
+   - 📁 Artifacts: `secrets-status`
 
-### Helper Scripts
-- `scripts/setup-branch-protection.sh` - Lock down main branch
-- `scripts/harden-linters.sh` - Make linters blocking (when ready)
-- `scripts/github-cli-setup.sh` - Initial GitHub CLI setup
+5. **Connectivity Smoke Tests** (`connectivity_smoke`)
+   - ✅ OpenRouter API: GET /models returns 200, approved models present
+   - ✅ OpenRouter API: POST /chat/completions returns 200, valid response
+   - ✅ Qdrant: GET /collections returns 200, collections listed
+   - ✅ Neon PostgreSQL: Connection successful, database/timestamp returned
+   - ✅ Redis: PING returns PONG
+   - 📁 Artifacts: `connectivity-smoke-logs` (openrouter.log, qdrant.log, neon.log, redis.log)
 
-### Documentation
-- `docs/github-cli-security.md` - Security best practices
-- `docs/github-security-checklist.md` - Manual verification steps
-- `ACCEPTANCE_REPORT.md` - Full system validation
+6. **Code Quality** (`lint`)
+   - ✅ Python compilation check passes
+   - ✅ Black formatting check passes
+   - ✅ MyPy type checking (optional)
 
-## 🎯 Ship Sequence
+7. **Test Suite** (`test`)
+   - ✅ All unit tests pass
+   - ✅ Health checks pass
+   - ✅ Integration tests with mock services
 
-### 1. Final Local Validation
-```bash
-# Ensure everything is committed
-git status
+8. **Security Scan** (`security`)
+   - ✅ Bandit security scan completed
+   - ✅ Safety vulnerability check completed
 
-# Run final validation
-make auth-doctor && \
-  test -f .git/hooks/pre-commit && \
-  test -f .github/CODEOWNERS && \
-  echo "✅ All systems GO!"
-```
+### 🔗 CI Job Links
+- **Latest CI Run**: https://github.com/ai-cherry/sophia-intel/actions
+- **Dependencies**: Look for `deps_uv_lock` job
+- **Hygiene**: Look for `hygiene_sweep` job  
+- **Router Tests**: Look for `router_allowlist_test` job
+- **Secrets**: Look for `secrets_presence_gate` job
+- **Connectivity**: Look for `connectivity_smoke` job
+- **Build Status**: Look for `build-status` job
 
-### 2. Create Feature Branch & Push
-```bash
-git checkout -b feat/security-baseline
-git add -A
-git commit -m "feat: complete security baseline
+### 📊 Evidence Requirements
+Each deployment must have:
+1. **Green CI badge** on main branch
+2. **Connectivity logs** showing real API responses
+3. **Secrets validation** confirming all required credentials present
+4. **Router enforcement** proving only approved models allowed
 
-- Token-based auth only (no passwords)
-- CI/CD with GitHub Actions v4/v5
-- Pre-commit secret detection hooks
-- CODEOWNERS for critical paths
-- Branch protection scripts ready
-- Comprehensive security documentation
+### 🚨 Deployment Blockers
+Do NOT deploy if:
+- Any CI job is red/failing
+- Connectivity smoke tests show API failures
+- Required secrets are missing
+- Forbidden patterns detected in code
+- Router allows unapproved models
 
-Validated: make auth-doctor ✅"
+### 📈 Success Metrics
+- **OpenRouter**: 200 responses, approved models available
+- **Qdrant**: 200 response, collections accessible  
+- **Neon**: Connection successful, query returns data
+- **Redis**: PING/PONG successful
+- **Router**: Only gpt-4o and gpt-4o-mini allowed
 
-git push -u origin feat/security-baseline
-```
+## Post-Deployment Verification
 
-### 3. Open PR
-```bash
-gh pr create -B main -H feat/security-baseline \
-  -t "🔒 Security Baseline - Production Ready" \
-  -b "## Summary
-Complete security hardening for autonomous agent deployment.
+### 🔍 Production Health Checks
+After deployment, verify:
+1. All endpoints return expected responses
+2. Database connections are stable
+3. Vector search is functional
+4. LLM routing works correctly
+5. No error spikes in logs
 
-## Changes
-- ✅ GitHub CLI auth verification in CI
-- ✅ Pre-commit hooks for secret detection  
-- ✅ CODEOWNERS for code review enforcement
-- ✅ Branch protection configuration
-- ✅ Updated CI/CD with latest GitHub Actions
-- ✅ Security documentation and guides
-
-## Validation
-\`\`\`bash
-make auth-doctor  # ✅ Passed
-\`\`\`
-
-## Post-Merge Actions
-1. Run \`./scripts/setup-branch-protection.sh\`
-2. Enable secret scanning in repo settings
-3. Consider running \`./scripts/harden-linters.sh\` after team alignment
-
-Ready for production deployment 🚀"
-```
-
-### 4. After PR Approval
-```bash
-# Merge (will auto-squash if configured)
-gh pr merge --squash
-
-# Switch to main and pull
-git checkout main
-git pull origin main
-
-# Apply branch protection
-./scripts/setup-branch-protection.sh
-
-# Tag the release
-git tag -a v0.1.0-security-baseline \
-  -m "Security baseline - Autonomous agent ready
-
-- Complete auth hardening
-- CI/CD guards implemented
-- Secret detection active
-- CODEOWNERS configured
-- Ready for production"
-
-git push origin v0.1.0-security-baseline
-```
-
-## 🔐 Post-Ship Hardening
-
-### Immediate (Do Now)
-1. **Enable Secret Scanning**
-   - Settings → Code security → Enable secret scanning
-   - Enable push protection
-
-2. **Verify Branch Protection**
-   ```bash
-   gh api repos/:owner/:repo/branches/main/protection
-   ```
-
-### Soon (This Week)
-1. **Harden Linters** (when team is ready)
-   ```bash
-   ./scripts/harden-linters.sh
-   git add .github/workflows/checks.yml
-   git commit -m "chore: make linters blocking"
-   git push
-   ```
-
-2. **Set Token Rotation Reminder**
-   - Calendar: Monthly on the 1st
-   - Rotate `GH_FINE_GRAINED_TOKEN` in Codespaces secrets
-
-### Later (This Month)
-1. **Add Environments**
-   - Create `staging` and `production` environments
-   - Require reviewers for production deployments
-   - Scope secrets per environment
-
-2. **Consider GitHub App**
-   - Migrate from PAT to GitHub App
-   - Benefits: Short-lived tokens, better audit trail
-
-## 📊 Success Metrics
-
-| Metric | Target | Current |
-|--------|--------|---------|
-| Auth Type | Token-only | ✅ Token |
-| Secret Detection | Active | ✅ Pre-commit hook |
-| CI/CD Guards | Enabled | ✅ GitHub CLI check |
-| Code Reviews | Required | ✅ CODEOWNERS |
-| Branch Protection | Enforced | 🔄 Script ready |
-| Linter Enforcement | Optional | ⚠️ Non-blocking |
-
-## 🎉 You're Ready!
-
-Your repository now has:
-- 🔒 **Enterprise-grade security**
-- 🚀 **CI/CD automation**
-- 🛡️ **Secret protection**
-- 👥 **Code review enforcement**
-- 📚 **Complete documentation**
-
-**Ship with confidence!** The autonomous agent infrastructure is production-ready. 🎯
+### 📝 Rollback Plan
+If issues detected:
+1. Revert to previous known-good commit
+2. Re-run CI pipeline
+3. Validate connectivity smoke tests
+4. Monitor for 15 minutes post-rollback
 
 ---
-*Generated: 2025-08-11 | Repository: ai-cherry/sophia-intel*
+
+**Last Updated**: August 14, 2025  
+**Version**: 1.0  
+**Maintainer**: Sophia Intel DevOps Team

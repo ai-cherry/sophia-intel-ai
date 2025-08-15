@@ -50,14 +50,21 @@ run_test() {
 test_mcp_code_health() {
     log_info "Testing MCP Code Server health..."
     
+    # Use production domain if available, fallback to localhost
+    MCP_BASE="${MCP_BASE:-https://mcp.sophia-intel.ai}"
+    if ! curl -f "$MCP_BASE/healthz" >/dev/null 2>&1; then
+        MCP_BASE="http://localhost:8000"
+        log_warning "Production MCP not accessible, using localhost"
+    fi
+    
     run_test "MCP Code Server - Health Endpoint" \
-        "curl -f http://localhost:8000/healthz"
+        "curl -f $MCP_BASE/healthz"
     
     run_test "MCP Code Server - GitHub Integration" \
-        "curl -f http://localhost:8000/mcp/code/github/status"
+        "curl -f $MCP_BASE/mcp/code/github/status"
     
     run_test "MCP Code Server - Repository Access" \
-        "curl -f http://localhost:8000/mcp/code/repo/status"
+        "curl -f $MCP_BASE/mcp/code/repo/status"
 }
 
 # Test MCP Research Server
@@ -65,13 +72,13 @@ test_mcp_research() {
     log_info "Testing MCP Research Server..."
     
     run_test "MCP Research - Health Endpoint" \
-        "curl -f http://localhost:8000/mcp/research/health"
+        "curl -f $MCP_BASE/mcp/research/health"
     
     run_test "MCP Research - Search Capability" \
-        "curl -f -X POST http://localhost:8000/mcp/research/search -H 'Content-Type: application/json' -d '{\"query\": \"test\"}'"
+        "curl -f -X POST $MCP_BASE/mcp/research/search -H 'Content-Type: application/json' -d '{\"query\": \"test\"}'"
     
     run_test "MCP Research - Analysis Capability" \
-        "curl -f -X POST http://localhost:8000/mcp/research/analyze -H 'Content-Type: application/json' -d '{\"content\": \"test content\"}'"
+        "curl -f -X POST $MCP_BASE/mcp/research/analyze -H 'Content-Type: application/json' -d '{\"content\": \"test content\"}'"
 }
 
 # Test MCP Code Analysis
@@ -79,13 +86,13 @@ test_mcp_analysis() {
     log_info "Testing MCP Code Analysis..."
     
     run_test "MCP Analysis - Health Endpoint" \
-        "curl -f http://localhost:8000/mcp/analysis/health"
+        "curl -f $MCP_BASE/mcp/analysis/health"
     
     run_test "MCP Analysis - Code Quality Check" \
-        "curl -f -X POST http://localhost:8000/mcp/analysis/quality -H 'Content-Type: application/json' -d '{\"code\": \"def test(): pass\"}'"
+        "curl -f -X POST $MCP_BASE/mcp/analysis/quality -H 'Content-Type: application/json' -d '{\"code\": \"def test(): pass\"}'"
     
     run_test "MCP Analysis - Security Scan" \
-        "curl -f -X POST http://localhost:8000/mcp/analysis/security -H 'Content-Type: application/json' -d '{\"code\": \"import os\"}'"
+        "curl -f -X POST $MCP_BASE/mcp/analysis/security -H 'Content-Type: application/json' -d '{\"code\": \"import os\"}'"
 }
 
 # Test GitHub Integration
@@ -214,9 +221,9 @@ test_security() {
     run_test "Security Headers" \
         "curl -I http://localhost:5000/ | grep -i 'x-frame-options'"
     
-    # Test rate limiting (make multiple rapid requests)
-    run_test "Rate Limiting" \
-        "for i in {1..20}; do curl -f http://localhost:5000/api/health >/dev/null 2>&1 || break; done"
+    # Test rate limiting (make multiple rapid requests and expect 429)
+    run_test "Rate Limiting fires" \
+        "for i in {1..50}; do curl -s -o /dev/null -w '%{http_code}\n' http://localhost:5000/api/health; done | grep -q '^429$'"
 }
 
 # Test Database Connections

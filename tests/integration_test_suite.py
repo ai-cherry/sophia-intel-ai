@@ -44,7 +44,7 @@ class IntegrationTestSuite:
         self.end_time = None
         
         # Test configuration
-        self.github_pat = os.getenv('GITHUB_PAT', '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')
+        self.github_pat = os.getenv('GITHUB_PAT', '')
         self.repository = "ai-cherry/sophia-intel"
         
         # Expected files and directories

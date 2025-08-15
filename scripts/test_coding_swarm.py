@@ -360,8 +360,8 @@ class CodingSwarmTester:
 async def main():
     """Main test runner"""
     # Set up environment
-    os.environ.setdefault('GITHUB_PAT', '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')
-    os.environ.setdefault('OPENROUTER_API_KEY', 'sk-or-v1-a7c9b8e6f5d4c3b2a1e9f8d7c6b5a4e3f2d1c0b9a8e7f6d5c4b3a2f1e0d9c8b7a6f5e4d3c2b1a0')
+    os.environ.setdefault('GITHUB_PAT', '')
+    os.environ.setdefault('OPENROUTER_API_KEY', '')
     
     tester = CodingSwarmTester()
     results = await tester.run_all_tests()

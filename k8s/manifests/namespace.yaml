@@ -1,0 +1,61 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: sophia-intel
+  labels:
+    name: sophia-intel
+    environment: production
+    project: sophia-intel-ai
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: sophia-secrets
+  namespace: sophia-intel
+  labels:
+    app: sophia-intel
+type: Opaque
+stringData:
+  # AI Model APIs
+  lambda-api-key: "${LAMBDA_API_KEY}"
+  openrouter-api-key: "${OPENROUTER_API_KEY}"
+  
+  # Infrastructure APIs
+  lambda-cloud-api-key: "${LAMBDA_CLOUD_API_KEY}"
+  dnsimple-api-key: "${DNSIMPLE_API_KEY}"
+  
+  # GitHub Integration
+  github-pat: "${GITHUB_PAT}"
+  
+  # Vector Database
+  qdrant-api-key: "${QDRANT_API_KEY}"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sophia-config
+  namespace: sophia-intel
+  labels:
+    app: sophia-intel
+data:
+  # Application Configuration
+  environment: "production"
+  log-level: "INFO"
+  
+  # External Services
+  qdrant-url: "https://your-cluster.qdrant.io:6333"
+  
+  # Domain Configuration
+  domain-name: "sophia-intel.ai"
+  api-domain: "api.sophia-intel.ai"
+  dashboard-domain: "dashboard.sophia-intel.ai"
+  
+  # Performance Settings
+  max-concurrent-requests: "100"
+  request-timeout: "30"
+  
+  # AI Router Configuration
+  default-cost-preference: "balanced"
+  circuit-breaker-threshold: "5"
+  fallback-enabled: "true"
+

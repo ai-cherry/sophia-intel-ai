@@ -1,0 +1,48 @@
+# SOPHIA Code Indexer Configuration
+
+# File inclusion/exclusion
+include_extensions:
+  - ".py"
+  - ".js"
+  - ".ts"
+  - ".jsx"
+  - ".tsx"
+  - ".go"
+  - ".rs"
+  - ".java"
+  - ".cpp"
+  - ".c"
+  - ".h"
+  - ".md"
+  - ".yaml"
+  - ".yml"
+  - ".json"
+
+exclude_patterns:
+  - "__pycache__"
+  - ".git"
+  - "node_modules"
+  - ".venv"
+  - "venv"
+  - "dist"
+  - "build"
+  - ".next"
+  - "target"
+  - "bin"
+  - "obj"
+  - ".pytest_cache"
+  - "coverage"
+
+# Chunking configuration
+max_chunk_size: 1000  # lines
+overlap_size: 100     # lines
+batch_size: 50        # points per batch upload
+
+# Vector configuration
+vector_dimensions: 384  # MiniLM-L6-v2 embedding size
+distance_metric: "cosine"
+
+# Search configuration
+default_search_limit: 10
+max_search_limit: 100
+

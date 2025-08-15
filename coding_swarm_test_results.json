@@ -1,0 +1,118 @@
+{
+  "timestamp": "2025-08-15T04:59:17.160443",
+  "repository": "ai-cherry/sophia-intel",
+  "total_tests": 9,
+  "passed_tests": 5,
+  "success_rate": 55.55555555555556,
+  "results": [
+    {
+      "test": "Environment Setup",
+      "success": true,
+      "timestamp": "2025-08-15T04:59:15.274471",
+      "details": "Environment: True, Packages: True",
+      "data": {
+        "environment_variables": {
+          "GITHUB_PAT": true,
+          "OPENROUTER_API_KEY": true
+        },
+        "packages": {
+          "langgraph": true,
+          "langchain_openai": true,
+          "langchain_core": true
+        }
+      }
+    },
+    {
+      "test": "Swarm Initialization",
+      "success": true,
+      "timestamp": "2025-08-15T04:59:15.274557",
+      "details": "Initialized 4/4 agents",
+      "data": {
+        "initialized_agents": [
+          "planner",
+          "coder",
+          "reviewer",
+          "integrator"
+        ],
+        "workflow_compiled": true
+      }
+    },
+    {
+      "test": "GitHub Integration",
+      "success": true,
+      "timestamp": "2025-08-15T04:59:16.056381",
+      "details": "Repository access: True, File read: True",
+      "data": {
+        "repository": "ai-cherry/sophia-intel",
+        "access_granted": true,
+        "file_operations": true
+      }
+    },
+    {
+      "test": "Diff Analyzer",
+      "success": false,
+      "timestamp": "2025-08-15T04:59:16.056545",
+      "details": "Diff generation: True, Complexity analysis: False",
+      "data": {
+        "diff_lines": 5,
+        "complexity_score": 1,
+        "risk_level": "low"
+      }
+    },
+    {
+      "test": "Workflow Structure",
+      "success": true,
+      "timestamp": "2025-08-15T04:59:16.056561",
+      "details": "Workflow compiled: True",
+      "data": {
+        "workflow_type": "<class 'langgraph.graph.state.CompiledStateGraph'>",
+        "compiled": true
+      }
+    },
+    {
+      "test": "Planner Agent",
+      "success": false,
+      "timestamp": "2025-08-15T04:59:16.353872",
+      "details": "Planning completed: False",
+      "data": {
+        "has_plan": false,
+        "plan_steps": 0,
+        "estimated_complexity": "unknown"
+      }
+    },
+    {
+      "test": "Planner Agent",
+      "success": false,
+      "timestamp": "2025-08-15T04:59:16.476808",
+      "details": "Planning completed: False",
+      "data": {
+        "has_plan": false,
+        "plan_steps": 0,
+        "estimated_complexity": "unknown"
+      }
+    },
+    {
+      "test": "GitHub Integration",
+      "success": true,
+      "timestamp": "2025-08-15T04:59:17.159736",
+      "details": "Repository access: True, File read: True",
+      "data": {
+        "repository": "ai-cherry/sophia-intel",
+        "access_granted": true,
+        "file_operations": true
+      }
+    },
+    {
+      "test": "Simple Task Execution",
+      "success": false,
+      "timestamp": "2025-08-15T04:59:17.159827",
+      "details": "Core components functional: False",
+      "data": {
+        "task_description": "Add a simple utility function",
+        "planner_functional": false,
+        "github_functional": true,
+        "note": "Full execution requires live GitHub operations"
+      }
+    }
+  ]
+}

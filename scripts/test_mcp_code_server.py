@@ -335,7 +335,7 @@ class MCPCodeServerTester:
 async def main():
     """Main test runner"""
     # Set up environment
-    os.environ.setdefault('GITHUB_PAT', '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')
+    os.environ.setdefault('GITHUB_PAT', '')
     
     tester = MCPCodeServerTester()
     results = await tester.run_all_tests()

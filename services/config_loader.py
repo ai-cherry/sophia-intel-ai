@@ -106,7 +106,7 @@ def load_from_env() -> Dict[str, Any]:
             "QDRANT_API_KEY",
             "DATABASE_URL",
             "OPENROUTER_API_KEY",
-            "PORTKEY_API_KEY",
+            "openrouter_API_KEY",
             "ANTHROPIC_API_KEY",
             "OPENAI_API_KEY",
             "DEEPSEEK_API_KEY",
@@ -170,7 +170,7 @@ def load_config(prefer_esc: bool = True) -> AppConfig:
     # Extract LLM keys
     llm_keys = {
         "openrouter": raw_config.get("OPENROUTER_API_KEY"),
-        "portkey": raw_config.get("PORTKEY_API_KEY"),
+        "openrouter": raw_config.get("openrouter_API_KEY"),
         "anthropic": raw_config.get("ANTHROPIC_API_KEY"),
         "openai": raw_config.get("OPENAI_API_KEY"),
         "deepseek": raw_config.get("DEEPSEEK_API_KEY"),

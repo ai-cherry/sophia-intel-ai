@@ -40,7 +40,7 @@ class TestSettings(BaseModel):
     GROQ_API_KEY: str = "test-groq-key"
     DEEPSEEK_API_KEY: str = "test-deepseek-key"
     OPENROUTER_API_KEY: str = "test-openrouter-key"
-    PORTKEY_API_KEY: str = "test-portkey-key"
+    openrouter_API_KEY: str = "test-openrouter-key"
     LAMBDA_CLOUD_API_KEY: str = "test-lambda-key"
     EXA_API_KEY: str = "test-exa-key"
 

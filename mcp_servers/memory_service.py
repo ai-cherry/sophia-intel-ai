@@ -16,7 +16,7 @@ from datetime import datetime
 
 # Add project root to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from services.portkey_client import PortkeyClient
+from services.openrouter_client import openrouterClient
 
 
 class MemoryService:
@@ -31,8 +31,8 @@ class MemoryService:
 
         self.client = QdrantClient(**client_kwargs)
 
-        # Initialize Portkey client for embeddings
-        self.portkey_client = PortkeyClient()
+        # Initialize openrouter client for embeddings
+        self.openrouter_client = openrouterClient()
 
         self._ensure_collection()
 
@@ -52,13 +52,13 @@ class MemoryService:
 
     async def _embed(self, text: str) -> List[float]:
         """
-        Create embeddings for text content using OpenRouter text-embedding-3-small via Portkey.
+        Create embeddings for text content using OpenRouter text-embedding-3-small via openrouter.
         """
         try:
             logger.debug(f"Generating embedding for text: {text[:100]}...")
 
-            # Use OpenRouter's text-embedding-3-small model through Portkey
-            response = await self.portkey_client.embeddings(
+            # Use OpenRouter's text-embedding-3-small model through openrouter
+            response = await self.openrouter_client.embeddings(
                 input=text, model="openai/text-embedding-3-small"
             )
 
@@ -117,7 +117,7 @@ class MemoryService:
                 }
             ]
 
-            response = await self.portkey_client.chat(
+            response = await self.openrouter_client.chat(
                 messages=messages,
                 model="openrouter/auto",
                 max_tokens=20,

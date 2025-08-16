@@ -229,3 +229,51 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 **SOPHIA Intel** - Transforming development with AI-first architecture and intelligent automation.
 
+
+## 🔧 Troubleshooting
+
+### Common Issues
+
+#### Dashboard Shows Blank Screen or "Host Not Allowed" Error
+
+**Problem**: The React dashboard appears blank or shows "This host is not allowed" when accessing from external domains.
+
+**Solution**: Update the Vite configuration in `apps/dashboard/vite.config.js`:
+
+```javascript
+export default defineConfig({
+  // ... other config
+  preview: {
+    host: '0.0.0.0',        // Listen on all addresses
+    port: 8080,
+    allowedHosts: true      // Allow any host
+  }
+})
+```
+
+**Why**: Vite has built-in security restrictions that block external hosts by default. See [docs/VITE_HOST_FIX.md](./docs/VITE_HOST_FIX.md) for detailed explanation.
+
+#### API Connection Errors
+
+**Problem**: Dashboard shows "Connection Error" or "Unable to connect to SOPHIA Intel API".
+
+**Solutions**:
+1. Ensure backend is running on port 5000
+2. Check environment variables are set correctly
+3. Verify API_BASE_URL in frontend configuration
+
+#### MCP Services Not Starting
+
+**Problem**: MCP services show as offline or fail to start.
+
+**Solutions**:
+1. Check port availability (8001, 8002, etc.)
+2. Verify Python dependencies are installed
+3. Check logs for specific error messages
+
+### Getting Help
+
+- **Documentation**: Check [docs/](./docs/) directory for detailed guides
+- **Issues**: Report bugs on [GitHub Issues](https://github.com/ai-cherry/sophia-intel/issues)
+- **Configuration**: See [docs/environment-variables.md](./docs/environment-variables.md)
+

@@ -1,0 +1,216 @@
+# SOPHIA Intel Production Values
+# This file configures the production deployment with real services and endpoints
+
+global:
+  environment: prod
+  namespace: sophia-intel
+  imageRegistry: ghcr.io/ai-cherry/sophia-intel
+  
+# Environment variables (non-secret)
+env:
+  ENV: prod
+  NODE_ENV: production
+  FLASK_ENV: production
+  
+  # Service URLs
+  MCP_CODE_URL: https://api.sophia-intel.ai/mcp/code
+  BRIGHTDATA_MCP_URL: https://api.sophia-intel.ai/mcp/brightdata
+  EMBEDDING_MCP_URL: https://api.sophia-intel.ai/mcp/embedding
+  TELEMETRY_MCP_URL: https://api.sophia-intel.ai/mcp/telemetry
+  NOTION_SYNC_MCP_URL: https://api.sophia-intel.ai/mcp/notion
+  
+  # Database URLs (non-secret parts)
+  QDRANT_URL: https://qdrant.prod:6333
+  WEAVIATE_URL: https://weaviate.prod:8080
+  
+  # Voice/AI Configuration
+  TTS_PROVIDER: elevenlabs
+  STT_PROVIDER: openai
+  AI_MODEL_PRIMARY: claude-3-5-sonnet-20241022
+  AI_MODEL_FALLBACK: gpt-4o
+  
+  # Feature Flags
+  ENABLE_VOICE: "true"
+  ENABLE_ORCHESTRATION: "true"
+  ENABLE_MEMORY: "true"
+  ENABLE_RESEARCH: "true"
+  ENABLE_CODE_GEN: "true"
+
+# Secret reference (secrets managed via GitHub Secrets → K8s Secret)
+secretName: sophia-secrets
+
+# Main API Component (Enhanced with Orchestration + Voice)
+api:
+  enabled: true
+  name: sophia-api
+  image:
+    repository: ghcr.io/ai-cherry/sophia-intel/api
+    tag: latest # Will be overridden by CI with SHA
+    pullPolicy: Always
+  
+  replicas: 2
+  
+  service:
+    type: NodePort
+    port: 80
+    targetPort: 5000
+    nodePort: 30083
+    
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "1Gi"
+      cpu: "500m"
+      
+  # Health checks for the enhanced API
+  probes:
+    readiness:
+      httpGet:
+        path: /health
+        port: 5000
+      initialDelaySeconds: 10
+      periodSeconds: 10
+    liveness:
+      httpGet:
+        path: /health
+        port: 5000
+      initialDelaySeconds: 30
+      periodSeconds: 20
+
+# Dashboard Component
+dashboard:
+  enabled: true
+  name: sophia-dashboard
+  image:
+    repository: ghcr.io/ai-cherry/sophia-intel/dashboard
+    tag: latest
+    pullPolicy: Always
+    
+  replicas: 1
+  
+  service:
+    type: NodePort
+    port: 80
+    targetPort: 3000
+    nodePort: 30081
+    
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "250m"
+
+# MCP Services (Microservices for AI capabilities)
+mcpServices:
+  - name: code
+    enabled: true
+    image:
+      repository: ghcr.io/ai-cherry/sophia-intel/mcp-code
+      tag: latest
+    replicas: 1
+    service:
+      port: 8001
+      nodePort: 30091
+      
+  - name: brightdata
+    enabled: true
+    image:
+      repository: ghcr.io/ai-cherry/sophia-intel/mcp-brightdata
+      tag: latest
+    replicas: 1
+    service:
+      port: 8002
+      nodePort: 30092
+      
+  - name: embedding
+    enabled: true
+    image:
+      repository: ghcr.io/ai-cherry/sophia-intel/mcp-embedding
+      tag: latest
+    replicas: 1
+    service:
+      port: 8003
+      nodePort: 30093
+      
+  - name: telemetry
+    enabled: true
+    image:
+      repository: ghcr.io/ai-cherry/sophia-intel/mcp-telemetry
+      tag: latest
+    replicas: 1
+    service:
+      port: 8004
+      nodePort: 30094
+
+# Ingress Configuration
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "Content-Type, Authorization"
+    
+  hosts:
+    - host: 104.171.202.107  # Will be overridden by CI
+      paths:
+        - path: /health
+          pathType: Prefix
+          service: sophia-api
+          port: 80
+        - path: /api/orchestration
+          pathType: Prefix
+          service: sophia-api
+          port: 80
+        - path: /api/speech
+          pathType: Prefix
+          service: sophia-api
+          port: 80
+        - path: /
+          pathType: Prefix
+          service: sophia-dashboard
+          port: 80
+
+# Vector Databases (if deploying in cluster)
+vectorDatabases:
+  qdrant:
+    enabled: false  # Using external Qdrant
+  weaviate:
+    enabled: false  # Using external Weaviate
+
+# Monitoring & Observability
+monitoring:
+  enabled: true
+  prometheus:
+    enabled: true
+  grafana:
+    enabled: true
+    
+# Security
+security:
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    fsGroup: 1000
+  securityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: false
+    capabilities:
+      drop:
+        - ALL
+
+# Autoscaling
+autoscaling:
+  api:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+  dashboard:
+    enabled: false  # Dashboard doesn't need autoscaling
+

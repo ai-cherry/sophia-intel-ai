@@ -1,11 +1,17 @@
 """SOPHIA Intel API Gateway - Single Front Door"""
-import os
+import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from routers import health, orchestration, speech
 from core.env_schema import validate_environment
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Validate environment on startup
 config = validate_environment()
+logger.info(f"Starting SOPHIA Intel API Gateway in {config.env} mode")
 
 app = FastAPI(
     title="SOPHIA Intel API Gateway",
@@ -22,15 +28,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/health")
-async def health():
-    """Health check endpoint"""
-    return {
-        "service": "sophia-api-gateway",
-        "status": "healthy",
-        "version": "1.0.0",
-        "environment": config.env
-    }
+# Include routers
+app.include_router(health.router)
+app.include_router(orchestration.router)
+app.include_router(speech.router)
 
 if __name__ == "__main__":
     import uvicorn

@@ -66,94 +66,154 @@ class ModelRouter:
         self.performance_metrics: Dict[str, Dict] = {}
         
     def _initialize_models(self) -> Dict[str, ModelConfig]:
-        """Initialize available models with their configurations"""
+        """Initialize available models with their configurations - Current 2025 OpenRouter Models"""
         return {
             # Efficient Tier - Cost optimized
-            "claude-3-haiku": ModelConfig(
-                name="claude-3-haiku",
-                provider="anthropic",
-                tier=ModelTier.EFFICIENT,
-                cost_per_token=0.00025,
-                max_tokens=4096,
-                capabilities=["chat", "analysis", "code"],
-                latency_p95_ms=800,
-                quality_score=0.85,
-                context_window=200000
-            ),
-            
-            "gpt-3.5-turbo": ModelConfig(
-                name="gpt-3.5-turbo",
+            "openai/gpt-oss-20b": ModelConfig(
+                name="openai/gpt-oss-20b",
                 provider="openai",
                 tier=ModelTier.EFFICIENT,
-                cost_per_token=0.0005,
+                cost_per_token=0.0,  # Free tier
                 max_tokens=4096,
+                capabilities=["chat", "analysis", "code"],
+                latency_p95_ms=1000,
+                quality_score=0.80,
+                context_window=32000
+            ),
+            
+            "ai21/jamba-mini-1.7": ModelConfig(
+                name="ai21/jamba-mini-1.7",
+                provider="ai21",
+                tier=ModelTier.EFFICIENT,
+                cost_per_token=0.0002,  # $0.20/M input
+                max_tokens=8192,
                 capabilities=["chat", "code", "analysis"],
+                latency_p95_ms=900,
+                quality_score=0.85,
+                context_window=256000
+            ),
+            
+            "baidu/ernie-4.5-21b-a3b": ModelConfig(
+                name="baidu/ernie-4.5-21b-a3b",
+                provider="baidu",
+                tier=ModelTier.EFFICIENT,
+                cost_per_token=0.00107,  # $1.07/M input
+                max_tokens=4096,
+                capabilities=["chat", "analysis", "code"],
                 latency_p95_ms=1200,
-                quality_score=0.82,
-                context_window=16385
+                quality_score=0.87,
+                context_window=120000
             ),
             
             # Standard Tier - Balanced
-            "claude-3-5-sonnet": ModelConfig(
-                name="claude-3-5-sonnet",
-                provider="anthropic",
+            "mistralai/mistral-medium-3.1": ModelConfig(
+                name="mistralai/mistral-medium-3.1",
+                provider="mistralai",
                 tier=ModelTier.STANDARD,
-                cost_per_token=0.003,
+                cost_per_token=0.0004,  # Estimated
                 max_tokens=8192,
                 capabilities=["chat", "analysis", "code", "reasoning"],
-                latency_p95_ms=1500,
-                quality_score=0.92,
-                context_window=200000
+                latency_p95_ms=1400,
+                quality_score=0.90,
+                context_window=262000
             ),
             
-            "gpt-4": ModelConfig(
-                name="gpt-4",
-                provider="openai",
+            "ai21/jamba-large-1.7": ModelConfig(
+                name="ai21/jamba-large-1.7",
+                provider="ai21",
                 tier=ModelTier.STANDARD,
-                cost_per_token=0.03,
+                cost_per_token=0.002,  # $2/M input
                 max_tokens=8192,
                 capabilities=["chat", "analysis", "code", "reasoning"],
-                latency_p95_ms=2000,
-                quality_score=0.90,
-                context_window=128000
+                latency_p95_ms=1600,
+                quality_score=0.92,
+                context_window=256000
+            ),
+            
+            "z-ai/glm-4.5v": ModelConfig(
+                name="z-ai/glm-4.5v",
+                provider="z-ai",
+                tier=ModelTier.STANDARD,
+                cost_per_token=0.0005,  # $0.50/M input
+                max_tokens=8192,
+                capabilities=["chat", "analysis", "code", "reasoning", "vision"],
+                latency_p95_ms=1500,
+                quality_score=0.89,
+                context_window=600000
+            ),
+            
+            "baidu/ernie-4.5-vl-28b-a3b": ModelConfig(
+                name="baidu/ernie-4.5-vl-28b-a3b",
+                provider="baidu",
+                tier=ModelTier.STANDARD,
+                cost_per_token=0.00014,  # $0.14/M input
+                max_tokens=8192,
+                capabilities=["chat", "analysis", "code", "reasoning", "vision"],
+                latency_p95_ms=1700,
+                quality_score=0.91,
+                context_window=300000
             ),
             
             # Premium Tier - High performance
-            "claude-3-opus": ModelConfig(
-                name="claude-3-opus",
-                provider="anthropic",
-                tier=ModelTier.PREMIUM,
-                cost_per_token=0.015,
-                max_tokens=4096,
-                capabilities=["chat", "analysis", "code", "reasoning", "creative"],
-                latency_p95_ms=3000,
-                quality_score=0.95,
-                context_window=200000
-            ),
-            
-            "gpt-4-turbo": ModelConfig(
-                name="gpt-4-turbo",
+            "openai/gpt-5-nano": ModelConfig(
+                name="openai/gpt-5-nano",
                 provider="openai",
                 tier=ModelTier.PREMIUM,
-                cost_per_token=0.01,
+                cost_per_token=0.0005,  # $0.05/M input estimated
                 max_tokens=4096,
-                capabilities=["chat", "analysis", "code", "reasoning", "vision"],
-                latency_p95_ms=2500,
+                capabilities=["chat", "analysis", "code", "reasoning"],
+                latency_p95_ms=800,
                 quality_score=0.93,
-                context_window=128000
+                context_window=400000
+            ),
+            
+            "openai/gpt-5-mini": ModelConfig(
+                name="openai/gpt-5-mini",
+                provider="openai",
+                tier=ModelTier.PREMIUM,
+                cost_per_token=0.00025,  # $0.25/M input estimated
+                max_tokens=8192,
+                capabilities=["chat", "analysis", "code", "reasoning", "health"],
+                latency_p95_ms=1000,
+                quality_score=0.95,
+                context_window=400000
+            ),
+            
+            "openai/gpt-5-chat": ModelConfig(
+                name="openai/gpt-5-chat",
+                provider="openai",
+                tier=ModelTier.PREMIUM,
+                cost_per_token=0.00125,  # $1.25/M input
+                max_tokens=8192,
+                capabilities=["chat", "analysis", "code", "reasoning", "multimodal"],
+                latency_p95_ms=1200,
+                quality_score=0.97,
+                context_window=400000
+            ),
+            
+            "openai/gpt-5": ModelConfig(
+                name="openai/gpt-5",
+                provider="openai",
+                tier=ModelTier.PREMIUM,
+                cost_per_token=0.00125,  # $1.25/M input, $10/M output
+                max_tokens=8192,
+                capabilities=["chat", "analysis", "code", "reasoning", "multimodal", "health"],
+                latency_p95_ms=1500,
+                quality_score=0.98,
+                context_window=400000
             ),
             
             # Specialized models
-            "codellama-34b": ModelConfig(
-                name="codellama-34b",
-                provider="meta",
+            "openai/gpt-oss-120b": ModelConfig(
+                name="openai/gpt-oss-120b",
+                provider="openai",
                 tier=ModelTier.SPECIALIZED,
-                cost_per_token=0.0008,
+                cost_per_token=0.00073,  # $0.73/M input estimated
                 max_tokens=16384,
-                capabilities=["code", "analysis"],
-                latency_p95_ms=1800,
-                quality_score=0.88,
-                context_window=16384
+                capabilities=["code", "analysis", "science", "health", "legal", "finance"],
+                latency_p95_ms=2000,
+                quality_score=0.94,
+                context_window=131000
             )
         }
     
@@ -177,14 +237,14 @@ class ModelRouter:
             
             if not scored_candidates:
                 # Fallback to default efficient model
-                fallback_model = self.models["claude-3-haiku"]
+                fallback_model = self.models["openai/gpt-oss-20b"]
                 return RoutingResult(
                     model=fallback_model,
                     estimated_cost=self._estimate_cost(fallback_model, request),
                     estimated_latency_ms=fallback_model.latency_p95_ms,
                     confidence=0.5,
                     reasoning="Fallback to default efficient model",
-                    fallback_models=["gpt-3.5-turbo"]
+                    fallback_models=["ai21/jamba-mini-1.7"]
                 )
             
             # Select best model
@@ -224,10 +284,10 @@ class ModelRouter:
         except Exception as e:
             logger.error(f"Model routing failed: {e}")
             # Return safe fallback
-            fallback_model = self.models["claude-3-haiku"]
+            fallback_model = self.models["openai/gpt-oss-20b"]
             return RoutingResult(
                 model=fallback_model,
-                estimated_cost=0.01,
+                estimated_cost=0.0,  # Free model
                 estimated_latency_ms=1000,
                 confidence=0.3,
                 reasoning=f"Error in routing, using fallback: {e}",

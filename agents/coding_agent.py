@@ -9,11 +9,11 @@ from agno.models.openai import OpenAIChat
 from agno.storage.sqlite import SqliteStorage
 from typing import Dict, Any, List
 from loguru import logger
-import httpx
 import json
 import asyncio
 import difflib
 from config.config import settings
+from libs.mcp_client.memory_client import MCPMemoryClient
 
 
 class CodingAgent(BaseAgent):
@@ -29,6 +29,9 @@ class CodingAgent(BaseAgent):
             concurrency=concurrency or settings.AGENT_CONCURRENCY,
             timeout_seconds=timeout_seconds or settings.AGENT_TIMEOUT_SECONDS,
         )
+
+        # Initialize MCP Memory Client
+        self.memory_client = MCPMemoryClient()
 
         # Initialize Agno agent with base instructions
         base_instructions = [
@@ -127,19 +130,12 @@ class CodingAgent(BaseAgent):
     ) -> List[Dict[str, Any]]:
         """Fetch relevant context from MCP memory service."""
         try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                response = await client.post(
-                    f"http://localhost:{settings.MCP_PORT}/context/query",
-                    json={
-                        "session_id": session_id,
-                        "query": query,
-                        "top_k": top_k,
-                        "global_search": False,
-                        "threshold": 0.7,
-                    },
-                )
-                response.raise_for_status()
-                return response.json().get("results", [])
+            return await self.memory_client.query(
+                session_id=session_id,
+                query=query,
+                top_k=top_k,
+                threshold=0.7
+            )
         except Exception as e:
             logger.warning(f"Failed to fetch memory context: {e}")
             return []
@@ -149,19 +145,16 @@ class CodingAgent(BaseAgent):
     ) -> None:
         """Store task context in MCP memory."""
         try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                await client.post(
-                    f"http://localhost:{settings.MCP_PORT}/context/store",
-                    json={
-                        "session_id": session_id,
-                        "content": f"Task: {query}\nCode:\n{code}",
-                        "metadata": {
-                            "task_id": task_id,
-                            "context_type": "coding_task",
-                            "query": query,
-                        },
-                    },
-                )
+            await self.memory_client.store(
+                session_id=session_id,
+                content=f"Task: {query}\nCode:\n{code}",
+                metadata={
+                    "task_id": task_id,
+                    "context_type": "coding_task",
+                    "query": query,
+                },
+                context_type="coding_task"
+            )
         except Exception as e:
             logger.warning(f"Failed to store task context: {e}")
 
@@ -170,19 +163,16 @@ class CodingAgent(BaseAgent):
     ) -> None:
         """Store result context in MCP memory."""
         try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                await client.post(
-                    f"http://localhost:{settings.MCP_PORT}/context/store",
-                    json={
-                        "session_id": session_id,
-                        "content": f"Result: {result['summary']}\nPatch:\n{result['patch']}",
-                        "metadata": {
-                            "task_id": task_id,
-                            "context_type": "coding_result",
-                            "summary": result["summary"],
-                        },
-                    },
-                )
+            await self.memory_client.store(
+                session_id=session_id,
+                content=f"Result: {result['summary']}\nPatch:\n{result['patch']}",
+                metadata={
+                    "task_id": task_id,
+                    "context_type": "coding_result",
+                    "summary": result["summary"],
+                },
+                context_type="coding_result"
+            )
         except Exception as e:
             logger.warning(f"Failed to store result context: {e}")
 

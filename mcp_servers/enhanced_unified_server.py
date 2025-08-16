@@ -21,6 +21,7 @@ from config.config import settings
 from mcp_servers.memory_service import MemoryService
 from mcp_servers.ai_router import AIRouter, TaskRequest, TaskType, RoutingDecision
 from agents.base_agent import BaseAgent
+from services.lambda_client import LambdaClient
 
 
 # Request/Response Models
@@ -110,6 +111,7 @@ class EnhancedUnifiedMCPServer:
         # Initialize services
         self.memory_service = MemoryService()
         self.ai_router = AIRouter()
+        self.lambda_client = LambdaClient()
         self.agents = {}
         self.active_sessions = {}
         self.performance_metrics = {
@@ -366,6 +368,72 @@ class EnhancedUnifiedMCPServer:
                 logger.error(f"Failed to clear session context: {e}")
                 raise HTTPException(status_code=500, detail=str(e))
 
+        @self.app.get("/context/search_multi_service")
+        async def search_multi_service(
+            session_id: str,
+            query: str,
+            services: Optional[str] = "memory,rag,vector",
+            top_k: int = 10
+        ):
+            """Search across multiple services for comprehensive results"""
+            try:
+                service_list = services.split(",") if services else ["memory", "rag", "vector"]
+                results = {}
+                
+                # Search memory service
+                if "memory" in service_list:
+                    memory_results = await self.memory_service.query_context(
+                        session_id=session_id,
+                        query=query,
+                        top_k=top_k // len(service_list),
+                        threshold=0.6
+                    )
+                    results["memory"] = memory_results
+                
+                # Search RAG pipeline (if available)
+                if "rag" in service_list:
+                    try:
+                        # TODO: Integrate with RAG pipeline when available
+                        results["rag"] = []
+                    except Exception as e:
+                        logger.warning(f"RAG search failed: {e}")
+                        results["rag"] = []
+                
+                # Search vector database directly (if available)
+                if "vector" in service_list:
+                    try:
+                        # TODO: Direct vector search when available
+                        results["vector"] = []
+                    except Exception as e:
+                        logger.warning(f"Vector search failed: {e}")
+                        results["vector"] = []
+                
+                # Fuse results (simple concatenation for now)
+                fused_results = []
+                for service, service_results in results.items():
+                    for result in service_results:
+                        result["source_service"] = service
+                        fused_results.append(result)
+                
+                # Sort by relevance score if available
+                fused_results.sort(key=lambda x: x.get("score", 0), reverse=True)
+                
+                return {
+                    "success": True,
+                    "query": query,
+                    "services_searched": service_list,
+                    "results": fused_results[:top_k],
+                    "total_found": len(fused_results),
+                    "service_breakdown": {
+                        service: len(service_results) 
+                        for service, service_results in results.items()
+                    }
+                }
+                
+            except Exception as e:
+                logger.error(f"Multi-service search failed: {e}")
+                raise HTTPException(status_code=500, detail=str(e))
+
         @self.app.post("/agents/execute")
         async def execute_agent_task(request: AgentTaskRequest):
             """Execute task using specialized agent"""
@@ -392,6 +460,12 @@ class EnhancedUnifiedMCPServer:
             except Exception as e:
                 logger.error(f"Agent task execution failed: {e}")
                 raise HTTPException(status_code=500, detail=str(e))
+
+        # Alias for /agent/task endpoint
+        @self.app.post("/agent/task")
+        async def agent_task_alias(request: AgentTaskRequest):
+            """Execute task using specialized agent (alias for /agents/execute)"""
+            return await execute_agent_task(request)
 
         @self.app.get("/stats")
         async def get_stats():
@@ -427,6 +501,70 @@ class EnhancedUnifiedMCPServer:
                 return await self.ai_router.get_model_stats()
             except Exception as e:
                 logger.error(f"Failed to get models: {e}")
+                raise HTTPException(status_code=500, detail=str(e))
+
+        # GPU Management Endpoints
+        @self.app.get("/gpu/quota")
+        async def gpu_quota():
+            """Get GPU quota and usage information"""
+            try:
+                return await self.lambda_client.quota()
+            except Exception as e:
+                logger.error(f"Failed to get GPU quota: {e}")
+                raise HTTPException(status_code=500, detail=str(e))
+
+        @self.app.get("/gpu/instances")
+        async def list_gpu_instances():
+            """List all GPU instances"""
+            try:
+                return await self.lambda_client.list_instances()
+            except Exception as e:
+                logger.error(f"Failed to list GPU instances: {e}")
+                raise HTTPException(status_code=500, detail=str(e))
+
+        @self.app.get("/gpu/instances/{instance_id}")
+        async def get_gpu_instance(instance_id: str):
+            """Get details for a specific GPU instance"""
+            try:
+                return await self.lambda_client.get_instance(instance_id)
+            except Exception as e:
+                logger.error(f"Failed to get GPU instance {instance_id}: {e}")
+                raise HTTPException(status_code=500, detail=str(e))
+
+        @self.app.post("/gpu/launch")
+        async def launch_gpu_instance(config: Dict[str, Any]):
+            """Launch a new GPU instance"""
+            try:
+                return await self.lambda_client.launch_instance(config)
+            except Exception as e:
+                logger.error(f"Failed to launch GPU instance: {e}")
+                raise HTTPException(status_code=500, detail=str(e))
+
+        @self.app.delete("/gpu/instances/{instance_id}")
+        async def terminate_gpu_instance(instance_id: str):
+            """Terminate a GPU instance"""
+            try:
+                return await self.lambda_client.terminate_instance(instance_id)
+            except Exception as e:
+                logger.error(f"Failed to terminate GPU instance {instance_id}: {e}")
+                raise HTTPException(status_code=500, detail=str(e))
+
+        @self.app.post("/gpu/instances/{instance_id}/restart")
+        async def restart_gpu_instance(instance_id: str):
+            """Restart a GPU instance"""
+            try:
+                return await self.lambda_client.restart_instance(instance_id)
+            except Exception as e:
+                logger.error(f"Failed to restart GPU instance {instance_id}: {e}")
+                raise HTTPException(status_code=500, detail=str(e))
+
+        @self.app.get("/gpu/instance-types")
+        async def list_gpu_instance_types():
+            """List available GPU instance types"""
+            try:
+                return await self.lambda_client.list_instance_types()
+            except Exception as e:
+                logger.error(f"Failed to list GPU instance types: {e}")
                 raise HTTPException(status_code=500, detail=str(e))
 
     async def _initialize_ai_clients(self):

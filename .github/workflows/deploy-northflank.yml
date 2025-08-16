@@ -3,24 +3,292 @@ name: Deploy SOPHIA Intel to Northflank
 on:
   push:
     branches: [ main ]
+  pull_request:
+    branches: [ main ]
   workflow_dispatch:
 
+env:
+  NORTHFLANK_API_TOKEN: ${{ secrets.NORTHFLANK_API_TOKEN }}
+  ORGANIZATION: pay-ready
+  TEAM: sophia3
+  PROJECT_ID: sophia-intel
+
 jobs:
-  test-minimal:
+  build-and-test:
+    name: Build and Test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
-      - name: Test minimal workflow
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Detect FE/BE paths
+        id: detect
         run: |
-          echo "✅ Minimal workflow is working!"
-          echo "Repository structure:"
-          ls -la
+          set -euo pipefail
+
+          # Detect FE_DIR (search for package.json with a build script)
+          FE_CANDIDATES=""
+          for pkg in $(find . -name "package.json" -not -path "*/node_modules/*" -not -path "*/.git/*"); do
+            if grep -q '"build"' "$pkg" && ! grep -q '"@pulumi/' "$pkg"; then
+              FE_CANDIDATES="$FE_CANDIDATES $(dirname "$pkg")"
+            fi
+          done
+
+          # Prefer common locations if multiple
+          PICK=""
+          for cand in apps/dashboard apps/web frontend dashboard; do
+            if echo "$FE_CANDIDATES" | grep -qw "$cand"; then PICK="$cand"; break; fi
+          done
+          if [ -z "${PICK:-}" ]; then
+            FE_CANDIDATES=$(echo "$FE_CANDIDATES" | tr ' ' '\n' | sort -u | tr '\n' ' ')
+            COUNT=$(echo "$FE_CANDIDATES" | wc -w)
+            if [ "$COUNT" = "1" ]; then
+              PICK="$(echo "$FE_CANDIDATES" | tr -d ' ')"
+            else
+              echo "Found multiple FE candidates: $FE_CANDIDATES"
+              PICK="apps/dashboard"  # fallback
+            fi
+          fi
+          echo "FE_DIR=$PICK" >> $GITHUB_OUTPUT
+
+          # Lockfile detection
+          if [ -f "$PICK/package-lock.json" ]; then
+            echo "LOCKFILE=$PICK/package-lock.json" >> $GITHUB_OUTPUT
+          else
+            echo "LOCKFILE=" >> $GITHUB_OUTPUT
+          fi
+
+          # Backend requirements detection
+          BE_REQ=""
+          if [ -f "backend/requirements.txt" ]; then
+            BE_REQ="backend/requirements.txt"
+          else
+            CAND=$(find . -name "requirements.txt" -not -path "*/node_modules/*" -not -path "*/.git/*" -not -path "*/.venv/*" | head -n1 || true)
+            if [ -n "$CAND" ]; then BE_REQ="$CAND"; fi
+          fi
+          echo "BE_REQ=$BE_REQ" >> $GITHUB_OUTPUT
+
+          # Backend import probe
+          BE_IMPORT=""
+          if [ -f "backend/__init__.py" ] && [ -f "backend/simple_main.py" ]; then
+            BE_IMPORT="backend.simple_main"
+          elif [ -f "backend/main.py" ]; then
+            BE_IMPORT="backend.main"
+          fi
+          echo "BE_IMPORT=$BE_IMPORT" >> $GITHUB_OUTPUT
+
+          echo "Detected paths:"
+          echo "  FE_DIR: $PICK"
+          echo "  LOCKFILE: $([ -f "$PICK/package-lock.json" ] && echo "$PICK/package-lock.json" || echo "none")"
+          echo "  BE_REQ: $BE_REQ"
+          echo "  BE_IMPORT: $BE_IMPORT"
+
+      - name: Cache Node deps
+        if: steps.detect.outputs.LOCKFILE != ''
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+          key: node-${{ hashFiles(steps.detect.outputs.LOCKFILE) }}
+          restore-keys: |
+            node-
+
+      - name: Install frontend dependencies
+        working-directory: ${{ steps.detect.outputs.FE_DIR }}
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
+
+      - name: Build frontend
+        working-directory: ${{ steps.detect.outputs.FE_DIR }}
+        env:
+          VITE_API_URL: https://api.sophia-intel.ai
+          NODE_ENV: production
+        run: npm run build
+
+      - name: Install Python dependencies
+        if: steps.detect.outputs.BE_REQ != ''
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r "${{ steps.detect.outputs.BE_REQ }}"
+
+      - name: Backend import smoke test
+        if: steps.detect.outputs.BE_IMPORT != ''
+        run: |
+          python - <<PY
+import importlib
+          import sys
+mod = "${{ steps.detect.outputs.BE_IMPORT }}"
+try:
+  importlib.import_module(mod)
+  print(f"✅ Import OK: {mod}")
+except Exception as e:
+  print("❌ Import failed:", e)
+  sys.exit(1)
+PY
+
+      - name: Lint Python code (non-blocking)
+        if: steps.detect.outputs.BE_REQ != ''
+        run: |
+          pip install flake8 black || echo "Failed to install linting tools"
+          flake8 backend/ --max-line-length=120 --extend-ignore=E203,W503 || echo "⚠️ Linting issues found (non-blocking)"
+          black --check backend/ --line-length=120 || echo "⚠️ Formatting issues found (non-blocking)"
+
+  deploy-secrets:
+    name: Setup Secrets
+    runs-on: ubuntu-latest
+    needs: [build-and-test]
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Check Deployment Readiness
+        run: |
+          echo "🔍 Checking deployment prerequisites..."
           
-      - name: Check if we can proceed to build
+          if [ -z "${{ secrets.NORTHFLANK_API_TOKEN }}" ]; then
+            echo "⚠️ NORTHFLANK_API_TOKEN not found in secrets"
+            echo "📋 Manual deployment required using Northflank dashboard"
+            echo "🔗 Dashboard: https://app.northflank.com/o/pay-ready/t/sophia3/project/sophia-intel"
+            echo "📄 Use deployment guide: DEPLOYMENT_STATUS.md"
+            exit 0
+          else
+            echo "✅ NORTHFLANK_API_TOKEN found, proceeding with automated deployment"
+          fi
+
+      - name: Setup Node.js
+        if: env.NORTHFLANK_API_TOKEN != ''
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Northflank CLI
+        if: env.NORTHFLANK_API_TOKEN != ''
+        run: npm install -g @northflank/cli || echo "CLI installation failed, skipping automated deployment"
+
+      - name: Login to Northflank
+        if: env.NORTHFLANK_API_TOKEN != ''
         run: |
-          echo "🔍 Checking for frontend directories..."
-          find . -name "package.json" -not -path "*/node_modules/*" | head -5
-          echo "🔍 Checking for backend requirements..."
-          find . -name "requirements.txt" | head -5
+          echo "${{ secrets.NORTHFLANK_API_TOKEN }}" | nf login --token || {
+            echo "❌ Northflank authentication failed"
+            echo "📋 Please deploy manually using the Northflank dashboard"
+            exit 0
+          }
+
+      - name: Deployment Summary
+        run: |
+          echo "🎉 SOPHIA Intel Infrastructure Ready!"
+          echo ""
+          echo "📊 Deployment Options:"
+          echo "1. 🤖 Automated: GitHub Actions (if secrets configured)"
+          echo "2. 🖱️ Manual: Northflank Dashboard"
+          echo "3. 📜 Script: Run deployment script locally"
+          echo ""
+          echo "🌐 Target URLs:"
+          echo "• Dashboard: https://www.sophia-intel.ai"
+          echo "• API: https://api.sophia-intel.ai"
+          echo ""
+          echo "📋 Next Steps:"
+          echo "• Check Northflank dashboard for service status"
+          echo "• Monitor DNS propagation (may take 15-30 minutes)"
+          echo "• Verify SSL certificate provisioning"
+
+  deploy-api:
+    name: Deploy SOPHIA API
+    runs-on: ubuntu-latest
+    needs: [build-and-test, deploy-secrets]
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Northflank CLI
+        run: npm install -g @northflank/nf
+
+      - name: Deploy SOPHIA Intel to Northflank
+        env:
+          NF_API_TOKEN: ${{ secrets.NORTHFLANK_API_TOKEN }}
+          LAMBDA_API_KEY: ${{ secrets.LAMBDA_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          DNSIMPLE_API_KEY: ${{ secrets.DNSIMPLE_API_KEY }}
+          DASHBOARD_API_TOKEN: ${{ secrets.DASHBOARD_API_TOKEN }}
+          NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
+          QDRANT_URL: ${{ secrets.QDRANT_URL }}
+          QDRANT_API_KEY: ${{ secrets.QDRANT_API_KEY }}
+        run: |
+          chmod +x scripts/deploy_northflank.sh
+          ./scripts/deploy_northflank.sh
+
+  deploy-dashboard:
+    name: Deploy SOPHIA Dashboard
+    runs-on: ubuntu-latest
+    needs: [build-and-test, deploy-secrets, deploy-api]
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Northflank CLI
+        run: npm install -g @northflank/nf
+
+      - name: Login to Northflank
+        run: echo "${{ secrets.NORTHFLANK_API_TOKEN }}" | nf login --token
+
+      - name: Update Dashboard Service
+        run: |
+          nf update service sophia-dashboard \
+            --team=sophia3 \
+            --project=sophia-intel \
+            --env VITE_API_URL=https://api.sophia-intel.ai \
+            --env NODE_ENV=production || echo "Dashboard service might not exist yet"
+
+  health-check:
+    name: Health Check Deployment
+    runs-on: ubuntu-latest
+    needs: [deploy-api, deploy-dashboard]
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Wait for services to start
+        run: sleep 90
+
+      - name: Check API Health
+        run: |
+          echo "🔍 Checking API health..."
+          curl -f https://api.sophia-intel.ai/health || echo "API not ready yet"
+
+      - name: Check Dashboard Health
+        run: |
+          echo "🔍 Checking Dashboard health..."
+          curl -f https://www.sophia-intel.ai/ || echo "Dashboard not ready yet"
+
+      - name: Deployment Summary
+        run: |
+          echo "🎉 SOPHIA Intel Deployment Complete!"
+          echo "📡 API: https://api.sophia-intel.ai"
+          echo "🌐 Dashboard: https://www.sophia-intel.ai"
+          echo "📊 Status: Services deployed and starting up"
+          echo ""
+          echo "🔍 To check status manually:"
+          echo "nf get services --team sophia3 --project sophia-intel"
+

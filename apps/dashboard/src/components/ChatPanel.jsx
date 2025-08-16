@@ -99,7 +99,7 @@ export function ChatPanel() {
     setMessages((prev) => [...prev, newUserMessage]);
 
     try {
-      // Send request to backend
+      // Send request to SOPHIA backend with Lambda integration
       const response = await fetch(`${API_BASE_URL}/api/chat`, {
         method: "POST",
         headers: {
@@ -107,9 +107,10 @@ export function ChatPanel() {
         },
         body: JSON.stringify({
           message: userMessage,
+          user_id: "dashboard_user",
           session_id: sessionId,
-          use_context: true,
-          stream: true,
+          model: "llama-4-maverick-17b-128e-instruct-fp8",
+          temperature: 0.7
         }),
       });
 
@@ -117,53 +118,21 @@ export function ChatPanel() {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      // Handle streaming response
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let assistantMessage = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        const chunk = decoder.decode(value);
-        const lines = chunk.split("\\n");
-
-        for (const line of lines) {
-          if (line.startsWith("data: ")) {
-            try {
-              const data = JSON.parse(line.slice(6));
-
-              if (data.error) {
-                throw new Error(data.error);
-              }
-
-              if (data.content) {
-                assistantMessage += data.content;
-                setStreamingMessage(assistantMessage);
-              }
-
-              if (data.done) {
-                // Streaming complete, add final message
-                const newAssistantMessage = {
-                  role: "assistant",
-                  content: assistantMessage,
-                  timestamp: Date.now() / 1000,
-                };
-                setMessages((prev) => [...prev, newAssistantMessage]);
-                setStreamingMessage("");
-                setIsLoading(false);
-                return;
-              }
-
-              if (data.session_id && data.session_id !== sessionId) {
-                setSessionId(data.session_id);
-              }
-            } catch (parseError) {
-              console.warn("Failed to parse SSE data:", parseError);
-            }
-          }
-        }
+      const data = await response.json();
+      
+      if (data.success) {
+        // Add assistant response to messages
+        const assistantMessage = {
+          role: "assistant",
+          content: data.response,
+          timestamp: Date.now() / 1000,
+          model: data.model_used,
+          usage: data.usage
+        };
+        setMessages((prev) => [...prev, assistantMessage]);
+        setIsConnected(true);
+      } else {
+        throw new Error(data.error || "Failed to get response from SOPHIA");
       }
     } catch (error) {
       console.error("Chat request failed:", error);

@@ -21,6 +21,8 @@ import uvicorn
 
 from orchestrator.scalable_orchestrator import orchestrator
 from config.config import settings
+from lambda_inference_client import LambdaInferenceClient, create_lambda_client
+from lambda_endpoints import router as lambda_router
 
 
 # Pydantic models
@@ -63,17 +65,25 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Include Lambda Inference API router
+app.include_router(lambda_router)
+
 # Global state
 redis_client = None
+lambda_client = None
 active_connections: Dict[str, WebSocket] = {}
 
 
 @app.on_event("startup")
 async def startup_event():
     """Initialize services on startup"""
-    global redis_client
+    global redis_client, lambda_client
     
     try:
+        # Initialize Lambda Inference API client
+        lambda_client = create_lambda_client()
+        logging.info("Lambda Inference API client initialized")
+        
         # Initialize Redis for queuing
         redis_client = redis.Redis(
             host=getattr(settings, 'REDIS_HOST', 'localhost'),

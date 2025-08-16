@@ -1,101 +1,111 @@
-# Deployment Guide
+# Production Deployment Guide
 
-This guide covers the complete deployment process for the Sophia Intel platform, from local development to production deployment.
+This guide covers the complete deployment process for the SOPHIA Intel platform to production servers.
+
+## 🚀 Quick Production Deployment
+
+For immediate deployment to www.sophia-intel.ai, see [REAL_PRODUCTION_DEPLOY.md](../../REAL_PRODUCTION_DEPLOY.md)
 
 ## Overview
 
-The Sophia Intel platform uses a modern deployment architecture with:
+The SOPHIA Intel platform uses a production-ready architecture with:
 
-- **Infrastructure as Code** (Pulumi)
-- **Containerization** (Docker)
-- **CI/CD Pipelines** (GitHub Actions)
-- **Cloud Infrastructure** (Lambda Labs)
-- **Dependency Management** (uv)
+- **React Frontend** with Vite build system
+- **FastAPI Backend** with async capabilities  
+- **Nginx Reverse Proxy** for production serving
+- **SSL/TLS Certificates** via Let's Encrypt
+- **Systemd Services** for process management
 
-## Prerequisites
+## Production Server Requirements
 
-### Required Tools
+### Minimum Specifications
+- **OS**: Ubuntu 20.04+ or similar Linux distribution
+- **RAM**: 4GB minimum, 8GB recommended
+- **Storage**: 20GB minimum, 50GB recommended
+- **Network**: Public IP with ports 80/443 accessible
 
+### Required Software
 ```bash
-# Install uv (Python package manager)
-curl -LsSf https://astral.sh/uv/install.sh | sh
+# Core packages
+sudo apt update
+sudo apt install -y nginx python3 python3-pip python3-venv nodejs npm git curl
 
-# Install Docker
-curl -fsSL https://get.docker.com -o get-docker.sh
-sh get-docker.sh
+# SSL certificate management
+sudo apt install -y certbot python3-certbot-nginx
 
-# Install Pulumi
-curl -fsSL https://get.pulumi.com | sh
+# Optional: Docker for containerized deployment
+curl -fsSL https://get.docker.com -o get-docker.sh && sudo sh get-docker.sh
 ```
 
-### Required Accounts
+## Production Deployment Methods
 
-- **GitHub** - Source code and CI/CD
-- **Lambda Labs** - Compute infrastructure
-- **Estuary Flow** - Data streaming (optional)
+### Method 1: Direct Server Deployment (Recommended)
 
-## Local Development Setup
-
-### 1. Clone Repository
-
+1. **Clone repository on production server**:
 ```bash
-git clone https://github.com/ai-cherry/sophia-intel.git
-cd sophia-intel
+cd /opt
+sudo git clone https://github.com/ai-cherry/sophia-intel.git
+sudo chown -R $USER:$USER /opt/sophia-intel
 ```
 
-### 2. Setup Environment
-
+2. **Setup backend**:
 ```bash
-# Create virtual environment
-uv venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-
-# Install dependencies
-uv sync --dev
+cd /opt/sophia-intel
+python3 -m venv venv
+source venv/bin/activate
+pip install -r backend/requirements.txt
 ```
 
-### 3. Configure Environment Variables
-
+3. **Build and deploy frontend**:
 ```bash
-# Copy example environment file
-cp .env.example .env
-
-# Edit with your configuration
-nano .env
+cd apps/dashboard
+npm install
+npm run build
+sudo mkdir -p /var/www/sophia-intel
+sudo cp -r dist/* /var/www/sophia-intel/
 ```
 
-Required environment variables:
+4. **Configure Nginx and SSL**:
 ```bash
-# Core Configuration
-ENVIRONMENT=development
+# See REAL_PRODUCTION_DEPLOY.md for complete Nginx configuration
+sudo certbot --nginx -d sophia-intel.ai -d www.sophia-intel.ai
+```
+
+### Method 2: Docker Deployment
+
+Use the provided `docker-compose.prod.yml` for containerized deployment with automatic SSL renewal and service management.
+
+## Environment Configuration
+
+### Production Environment Variables
+```bash
+# Core API Configuration
+LAMBDA_API_KEY=your-actual-lambda-key
+OPENAI_API_KEY=your-openai-key
+PORT=5000
 HOST=127.0.0.1
-PORT=8765
+ENVIRONMENT=production
 
-# Database URLs
-DATABASE_URL=postgresql+asyncpg://user:pass@localhost:5432/sophia
+# Security
+SECRET_KEY=your-production-secret-key
+JWT_SECRET=your-jwt-secret
+API_SALT=your-api-salt
+
+# Database (if using)
+DATABASE_URL=postgresql://user:pass@localhost:5432/sophia_prod
 REDIS_URL=redis://localhost:6379/0
-QDRANT_URL=http://localhost:6333
-
-# API Keys (development)
-OPENROUTER_API_KEY=your_openrouter_key
-LAMBDA_CLOUD_API_KEY=your_lambda_key
-EXA_API_KEY=your_exa_key
-
-# Security Keys
-SECRET_KEY=your_secret_key_32_chars_minimum
-ENCRYPTION_KEY=your_encryption_key_exactly_32_char
-JWT_SECRET=your_jwt_secret_16_chars_minimum
-API_SALT=your_api_salt_16_chars_minimum
 ```
 
-### 4. Start Services
-
-```bash
-# Start infrastructure services
-docker-compose up -d postgres redis qdrant
-
-# Start the application
-python -m uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
+### Frontend Configuration
+Ensure `apps/dashboard/vite.config.js` has proper production settings:
+```javascript
+export default defineConfig({
+  preview: {
+    host: '0.0.0.0',
+    port: 8080,
+    allowedHosts: true  // CRITICAL for production domains
+  }
+})
 ```
 
 ### 5. Verify Installation

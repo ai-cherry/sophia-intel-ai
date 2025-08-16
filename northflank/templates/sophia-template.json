@@ -1,0 +1,276 @@
+{
+  "apiVersion": "v1",
+  "spec": {
+    "kind": "Workflow",
+    "spec": {
+      "type": "deployment",
+      "context": {
+        "projectId": "sophia3",
+        "clusterId": "nf-compute-20"
+      },
+      "steps": [
+        {
+          "kind": "SecretGroup",
+          "spec": {
+            "name": "sophia-secrets-prod",
+            "description": "Production secrets for SOPHIA Intel",
+            "priority": 10,
+            "secrets": {
+              "LAMBDA_API_KEY": {
+                "value": "{{LAMBDA_API_KEY}}"
+              },
+              "DNSIMPLE_API_KEY": {
+                "value": "{{DNSIMPLE_API_KEY}}"
+              },
+              "NOTION_API_KEY": {
+                "value": "{{NOTION_API_KEY}}"
+              },
+              "QDRANT_URL": {
+                "value": "{{QDRANT_URL}}"
+              },
+              "POSTGRES_URL": {
+                "value": "{{POSTGRES_URL}}"
+              },
+              "REDIS_URL": {
+                "value": "{{REDIS_URL}}"
+              }
+            }
+          }
+        },
+        {
+          "kind": "Addon",
+          "spec": {
+            "name": "sophia-postgres",
+            "type": "postgresql",
+            "version": "15",
+            "billing": {
+              "deploymentPlan": "nf-compute-20"
+            },
+            "typeSpecificSettings": {
+              "database": "sophia_intel",
+              "username": "sophia",
+              "password": "{{POSTGRES_PASSWORD}}"
+            }
+          }
+        },
+        {
+          "kind": "Addon",
+          "spec": {
+            "name": "sophia-redis",
+            "type": "redis",
+            "version": "7",
+            "billing": {
+              "deploymentPlan": "nf-compute-10"
+            }
+          }
+        },
+        {
+          "kind": "Service",
+          "spec": {
+            "name": "sophia-api",
+            "billing": {
+              "deploymentPlan": "nf-compute-40"
+            },
+            "deployment": {
+              "instances": 2,
+              "docker": {
+                "configType": "dockerfile",
+                "pathToDockerfile": "/northflank/docker/sophia-api.Dockerfile",
+                "buildEngine": "kaniko"
+              },
+              "storage": {
+                "ephemeralStorage": {
+                  "storageSize": 1024
+                }
+              }
+            },
+            "ports": [
+              {
+                "name": "api",
+                "internalPort": 8000,
+                "public": true,
+                "protocol": "HTTP",
+                "domains": [
+                  {
+                    "domain": "api.sophia-intel.ai"
+                  }
+                ]
+              }
+            ],
+            "variables": {
+              "LAMBDA_API_KEY": {
+                "value": "@{secrets.sophia-secrets-prod.LAMBDA_API_KEY}"
+              },
+              "POSTGRES_URL": {
+                "value": "@{addons.sophia-postgres.connectionString}"
+              },
+              "REDIS_URL": {
+                "value": "@{addons.sophia-redis.connectionString}"
+              },
+              "ENVIRONMENT": {
+                "value": "production"
+              },
+              "LOG_LEVEL": {
+                "value": "info"
+              }
+            },
+            "buildArguments": {},
+            "healthChecks": [
+              {
+                "path": "/health",
+                "initialDelaySeconds": 30,
+                "periodSeconds": 10
+              }
+            ],
+            "vcsData": {
+              "projectUrl": "https://github.com/ai-cherry/sophia-intel",
+              "projectType": "github",
+              "projectBranch": "main"
+            }
+          }
+        },
+        {
+          "kind": "Service",
+          "spec": {
+            "name": "sophia-dashboard",
+            "billing": {
+              "deploymentPlan": "nf-compute-20"
+            },
+            "deployment": {
+              "instances": 2,
+              "docker": {
+                "configType": "dockerfile",
+                "pathToDockerfile": "/northflank/docker/sophia-dashboard.Dockerfile",
+                "buildEngine": "kaniko"
+              },
+              "storage": {
+                "ephemeralStorage": {
+                  "storageSize": 512
+                }
+              }
+            },
+            "ports": [
+              {
+                "name": "web",
+                "internalPort": 80,
+                "public": true,
+                "protocol": "HTTP",
+                "domains": [
+                  {
+                    "domain": "www.sophia-intel.ai"
+                  },
+                  {
+                    "domain": "app.sophia-intel.ai"
+                  }
+                ]
+              }
+            ],
+            "variables": {
+              "VITE_API_URL": {
+                "value": "https://api.sophia-intel.ai"
+              },
+              "NODE_ENV": {
+                "value": "production"
+              }
+            },
+            "buildArguments": {
+              "VITE_API_URL": "https://api.sophia-intel.ai"
+            },
+            "healthChecks": [
+              {
+                "path": "/health",
+                "initialDelaySeconds": 10,
+                "periodSeconds": 30
+              }
+            ],
+            "vcsData": {
+              "projectUrl": "https://github.com/ai-cherry/sophia-intel",
+              "projectType": "github",
+              "projectBranch": "main"
+            }
+          }
+        },
+        {
+          "kind": "Service",
+          "spec": {
+            "name": "sophia-mcp-memory",
+            "billing": {
+              "deploymentPlan": "nf-compute-20"
+            },
+            "deployment": {
+              "instances": 1,
+              "docker": {
+                "configType": "dockerfile",
+                "pathToDockerfile": "/northflank/docker/sophia-mcp.Dockerfile",
+                "buildEngine": "kaniko"
+              }
+            },
+            "ports": [
+              {
+                "name": "mcp",
+                "internalPort": 8001,
+                "public": false,
+                "protocol": "HTTP"
+              }
+            ],
+            "variables": {
+              "MCP_SERVICE_TYPE": {
+                "value": "memory"
+              },
+              "POSTGRES_URL": {
+                "value": "@{addons.sophia-postgres.connectionString}"
+              },
+              "REDIS_URL": {
+                "value": "@{addons.sophia-redis.connectionString}"
+              }
+            },
+            "vcsData": {
+              "projectUrl": "https://github.com/ai-cherry/sophia-intel",
+              "projectType": "github",
+              "projectBranch": "main"
+            }
+          }
+        },
+        {
+          "kind": "Service",
+          "spec": {
+            "name": "sophia-mcp-notion",
+            "billing": {
+              "deploymentPlan": "nf-compute-20"
+            },
+            "deployment": {
+              "instances": 1,
+              "docker": {
+                "configType": "dockerfile",
+                "pathToDockerfile": "/northflank/docker/sophia-mcp.Dockerfile",
+                "buildEngine": "kaniko"
+              }
+            },
+            "ports": [
+              {
+                "name": "mcp",
+                "internalPort": 8002,
+                "public": false,
+                "protocol": "HTTP"
+              }
+            ],
+            "variables": {
+              "MCP_SERVICE_TYPE": {
+                "value": "notion"
+              },
+              "NOTION_API_KEY": {
+                "value": "@{secrets.sophia-secrets-prod.NOTION_API_KEY}"
+              }
+            },
+            "vcsData": {
+              "projectUrl": "https://github.com/ai-cherry/sophia-intel",
+              "projectType": "github",
+              "projectBranch": "main"
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+

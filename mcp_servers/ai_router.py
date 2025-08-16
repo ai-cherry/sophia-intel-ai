@@ -142,7 +142,7 @@ class AIRouter:
                 cost_per_1k_tokens=0.00013,
                 avg_response_time=0.5,
                 quality_score=0.85,
-                specialties=[TaskType.EMBEDDING, TaskType.SEMANTIC_SEARCH],
+                specialties=[TaskType.GENERAL_CHAT, TaskType.ANALYSIS],
                 context_window=8192,
                 supports_function_calling=False,
                 supports_structured_output=False,
@@ -169,7 +169,7 @@ class AIRouter:
                 cost_per_1k_tokens=0.0002,
                 avg_response_time=1.2,
                 quality_score=0.88,
-                specialties=[TaskType.GENERAL_CHAT, TaskType.QUICK_TASKS],
+                specialties=[TaskType.GENERAL_CHAT, TaskType.ANALYSIS],
                 context_window=272000,  # 272B tokens
                 supports_function_calling=True,
                 supports_structured_output=True,
@@ -184,8 +184,8 @@ class AIRouter:
         logger.info(f"Routing request for task type: {request.task_type}")
 
         try:
-            # Special case: Embedding tasks go to embedding model
-            if request.task_type == TaskType.EMBEDDING or request.task_type == TaskType.SEMANTIC_SEARCH:
+            # Special routing for specific task types
+            if request.task_type == TaskType.GENERAL_CHAT or request.task_type == TaskType.ANALYSIS:
                 selected_model = "embedding-model"
                 confidence = 1.0
                 reasoning = "Specialized embedding model for vector search tasks"

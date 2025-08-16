@@ -549,3 +549,55 @@ pulumi stack output application_deployment
 
 This enterprise infrastructure provides a robust, scalable, and maintainable foundation for the Sophia Intel platform with proper containerization, infrastructure as code, and automated deployment capabilities.
 
+
+
+## Frontend Configuration (Critical)
+
+### Vite Host Restrictions Fix
+
+**IMPORTANT**: The React dashboard uses Vite for development and preview servers. By default, Vite only responds to localhost requests for security reasons. For external access (including production domains), you MUST configure the host settings.
+
+#### Required Vite Configuration
+
+In `apps/dashboard/vite.config.js`, ensure the following configuration:
+
+```javascript
+export default defineConfig({
+  // ... other config
+  preview: {
+    host: '0.0.0.0',        // Listen on all addresses
+    port: 8080,             // Production port
+    strictPort: false,
+    allowedHosts: true      // CRITICAL: Allow any host
+  }
+})
+```
+
+#### Why This Matters
+
+- **Without `host: '0.0.0.0'`**: Server only listens on localhost
+- **Without `allowedHosts: true`**: Vite blocks external domains with "This host is not allowed" error
+- **Result**: Blank screens, CORS errors, and inaccessible dashboard
+
+#### Alternative Configuration (More Secure)
+
+For production environments where you want to restrict hosts:
+
+```javascript
+preview: {
+  host: '0.0.0.0',
+  port: 8080,
+  allowedHosts: ['sophia-intel.ai', 'www.sophia-intel.ai', 'localhost']
+}
+```
+
+#### Troubleshooting
+
+If you see:
+- Blank screens on external domains
+- "This host is not allowed" errors
+- CORS-related issues
+
+Check your Vite configuration and ensure `allowedHosts` is properly set.
+
+

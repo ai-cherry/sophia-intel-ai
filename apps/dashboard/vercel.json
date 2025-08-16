@@ -1,0 +1,21 @@
+{
+  "name": "sophia-intel-dashboard",
+  "version": 2,
+  "builds": [
+    {
+      "src": "dist/**",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/dist/$1"
+    }
+  ],
+  "functions": {
+    "apps/dashboard/dist/index.html": {
+      "includeFiles": "dist/**"
+    }
+  }
+}

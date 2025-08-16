@@ -467,6 +467,132 @@ class EnhancedUnifiedMCPServer:
             """Execute task using specialized agent (alias for /agents/execute)"""
             return await execute_agent_task(request)
 
+        # Web Research Endpoints
+        @self.app.post("/research/search")
+        async def web_search(request: dict):
+            """
+            Perform web search using integrated web access service
+            """
+            try:
+                from backend.web_access_service import WebAccessService
+                web_service = WebAccessService()
+                
+                query = request.get("query", "")
+                max_results = request.get("max_results", 10)
+                strategy = request.get("strategy", "auto")
+                
+                if not query:
+                    raise HTTPException(status_code=400, detail="Query is required")
+                
+                results = await web_service.search(
+                    query=query,
+                    max_results=max_results,
+                    strategy=strategy
+                )
+                
+                return {
+                    "query": query,
+                    "strategy": strategy,
+                    "results": results,
+                    "total_found": len(results),
+                    "timestamp": datetime.now().isoformat()
+                }
+                
+            except Exception as e:
+                logger.error(f"Web search failed: {e}")
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.post("/research/scrape")
+        async def web_scrape(request: dict):
+            """
+            Scrape content from a URL using integrated web access service
+            """
+            try:
+                from backend.web_access_service import WebAccessService
+                web_service = WebAccessService()
+                
+                url = request.get("url", "")
+                strategy = request.get("strategy", "auto")
+                extract_text = request.get("extract_text", True)
+                extract_links = request.get("extract_links", False)
+                extract_images = request.get("extract_images", False)
+                
+                if not url:
+                    raise HTTPException(status_code=400, detail="URL is required")
+                
+                result = await web_service.scrape(
+                    url=url,
+                    strategy=strategy,
+                    extract_text=extract_text,
+                    extract_links=extract_links,
+                    extract_images=extract_images
+                )
+                
+                return result
+                
+            except Exception as e:
+                logger.error(f"Web scraping failed: {e}")
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.post("/research/comprehensive")
+        async def comprehensive_research(request: dict):
+            """
+            Perform comprehensive research combining search and scraping
+            """
+            try:
+                from backend.web_access_service import WebAccessService
+                web_service = WebAccessService()
+                
+                query = request.get("query", "")
+                max_results = request.get("max_results", 5)
+                scrape_top = request.get("scrape_top", 3)
+                
+                if not query:
+                    raise HTTPException(status_code=400, detail="Query is required")
+                
+                # First, perform web search
+                search_results = await web_service.search(
+                    query=query,
+                    max_results=max_results,
+                    strategy="auto"
+                )
+                
+                # Then scrape top results for detailed content
+                detailed_results = []
+                for i, result in enumerate(search_results[:scrape_top]):
+                    try:
+                        scraped = await web_service.scrape(
+                            url=result["url"],
+                            strategy="auto",
+                            extract_text=True
+                        )
+                        
+                        result["scraped_content"] = scraped.get("content", "")[:2000]  # Limit content
+                        result["scraped_title"] = scraped.get("title", "")
+                        result["scrape_success"] = scraped.get("success", False)
+                        
+                    except Exception as e:
+                        logger.warning(f"Failed to scrape {result['url']}: {e}")
+                        result["scraped_content"] = ""
+                        result["scraped_title"] = ""
+                        result["scrape_success"] = False
+                        result["scrape_error"] = str(e)
+                    
+                    detailed_results.append(result)
+                
+                return {
+                    "query": query,
+                    "strategy": "comprehensive",
+                    "search_results": len(search_results),
+                    "scraped_results": len([r for r in detailed_results if r.get("scrape_success")]),
+                    "results": detailed_results,
+                    "timestamp": datetime.now().isoformat()
+                }
+                
+            except Exception as e:
+                logger.error(f"Comprehensive research failed: {e}")
+                raise HTTPException(status_code=500, detail=str(e))
+
         @self.app.get("/stats")
         async def get_stats():
             """Get comprehensive system statistics"""

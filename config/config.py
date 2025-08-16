@@ -1,6 +1,7 @@
 import os
 from typing import Optional
-from pydantic import BaseSettings, AnyHttpUrl
+from pydantic_settings import BaseSettings
+from pydantic import AnyHttpUrl
 
 class Settings(BaseSettings):
     # MCP HTTP server (optional; stdio handled by VS Code)

@@ -1,11 +1,15 @@
-"""Orchestration router - Single front door for all AI requests"""
-from fastapi import APIRouter, HTTPException
+"""Orchestration router - Single front door with rate limiting and error handling"""
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 from typing import Dict, Any, Optional
-from core.orchestrator import orchestrator
-import logging
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
-logger = logging.getLogger(__name__)
+from core.orchestrator import orchestrator
+from core.middleware import limiter
+import structlog
+
+logger = structlog.get_logger()
 router = APIRouter()
 
 class OrchestrationRequest(BaseModel):
@@ -21,16 +25,23 @@ class OrchestrationResponse(BaseModel):
     cost_estimate: Optional[float] = None
 
 @router.post("/api/orchestration", response_model=OrchestrationResponse)
-async def orchestrate_request(request: OrchestrationRequest):
-    """Single front door for all AI orchestration requests"""
+@limiter.limit("10/minute")  # Rate limit: 10 requests per minute per IP
+async def orchestrate_request(request: Request, orchestration_request: OrchestrationRequest):
+    """Single front door for all AI orchestration requests - Rate Limited"""
     try:
-        logger.info(f"Orchestrating {request.request_type} request")
+        logger.info("orchestration_request", 
+                   request_type=orchestration_request.request_type,
+                   client_ip=get_remote_address(request))
         
         result = await orchestrator.handle_request(
-            request_type=request.request_type,
-            payload=request.payload,
-            context=request.context or {}
+            request_type=orchestration_request.request_type,
+            payload=orchestration_request.payload,
+            context=orchestration_request.context or {}
         )
+        
+        logger.info("orchestration_success", 
+                   request_id=result.get("request_id"),
+                   model_used=result.get("model_used"))
         
         return OrchestrationResponse(
             status="success",
@@ -41,5 +52,5 @@ async def orchestrate_request(request: OrchestrationRequest):
         )
         
     except Exception as e:
-        logger.error(f"Orchestration failed: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error("orchestration_failed", error=str(e), request_type=orchestration_request.request_type)
+        raise HTTPException(status_code=500, detail=f"Orchestration failed: {str(e)}")

@@ -4,57 +4,49 @@ Integrates AI Router, memory services, and comprehensive AI development capabili
 """
 
 import asyncio
-import time
-import json
 import hashlib
-from typing import Dict, List, Optional, Any, Union
+import json
+import time
 from datetime import datetime
-from fastapi import FastAPI, HTTPException, BackgroundTasks, Depends
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, StreamingResponse
-from pydantic import BaseModel, Field
-from loguru import logger
+from typing import Any, Dict, List, Optional, Union
+
 import aiohttp
 import uvicorn
+from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse, StreamingResponse
+from loguru import logger
+from pydantic import BaseModel, Field
 
-from config.config import settings
-from mcp_servers.memory_service import MemoryService
-from mcp_servers.ai_router import AIRouter, TaskRequest, TaskType, RoutingDecision
 from agents.base_agent import BaseAgent
+from config.config import settings
+from mcp_servers.ai_router import AIRouter, RoutingDecision, TaskRequest, TaskType
+from mcp_servers.memory_service import MemoryService
 from services.lambda_client import LambdaClient
 
 
 # Request/Response Models
 class AIRequest(BaseModel):
     """Enhanced AI request with routing capabilities"""
+
     prompt: str = Field(..., description="The prompt to send to the AI")
-    task_type: TaskType = Field(
-        default=TaskType.GENERAL_CHAT, description="Type of task")
-    max_tokens: Optional[int] = Field(
-        default=None, description="Maximum tokens to generate")
-    temperature: float = Field(
-        default=0.7, ge=0.0, le=2.0, description="Temperature for generation")
-    stream: bool = Field(
-        default=False, description="Whether to stream the response")
+    task_type: TaskType = Field(default=TaskType.GENERAL_CHAT, description="Type of task")
+    max_tokens: Optional[int] = Field(default=None, description="Maximum tokens to generate")
+    temperature: float = Field(default=0.7, ge=0.0, le=2.0, description="Temperature for generation")
+    stream: bool = Field(default=False, description="Whether to stream the response")
     priority: str = Field(default="normal", description="Request priority")
-    cost_preference: str = Field(
-        default="balanced", description="Cost optimization preference")
-    latency_requirement: str = Field(
-        default="normal", description="Latency requirement")
-    quality_requirement: str = Field(
-        default="high", description="Quality requirement")
-    session_id: Optional[str] = Field(
-        default=None, description="Session ID for context")
-    use_context: bool = Field(
-        default=True, description="Whether to use session context")
-    context_query: Optional[str] = Field(
-        default=None, description="Specific context query")
-    metadata: Optional[Dict[str, Any]] = Field(
-        default={}, description="Additional metadata")
+    cost_preference: str = Field(default="balanced", description="Cost optimization preference")
+    latency_requirement: str = Field(default="normal", description="Latency requirement")
+    quality_requirement: str = Field(default="high", description="Quality requirement")
+    session_id: Optional[str] = Field(default=None, description="Session ID for context")
+    use_context: bool = Field(default=True, description="Whether to use session context")
+    context_query: Optional[str] = Field(default=None, description="Specific context query")
+    metadata: Optional[Dict[str, Any]] = Field(default={}, description="Additional metadata")
 
 
 class AIResponse(BaseModel):
     """Enhanced AI response with routing information"""
+
     success: bool
     content: str
     provider: str
@@ -68,26 +60,25 @@ class AIResponse(BaseModel):
 
 class ContextRequest(BaseModel):
     """Context management request"""
+
     session_id: str = Field(..., description="Session identifier")
     content: str = Field(..., description="Content to store")
-    metadata: Optional[Dict[str, Any]] = Field(
-        default={}, description="Additional metadata")
-    context_type: Optional[str] = Field(
-        default="general", description="Type of context")
+    metadata: Optional[Dict[str, Any]] = Field(default={}, description="Additional metadata")
+    context_type: Optional[str] = Field(default="general", description="Type of context")
 
 
 class ContextQueryRequest(BaseModel):
     """Context query request"""
+
     session_id: str = Field(..., description="Session identifier")
     query: str = Field(..., description="Query string for context search")
-    top_k: int = Field(default=5, ge=1, le=20,
-                       description="Number of results to return")
-    threshold: float = Field(default=0.7, ge=0.0, le=1.0,
-                             description="Similarity threshold")
+    top_k: int = Field(default=5, ge=1, le=20, description="Number of results to return")
+    threshold: float = Field(default=0.7, ge=0.0, le=1.0, description="Similarity threshold")
 
 
 class AgentTaskRequest(BaseModel):
     """Agent task execution request"""
+
     agent_type: str = Field(..., description="Type of agent to use")
     task_data: Dict[str, Any] = Field(..., description="Task data")
     session_id: Optional[str] = Field(default=None, description="Session ID")
@@ -119,7 +110,7 @@ class EnhancedUnifiedMCPServer:
             "successful_requests": 0,
             "failed_requests": 0,
             "avg_response_time": 0.0,
-            "total_cost": 0.0
+            "total_cost": 0.0,
         }
 
         # Setup middleware
@@ -163,14 +154,13 @@ class EnhancedUnifiedMCPServer:
                     "components": {
                         "memory_service": memory_health,
                         "ai_router": router_health,
-                        "providers": provider_health
+                        "providers": provider_health,
                     },
-                    "metrics": self.performance_metrics
+                    "metrics": self.performance_metrics,
                 }
             except Exception as e:
                 logger.error(f"Health check failed: {e}")
-                raise HTTPException(
-                    status_code=503, detail="Service unhealthy")
+                raise HTTPException(status_code=503, detail="Service unhealthy")
 
         @self.app.post("/ai/chat", response_model=AIResponse)
         async def ai_chat(request: AIRequest, background_tasks: BackgroundTasks):
@@ -188,15 +178,11 @@ class EnhancedUnifiedMCPServer:
                 if request.use_context and request.session_id:
                     context_query = request.context_query or request.prompt[:100]
                     context_results = await self.memory_service.query_context(
-                        session_id=request.session_id,
-                        query=context_query,
-                        top_k=5,
-                        threshold=0.7
+                        session_id=request.session_id, query=context_query, top_k=5, threshold=0.7
                     )
 
                     if context_results:
-                        context_content = "\n".join(
-                            [r.get("content", "") for r in context_results])
+                        context_content = "\n".join([r.get("content", "") for r in context_results])
                         context_used = context_results
 
                 # Prepare enhanced prompt with context
@@ -215,18 +201,14 @@ class EnhancedUnifiedMCPServer:
                     latency_requirement=request.latency_requirement,
                     quality_requirement=request.quality_requirement,
                     context=context_content,
-                    metadata=request.metadata
+                    metadata=request.metadata,
                 )
 
                 # Get routing decision
                 routing_decision = await self.ai_router.route_request(task_request)
 
                 # Execute AI request
-                ai_response = await self._execute_ai_request(
-                    routing_decision,
-                    enhanced_prompt,
-                    request
-                )
+                ai_response = await self._execute_ai_request(routing_decision, enhanced_prompt, request)
 
                 # Store interaction in context if session provided
                 if request.session_id:
@@ -235,7 +217,7 @@ class EnhancedUnifiedMCPServer:
                         request.session_id,
                         request.prompt,
                         ai_response["content"],
-                        routing_decision
+                        routing_decision,
                     )
 
                 # Record performance
@@ -246,16 +228,16 @@ class EnhancedUnifiedMCPServer:
                     routing_decision.selected_model,
                     True,
                     response_time,
-                    routing_decision.estimated_cost
+                    routing_decision.estimated_cost,
                 )
 
                 # Update metrics
                 self.performance_metrics["successful_requests"] += 1
                 self.performance_metrics["avg_response_time"] = (
-                    (self.performance_metrics["avg_response_time"] *
-                     (self.performance_metrics["successful_requests"] - 1) + response_time) /
-                    self.performance_metrics["successful_requests"]
-                )
+                    self.performance_metrics["avg_response_time"]
+                    * (self.performance_metrics["successful_requests"] - 1)
+                    + response_time
+                ) / self.performance_metrics["successful_requests"]
                 self.performance_metrics["total_cost"] += routing_decision.estimated_cost
 
                 return AIResponse(
@@ -265,12 +247,9 @@ class EnhancedUnifiedMCPServer:
                     model=routing_decision.selected_model,
                     routing_decision=routing_decision.__dict__,
                     usage=ai_response.get("usage", {}),
-                    performance={
-                        "response_time": response_time,
-                        "estimated_cost": routing_decision.estimated_cost
-                    },
+                    performance={"response_time": response_time, "estimated_cost": routing_decision.estimated_cost},
                     session_id=request.session_id,
-                    context_used=context_used
+                    context_used=context_used,
                 )
 
             except Exception as e:
@@ -278,10 +257,9 @@ class EnhancedUnifiedMCPServer:
                 self.performance_metrics["failed_requests"] += 1
 
                 # Record failure
-                if 'routing_decision' in locals():
+                if "routing_decision" in locals():
                     await self.ai_router.record_failure(
-                        routing_decision.selected_provider,
-                        routing_decision.selected_model
+                        routing_decision.selected_provider, routing_decision.selected_model
                     )
 
                 raise HTTPException(status_code=500, detail=str(e))
@@ -290,8 +268,7 @@ class EnhancedUnifiedMCPServer:
         async def ai_stream(request: AIRequest):
             """Streaming AI response"""
             if not request.stream:
-                raise HTTPException(
-                    status_code=400, detail="Stream must be enabled for this endpoint")
+                raise HTTPException(status_code=400, detail="Stream must be enabled for this endpoint")
 
             # Get routing decision
             task_request = TaskRequest(
@@ -303,16 +280,13 @@ class EnhancedUnifiedMCPServer:
                 cost_preference=request.cost_preference,
                 latency_requirement=request.latency_requirement,
                 quality_requirement=request.quality_requirement,
-                metadata=request.metadata
+                metadata=request.metadata,
             )
 
             routing_decision = await self.ai_router.route_request(task_request)
 
             # Stream response
-            return StreamingResponse(
-                self._stream_ai_response(routing_decision, request),
-                media_type="text/plain"
-            )
+            return StreamingResponse(self._stream_ai_response(routing_decision, request), media_type="text/plain")
 
         @self.app.post("/context/store")
         async def store_context(request: ContextRequest):
@@ -321,15 +295,10 @@ class EnhancedUnifiedMCPServer:
                 result = await self.memory_service.store_context(
                     session_id=request.session_id,
                     content=request.content,
-                    metadata={**request.metadata,
-                              "context_type": request.context_type}
+                    metadata={**request.metadata, "context_type": request.context_type},
                 )
 
-                return {
-                    "success": True,
-                    "id": str(result["id"]),
-                    "message": "Context stored successfully"
-                }
+                return {"success": True, "id": str(result["id"]), "message": "Context stored successfully"}
             except Exception as e:
                 logger.error(f"Failed to store context: {e}")
                 raise HTTPException(status_code=500, detail=str(e))
@@ -339,18 +308,10 @@ class EnhancedUnifiedMCPServer:
             """Query context from memory service"""
             try:
                 results = await self.memory_service.query_context(
-                    session_id=request.session_id,
-                    query=request.query,
-                    top_k=request.top_k,
-                    threshold=request.threshold
+                    session_id=request.session_id, query=request.query, top_k=request.top_k, threshold=request.threshold
                 )
 
-                return {
-                    "success": True,
-                    "results": results,
-                    "query": request.query,
-                    "total_found": len(results)
-                }
+                return {"success": True, "results": results, "query": request.query, "total_found": len(results)}
             except Exception as e:
                 logger.error(f"Failed to query context: {e}")
                 raise HTTPException(status_code=500, detail=str(e))
@@ -360,36 +321,27 @@ class EnhancedUnifiedMCPServer:
             """Clear all context for a session"""
             try:
                 result = await self.memory_service.clear_session(session_id)
-                return {
-                    "success": True,
-                    "deleted_count": result.get("deleted_count", 0)
-                }
+                return {"success": True, "deleted_count": result.get("deleted_count", 0)}
             except Exception as e:
                 logger.error(f"Failed to clear session context: {e}")
                 raise HTTPException(status_code=500, detail=str(e))
 
         @self.app.get("/context/search_multi_service")
         async def search_multi_service(
-            session_id: str,
-            query: str,
-            services: Optional[str] = "memory,rag,vector",
-            top_k: int = 10
+            session_id: str, query: str, services: Optional[str] = "memory,rag,vector", top_k: int = 10
         ):
             """Search across multiple services for comprehensive results"""
             try:
                 service_list = services.split(",") if services else ["memory", "rag", "vector"]
                 results = {}
-                
+
                 # Search memory service
                 if "memory" in service_list:
                     memory_results = await self.memory_service.query_context(
-                        session_id=session_id,
-                        query=query,
-                        top_k=top_k // len(service_list),
-                        threshold=0.6
+                        session_id=session_id, query=query, top_k=top_k // len(service_list), threshold=0.6
                     )
                     results["memory"] = memory_results
-                
+
                 # Search RAG pipeline (if available)
                 if "rag" in service_list:
                     try:
@@ -398,7 +350,7 @@ class EnhancedUnifiedMCPServer:
                     except Exception as e:
                         logger.warning(f"RAG search failed: {e}")
                         results["rag"] = []
-                
+
                 # Search vector database directly (if available)
                 if "vector" in service_list:
                     try:
@@ -407,17 +359,17 @@ class EnhancedUnifiedMCPServer:
                     except Exception as e:
                         logger.warning(f"Vector search failed: {e}")
                         results["vector"] = []
-                
+
                 # Fuse results (simple concatenation for now)
                 fused_results = []
                 for service, service_results in results.items():
                     for result in service_results:
                         result["source_service"] = service
                         fused_results.append(result)
-                
+
                 # Sort by relevance score if available
                 fused_results.sort(key=lambda x: x.get("score", 0), reverse=True)
-                
+
                 return {
                     "success": True,
                     "query": query,
@@ -425,11 +377,10 @@ class EnhancedUnifiedMCPServer:
                     "results": fused_results[:top_k],
                     "total_found": len(fused_results),
                     "service_breakdown": {
-                        service: len(service_results) 
-                        for service, service_results in results.items()
-                    }
+                        service: len(service_results) for service, service_results in results.items()
+                    },
                 }
-                
+
             except Exception as e:
                 logger.error(f"Multi-service search failed: {e}")
                 raise HTTPException(status_code=500, detail=str(e))
@@ -448,11 +399,7 @@ class EnhancedUnifiedMCPServer:
                     await self.memory_service.store_context(
                         session_id=request.session_id,
                         content=json.dumps(result),
-                        metadata={
-                            "type": "agent_result",
-                            "agent_type": request.agent_type,
-                            "task_id": task_id
-                        }
+                        metadata={"type": "agent_result", "agent_type": request.agent_type, "task_id": task_id},
                     )
 
                 return result
@@ -475,33 +422,30 @@ class EnhancedUnifiedMCPServer:
             """
             try:
                 from backend.web_access_service import WebAccessService
+
                 web_service = WebAccessService()
-                
+
                 query = request.get("query", "")
                 max_results = request.get("max_results", 10)
                 strategy = request.get("strategy", "auto")
-                
+
                 if not query:
                     raise HTTPException(status_code=400, detail="Query is required")
-                
-                results = await web_service.search(
-                    query=query,
-                    max_results=max_results,
-                    strategy=strategy
-                )
-                
+
+                results = await web_service.search(query=query, max_results=max_results, strategy=strategy)
+
                 return {
                     "query": query,
                     "strategy": strategy,
                     "results": results,
                     "total_found": len(results),
-                    "timestamp": datetime.now().isoformat()
+                    "timestamp": datetime.now().isoformat(),
                 }
-                
+
             except Exception as e:
                 logger.error(f"Web search failed: {e}")
                 raise HTTPException(status_code=500, detail=str(e))
-        
+
         @self.app.post("/research/scrape")
         async def web_scrape(request: dict):
             """
@@ -509,31 +453,32 @@ class EnhancedUnifiedMCPServer:
             """
             try:
                 from backend.web_access_service import WebAccessService
+
                 web_service = WebAccessService()
-                
+
                 url = request.get("url", "")
                 strategy = request.get("strategy", "auto")
                 extract_text = request.get("extract_text", True)
                 extract_links = request.get("extract_links", False)
                 extract_images = request.get("extract_images", False)
-                
+
                 if not url:
                     raise HTTPException(status_code=400, detail="URL is required")
-                
+
                 result = await web_service.scrape(
                     url=url,
                     strategy=strategy,
                     extract_text=extract_text,
                     extract_links=extract_links,
-                    extract_images=extract_images
+                    extract_images=extract_images,
                 )
-                
+
                 return result
-                
+
             except Exception as e:
                 logger.error(f"Web scraping failed: {e}")
                 raise HTTPException(status_code=500, detail=str(e))
-        
+
         @self.app.post("/research/comprehensive")
         async def comprehensive_research(request: dict):
             """
@@ -541,54 +486,47 @@ class EnhancedUnifiedMCPServer:
             """
             try:
                 from backend.web_access_service import WebAccessService
+
                 web_service = WebAccessService()
-                
+
                 query = request.get("query", "")
                 max_results = request.get("max_results", 5)
                 scrape_top = request.get("scrape_top", 3)
-                
+
                 if not query:
                     raise HTTPException(status_code=400, detail="Query is required")
-                
+
                 # First, perform web search
-                search_results = await web_service.search(
-                    query=query,
-                    max_results=max_results,
-                    strategy="auto"
-                )
-                
+                search_results = await web_service.search(query=query, max_results=max_results, strategy="auto")
+
                 # Then scrape top results for detailed content
                 detailed_results = []
                 for i, result in enumerate(search_results[:scrape_top]):
                     try:
-                        scraped = await web_service.scrape(
-                            url=result["url"],
-                            strategy="auto",
-                            extract_text=True
-                        )
-                        
+                        scraped = await web_service.scrape(url=result["url"], strategy="auto", extract_text=True)
+
                         result["scraped_content"] = scraped.get("content", "")[:2000]  # Limit content
                         result["scraped_title"] = scraped.get("title", "")
                         result["scrape_success"] = scraped.get("success", False)
-                        
+
                     except Exception as e:
                         logger.warning(f"Failed to scrape {result['url']}: {e}")
                         result["scraped_content"] = ""
                         result["scraped_title"] = ""
                         result["scrape_success"] = False
                         result["scrape_error"] = str(e)
-                    
+
                     detailed_results.append(result)
-                
+
                 return {
                     "query": query,
                     "strategy": "comprehensive",
                     "search_results": len(search_results),
                     "scraped_results": len([r for r in detailed_results if r.get("scrape_success")]),
                     "results": detailed_results,
-                    "timestamp": datetime.now().isoformat()
+                    "timestamp": datetime.now().isoformat(),
                 }
-                
+
             except Exception as e:
                 logger.error(f"Comprehensive research failed: {e}")
                 raise HTTPException(status_code=500, detail=str(e))
@@ -604,17 +542,14 @@ class EnhancedUnifiedMCPServer:
                 memory_stats = await self.memory_service.get_stats()
 
                 # Get agent stats
-                agent_stats = {
-                    name: agent.get_stats()
-                    for name, agent in self.agents.items()
-                }
+                agent_stats = {name: agent.get_stats() for name, agent in self.agents.items()}
 
                 return {
                     "system": self.performance_metrics,
                     "ai_router": router_stats,
                     "memory_service": memory_stats,
                     "agents": agent_stats,
-                    "active_sessions": len(self.active_sessions)
+                    "active_sessions": len(self.active_sessions),
                 }
             except Exception as e:
                 logger.error(f"Failed to get stats: {e}")
@@ -706,7 +641,7 @@ class EnhancedUnifiedMCPServer:
                 "google": self._create_google_client(),
                 "groq": self._create_groq_client(),
                 "deepseek": self._create_deepseek_client(),
-                "grok": self._create_grok_client()
+                "grok": self._create_grok_client(),
             }
 
             logger.info("AI clients initialized successfully")
@@ -718,10 +653,7 @@ class EnhancedUnifiedMCPServer:
         """Create OpenAI client configuration"""
         return {
             "base_url": "https://api.openai.com/v1",
-            "headers": {
-                "Authorization": f"Bearer {settings.OPENAI_API_KEY}",
-                "Content-Type": "application/json"
-            }
+            "headers": {"Authorization": f"Bearer {settings.OPENAI_API_KEY}", "Content-Type": "application/json"},
         }
 
     def _create_anthropic_client(self):
@@ -731,59 +663,48 @@ class EnhancedUnifiedMCPServer:
             "headers": {
                 "x-api-key": settings.ANTHROPIC_API_KEY,
                 "Content-Type": "application/json",
-                "anthropic-version": "2023-06-01"
-            }
+                "anthropic-version": "2023-06-01",
+            },
         }
 
     def _create_google_client(self):
         """Create Google AI client configuration"""
         return {
             "base_url": "https://generativelanguage.googleapis.com/v1beta",
-            "headers": {
-                "Content-Type": "application/json"
-            },
-            "api_key": settings.GEMINI_API_KEY
+            "headers": {"Content-Type": "application/json"},
+            "api_key": settings.GEMINI_API_KEY,
         }
 
     def _create_groq_client(self):
         """Create Groq client configuration"""
         return {
             "base_url": "https://api.groq.com/openai/v1",
-            "headers": {
-                "Authorization": f"Bearer {settings.GROQ_API_KEY}",
-                "Content-Type": "application/json"
-            }
+            "headers": {"Authorization": f"Bearer {settings.GROQ_API_KEY}", "Content-Type": "application/json"},
         }
 
     def _create_deepseek_client(self):
         """Create DeepSeek client configuration"""
         return {
             "base_url": "https://api.deepseek.com/v1",
-            "headers": {
-                "Authorization": f"Bearer {settings.DEEPSEEK_API_KEY}",
-                "Content-Type": "application/json"
-            }
+            "headers": {"Authorization": f"Bearer {settings.DEEPSEEK_API_KEY}", "Content-Type": "application/json"},
         }
 
     def _create_grok_client(self):
         """Create Grok client configuration"""
         return {
             "base_url": "https://api.x.ai/v1",
-            "headers": {
-                "Authorization": f"Bearer {settings.GROK_API_KEY}",
-                "Content-Type": "application/json"
-            }
+            "headers": {"Authorization": f"Bearer {settings.GROK_API_KEY}", "Content-Type": "application/json"},
         }
 
-    async def _execute_ai_request(self, routing_decision: RoutingDecision,
-                                  prompt: str, request: AIRequest) -> Dict[str, Any]:
+    async def _execute_ai_request(
+        self, routing_decision: RoutingDecision, prompt: str, request: AIRequest
+    ) -> Dict[str, Any]:
         """Execute AI request using the selected provider"""
         provider = routing_decision.selected_provider.value
         model = routing_decision.selected_model
 
         if provider not in self.ai_clients:
-            raise HTTPException(
-                status_code=500, detail=f"Provider {provider} not available")
+            raise HTTPException(status_code=500, detail=f"Provider {provider} not available")
 
         client_config = self.ai_clients[provider]
 
@@ -793,7 +714,7 @@ class EnhancedUnifiedMCPServer:
                 "model": model,
                 "messages": [{"role": "user", "content": prompt}],
                 "max_tokens": request.max_tokens,
-                "temperature": request.temperature
+                "temperature": request.temperature,
             }
             endpoint = f"{client_config['base_url']}/chat/completions"
 
@@ -802,17 +723,14 @@ class EnhancedUnifiedMCPServer:
                 "model": model,
                 "max_tokens": request.max_tokens or 4096,
                 "temperature": request.temperature,
-                "messages": [{"role": "user", "content": prompt}]
+                "messages": [{"role": "user", "content": prompt}],
             }
             endpoint = f"{client_config['base_url']}/messages"
 
         elif provider == "google":
             payload = {
                 "contents": [{"parts": [{"text": prompt}]}],
-                "generationConfig": {
-                    "maxOutputTokens": request.max_tokens or 4096,
-                    "temperature": request.temperature
-                }
+                "generationConfig": {"maxOutputTokens": request.max_tokens or 4096, "temperature": request.temperature},
             }
             endpoint = f"{client_config['base_url']}/models/{model}:generateContent?key={client_config['api_key']}"
 
@@ -821,22 +739,15 @@ class EnhancedUnifiedMCPServer:
                 "model": model,
                 "messages": [{"role": "user", "content": prompt}],
                 "max_tokens": request.max_tokens,
-                "temperature": request.temperature
+                "temperature": request.temperature,
             }
             endpoint = f"{client_config['base_url']}/chat/completions"
 
         # Make API request
-        async with self.session.post(
-            endpoint,
-            headers=client_config["headers"],
-            json=payload
-        ) as response:
+        async with self.session.post(endpoint, headers=client_config["headers"], json=payload) as response:
             if response.status != 200:
                 error_text = await response.text()
-                raise HTTPException(
-                    status_code=response.status,
-                    detail=f"Provider API error: {error_text}"
-                )
+                raise HTTPException(status_code=response.status, detail=f"Provider API error: {error_text}")
 
             result = await response.json()
 
@@ -851,11 +762,7 @@ class EnhancedUnifiedMCPServer:
                 content = result["candidates"][0]["content"]["parts"][0]["text"]
                 usage = result.get("usageMetadata", {})
 
-            return {
-                "content": content,
-                "usage": usage,
-                "raw_response": result
-            }
+            return {"content": content, "usage": usage, "raw_response": result}
 
     async def _stream_ai_response(self, routing_decision: RoutingDecision, request: AIRequest):
         """Stream AI response"""
@@ -865,8 +772,9 @@ class EnhancedUnifiedMCPServer:
         yield f"data: {request.prompt}\n\n"
         yield "data: [DONE]\n\n"
 
-    async def _store_interaction(self, session_id: str, user_prompt: str,
-                                 ai_response: str, routing_decision: RoutingDecision):
+    async def _store_interaction(
+        self, session_id: str, user_prompt: str, ai_response: str, routing_decision: RoutingDecision
+    ):
         """Store interaction in context memory"""
         try:
             interaction = {
@@ -874,7 +782,7 @@ class EnhancedUnifiedMCPServer:
                 "ai_response": ai_response,
                 "provider": routing_decision.selected_provider.value,
                 "model": routing_decision.selected_model,
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             }
 
             await self.memory_service.store_context(
@@ -883,8 +791,8 @@ class EnhancedUnifiedMCPServer:
                 metadata={
                     "type": "interaction",
                     "provider": routing_decision.selected_provider.value,
-                    "model": routing_decision.selected_model
-                }
+                    "model": routing_decision.selected_model,
+                },
             )
         except Exception as e:
             logger.error(f"Failed to store interaction: {e}")
@@ -895,10 +803,10 @@ class EnhancedUnifiedMCPServer:
             # Import and create agent based on type
             if agent_type == "coding":
                 from agents.coding_agent import CodingAgent
+
                 self.agents[agent_type] = CodingAgent()
             else:
-                raise HTTPException(
-                    status_code=400, detail=f"Unknown agent type: {agent_type}")
+                raise HTTPException(status_code=400, detail=f"Unknown agent type: {agent_type}")
 
         return self.agents[agent_type]
 
@@ -933,9 +841,4 @@ app = enhanced_server.app
 
 
 if __name__ == "__main__":
-    uvicorn.run(
-        "enhanced_unified_server:app",
-        host="0.0.0.0",
-        port=settings.MCP_PORT,
-        reload=True
-    )
+    uvicorn.run("enhanced_unified_server:app", host="0.0.0.0", port=settings.MCP_PORT, reload=True)

@@ -3,16 +3,18 @@ Memory service with Qdrant vector database backend.
 Provides semantic search and context storage for the Sophia platform.
 """
 
-from qdrant_client import QdrantClient
-from qdrant_client.http.models import Distance, VectorParams, PointStruct, Filter
-from typing import List, Dict, Optional, Any
-from loguru import logger
-from config.config import settings
-import time
 import asyncio
 import sys
-from pathlib import Path
+import time
 from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
+from loguru import logger
+from qdrant_client import QdrantClient
+from qdrant_client.http.models import Distance, Filter, PointStruct, VectorParams
+
+from config.config import settings
 
 # Add project root to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -45,9 +47,7 @@ class MemoryService:
             logger.info(f"Creating collection {self.collection_name}: {e}")
             self.client.recreate_collection(
                 collection_name=self.collection_name,
-                vectors_config=VectorParams(
-                    size=self.embedding_dim, distance=Distance.COSINE
-                ),
+                vectors_config=VectorParams(size=self.embedding_dim, distance=Distance.COSINE),
             )
 
     async def _embed(self, text: str) -> List[float]:
@@ -58,18 +58,14 @@ class MemoryService:
             logger.debug(f"Generating embedding for text: {text[:100]}...")
 
             # Use OpenRouter's text-embedding-3-small model through openrouter
-            response = await self.openrouter_client.embeddings(
-                input=text, model="openai/text-embedding-3-small"
-            )
+            response = await self.openrouter_client.embeddings(input=text, model="openai/text-embedding-3-small")
 
             # Extract the embedding vector
             embedding = response["data"][0]["embedding"]
 
             # Validate embedding dimension
             if len(embedding) != self.embedding_dim:
-                logger.warning(
-                    f"Expected embedding dimension {self.embedding_dim}, got {len(embedding)}"
-                )
+                logger.warning(f"Expected embedding dimension {self.embedding_dim}, got {len(embedding)}")
 
             logger.debug(f"Generated embedding with dimension: {len(embedding)}")
             return embedding
@@ -144,9 +140,7 @@ class MemoryService:
         try:
             # Run in thread pool to avoid blocking
             loop = asyncio.get_event_loop()
-            collection_info = await loop.run_in_executor(
-                None, self.client.get_collection, self.collection_name
-            )
+            collection_info = await loop.run_in_executor(None, self.client.get_collection, self.collection_name)
             return {
                 "status": "healthy",
                 "collection": self.collection_name,
@@ -188,9 +182,7 @@ class MemoryService:
                 [PointStruct(id=point_id, vector=vector, payload=payload)],
             )
 
-            logger.info(
-                f"Stored context {point_id} for session {session_id} with summary: {summary}"
-            )
+            logger.info(f"Stored context {point_id} for session {session_id} with summary: {summary}")
             return {"success": True, "id": point_id, "summary": summary}
 
         except Exception as e:
@@ -213,9 +205,7 @@ class MemoryService:
             # Build filter
             query_filter = None
             if not global_search:
-                query_filter = Filter(
-                    must=[{"key": "session_id", "match": {"value": session_id}}]
-                )
+                query_filter = Filter(must=[{"key": "session_id", "match": {"value": session_id}}])
 
             # Search in thread pool
             loop = asyncio.get_event_loop()
@@ -244,15 +234,12 @@ class MemoryService:
                         "metadata": {
                             k: v
                             for k, v in result.payload.items()
-                            if k
-                            not in ["content", "summary", "session_id", "timestamp"]
+                            if k not in ["content", "summary", "session_id", "timestamp"]
                         },
                     }
                 )
 
-            logger.info(
-                f"Found {len(formatted_results)} results for query in session {session_id}"
-            )
+            logger.info(f"Found {len(formatted_results)} results for query in session {session_id}")
             return formatted_results
 
         except Exception as e:
@@ -268,9 +255,7 @@ class MemoryService:
                 None,
                 lambda: self.client.delete(
                     collection_name=self.collection_name,
-                    points_selector=Filter(
-                        must=[{"key": "session_id", "match": {"value": session_id}}]
-                    ),
+                    points_selector=Filter(must=[{"key": "session_id", "match": {"value": session_id}}]),
                 ),
             )
 
@@ -292,9 +277,7 @@ class MemoryService:
                 None,
                 lambda: self.client.scroll(
                     collection_name=self.collection_name,
-                    scroll_filter=Filter(
-                        must=[{"key": "session_id", "match": {"value": session_id}}]
-                    ),
+                    scroll_filter=Filter(must=[{"key": "session_id", "match": {"value": session_id}}]),
                     limit=1,
                     with_payload=False,
                     with_vectors=False,
@@ -302,9 +285,7 @@ class MemoryService:
             )
 
             # Get collection info for total context
-            collection_info = await loop.run_in_executor(
-                None, self.client.get_collection, self.collection_name
-            )
+            collection_info = await loop.run_in_executor(None, self.client.get_collection, self.collection_name)
 
             return {
                 "session_id": session_id,

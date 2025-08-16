@@ -1,9 +1,10 @@
 import asyncio
 import time
-from enum import Enum
-from typing import Dict, Any
-from loguru import logger
 from abc import ABC, abstractmethod
+from enum import Enum
+from typing import Any, Dict
+
+from loguru import logger
 
 
 class Status(str, Enum):
@@ -23,7 +24,7 @@ class BaseAgent(ABC):
     SYSTEM_PROMPT_RULES = [
         "Your output must be completely honest, no bullshit, no hyperbole, and only factual.",
         "You must never provide timeline estimations. Report progress exclusively in Stages and Phases.",
-        "You must not produce high-level guesses about revenue or efficiency impacts unless they are derived from verifiable data via a trusted tool."
+        "You must not produce high-level guesses about revenue or efficiency impacts unless they are derived from verifiable data via a trusted tool.",
     ]
 
     def __init__(self, name: str, concurrency: int = 2, timeout_seconds: int = 300):
@@ -79,9 +80,7 @@ class BaseAgent(ABC):
                 self.tasks_completed += 1
                 self.total_duration += duration
 
-                logger.info(
-                    f"Agent {self.name} completed task {task_id} in {duration:.2f}s"
-                )
+                logger.info(f"Agent {self.name} completed task {task_id} in {duration:.2f}s")
 
                 return {
                     "success": True,
@@ -96,9 +95,7 @@ class BaseAgent(ABC):
                 self.tasks_timeout += 1
                 self.status = Status.TIMEOUT
 
-                logger.error(
-                    f"Agent {self.name} task {task_id} timed out after {duration:.2f}s"
-                )
+                logger.error(f"Agent {self.name} task {task_id} timed out after {duration:.2f}s")
 
                 return {
                     "success": False,
@@ -132,9 +129,7 @@ class BaseAgent(ABC):
                     self.status = Status.READY
 
     @abstractmethod
-    async def _process_task_impl(
-        self, task_id: str, task_data: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def _process_task_impl(self, task_id: str, task_data: Dict[str, Any]) -> Dict[str, Any]:
         """
         Implement task-specific processing logic.
         Must return a dictionary with 'summary' and 'patch' keys for code agents.
@@ -151,11 +146,7 @@ class BaseAgent(ABC):
     def get_stats(self) -> Dict[str, Any]:
         """Get agent performance statistics."""
         total_tasks = self.tasks_completed + self.tasks_failed + self.tasks_timeout
-        avg_duration = (
-            self.total_duration / self.tasks_completed
-            if self.tasks_completed > 0
-            else 0
-        )
+        avg_duration = self.total_duration / self.tasks_completed if self.tasks_completed > 0 else 0
 
         return {
             "name": self.name,
@@ -167,9 +158,7 @@ class BaseAgent(ABC):
             "tasks_failed": self.tasks_failed,
             "tasks_timeout": self.tasks_timeout,
             "total_tasks": total_tasks,
-            "success_rate": (
-                self.tasks_completed / total_tasks if total_tasks > 0 else 0
-            ),
+            "success_rate": (self.tasks_completed / total_tasks if total_tasks > 0 else 0),
             "average_duration": avg_duration,
             "total_duration": self.total_duration,
         }
@@ -188,8 +177,7 @@ class BaseAgent(ABC):
         augmented_instructions = list(instructions)
 
         # Add a section header for clarity
-        augmented_instructions.append(
-            "\n### SOPHIA OUTPUT QUALITY STANDARDS (REQUIRED) ###")
+        augmented_instructions.append("\n### SOPHIA OUTPUT QUALITY STANDARDS (REQUIRED) ###")
 
         # Add each system rule
         for rule in self.SYSTEM_PROMPT_RULES:

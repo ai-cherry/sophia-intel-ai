@@ -91,13 +91,13 @@ dev-dependencies = [
 ]
 
 [tool.black]
-line-length = 88
+line-length = 120
 target-version = ['py311']
 include = '\.pyi?$'
 
 [tool.ruff]
 target-version = "py311"
-line-length = 88
+line-length = 120
 select = [
     "E",  # pycodestyle errors
     "W",  # pycodestyle warnings

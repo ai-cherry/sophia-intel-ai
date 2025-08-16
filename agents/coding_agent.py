@@ -3,17 +3,20 @@ Coding Agent implementation using Agno framework.
 Provides code analysis, modification, and generation capabilities.
 """
 
-from .base_agent import BaseAgent
+import asyncio
+import difflib
+import json
+from typing import Any, Dict, List
+
 from agno.agent import Agent
 from agno.models.openai import OpenAIChat
 from agno.storage.sqlite import SqliteStorage
-from typing import Dict, Any, List
 from loguru import logger
-import json
-import asyncio
-import difflib
+
 from config.config import settings
 from libs.mcp_client.memory_client import MCPMemoryClient
+
+from .base_agent import BaseAgent
 
 
 class CodingAgent(BaseAgent):
@@ -53,9 +56,7 @@ class CodingAgent(BaseAgent):
             model=OpenAIChat(
                 id="gpt-4o",
                 api_key=settings.OPENROUTER_API_KEY,
-                base_url=(
-                    "https://api.openrouter.ai/v1" if settings.openrouter_API_KEY else None
-                ),
+                base_url=("https://api.openrouter.ai/v1" if settings.openrouter_API_KEY else None),
                 extra_headers=(
                     {
                         "X-ROUTER-TARGET": "openrouter",
@@ -78,9 +79,7 @@ class CodingAgent(BaseAgent):
             show_tool_calls=False,
         )
 
-    async def _process_task_impl(
-        self, task_id: str, task_data: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def _process_task_impl(self, task_id: str, task_data: Dict[str, Any]) -> Dict[str, Any]:
         """
         Process coding task with context from MCP memory service.
 
@@ -105,17 +104,14 @@ class CodingAgent(BaseAgent):
         context_results = await self._fetch_memory_context(session_id, query)
 
         # Build comprehensive prompt
-        prompt = self._build_prompt(
-            code, query, context_results, file_path, language)
+        prompt = self._build_prompt(code, query, context_results, file_path, language)
 
         # Store current task context in MCP
         await self._store_task_context(session_id, task_id, code, query)
 
         # Execute via Agno (run in thread pool since Agno is sync)
         loop = asyncio.get_event_loop()
-        response = await loop.run_in_executor(
-            None, lambda: self.agno.run(prompt, session_id=session_id)
-        )
+        response = await loop.run_in_executor(None, lambda: self.agno.run(prompt, session_id=session_id))
 
         # Parse and validate response
         result = self._parse_response(str(response), code)
@@ -125,24 +121,15 @@ class CodingAgent(BaseAgent):
 
         return result
 
-    async def _fetch_memory_context(
-        self, session_id: str, query: str, top_k: int = 3
-    ) -> List[Dict[str, Any]]:
+    async def _fetch_memory_context(self, session_id: str, query: str, top_k: int = 3) -> List[Dict[str, Any]]:
         """Fetch relevant context from MCP memory service."""
         try:
-            return await self.memory_client.query(
-                session_id=session_id,
-                query=query,
-                top_k=top_k,
-                threshold=0.7
-            )
+            return await self.memory_client.query(session_id=session_id, query=query, top_k=top_k, threshold=0.7)
         except Exception as e:
             logger.warning(f"Failed to fetch memory context: {e}")
             return []
 
-    async def _store_task_context(
-        self, session_id: str, task_id: str, code: str, query: str
-    ) -> None:
+    async def _store_task_context(self, session_id: str, task_id: str, code: str, query: str) -> None:
         """Store task context in MCP memory."""
         try:
             await self.memory_client.store(
@@ -153,14 +140,12 @@ class CodingAgent(BaseAgent):
                     "context_type": "coding_task",
                     "query": query,
                 },
-                context_type="coding_task"
+                context_type="coding_task",
             )
         except Exception as e:
             logger.warning(f"Failed to store task context: {e}")
 
-    async def _store_result_context(
-        self, session_id: str, task_id: str, result: Dict[str, Any]
-    ) -> None:
+    async def _store_result_context(self, session_id: str, task_id: str, result: Dict[str, Any]) -> None:
         """Store result context in MCP memory."""
         try:
             await self.memory_client.store(
@@ -171,7 +156,7 @@ class CodingAgent(BaseAgent):
                     "context_type": "coding_result",
                     "summary": result["summary"],
                 },
-                context_type="coding_result"
+                context_type="coding_result",
             )
         except Exception as e:
             logger.warning(f"Failed to store result context: {e}")
@@ -214,12 +199,8 @@ class CodingAgent(BaseAgent):
 
         # Add instructions
         prompt_parts.append("\n## Instructions:")
-        prompt_parts.append(
-            "Analyze the code and provide improvements according to the task."
-        )
-        prompt_parts.append(
-            "Return ONLY a valid JSON response with 'summary' and 'patch' fields."
-        )
+        prompt_parts.append("Analyze the code and provide improvements according to the task.")
+        prompt_parts.append("Return ONLY a valid JSON response with 'summary' and 'patch' fields.")
         prompt_parts.append("Use unified diff format for the patch field.")
 
         return "\n".join(prompt_parts)
@@ -263,9 +244,7 @@ class CodingAgent(BaseAgent):
             # Return fallback response
             return {"summary": f"Failed to parse agent response: {e}", "patch": ""}
 
-    def _generate_unified_diff(
-        self, original: str, modified: str, filename: str = "file"
-    ) -> str:
+    def _generate_unified_diff(self, original: str, modified: str, filename: str = "file") -> str:
         """Generate unified diff format patch."""
         original_lines = original.splitlines(keepends=True)
         modified_lines = modified.splitlines(keepends=True)

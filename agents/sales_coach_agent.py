@@ -5,11 +5,11 @@ This agent provides sales coaching insights based on Gong call data.
 """
 
 import logging
-from typing import Dict, List, Optional, Any
+from typing import Optional
 
+from agents.base_agent import BaseAgent
 from libs.mcp_client.gong import GongMCPClient
 from schemas.gong import MCPError as GongMCPError
-from agents.base_agent import BaseAgent
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +43,8 @@ class SalesCoachAgent(BaseAgent):
         try:
             return await self._gong_client.get_call_transcript(call_id)
         except GongMCPError as e:
-            # Pass through a structured failure for upstream handlers; keep envelope discipline at API layer
+            # Pass through a structured failure for upstream handlers; keep
+            # envelope discipline at API layer
             raise
 
     async def get_call_insights(self, call_id: str):

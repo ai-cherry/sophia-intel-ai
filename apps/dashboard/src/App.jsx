@@ -1,113 +1,145 @@
-import { useState, useEffect } from 'react'
-import { Button } from '@/components/ui/button.jsx'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card.jsx'
-import { Badge } from '@/components/ui/badge.jsx'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs.jsx'
-import { Progress } from '@/components/ui/progress.jsx'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert.jsx'
-import { 
-  Activity, 
-  Brain, 
-  Database, 
-  Globe, 
-  MessageSquare, 
-  Settings, 
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button.jsx";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card.jsx";
+import { Badge } from "@/components/ui/badge.jsx";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs.jsx";
+import { Progress } from "@/components/ui/progress.jsx";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.jsx";
+import {
+  Activity,
+  Brain,
+  Database,
+  Globe,
+  MessageSquare,
+  Settings,
   TrendingUp,
   Zap,
   CheckCircle,
   AlertCircle,
   Clock,
-  Users
-} from 'lucide-react'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts'
-import { ChatPanel } from '@/components/ChatPanel.jsx'
-import { WebResearchPanel } from '@/components/WebResearchPanel.jsx'
-import { KnowledgePanel } from '@/components/KnowledgePanel.jsx'
-import './App.css'
+  Users,
+} from "lucide-react";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+} from "recharts";
+import { ChatPanel } from "@/components/ChatPanel.jsx";
+import { WebResearchPanel } from "@/components/WebResearchPanel.jsx";
+import { KnowledgePanel } from "@/components/KnowledgePanel.jsx";
+import "./App.css";
 
 // API Configuration
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 function App() {
-  const [systemStatus, setSystemStatus] = useState({})
-  const [mcpServices, setMcpServices] = useState([])
-  const [telemetryData, setTelemetryData] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [systemStatus, setSystemStatus] = useState({});
+  const [mcpServices, setMcpServices] = useState([]);
+  const [telemetryData, setTelemetryData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // Fetch system status and MCP services
   useEffect(() => {
     const fetchSystemData = async () => {
       try {
-        setLoading(true)
-        
+        setLoading(true);
+
         // Fetch main API health
-        const healthResponse = await fetch(`${API_BASE_URL}/health`)
-        const healthData = await healthResponse.json()
-        setSystemStatus(healthData)
+        const healthResponse = await fetch(`${API_BASE_URL}/health`);
+        const healthData = await healthResponse.json();
+        setSystemStatus(healthData);
 
         // Fetch MCP services status
         const mcpServices = [
-          { name: 'Telemetry MCP', port: '5001', service: 'telemetry' },
-          { name: 'Embedding MCP', port: '5002', service: 'embedding' },
-          { name: 'Research MCP', port: '5003', service: 'research' },
-          { name: 'Notion Sync MCP', port: '5004', service: 'notion-sync' }
-        ]
+          { name: "Telemetry MCP", port: "5001", service: "telemetry" },
+          { name: "Embedding MCP", port: "5002", service: "embedding" },
+          { name: "Research MCP", port: "5003", service: "research" },
+          { name: "Notion Sync MCP", port: "5004", service: "notion-sync" },
+        ];
 
         const serviceStatuses = await Promise.allSettled(
           mcpServices.map(async (service) => {
             try {
-              const response = await fetch(`http://104.171.202.107:${service.port}/health`)
-              const data = await response.json()
-              return { ...service, status: 'healthy', data }
+              const response = await fetch(
+                `http://104.171.202.107:${service.port}/health`,
+              );
+              const data = await response.json();
+              return { ...service, status: "healthy", data };
             } catch (error) {
-              return { ...service, status: 'error', error: error.message }
+              return { ...service, status: "error", error: error.message };
             }
-          })
-        )
+          }),
+        );
 
-        setMcpServices(serviceStatuses.map(result => result.value || result.reason))
+        setMcpServices(
+          serviceStatuses.map((result) => result.value || result.reason),
+        );
 
         // Generate sample telemetry data
         const sampleData = Array.from({ length: 24 }, (_, i) => ({
           hour: `${i}:00`,
           requests: Math.floor(Math.random() * 100) + 50,
           latency: Math.floor(Math.random() * 200) + 100,
-          errors: Math.floor(Math.random() * 5)
-        }))
-        setTelemetryData(sampleData)
-
+          errors: Math.floor(Math.random() * 5),
+        }));
+        setTelemetryData(sampleData);
       } catch (err) {
-        setError(err.message)
+        setError(err.message);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    fetchSystemData()
-    
+    fetchSystemData();
+
     // Refresh data every 30 seconds
-    const interval = setInterval(fetchSystemData, 30000)
-    return () => clearInterval(interval)
-  }, [])
+    const interval = setInterval(fetchSystemData, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'healthy': return 'bg-green-500'
-      case 'warning': return 'bg-yellow-500'
-      case 'error': return 'bg-red-500'
-      default: return 'bg-gray-500'
+      case "healthy":
+        return "bg-green-500";
+      case "warning":
+        return "bg-yellow-500";
+      case "error":
+        return "bg-red-500";
+      default:
+        return "bg-gray-500";
     }
-  }
+  };
 
   const getStatusBadge = (status) => {
     switch (status) {
-      case 'healthy': return <Badge className="bg-green-100 text-green-800">Healthy</Badge>
-      case 'warning': return <Badge className="bg-yellow-100 text-yellow-800">Warning</Badge>
-      case 'error': return <Badge className="bg-red-100 text-red-800">Error</Badge>
-      default: return <Badge className="bg-gray-100 text-gray-800">Unknown</Badge>
+      case "healthy":
+        return <Badge className="bg-green-100 text-green-800">Healthy</Badge>;
+      case "warning":
+        return <Badge className="bg-yellow-100 text-yellow-800">Warning</Badge>;
+      case "error":
+        return <Badge className="bg-red-100 text-red-800">Error</Badge>;
+      default:
+        return <Badge className="bg-gray-100 text-gray-800">Unknown</Badge>;
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -117,7 +149,7 @@ function App() {
           <p className="text-gray-600">Loading SOPHIA Intel Dashboard...</p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -131,14 +163,22 @@ function App() {
                 <Brain className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">SOPHIA Intel</h1>
-                <p className="text-sm text-gray-500">AI Command Center Dashboard</p>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  SOPHIA Intel
+                </h1>
+                <p className="text-sm text-gray-500">
+                  AI Command Center Dashboard
+                </p>
               </div>
             </div>
             <div className="flex items-center space-x-4">
-              <div className={`w-3 h-3 rounded-full ${getStatusColor(systemStatus.status === 'healthy' ? 'healthy' : 'error')}`}></div>
+              <div
+                className={`w-3 h-3 rounded-full ${getStatusColor(systemStatus.status === "healthy" ? "healthy" : "error")}`}
+              ></div>
               <span className="text-sm text-gray-600">
-                {systemStatus.status === 'healthy' ? 'All Systems Operational' : 'System Issues Detected'}
+                {systemStatus.status === "healthy"
+                  ? "All Systems Operational"
+                  : "System Issues Detected"}
               </span>
             </div>
           </div>
@@ -173,25 +213,32 @@ function App() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">System Status</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    System Status
+                  </CardTitle>
                   <Activity className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-green-600">Operational</div>
+                  <div className="text-2xl font-bold text-green-600">
+                    Operational
+                  </div>
                   <p className="text-xs text-muted-foreground">
-                    {systemStatus.version || 'v1.0.0'} • Uptime: 99.9%
+                    {systemStatus.version || "v1.0.0"} • Uptime: 99.9%
                   </p>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">MCP Services</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    MCP Services
+                  </CardTitle>
                   <Zap className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {mcpServices.filter(s => s.status === 'healthy').length}/{mcpServices.length}
+                    {mcpServices.filter((s) => s.status === "healthy").length}/
+                    {mcpServices.length}
                   </div>
                   <p className="text-xs text-muted-foreground">
                     Services Online
@@ -201,7 +248,9 @@ function App() {
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">API Requests</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    API Requests
+                  </CardTitle>
                   <TrendingUp className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
@@ -214,7 +263,9 @@ function App() {
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Response Time</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    Response Time
+                  </CardTitle>
                   <Clock className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
@@ -230,23 +281,37 @@ function App() {
             <Card>
               <CardHeader>
                 <CardTitle>Quick Actions</CardTitle>
-                <CardDescription>Common SOPHIA Intel operations</CardDescription>
+                <CardDescription>
+                  Common SOPHIA Intel operations
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <Button variant="outline" className="h-20 flex flex-col items-center justify-center space-y-2">
+                  <Button
+                    variant="outline"
+                    className="h-20 flex flex-col items-center justify-center space-y-2"
+                  >
                     <MessageSquare className="h-6 w-6" />
                     <span className="text-sm">Start Chat</span>
                   </Button>
-                  <Button variant="outline" className="h-20 flex flex-col items-center justify-center space-y-2">
+                  <Button
+                    variant="outline"
+                    className="h-20 flex flex-col items-center justify-center space-y-2"
+                  >
                     <Globe className="h-6 w-6" />
                     <span className="text-sm">Web Research</span>
                   </Button>
-                  <Button variant="outline" className="h-20 flex flex-col items-center justify-center space-y-2">
+                  <Button
+                    variant="outline"
+                    className="h-20 flex flex-col items-center justify-center space-y-2"
+                  >
                     <Database className="h-6 w-6" />
                     <span className="text-sm">Query Knowledge</span>
                   </Button>
-                  <Button variant="outline" className="h-20 flex flex-col items-center justify-center space-y-2">
+                  <Button
+                    variant="outline"
+                    className="h-20 flex flex-col items-center justify-center space-y-2"
+                  >
                     <Settings className="h-6 w-6" />
                     <span className="text-sm">System Config</span>
                   </Button>
@@ -270,21 +335,25 @@ function App() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    {service.status === 'healthy' && service.data ? (
+                    {service.status === "healthy" && service.data ? (
                       <div className="space-y-2">
                         <div className="flex justify-between text-sm">
                           <span>Version:</span>
-                          <span>{service.data.version || '1.0.0'}</span>
+                          <span>{service.data.version || "1.0.0"}</span>
                         </div>
                         <div className="flex justify-between text-sm">
                           <span>Last Check:</span>
-                          <span>{new Date(service.data.timestamp).toLocaleTimeString()}</span>
+                          <span>
+                            {new Date(
+                              service.data.timestamp,
+                            ).toLocaleTimeString()}
+                          </span>
                         </div>
                         <Progress value={100} className="h-2" />
                       </div>
                     ) : (
                       <div className="text-sm text-red-600">
-                        {service.error || 'Service unavailable'}
+                        {service.error || "Service unavailable"}
                       </div>
                     )}
                   </CardContent>
@@ -299,7 +368,9 @@ function App() {
               <Card>
                 <CardHeader>
                   <CardTitle>API Request Volume</CardTitle>
-                  <CardDescription>Requests per hour over the last 24 hours</CardDescription>
+                  <CardDescription>
+                    Requests per hour over the last 24 hours
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <ResponsiveContainer width="100%" height={300}>
@@ -308,7 +379,12 @@ function App() {
                       <XAxis dataKey="hour" />
                       <YAxis />
                       <Tooltip />
-                      <Line type="monotone" dataKey="requests" stroke="#3b82f6" strokeWidth={2} />
+                      <Line
+                        type="monotone"
+                        dataKey="requests"
+                        stroke="#3b82f6"
+                        strokeWidth={2}
+                      />
                     </LineChart>
                   </ResponsiveContainer>
                 </CardContent>
@@ -317,7 +393,9 @@ function App() {
               <Card>
                 <CardHeader>
                   <CardTitle>Response Latency</CardTitle>
-                  <CardDescription>Average response time in milliseconds</CardDescription>
+                  <CardDescription>
+                    Average response time in milliseconds
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <ResponsiveContainer width="100%" height={300}>
@@ -357,8 +435,7 @@ function App() {
         </Tabs>
       </main>
     </div>
-  )
+  );
 }
 
-export default App
-
+export default App;

@@ -1,0 +1,99 @@
+# SOPHIA Intel Production Configuration
+
+# Environment settings
+environment: production
+debug: false
+log_level: INFO
+
+# Domain configuration
+domain:
+  primary: sophia-intel.ai
+  api: api.sophia-intel.ai
+  dashboard: dashboard.sophia-intel.ai
+  web: www.sophia-intel.ai
+
+# Infrastructure settings
+infrastructure:
+  provider: lambda-labs
+  region: us-south-1
+  cluster_name: sophia-k3s
+  namespace: sophia-intel
+
+# Application settings
+applications:
+  api:
+    replicas: 2
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 1Gi
+      requests:
+        cpu: 500m
+        memory: 512Mi
+  
+  dashboard:
+    replicas: 1
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+
+# MCP Services settings
+mcp_services:
+  replicas: 1
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+
+# Database settings
+database:
+  provider: neon
+  ssl_mode: require
+  pool_size: 10
+  max_overflow: 20
+
+# Vector database settings
+vector_db:
+  primary: qdrant
+  secondary: weaviate
+  embedding_model: nomic-ai/nomic-embed-text-v1.5
+
+# AI model settings
+ai_models:
+  primary: anthropic/claude-3.5-sonnet
+  fallback: deepseek/deepseek-v3
+  embedding: nomic-ai/nomic-embed-text-v1.5
+  voice: elevenlabs/rachel
+
+# Security settings
+security:
+  cors_origins:
+    - https://www.sophia-intel.ai
+    - https://dashboard.sophia-intel.ai
+    - https://api.sophia-intel.ai
+  rate_limiting:
+    enabled: true
+    requests_per_minute: 100
+  
+# Monitoring settings
+monitoring:
+  health_checks: true
+  metrics: true
+  logging: true
+  alerts:
+    slack_enabled: true
+    email_enabled: false
+
+# Backup settings
+backup:
+  enabled: true
+  schedule: "0 2 * * *"  # Daily at 2 AM
+  retention_days: 30
+

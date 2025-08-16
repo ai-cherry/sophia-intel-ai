@@ -1,0 +1,637 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: embedding-models-config
+  namespace: sophia-intel
+data:
+  embedding_models.yaml: |
+    # Embedding Models Configuration for SOPHIA Intel
+    # Vendor-independent, pluggable embedding architecture
+    
+    # Default model - best balance of performance and cost
+    default_model: "nomic-embed-text-v1.5"
+    
+    # Provider configurations
+    providers:
+      openrouter:
+        name: "OpenRouter"
+        api_key_env: "OPENROUTER_API_KEY"
+        base_url: "https://openrouter.ai/api/v1"
+        timeout: 30
+        retry_attempts: 3
+        batch_size: 100
+        
+      lambda_inference:
+        name: "Lambda Inference API"
+        api_key_env: "LAMBDA_CLOUD_API_KEY"
+        base_url: "https://api.lambda.ai/v1"
+        timeout: 30
+        retry_attempts: 3
+        batch_size: 50
+        
+      openai:
+        name: "OpenAI (Fallback Only)"
+        api_key_env: "OPENAI_API_KEY"
+        base_url: "https://api.openai.com/v1"
+        timeout: 30
+        retry_attempts: 3
+        batch_size: 100
+    
+    # Available embedding models
+    embedding_models:
+      # PRIMARY: Best general-purpose model via OpenRouter
+      nomic-embed-text-v1.5:
+        provider: "openrouter"
+        model: "nomic-ai/nomic-embed-text-v1.5"
+        dimensions: 768
+        max_tokens: 8192
+        cost_per_million_tokens: 0.10
+        description: "Excellent general-purpose, high-performance embedding model"
+        use_cases: ["general", "search", "similarity", "clustering"]
+        quality_tier: "premium"
+        
+      # HIGH-QUALITY: For critical applications
+      openai-large-via-openrouter:
+        provider: "openrouter"
+        model: "openai/text-embedding-3-large"
+        dimensions: 3072
+        max_tokens: 8191
+        cost_per_million_tokens: 0.13
+        description: "High-quality OpenAI model via OpenRouter"
+        use_cases: ["critical", "high_precision", "foundational_knowledge"]
+        quality_tier: "premium"
+        
+      # COST-EFFECTIVE: For high-volume operations
+      openai-small-via-openrouter:
+        provider: "openrouter"
+        model: "openai/text-embedding-3-small"
+        dimensions: 1536
+        max_tokens: 8191
+        cost_per_million_tokens: 0.02
+        description: "Cost-effective OpenAI model via OpenRouter"
+        use_cases: ["bulk_processing", "chat_history", "general"]
+        quality_tier: "standard"
+        
+      # FALLBACK: Direct OpenAI (only if OpenRouter fails)
+      openai-fallback:
+        provider: "openai"
+        model: "text-embedding-3-small"
+        dimensions: 1536
+        max_tokens: 8191
+        cost_per_million_tokens: 0.02
+        description: "Direct OpenAI fallback (emergency use only)"
+        use_cases: ["fallback"]
+        quality_tier: "fallback"
+    
+    # Intelligent routing rules
+    routing_rules:
+      # Use case to model mapping
+      use_case_mappings:
+        general: "nomic-embed-text-v1.5"
+        search: "nomic-embed-text-v1.5"
+        similarity: "nomic-embed-text-v1.5"
+        clustering: "nomic-embed-text-v1.5"
+        foundational_knowledge: "openai-large-via-openrouter"
+        critical: "openai-large-via-openrouter"
+        high_precision: "openai-large-via-openrouter"
+        bulk_processing: "openai-small-via-openrouter"
+        chat_history: "openai-small-via-openrouter"
+        cost_effective: "openai-small-via-openrouter"
+        
+      # Fallback chain (in order of preference)
+      fallback_chain:
+        - "nomic-embed-text-v1.5"
+        - "openai-small-via-openrouter"
+        - "openai-large-via-openrouter"
+        - "openai-fallback"
+    
+    # Global settings
+    settings:
+      default_model: "nomic-embed-text-v1.5"
+      cache_embeddings: true
+      cache_ttl_hours: 24
+      max_batch_size: 100
+      enable_metrics: true
+      log_level: "INFO"
+    
+    # Strategic principles (documentation)
+    principles:
+      vendor_independence: "Never lock into a single provider"
+      cost_optimization: "Always consider cost vs quality trade-offs"
+      performance_first: "Prioritize speed and reliability"
+      future_proofing: "Design for easy model swapping"
+      quality_assurance: "Maintain high standards for critical use cases"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: embedding-mcp
+  namespace: sophia-intel
+  labels:
+    app: embedding-mcp
+    component: mcp-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: embedding-mcp
+  template:
+    metadata:
+      labels:
+        app: embedding-mcp
+        component: mcp-server
+    spec:
+      containers:
+      - name: embedding-mcp
+        image: python:3.11-slim
+        ports:
+        - containerPort: 5003
+        env:
+        - name: OPENROUTER_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: sophia-secrets-enhanced
+              key: openrouter-api-key
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: sophia-secrets-enhanced
+              key: openai-api-key
+        - name: LAMBDA_CLOUD_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: sophia-secrets-enhanced
+              key: lambda-cloud-api-key
+        - name: FLASK_ENV
+          value: "production"
+        command: ["/bin/bash"]
+        args:
+        - -c
+        - |
+          pip install --no-cache-dir flask flask-cors requests aiohttp pyyaml
+          
+          mkdir -p /app/config
+          
+          cat > /app/server.py << 'PYEOF'
+          #!/usr/bin/env python3
+          """
+          Pluggable Embedding MCP Server for Autonomous Evolution v2
+          Vendor-independent embedding service with intelligent routing
+          """
+          
+          import os
+          import sys
+          import json
+          import yaml
+          import logging
+          import asyncio
+          import aiohttp
+          import hashlib
+          import time
+          from datetime import datetime, timezone, timedelta
+          from typing import Dict, List, Optional, Any, Union, Tuple
+          from dataclasses import dataclass, asdict
+          from pathlib import Path
+          
+          from flask import Flask, request, jsonify
+          from flask_cors import CORS
+          
+          # Configure logging
+          logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+          logger = logging.getLogger(__name__)
+          
+          @dataclass
+          class EmbeddingRequest:
+              """Data class for embedding requests"""
+              text: Union[str, List[str]]
+              model_id: str = 'default'
+              use_case: Optional[str] = None
+              cache_key: Optional[str] = None
+              metadata: Optional[Dict[str, Any]] = None
+              
+              def __post_init__(self):
+                  if self.metadata is None:
+                      self.metadata = {}
+                  
+                  # Generate cache key if not provided
+                  if self.cache_key is None:
+                      text_str = self.text if isinstance(self.text, str) else '|'.join(self.text)
+                      cache_input = f"{text_str}:{self.model_id}:{self.use_case or ''}"
+                      self.cache_key = hashlib.md5(cache_input.encode()).hexdigest()
+          
+          @dataclass
+          class EmbeddingResponse:
+              """Data class for embedding responses"""
+              embeddings: List[List[float]]
+              model_id: str
+              provider: str
+              dimensions: int
+              token_count: int
+              cost_estimate: float
+              cache_hit: bool
+              processing_time_ms: float
+              metadata: Dict[str, Any]
+              timestamp: str
+              
+              def to_dict(self) -> Dict[str, Any]:
+                  return asdict(self)
+          
+          class VendorIndependentEmbeddingMCP:
+              """Vendor-independent Embedding MCP with intelligent routing"""
+              
+              def __init__(self, config_path: str = "/app/config/embedding_models.yaml"):
+                  self.config_path = config_path
+                  self.config = self._load_config()
+                  self.session = None
+                  
+                  logger.info("VendorIndependentEmbeddingMCP initialized")
+                  logger.info(f"Available models: {list(self.config['embedding_models'].keys())}")
+                  logger.info(f"Default model: {self.config.get('default_model', 'nomic-embed-text-v1.5')}")
+              
+              def _load_config(self) -> Dict[str, Any]:
+                  """Load embedding models configuration"""
+                  try:
+                      if os.path.exists(self.config_path):
+                          with open(self.config_path, 'r') as f:
+                              config = yaml.safe_load(f)
+                          logger.info(f"Loaded config from {self.config_path}")
+                          return config
+                      else:
+                          logger.warning(f"Config file not found: {self.config_path}, using default config")
+                          return self._get_default_config()
+                  except Exception as e:
+                      logger.error(f"Failed to load config: {str(e)}, using default config")
+                      return self._get_default_config()
+              
+              def _get_default_config(self) -> Dict[str, Any]:
+                  """Get default configuration if config file is not available"""
+                  return {
+                      "default_model": "nomic-embed-text-v1.5",
+                      "embedding_models": {
+                          "nomic-embed-text-v1.5": {
+                              "provider": "openrouter",
+                              "model": "nomic-ai/nomic-embed-text-v1.5",
+                              "dimensions": 768,
+                              "cost_per_million_tokens": 0.10,
+                              "description": "Excellent general-purpose embedding model"
+                          }
+                      },
+                      "providers": {
+                          "openrouter": {
+                              "api_key_env": "OPENROUTER_API_KEY",
+                              "base_url": "https://openrouter.ai/api/v1",
+                              "timeout": 30
+                          }
+                      },
+                      "settings": {
+                          "cache_embeddings": True,
+                          "cache_ttl_hours": 24
+                      }
+                  }
+              
+              def get_model_config(self, model_id: str) -> Dict[str, Any]:
+                  """Get configuration for a specific model with intelligent routing"""
+                  models = self.config.get('embedding_models', {})
+                  
+                  # Direct model lookup
+                  if model_id in models:
+                      return models[model_id]
+                  
+                  # Use case mapping
+                  if model_id == 'default':
+                      default_model = self.config.get('default_model', 'nomic-embed-text-v1.5')
+                      if default_model in models:
+                          return models[default_model]
+                  
+                  # Use case to model mapping
+                  use_case_mappings = self.config.get('routing_rules', {}).get('use_case_mappings', {})
+                  if model_id in use_case_mappings:
+                      mapped_model = use_case_mappings[model_id]
+                      if mapped_model in models:
+                          return models[mapped_model]
+                  
+                  # Fallback chain
+                  fallback_chain = self.config.get('routing_rules', {}).get('fallback_chain', [])
+                  for fallback_model in fallback_chain:
+                      if fallback_model in models:
+                          logger.warning(f"Model '{model_id}' not found, using fallback: {fallback_model}")
+                          return models[fallback_model]
+                  
+                  raise ValueError(f"Model '{model_id}' not found and no fallback available")
+              
+              async def generate_embedding(self, request: EmbeddingRequest) -> EmbeddingResponse:
+                  """Generate embeddings using vendor-independent routing"""
+                  start_time = time.time()
+                  
+                  try:
+                      # Get model configuration with intelligent routing
+                      model_config = self.get_model_config(request.model_id)
+                      provider_name = model_config['provider']
+                      
+                      # For demo purposes, return mock response
+                      response = await self._mock_embedding_response(request, model_config, provider_name)
+                      
+                      response.processing_time_ms = (time.time() - start_time) * 1000
+                      response.cache_hit = False
+                      
+                      logger.info(f"Generated embeddings: model={request.model_id}, provider={provider_name}, tokens={response.token_count}, time={response.processing_time_ms:.1f}ms")
+                      return response
+                      
+                  except Exception as e:
+                      logger.error(f"Embedding generation failed: {str(e)}")
+                      raise
+              
+              async def _mock_embedding_response(self, request: EmbeddingRequest, model_config: Dict[str, Any], provider: str) -> EmbeddingResponse:
+                  """Generate mock embedding response for demo purposes"""
+                  input_texts = request.text if isinstance(request.text, list) else [request.text]
+                  dimensions = model_config['dimensions']
+                  
+                  # Generate mock embeddings (random normalized vectors)
+                  import random
+                  embeddings = []
+                  for _ in input_texts:
+                      embedding = [random.gauss(0, 1) for _ in range(dimensions)]
+                      # Normalize
+                      norm = sum(x*x for x in embedding) ** 0.5
+                      embedding = [x/norm for x in embedding]
+                      embeddings.append(embedding)
+                  
+                  # Estimate token count (rough approximation)
+                  total_chars = sum(len(text) for text in input_texts)
+                  estimated_tokens = total_chars // 4  # Rough estimate
+                  
+                  cost_per_million = model_config.get('cost_per_million_tokens', 0.10)
+                  cost_estimate = (estimated_tokens / 1_000_000) * cost_per_million
+                  
+                  return EmbeddingResponse(
+                      embeddings=embeddings,
+                      model_id=request.model_id,
+                      provider=provider,
+                      dimensions=dimensions,
+                      token_count=estimated_tokens,
+                      cost_estimate=cost_estimate,
+                      cache_hit=False,
+                      processing_time_ms=0,
+                      metadata={
+                          "model": model_config['model'],
+                          "input_count": len(input_texts),
+                          "use_case": request.use_case,
+                          "mock": True,
+                          **request.metadata
+                      },
+                      timestamp=datetime.now(timezone.utc).isoformat()
+                  )
+              
+              def get_available_models(self) -> Dict[str, Any]:
+                  """Get list of available models and their configurations"""
+                  models = {}
+                  for model_id, config in self.config.get('embedding_models', {}).items():
+                      models[model_id] = {
+                          "provider": config['provider'],
+                          "model": config['model'],
+                          "dimensions": config['dimensions'],
+                          "description": config.get('description', ''),
+                          "use_cases": config.get('use_cases', []),
+                          "quality_tier": config.get('quality_tier', 'standard'),
+                          "cost_per_million_tokens": config.get('cost_per_million_tokens', 0.0)
+                      }
+                  return models
+              
+              def get_capabilities(self) -> Dict[str, Any]:
+                  """Get MCP capabilities and configuration"""
+                  return {
+                      "models": self.get_available_models(),
+                      "providers": list(self.config.get('providers', {}).keys()),
+                      "routing_rules": self.config.get('routing_rules', {}),
+                      "settings": self.config.get('settings', {}),
+                      "principles": self.config.get('principles', {})
+                  }
+          
+          # Flask application for MCP endpoints
+          app = Flask(__name__)
+          CORS(app)
+          
+          # Initialize Vendor-Independent Embedding MCP
+          embedding_mcp = VendorIndependentEmbeddingMCP()
+          
+          @app.route('/health', methods=['GET'])
+          def health_check():
+              """Health check endpoint"""
+              return jsonify({
+                  "service": "embedding-mcp",
+                  "status": "healthy",
+                  "version": "2.0.0",
+                  "architecture": "vendor-independent",
+                  "timestamp": datetime.now(timezone.utc).isoformat(),
+                  "models_available": len(embedding_mcp.get_available_models()),
+                  "default_model": embedding_mcp.config.get('default_model'),
+                  "cache_enabled": embedding_mcp.config.get('settings', {}).get('cache_embeddings', True)
+              })
+          
+          @app.route('/generate_embedding', methods=['POST'])
+          def generate_embedding():
+              """Generate embeddings for text using intelligent routing"""
+              try:
+                  data = request.get_json()
+                  
+                  # Validate required fields
+                  if 'text' not in data:
+                      return jsonify({
+                          "success": False,
+                          "error": "Missing required field: text"
+                      }), 400
+                  
+                  # Create EmbeddingRequest object
+                  embedding_request = EmbeddingRequest(
+                      text=data['text'],
+                      model_id=data.get('model_id', 'default'),
+                      use_case=data.get('use_case'),
+                      metadata=data.get('metadata', {})
+                  )
+                  
+                  # Execute async request
+                  loop = asyncio.new_event_loop()
+                  asyncio.set_event_loop(loop)
+                  try:
+                      result = loop.run_until_complete(embedding_mcp.generate_embedding(embedding_request))
+                  finally:
+                      loop.close()
+                  
+                  return jsonify({
+                      "success": True,
+                      "data": result.to_dict(),
+                      "timestamp": datetime.now(timezone.utc).isoformat()
+                  })
+                  
+              except Exception as e:
+                  logger.error(f"Generate embedding failed: {str(e)}")
+                  return jsonify({
+                      "success": False,
+                      "error": str(e),
+                      "timestamp": datetime.now(timezone.utc).isoformat()
+                  }), 500
+          
+          @app.route('/models', methods=['GET'])
+          def get_models():
+              """Get available embedding models"""
+              try:
+                  models = embedding_mcp.get_available_models()
+                  return jsonify({
+                      "success": True,
+                      "data": {
+                          "models": models,
+                          "total_models": len(models),
+                          "default_model": embedding_mcp.config.get('default_model')
+                      },
+                      "timestamp": datetime.now(timezone.utc).isoformat()
+                  })
+              except Exception as e:
+                  logger.error(f"Get models failed: {str(e)}")
+                  return jsonify({
+                      "success": False,
+                      "error": str(e),
+                      "timestamp": datetime.now(timezone.utc).isoformat()
+                  }), 500
+          
+          @app.route('/capabilities', methods=['GET'])
+          def get_capabilities():
+              """Get MCP capabilities and configuration"""
+              try:
+                  capabilities = embedding_mcp.get_capabilities()
+                  return jsonify({
+                      "success": True,
+                      "data": capabilities,
+                      "timestamp": datetime.now(timezone.utc).isoformat()
+                  })
+              except Exception as e:
+                  logger.error(f"Get capabilities failed: {str(e)}")
+                  return jsonify({
+                      "success": False,
+                      "error": str(e),
+                      "timestamp": datetime.now(timezone.utc).isoformat()
+                  }), 500
+          
+          @app.route('/test_embedding', methods=['GET'])
+          def test_embedding():
+              """Test embedding generation with multiple models"""
+              try:
+                  test_cases = [
+                      {
+                          "text": "This is a test sentence for vendor-independent embedding generation.",
+                          "model_id": "default",
+                          "use_case": "test"
+                      },
+                      {
+                          "text": "Testing high-quality embeddings for foundational knowledge.",
+                          "model_id": "foundational_knowledge",
+                          "use_case": "critical"
+                      },
+                      {
+                          "text": ["Batch test sentence one.", "Batch test sentence two."],
+                          "model_id": "bulk_processing",
+                          "use_case": "batch_test"
+                      }
+                  ]
+                  
+                  results = []
+                  
+                  loop = asyncio.new_event_loop()
+                  asyncio.set_event_loop(loop)
+                  
+                  try:
+                      for test_case in test_cases:
+                          embedding_request = EmbeddingRequest(
+                              text=test_case["text"],
+                              model_id=test_case["model_id"],
+                              use_case=test_case["use_case"]
+                          )
+                          
+                          result = loop.run_until_complete(embedding_mcp.generate_embedding(embedding_request))
+                          results.append({
+                              "test_case": test_case,
+                              "result": {
+                                  "success": True,
+                                  "model_used": result.model_id,
+                                  "provider": result.provider,
+                                  "dimensions": result.dimensions,
+                                  "token_count": result.token_count,
+                                  "cost_estimate": result.cost_estimate,
+                                  "processing_time_ms": result.processing_time_ms,
+                                  "cache_hit": result.cache_hit,
+                                  "fallback_used": result.metadata.get("fallback_used", False)
+                              }
+                          })
+                  finally:
+                      loop.close()
+                  
+                  return jsonify({
+                      "success": True,
+                      "data": {
+                          "tests": results,
+                          "total_tests": len(results),
+                          "successful_tests": len(results)
+                      },
+                      "timestamp": datetime.now(timezone.utc).isoformat()
+                  })
+                  
+              except Exception as e:
+                  logger.error(f"Test embedding failed: {str(e)}")
+                  return jsonify({
+                      "success": False,
+                      "error": str(e),
+                      "timestamp": datetime.now(timezone.utc).isoformat()
+                  }), 500
+          
+          if __name__ == '__main__':
+              logger.info("🔧 Starting Vendor-Independent Embedding MCP Server for Autonomous Evolution v2")
+              logger.info(f"Default model: {embedding_mcp.config.get('default_model')}")
+              logger.info(f"Available models: {list(embedding_mcp.get_available_models().keys())}")
+              
+              app.run(host='0.0.0.0', port=5003, debug=False)
+          PYEOF
+          
+          cd /app && python server.py
+        volumeMounts:
+        - name: embedding-config
+          mountPath: /app/config
+        workingDir: /app
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5003
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 5003
+          initialDelaySeconds: 10
+          periodSeconds: 5
+      volumes:
+      - name: embedding-config
+        configMap:
+          name: embedding-models-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: embedding-mcp
+  namespace: sophia-intel
+  labels:
+    app: embedding-mcp
+spec:
+  selector:
+    app: embedding-mcp
+  ports:
+  - port: 5003
+    targetPort: 5003
+    protocol: TCP
+  type: ClusterIP
+

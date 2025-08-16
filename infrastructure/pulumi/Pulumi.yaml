@@ -1,8 +1,4 @@
-name: sophia-intel
+name: sophia-intel-infrastructure
+description: SOPHIA Intel Infrastructure as Code with Railway
 runtime: python
-description: SOPHIA Intel AI Platform - Production Kubernetes Deployment
-template:
-  config:
-    aws:region:
-      description: AWS region for deployment
-      default: us-west-2
+main: __main__.py

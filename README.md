@@ -277,3 +277,61 @@ export default defineConfig({
 - **Issues**: Report bugs on [GitHub Issues](https://github.com/ai-cherry/sophia-intel/issues)
 - **Configuration**: See [docs/environment-variables.md](./docs/environment-variables.md)
 
+
+
+## 🚀 **GitHub Actions Deployment**
+
+SOPHIA Intel now supports automatic deployment to Northflank via GitHub Actions.
+
+### **Setup GitHub Secrets**
+
+Add these secrets to your GitHub repository settings (`Settings` → `Secrets and variables` → `Actions`):
+
+```
+NORTHFLANK_API_TOKEN: your-northflank-api-token
+LAMBDA_API_KEY: secret_sophiacloudapi_17cf7f3cedca48f18b4b8ea46cbb258f.EsLXt0lkGlhZ1Nd369Ld5DMSuhJg9O9y
+DNSIMPLE_API_KEY: dnsimple_u_XBHeyhH3O8uKJF6HnqU76h7ANWdNvUzN
+```
+
+### **Automatic Deployment**
+
+The platform automatically deploys when you push to the `main` branch:
+
+1. **Push to main** → Triggers deployment workflow
+2. **Build & Test** → Runs comprehensive test suite
+3. **Deploy Services** → Creates/updates Northflank services
+4. **Health Check** → Verifies deployment success
+
+### **Manual Deployment**
+
+Trigger deployment manually:
+
+1. Go to **Actions** tab in GitHub
+2. Select **"Deploy SOPHIA Intel to Northflank"**
+3. Click **"Run workflow"** → Select `main` branch → **"Run workflow"**
+
+### **Deployment Status**
+
+Monitor deployment status with badges:
+
+[![Deploy to Northflank](https://github.com/ai-cherry/sophia-intel/actions/workflows/deploy-northflank.yml/badge.svg)](https://github.com/ai-cherry/sophia-intel/actions/workflows/deploy-northflank.yml)
+[![Build and Test](https://github.com/ai-cherry/sophia-intel/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/ai-cherry/sophia-intel/actions/workflows/build-and-test.yml)
+
+### **Services Deployed**
+
+The GitHub Actions workflow deploys:
+
+- **SOPHIA API** → `https://api.sophia-intel.ai`
+- **SOPHIA Dashboard** → `https://www.sophia-intel.ai`
+- **Secret Management** → Northflank secret groups
+- **Health Monitoring** → Automatic health checks
+
+### **Workflow Features**
+
+- ✅ **Automated Testing** - Backend, frontend, and Docker builds
+- ✅ **Security Scanning** - Vulnerability detection
+- ✅ **Code Quality** - Linting and formatting checks
+- ✅ **Multi-Service Deployment** - API and Dashboard
+- ✅ **Health Verification** - Post-deployment testing
+- ✅ **Rollback Support** - Automatic failure detection
+

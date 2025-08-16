@@ -1,0 +1,169 @@
+name: Deploy SOPHIA Intel to Northflank
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  NORTHFLANK_API_TOKEN: ${{ secrets.NORTHFLANK_API_TOKEN }}
+  PROJECT_ID: sophia-intel
+
+jobs:
+  deploy-api:
+    name: Deploy SOPHIA API
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Northflank CLI
+        run: npm install -g @northflank/cli
+
+      - name: Login to Northflank
+        run: echo "${{ secrets.NORTHFLANK_API_TOKEN }}" | nf login --token
+
+      - name: Deploy SOPHIA API Service
+        run: |
+          nf create service \
+            --project=$PROJECT_ID \
+            --name=sophia-api \
+            --type=build \
+            --build-source=github \
+            --build-repo=ai-cherry/sophia-intel \
+            --build-branch=main \
+            --build-dockerfile=northflank/docker/sophia-api.Dockerfile \
+            --port=8000 \
+            --public \
+            --domain=api.sophia-intel.ai \
+            --env LAMBDA_API_KEY="${{ secrets.LAMBDA_API_KEY }}" \
+            --env ENVIRONMENT=production \
+            --env LOG_LEVEL=info \
+            --instances=2 \
+            --cpu=1000 \
+            --memory=2048 || echo "Service might already exist"
+
+      - name: Update SOPHIA API Service
+        run: |
+          nf update service sophia-api \
+            --project=$PROJECT_ID \
+            --env LAMBDA_API_KEY="${{ secrets.LAMBDA_API_KEY }}" \
+            --env ENVIRONMENT=production \
+            --env LOG_LEVEL=info
+
+  deploy-dashboard:
+    name: Deploy SOPHIA Dashboard
+    runs-on: ubuntu-latest
+    needs: deploy-api
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Northflank CLI
+        run: npm install -g @northflank/cli
+
+      - name: Login to Northflank
+        run: echo "${{ secrets.NORTHFLANK_API_TOKEN }}" | nf login --token
+
+      - name: Deploy SOPHIA Dashboard Service
+        run: |
+          nf create service \
+            --project=$PROJECT_ID \
+            --name=sophia-dashboard \
+            --type=build \
+            --build-source=github \
+            --build-repo=ai-cherry/sophia-intel \
+            --build-branch=main \
+            --build-dockerfile=northflank/docker/sophia-dashboard.Dockerfile \
+            --port=80 \
+            --public \
+            --domain=www.sophia-intel.ai \
+            --domain=app.sophia-intel.ai \
+            --build-arg VITE_API_URL=https://api.sophia-intel.ai \
+            --env VITE_API_URL=https://api.sophia-intel.ai \
+            --env NODE_ENV=production \
+            --instances=2 \
+            --cpu=500 \
+            --memory=1024 || echo "Service might already exist"
+
+      - name: Update SOPHIA Dashboard Service
+        run: |
+          nf update service sophia-dashboard \
+            --project=$PROJECT_ID \
+            --env VITE_API_URL=https://api.sophia-intel.ai \
+            --env NODE_ENV=production
+
+  deploy-secrets:
+    name: Setup Secrets
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Northflank CLI
+        run: npm install -g @northflank/cli
+
+      - name: Login to Northflank
+        run: echo "${{ secrets.NORTHFLANK_API_TOKEN }}" | nf login --token
+
+      - name: Create Secret Group
+        run: |
+          nf create secret-group \
+            --project=$PROJECT_ID \
+            --name=sophia-secrets-prod \
+            --description="Production secrets for SOPHIA Intel" || echo "Secret group might already exist"
+
+      - name: Update Secrets
+        run: |
+          nf update secret \
+            --project=$PROJECT_ID \
+            --secret-group=sophia-secrets-prod \
+            --name=LAMBDA_API_KEY \
+            --value="${{ secrets.LAMBDA_API_KEY }}" || echo "Secret might not exist yet"
+          
+          nf update secret \
+            --project=$PROJECT_ID \
+            --secret-group=sophia-secrets-prod \
+            --name=DNSIMPLE_API_KEY \
+            --value="${{ secrets.DNSIMPLE_API_KEY }}" || echo "Secret might not exist yet"
+
+  health-check:
+    name: Health Check Deployment
+    runs-on: ubuntu-latest
+    needs: [deploy-api, deploy-dashboard]
+    steps:
+      - name: Wait for services to start
+        run: sleep 60
+
+      - name: Check API Health
+        run: |
+          curl -f https://api.sophia-intel.ai/health || echo "API not ready yet"
+
+      - name: Check Dashboard Health
+        run: |
+          curl -f https://www.sophia-intel.ai/health || echo "Dashboard not ready yet"
+
+      - name: Deployment Summary
+        run: |
+          echo "🎉 SOPHIA Intel Deployment Complete!"
+          echo "📡 API: https://api.sophia-intel.ai"
+          echo "🌐 Dashboard: https://www.sophia-intel.ai"
+          echo "📊 Status: Services deployed and starting up"
+

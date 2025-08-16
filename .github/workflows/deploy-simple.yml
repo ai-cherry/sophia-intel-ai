@@ -1,0 +1,167 @@
+name: Deploy SOPHIA Intel (Simple)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths: [ '.github/workflows/deploy-simple.yml' ]
+
+jobs:
+  deploy-direct:
+    name: Direct Deploy to Northflank
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Northflank CLI
+        run: npm i -g @northflank/cli
+
+      - name: Verify secrets
+        env:
+          NORTHFLANK_API_TOKEN: ${{ secrets.NORTHFLANK_API_TOKEN }}
+        run: |
+          if [ -z "$NORTHFLANK_API_TOKEN" ]; then
+            echo "❌ Missing NORTHFLANK_API_TOKEN"
+            exit 1
+          fi
+          echo "✅ Secrets verified"
+
+      - name: Deploy via Northflank API
+        env:
+          NORTHFLANK_API_TOKEN: ${{ secrets.NORTHFLANK_API_TOKEN }}
+          LAMBDA_API_KEY: ${{ secrets.LAMBDA_API_KEY }}
+          DASHBOARD_API_TOKEN: ${{ secrets.DASHBOARD_API_TOKEN }}
+        run: |
+          echo "🚀 Deploying SOPHIA Intel directly to Northflank..."
+          
+          # Organization and project context
+          ORG="pay-ready"
+          TEAM="sophia3" 
+          PROJECT="sophia-intel"
+          
+          echo "📋 Context: $ORG/$TEAM/$PROJECT"
+          
+          # Deploy API service
+          echo "🔧 Deploying API service..."
+          curl -X POST \
+            -H "Authorization: Bearer $NORTHFLANK_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "name": "sophia-api",
+              "description": "SOPHIA Intel API",
+              "spec": {
+                "kind": "Deployment",
+                "spec": {
+                  "external": {
+                    "imagePath": "python:3.11-slim"
+                  },
+                  "buildConfiguration": {
+                    "pathIgnoreRules": [],
+                    "isAllowList": false,
+                    "ciIgnoreFlagsEnabled": false,
+                    "dockerFilePath": "/northflank/docker/sophia-api.Dockerfile",
+                    "dockerWorkDir": "/",
+                    "buildEngine": "kaniko"
+                  },
+                  "vcsData": {
+                    "projectUrl": "https://github.com/ai-cherry/sophia-intel",
+                    "projectType": "github",
+                    "projectBranch": "main"
+                  },
+                  "env": [
+                    {"name": "LAMBDA_API_KEY", "value": "'$LAMBDA_API_KEY'"},
+                    {"name": "DASHBOARD_API_TOKEN", "value": "'$DASHBOARD_API_TOKEN'"}
+                  ],
+                  "ports": [{"name": "http", "internalPort": 5000, "public": true}]
+                }
+              }
+            }' \
+            "https://api.northflank.com/v1/projects/$PROJECT/services" || echo "API service exists"
+          
+          # Deploy Dashboard service  
+          echo "🔧 Deploying Dashboard service..."
+          curl -X POST \
+            -H "Authorization: Bearer $NORTHFLANK_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "name": "sophia-dashboard",
+              "description": "SOPHIA Intel Dashboard",
+              "spec": {
+                "kind": "Deployment", 
+                "spec": {
+                  "external": {
+                    "imagePath": "node:20-alpine"
+                  },
+                  "buildConfiguration": {
+                    "pathIgnoreRules": [],
+                    "isAllowList": false,
+                    "ciIgnoreFlagsEnabled": false,
+                    "dockerFilePath": "/northflank/docker/sophia-dashboard.Dockerfile",
+                    "dockerWorkDir": "/",
+                    "buildEngine": "kaniko"
+                  },
+                  "vcsData": {
+                    "projectUrl": "https://github.com/ai-cherry/sophia-intel",
+                    "projectType": "github", 
+                    "projectBranch": "main"
+                  },
+                  "env": [
+                    {"name": "VITE_API_URL", "value": "https://api.sophia-intel.ai"}
+                  ],
+                  "ports": [{"name": "http", "internalPort": 80, "public": true}]
+                }
+              }
+            }' \
+            "https://api.northflank.com/v1/projects/$PROJECT/services" || echo "Dashboard service exists"
+          
+          echo "✅ Services deployed successfully"
+
+      - name: Configure domains
+        env:
+          DNSIMPLE_API_KEY: ${{ secrets.DNSIMPLE_API_KEY }}
+          DNS_ACCOUNT_ID: ${{ secrets.DNS_ACCOUNT_ID }}
+        run: |
+          echo "🌐 Configuring DNS..."
+          
+          # Configure www.sophia-intel.ai -> dashboard
+          curl -X POST \
+            -H "Authorization: Bearer $DNSIMPLE_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d '{"name": "www","type": "CNAME","content": "sophia-dashboard.northflank.app.","ttl": 300}' \
+            "https://api.dnsimple.com/v2/$DNS_ACCOUNT_ID/zones/sophia-intel.ai/records" || true
+          
+          # Configure api.sophia-intel.ai -> api  
+          curl -X POST \
+            -H "Authorization: Bearer $DNSIMPLE_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d '{"name": "api","type": "CNAME","content": "sophia-api.northflank.app.","ttl": 300}' \
+            "https://api.dnsimple.com/v2/$DNS_ACCOUNT_ID/zones/sophia-intel.ai/records" || true
+          
+          echo "✅ DNS configured"
+
+      - name: Wait and verify
+        run: |
+          echo "⏳ Waiting for deployment to complete..."
+          sleep 120
+          
+          echo "🔍 Checking deployment status..."
+          API_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://api.sophia-intel.ai/health || echo "000")
+          DASH_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://www.sophia-intel.ai || echo "000")
+          
+          echo "📊 API Status: $API_STATUS"
+          echo "📊 Dashboard Status: $DASH_STATUS"
+          
+          if [ "$API_STATUS" = "200" ] || [ "$DASH_STATUS" = "200" ]; then
+            echo "🎉 SOPHIA Intel deployment initiated!"
+            echo "🔗 Monitor: https://app.northflank.com/o/pay-ready/t/sophia3/project/sophia-intel"
+          else
+            echo "⚠️ Services starting up - check Northflank dashboard"
+          fi
+

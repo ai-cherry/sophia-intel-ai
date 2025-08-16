@@ -1,10 +1,14 @@
-"""Speech router - STT and TTS endpoints"""
-from fastapi import APIRouter, HTTPException, UploadFile, File
+"""Speech router - STT and TTS with rate limiting"""
+from fastapi import APIRouter, HTTPException, UploadFile, File, Request
 from pydantic import BaseModel
 from typing import Optional
-import logging
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
-logger = logging.getLogger(__name__)
+from core.middleware import limiter
+import structlog
+
+logger = structlog.get_logger()
 router = APIRouter()
 
 class TTSRequest(BaseModel):
@@ -28,7 +32,11 @@ async def speech_health():
         "service": "sophia-speech",
         "status": "healthy",
         "features": ["stt", "tts"],
-        "providers": ["openai", "elevenlabs"]
+        "providers": ["openai", "elevenlabs"],
+        "rate_limits": {
+            "stt": "5/minute",
+            "tts": "5/minute"
+        }
     }
 
 @router.get("/api/speech/voices")
@@ -43,36 +51,48 @@ async def get_voices():
     }
 
 @router.post("/api/speech/stt", response_model=STTResponse)
-async def speech_to_text(file: UploadFile = File(...)):
-    """Convert speech to text"""
+@limiter.limit("5/minute")  # Rate limit: 5 STT requests per minute per IP
+async def speech_to_text(request: Request, file: UploadFile = File(...)):
+    """Convert speech to text - Rate Limited"""
     try:
-        logger.info(f"Processing STT for file: {file.filename}")
+        logger.info("stt_request", 
+                   filename=file.filename,
+                   content_type=file.content_type,
+                   client_ip=get_remote_address(request))
         
-        # For now, return mock response
         # TODO: Integrate with OpenAI Whisper
+        # For now, return mock response with clear indication
+        logger.warning("stt_mock_response", message="Using mock STT - integrate OpenAI Whisper for production")
+        
         return STTResponse(
-            text="Hello, this is a mock transcription",
+            text="Mock transcription: Hello, this is a test transcription from SOPHIA",
             confidence=0.95,
             language="en"
         )
         
     except Exception as e:
-        logger.error(f"STT failed: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error("stt_failed", error=str(e), filename=file.filename)
+        raise HTTPException(status_code=500, detail=f"STT failed: {str(e)}")
 
 @router.post("/api/speech/tts", response_model=TTSResponse)
-async def text_to_speech(request: TTSRequest):
-    """Convert text to speech"""
+@limiter.limit("5/minute")  # Rate limit: 5 TTS requests per minute per IP
+async def text_to_speech(request: Request, tts_request: TTSRequest):
+    """Convert text to speech - Rate Limited"""
     try:
-        logger.info(f"Processing TTS for text: {request.text[:50]}...")
+        logger.info("tts_request", 
+                   text_length=len(tts_request.text),
+                   voice=tts_request.voice,
+                   client_ip=get_remote_address(request))
         
-        # For now, return mock response
         # TODO: Integrate with ElevenLabs
+        # For now, return mock response with clear indication
+        logger.warning("tts_mock_response", message="Using mock TTS - integrate ElevenLabs for production")
+        
         return TTSResponse(
-            audio_url="/tmp/mock_audio.wav",
-            duration=len(request.text) * 0.1  # Rough estimate
+            audio_url="/tmp/mock_sophia_audio.wav",
+            duration=len(tts_request.text) * 0.1  # Rough estimate
         )
         
     except Exception as e:
-        logger.error(f"TTS failed: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error("tts_failed", error=str(e), text_length=len(tts_request.text))
+        raise HTTPException(status_code=500, detail=f"TTS failed: {str(e)}")

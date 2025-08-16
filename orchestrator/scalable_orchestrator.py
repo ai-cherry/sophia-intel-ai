@@ -12,7 +12,6 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional, TypedDict
 
 import redis.asyncio as redis
-from circuit_breaker import CircuitBreaker
 from langgraph.graph import StateGraph, END
 from langgraph.checkpoint.memory import MemorySaver
 from mem0 import Memory
@@ -21,6 +20,34 @@ import aiohttp
 from loguru import logger
 
 from config.config import settings
+
+
+# Simple circuit breaker implementation
+class CircuitBreaker:
+    def __init__(self, failure_threshold=5, recovery_timeout=30):
+        self.failure_threshold = failure_threshold
+        self.recovery_timeout = recovery_timeout
+        self.failure_count = 0
+        self.last_failure_time = None
+        self.state = 'CLOSED'  # CLOSED, OPEN, HALF_OPEN
+    
+    def __enter__(self):
+        if self.state == 'OPEN':
+            if time.time() - self.last_failure_time > self.recovery_timeout:
+                self.state = 'HALF_OPEN'
+            else:
+                raise Exception("Circuit breaker is OPEN")
+        return self
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if exc_type is not None:
+            self.failure_count += 1
+            self.last_failure_time = time.time()
+            if self.failure_count >= self.failure_threshold:
+                self.state = 'OPEN'
+        else:
+            self.failure_count = 0
+            self.state = 'CLOSED'
 
 
 # Metrics

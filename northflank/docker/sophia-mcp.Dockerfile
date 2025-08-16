@@ -28,13 +28,16 @@ RUN useradd --create-home --shell /bin/bash sophia
 RUN chown -R sophia:sophia /app
 USER sophia
 
+# Set default port (can be overridden by environment)
+ENV PORT=8000
+
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:${PORT:-8001}/health || exit 1
+    CMD curl -f http://localhost:${PORT}/health || exit 1
 
-# Expose port (will be overridden by environment)
-EXPOSE 8001
+# Expose port
+EXPOSE ${PORT}
 
-# Start command - will be determined by MCP_SERVICE_TYPE environment variable
-CMD ["python", "-c", "import os; exec(open(f'mcp_servers/{os.environ.get(\"MCP_SERVICE_TYPE\", \"memory\")}_service.py').read())"]
+# Start the Enhanced Unified MCP Server
+CMD python -m uvicorn mcp_servers.enhanced_unified_server:app --host 0.0.0.0 --port ${PORT}
 

@@ -87,7 +87,7 @@
             "ports": [
               {
                 "name": "api",
-                "internalPort": 8000,
+                "internalPort": 5000,
                 "public": true,
                 "protocol": "HTTP",
                 "domains": [
@@ -98,6 +98,9 @@
               }
             ],
             "variables": {
+              "PORT": {
+                "value": "5000"
+              },
               "LAMBDA_API_KEY": {
                 "value": "@{secrets.sophia-secrets-prod.LAMBDA_API_KEY}"
               },
@@ -112,6 +115,9 @@
               },
               "LOG_LEVEL": {
                 "value": "info"
+              },
+              "PYTHONPATH": {
+                "value": "/app"
               }
             },
             "buildArguments": {},
@@ -193,7 +199,7 @@
         {
           "kind": "Service",
           "spec": {
-            "name": "sophia-mcp-memory",
+            "name": "sophia-mcp",
             "billing": {
               "deploymentPlan": "nf-compute-20"
             },
@@ -208,14 +214,26 @@
             "ports": [
               {
                 "name": "mcp",
-                "internalPort": 8001,
+                "internalPort": 8000,
                 "public": false,
                 "protocol": "HTTP"
               }
             ],
             "variables": {
-              "MCP_SERVICE_TYPE": {
-                "value": "memory"
+              "PORT": {
+                "value": "8000"
+              },
+              "ENVIRONMENT": {
+                "value": "production"
+              },
+              "PYTHONPATH": {
+                "value": "/app"
+              },
+              "NOTION_API_KEY": {
+                "value": "@{secrets.sophia-secrets-prod.NOTION_API_KEY}"
+              },
+              "QDRANT_URL": {
+                "value": "@{secrets.sophia-secrets-prod.QDRANT_URL}"
               },
               "POSTGRES_URL": {
                 "value": "@{addons.sophia-postgres.connectionString}"
@@ -224,44 +242,13 @@
                 "value": "@{addons.sophia-redis.connectionString}"
               }
             },
-            "vcsData": {
-              "projectUrl": "https://github.com/ai-cherry/sophia-intel",
-              "projectType": "github",
-              "projectBranch": "main"
-            }
-          }
-        },
-        {
-          "kind": "Service",
-          "spec": {
-            "name": "sophia-mcp-notion",
-            "billing": {
-              "deploymentPlan": "nf-compute-20"
-            },
-            "deployment": {
-              "instances": 1,
-              "docker": {
-                "configType": "dockerfile",
-                "pathToDockerfile": "/northflank/docker/sophia-mcp.Dockerfile",
-                "buildEngine": "kaniko"
-              }
-            },
-            "ports": [
+            "healthChecks": [
               {
-                "name": "mcp",
-                "internalPort": 8002,
-                "public": false,
-                "protocol": "HTTP"
+                "path": "/health",
+                "initialDelaySeconds": 30,
+                "periodSeconds": 15
               }
             ],
-            "variables": {
-              "MCP_SERVICE_TYPE": {
-                "value": "notion"
-              },
-              "NOTION_API_KEY": {
-                "value": "@{secrets.sophia-secrets-prod.NOTION_API_KEY}"
-              }
-            },
             "vcsData": {
               "projectUrl": "https://github.com/ai-cherry/sophia-intel",
               "projectType": "github",

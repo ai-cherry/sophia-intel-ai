@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     # Orchestrator Configuration
     ORCHESTRATOR_URL: str = os.getenv("ORCHESTRATOR_URL", "http://localhost:8001")
     MCP_BASE_URL: str = os.getenv("MCP_BASE_URL", "http://localhost:8001")
+    FINANCIAL_MCP_URL: str = os.getenv("FINANCIAL_MCP_URL", "http://localhost:8004")
 
     # Sessions
     session_dir: str = os.getenv("MCP_SESSION_DIR", ".sophia_sessions")

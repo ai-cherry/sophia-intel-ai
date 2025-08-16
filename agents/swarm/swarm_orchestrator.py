@@ -94,8 +94,10 @@ class SwarmOrchestrator:
     - Result aggregation and delivery
     """
     
-    def __init__(self, ai_router_url: str = "http://localhost:5000/api/ai/route"):
-        self.ai_router_url = ai_router_url
+    def __init__(self, ai_router_url: str = None):
+        # Use environment variable or default
+        from config.config import settings
+        self.ai_router_url = ai_router_url or (settings.ORCHESTRATOR_URL + "/ai/chat")
         
         # Initialize agents
         self.agents: Dict[AgentType, BaseAgent] = {}

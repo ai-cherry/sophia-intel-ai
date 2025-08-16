@@ -1,36 +1,29 @@
 FROM python:3.11-slim
 
-# Set working directory
 WORKDIR /app
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
-    curl \
-    git \
-    build-essential \
+    gcc \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements and install Python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the entire SOPHIA Intel codebase
+# Copy application code
 COPY . .
 
-# Set environment variables
-ENV PYTHONPATH=/app
-ENV FLASK_ENV=production
-
 # Create non-root user
-RUN useradd -m -u 1000 sophia && chown -R sophia:sophia /app
-USER sophia
+RUN useradd --create-home --shell /bin/bash app && chown -R app:app /app
+USER app
 
 # Expose port
-EXPOSE 8080
+EXPOSE 5000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8080/health || exit 1
+    CMD curl -f http://localhost:5000/health || exit 1
 
-# Start the complete SOPHIA Intel system
-CMD ["python", "-m", "apps.sophia-api.main"]
+# Run application
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "2", "--timeout", "60", "app:app"]

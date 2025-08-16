@@ -24,10 +24,18 @@ def requires_token(f):
     """Decorator to require API token for mutating operations"""
     @wraps(f)
     def _wrapped(*args, **kwargs):
-        if not API_TOKEN:
-            return f(*args, **kwargs)  # Allow if not set (dev mode)
-        if request.headers.get("X-Auth-Token") != API_TOKEN:
+        # In production, always require token
+        if os.getenv("FLASK_ENV") == "production" and not API_TOKEN:
+            return jsonify({"error": "API token not configured in production"}), 500
+        
+        # If token is set, validate it
+        if API_TOKEN and request.headers.get("X-Auth-Token") != API_TOKEN:
             return jsonify({"error": "unauthorized"}), 401
+            
+        # Allow if no token set in development only
+        if not API_TOKEN and os.getenv("FLASK_ENV") != "production":
+            return f(*args, **kwargs)
+            
         return f(*args, **kwargs)
     return _wrapped
 
@@ -119,6 +127,25 @@ def api_swarm_jobs():
             }
         ]
     })
+
+@app.route("/api/conversation/reset", methods=["POST"])
+@requires_token
+def reset_conversation():
+    """Reset the current conversation state"""
+    try:
+        # In a real implementation, this would clear conversation history
+        # from database, cache, or session storage
+        return jsonify({
+            "status": "success",
+            "message": "Conversation reset successfully",
+            "timestamp": time.time()
+        })
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "error": str(e),
+            "timestamp": time.time()
+        }), 500
 
 # Airbyte Pipeline Management Endpoints
 

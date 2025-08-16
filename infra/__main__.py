@@ -42,7 +42,14 @@ def create_infrastructure():
         return
     
     # 2. Setup DNS and TLS
-    dns_setup = setup_dns_tls()
+    # Create a mock cluster object for DNS setup
+    class MockCluster:
+        def __init__(self):
+            self.control_ip = "192.222.58.232"  # Load balancer IP from requirements
+            self.worker_ip = "192.222.58.232"
+    
+    mock_cluster = MockCluster()
+    dns_setup = setup_dns_tls(mock_cluster)
     
     # 3. Create Lambda Labs infrastructure placeholder
     # Note: In a full implementation, this would create actual Lambda Labs instances

@@ -1,0 +1,371 @@
+# SOPHIA Intel Helm Values
+# Production-ready configuration for complete AI orchestration platform
+
+# Global settings
+global:
+  imageRegistry: ""
+  imagePullSecrets: []
+  storageClass: ""
+
+# Environment configuration
+environment: prod
+debug: false
+logLevel: INFO
+
+# API Server configuration
+api:
+  image:
+    repository: sophia-intel/api-server
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  
+  replicaCount: 2
+  
+  service:
+    type: ClusterIP
+    port: 5000
+    targetPort: 5000
+    annotations: {}
+  
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 500m
+      memory: 512Mi
+  
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+  
+  livenessProbe:
+    httpGet:
+      path: /health
+      port: 5000
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+  
+  readinessProbe:
+    httpGet:
+      path: /health
+      port: 5000
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 3
+
+# Dashboard configuration
+dashboard:
+  image:
+    repository: sophia-intel/dashboard
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  
+  replicaCount: 2
+  
+  service:
+    type: ClusterIP
+    port: 3000
+    targetPort: 3000
+    annotations: {}
+  
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+  
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 6
+    targetCPUUtilizationPercentage: 70
+
+# MCP Services configuration
+mcpServices:
+  # Code MCP Server
+  code:
+    enabled: true
+    image:
+      repository: sophia-intel/mcp-code
+      tag: "latest"
+      pullPolicy: IfNotPresent
+    replicaCount: 1
+    service:
+      port: 5000
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+  
+  # Research MCP Server (BrightData)
+  research:
+    enabled: true
+    image:
+      repository: sophia-intel/mcp-research
+      tag: "latest"
+      pullPolicy: IfNotPresent
+    replicaCount: 2
+    service:
+      port: 5002
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 1Gi
+      requests:
+        cpu: 500m
+        memory: 512Mi
+  
+  # Embedding MCP Server
+  embedding:
+    enabled: true
+    image:
+      repository: sophia-intel/mcp-embedding
+      tag: "latest"
+      pullPolicy: IfNotPresent
+    replicaCount: 2
+    service:
+      port: 5003
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 1Gi
+      requests:
+        cpu: 500m
+        memory: 512Mi
+  
+  # Telemetry MCP Server
+  telemetry:
+    enabled: true
+    image:
+      repository: sophia-intel/mcp-telemetry
+      tag: "latest"
+      pullPolicy: IfNotPresent
+    replicaCount: 1
+    service:
+      port: 5004
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+  
+  # Notion Sync MCP Server
+  notion:
+    enabled: true
+    image:
+      repository: sophia-intel/mcp-notion
+      tag: "latest"
+      pullPolicy: IfNotPresent
+    replicaCount: 1
+    service:
+      port: 5001
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+
+# Environment variables (non-secret)
+env:
+  ENV: prod
+  DEBUG: false
+  LOG_LEVEL: INFO
+  API_HOST: "0.0.0.0"
+  API_PORT: "5000"
+  API_WORKERS: "2"
+  
+  # AI Configuration
+  OPENROUTER_BASE_URL: "https://openrouter.ai/api/v1"
+  OPENROUTER_MODEL: "anthropic/claude-3.5-sonnet"
+  OPENAI_BASE_URL: "https://api.openai.com/v1"
+  
+  # MCP Service URLs (internal cluster)
+  MCP_CODE_URL: "http://sophia-mcp-code:5000"
+  MCP_RESEARCH_URL: "http://sophia-mcp-research:5002"
+  MCP_EMBEDDING_URL: "http://sophia-mcp-embedding:5003"
+  MCP_TELEMETRY_URL: "http://sophia-mcp-telemetry:5004"
+  MCP_NOTION_URL: "http://sophia-mcp-notion:5001"
+  
+  # Vector Database
+  QDRANT_URL: "http://qdrant:6333"
+  QDRANT_COLLECTION: "sophia_memory_prod"
+  QDRANT_TIMEOUT: "30"
+  
+  # Voice Configuration
+  TTS_PROVIDER: "elevenlabs"
+  STT_PROVIDER: "whisper"
+  
+  # Feature Flags
+  FEATURE_VOICE_ENABLED: "true"
+  FEATURE_RESEARCH_ENABLED: "true"
+  FEATURE_CODE_GENERATION: "true"
+  FEATURE_MEMORY_ENABLED: "true"
+  FEATURE_TELEMETRY_ENABLED: "true"
+  
+  # Security
+  CORS_ORIGINS: "https://www.sophia-intel.ai,https://sophia-intel.ai"
+  
+  # Production Guardrails
+  MOCK_SERVICES: "false"
+  MOCK_EMBEDDINGS: "false"
+  ALLOW_HASH_EMBEDDINGS: "false"
+  
+  # GitHub Configuration
+  GITHUB_ORG: "ai-cherry"
+  GITHUB_REPO: "sophia-intel"
+
+# Secret configuration (references to K8s secrets)
+secrets:
+  # Main secrets from GitHub Organization Secrets
+  name: sophia-secrets
+  keys:
+    - OPENROUTER_API_KEY
+    - OPENAI_API_KEY
+    - ELEVENLABS_API_KEY
+    - QDRANT_API_KEY
+    - DATABASE_URL
+    - REDIS_URL
+    - GITHUB_PAT
+    - BRIGHTDATA_API_KEY
+    - NOTION_API_KEY
+    - JWT_SECRET_KEY
+
+# Ingress configuration
+ingress:
+  enabled: true
+  className: "kong"
+  annotations:
+    kubernetes.io/ingress.class: kong
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    konghq.com/strip-path: "true"
+    konghq.com/preserve-host: "true"
+  hosts:
+    - host: www.sophia-intel.ai
+      paths:
+        - path: /api
+          pathType: Prefix
+          service: sophia-api
+          port: 5000
+        - path: /
+          pathType: Prefix
+          service: sophia-dashboard
+          port: 3000
+    - host: api.sophia-intel.ai
+      paths:
+        - path: /
+          pathType: Prefix
+          service: sophia-api
+          port: 5000
+  tls:
+    - secretName: sophia-intel-tls
+      hosts:
+        - www.sophia-intel.ai
+        - api.sophia-intel.ai
+
+# Persistence (for logs, cache, etc.)
+persistence:
+  enabled: true
+  storageClass: ""
+  accessMode: ReadWriteOnce
+  size: 10Gi
+
+# ServiceAccount
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+# Pod Security Context
+podSecurityContext:
+  fsGroup: 2000
+  runAsNonRoot: true
+  runAsUser: 1000
+
+# Security Context
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1000
+
+# Node selection
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+# Monitoring and observability
+monitoring:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    interval: 30s
+    scrapeTimeout: 10s
+  
+  prometheusRule:
+    enabled: true
+    rules:
+      - alert: SophiaAPIDown
+        expr: up{job="sophia-api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "SOPHIA API is down"
+      
+      - alert: SophiaHighErrorRate
+        expr: rate(api_requests_total{status=~"5.."}[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High error rate in SOPHIA API"
+
+# External dependencies
+dependencies:
+  qdrant:
+    enabled: true
+    image: qdrant/qdrant:latest
+    persistence:
+      enabled: true
+      size: 20Gi
+    resources:
+      limits:
+        cpu: 2000m
+        memory: 4Gi
+      requests:
+        cpu: 1000m
+        memory: 2Gi
+  
+  redis:
+    enabled: true
+    image: redis:7-alpine
+    persistence:
+      enabled: true
+      size: 5Gi
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+

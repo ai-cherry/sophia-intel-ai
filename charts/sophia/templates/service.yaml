@@ -1,0 +1,77 @@
+{{/*
+SOPHIA Intel API Service
+*/}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "sophia.fullname" . }}-api
+  labels:
+    {{- include "sophia.labels" . | nindent 4 }}
+    app.kubernetes.io/component: api
+  {{- with .Values.api.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.api.service.type }}
+  ports:
+    - port: {{ .Values.api.service.port }}
+      targetPort: {{ .Values.api.service.targetPort }}
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "sophia.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: api
+
+---
+{{/*
+SOPHIA Intel Dashboard Service
+*/}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "sophia.fullname" . }}-dashboard
+  labels:
+    {{- include "sophia.labels" . | nindent 4 }}
+    app.kubernetes.io/component: dashboard
+  {{- with .Values.dashboard.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.dashboard.service.type }}
+  ports:
+    - port: {{ .Values.dashboard.service.port }}
+      targetPort: {{ .Values.dashboard.service.targetPort }}
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "sophia.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: dashboard
+
+{{/*
+MCP Services
+*/}}
+{{- range $service, $config := .Values.mcpServices }}
+{{- if $config.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "sophia.fullname" $ }}-mcp-{{ $service }}
+  labels:
+    {{- include "sophia.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: mcp-{{ $service }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ $config.service.port }}
+      targetPort: {{ $config.service.port }}
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "sophia.selectorLabels" $ | nindent 4 }}
+    app.kubernetes.io/component: mcp-{{ $service }}
+{{- end }}
+{{- end }}
+

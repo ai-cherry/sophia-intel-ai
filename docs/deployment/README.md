@@ -379,3 +379,173 @@ pulumi stack import < stack_backup.json
 - [Dependency Management](../dependency_management.md)
 - [Estuary Flow Integration](../estuary_flow_integration.md)
 
+
+
+## Enterprise Infrastructure Updates (v2.0)
+
+### Recent Infrastructure Improvements
+
+The Sophia Intel platform has been upgraded with enterprise-grade infrastructure improvements:
+
+#### Service Consolidation and Refactoring
+
+1. **Frontend Consolidation**
+   - Removed duplicate `apps/interface` directory
+   - Consolidated to single React frontend: `apps/sophia-dashboard/sophia-dashboard-frontend`
+   - Fixed dependency conflicts (date-fns version)
+   - Added production-ready Dockerfile with Nginx
+
+2. **MCP Services Consolidation**
+   - Removed duplicate MCP server directories
+   - Consolidated all MCP services under `apps/mcp-services/`
+   - Standardized Docker configurations
+
+3. **Enhanced Security**
+   - Hardened authentication in dashboard backend
+   - Added production token validation
+   - Improved CORS configuration
+   - Added missing `reset_conversation` endpoint
+
+#### New Docker Configurations
+
+All services now have production-ready Dockerfiles:
+
+```bash
+# API Gateway (FastAPI + Uvicorn)
+apps/api-gateway/Dockerfile
+
+# Dashboard Backend (Flask + Gunicorn)  
+apps/sophia-dashboard/sophia-dashboard-backend/Dockerfile
+
+# Dashboard Frontend (React + Nginx)
+apps/sophia-dashboard/sophia-dashboard-frontend/Dockerfile
+
+# MCP Services (Python + Gunicorn)
+apps/mcp-services/embedding-mcp-server/Dockerfile
+```
+
+#### Requirements Files Added
+
+Missing requirements.txt files have been created:
+
+- `apps/api-gateway/requirements.txt`
+- `apps/api/requirements.txt`
+- Updated `apps/sophia-dashboard/sophia-dashboard-backend/requirements.txt`
+
+#### Pulumi Infrastructure Enhancements
+
+The Pulumi infrastructure has been enhanced with:
+
+1. **DNS Management**
+   - Automated DNS record creation for all subdomains
+   - TLS certificate management
+   - Load balancer configuration (IP: 192.222.58.232)
+
+2. **Application Deployment**
+   - Automated service deployment scripts
+   - Health check configurations
+   - Monitoring setup
+
+3. **Secrets Management**
+   - Integration with GitHub Secrets
+   - Secure environment variable injection
+   - Production-ready secret handling
+
+#### Service Endpoints (Updated)
+
+After the enterprise infrastructure deployment:
+
+- **Main Application**: https://app.sophia-intel.ai
+- **API Gateway**: https://api.sophia-intel.ai  
+- **Root Domain**: https://www.sophia-intel.ai
+- **Load Balancer**: http://192.222.58.232
+
+#### GitHub Secrets Configuration
+
+The following secrets have been configured in the GitHub repository:
+
+- `LAMBDA_API_KEY`: Lambda Labs API access
+- `DEPLOYMENT_PAT`: GitHub Personal Access Token (renamed from GITHUB_PAT due to naming restrictions)
+- `DNSIMPLE_API_KEY`: DNS management
+- `OPENROUTER_API_KEY`: AI model access
+- `PULUMI_ACCESS_TOKEN`: Infrastructure deployment
+
+#### Deployment Validation
+
+To validate the enterprise deployment:
+
+```bash
+# Check Pulumi stack status
+cd infra
+pulumi stack ls
+pulumi stack --show-name
+
+# Verify DNS configuration
+nslookup api.sophia-intel.ai
+nslookup app.sophia-intel.ai
+
+# Test service endpoints
+curl -v https://api.sophia-intel.ai/health
+curl -v https://app.sophia-intel.ai
+
+# Check load balancer directly
+curl -v http://192.222.58.232
+```
+
+#### Migration Notes
+
+When upgrading from v1.0 to v2.0:
+
+1. **Frontend Migration**
+   - The minimal `apps/interface` has been removed
+   - Use `apps/sophia-dashboard/sophia-dashboard-frontend` for all frontend needs
+   - Update any references to the old interface
+
+2. **MCP Services Migration**
+   - Individual MCP server directories have been consolidated
+   - Update any deployment scripts to use `apps/mcp-services/`
+
+3. **Authentication Updates**
+   - `DASHBOARD_API_TOKEN` is now required in production
+   - Update environment configurations accordingly
+
+4. **Docker Updates**
+   - All services now use production-ready Dockerfiles
+   - Update CI/CD pipelines to use new Docker configurations
+
+#### Troubleshooting Enterprise Infrastructure
+
+**DNS Issues**
+```bash
+# Check DNS propagation
+dig api.sophia-intel.ai
+dig app.sophia-intel.ai
+
+# Verify DNSimple configuration
+# Check Pulumi DNS outputs
+pulumi stack output dns_records
+```
+
+**Certificate Issues**
+```bash
+# Check TLS certificate status
+openssl s_client -connect api.sophia-intel.ai:443 -servername api.sophia-intel.ai
+
+# Verify cert-manager configuration
+kubectl get certificates -n sophia-intel
+```
+
+**Service Deployment Issues**
+```bash
+# Check Pulumi deployment status
+pulumi stack output infrastructure_status
+
+# View deployment logs
+pulumi logs --follow
+
+# Check application deployment
+pulumi stack output application_deployment
+```
+
+This enterprise infrastructure provides a robust, scalable, and maintainable foundation for the Sophia Intel platform with proper containerization, infrastructure as code, and automated deployment capabilities.
+

@@ -48,13 +48,14 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 # Add request middleware (must be first)
 app.add_middleware(RequestMiddleware)
 
-# CORS middleware
+# CORS middleware with production security
 app.add_middleware(
     CORSMiddleware,
     allow_origins=config.cors_origins,
-    allow_credentials=True,
+    allow_credentials=config.cors_allow_credentials,
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
+    max_age=config.cors_max_age,
 )
 
 # Include routers

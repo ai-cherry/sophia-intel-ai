@@ -97,7 +97,7 @@ echo "Database services configured successfully"
         """
         
         self.database_services = local.Command(
-            f"{name}-database-services",
+            "sophia-database-services",
             create=db_deployment_script,
             opts=ResourceOptions(parent=self)
         )
@@ -170,7 +170,7 @@ echo "AI services configured successfully"
         """
         
         self.ai_services = local.Command(
-            f"{name}-ai-services",
+            "sophia-ai-services",
             create=ai_deployment_script,
             opts=ResourceOptions(parent=self, depends_on=[self.database_services])
         )
@@ -217,7 +217,7 @@ echo "Application should be accessible at configured domains"
         """
         
         self.web_application = local.Command(
-            f"{name}-web-app",
+            "sophia-web-app",
             create=web_deployment_script,
             opts=ResourceOptions(parent=self, depends_on=[self.ai_services])
         )
@@ -277,7 +277,7 @@ echo "Monitoring services configured successfully"
         """
         
         self.monitoring = local.Command(
-            f"{name}-monitoring",
+            "sophia-monitoring",
             create=monitoring_deployment_script,
             opts=ResourceOptions(parent=self, depends_on=[self.web_application])
         )

@@ -19,6 +19,8 @@ class Config(BaseSettings):
     api_host: str = Field(default="0.0.0.0", description="API host")
     api_port: int = Field(default=8000, description="API port")
     cors_origins: List[str] = Field(default=["http://localhost:5173"], description="CORS origins")
+    cors_allow_credentials: bool = Field(default=True, description="Allow CORS credentials")
+    cors_max_age: int = Field(default=600, description="CORS preflight cache time in seconds")
     
     # OpenRouter (required in production)
     openrouter_api_key: str = Field(default="", description="OpenRouter API key")

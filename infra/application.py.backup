@@ -53,6 +53,10 @@ class SophiaApplication(ComponentResource):
                 'enabled': self.secrets.get('DATABASE_URL') is not None,
                 'url': self.secrets.get('DATABASE_URL')
             },
+            'estuary': {
+                'enabled': self.secrets.get('ESTUARY_ACCESS_TOKEN') is not None,
+                'token': self.secrets.get('ESTUARY_ACCESS_TOKEN')
+            }
         }
         
         # Create database services deployment script

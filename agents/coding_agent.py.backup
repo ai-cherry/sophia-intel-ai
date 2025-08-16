@@ -56,13 +56,13 @@ class CodingAgent(BaseAgent):
             model=OpenAIChat(
                 id="gpt-4o",
                 api_key=settings.OPENROUTER_API_KEY,
-                base_url=("https://openrouter.ai/api/v1" if settings.OPENROUTER_API_KEY else None),
+                base_url=("https://api.openrouter.ai/v1" if settings.openrouter_API_KEY else None),
                 extra_headers=(
                     {
                         "X-ROUTER-TARGET": "openrouter",
-                        "X-openrouter-API-KEY": settings.OPENROUTER_API_KEY,
+                        "X-openrouter-API-KEY": settings.openrouter_API_KEY,
                     }
-                    if settings.OPENROUTER_API_KEY
+                    if settings.openrouter_API_KEY
                     else {}
                 ),
             ),

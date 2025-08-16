@@ -24,6 +24,10 @@ class ChatRequest(BaseModel):
     session_id: Optional[str] = None
     use_context: bool = True
     stream: bool = True
+    # Feature toggle flags
+    web_access: bool = False
+    deep_research: bool = False
+    training: bool = False
 
 
 class ChatProxy:
@@ -75,6 +79,9 @@ class ChatProxy:
                     "session_id": session_id,
                     "use_context": request.use_context,
                     "stream": request.stream,
+                    "web_access": request.web_access,
+                    "deep_research": request.deep_research,
+                    "training": request.training,
                     "metadata": {"source": "dashboard_chat", "timestamp": asyncio.get_event_loop().time()},
                 }
 

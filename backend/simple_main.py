@@ -28,6 +28,10 @@ class ChatMessage(BaseModel):
     session_id: Optional[str] = None
     model: Optional[str] = None
     temperature: float = 0.7
+    # Feature toggle flags
+    web_access: bool = False
+    deep_research: bool = False
+    training: bool = False
 
 
 class ChatResponse(BaseModel):
@@ -144,11 +148,25 @@ async def chat_with_sophia(message: ChatMessage):
     try:
         client = get_lambda_client()
         
-        # Build context-aware messages
+        # Build context-aware messages with feature flags
+        system_content = f"You are SOPHIA, an advanced AI assistant created by the SOPHIA Intel team. You are helpful, accurate, and engaging. You have access to state-of-the-art AI models through Lambda Inference API. You are currently helping user {message.user_id}."
+        
+        # Add feature flag context
+        enabled_features = []
+        if message.web_access:
+            enabled_features.append("web search and real-time information access")
+        if message.deep_research:
+            enabled_features.append("multi-step research and analysis capabilities")
+        if message.training:
+            enabled_features.append("training mode for knowledge capture and learning")
+            
+        if enabled_features:
+            system_content += f" Currently enabled features: {', '.join(enabled_features)}."
+        
         messages = [
             {
                 "role": "system",
-                "content": f"You are SOPHIA, an advanced AI assistant created by the SOPHIA Intel team. You are helpful, accurate, and engaging. You have access to state-of-the-art AI models through Lambda Inference API. You are currently helping user {message.user_id}."
+                "content": system_content
             },
             {
                 "role": "user",

@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Unified Chat Interface with Feature Toggles** - Consolidated chat and web research into single interface
+  - Web Access toggle for real-time information and web search
+  - Deep Research toggle for multi-step analysis capabilities  
+  - Training Mode toggle for knowledge capture and learning
+  - Smart status display showing active features
+  - Contextual tooltips for feature guidance
+- **Enhanced Backend API** - Updated chat endpoints to handle feature toggle flags
+  - Feature flags passed to Lambda inference API
+  - Context-aware system messages based on enabled features
+  - Backward compatible with existing chat functionality
+
+### Changed
+- **Simplified Navigation** - Reduced main tabs from 6 to 5 by consolidating chat functionality
+- **Improved User Experience** - Single entry point for all chat-related features
+- **Cleaner Codebase** - Removed duplicate WebResearchPanel component
+
+### Removed
+- **Web Research Tab** - Functionality integrated into unified chat interface
+- **Redundant Components** - Cleaned up unused imports and duplicate code
+
+### Technical
+- **Frontend**: React components with Radix UI toggles and visual feedback
+- **Backend**: Updated Pydantic models and FastAPI endpoints
+- **Build**: Verified successful compilation with 2,281 modules transformed
+- **Documentation**: Comprehensive implementation guide and user documentation
+
 ## [1.1.0] - 2025-08-16
 
 ### Added

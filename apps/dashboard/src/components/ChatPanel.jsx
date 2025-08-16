@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button.jsx";
+import { Toggle } from "@/components/ui/toggle.jsx";
 import {
   Card,
   CardContent,
@@ -19,6 +20,9 @@ import {
   Loader2,
   RefreshCw,
   AlertCircle,
+  Globe,
+  Search,
+  Sparkles,
 } from "lucide-react";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
@@ -31,6 +35,11 @@ export function ChatPanel() {
   const [isConnected, setIsConnected] = useState(true);
   const [error, setError] = useState(null);
   const [streamingMessage, setStreamingMessage] = useState("");
+  
+  // Feature toggle states
+  const [webAccess, setWebAccess] = useState(false);
+  const [deepResearch, setDeepResearch] = useState(false);
+  const [trainingMode, setTrainingMode] = useState(false);
 
   const messagesEndRef = useRef(null);
   const eventSourceRef = useRef(null);
@@ -110,7 +119,11 @@ export function ChatPanel() {
           user_id: "dashboard_user",
           session_id: sessionId,
           model: "llama-4-maverick-17b-128e-instruct-fp8",
-          temperature: 0.7
+          temperature: 0.7,
+          // Feature toggle flags
+          web_access: webAccess,
+          deep_research: deepResearch,
+          training: trainingMode
         }),
       });
 
@@ -218,6 +231,46 @@ export function ChatPanel() {
           </Button>
         </div>
       </CardHeader>
+
+      {/* Feature Toggle Bar */}
+      <div className="flex items-center gap-2 px-6 py-3 border-b bg-gray-50/50">
+        <Toggle
+          pressed={webAccess}
+          onPressedChange={setWebAccess}
+          className="flex items-center gap-2 px-3 py-2 rounded-md text-sm data-[state=on]:bg-blue-100 data-[state=on]:text-blue-700 hover:bg-gray-100"
+          title="Enable web search and real-time information access"
+        >
+          <Globe size={14} />
+          <span>Web</span>
+        </Toggle>
+        <Toggle
+          pressed={deepResearch}
+          onPressedChange={setDeepResearch}
+          className="flex items-center gap-2 px-3 py-2 rounded-md text-sm data-[state=on]:bg-green-100 data-[state=on]:text-green-700 hover:bg-gray-100"
+          title="Enable multi-step research and analysis"
+        >
+          <Search size={14} />
+          <span>Deep</span>
+        </Toggle>
+        <Toggle
+          pressed={trainingMode}
+          onPressedChange={setTrainingMode}
+          className="flex items-center gap-2 px-3 py-2 rounded-md text-sm data-[state=on]:bg-purple-100 data-[state=on]:text-purple-700 hover:bg-gray-100"
+          title="Enable training mode for knowledge capture"
+        >
+          <Sparkles size={14} />
+          <span>Train</span>
+        </Toggle>
+        {(webAccess || deepResearch || trainingMode) && (
+          <div className="ml-auto text-xs text-muted-foreground">
+            {[
+              webAccess && "Web Access",
+              deepResearch && "Deep Research", 
+              trainingMode && "Training Mode"
+            ].filter(Boolean).join(" • ")} enabled
+          </div>
+        )}
+      </div>
 
       <CardContent className="flex-1 flex flex-col space-y-4">
         {error && (

@@ -42,7 +42,6 @@ import {
   Bar,
 } from "recharts";
 import { ChatPanel } from "@/components/ChatPanel.jsx";
-import { WebResearchPanel } from "@/components/WebResearchPanel.jsx";
 import { KnowledgePanel } from "@/components/KnowledgePanel.jsx";
 import "./App.css";
 
@@ -198,12 +197,11 @@ function App() {
         )}
 
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="services">MCP Services</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
-            <TabsTrigger value="chat">Chat Interface</TabsTrigger>
-            <TabsTrigger value="research">Web Research</TabsTrigger>
+            <TabsTrigger value="chat">Chat</TabsTrigger>
             <TabsTrigger value="knowledge">Knowledge Base</TabsTrigger>
           </TabsList>
 
@@ -416,13 +414,6 @@ function App() {
           <TabsContent value="chat" className="space-y-6">
             <div className="h-[600px]">
               <ChatPanel />
-            </div>
-          </TabsContent>
-
-          {/* Web Research Tab */}
-          <TabsContent value="research" className="space-y-6">
-            <div className="h-[600px]">
-              <WebResearchPanel />
             </div>
           </TabsContent>
 

@@ -90,6 +90,7 @@ read_secret OPENROUTER_API_KEY "OPENROUTER_API_KEY (or another LLM key)"
 
 # LLM Keys - collect any that the user has
 [ -n "${OPENROUTER_API_KEY:-}" ] && esc env set sophia/dev environmentVariables.OPENROUTER_API_KEY "$OPENROUTER_API_KEY" --secret
+[ -n "${PORTKEY_API_KEY:-}" ] && esc env set sophia/dev environmentVariables.PORTKEY_API_KEY "$PORTKEY_API_KEY" --secret
 [ -n "${ANTHROPIC_API_KEY:-}" ] && esc env set sophia/dev environmentVariables.ANTHROPIC_API_KEY "$ANTHROPIC_API_KEY" --secret
 [ -n "${OPENAI_API_KEY:-}" ] && esc env set sophia/dev environmentVariables.OPENAI_API_KEY "$OPENAI_API_KEY" --secret
 [ -n "${DEEPSEEK_API_KEY:-}" ] && esc env set sophia/dev environmentVariables.DEEPSEEK_API_KEY "$DEEPSEEK_API_KEY" --secret

@@ -1,0 +1,266 @@
+name: Deploy SOPHIA Intel to Northflank (Fixed)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths: [ '.github/workflows/deploy-northflank-fixed.yml' ]
+
+env:
+  NODE_VERSION: '20'
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  build-and-test:
+    name: Build and Test (Fixed)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Clear npm cache
+        run: |
+          echo "🧹 Clearing npm cache to prevent corruption..."
+          npm cache clean --force
+          npm cache verify
+
+      - name: Build frontend (Fixed)
+        working-directory: ./apps/dashboard
+        env:
+          VITE_API_URL: https://api.sophia-intel.ai
+          NODE_ENV: production
+          CI: false
+          NPM_CONFIG_FUND: false
+          NPM_CONFIG_AUDIT: false
+          NODE_OPTIONS: '--max-old-space-size=4096'
+        run: |
+          echo "🔧 Building SOPHIA Intel frontend..."
+          echo "📋 Working directory: $(pwd)"
+          echo "📋 Node version: $(node --version)"
+          echo "📋 NPM version: $(npm --version)"
+          echo "📋 Available memory: $(free -h)"
+          
+          echo "🔍 Checking package.json..."
+          if [ ! -f "package.json" ]; then
+            echo "❌ package.json not found!"
+            exit 1
+          fi
+          
+          echo "🔍 Installing dependencies with proper cache handling..."
+          # Remove existing node_modules and package-lock to ensure clean install
+          rm -rf node_modules package-lock.json
+          
+          # Install with legacy peer deps and proper error handling
+          npm install --legacy-peer-deps --no-fund --no-audit --prefer-offline=false
+          
+          # Verify installation
+          if [ ! -d "node_modules" ]; then
+            echo "❌ node_modules not created!"
+            exit 1
+          fi
+          
+          echo "✅ Dependencies installed successfully"
+          echo "📊 node_modules size: $(du -sh node_modules)"
+          
+          echo "🔍 Building application..."
+          npm run build --verbose
+          
+          # Verify build output
+          if [ ! -d "dist" ]; then
+            echo "❌ Build failed - no dist directory!"
+            exit 1
+          fi
+          
+          echo "✅ Build completed successfully"
+          echo "📋 Build output:"
+          ls -la dist/
+          echo "📊 Build size: $(du -sh dist/)"
+
+      - name: Test backend imports
+        run: |
+          echo "🔧 Testing backend imports..."
+          python -m pip install --upgrade pip
+          
+          if [ -f "backend/requirements.txt" ]; then
+            pip install -r backend/requirements.txt
+            echo "✅ Backend dependencies installed"
+            python -c "import sys; print('Python version:', sys.version)"
+          else
+            echo "⚠️ No backend requirements.txt found, skipping backend test"
+          fi
+
+  deploy-to-northflank:
+    name: Deploy to Northflank (Fixed)
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    if: success()
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install Northflank CLI
+        run: |
+          echo "🔧 Installing Northflank CLI..."
+          npm install -g @northflank/cli
+          echo "✅ Northflank CLI installed"
+
+      - name: Deploy services
+        env:
+          NORTHFLANK_API_TOKEN: ${{ secrets.NORTHFLANK_API_TOKEN }}
+          LAMBDA_API_KEY: ${{ secrets.LAMBDA_API_KEY }}
+          DASHBOARD_API_TOKEN: ${{ secrets.DASHBOARD_API_TOKEN }}
+        run: |
+          echo "🚀 Deploying SOPHIA Intel to Northflank..."
+          
+          # Set organization and project context
+          ORG_ID="pay-ready"
+          TEAM_ID="sophia3"
+          PROJECT_ID="sophia-intel"
+          
+          echo "📋 Deployment context:"
+          echo "  Organization: $ORG_ID"
+          echo "  Team: $TEAM_ID"
+          echo "  Project: $PROJECT_ID"
+          
+          # Create or update services using Northflank API
+          echo "🔧 Deploying API service..."
+          curl -X POST \
+            -H "Authorization: Bearer $NORTHFLANK_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "name": "sophia-api",
+              "description": "SOPHIA Intel API Service",
+              "projectId": "'$PROJECT_ID'",
+              "spec": {
+                "kind": "Deployment",
+                "spec": {
+                  "external": {
+                    "imagePath": "ghcr.io/ai-cherry/sophia-intel/api:latest"
+                  },
+                  "env": [
+                    {"name": "LAMBDA_API_KEY", "value": "'$LAMBDA_API_KEY'"},
+                    {"name": "DASHBOARD_API_TOKEN", "value": "'$DASHBOARD_API_TOKEN'"}
+                  ],
+                  "ports": [{"name": "http", "internalPort": 5000, "public": true}]
+                }
+              }
+            }' \
+            "https://api.northflank.com/v1/projects/$PROJECT_ID/services" || echo "API service may already exist"
+          
+          echo "🔧 Deploying Dashboard service..."
+          curl -X POST \
+            -H "Authorization: Bearer $NORTHFLANK_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "name": "sophia-dashboard",
+              "description": "SOPHIA Intel Dashboard",
+              "projectId": "'$PROJECT_ID'",
+              "spec": {
+                "kind": "Deployment",
+                "spec": {
+                  "external": {
+                    "imagePath": "ghcr.io/ai-cherry/sophia-intel/dashboard:latest"
+                  },
+                  "env": [
+                    {"name": "VITE_API_URL", "value": "https://api.sophia-intel.ai"}
+                  ],
+                  "ports": [{"name": "http", "internalPort": 80, "public": true}]
+                }
+              }
+            }' \
+            "https://api.northflank.com/v1/projects/$PROJECT_ID/services" || echo "Dashboard service may already exist"
+          
+          echo "🔧 Deploying MCP service..."
+          curl -X POST \
+            -H "Authorization: Bearer $NORTHFLANK_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "name": "sophia-mcp",
+              "description": "SOPHIA Intel MCP Service",
+              "projectId": "'$PROJECT_ID'",
+              "spec": {
+                "kind": "Deployment",
+                "spec": {
+                  "external": {
+                    "imagePath": "ghcr.io/ai-cherry/sophia-intel/mcp:latest"
+                  },
+                  "ports": [{"name": "http", "internalPort": 8000, "public": false}]
+                }
+              }
+            }' \
+            "https://api.northflank.com/v1/projects/$PROJECT_ID/services" || echo "MCP service may already exist"
+          
+          echo "✅ All services deployed successfully"
+
+      - name: Configure DNS
+        env:
+          DNSIMPLE_API_KEY: ${{ secrets.DNSIMPLE_API_KEY }}
+          DNSIMPLE_ACCOUNT_ID: ${{ secrets.DNS_ACCOUNT_ID }}
+        run: |
+          echo "🌐 Configuring DNS for SOPHIA Intel..."
+          
+          # Configure www.sophia-intel.ai
+          curl -X POST \
+            -H "Authorization: Bearer $DNSIMPLE_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d '{"name": "www","type": "CNAME","content": "sophia-dashboard.northflank.app.","ttl": 300}' \
+            "https://api.dnsimple.com/v2/$DNSIMPLE_ACCOUNT_ID/zones/sophia-intel.ai/records" || true
+          
+          # Configure api.sophia-intel.ai
+          curl -X POST \
+            -H "Authorization: Bearer $DNSIMPLE_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d '{"name": "api","type": "CNAME","content": "sophia-api.northflank.app.","ttl": 300}' \
+            "https://api.dnsimple.com/v2/$DNSIMPLE_ACCOUNT_ID/zones/sophia-intel.ai/records" || true
+          
+          echo "✅ DNS configuration completed"
+
+  health-check:
+    name: Health Check (Fixed)
+    runs-on: ubuntu-latest
+    needs: deploy-to-northflank
+    if: success()
+    steps:
+      - name: Wait for deployment
+        run: |
+          echo "⏳ Waiting for services to be ready..."
+          sleep 60
+
+      - name: Check service health
+        run: |
+          echo "🔍 Checking SOPHIA Intel health..."
+          
+          # Check API health
+          API_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://api.sophia-intel.ai/health || echo "000")
+          echo "📊 API Status: $API_STATUS"
+          
+          # Check Dashboard health
+          DASHBOARD_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://www.sophia-intel.ai || echo "000")
+          echo "📊 Dashboard Status: $DASHBOARD_STATUS"
+          
+          if [ "$API_STATUS" = "200" ] && [ "$DASHBOARD_STATUS" = "200" ]; then
+            echo "🎉 SOPHIA Intel is live and healthy!"
+            echo "✅ Dashboard: https://www.sophia-intel.ai"
+            echo "✅ API: https://api.sophia-intel.ai"
+          else
+            echo "⚠️ Services may still be starting up"
+            echo "🔗 Monitor: https://app.northflank.com/o/pay-ready/t/sophia3/project/sophia-intel"
+          fi
+

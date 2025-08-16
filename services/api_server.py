@@ -4,19 +4,31 @@ from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_
 from fastapi.responses import Response
 from pydantic import BaseModel, Field
 from typing import Dict, Any, Optional
-from config.config import settings
+from services.api.speech_controller import router as speech_router
 from services.orchestrator import Orchestrator
+from services.common.env_schema import get_config
 
-app = FastAPI(title="Sophia Backend", version="0.1.0")
+# Load configuration
+config = get_config()
+
+app = FastAPI(
+    title="SOPHIA Intel API",
+    description="AI Command Center with Orchestration and Voice Capabilities", 
+    version="1.0.0"
+)
 
 # Configure CORS
+cors_origins = config.CORS_ORIGINS.split(",") if hasattr(config, 'CORS_ORIGINS') else ["*"]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:8080"],
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include routers
+app.include_router(speech_router)
 
 # Initialize orchestrator
 orchestrator = Orchestrator()
@@ -39,7 +51,18 @@ class OrchestrationRequest(BaseModel):
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "env": settings.ENVIRONMENT}
+    """Health check endpoint"""
+    return {
+        "status": "ok", 
+        "environment": config.ENV,
+        "features": {
+            "voice": config.FEATURE_VOICE_ENABLED,
+            "research": config.FEATURE_RESEARCH_ENABLED,
+            "code": config.FEATURE_CODE_GENERATION,
+            "memory": config.FEATURE_MEMORY_ENABLED
+        },
+        "orchestrator": orchestrator.get_stats()
+    }
 
 
 @app.get("/metrics")

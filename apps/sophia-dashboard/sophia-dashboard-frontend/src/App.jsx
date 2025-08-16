@@ -3,6 +3,7 @@ import Overview from './pages/Overview'
 import Swarm from './pages/Swarm'
 import Pipelines from './pages/Pipelines'
 import Models from './pages/Models'
+import VoiceCapture from './components/VoiceCapture'
 import './App.css'
 
 function App() {
@@ -52,10 +53,19 @@ function App() {
               ))}
             </div>
 
-            {/* Status Indicator */}
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-              <span className="text-white/60 text-sm">Live</span>
+            {/* Voice Capture */}
+            <div className="flex items-center gap-4">
+              <VoiceCapture 
+                onTranscription={(text) => console.log('Transcribed:', text)}
+                onResponse={(response) => console.log('Response:', response)}
+                className="scale-75"
+              />
+              
+              {/* Status Indicator */}
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                <span className="text-white/60 text-sm">Live</span>
+              </div>
             </div>
           </div>
         </div>

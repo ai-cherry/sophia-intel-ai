@@ -1,0 +1,121 @@
+name: 🚑 SOPHIA Intel Rescue Deploy (atomic + smoke)
+
+on:
+  workflow_dispatch:
+    inputs:
+      release:
+        description: 'Release name'
+        required: true
+        default: 'sophia'
+      namespace:
+        description: 'Kubernetes namespace'
+        required: true
+        default: 'sophia-intel'
+      imageTag:
+        description: 'Image tag to deploy'
+        required: false
+        default: 'latest'
+      ingressHost:
+        description: 'Ingress host (leave empty to use secret)'
+        required: false
+
+jobs:
+  rescue-deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'v1.28.0'
+
+    - name: Set up Helm
+      uses: azure/setup-helm@v3
+      with:
+        version: '3.12.0'
+
+    - name: Configure kubectl
+      run: |
+        echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > ~/.kube/config
+        kubectl cluster-info
+
+    - name: Refresh secrets
+      run: |
+        # Delete existing secret if it exists
+        kubectl delete secret sophia-secrets -n ${{ inputs.namespace }} --ignore-not-found=true
+        
+        # Create namespace if it doesn't exist
+        kubectl create namespace ${{ inputs.namespace }} --dry-run=client -o yaml | kubectl apply -f -
+        
+        # Create new secret with all required keys
+        kubectl create secret generic sophia-secrets -n ${{ inputs.namespace }} \
+          --from-literal=OPENROUTER_API_KEY="${{ secrets.OPENROUTER_API_KEY }}" \
+          --from-literal=QDRANT_API_KEY="${{ secrets.QDRANT_API_KEY }}" \
+          --from-literal=BRIGHTDATA_API_KEY="${{ secrets.BRIGHTDATA_API_KEY }}" \
+          --from-literal=GITHUB_PAT="${{ secrets.GITHUB_PAT }}" \
+          --from-literal=POSTGRES_URL="${{ secrets.POSTGRES_URL }}" \
+          --from-literal=OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}" \
+          --from-literal=ELEVENLABS_API_KEY="${{ secrets.ELEVENLABS_API_KEY }}"
+
+    - name: Deploy with Helm (atomic)
+      run: |
+        INGRESS_HOST="${{ inputs.ingressHost }}"
+        if [ -z "$INGRESS_HOST" ]; then
+          INGRESS_HOST="${{ secrets.INGRESS_HOST }}"
+        fi
+        
+        helm upgrade --install ${{ inputs.release }} ./infra/helm/sophia \
+          --namespace ${{ inputs.namespace }} \
+          --values ./infra/helm/sophia/values-prod.yaml \
+          --set api.image.tag=${{ inputs.imageTag }} \
+          --set interface.image.tag=${{ inputs.imageTag }} \
+          --set global.ingressHost="$INGRESS_HOST" \
+          --atomic \
+          --timeout 10m \
+          --wait
+
+    - name: Wait for rollout
+      run: |
+        kubectl rollout status deployment/sophia-api -n ${{ inputs.namespace }} --timeout=300s
+        kubectl rollout status deployment/sophia-interface -n ${{ inputs.namespace }} --timeout=300s
+
+    - name: Smoke tests (blocking)
+      run: |
+        INGRESS_HOST="${{ inputs.ingressHost }}"
+        if [ -z "$INGRESS_HOST" ]; then
+          INGRESS_HOST="${{ secrets.INGRESS_HOST }}"
+        fi
+        
+        echo "🧪 Running smoke tests against http://$INGRESS_HOST"
+        
+        # Test 1: Health check
+        echo "1. Testing health endpoint..."
+        curl -fsS "http://$INGRESS_HOST/health" | jq .
+        
+        # Test 2: Orchestration endpoint
+        echo "2. Testing orchestration endpoint..."
+        curl -fsS -X POST "http://$INGRESS_HOST/api/orchestration" \
+          -H "Content-Type: application/json" \
+          -d '{"request_type":"chat","payload":{"message":"SOPHIA status check"}}' | jq .
+        
+        # Test 3: Speech health
+        echo "3. Testing speech health endpoint..."
+        curl -fsS "http://$INGRESS_HOST/api/speech/health" | jq .
+        
+        echo "✅ All smoke tests passed!"
+
+    - name: Deployment summary
+      run: |
+        echo "## 🎉 Deployment Summary" >> $GITHUB_STEP_SUMMARY
+        echo "- **Release**: ${{ inputs.release }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Namespace**: ${{ inputs.namespace }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Image Tag**: ${{ inputs.imageTag }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Ingress Host**: ${{ inputs.ingressHost || secrets.INGRESS_HOST }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Status**: ✅ SUCCESS" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Endpoints:" >> $GITHUB_STEP_SUMMARY
+        echo "- Health: http://${{ inputs.ingressHost || secrets.INGRESS_HOST }}/health" >> $GITHUB_STEP_SUMMARY
+        echo "- API: http://${{ inputs.ingressHost || secrets.INGRESS_HOST }}/api/orchestration" >> $GITHUB_STEP_SUMMARY
+        echo "- Interface: http://${{ inputs.ingressHost || secrets.INGRESS_HOST }}/" >> $GITHUB_STEP_SUMMARY

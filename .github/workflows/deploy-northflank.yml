@@ -115,7 +115,7 @@ jobs:
       - name: Build frontend
         working-directory: ${{ steps.detect.outputs.FE_DIR }}
         env:
-          VITE_API_URL: ${{ env.VITE_API_URL || 'https://api.sophia-intel.ai' }}
+          VITE_API_URL: https://api.sophia-intel.ai
           NODE_ENV: production
         run: npm run build
 

@@ -1,0 +1,88 @@
+# SOPHIA Intel Production Values
+global:
+  namespace: sophia-intel
+  ingressHost: "104.171.202.107"
+  imageRegistry: "ghcr.io/scoobyjava/sophia-intel"
+
+api:
+  image:
+    repository: ghcr.io/scoobyjava/sophia-intel/api
+    tag: latest
+    pullPolicy: Always
+  
+  replicas: 2
+  
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "512Mi"
+    limits:
+      cpu: "1000m"
+      memory: "1Gi"
+  
+  service:
+    type: ClusterIP
+    port: 8000
+    targetPort: 8000
+  
+  env:
+    ENV: "production"
+    DEBUG: "false"
+    LOG_LEVEL: "info"
+    API_HOST: "0.0.0.0"
+    API_PORT: "8000"
+    CORS_ORIGINS: "http://104.171.202.107,https://104.171.202.107"
+
+interface:
+  image:
+    repository: ghcr.io/scoobyjava/sophia-intel/dashboard
+    tag: latest
+    pullPolicy: Always
+  
+  replicas: 2
+  
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "256Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+  
+  service:
+    type: ClusterIP
+    port: 80
+    targetPort: 5173
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, OPTIONS"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "Content-Type, Authorization"
+  
+  hosts:
+    - host: "104.171.202.107"
+      paths:
+        - path: /health
+          pathType: Prefix
+          service: sophia-api
+        - path: /api
+          pathType: Prefix
+          service: sophia-api
+        - path: /
+          pathType: Prefix
+          service: sophia-interface
+
+secrets:
+  name: sophia-secrets
+  data:
+    OPENROUTER_API_KEY: ""
+    QDRANT_API_KEY: ""
+    BRIGHTDATA_API_KEY: ""
+    GITHUB_PAT: ""
+    POSTGRES_URL: ""
+    OPENAI_API_KEY: ""
+    ELEVENLABS_API_KEY: ""

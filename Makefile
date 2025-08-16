@@ -1,13 +1,27 @@
-.PHONY: deps index swarm mcp
+.PHONY: help up down logs smoke clean build
 
-deps:
-	python -m pip install -U -r requirements.txt
+help: ## Show this help
+@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
-index:
-	python scripts/index_repo.py
+up: ## Start all services
+docker-compose up -d
+@echo "🚀 Services starting..."
+@echo "   API: http://localhost:8000"
+@echo "   UI:  http://localhost:5173"
 
-swarm:
-	python -m swarm.cli --task "$(task)"
+down: ## Stop all services
+docker-compose down
 
-mcp:
-	python mcp_servers/enhanced_unified_server.py --host 127.0.0.1 --port 8765
+logs: ## Show logs
+docker-compose logs -f
+
+smoke: ## Run smoke tests
+@echo "🧪 Running smoke tests..."
+@bash ops/smoke.sh
+
+clean: ## Clean up containers and volumes
+docker-compose down -v
+docker system prune -f
+
+build: ## Build all images
+docker-compose build --no-cache

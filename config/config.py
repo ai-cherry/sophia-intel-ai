@@ -1,7 +1,9 @@
 import os
 from typing import Optional
-from pydantic_settings import BaseSettings
+
 from pydantic import AnyHttpUrl
+from pydantic_settings import BaseSettings
+
 
 class Settings(BaseSettings):
     # MCP HTTP server (optional; stdio handled by VS Code)
@@ -30,7 +32,7 @@ class Settings(BaseSettings):
     OPENROUTER_API_KEY: str = os.getenv("OPENROUTER_API_KEY", "")
     LAMBDA_CLOUD_API_KEY: str = os.getenv("LAMBDA_CLOUD_API_KEY", "")
     GITHUB_PAT: str = os.getenv("GITHUB_PAT", "")
-    
+
     # Optional API Keys
     ANTHROPIC_API_KEY: str = os.getenv("ANTHROPIC_API_KEY", "")
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
@@ -39,5 +41,6 @@ class Settings(BaseSettings):
 
     class Config:
         env_file = ".env"
+
 
 settings = Settings()

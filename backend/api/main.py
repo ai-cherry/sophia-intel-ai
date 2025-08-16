@@ -1,9 +1,11 @@
 """
 Main API server for Sophia Intelligence services
 """
+
+from typing import Any, Dict
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from typing import Dict, Any
 
 # Import routers
 from backend.api.swarm_chat import router as swarm_chat_router
@@ -11,6 +13,7 @@ from backend.api.swarm_chat import router as swarm_chat_router
 # Import any existing routers
 try:
     from apps.api.routers.sales_router import router as sales_router
+
     has_sales_router = True
 except ImportError:
     has_sales_router = False
@@ -45,10 +48,7 @@ async def root() -> Dict[str, Any]:
     return {
         "name": "Sophia Intelligence API",
         "version": "1.0.0",
-        "services": {
-            "swarm_chat": "/swarm-chat",
-            "sales_router": "/sales" if has_sales_router else "not available"
-        }
+        "services": {"swarm_chat": "/swarm-chat", "sales_router": "/sales" if has_sales_router else "not available"},
     }
 
 
@@ -57,6 +57,8 @@ async def health_check() -> Dict[str, Any]:
     """Health check endpoint"""
     return {"status": "healthy"}
 
+
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run("backend.api.main:app", host="0.0.0.0", port=8001, reload=True)

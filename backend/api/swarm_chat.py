@@ -3,9 +3,10 @@ Swarm Chat API Integration
 Exposes Swarm chat functionality as an API endpoint
 """
 
+from typing import Any, Dict, Optional
+
 from fastapi import APIRouter, Body, HTTPException
 from pydantic import BaseModel
-from typing import Dict, Any, Optional
 
 # TODO: Replace with proper agent integration
 # from integrations.agent_chat import process_agent_message, reset_conversation
@@ -42,10 +43,7 @@ async def chat_with_swarm(request: SwarmChatRequest):
         response = {"response": "Agent integration pending", "metadata": {"status": "placeholder"}}
         return response
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error processing chat message: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error processing chat message: {str(e)}")
 
 
 @router.post("/reset")
@@ -57,7 +55,4 @@ async def reset_chat():
         result = reset_conversation()
         return result
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error resetting conversation: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error resetting conversation: {str(e)}")

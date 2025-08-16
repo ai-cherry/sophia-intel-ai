@@ -3,9 +3,10 @@ Test configuration for Enhanced MCP Server
 Provides minimal configuration for local testing without external dependencies
 """
 
-from pydantic import BaseModel
-from typing import Optional
 import os
+from typing import Optional
+
+from pydantic import BaseModel
 
 
 class TestSettings(BaseModel):
@@ -59,4 +60,3 @@ class TestSettings(BaseModel):
 
 # Create test settings instance
 settings = TestSettings()
-

@@ -9,6 +9,8 @@ on:
 
 env:
   NORTHFLANK_API_TOKEN: ${{ secrets.NORTHFLANK_API_TOKEN }}
+  ORGANIZATION: pay-ready
+  TEAM: sophia3
   PROJECT_ID: sophia-intel
 
 jobs:
@@ -163,7 +165,8 @@ jobs:
       - name: Update Dashboard Service
         run: |
           nf update service sophia-dashboard \
-            --project=sophia3 \
+            --team=sophia3 \
+            --project=sophia-intel \
             --env VITE_API_URL=https://api.sophia-intel.ai \
             --env NODE_ENV=production || echo "Dashboard service might not exist yet"
 
@@ -194,5 +197,5 @@ jobs:
           echo "📊 Status: Services deployed and starting up"
           echo ""
           echo "🔍 To check status manually:"
-          echo "nf get services --project sophia3"
+          echo "nf get services --team sophia3 --project sophia-intel"
 

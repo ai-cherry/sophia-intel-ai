@@ -1,0 +1,89 @@
+# SOPHIA Intel Production Configuration for Railway
+# Complete deployment specification for all components
+
+project:
+  name: sophia-intel-production
+  description: "SOPHIA Intel AI Command Center - Production Infrastructure"
+  
+services:
+  backend:
+    name: sophia-api
+    source:
+      repo: ai-cherry/sophia-intel
+      branch: main
+      root_directory: backend
+    build:
+      command: pip install -r requirements.txt
+      start_command: python main.py
+    environment:
+      PORT: 8000
+      PYTHONPATH: /app
+      NODE_ENV: production
+      LAMBDA_API_KEY: ${LAMBDA_API_KEY}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+    domains:
+      - api.sophia-intel.ai
+    health_check:
+      path: /health
+      timeout: 30
+      
+  frontend:
+    name: sophia-dashboard
+    source:
+      repo: ai-cherry/sophia-intel
+      branch: main
+      root_directory: apps/dashboard
+    build:
+      command: npm install --legacy-peer-deps && npm run build
+      start_command: npm run preview -- --host 0.0.0.0 --port $PORT
+    environment:
+      PORT: 3000
+      NODE_ENV: production
+      VITE_API_URL: https://api.sophia-intel.ai
+    domains:
+      - www.sophia-intel.ai
+    health_check:
+      path: /
+      timeout: 30
+
+databases:
+  postgres:
+    plugin: postgresql
+    name: sophia-postgres
+    
+  redis:
+    plugin: redis
+    name: sophia-redis
+    
+  qdrant:
+    plugin: qdrant
+    name: sophia-qdrant
+
+monitoring:
+  enabled: true
+  alerts:
+    - type: uptime
+      threshold: 99.9
+    - type: response_time
+      threshold: 2000ms
+    - type: error_rate
+      threshold: 5%
+
+backup:
+  enabled: true
+  schedule: "0 2 * * *"  # Daily at 2 AM
+  retention: 30  # days
+
+dns:
+  provider: dnsimple
+  domain: sophia-intel.ai
+  records:
+    - name: api
+      type: CNAME
+      value: ${BACKEND_URL}
+      ttl: 300
+    - name: www
+      type: CNAME
+      value: ${FRONTEND_URL}
+      ttl: 300
+

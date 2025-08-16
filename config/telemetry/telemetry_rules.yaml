@@ -1,0 +1,263 @@
+# Telemetry Rules Configuration for SOPHIA Intel
+# Defines alerting thresholds and monitoring rules for all services
+
+# Global settings
+global:
+  check_interval_minutes: 5
+  alert_cooldown_minutes: 30
+  default_severity: "warning"
+  enable_cost_tracking: true
+  enable_performance_tracking: true
+  enable_health_tracking: true
+
+# Service-specific rules and thresholds
+services:
+  # OpenRouter (Primary LLM Provider)
+  openrouter:
+    display_name: "OpenRouter AI"
+    category: "ai_inference"
+    cost_rules:
+      daily_spend_warning: 50.00
+      daily_spend_critical: 100.00
+      monthly_spend_warning: 1000.00
+      monthly_spend_critical: 2000.00
+      currency: "USD"
+    performance_rules:
+      avg_response_time_warning: 3000  # ms
+      avg_response_time_critical: 5000  # ms
+      error_rate_warning: 0.05  # 5%
+      error_rate_critical: 0.10  # 10%
+    health_rules:
+      uptime_warning: 0.99  # 99%
+      uptime_critical: 0.95  # 95%
+      
+  # Lambda Labs (Infrastructure Provider)
+  lambda_labs:
+    display_name: "Lambda Labs"
+    category: "infrastructure"
+    cost_rules:
+      daily_spend_warning: 30.00
+      daily_spend_critical: 60.00
+      monthly_spend_warning: 600.00
+      monthly_spend_critical: 1200.00
+      currency: "USD"
+    performance_rules:
+      instance_utilization_warning: 0.85  # 85%
+      instance_utilization_critical: 0.95  # 95%
+    health_rules:
+      instance_uptime_warning: 0.99
+      instance_uptime_critical: 0.95
+      
+  # BrightData (Web Scraping Provider)
+  brightdata:
+    display_name: "BrightData"
+    category: "data_ingestion"
+    cost_rules:
+      daily_spend_warning: 20.00
+      daily_spend_critical: 40.00
+      monthly_spend_warning: 400.00
+      monthly_spend_critical: 800.00
+      currency: "USD"
+    performance_rules:
+      success_rate_warning: 0.90  # 90%
+      success_rate_critical: 0.80  # 80%
+      avg_response_time_warning: 10000  # ms
+      avg_response_time_critical: 20000  # ms
+    health_rules:
+      proxy_availability_warning: 0.95
+      proxy_availability_critical: 0.90
+      
+  # Weaviate (AI-Native Vector Database)
+  weaviate:
+    display_name: "Weaviate Cloud"
+    category: "vector_database"
+    cost_rules:
+      daily_spend_warning: 15.00
+      daily_spend_critical: 30.00
+      monthly_spend_warning: 300.00
+      monthly_spend_critical: 600.00
+      currency: "USD"
+    performance_rules:
+      query_latency_warning: 500  # ms
+      query_latency_critical: 1000  # ms
+      storage_usage_warning: 0.80  # 80%
+      storage_usage_critical: 0.90  # 90%
+    health_rules:
+      cluster_health_warning: 0.99
+      cluster_health_critical: 0.95
+      
+  # Qdrant (Vector Database)
+  qdrant:
+    display_name: "Qdrant Cloud"
+    category: "vector_database"
+    cost_rules:
+      daily_spend_warning: 10.00
+      daily_spend_critical: 20.00
+      monthly_spend_warning: 200.00
+      monthly_spend_critical: 400.00
+      currency: "USD"
+    performance_rules:
+      search_latency_warning: 200  # ms
+      search_latency_critical: 500  # ms
+      memory_usage_warning: 0.80  # 80%
+      memory_usage_critical: 0.90  # 90%
+    health_rules:
+      service_availability_warning: 0.99
+      service_availability_critical: 0.95
+      
+  # Neon (PostgreSQL Database)
+  neon:
+    display_name: "Neon PostgreSQL"
+    category: "database"
+    cost_rules:
+      daily_spend_warning: 5.00
+      daily_spend_critical: 10.00
+      monthly_spend_warning: 100.00
+      monthly_spend_critical: 200.00
+      currency: "USD"
+    performance_rules:
+      connection_count_warning: 80  # connections
+      connection_count_critical: 95  # connections
+      query_latency_warning: 1000  # ms
+      query_latency_critical: 2000  # ms
+    health_rules:
+      database_availability_warning: 0.99
+      database_availability_critical: 0.95
+      
+  # DNSimple (DNS Management)
+  dnsimple:
+    display_name: "DNSimple"
+    category: "dns"
+    cost_rules:
+      monthly_spend_warning: 50.00
+      monthly_spend_critical: 100.00
+      currency: "USD"
+    performance_rules:
+      dns_resolution_time_warning: 100  # ms
+      dns_resolution_time_critical: 500  # ms
+    health_rules:
+      dns_uptime_warning: 0.999
+      dns_uptime_critical: 0.995
+
+# Composite rules (across multiple services)
+composite_rules:
+  total_daily_spend:
+    warning: 150.00
+    critical: 300.00
+    currency: "USD"
+    description: "Total daily spend across all services"
+    
+  total_monthly_spend:
+    warning: 3000.00
+    critical: 6000.00
+    currency: "USD"
+    description: "Total monthly spend across all services"
+    
+  overall_system_health:
+    warning: 0.95  # 95% of services healthy
+    critical: 0.90  # 90% of services healthy
+    description: "Percentage of services meeting health thresholds"
+
+# Alert routing and notification settings
+alerting:
+  channels:
+    slack:
+      enabled: true
+      webhook_url_env: "SLACK_WEBHOOK_URL"
+      channel: "#sophia-prod-alerts"
+      username: "SOPHIA Comptroller"
+      icon_emoji: ":warning:"
+      
+    email:
+      enabled: false  # Can be enabled later
+      smtp_server: ""
+      recipients: []
+      
+  severity_routing:
+    critical:
+      channels: ["slack"]
+      immediate: true
+      escalation_minutes: 15
+      
+    warning:
+      channels: ["slack"]
+      immediate: false
+      batch_minutes: 30
+      
+    info:
+      channels: []
+      immediate: false
+      batch_minutes: 60
+
+# Data retention and storage
+data_retention:
+  telemetry_data_days: 90
+  alert_history_days: 365
+  cost_data_days: 730  # 2 years for financial records
+  performance_data_days: 30
+
+# Integration settings
+integrations:
+  lambda_labs:
+    api_base: "https://cloud.lambdalabs.com/api/v1"
+    api_key_env: "LAMBDA_CLOUD_API_KEY"
+    endpoints:
+      instances: "/instances"
+      billing: "/billing"
+      
+  openrouter:
+    api_base: "https://openrouter.ai/api/v1"
+    api_key_env: "OPENROUTER_API_KEY"
+    endpoints:
+      usage: "/usage"
+      models: "/models"
+      
+  brightdata:
+    api_base: "https://brightdata.com/api"
+    api_key_env: "BRIGHTDATA_API_KEY"
+    endpoints:
+      usage: "/usage"
+      zones: "/zones"
+      
+  weaviate:
+    api_base_env: "WEAVIATE_REST_ENDPOINT"
+    api_key_env: "WEAVIATE_ADMIN_API_KEY"
+    endpoints:
+      meta: "/v1/meta"
+      nodes: "/v1/nodes"
+      
+  qdrant:
+    api_base: "https://your-cluster.qdrant.io"
+    api_key_env: "QDRANT_API_KEY"
+    endpoints:
+      cluster_info: "/cluster"
+      collections: "/collections"
+      
+  neon:
+    api_base: "https://console.neon.tech/api/v2"
+    api_key_env: "NEON_API_KEY"
+    endpoints:
+      projects: "/projects"
+      usage: "/consumption"
+      
+  dnsimple:
+    api_base: "https://api.dnsimple.com/v2"
+    api_key_env: "DNSIMPLE_API_KEY"
+    endpoints:
+      account: "/whoami"
+      domains: "/domains"
+
+# Monitoring and debugging
+monitoring:
+  enable_debug_logging: false
+  log_level: "INFO"
+  metrics_retention_hours: 24
+  health_check_timeout_seconds: 30
+  
+# Security and compliance
+security:
+  encrypt_sensitive_data: true
+  audit_log_enabled: true
+  api_rate_limiting: true
+  max_requests_per_minute: 100
+

@@ -1,0 +1,171 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: weaviate-config
+  namespace: sophia-intel
+data:
+  weaviate.conf.yaml: |
+    authentication:
+      anonymous_access:
+        enabled: false
+      api_key:
+        enabled: true
+        allowed_keys:
+          - VMKjGMQUnXQIDiFOciZZOhr7amBfCHMh7hNf
+        users:
+          - VMKjGMQUnXQIDiFOciZZOhr7amBfCHMh7hNf
+    authorization:
+      admin_list:
+        enabled: true
+        users:
+          - VMKjGMQUnXQIDiFOciZZOhr7amBfCHMh7hNf
+    query_defaults:
+      limit: 25
+    debug: false
+    log_level: "info"
+    persistence:
+      data_path: "/var/lib/weaviate"
+    cluster:
+      hostname: "weaviate"
+      data_bind_port: 7001
+      gossip_bind_port: 7000
+    grpc:
+      port: 50051
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: weaviate-storage
+  namespace: sophia-intel
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: weaviate
+  namespace: sophia-intel
+  labels:
+    app: weaviate
+    component: vector-database
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: weaviate
+  template:
+    metadata:
+      labels:
+        app: weaviate
+        component: vector-database
+    spec:
+      containers:
+      - name: weaviate
+        image: semitechnologies/weaviate:1.24.1
+        ports:
+        - containerPort: 8080
+          name: http
+        - containerPort: 50051
+          name: grpc
+        env:
+        - name: QUERY_DEFAULTS_LIMIT
+          value: "25"
+        - name: AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED
+          value: "false"
+        - name: AUTHENTICATION_APIKEY_ENABLED
+          value: "true"
+        - name: AUTHENTICATION_APIKEY_ALLOWED_KEYS
+          value: "VMKjGMQUnXQIDiFOciZZOhr7amBfCHMh7hNf"
+        - name: AUTHENTICATION_APIKEY_USERS
+          value: "VMKjGMQUnXQIDiFOciZZOhr7amBfCHMh7hNf"
+        - name: AUTHORIZATION_ADMINLIST_ENABLED
+          value: "true"
+        - name: AUTHORIZATION_ADMINLIST_USERS
+          value: "VMKjGMQUnXQIDiFOciZZOhr7amBfCHMh7hNf"
+        - name: PERSISTENCE_DATA_PATH
+          value: "/var/lib/weaviate"
+        - name: DEFAULT_VECTORIZER_MODULE
+          value: "text2vec-openai"
+        - name: ENABLE_MODULES
+          value: "text2vec-openai,generative-openai,qna-openai"
+        - name: CLUSTER_HOSTNAME
+          value: "weaviate"
+        - name: CLUSTER_GOSSIP_BIND_PORT
+          value: "7000"
+        - name: CLUSTER_DATA_BIND_PORT
+          value: "7001"
+        volumeMounts:
+        - name: weaviate-storage
+          mountPath: /var/lib/weaviate
+        - name: weaviate-config
+          mountPath: /weaviate.conf.yaml
+          subPath: weaviate.conf.yaml
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
+        livenessProbe:
+          httpGet:
+            path: /v1/.well-known/live
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /v1/.well-known/ready
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 5
+      volumes:
+      - name: weaviate-storage
+        persistentVolumeClaim:
+          claimName: weaviate-storage
+      - name: weaviate-config
+        configMap:
+          name: weaviate-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: weaviate
+  namespace: sophia-intel
+  labels:
+    app: weaviate
+spec:
+  selector:
+    app: weaviate
+  ports:
+  - port: 8080
+    targetPort: 8080
+    protocol: TCP
+    name: http
+  - port: 50051
+    targetPort: 50051
+    protocol: TCP
+    name: grpc
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: weaviate-grpc
+  namespace: sophia-intel
+  labels:
+    app: weaviate
+spec:
+  selector:
+    app: weaviate
+  ports:
+  - port: 50051
+    targetPort: 50051
+    protocol: TCP
+    name: grpc
+  type: ClusterIP
+

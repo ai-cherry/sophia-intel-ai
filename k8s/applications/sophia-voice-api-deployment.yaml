@@ -1,0 +1,175 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sophia-voice-api
+  namespace: sophia-intel
+  labels:
+    app: sophia-voice-api
+    component: voice-interface
+    version: v2.0
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sophia-voice-api
+  template:
+    metadata:
+      labels:
+        app: sophia-voice-api
+        component: voice-interface
+        version: v2.0
+    spec:
+      containers:
+      - name: sophia-voice-api
+        image: python:3.11-slim
+        ports:
+        - containerPort: 8001
+          name: http
+        env:
+        - name: ELEVENLABS_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: sophia-secrets-enhanced
+              key: elevenlabs-api-key
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: sophia-secrets-enhanced
+              key: openai-api-key
+        - name: OPENROUTER_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: sophia-secrets-enhanced
+              key: openrouter-api-key
+        - name: NOTION_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: sophia-secrets-enhanced
+              key: notion-api-key
+        - name: QDRANT_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: sophia-secrets-enhanced
+              key: qdrant-api-key
+        - name: QDRANT_URL
+          valueFrom:
+            secretKeyRef:
+              name: sophia-secrets-enhanced
+              key: qdrant-url
+        - name: WEAVIATE_ADMIN_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: sophia-secrets-enhanced
+              key: weaviate-admin-api-key
+        - name: BRIGHTDATA_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: sophia-secrets-enhanced
+              key: brightdata-api-key
+        - name: NEON_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: sophia-secrets-enhanced
+              key: neon-api-key
+        command: ["/bin/bash"]
+        args:
+        - -c
+        - |
+          echo "🎤 Starting SOPHIA Voice API v2.0..."
+          
+          # Install system dependencies
+          apt-get update -qq
+          apt-get install -y --no-install-recommends \
+            git curl wget build-essential \
+            ffmpeg libsm6 libxext6 libfontconfig1 libxrender1
+          
+          # Clone repository
+          cd /tmp
+          git clone https://github.com/ai-cherry/sophia-intel.git
+          cd sophia-intel
+          
+          # Install Python dependencies
+          pip install --no-cache-dir \
+            fastapi uvicorn \
+            websockets aiohttp aiofiles \
+            openai requests \
+            python-multipart \
+            numpy pandas
+          
+          # Set Python path
+          export PYTHONPATH="/tmp/sophia-intel:$PYTHONPATH"
+          
+          # Start voice API server
+          echo "✅ Starting SOPHIA Voice API on port 8001..."
+          cd /tmp/sophia-intel
+          python apps/sophia-api/voice_command_api.py
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8001
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8001
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+      restartPolicy: Always
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sophia-voice-api-service
+  namespace: sophia-intel
+  labels:
+    app: sophia-voice-api
+    component: voice-interface
+spec:
+  selector:
+    app: sophia-voice-api
+  ports:
+  - name: http
+    port: 8001
+    targetPort: 8001
+    protocol: TCP
+  type: ClusterIP
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: sophia-voice-api-ingress
+  namespace: sophia-intel
+  annotations:
+    kubernetes.io/ingress.class: kong
+    konghq.com/strip-path: "true"
+    konghq.com/preserve-host: "true"
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  tls:
+  - hosts:
+    - api.sophia-intel.ai
+    secretName: sophia-voice-api-tls
+  rules:
+  - host: api.sophia-intel.ai
+    http:
+      paths:
+      - path: /voice
+        pathType: Prefix
+        backend:
+          service:
+            name: sophia-voice-api-service
+            port:
+              number: 8001
+

@@ -1,0 +1,160 @@
+# Embedding Models Configuration for SOPHIA Intel
+# Vendor-independent, pluggable embedding architecture
+
+# Default model - best balance of performance and cost
+default_model: "nomic-embed-text-v1.5"
+
+# Provider configurations
+providers:
+  openrouter:
+    name: "OpenRouter"
+    api_key_env: "OPENROUTER_API_KEY"
+    base_url: "https://openrouter.ai/api/v1"
+    timeout: 30
+    retry_attempts: 3
+    batch_size: 100
+    
+  lambda_inference:
+    name: "Lambda Inference API"
+    api_key_env: "LAMBDA_CLOUD_API_KEY"
+    base_url: "https://api.lambda.ai/v1"
+    timeout: 30
+    retry_attempts: 3
+    batch_size: 50
+    
+  openai:
+    name: "OpenAI (Fallback Only)"
+    api_key_env: "OPENAI_API_KEY"
+    base_url: "https://api.openai.com/v1"
+    timeout: 30
+    retry_attempts: 3
+    batch_size: 100
+
+# Available embedding models
+embedding_models:
+  # PRIMARY: Best general-purpose model via OpenRouter
+  nomic-embed-text-v1.5:
+    provider: "openrouter"
+    model: "nomic-ai/nomic-embed-text-v1.5"
+    dimensions: 768
+    max_tokens: 8192
+    cost_per_million_tokens: 0.10
+    description: "Excellent general-purpose, high-performance embedding model"
+    use_cases: ["general", "search", "similarity", "clustering"]
+    quality_tier: "premium"
+    
+  # HIGH-QUALITY: For critical applications
+  openai-large-via-openrouter:
+    provider: "openrouter"
+    model: "openai/text-embedding-3-large"
+    dimensions: 3072
+    max_tokens: 8191
+    cost_per_million_tokens: 0.13
+    description: "High-quality OpenAI model via OpenRouter"
+    use_cases: ["critical", "high_precision", "foundational_knowledge"]
+    quality_tier: "premium"
+    
+  # COST-EFFECTIVE: For high-volume operations
+  openai-small-via-openrouter:
+    provider: "openrouter"
+    model: "openai/text-embedding-3-small"
+    dimensions: 1536
+    max_tokens: 8191
+    cost_per_million_tokens: 0.02
+    description: "Cost-effective OpenAI model via OpenRouter"
+    use_cases: ["bulk_processing", "chat_history", "general"]
+    quality_tier: "standard"
+    
+  # FALLBACK: Direct OpenAI (only if OpenRouter fails)
+  openai-fallback:
+    provider: "openai"
+    model: "text-embedding-3-small"
+    dimensions: 1536
+    max_tokens: 8191
+    cost_per_million_tokens: 0.02
+    description: "Direct OpenAI fallback (emergency use only)"
+    use_cases: ["fallback"]
+    quality_tier: "fallback"
+    
+  # FUTURE: Lambda Inference API models (when available)
+  # lambda-embed-v1:
+  #   provider: "lambda_inference"
+  #   model: "lambda-embed-v1"
+  #   dimensions: 1024
+  #   max_tokens: 4096
+  #   cost_per_million_tokens: 0.05
+  #   description: "Lambda Labs embedding model"
+  #   use_cases: ["cost_effective", "high_throughput"]
+
+# Intelligent routing rules
+routing_rules:
+  # Use case to model mapping
+  use_case_mappings:
+    general: "nomic-embed-text-v1.5"
+    search: "nomic-embed-text-v1.5"
+    similarity: "nomic-embed-text-v1.5"
+    clustering: "nomic-embed-text-v1.5"
+    foundational_knowledge: "openai-large-via-openrouter"
+    critical: "openai-large-via-openrouter"
+    high_precision: "openai-large-via-openrouter"
+    bulk_processing: "openai-small-via-openrouter"
+    chat_history: "openai-small-via-openrouter"
+    cost_effective: "openai-small-via-openrouter"
+    
+  # Fallback chain (in order of preference)
+  fallback_chain:
+    - "nomic-embed-text-v1.5"
+    - "openai-small-via-openrouter"
+    - "openai-large-via-openrouter"
+    - "openai-fallback"
+    
+  # Quality tier preferences
+  quality_tiers:
+    premium: ["nomic-embed-text-v1.5", "openai-large-via-openrouter"]
+    standard: ["openai-small-via-openrouter"]
+    fallback: ["openai-fallback"]
+
+# Global settings
+settings:
+  default_model: "nomic-embed-text-v1.5"
+  cache_embeddings: true
+  cache_ttl_hours: 24
+  max_batch_size: 100
+  enable_metrics: true
+  log_level: "INFO"
+  
+  # Cost optimization
+  cost_optimization:
+    enabled: true
+    max_cost_per_request: 0.01
+    prefer_cheaper_models: true
+    
+  # Performance settings
+  performance:
+    concurrent_requests: 10
+    request_timeout: 30
+    connection_pool_size: 20
+    enable_compression: true
+    
+  # Quality thresholds
+  quality_thresholds:
+    similarity_threshold: 0.7
+    clustering_threshold: 0.6
+    search_relevance_threshold: 0.5
+
+# Monitoring and alerting
+monitoring:
+  track_usage: true
+  track_costs: true
+  track_performance: true
+  alert_on_failures: true
+  alert_on_high_costs: true
+  
+# Strategic principles (documentation)
+principles:
+  vendor_independence: "Never lock into a single provider"
+  cost_optimization: "Always consider cost vs quality trade-offs"
+  performance_first: "Prioritize speed and reliability"
+  future_proofing: "Design for easy model swapping"
+  quality_assurance: "Maintain high standards for critical use cases"
+

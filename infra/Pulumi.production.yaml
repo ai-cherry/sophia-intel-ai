@@ -1,0 +1,40 @@
+# SOPHIA Intel Production Stack Configuration
+# This file contains non-sensitive configuration for the production environment
+# Sensitive values should be managed through Pulumi ESC
+
+config:
+  # Environment settings
+  sophia-intel:environment: production
+  sophia-intel:domain: sophia-intel.ai
+  sophia-intel:namespace: sophia-intel
+  sophia-intel:cluster_name: sophia-k3s
+  sophia-intel:log_level: INFO
+  
+  # Resource configuration
+  sophia-intel:replica_count: 2
+  sophia-intel:cpu_limit: 1000m
+  sophia-intel:memory_limit: 1Gi
+  
+  # Infrastructure settings
+  sophia-intel:provider: lambda-labs
+  sophia-intel:region: us-south-1
+  
+  # Kubernetes provider configuration
+  kubernetes:kubeconfig: /home/ubuntu/.kube/config
+  kubernetes:context: default
+  
+  # Monitoring and observability
+  sophia-intel:monitoring_enabled: true
+  sophia-intel:health_checks_enabled: true
+  sophia-intel:metrics_enabled: true
+  
+  # Security settings
+  sophia-intel:cors_enabled: true
+  sophia-intel:rate_limiting_enabled: true
+  sophia-intel:ssl_enabled: true
+  
+  # Backup and maintenance
+  sophia-intel:backup_enabled: true
+  sophia-intel:backup_schedule: "0 2 * * *"
+  sophia-intel:backup_retention_days: 30
+

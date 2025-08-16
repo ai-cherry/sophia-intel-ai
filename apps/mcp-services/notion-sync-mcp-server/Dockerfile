@@ -4,27 +4,26 @@ WORKDIR /app
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
-    curl \
-    git \
+    gcc \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements and install Python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the entire application
+# Copy application code
 COPY . .
 
-# Set environment variables
-ENV PYTHONPATH=/app
-ENV PORT=8080
+# Create non-root user
+RUN useradd --create-home --shell /bin/bash app && chown -R app:app /app
+USER app
 
 # Expose port
-EXPOSE 8080
+EXPOSE 5000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8080/health || exit 1
+    CMD curl -f http://localhost:5000/health || exit 1
 
-# Start the main SOPHIA API
-CMD ["python", "-m", "uvicorn", "apps.sophia-dashboard.sophia-dashboard-backend.app:app", "--host", "0.0.0.0", "--port", "8080"]
+# Run application
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "2", "--timeout", "60", "app:app"]

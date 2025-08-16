@@ -1,15 +1,8 @@
-name: sophia-intel-infrastructure
-runtime: nodejs
-description: Sophia Intel Infrastructure as Code - Complete AI Development Platform
+name: sophia-intel
+runtime: python
+description: SOPHIA Intel AI Platform - Production Kubernetes Deployment
 template:
   config:
     aws:region:
-      description: AWS region for resources
+      description: AWS region for deployment
       default: us-west-2
-    lambda:region:
-      description: Lambda Labs region
-      default: us-west-1
-    environment:
-      description: Deployment environment (dev/staging/prod)
-      default: dev
-

@@ -61,8 +61,8 @@ jobs:
           echo "✅ Backend requirements: $BE_REQ"
 
       - name: Install frontend dependencies
-        if: steps.detect.outputs.fe_dir != ''
-        working-directory: ${{ steps.detect.outputs.fe_dir }}
+        if: steps.detect.outputs.FE_DIR != ''
+        working-directory: ${{ steps.detect.outputs.FE_DIR }}
         run: |
           if [ -f "package-lock.json" ]; then
             npm ci --legacy-peer-deps
@@ -71,21 +71,21 @@ jobs:
           fi
 
       - name: Build frontend
-        if: steps.detect.outputs.fe_dir != ''
-        working-directory: ${{ steps.detect.outputs.fe_dir }}
+        if: steps.detect.outputs.FE_DIR != ''
+        working-directory: ${{ steps.detect.outputs.FE_DIR }}
         env:
           VITE_API_URL: https://api.sophia-intel.ai
           NODE_ENV: production
         run: npm run build
 
       - name: Install backend dependencies
-        if: steps.detect.outputs.be_req != ''
+        if: steps.detect.outputs.BE_REQ != ''
         run: |
           python -m pip install --upgrade pip
-          pip install -r ${{ steps.detect.outputs.be_req }}
+          pip install -r ${{ steps.detect.outputs.BE_REQ }}
 
       - name: Test backend imports
-        if: steps.detect.outputs.be_req != ''
+        if: steps.detect.outputs.BE_REQ != ''
         run: |
           echo "✅ Backend dependencies installed successfully"
           python -c "import sys; print('Python version:', sys.version)"

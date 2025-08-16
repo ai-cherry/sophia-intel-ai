@@ -1,0 +1,257 @@
+name: 🚀 Deploy SOPHIA Intel to Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_name:
+        description: 'Helm release name'
+        required: true
+        default: 'sophia'
+        type: string
+      namespace:
+        description: 'Kubernetes namespace'
+        required: true
+        default: 'sophia-intel'
+        type: string
+      image_tag:
+        description: 'Docker image tag'
+        required: true
+        default: 'latest'
+        type: string
+      ingress_host:
+        description: 'Ingress host'
+        required: true
+        default: '104.171.202.107'
+        type: string
+      force_deploy:
+        description: 'Force deployment (skip checks)'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: scoobyjava/sophia-intel
+
+jobs:
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    environment: production
+    
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: 🔐 Setup Kubernetes Config
+        run: |
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > ~/.kube/config
+          chmod 600 ~/.kube/config
+      
+      - name: 🛠️ Install Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: '3.12.0'
+      
+      - name: 🔍 Validate Environment
+        run: |
+          echo "🔍 Validating deployment environment..."
+          
+          # Check required secrets
+          REQUIRED_SECRETS=(
+            "KUBE_CONFIG"
+            "OPENROUTER_API_KEY"
+            "GITHUB_PAT"
+          )
+          
+          MISSING_SECRETS=()
+          for secret in "${REQUIRED_SECRETS[@]}"; do
+            if [ -z "${!secret}" ]; then
+              MISSING_SECRETS+=("$secret")
+            fi
+          done
+          
+          if [ ${#MISSING_SECRETS[@]} -ne 0 ]; then
+            echo "❌ Missing required secrets: ${MISSING_SECRETS[*]}"
+            exit 1
+          fi
+          
+          # Test Kubernetes connection
+          kubectl cluster-info --request-timeout=10s
+          kubectl get nodes
+          
+          echo "✅ Environment validation passed"
+        env:
+          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          GITHUB_PAT: ${{ secrets.GITHUB_PAT }}
+      
+      - name: 🔄 Refresh Kubernetes Secrets
+        run: |
+          echo "🔄 Refreshing Kubernetes secrets..."
+          
+          # Delete existing secret if it exists
+          kubectl delete secret sophia-secrets -n ${{ inputs.namespace }} --ignore-not-found=true
+          
+          # Create namespace if it doesn't exist
+          kubectl create namespace ${{ inputs.namespace }} --dry-run=client -o yaml | kubectl apply -f -
+          
+          # Create new secret with all required values
+          kubectl create secret generic sophia-secrets -n ${{ inputs.namespace }} \
+            --from-literal=OPENROUTER_API_KEY="${{ secrets.OPENROUTER_API_KEY }}" \
+            --from-literal=OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}" \
+            --from-literal=ELEVENLABS_API_KEY="${{ secrets.ELEVENLABS_API_KEY }}" \
+            --from-literal=QDRANT_API_KEY="${{ secrets.QDRANT_API_KEY }}" \
+            --from-literal=QDRANT_URL="${{ secrets.QDRANT_URL }}" \
+            --from-literal=BRIGHTDATA_API_KEY="${{ secrets.BRIGHTDATA_API_KEY }}" \
+            --from-literal=GITHUB_PAT="${{ secrets.GITHUB_PAT }}" \
+            --from-literal=POSTGRES_URL="${{ secrets.POSTGRES_URL }}" \
+            --from-literal=LAMBDA_API_KEY="${{ secrets.LAMBDA_API_KEY }}" \
+            --from-literal=ENV="production" \
+            --from-literal=LOG_LEVEL="info" \
+            --from-literal=API_HOST="0.0.0.0" \
+            --from-literal=API_PORT="8000" \
+            --from-literal=CORS_ORIGINS="https://www.sophia-intel.ai,http://${{ inputs.ingress_host }}" \
+            --from-literal=VITE_API_BASE="http://${{ inputs.ingress_host }}"
+          
+          echo "✅ Kubernetes secrets refreshed"
+      
+      - name: 🚀 Deploy with Helm (Atomic)
+        run: |
+          echo "🚀 Deploying SOPHIA Intel with Helm..."
+          
+          # Update values with runtime inputs
+          cat > /tmp/runtime-values.yaml << EOF
+          global:
+            environment: production
+            namespace: ${{ inputs.namespace }}
+            ingress:
+              host: ${{ inputs.ingress_host }}
+          
+          api:
+            image:
+              tag: ${{ inputs.image_tag }}
+          
+          dashboard:
+            image:
+              tag: ${{ inputs.image_tag }}
+          
+          ingress:
+            hosts:
+              - host: ${{ inputs.ingress_host }}
+                paths:
+                  - path: /api
+                    pathType: Prefix
+                    service:
+                      name: sophia-api
+                      port: 8000
+                  - path: /
+                    pathType: Prefix
+                    service:
+                      name: sophia-dashboard
+                      port: 5173
+          EOF
+          
+          # Deploy with atomic rollback on failure
+          helm upgrade --install ${{ inputs.release_name }} ./charts/sophia \
+            --namespace ${{ inputs.namespace }} \
+            --create-namespace \
+            --values charts/sophia/values-prod-locked.yaml \
+            --values /tmp/runtime-values.yaml \
+            --atomic \
+            --timeout 10m \
+            --wait \
+            --debug
+          
+          echo "✅ Helm deployment completed"
+      
+      - name: ⏳ Wait for Rollout
+        run: |
+          echo "⏳ Waiting for deployment rollout..."
+          
+          # Wait for API deployment
+          kubectl rollout status deployment/sophia-api -n ${{ inputs.namespace }} --timeout=300s
+          
+          # Wait for Dashboard deployment
+          kubectl rollout status deployment/sophia-dashboard -n ${{ inputs.namespace }} --timeout=300s
+          
+          echo "✅ All deployments rolled out successfully"
+      
+      - name: 🧪 Run Smoke Tests
+        run: |
+          echo "🧪 Running post-deployment smoke tests..."
+          
+          # Get service endpoints
+          API_ENDPOINT="http://${{ inputs.ingress_host }}"
+          
+          # Wait for services to be ready
+          sleep 30
+          
+          # Test health endpoint
+          echo "Testing health endpoint..."
+          HEALTH_RESPONSE=$(curl -s -w "%{http_code}" -o /tmp/health.json "$API_ENDPOINT/health" || echo "000")
+          
+          if [ "$HEALTH_RESPONSE" = "200" ]; then
+            echo "✅ Health check passed"
+            cat /tmp/health.json
+          else
+            echo "❌ Health check failed (HTTP $HEALTH_RESPONSE)"
+            kubectl get pods -n ${{ inputs.namespace }}
+            kubectl logs -l app=sophia-api -n ${{ inputs.namespace }} --tail=50
+            exit 1
+          fi
+          
+          # Test orchestration endpoint
+          echo "Testing orchestration endpoint..."
+          ORCH_RESPONSE=$(curl -s -w "%{http_code}" -o /tmp/orch.json -X POST "$API_ENDPOINT/api/orchestration" \
+            -H "Content-Type: application/json" \
+            -d '{"request_type":"health","payload":{}}' || echo "000")
+          
+          if [ "$ORCH_RESPONSE" = "200" ]; then
+            echo "✅ Orchestration endpoint working"
+            cat /tmp/orch.json
+          else
+            echo "❌ Orchestration endpoint failed (HTTP $ORCH_RESPONSE)"
+            kubectl logs -l app=sophia-api -n ${{ inputs.namespace }} --tail=50
+            exit 1
+          fi
+          
+          # Test dashboard
+          echo "Testing dashboard..."
+          DASHBOARD_RESPONSE=$(curl -s -w "%{http_code}" -o /tmp/dashboard.html "$API_ENDPOINT/" || echo "000")
+          
+          if [ "$DASHBOARD_RESPONSE" = "200" ]; then
+            echo "✅ Dashboard accessible"
+          else
+            echo "❌ Dashboard failed (HTTP $DASHBOARD_RESPONSE)"
+            kubectl logs -l app=sophia-dashboard -n ${{ inputs.namespace }} --tail=50
+            exit 1
+          fi
+          
+          echo "✅ All smoke tests passed!"
+      
+      - name: 📊 Deployment Summary
+        run: |
+          echo "📊 SOPHIA Intel Deployment Summary"
+          echo "=================================="
+          echo ""
+          echo "🎯 Endpoints:"
+          echo "  - Health: http://${{ inputs.ingress_host }}/health"
+          echo "  - API: http://${{ inputs.ingress_host }}/api/orchestration"
+          echo "  - Dashboard: http://${{ inputs.ingress_host }}/"
+          echo "  - Speech: http://${{ inputs.ingress_host }}/api/speech/health"
+          echo ""
+          echo "🏗️ Infrastructure:"
+          echo "  - Namespace: ${{ inputs.namespace }}"
+          echo "  - Release: ${{ inputs.release_name }}"
+          echo "  - Image Tag: ${{ inputs.image_tag }}"
+          echo "  - Ingress Host: ${{ inputs.ingress_host }}"
+          echo ""
+          echo "📋 Kubernetes Status:"
+          kubectl get pods,svc,ingress -n ${{ inputs.namespace }}
+          echo ""
+          echo "✅ SOPHIA Intel is LIVE and ready for badass mode! 🚀"
+

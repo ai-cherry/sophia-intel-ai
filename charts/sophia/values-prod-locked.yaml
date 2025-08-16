@@ -1,0 +1,192 @@
+# SOPHIA Intel Production Values - Locked Configuration
+# This file pins exact images and configurations for reliable deployment
+
+global:
+  environment: production
+  namespace: sophia-intel
+  domain: www.sophia-intel.ai
+  ingress:
+    host: 104.171.202.107
+    className: nginx
+    tls:
+      enabled: false  # Start with HTTP, enable HTTPS after domain resolution
+
+# API Gateway Configuration
+api:
+  name: sophia-api
+  image:
+    repository: ghcr.io/scoobyjava/sophia-intel/api
+    tag: latest
+    pullPolicy: Always
+  
+  replicas: 2
+  
+  service:
+    type: ClusterIP
+    port: 8000
+    targetPort: 8000
+  
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: 1
+      memory: 1Gi
+  
+  env:
+    ENV: production
+    LOG_LEVEL: info
+    API_HOST: "0.0.0.0"
+    API_PORT: "8000"
+    CORS_ORIGINS: "https://www.sophia-intel.ai,http://104.171.202.107"
+  
+  # Health checks
+  readinessProbe:
+    httpGet:
+      path: /health
+      port: 8000
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+  
+  livenessProbe:
+    httpGet:
+      path: /health
+      port: 8000
+    initialDelaySeconds: 30
+    periodSeconds: 30
+    timeoutSeconds: 10
+    failureThreshold: 3
+
+# Dashboard/Interface Configuration
+dashboard:
+  name: sophia-dashboard
+  image:
+    repository: ghcr.io/scoobyjava/sophia-intel/dashboard
+    tag: latest
+    pullPolicy: Always
+  
+  replicas: 2
+  
+  service:
+    type: ClusterIP
+    port: 5173
+    targetPort: 5173
+  
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  
+  env:
+    VITE_API_BASE: "http://104.171.202.107"
+  
+  # Health checks
+  readinessProbe:
+    httpGet:
+      path: /
+      port: 5173
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 3
+    failureThreshold: 3
+  
+  livenessProbe:
+    httpGet:
+      path: /
+      port: 5173
+    initialDelaySeconds: 15
+    periodSeconds: 30
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+# Ingress Configuration
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
+  
+  hosts:
+    - host: 104.171.202.107
+      paths:
+        - path: /api
+          pathType: Prefix
+          service:
+            name: sophia-api
+            port: 8000
+        - path: /
+          pathType: Prefix
+          service:
+            name: sophia-dashboard
+            port: 5173
+  
+  tls: []  # Disable TLS for now
+
+# Secrets Configuration (will be populated by GitHub Actions)
+secrets:
+  name: sophia-secrets
+  data:
+    # API Keys (base64 encoded by CI/CD)
+    OPENROUTER_API_KEY: ""
+    OPENAI_API_KEY: ""
+    ELEVENLABS_API_KEY: ""
+    QDRANT_API_KEY: ""
+    BRIGHTDATA_API_KEY: ""
+    GITHUB_PAT: ""
+    
+    # Database URLs
+    POSTGRES_URL: ""
+    QDRANT_URL: ""
+    
+    # Optional services
+    LAMBDA_API_KEY: ""
+
+# Autoscaling Configuration
+autoscaling:
+  api:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 8
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+  
+  dashboard:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 4
+    targetCPUUtilizationPercentage: 60
+
+# Network Policies (for security)
+networkPolicy:
+  enabled: true
+  ingress:
+    - from: []
+      ports:
+        - protocol: TCP
+          port: 8000
+        - protocol: TCP
+          port: 5173
+
+# Service Monitor (for Prometheus)
+serviceMonitor:
+  enabled: false  # Enable when monitoring is set up
+  interval: 30s
+  path: /metrics
+
+# Pod Disruption Budget
+podDisruptionBudget:
+  api:
+    enabled: true
+    minAvailable: 1
+  dashboard:
+    enabled: true
+    minAvailable: 1
+

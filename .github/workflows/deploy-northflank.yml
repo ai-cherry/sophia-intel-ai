@@ -65,9 +65,9 @@ jobs:
         working-directory: ${{ steps.detect.outputs.fe_dir }}
         run: |
           if [ -f "package-lock.json" ]; then
-            npm ci --legacy-peer-deps --legacy-peer-deps --legacy-peer-deps
+            npm ci --legacy-peer-deps
           else
-            npm install --legacy-peer-deps --legacy-peer-deps --legacy-peer-deps
+            npm install --legacy-peer-deps
           fi
 
       - name: Build frontend

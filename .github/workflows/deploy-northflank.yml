@@ -25,34 +25,123 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: 'apps/dashboard/package.json'
 
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: Install Python dependencies
+      - name: Detect FE/BE paths
+        id: detect
         run: |
-          python -m pip install --upgrade pip
-          pip install -r backend/requirements.txt
+          set -euo pipefail
+
+          # Detect FE_DIR (search for package.json with a build script)
+          FE_CANDIDATES=""
+          for pkg in $(find . -name "package.json" -not -path "*/node_modules/*" -not -path "*/.git/*"); do
+            if grep -q '"build"' "$pkg" && ! grep -q '"@pulumi/' "$pkg"; then
+              FE_CANDIDATES="$FE_CANDIDATES $(dirname "$pkg")"
+            fi
+          done
+
+          # Prefer common locations if multiple
+          PICK=""
+          for cand in apps/dashboard apps/web frontend dashboard; do
+            if echo "$FE_CANDIDATES" | grep -qw "$cand"; then PICK="$cand"; break; fi
+          done
+          if [ -z "${PICK:-}" ]; then
+            FE_CANDIDATES=$(echo "$FE_CANDIDATES" | tr ' ' '\n' | sort -u | tr '\n' ' ')
+            COUNT=$(echo "$FE_CANDIDATES" | wc -w)
+            if [ "$COUNT" = "1" ]; then
+              PICK="$(echo "$FE_CANDIDATES" | tr -d ' ')"
+            else
+              echo "Found multiple FE candidates: $FE_CANDIDATES"
+              PICK="apps/dashboard"  # fallback
+            fi
+          fi
+          echo "FE_DIR=$PICK" >> $GITHUB_OUTPUT
+
+          # Lockfile detection
+          if [ -f "$PICK/package-lock.json" ]; then
+            echo "LOCKFILE=$PICK/package-lock.json" >> $GITHUB_OUTPUT
+          else
+            echo "LOCKFILE=" >> $GITHUB_OUTPUT
+          fi
+
+          # Backend requirements detection
+          BE_REQ=""
+          if [ -f "backend/requirements.txt" ]; then
+            BE_REQ="backend/requirements.txt"
+          else
+            CAND=$(find . -name "requirements.txt" -not -path "*/node_modules/*" -not -path "*/.git/*" -not -path "*/.venv/*" | head -n1 || true)
+            if [ -n "$CAND" ]; then BE_REQ="$CAND"; fi
+          fi
+          echo "BE_REQ=$BE_REQ" >> $GITHUB_OUTPUT
+
+          # Backend import probe
+          BE_IMPORT=""
+          if [ -f "backend/__init__.py" ] && [ -f "backend/simple_main.py" ]; then
+            BE_IMPORT="backend.simple_main"
+          elif [ -f "backend/main.py" ]; then
+            BE_IMPORT="backend.main"
+          fi
+          echo "BE_IMPORT=$BE_IMPORT" >> $GITHUB_OUTPUT
+
+          echo "Detected paths:"
+          echo "  FE_DIR: $PICK"
+          echo "  LOCKFILE: $([ -f "$PICK/package-lock.json" ] && echo "$PICK/package-lock.json" || echo "none")"
+          echo "  BE_REQ: $BE_REQ"
+          echo "  BE_IMPORT: $BE_IMPORT"
+
+      - name: Cache Node deps
+        if: steps.detect.outputs.LOCKFILE != ''
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+          key: node-${{ hashFiles(steps.detect.outputs.LOCKFILE) }}
+          restore-keys: |
+            node-
 
       - name: Install frontend dependencies
-        working-directory: apps/dashboard
+        working-directory: ${{ steps.detect.outputs.FE_DIR }}
         run: |
-          npm ci
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
 
       - name: Build frontend
-        working-directory: apps/dashboard
-        run: |
-          npm run build
+        working-directory: ${{ steps.detect.outputs.FE_DIR }}
+        env:
+          VITE_API_URL: ${{ env.VITE_API_URL || 'https://api.sophia-intel.ai' }}
+          NODE_ENV: production
+        run: npm run build
 
-      - name: Test backend
+      - name: Install Python dependencies
+        if: steps.detect.outputs.BE_REQ != ''
         run: |
-          python -c "import backend.simple_main; print('✅ Backend imports successfully')" || echo "⚠️ Backend import test skipped"
+          python -m pip install --upgrade pip
+          pip install -r "${{ steps.detect.outputs.BE_REQ }}"
 
-      - name: Lint Python code
+      - name: Backend import smoke test
+        if: steps.detect.outputs.BE_IMPORT != ''
+        run: |
+          python - <<PY
+import importlib
+import sys
+mod = "${{ steps.detect.outputs.BE_IMPORT }}"
+try:
+  importlib.import_module(mod)
+  print(f"✅ Import OK: {mod}")
+except Exception as e:
+  print("❌ Import failed:", e)
+  sys.exit(1)
+PY
+
+      - name: Lint Python code (non-blocking)
+        if: steps.detect.outputs.BE_REQ != ''
         run: |
           pip install flake8 black || echo "Failed to install linting tools"
           flake8 backend/ --max-line-length=120 --extend-ignore=E203,W503 || echo "⚠️ Linting issues found (non-blocking)"

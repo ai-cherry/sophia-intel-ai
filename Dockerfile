@@ -1,17 +1,11 @@
 FROM python:3.11-slim
 
-ENV DEBIAN_FRONTEND=noninteractive
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl git build-essential && \
-    rm -rf /var/lib/apt/lists/*
+WORKDIR /app
 
-# Install uv
-RUN curl -LsSf https://astral.sh/uv/install.sh | sh
-ENV PATH="/root/.local/bin:${PATH}"
+RUN pip install fastapi uvicorn pydantic
 
-WORKDIR /workspace
-COPY requirements.txt /workspace/requirements.txt
-RUN uv pip install --system -r /workspace/requirements.txt
+COPY working_api.py .
 
-# Default command for Codespaces terminal sessions
-CMD ["bash"]
+EXPOSE 5000
+
+CMD ["python", "working_api.py"]

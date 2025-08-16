@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sophia-api-working
+  namespace: sophia-prod
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: sophia-api-working
+  template:
+    metadata:
+      labels:
+        app: sophia-api-working
+    spec:
+      containers:
+      - name: api
+        image: sophia-api-working:latest
+        ports:
+        - containerPort: 5000
+        imagePullPolicy: Never
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sophia-api-working-service
+  namespace: sophia-prod
+spec:
+  selector:
+    app: sophia-api-working
+  ports:
+  - port: 5000
+    targetPort: 5000
+    nodePort: 30084
+  type: NodePort

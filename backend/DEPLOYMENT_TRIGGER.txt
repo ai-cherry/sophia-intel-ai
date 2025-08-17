@@ -1,0 +1,5 @@
+DEPLOYMENT TRIGGER - Force Railway to redeploy enhanced backend
+Timestamp: 2025-08-17T23:55:30Z
+Enhanced orchestrator with complete ecosystem awareness ready for deployment
+Version: 2.1.0 with enhanced chat endpoint /api/v1/chat/enhanced
+

@@ -1,6 +1,6 @@
 """
 SOPHIA Intel Consolidated Dashboard
-Production-ready monitoring dashboard with concurrent health checks, 
+Production-ready monitoring dashboard with concurrent health checks,
 parameterized service URLs, and enhanced UI with charts and alerting
 """
 
@@ -27,11 +27,13 @@ import uvicorn
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 class ServiceStatus(Enum):
     HEALTHY = "healthy"
     DEGRADED = "degraded"
     UNHEALTHY = "unhealthy"
     UNKNOWN = "unknown"
+
 
 @dataclass
 class ServiceHealth:
@@ -42,6 +44,7 @@ class ServiceHealth:
     last_check: datetime
     error_message: Optional[str] = None
     details: Optional[Dict[str, Any]] = None
+
 
 @dataclass
 class SystemMetrics:
@@ -54,16 +57,17 @@ class SystemMetrics:
     lambda_servers_active: int
     lambda_servers_total: int
 
+
 class ConsolidatedDashboard:
     """Consolidated monitoring dashboard for SOPHIA Intel"""
-    
+
     def __init__(self):
         self.app = FastAPI(
             title="SOPHIA Intel Monitoring Dashboard",
             description="Consolidated monitoring dashboard with real-time health checks",
-            version="2.0.0"
+            version="2.0.0",
         )
-        
+
         # Add CORS middleware
         self.app.add_middleware(
             CORSMiddleware,
@@ -72,31 +76,31 @@ class ConsolidatedDashboard:
             allow_methods=["*"],
             allow_headers=["*"],
         )
-        
+
         # Service configuration from environment variables
         self.services = self._load_service_config()
-        
+
         # Health check configuration
         self.health_check_interval = int(os.getenv("HEALTH_CHECK_INTERVAL", "30"))
         self.health_check_timeout = int(os.getenv("HEALTH_CHECK_TIMEOUT", "5"))
-        
+
         # Alerting configuration
         self.alert_thresholds = {
             "unhealthy_services": int(os.getenv("ALERT_UNHEALTHY_THRESHOLD", "2")),
             "response_time": float(os.getenv("ALERT_RESPONSE_TIME_THRESHOLD", "5.0")),
-            "lambda_servers_down": int(os.getenv("ALERT_LAMBDA_SERVERS_DOWN", "1"))
+            "lambda_servers_down": int(os.getenv("ALERT_LAMBDA_SERVERS_DOWN", "1")),
         }
-        
+
         # Data storage
         self.current_health: Dict[str, ServiceHealth] = {}
         self.health_history: List[SystemMetrics] = []
         self.max_history_size = int(os.getenv("MAX_HISTORY_SIZE", "1440"))  # 24 hours at 1-minute intervals
-        
+
         # Background task control
         self.monitoring_task: Optional[asyncio.Task] = None
-        
+
         self._setup_routes()
-    
+
     def _load_service_config(self) -> Dict[str, str]:
         """Load service configuration from environment variables"""
         return {
@@ -109,18 +113,18 @@ class ConsolidatedDashboard:
             "airbyte": os.getenv("AIRBYTE_API_URL", "https://api.airbyte.com/v1"),
             "minio": os.getenv("MINIO_ENDPOINT", "http://localhost:9000"),
             "lambda_primary": os.getenv("LAMBDA_PRIMARY_URL", "http://192.222.51.223:8000"),
-            "lambda_secondary": os.getenv("LAMBDA_SECONDARY_URL", "http://192.222.50.242:8000")
+            "lambda_secondary": os.getenv("LAMBDA_SECONDARY_URL", "http://192.222.50.242:8000"),
         }
-    
+
     def _setup_routes(self):
         """Setup FastAPI routes"""
-        
+
         @self.app.on_event("startup")
         async def startup_event():
             """Start background monitoring on startup"""
             self.monitoring_task = asyncio.create_task(self._monitoring_loop())
             logger.info("SOPHIA Intel Dashboard started with monitoring")
-        
+
         @self.app.on_event("shutdown")
         async def shutdown_event():
             """Stop background monitoring on shutdown"""
@@ -131,54 +135,54 @@ class ConsolidatedDashboard:
                 except asyncio.CancelledError:
                     pass
             logger.info("SOPHIA Intel Dashboard stopped")
-        
+
         @self.app.get("/", response_class=HTMLResponse)
         async def dashboard():
             """Main dashboard page"""
             return self._generate_dashboard_html()
-        
+
         @self.app.get("/api/health")
         async def get_health():
             """Get current health status of all services"""
             return {
                 "services": {name: asdict(health) for name, health in self.current_health.items()},
                 "summary": self._calculate_summary(),
-                "last_updated": datetime.now().isoformat()
+                "last_updated": datetime.now().isoformat(),
             }
-        
+
         @self.app.get("/api/metrics")
         async def get_metrics():
             """Get historical metrics for charts"""
             return {
                 "history": [asdict(metric) for metric in self.health_history[-100:]],  # Last 100 data points
-                "current": self._calculate_current_metrics()
+                "current": self._calculate_current_metrics(),
             }
-        
+
         @self.app.post("/api/health/refresh")
         async def refresh_health():
             """Manually trigger health check refresh"""
             await self._check_all_services()
             return {"status": "refreshed", "timestamp": datetime.now().isoformat()}
-        
+
         @self.app.get("/api/services/{service_name}/details")
         async def get_service_details(service_name: str):
             """Get detailed information about a specific service"""
             if service_name not in self.current_health:
                 raise HTTPException(status_code=404, detail="Service not found")
-            
+
             health = self.current_health[service_name]
             return {
                 "service": asdict(health),
-                "history": [m for m in self.health_history[-50:] if service_name in getattr(m, 'service_details', {})],
-                "recommendations": self._get_service_recommendations(service_name, health)
+                "history": [m for m in self.health_history[-50:] if service_name in getattr(m, "service_details", {})],
+                "recommendations": self._get_service_recommendations(service_name, health),
             }
-        
+
         @self.app.post("/api/alerts/test")
         async def test_alert():
             """Test alert system"""
             await self._send_alert("Test Alert", "This is a test alert from SOPHIA Intel Dashboard")
             return {"status": "alert_sent", "timestamp": datetime.now().isoformat()}
-    
+
     async def _monitoring_loop(self):
         """Background monitoring loop"""
         while True:
@@ -192,18 +196,18 @@ class ConsolidatedDashboard:
             except Exception as e:
                 logger.error(f"Error in monitoring loop: {e}")
                 await asyncio.sleep(5)  # Short delay before retrying
-    
+
     async def _check_all_services(self):
         """Check health of all services concurrently"""
         tasks = []
-        
+
         for service_name, service_url in self.services.items():
             task = asyncio.create_task(self._check_service_health(service_name, service_url))
             tasks.append(task)
-        
+
         # Wait for all health checks to complete
         results = await asyncio.gather(*tasks, return_exceptions=True)
-        
+
         # Update current health status
         for i, result in enumerate(results):
             service_name = list(self.services.keys())[i]
@@ -215,36 +219,36 @@ class ConsolidatedDashboard:
                     status=ServiceStatus.UNKNOWN,
                     response_time=0.0,
                     last_check=datetime.now(),
-                    error_message=str(result)
+                    error_message=str(result),
                 )
             else:
                 self.current_health[service_name] = result
-    
+
     async def _check_service_health(self, service_name: str, service_url: str) -> ServiceHealth:
         """Check health of a single service"""
         start_time = datetime.now()
-        
+
         try:
             # Determine health endpoint based on service type
             health_endpoint = self._get_health_endpoint(service_name, service_url)
-            
+
             async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=self.health_check_timeout)) as session:
                 async with session.get(health_endpoint) as response:
                     end_time = datetime.now()
                     response_time = (end_time - start_time).total_seconds()
-                    
+
                     if response.status == 200:
                         try:
                             data = await response.json()
                             status = self._determine_service_status(service_name, data, response_time)
-                            
+
                             return ServiceHealth(
                                 name=service_name,
                                 url=service_url,
                                 status=status,
                                 response_time=response_time,
                                 last_check=end_time,
-                                details=data
+                                details=data,
                             )
                         except json.JSONDecodeError:
                             # Service responded but not with JSON
@@ -254,7 +258,7 @@ class ConsolidatedDashboard:
                                 status=ServiceStatus.DEGRADED,
                                 response_time=response_time,
                                 last_check=end_time,
-                                error_message="Non-JSON response"
+                                error_message="Non-JSON response",
                             )
                     else:
                         return ServiceHealth(
@@ -263,9 +267,9 @@ class ConsolidatedDashboard:
                             status=ServiceStatus.UNHEALTHY,
                             response_time=response_time,
                             last_check=end_time,
-                            error_message=f"HTTP {response.status}"
+                            error_message=f"HTTP {response.status}",
                         )
-        
+
         except asyncio.TimeoutError:
             return ServiceHealth(
                 name=service_name,
@@ -273,7 +277,7 @@ class ConsolidatedDashboard:
                 status=ServiceStatus.UNHEALTHY,
                 response_time=self.health_check_timeout,
                 last_check=datetime.now(),
-                error_message="Timeout"
+                error_message="Timeout",
             )
         except Exception as e:
             return ServiceHealth(
@@ -282,9 +286,9 @@ class ConsolidatedDashboard:
                 status=ServiceStatus.UNHEALTHY,
                 response_time=0.0,
                 last_check=datetime.now(),
-                error_message=str(e)
+                error_message=str(e),
             )
-    
+
     def _get_health_endpoint(self, service_name: str, service_url: str) -> str:
         """Get appropriate health endpoint for service"""
         if service_name in ["redis"]:
@@ -299,13 +303,13 @@ class ConsolidatedDashboard:
         else:
             # Standard health endpoint
             return f"{service_url}/health"
-    
+
     def _determine_service_status(self, service_name: str, data: Dict[str, Any], response_time: float) -> ServiceStatus:
         """Determine service status based on response data and performance"""
         # Check response time threshold
         if response_time > self.alert_thresholds["response_time"]:
             return ServiceStatus.DEGRADED
-        
+
         # Check service-specific health indicators
         if service_name.startswith("lambda_"):
             # Lambda Labs server specific checks
@@ -315,7 +319,7 @@ class ConsolidatedDashboard:
                 return ServiceStatus.DEGRADED
             else:
                 return ServiceStatus.UNHEALTHY
-        
+
         # Generic health check
         status = data.get("status", "unknown").lower()
         if status == "healthy":
@@ -326,32 +330,32 @@ class ConsolidatedDashboard:
             return ServiceStatus.UNHEALTHY
         else:
             return ServiceStatus.UNKNOWN
-    
+
     async def _update_metrics(self):
         """Update historical metrics"""
         current_metrics = self._calculate_current_metrics()
         self.health_history.append(current_metrics)
-        
+
         # Trim history to max size
         if len(self.health_history) > self.max_history_size:
-            self.health_history = self.health_history[-self.max_history_size:]
-    
+            self.health_history = self.health_history[-self.max_history_size :]
+
     def _calculate_current_metrics(self) -> SystemMetrics:
         """Calculate current system metrics"""
         total_services = len(self.current_health)
         healthy_count = sum(1 for h in self.current_health.values() if h.status == ServiceStatus.HEALTHY)
         degraded_count = sum(1 for h in self.current_health.values() if h.status == ServiceStatus.DEGRADED)
         unhealthy_count = sum(1 for h in self.current_health.values() if h.status == ServiceStatus.UNHEALTHY)
-        
+
         # Calculate average response time
         response_times = [h.response_time for h in self.current_health.values() if h.response_time > 0]
         avg_response_time = sum(response_times) / len(response_times) if response_times else 0.0
-        
+
         # Count Lambda Labs servers
         lambda_servers = [h for name, h in self.current_health.items() if name.startswith("lambda_")]
         lambda_active = sum(1 for h in lambda_servers if h.status == ServiceStatus.HEALTHY)
         lambda_total = len(lambda_servers)
-        
+
         return SystemMetrics(
             timestamp=datetime.now(),
             total_services=total_services,
@@ -360,19 +364,19 @@ class ConsolidatedDashboard:
             unhealthy_services=unhealthy_count,
             average_response_time=avg_response_time,
             lambda_servers_active=lambda_active,
-            lambda_servers_total=lambda_total
+            lambda_servers_total=lambda_total,
         )
-    
+
     def _calculate_summary(self) -> Dict[str, Any]:
         """Calculate summary statistics"""
         metrics = self._calculate_current_metrics()
-        
+
         overall_status = ServiceStatus.HEALTHY
         if metrics.unhealthy_services > 0:
             overall_status = ServiceStatus.UNHEALTHY
         elif metrics.degraded_services > 0:
             overall_status = ServiceStatus.DEGRADED
-        
+
         return {
             "overall_status": overall_status.value,
             "total_services": metrics.total_services,
@@ -383,33 +387,35 @@ class ConsolidatedDashboard:
             "lambda_servers": {
                 "active": metrics.lambda_servers_active,
                 "total": metrics.lambda_servers_total,
-                "status": "healthy" if metrics.lambda_servers_active == metrics.lambda_servers_total else "degraded"
-            }
+                "status": "healthy" if metrics.lambda_servers_active == metrics.lambda_servers_total else "degraded",
+            },
         }
-    
+
     async def _check_alert_conditions(self):
         """Check if any alert conditions are met"""
         metrics = self._calculate_current_metrics()
         alerts = []
-        
+
         # Check unhealthy services threshold
         if metrics.unhealthy_services >= self.alert_thresholds["unhealthy_services"]:
             alerts.append(f"⚠️ {metrics.unhealthy_services} services are unhealthy")
-        
+
         # Check response time threshold
         if metrics.average_response_time > self.alert_thresholds["response_time"]:
-            alerts.append(f"⚠️ Average response time is {metrics.average_response_time:.2f}s (threshold: {self.alert_thresholds['response_time']}s)")
-        
+            alerts.append(
+                f"⚠️ Average response time is {metrics.average_response_time:.2f}s (threshold: {self.alert_thresholds['response_time']}s)"
+            )
+
         # Check Lambda Labs servers
         lambda_down = metrics.lambda_servers_total - metrics.lambda_servers_active
         if lambda_down >= self.alert_thresholds["lambda_servers_down"]:
             alerts.append(f"⚠️ {lambda_down} Lambda Labs servers are down")
-        
+
         # Send alerts if any conditions are met
         if alerts:
             alert_message = "SOPHIA Intel Alert:\n\n" + "\n".join(alerts)
             await self._send_alert("SOPHIA Intel System Alert", alert_message)
-    
+
     async def _send_alert(self, subject: str, message: str):
         """Send alert via configured channels"""
         try:
@@ -417,30 +423,26 @@ class ConsolidatedDashboard:
             slack_webhook = os.getenv("SLACK_WEBHOOK_URL")
             if slack_webhook:
                 await self._send_slack_alert(slack_webhook, subject, message)
-            
+
             # Email alert
             smtp_host = os.getenv("SMTP_HOST")
             if smtp_host:
                 await self._send_email_alert(subject, message)
-            
+
             logger.info(f"Alert sent: {subject}")
-            
+
         except Exception as e:
             logger.error(f"Failed to send alert: {e}")
-    
+
     async def _send_slack_alert(self, webhook_url: str, subject: str, message: str):
         """Send alert to Slack"""
-        payload = {
-            "text": f"*{subject}*\n{message}",
-            "username": "SOPHIA Intel",
-            "icon_emoji": ":warning:"
-        }
-        
+        payload = {"text": f"*{subject}*\n{message}", "username": "SOPHIA Intel", "icon_emoji": ":warning:"}
+
         async with aiohttp.ClientSession() as session:
             async with session.post(webhook_url, json=payload) as response:
                 if response.status != 200:
                     logger.error(f"Failed to send Slack alert: {response.status}")
-    
+
     async def _send_email_alert(self, subject: str, message: str):
         """Send alert via email"""
         smtp_host = os.getenv("SMTP_HOST")
@@ -448,50 +450,50 @@ class ConsolidatedDashboard:
         smtp_user = os.getenv("SMTP_USER")
         smtp_password = os.getenv("SMTP_PASSWORD")
         alert_email_to = os.getenv("ALERT_EMAIL_TO")
-        
+
         if not all([smtp_host, smtp_user, smtp_password, alert_email_to]):
             logger.warning("Email configuration incomplete, skipping email alert")
             return
-        
+
         try:
             msg = MIMEMultipart()
-            msg['From'] = smtp_user
-            msg['To'] = alert_email_to
-            msg['Subject'] = subject
-            
-            msg.attach(MIMEText(message, 'plain'))
-            
+            msg["From"] = smtp_user
+            msg["To"] = alert_email_to
+            msg["Subject"] = subject
+
+            msg.attach(MIMEText(message, "plain"))
+
             server = smtplib.SMTP(smtp_host, smtp_port)
             server.starttls()
             server.login(smtp_user, smtp_password)
             server.send_message(msg)
             server.quit()
-            
+
         except Exception as e:
             logger.error(f"Failed to send email alert: {e}")
-    
+
     def _get_service_recommendations(self, service_name: str, health: ServiceHealth) -> List[str]:
         """Get recommendations for service issues"""
         recommendations = []
-        
+
         if health.status == ServiceStatus.UNHEALTHY:
             recommendations.append("Check service logs for errors")
             recommendations.append("Verify service configuration")
             recommendations.append("Restart the service if necessary")
-        
+
         if health.response_time > 2.0:
             recommendations.append("Investigate performance bottlenecks")
             recommendations.append("Check resource utilization (CPU, memory)")
             recommendations.append("Consider scaling the service")
-        
+
         if service_name.startswith("lambda_"):
             if health.status != ServiceStatus.HEALTHY:
                 recommendations.append("Check Lambda Labs server status")
                 recommendations.append("Verify GPU availability")
                 recommendations.append("Check inference model loading")
-        
+
         return recommendations
-    
+
     def _generate_dashboard_html(self) -> str:
         """Generate dashboard HTML with embedded JavaScript for real-time updates"""
         return """
@@ -718,17 +720,12 @@ class ConsolidatedDashboard:
 </html>
         """
 
+
 # Global dashboard instance
 dashboard = ConsolidatedDashboard()
 
 if __name__ == "__main__":
     port = int(os.getenv("DASHBOARD_PORT", "8090"))
     log_level = os.getenv("LOG_LEVEL", "info").lower()
-    
-    uvicorn.run(
-        dashboard.app,
-        host="0.0.0.0",
-        port=port,
-        log_level=log_level
-    )
 
+    uvicorn.run(dashboard.app, host="0.0.0.0", port=port, log_level=log_level)

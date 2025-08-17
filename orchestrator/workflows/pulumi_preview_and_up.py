@@ -71,9 +71,7 @@ class PulumiPreviewAndUpWorkflow:
 
         # 4. Wait for approval
         try:
-            await workflow.wait_for_signal(
-                "approval_received", timeout=timedelta(hours=24)
-            )
+            await workflow.wait_for_signal("approval_received", timeout=timedelta(hours=24))
             approved = True
         except asyncio.TimeoutError:
             approved = False

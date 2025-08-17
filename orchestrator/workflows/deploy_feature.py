@@ -1,3 +1,4 @@
+import os
 import asyncio
 from temporalio import activity, workflow
 from temporalio.client import Client
@@ -79,14 +80,12 @@ class DeployFeatureWorkflow:
         work_dir: str,
     ) -> str:
 
-        pr_details = await workflow.execute_activity(
-            fetch_pr_details,
+                    fetch_pr_details,
             args=[owner, repo, pr_number],
             start_to_close_timeout=timedelta(seconds=60),
         )
 
-        test_results = await workflow.execute_activity(
-            run_tests_in_sandbox, start_to_close_timeout=timedelta(minutes=5)
+                    run_tests_in_sandbox, start_to_close_timeout=timedelta(minutes=5)
         )
 
         preview_output = await workflow.execute_activity(
@@ -127,9 +126,7 @@ class DeployFeatureWorkflow:
             start_to_close_timeout=timedelta(minutes=15),
         )
 
-        summary_comment = (
-            f"Deployment successful!\n\n**Pulumi Output:**\n```\n{up_output}\n```"
-        )
+        summary_comment = f"Deployment successful!\n\n**Pulumi Output:**\n```\n{up_output}\n```"
         await workflow.execute_activity(
             post_pr_comment,
             args=[owner, repo, pr_number, summary_comment],

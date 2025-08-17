@@ -8,11 +8,7 @@ from temporalio.worker import Worker
 from orchestrator.workflows.hello_world import HelloWorld, say_hello
 from orchestrator.workflows.read_file import ReadFileWorkflow, read_github_file
 from orchestrator.workflows.deploy_feature import DeployFeatureWorkflow, run_deploy
-from orchestrator.workflows.pulumi_preview_and_up import (
-    PulumiPreviewAndUpWorkflow,
-    pulumi_preview,
-    pulumi_up
-)
+from orchestrator.workflows.pulumi_preview_and_up import PulumiPreviewAndUpWorkflow, pulumi_preview, pulumi_up
 
 
 async def main():
@@ -28,19 +24,8 @@ async def main():
     worker = Worker(
         client,
         task_queue="agno-task-queue",
-        workflows=[
-            HelloWorld,
-            ReadFileWorkflow,
-            DeployFeatureWorkflow,
-            PulumiPreviewAndUpWorkflow
-        ],
-        activities=[
-            say_hello,
-            read_github_file,
-            run_deploy,
-            pulumi_preview,
-            pulumi_up
-        ],
+        workflows=[HelloWorld, ReadFileWorkflow, DeployFeatureWorkflow, PulumiPreviewAndUpWorkflow],
+        activities=[say_hello, read_github_file, run_deploy, pulumi_preview, pulumi_up],
         # Enable Update-with-Start
         build_id="1.0",
         identity="agno-worker-1",

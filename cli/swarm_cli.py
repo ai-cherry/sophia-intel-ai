@@ -12,30 +12,12 @@ from swarm.nl_interface import process_natural_language
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Interact with Sophia Swarm using natural language")
-    parser.add_argument(
-        "query",
-        nargs="*",
-        help="Natural language query to process"
-    )
-    parser.add_argument(
-        "-f", "--file",
-        help="File path containing the natural language query"
-    )
-    parser.add_argument(
-        "--json",
-        action="store_true",
-        help="Output results as JSON"
-    )
-    parser.add_argument(
-        "-o", "--output",
-        help="File to save the output results"
-    )
-    parser.add_argument(
-        "--model",
-        help="Override the default model for all agents"
-    )
+    parser = argparse.ArgumentParser(description="Interact with Sophia Swarm using natural language")
+    parser.add_argument("query", nargs="*", help="Natural language query to process")
+    parser.add_argument("-f", "--file", help="File path containing the natural language query")
+    parser.add_argument("--json", action="store_true", help="Output results as JSON")
+    parser.add_argument("-o", "--output", help="File to save the output results")
+    parser.add_argument("--model", help="Override the default model for all agents")
 
     args = parser.parse_args()
 

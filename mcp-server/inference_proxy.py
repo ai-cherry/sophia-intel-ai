@@ -1,6 +1,7 @@
 """
 FastAPI inference proxy for SOPHIA Intel Lambda Labs GH200 servers
 """
+
 from fastapi import FastAPI, Depends, HTTPException, Request, status
 import httpx
 import os
@@ -17,19 +18,16 @@ SECONDARY_URL = os.getenv("LAMBDA_SECONDARY_URL", "http://192.222.50.242:8000")
 API_KEY = os.getenv("INFERENCE_API_KEY", "sophia-inference-key")
 
 app = FastAPI(
-    title="SOPHIA Intel Inference Proxy",
-    description="Proxy for Lambda Labs GH200 inference servers",
-    version="1.0.0"
+    title="SOPHIA Intel Inference Proxy", description="Proxy for Lambda Labs GH200 inference servers", version="1.0.0"
 )
+
 
 def api_key_auth(request: Request):
     """Simple API key authentication"""
     provided = request.headers.get("X-API-Key")
     if provided != API_KEY:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, 
-            detail="Invalid API key"
-        )
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid API key")
+
 
 @app.get("/health")
 async def health():
@@ -38,8 +36,9 @@ async def health():
         "status": "OK",
         "service": "SOPHIA Intel Inference Proxy",
         "primary_server": PRIMARY_URL,
-        "secondary_server": SECONDARY_URL
+        "secondary_server": SECONDARY_URL,
     }
+
 
 @app.post("/infer", dependencies=[Depends(api_key_auth)])
 async def infer(payload: Dict[str, Any]):
@@ -58,7 +57,7 @@ async def infer(payload: Dict[str, Any]):
             return result
     except (httpx.RequestError, httpx.HTTPStatusError) as e:
         logger.warning(f"Primary server failed: {e}, trying secondary server")
-        
+
         try:
             # Fallback to secondary server
             async with httpx.AsyncClient(timeout=30) as client:
@@ -71,18 +70,18 @@ async def infer(payload: Dict[str, Any]):
         except (httpx.RequestError, httpx.HTTPStatusError) as e:
             logger.error(f"Both servers failed: {e}")
             raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="Both inference servers are unavailable"
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Both inference servers are unavailable"
             )
+
 
 @app.get("/servers/status")
 async def server_status():
     """Check status of both inference servers"""
     status_info = {
         "primary": {"url": PRIMARY_URL, "status": "unknown"},
-        "secondary": {"url": SECONDARY_URL, "status": "unknown"}
+        "secondary": {"url": SECONDARY_URL, "status": "unknown"},
     }
-    
+
     # Check primary server
     try:
         async with httpx.AsyncClient(timeout=5) as client:
@@ -90,7 +89,7 @@ async def server_status():
             status_info["primary"]["status"] = "healthy" if resp.status_code == 200 else "unhealthy"
     except:
         status_info["primary"]["status"] = "unreachable"
-    
+
     # Check secondary server
     try:
         async with httpx.AsyncClient(timeout=5) as client:
@@ -98,9 +97,11 @@ async def server_status():
             status_info["secondary"]["status"] = "healthy" if resp.status_code == 200 else "unhealthy"
     except:
         status_info["secondary"]["status"] = "unreachable"
-    
+
     return status_info
+
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=int(os.getenv("PORT", 8001)))

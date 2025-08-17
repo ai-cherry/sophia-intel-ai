@@ -18,7 +18,7 @@ from pathlib import Path
 # Add parent directory to path for imports
 sys.path.append(str(Path(__file__).parent.parent))
 
-from config.config import Settings, load_settings
+from config.config import Settings
 from mcp_servers.ai_router import AIRouter
 
 
@@ -26,9 +26,9 @@ class SophiaIntelCLI:
     """Main CLI class for Sophia Intel operations"""
 
     def __init__(self):
-        self.settings = load_settings()
+        self.settings = Settings()
         self.ai_router = AIRouter()
-        self.base_url = f"http://localhost:{self.settings.MCP_PORT}"
+        self.base_url = f"http://localhost:{8001}"
 
     async def initialize(self):
         """Initialize the CLI with AI router"""

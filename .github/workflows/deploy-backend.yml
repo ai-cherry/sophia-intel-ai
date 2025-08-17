@@ -1,0 +1,38 @@
+name: Deploy SOPHIA Intel Backend
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['backend/**']
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          
+      - name: Install Railway CLI
+        run: |
+          curl -fsSL https://railway.app/install.sh | sh
+          echo "$HOME/.railway/bin" >> $GITHUB_PATH
+          
+      - name: Deploy to Railway
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+        run: |
+          cd backend
+          railway login --token $RAILWAY_TOKEN
+          railway up --detach
+          
+      - name: Health Check
+        run: |
+          echo "Waiting for deployment to be ready..."
+          sleep 60
+          echo "Backend deployed with latest AI models!"

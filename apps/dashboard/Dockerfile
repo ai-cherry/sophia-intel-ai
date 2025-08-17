@@ -1,39 +1,26 @@
-FROM node:18-alpine AS builder
+# Build stage
+FROM node:18-alpine as builder
 
-# Set working directory
 WORKDIR /app
-
-# Copy package files
 COPY package*.json ./
-
-# Install dependencies with legacy peer deps to handle conflicts
 RUN npm install --legacy-peer-deps
-
-# Copy source code
 COPY . .
-
-# Build the application
 RUN npm run build
 
-# Production stage
-FROM nginx:alpine
+# Production stage - use a simple static server
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Install serve package for static file serving
+RUN npm install -g serve
 
 # Copy built assets from builder stage
-COPY --from=builder /app/dist /usr/share/nginx/html
+COPY --from=builder /app/dist ./dist
 
-# Install gettext for envsubst
-RUN apk add --no-cache gettext
+# Expose port
+EXPOSE 3000
 
-# Copy nginx configuration
-COPY nginx.conf /etc/nginx/nginx.conf
-
-# Copy startup script
-COPY start.sh /start.sh
-RUN chmod +x /start.sh
-
-# Expose port (Railway will set this dynamically)
-EXPOSE 80
-
-# Use startup script
-CMD ["/start.sh"]
+# Serve static files
+CMD ["serve", "-s", "dist", "-l", "3000"]
 

@@ -17,7 +17,7 @@ This runbook provides step-by-step procedures for deploying, monitoring, and mai
 - **Production Dashboard**: https://www.sophia-intel.ai
 - **API Endpoint**: https://api.sophia-intel.ai
 - **Health Check**: https://api.sophia-intel.ai/health
-- **Fallback Frontend**: https://dnztojfz.manus.space
+- **Dashboard**: https://dashboard.sophia-intel.ai
 
 ### Key Commands
 ```bash

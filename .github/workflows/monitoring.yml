@@ -39,19 +39,19 @@ jobs:
             echo "primary_healthy=false" >> $GITHUB_OUTPUT
           fi
           
-          # Fallback domain check
-          if curl -f -s --max-time 30 https://dnztojfz.manus.space > /dev/null; then
-            echo "✅ Fallback domain (dnztojfz.manus.space) is healthy"
-            echo "fallback_healthy=true" >> $GITHUB_OUTPUT
+          # Check dashboard domain
+          if curl -f -s --max-time 30 https://dashboard.sophia-intel.ai > /dev/null; then
+            echo "✅ Dashboard domain (dashboard.sophia-intel.ai) is healthy"
+            echo "dashboard_healthy=true" >> $GITHUB_OUTPUT
           else
-            echo "❌ Fallback domain (dnztojfz.manus.space) is down"
-            echo "fallback_healthy=false" >> $GITHUB_OUTPUT
+            echo "❌ Dashboard domain (dashboard.sophia-intel.ai) is down"
+            echo "dashboard_healthy=false" >> $GITHUB_OUTPUT
           fi
 
       - name: Frontend performance check
         run: |
           echo "Checking frontend performance..."
-          response_time=$(curl -o /dev/null -s -w '%{time_total}' https://dnztojfz.manus.space || echo "0")
+          response_time=$(curl -o /dev/null -s -w '%{time_total}' https://www.sophia-intel.ai || echo "0")
           echo "Response time: ${response_time}s"
           
           if (( $(echo "$response_time > 5.0" | bc -l) )); then
@@ -135,7 +135,7 @@ jobs:
           
           # Measure load time
           start_time=$(date +%s.%N)
-          curl -s https://dnztojfz.manus.space > /dev/null
+          curl -s https://www.sophia-intel.ai > /dev/null
           end_time=$(date +%s.%N)
           load_time=$(echo "$end_time - $start_time" | bc)
           

@@ -23,13 +23,53 @@ from backend.config.settings import get_settings
 router = APIRouter(prefix="/api/v1", tags=["Enhanced SOPHIA Intel"])
 
 # Initialize services
+# Initialize services with proper dependencies
 settings = get_settings()
-chat_service = ChatService(settings)
-sophia_awareness = SophiaAwarenessSystem(settings)
-persona_service = PersonaService(settings)
-mcp_service = MCPService(settings)
-infra_service = InfrastructureAutomationService(settings)
-observability = ObservabilityService(settings)
+
+# Initialize services with proper dependencies
+settings = get_settings()
+
+# Initialize core services first
+observability = ObservabilityService()
+persona_service = PersonaService()
+
+# Initialize MCP service with Lambda API key
+lambda_api_key = getattr(settings, 'lambda_api_key', 'test-key')
+mcp_service = MCPService()
+# Set lambda manager with API key after initialization
+if hasattr(mcp_service, 'lambda_manager') and lambda_api_key != 'test-key':
+    mcp_service.lambda_manager.api_key = lambda_api_key
+
+infra_service = InfrastructureAutomationService(config={
+    "lambda_labs": {"api_key": lambda_api_key},
+    "railway": {"token": getattr(settings, 'railway_token', 'test-token')},
+    "neon": {"api_token": getattr(settings, 'neon_api_token', 'test-token')},
+    "qdrant": {"url": "http://localhost:6333", "api_key": None},
+    "redis": {"url": getattr(settings, 'redis_url', 'redis://localhost:6379')},
+    "github": {"token": getattr(settings, 'github_token', 'test-token'), "org": "ai-cherry"},
+    "pulumi": {"access_token": getattr(settings, 'pulumi_token', 'test-token'), "org": "sophia-intel"},
+    "openai": {"api_key": getattr(settings, 'openrouter_api_key', 'test-key')},
+    "anthropic": {"api_key": getattr(settings, 'anthropic_api_key', 'test-key')}
+})
+
+# Initialize services that depend on others
+from backend.domains.research.service import ResearchService
+from backend.domains.monitoring.service import MonitoringService
+from libs.mcp_client.enhanced_memory_client import EnhancedMemoryClient
+
+memory_client = EnhancedMemoryClient()
+research_service = ResearchService()
+monitoring_service = MonitoringService()
+
+# Initialize chat service with all dependencies
+chat_service = ChatService(
+    memory_client=memory_client,
+    research_service=research_service,
+    persona_service=persona_service,
+    monitoring_service=monitoring_service
+)
+
+sophia_awareness = SophiaAwarenessSystem()
 
 
 @router.get("/sophia/status", summary="SOPHIA System Status")
@@ -443,5 +483,10 @@ async def websocket_chat_endpoint(websocket):
 # Add router to main application
 def get_enhanced_router():
     """Get the enhanced API router"""
+    return router
+
+
+def create_enhanced_api_router() -> APIRouter:
+    """Create and return the enhanced API router with all endpoints"""
     return router
 

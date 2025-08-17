@@ -25,15 +25,46 @@ class MCPService:
     
     def __init__(self):
         self.servers: Dict[str, MCPServer] = {}
-        self.lambda_manager = LambdaManager()
+        # Initialize with placeholder API key - will be set later
+        self.lambda_manager = LambdaManager(api_key="placeholder")
         self.health_check_tasks: Dict[str, asyncio.Task] = {}
         self.operations: Dict[str, MCPOperation] = {}
         
         # Performance tracking
         self.performance_history: Dict[str, List[Dict[str, Any]]] = {}
         
-        # Initialize with Lambda Labs servers
-        self._initialize_lambda_servers()
+        # Initialize Lambda servers (without async operations)
+        self._setup_lambda_servers()
+        
+    def _setup_lambda_servers(self) -> None:
+        """Setup Lambda servers configuration without async operations"""
+        # Add Lambda Labs GH200 servers
+        self.servers["sophia-inference-01"] = MCPServer(
+            server_id="sophia-inference-01",
+            name="SOPHIA Inference Primary",
+            server_type=MCPServerType.LAMBDA_INFERENCE,
+            host="inference-primary.sophia-intel.ai",
+            port=443,
+            endpoint="/health",
+            status=ServerStatus.UNKNOWN
+        )
+        
+        self.servers["sophia-inference-02"] = MCPServer(
+            server_id="sophia-inference-02", 
+            name="SOPHIA Inference Secondary",
+            server_type=MCPServerType.LAMBDA_INFERENCE,
+            host="inference-secondary.sophia-intel.ai",
+            port=443,
+            endpoint="/health",
+            status=ServerStatus.UNKNOWN
+        )
+        
+        logger.info(f"✅ Configured {len(self.servers)} Lambda servers")
+    
+    async def initialize_async(self) -> None:
+        """Initialize async components after event loop is running"""
+        await self._start_health_monitoring()
+        logger.info("✅ MCP Service async initialization complete")
         
         logger.info("MCPService initialized")
     

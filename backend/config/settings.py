@@ -1,189 +1,187 @@
 """
-Centralized settings management for SOPHIA Intel
-Handles environment variables and configuration validation
+Unified SOPHIA Intel Configuration Settings
+Single source of truth for all application configuration
 """
 
 import os
-from typing import List, Optional, Dict, Any
-from pydantic import Field, field_validator
-from pydantic_settings import BaseSettings
-import json
+from typing import List, Optional
+from pydantic import BaseSettings, Field
 
-class DatabaseSettings(BaseSettings):
-    """Database configuration settings"""
-    postgres_url: str = Field("postgresql://test:test@localhost:5432/test_db", env="DATABASE_URL")
-    postgres_pool_size: int = Field(20, env="POSTGRES_POOL_SIZE")
-    postgres_max_overflow: int = Field(30, env="POSTGRES_MAX_OVERFLOW")
-    
-    redis_url: str = Field("redis://localhost:6379/0", env="REDIS_URL")
-    redis_pool_size: int = Field(10, env="REDIS_POOL_SIZE")
-    
-    qdrant_url: str = Field("http://localhost:6333", env="QDRANT_URL")
-    qdrant_api_key: Optional[str] = Field(None, env="QDRANT_API_KEY")
 
-class LambdaLabsSettings(BaseSettings):
-    """Lambda Labs configuration settings"""
-    api_key: str = Field("test_key", env="LAMBDA_API_KEY")
-    primary_url: str = Field("http://localhost:8000", env="LAMBDA_PRIMARY_URL")
-    secondary_url: str = Field("http://localhost:8001", env="LAMBDA_SECONDARY_URL")
+class SophiaConfig(BaseSettings):
+    """Unified configuration for SOPHIA Intel"""
     
-    servers_json: str = Field("{}", env="LAMBDA_SERVERS_JSON")
+    # Environment
+    ENVIRONMENT: str = Field(default="production", env="ENVIRONMENT")
+    DEBUG: bool = Field(default=False, env="DEBUG")
+    LOG_LEVEL: str = Field(default="INFO", env="LOG_LEVEL")
     
-    @field_validator("servers_json")
-    @classmethod
-    def parse_servers_json(cls, v):
-        try:
-            return json.loads(v)
-        except json.JSONDecodeError:
-            return {}
-
-class AIServiceSettings(BaseSettings):
-    """AI service configuration settings"""
-    openai_api_key: str = Field("test_openai_key", env="OPENAI_API_KEY")
-    openai_api_base: Optional[str] = Field(None, env="OPENAI_API_BASE")
+    # Database Configuration
+    DATABASE_URL: str = Field(..., env="DATABASE_URL")
+    REDIS_URL: str = Field(default="redis://localhost:6379/0", env="REDIS_URL")
     
-    anthropic_api_key: Optional[str] = Field(None, env="ANTHROPIC_API_KEY")
-    openrouter_api_key: Optional[str] = Field(None, env="OPENROUTER_API_KEY")
+    # Neon Database (Production)
+    NEON_API_TOKEN: Optional[str] = Field(None, env="NEON_API_TOKEN")
+    NEON_PROJECT: str = Field(default="sophia", env="NEON_PROJECT")
+    NEON_DATABASE_URL: Optional[str] = Field(None, env="NEON_DATABASE_URL")
     
-    elevenlabs_api_key: Optional[str] = Field(None, env="ELEVENLABS_API_KEY")
-    elevenlabs_voice_id: str = Field("21m00Tcm4TlvDq8ikWAM", env="ELEVENLABS_VOICE_ID")
-
-class ResearchSettings(BaseSettings):
-    """Research service configuration settings"""
-    tavily_api_key: Optional[str] = Field(None, env="TAVILY_API_KEY")
-    serp_api_key: Optional[str] = Field(None, env="SERP_API_KEY")
-    news_api_key: Optional[str] = Field(None, env="NEWS_API_KEY")
+    # AI Service APIs
+    OPENAI_API_KEY: Optional[str] = Field(None, env="OPENAI_API_KEY")
+    OPENROUTER_API_KEY: Optional[str] = Field(None, env="OPENROUTER_API_KEY")
+    LLAMA_API_KEY: Optional[str] = Field(None, env="LLAMA_API_KEY")
     
-    bright_data_username: Optional[str] = Field(None, env="BRIGHT_DATA_USERNAME")
-    bright_data_password: Optional[str] = Field(None, env="BRIGHT_DATA_PASSWORD")
+    # Graph Database
+    NEO4J_URI: Optional[str] = Field(None, env="NEO4J_URI")
+    NEO4J_CLIENT_ID: Optional[str] = Field(None, env="NEO4J_CLIENT_ID")
+    NEO4J_CLIENT_SECRET: Optional[str] = Field(None, env="NEO4J_CLIENT_SECRET")
     
-    zenrows_api_key: Optional[str] = Field(None, env="ZENROWS_API_KEY")
-    apify_api_key: Optional[str] = Field(None, env="APIFY_API_KEY")
-
-class SecuritySettings(BaseSettings):
-    """Security configuration settings"""
-    jwt_secret_key: str = Field("change-in-production", env="JWT_SECRET_KEY")
-    jwt_expiration_hours: int = Field(24, env="JWT_EXPIRATION_HOURS")
+    # Deployment Services
+    RAILWAY_TOKEN: Optional[str] = Field(None, env="RAILWAY_TOKEN")
+    LAMBDA_API_KEY: Optional[str] = Field(None, env="LAMBDA_API_KEY")
+    DNSIMPLE_API_KEY: Optional[str] = Field(None, env="DNSIMPLE_API_KEY")
     
-    api_gateway_token: Optional[str] = Field(None, env="API_GATEWAY_TOKEN")
-    mcp_auth_token: Optional[str] = Field(None, env="MCP_AUTH_TOKEN")
+    # Pay Ready Data Sources
+    SALESFORCE_API_KEY: Optional[str] = Field(None, env="SALESFORCE_API_KEY")
+    SALESFORCE_INSTANCE_URL: Optional[str] = Field(None, env="SALESFORCE_INSTANCE_URL")
+    SALESFORCE_USERNAME: Optional[str] = Field(None, env="SALESFORCE_USERNAME")
     
-    allowed_origins: List[str] = Field(
-        ["http://localhost:3000", "https://sophia-intel.ai"],
-        env="ALLOWED_ORIGINS"
-    )
-    allowed_hosts: List[str] = Field(
-        ["localhost", "sophia-intel.ai", "*.sophia-intel.ai"],
-        env="ALLOWED_HOSTS"
-    )
+    HUBSPOT_API_KEY: Optional[str] = Field(None, env="HUBSPOT_API_KEY")
+    HUBSPOT_PORTAL_ID: Optional[str] = Field(None, env="HUBSPOT_PORTAL_ID")
     
-    @field_validator("allowed_origins", mode="before")
-    @classmethod
-    def parse_origins(cls, v):
-        if isinstance(v, str):
-            return v.split(",")
-        return v
+    GONG_API_KEY: Optional[str] = Field(None, env="GONG_API_KEY")
+    GONG_ACCESS_TOKEN: Optional[str] = Field(None, env="GONG_ACCESS_TOKEN")
     
-    @field_validator("allowed_hosts", mode="before")
-    @classmethod
-    def parse_hosts(cls, v):
-        if isinstance(v, str):
-            return v.split(",")
-        return v
-
-class MonitoringSettings(BaseSettings):
-    """Monitoring and observability settings"""
-    sentry_dsn: Optional[str] = Field(None, env="SENTRY_DSN")
-    prometheus_enabled: bool = Field(True, env="PROMETHEUS_ENABLED")
+    INTERCOM_API_KEY: Optional[str] = Field(None, env="INTERCOM_API_KEY")
+    INTERCOM_APP_ID: Optional[str] = Field(None, env="INTERCOM_APP_ID")
     
-    slack_webhook_url: Optional[str] = Field(None, env="SLACK_WEBHOOK_URL")
-    email_alerts_enabled: bool = Field(False, env="EMAIL_ALERTS_ENABLED")
+    LOOKER_API_KEY: Optional[str] = Field(None, env="LOOKER_API_KEY")
+    LOOKER_BASE_URL: Optional[str] = Field(None, env="LOOKER_BASE_URL")
     
-    log_level: str = Field("INFO", env="LOG_LEVEL")
-    structured_logging: bool = Field(True, env="STRUCTURED_LOGGING")
-
-class ApplicationSettings(BaseSettings):
-    """Main application settings"""
-    environment: str = Field("development", env="ENVIRONMENT")
-    debug: bool = Field(False, env="DEBUG")
+    SLACK_BOT_TOKEN: Optional[str] = Field(None, env="SLACK_BOT_TOKEN")
+    SLACK_APP_TOKEN: Optional[str] = Field(None, env="SLACK_APP_TOKEN")
     
-    host: str = Field("0.0.0.0", env="HOST")
-    port: int = Field(8000, env="PORT")
+    ASANA_API_KEY: Optional[str] = Field(None, env="ASANA_API_KEY")
+    ASANA_WORKSPACE_ID: Optional[str] = Field(None, env="ASANA_WORKSPACE_ID")
     
-    orchestrator_url: str = Field("http://localhost:8001", env="ORCHESTRATOR_URL")
-    mcp_server_url: str = Field("http://localhost:8002", env="MCP_SERVER_URL")
+    LINEAR_API_KEY: Optional[str] = Field(None, env="LINEAR_API_KEY")
+    LINEAR_TEAM_ID: Optional[str] = Field(None, env="LINEAR_TEAM_ID")
     
-    # Feature flags
-    web_access_enabled: bool = Field(True, env="WEB_ACCESS_ENABLED")
-    deep_research_enabled: bool = Field(True, env="DEEP_RESEARCH_ENABLED")
-    training_enabled: bool = Field(True, env="TRAINING_ENABLED")
-    voice_enabled: bool = Field(True, env="VOICE_ENABLED")
+    FACTOR_AI_API_KEY: Optional[str] = Field(None, env="FACTOR_AI_API_KEY")
+    FACTOR_AI_WORKSPACE: Optional[str] = Field(None, env="FACTOR_AI_WORKSPACE")
+    
+    NOTION_API_KEY: Optional[str] = Field(None, env="NOTION_API_KEY")
+    NOTION_DATABASE_ID: Optional[str] = Field(None, env="NOTION_DATABASE_ID")
+    
+    NETSUITE_API_KEY: Optional[str] = Field(None, env="NETSUITE_API_KEY")
+    NETSUITE_ACCOUNT_ID: Optional[str] = Field(None, env="NETSUITE_ACCOUNT_ID")
+    
+    # Security
+    JWT_SECRET_KEY: str = Field(default="change-in-production", env="JWT_SECRET_KEY")
+    ENCRYPTION_KEY: str = Field(default="change-in-production", env="ENCRYPTION_KEY")
+    API_KEY_SALT: str = Field(default="change-in-production", env="API_KEY_SALT")
+    
+    # Monitoring & Observability
+    GRAFANA_API_KEY: Optional[str] = Field(None, env="GRAFANA_API_KEY")
+    PROMETHEUS_ENDPOINT: str = Field(default="http://localhost:9090", env="PROMETHEUS_ENDPOINT")
+    SENTRY_DSN: Optional[str] = Field(None, env="SENTRY_DSN")
+    
+    # Application Settings
+    PORT: int = Field(default=8000, env="PORT")
+    HOST: str = Field(default="0.0.0.0", env="HOST")
+    WORKERS: int = Field(default=4, env="WORKERS")
+    MAX_CONNECTIONS: int = Field(default=1000, env="MAX_CONNECTIONS")
+    REQUEST_TIMEOUT: int = Field(default=300, env="REQUEST_TIMEOUT")
+    
+    # Celery Configuration
+    CELERY_BROKER_URL: str = Field(default="redis://localhost:6379/0", env="CELERY_BROKER_URL")
+    CELERY_RESULT_BACKEND: str = Field(default="redis://localhost:6379/0", env="CELERY_RESULT_BACKEND")
+    CELERY_TASK_SERIALIZER: str = Field(default="json", env="CELERY_TASK_SERIALIZER")
+    CELERY_RESULT_SERIALIZER: str = Field(default="json", env="CELERY_RESULT_SERIALIZER")
+    CELERY_ACCEPT_CONTENT: List[str] = Field(default=["json"], env="CELERY_ACCEPT_CONTENT")
+    
+    # Rate Limiting
+    RATE_LIMIT_REQUESTS_PER_MINUTE: int = Field(default=1000, env="RATE_LIMIT_REQUESTS_PER_MINUTE")
+    RATE_LIMIT_BURST: int = Field(default=100, env="RATE_LIMIT_BURST")
+    
+    # File Storage
+    UPLOAD_MAX_SIZE: int = Field(default=10485760, env="UPLOAD_MAX_SIZE")  # 10MB
+    ALLOWED_FILE_TYPES: str = Field(default="pdf,doc,docx,txt,csv,json", env="ALLOWED_FILE_TYPES")
+    
+    # Feature Flags
+    ENABLE_ADVANCED_RAG: bool = Field(default=True, env="ENABLE_ADVANCED_RAG")
+    ENABLE_CROSS_PLATFORM_CORRELATION: bool = Field(default=True, env="ENABLE_CROSS_PLATFORM_CORRELATION")
+    ENABLE_QUALITY_ASSURANCE: bool = Field(default=True, env="ENABLE_QUALITY_ASSURANCE")
+    ENABLE_REAL_TIME_LEARNING: bool = Field(default=True, env="ENABLE_REAL_TIME_LEARNING")
+    ENABLE_BACKGROUND_AGENTS: bool = Field(default=True, env="ENABLE_BACKGROUND_AGENTS")
+    
+    # Business Intelligence Settings
+    PAY_READY_DOMAIN_FOCUS: bool = Field(default=True, env="PAY_READY_DOMAIN_FOCUS")
+    BUSINESS_CONTEXT_WEIGHT: float = Field(default=0.8, env="BUSINESS_CONTEXT_WEIGHT")
+    CONFIDENCE_THRESHOLD: float = Field(default=0.7, env="CONFIDENCE_THRESHOLD")
+    QUALITY_THRESHOLD: float = Field(default=0.75, env="QUALITY_THRESHOLD")
+    
+    # Performance Tuning
+    DATABASE_POOL_SIZE: int = Field(default=20, env="DATABASE_POOL_SIZE")
+    DATABASE_MAX_OVERFLOW: int = Field(default=30, env="DATABASE_MAX_OVERFLOW")
+    REDIS_POOL_SIZE: int = Field(default=50, env="REDIS_POOL_SIZE")
+    HTTP_TIMEOUT: int = Field(default=30, env="HTTP_TIMEOUT")
+    WEBSOCKET_TIMEOUT: int = Field(default=300, env="WEBSOCKET_TIMEOUT")
+    
+    # Backup & Recovery
+    BACKUP_ENABLED: bool = Field(default=True, env="BACKUP_ENABLED")
+    BACKUP_SCHEDULE: str = Field(default="0 2 * * *", env="BACKUP_SCHEDULE")
+    BACKUP_RETENTION_DAYS: int = Field(default=30, env="BACKUP_RETENTION_DAYS")
     
     class Config:
-        env_file = ".env"
-        case_sensitive = False
-
-class Settings:
-    """Centralized settings container"""
-    
-    def __init__(self):
-        self.app = ApplicationSettings()
-        self.database = DatabaseSettings()
-        self.lambda_labs = LambdaLabsSettings()
-        self.ai_services = AIServiceSettings()
-        self.research = ResearchSettings()
-        self.security = SecuritySettings()
-        self.monitoring = MonitoringSettings()
-    
-    @property
-    def is_production(self) -> bool:
-        return self.app.environment.lower() == "production"
-    
-    @property
-    def is_development(self) -> bool:
-        return self.app.environment.lower() == "development"
+        env_file = ".env.unified"
+        env_file_encoding = "utf-8"
+        case_sensitive = True
     
     def get_database_url(self) -> str:
-        """Get database URL with connection parameters"""
-        return self.database.postgres_url
+        """Get the appropriate database URL based on environment"""
+        if self.ENVIRONMENT == "production" and self.NEON_DATABASE_URL:
+            return self.NEON_DATABASE_URL
+        return self.DATABASE_URL
     
-    def get_redis_url(self) -> str:
-        """Get Redis URL"""
-        return self.database.redis_url
-    
-    def validate_required_settings(self) -> List[str]:
-        """Validate that all required settings are present"""
-        missing = []
-        
-        # Check critical settings
-        if not self.database.postgres_url:
-            missing.append("DATABASE_URL")
-        if not self.database.redis_url:
-            missing.append("REDIS_URL")
-        if not self.lambda_labs.api_key:
-            missing.append("LAMBDA_API_KEY")
-        if not self.ai_services.openai_api_key:
-            missing.append("OPENAI_API_KEY")
-        
-        return missing
+    def is_feature_enabled(self, feature: str) -> bool:
+        """Check if a feature is enabled"""
+        feature_map = {
+            'advanced_rag': self.ENABLE_ADVANCED_RAG,
+            'cross_platform_correlation': self.ENABLE_CROSS_PLATFORM_CORRELATION,
+            'quality_assurance': self.ENABLE_QUALITY_ASSURANCE,
+            'real_time_learning': self.ENABLE_REAL_TIME_LEARNING,
+            'background_agents': self.ENABLE_BACKGROUND_AGENTS
+        }
+        return feature_map.get(feature, False)
 
-# Global settings instance
-settings = Settings()
 
-def get_settings() -> Settings:
+# Global configuration instance
+config = SophiaConfig()
+
+# Backward compatibility
+settings = config
+
+def get_settings() -> SophiaConfig:
     """Get global settings instance"""
-    return settings
+    return config
 
 def validate_environment():
     """Validate environment configuration"""
-    missing = settings.validate_required_settings()
+    missing = []
+    
+    # Check critical settings
+    if not config.DATABASE_URL:
+        missing.append("DATABASE_URL")
+    if not config.REDIS_URL:
+        missing.append("REDIS_URL")
+    
     if missing:
         raise ValueError(f"Missing required environment variables: {', '.join(missing)}")
     
     print(f"✅ Environment validation passed")
-    print(f"📊 Environment: {settings.app.environment}")
-    print(f"🔧 Debug mode: {settings.app.debug}")
-    print(f"🌐 Host: {settings.app.host}:{settings.app.port}")
+    print(f"📊 Environment: {config.ENVIRONMENT}")
+    print(f"🔧 Debug mode: {config.DEBUG}")
+    print(f"🌐 Host: {config.HOST}:{config.PORT}")
     
     return True
 

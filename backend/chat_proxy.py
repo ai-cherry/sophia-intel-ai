@@ -28,6 +28,11 @@ class ChatRequest(BaseModel):
     web_access: bool = False
     deep_research: bool = False
     training: bool = False
+    use_swarm: bool = False  # New flag for explicit Swarm routing
+    # Additional metadata
+    user_id: Optional[str] = None
+    model: Optional[str] = None
+    temperature: float = 0.7
 
 
 class ChatProxy:

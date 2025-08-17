@@ -21,19 +21,19 @@ FROM nginx:alpine
 # Copy built assets from builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Copy nginx configuration template
-COPY nginx.conf /etc/nginx/nginx.conf.template
+# Install gettext for envsubst
+RUN apk add --no-cache gettext
 
-# Create startup script
-RUN echo '#!/bin/sh' > /docker-entrypoint.sh && \
-    echo 'export PORT=${PORT:-80}' >> /docker-entrypoint.sh && \
-    echo 'envsubst "\$PORT" < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf' >> /docker-entrypoint.sh && \
-    echo 'nginx -g "daemon off;"' >> /docker-entrypoint.sh && \
-    chmod +x /docker-entrypoint.sh
+# Copy nginx configuration
+COPY nginx.conf /etc/nginx/nginx.conf
+
+# Copy startup script
+COPY start.sh /start.sh
+RUN chmod +x /start.sh
 
 # Expose port (Railway will set this dynamically)
-EXPOSE $PORT
+EXPOSE 80
 
-# Start with our custom script
-CMD ["/docker-entrypoint.sh"]
+# Use startup script
+CMD ["/start.sh"]
 

@@ -14,7 +14,7 @@ from .models import (
     MCPServer, LambdaServer, MCPServerStatus, MCPOperation, 
     MCPHealthCheck, MCPDashboardData, ServerStatus, MCPServerType
 )
-from .lambda_manager import LambdaServerManager
+from .lambda_manager import LambdaManager
 
 
 class MCPService:
@@ -25,7 +25,7 @@ class MCPService:
     
     def __init__(self):
         self.servers: Dict[str, MCPServer] = {}
-        self.lambda_manager = LambdaServerManager()
+        self.lambda_manager = LambdaManager()
         self.health_check_tasks: Dict[str, asyncio.Task] = {}
         self.operations: Dict[str, MCPOperation] = {}
         

@@ -7,14 +7,14 @@ import re
 import asyncio
 from datetime import datetime
 
-from backend.config.settings import Settings
+from backend.config.settings import SophiaConfig, config
 
 
 class ChatRouter:
     """Intelligent chat router for backend selection"""
     
-    def __init__(self, settings: Settings):
-        self.settings = settings
+    def __init__(self, settings: SophiaConfig = None):
+        self.settings = settings or config
         
         # Keywords that suggest Swarm usage
         self.swarm_keywords = {

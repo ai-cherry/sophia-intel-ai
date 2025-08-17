@@ -20,6 +20,7 @@ class SophiaConfig(BaseSettings):
     # Database Configuration
     DATABASE_URL: str = Field(..., env="DATABASE_URL")
     REDIS_URL: str = Field(default="redis://localhost:6379/0", env="REDIS_URL")
+    REDIS_USER_API_KEY: Optional[str] = Field(None, env="REDIS_USER_API_KEY")
     
     # Neon Database (Production)
     NEON_API_TOKEN: Optional[str] = Field(None, env="NEON_API_TOKEN")
@@ -137,6 +138,7 @@ class SophiaConfig(BaseSettings):
         env_file = ".env.unified"
         env_file_encoding = "utf-8"
         case_sensitive = True
+        extra = "allow"  # Allow extra environment variables
     
     def get_database_url(self) -> str:
         """Get the appropriate database URL based on environment"""

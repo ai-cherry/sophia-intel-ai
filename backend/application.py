@@ -9,7 +9,7 @@ from typing import Dict, Any
 
 from backend.core.dependency_container import DependencyContainer
 from backend.core.service_registry import ServiceRegistry
-from backend.config.settings import Settings
+from backend.config.settings import SophiaConfig, config
 
 # Import service classes
 from backend.domains.chat.service_v2 import ChatService
@@ -22,7 +22,7 @@ class SophiaApplication:
     
     def __init__(self):
         self.container = DependencyContainer()
-        self.settings = Settings()
+        self.settings = config
         self._initialized = False
     
     async def initialize(self) -> None:

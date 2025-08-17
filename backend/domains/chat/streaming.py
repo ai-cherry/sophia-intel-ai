@@ -7,14 +7,14 @@ import json
 from typing import AsyncGenerator, Dict, Any, Optional
 from datetime import datetime
 
-from backend.config.settings import Settings
+from backend.config.settings import SophiaConfig, config
 
 
 class StreamingChatHandler:
     """Handles streaming chat responses"""
     
-    def __init__(self, settings: Settings):
-        self.settings = settings
+    def __init__(self, settings: SophiaConfig = None):
+        self.settings = settings or config
     
     async def stream_response(
         self, 

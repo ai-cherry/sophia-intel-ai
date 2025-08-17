@@ -8,7 +8,7 @@ import asyncio
 from datetime import datetime
 
 from backend.core.base_service import BaseService
-from backend.config.settings import Settings
+from backend.config.settings import SophiaConfig, config
 from .models import ChatRequest, ChatResponse, ChatMessage
 from .router import ChatRouter
 from .streaming import StreamingChatHandler
@@ -19,7 +19,7 @@ class ChatService(BaseService):
     
     def __init__(self, name: str, dependencies: Optional[Dict[str, Any]] = None):
         super().__init__(name, dependencies)
-        self.settings: Optional[Settings] = None
+        self.settings: Optional[SophiaConfig] = None
         self.router: Optional[ChatRouter] = None
         self.streaming_handler: Optional[StreamingChatHandler] = None
         self.session_memory: Dict[str, Dict[str, Any]] = {}
@@ -27,7 +27,7 @@ class ChatService(BaseService):
     async def _initialize(self) -> None:
         """Initialize chat service"""
         # Get settings from dependencies or create default
-        self.settings = self.dependencies.get('settings') or Settings()
+        self.settings = self.dependencies.get('settings') or config
         
         # Initialize components
         self.router = ChatRouter(self.settings)

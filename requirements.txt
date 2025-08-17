@@ -9,3 +9,9 @@ psycopg2-binary==2.9.9
 sqlalchemy==2.0.23
 requests==2.31.0
 python-dotenv==1.0.0
+PyJWT==2.8.0
+python-multipart==0.0.6
+celery==5.3.4
+qdrant-client==1.7.0
+llama-index==0.9.30
+haystack-ai==2.0.0

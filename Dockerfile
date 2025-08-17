@@ -23,4 +23,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
 EXPOSE 8000
-CMD ["python", "-m", "backend.simple_sophia_app"]
+CMD ["python", "main.py"]

@@ -15,7 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 # Add backend to Python path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'backend'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__)))
 
 from backend.application import get_application
 from backend.api.enhanced_endpoints import create_enhanced_api_router

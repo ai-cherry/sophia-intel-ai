@@ -1,0 +1,11 @@
+[build]
+builder = "DOCKERFILE"
+
+[deploy]
+healthcheckPath = "/"
+healthcheckTimeout = 30
+restartPolicyType = "ON_FAILURE"
+
+[variables]
+PORT = "80"
+NODE_ENV = "production"

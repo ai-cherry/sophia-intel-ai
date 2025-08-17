@@ -108,7 +108,7 @@ async def health_check():
     return {
         "status": "healthy",
         "service": "sophia-intel-enhanced-backend",
-        "version": "3.0.0",
+        "version": "2.1.0",
         "timestamp": datetime.utcnow().isoformat()
     }
 

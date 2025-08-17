@@ -20,6 +20,24 @@ from config.config import settings
 from libs.mcp_client.memory_client import MCPMemoryClient
 from swarm.chat_interface import SwarmChatInterface
 
+# Import enhanced orchestrator
+try:
+    from enhanced_orchestrator import get_orchestrator, EnhancedSOPHIAOrchestrator
+    ENHANCED_ORCHESTRATOR_AVAILABLE = True
+    logger.info("Enhanced SOPHIA Orchestrator imported successfully")
+except ImportError as e:
+    ENHANCED_ORCHESTRATOR_AVAILABLE = False
+    logger.warning(f"Enhanced orchestrator not available: {e}")
+
+# Import enhanced auth
+try:
+    from enhanced_auth import authenticate_request, require_admin, optional_auth, get_authenticator
+    ENHANCED_AUTH_AVAILABLE = True
+    logger.info("Enhanced authentication imported successfully")
+except ImportError as e:
+    ENHANCED_AUTH_AVAILABLE = False
+    logger.warning(f"Enhanced auth not available: {e}")
+
 
 class EnhancedChatRequest(BaseModel):
     """Enhanced chat request with all feature toggles and routing options"""
@@ -326,8 +344,41 @@ class ChatRouter:
             raise
 
     async def _handle_orchestrator_request(self, request: EnhancedChatRequest, session_id: str) -> Dict[str, Any]:
-        """Handle request using Orchestrator (MCP)"""
+        """Handle request using Enhanced Orchestrator or fallback to MCP"""
         try:
+            # Try enhanced orchestrator first if available
+            if ENHANCED_ORCHESTRATOR_AVAILABLE:
+                logger.info("Using Enhanced SOPHIA Orchestrator")
+                orchestrator = get_orchestrator()
+                
+                # Prepare user context
+                user_context = {
+                    "user_id": request.user_id or "anonymous",
+                    "access_level": "admin",  # Default to admin for now
+                    "auth_type": "api_key"
+                }
+                
+                # Process message with enhanced orchestrator
+                response = await orchestrator.process_chat_message(
+                    message=request.message,
+                    session_id=session_id,
+                    user_context=user_context
+                )
+                
+                # Store AI response in memory
+                await self._store_ai_message(session_id, response["response"], request.user_id, "enhanced_orchestrator")
+                
+                return {
+                    "session_id": session_id,
+                    "response": response["response"],
+                    "backend_used": "enhanced_orchestrator",
+                    "metadata": response["metadata"],
+                    "success": True
+                }
+            
+            # Fallback to original MCP orchestrator
+            logger.info("Using fallback MCP orchestrator")
+            
             # Prepare request for MCP server
             mcp_request = {
                 "prompt": request.message,

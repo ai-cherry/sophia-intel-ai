@@ -6,7 +6,7 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "python -m backend.unified_sophia_app",
+    "startCommand": "python main.py",
     "healthcheckPath": "/health",
     "healthcheckTimeout": 300,
     "restartPolicyType": "ON_FAILURE",

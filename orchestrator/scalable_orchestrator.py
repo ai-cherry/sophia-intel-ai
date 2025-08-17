@@ -20,6 +20,8 @@ import aiohttp
 from loguru import logger
 
 from config.config import settings
+from services.lambda_inference_client import LambdaInferenceClient, run_lambda_inference
+from services.openrouter_client import OpenRouterClient
 
 
 # Simple circuit breaker implementation
@@ -397,14 +399,114 @@ class ScalableOrchestrator:
             return {"temperature": 0.7, "max_tokens": 2000}
     
     async def _generate_code(self, user_input: str, memory_context: Dict[str, Any]) -> str:
-        """Generate code using AI with memory context"""
-        # Placeholder - integrate with your AI provider
-        return f"# Generated code for: {user_input}\n# Context: {memory_context}"
+        """Generate code using Lambda Labs GH200 servers with OpenRouter fallback"""
+        try:
+            # Build prompt with context
+            prompt = self._build_code_prompt(user_input, memory_context)
+            
+            # Try Lambda Labs inference first with circuit breaker
+            try:
+                with self.circuit_breaker:
+                    result = await run_lambda_inference(
+                        prompt=prompt,
+                        max_tokens=1024,
+                        temperature=0.1  # Lower temperature for code generation
+                    )
+                    logger.info(f"Code generated using Lambda Labs server: {result.get('server')}")
+                    return result.get('response', '')
+                    
+            except Exception as lambda_error:
+                logger.warning(f"Lambda Labs inference failed: {lambda_error}")
+                
+                # Fallback to OpenRouter
+                async with OpenRouterClient() as client:
+                    messages = [{"role": "user", "content": prompt}]
+                    result = await client.chat_completion(
+                        messages=messages,
+                        model="anthropic/claude-3.5-sonnet",  # Good for code generation
+                        max_tokens=1024,
+                        temperature=0.1
+                    )
+                    logger.info("Code generated using OpenRouter fallback")
+                    return result.get('content', '')
+                    
+        except Exception as e:
+            logger.error(f"Code generation failed: {e}")
+            return f"# Error generating code: {str(e)}\n# Please try again or provide more specific requirements."
+    
+    def _build_code_prompt(self, user_input: str, memory_context: Dict[str, Any]) -> str:
+        """Build optimized prompt for code generation"""
+        context_info = ""
+        if memory_context:
+            context_info = f"\nRelevant context from previous conversations:\n{json.dumps(memory_context, indent=2)}\n"
+        
+        return f"""You are SOPHIA Intel, an expert software engineer. Generate high-quality, production-ready code based on the user's request.
+
+User Request: {user_input}
+{context_info}
+Requirements:
+- Write clean, well-documented code
+- Include error handling where appropriate
+- Follow best practices for the language/framework
+- Provide brief explanations for complex logic
+- Make the code production-ready
+
+Generate the code:"""
     
     async def _perform_research(self, user_input: str, memory_context: Dict[str, Any]) -> str:
-        """Perform web research with memory context"""
-        # Placeholder - integrate with your research tools
-        return f"Research results for: {user_input}\nContext: {memory_context}"
+        """Perform web research with Lambda Labs GH200 servers and OpenRouter fallback"""
+        try:
+            # Build research prompt with context
+            prompt = self._build_research_prompt(user_input, memory_context)
+            
+            # Try Lambda Labs inference first with circuit breaker
+            try:
+                with self.circuit_breaker:
+                    result = await run_lambda_inference(
+                        prompt=prompt,
+                        max_tokens=1024,
+                        temperature=0.3  # Moderate temperature for research
+                    )
+                    logger.info(f"Research completed using Lambda Labs server: {result.get('server')}")
+                    return result.get('response', '')
+                    
+            except Exception as lambda_error:
+                logger.warning(f"Lambda Labs research failed: {lambda_error}")
+                
+                # Fallback to OpenRouter
+                async with OpenRouterClient() as client:
+                    messages = [{"role": "user", "content": prompt}]
+                    result = await client.chat_completion(
+                        messages=messages,
+                        model="google/gemini-2.0-flash-exp",  # Good for research and analysis
+                        max_tokens=1024,
+                        temperature=0.3
+                    )
+                    logger.info("Research completed using OpenRouter fallback")
+                    return result.get('content', '')
+                    
+        except Exception as e:
+            logger.error(f"Research failed: {e}")
+            return f"Research Error: {str(e)}\nPlease try rephrasing your research query."
+    
+    def _build_research_prompt(self, user_input: str, memory_context: Dict[str, Any]) -> str:
+        """Build optimized prompt for research tasks"""
+        context_info = ""
+        if memory_context:
+            context_info = f"\nRelevant context from previous conversations:\n{json.dumps(memory_context, indent=2)}\n"
+        
+        return f"""You are SOPHIA Intel, an expert researcher and analyst. Provide comprehensive, accurate research and analysis based on the user's request.
+
+User Request: {user_input}
+{context_info}
+Requirements:
+- Provide accurate, up-to-date information
+- Include multiple perspectives when relevant
+- Cite sources or indicate when information should be verified
+- Structure the response clearly with key findings
+- Focus on actionable insights
+
+Research and analyze:"""
     
     async def _generate_response(self, context: Dict[str, Any], memory_context: Dict[str, Any]) -> str:
         """Generate final response with full context"""

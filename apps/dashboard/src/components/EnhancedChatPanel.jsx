@@ -45,7 +45,7 @@ import {
   Network,
 } from "lucide-react";
 
-export function ChatPanel({ 
+export function EnhancedChatPanel({ 
   apiBaseUrl = "https://sophia-backend-production-1fc3.up.railway.app",
   voiceEnabled = false,
   audioOutput = false,
@@ -824,4 +824,7 @@ export function ChatPanel({
     </Card>
   );
 }
+
+
+
 

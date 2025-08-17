@@ -171,8 +171,241 @@ def stats():
         click.echo(f"❌ Error fetching statistics: {e}")
 
 @cli.group()
+def lambda_servers():
+    """🖥️ Lambda Labs Server Management - Control GH200 inference servers"""
+    pass
+
+@lambda_servers.command()
+@click.option('--token', '-t', help='MCP authentication token', envvar='MCP_AUTH_TOKEN')
+def list(token: Optional[str]):
+    """📋 List all Lambda Labs GH200 servers"""
+    if not cli_instance.check_server_health():
+        click.echo("❌ MCP Server not running. Please start the server first.")
+        return
+    
+    headers = {}
+    if token:
+        headers['X-MCP-Token'] = token
+    
+    try:
+        response = requests.get(f"{cli_instance.base_url}/servers", headers=headers)
+        if response.status_code == 401:
+            click.echo("❌ Authentication required. Set MCP_AUTH_TOKEN or use --token")
+            return
+        
+        response.raise_for_status()
+        data = response.json()
+        
+        click.echo("🖥️ Lambda Labs GH200 Servers:")
+        click.echo("=" * 50)
+        
+        for server in data.get('servers', []):
+            status_emoji = "🟢" if server['status'] == 'active' else "🔴" if server['status'] == 'error' else "🟡"
+            click.echo(f"\n{status_emoji} {server['key'].upper()}")
+            click.echo(f"   Name: {server['name']}")
+            click.echo(f"   IP: {server['ip']}")
+            click.echo(f"   Role: {server['role']}")
+            click.echo(f"   Status: {server['status']}")
+            click.echo(f"   Inference URL: {server.get('inference_url', 'N/A')}")
+            
+        click.echo(f"\nTotal servers: {data.get('total', 0)}")
+        
+    except Exception as e:
+        click.echo(f"❌ Error listing servers: {e}")
+
+@lambda_servers.command()
+@click.argument('server_key', type=click.Choice(['primary', 'secondary']))
+@click.option('--token', '-t', help='MCP authentication token', envvar='MCP_AUTH_TOKEN')
+@click.option('--force', '-f', is_flag=True, help='Skip confirmation prompt')
+def start(server_key: str, token: Optional[str], force: bool):
+    """🚀 Start a Lambda Labs server"""
+    if not force:
+        if not click.confirm(f"Start {server_key} server?"):
+            click.echo("Operation cancelled.")
+            return
+    
+    if not cli_instance.check_server_health():
+        click.echo("❌ MCP Server not running. Please start the server first.")
+        return
+    
+    headers = {}
+    if token:
+        headers['X-MCP-Token'] = token
+    
+    try:
+        click.echo(f"🚀 Starting {server_key} server...")
+        response = requests.post(f"{cli_instance.base_url}/servers/{server_key}/start", headers=headers)
+        
+        if response.status_code == 401:
+            click.echo("❌ Authentication required. Set MCP_AUTH_TOKEN or use --token")
+            return
+        
+        response.raise_for_status()
+        data = response.json()
+        
+        click.echo(f"✅ {server_key.capitalize()} server start initiated")
+        click.echo(f"   Instance ID: {data.get('instance_id')}")
+        click.echo("   Note: Server may take a few minutes to fully start")
+        
+    except Exception as e:
+        click.echo(f"❌ Error starting server: {e}")
+
+@lambda_servers.command()
+@click.argument('server_key', type=click.Choice(['primary', 'secondary']))
+@click.option('--token', '-t', help='MCP authentication token', envvar='MCP_AUTH_TOKEN')
+@click.option('--force', '-f', is_flag=True, help='Skip confirmation prompt')
+def stop(server_key: str, token: Optional[str], force: bool):
+    """🛑 Stop a Lambda Labs server"""
+    if not force:
+        if not click.confirm(f"⚠️  Stop {server_key} server? This will interrupt any running inference tasks."):
+            click.echo("Operation cancelled.")
+            return
+    
+    if not cli_instance.check_server_health():
+        click.echo("❌ MCP Server not running. Please start the server first.")
+        return
+    
+    headers = {}
+    if token:
+        headers['X-MCP-Token'] = token
+    
+    try:
+        click.echo(f"🛑 Stopping {server_key} server...")
+        response = requests.post(f"{cli_instance.base_url}/servers/{server_key}/stop", headers=headers)
+        
+        if response.status_code == 401:
+            click.echo("❌ Authentication required. Set MCP_AUTH_TOKEN or use --token")
+            return
+        
+        response.raise_for_status()
+        data = response.json()
+        
+        click.echo(f"✅ {server_key.capitalize()} server stop initiated")
+        click.echo(f"   Instance ID: {data.get('instance_id')}")
+        
+    except Exception as e:
+        click.echo(f"❌ Error stopping server: {e}")
+
+@lambda_servers.command()
+@click.argument('server_key', type=click.Choice(['primary', 'secondary']))
+@click.option('--token', '-t', help='MCP authentication token', envvar='MCP_AUTH_TOKEN')
+@click.option('--force', '-f', is_flag=True, help='Skip confirmation prompt')
+def restart(server_key: str, token: Optional[str], force: bool):
+    """🔄 Restart a Lambda Labs server"""
+    if not force:
+        if not click.confirm(f"Restart {server_key} server?"):
+            click.echo("Operation cancelled.")
+            return
+    
+    if not cli_instance.check_server_health():
+        click.echo("❌ MCP Server not running. Please start the server first.")
+        return
+    
+    headers = {}
+    if token:
+        headers['X-MCP-Token'] = token
+    
+    try:
+        click.echo(f"🔄 Restarting {server_key} server...")
+        response = requests.post(f"{cli_instance.base_url}/servers/{server_key}/restart", headers=headers)
+        
+        if response.status_code == 401:
+            click.echo("❌ Authentication required. Set MCP_AUTH_TOKEN or use --token")
+            return
+        
+        response.raise_for_status()
+        data = response.json()
+        
+        click.echo(f"✅ {server_key.capitalize()} server restart initiated")
+        click.echo(f"   Instance ID: {data.get('instance_id')}")
+        click.echo("   Note: Server may take a few minutes to fully restart")
+        
+    except Exception as e:
+        click.echo(f"❌ Error restarting server: {e}")
+
+@lambda_servers.command()
+@click.argument('server_key', type=click.Choice(['primary', 'secondary']))
+@click.option('--token', '-t', help='MCP authentication token', envvar='MCP_AUTH_TOKEN')
+def stats(server_key: str, token: Optional[str]):
+    """📊 Get server statistics and performance metrics"""
+    if not cli_instance.check_server_health():
+        click.echo("❌ MCP Server not running. Please start the server first.")
+        return
+    
+    headers = {}
+    if token:
+        headers['X-MCP-Token'] = token
+    
+    try:
+        response = requests.get(f"{cli_instance.base_url}/servers/{server_key}/stats", headers=headers)
+        
+        if response.status_code == 401:
+            click.echo("❌ Authentication required. Set MCP_AUTH_TOKEN or use --token")
+            return
+        
+        response.raise_for_status()
+        data = response.json()
+        
+        stats = data.get('stats', {})
+        config = data.get('config', {})
+        
+        click.echo(f"📊 {server_key.capitalize()} Server Statistics:")
+        click.echo("=" * 40)
+        click.echo(f"Status: {stats.get('status', 'unknown')}")
+        click.echo(f"Instance Type: {stats.get('instance_type', 'unknown')}")
+        click.echo(f"Region: {stats.get('region', 'unknown')}")
+        click.echo(f"IP Address: {stats.get('ip', 'unknown')}")
+        click.echo(f"Role: {config.get('role', 'unknown')}")
+        click.echo(f"GPU Utilization: {stats.get('gpu_utilization', 'N/A')}")
+        click.echo(f"Memory Usage: {stats.get('memory_usage', 'N/A')}")
+        click.echo(f"Uptime: {stats.get('uptime', 'N/A')}")
+        
+        if 'error' in stats:
+            click.echo(f"⚠️  Error: {stats['error']}")
+        
+    except Exception as e:
+        click.echo(f"❌ Error getting server stats: {e}")
+
+@lambda_servers.command()
+@click.option('--token', '-t', help='MCP authentication token', envvar='MCP_AUTH_TOKEN')
+@click.option('--force', '-f', is_flag=True, help='Skip confirmation prompt')
+def rename(token: Optional[str], force: bool):
+    """🏷️ Rename all servers with proper naming convention"""
+    if not force:
+        if not click.confirm("Rename all servers to use proper naming convention?"):
+            click.echo("Operation cancelled.")
+            return
+    
+    if not cli_instance.check_server_health():
+        click.echo("❌ MCP Server not running. Please start the server first.")
+        return
+    
+    headers = {}
+    if token:
+        headers['X-MCP-Token'] = token
+    
+    try:
+        click.echo("🏷️ Renaming servers...")
+        response = requests.post(f"{cli_instance.base_url}/servers/rename", headers=headers)
+        
+        if response.status_code == 401:
+            click.echo("❌ Authentication required. Set MCP_AUTH_TOKEN or use --token")
+            return
+        
+        response.raise_for_status()
+        data = response.json()
+        
+        click.echo("✅ Rename operation completed:")
+        for result in data.get('rename_results', []):
+            status_emoji = "✅" if result['status'] == 'success' else "❌"
+            click.echo(f"   {status_emoji} {result['server']}: {result.get('new_name', result.get('error'))}")
+        
+    except Exception as e:
+        click.echo(f"❌ Error renaming servers: {e}")
+
+@cli.group()
 def server():
-    """🖥️ Server Management - Start, stop, and monitor MCP server"""
+    """🖥️ MCP Server Management - Start, stop, and monitor MCP server"""
     pass
 
 @server.command()

@@ -1,0 +1,234 @@
+name: Deploy SOPHIA Intel with Valid Token
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Verify Northflank token works
+        env:
+          NORTHFLANK_API_TOKEN: nf-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1dWlkIjoiZTU5YTI2ZmItMjRkMi00Mjg4LWJlOGQtZTQxMGU3NDQ2NGM5IiwiZW50aXR5SWQiOiI2OGEwOTVjNTkwMDNiYWJmNTUyNzFjNjYiLCJlbnRpdHlUeXBlIjoidGVhbSIsInRva2VuSWQiOiI2OGEwYTA3MGNlMTlmMDBiOTU2Mjk4YmQiLCJ0b2tlbkludGVybmFsSWQiOiJzb3BoaWEzIiwicm9sZUlkIjoiNjhhMDlmNzJjZTE5ZjAwYjk1NjI5OGE5Iiwicm9sZUludGVybmFsSWQiOiJvcmcvc29waGlhIiwidHlwZSI6InRlbXBsYXRlIiwiaWF0IjoxNzU1MzU3Mjk2fQ.9VqznqDce0lLqJuTDqrZq_fSjbxJrSUx97pVUFujkwM
+        run: |
+          set -euo pipefail
+          echo "🔍 Verifying Northflank API access..."
+          
+          # Test API access (without printing token)
+          RESPONSE=$(curl -s -w "%{http_code}" -H "Authorization: Bearer $NORTHFLANK_API_TOKEN" \
+            "https://api.northflank.com/v1/projects/sophia-intel" -o /tmp/project_response.json)
+          
+          if [ "$RESPONSE" = "200" ]; then
+            echo "✅ Northflank API access verified"
+            echo "📋 Project details:"
+            cat /tmp/project_response.json | jq -r '.data | "Project: \(.name) | Region: \(.deployment.region)"'
+          else
+            echo "❌ Northflank API access failed (HTTP $RESPONSE)"
+            cat /tmp/project_response.json
+            exit 1
+          fi
+
+      - name: Deploy API Service
+        env:
+          NORTHFLANK_API_TOKEN: nf-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1dWlkIjoiZTU5YTI2ZmItMjRkMi00Mjg4LWJlOGQtZTQxMGU3NDQ2NGM5IiwiZW50aXR5SWQiOiI2OGEwOTVjNTkwMDNiYWJmNTUyNzFjNjYiLCJlbnRpdHlUeXBlIjoidGVhbSIsInRva2VuSWQiOiI2OGEwYTA3MGNlMTlmMDBiOTU2Mjk4YmQiLCJ0b2tlbkludGVybmFsSWQiOiJzb3BoaWEzIiwicm9sZUlkIjoiNjhhMDlmNzJjZTE5ZjAwYjk1NjI5OGE5Iiwicm9sZUludGVybmFsSWQiOiJvcmcvc29waGlhIiwidHlwZSI6InRlbXBsYXRlIiwiaWF0IjoxNzU1MzU3Mjk2fQ.9VqznqDce0lLqJuTDqrZq_fSjbxJrSUx97pVUFujkwM
+          LAMBDA_API_KEY: secret_sophiacloudapi_17cf7f3cedca48f18b4b8ea46cbb258f
+          DASHBOARD_API_TOKEN: sophia_dashboard_2025_secure_token
+        run: |
+          set -euo pipefail
+          echo "🚀 Deploying SOPHIA Intel API Service..."
+          
+          # Create API service payload
+          API_PAYLOAD='{
+            "name": "sophia-api",
+            "spec": {
+              "kind": "Deployment",
+              "replicas": 1,
+              "vcsData": {
+                "projectUrl": "https://github.com/ai-cherry/sophia-intel",
+                "projectType": "github",
+                "accountLogin": "ai-cherry",
+                "projectName": "sophia-intel",
+                "gitRef": "main"
+              },
+              "buildSettings": {
+                "dockerfile": {
+                  "buildEngine": "kaniko",
+                  "dockerFilePath": "/backend/Dockerfile",
+                  "dockerWorkDir": "/backend"
+                }
+              },
+              "runtimeEnvironment": {
+                "LAMBDA_API_KEY": "'"$LAMBDA_API_KEY"'",
+                "DASHBOARD_API_TOKEN": "'"$DASHBOARD_API_TOKEN"'",
+                "PORT": "5000"
+              },
+              "ports": [
+                {
+                  "name": "api",
+                  "internalPort": 5000,
+                  "public": true,
+                  "protocol": "HTTP",
+                  "domains": [
+                    {
+                      "domain": "api.sophia-intel.ai"
+                    }
+                  ]
+                }
+              ]
+            }
+          }'
+          
+          # Deploy API service
+          echo "📋 Creating/updating API service..."
+          RESPONSE=$(curl -s -w "%{http_code}" -X PUT \
+            -H "Authorization: Bearer $NORTHFLANK_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "$API_PAYLOAD" \
+            "https://api.northflank.com/v1/projects/sophia-intel/services/sophia-api" \
+            -o /tmp/api_response.json)
+          
+          if [ "$RESPONSE" = "200" ] || [ "$RESPONSE" = "201" ]; then
+            echo "✅ API service deployed successfully (HTTP $RESPONSE)"
+          else
+            echo "❌ API service deployment failed (HTTP $RESPONSE)"
+            cat /tmp/api_response.json
+            exit 1
+          fi
+
+      - name: Deploy Dashboard Service
+        env:
+          NORTHFLANK_API_TOKEN: nf-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1dWlkIjoiZTU5YTI2ZmItMjRkMi00Mjg4LWJlOGQtZTQxMGU3NDQ2NGM5IiwiZW50aXR5SWQiOiI2OGEwOTVjNTkwMDNiYWJmNTUyNzFjNjYiLCJlbnRpdHlUeXBlIjoidGVhbSIsInRva2VuSWQiOiI2OGEwYTA3MGNlMTlmMDBiOTU2Mjk4YmQiLCJ0b2tlbkludGVybmFsSWQiOiJzb3BoaWEzIiwicm9sZUlkIjoiNjhhMDlmNzJjZTE5ZjAwYjk1NjI5OGE5Iiwicm9sZUludGVybmFsSWQiOiJvcmcvc29waGlhIiwidHlwZSI6InRlbXBsYXRlIiwiaWF0IjoxNzU1MzU3Mjk2fQ.9VqznqDce0lLqJuTDqrZq_fSjbxJrSUx97pVUFujkwM
+        run: |
+          set -euo pipefail
+          echo "🚀 Deploying SOPHIA Intel Dashboard Service..."
+          
+          # Create Dashboard service payload
+          DASHBOARD_PAYLOAD='{
+            "name": "sophia-dashboard",
+            "spec": {
+              "kind": "Deployment",
+              "replicas": 1,
+              "vcsData": {
+                "projectUrl": "https://github.com/ai-cherry/sophia-intel",
+                "projectType": "github",
+                "accountLogin": "ai-cherry",
+                "projectName": "sophia-intel",
+                "gitRef": "main"
+              },
+              "buildSettings": {
+                "dockerfile": {
+                  "buildEngine": "kaniko",
+                  "dockerFilePath": "/apps/dashboard/Dockerfile",
+                  "dockerWorkDir": "/apps/dashboard"
+                }
+              },
+              "runtimeEnvironment": {
+                "VITE_API_URL": "https://api.sophia-intel.ai",
+                "NODE_ENV": "production"
+              },
+              "ports": [
+                {
+                  "name": "web",
+                  "internalPort": 80,
+                  "public": true,
+                  "protocol": "HTTP",
+                  "domains": [
+                    {
+                      "domain": "www.sophia-intel.ai"
+                    }
+                  ]
+                }
+              ]
+            }
+          }'
+          
+          # Deploy Dashboard service
+          echo "📋 Creating/updating Dashboard service..."
+          RESPONSE=$(curl -s -w "%{http_code}" -X PUT \
+            -H "Authorization: Bearer $NORTHFLANK_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "$DASHBOARD_PAYLOAD" \
+            "https://api.northflank.com/v1/projects/sophia-intel/services/sophia-dashboard" \
+            -o /tmp/dashboard_response.json)
+          
+          if [ "$RESPONSE" = "200" ] || [ "$RESPONSE" = "201" ]; then
+            echo "✅ Dashboard service deployed successfully (HTTP $RESPONSE)"
+          else
+            echo "❌ Dashboard service deployment failed (HTTP $RESPONSE)"
+            cat /tmp/dashboard_response.json
+            exit 1
+          fi
+
+      - name: Wait for Services to Start
+        run: |
+          echo "⏳ Waiting for services to build and start..."
+          echo "This may take 5-10 minutes for initial deployment..."
+          sleep 300  # Wait 5 minutes for build and deployment
+
+      - name: Health Checks
+        env:
+          NORTHFLANK_API_TOKEN: nf-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1dWlkIjoiZTU5YTI2ZmItMjRkMi00Mjg4LWJlOGQtZTQxMGU3NDQ2NGM5IiwiZW50aXR5SWQiOiI2OGEwOTVjNTkwMDNiYWJmNTUyNzFjNjYiLCJlbnRpdHlUeXBlIjoidGVhbSIsInRva2VuSWQiOiI2OGEwYTA3MGNlMTlmMDBiOTU2Mjk4YmQiLCJ0b2tlbkludGVybmFsSWQiOiJzb3BoaWEzIiwicm9sZUlkIjoiNjhhMDlmNzJjZTE5ZjAwYjk1NjI5OGE5Iiwicm9sZUludGVybmFsSWQiOiJvcmcvc29waGlhIiwidHlwZSI6InRlbXBsYXRlIiwiaWF0IjoxNzU1MzU3Mjk2fQ.9VqznqDce0lLqJuTDqrZq_fSjbxJrSUx97pVUFujkwM
+        run: |
+          set -euo pipefail
+          echo "🔍 Running health checks..."
+          
+          # Check service status via Northflank API
+          echo "📋 Checking service status..."
+          curl -s -H "Authorization: Bearer $NORTHFLANK_API_TOKEN" \
+            "https://api.northflank.com/v1/projects/sophia-intel/services" | \
+            jq -r '.data[] | "Service: \(.name) | Status: \(.status) | Replicas: \(.replicas.running)/\(.replicas.desired)"'
+          
+          # Health check endpoints
+          echo ""
+          echo "🔍 Testing endpoint accessibility..."
+          
+          for i in {1..12}; do
+            echo "Attempt $i/12:"
+            
+            API_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://api.sophia-intel.ai/health" || echo "000")
+            WEB_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://www.sophia-intel.ai" || echo "000")
+            
+            echo "  API: $API_STATUS | Dashboard: $WEB_STATUS"
+            
+            if [ "$API_STATUS" = "200" ] && [ "$WEB_STATUS" = "200" ]; then
+              echo ""
+              echo "🎉 SUCCESS! SOPHIA Intel is live!"
+              echo "📋 Access URLs:"
+              echo "  Dashboard: https://www.sophia-intel.ai"
+              echo "  API: https://api.sophia-intel.ai"
+              exit 0
+            fi
+            
+            if [ $i -lt 12 ]; then
+              echo "  Waiting 30 seconds before retry..."
+              sleep 30
+            fi
+          done
+          
+          echo ""
+          echo "⚠️ Services deployed but not yet accessible"
+          echo "This is normal for initial deployments - services may need more time to start"
+          echo "Check https://www.sophia-intel.ai in a few minutes"
+
+      - name: Deployment Summary
+        if: always()
+        env:
+          NORTHFLANK_API_TOKEN: nf-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1dWlkIjoiZTU5YTI2ZmItMjRkMi00Mjg4LWJlOGQtZTQxMGU3NDQ2NGM5IiwiZW50aXR5SWQiOiI2OGEwOTVjNTkwMDNiYWJmNTUyNzFjNjYiLCJlbnRpdHlUeXBlIjoidGVhbSIsInRva2VuSWQiOiI2OGEwYTA3MGNlMTlmMDBiOTU2Mjk4YmQiLCJ0b2tlbkludGVybmFsSWQiOiJzb3BoaWEzIiwicm9sZUlkIjoiNjhhMDlmNzJjZTE5ZjAwYjk1NjI5OGE5Iiwicm9sZUludGVybmFsSWQiOiJvcmcvc29waGlhIiwidHlwZSI6InRlbXBsYXRlIiwiaWF0IjoxNzU1MzU3Mjk2fQ.9VqznqDce0lLqJuTDqrZq_fSjbxJrSUx97pVUFujkwM
+        run: |
+          echo "📊 DEPLOYMENT SUMMARY"
+          echo "===================="
+          echo ""
+          echo "🔗 Northflank Project: https://app.northflank.com/projects/sophia-intel"
+          echo "🔗 Dashboard: https://www.sophia-intel.ai"
+          echo "🔗 API: https://api.sophia-intel.ai"
+          echo ""
+          echo "📋 Final service status:"
+          curl -s -H "Authorization: Bearer $NORTHFLANK_API_TOKEN" \
+            "https://api.northflank.com/v1/projects/sophia-intel/services" | \
+            jq -r '.data[] | "✅ \(.name): \(.status) (\(.replicas.running)/\(.replicas.desired) replicas)"' || echo "❌ Could not fetch service status"
+

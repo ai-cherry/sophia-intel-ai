@@ -12,7 +12,7 @@ from datetime import datetime
 import httpx
 from dataclasses import asdict
 
-from .models.openrouter_models import model_selector, ModelTier, ModelConfig
+from models.openrouter_models import model_selector, ModelTier, ModelConfig
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

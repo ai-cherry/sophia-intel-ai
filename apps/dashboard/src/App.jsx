@@ -67,6 +67,8 @@ import {
 import { ChatPanel } from "@/components/ChatPanel.jsx";
 import { EnhancedChatPanel } from "@/components/EnhancedChatPanel.jsx";
 import { KnowledgePanel } from "@/components/KnowledgePanel.jsx";
+import { RealTimeMetrics } from "@/components/RealTimeMetrics.jsx";
+import ErrorBoundary from "@/components/ErrorBoundary.jsx";
 import sophiaLogo from "@/assets/sophia-logo.png";
 import "./App.css";
 import "./styles/variables.css";
@@ -75,11 +77,18 @@ import "./styles/variables.css";
 const API_BASE_URL = import.meta.env.VITE_API_URL || "https://sophia-backend-production-1fc3.up.railway.app";
 
 function App() {
+  return (
+    <ErrorBoundary apiBaseUrl={API_BASE_URL}>
+      <AppContent />
+    </ErrorBoundary>
+  );
+}
+
+function AppContent() {
   // Core State
   const [systemStatus, setSystemStatus] = useState({});
   const [mcpServices, setMcpServices] = useState([]);
   const [agentStatus, setAgentStatus] = useState([]);
-  const [telemetryData, setTelemetryData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState("chat");
@@ -210,16 +219,7 @@ function App() {
         ];
         setAgentStatus(mockAgents);
 
-        // Generate enhanced telemetry data
-        const sampleData = Array.from({ length: 24 }, (_, i) => ({
-          hour: `${i}:00`,
-          requests: Math.floor(Math.random() * 200) + 100,
-          latency: Math.floor(Math.random() * 150) + 80,
-          errors: Math.floor(Math.random() * 8),
-          agents_active: Math.floor(Math.random() * 4) + 2,
-          knowledge_items: Math.floor(Math.random() * 50) + 200,
-        }));
-        setTelemetryData(sampleData);
+        // Generate enhanced telemetry data - removed, now using RealTimeMetrics component
 
         setConnectionStatus("connected");
         setLastUpdated(new Date().toISOString());
@@ -454,146 +454,9 @@ function App() {
             </div>
           </TabsContent>
 
-          {/* Enhanced Overview Tab */}
+          {/* Enhanced Overview Tab - Real Metrics */}
           <TabsContent value="overview" className="space-y-6">
-            
-            {/* System Status Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <Card className="sophia-fade-in" style={{ backgroundColor: 'var(--sophia-bg-secondary)' }}>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">System Health</CardTitle>
-                  <Activity className="h-4 w-4" style={{ color: 'var(--sophia-text-muted)' }} />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold" style={{ color: getStatusColor("healthy") }}>
-                    Operational
-                  </div>
-                  <p className="text-xs" style={{ color: 'var(--sophia-text-muted)' }}>
-                    {systemStatus.version || "v1.0.0"} • Uptime: 99.9%
-                  </p>
-                  <Progress value={99.9} className="h-2 mt-2" />
-                </CardContent>
-              </Card>
-
-              <Card className="sophia-fade-in" style={{ backgroundColor: 'var(--sophia-bg-secondary)' }}>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">MCP Services</CardTitle>
-                  <Zap className="h-4 w-4" style={{ color: 'var(--sophia-text-muted)' }} />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {mcpServices.filter((s) => s.status === "healthy").length}/
-                    {mcpServices.length}
-                  </div>
-                  <p className="text-xs" style={{ color: 'var(--sophia-text-muted)' }}>
-                    Services Online
-                  </p>
-                  <Progress 
-                    value={(mcpServices.filter((s) => s.status === "healthy").length / mcpServices.length) * 100} 
-                    className="h-2 mt-2" 
-                  />
-                </CardContent>
-              </Card>
-
-              <Card className="sophia-fade-in" style={{ backgroundColor: 'var(--sophia-bg-secondary)' }}>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">AI Agents</CardTitle>
-                  <Bot className="h-4 w-4" style={{ color: 'var(--sophia-text-muted)' }} />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {agentStatus.filter((a) => a.status === "healthy").length}/
-                    {agentStatus.length}
-                  </div>
-                  <p className="text-xs" style={{ color: 'var(--sophia-text-muted)' }}>
-                    Agents Active
-                  </p>
-                  <Progress 
-                    value={(agentStatus.filter((a) => a.status === "healthy").length / agentStatus.length) * 100} 
-                    className="h-2 mt-2" 
-                  />
-                </CardContent>
-              </Card>
-
-              <Card className="sophia-fade-in" style={{ backgroundColor: 'var(--sophia-bg-secondary)' }}>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Response Time</CardTitle>
-                  <Clock className="h-4 w-4" style={{ color: 'var(--sophia-text-muted)' }} />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">142ms</div>
-                  <p className="text-xs" style={{ color: 'var(--sophia-text-muted)' }}>
-                    Average latency
-                  </p>
-                  <Progress value={85} className="h-2 mt-2" />
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Analytics Charts */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card style={{ backgroundColor: 'var(--sophia-bg-secondary)' }}>
-                <CardHeader>
-                  <CardTitle>System Performance</CardTitle>
-                  <CardDescription>Real-time metrics over the last 24 hours</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <LineChart data={telemetryData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="var(--sophia-border)" />
-                      <XAxis dataKey="hour" stroke="var(--sophia-text-muted)" />
-                      <YAxis stroke="var(--sophia-text-muted)" />
-                      <Tooltip 
-                        contentStyle={{ 
-                          backgroundColor: 'var(--sophia-bg-tertiary)', 
-                          border: '1px solid var(--sophia-border)',
-                          borderRadius: 'var(--sophia-radius-md)'
-                        }} 
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="requests"
-                        stroke="var(--sophia-primary-blue)"
-                        strokeWidth={2}
-                        name="Requests"
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="agents_active"
-                        stroke="var(--sophia-purple)"
-                        strokeWidth={2}
-                        name="Active Agents"
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-
-              <Card style={{ backgroundColor: 'var(--sophia-bg-secondary)' }}>
-                <CardHeader>
-                  <CardTitle>Knowledge Growth</CardTitle>
-                  <CardDescription>Knowledge base expansion and agent learning</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={telemetryData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="var(--sophia-border)" />
-                      <XAxis dataKey="hour" stroke="var(--sophia-text-muted)" />
-                      <YAxis stroke="var(--sophia-text-muted)" />
-                      <Tooltip 
-                        contentStyle={{ 
-                          backgroundColor: 'var(--sophia-bg-tertiary)', 
-                          border: '1px solid var(--sophia-border)',
-                          borderRadius: 'var(--sophia-radius-md)'
-                        }} 
-                      />
-                      <Bar dataKey="knowledge_items" fill="var(--sophia-cyan)" name="Knowledge Items" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-            </div>
-
+            <RealTimeMetrics apiBaseUrl={API_BASE_URL} />
           </TabsContent>
 
           {/* Knowledge Base Tab */}

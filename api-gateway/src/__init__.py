@@ -1,3 +1,0 @@
-"""
-Sophia Intelligence backend package
-"""

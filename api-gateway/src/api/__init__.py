@@ -1,3 +1,0 @@
-"""
-Sophia Intelligence API package
-"""

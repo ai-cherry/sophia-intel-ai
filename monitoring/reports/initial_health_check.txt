@@ -4,7 +4,7 @@
 Timestamp: $(date)
 
 ✅ OPERATIONAL SERVICES:
-- Frontend Dashboard: https://dnztojfz.manus.space
+- Frontend Dashboard: https://www.sophia-intel.ai
   Status: Fully operational with unified chat interface
   Features: Overview, MCP Services, Analytics, Chat, Knowledge Base
   Performance: Good response times

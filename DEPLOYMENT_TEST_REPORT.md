@@ -223,7 +223,7 @@ The platform is ready for Stage 2 PNM Hardening and continued development of adv
 ---
 
 **Report Generated**: August 16, 2025  
-**Deployment Engineer**: Manus AI Agent  
+**Deployment Engineer**: SOPHIA Intel Development Team  
 **Repository**: https://github.com/ai-cherry/sophia-intel  
 **Production URL**: http://104.171.202.107:30083 (API) | http://104.171.202.107:30081 (Dashboard)
 

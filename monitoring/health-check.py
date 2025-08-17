@@ -62,7 +62,7 @@ class HealthMonitor:
         default_config = {
             "services": {
                 "frontend": "https://www.sophia-intel.ai",
-                "frontend_fallback": "https://dnztojfz.manus.space",
+                "frontend_fallback": "https://www.sophia-intel.ai",
                 "api": "https://api.sophia-intel.ai",
                 "api_health": "https://api.sophia-intel.ai/health",
             },

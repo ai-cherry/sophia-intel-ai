@@ -47,7 +47,7 @@
 
 ### API Endpoints
 - `ORCHESTRATOR_URL`: http://localhost:5002
-- `API_BASE_URL`: https://5002-i60l4jzr9nuxfs8nawr36-fa5fdbef.manusvm.computer
+- `API_BASE_URL`: https://api.sophia-intel.ai
 
 ## Current Deployment Status
 

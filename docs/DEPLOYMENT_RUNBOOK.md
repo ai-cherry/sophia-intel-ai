@@ -413,7 +413,7 @@ nslookup www.sophia-intel.ai
 railway status --service sophia-dashboard
 
 # Check fallback
-curl -I https://dnztojfz.manus.space
+curl -I https://www.sophia-intel.ai
 
 # Resolution: DNS update or service restart
 ```

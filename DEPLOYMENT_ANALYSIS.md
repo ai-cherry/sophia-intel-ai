@@ -198,7 +198,7 @@ export PORT=8000
 
 #### Local Environment
 - **API Server**: ✅ Running on port 8000
-- **Public Access**: ✅ https://8000-iz398gjyqv0cjs51zk5me-fa5fdbef.manusvm.computer
+- **Public Access**: ✅ https://api.sophia-intel.ai
 - **Health Status**: ✅ All components operational
 - **Lambda Integration**: ✅ Connected (19 models)
 

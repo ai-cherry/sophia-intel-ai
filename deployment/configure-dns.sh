@@ -10,7 +10,7 @@ DNSIMPLE_ACCOUNT_ID="placeholder"  # Need actual account ID
 DOMAIN="sophia-intel.ai"
 
 # Current working deployments
-FRONTEND_URL="dnztojfz.manus.space"
+FRONTEND_URL="www.sophia-intel.ai"
 BACKEND_URL="api-placeholder.railway.app"  # Will be updated when backend deploys
 
 echo "1. Configuring www.sophia-intel.ai → $FRONTEND_URL"

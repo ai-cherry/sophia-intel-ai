@@ -4,7 +4,7 @@
 **Project:** Sophia AI Platform Infrastructure  
 **Repository:** https://github.com/ai-cherry/sophia-intel  
 **Branch:** feat/infrastructure-remediation-20250814  
-**Executed by:** Manus AI Agent  
+**Executed by:** SOPHIA Intel Development Team  
 
 ---
 
@@ -44,8 +44,8 @@ The infrastructure has been transformed from a fragmented, partially functional 
 ```bash
 # Branch creation and setup
 git checkout -b feat/infrastructure-remediation-20250814
-git config --local user.name "Manus AI Agent"
-git config --local user.email "manus@sophia-intel.ai"
+git config --local user.name "SOPHIA Intel"
+git config --local user.email "sophia@sophia-intel.ai"
 
 # Environment setup with 22+ service credentials
 source .env.remediation

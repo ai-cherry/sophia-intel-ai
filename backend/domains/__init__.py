@@ -3,20 +3,8 @@ SOPHIA Intel Domain-Driven Architecture
 Organized by business capabilities for maintainability and scalability
 """
 
-# Domain modules
-from . import chat
-from . import research
-from . import orchestration
-from . import mcp
-from . import persona
-from . import monitoring
+# Temporarily simplified for testing - avoiding circular imports
+# Domain modules will be imported as needed
 
-__all__ = [
-    "chat",
-    "research", 
-    "orchestration",
-    "mcp",
-    "persona",
-    "monitoring"
-]
+__all__ = []
 

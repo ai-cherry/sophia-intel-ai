@@ -7,20 +7,25 @@ RUN npm install --legacy-peer-deps
 COPY . .
 RUN npm run build
 
-# Production stage - use a simple static server
+# Production stage
 FROM node:18-alpine
 
 WORKDIR /app
 
-# Install serve package for static file serving
+# Install serve package
 RUN npm install -g serve
 
-# Copy built assets from builder stage
+# Copy built assets
 COPY --from=builder /app/dist ./dist
 
-# Expose port
-EXPOSE 3000
+# Create a start script that uses Railway's PORT variable
+RUN echo '#!/bin/sh' > start.sh && \
+    echo 'serve -s dist -l ${PORT:-3000}' >> start.sh && \
+    chmod +x start.sh
 
-# Serve static files
-CMD ["serve", "-s", "dist", "-l", "3000"]
+# Expose the port
+EXPOSE $PORT
+
+# Start the application
+CMD ["./start.sh"]
 

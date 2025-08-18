@@ -9,6 +9,7 @@ import httpx
 import asyncio
 from typing import Dict, Any, List
 from datetime import datetime
+from search_engine import SearchEnhancedSwarm
 
 # Initialize logging
 logging.basicConfig(level=logging.INFO)
@@ -48,10 +49,18 @@ class ChatRequest(BaseModel):
 class TaskRequest(BaseModel):
     task: str
 
+class SearchRequest(BaseModel):
+    query: str
+    max_results: int = 10
+    sources: List[str] = ["duckduckgo"]
+
 class TaskResponse(BaseModel):
     result: str
     status: str
     agents_used: List[str]
+
+# Initialize search-enhanced swarm
+search_swarm = SearchEnhancedSwarm()
 
 # SOPHIA's Minimal Swarm Implementation
 agents = {
@@ -270,6 +279,69 @@ async def execute_swarm_task(request: TaskRequest):
         logger.error(f"Swarm execution error: {str(e)}")
         sentry_sdk.capture_exception(e)
         raise HTTPException(status_code=500, detail=f"Swarm execution failed: {str(e)}")
+
+@app.post("/api/v1/search/research")
+async def search_research(request: SearchRequest):
+    """SOPHIA's bootstrap search capability - she will use this to research and upgrade herself"""
+    try:
+        logger.info(f"SOPHIA executing search research: {request.query[:100]}...")
+        
+        # Use the search-enhanced swarm for research
+        result = await search_swarm.research_task(
+            research_query=request.query,
+            analysis_focus="implementation strategies and technical details"
+        )
+        
+        logger.info(f"Search research completed. Status: {result.get('status')}")
+        return result
+        
+    except Exception as e:
+        logger.error(f"Search research error: {str(e)}")
+        sentry_sdk.capture_exception(e)
+        raise HTTPException(status_code=500, detail=f"Search research failed: {str(e)}")
+
+@app.post("/api/v1/search/upgrade")
+async def search_upgrade_analysis(request: TaskRequest):
+    """SOPHIA analyzes search capabilities and plans upgrades"""
+    try:
+        logger.info("SOPHIA analyzing her own search capabilities for upgrades...")
+        
+        # Have SOPHIA research her own search architecture
+        research_result = await search_swarm.research_task(
+            research_query="AI agent search architecture web scraping frameworks 2024 2025 best practices",
+            analysis_focus="search system improvements and implementation strategies"
+        )
+        
+        # Combine with task analysis
+        upgrade_analysis = {
+            "current_capabilities": {
+                "search_engines": ["duckduckgo"],
+                "agent_types": ["researcher", "analyzer", "synthesizer"],
+                "limitations": ["basic search only", "no specialized scraping", "limited source diversity"]
+            },
+            "research_findings": research_result,
+            "upgrade_recommendations": [
+                "Add multiple search engine support",
+                "Implement specialized scraping agents",
+                "Add academic and social media search",
+                "Implement real-time monitoring capabilities"
+            ],
+            "next_steps": [
+                "Research specific implementation frameworks",
+                "Design enhanced search architecture",
+                "Implement and test improvements",
+                "Deploy upgraded search system"
+            ],
+            "status": "analysis_complete",
+            "agents_used": ["researcher", "analyzer", "synthesizer"]
+        }
+        
+        return upgrade_analysis
+        
+    except Exception as e:
+        logger.error(f"Search upgrade analysis error: {str(e)}")
+        sentry_sdk.capture_exception(e)
+        raise HTTPException(status_code=500, detail=f"Search upgrade analysis failed: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn

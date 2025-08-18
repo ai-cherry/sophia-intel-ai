@@ -1,6 +1,5 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 import sentry_sdk
 import os
@@ -30,13 +29,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Mount dashboard static files
-try:
-    app.mount("/dashboard", StaticFiles(directory="apps/dashboard/dist", html=True), name="dashboard")
-    logger.info("✅ Dashboard static files mounted successfully at /dashboard")
-except Exception as e:
-    logger.warning(f"⚠️ Could not mount dashboard static files: {e}")
 
 # API keys
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")

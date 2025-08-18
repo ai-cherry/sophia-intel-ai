@@ -284,7 +284,7 @@
                                     </div>
                                 </div>
 
-                                {/* Development Activity */}
+                                    {/* Development Activity */}
                                 <div className="status-card bg-white rounded-lg shadow-lg p-6">
                                     <h3 className="text-xl font-semibold mb-4 text-gray-800">Development</h3>
                                     <div className="space-y-3">
@@ -296,16 +296,118 @@
                                             <span className="text-gray-600">DB Tables:</span>
                                             <span className="text-lg font-semibold text-green-600">{status.db_tables || 0}</span>
                                         </div>
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-gray-600">API Latency:</span>
+                                            <span className="text-sm text-gray-700">{status.api_latency || "N/A"} ms</span>
+                                        </div>
                                     </div>
                                 </div>
 
-                                {/* Quick Actions */}
+                                {/* To-Do List with Persistence */}
                                 <div className="status-card bg-white rounded-lg shadow-lg p-6 md:col-span-2 lg:col-span-3">
-                                    <h3 className="text-xl font-semibold mb-4 text-gray-800">Quick Actions</h3>
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                    <h3 className="text-xl font-semibold mb-4 text-gray-800">Task Manager</h3>
+                                    <div className="flex gap-2 mb-4">
+                                        <input
+                                            id="task-input"
+                                            type="text"
+                                            className="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            placeholder="Add a new task..."
+                                        />
                                         <button
-                                            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-3 rounded-lg transition-colors"
-                                            onClick={fetchStatus}
+                                            id="add-task"
+                                            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
+                                        >
+                                            Add Task
+                                        </button>
+                                    </div>
+                                    <ul id="task-list" className="space-y-2">
+                                        {/* Tasks will be dynamically added here */}
+                                    </ul>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+
+        // Task persistence functionality using localStorage
+        function saveTasks(tasks) {
+            localStorage.setItem('sophia_tasks', JSON.stringify(tasks));
+        }
+
+        function loadTasks() {
+            return JSON.parse(localStorage.getItem('sophia_tasks') || '[]');
+        }
+
+        function addTaskToDOM(task, completed = false) {
+            const taskList = document.getElementById('task-list');
+            const li = document.createElement('li');
+            li.className = 'flex items-center gap-2 p-2 bg-gray-50 rounded border';
+            li.innerHTML = `
+                <input type="checkbox" class="task-checkbox" ${completed ? 'checked' : ''}>
+                <span class="task-text ${completed ? 'line-through text-gray-500' : ''}">${task}</span>
+                <button class="delete-task ml-auto text-red-500 hover:text-red-700">×</button>
+            `;
+            
+            // Add event listeners
+            const checkbox = li.querySelector('.task-checkbox');
+            const deleteBtn = li.querySelector('.delete-task');
+            const taskText = li.querySelector('.task-text');
+            
+            checkbox.addEventListener('change', () => {
+                const tasks = loadTasks();
+                const taskIndex = tasks.findIndex(t => t.text === task);
+                if (taskIndex !== -1) {
+                    tasks[taskIndex].completed = checkbox.checked;
+                    saveTasks(tasks);
+                    taskText.className = checkbox.checked ? 'task-text line-through text-gray-500' : 'task-text';
+                }
+            });
+            
+            deleteBtn.addEventListener('click', () => {
+                const tasks = loadTasks().filter(t => t.text !== task);
+                saveTasks(tasks);
+                li.remove();
+            });
+            
+            taskList.appendChild(li);
+        }
+
+        // Initialize task persistence on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            // Load existing tasks
+            const tasks = loadTasks();
+            tasks.forEach(task => addTaskToDOM(task.text, task.completed));
+            
+            // Add task functionality
+            const addTaskBtn = document.getElementById('add-task');
+            const taskInput = document.getElementById('task-input');
+            
+            function addTask() {
+                const taskText = taskInput.value.trim();
+                if (taskText) {
+                    const tasks = loadTasks();
+                    const newTask = { text: taskText, completed: false };
+                    tasks.push(newTask);
+                    saveTasks(tasks);
+                    addTaskToDOM(taskText, false);
+                    taskInput.value = '';
+                }
+            }
+            
+            addTaskBtn.addEventListener('click', addTask);
+            taskInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    addTask();
+                }
+            });
+        });
+    </script>
+</body>
+</html>              onClick={fetchStatus}
                                         >
                                             Refresh Status
                                         </button>

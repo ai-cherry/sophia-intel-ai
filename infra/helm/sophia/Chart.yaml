@@ -1,6 +1,0 @@
-apiVersion: v2
-name: sophia
-description: SOPHIA Intel - AI Command Center
-type: application
-version: 1.0.0
-appVersion: "1.0.0"

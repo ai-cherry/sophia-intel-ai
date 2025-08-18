@@ -98,14 +98,15 @@ async def select_model(query: str, use_case: str) -> str:
         sentry_sdk.capture_exception(e)
         return "openai/gpt-4o"  # Fallback
 
-# Health endpoint
+# Health endpoint - Updated Aug 18, 2025 6:32 AM
 @app.get("/health")
 async def health():
     return {
         "status": "healthy",
         "port": os.getenv("PORT", "8000"),
         "sentry": "connected" if os.getenv("SENTRY_DSN") else "disconnected",
-        "llm_providers": ["openrouter"]
+        "llm_providers": ["openrouter"],
+        "deployment_timestamp": "2025-08-18T06:32:00Z"
     }
 
 # Legacy chat endpoint

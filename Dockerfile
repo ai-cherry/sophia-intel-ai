@@ -1,26 +1,22 @@
-# SOPHIA Intel Production Dockerfile
-FROM python:3.11-slim
+FROM python:3.12-slim
 
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    gcc g++ curl && rm -rf /var/lib/apt/lists/*
+# Copy minimal requirements
+COPY requirements.txt .
 
-# Copy requirements and install Python dependencies
-COPY backend/requirements.txt .
+# Install dependencies with no cache
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
-COPY backend/ .
-
-# Create non-root user
-RUN useradd -m -u 1000 sophia && chown -R sophia:sophia /app
-USER sophia
+# Copy minimal backend
+COPY minimal_main.py .
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
 EXPOSE 8000
+
+# Use uvicorn directly with minimal_main
 CMD ["uvicorn", "minimal_main:app", "--host", "0.0.0.0", "--port", "8000"]
+

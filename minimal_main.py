@@ -55,10 +55,10 @@ class TaskResponse(BaseModel):
 
 # SOPHIA's Minimal Swarm Implementation
 agents = {
-    "planner": {"status": "active", "role": "task_planning", "model": "anthropic/claude-sonnet-4"},
-    "coder": {"status": "active", "role": "code_generation", "model": "qwen/qwen3-coder"},
-    "reviewer": {"status": "active", "role": "quality_assurance", "model": "anthropic/claude-sonnet-4"},
-    "coordinator": {"status": "active", "role": "orchestrator", "model": "google/gemini-2.0-flash"}
+    "planner": {"status": "active", "role": "task_planning", "model": "anthropic/claude-3.5-sonnet"},
+    "coder": {"status": "active", "role": "code_generation", "model": "deepseek/deepseek-coder"},
+    "reviewer": {"status": "active", "role": "quality_assurance", "model": "anthropic/claude-3.5-sonnet"},
+    "coordinator": {"status": "active", "role": "orchestrator", "model": "google/gemini-flash-1.5"}
 }
 
 # OpenRouter client
@@ -99,16 +99,16 @@ openrouter_client = OpenRouterClient(OPENROUTER_API_KEY)
 async def select_model(query: str, use_case: str) -> str:
     try:
         if "complex" in use_case.lower() or len(query.split()) > 50:
-            return "anthropic/claude-sonnet-4"  # #1 on leaderboard
+            return "anthropic/claude-3.5-sonnet"  # High-performance model
         elif "code" in use_case.lower():
-            return "qwen/qwen3-coder"  # #6 on leaderboard
+            return "deepseek/deepseek-coder"  # Code generation specialist
         elif "reasoning" in use_case.lower():
-            return "deepseek/deepseek-v3-0324"  # #5 on leaderboard
+            return "anthropic/claude-3.5-sonnet"  # Strong reasoning
         else:
-            return "google/gemini-2.0-flash"  # #2 on leaderboard
+            return "google/gemini-flash-1.5"  # Fast general purpose
     except Exception as e:
         logger.error(f"Model selection failed: {str(e)}")
-        return "google/gemini-2.5-flash"  # #3 fallback
+        return "google/gemini-flash-1.5"  # Reliable fallback
 
 # Simple Agent Coordination
 async def coordinate_agents(task: str) -> TaskResponse:
@@ -196,7 +196,7 @@ async def swarm_status():
         "total_agents": len(agents),
         "active_agents": active_agents,
         "agents": agents,
-        "coordinator_model": "google/gemini-2.0-flash",
+        "coordinator_model": "google/gemini-flash-1.5",
         "openrouter_connected": OPENROUTER_API_KEY is not None,
         "last_updated": datetime.utcnow().isoformat()
     }

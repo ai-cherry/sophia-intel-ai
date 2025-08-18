@@ -379,7 +379,7 @@
                                     </div>
                                 </div>
 
-                                {/* To-Do List with Persistence */}
+                                {/* To-Do List with Persistence and Priority */}
                                 <div className="status-card bg-white rounded-lg shadow-lg p-6 md:col-span-2 lg:col-span-3">
                                     <h3 className="text-xl font-semibold mb-4 text-gray-800">Task Manager</h3>
                                     <div className="flex gap-2 mb-4">
@@ -389,6 +389,14 @@
                                             className="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                             placeholder="Add a new task..."
                                         />
+                                        <select
+                                            id="task-priority"
+                                            className="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        >
+                                            <option value="low">Low Priority</option>
+                                            <option value="medium" selected>Medium Priority</option>
+                                            <option value="high">High Priority</option>
+                                        </select>
                                         <button
                                             id="add-task"
                                             className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
@@ -418,13 +426,28 @@
             return JSON.parse(localStorage.getItem('sophia_tasks') || '[]');
         }
 
-        function addTaskToDOM(task, completed = false) {
+        function addTaskToDOM(task, completed = false, priority = 'medium') {
             const taskList = document.getElementById('task-list');
             const li = document.createElement('li');
-            li.className = 'flex items-center gap-2 p-2 bg-gray-50 rounded border';
+            
+            // Priority color classes
+            const priorityColors = {
+                'high': 'border-l-4 border-red-500 bg-red-50',
+                'medium': 'border-l-4 border-yellow-500 bg-yellow-50', 
+                'low': 'border-l-4 border-green-500 bg-green-50'
+            };
+            
+            const priorityBadges = {
+                'high': '<span class="px-2 py-1 text-xs bg-red-100 text-red-800 rounded-full">High</span>',
+                'medium': '<span class="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-full">Medium</span>',
+                'low': '<span class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">Low</span>'
+            };
+            
+            li.className = `flex items-center gap-2 p-2 rounded border priority-${priority} ${priorityColors[priority]}`;
             li.innerHTML = `
                 <input type="checkbox" class="task-checkbox" ${completed ? 'checked' : ''}>
-                <span class="task-text ${completed ? 'line-through text-gray-500' : ''}">${task}</span>
+                <span class="task-text ${completed ? 'line-through text-gray-500' : ''} flex-1">${task}</span>
+                <span class="task-priority">${priorityBadges[priority]}</span>
                 <button class="delete-task ml-auto text-red-500 hover:text-red-700">×</button>
             `;
             
@@ -435,16 +458,16 @@
             
             checkbox.addEventListener('change', () => {
                 const tasks = loadTasks();
-                const taskIndex = tasks.findIndex(t => t.text === task);
+                const taskIndex = tasks.findIndex(t => t.text === task && t.priority === priority);
                 if (taskIndex !== -1) {
                     tasks[taskIndex].completed = checkbox.checked;
                     saveTasks(tasks);
-                    taskText.className = checkbox.checked ? 'task-text line-through text-gray-500' : 'task-text';
+                    taskText.className = checkbox.checked ? 'task-text line-through text-gray-500 flex-1' : 'task-text flex-1';
                 }
             });
             
             deleteBtn.addEventListener('click', () => {
-                const tasks = loadTasks().filter(t => t.text !== task);
+                const tasks = loadTasks().filter(t => !(t.text === task && t.priority === priority));
                 saveTasks(tasks);
                 li.remove();
             });
@@ -456,21 +479,24 @@
         document.addEventListener('DOMContentLoaded', () => {
             // Load existing tasks
             const tasks = loadTasks();
-            tasks.forEach(task => addTaskToDOM(task.text, task.completed));
+            tasks.forEach(task => addTaskToDOM(task.text, task.completed, task.priority || 'medium'));
             
             // Add task functionality
             const addTaskBtn = document.getElementById('add-task');
             const taskInput = document.getElementById('task-input');
+            const taskPriority = document.getElementById('task-priority');
             
             function addTask() {
                 const taskText = taskInput.value.trim();
+                const priority = taskPriority.value;
                 if (taskText) {
                     const tasks = loadTasks();
-                    const newTask = { text: taskText, completed: false };
+                    const newTask = { text: taskText, completed: false, priority: priority };
                     tasks.push(newTask);
                     saveTasks(tasks);
-                    addTaskToDOM(taskText, false);
+                    addTaskToDOM(taskText, false, priority);
                     taskInput.value = '';
+                    taskPriority.value = 'medium'; // Reset to default
                 }
             }
             

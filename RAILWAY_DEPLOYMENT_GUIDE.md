@@ -37,7 +37,7 @@ railway link [PROJECT_ID]
 ```bash
 # Set all required environment variables in Railway
 railway variables set OPENAI_API_KEY="your-key"
-railway variables set OPENROUTER_API_KEY="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"
+railway variables set OPENROUTER_API_KEY="OPENROUTER_API_KEY_REDACTED"
 railway variables set LLAMA_API_KEY="llx-MfsEhU0wHNL7PcRN4YEFM3eWcPQggq7edEr52IdnvkHZPPYj"
 railway variables set NEON_API_TOKEN="napi_mr8himnznklsfgjpwb78w89q9eqfi0pb9ceg8y8y08a05v68vwrefcxg4gu82sg7"
 railway variables set DATABASE_URL="postgresql://sophia_user@ep-cool-cloud-123456.us-east-1.aws.neon.tech/sophia?sslmode=require"

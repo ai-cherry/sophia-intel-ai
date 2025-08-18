@@ -155,8 +155,8 @@ curl http://your-server:8002/health
 ### **4.1 API Key Management**
 ```yaml
 # GitHub Organization Secrets (Required)
-OPENROUTER_API_KEY: "sk-or-v1-..."
-GITHUB_TOKEN: "github_pat_..."
+OPENROUTER_API_KEY: "OPENROUTER_API_KEY_REDACTED..."
+GITHUB_TOKEN: "GITHUB_PAT_REDACTED..."
 LAMBDA_LABS_API_KEY: "your-lambda-key"
 PULUMI_ACCESS_TOKEN: "pul-..."
 

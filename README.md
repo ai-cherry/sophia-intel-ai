@@ -79,12 +79,12 @@ Edit `.env` with your API credentials:
 ```bash
 # AI Model Routing - Required
 LAMBDA_API_KEY=secret_sophiacloudapi_your-lambda-inference-key
-OPENROUTER_API_KEY=sk-or-v1-your-openrouter-key
+OPENROUTER_API_KEY=OPENROUTER_API_KEY_REDACTED-openrouter-key
 
 # Infrastructure - Required for production deployment
 LAMBDA_CLOUD_API_KEY=ll-your-lambda-labs-key  # For CPU cluster provisioning
 DNSIMPLE_API_KEY=dnsimple_u_your-dns-key      # For domain management
-GITHUB_PAT=github_pat_your-github-token       # For CI/CD integration
+GITHUB_PAT=GITHUB_PAT_REDACTED-github-token       # For CI/CD integration
 
 # Optional - Enhanced features
 QDRANT_URL=https://your-cluster.qdrant.io:6333

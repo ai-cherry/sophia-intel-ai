@@ -4,11 +4,6 @@ uvicorn==0.30.6
 phidata==0.3.0
 langgraph==0.2.5
 
-# CPU-only PyTorch compatible with Python 3.12
-torch==2.3.1+cpu --index-url https://download.pytorch.org/whl/cpu
-torchvision==0.18.1+cpu --index-url https://download.pytorch.org/whl/cpu
-torchaudio==2.3.1+cpu --index-url https://download.pytorch.org/whl/cpu
-
 # Testing and performance
 pytest==8.3.3
 locust==2.31.6
@@ -22,11 +17,9 @@ qdrant-client==1.11.2
 aiohttp==3.10.5
 httpx==0.27.2
 
-# AI and ML
+# AI and ML (without PyTorch)
 anthropic==0.34.2
 openai==1.51.2
-transformers==4.44.2
-sentence-transformers==3.1.1
 
 # Business integrations
 notion-client==2.2.1

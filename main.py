@@ -6,8 +6,7 @@ from typing import List, Optional
 app = FastAPI(
     title="SOPHIA Intel API",
     description="Clean minimal backend with correct API endpoints",
-    version="1.0.0",
-    openapi_prefix="/api/v1"
+    version="1.0.0"
 )
 
 class ChatMessage(BaseModel):
@@ -30,7 +29,18 @@ async def root():
 
 @app.get("/health")
 async def health():
-    return {"status": "healthy", "service": "sophia-intel-clean"}
+    """Health check endpoint for Railway"""
+    try:
+        print("Health check endpoint called")  # Simple logging for Railway
+        return {
+            "status": "healthy", 
+            "service": "sophia-intel-clean",
+            "timestamp": "2025-08-18T01:50:00Z",
+            "port": os.getenv("PORT", "8000")
+        }
+    except Exception as e:
+        print(f"Health check error: {e}")
+        return {"status": "error", "error": str(e)}
 
 @app.get("/api/v1/system/status")
 async def system_status():

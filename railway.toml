@@ -5,7 +5,7 @@ builder = "dockerfile"
 replicas = 1
 healthcheckPath = "/health"
 restartPolicyType = "on_failure"
-healthcheckTimeout = 30
+healthcheckTimeout = 60
 startCommand = "uvicorn main:app --host 0.0.0.0 --port 8000"
 
 [variables]

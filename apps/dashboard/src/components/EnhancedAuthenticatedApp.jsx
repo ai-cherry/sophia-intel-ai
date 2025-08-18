@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AlertCircle, CheckCircle, Settings, MessageSquare, Database, Activity, Server, Shield } from 'lucide-react';
+import SystemStats from './SystemStats';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://sophia-intel.fly.dev';
 
@@ -542,7 +543,12 @@ const EnhancedDashboard = () => {
         {/* Main Content */}
         <main className="flex-1 overflow-hidden">
           {activeTab === 'chat' && <EnhancedChatPanel />}
-          {activeTab === 'status' && <SystemStatusPanel />}
+          {activeTab === 'status' && (
+            <div className="p-6 space-y-6">
+              <SystemStats />
+              <SystemStatusPanel />
+            </div>
+          )}
           {activeTab === 'database' && (
             <div className="p-6">
               <h2 className="text-2xl font-bold mb-4">Database Management</h2>

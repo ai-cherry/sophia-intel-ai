@@ -188,7 +188,7 @@ async def enhanced_chat(request: ChatRequest):
 
 @app.get("/api/v1/swarm/status")
 async def swarm_status():
-    """SOPHIA's minimal swarm status endpoint"""
+    """Get current swarm status"""
     active_agents = sum(1 for agent in agents.values() if agent["status"] == "active")
     
     return {
@@ -199,6 +199,53 @@ async def swarm_status():
         "coordinator_model": "google/gemini-flash-1.5",
         "openrouter_connected": OPENROUTER_API_KEY is not None,
         "last_updated": datetime.utcnow().isoformat()
+    }
+
+@app.get("/api/v1/system/stats")
+async def system_stats():
+    """Get comprehensive system statistics"""
+    import psutil
+    import time
+    
+    # Get system metrics
+    cpu_percent = psutil.cpu_percent(interval=1)
+    memory = psutil.virtual_memory()
+    disk = psutil.disk_usage('/')
+    
+    # Calculate uptime
+    boot_time = psutil.boot_time()
+    uptime_seconds = time.time() - boot_time
+    uptime_hours = uptime_seconds / 3600
+    
+    # Agent statistics
+    active_agents = sum(1 for agent in agents.values() if agent["status"] == "active")
+    
+    return {
+        "system_health": "healthy" if cpu_percent < 80 and memory.percent < 80 else "warning",
+        "performance": {
+            "cpu_usage_percent": round(cpu_percent, 2),
+            "memory_usage_percent": round(memory.percent, 2),
+            "memory_available_gb": round(memory.available / (1024**3), 2),
+            "disk_usage_percent": round(disk.percent, 2),
+            "disk_free_gb": round(disk.free / (1024**3), 2)
+        },
+        "uptime": {
+            "hours": round(uptime_hours, 2),
+            "days": round(uptime_hours / 24, 2)
+        },
+        "ai_swarm": {
+            "status": "operational" if active_agents > 0 else "degraded",
+            "active_agents": active_agents,
+            "total_agents": len(agents),
+            "models_available": ["anthropic/claude-3.5-sonnet", "google/gemini-flash-1.5"]
+        },
+        "services": {
+            "openrouter_connected": OPENROUTER_API_KEY is not None,
+            "database_connected": True,  # Placeholder for future DB connection check
+            "cache_connected": True      # Placeholder for future Redis connection check
+        },
+        "timestamp": datetime.utcnow().isoformat(),
+        "version": "1.1.0"
     }
 
 @app.post("/api/v1/swarm/execute", response_model=TaskResponse)

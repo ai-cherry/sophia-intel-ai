@@ -4,12 +4,19 @@ primary_region = "us-west-2"
 [build]
 
 [http_service]
-  internal_port = 5000
+  internal_port = 8000
   force_https = true
-  auto_stop_machines = "stop"
+  auto_stop_machines = false
   auto_start_machines = true
   min_machines_running = 1
   processes = ["app"]
+
+  [http_service.checks]
+    grace_period = "10s"
+    interval = "15s"
+    timeout = "5s"
+    method = "GET"
+    path = "/api/v1/health"
 
 [[statics]]
   guest_path = "/app/apps/frontend"
@@ -21,5 +28,7 @@ primary_region = "us-west-2"
   cpus = 2
 
 [env]
-  PORT = "5000"
+  PORT = "8000"
+  PYTHONPATH = "/app"
+  ENVIRONMENT = "production"
 

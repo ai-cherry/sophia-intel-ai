@@ -56,7 +56,7 @@ class TaskResponse(BaseModel):
 # SOPHIA's Minimal Swarm Implementation
 agents = {
     "planner": {"status": "active", "role": "task_planning", "model": "anthropic/claude-3.5-sonnet"},
-    "coder": {"status": "active", "role": "code_generation", "model": "deepseek/deepseek-coder"},
+    "coder": {"status": "active", "role": "code_generation", "model": "anthropic/claude-3.5-sonnet"},
     "reviewer": {"status": "active", "role": "quality_assurance", "model": "anthropic/claude-3.5-sonnet"},
     "coordinator": {"status": "active", "role": "orchestrator", "model": "google/gemini-flash-1.5"}
 }
@@ -101,7 +101,7 @@ async def select_model(query: str, use_case: str) -> str:
         if "complex" in use_case.lower() or len(query.split()) > 50:
             return "anthropic/claude-3.5-sonnet"  # High-performance model
         elif "code" in use_case.lower():
-            return "deepseek/deepseek-coder"  # Code generation specialist
+            return "anthropic/claude-3.5-sonnet"  # Also good for code
         elif "reasoning" in use_case.lower():
             return "anthropic/claude-3.5-sonnet"  # Strong reasoning
         else:

@@ -187,7 +187,7 @@ const EnhancedChatPanel = () => {
     setLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/v1/chat/enhanced`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/api/v1/sophia/chat/enhanced`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${authToken}`,

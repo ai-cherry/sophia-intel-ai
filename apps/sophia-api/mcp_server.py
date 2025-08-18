@@ -286,6 +286,9 @@ async def code_modify(request: Request, data: dict, api_key: str = Depends(verif
                 
                 # Check if priority feature already exists
                 if 'id="task-priority"' not in current_content:
+                    # Initialize modified_content
+                    modified_content = current_content
+                    
                     # Enhanced code modification with priority feature
                     if 'placeholder="Add a new task..."' in current_content:
                         # Add priority dropdown and enhanced functionality

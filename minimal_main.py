@@ -6,6 +6,7 @@ import os
 import logging
 import httpx
 from typing import Dict, Any
+from datetime import datetime
 
 # Initialize logging
 logging.basicConfig(level=logging.INFO)
@@ -28,6 +29,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Log registered routes on startup
+logger.info("Registered routes: %s", [str(route) for route in app.routes])
+
 # API keys
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
@@ -39,7 +43,7 @@ class ChatRequest(BaseModel):
 class OpenRouterClient:
     def __init__(self, api_key: str):
         self.api_key = api_key
-        self.base_url = "https://openrouter.ai/api/v1"
+        self.base_url = "https://api.openrouter.ai/v1"
 
     async def generate(self, query: str, model: str) -> str:
         async with httpx.AsyncClient() as client:
@@ -98,7 +102,12 @@ async def select_model(query: str, use_case: str) -> str:
         sentry_sdk.capture_exception(e)
         return "openai/gpt-4o"  # Fallback
 
-# Health endpoint - Updated Aug 18, 2025 6:32 AM
+# Debug route to verify FastAPI registration
+@app.get("/debug/routes")
+async def debug_routes():
+    return [str(route) for route in app.routes]
+
+# Health endpoint with deployment timestamp
 @app.get("/health")
 async def health():
     return {
@@ -106,7 +115,7 @@ async def health():
         "port": os.getenv("PORT", "8000"),
         "sentry": "connected" if os.getenv("SENTRY_DSN") else "disconnected",
         "llm_providers": ["openrouter"],
-        "deployment_timestamp": "2025-08-18T06:32:00Z"
+        "deployment_timestamp": datetime.utcnow().isoformat()
     }
 
 # Legacy chat endpoint
@@ -135,11 +144,6 @@ async def enhanced_chat(request: ChatRequest):
         logger.error(f"Enhanced chat error: {str(e)}")
         sentry_sdk.capture_exception(e)
         raise HTTPException(status_code=500, detail=str(e))
-
-# Debug route to verify FastAPI registration
-@app.get("/debug/routes")
-async def debug_routes():
-    return [str(route) for route in app.routes]
 
 if __name__ == "__main__":
     import uvicorn

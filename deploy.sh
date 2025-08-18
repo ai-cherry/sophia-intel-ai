@@ -1,38 +1,43 @@
 #!/bin/bash
 set -e
 
-echo "🚀 SOPHIA INTEL DEPLOYMENT PLAN - EXECUTING NOW"
+echo "🚀 SOPHIA INTEL DEPLOYMENT TO FLY.IO - EXECUTING NOW"
 
-# 1. Deploy to Railway
-echo "📦 Deploying to Railway..."
-export RAILWAY_TOKEN="67dc4ecc-2aaa-40ec-8d5d-846c8ca89f1c"
-railway up --detach
+# Set up Fly CLI path
+export PATH="$HOME/.fly/bin:$PATH"
 
-# 2. Configure environment variables
+# 1. Deploy to Fly.io
+echo "📦 Deploying to Fly.io..."
+flyctl deploy --remote-only --app sophia-intel
+
+# 2. Set environment variables on Fly.io
 echo "⚙️ Setting environment variables..."
-railway variables set LAMBDA_API_KEY="secret_sophiacloudapi_17cf7f3cedca48f18b4b8ea46cbb258f.EsLXt0lkGlhZ1Nd369Ld5DMSuhJg9O9y"
-railway variables set LAMBDA_API_BASE="https://api.lambda.ai/v1"
-railway variables set PORT="8080"
-railway variables set PYTHONPATH="/app"
+flyctl secrets set OPENROUTER_API_KEY="$OPENROUTER_API_KEY" --app sophia-intel
+flyctl secrets set LAMBDA_API_KEY="$LAMBDA_API_KEY" --app sophia-intel
+flyctl secrets set LAMBDA_API_BASE="https://cloud.lambdalabs.com/api/v1" --app sophia-intel
+flyctl secrets set SENTRY_DSN="$SENTRY_DSN" --app sophia-intel
+flyctl secrets set JWT_SECRET_KEY="sophia-intel-production-jwt-secret-$(date +%s)" --app sophia-intel
 
 # 3. Get deployment URL
 echo "🌐 Getting deployment URL..."
-RAILWAY_URL=$(railway status --json | jq -r '.deployments[0].url')
-echo "Deployment URL: $RAILWAY_URL"
+FLY_URL="https://sophia-intel.fly.dev"
+echo "Deployment URL: $FLY_URL"
 
-# 4. Configure domain
-echo "🔗 Configuring domain..."
-curl -H "Authorization: Bearer dnsimple_u_XBHeyhH3O8uKJF6HnqU76h7ANWdNvUzN" \
-     -H "Content-Type: application/json" \
-     -X POST \
-     -d "{\"name\": \"\", \"type\": \"CNAME\", \"content\": \"${RAILWAY_URL#https://}\", \"ttl\": 300}" \
-     https://api.dnsimple.com/v2/162809/zones/sophia-intel.ai/records
-
-# 5. Test deployment
+# 4. Test deployment
 echo "🧪 Testing deployment..."
 sleep 30
-curl -f "$RAILWAY_URL/health" || echo "Health check failed"
+curl -f "$FLY_URL/health" || echo "Health check failed"
+
+# 5. Test dashboard
+echo "🎛️ Testing dashboard..."
+curl -f "$FLY_URL/dashboard/" || echo "Dashboard check failed"
+
+# 6. Test API endpoints
+echo "🔌 Testing API endpoints..."
+curl -f "$FLY_URL/api/v1/swarm/status" || echo "Swarm API check failed"
 
 echo "✅ DEPLOYMENT COMPLETE!"
-echo "🌐 SOPHIA Intel is live at: https://sophia-intel.ai"
-echo "🔗 Railway URL: $RAILWAY_URL"
+echo "🌐 SOPHIA Intel is live at: $FLY_URL"
+echo "🎛️ Dashboard available at: $FLY_URL/dashboard/"
+echo "🔌 API endpoints ready at: $FLY_URL/api/"
+

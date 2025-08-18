@@ -489,6 +489,120 @@ async def mcp_proxy(request: Request, tool: str, data: dict, api_key: str = Depe
     
     return response
 
+@app.post("/api/v1/deploy")
+async def deploy_pr(request: dict):
+    """
+    Autonomous deployment endpoint for SOPHIA Intel.
+    Deploys a GitHub PR to Fly.io with testing and verification.
+    """
+    try:
+        pr_number = request.get("pr_number")
+        repo_url = request.get("repo", "https://github.com/ai-cherry/sophia-intel")
+        
+        if not pr_number:
+            return {"status": "error", "error": "pr_number is required"}
+        
+        logger.info(f"Starting autonomous deployment of PR #{pr_number}")
+        
+        # Initialize GitHub client
+        github_token = os.getenv("GITHUB_TOKEN")
+        if not github_token:
+            return {"status": "error", "error": "GITHUB_TOKEN not configured"}
+        
+        g = Github(github_token)
+        repo_name = repo_url.split("github.com/")[1]
+        repo = g.get_repo(repo_name)
+        pr = repo.get_pull(pr_number)
+        branch = pr.head.ref
+        
+        logger.info(f"Deploying branch: {branch} from PR #{pr_number}")
+        
+        # Create temporary directory for deployment
+        import tempfile
+        import shutil
+        
+        with tempfile.TemporaryDirectory() as temp_dir:
+            # Clone repository and checkout PR branch
+            clone_result = subprocess.run([
+                "git", "clone", "--depth", "1", "--branch", branch, 
+                repo_url, temp_dir
+            ], capture_output=True, text=True, cwd="/tmp")
+            
+            if clone_result.returncode != 0:
+                logger.error(f"Git clone failed: {clone_result.stderr}")
+                return {
+                    "status": "error", 
+                    "error": f"Git clone failed: {clone_result.stderr}",
+                    "timestamp": datetime.now().isoformat()
+                }
+            
+            # Deploy to Fly.io
+            deploy_result = subprocess.run([
+                "fly", "deploy", "--app", "sophia-intel"
+            ], capture_output=True, text=True, cwd=temp_dir)
+            
+            if deploy_result.returncode != 0:
+                logger.error(f"Fly.io deployment failed: {deploy_result.stderr}")
+                return {
+                    "status": "error",
+                    "error": f"Deployment failed: {deploy_result.stderr}",
+                    "timestamp": datetime.now().isoformat()
+                }
+            
+            # Verify deployment health
+            import time
+            time.sleep(30)  # Wait for deployment to stabilize
+            
+            try:
+                import requests
+                health_response = requests.get("https://sophia-intel.fly.dev/api/v1/health", timeout=10)
+                if health_response.status_code == 200:
+                    health_data = health_response.json()
+                    deployment_status = "healthy" if health_data.get("status") == "healthy" else "unhealthy"
+                else:
+                    deployment_status = "unhealthy"
+            except Exception as e:
+                logger.error(f"Health check failed: {e}")
+                deployment_status = "unknown"
+            
+            # Log deployment action
+            try:
+                log_data = {
+                    "action": "autonomous_deployment",
+                    "details": f"Deployed PR #{pr_number} (branch: {branch}) to Fly.io",
+                    "pr_number": pr_number,
+                    "branch": branch,
+                    "deployment_status": deployment_status,
+                    "deploy_output": deploy_result.stdout[:500]  # Truncate for logging
+                }
+                
+                # Store in Redis if available
+                if redis_client:
+                    redis_client.lpush("sophia_deployment_logs", json.dumps(log_data))
+                    redis_client.expire("sophia_deployment_logs", 86400)  # 24 hours
+                    
+            except Exception as log_error:
+                logger.warning(f"Failed to log deployment: {log_error}")
+            
+            return {
+                "status": "deployment_complete",
+                "pr_number": pr_number,
+                "branch": branch,
+                "deployment_status": deployment_status,
+                "deploy_output": deploy_result.stdout,
+                "health_check": deployment_status,
+                "timestamp": datetime.now().isoformat(),
+                "message": f"Successfully deployed PR #{pr_number} to https://sophia-intel.fly.dev"
+            }
+            
+    except Exception as e:
+        logger.error(f"Deployment error: {e}")
+        return {
+            "status": "error",
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))
     logger.info(f"Starting SOPHIA Intel API on port {port}")

@@ -11,6 +11,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy enhanced backend with OpenRouter LLM integration
 COPY minimal_main.py main.py
 
+# Copy dashboard static files
+COPY apps/dashboard/dist apps/dashboard/dist
+
 EXPOSE 8000
 
 # Use uvicorn with enhanced backend

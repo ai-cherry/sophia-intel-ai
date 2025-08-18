@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AlertCircle, CheckCircle, Settings, MessageSquare, Database, Activity, Server, Shield } from 'lucide-react';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://sophia-backend-production-1fc3.up.railway.app';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://sophia-intel.fly.dev';
 
 // Authentication context
 const AuthContext = React.createContext();

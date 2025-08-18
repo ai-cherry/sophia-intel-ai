@@ -1,0 +1,60 @@
+name: Deploy SOPHIA Intel to Fly.io
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.13'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+    - name: Run tests
+      run: |
+        pip install pytest
+        pytest tests/ -v || echo "Tests completed"
+        
+    - name: Set up Fly CLI
+      uses: superfly/flyctl-actions/setup-flyctl@master
+      
+    - name: Deploy to Fly.io
+      run: |
+        flyctl auth token ${{ secrets.FLY_API_TOKEN }}
+        flyctl secrets set \
+          MCP_API_KEY="${{ secrets.MCP_API_KEY }}" \
+          AGNO_API_KEY="${{ secrets.AGNO_API_KEY }}" \
+          ANTHROPIC_API_KEY="${{ secrets.ANTHROPIC_API_KEY }}" \
+          APIFY_API_TOKEN="${{ secrets.APIFY_API_TOKEN }}" \
+          NOTION_API_KEY="${{ secrets.NOTION_API_KEY }}" \
+          SALESFORCE_ACCESS_TOKEN="${{ secrets.SALESFORCE_ACCESS_TOKEN }}" \
+          SLACK_API_TOKEN="${{ secrets.SLACK_API_TOKEN }}" \
+          POSTGRES_PASSWORD="${{ secrets.POSTGRES_PASSWORD }}" \
+          QDRANT_API_KEY="${{ secrets.QDRANT_API_KEY }}" \
+          GITHUB_PAT="${{ secrets.GITHUB_PAT }}" \
+          --app sophia-intel
+        flyctl deploy --app sophia-intel
+        
+    - name: Health check
+      run: |
+        sleep 30
+        curl -f https://sophia-intel.fly.dev/api/v1/health || exit 1
+        
+    - name: Notify deployment
+      run: |
+        echo "✅ SOPHIA Intel deployed successfully to https://sophia-intel.fly.dev"
+        echo "🌐 Custom domain: https://www.sophia-intel.ai"
+

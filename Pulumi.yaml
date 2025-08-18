@@ -1,0 +1,23 @@
+name: sophia-intel
+runtime: python
+description: SOPHIA Intel - Cloud-Native AI Platform Infrastructure
+
+config:
+  pulumi:tags:
+    value:
+      project: sophia-intel
+      environment: production
+      owner: ai-cherry
+      
+template:
+  config:
+    fly:region:
+      description: Fly.io region for deployment
+      default: us-west-2
+    postgres_host:
+      description: PostgreSQL host
+      default: postgres.fly.dev
+    redis_host:
+      description: Redis host  
+      default: redis.fly.dev
+

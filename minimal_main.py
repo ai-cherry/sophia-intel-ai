@@ -52,13 +52,13 @@ class OpenRouterClient:
                     f"{self.base_url}/chat/completions",
                     headers={
                         "Authorization": f"Bearer {self.api_key}",
+                        "Content-Type": "application/json",
                         "HTTP-Referer": "https://sophia-intel.pay-ready.com",
                         "X-Title": "SOPHIA Intel"
                     },
                     json={
                         "model": model,
-                        "messages": [{"role": "user", "content": query}],
-                        "usage": {"include": True}
+                        "messages": [{"role": "user", "content": query}]
                     }
                 )
                 response.raise_for_status()

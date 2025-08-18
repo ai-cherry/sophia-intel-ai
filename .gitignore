@@ -369,3 +369,14 @@ logs/secrets_list.log
 logs/manus_artifacts.log
 *.log
 
+
+# Cloudify - Additional exclusions
+.env
+*.key
+secrets/
+logs/
+*.log
+__pycache__/
+Dockerfile
+**/Dockerfile
+

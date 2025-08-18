@@ -1,5 +1,5 @@
 import os
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from qdrant_client import QdrantClient
 from github import Github
@@ -7,7 +7,7 @@ import aiohttp
 import anthropic
 import google.generativeai as gemini
 import asana
-# import apify_client  # Temporarily disabled due to import error
+from apify_client import ApifyClient
 import requests
 from langgraph.graph import StateGraph
 from typing import Dict, Any
@@ -90,7 +90,11 @@ except Exception as e:
     logger.warning(f"Asana client initialization failed: {e}")
     asana_client = None
 
-# apify_client_instance = apify_client.ApifyClient(APIFY_API_TOKEN)  # Temporarily disabled
+try:
+    apify_client_instance = ApifyClient(APIFY_API_TOKEN) if APIFY_API_TOKEN else None
+except Exception as e:
+    logger.warning(f"Apify client initialization failed: {e}")
+    apify_client_instance = None
 
 try:
     redis_client = redis.Redis(host=REDIS_HOST, port=6379, decode_responses=True)
@@ -400,24 +404,20 @@ async def retrieve_memory(request: MemoryRetrieveRequest):
 
 @app.post("/api/v1/research/scrape")
 async def research_scrape(request: ResearchRequest):
-    """Web scraping for research using Brave API"""
+    """Web scraping for research using Apify"""
     try:
-        # Use Brave Search API for research
-        headers = {"X-Subscription-Token": BRAVE_API_KEY}
-        params = {"q": request.url, "count": 5}
+        if not apify_client_instance:
+            raise HTTPException(status_code=503, detail="Apify client not available")
         
-        async with aiohttp.ClientSession() as session:
-            async with session.get(
-                "https://api.search.brave.com/res/v1/web/search",
-                headers=headers,
-                params=params
-            ) as response:
-                data = await response.json()
+        # Use Apify Website Content Crawler
+        run = apify_client_instance.actor("apify/website-content-crawler").call(
+            run_input={"startUrls": [{"url": request.url}]}
+        )
         
         logger.info(f"Research scrape: {request.url}")
         return {
             "url": request.url,
-            "results": data.get("web", {}).get("results", []),
+            "content": run.get("output", {}),
             "status": "completed"
         }
     except Exception as e:

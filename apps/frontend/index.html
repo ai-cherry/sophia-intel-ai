@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SOPHIA Intel Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.7.7/dist/axios.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        .chat-container {
+            height: 400px;
+            overflow-y: auto;
+        }
+        .status-card {
+            transition: all 0.3s ease;
+        }
+        .status-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        function App() {
+            const [query, setQuery] = useState("");
+            const [response, setResponse] = useState("");
+            const [status, setStatus] = useState({});
+            const [error, setError] = useState("");
+            const [history, setHistory] = useState([]);
+            const [loading, setLoading] = useState(false);
+            const [activeTab, setActiveTab] = useState("chat");
+
+            const apiBase = "https://sophia-intel.fly.dev/api/v1";
+
+            const fetchStatus = async () => {
+                try {
+                    const res = await axios.get(`${apiBase}/dashboard/status`);
+                    setStatus(res.data);
+                    setError("");
+                } catch (err) {
+                    setError("Failed to fetch status: " + err.message);
+                }
+            };
+
+            const handleChat = async () => {
+                if (!query.trim()) return;
+                
+                setLoading(true);
+                try {
+                    const res = await axios.post(`${apiBase}/chat/enhanced`, { query });
+                    setResponse(res.data.response);
+                    setHistory([...history, { 
+                        query, 
+                        response: res.data.response,
+                        timestamp: new Date().toLocaleTimeString()
+                    }]);
+                    setQuery("");
+                    setError("");
+                } catch (err) {
+                    setError("Chat request failed: " + err.message);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const handleCodeRequest = async () => {
+                if (!query.trim()) return;
+                
+                setLoading(true);
+                try {
+                    const res = await axios.post(`${apiBase}/code/modify`, {
+                        query,
+                        repo: "https://github.com/ai-cherry/sophia-intel"
+                    });
+                    setResponse(`PR created: ${res.data.pr_url}`);
+                    setHistory([...history, { 
+                        query, 
+                        response: `Code modification completed. PR: ${res.data.pr_url}`,
+                        timestamp: new Date().toLocaleTimeString()
+                    }]);
+                    setQuery("");
+                    setError("");
+                } catch (err) {
+                    setError("Code request failed: " + err.message);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const handleSwarmRequest = async () => {
+                if (!query.trim()) return;
+                
+                setLoading(true);
+                try {
+                    const res = await axios.post(`${apiBase}/swarm/execute`, { task: query });
+                    setResponse(`Swarm task completed: ${res.data.pr_url}`);
+                    setHistory([...history, { 
+                        query, 
+                        response: `AI Swarm executed task. PR: ${res.data.pr_url}`,
+                        timestamp: new Date().toLocaleTimeString()
+                    }]);
+                    setQuery("");
+                    setError("");
+                } catch (err) {
+                    setError("Swarm request failed: " + err.message);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            useEffect(() => {
+                fetchStatus();
+                const interval = setInterval(fetchStatus, 30000);
+                return () => clearInterval(interval);
+            }, []);
+
+            const handleKeyPress = (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleChat();
+                }
+            };
+
+            return (
+                <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+                    <div className="container mx-auto px-4 py-8">
+                        <header className="text-center mb-8">
+                            <h1 className="text-4xl font-bold text-gray-800 mb-2">SOPHIA Intel</h1>
+                            <p className="text-gray-600">AI-Powered Autonomous Intelligence Platform</p>
+                        </header>
+
+                        {/* Tab Navigation */}
+                        <div className="flex justify-center mb-6">
+                            <div className="bg-white rounded-lg p-1 shadow-md">
+                                <button
+                                    className={`px-6 py-2 rounded-md transition-all ${
+                                        activeTab === "chat" 
+                                            ? "bg-blue-500 text-white shadow-md" 
+                                            : "text-gray-600 hover:bg-gray-100"
+                                    }`}
+                                    onClick={() => setActiveTab("chat")}
+                                >
+                                    Chat Interface
+                                </button>
+                                <button
+                                    className={`px-6 py-2 rounded-md transition-all ${
+                                        activeTab === "dashboard" 
+                                            ? "bg-blue-500 text-white shadow-md" 
+                                            : "text-gray-600 hover:bg-gray-100"
+                                    }`}
+                                    onClick={() => setActiveTab("dashboard")}
+                                >
+                                    System Dashboard
+                                </button>
+                            </div>
+                        </div>
+
+                        {activeTab === "chat" && (
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                {/* Chat Interface */}
+                                <div className="bg-white rounded-lg shadow-lg p-6">
+                                    <h2 className="text-2xl font-semibold mb-4 text-gray-800">Chat with SOPHIA</h2>
+                                    
+                                    <div className="mb-4">
+                                        <textarea
+                                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                                            rows="4"
+                                            value={query}
+                                            onChange={(e) => setQuery(e.target.value)}
+                                            onKeyPress={handleKeyPress}
+                                            placeholder="Ask SOPHIA to code, research, integrate services, or manage infrastructure..."
+                                            disabled={loading}
+                                        />
+                                    </div>
+                                    
+                                    <div className="flex gap-2 mb-4">
+                                        <button
+                                            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
+                                            onClick={handleChat}
+                                            disabled={loading || !query.trim()}
+                                        >
+                                            {loading ? "Processing..." : "Chat"}
+                                        </button>
+                                        <button
+                                            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
+                                            onClick={handleCodeRequest}
+                                            disabled={loading || !query.trim()}
+                                        >
+                                            Code
+                                        </button>
+                                        <button
+                                            className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
+                                            onClick={handleSwarmRequest}
+                                            disabled={loading || !query.trim()}
+                                        >
+                                            AI Swarm
+                                        </button>
+                                    </div>
+                                    
+                                    {response && (
+                                        <div className="mb-4 p-3 bg-gray-50 rounded-lg border">
+                                            <h4 className="font-semibold text-gray-700 mb-2">Latest Response:</h4>
+                                            <p className="text-gray-600">{response}</p>
+                                        </div>
+                                    )}
+                                    
+                                    {error && (
+                                        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                                            <p className="text-red-600">{error}</p>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Chat History */}
+                                <div className="bg-white rounded-lg shadow-lg p-6">
+                                    <h3 className="text-xl font-semibold mb-4 text-gray-800">Conversation History</h3>
+                                    <div className="chat-container space-y-3">
+                                        {history.length === 0 ? (
+                                            <p className="text-gray-500 text-center py-8">No conversations yet. Start chatting with SOPHIA!</p>
+                                        ) : (
+                                            history.slice().reverse().map((item, index) => (
+                                                <div key={index} className="border-b border-gray-100 pb-3">
+                                                    <div className="mb-2">
+                                                        <span className="text-xs text-gray-500">{item.timestamp}</span>
+                                                        <p className="font-medium text-gray-700">Q: {item.query}</p>
+                                                    </div>
+                                                    <p className="text-gray-600 text-sm">A: {item.response}</p>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === "dashboard" && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {/* System Health */}
+                                <div className="status-card bg-white rounded-lg shadow-lg p-6">
+                                    <h3 className="text-xl font-semibold mb-4 text-gray-800">System Health</h3>
+                                    <div className="space-y-3">
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-gray-600">Status:</span>
+                                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                                status.health === "OK" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                                            }`}>
+                                                {status.health || "Loading..."}
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-gray-600">Redis:</span>
+                                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                                status.redis_status === "OK" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                                            }`}>
+                                                {status.redis_status || "Loading..."}
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-gray-600">Qdrant:</span>
+                                            <span className="text-sm text-gray-700">{status.qdrant_status || "Loading..."}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* AI Models */}
+                                <div className="status-card bg-white rounded-lg shadow-lg p-6">
+                                    <h3 className="text-xl font-semibold mb-4 text-gray-800">AI Models</h3>
+                                    <div className="space-y-2">
+                                        {status.models ? status.models.map((model, index) => (
+                                            <div key={index} className="flex items-center space-x-2">
+                                                <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                                                <span className="text-gray-700">{model}</span>
+                                            </div>
+                                        )) : (
+                                            <p className="text-gray-500">Loading models...</p>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Development Activity */}
+                                <div className="status-card bg-white rounded-lg shadow-lg p-6">
+                                    <h3 className="text-xl font-semibold mb-4 text-gray-800">Development</h3>
+                                    <div className="space-y-3">
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-gray-600">Open PRs:</span>
+                                            <span className="text-lg font-semibold text-blue-600">{status.github_prs || 0}</span>
+                                        </div>
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-gray-600">DB Tables:</span>
+                                            <span className="text-lg font-semibold text-green-600">{status.db_tables || 0}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Quick Actions */}
+                                <div className="status-card bg-white rounded-lg shadow-lg p-6 md:col-span-2 lg:col-span-3">
+                                    <h3 className="text-xl font-semibold mb-4 text-gray-800">Quick Actions</h3>
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                        <button
+                                            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-3 rounded-lg transition-colors"
+                                            onClick={fetchStatus}
+                                        >
+                                            Refresh Status
+                                        </button>
+                                        <button
+                                            className="bg-green-500 hover:bg-green-600 text-white px-4 py-3 rounded-lg transition-colors"
+                                            onClick={() => {
+                                                setActiveTab("chat");
+                                                setQuery("Create a Python API for task management");
+                                            }}
+                                        >
+                                            Quick Code
+                                        </button>
+                                        <button
+                                            className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-3 rounded-lg transition-colors"
+                                            onClick={() => {
+                                                setActiveTab("chat");
+                                                setQuery("Research latest AI developments");
+                                            }}
+                                        >
+                                            Research
+                                        </button>
+                                        <button
+                                            className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-3 rounded-lg transition-colors"
+                                            onClick={() => {
+                                                setActiveTab("chat");
+                                                setQuery("Deploy infrastructure updates");
+                                            }}
+                                        >
+                                            Deploy
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Footer */}
+                        <footer className="text-center mt-12 text-gray-500">
+                            <p>SOPHIA Intel - Autonomous AI Platform | Last updated: {status.timestamp || "Loading..."}</p>
+                        </footer>
+                    </div>
+                </div>
+            );
+        }
+
+        ReactDOM.render(<App />, document.getElementById("root"));
+    </script>
+</body>
+</html>
+

@@ -1,52 +1,28 @@
 version: '3.8'
-
 services:
-  api:
-    build:
-      context: .
-      dockerfile: infra/docker/api.Dockerfile
-    ports:
-      - "8000:8000"
-    environment:
-      - ENV=development
-      - API_HOST=0.0.0.0
-      - API_PORT=8000
-      - CORS_ORIGINS=http://localhost:5173
-    env_file:
-      - .env
-    volumes:
-      - ./apps/api-gateway:/app
-    depends_on:
-      - redis
-      - postgres
-
-  interface:
-    build:
-      context: .
-      dockerfile: infra/docker/interface.Dockerfile
-    ports:
-      - "5173:5173"
-    environment:
-      - VITE_API_BASE=http://localhost:8000
-    volumes:
-      - ./apps/interface:/app
-      - /app/node_modules
-
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-
   postgres:
-    image: postgres:15-alpine
+    image: postgres:16
     environment:
       POSTGRES_DB: sophia
       POSTGRES_USER: sophia
-      POSTGRES_PASSWORD: sophia_dev
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+  qdrant:
+    image: qdrant/qdrant:v1.11.2
+    environment:
+      QDRANT__SERVICE__API_KEY: ${QDRANT_API_KEY}
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant_data:/qdrant/storage
 
 volumes:
   postgres_data:
+  qdrant_data:

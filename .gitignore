@@ -360,3 +360,12 @@ Thumbs.db
 .coverage
 htmlcov/
 
+
+# SOPHIA Intel - Additional Secret Protection
+*.key
+secrets/
+logs/required_fly_secrets.sh
+logs/secrets_list.log
+logs/manus_artifacts.log
+*.log
+

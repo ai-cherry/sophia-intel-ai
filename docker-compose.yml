@@ -22,6 +22,15 @@ services:
       - "6333:6333"
     volumes:
       - qdrant_data:/qdrant/storage
+  mcp_server:
+    image: python:3.13
+    command: uvicorn apps.sophia_api.mcp_server:app --host 0.0.0.0 --port 8000
+    environment:
+      - NOTION_API_KEY=${NOTION_API_KEY}
+      - SALESFORCE_ACCESS_TOKEN=${SALESFORCE_ACCESS_TOKEN}
+      - SLACK_API_TOKEN=${SLACK_API_TOKEN}
+    ports:
+      - "8000:8000"
 
 volumes:
   postgres_data:

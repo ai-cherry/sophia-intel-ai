@@ -1,4 +1,12 @@
-# Force Railway to use Dockerfile instead of auto-detection
+[phases.setup]
+nixPkgs = ["python312"]
+
+[phases.install]
+cmds = ["pip install --no-cache-dir -r requirements.txt"]
+
+[phases.start]
+cmd = "uvicorn minimal_main:app --host 0.0.0.0 --port $PORT"
+
 [build]
-dockerfile = "Dockerfile"
+cacheKey = "build-minimal-$(date +%s)"
 

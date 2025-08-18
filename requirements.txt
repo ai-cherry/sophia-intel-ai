@@ -4,7 +4,7 @@ pydantic==2.6.0
 httpx==0.25.2
 sentry-sdk==1.38.0
 langgraph==0.0.40
-langchain==0.1.0
-langchain-openai==0.0.8
-langchain-core==0.1.0
+langchain>=0.1.46
+langchain-openai>=0.0.8
+langchain-core>=0.1.46
 

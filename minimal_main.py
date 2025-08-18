@@ -136,6 +136,11 @@ async def enhanced_chat(request: ChatRequest):
         sentry_sdk.capture_exception(e)
         raise HTTPException(status_code=500, detail=str(e))
 
+# Debug route to verify FastAPI registration
+@app.get("/debug/routes")
+async def debug_routes():
+    return [str(route) for route in app.routes]
+
 if __name__ == "__main__":
     import uvicorn
     port = int(os.getenv("PORT", 8000))

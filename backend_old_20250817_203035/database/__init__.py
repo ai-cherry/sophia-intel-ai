@@ -1,2 +1,0 @@
-# SOPHIA Intel Database Package
-

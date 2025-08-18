@@ -1,2 +1,0 @@
-# Railway Deployment Force Trigger - Sun Aug 17 20:18:00 EDT 2025
-This file forces Railway to redeploy the ultimate backend v4.0.0

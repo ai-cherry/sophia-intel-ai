@@ -1,0 +1,4 @@
+# Force Railway to use Dockerfile instead of auto-detection
+[build]
+dockerfile = "Dockerfile"
+

@@ -43,7 +43,7 @@ class ChatRequest(BaseModel):
 class OpenRouterClient:
     def __init__(self, api_key: str):
         self.api_key = api_key
-        self.base_url = "https://api.openrouter.ai/v1"
+        self.base_url = "https://openrouter.ai/api/v1"
 
     async def generate(self, query: str, model: str) -> str:
         async with httpx.AsyncClient() as client:

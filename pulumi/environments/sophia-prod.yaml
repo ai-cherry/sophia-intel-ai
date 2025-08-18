@@ -1,0 +1,68 @@
+values:
+  # AI/LLM Provider Keys
+  openrouter:
+    api_key:
+      fn::secret: ${OPENROUTER_API_KEY}
+  
+  openai:
+    api_key:
+      fn::secret: ${OPENAI_API_KEY}
+  
+  anthropic:
+    api_key:
+      fn::secret: ${ANTHROPIC_API_KEY}
+  
+  # Infrastructure Keys
+  github:
+    token:
+      fn::secret: ${GITHUB_TOKEN}
+    pat:
+      fn::secret: ${GITHUB_TOKEN}
+  
+  railway:
+    token:
+      fn::secret: ${RAILWAY_TOKEN}
+  
+  neon:
+    api_token:
+      fn::secret: ${NEON_API_TOKEN}
+  
+  lambda_labs:
+    api_key:
+      fn::secret: ${LAMBDA_LABS_API_KEY}
+  
+  docker:
+    pat:
+      fn::secret: ${DOCKER_PAT}
+  
+  dnsimple:
+    api_key:
+      fn::secret: ${DNSIMPLE_API_KEY}
+  
+  pulumi:
+    access_token:
+      fn::secret: ${PULUMI_ACCESS_TOKEN}
+
+  # Environment Configuration
+  environment:
+    name: production
+    deployment_platform: lambda_labs
+    github_org: ai-cherry
+    pulumi_stack: scoobyjava-org/sophia-prod-on-lambda
+    
+  # Service URLs
+  lambda:
+    primary_url: http://192.222.51.223:8000
+    secondary_url: http://192.222.50.242:8000
+    
+  # CORS Configuration
+  cors:
+    origins: "https://www.sophia-intel.ai,https://api.sophia-intel.ai"
+    
+  # Logging
+  logging:
+    level: INFO
+
+imports:
+  - github-org-secrets
+

@@ -9,12 +9,6 @@ import asyncio
 from typing import Dict, Any, List
 from datetime import datetime
 
-# LangGraph and LangChain imports
-from langgraph import StateGraph, END
-from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
-from langchain_openai import ChatOpenAI
-from langchain_core.agents import AgentAction, AgentFinish
-
 # Initialize logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -50,6 +44,14 @@ class TaskResponse(BaseModel):
     result: str
     status: str
     agents_used: List[str]
+
+# SOPHIA's Minimal Swarm Implementation
+agents = {
+    "planner": {"status": "active", "role": "task_planning", "model": "anthropic/claude-sonnet-4"},
+    "coder": {"status": "active", "role": "code_generation", "model": "qwen/qwen3-coder"},
+    "reviewer": {"status": "active", "role": "quality_assurance", "model": "anthropic/claude-sonnet-4"},
+    "coordinator": {"status": "active", "role": "orchestrator", "model": "google/gemini-2.0-flash"}
+}
 
 # OpenRouter client
 class OpenRouterClient:
@@ -100,163 +102,42 @@ async def select_model(query: str, use_case: str) -> str:
         logger.error(f"Model selection failed: {str(e)}")
         return "google/gemini-2.5-flash"  # #3 fallback
 
-# SOPHIA's LangGraph Agent State
-class AgentState(BaseModel):
-    messages: List[Any]
-    current_agent: str
-    task_complete: bool = False
-    final_result: str = ""
-    agents_used: List[str] = []
-
-# Agent Definitions
-class PlannerAgent:
-    def __init__(self):
-        self.name = "Planner"
+# Simple Agent Coordination
+async def coordinate_agents(task: str) -> TaskResponse:
+    """Simple agent coordination without complex dependencies"""
+    try:
+        agents_used = []
         
-    async def invoke(self, input_data: Dict) -> Dict:
-        try:
-            query = input_data.get("input", "")
-            chat_history = input_data.get("chat_history", [])
-            
-            # Use OpenRouter for planning
-            planning_prompt = f"As a task planner, break down this task into actionable steps: {query}"
-            result = await openrouter_client.generate(planning_prompt, "anthropic/claude-sonnet-4")
-            
-            return {"output": result}
-        except Exception as e:
-            logger.error(f"Planner agent error: {str(e)}")
-            return {"output": f"Planning failed: {str(e)}"}
-
-class CoderAgent:
-    def __init__(self):
-        self.name = "Coder"
+        # Step 1: Planning
+        logger.info("Agent coordination: Planning phase")
+        planning_prompt = f"As a task planner, break down this task: {task}"
+        plan = await openrouter_client.generate(planning_prompt, agents["planner"]["model"])
+        agents_used.append("Planner")
         
-    async def invoke(self, input_data: Dict) -> Dict:
-        try:
-            query = input_data.get("input", "")
-            chat_history = input_data.get("chat_history", [])
-            
-            # Extract plan from previous messages
-            plan_context = ""
-            for msg in chat_history:
-                if hasattr(msg, 'content'):
-                    plan_context += msg.content + "\n"
-            
-            coding_prompt = f"Based on this plan:\n{plan_context}\n\nImplement the solution with production-ready code."
-            result = await openrouter_client.generate(coding_prompt, "qwen/qwen3-coder")
-            
-            return {"output": result}
-        except Exception as e:
-            logger.error(f"Coder agent error: {str(e)}")
-            return {"output": f"Coding failed: {str(e)}"}
-
-class ReviewerAgent:
-    def __init__(self):
-        self.name = "Reviewer"
+        # Step 2: Implementation
+        logger.info("Agent coordination: Implementation phase")
+        coding_prompt = f"Based on this plan, implement the solution:\n{plan}"
+        implementation = await openrouter_client.generate(coding_prompt, agents["coder"]["model"])
+        agents_used.append("Coder")
         
-    async def invoke(self, input_data: Dict) -> Dict:
-        try:
-            query = input_data.get("input", "")
-            chat_history = input_data.get("chat_history", [])
-            
-            # Extract code from previous messages
-            code_context = ""
-            for msg in chat_history:
-                if hasattr(msg, 'content'):
-                    code_context += msg.content + "\n"
-            
-            review_prompt = f"Review this implementation for quality, security, and production readiness:\n{code_context}"
-            result = await openrouter_client.generate(review_prompt, "anthropic/claude-sonnet-4")
-            
-            return {"output": result}
-        except Exception as e:
-            logger.error(f"Reviewer agent error: {str(e)}")
-            return {"output": f"Review failed: {str(e)}"}
-
-# Initialize agents
-planner_agent = PlannerAgent()
-coder_agent = CoderAgent()
-reviewer_agent = ReviewerAgent()
-
-# Create LangGraph workflow
-def create_swarm_graph():
-    workflow = StateGraph(AgentState)
-    
-    async def planner_node(state: AgentState):
-        logger.info("Executing Planner Agent")
-        system_msg = SystemMessage(content="You are a strategic task planner.")
-        messages = [system_msg] + state.messages
-        result = await planner_agent.invoke({"input": "", "chat_history": messages})
+        # Step 3: Review
+        logger.info("Agent coordination: Review phase")
+        review_prompt = f"Review this implementation for quality:\n{implementation}"
+        review = await openrouter_client.generate(review_prompt, agents["reviewer"]["model"])
+        agents_used.append("Reviewer")
         
-        new_agents_used = state.agents_used + ["Planner"]
-        return AgentState(
-            messages=state.messages + [AIMessage(content=result["output"])],
-            current_agent="coder",
-            agents_used=new_agents_used
+        # Combine results
+        final_result = f"## Plan\n{plan}\n\n## Implementation\n{implementation}\n\n## Review\n{review}"
+        
+        return TaskResponse(
+            result=final_result,
+            status="completed",
+            agents_used=agents_used
         )
-
-    async def coder_node(state: AgentState):
-        logger.info("Executing Coder Agent")
-        system_msg = SystemMessage(content="You are an expert software developer.")
-        messages = [system_msg] + state.messages
-        result = await coder_agent.invoke({"input": "", "chat_history": messages})
         
-        new_agents_used = state.agents_used + ["Coder"]
-        return AgentState(
-            messages=state.messages + [AIMessage(content=result["output"])],
-            current_agent="reviewer",
-            agents_used=new_agents_used
-        )
-
-    async def reviewer_node(state: AgentState):
-        logger.info("Executing Reviewer Agent")
-        system_msg = SystemMessage(content="You are a code reviewer. Evaluate quality and approve for production.")
-        messages = [system_msg] + state.messages
-        result = await reviewer_agent.invoke({"input": "", "chat_history": messages})
-        
-        new_agents_used = state.agents_used + ["Reviewer"]
-        return AgentState(
-            messages=state.messages + [AIMessage(content=result["output"])],
-            current_agent="end",
-            task_complete=True,
-            final_result=result["output"],
-            agents_used=new_agents_used
-        )
-
-    # Add nodes to workflow
-    workflow.add_node("planner", planner_node)
-    workflow.add_node("coder", coder_node)
-    workflow.add_node("reviewer", reviewer_node)
-    
-    # Define routing
-    def route_agent(state: AgentState):
-        if state.current_agent == "planner":
-            return "planner"
-        elif state.current_agent == "coder":
-            return "coder"
-        elif state.current_agent == "reviewer":
-            return "reviewer"
-        else:
-            return END
-
-    workflow.set_conditional_entry_point(route_agent)
-    workflow.add_conditional_edges(
-        "planner",
-        lambda _: "coder"
-    )
-    workflow.add_conditional_edges(
-        "coder",
-        lambda _: "reviewer"
-    )
-    workflow.add_conditional_edges(
-        "reviewer",
-        lambda state: END if state.task_complete else "planner"
-    )
-    
-    return workflow.compile()
-
-# Initialize compiled workflow graph
-swarm_graph = create_swarm_graph()
+    except Exception as e:
+        logger.error(f"Agent coordination error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Agent coordination failed: {str(e)}")
 
 # API Endpoints
 @app.get("/health")
@@ -274,6 +155,16 @@ async def health():
 async def debug_routes():
     return [str(route) for route in app.routes]
 
+@app.post("/api/chat")
+async def legacy_chat(request: ChatRequest):
+    try:
+        model = await select_model(request.query, request.use_case)
+        response = await openrouter_client.generate(request.query, model)
+        return {"response": response}
+    except Exception as e:
+        logger.error(f"Legacy chat error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.post("/api/v1/chat/enhanced")
 async def enhanced_chat(request: ChatRequest):
     try:
@@ -287,42 +178,35 @@ async def enhanced_chat(request: ChatRequest):
         sentry_sdk.capture_exception(e)
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/api/v1/swarm/status")
+async def swarm_status():
+    """SOPHIA's minimal swarm status endpoint"""
+    active_agents = sum(1 for agent in agents.values() if agent["status"] == "active")
+    
+    return {
+        "swarm_status": "operational" if active_agents > 0 else "degraded",
+        "total_agents": len(agents),
+        "active_agents": active_agents,
+        "agents": agents,
+        "coordinator_model": "google/gemini-2.0-flash",
+        "openrouter_connected": OPENROUTER_API_KEY is not None,
+        "last_updated": datetime.utcnow().isoformat()
+    }
+
 @app.post("/api/v1/swarm/execute", response_model=TaskResponse)
 async def execute_swarm_task(request: TaskRequest):
-    """Execute task through LangGraph agent swarm"""
+    """Execute task through simple agent coordination"""
     try:
         logger.info(f"Executing swarm task: {request.task[:100]}...")
         
-        initial_state = AgentState(
-            messages=[HumanMessage(content=request.task)],
-            current_agent="planner",
-            agents_used=[]
+        # Execute with timeout protection
+        task_result = await asyncio.wait_for(
+            coordinate_agents(request.task), 
+            timeout=120.0
         )
         
-        # Execute workflow with timeout protection
-        async def run_graph():
-            # Convert to dict for LangGraph
-            state_dict = {
-                "messages": initial_state.messages,
-                "current_agent": initial_state.current_agent,
-                "task_complete": initial_state.task_complete,
-                "final_result": initial_state.final_result,
-                "agents_used": initial_state.agents_used
-            }
-            return await asyncio.get_event_loop().run_in_executor(
-                None, swarm_graph.invoke, state_dict
-            )
-            
-        # Create task with timeout
-        task_result = await asyncio.wait_for(run_graph(), timeout=120.0)
-        
-        logger.info(f"Swarm task completed. Agents used: {task_result.get('agents_used', [])}")
-        
-        return TaskResponse(
-            result=task_result.get("final_result", "Task completed"),
-            status="completed",
-            agents_used=task_result.get("agents_used", ["Planner", "Coder", "Reviewer"])
-        )
+        logger.info(f"Swarm task completed. Agents used: {task_result.agents_used}")
+        return task_result
             
     except asyncio.TimeoutError:
         logger.error("Swarm task timeout exceeded")
@@ -331,16 +215,6 @@ async def execute_swarm_task(request: TaskRequest):
         logger.error(f"Swarm execution error: {str(e)}")
         sentry_sdk.capture_exception(e)
         raise HTTPException(status_code=500, detail=f"Swarm execution failed: {str(e)}")
-
-@app.get("/api/v1/swarm/status")
-async def swarm_status():
-    """Get swarm system status"""
-    return {
-        "swarm_enabled": True,
-        "agents": ["Planner", "Coder", "Reviewer"],
-        "workflow_compiled": swarm_graph is not None,
-        "openrouter_connected": OPENROUTER_API_KEY is not None
-    }
 
 if __name__ == "__main__":
     import uvicorn

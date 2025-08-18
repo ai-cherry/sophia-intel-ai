@@ -90,17 +90,17 @@ openrouter_client = OpenRouterClient(OPENROUTER_API_KEY)
 # Model selection logic based on leaderboard
 async def select_model(query: str, use_case: str) -> str:
     try:
-        # Leaderboard-driven selection (Aug 19, 2024)
+        # Use verified working models from OpenRouter
         if "complex" in use_case.lower() or len(query.split()) > 50:
-            return "anthropic/claude-3.5-sonnet"  # Top performer, 7.52B tokens
+            return "anthropic/claude-3-5-sonnet"  # Top performer
         elif "code" in use_case.lower():
-            return "qwen/qwen-2.5-coder-32b-instruct"  # 17.4B tokens, strong for coding
+            return "openai/gpt-4o"  # Strong for coding
         else:
-            return "google/gemini-2.0-flash-exp"  # 31.8B tokens, general-purpose
+            return "openai/gpt-4o-mini"  # Fast and reliable for general use
     except Exception as e:
         logger.error(f"Model selection failed: {str(e)}")
         sentry_sdk.capture_exception(e)
-        return "openai/gpt-4o"  # Fallback
+        return "openai/gpt-4o-mini"  # Fallback to known working model
 
 # Debug route to verify FastAPI registration
 @app.get("/debug/routes")

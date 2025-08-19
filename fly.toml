@@ -43,13 +43,6 @@ kill_timeout = "5s"
   regions = ["ord", "yyz"]
   processes = ["app"]
 
-# AI Processing Machine - A100 GPU
-[[vm]]
-  size = "performance-4x"  # 4 vCPUs, 8GB RAM
-  gpu_kind = "a100-40gb"   # A100-40GB GPU for AI processing
-  regions = ["ord"]
-  processes = ["app"]
-
 # Persistent Storage
 [[mounts]]
   source = "sophia_data"

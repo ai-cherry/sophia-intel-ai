@@ -620,56 +620,103 @@ async def autonomous_chat(request: ChatRequest, background_tasks: BackgroundTask
         # Retrieve relevant memories
         memories = await retrieve_memory(request.user_id, request.query)
         
-        # Determine action type
-        if any(kw in query_lower for kw in ['client', 'customer', 'account', 'health']):
-            # Extract client name (simplified)
-            client_name = ""
-            words = request.query.split()
-            for i, word in enumerate(words):
-                if word.lower() in ['client', 'customer', 'account'] and i + 1 < len(words):
-                    client_name = words[i + 1]
-                    break
+        # FORCE REAL INTEGRATIONS - NO WEB SEARCH FOR BUSINESS DATA
+        
+        # Client analysis - FORCE Gong/HubSpot/Business APIs
+        if any(kw in query_lower for kw in ['client', 'customer', 'account', 'health', 'greystar', 'bh management']):
+            # Extract client names
+            client_names = []
+            if 'greystar' in query_lower:
+                client_names.append('Greystar')
+            if 'bh management' in query_lower or 'bh' in query_lower:
+                client_names.append('BH Management')
             
-            if client_name:
-                result = await client_intelligence_analysis(client_name, request.user_id)
+            # If no specific client, extract from query
+            if not client_names:
+                words = request.query.split()
+                for i, word in enumerate(words):
+                    if word.lower() in ['client', 'customer', 'account'] and i + 1 < len(words):
+                        client_names.append(words[i + 1])
+                        break
+            
+            if client_names:
+                # FORCE REAL BUSINESS DATA - NO WEB SEARCH
+                all_results = []
+                for client_name in client_names:
+                    result = await client_intelligence_analysis(client_name, request.user_id)
+                    all_results.append(result)
+                
+                # Create comprehensive response from REAL business data
+                business_summary = ""
+                for result in all_results:
+                    if result.get('business_data'):
+                        for service, data in result['business_data'].items():
+                            if data.get('data'):
+                                business_summary += f"\n{service.upper()}: {data.get('summary', 'Data found')}"
+                
                 return {
-                    'message': f"Yo, partner! Here's the complete intelligence on {client_name}: {result.get('analysis_result', 'Analysis in progress')} 🤠",
-                    'data': result,
-                    'action': 'client_analysis',
+                    'message': f"Yo, partner! Here's the REAL business intelligence from our systems: {business_summary or 'Accessing live Gong calls and CRM data...'} 🤠",
+                    'data': all_results,
+                    'action': 'real_client_analysis',
                     'timestamp': datetime.now().isoformat()
                 }
         
-        elif any(kw in query_lower for kw in ['enhance', 'upgrade', 'improve', 'langchain', 'agno', 'code']):
+        # Repository analysis - FORCE GitHub API
+        elif any(kw in query_lower for kw in ['repository', 'repo', 'github', 'sophia-intel', 'codebase', 'analyze']):
+            # FORCE REAL REPOSITORY ANALYSIS
+            repo_analysis = await analyze_repository()
+            
+            # Use repository data for enhancement planning
+            enhancement_prompt = f"""
+            REAL Repository Analysis: {json.dumps(repo_analysis, indent=2)}
+            Query: {request.query}
+            
+            As SOPHIA V4, analyze our ACTUAL sophia-intel repository and provide specific improvements.
+            Focus on real files, real dependencies, real code structure.
+            NO generic advice - only specific improvements for our actual codebase.
+            """
+            
+            ai_response = await call_openrouter_model('coding', [
+                {'role': 'user', 'content': enhancement_prompt}
+            ], 3000)
+            
+            return {
+                'message': f"Yo, partner! Here's my analysis of our REAL sophia-intel repository: {ai_response} 🤠",
+                'data': {
+                    'repository_analysis': repo_analysis,
+                    'enhancement_plan': ai_response,
+                    'action': 'real_repo_analysis'
+                },
+                'action': 'real_repository_analysis',
+                'timestamp': datetime.now().isoformat()
+            }
+        
+        # Code enhancement - FORCE repository + research combination
+        elif any(kw in query_lower for kw in ['enhance', 'upgrade', 'improve', 'fastapi', 'pydantic', 'code']):
+            # FORCE REAL REPOSITORY + RESEARCH
+            repo_analysis = await analyze_repository()
+            
             # Extract technology
-            technology = "general"
-            for tech in ['langchain', 'agno', 'fastapi', 'python', 'ai', 'ml']:
+            technology = "fastapi"
+            for tech in ['fastapi', 'pydantic', 'python', 'ai', 'ml']:
                 if tech in query_lower:
                     technology = tech
                     break
             
             result = await autonomous_code_enhancement(technology, request.user_id, True)
-            
-            # Auto-commit if implementation ready
-            if result.get('implementation_code') and result.get('status') == 'ready_for_deployment':
-                background_tasks.add_task(
-                    autonomous_github_commit,
-                    f"enhancements/{technology}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.py",
-                    result['implementation_code'],
-                    f"🔥 Autonomous {technology} enhancement by SOPHIA V4"
-                )
+            result['real_repository'] = repo_analysis
             
             return {
-                'message': f"Yo, partner! I've researched the latest {technology} enhancements and designed a badass upgrade plan. Implementation is ready for deployment! 🤠",
+                'message': f"Yo, partner! I've analyzed our REAL repository and researched {technology} enhancements. Here's the specific upgrade plan for our actual codebase! 🤠",
                 'data': result,
-                'action': 'code_enhancement',
+                'action': 'real_code_enhancement',
                 'timestamp': datetime.now().isoformat()
             }
         
         else:
-            # General autonomous response
+            # General response - still use web search for general queries
             web_results = await search_web_intelligence(request.query, request.sources_limit)
             
-            # Use primary model for response
             response_prompt = f"""
             Query: {request.query}
             Web Results: {json.dumps(web_results, indent=2)}
@@ -681,12 +728,6 @@ async def autonomous_chat(request: ChatRequest, background_tasks: BackgroundTask
             ai_response = await call_openrouter_model('primary', [
                 {'role': 'user', 'content': response_prompt}
             ])
-            
-            # Store in memory
-            await store_memory(request.user_id, request.query, ai_response, {
-                'web_results': web_results,
-                'memories_used': len(memories)
-            })
             
             return {
                 'message': ai_response or f"Yo, partner! I heard '{request.query}' and I'm processing it with my autonomous capabilities. Let me dig deeper! 🤠",

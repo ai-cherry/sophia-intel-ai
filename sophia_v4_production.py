@@ -715,6 +715,14 @@ async def health_check():
     return {
         "status": "healthy",
         "version": "4.0.0",
+        "timestamp": datetime.now().isoformat()
+    }
+
+@app.get("/api/v1/health")
+async def health_check_v1():
+    return {
+        "status": "healthy",
+        "version": "4.0.0",
         "timestamp": datetime.now().isoformat(),
         "database": "connected",
         "agents": "operational"

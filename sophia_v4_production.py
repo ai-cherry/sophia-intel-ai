@@ -599,7 +599,18 @@ class CommitAgent:
 class DeploymentAgent:
     def __init__(self):
         self.agent_id = f"deploy_{uuid.uuid4().hex[:8]}"
-        self.fly_token = FLY_API_TOKEN
+        
+        # Use FLY_ORG_TOKEN for full organizational access (CRITICAL!)
+        self.fly_org_token = os.getenv("FLY_ORG_TOKEN")
+        self.fly_auth_token = os.getenv("FLY_AUTH_TOKEN") 
+        self.fly_api_token = os.getenv("FLY_API_TOKEN")
+        
+        if not self.fly_org_token:
+            logger.warning("FLY_ORG_TOKEN not found - SOPHIA's autonomous capabilities will be limited!")
+            
+        # Prioritize tokens: ORG > AUTH > API for maximum autonomous capability
+        self.active_token = self.fly_org_token or self.fly_auth_token or self.fly_api_token
+        self.fly_token = self.active_token
     
     async def trigger_deployment(self, request: Dict[str, Any]) -> Dict[str, Any]:
         """Trigger Fly.io deployment"""

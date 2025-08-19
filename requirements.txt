@@ -10,7 +10,7 @@ locust==2.31.6
 
 # Database and caching
 redis==5.0.8
-asyncpg==0.29.0
+# asyncpg==0.29.0 # Removed due to build issues
 qdrant-client==1.11.2
 
 # HTTP and async

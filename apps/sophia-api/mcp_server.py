@@ -498,7 +498,10 @@ async def deploy_pr(request: dict):
     Deploys a GitHub PR to Fly.io using API (no CLI authentication required).
     """
     try:
-        from .fly_api_client import FlyAPIClient
+        import sys
+        import os
+        sys.path.append(os.path.dirname(__file__))
+        from fly_api_client import FlyAPIClient
         
         pr_number = request.get("pr_number")
         repo_url = request.get("repo", "https://github.com/ai-cherry/sophia-intel")

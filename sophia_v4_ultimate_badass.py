@@ -579,5 +579,5 @@ if __name__ == "__main__":
     logger.info("🔥 Maximum autonomous capabilities: LOADED AND READY TO DOMINATE")
     
     port = int(os.getenv("PORT", 8080))
-    uvicorn.run("sophia_v4_production:app", host="0.0.0.0", port=port, log_level="info")
+    uvicorn.run("sophia_v4_ultimate_badass:app", host="0.0.0.0", port=port, log_level="info")
 

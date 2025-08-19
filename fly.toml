@@ -4,35 +4,25 @@ primary_region = "ord"
 [build]
   dockerfile = "Dockerfile"
 
+[env]
+  PORT = "8080"
+  QDRANT_URL = "https://a2a5dc3b-bf37-4907-9398-d49f5c6813ed.us-west-2-0.aws.cloud.qdrant.io"
+
 [http_service]
   internal_port = 8080
   force_https = true
-  auto_stop_machines = "stop"
+  auto_stop_machines = false
   auto_start_machines = true
   min_machines_running = 1
-  [http_service.concurrency]
-    type = "requests"
-    soft_limit = 200
-    hard_limit = 250
-  [[http_service.checks]]
-    grace_period = "10s"
-    interval = "15s"
-    method = "GET"
-    path = "/health"
-    protocol = "http"
-    timeout = "5s"
 
-[deploy]
-  strategy = "rolling"
-  max_unavailable = 1
-  wait_timeout = "10m"
-  PRIMARY_REGION = "ord"
-  PORT = "8080"
-  PYTHONPATH = "/app"
-  ENVIRONMENT = "production"
+[http_service.concurrency]
+  type = "connections"
+  soft_limit = 200
+  hard_limit = 250
 
+# Performance machine configuration with A100 GPU support
 [[vm]]
-  size = "shared-cpu-2x"
-  memory = "4gb"
-  processes = ["app"]
+  cpu_kind = "performance"
+  cpus = 8
+  memory_mb = 16384
 

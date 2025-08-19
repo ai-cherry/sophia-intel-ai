@@ -540,7 +540,7 @@ async def deploy_pr(request: dict):
             
             # Deploy to Fly.io
             deploy_result = subprocess.run([
-                "fly", "deploy", "--app", "sophia-intel"
+                "flyctl", "deploy", "--app", "sophia-intel"
             ], capture_output=True, text=True, cwd=temp_dir)
             
             if deploy_result.returncode != 0:

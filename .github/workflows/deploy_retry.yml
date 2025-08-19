@@ -1,0 +1,124 @@
+name: Deploy SOPHIA V4 with Retry Logic
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Install Flyctl
+        run: |
+          curl -L https://fly.io/install.sh | sh
+          echo "$HOME/.fly/bin" >> $GITHUB_PATH
+          
+      - name: Deploy to Fly.io with Retry
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_ORG_TOKEN }}
+        run: |
+          set -e
+          
+          # Function to retry deployment
+          retry_deploy() {
+            local attempt=1
+            local max_attempts=5
+            local delay=30
+            
+            while [ $attempt -le $max_attempts ]; do
+              echo "Deployment attempt $attempt of $max_attempts"
+              
+              if flyctl deploy --app sophia-intel --strategy immediate --wait-timeout 10m; then
+                echo "Deployment successful on attempt $attempt"
+                return 0
+              else
+                echo "Deployment failed on attempt $attempt"
+                if [ $attempt -lt $max_attempts ]; then
+                  echo "Waiting $delay seconds before retry..."
+                  sleep $delay
+                  delay=$((delay * 2))  # Exponential backoff
+                fi
+              fi
+              
+              attempt=$((attempt + 1))
+            done
+            
+            echo "All deployment attempts failed"
+            return 1
+          }
+          
+          # Execute retry deployment
+          retry_deploy
+          
+      - name: Health Check with Retry
+        run: |
+          set -e
+          
+          # Function to retry health check
+          retry_health_check() {
+            local attempt=1
+            local max_attempts=10
+            local delay=10
+            
+            while [ $attempt -le $max_attempts ]; do
+              echo "Health check attempt $attempt of $max_attempts"
+              
+              if curl --fail --silent --max-time 10 https://sophia-intel.fly.dev/health; then
+                echo "Health check successful on attempt $attempt"
+                return 0
+              else
+                echo "Health check failed on attempt $attempt"
+                if [ $attempt -lt $max_attempts ]; then
+                  echo "Waiting $delay seconds before retry..."
+                  sleep $delay
+                fi
+              fi
+              
+              attempt=$((attempt + 1))
+            done
+            
+            echo "All health check attempts failed"
+            return 1
+          }
+          
+          # Execute retry health check
+          retry_health_check
+          
+      - name: Verify Endpoints
+        run: |
+          echo "Testing all SOPHIA V4 endpoints..."
+          
+          # Test basic health
+          curl --fail --silent https://sophia-intel.fly.dev/health | jq .
+          
+          # Test API v1 health
+          curl --fail --silent https://sophia-intel.fly.dev/api/v1/health | jq .
+          
+          # Test chat endpoint (should return error without proper payload, but endpoint should exist)
+          curl --silent -X POST https://sophia-intel.fly.dev/api/v1/chat \
+            -H "Content-Type: application/json" \
+            -d '{"query": "test", "sources_limit": 1}' | head -c 100
+            
+          echo "All endpoint tests completed"
+          
+      - name: Rollback on Failure
+        if: failure()
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_ORG_TOKEN }}
+        run: |
+          echo "Deployment failed, attempting rollback..."
+          flyctl rollback --app sophia-intel || echo "Rollback failed or not needed"
+          
+      - name: Deployment Success Notification
+        if: success()
+        run: |
+          echo "🚀 SOPHIA V4 deployment successful!"
+          echo "Health endpoint: https://sophia-intel.fly.dev/health"
+          echo "API v1 health: https://sophia-intel.fly.dev/api/v1/health"
+          echo "Frontend: https://sophia-intel.fly.dev/v4/"
+

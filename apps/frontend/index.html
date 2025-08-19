@@ -111,7 +111,7 @@
 
             const fetchStatus = async () => {
                 try {
-                    const res = await axios.get(`${apiBase}/dashboard/status`);
+                    const res = await axios.get(`${apiBase}/api/v1/health`);
                     setStatus(res.data);
                     setError("");
                 } catch (err) {
@@ -124,7 +124,10 @@
                 
                 setLoading(true);
                 try {
-                    const res = await axios.post(`${apiBase}/chat/enhanced`, { query });
+                    const res = await axios.post(`${apiBase}/api/v1/chat`, { 
+                        message: query,
+                        mode: "chat"
+                    });
                     setResponse(res.data.response);
                     setHistory([...history, { 
                         query, 
@@ -145,7 +148,7 @@
                 
                 setLoading(true);
                 try {
-                    const res = await axios.post(`${apiBase}/code/modify`, {
+                    const res = await axios.post(`${apiBase}/api/v1/code/modify`, {
                         query,
                         repo: "https://github.com/ai-cherry/sophia-intel"
                     });
@@ -169,7 +172,7 @@
                 
                 setLoading(true);
                 try {
-                    const res = await axios.post(`${apiBase}/swarm/execute`, { task: query });
+                    const res = await axios.post(`${apiBase}/api/v1/swarm/execute`, { task: query });
                     setResponse(`Swarm task completed: ${res.data.pr_url}`);
                     setHistory([...history, { 
                         query, 

@@ -24,6 +24,10 @@ from github import Github
 # SOPHIA Intel V4 Mega Upgrade - Phase 5: OpenRouter Models Integration
 from apps.sophia_api.models.openrouter_models import openrouter_models, ModelTier
 
+# SOPHIA Intel V4 Mega Upgrade - Phase 6: Ecosystem Integration
+from ecosystem.n8n.workflow_automation import n8n_automation
+from ecosystem.airbyte.data_sync import airbyte_sync
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -740,6 +744,178 @@ async def test_ai_connectivity(request: Request):
         }
     except Exception as e:
         logger.error(f"AI connectivity test error: {e}")
+        return {
+            "status": "error",
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
+# SOPHIA Intel V4 Mega Upgrade - Phase 6: Ecosystem Integration API
+@app.post("/api/v1/ecosystem/n8n/setup")
+@limiter.limit("5/minute")
+async def setup_n8n_automation(request: Request):
+    """Set up n8n workflow automation for SOPHIA autonomous operations"""
+    try:
+        result = await n8n_automation.setup_sophia_automation()
+        return {
+            "status": "success",
+            "result": result,
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"n8n setup error: {e}")
+        return {
+            "status": "error",
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
+@app.post("/api/v1/ecosystem/n8n/trigger")
+@limiter.limit("20/minute")
+async def trigger_n8n_workflow(request: Request, data: Dict[str, Any]):
+    """Trigger n8n workflow execution"""
+    try:
+        workflow_id = data.get("workflow_id")
+        workflow_data = data.get("data", {})
+        
+        if not workflow_id:
+            raise HTTPException(status_code=400, detail="workflow_id is required")
+        
+        result = await n8n_automation.trigger_workflow(workflow_id, workflow_data)
+        return {
+            "status": "success",
+            "result": result,
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"n8n trigger error: {e}")
+        return {
+            "status": "error",
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
+@app.get("/api/v1/ecosystem/n8n/templates")
+@limiter.limit("10/minute")
+async def get_n8n_templates(request: Request):
+    """Get available n8n workflow templates"""
+    try:
+        templates = n8n_automation.get_available_templates()
+        return {
+            "status": "success",
+            "templates": templates,
+            "total_templates": len(templates),
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"n8n templates error: {e}")
+        return {
+            "status": "error",
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
+@app.post("/api/v1/ecosystem/airbyte/setup")
+@limiter.limit("5/minute")
+async def setup_airbyte_sync(request: Request):
+    """Set up Airbyte data synchronization pipelines"""
+    try:
+        result = await airbyte_sync.setup_sophia_data_pipelines()
+        return {
+            "status": "success",
+            "result": result,
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Airbyte setup error: {e}")
+        return {
+            "status": "error",
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
+@app.post("/api/v1/ecosystem/airbyte/sync")
+@limiter.limit("10/minute")
+async def trigger_airbyte_sync(request: Request, data: Dict[str, Any]):
+    """Trigger Airbyte data synchronization"""
+    try:
+        connection_id = data.get("connection_id")
+        
+        if not connection_id:
+            raise HTTPException(status_code=400, detail="connection_id is required")
+        
+        result = await airbyte_sync.trigger_sync(connection_id)
+        return {
+            "status": "success",
+            "result": result,
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Airbyte sync error: {e}")
+        return {
+            "status": "error",
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
+@app.get("/api/v1/ecosystem/airbyte/status/{connection_id}")
+@limiter.limit("20/minute")
+async def get_airbyte_sync_status(request: Request, connection_id: str):
+    """Get Airbyte synchronization status"""
+    try:
+        result = await airbyte_sync.get_sync_status(connection_id)
+        return {
+            "status": "success",
+            "sync_status": result,
+            "connection_id": connection_id,
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Airbyte status error: {e}")
+        return {
+            "status": "error",
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
+@app.post("/api/v1/ecosystem/setup-all")
+@limiter.limit("2/minute")
+async def setup_complete_ecosystem(request: Request):
+    """Set up complete SOPHIA ecosystem integration (n8n + Airbyte + Pulumi)"""
+    try:
+        results = {}
+        
+        # Set up n8n automation
+        try:
+            n8n_result = await n8n_automation.setup_sophia_automation()
+            results["n8n"] = n8n_result
+        except Exception as e:
+            results["n8n"] = {"status": "error", "error": str(e)}
+        
+        # Set up Airbyte data sync
+        try:
+            airbyte_result = await airbyte_sync.setup_sophia_data_pipelines()
+            results["airbyte"] = airbyte_result
+        except Exception as e:
+            results["airbyte"] = {"status": "error", "error": str(e)}
+        
+        # Pulumi infrastructure (configuration only, actual deployment via CLI)
+        results["pulumi"] = {
+            "status": "configuration_ready",
+            "message": "Enhanced Pulumi infrastructure configuration created",
+            "deployment_command": "cd ecosystem/pulumi && pulumi up"
+        }
+        
+        return {
+            "status": "ecosystem_setup_complete",
+            "results": results,
+            "components_ready": len([r for r in results.values() if r.get("status") != "error"]),
+            "components_failed": len([r for r in results.values() if r.get("status") == "error"]),
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Ecosystem setup error: {e}")
         return {
             "status": "error",
             "error": str(e),

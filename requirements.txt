@@ -39,10 +39,8 @@ PyGithub==2.3.0
 # Autonomous Capabilities Dependencies
 playwright==1.40.0
 beautifulsoup4==4.12.2
-qdrant-client==1.7.0
 aiohttp==3.9.1
 pygithub==2.1.1
-langgraph==0.0.40
 lxml==4.9.3
 requests==2.31.0
 python-dateutil==2.8.2

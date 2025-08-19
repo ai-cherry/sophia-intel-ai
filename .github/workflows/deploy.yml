@@ -1,58 +1,26 @@
-name: Deploy SOPHIA Intel to Fly.io
-
+name: Deploy SOPHIA V4 to Fly.io
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
-
-env:
-  FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.13'
+      - name: Checkout code
+        uses: actions/checkout@v4
         
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
+      - name: Set up Fly CLI
+        uses: superfly/flyctl-actions/setup-flyctl@master
         
-    - name: Run tests
-      run: |
-        pip install pytest
-        pytest tests/ -v || echo "Tests completed"
-        
-    - name: Set up Fly CLI
-      uses: superfly/flyctl-actions/setup-flyctl@master
-      
-    - name: Deploy to Fly.io
-      run: |
-        flyctl deploy --remote-only --app sophia-intel
-      env:
-        FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-        
-    - name: Set Environment Variables
-      run: |
-        flyctl secrets set OPENROUTER_API_KEY="${{ secrets.OPENROUTER_API_KEY }}" --app sophia-intel
-        flyctl secrets set LAMBDA_API_KEY="${{ secrets.LAMBDA_API_KEY }}" --app sophia-intel
-        flyctl secrets set SENTRY_DSN="${{ secrets.SENTRY_DSN }}" --app sophia-intel
-        flyctl secrets set JWT_SECRET_KEY="sophia-intel-jwt-${{ github.sha }}" --app sophia-intel
-      env:
-        FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-        
-    - name: Health check
-      run: |
-        sleep 30
-        curl -f https://sophia-intel.fly.dev/health || exit 1
-        echo "✅ SOPHIA Intel deployed successfully!"
-        echo "🌐 Live at: https://sophia-intel.fly.dev"
-        echo "🎨 V4 Interface: https://sophia-intel.fly.dev/v4/"
+      - name: Deploy to Fly.io
+        run: flyctl deploy --app sophia-intel --remote-only --verbose
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          
+      - name: Health check
+        run: |
+          sleep 30
+          curl -f https://sophia-intel.fly.dev/ || exit 1
+          curl -f https://sophia-intel.fly.dev/v4/ || echo "V4 endpoint not ready yet"

@@ -22,11 +22,13 @@ import subprocess
 from github import Github
 
 # SOPHIA Intel V4 Mega Upgrade - Phase 5: OpenRouter Models Integration
-from .models.openrouter_models import openrouter_models, ModelTier
+# Temporarily disable OpenRouter import to get service working
+# from .models.openrouter_models import openrouter_models, ModelTier
 
 # SOPHIA Intel V4 Mega Upgrade - Phase 6: Ecosystem Integration
-from ecosystem.n8n.workflow_automation import n8n_automation
-from ecosystem.airbyte.data_sync import airbyte_sync
+# Temporarily disable ecosystem imports to get service working
+# from ecosystem.n8n.workflow_automation import n8n_automation
+# from ecosystem.airbyte.data_sync import airbyte_sync
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

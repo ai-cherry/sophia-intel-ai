@@ -22,7 +22,7 @@ import subprocess
 from github import Github
 
 # SOPHIA Intel V4 Mega Upgrade - Phase 5: OpenRouter Models Integration
-from apps.sophia_api.models.openrouter_models import openrouter_models, ModelTier
+from .models.openrouter_models import openrouter_models, ModelTier
 
 # SOPHIA Intel V4 Mega Upgrade - Phase 6: Ecosystem Integration
 from ecosystem.n8n.workflow_automation import n8n_automation

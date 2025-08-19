@@ -105,9 +105,9 @@
 ## 🌐 **REAL-WORLD CLOUD COMPATIBILITY**
 
 ### **Environment Support**
-- ✅ **AWS**: EC2, Lambda, ECS, Fargate
-- ✅ **Google Cloud**: Compute Engine, Cloud Run, GKE
-- ✅ **Azure**: Virtual Machines, Container Instances, AKS
+- ✅ **Lambda Labs**: Preferred cloud compute provider for GPU workloads
+- ✅ **Vercel**: Preferred platform for web application deployments  
+- ✅ **Fly.io**: Current production deployment platform
 - ✅ **Local Development**: Any Python 3.8+ environment
 - ✅ **CI/CD**: GitHub Actions, Jenkins, GitLab CI
 - ✅ **Docker**: Any container orchestration system

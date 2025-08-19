@@ -15,6 +15,10 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+# Install flyctl for autonomous deployment
+RUN curl -L https://fly.io/install.sh | sh
+ENV PATH="/root/.fly/bin:$PATH"
+
 # Copy requirements first for better caching
 COPY requirements.txt .
 

@@ -1,21 +1,33 @@
 """
-SOPHIA Intel Multi-Agent Swarm System
-Phase 4 of V4 Mega Upgrade - Real Implementation
-
-Multi-agent orchestration using Phidata 0.3.0+ with specialized agents
-for different aspects of autonomous operations.
+SOPHIA Intel Enhanced Agent System
+Fixed import structure to prevent startup crashes
 """
 
-from .swarm_coordinator import SwarmCoordinator
-from .research_agent import ResearchAgent
-from .coding_agent import CodingAgent
-from .deployment_agent import DeploymentAgent
-from .monitoring_agent import MonitoringAgent
+# Enhanced agents (fallback imports with error handling)
+try:
+    from .persona_manager import PersonaManager
+except ImportError:
+    PersonaManager = None
+
+try:
+    from .search_engine import DeepSearchEngine  
+except ImportError:
+    DeepSearchEngine = None
+
+try:
+    from .swarm_manager import SwarmManager
+except ImportError:
+    SwarmManager = None
+
+# Legacy agents (commented out to prevent phi import errors)
+# from .swarm_coordinator import SwarmCoordinator
+# from .research_agent import ResearchAgent
+# from .coding_agent import CodingAgent
+# from .deployment_agent import DeploymentAgent
+# from .monitoring_agent import MonitoringAgent
 
 __all__ = [
-    'SwarmCoordinator',
-    'ResearchAgent', 
-    'CodingAgent',
-    'DeploymentAgent',
-    'MonitoringAgent'
+    'PersonaManager',
+    'DeepSearchEngine', 
+    'SwarmManager'
 ]

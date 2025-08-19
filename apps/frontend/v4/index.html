@@ -4,11 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SOPHIA Intel V4 - Pay Ready</title>
-    <script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/axios@1.7.7/dist/axios.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
         :root {
             --indigo: #0D173A;
@@ -36,6 +31,9 @@
             border: 1px solid rgba(134, 208, 190, 0.3);
             backdrop-filter: blur(10px);
             transition: all 0.3s ease;
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 24px;
         }
         
         .card-module:hover {
@@ -43,142 +41,177 @@
             box-shadow: 0 8px 25px rgba(71, 88, 241, 0.2);
         }
         
-        .chat-container {
+        .chat-area {
             height: 400px;
             overflow-y: auto;
             background: rgba(13, 23, 58, 0.8);
             border: 1px solid var(--azure);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        
+        .chat-input {
+            flex: 1;
+            padding: 12px;
+            background: #374151;
+            border: 1px solid #4b5563;
+            border-radius: 8px;
+            color: white;
+            outline: none;
+        }
+        
+        .chat-input:focus {
+            border-color: var(--azure);
+        }
+        
+        .send-button {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, var(--azure), var(--mint));
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.3s ease;
+        }
+        
+        .send-button:hover {
+            opacity: 0.9;
+        }
+        
+        .send-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .input-container {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+        
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 32px;
+            color: #9ca3af;
+            font-size: 14px;
         }
     </style>
 </head>
 <body class="dark-theme">
-    <div id="root"></div>
-    
-    <script type="text/babel">
-        const { useState, useEffect } = React;
+    <div style="min-height: 100vh; padding: 24px;">
+        <!-- Header -->
+        <header class="header">
+            <h1 style="font-size: 2.5rem; margin-bottom: 8px;" class="pay-ready-brand">
+                SOPHIA Intel V4 - Pay Ready
+            </h1>
+            <p style="color: #d1d5db;">
+                Autonomous AI Development Platform
+            </p>
+        </header>
         
-        function SophiaV4Dashboard() {
-            const [chatInput, setChatInput] = useState('');
-            const [chatResponse, setChatResponse] = useState('');
-            const [isLoading, setIsLoading] = useState(false);
-            
-            const sendChat = async () => {
-                if (!chatInput.trim()) return;
-                
-                setIsLoading(true);
-                try {
-                    const response = await axios.post('/api/v1/chat', {
-                        message: chatInput,
-                        mode: 'v4_upgrade',
-                        priority: 'normal'
-                    });
-                    setChatResponse(response.data.response || 'SOPHIA V4 is operational!');
-                } catch (error) {
-                    setChatResponse('Error: ' + error.message);
-                } finally {
-                    setIsLoading(false);
-                }
-            };
-            
-            return (
-                <div className="min-h-screen p-6">
-                    {/* Header */}
-                    <header className="text-center mb-8">
-                        <h1 className="text-4xl pay-ready-brand mb-2">
-                            SOPHIA Intel V4 - Pay Ready
-                        </h1>
-                        <p className="text-gray-300">
-                            Autonomous AI Development Platform
-                        </p>
-                    </header>
+        <!-- Main Dashboard Grid -->
+        <div class="grid">
+            <!-- Chat Interface -->
+            <div>
+                <div class="card-module">
+                    <h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 16px; color: white;">
+                        Chat with SOPHIA
+                    </h2>
                     
-                    {/* Main Dashboard Grid */}
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        {/* Chat Interface */}
-                        <div className="lg:col-span-2">
-                            <div className="card-module rounded-lg p-6">
-                                <h2 className="text-xl font-semibold mb-4 text-white">
-                                    Chat with SOPHIA
-                                </h2>
-                                
-                                <div className="chat-container rounded-lg p-4 mb-4">
-                                    <div className="text-sm text-gray-300">
-                                        {chatResponse || 'SOPHIA V4 is ready for autonomous development tasks...'}
-                                    </div>
-                                </div>
-                                
-                                <div className="flex gap-2">
-                                    <input
-                                        type="text"
-                                        value={chatInput}
-                                        onChange={(e) => setChatInput(e.target.value)}
-                                        onKeyPress={(e) => e.key === 'Enter' && sendChat()}
-                                        placeholder="Ask SOPHIA about V4 capabilities..."
-                                        className="flex-1 p-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-azure focus:outline-none"
-                                    />
-                                    <button
-                                        onClick={sendChat}
-                                        disabled={isLoading}
-                                        className="px-6 py-3 bg-gradient-to-r from-azure to-mint text-white rounded-lg hover:opacity-90 disabled:opacity-50 font-medium"
-                                    >
-                                        {isLoading ? 'Sending...' : 'Send'}
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        {/* Modular Cards */}
-                        <div className="space-y-6">
-                            {/* Agent Factory */}
-                            <div className="card-module rounded-lg p-6">
-                                <h3 className="text-lg font-semibold mb-3 text-white">
-                                    🤖 Agent Factory
-                                </h3>
-                                <p className="text-gray-300 text-sm mb-3">
-                                    Create and manage AI agents
-                                </p>
-                                <div className="text-xs text-mint">
-                                    Status: Ready for deployment
-                                </div>
-                            </div>
-                            
-                            {/* OKR Tracking */}
-                            <div className="card-module rounded-lg p-6">
-                                <h3 className="text-lg font-semibold mb-3 text-white">
-                                    🎯 OKR Tracking
-                                </h3>
-                                <p className="text-gray-300 text-sm mb-3">
-                                    Objectives and Key Results
-                                </p>
-                                <div className="text-xs text-mint">
-                                    V4 Upgrade: 85% Complete
-                                </div>
-                            </div>
-                            
-                            {/* Bulletin Board */}
-                            <div className="card-module rounded-lg p-6">
-                                <h3 className="text-lg font-semibold mb-3 text-white">
-                                    📋 Bulletin Board
-                                </h3>
-                                <p className="text-gray-300 text-sm mb-3">
-                                    System notifications
-                                </p>
-                                <div className="text-xs text-mint">
-                                    Latest: Dark theme deployed
-                                </div>
-                            </div>
+                    <div class="chat-area">
+                        <div style="color: #d1d5db; font-size: 14px;">
+                            🤠 Howdy! SOPHIA V4 is locked and loaded with real autonomous capabilities. I can research, coordinate swarms, commit code, and deploy apps. What's the mission, partner?
                         </div>
                     </div>
                     
-                    {/* Footer */}
-                    <footer className="text-center mt-8 text-gray-400 text-sm">
-                        SOPHIA Intel V4 • Pay Ready Branding • Autonomous Development Platform
-                    </footer>
+                    <div class="input-container">
+                        <input
+                            type="text"
+                            placeholder="Ask SOPHIA about V4 capabilities..."
+                            class="chat-input"
+                        />
+                        <button class="send-button">Send</button>
+                    </div>
                 </div>
-            );
-        }
+            </div>
+            
+            <!-- Sidebar Modules -->
+            <div class="sidebar">
+                <!-- Agent Factory -->
+                <div class="card-module">
+                    <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 12px; color: white;">
+                        🤖 Agent Factory
+                    </h3>
+                    <p style="color: #d1d5db; font-size: 14px; margin-bottom: 12px;">
+                        Create and manage AI agents
+                    </p>
+                    <div style="font-size: 12px; color: var(--mint);">
+                        Status: Ready for deployment
+                    </div>
+                </div>
+                
+                <!-- OKR Tracking -->
+                <div class="card-module">
+                    <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 12px; color: white;">
+                        🎯 OKR Tracking
+                    </h3>
+                    <p style="color: #d1d5db; font-size: 14px; margin-bottom: 12px;">
+                        Objectives and Key Results
+                    </p>
+                    <div style="font-size: 12px; color: var(--mint);">
+                        V4 Upgrade: 85% Complete
+                    </div>
+                </div>
+                
+                <!-- Bulletin Board -->
+                <div class="card-module">
+                    <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 12px; color: white;">
+                        📋 Bulletin Board
+                    </h3>
+                    <p style="color: #d1d5db; font-size: 14px; margin-bottom: 12px;">
+                        System notifications
+                    </p>
+                    <div style="font-size: 12px; color: var(--mint);">
+                        Latest: Dark theme deployed
+                    </div>
+                </div>
+            </div>
+        </div>
         
-        ReactDOM.render(<SophiaV4Dashboard />, document.getElementById('root'));
-    </script>
+        <!-- Footer -->
+        <footer class="footer">
+            SOPHIA Intel V4 • Pay Ready Branding • Autonomous Development Platform
+        </footer>
+    </div>
+    
+    <!-- Load the corrected JavaScript with cache-busting -->
+    <script src="script.js?v=20250819193800"></script>
 </body>
 </html>
+

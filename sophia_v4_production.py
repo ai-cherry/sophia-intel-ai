@@ -710,36 +710,67 @@ async def health_check():
     }
 
 @app.post("/api/v1/chat")
-async def chat_endpoint(request: ChatRequest):
-    """Web research endpoint with real autonomous capabilities"""
+async def chat_endpoint(request: dict):
+    """Web research endpoint - handles both legacy and new formats"""
     try:
-        result = await web_research_agent.research_query(
-            request.query, 
-            request.sources_limit
-        )
-        return result
+        # Handle both old format (message) and new format (query)
+        query = request.get("query") or request.get("message", "")
+        sources_limit = request.get("sources_limit", 3)
+        
+        if not query:
+            raise HTTPException(status_code=400, detail="Query or message is required")
+        
+        result = await web_research_agent.research_query(query, sources_limit)
+        
+        # Return format compatible with both old and new frontend
+        response = {
+            "results": result.get("results", []),
+            "sources": result.get("sources", []),
+            "agent_id": result.get("agent_id", "web-research-001"),
+            "timestamp": datetime.now().isoformat()
+        }
+        
+        # Add legacy response field for old frontend compatibility
+        if "message" in request:
+            response["response"] = response["results"]
+        
+        return response
     except Exception as e:
         logger.error(f"Chat endpoint error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/v1/swarm/trigger")
-async def swarm_trigger_endpoint(request: SwarmRequest):
-    """Multi-agent swarm coordination endpoint"""
+async def swarm_trigger_endpoint(request: dict):
+    """Multi-agent swarm coordination endpoint - handles dict format"""
     try:
-        result = await swarm_coordinator.trigger_swarm(request)
+        # Convert dict to SwarmRequest format
+        swarm_request = SwarmRequest(
+            task=request.get("task", ""),
+            priority=request.get("priority", "normal"),
+            agents=request.get("agents", ["research", "analysis"])
+        )
+        
+        result = await swarm_coordinator.trigger_swarm(swarm_request)
         return result
     except Exception as e:
         logger.error(f"Swarm endpoint error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/v1/code/modify")
-async def code_modify_endpoint(request: CommitRequest):
-    """GitHub commit creation endpoint"""
+async def code_modify_endpoint(request: dict):
+    """GitHub commit creation endpoint - handles dict format"""
     try:
+        # Convert dict to CommitRequest format
+        commit_request = CommitRequest(
+            repo=request.get("repo", "ai-cherry/sophia-intel"),
+            changes=request.get("changes", ""),
+            message=request.get("message", f"SOPHIA V4 automated: {request.get('changes', 'update')}")
+        )
+        
         result = await commit_agent.create_commit({
-            "repo": request.repo,
-            "changes": request.changes,
-            "message": request.message
+            "repo": commit_request.repo,
+            "changes": commit_request.changes,
+            "message": commit_request.message
         })
         return result
     except Exception as e:
@@ -747,12 +778,18 @@ async def code_modify_endpoint(request: CommitRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/v1/deploy/trigger")
-async def deploy_trigger_endpoint(request: DeployRequest):
-    """Deployment automation endpoint"""
+async def deploy_trigger_endpoint(request: dict):
+    """Deployment trigger endpoint - handles dict format"""
     try:
+        # Convert dict to DeployRequest format
+        deploy_request = DeployRequest(
+            app_name=request.get("app_name", "sophia-intel"),
+            environment=request.get("environment", "production")
+        )
+        
         result = await deployment_agent.trigger_deployment({
-            "app_name": request.app_name,
-            "environment": request.environment
+            "app_name": deploy_request.app_name,
+            "environment": deploy_request.environment
         })
         return result
     except Exception as e:

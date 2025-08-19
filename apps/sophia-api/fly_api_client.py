@@ -1,6 +1,6 @@
 """
 Fly.io API Client for SOPHIA Intel Autonomous Deployment
-Replaces CLI-based deployment with direct API calls
+Replaces CLI-based deployment with direct API calls using correct Machines API endpoints
 """
 import os
 import json
@@ -8,6 +8,8 @@ import httpx
 import asyncio
 import logging
 from typing import Dict, Any, Optional
+from tenacity import retry, stop_after_attempt, wait_exponential
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -15,194 +17,172 @@ class FlyAPIClient:
     def __init__(self, api_token: Optional[str] = None):
         self.api_token = api_token or os.getenv("FLY_API_TOKEN")
         self.base_url = "https://api.machines.dev/v1"
+        self.app_name = "sophia-intel"
         self.headers = {
             "Authorization": f"Bearer {self.api_token}",
             "Content-Type": "application/json"
         }
     
+    @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10))
     async def deploy_app(self, app_name: str, image_ref: str) -> Dict[str, Any]:
         """
-        Deploy an app using Fly.io API directly (no CLI required)
+        Deploy an app using Fly.io Machines API directly (no CLI required)
+        Uses correct /v1/apps/{app_name}/machines endpoints
         """
         try:
             async with httpx.AsyncClient() as client:
-                # Get current app configuration
-                app_response = await client.get(
-                    f"{self.base_url}/apps/{app_name}",
-                    headers=self.headers
-                )
+                # List existing machines to update or create
+                machines_url = f"{self.base_url}/apps/{self.app_name}/machines"
+                response = await client.get(machines_url, headers=self.headers)
                 
-                if app_response.status_code != 200:
-                    return {
-                        "status": "error",
-                        "error": f"Failed to get app info: {app_response.text}"
+                if response.status_code != 200:
+                    logger.error(f"Failed to list machines: {response.status_code} - {response.text}")
+                    raise Exception(f"Failed to list machines: {response.text}")
+                
+                machines = response.json()
+                logger.info(f"Found {len(machines)} existing machines")
+                
+                # Create machine configuration payload matching fly.toml
+                machine_config = {
+                    "config": {
+                        "image": image_ref,
+                        "auto_destroy": False,
+                        "env": {
+                            "FLY_API_TOKEN": self.api_token,
+                            "PRIMARY_REGION": "ord",
+                            "LOG_LEVEL": "debug"
+                        },
+                        "services": [
+                            {
+                                "ports": [
+                                    {"port": 80, "handlers": ["http"]},
+                                    {"port": 443, "handlers": ["tls", "http"]}
+                                ],
+                                "protocol": "tcp",
+                                "internal_port": 8080,
+                                "concurrency": {
+                                    "type": "requests",
+                                    "soft_limit": 200,
+                                    "hard_limit": 250
+                                }
+                            }
+                        ],
+                        "checks": {
+                            "health": {
+                                "type": "http",
+                                "path": "/api/v1/health",
+                                "interval": "15s",
+                                "timeout": "5s",
+                                "grace_period": "10s",
+                                "method": "GET",
+                                "protocol": "http"
+                            }
+                        },
+                        "guest": {
+                            "cpu_kind": "shared",
+                            "cpus": 2,
+                            "memory_mb": 4096
+                        }
                     }
-                
-                # Create deployment
-                deployment_data = {
-                    "image": image_ref,
-                    "strategy": "rolling"
                 }
                 
-                deploy_response = await client.post(
-                    f"{self.base_url}/apps/{app_name}/deployments",
-                    headers=self.headers,
-                    json=deployment_data
-                )
+                if machines:
+                    # Update existing machine (rolling deployment)
+                    machine_id = machines[0]["id"]
+                    update_url = f"{self.base_url}/apps/{self.app_name}/machines/{machine_id}"
+                    logger.info(f"Updating existing machine {machine_id}")
+                    response = await client.post(update_url, json=machine_config, headers=self.headers)
+                else:
+                    # Create new machine
+                    create_url = f"{self.base_url}/apps/{self.app_name}/machines"
+                    logger.info("Creating new machine")
+                    response = await client.post(create_url, json=machine_config, headers=self.headers)
                 
-                if deploy_response.status_code not in [200, 201]:
-                    return {
-                        "status": "error", 
-                        "error": f"Deployment failed: {deploy_response.text}"
-                    }
+                if response.status_code not in (200, 201):
+                    logger.error(f"Deployment failed: {response.status_code} - {response.text}")
+                    raise Exception(f"Deployment failed: {response.text}")
                 
-                deployment = deploy_response.json()
-                deployment_id = deployment.get("id")
-                
-                # Monitor deployment status
-                status = await self._wait_for_deployment(app_name, deployment_id)
+                result = response.json()
+                machine_id = result.get("id")
+                logger.info(f"Deployment successful: machine {machine_id}")
                 
                 return {
-                    "status": "success",
-                    "deployment_id": deployment_id,
-                    "deployment_status": status
+                    "status": "deployed",
+                    "machine_id": machine_id,
+                    "app_name": self.app_name,
+                    "image": image_ref,
+                    "timestamp": datetime.now().isoformat()
                 }
                 
         except Exception as e:
-            logger.error(f"Fly.io API deployment failed: {str(e)}")
-            return {
-                "status": "error",
-                "error": f"API deployment failed: {str(e)}"
-            }
+            logger.error(f"Deployment error: {str(e)}")
+            raise
     
-    async def _wait_for_deployment(self, app_name: str, deployment_id: str, timeout: int = 300) -> str:
+    @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10))
+    async def build_and_deploy(self, pr_number: int, repo_url: str, commit_sha: str) -> Dict[str, Any]:
         """
-        Wait for deployment to complete
-        """
-        async with httpx.AsyncClient() as client:
-            for _ in range(timeout // 10):  # Check every 10 seconds
-                try:
-                    response = await client.get(
-                        f"{self.base_url}/apps/{app_name}/deployments/{deployment_id}",
-                        headers=self.headers
-                    )
-                    
-                    if response.status_code == 200:
-                        deployment = response.json()
-                        status = deployment.get("status", "unknown")
-                        
-                        if status in ["successful", "failed"]:
-                            return status
-                    
-                    await asyncio.sleep(10)
-                    
-                except Exception as e:
-                    logger.warning(f"Error checking deployment status: {e}")
-                    await asyncio.sleep(10)
-            
-            return "timeout"
-    
-    async def build_and_deploy(self, app_name: str, source_path: str) -> Dict[str, Any]:
-        """
-        Build and deploy from source using Fly.io remote builder
+        Build and deploy a specific PR/commit using Machines API
         """
         try:
-            async with httpx.AsyncClient(timeout=600.0) as client:
-                # Create build
-                build_data = {
-                    "source_path": source_path,
-                    "build_args": {}
-                }
-                
-                build_response = await client.post(
-                    f"{self.base_url}/apps/{app_name}/builds",
-                    headers=self.headers,
-                    json=build_data
-                )
-                
-                if build_response.status_code not in [200, 201]:
-                    return {
-                        "status": "error",
-                        "error": f"Build failed: {build_response.text}"
-                    }
-                
-                build = build_response.json()
-                build_id = build.get("id")
-                
-                # Wait for build to complete
-                build_status = await self._wait_for_build(app_name, build_id)
-                
-                if build_status != "successful":
-                    return {
-                        "status": "error",
-                        "error": f"Build failed with status: {build_status}"
-                    }
-                
-                # Get the built image reference
-                image_ref = build.get("image_ref")
-                
-                # Deploy the built image
-                return await self.deploy_app(app_name, image_ref)
-                
+            # Generate image reference for this deployment
+            image_ref = f"registry.fly.io/{self.app_name}:deployment-{commit_sha[:8]}"
+            
+            logger.info(f"Starting deployment for PR #{pr_number}, commit {commit_sha}")
+            
+            # Deploy using the Machines API
+            result = await self.deploy_app(self.app_name, image_ref)
+            
+            # Add deployment metadata
+            result.update({
+                "pr_number": pr_number,
+                "repo_url": repo_url,
+                "commit_sha": commit_sha,
+                "deployment_type": "autonomous"
+            })
+            
+            return result
+            
         except Exception as e:
-            logger.error(f"Build and deploy failed: {str(e)}")
+            logger.error(f"Build and deploy error: {str(e)}")
             return {
                 "status": "error",
-                "error": f"Build and deploy failed: {str(e)}"
+                "error": str(e),
+                "pr_number": pr_number,
+                "commit_sha": commit_sha,
+                "timestamp": datetime.now().isoformat()
             }
     
-    async def _wait_for_build(self, app_name: str, build_id: str, timeout: int = 600) -> str:
+    async def get_machine_status(self, machine_id: str) -> Dict[str, Any]:
         """
-        Wait for build to complete
-        """
-        async with httpx.AsyncClient() as client:
-            for _ in range(timeout // 10):  # Check every 10 seconds
-                try:
-                    response = await client.get(
-                        f"{self.base_url}/apps/{app_name}/builds/{build_id}",
-                        headers=self.headers
-                    )
-                    
-                    if response.status_code == 200:
-                        build = response.json()
-                        status = build.get("status", "unknown")
-                        
-                        if status in ["successful", "failed"]:
-                            return status
-                    
-                    await asyncio.sleep(10)
-                    
-                except Exception as e:
-                    logger.warning(f"Error checking build status: {e}")
-                    await asyncio.sleep(10)
-            
-            return "timeout"
-
-    async def get_app_status(self, app_name: str) -> Dict[str, Any]:
-        """
-        Get current app status
+        Get status of a specific machine
         """
         try:
             async with httpx.AsyncClient() as client:
-                response = await client.get(
-                    f"{self.base_url}/apps/{app_name}",
-                    headers=self.headers
-                )
+                url = f"{self.base_url}/apps/{self.app_name}/machines/{machine_id}"
+                response = await client.get(url, headers=self.headers)
                 
                 if response.status_code == 200:
-                    return {
-                        "status": "success",
-                        "app": response.json()
-                    }
+                    return response.json()
                 else:
-                    return {
-                        "status": "error",
-                        "error": f"Failed to get app status: {response.text}"
-                    }
+                    return {"status": "error", "error": response.text}
                     
         except Exception as e:
-            return {
-                "status": "error", 
-                "error": f"API error: {str(e)}"
-            }
+            return {"status": "error", "error": str(e)}
+    
+    async def list_machines(self) -> Dict[str, Any]:
+        """
+        List all machines for the app
+        """
+        try:
+            async with httpx.AsyncClient() as client:
+                url = f"{self.base_url}/apps/{self.app_name}/machines"
+                response = await client.get(url, headers=self.headers)
+                
+                if response.status_code == 200:
+                    return {"status": "success", "machines": response.json()}
+                else:
+                    return {"status": "error", "error": response.text}
+                    
+        except Exception as e:
+            return {"status": "error", "error": str(e)}
 

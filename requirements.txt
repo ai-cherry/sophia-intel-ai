@@ -32,5 +32,6 @@ pydantic==2.9.2
 pydantic-settings==2.5.2
 python-multipart==0.0.9
 slowapi==0.1.9
+tenacity==8.2.3
 
 PyGithub==2.3.0

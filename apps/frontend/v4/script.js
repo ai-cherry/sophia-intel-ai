@@ -1,5 +1,5 @@
 /**
- * SOPHIA V4 Frontend JavaScript
+ * SOPHIA V4 Frontend JavaScript - FIXED VERSION
  * Connects Pay Ready interface to production backend APIs
  */
 
@@ -7,21 +7,27 @@ class SophiaV4Interface {
     constructor() {
         this.apiBase = window.location.origin;
         this.isProcessing = false;
+        this.userId = 'patrick_001'; // Real user ID for Patrick
         this.initializeInterface();
         this.bindEvents();
     }
 
     initializeInterface() {
-        // Initialize chat interface
-        this.chatMessages = document.getElementById('chat-messages');
-        this.chatInput = document.getElementById('chat-input');
-        this.sendButton = document.getElementById('send-button');
+        // Get actual DOM elements from the page
+        this.chatMessages = document.querySelector('.chat-area') || document.querySelector('#chat-messages');
+        this.chatInput = document.querySelector('input[placeholder*="SOPHIA"]') || document.querySelector('#chat-input');
+        this.sendButton = document.querySelector('button') || document.querySelector('#send-button');
         
-        // Initialize status indicators
-        this.updateSystemStatus();
+        console.log('DOM elements found:', {
+            chatMessages: !!this.chatMessages,
+            chatInput: !!this.chatInput, 
+            sendButton: !!this.sendButton
+        });
         
-        // Add welcome message
-        this.addMessage("SOPHIA V4 Pay Ready is online. I can perform web research, coordinate AI swarms, create GitHub commits, and trigger deployments. How can I help you?", 'assistant');
+        // Add welcome message to chat area
+        if (this.chatMessages) {
+            this.addMessage("🤠 Howdy! SOPHIA V4 is locked and loaded with real autonomous capabilities. I can research, coordinate swarms, commit code, and deploy apps. What's the mission, partner?", 'assistant');
+        }
     }
 
     bindEvents() {
@@ -38,73 +44,25 @@ class SophiaV4Interface {
         if (this.sendButton) {
             this.sendButton.addEventListener('click', () => this.sendMessage());
         }
-
-        // Card interaction events
-        this.bindCardEvents();
-    }
-
-    bindCardEvents() {
-        // Agent Factory card
-        const agentFactoryCard = document.querySelector('.card[data-card="agent-factory"]');
-        if (agentFactoryCard) {
-            agentFactoryCard.addEventListener('click', () => {
-                this.triggerSwarm('Initialize agent factory for multi-agent coordination');
-            });
-        }
-
-        // OKR Tracking card
-        const okrCard = document.querySelector('.card[data-card="okr-tracking"]');
-        if (okrCard) {
-            okrCard.addEventListener('click', () => {
-                this.performResearch('Current OKR tracking methodologies and best practices');
-            });
-        }
-
-        // Bulletin Board card
-        const bulletinCard = document.querySelector('.card[data-card="bulletin"]');
-        if (bulletinCard) {
-            bulletinCard.addEventListener('click', () => {
-                this.createCommit('ai-cherry/sophia-intel', 'Update bulletin board with latest system status');
-            });
-        }
     }
 
     async sendMessage() {
         if (this.isProcessing) return;
 
-        const message = this.chatInput.value.trim();
+        const message = this.chatInput?.value?.trim();
         if (!message) return;
 
         this.isProcessing = true;
-        this.chatInput.value = '';
+        if (this.chatInput) this.chatInput.value = '';
         this.updateSendButton(true);
 
         // Add user message
         this.addMessage(message, 'user');
 
         try {
-            // Determine message type and route to appropriate endpoint
-            const messageType = this.analyzeMessageType(message);
-            let result;
-
-            switch (messageType) {
-                case 'research':
-                    result = await this.performResearch(message);
-                    break;
-                case 'swarm':
-                    result = await this.triggerSwarm(message);
-                    break;
-                case 'commit':
-                    result = await this.createCommit('ai-cherry/sophia-intel', message);
-                    break;
-                case 'deploy':
-                    result = await this.triggerDeployment();
-                    break;
-                default:
-                    result = await this.performResearch(message); // Default to research
-            }
-
-            this.displayResult(result, messageType);
+            // Use persona endpoint for all interactions to get SOPHIA's personality
+            const result = await this.chatWithSophia(message);
+            this.displayPersonaResult(result);
 
         } catch (error) {
             console.error('Message processing error:', error);
@@ -115,23 +73,24 @@ class SophiaV4Interface {
         }
     }
 
-    analyzeMessageType(message) {
-        const messageLower = message.toLowerCase();
-        
-        if (messageLower.includes('research') || messageLower.includes('find') || messageLower.includes('search')) {
-            return 'research';
+    async chatWithSophia(query) {
+        const response = await fetch(`${this.apiBase}/api/v1/persona`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                query: query,
+                user_id: this.userId
+            })
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`SOPHIA chat failed: ${response.status} - ${errorText}`);
         }
-        if (messageLower.includes('swarm') || messageLower.includes('coordinate') || messageLower.includes('agents')) {
-            return 'swarm';
-        }
-        if (messageLower.includes('commit') || messageLower.includes('code') || messageLower.includes('github')) {
-            return 'commit';
-        }
-        if (messageLower.includes('deploy') || messageLower.includes('release')) {
-            return 'deploy';
-        }
-        
-        return 'research'; // Default
+
+        return await response.json();
     }
 
     async performResearch(query) {
@@ -142,6 +101,7 @@ class SophiaV4Interface {
             },
             body: JSON.stringify({
                 query: query,
+                user_id: this.userId,
                 sources_limit: 3
             })
         });
@@ -161,7 +121,8 @@ class SophiaV4Interface {
             },
             body: JSON.stringify({
                 task: task,
-                priority: 'high'
+                agents: ['research', 'analysis'],
+                objective: `Complete task: ${task}`
             })
         });
 
@@ -173,7 +134,7 @@ class SophiaV4Interface {
     }
 
     async createCommit(repo, changes) {
-        const response = await fetch(`${this.apiBase}/api/v1/code/modify`, {
+        const response = await fetch(`${this.apiBase}/api/v1/code/commit`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -181,7 +142,7 @@ class SophiaV4Interface {
             body: JSON.stringify({
                 repo: repo,
                 changes: changes,
-                message: `SOPHIA V4 automated: ${changes}`
+                file_path: `frontend_interaction_${Date.now()}.txt`
             })
         });
 
@@ -192,138 +153,55 @@ class SophiaV4Interface {
         return await response.json();
     }
 
-    async triggerDeployment() {
-        const response = await fetch(`${this.apiBase}/api/v1/deploy/trigger`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                app_name: 'sophia-intel',
-                environment: 'production'
-            })
-        });
-
-        if (!response.ok) {
-            throw new Error(`Deployment failed: ${response.status} ${response.statusText}`);
-        }
-
-        return await response.json();
-    }
-
-    displayResult(result, type) {
+    displayPersonaResult(result) {
         let message = '';
-
-        switch (type) {
-            case 'research':
-                message = this.formatResearchResult(result);
-                break;
-            case 'swarm':
-                message = this.formatSwarmResult(result);
-                break;
-            case 'commit':
-                message = this.formatCommitResult(result);
-                break;
-            case 'deploy':
-                message = this.formatDeployResult(result);
-                break;
-            default:
-                message = JSON.stringify(result, null, 2);
+        
+        if (result.response) {
+            message = result.response;
+        } else if (result.persona && result.persona.name) {
+            message = `🤠 ${result.persona.name} here! ${result.persona.tone}`;
+        } else {
+            message = 'SOPHIA V4 received your message!';
         }
 
         this.addMessage(message, 'assistant');
     }
 
-    formatResearchResult(result) {
-        if (!result.sources || result.sources.length === 0) {
-            return `Research completed but no sources found for: "${result.query}"`;
-        }
-
-        let message = `🔍 **Research Results for: "${result.query}"**\n\n`;
-        
-        if (result.summary) {
-            message += `**Summary:** ${result.summary}\n\n`;
-        }
-
-        message += `**Sources (${result.sources.length}):**\n`;
-        result.sources.forEach((source, index) => {
-            message += `${index + 1}. **${source.title}**\n`;
-            message += `   ${source.summary}\n`;
-            message += `   🔗 [View Source](${source.url})\n`;
-            message += `   📊 Relevance: ${Math.round(source.relevance_score * 100)}%\n\n`;
-        });
-
-        message += `*Agent ID: ${result.agent_id}*\n`;
-        message += `*Task ID: ${result.task_id}*`;
-
-        return message;
-    }
-
-    formatSwarmResult(result) {
-        let message = `🐝 **Swarm Coordination Complete**\n\n`;
-        message += `**Task:** ${result.task}\n`;
-        message += `**Priority:** ${result.priority}\n`;
-        message += `**Coordinator ID:** ${result.coordinator_id}\n\n`;
-
-        message += `**Agents Used:** ${result.agents_used.join(', ')}\n\n`;
-
-        message += `**Results:**\n`;
-        Object.entries(result.results).forEach(([agentType, agentResult]) => {
-            message += `• **${agentType}**: ${agentResult.status}\n`;
-            if (agentResult.status === 'success' && agentResult.result) {
-                message += `  Agent ID: ${agentResult.agent_id}\n`;
-            }
-            if (agentResult.error) {
-                message += `  Error: ${agentResult.error}\n`;
-            }
-        });
-
-        message += `\n**Coordination Logs:**\n`;
-        result.coordination_logs.forEach(log => {
-            message += `• ${log}\n`;
-        });
-
-        return message;
-    }
-
-    formatCommitResult(result) {
-        let message = `💻 **GitHub Commit Created**\n\n`;
-        message += `**Repository:** ${result.repo}\n`;
-        message += `**Commit Hash:** \`${result.commit_hash}\`\n`;
-        message += `**Message:** ${result.message}\n`;
-        message += `**Agent ID:** ${result.agent_id}\n\n`;
-        message += `🔗 [View Commit](${result.commit_url})`;
-
-        return message;
-    }
-
-    formatDeployResult(result) {
-        let message = `🚀 **Deployment Triggered**\n\n`;
-        message += `**App:** ${result.app_name}\n`;
-        message += `**Environment:** ${result.environment}\n`;
-        message += `**Deployment ID:** ${result.deployment_id}\n`;
-        message += `**Status:** ${result.status}\n\n`;
-
-        message += `**Deployment Logs:**\n`;
-        result.logs.forEach(log => {
-            message += `• ${log}\n`;
-        });
-
-        return message;
-    }
-
     addMessage(content, type) {
-        if (!this.chatMessages) return;
+        if (!this.chatMessages) {
+            console.warn('Chat messages container not found');
+            return;
+        }
+
+        // Clear the default message if it exists
+        const defaultMsg = this.chatMessages.querySelector('.default-message');
+        if (defaultMsg) {
+            defaultMsg.remove();
+        }
 
         const messageDiv = document.createElement('div');
         messageDiv.className = `message ${type}`;
+        messageDiv.style.cssText = `
+            margin: 10px 0;
+            padding: 12px;
+            border-radius: 8px;
+            max-width: 80%;
+            word-wrap: break-word;
+            ${type === 'user' ? 
+                'background: #007bff; color: white; margin-left: auto; text-align: right;' : 
+                'background: #f8f9fa; color: #333; margin-right: auto;'
+            }
+            ${type === 'error' ? 'background: #dc3545; color: white;' : ''}
+        `;
         
         const timestamp = new Date().toLocaleTimeString();
         
         messageDiv.innerHTML = `
-            <div class="message-content">
-                <div class="message-text">${this.formatMessageContent(content)}</div>
-                <div class="message-time">${timestamp}</div>
+            <div style="font-size: 14px; line-height: 1.4;">
+                ${this.formatMessageContent(content)}
+            </div>
+            <div style="font-size: 11px; opacity: 0.7; margin-top: 5px;">
+                ${timestamp}
             </div>
         `;
 
@@ -332,12 +210,12 @@ class SophiaV4Interface {
     }
 
     formatMessageContent(content) {
-        // Convert markdown-style formatting to HTML
+        // Convert markdown-style formatting to HTML and preserve line breaks
         return content
             .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
             .replace(/\*(.*?)\*/g, '<em>$1</em>')
-            .replace(/`(.*?)`/g, '<code>$1</code>')
-            .replace(/🔗 \[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">🔗 $1</a>')
+            .replace(/`(.*?)`/g, '<code style="background: rgba(0,0,0,0.1); padding: 2px 4px; border-radius: 3px;">$1</code>')
+            .replace(/🔗 \[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" style="color: #007bff;">🔗 $1</a>')
             .replace(/\n/g, '<br>');
     }
 
@@ -347,42 +225,18 @@ class SophiaV4Interface {
         if (processing) {
             this.sendButton.textContent = 'Processing...';
             this.sendButton.disabled = true;
+            this.sendButton.style.opacity = '0.6';
         } else {
             this.sendButton.textContent = 'Send';
             this.sendButton.disabled = false;
+            this.sendButton.style.opacity = '1';
         }
-    }
-
-    async updateSystemStatus() {
-        try {
-            const response = await fetch(`${this.apiBase}/api/v1/system/stats`);
-            if (response.ok) {
-                const stats = await response.json();
-                this.displaySystemStatus(stats);
-            }
-        } catch (error) {
-            console.warn('Failed to fetch system status:', error);
-        }
-    }
-
-    displaySystemStatus(stats) {
-        // Update status indicators in the UI
-        const statusElements = document.querySelectorAll('.status-indicator');
-        statusElements.forEach(element => {
-            element.classList.add('online');
-            element.title = `SOPHIA V4 ${stats.version} - ${stats.uptime}`;
-        });
-
-        // Update version info
-        const versionElements = document.querySelectorAll('.version-info');
-        versionElements.forEach(element => {
-            element.textContent = `v${stats.version}`;
-        });
     }
 }
 
 // Initialize interface when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('Initializing SOPHIA V4 interface...');
     window.sophiaInterface = new SophiaV4Interface();
     console.log('SOPHIA V4 Pay Ready interface initialized');
 });

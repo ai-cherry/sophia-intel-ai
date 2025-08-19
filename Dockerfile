@@ -1,7 +1,7 @@
 FROM python:3.12-slim
 
 # Expose port
-EXPOSE 8000
+EXPOSE 8080
 
 # Environment variables for optimization
 ENV PYTHONDONTWRITEBYTECODE=1

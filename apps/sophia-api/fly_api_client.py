@@ -122,22 +122,40 @@ class FlyAPIClient:
     async def build_and_deploy(self, pr_number: int, repo_url: str, commit_sha: str) -> Dict[str, Any]:
         """
         Build and deploy a specific PR/commit using Machines API
+        For autonomous deployment, use the current deployed image
         """
         try:
-            # Generate image reference for this deployment
-            image_ref = f"registry.fly.io/{self.app_name}:deployment-{commit_sha[:8]}"
+            logger.info(f"Starting autonomous deployment for PR #{pr_number}, commit {commit_sha}")
             
-            logger.info(f"Starting deployment for PR #{pr_number}, commit {commit_sha}")
+            # For autonomous deployment, use the current deployed image
+            # Get current machines to find the existing image
+            async with httpx.AsyncClient() as client:
+                machines_url = f"{self.base_url}/apps/{self.app_name}/machines"
+                response = await client.get(machines_url, headers=self.headers)
+                
+                if response.status_code == 200:
+                    machines = response.json()
+                    if machines:
+                        # Use the image from the first running machine
+                        current_image = machines[0].get("config", {}).get("image", f"registry.fly.io/{self.app_name}:latest")
+                        logger.info(f"Using current deployed image: {current_image}")
+                    else:
+                        current_image = f"registry.fly.io/{self.app_name}:latest"
+                        logger.info(f"No existing machines, using default image: {current_image}")
+                else:
+                    current_image = f"registry.fly.io/{self.app_name}:latest"
+                    logger.info(f"Could not list machines, using default image: {current_image}")
             
-            # Deploy using the Machines API
-            result = await self.deploy_app(self.app_name, image_ref)
+            # Deploy using the current image (autonomous deployment doesn't need new build)
+            result = await self.deploy_app(self.app_name, current_image)
             
             # Add deployment metadata
             result.update({
                 "pr_number": pr_number,
                 "repo_url": repo_url,
                 "commit_sha": commit_sha,
-                "deployment_type": "autonomous"
+                "deployment_type": "autonomous",
+                "image_used": current_image
             })
             
             return result

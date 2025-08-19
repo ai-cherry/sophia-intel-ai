@@ -651,6 +651,23 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+# Static files for frontend
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+import os
+
+# Mount static files
+if os.path.exists("apps/frontend"):
+    app.mount("/apps/frontend", StaticFiles(directory="apps/frontend"), name="frontend")
+
+# Serve V4 interface
+@app.get("/v4/")
+async def serve_v4_interface():
+    v4_path = "apps/frontend/v4/index.html"
+    if os.path.exists(v4_path):
+        return FileResponse(v4_path)
+    return {"message": "V4 interface not found", "available_at": "/apps/frontend/v4/"}
+
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,

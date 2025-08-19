@@ -213,6 +213,55 @@ async def chat_endpoint(request: ChatRequest):
             "timestamp": datetime.now().isoformat()
         }
 
+# Persona endpoint
+@app.post("/api/v1/persona")
+async def persona_endpoint(request: ChatRequest):
+    """SOPHIA's badass persona interaction"""
+    try:
+        logger.info(f"Persona request from {request.user_id}: {request.query}")
+        
+        # SOPHIA's badass persona responses
+        persona_responses = [
+            "Yo! SOPHIA here, ready to crush whatever you throw at me. What's the mission?",
+            "Hey there, partner! SOPHIA's locked and loaded. What are we conquering today?",
+            "SOPHIA in the house! Time to make some digital magic happen. What's up?",
+            "Howdy! SOPHIA's ready to ride into the code sunset. What's the target?",
+            "SOPHIA here - your AI sidekick with attitude. Let's make something awesome!"
+        ]
+        
+        # Select response based on query hash for consistency
+        response_index = hash(request.query) % len(persona_responses)
+        greeting = persona_responses[response_index]
+        
+        persona_info = {
+            "name": "SOPHIA",
+            "tone": "confident, witty, neon cowboy tech vibe",
+            "greeting_variants": persona_responses,
+            "capabilities": [
+                "witty_responses",
+                "context_awareness", 
+                "neon_cowboy_attitude",
+                "autonomous_operations"
+            ]
+        }
+        
+        return {
+            "persona": persona_info,
+            "response": f"{greeting}\n\nGot your query: {request.query}! I'm your autonomous AI sidekick with some serious firepower! 🤠",
+            "status": "badass_mode_active",
+            "user_id": request.user_id,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Persona error: {str(e)}")
+        return {
+            "persona": {"name": "SOPHIA", "tone": "confident"},
+            "response": "Hey partner! SOPHIA hit a snag, but I'm still here with attitude!",
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
 # Swarm orchestration endpoint
 @app.post("/api/v1/swarm/trigger")
 async def swarm_trigger(request: SwarmRequest):

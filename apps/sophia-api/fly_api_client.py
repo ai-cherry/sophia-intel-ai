@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 class FlyAPIClient:
     def __init__(self, api_token: Optional[str] = None):
         self.api_token = api_token or os.getenv("FLY_API_TOKEN")
-        self.base_url = "https://api.fly.io/v1"
+        self.base_url = "https://api.machines.dev/v1"
         self.headers = {
             "Authorization": f"Bearer {self.api_token}",
             "Content-Type": "application/json"

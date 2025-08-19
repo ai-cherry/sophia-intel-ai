@@ -866,10 +866,12 @@ async def system_stats():
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
+    import os
+    port = int(os.getenv("PORT", 8080))
     uvicorn.run(
         "sophia_v4_production:app",
         host="0.0.0.0",
-        port=8000,
+        port=port,
         reload=False,
         log_level="info"
     )

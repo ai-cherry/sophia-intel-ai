@@ -1,47 +1,37 @@
 FROM python:3.11-slim
 
-# Install system dependencies including git, flyctl, and Playwright dependencies
-RUN apt-get update && apt-get install -y \
-    git \
-    curl \
-    wget \
-    gnupg \
-    libnss3 \
-    libatk-bridge2.0-0 \
-    libdrm2 \
-    libxkbcommon0 \
-    libgtk-3-0 \
-    libgbm1 \
-    libasound2 \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install flyctl
-RUN curl -L https://fly.io/install.sh | sh
-ENV PATH="/root/.fly/bin:$PATH"
-
 # Set working directory
 WORKDIR /app
 
-# Copy requirements and install Python dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install Playwright browsers
-RUN playwright install chromium
-RUN playwright install-deps chromium
+# Copy requirements and install Python dependencies
+COPY requirements_production.txt .
+RUN pip install --no-cache-dir -r requirements_production.txt
 
 # Copy application code
-COPY . .
+COPY sophia_v4_production.py .
+COPY apps/ ./apps/
+COPY logs/ ./logs/
 
-# Create necessary directories
-RUN mkdir -p logs apps/frontend/v4
+# Create database directory
+RUN mkdir -p /app/data
 
 # Set environment variables
 ENV PYTHONPATH=/app
-ENV PORT=8080
+ENV PORT=8000
 
 # Expose port
-EXPOSE 8080
+EXPOSE 8000
 
-# Run the V4 production server with autonomous capabilities
-CMD ["uvicorn", "apps.sophia-api.mcp_server_v4_production:app", "--host", "0.0.0.0", "--port", "8080"]
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# Run the application
+CMD ["python", "sophia_v4_production.py"]
+

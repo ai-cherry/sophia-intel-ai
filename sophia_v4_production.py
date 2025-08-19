@@ -493,5 +493,5 @@ if __name__ == "__main__":
     logger.info("🔥 STARTING SOPHIA V4 REAL - NO MOCKS, NO BULLSHIT! 🔥")
     
     port = int(os.getenv("PORT", 8080))
-    uvicorn.run("sophia_v4_real:app", host="0.0.0.0", port=port, log_level="info")
+    uvicorn.run("sophia_v4_production:app", host="0.0.0.0", port=port, log_level="info")
 

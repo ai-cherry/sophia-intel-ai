@@ -5,6 +5,9 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+env:
+  FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -33,28 +36,23 @@ jobs:
       
     - name: Deploy to Fly.io
       run: |
-        flyctl auth token ${{ secrets.FLY_API_TOKEN }}
-        flyctl secrets set \
-          MCP_API_KEY="${{ secrets.MCP_API_KEY }}" \
-          AGNO_API_KEY="${{ secrets.AGNO_API_KEY }}" \
-          ANTHROPIC_API_KEY="${{ secrets.ANTHROPIC_API_KEY }}" \
-          APIFY_API_TOKEN="${{ secrets.APIFY_API_TOKEN }}" \
-          NOTION_API_KEY="${{ secrets.NOTION_API_KEY }}" \
-          SALESFORCE_ACCESS_TOKEN="${{ secrets.SALESFORCE_ACCESS_TOKEN }}" \
-          SLACK_API_TOKEN="${{ secrets.SLACK_API_TOKEN }}" \
-          POSTGRES_PASSWORD="${{ secrets.POSTGRES_PASSWORD }}" \
-          QDRANT_API_KEY="${{ secrets.QDRANT_API_KEY }}" \
-          GITHUB_PAT="${{ secrets.GITHUB_PAT }}" \
-          --app sophia-intel
-        flyctl deploy --app sophia-intel
+        flyctl deploy --remote-only --app sophia-intel
+      env:
+        FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        
+    - name: Set Environment Variables
+      run: |
+        flyctl secrets set OPENROUTER_API_KEY="${{ secrets.OPENROUTER_API_KEY }}" --app sophia-intel
+        flyctl secrets set LAMBDA_API_KEY="${{ secrets.LAMBDA_API_KEY }}" --app sophia-intel
+        flyctl secrets set SENTRY_DSN="${{ secrets.SENTRY_DSN }}" --app sophia-intel
+        flyctl secrets set JWT_SECRET_KEY="sophia-intel-jwt-${{ github.sha }}" --app sophia-intel
+      env:
+        FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
         
     - name: Health check
       run: |
         sleep 30
-        curl -f https://sophia-intel.fly.dev/api/v1/health || exit 1
-        
-    - name: Notify deployment
-      run: |
-        echo "✅ SOPHIA Intel deployed successfully to https://sophia-intel.fly.dev"
-        echo "🌐 Custom domain: https://www.sophia-intel.ai"
-
+        curl -f https://sophia-intel.fly.dev/health || exit 1
+        echo "✅ SOPHIA Intel deployed successfully!"
+        echo "🌐 Live at: https://sophia-intel.fly.dev"
+        echo "🎨 V4 Interface: https://sophia-intel.fly.dev/v4/"

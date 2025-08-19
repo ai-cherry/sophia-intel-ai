@@ -21,6 +21,9 @@ import uvicorn
 import subprocess
 from github import Github
 
+# SOPHIA Intel V4 Mega Upgrade - Phase 5: OpenRouter Models Integration
+from apps.sophia_api.models.openrouter_models import openrouter_models, ModelTier
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -614,6 +617,129 @@ async def deploy_pr(request: dict):
             
     except Exception as e:
         logger.error(f"Deployment error: {e}")
+        return {
+            "status": "error",
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
+# SOPHIA Intel V4 Mega Upgrade - Phase 5: OpenRouter Models API
+@app.post("/api/v1/ai/generate")
+@limiter.limit("30/minute")
+async def ai_generate_completion(request: Request, data: Dict[str, Any]):
+    """
+    SOPHIA autonomous AI generation using OpenRouter models.
+    Provides access to Claude Sonnet 4, DeepSeek V3, Qwen 3 Coder, and other top-tier models.
+    """
+    try:
+        messages = data.get("messages", [])
+        task_type = data.get("task_type", "general")
+        complexity = data.get("complexity", "medium")
+        model_key = data.get("model", None)
+        temperature = data.get("temperature", 0.7)
+        max_tokens = data.get("max_tokens", 4000)
+        stream = data.get("stream", False)
+        
+        if not messages:
+            raise HTTPException(status_code=400, detail="Messages are required")
+        
+        # Generate completion using optimal model selection
+        result = await openrouter_models.generate_completion(
+            messages=messages,
+            model_key=model_key,
+            task_type=task_type,
+            complexity=complexity,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            stream=stream
+        )
+        
+        # Log SOPHIA's AI usage
+        try:
+            redis_client = redis.from_url(os.getenv("REDIS_URL", "redis://localhost:6379"))
+            log_data = {
+                "action": "ai_generation",
+                "model_used": result.get("model_used"),
+                "task_type": task_type,
+                "complexity": complexity,
+                "tokens_used": result.get("usage", {}).get("total_tokens", 0),
+                "cost_estimate": result.get("cost_estimate", 0),
+                "timestamp": datetime.now().isoformat()
+            }
+            redis_client.lpush("sophia_ai_usage_logs", json.dumps(log_data))
+            redis_client.expire("sophia_ai_usage_logs", 86400)  # 24 hours
+        except Exception as log_error:
+            logger.warning(f"Failed to log AI usage: {log_error}")
+        
+        return {
+            "status": "success",
+            "result": result,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"AI generation error: {e}")
+        return {
+            "status": "error",
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
+@app.get("/api/v1/ai/models")
+@limiter.limit("10/minute")
+async def get_available_models(request: Request, tier: str = None):
+    """Get available OpenRouter models, optionally filtered by tier"""
+    try:
+        tier_enum = None
+        if tier:
+            try:
+                tier_enum = ModelTier(tier.lower())
+            except ValueError:
+                raise HTTPException(status_code=400, detail=f"Invalid tier: {tier}")
+        
+        models = openrouter_models.get_available_models(tier_enum)
+        
+        # Convert to serializable format
+        models_info = {}
+        for key, model in models.items():
+            models_info[key] = {
+                "name": model.name,
+                "tier": model.tier.value,
+                "context_length": model.context_length,
+                "cost_per_1k_tokens": model.cost_per_1k_tokens,
+                "specialties": model.specialties,
+                "supports_streaming": model.supports_streaming,
+                "supports_function_calling": model.supports_function_calling
+            }
+        
+        return {
+            "status": "success",
+            "models": models_info,
+            "total_models": len(models_info),
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting models: {e}")
+        return {
+            "status": "error",
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
+@app.get("/api/v1/ai/test")
+@limiter.limit("5/minute")
+async def test_ai_connectivity(request: Request):
+    """Test OpenRouter connectivity and model availability"""
+    try:
+        result = await openrouter_models.test_model_connectivity()
+        return {
+            "status": "success",
+            "connectivity": result,
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"AI connectivity test error: {e}")
         return {
             "status": "error",
             "error": str(e),

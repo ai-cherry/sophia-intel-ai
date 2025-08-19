@@ -26,6 +26,9 @@ primary_region = "ord"
   strategy = "rolling"
   max_unavailable = 1
   wait_timeout = "10m"
+
+[env]
+  LOG_LEVEL = "debug"
   PRIMARY_REGION = "ord"
   PORT = "8080"
   PYTHONPATH = "/app"

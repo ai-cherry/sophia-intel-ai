@@ -412,7 +412,7 @@ async def general_exception_handler(request: Request, exc: Exception):
 
 # Main application entry point
 if __name__ == "__main__":
-    port = int(os.getenv("PORT", "8081"))
+    port = int(os.getenv("PORT", "8080"))
     
     logger.info(f"🚀 Starting SOPHIA V4 Minimal on port {port}")
     logger.info("🤠 Bulletproof minimal version with badass persona!")

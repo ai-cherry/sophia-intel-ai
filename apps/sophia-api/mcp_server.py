@@ -539,7 +539,6 @@ async def deploy_pr(request: dict):
                 }
             
             # Deploy to Fly.io
-            import os
             deploy_env = os.environ.copy()
             deploy_env["FLY_API_TOKEN"] = os.getenv("FLY_API_TOKEN", "")
             

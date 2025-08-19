@@ -495,11 +495,14 @@ async def mcp_proxy(request: Request, tool: str, data: dict, api_key: str = Depe
 async def deploy_pr(request: dict):
     """
     Autonomous deployment endpoint for SOPHIA Intel.
-    Deploys a GitHub PR to Fly.io with testing and verification.
+    Deploys a GitHub PR to Fly.io using API (no CLI authentication required).
     """
     try:
+        from .fly_api_client import FlyAPIClient
+        
         pr_number = request.get("pr_number")
         repo_url = request.get("repo", "https://github.com/ai-cherry/sophia-intel")
+        commit = request.get("commit")
         
         if not pr_number:
             return {"status": "error", "error": "pr_number is required"}
@@ -511,6 +514,11 @@ async def deploy_pr(request: dict):
         if not github_token:
             return {"status": "error", "error": "GITHUB_TOKEN not configured"}
         
+        # Initialize Fly API client
+        fly_client = FlyAPIClient()
+        if not fly_client.api_token:
+            return {"status": "error", "error": "FLY_API_TOKEN not configured"}
+        
         g = Github(github_token)
         repo_name = repo_url.split("github.com/")[1]
         repo = g.get_repo(repo_name)
@@ -521,7 +529,6 @@ async def deploy_pr(request: dict):
         
         # Create temporary directory for deployment
         import tempfile
-        import shutil
         
         with tempfile.TemporaryDirectory() as temp_dir:
             # Clone repository and checkout PR branch
@@ -538,34 +545,31 @@ async def deploy_pr(request: dict):
                     "timestamp": datetime.now().isoformat()
                 }
             
-            # Deploy to Fly.io
-            deploy_env = os.environ.copy()
-            deploy_env["FLY_API_TOKEN"] = os.getenv("FLY_API_TOKEN", "")
+            # Deploy to Fly.io using API (no CLI required)
+            logger.info("Starting Fly.io deployment via API...")
+            deploy_result = await fly_client.build_and_deploy("sophia-intel", temp_dir)
             
-            deploy_result = subprocess.run([
-                "flyctl", "deploy", "--app", "sophia-intel"
-            ], capture_output=True, text=True, cwd=temp_dir, env=deploy_env)
-            
-            if deploy_result.returncode != 0:
-                logger.error(f"Fly.io deployment failed: {deploy_result.stderr}")
+            if deploy_result["status"] != "success":
+                logger.error(f"Fly.io API deployment failed: {deploy_result.get('error')}")
                 return {
                     "status": "error",
-                    "error": f"Deployment failed: {deploy_result.stderr}",
+                    "error": f"API deployment failed: {deploy_result.get('error')}",
                     "timestamp": datetime.now().isoformat()
                 }
             
             # Verify deployment health
-            import time
-            time.sleep(30)  # Wait for deployment to stabilize
+            import asyncio
+            await asyncio.sleep(30)  # Wait for deployment to stabilize
             
             try:
-                import requests
-                health_response = requests.get("https://sophia-intel.fly.dev/api/v1/health", timeout=10)
-                if health_response.status_code == 200:
-                    health_data = health_response.json()
-                    deployment_status = "healthy" if health_data.get("status") == "healthy" else "unhealthy"
-                else:
-                    deployment_status = "unhealthy"
+                import httpx
+                async with httpx.AsyncClient() as client:
+                    health_response = await client.get("https://sophia-intel.fly.dev/api/v1/health", timeout=10)
+                    if health_response.status_code == 200:
+                        health_data = health_response.json()
+                        deployment_status = "healthy" if health_data.get("status") == "healthy" else "unhealthy"
+                    else:
+                        deployment_status = "unhealthy"
             except Exception as e:
                 logger.error(f"Health check failed: {e}")
                 deployment_status = "unknown"

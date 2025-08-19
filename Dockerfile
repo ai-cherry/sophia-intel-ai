@@ -31,9 +31,15 @@ WORKDIR /app
 # Copy application code
 COPY . /app
 
-# Create non-root user for security
-RUN adduser -u 5678 --disabled-password --gecos "" appuser && chown -R appuser /app
+# Create non-root user for security and copy flyctl
+RUN adduser -u 5678 --disabled-password --gecos "" appuser && \
+    mkdir -p /home/appuser/.fly/bin && \
+    cp /root/.fly/bin/flyctl /home/appuser/.fly/bin/ && \
+    chown -R appuser:appuser /home/appuser/.fly && \
+    chown -R appuser /app
+
 USER appuser
+ENV PATH="/home/appuser/.fly/bin:$PATH"
 
 # Run the application
 CMD ["python", "apps/sophia-api/mcp_server.py"]

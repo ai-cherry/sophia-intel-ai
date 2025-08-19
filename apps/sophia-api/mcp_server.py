@@ -550,9 +550,10 @@ async def deploy_pr(request: dict):
             
             # Deploy to Fly.io using API (no CLI required)
             logger.info("Starting Fly.io deployment via API...")
-            deploy_result = await fly_client.build_and_deploy("sophia-intel", temp_dir)
+            commit_sha = commit or pr.head.sha
+            deploy_result = await fly_client.build_and_deploy(pr_number, repo_url, commit_sha)
             
-            if deploy_result["status"] != "success":
+            if deploy_result["status"] not in ["deployed", "success"]:
                 logger.error(f"Fly.io API deployment failed: {deploy_result.get('error')}")
                 return {
                     "status": "error",

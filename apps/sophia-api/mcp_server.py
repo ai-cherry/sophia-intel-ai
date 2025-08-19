@@ -539,9 +539,13 @@ async def deploy_pr(request: dict):
                 }
             
             # Deploy to Fly.io
+            import os
+            deploy_env = os.environ.copy()
+            deploy_env["FLY_API_TOKEN"] = os.getenv("FLY_API_TOKEN", "")
+            
             deploy_result = subprocess.run([
                 "flyctl", "deploy", "--app", "sophia-intel"
-            ], capture_output=True, text=True, cwd=temp_dir)
+            ], capture_output=True, text=True, cwd=temp_dir, env=deploy_env)
             
             if deploy_result.returncode != 0:
                 logger.error(f"Fly.io deployment failed: {deploy_result.stderr}")

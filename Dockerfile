@@ -1,46 +1,34 @@
-FROM python:3.12-slim
+FROM python:3.11-slim
 
-# Expose port
-EXPOSE 8080
-
-# Environment variables for optimization
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
-
-# Install system dependencies
+# Install system dependencies including git and flyctl
 RUN apt-get update && apt-get install -y \
-    build-essential \
-    curl \
     git \
-    && apt-get clean \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Install flyctl for autonomous deployment
+# Install flyctl
 RUN curl -L https://fly.io/install.sh | sh
 ENV PATH="/root/.fly/bin:$PATH"
-
-# Copy requirements first for better caching
-COPY requirements.txt .
-
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
 
 # Set working directory
 WORKDIR /app
 
+# Copy requirements and install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
 # Copy application code
-COPY . /app
+COPY . .
 
-# Create non-root user for security and copy flyctl
-RUN adduser -u 5678 --disabled-password --gecos "" appuser && \
-    mkdir -p /home/appuser/.fly/bin && \
-    cp /root/.fly/bin/flyctl /home/appuser/.fly/bin/ && \
-    chown -R appuser:appuser /home/appuser/.fly && \
-    chown -R appuser /app
+# Create necessary directories
+RUN mkdir -p logs apps/frontend/v4
 
-USER appuser
-ENV PATH="/home/appuser/.fly/bin:$PATH"
+# Set environment variables
+ENV PYTHONPATH=/app
+ENV PORT=8080
 
-# Run the application
+# Expose port
+EXPOSE 8080
+
+# Run the V4 server
 CMD ["python", "apps/sophia-api/mcp_server.py"]
-

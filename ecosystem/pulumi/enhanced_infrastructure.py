@@ -26,8 +26,7 @@ class SophiaInfrastructure:
         self.region = config.get("region") or "us-west-2"
         
         # Multi-cloud configuration
-        self.enable_aws = config.get_bool("enable_aws") or False
-        self.enable_gcp = config.get_bool("enable_gcp") or False
+        self.enable_lambda_labs = config.get_bool("enable_lambda_labs") or True
         self.enable_scaling = config.get_bool("enable_scaling") or True
         
         # Resource limits and scaling

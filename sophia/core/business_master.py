@@ -12,6 +12,8 @@ from datetime import datetime, timezone, timedelta
 from .api_manager import SOPHIAAPIManager
 from .ultimate_model_router import UltimateModelRouter
 from .mcp_client import SOPHIAMCPClient
+from .memory_master import SOPHIAMemoryMaster
+from ..integrations.gong_client import GongClient, GongCall
 
 logger = logging.getLogger(__name__)
 
@@ -21,17 +23,19 @@ class SOPHIABusinessMaster:
     Orchestrates data collection, analysis, and insights from business tools.
     """
     
-    def __init__(self):
+    def __init__(self, memory: Optional[SOPHIAMemoryMaster] = None, router: Optional[UltimateModelRouter] = None):
         """Initialize business master with required components."""
         self.api_manager = SOPHIAAPIManager()
-        self.model_router = UltimateModelRouter()
+        self.model_router = router or UltimateModelRouter()
+        self.memory = memory or SOPHIAMemoryMaster()
         self.mcp_client = None  # Will be initialized when needed
+        self.gong = GongClient()
         
         # Business configuration
         self.supported_sources = ["gong", "hubspot", "slack", "salesforce", "notion"]
         self.default_date_range = 30  # days
         
-        logger.info("Initialized SOPHIABusinessMaster")
+        logger.info("Initialized SOPHIABusinessMaster with Gong integration")
     
     async def _get_mcp_client(self) -> SOPHIAMCPClient:
         """Get or create MCP client."""
@@ -606,8 +610,189 @@ Report:
             logger.error(f"Integration status check failed: {e}")
             raise
     
+    async def ingest_recent_calls(self, since: str, until: str) -> List[Dict[str, Any]]:
+        """
+        Ingest recent Gong calls and store in memory.
+        
+        Args:
+            since: Start date (ISO format: 2025-08-01T00:00:00Z)
+            until: End date (ISO format: 2025-08-20T23:59:59Z)
+        """
+        try:
+            calls = await self.gong.list_calls(since, until, limit=100)
+            normalized = self._normalize_calls(calls)
+            
+            # Store to memory (Qdrant + Mem0)
+            await self.memory.store_business_artifacts("gong_calls", normalized)
+            
+            logger.info(f"Ingested {len(normalized)} Gong calls")
+            return normalized
+            
+        except Exception as e:
+            logger.error(f"Failed to ingest Gong calls: {e}")
+            raise
+    
+    async def summarize_call(self, call_id: str) -> str:
+        """
+        Summarize a Gong call using approved AI models.
+        
+        Args:
+            call_id: Gong call ID
+            
+        Returns:
+            Call summary with key insights
+        """
+        try:
+            call = await self.gong.get_call(call_id)
+            
+            if not call.transcript:
+                return f"No transcript available for call: {call.title}"
+            
+            # Use approved high-quality model for analysis
+            model = self.model_router.select_model("analysis")
+            
+            prompt = f"""
+            Analyze this sales call transcript and provide a comprehensive summary:
+            
+            Call: {call.title}
+            Duration: {call.duration} seconds
+            Participants: {', '.join(call.participants)}
+            
+            Transcript:
+            {call.transcript}
+            
+            Please provide:
+            1. Key discussion points
+            2. Customer pain points and needs
+            3. Next steps and action items
+            4. Deal status and opportunities
+            5. Risk factors or concerns
+            """
+            
+            summary = await self.model_router.call_model(model, prompt)
+            
+            # Store summary in memory
+            summary_data = [{
+                "call_id": call_id,
+                "summary": summary,
+                "call_title": call.title,
+                "participants": call.participants,
+                "duration": call.duration,
+                "url": call.url,
+                "timestamp": call.started.isoformat()
+            }]
+            
+            await self.memory.store_business_artifacts("gong_summaries", summary_data)
+            
+            logger.info(f"Summarized call {call_id}")
+            return summary
+            
+        except Exception as e:
+            logger.error(f"Failed to summarize call {call_id}: {e}")
+            raise
+    
+    def _normalize_calls(self, calls: List[GongCall]) -> List[Dict[str, Any]]:
+        """Normalize Gong calls for memory storage"""
+        normalized = []
+        for call in calls:
+            normalized.append({
+                "id": call.call_id,
+                "title": call.title,
+                "started": call.started.isoformat(),
+                "duration": call.duration,
+                "participants": call.participants,
+                "url": call.url,
+                "source": "gong",
+                "type": "call_record"
+            })
+        return normalized
+    
+    def _extract_transcript(self, call: GongCall) -> str:
+        """Extract transcript text from call data"""
+        return call.transcript or ""
+    
+    async def post_slack_message(
+        self, 
+        channel: str, 
+        message: str, 
+        reference_call_id: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Post message to Slack with optional Gong call reference.
+        This is a write-back capability from Gong analysis.
+        """
+        try:
+            # Add call reference if provided
+            if reference_call_id:
+                call = await self.gong.get_call(reference_call_id)
+                message += f"\n\n🎯 Related Gong Call: {call.title}"
+                if call.url:
+                    message += f"\nCall Link: {call.url}"
+            
+            # Use existing Slack integration
+            result = await self.api_manager.slack_client.post_message(
+                channel=channel,
+                text=message
+            )
+            
+            logger.info(f"Posted Slack message to {channel}")
+            return result
+            
+        except Exception as e:
+            logger.error(f"Failed to post Slack message: {e}")
+            raise
+    
+    async def create_hubspot_task(
+        self, 
+        call_id: str, 
+        task_title: str, 
+        task_body: str,
+        contact_email: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Create HubSpot task based on Gong call insights.
+        This is a write-back capability from Gong analysis.
+        """
+        try:
+            call = await self.gong.get_call(call_id)
+            
+            # Enhance task with call context
+            enhanced_body = f"""
+            {task_body}
+            
+            Based on Gong call: {call.title}
+            Call Date: {call.started.strftime('%Y-%m-%d %H:%M')}
+            Participants: {', '.join(call.participants)}
+            Duration: {call.duration // 60} minutes
+            """
+            
+            if call.url:
+                enhanced_body += f"\nCall Recording: {call.url}"
+            
+            # Create task in HubSpot
+            task_data = {
+                "properties": {
+                    "hs_task_subject": task_title,
+                    "hs_task_body": enhanced_body,
+                    "hs_task_status": "NOT_STARTED",
+                    "hs_task_priority": "HIGH",
+                    "hs_task_type": "CALL_FOLLOW_UP"
+                }
+            }
+            
+            result = await self.api_manager.hubspot_client.create_task(task_data)
+            
+            logger.info(f"Created HubSpot task for call {call_id}")
+            return result
+            
+        except Exception as e:
+            logger.error(f"Failed to create HubSpot task: {e}")
+            raise
+    
     async def close(self):
         """Close connections."""
         if self.mcp_client:
             await self.mcp_client.close()
+        if self.gong:
+            await self.gong.aclose()
 

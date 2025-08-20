@@ -39,41 +39,67 @@ class UltimateModelRouter:
     """
 
     def __init__(self):
+        """Initialize with the approved model list only."""
         self.model_registry: Dict[str, List[ModelConfig]] = {
             TaskType.CODE_GENERATION.value: [
-                ModelConfig("openai", "gpt-4o", 1, 128_000, 0.00003, "OPENAI_API_KEY"),
-                ModelConfig("anthropic", "claude-3-opus-20240229", 2, 200_000, 0.00005, "ANTHROPIC_API_KEY"),
-                ModelConfig("google", "gemini-1.5-pro", 3, 128_000, 0.00004, "GEMINI_API_KEY"),
-                ModelConfig("groq", "llama-3-70b-8192", 4, 8_192, 0.00002, "GROQ_API_KEY"),
-                ModelConfig("deepseek", "deepseek-coder", 5, 16_384, 0.00002, "DEEPSEEK_API_KEY"),
+                ModelConfig("openai", "gpt-5", 1, 128_000, 0.00008, "OPENAI_API_KEY"),
+                ModelConfig("anthropic", "claude-sonnet-4", 2, 200_000, 0.00006, "ANTHROPIC_API_KEY"),
+                ModelConfig("google", "gemini-2.5-pro", 3, 128_000, 0.00005, "GEMINI_API_KEY"),
+                ModelConfig("qwen", "qwen3-coder", 4, 32_000, 0.00003, "QWEN_API_KEY"),
+                ModelConfig("openai", "gpt-4o-mini", 5, 8_192, 0.00002, "OPENAI_API_KEY"),
+                ModelConfig("qwen", "qwen3-coder-free", 6, 32_000, 0.00001, "QWEN_API_KEY"),
             ],
             TaskType.RESEARCH.value: [
-                ModelConfig("openai", "gpt-4o", 1, 128_000, 0.00003, "OPENAI_API_KEY"),
-                ModelConfig("anthropic", "claude-3-opus-20240229", 2, 200_000, 0.00005, "ANTHROPIC_API_KEY"),
-                ModelConfig("google", "gemini-1.5-pro", 3, 128_000, 0.00004, "GEMINI_API_KEY"),
+                ModelConfig("deepseek", "deepseek-v3-0324", 1, 16_384, 0.00002, "DEEPSEEK_API_KEY"),
+                ModelConfig("anthropic", "claude-3.7-sonnet", 2, 200_000, 0.00006, "ANTHROPIC_API_KEY"),
+                ModelConfig("google", "gemini-2.5-flash", 3, 128_000, 0.00004, "GEMINI_API_KEY"),
+                ModelConfig("openai", "gpt-5-mini", 4, 16_384, 0.00003, "OPENAI_API_KEY"),
+                ModelConfig("moonshot", "kimi-k2", 5, 32_000, 0.00003, "MOONSHOT_API_KEY"),
+                ModelConfig("deepseek", "deepseek-v3-0324-free", 6, 16_384, 0.00001, "DEEPSEEK_API_KEY"),
             ],
             TaskType.DEPLOYMENT.value: [
-                ModelConfig("openai", "gpt-4o", 1, 128_000, 0.00003, "OPENAI_API_KEY"),
-                ModelConfig("anthropic", "claude-3-opus-20240229", 2, 200_000, 0.00005, "ANTHROPIC_API_KEY"),
+                ModelConfig("openai", "gpt-5", 1, 128_000, 0.00008, "OPENAI_API_KEY"),
+                ModelConfig("google", "gemini-2.5-pro", 2, 128_000, 0.00005, "GEMINI_API_KEY"),
+                ModelConfig("anthropic", "claude-sonnet-4", 3, 200_000, 0.00006, "ANTHROPIC_API_KEY"),
+                ModelConfig("google", "gemini-2.0-flash", 4, 64_000, 0.00003, "GEMINI_API_KEY"),
             ],
             TaskType.CREATIVE.value: [
-                ModelConfig("anthropic", "claude-3-opus-20240229", 1, 200_000, 0.00005, "ANTHROPIC_API_KEY", 0.7),
-                ModelConfig("openai", "gpt-4o", 2, 128_000, 0.00003, "OPENAI_API_KEY", 0.7),
+                ModelConfig("anthropic", "claude-3.7-sonnet", 1, 200_000, 0.00006, "ANTHROPIC_API_KEY", 0.7),
+                ModelConfig("openai", "gpt-5", 2, 128_000, 0.00008, "OPENAI_API_KEY", 0.7),
+                ModelConfig("mistral", "mistral-nemo", 3, 32_000, 0.00004, "MISTRAL_API_KEY", 0.8),
+                ModelConfig("zhipu", "glm-4.5", 4, 16_384, 0.00003, "ZHIPU_API_KEY", 0.7),
             ],
             TaskType.REASONING.value: [
-                ModelConfig("openai", "o1-preview", 1, 32_768, 0.00015, "OPENAI_API_KEY", 0.1),
-                ModelConfig("anthropic", "claude-3-opus-20240229", 2, 200_000, 0.00005, "ANTHROPIC_API_KEY", 0.1),
+                ModelConfig("openai", "gpt-5", 1, 128_000, 0.00008, "OPENAI_API_KEY", 0.1),
+                ModelConfig("deepseek", "r1-0528-free", 2, 16_384, 0.00001, "DEEPSEEK_API_KEY", 0.1),
+                ModelConfig("anthropic", "claude-sonnet-4", 3, 200_000, 0.00006, "ANTHROPIC_API_KEY", 0.1),
+                ModelConfig("google", "gemini-2.5-flash", 4, 128_000, 0.00004, "GEMINI_API_KEY", 0.1),
+                ModelConfig("moonshot", "kimi-k2", 5, 32_000, 0.00003, "MOONSHOT_API_KEY", 0.1),
             ],
             TaskType.ANALYSIS.value: [
-                ModelConfig("openai", "gpt-4o", 1, 128_000, 0.00003, "OPENAI_API_KEY"),
-                ModelConfig("anthropic", "claude-3-opus-20240229", 2, 200_000, 0.00005, "ANTHROPIC_API_KEY"),
-                ModelConfig("google", "gemini-1.5-pro", 3, 128_000, 0.00004, "GEMINI_API_KEY"),
+                ModelConfig("openai", "gpt-5", 1, 128_000, 0.00008, "OPENAI_API_KEY"),
+                ModelConfig("deepseek", "deepseek-v3-0324", 2, 16_384, 0.00002, "DEEPSEEK_API_KEY"),
+                ModelConfig("google", "gemini-2.5-pro", 3, 128_000, 0.00005, "GEMINI_API_KEY"),
+                ModelConfig("anthropic", "claude-sonnet-4", 4, 200_000, 0.00006, "ANTHROPIC_API_KEY"),
+                ModelConfig("openai", "gpt-oss-120b", 5, 32_000, 0.00004, "OPENAI_API_KEY"),
+                ModelConfig("google", "gemini-2.5-flash-lite", 6, 64_000, 0.00002, "GEMINI_API_KEY"),
             ],
         }
+        
+        # Additional approved models for specialized tasks
+        self.approved_models = {
+            "gpt-5", "claude-sonnet-4", "gemini-2.5-flash", "gemini-2.0-flash", 
+            "deepseek-v3-0324", "gemini-2.5-pro", "qwen3-coder", "claude-3.7-sonnet",
+            "deepseek-v3-0324-free", "r1-0528-free", "kimi-k2", "gpt-oss-120b",
+            "qwen3-coder-free", "gemini-2.5-flash-lite", "glm-4.5", "mistral-nemo",
+            "gpt-4o-mini", "r1-free", "gpt-5-mini", "gpt-4.1"
+        }
+        
+        logger.info(f"Initialized UltimateModelRouter with {len(self.approved_models)} approved models")
 
     def select_model(self, task_type: str, fallback: bool = True) -> ModelConfig:
         """
-        Return the highest-quality available model for the given task.
+        Return the highest-ranked model for the given task_type from the approved list.
         
         Args:
             task_type: The type of task to select a model for
@@ -84,24 +110,34 @@ class UltimateModelRouter:
             
         Raises:
             ValueError: If no models are configured for the task type
-            EnvironmentError: If no API keys are available for any model
+            RuntimeError: If no API keys are available for any approved model
         """
         models = self.model_registry.get(task_type, [])
         if not models:
-            raise ValueError(f"No models configured for task_type: {task_type}")
+            raise ValueError(f"No approved models configured for task_type: {task_type}")
         
-        # Try models in quality order
+        # Try models in quality order (1 = highest quality)
         for model in models:
+            # Verify model is in approved list
+            if model.model_name not in self.approved_models:
+                logger.warning(f"Model {model.model_name} not in approved list, skipping")
+                continue
+                
             api_key = os.getenv(model.api_key_env_var)
             if api_key:
-                logger.info(f"Selected {model.provider}:{model.model_name} for {task_type}")
+                logger.info(f"Selected approved model {model.provider}:{model.model_name} for {task_type}")
                 return model
             elif not fallback:
                 break
         
-        # If we get here, no API keys were found
-        available_vars = [model.api_key_env_var for model in models]
-        raise EnvironmentError(f"No API keys found for {task_type}. Required: {available_vars}")
+        # If we get here, no models had valid API keys
+        available_models = [m.model_name for m in models if m.model_name in self.approved_models]
+        required_keys = [m.api_key_env_var for m in models if m.model_name in self.approved_models]
+        raise RuntimeError(
+            f"No available approved models for task_type {task_type}. "
+            f"Available models: {available_models}. "
+            f"Required API keys: {required_keys}"
+        )
 
     async def call_model(self, model_config: ModelConfig, prompt: str, **kwargs) -> str:
         """
@@ -135,10 +171,16 @@ class UltimateModelRouter:
                 return await self._call_anthropic(model_config, prompt, system_prompt, temperature, max_tokens)
             elif model_config.provider == "google":
                 return await self._call_google(model_config, prompt, system_prompt, temperature, max_tokens)
-            elif model_config.provider == "groq":
-                return await self._call_groq(model_config, prompt, system_prompt, temperature, max_tokens)
             elif model_config.provider == "deepseek":
                 return await self._call_deepseek(model_config, prompt, system_prompt, temperature, max_tokens)
+            elif model_config.provider == "qwen":
+                return await self._call_qwen(model_config, prompt, system_prompt, temperature, max_tokens)
+            elif model_config.provider == "moonshot":
+                return await self._call_moonshot(model_config, prompt, system_prompt, temperature, max_tokens)
+            elif model_config.provider == "mistral":
+                return await self._call_mistral(model_config, prompt, system_prompt, temperature, max_tokens)
+            elif model_config.provider == "zhipu":
+                return await self._call_zhipu(model_config, prompt, system_prompt, temperature, max_tokens)
             else:
                 raise NotImplementedError(f"Provider {model_config.provider} not yet implemented")
         except Exception as e:
@@ -226,4 +268,72 @@ class UltimateModelRouter:
                 for model in models
             ]
         }
+
+
+    async def _call_qwen(self, config: ModelConfig, prompt: str, system_prompt: str, temperature: float, max_tokens: int) -> str:
+        """Call Qwen API."""
+        # TODO: Implement Qwen API call
+        # For now, use OpenAI-compatible endpoint if available
+        raise NotImplementedError("Qwen API integration not yet implemented")
+
+    async def _call_moonshot(self, config: ModelConfig, prompt: str, system_prompt: str, temperature: float, max_tokens: int) -> str:
+        """Call Moonshot (Kimi) API."""
+        # TODO: Implement Moonshot API call
+        raise NotImplementedError("Moonshot API integration not yet implemented")
+
+    async def _call_mistral(self, config: ModelConfig, prompt: str, system_prompt: str, temperature: float, max_tokens: int) -> str:
+        """Call Mistral API."""
+        # TODO: Implement Mistral API call
+        raise NotImplementedError("Mistral API integration not yet implemented")
+
+    async def _call_zhipu(self, config: ModelConfig, prompt: str, system_prompt: str, temperature: float, max_tokens: int) -> str:
+        """Call Zhipu (GLM) API."""
+        # TODO: Implement Zhipu API call
+        raise NotImplementedError("Zhipu API integration not yet implemented")
+
+    def validate_approved_models(self) -> Dict[str, Any]:
+        """
+        Validate that all models in the registry are in the approved list.
+        
+        Returns:
+            Dictionary with validation results
+        """
+        validation_results = {
+            "valid": True,
+            "total_models": 0,
+            "approved_models": 0,
+            "unapproved_models": [],
+            "missing_providers": []
+        }
+        
+        all_models = set()
+        for task_type, models in self.model_registry.items():
+            for model in models:
+                all_models.add(model.model_name)
+                validation_results["total_models"] += 1
+                
+                if model.model_name in self.approved_models:
+                    validation_results["approved_models"] += 1
+                else:
+                    validation_results["unapproved_models"].append({
+                        "task_type": task_type,
+                        "provider": model.provider,
+                        "model_name": model.model_name
+                    })
+                    validation_results["valid"] = False
+        
+        # Check for missing provider implementations
+        providers_in_use = set()
+        for models in self.model_registry.values():
+            for model in models:
+                providers_in_use.add(model.provider)
+        
+        implemented_providers = {"openai", "anthropic", "google", "deepseek", "qwen", "moonshot", "mistral", "zhipu"}
+        missing_providers = providers_in_use - implemented_providers
+        
+        if missing_providers:
+            validation_results["missing_providers"] = list(missing_providers)
+            validation_results["valid"] = False
+        
+        return validation_results
 

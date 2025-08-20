@@ -157,6 +157,26 @@
             timestamp: new Date().toISOString()
         });
 
+        // Frontend normalization to eliminate "undefined" forever
+        function normalizeResponse(obj) {
+            if (obj && obj.ok && obj.answer && obj.answer.text) {
+                return { 
+                    text: obj.answer.text, 
+                    sources: Array.isArray(obj.answer.sources) ? obj.answer.sources : [] 
+                };
+            }
+            if (obj && obj.response) { // legacy fallback
+                const src = Array.isArray(obj.sources) ? obj.sources.map(s => ({
+                    title: s.title || s.url, 
+                    url: s.url
+                })) : [];
+                return { text: obj.response, sources: src };
+            }
+            return { text: "I couldn't parse the server response.", sources: [] };
+        }
+        
+        console.info("normalizeResponse available:", typeof normalizeResponse);
+
         // Load services status
         async function loadServicesStatus() {
             try {

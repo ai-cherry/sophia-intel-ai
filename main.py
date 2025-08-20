@@ -24,7 +24,7 @@ app.add_middleware(
 
 # Environment variables
 LAMBDA_IPS = os.getenv('LAMBDA_IPS', '192.222.51.223,192.222.50.242').split(',')
-MCP_SERVERS = os.getenv('MCP_SERVERS', 'sophia-mcp-1.internal:8000,sophia-mcp-2.internal:8000,sophia-mcp-3.internal:8000,sophia-mcp-4.internal:8000,sophia-mcp-5.internal:8000,sophia-mcp-6.internal:8000,sophia-mcp-7.internal:8000,sophia-mcp-8.internal:8000,sophia-mcp-9.internal:8000,sophia-mcp-10.internal:8000,sophia-mcp-11.internal:8000,sophia-mcp-12.internal:8000').split(',')
+MCP_SERVERS = ['localhost:8001']
 
 # Initialize Redis client (with fallback)
 try:
@@ -65,15 +65,15 @@ async def classify_query(query: str) -> dict:
 async def call_mcp(module: str, action: str, query: str, user_id: str):
     """Call MCP servers with intelligent routing and fallbacks"""
     
-    # Map modules to MCP server groups
-    mcp_map = {
-        'business': [0, 4, 8],   # sophia-mcp-1,5,9
-        'research': [1, 5, 9],   # sophia-mcp-2,6,10
-        'codebase': [2, 6, 10],  # sophia-mcp-3,7,11
-        'infra': [3, 7, 11]      # sophia-mcp-4,8,12
+    # M    # MCP server routing - All modules use the real execution server
+    module_routing = {
+        'business': [0],   # localhost:8001
+        'research': [0],   # localhost:8001
+        'codebase': [0],   # localhost:8001
+        'infra': [0]       # localhost:8001
     }
     
-    server_indices = mcp_map.get(module, [0, 1, 2, 3])  # Default to first 4 servers
+    server_indices = module_routing.get(module, [0])  # Default to real execution server
     
     for idx in server_indices:
         if idx < len(MCP_SERVERS):

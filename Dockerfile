@@ -13,7 +13,7 @@ COPY requirements_ultimate.txt .
 RUN pip install --no-cache-dir -r requirements_ultimate.txt
 
 # Copy application code
-COPY sophia_v4_ultimate_badass.py .
+COPY sophia_v4_production.py .
 COPY apps/ ./apps/
 
 # Create data directory
@@ -30,6 +30,6 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:8080/api/v1/health || exit 1
 
-# Run the ultimate badass application
-CMD ["python", "sophia_v4_ultimate_badass.py"]
+# Run the ultimate production application
+CMD ["python", "sophia_v4_production.py"]
 

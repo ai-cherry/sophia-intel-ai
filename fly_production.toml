@@ -32,12 +32,14 @@ primary_region = "ord"
   cpu_kind = "performance"
   processes = ["app"]
 
-[mounts]
-  source = "sophia_data"
-  destination = "/data"
-  processes = ["app"]
-
 [deploy]
   strategy = "rolling"
   max_unavailable = 1
+
+[restart]
+  policy = "always"
+
+[metrics]
+  port = 9090
+  path = "/metrics"
 

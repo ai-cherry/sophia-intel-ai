@@ -15,6 +15,8 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from agents.base_agent import BaseAgent, Status
 from .ultimate_model_router import UltimateModelRouter, TaskType
 from .api_manager import SOPHIAAPIManager
+from .github_master import SOPHIAGitHubMaster, GitHubRepoInfo
+from .fly_master import SOPHIAFlyMaster
 
 logger = logging.getLogger(__name__)
 
@@ -52,6 +54,23 @@ class SOPHIABaseAgent(BaseAgent):
         except Exception as e:
             logger.error(f"Failed to initialize API manager: {e}")
             self.api_manager = None
+        
+        # Initialize GitHub master
+        try:
+            repo_info = GitHubRepoInfo(owner="ai-cherry", repo="sophia-intel")
+            self.github_master = SOPHIAGitHubMaster(repo_info)
+            logger.info("GitHub master initialized")
+        except Exception as e:
+            logger.error(f"Failed to initialize GitHub master: {e}")
+            self.github_master = None
+        
+        # Initialize Fly master
+        try:
+            self.fly_master = SOPHIAFlyMaster()
+            logger.info("Fly master initialized")
+        except Exception as e:
+            logger.error(f"Failed to initialize Fly master: {e}")
+            self.fly_master = None
         
         # Track SOPHIA-specific metrics
         self.model_calls = 0
@@ -283,7 +302,9 @@ Guidelines:
         health = {
             "agent": "healthy" if self.status == Status.READY else "unhealthy",
             "model_router": "healthy" if self.model_router else "unavailable",
-            "api_manager": "healthy" if self.api_manager else "unavailable"
+            "api_manager": "healthy" if self.api_manager else "unavailable",
+            "github_master": "healthy" if self.github_master else "unavailable",
+            "fly_master": "healthy" if self.fly_master else "unavailable"
         }
         
         # Check API manager services
@@ -294,7 +315,171 @@ Guidelines:
             except Exception as e:
                 health["services"] = f"health_check_failed: {e}"
         
+        # Check Fly.io health
+        if self.fly_master:
+            try:
+                fly_health = self.fly_master.health_check()
+                health["fly_status"] = fly_health
+            except Exception as e:
+                health["fly_status"] = f"fly_health_check_failed: {e}"
+        
         return health
+
+    # GitHub Operations
+    async def create_and_commit(self, branch_name: str, files: Dict[str, str], commit_message: str, create_pr: bool = False, pr_title: str = "", pr_body: str = "") -> Dict[str, Any]:
+        """
+        High-level method to create a branch, commit files, and optionally create a PR.
+        
+        Args:
+            branch_name: Name of the new branch
+            files: Dictionary of file paths to content
+            commit_message: Commit message
+            create_pr: Whether to create a pull request
+            pr_title: PR title (if creating PR)
+            pr_body: PR description (if creating PR)
+            
+        Returns:
+            Dictionary with operation results
+            
+        Raises:
+            RuntimeError: If GitHub master is not available or operation fails
+        """
+        if not self.github_master:
+            raise RuntimeError("GitHub master not initialized")
+        
+        try:
+            # Create branch
+            branch_sha = self.github_master.create_branch(branch_name)
+            logger.info(f"Created branch {branch_name}")
+            
+            # Commit and push files
+            commit_sha = self.github_master.commit_and_push(branch_name, files, commit_message)
+            logger.info(f"Committed changes to {branch_name}")
+            
+            result = {
+                "branch_name": branch_name,
+                "branch_sha": branch_sha,
+                "commit_sha": commit_sha,
+                "files_committed": len(files)
+            }
+            
+            # Create PR if requested
+            if create_pr:
+                pr_info = self.github_master.create_pull_request(branch_name, pr_title or commit_message, pr_body)
+                result["pr_info"] = {
+                    "number": pr_info.number,
+                    "url": pr_info.html_url,
+                    "title": pr_info.title
+                }
+                logger.info(f"Created PR #{pr_info.number}")
+            
+            return result
+            
+        except Exception as e:
+            logger.error(f"GitHub operation failed: {e}")
+            raise RuntimeError(f"GitHub operation failed: {e}")
+
+    async def deploy_to_fly(self, app_name: str, image: str, wait: bool = True) -> Dict[str, Any]:
+        """
+        High-level method to deploy an application to Fly.io.
+        
+        Args:
+            app_name: Name of the Fly.io application
+            image: Docker image to deploy
+            wait: Whether to wait for deployment completion
+            
+        Returns:
+            Dictionary with deployment results
+            
+        Raises:
+            RuntimeError: If Fly master is not available or deployment fails
+        """
+        if not self.fly_master:
+            raise RuntimeError("Fly master not initialized")
+        
+        try:
+            # Deploy the application
+            release_info = self.fly_master.deploy_app(app_name, image, wait)
+            
+            # Get app status after deployment
+            app_status = self.fly_master.get_app_status(app_name)
+            
+            result = {
+                "app_name": app_name,
+                "image": image,
+                "release": {
+                    "id": release_info.id,
+                    "version": release_info.version,
+                    "status": release_info.status
+                },
+                "app_status": app_status["status"],
+                "healthy_machines": app_status["healthy_machines"],
+                "total_machines": app_status["machine_count"]
+            }
+            
+            logger.info(f"Deployed {image} to {app_name} as v{release_info.version}")
+            return result
+            
+        except Exception as e:
+            logger.error(f"Fly deployment failed: {e}")
+            raise RuntimeError(f"Fly deployment failed: {e}")
+
+    async def autonomous_code_deploy(self, code_changes: Dict[str, str], app_name: str, image: str, branch_name: Optional[str] = None, commit_message: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Autonomous end-to-end code deployment: commit to GitHub and deploy to Fly.io.
+        
+        Args:
+            code_changes: Dictionary of file paths to new content
+            app_name: Fly.io application name
+            image: Docker image to deploy
+            branch_name: Git branch name (auto-generated if None)
+            commit_message: Commit message (auto-generated if None)
+            
+        Returns:
+            Dictionary with complete deployment results
+            
+        Raises:
+            RuntimeError: If any step fails
+        """
+        import time
+        
+        # Auto-generate branch name and commit message if not provided
+        if branch_name is None:
+            timestamp = int(time.time())
+            branch_name = f"sophia-auto-deploy-{timestamp}"
+        
+        if commit_message is None:
+            commit_message = f"🤖 SOPHIA autonomous deployment - {len(code_changes)} files updated"
+        
+        try:
+            # Step 1: Commit code changes to GitHub
+            github_result = await self.create_and_commit(
+                branch_name=branch_name,
+                files=code_changes,
+                commit_message=commit_message,
+                create_pr=True,
+                pr_title=f"SOPHIA Auto-Deploy: {app_name}",
+                pr_body=f"Autonomous deployment by SOPHIA AI\n\nFiles updated: {', '.join(code_changes.keys())}\nTarget app: {app_name}\nImage: {image}"
+            )
+            
+            # Step 2: Deploy to Fly.io
+            fly_result = await self.deploy_to_fly(app_name, image, wait=True)
+            
+            # Combine results
+            result = {
+                "deployment_type": "autonomous",
+                "timestamp": time.time(),
+                "github": github_result,
+                "fly": fly_result,
+                "success": True
+            }
+            
+            logger.info(f"Autonomous deployment completed: {branch_name} -> {app_name}")
+            return result
+            
+        except Exception as e:
+            logger.error(f"Autonomous deployment failed: {e}")
+            raise RuntimeError(f"Autonomous deployment failed: {e}")
 
     async def initialize_mcp(self):
         """

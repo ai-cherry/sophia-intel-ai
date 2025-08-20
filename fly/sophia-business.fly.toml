@@ -1,0 +1,29 @@
+app = "sophia-business"
+primary_region = "iad"  # Ashburn / adjust as needed
+kill_signal = "SIGINT"
+kill_timeout = "5s"
+
+[build]
+  # image is provided at deploy time by Pulumi (do not set here)
+
+[env]
+  MCP_ROLE = "business"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 1
+
+[[services.tcp_checks]]
+  interval = "15s"
+  timeout = "2s"
+
+[[services.http_checks]]
+  interval = "15s"
+  timeout = "3s"
+  method = "GET"
+  path = "/healthz"
+  protocol = "http"
+

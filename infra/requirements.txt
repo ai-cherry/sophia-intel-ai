@@ -1,5 +1,4 @@
-pulumi>=3.0.0,<4.0.0
-pulumi-fly>=0.1.0
-pulumi-docker>=4.0.0
-pulumi-github>=6.0.0
+pulumi>=3.120.0
+pulumi-command>=1.0.1
+pulumi-docker>=4.5.1
 

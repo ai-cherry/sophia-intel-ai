@@ -17,6 +17,10 @@ from .ultimate_model_router import UltimateModelRouter, TaskType
 from .api_manager import SOPHIAAPIManager
 from .github_master import SOPHIAGitHubMaster, GitHubRepoInfo
 from .fly_master import SOPHIAFlyMaster
+from .research_master import SOPHIAResearchMaster
+from .business_master import SOPHIABusinessMaster
+from .memory_master import SOPHIAMemoryMaster
+from .mcp_client import SOPHIAMCPClient
 
 logger = logging.getLogger(__name__)
 
@@ -71,6 +75,38 @@ class SOPHIABaseAgent(BaseAgent):
         except Exception as e:
             logger.error(f"Failed to initialize Fly master: {e}")
             self.fly_master = None
+        
+        # Initialize Research master
+        try:
+            self.research_master = SOPHIAResearchMaster()
+            logger.info("Research master initialized")
+        except Exception as e:
+            logger.error(f"Failed to initialize Research master: {e}")
+            self.research_master = None
+        
+        # Initialize Business master
+        try:
+            self.business_master = SOPHIABusinessMaster()
+            logger.info("Business master initialized")
+        except Exception as e:
+            logger.error(f"Failed to initialize Business master: {e}")
+            self.business_master = None
+        
+        # Initialize Memory master
+        try:
+            self.memory_master = SOPHIAMemoryMaster()
+            logger.info("Memory master initialized")
+        except Exception as e:
+            logger.error(f"Failed to initialize Memory master: {e}")
+            self.memory_master = None
+        
+        # Initialize MCP client
+        try:
+            self.mcp_client = SOPHIAMCPClient()
+            logger.info("MCP client initialized")
+        except Exception as e:
+            logger.error(f"Failed to initialize MCP client: {e}")
+            self.mcp_client = None
         
         # Track SOPHIA-specific metrics
         self.model_calls = 0
@@ -489,4 +525,147 @@ Guidelines:
         # TODO: Implement MCP server integration
         logger.info("MCP initialization placeholder - to be implemented")
         pass
+
+    # Research Master Methods
+    async def conduct_research(self, query: str, sources: Optional[list] = None, **kwargs) -> Dict[str, Any]:
+        """Conduct research using the research master."""
+        if not self.research_master:
+            raise RuntimeError("Research master not available")
+        
+        try:
+            return await self.research_master.research(query, sources, **kwargs)
+        except Exception as e:
+            logger.error(f"Research failed: {e}")
+            raise
+
+    async def deep_research(self, topic: str, **kwargs) -> Dict[str, Any]:
+        """Conduct deep research using the research master."""
+        if not self.research_master:
+            raise RuntimeError("Research master not available")
+        
+        try:
+            return await self.research_master.deep_research(topic, **kwargs)
+        except Exception as e:
+            logger.error(f"Deep research failed: {e}")
+            raise
+
+    # Business Master Methods
+    async def get_customer_360(self, customer_email: str, **kwargs) -> Dict[str, Any]:
+        """Get comprehensive customer view using business master."""
+        if not self.business_master:
+            raise RuntimeError("Business master not available")
+        
+        try:
+            return await self.business_master.get_customer_360(customer_email, **kwargs)
+        except Exception as e:
+            logger.error(f"Customer 360 view failed: {e}")
+            raise
+
+    async def get_sales_dashboard(self, **kwargs) -> Dict[str, Any]:
+        """Get sales dashboard using business master."""
+        if not self.business_master:
+            raise RuntimeError("Business master not available")
+        
+        try:
+            return await self.business_master.get_sales_dashboard(**kwargs)
+        except Exception as e:
+            logger.error(f"Sales dashboard failed: {e}")
+            raise
+
+    async def analyze_team_performance(self, **kwargs) -> Dict[str, Any]:
+        """Analyze team performance using business master."""
+        if not self.business_master:
+            raise RuntimeError("Business master not available")
+        
+        try:
+            return await self.business_master.analyze_team_performance(**kwargs)
+        except Exception as e:
+            logger.error(f"Team performance analysis failed: {e}")
+            raise
+
+    # Memory Master Methods
+    async def store_knowledge(self, content: str, knowledge_type: str = "fact", **kwargs) -> Dict[str, Any]:
+        """Store knowledge using memory master."""
+        if not self.memory_master:
+            raise RuntimeError("Memory master not available")
+        
+        try:
+            return await self.memory_master.store_knowledge(content, knowledge_type, **kwargs)
+        except Exception as e:
+            logger.error(f"Knowledge storage failed: {e}")
+            raise
+
+    async def retrieve_knowledge(self, query: str, **kwargs) -> Dict[str, Any]:
+        """Retrieve knowledge using memory master."""
+        if not self.memory_master:
+            raise RuntimeError("Memory master not available")
+        
+        try:
+            return await self.memory_master.retrieve_knowledge(query, **kwargs)
+        except Exception as e:
+            logger.error(f"Knowledge retrieval failed: {e}")
+            raise
+
+    async def store_conversation(self, session_id: str, messages: list, **kwargs) -> Dict[str, Any]:
+        """Store conversation using memory master."""
+        if not self.memory_master:
+            raise RuntimeError("Memory master not available")
+        
+        try:
+            return await self.memory_master.store_conversation(session_id, messages, **kwargs)
+        except Exception as e:
+            logger.error(f"Conversation storage failed: {e}")
+            raise
+
+    async def get_contextual_memory(self, query: str, **kwargs) -> Dict[str, Any]:
+        """Get contextual memory using memory master."""
+        if not self.memory_master:
+            raise RuntimeError("Memory master not available")
+        
+        try:
+            return await self.memory_master.get_contextual_memory(query, **kwargs)
+        except Exception as e:
+            logger.error(f"Contextual memory retrieval failed: {e}")
+            raise
+
+    # MCP Client Methods
+    async def mcp_health_check(self) -> Dict[str, Any]:
+        """Check MCP server health."""
+        if not self.mcp_client:
+            raise RuntimeError("MCP client not available")
+        
+        try:
+            return await self.mcp_client.health_check()
+        except Exception as e:
+            logger.error(f"MCP health check failed: {e}")
+            raise
+
+    async def mcp_generate_code(self, prompt: str, **kwargs) -> Dict[str, Any]:
+        """Generate code using MCP server."""
+        if not self.mcp_client:
+            raise RuntimeError("MCP client not available")
+        
+        try:
+            return await self.mcp_client.generate_code(prompt, **kwargs)
+        except Exception as e:
+            logger.error(f"MCP code generation failed: {e}")
+            raise
+
+    # Cleanup method
+    async def cleanup(self):
+        """Clean up all connections and resources."""
+        try:
+            if self.research_master:
+                await self.research_master.close()
+            if self.business_master:
+                await self.business_master.close()
+            if self.memory_master:
+                await self.memory_master.close()
+            if self.mcp_client:
+                await self.mcp_client.close()
+            
+            logger.info("SOPHIA agent cleanup completed")
+            
+        except Exception as e:
+            logger.error(f"Cleanup failed: {e}")
 

@@ -85,27 +85,27 @@ async def call_openrouter(prompt: str) -> dict:
             'model_used': 'no_api_key',
             'success': False
         }
-    
+
     headers = {
         'Authorization': f'Bearer {OPENROUTER_KEY}',
         'Content-Type': 'application/json',
         'HTTP-Referer': 'https://sophia-intel.fly.dev',
         'X-Title': 'SOPHIA V4 Simple Orchestrator'
     }
-    
-    system_prompt = '''You are SOPHIA V4, a badass autonomous AI orchestrator with a neon cowboy personality. 
+
+    system_prompt = '''You are SOPHIA V4, a badass autonomous AI orchestrator with a neon cowboy personality.
     You manage Fly.io infrastructure, Lambda Labs GPUs, GitHub operations, and business intelligence.
     You're confident, direct, and always end responses with "🤠" and phrases like "That's the real fucking deal!"
-    
+
     You have access to:
     - 3 Fly.io machines across ord,yyz,ewr regions
     - 2 Lambda Labs GPU servers for ML processing
     - GitHub repository operations
     - Gong business intelligence
     - OpenRouter AI models
-    
+
     Be confident and show your capabilities!'''
-    
+
     payload = {
         'model': 'anthropic/claude-3.5-sonnet-20241022',
         'messages': [
@@ -115,7 +115,7 @@ async def call_openrouter(prompt: str) -> dict:
         'max_tokens': 1500,
         'temperature': 0.7
     }
-    
+
     try:
         response = requests.post(
             'https://openrouter.ai/api/v1/chat/completions',
@@ -123,7 +123,7 @@ async def call_openrouter(prompt: str) -> dict:
             json=payload,
             timeout=30
         )
-        
+
         if response.status_code == 200:
             data = response.json()
             content = data['choices'][0]['message']['content']
@@ -138,7 +138,7 @@ async def call_openrouter(prompt: str) -> dict:
                 'model_used': 'error_fallback',
                 'success': False
             }
-    
+
     except Exception as e:
         logger.error(f"OpenRouter API exception: {e}")
         return {
@@ -151,36 +151,36 @@ async def get_gong_data(query: str) -> str:
     """Get real Gong data"""
     if not GONG_ACCESS_KEY or not GONG_CLIENT_SECRET:
         return "🤠 Gong integration ready but needs API credentials configured!"
-    
+
     try:
         headers = {
             'Authorization': f'Bearer {GONG_CLIENT_SECRET}',
             'Content-Type': 'application/json'
         }
-        
+
         response = requests.get(
             'https://api.gong.io/v2/calls',
             headers=headers,
             timeout=10
         )
-        
+
         if response.status_code == 200:
             data = response.json()
             calls = data.get('calls', [])
-            
+
             if calls:
                 call_info = []
                 for call in calls[:3]:
                     title = call.get('title', 'Unknown Call')
                     duration = call.get('duration', 0)
                     call_info.append(f"'{title}' ({duration}s)")
-                
+
                 return f"🔍 Found {len(calls)} Gong calls: {', '.join(call_info)}"
             else:
                 return "🔍 No Gong calls found in recent data"
         else:
             return f"🔍 Gong API returned status {response.status_code}"
-    
+
     except Exception as e:
         logger.error(f"Gong API error: {e}")
         return f"🔍 Gong API connection issue: {str(e)}"
@@ -205,7 +205,7 @@ async def health_check():
             shell=True, capture_output=True, text=True
         )
         fly_status = fly_result.returncode == 0
-        
+
         # Check Lambda status
         lambda_status = False
         try:
@@ -216,7 +216,7 @@ async def health_check():
             lambda_status = lambda_response.status_code == 200
         except:
             lambda_status = False
-        
+
         return {
             'status': 'SIMPLE_ORCHESTRATOR_BADASS',
             'fly_status': 'active' if fly_status else 'inactive',
@@ -242,33 +242,33 @@ async def chat_endpoint(request: ChatRequest):
     try:
         user_input = request.message
         enhanced_prompt = user_input
-        
+
         # Check for infrastructure queries
         if any(word in user_input.lower() for word in ['scale', 'fly.io', 'machines', 'deploy']):
             if 'scale' in user_input.lower():
                 result = await manage_flyio_infra('scale count 3', user_input)
                 enhanced_prompt = f"{user_input}\n\nInfrastructure Action: {result['status']}"
-        
+
         # Check for Gong/business queries
         elif any(word in user_input.lower() for word in ['gong', 'calls', 'client', 'greystar', 'bh management']):
             gong_data = await get_gong_data(user_input)
             enhanced_prompt = f"{user_input}\n\nGong Data: {gong_data}"
-        
+
         # Check for Lambda GPU queries
         elif any(word in user_input.lower() for word in ['gpu', 'ml', 'sentiment', 'analysis']):
             lambda_result = await call_lambda_gpu('sentiment_analysis', {'text': user_input})
             enhanced_prompt = f"{user_input}\n\nLambda GPU Result: {lambda_result}"
-        
+
         # Get AI response
         ai_result = await call_openrouter(enhanced_prompt)
-        
+
         return {
             "response": ai_result['response'],
             "model_used": ai_result['model_used'],
             "success": ai_result['success'],
             "timestamp": datetime.now().isoformat()
         }
-    
+
     except Exception as e:
         logger.error(f"Chat endpoint error: {e}")
         return {
@@ -291,15 +291,15 @@ async def sophia_interface():
     <title>SOPHIA V4 Simple Orchestrator</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-            font-family: 'Courier New', monospace; 
+        body {
+            font-family: 'Courier New', monospace;
             background: linear-gradient(135deg, #0a0a0a, #1a1a2e);
-            color: #00ff41; 
+            color: #00ff41;
             min-height: 100vh;
         }
-        .container { 
-            max-width: 1200px; 
-            margin: 0 auto; 
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
             padding: 20px;
         }
         .header {
@@ -404,7 +404,7 @@ async def sophia_interface():
             <div class="title">🤠 SOPHIA V4 Simple Orchestrator 🤠</div>
             <div class="subtitle">Fly.io + Lambda Labs + Badass AI</div>
         </div>
-        
+
         <div class="status-grid">
             <div class="status-card">
                 <div class="status-title">🚀 Fly.io Infrastructure</div>
@@ -427,7 +427,7 @@ async def sophia_interface():
                 <div>GitHub Operations</div>
             </div>
         </div>
-        
+
         <div class="chat-container">
             <div class="chat-messages" id="chatMessages">
                 <div class="message sophia-message">
@@ -444,57 +444,57 @@ async def sophia_interface():
     <script>
         const chatMessages = document.getElementById('chatMessages');
         const chatInput = document.getElementById('chatInput');
-        
+
         chatInput.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 sendMessage();
             }
         });
-        
+
         async function sendMessage() {
             const message = chatInput.value.trim();
             if (!message) return;
-            
+
             addMessage(message, 'user');
             chatInput.value = '';
-            
+
             const loadingId = addMessage('🤠 SOPHIA is orchestrating...', 'sophia', true);
-            
+
             try {
                 const response = await fetch('/api/v1/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ message: message })
                 });
-                
+
                 const data = await response.json();
                 document.getElementById(loadingId).remove();
-                
+
                 const responseText = `${data.response}\\n\\n<small>Model: ${data.model_used} | Success: ${data.success}</small>`;
                 addMessage(responseText, 'sophia');
-                
+
             } catch (error) {
                 document.getElementById(loadingId).remove();
                 addMessage('🤠 Hit a snag there partner, but I\\'m still ready to orchestrate! That\\'s the real fucking deal! 🤠', 'sophia');
             }
         }
-        
+
         function addMessage(text, sender, isLoading = false) {
             const messageDiv = document.createElement('div');
             const messageId = 'msg_' + Date.now();
             messageDiv.id = messageId;
             messageDiv.className = `message ${sender}-message`;
             if (isLoading) messageDiv.classList.add('loading');
-            
+
             const senderName = sender === 'user' ? '👤 You' : '🤠 SOPHIA V4';
             messageDiv.innerHTML = `<strong>${senderName}:</strong> ${text.replace(/\\n/g, '<br>')}`;
-            
+
             chatMessages.appendChild(messageDiv);
             chatMessages.scrollTop = chatMessages.scrollHeight;
-            
+
             return messageId;
         }
-        
+
         chatInput.focus();
     </script>
 </body>
@@ -507,4 +507,3 @@ if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))
     logger.info(f"🤠 Starting SOPHIA V4 Simple Orchestrator on port {port}")
     uvicorn.run(app, host="0.0.0.0", port=port)
-

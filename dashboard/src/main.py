@@ -77,7 +77,7 @@ async def services_status():
 
 @app.route('/api/chat', methods=['POST'])
 async def chat():
-    """Handle chat messages with proper error handling"""
+    """ChatOps interface endpoint"""
     try:
         data = request.get_json()
         user_input = data.get('message', '').strip()
@@ -85,51 +85,11 @@ async def chat():
         if not user_input:
             return jsonify({"error": "Message is required"}), 400
         
-        # Route to appropriate service based on intent
-        if any(word in user_input.lower() for word in ['weather', 'research', 'search', 'find']):
-            # Route to research service
-            try:
-                async with httpx.AsyncClient(timeout=30.0) as client:
-                    research_url = SOPHIA_SERVICES.get("research")
-                    if research_url:
-                        response = await client.post(
-                            f"{research_url}/api/research",
-                            json={"query": user_input},
-                            headers={"Content-Type": "application/json"}
-                        )
-                        
-                        # Handle different response types
-                        if response.headers.get('content-type', '').startswith('application/json'):
-                            result = response.json()
-                        else:
-                            # If HTML or other format, create a proper JSON response
-                            result = {
-                                "message": user_input,
-                                "intent": "research",
-                                "response": f"Research service returned non-JSON response. Status: {response.status_code}",
-                                "error": "Service configuration issue - returning HTML instead of JSON",
-                                "timestamp": datetime.utcnow().isoformat(),
-                                "sources": [{"type": "error", "name": "Research Service", "status": "misconfigured"}]
-                            }
-                        
-                        return jsonify(result)
-                        
-            except Exception as e:
-                logger.error(f"Research service error: {e}")
-                # Fallback response
-                return jsonify({
-                    "message": user_input,
-                    "intent": "research",
-                    "response": f"Research service unavailable. Error: {str(e)}",
-                    "timestamp": datetime.utcnow().isoformat(),
-                    "sources": [{"type": "error", "name": "Research Service", "status": "unavailable"}]
-                })
-        
-        # Default response for other queries
+        # For demo purposes, simulate ChatOps response
         response = {
             "message": user_input,
-            "intent": "general",
-            "response": f"SOPHIA v4.1.0 received: '{user_input}'. This would be processed by the appropriate service in production.",
+            "intent": "demo",
+            "response": f"SOPHIA v4.1.0 received: '{user_input}'. In production, this would be processed by the ChatOps router.",
             "timestamp": datetime.utcnow().isoformat(),
             "sources": [
                 {"type": "system", "name": "SOPHIA Core", "status": "active"},

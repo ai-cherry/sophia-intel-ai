@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SOPHIA v4.1.0 - Ultimate AI Orchestrator</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .service-card { transition: all 0.3s ease; }
+        .service-card:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .status-healthy { color: #10b981; }
+        .status-unhealthy { color: #ef4444; }
+        .status-unknown { color: #f59e0b; }
+        .chat-container { max-height: 400px; overflow-y: auto; }
+        .message-user { background: #3b82f6; color: white; }
+        .message-sophia { background: #f3f4f6; color: #1f2937; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="gradient-bg text-white shadow-lg">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <i class="fas fa-robot text-3xl"></i>
+                    <div>
+                        <h1 class="text-2xl font-bold">SOPHIA v4.1.0</h1>
+                        <p class="text-blue-100">Ultimate AI Orchestrator</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="text-right">
+                        <div class="text-sm text-blue-100">Status</div>
+                        <div class="flex items-center space-x-2">
+                            <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                            <span class="text-sm font-medium">Production Ready</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container mx-auto px-6 py-8">
+        <!-- Services Status -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Microservices Status</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="services-grid">
+                <!-- Services will be loaded here -->
+            </div>
+        </div>
+
+        <!-- ChatOps Interface -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Chat Interface -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">
+                    <i class="fas fa-comments text-blue-500 mr-2"></i>
+                    Hybrid ChatOps Interface
+                </h3>
+                <div class="chat-container mb-4 p-4 bg-gray-50 rounded-lg" id="chat-messages">
+                    <div class="text-center text-gray-500 text-sm">
+                        Start a conversation with SOPHIA...
+                    </div>
+                </div>
+                <div class="flex space-x-2">
+                    <input type="text" id="chat-input" 
+                           placeholder="Try: 'Deploy the API to production' or '/status'"
+                           class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <button onclick="sendMessage()" 
+                            class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:ring-2 focus:ring-blue-500">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+                <div class="mt-2 text-xs text-gray-500">
+                    Supports natural language and /commands
+                </div>
+            </div>
+
+            <!-- Integrations Status -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">
+                    <i class="fas fa-plug text-green-500 mr-2"></i>
+                    Business Integrations
+                </h3>
+                <div id="integrations-list">
+                    <!-- Integrations will be loaded here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="mt-8 bg-white rounded-lg shadow-lg p-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">
+                <i class="fas fa-bolt text-yellow-500 mr-2"></i>
+                Quick Actions
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <button onclick="quickAction('Deploy API')" 
+                        class="p-4 bg-blue-50 hover:bg-blue-100 rounded-lg text-left transition-colors">
+                    <i class="fas fa-rocket text-blue-500 mb-2"></i>
+                    <div class="font-medium">Deploy Service</div>
+                    <div class="text-sm text-gray-600">Deploy to production</div>
+                </button>
+                <button onclick="quickAction('Gong Summary')" 
+                        class="p-4 bg-green-50 hover:bg-green-100 rounded-lg text-left transition-colors">
+                    <i class="fas fa-chart-line text-green-500 mb-2"></i>
+                    <div class="font-medium">Gong Summary</div>
+                    <div class="text-sm text-gray-600">Analyze recent calls</div>
+                </button>
+                <button onclick="quickAction('Create Task')" 
+                        class="p-4 bg-purple-50 hover:bg-purple-100 rounded-lg text-left transition-colors">
+                    <i class="fas fa-tasks text-purple-500 mb-2"></i>
+                    <div class="font-medium">Create Task</div>
+                    <div class="text-sm text-gray-600">Add to Asana/Linear</div>
+                </button>
+                <button onclick="quickAction('Research')" 
+                        class="p-4 bg-orange-50 hover:bg-orange-100 rounded-lg text-left transition-colors">
+                    <i class="fas fa-search text-orange-500 mb-2"></i>
+                    <div class="font-medium">Research</div>
+                    <div class="text-sm text-gray-600">Multi-source analysis</div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-8 mt-12">
+        <div class="container mx-auto px-6 text-center">
+            <div class="mb-4">
+                <i class="fas fa-robot text-2xl text-blue-400 mb-2"></i>
+                <p class="text-lg font-medium">SOPHIA v4.1.0 - Ultimate AI Orchestrator</p>
+                <p class="text-gray-400">Production deployment ready • All systems operational</p>
+            </div>
+            <div class="flex justify-center space-x-6 text-sm text-gray-400">
+                <a href="https://github.com/ai-cherry/sophia-intel" class="hover:text-white">
+                    <i class="fab fa-github mr-1"></i>GitHub
+                </a>
+                <a href="/api/metrics" class="hover:text-white">
+                    <i class="fas fa-chart-bar mr-1"></i>Metrics
+                </a>
+                <a href="/healthz" class="hover:text-white">
+                    <i class="fas fa-heartbeat mr-1"></i>Health
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Load services status
+        async function loadServicesStatus() {
+            try {
+                const response = await fetch('/api/services/status');
+                const services = await response.json();
+                
+                const grid = document.getElementById('services-grid');
+                grid.innerHTML = '';
+                
+                Object.entries(services).forEach(([name, service]) => {
+                    const statusClass = service.status === 'healthy' ? 'status-healthy' : 
+                                       service.status === 'unhealthy' ? 'status-unhealthy' : 'status-unknown';
+                    
+                    const card = document.createElement('div');
+                    card.className = 'service-card bg-white rounded-lg shadow-md p-6';
+                    card.innerHTML = `
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="font-bold text-gray-800 capitalize">${name}</h4>
+                            <i class="fas fa-circle ${statusClass}"></i>
+                        </div>
+                        <div class="text-sm text-gray-600 mb-2">
+                            <div>Status: <span class="font-medium ${statusClass}">${service.status}</span></div>
+                            ${service.response_time ? `<div>Response: ${service.response_time}ms</div>` : ''}
+                            ${service.version ? `<div>Version: ${service.version}</div>` : ''}
+                        </div>
+                        <a href="${service.url}/healthz" target="_blank" 
+                           class="text-xs text-blue-500 hover:text-blue-700 break-all">
+                            ${service.url}
+                        </a>
+                    `;
+                    grid.appendChild(card);
+                });
+            } catch (error) {
+                console.error('Failed to load services:', error);
+            }
+        }
+
+        // Load integrations status
+        async function loadIntegrations() {
+            try {
+                const response = await fetch('/api/integrations');
+                const integrations = await response.json();
+                
+                const list = document.getElementById('integrations-list');
+                list.innerHTML = '';
+                
+                Object.entries(integrations).forEach(([key, integration]) => {
+                    const statusClass = integration.status === 'connected' ? 'text-green-500' : 'text-gray-400';
+                    const statusIcon = integration.status === 'connected' ? 'fa-check-circle' : 'fa-circle';
+                    
+                    const item = document.createElement('div');
+                    item.className = 'flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0';
+                    item.innerHTML = `
+                        <div>
+                            <div class="font-medium text-gray-800">${integration.name}</div>
+                            <div class="text-xs text-gray-500">${integration.description}</div>
+                        </div>
+                        <i class="fas ${statusIcon} ${statusClass}"></i>
+                    `;
+                    list.appendChild(item);
+                });
+            } catch (error) {
+                console.error('Failed to load integrations:', error);
+            }
+        }
+
+        // Send chat message
+        async function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            const chatContainer = document.getElementById('chat-messages');
+            
+            // Add user message
+            const userMsg = document.createElement('div');
+            userMsg.className = 'message-user p-3 rounded-lg mb-2 ml-8';
+            userMsg.textContent = message;
+            chatContainer.appendChild(userMsg);
+            
+            input.value = '';
+            
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message })
+                });
+                
+                const data = await response.json();
+                
+                // Add SOPHIA response
+                const sophiaMsg = document.createElement('div');
+                sophiaMsg.className = 'message-sophia p-3 rounded-lg mb-2 mr-8';
+                sophiaMsg.innerHTML = `
+                    <div class="font-medium text-blue-600 mb-1">SOPHIA</div>
+                    <div>${data.response}</div>
+                    ${data.sources ? `
+                        <div class="mt-2 text-xs text-gray-500">
+                            Sources: ${data.sources.map(s => s.name).join(', ')}
+                        </div>
+                    ` : ''}
+                `;
+                chatContainer.appendChild(sophiaMsg);
+                
+            } catch (error) {
+                const errorMsg = document.createElement('div');
+                errorMsg.className = 'message-sophia p-3 rounded-lg mb-2 mr-8 bg-red-50 text-red-700';
+                errorMsg.textContent = 'Error: ' + error.message;
+                chatContainer.appendChild(errorMsg);
+            }
+            
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // Quick actions
+        function quickAction(action) {
+            const input = document.getElementById('chat-input');
+            const actions = {
+                'Deploy API': 'Deploy the API service to production',
+                'Gong Summary': 'Summarize recent Gong calls and create action items',
+                'Create Task': 'Create a task in Asana for follow-up',
+                'Research': 'Research AI orchestration best practices'
+            };
+            
+            input.value = actions[action] || action;
+            sendMessage();
+        }
+
+        // Handle enter key in chat input
+        document.getElementById('chat-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            loadServicesStatus();
+            loadIntegrations();
+            
+            // Refresh services status every 30 seconds
+            setInterval(loadServicesStatus, 30000);
+        });
+    </script>
+</body>
+</html>
+

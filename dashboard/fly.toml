@@ -13,7 +13,6 @@ primary_region = "iad"
   SOPHIA_BUSINESS_URL = "https://sophia-business.fly.dev"
 
 [[services]]
-  http_checks = []
   internal_port = 8080
   processes = ["app"]
   protocol = "tcp"

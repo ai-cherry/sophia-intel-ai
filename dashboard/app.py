@@ -107,7 +107,39 @@ def chat():
                     
                     # Handle different response types
                     if response.headers.get('content-type', '').startswith('application/json'):
-                        result = response.json()
+                        research_result = response.json()
+                        
+                        # Extract weather information from the research result
+                        if research_result.get("sources"):
+                            # Create a formatted response with actual weather data
+                            weather_info = []
+                            for source in research_result["sources"][:3]:  # Top 3 sources
+                                if source.get("snippet"):
+                                    weather_info.append(source["snippet"])
+                            
+                            # Format the response with real weather data
+                            if weather_info:
+                                formatted_response = f"🌡️ **Las Vegas Weather Today:**\n\n"
+                                formatted_response += f"• {weather_info[0]}\n\n"
+                                if len(weather_info) > 1:
+                                    formatted_response += f"• {weather_info[1]}\n\n"
+                                formatted_response += f"**Summary:** {research_result.get('summary', 'Weather data retrieved successfully')}\n\n"
+                                formatted_response += f"**Sources:** {len(research_result['sources'])} live weather sources"
+                            else:
+                                formatted_response = research_result.get('summary', 'Weather data retrieved')
+                        else:
+                            formatted_response = "No weather data found"
+                        
+                        # Return properly formatted response
+                        return jsonify({
+                            "message": user_input,
+                            "intent": "research",
+                            "response": formatted_response,
+                            "timestamp": datetime.utcnow().isoformat(),
+                            "sources": [{"type": "research", "name": source["name"], "url": source["url"]} for source in research_result.get("sources", [])[:5]],
+                            "research_id": research_result.get("research_id"),
+                            "total_sources": research_result.get("total_sources", 0)
+                        })
                     else:
                         # If HTML or other format, create a proper JSON response
                         result = {

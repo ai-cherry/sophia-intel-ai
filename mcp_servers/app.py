@@ -16,7 +16,7 @@ from contextlib import asynccontextmanager
 from .code_server import router as code_router
 from .context_server import router as context_router
 from .memory_server import router as memory_router
-from .research_server import router as research_router
+from .simple_research_server import router as research_router
 from .business_server import router as business_router
 
 # Configure logging

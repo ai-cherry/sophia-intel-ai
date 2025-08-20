@@ -13,11 +13,7 @@ kill_timeout = "5s"
   source = "sophia_data"
   destination = "/data"
 
-[processes]
-  app = "uvicorn main:app --host 0.0.0.0 --port 8000"
-
 [[services]]
-  processes = ["app"]
   internal_port = 8000
   protocol = "tcp"
   [services.concurrency]
@@ -29,4 +25,7 @@ kill_timeout = "5s"
   [[services.ports]]
     port = 443
     handlers = ["tls", "http"]
+
+[processes]
+  app = "uvicorn main:app --host 0.0.0.0 --port 8000"
 

@@ -6,4 +6,5 @@ tenacity==9.0.0
 pydantic==2.9.2
 sentry-sdk==2.17.0
 slack-sdk==3.33.1
+python-telegram-bot==21.5
 

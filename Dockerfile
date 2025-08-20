@@ -8,14 +8,16 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements and install
+# Copy requirements and install with no cache for stability
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY main.py .
+COPY mcp_integration.py .
+COPY ml_task.py .
 
-# Create data directory
+# Create data directory for volume mount
 RUN mkdir -p /app/data
 
 # Set git config for autonomous commits

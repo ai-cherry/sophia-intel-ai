@@ -15,8 +15,15 @@ from .core.mcp_client import SOPHIAMCPClient
 from .core.feedback_master import SOPHIAFeedbackMaster, FeedbackRecord, FeedbackSummary
 from .core.performance_monitor import SOPHIAPerformanceMonitor, PerformanceMetric, ServiceStats
 from .core.lambda_master import SOPHIALambdaMaster, LambdaInstance, LambdaInstanceType, LambdaJob
+from .core.chatops_router import SOPHIAChatOpsRouter, ChatMode, ExecutionPlan, ParsedIntent
 
-__version__ = "4.0.0"
+# Import integrations
+from .integrations.asana_client import AsanaClient, AsanaProject, AsanaTask
+from .integrations.linear_client import LinearClient, LinearTeam, LinearIssue
+from .integrations.notion_client import NotionClient, NotionDatabase, NotionPage
+from .integrations.gong_client import GongClient, GongCall, GongCallSummary
+
+__version__ = "4.1.0"
 __author__ = "SOPHIA AI Team"
 
 __all__ = [
@@ -47,6 +54,23 @@ __all__ = [
     "SOPHIALambdaMaster",
     "LambdaInstance",
     "LambdaInstanceType",
-    "LambdaJob"
+    "LambdaJob",
+    "SOPHIAChatOpsRouter",
+    "ChatMode",
+    "ExecutionPlan",
+    "ParsedIntent",
+    # Integrations
+    "AsanaClient",
+    "AsanaProject",
+    "AsanaTask",
+    "LinearClient",
+    "LinearTeam",
+    "LinearIssue",
+    "NotionClient",
+    "NotionDatabase",
+    "NotionPage",
+    "GongClient",
+    "GongCall",
+    "GongCallSummary"
 ]
 

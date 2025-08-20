@@ -14,6 +14,9 @@ from .ultimate_model_router import UltimateModelRouter
 from .mcp_client import SOPHIAMCPClient
 from .memory_master import SOPHIAMemoryMaster
 from ..integrations.gong_client import GongClient, GongCall
+from ..integrations.asana_client import AsanaClient, AsanaTask
+from ..integrations.linear_client import LinearClient, LinearIssue
+from ..integrations.notion_client import NotionClient, NotionPage
 
 logger = logging.getLogger(__name__)
 
@@ -29,13 +32,18 @@ class SOPHIABusinessMaster:
         self.model_router = router or UltimateModelRouter()
         self.memory = memory or SOPHIAMemoryMaster()
         self.mcp_client = None  # Will be initialized when needed
+        
+        # Initialize all business service clients
         self.gong = GongClient()
+        self.asana = AsanaClient()
+        self.linear = LinearClient()
+        self.notion = NotionClient()
         
         # Business configuration
-        self.supported_sources = ["gong", "hubspot", "slack", "salesforce", "notion"]
+        self.supported_sources = ["gong", "hubspot", "slack", "salesforce", "notion", "asana", "linear"]
         self.default_date_range = 30  # days
         
-        logger.info("Initialized SOPHIABusinessMaster with Gong integration")
+        logger.info("Initialized SOPHIABusinessMaster with Gong, Asana, Linear, and Notion integrations")
     
     async def _get_mcp_client(self) -> SOPHIAMCPClient:
         """Get or create MCP client."""
@@ -789,10 +797,240 @@ Report:
             logger.error(f"Failed to create HubSpot task: {e}")
             raise
     
+    async def create_asana_task(
+        self,
+        call_id: str,
+        summary: str,
+        project_id: Optional[str] = None,
+        assignee: Optional[str] = None
+    ) -> AsanaTask:
+        """
+        Create Asana task based on Gong call insights.
+        This is a write-back capability from Gong analysis.
+        """
+        try:
+            call = await self.gong.get_call(call_id)
+            
+            # Create task title and description
+            task_title = f"Follow-up: {call.title}"
+            task_notes = f"""
+{summary}
+
+Based on Gong call: {call.title}
+Call Date: {call.started.strftime('%Y-%m-%d %H:%M')}
+Participants: {', '.join(call.participants)}
+Duration: {call.duration // 60} minutes
+"""
+            
+            if call.url:
+                task_notes += f"\nCall Recording: {call.url}"
+            
+            # Create task in Asana
+            task = await self.asana.create_task(
+                name=task_title,
+                notes=task_notes,
+                assignee=assignee,
+                project=project_id
+            )
+            
+            # Store in memory
+            task_data = [{
+                "task_id": task.gid,
+                "call_id": call_id,
+                "title": task.name,
+                "url": task.permalink_url,
+                "source": "asana",
+                "type": "task_creation",
+                "timestamp": datetime.now().isoformat()
+            }]
+            
+            await self.memory.store_business_artifacts("asana_tasks", task_data)
+            
+            logger.info(f"Created Asana task {task.gid} for call {call_id}")
+            return task
+            
+        except Exception as e:
+            logger.error(f"Failed to create Asana task: {e}")
+            raise
+    
+    async def create_linear_issue(
+        self,
+        call_id: str,
+        title: str,
+        description: str,
+        team_id: Optional[str] = None,
+        assignee_id: Optional[str] = None,
+        priority: int = 3  # Normal priority
+    ) -> LinearIssue:
+        """
+        Create Linear issue based on Gong call insights.
+        This is a write-back capability from Gong analysis.
+        """
+        try:
+            call = await self.gong.get_call(call_id)
+            
+            # Enhance description with call context
+            enhanced_description = f"""
+{description}
+
+**Context from Gong Call:**
+- Call: {call.title}
+- Date: {call.started.strftime('%Y-%m-%d %H:%M')}
+- Participants: {', '.join(call.participants)}
+- Duration: {call.duration // 60} minutes
+"""
+            
+            if call.url:
+                enhanced_description += f"- Recording: {call.url}"
+            
+            # Create issue in Linear
+            issue = await self.linear.create_issue(
+                title=title,
+                description=enhanced_description,
+                team_id=team_id,
+                assignee_id=assignee_id,
+                priority=priority
+            )
+            
+            # Store in memory
+            issue_data = [{
+                "issue_id": issue.id,
+                "call_id": call_id,
+                "identifier": issue.identifier,
+                "title": issue.title,
+                "url": issue.url,
+                "source": "linear",
+                "type": "issue_creation",
+                "timestamp": datetime.now().isoformat()
+            }]
+            
+            await self.memory.store_business_artifacts("linear_issues", issue_data)
+            
+            logger.info(f"Created Linear issue {issue.identifier} for call {call_id}")
+            return issue
+            
+        except Exception as e:
+            logger.error(f"Failed to create Linear issue: {e}")
+            raise
+    
+    async def create_notion_page(
+        self,
+        call_id: str,
+        title: str,
+        content: str,
+        database_id: Optional[str] = None
+    ) -> NotionPage:
+        """
+        Create Notion page based on Gong call insights or research.
+        This is a write-back capability from Gong analysis.
+        """
+        try:
+            call = await self.gong.get_call(call_id)
+            
+            # Enhance content with call context
+            enhanced_content = f"""
+{content}
+
+## Call Context
+
+**Call:** {call.title}
+**Date:** {call.started.strftime('%Y-%m-%d %H:%M')}
+**Participants:** {', '.join(call.participants)}
+**Duration:** {call.duration // 60} minutes
+"""
+            
+            if call.url:
+                enhanced_content += f"\n**Recording:** {call.url}"
+            
+            # Create page in Notion
+            page = await self.notion.create_page(
+                parent_id=database_id,
+                title=title,
+                content=enhanced_content,
+                is_database_parent=database_id is not None
+            )
+            
+            # Store in memory
+            page_data = [{
+                "page_id": page.id,
+                "call_id": call_id,
+                "title": page.title,
+                "url": page.url,
+                "source": "notion",
+                "type": "page_creation",
+                "timestamp": datetime.now().isoformat()
+            }]
+            
+            await self.memory.store_business_artifacts("notion_pages", page_data)
+            
+            logger.info(f"Created Notion page {page.id} for call {call_id}")
+            return page
+            
+        except Exception as e:
+            logger.error(f"Failed to create Notion page: {e}")
+            raise
+    
+    async def create_research_notion_page(
+        self,
+        title: str,
+        content: str,
+        database_id: Optional[str] = None,
+        sources: Optional[List[str]] = None
+    ) -> NotionPage:
+        """
+        Create Notion page for research summaries.
+        """
+        try:
+            # Enhance content with sources
+            if sources:
+                enhanced_content = f"""
+{content}
+
+## Sources
+
+"""
+                for i, source in enumerate(sources, 1):
+                    enhanced_content += f"{i}. {source}\n"
+            else:
+                enhanced_content = content
+            
+            # Create page in Notion
+            page = await self.notion.create_page(
+                parent_id=database_id,
+                title=title,
+                content=enhanced_content,
+                is_database_parent=database_id is not None
+            )
+            
+            # Store in memory
+            page_data = [{
+                "page_id": page.id,
+                "title": page.title,
+                "url": page.url,
+                "source": "notion",
+                "type": "research_page",
+                "timestamp": datetime.now().isoformat()
+            }]
+            
+            await self.memory.store_business_artifacts("notion_research", page_data)
+            
+            logger.info(f"Created research Notion page {page.id}")
+            return page
+            
+        except Exception as e:
+            logger.error(f"Failed to create research Notion page: {e}")
+            raise
+    
     async def close(self):
         """Close connections."""
         if self.mcp_client:
             await self.mcp_client.close()
         if self.gong:
             await self.gong.aclose()
+        if self.asana:
+            await self.asana.aclose()
+        if self.linear:
+            await self.linear.aclose()
+        if self.notion:
+            await self.notion.aclose()
 

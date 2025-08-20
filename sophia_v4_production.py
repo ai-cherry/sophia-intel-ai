@@ -76,50 +76,50 @@ class UltimateModelOrchestrator:
         self.openrouter_key = os.getenv('OPENROUTER_API_KEY')
         self.base_url = "https://openrouter.ai/api/v1"
         
-        # SOPHIA's primary models (Top OpenRouter models)
+        # SOPHIA's primary models (Correct OpenRouter IDs from official list)
         self.sophia_models = {
-            'master': 'anthropic/claude-sonnet-4',              # #1 Master orchestrator
-            'reasoning': 'anthropic/claude-sonnet-4',           # #1 Complex reasoning
-            'fallback': 'anthropic/claude-3.7-sonnet',         # #7 Backup reasoning
-            'emergency': 'openai/gpt-4o-mini'                  # #19 Emergency fallback
+            'master': 'anthropic/claude-sonnet-4',               # #1 Coding/Agentic (72.7% SWE-Bench)
+            'reasoning': 'google/gemini-2.5-pro',               # #1 Reasoning (1M context)
+            'fallback': 'anthropic/claude-3.7-sonnet',          # Solid backup
+            'emergency': 'openai/gpt-4o-mini'                   # Emergency fallback
         }
         
-        # AI Agent Swarm Models (Specialized teams)
+        # AI Agent Swarm Models (Specialized teams with correct OpenRouter IDs)
         self.swarm_models = {
             SwarmType.CODING: {
-                'primary': 'qwen/qwen-3-coder',                 # #5 Primary coding (149B tokens)
-                'secondary': 'deepseek/deepseek-v3-0324',      # #4 Advanced analysis (161B tokens)
-                'free': 'qwen/qwen-3-coder-free',              # #11 Free coding (94.1B tokens)
-                'review': 'anthropic/claude-3.7-sonnet',       # #7 Code review (137B tokens)
-                'debug': 'deepseek/deepseek-v3-0324-free'      # #6 Debug analysis (145B tokens)
+                'primary': 'anthropic/claude-sonnet-4',         # #1 Coding (72.7% SWE-Bench)
+                'secondary': 'qwen/qwen3-coder',                # Strong coding model
+                'free': 'deepseek/deepseek-chat-v3-0324:free',  # Free tier coding
+                'review': 'anthropic/claude-3.7-sonnet',        # Code review
+                'debug': 'anthropic/claude-sonnet-4'            # Best debugging
             },
             SwarmType.RESEARCH: {
-                'primary': 'google/gemini-2.0-flash',          # #2 Fast research (276B tokens)
-                'deep': 'google/gemini-2.5-flash',             # #3 Deep research (275B tokens)
-                'synthesis': 'anthropic/claude-3.7-sonnet',    # #7 Research synthesis (137B tokens)
-                'verification': 'google/gemini-2.5-pro',       # #8 Fact verification (135B tokens)
-                'realtime': 'deepseek/r1-0528-free'            # #9 Real-time data (108B tokens)
+                'primary': 'google/gemini-2.5-pro',             # 1M context for research
+                'deep': 'anthropic/claude-sonnet-4',            # Deep analysis
+                'synthesis': 'google/gemini-2.0-flash-001',     # Fast synthesis
+                'verification': 'google/gemini-2.5-pro',        # Fact verification
+                'realtime': 'deepseek/deepseek-r1:free'         # Real-time data
             },
             SwarmType.BUSINESS: {
-                'primary': 'google/gemini-2.5-pro',            # #8 Business intelligence (135B tokens)
-                'enterprise': 'openai/gpt-5',                  # #14 Enterprise tasks (50.8B tokens)
-                'analysis': 'anthropic/claude-3.7-sonnet',     # #7 Business analysis (137B tokens)
-                'communication': 'google/gemini-2.0-flash',    # #2 Fast communication (276B tokens)
-                'crm': 'deepseek/deepseek-v3-0324'             # #4 CRM analysis (161B tokens)
+                'primary': 'google/gemini-2.5-pro',             # Enterprise analysis
+                'enterprise': 'anthropic/claude-sonnet-4',      # Business workflows
+                'analysis': 'anthropic/claude-3.7-sonnet',      # Business analysis
+                'communication': 'google/gemini-2.0-flash-001', # Fast communication
+                'crm': 'anthropic/claude-sonnet-4'              # CRM analysis
             },
             SwarmType.ANALYSIS: {
-                'primary': 'deepseek/deepseek-v3-0324',        # #4 Deep analysis (161B tokens)
-                'reasoning': 'anthropic/claude-sonnet-4',      # #1 Complex reasoning (513B tokens)
-                'data': 'google/gemini-2.5-pro',               # #8 Data analysis (135B tokens)
-                'patterns': 'qwen/qwen-3-coder',               # #5 Pattern recognition (149B tokens)
-                'insights': 'anthropic/claude-3.7-sonnet'      # #7 Insight generation (137B tokens)
+                'primary': 'google/gemini-2.5-pro',             # Best reasoning (1M context)
+                'reasoning': 'anthropic/claude-sonnet-4',       # Complex reasoning
+                'data': 'google/gemini-2.5-pro',                # Data analysis
+                'patterns': 'deepseek/deepseek-chat-v3-0324',   # Pattern recognition
+                'insights': 'anthropic/claude-3.7-sonnet'       # Insight generation
             },
             SwarmType.CREATIVE: {
-                'primary': 'anthropic/claude-3.7-sonnet',      # #7 Creative writing (137B tokens)
-                'ideation': 'google/gemini-2.5-flash',         # #3 Idea generation (275B tokens)
-                'design': 'anthropic/claude-sonnet-4',         # #1 Design thinking (513B tokens)
-                'innovation': 'openai/gpt-5',                  # #14 Innovation (50.8B tokens)
-                'storytelling': 'mistral/mistral-nemo'         # #12 Storytelling (68.3B tokens)
+                'primary': 'anthropic/claude-sonnet-4',         # Best overall creativity
+                'ideation': 'google/gemini-2.5-pro',            # Creative reasoning
+                'design': 'anthropic/claude-3.7-sonnet',        # Design thinking
+                'innovation': 'google/gemini-2.0-flash-001',    # Fast innovation
+                'storytelling': 'anthropic/claude-3.7-sonnet'   # Storytelling
             }
         }
         

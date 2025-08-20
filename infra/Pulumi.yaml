@@ -1,0 +1,7 @@
+name: sophia-intel-infra
+runtime:
+  name: python
+  options:
+    virtualenv: venv
+description: "Pulumi IaC for Sophia Intel cloud deployment (Fly.io + containers)"
+

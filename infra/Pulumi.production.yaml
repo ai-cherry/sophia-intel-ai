@@ -1,0 +1,32 @@
+config:
+  sophia-intel-infra:registry:
+    server: ghcr.io
+    org: ai-cherry
+    repoPrefix: sophia
+  sophia-intel-infra:apps:
+    - name: sophia-code
+      context: .
+      dockerfile: docker/production/Dockerfile.mcp
+      flyToml: fly/sophia-code.fly.toml
+      port: 8080
+    - name: sophia-context
+      context: .
+      dockerfile: docker/production/Dockerfile.mcp
+      flyToml: fly/sophia-context.fly.toml
+      port: 8080
+    - name: sophia-memory
+      context: .
+      dockerfile: docker/production/Dockerfile.mcp
+      flyToml: fly/sophia-memory.fly.toml
+      port: 8080
+    - name: sophia-research
+      context: .
+      dockerfile: docker/production/Dockerfile.mcp
+      flyToml: fly/sophia-research.fly.toml
+      port: 8080
+    - name: sophia-business
+      context: .
+      dockerfile: docker/production/Dockerfile.mcp
+      flyToml: fly/sophia-business.fly.toml
+      port: 8080
+

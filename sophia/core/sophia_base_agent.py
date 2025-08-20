@@ -21,6 +21,8 @@ from .research_master import SOPHIAResearchMaster
 from .business_master import SOPHIABusinessMaster
 from .memory_master import SOPHIAMemoryMaster
 from .mcp_client import SOPHIAMCPClient
+from .feedback_master import SOPHIAFeedbackMaster
+from .performance_monitor import SOPHIAPerformanceMonitor
 
 logger = logging.getLogger(__name__)
 
@@ -108,6 +110,22 @@ class SOPHIABaseAgent(BaseAgent):
             logger.error(f"Failed to initialize MCP client: {e}")
             self.mcp_client = None
         
+        # Initialize Feedback master
+        try:
+            self.feedback_master = SOPHIAFeedbackMaster()
+            logger.info("Feedback master initialized")
+        except Exception as e:
+            logger.error(f"Failed to initialize Feedback master: {e}")
+            self.feedback_master = None
+        
+        # Initialize Performance monitor
+        try:
+            self.performance_monitor = SOPHIAPerformanceMonitor()
+            logger.info("Performance monitor initialized")
+        except Exception as e:
+            logger.error(f"Failed to initialize Performance monitor: {e}")
+            self.performance_monitor = None
+        
         # Track SOPHIA-specific metrics
         self.model_calls = 0
         self.api_calls = 0
@@ -139,8 +157,15 @@ class SOPHIABaseAgent(BaseAgent):
             model_config = self.model_router.select_model(task_type)
             logger.info(f"Selected {model_config.provider}:{model_config.model_name} for {task_type}")
             
-            # Call the model
-            response = await self.model_router.call_model(model_config, prompt, **kwargs)
+            # Monitor the model call performance
+            if self.performance_monitor:
+                async with self.performance_monitor.monitor_operation(
+                    service=model_config.provider,
+                    operation=f"model_call_{task_type}"
+                ):
+                    response = await self.model_router.call_model(model_config, prompt, **kwargs)
+            else:
+                response = await self.model_router.call_model(model_config, prompt, **kwargs)
             
             self.successful_model_calls += 1
             logger.info(f"Model call successful for {task_type}")
@@ -663,9 +688,165 @@ Guidelines:
                 await self.memory_master.close()
             if self.mcp_client:
                 await self.mcp_client.close()
+            if self.feedback_master:
+                await self.feedback_master.close()
             
             logger.info("SOPHIA agent cleanup completed")
             
         except Exception as e:
             logger.error(f"Cleanup failed: {e}")
+
+    # Feedback and Performance Monitoring Methods
+    async def submit_user_feedback(
+        self,
+        task_id: str,
+        rating: int,
+        comments: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        """
+        Submit user feedback for a completed task.
+        
+        Args:
+            task_id: Unique task identifier
+            rating: User rating (1-5)
+            comments: Optional user comments
+            metadata: Additional metadata
+            
+        Returns:
+            Feedback record
+        """
+        if not self.feedback_master:
+            raise RuntimeError("Feedback master not available")
+        
+        try:
+            return await self.feedback_master.record_user_feedback(
+                task_id=task_id,
+                rating=rating,
+                comments=comments,
+                metadata=metadata
+            )
+        except Exception as e:
+            logger.error(f"User feedback submission failed: {e}")
+            raise
+
+    async def record_task_outcome(
+        self,
+        task_id: str,
+        outcome: str,
+        metadata: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        """
+        Record task outcome for learning and improvement.
+        
+        Args:
+            task_id: Unique task identifier
+            outcome: Task outcome (success, failure, partial, etc.)
+            metadata: Additional metadata (execution time, errors, etc.)
+            
+        Returns:
+            Feedback record
+        """
+        if not self.feedback_master:
+            raise RuntimeError("Feedback master not available")
+        
+        try:
+            return await self.feedback_master.record_agent_feedback(
+                task_id=task_id,
+                outcome=outcome,
+                metadata=metadata
+            )
+        except Exception as e:
+            logger.error(f"Task outcome recording failed: {e}")
+            raise
+
+    def get_performance_summary(self, hours: int = 24) -> Dict[str, Any]:
+        """
+        Get performance summary for the specified time period.
+        
+        Args:
+            hours: Number of hours to analyze
+            
+        Returns:
+            Performance summary
+        """
+        if not self.performance_monitor:
+            raise RuntimeError("Performance monitor not available")
+        
+        try:
+            return self.performance_monitor.get_performance_summary(hours=hours)
+        except Exception as e:
+            logger.error(f"Performance summary retrieval failed: {e}")
+            raise
+
+    def get_health_status(self) -> Dict[str, Any]:
+        """
+        Get health status of all monitored services.
+        
+        Returns:
+            Health status report
+        """
+        if not self.performance_monitor:
+            raise RuntimeError("Performance monitor not available")
+        
+        try:
+            return self.performance_monitor.get_health_status()
+        except Exception as e:
+            logger.error(f"Health status retrieval failed: {e}")
+            raise
+
+    async def get_feedback_summary(self, days: int = 30) -> Dict[str, Any]:
+        """
+        Get feedback summary for the specified time period.
+        
+        Args:
+            days: Number of days to analyze
+            
+        Returns:
+            Feedback summary
+        """
+        if not self.feedback_master:
+            raise RuntimeError("Feedback master not available")
+        
+        try:
+            summary = await self.feedback_master.aggregate_feedback(days=days)
+            return {
+                "total_feedback": summary.total_feedback,
+                "average_rating": summary.average_rating,
+                "rating_distribution": summary.rating_distribution,
+                "common_issues": summary.common_issues,
+                "improvement_suggestions": summary.improvement_suggestions,
+                "time_period": summary.time_period
+            }
+        except Exception as e:
+            logger.error(f"Feedback summary retrieval failed: {e}")
+            raise
+
+    def get_agent_metrics(self) -> Dict[str, Any]:
+        """
+        Get agent-specific metrics and statistics.
+        
+        Returns:
+            Agent metrics
+        """
+        return {
+            "model_calls": self.model_calls,
+            "api_calls": self.api_calls,
+            "successful_model_calls": self.successful_model_calls,
+            "successful_api_calls": self.successful_api_calls,
+            "model_success_rate": (self.successful_model_calls / self.model_calls * 100) if self.model_calls > 0 else 0,
+            "api_success_rate": (self.successful_api_calls / self.api_calls * 100) if self.api_calls > 0 else 0,
+            "components_initialized": {
+                "model_router": self.model_router is not None,
+                "api_manager": self.api_manager is not None,
+                "github_master": self.github_master is not None,
+                "fly_master": self.fly_master is not None,
+                "research_master": self.research_master is not None,
+                "business_master": self.business_master is not None,
+                "memory_master": self.memory_master is not None,
+                "mcp_client": self.mcp_client is not None,
+                "feedback_master": self.feedback_master is not None,
+                "performance_monitor": self.performance_monitor is not None
+            }
+        }
 

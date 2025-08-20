@@ -12,6 +12,8 @@ from .core.research_master import SOPHIAResearchMaster
 from .core.business_master import SOPHIABusinessMaster
 from .core.memory_master import SOPHIAMemoryMaster
 from .core.mcp_client import SOPHIAMCPClient
+from .core.feedback_master import SOPHIAFeedbackMaster, FeedbackRecord, FeedbackSummary
+from .core.performance_monitor import SOPHIAPerformanceMonitor, PerformanceMetric, ServiceStats
 
 __version__ = "4.0.0"
 __author__ = "SOPHIA AI Team"
@@ -34,6 +36,12 @@ __all__ = [
     "SOPHIAResearchMaster",
     "SOPHIABusinessMaster",
     "SOPHIAMemoryMaster",
-    "SOPHIAMCPClient"
+    "SOPHIAMCPClient",
+    "SOPHIAFeedbackMaster",
+    "FeedbackRecord",
+    "FeedbackSummary",
+    "SOPHIAPerformanceMonitor",
+    "PerformanceMetric",
+    "ServiceStats"
 ]
 

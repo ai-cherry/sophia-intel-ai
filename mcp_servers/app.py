@@ -81,6 +81,11 @@ def create_app(service: str = None) -> FastAPI:
         app.include_router(memory_router, prefix="/memory", tags=["Memory Operations"])
         app.include_router(research_router, prefix="/research", tags=["Research Operations"])
         app.include_router(business_router, prefix="/business", tags=["Business Intelligence"])
+        
+        # Include feedback router
+        from .feedback_server import router as feedback_router
+        app.include_router(feedback_router, prefix="/feedback", tags=["Feedback Management"])
+        
     elif service == "code":
         app.include_router(code_router, prefix="", tags=["Code Operations"])
     elif service == "context":
@@ -91,6 +96,9 @@ def create_app(service: str = None) -> FastAPI:
         app.include_router(research_router, prefix="", tags=["Research Operations"])
     elif service == "business":
         app.include_router(business_router, prefix="", tags=["Business Intelligence"])
+    elif service == "feedback":
+        from .feedback_server import router as feedback_router
+        app.include_router(feedback_router, prefix="", tags=["Feedback Management"])
     else:
         logger.error(f"Unknown service: {service}")
         raise ValueError(f"Unknown service: {service}")
@@ -153,7 +161,7 @@ if __name__ == "__main__":
     
     # Parse command line arguments
     parser = argparse.ArgumentParser(description="Sophia MCP Server")
-    parser.add_argument("--service", choices=["code", "context", "memory", "research", "business", "all"], 
+    parser.add_argument("--service", choices=["code", "context", "memory", "research", "business", "feedback", "all"], 
                        default="all", help="Service to run")
     parser.add_argument("--host", default="0.0.0.0", help="Host to bind to")
     parser.add_argument("--port", type=int, default=8080, help="Port to bind to")

@@ -76,7 +76,7 @@ async def services_status():
     return jsonify(status)
 
 @app.route('/api/chat', methods=['POST'])
-async def chat():
+def chat():
     """Handle chat messages with proper error handling"""
     try:
         data = request.get_json()
@@ -89,30 +89,37 @@ async def chat():
         if any(word in user_input.lower() for word in ['weather', 'research', 'search', 'find']):
             # Route to research service
             try:
-                async with httpx.AsyncClient(timeout=30.0) as client:
-                    research_url = SOPHIA_SERVICES.get("research")
-                    if research_url:
-                        response = await client.post(
-                            f"{research_url}/api/research",
-                            json={"query": user_input},
-                            headers={"Content-Type": "application/json"}
-                        )
-                        
-                        # Handle different response types
-                        if response.headers.get('content-type', '').startswith('application/json'):
-                            result = response.json()
-                        else:
-                            # If HTML or other format, create a proper JSON response
-                            result = {
-                                "message": user_input,
-                                "intent": "research",
-                                "response": f"Research service returned non-JSON response. Status: {response.status_code}",
-                                "error": "Service configuration issue - returning HTML instead of JSON",
-                                "timestamp": datetime.utcnow().isoformat(),
-                                "sources": [{"type": "error", "name": "Research Service", "status": "misconfigured"}]
-                            }
-                        
-                        return jsonify(result)
+                import requests
+                research_url = SOPHIA_SERVICES.get("research")
+                if research_url:
+                    response = requests.post(
+                        f"{research_url}/search",
+                        json={
+                            "query": user_input,
+                            "sources": ["serper", "tavily"],
+                            "max_results_per_source": 5,
+                            "include_content": True,
+                            "summarize": True
+                        },
+                        headers={"Content-Type": "application/json"},
+                        timeout=30
+                    )
+                    
+                    # Handle different response types
+                    if response.headers.get('content-type', '').startswith('application/json'):
+                        result = response.json()
+                    else:
+                        # If HTML or other format, create a proper JSON response
+                        result = {
+                            "message": user_input,
+                            "intent": "research",
+                            "response": f"Research service returned non-JSON response. Status: {response.status_code}",
+                            "error": "Service configuration issue - returning HTML instead of JSON",
+                            "timestamp": datetime.utcnow().isoformat(),
+                            "sources": [{"type": "error", "name": "Research Service", "status": "misconfigured"}]
+                        }
+                    
+                    return jsonify(result)
                         
             except Exception as e:
                 logger.error(f"Research service error: {e}")

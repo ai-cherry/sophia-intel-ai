@@ -8,28 +8,27 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy ultimate requirements and install
-COPY requirements_ultimate.txt .
-RUN pip install --no-cache-dir -r requirements_ultimate.txt
+# Copy requirements and install
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
-COPY sophia_v4_production.py .
-COPY apps/ ./apps/
+COPY main.py .
 
 # Create data directory
 RUN mkdir -p /app/data
 
 # Set git config for autonomous commits
 RUN git config --global user.email "sophia@ai-cherry.com" && \
-    git config --global user.name "SOPHIA V4 Ultimate"
+    git config --global user.name "SOPHIA V4"
 
 # Expose port
-EXPOSE 8080
+EXPOSE 8000
 
-# Health check for ultimate monitoring
+# Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:8080/api/v1/health || exit 1
+  CMD curl -f http://localhost:8000/api/v1/health || exit 1
 
-# Run the ultimate production application
-CMD ["python", "sophia_v4_production.py"]
+# Run the application
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
 

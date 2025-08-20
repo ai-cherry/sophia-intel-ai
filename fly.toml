@@ -1,43 +1,32 @@
 app = "sophia-intel"
 primary_region = "ord"
-
-[build]
-  dockerfile = "Dockerfile"
+kill_signal = "SIGTERM"
+kill_timeout = "5s"
 
 [env]
-  PORT = "8080"
-  PYTHONUNBUFFERED = "1"
-
-[http_service]
-  internal_port = 8080
-  force_https = true
+  GPU_TYPE = "none"
+  LAMBDA_IPS = "192.222.51.223,192.222.50.242"
   auto_stop_machines = false
-  auto_start_machines = true
-  min_machines_running = 2
-  processes = ["app"]
-
-  [[http_service.checks]]
-    grace_period = "10s"
-    interval = "30s"
-    method = "GET"
-    timeout = "5s"
-    path = "/api/v1/health"
-
-[processes]
-  app = "python3 sophia_v4_production.py"
-
-[[vm]]
-  size = "performance-8x"
-  memory = "16gb"
-  cpu_kind = "performance"
-  processes = ["app"]
+  min_machines_running = 1
 
 [mounts]
   source = "sophia_data"
   destination = "/data"
-  processes = ["app"]
 
-[deploy]
-  strategy = "rolling"
-  max_unavailable = 1
+[processes]
+  app = "uvicorn main:app --host 0.0.0.0 --port 8000"
+
+[[services]]
+  processes = ["app"]
+  internal_port = 8000
+  protocol = "tcp"
+  [services.concurrency]
+    hard_limit = 100
+    soft_limit = 80
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+  [[services.ports]]
+    port = 443
+    handlers = ["tls", "http"]
 

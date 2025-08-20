@@ -2,24 +2,28 @@ app = "sophia-research"
 primary_region = "iad"
 
 [build]
-  dockerfile = "../mcp_servers/Dockerfile"
+  dockerfile = "../docker/production/Dockerfile.mcp"
 
 [env]
   PORT = "8080"
-  SERVICE_TYPE = "research"
+  MCP_ROLE = "research"
 
-[http_service]
+[[services]]
+  protocol = "tcp"
   internal_port = 8080
-  force_https = true
-  auto_stop_machines = true
-  auto_start_machines = true
-  min_machines_running = 1
 
-  [[http_service.checks]]
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+  [[services.ports]]
+    port = 443
+    handlers = ["tls","http"]
+
+  [[services.http_checks]]
     method = "GET"
     path = "/healthz"
     interval = "10s"
-    timeout = "2s"
+    timeout  = "2s"
     grace_period = "10s"
 
 [vm]

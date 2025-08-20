@@ -9,6 +9,7 @@ import requests, os, logging, subprocess, asyncio
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_message
 import json
 from typing import Dict, Any, Optional
+from mcp_integration import mcp
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -238,30 +239,125 @@ async def health_check():
 
 @app.post('/api/v1/chat')
 async def chat_endpoint(request: ChatRequest):
-    """Main chat endpoint"""
+    """Main chat endpoint with REAL MCP functionality"""
     try:
         user_input = request.message
-        enhanced_prompt = user_input
-
-        # Check for infrastructure queries
-        if any(word in user_input.lower() for word in ['scale', 'fly.io', 'machines', 'deploy']):
+        
+        # REAL MCP FUNCTIONALITY - NO MORE FAKE RESPONSES
+        
+        # Code generation requests
+        if any(word in user_input.lower() for word in ['generate', 'code', 'create function', 'write code']):
+            language = 'python'  # Default, could be extracted from prompt
+            if 'javascript' in user_input.lower() or 'js' in user_input.lower():
+                language = 'javascript'
+            elif 'java' in user_input.lower():
+                language = 'java'
+            
+            result = await mcp.generate_code(user_input, language)
+            if result['success']:
+                return {
+                    "response": f"🤠 Generated {language} code:\n\n```{language}\n{result['code']}\n```\n\nModel: {result['model']}",
+                    "model_used": result['model'],
+                    "success": True,
+                    "mcp_service": "code-gen",
+                    "timestamp": datetime.now().isoformat()
+                }
+            else:
+                return {
+                    "response": f"🤠 Code generation failed: {result['error']}",
+                    "success": False,
+                    "error": result['error']
+                }
+        
+        # Code indexing requests
+        elif any(word in user_input.lower() for word in ['index', 'search code', 'find function']):
+            if 'search' in user_input.lower():
+                # Extract search query
+                query = user_input.replace('search', '').replace('code', '').strip()
+                result = mcp.search_code(query)
+                if result['success']:
+                    response = f"🤠 Found {result['total_results']} code matches:\n\n"
+                    for i, match in enumerate(result['results'][:3]):
+                        response += f"{i+1}. {match['filename']} (score: {match['score']})\n"
+                        response += f"   Functions: {', '.join([f['name'] for f in match['functions']])}\n\n"
+                    return {
+                        "response": response,
+                        "success": True,
+                        "mcp_service": "code-index",
+                        "results": result['results']
+                    }
+            else:
+                return {
+                    "response": "🤠 To index code, use: 'index this code: [your code]' or search with: 'search code for [query]'",
+                    "success": True
+                }
+        
+        # Security analysis requests
+        elif any(word in user_input.lower() for word in ['security', 'vulnerability', 'audit', 'scan']):
+            if 'scan' in user_input.lower() or 'audit' in user_input.lower():
+                # For demo, scan the main.py file
+                with open('/home/ubuntu/sophia-intel/main.py', 'r') as f:
+                    code_to_scan = f.read()
+                
+                result = await mcp.analyze_security(code_to_scan, 'python')
+                if result['success']:
+                    return {
+                        "response": f"🤠 Security analysis complete:\n\n{result['analysis']}",
+                        "success": True,
+                        "mcp_service": "security",
+                        "scan_id": result['scan_id']
+                    }
+            else:
+                return {
+                    "response": "🤠 Use: 'security scan' to analyze codebase or 'audit [code]' to check specific code",
+                    "success": True
+                }
+        
+        # Analytics requests
+        elif any(word in user_input.lower() for word in ['analytics', 'stats', 'metrics']):
+            result = mcp.get_analytics()
+            if result['success']:
+                analytics = result['analytics']
+                response = f"🤠 SOPHIA V4 Analytics:\n\n"
+                response += f"📊 Indexed Files: {analytics['indexed_files']}\n"
+                response += f"🔧 Total Functions: {analytics['total_functions']}\n"
+                response += f"🔒 Security Scans: {analytics['security_scans']}\n"
+                response += f"💻 Languages: {', '.join(analytics['languages'])}\n"
+                return {
+                    "response": response,
+                    "success": True,
+                    "mcp_service": "analytics",
+                    "analytics": analytics
+                }
+        
+        # Self-testing requests
+        elif any(word in user_input.lower() for word in ['test yourself', 'self test', 'verify', 'prove']):
+            return await sophia_self_test()
+        
+        # Infrastructure queries (existing functionality)
+        elif any(word in user_input.lower() for word in ['scale', 'fly.io', 'machines', 'deploy']):
             if 'scale' in user_input.lower():
                 result = await manage_flyio_infra('scale count 3', user_input)
-                enhanced_prompt = f"{user_input}\n\nInfrastructure Action: {result['status']}"
-
-        # Check for Gong/business queries
+                enhanced_prompt = f"{user_input}\n\nFly.io Result: {result}"
+            else:
+                enhanced_prompt = user_input
+        
+        # Gong/business queries (existing functionality)
         elif any(word in user_input.lower() for word in ['gong', 'calls', 'client', 'greystar', 'bh management']):
             gong_data = await get_gong_data(user_input)
             enhanced_prompt = f"{user_input}\n\nGong Data: {gong_data}"
-
-        # Check for Lambda GPU queries
+        
+        # Lambda GPU queries (existing functionality)
         elif any(word in user_input.lower() for word in ['gpu', 'ml', 'sentiment', 'analysis']):
             lambda_result = await call_lambda_gpu('sentiment_analysis', {'text': user_input})
             enhanced_prompt = f"{user_input}\n\nLambda GPU Result: {lambda_result}"
-
-        # Get AI response
+        
+        else:
+            enhanced_prompt = user_input
+        
+        # Get AI response for non-MCP queries
         ai_result = await call_openrouter(enhanced_prompt)
-
+        
         return {
             "response": ai_result['response'],
             "model_used": ai_result['model_used'],
@@ -272,12 +368,191 @@ async def chat_endpoint(request: ChatRequest):
     except Exception as e:
         logger.error(f"Chat endpoint error: {e}")
         return {
-            "response": f"🤠 Howdy! SOPHIA V4 Simple Orchestrator here - I hit a small snag but I'm still operational and ready to help! That's the real fucking deal! 🤠",
+            "response": f"🤠 SOPHIA V4 error: {str(e)}",
             "model_used": "error_handler",
             "success": False,
             "error": str(e),
             "timestamp": datetime.now().isoformat()
         }
+
+async def sophia_self_test():
+    """SOPHIA tests herself with REAL functionality"""
+    try:
+        test_results = []
+        
+        # Test 1: Code generation
+        logger.info("Testing code generation...")
+        code_result = await mcp.generate_code("Create a simple FastAPI health check endpoint", "python")
+        test_results.append({
+            "test": "Code Generation",
+            "success": code_result['success'],
+            "details": "Generated Python code" if code_result['success'] else code_result.get('error', 'Failed')
+        })
+        
+        # Test 2: Code indexing
+        logger.info("Testing code indexing...")
+        if code_result['success']:
+            index_result = mcp.index_code(code_result['code'], "test_generated.py", "python")
+            test_results.append({
+                "test": "Code Indexing", 
+                "success": index_result['success'],
+                "details": f"Indexed {index_result.get('functions_found', 0)} functions" if index_result['success'] else "Failed"
+            })
+            
+            # Test 3: Code search
+            search_result = mcp.search_code("health check")
+            test_results.append({
+                "test": "Code Search",
+                "success": search_result['success'],
+                "details": f"Found {search_result.get('total_results', 0)} results" if search_result['success'] else "Failed"
+            })
+        
+        # Test 4: Security analysis
+        logger.info("Testing security analysis...")
+        security_result = await mcp.analyze_security("import os\npassword = 'hardcoded123'\nquery = f'SELECT * FROM users WHERE id = {user_id}'", "python")
+        test_results.append({
+            "test": "Security Analysis",
+            "success": security_result['success'],
+            "details": "Detected vulnerabilities" if security_result['success'] else "Failed"
+        })
+        
+        # Test 5: Analytics
+        analytics_result = mcp.get_analytics()
+        test_results.append({
+            "test": "Analytics",
+            "success": analytics_result['success'],
+            "details": f"Tracking {analytics_result['analytics']['indexed_files']} files" if analytics_result['success'] else "Failed"
+        })
+        
+        # Test 6: OpenRouter API
+        logger.info("Testing OpenRouter API...")
+        ai_result = await call_openrouter("Test message - respond with 'API working'")
+        test_results.append({
+            "test": "OpenRouter API",
+            "success": ai_result['success'],
+            "details": f"Model: {ai_result['model_used']}" if ai_result['success'] else "Failed"
+        })
+        
+        # Generate test report
+        passed = sum(1 for test in test_results if test['success'])
+        total = len(test_results)
+        
+        response = f"🤠 SOPHIA V4 Self-Test Results ({passed}/{total} passed):\n\n"
+        for test in test_results:
+            status = "✅" if test['success'] else "❌"
+            response += f"{status} {test['test']}: {test['details']}\n"
+        
+        response += f"\n🎯 Overall Status: {'OPERATIONAL' if passed == total else 'PARTIAL FUNCTIONALITY'}"
+        
+        return {
+            "response": response,
+            "success": passed == total,
+            "test_results": test_results,
+            "passed": passed,
+            "total": total,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Self-test error: {e}")
+        return {
+            "response": f"🤠 Self-test failed: {str(e)}",
+            "success": False,
+            "error": str(e)
+        }
+
+# REAL MCP API ENDPOINTS - NO FAKE SHIT
+@app.post("/api/v1/mcp/generate")
+async def mcp_generate_code(request: dict):
+    """Real code generation endpoint"""
+    try:
+        prompt = request.get('prompt')
+        language = request.get('language', 'python')
+        model = request.get('model')
+        
+        if not prompt:
+            raise HTTPException(status_code=400, detail="prompt is required")
+        
+        result = await mcp.generate_code(prompt, language, model)
+        return result
+        
+    except Exception as e:
+        logger.error(f"MCP generate error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/v1/mcp/index")
+async def mcp_index_code(request: dict):
+    """Real code indexing endpoint"""
+    try:
+        content = request.get('content')
+        filename = request.get('filename', 'unknown.py')
+        language = request.get('language', 'python')
+        
+        if not content:
+            raise HTTPException(status_code=400, detail="content is required")
+        
+        result = mcp.index_code(content, filename, language)
+        return result
+        
+    except Exception as e:
+        logger.error(f"MCP index error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/v1/mcp/search")
+async def mcp_search_code(request: dict):
+    """Real code search endpoint"""
+    try:
+        query = request.get('query')
+        language = request.get('language')
+        
+        if not query:
+            raise HTTPException(status_code=400, detail="query is required")
+        
+        result = mcp.search_code(query, language)
+        return result
+        
+    except Exception as e:
+        logger.error(f"MCP search error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/v1/mcp/security")
+async def mcp_security_scan(request: dict):
+    """Real security analysis endpoint"""
+    try:
+        code = request.get('code')
+        language = request.get('language', 'python')
+        
+        if not code:
+            raise HTTPException(status_code=400, detail="code is required")
+        
+        result = await mcp.analyze_security(code, language)
+        return result
+        
+    except Exception as e:
+        logger.error(f"MCP security error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/v1/mcp/analytics")
+async def mcp_get_analytics():
+    """Real analytics endpoint"""
+    try:
+        result = mcp.get_analytics()
+        return result
+        
+    except Exception as e:
+        logger.error(f"MCP analytics error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/v1/self-test")
+async def sophia_self_test_endpoint():
+    """SOPHIA self-test endpoint"""
+    try:
+        result = await sophia_self_test()
+        return result
+        
+    except Exception as e:
+        logger.error(f"Self-test endpoint error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/v4/", response_class=HTMLResponse)
 async def sophia_interface():

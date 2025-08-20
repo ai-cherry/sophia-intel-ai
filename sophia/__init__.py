@@ -14,6 +14,7 @@ from .core.memory_master import SOPHIAMemoryMaster
 from .core.mcp_client import SOPHIAMCPClient
 from .core.feedback_master import SOPHIAFeedbackMaster, FeedbackRecord, FeedbackSummary
 from .core.performance_monitor import SOPHIAPerformanceMonitor, PerformanceMetric, ServiceStats
+from .core.lambda_master import SOPHIALambdaMaster, LambdaInstance, LambdaInstanceType, LambdaJob
 
 __version__ = "4.0.0"
 __author__ = "SOPHIA AI Team"
@@ -42,6 +43,10 @@ __all__ = [
     "FeedbackSummary",
     "SOPHIAPerformanceMonitor",
     "PerformanceMetric",
-    "ServiceStats"
+    "ServiceStats",
+    "SOPHIALambdaMaster",
+    "LambdaInstance",
+    "LambdaInstanceType",
+    "LambdaJob"
 ]
 

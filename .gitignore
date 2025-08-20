@@ -380,3 +380,24 @@ __pycache__/
 Dockerfile
 **/Dockerfile
 
+
+# Virtual environments
+venv/
+*/venv/
+.venv/
+env/
+ENV/
+
+# Backup files
+*.backup
+*.bak
+*.old
+*_backup*
+
+# Monitoring reports
+MONITORING_REPORT_*.md
+
+# Salvage directories
+_salvage/
+salvage/
+

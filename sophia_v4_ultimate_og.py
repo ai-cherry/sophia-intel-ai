@@ -59,14 +59,18 @@ class UltimateModelRouter:
         self.openrouter_key = os.getenv('OPENROUTER_API_KEY')
         self.base_url = "https://openrouter.ai/api/v1"
         
-        # The absolute best models for each task type
+        # The absolute best models from OpenRouter Top 20 (correct IDs)
         self.models = {
-            'reasoning': 'anthropic/claude-3.5-sonnet-20241022',  # Claude Sonnet 4
-            'coding': 'deepseek/deepseek-v3',                     # DeepSeek V3
-            'speed': 'google/gemini-2.0-flash-exp',               # Gemini 2.0 Flash
-            'analysis': 'qwen/qwen-2.5-coder-32b-instruct',      # Qwen3 Coder
-            'creative': 'anthropic/claude-3.5-sonnet-20241022',  # Claude Sonnet 4
-            'fallback': 'openai/gpt-4o-mini'                     # GPT-4o Mini
+            'reasoning': 'anthropic/claude-sonnet-4',             # #1 Claude Sonnet 4 (513B tokens)
+            'coding': 'qwen/qwen-3-coder',                        # #5 Qwen3 Coder (149B tokens)
+            'speed': 'google/gemini-2.0-flash',                  # #2 Gemini 2.0 Flash (276B tokens)
+            'analysis': 'deepseek/deepseek-v3-0324',             # #4 DeepSeek V3 0324 (161B tokens)
+            'creative': 'anthropic/claude-3.7-sonnet',           # #7 Claude 3.7 Sonnet (137B tokens)
+            'pro': 'google/gemini-2.5-pro',                      # #8 Gemini 2.5 Pro (135B tokens)
+            'free_coding': 'qwen/qwen-3-coder-free',             # #11 Qwen3 Coder (free) (94.1B tokens)
+            'free_reasoning': 'deepseek/deepseek-v3-0324-free',  # #6 DeepSeek V3 0324 (free) (145B tokens)
+            'gpt5': 'openai/gpt-5',                              # #14 GPT-5 (50.8B tokens)
+            'fallback': 'openai/gpt-4o-mini'                     # #19 GPT-4o-mini (39.5B tokens)
         }
         
         self._session: Optional[aiohttp.ClientSession] = None
@@ -83,29 +87,29 @@ class UltimateModelRouter:
             await self._session.close()
     
     def route_query(self, query: str, context: str = "") -> str:
-        """Intelligently select the best model for the query"""
+        """Intelligently select the best model from OpenRouter Top 20"""
         query_lower = query.lower()
         context_lower = context.lower()
         
-        # Code-related queries
-        if any(keyword in query_lower for keyword in ['code', 'github', 'deploy', 'commit', 'programming', 'function', 'class', 'bug', 'fix']):
-            return self.models['coding']
+        # Code-related queries - use best coding models
+        if any(keyword in query_lower for keyword in ['code', 'github', 'deploy', 'commit', 'programming', 'function', 'class', 'bug', 'fix', 'swarm']):
+            return self.models['coding']  # Qwen3 Coder
         
-        # Analysis and research queries
-        elif any(keyword in query_lower for keyword in ['analyze', 'research', 'investigate', 'study', 'examine', 'compare']):
-            return self.models['reasoning']
+        # Analysis and research queries - use DeepSeek V3 for deep analysis
+        elif any(keyword in query_lower for keyword in ['analyze', 'research', 'investigate', 'study', 'examine', 'compare', 'repository']):
+            return self.models['analysis']  # DeepSeek V3 0324
         
-        # Quick/fast queries
+        # Quick/fast queries - use Gemini 2.0 Flash for speed
         elif any(keyword in query_lower for keyword in ['quick', 'fast', 'brief', 'summary', 'simple']):
-            return self.models['speed']
+            return self.models['speed']  # Gemini 2.0 Flash
         
-        # Creative queries
+        # Creative queries - use Claude 3.7 Sonnet
         elif any(keyword in query_lower for keyword in ['create', 'design', 'write', 'generate', 'imagine']):
-            return self.models['creative']
+            return self.models['creative']  # Claude 3.7 Sonnet
         
-        # Default to reasoning for complex queries
+        # Complex reasoning - use the absolute best Claude Sonnet 4
         else:
-            return self.models['reasoning']
+            return self.models['reasoning']  # Claude Sonnet 4
     
     async def generate_response(self, query: str, context: str = "", model: str = None) -> Dict[str, Any]:
         """Generate response using the optimal model"""

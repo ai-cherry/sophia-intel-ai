@@ -1,165 +1,95 @@
-import pulumi
-import pulumi_fly as fly
-import pulumi_docker as docker
+"""
+Pulumi IaC for Sophia Intel cloud deployment.
+Builds Docker images and deploys to Fly.io using flyctl.
+"""
+
+import json
 import os
+import subprocess
+from datetime import datetime
 
-# Configuration
-config = pulumi.Config()
-app_name = "sophia-intel"
-region = "us-west-2"
+import pulumi
+from pulumi import ResourceOptions, Output, Config
+from pulumi_command import local as command
+from pulumi_docker import Image, DockerBuild
 
-# Create Fly.io application
-app = fly.App(
-    app_name,
-    fly.AppArgs(
-        name=app_name,
-        org="personal"
+cfg = Config()
+registry = cfg.require_object("registry")  # { server, org, repoPrefix }
+apps = cfg.require_object("apps")          # list of {name, context, dockerfile, flyToml, port}
+
+# CI will pass in IMAGE_TAG or we default to short git sha + date
+def git_sha_short():
+    """Get short git SHA for image tagging."""
+    try:
+        return subprocess.check_output(["git", "rev-parse", "--short", "HEAD"]).decode().strip()
+    except Exception:
+        return "dev"
+
+image_tag = os.getenv("IMAGE_TAG", f"{git_sha_short()}-{datetime.utcnow().strftime('%Y%m%d%H%M')}")
+
+# Docker registry target e.g. ghcr.io/ai-cherry/sophia-<app>:<tag>
+def registry_image_name(app_name: str) -> str:
+    """Generate full registry image name for an app."""
+    repo = f"{registry['repoPrefix']}-{app_name}"
+    return f"{registry['server']}/{registry['org']}/{repo}:{image_tag}"
+
+# Ensure flyctl is present at runtime (we invoke it via Pulumi command)
+flyctl_path = os.getenv("FLYCTL_PATH", "flyctl")
+fly_token = os.getenv("FLY_API_TOKEN") or pulumi.Config("fly").get("token")
+if not fly_token:
+    pulumi.log.warn("FLY_API_TOKEN not set; flyctl commands will fail until provided.")
+
+built_images = {}
+deploy_cmds = {}
+
+for app in apps:
+    app_name = app["name"]
+    context = app["context"]
+    dockerfile = app["dockerfile"]
+    fly_toml = app["flyToml"]
+
+    image_ref = registry_image_name(app_name)
+
+    # Build & Push image
+    img = Image(
+        f"{app_name}-image",
+        build=DockerBuild(
+            context=context,
+            dockerfile=dockerfile,
+            platform="linux/amd64",  # change/extend as needed
+            build_args={
+                "MCP_ROLE": app_name.replace("sophia-", "")  # code, context, memory, research, business
+            }
+        ),
+        image_name=image_ref,
+        skip_push=False,  # push to registry
     )
-)
+    built_images[app_name] = img.image_name
 
-# Fly.io Secrets Management
-secrets = [
-    "MCP_API_KEY",
-    "AGNO_API_KEY", 
-    "ANTHROPIC_API_KEY",
-    "APIFY_API_TOKEN",
-    "NOTION_API_KEY",
-    "SALESFORCE_ACCESS_TOKEN",
-    "SLACK_API_TOKEN",
-    "POSTGRES_PASSWORD",
-    "QDRANT_API_KEY",
-    "GITHUB_PAT"
-]
-
-# Set secrets in Fly.io (these would be set via CLI or GitHub Actions)
-for secret in secrets:
-    fly.Secret(
-        f"{app_name}-{secret.lower().replace('_', '-')}",
-        fly.SecretArgs(
-            app=app.name,
-            name=secret,
-            value=config.get_secret(secret) or f"${{{secret}}}"  # Use Pulumi config or env var
-        )
+    # Deploy via flyctl using the built image
+    # We rely on per-app fly.toml and override image at deploy time
+    deploy = command.Command(
+        f"{app_name}-deploy",
+        create=Output.concat(
+            f"export FLY_API_TOKEN='{fly_token}' && ",
+            flyctl_path, " deploy ",
+            "--config ", fly_toml, " ",
+            "--image ", img.image_name, " ",
+            "--app ", app_name, " ",
+            "--strategy immediate ",
+            "--yes"
+        ),
+        opts=ResourceOptions(depends_on=[img]),
+        environment={"FLY_API_TOKEN": fly_token} if fly_token else None,
+        delete=Output.concat(
+            f"export FLY_API_TOKEN='{fly_token}' && ",
+            flyctl_path, " apps destroy ", app_name, " --yes"
+        ),
     )
+    deploy_cmds[app_name] = deploy
 
-# Create Fly.io machine with enhanced configuration
-machine = fly.Machine(
-    f"{app_name}-machine",
-    fly.MachineArgs(
-        app=app.name,
-        region=region,
-        image="python:3.13-slim",
-        cpu_kind="shared",
-        cpus=2,
-        memory_mb=4096,
-        env={
-            "QDRANT_URL": "https://a2a5dc3b-bf37-4907-9398-d49f5c6813ed.us-west-2-0.aws.cloud.qdrant.io:6333",
-            "REDIS_HOST": "redis",
-            "POSTGRES_HOST": "postgres",
-            "ENVIRONMENT": "production"
-        },
-        services=[
-            fly.MachineServiceArgs(
-                protocol="tcp",
-                internal_port=5000,
-                ports=[
-                    fly.MachineServicePortArgs(
-                        port=443,
-                        handlers=["tls", "http"]
-                    ),
-                    fly.MachineServicePortArgs(
-                        port=80,
-                        handlers=["http"]
-                    )
-                ]
-            )
-        ],
-        mounts=[
-            fly.MachineMountArgs(
-                volume="sophia_data",
-                path="/app/data"
-            )
-        ]
-    )
-)
-
-# Create persistent volume for data storage
-volume = fly.Volume(
-    f"{app_name}-volume",
-    fly.VolumeArgs(
-        app=app.name,
-        name="sophia_data",
-        region=region,
-        size_gb=10
-    )
-)
-
-# Create SSL certificate for custom domain
-cert = fly.Cert(
-    f"{app_name}-cert",
-    fly.CertArgs(
-        app=app.name,
-        hostname="www.sophia-intel.ai"
-    )
-)
-
-# MCP Server machine (separate service)
-mcp_machine = fly.Machine(
-    f"{app_name}-mcp-machine",
-    fly.MachineArgs(
-        app=app.name,
-        region=region,
-        image="python:3.13-slim",
-        cpu_kind="shared",
-        cpus=1,
-        memory_mb=2048,
-        env={
-            "SERVICE_TYPE": "mcp_server",
-            "REDIS_HOST": "redis"
-        },
-        services=[
-            fly.MachineServiceArgs(
-                protocol="tcp",
-                internal_port=8000,
-                ports=[
-                    fly.MachineServicePortArgs(
-                        port=8000,
-                        handlers=["http"]
-                    )
-                ]
-            )
-        ]
-    )
-)
-
-# External service configurations
-postgres_config = {
-    "host": config.get("postgres_host") or "postgres.fly.dev",
-    "database": "sophia",
-    "user": "sophia",
-    "port": 5432
-}
-
-redis_config = {
-    "host": config.get("redis_host") or "redis.fly.dev",
-    "port": 6379
-}
-
-qdrant_config = {
-    "url": "https://a2a5dc3b-bf37-4907-9398-d49f5c6813ed.us-west-2-0.aws.cloud.qdrant.io:6333",
-    "collection": "sophia_memory"
-}
-
-# Export important values
-pulumi.export("app_name", app.name)
-pulumi.export("app_url", f"https://{app_name}.fly.dev")
-pulumi.export("custom_domain", "https://www.sophia-intel.ai")
-pulumi.export("machine_id", machine.id)
-pulumi.export("mcp_machine_id", mcp_machine.id)
-pulumi.export("volume_id", volume.id)
-pulumi.export("cert_hostname", cert.hostname)
-pulumi.export("postgres_config", postgres_config)
-pulumi.export("redis_config", redis_config)
-pulumi.export("qdrant_config", qdrant_config)
-pulumi.export("secrets_configured", secrets)
+# Export results
+pulumi.export("image_tag", image_tag)
+pulumi.export("images", built_images)
+pulumi.export("deployments", {name: "deployed" for name in deploy_cmds.keys()})
 

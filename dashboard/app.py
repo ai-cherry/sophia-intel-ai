@@ -1,23 +1,30 @@
 """
-SOPHIA v4.1.0 Production Dashboard
+SOPHIA Dashboard v4.1.0
 Real-time monitoring and ChatOps interface with proper answer formatting
 """
 
 import os
-import asyncio
-import json
-from datetime import datetime
-from flask import Flask, render_template, request, jsonify, Response
-from flask_cors import CORS
-import httpx
+import time
 import logging
+from datetime import datetime
+from flask import Flask, render_template, request, jsonify, make_response
+from flask_cors import CORS
+import requests
+from version import version_bp
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = Flask(__name__)
-CORS(app)
+def json_no_cache(payload, status=200, schema=None):
+    """Return JSON response with no-cache headers"""
+    resp = jsonify(payload)
+    resp.status_code = status
+    resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+    resp.headers['Pragma'] = 'no-cache'
+    if schema:
+        resp.headers['X-Response-Schema'] = schema
+    return resp
 
 # Configuration
 SOPHIA_SERVICES = {
@@ -107,10 +114,18 @@ def format_generic_answer(research: dict, query: str) -> dict:
         "ts": research.get("created_at")
     }
 
-@app.route('/')
+@app.route("/")
 def dashboard():
     """Main dashboard page"""
-    return render_template('dashboard.html')
+    build_time = os.getenv("BUILD_TIME", str(int(time.time())))
+    git_commit = os.getenv("GIT_COMMIT", "unknown")
+    
+    resp = make_response(render_template("dashboard.html", 
+                                       build_time=build_time, 
+                                       git_commit=git_commit))
+    resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+    resp.headers['Pragma'] = 'no-cache'
+    return resp
 
 @app.route('/healthz')
 def health_check():
@@ -199,13 +214,13 @@ def chat():
                             answer = format_generic_answer(research_result, user_input)
                         
                         # Return properly formatted response
-                        return jsonify({
+                        return json_no_cache({
                             "ok": True,
                             "query": user_input,
                             "answer": answer,
                             "raw": {"research": research_result},
                             "ts": datetime.utcnow().timestamp()
-                        })
+                        }, schema="v2")
                     else:
                         # If HTML or other format, create error response
                         return jsonify({
@@ -238,7 +253,7 @@ def chat():
                 })
         
         # Default response for other queries
-        return jsonify({
+        return json_no_cache({
             "ok": True,
             "query": user_input,
             "answer": {
@@ -252,7 +267,7 @@ def chat():
                 "ts": datetime.utcnow().timestamp()
             },
             "ts": datetime.utcnow().timestamp()
-        })
+        }, schema="v2")
         
     except Exception as e:
         logger.error(f"Chat error: {e}")

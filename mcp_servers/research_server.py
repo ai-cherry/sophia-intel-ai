@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 # Pydantic models
 class ResearchRequest(BaseModel):
     query: str
-    sources: Optional[List[str]] = ["serper", "tavily", "zenrows"]
+    sources: Optional[List[str]] = ["serper", "tavily", "zenrows", "apify"]
     max_results_per_source: Optional[int] = 10
     include_content: Optional[bool] = True
     summarize: Optional[bool] = True
@@ -148,10 +148,64 @@ async def search_tavily(query: str, api_key: str, max_results: int = 10) -> List
 async def search_zenrows(query: str, api_key: str, max_results: int = 10) -> List[ResearchSource]:
     """Search using ZenRows for web scraping."""
     try:
-        # TODO: Implement ZenRows web scraping
-        logger.warning("ZenRows search not yet implemented")
-        return []
+        # First get search results from Google via ZenRows
+        search_url = f"https://www.google.com/search?q={query}&num={max_results}"
         
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                "https://api.zenrows.com/v1/",
+                params={
+                    "url": search_url,
+                    "apikey": api_key,
+                    "js_render": "true",
+                    "premium_proxy": "true"
+                },
+                timeout=30.0
+            )
+            
+            if response.status_code == 200:
+                html_content = response.text
+                sources = []
+                
+                # Parse Google search results from HTML
+                from bs4 import BeautifulSoup
+                soup = BeautifulSoup(html_content, 'html.parser')
+                
+                # Find search result containers
+                search_results = soup.find_all('div', class_='g')
+                
+                for i, result in enumerate(search_results[:max_results]):
+                    try:
+                        # Extract title
+                        title_elem = result.find('h3')
+                        title = title_elem.get_text() if title_elem else "No title"
+                        
+                        # Extract URL
+                        link_elem = result.find('a')
+                        url = link_elem.get('href') if link_elem else ""
+                        
+                        # Extract snippet
+                        snippet_elem = result.find('span', class_='aCOpRe') or result.find('div', class_='VwiC3b')
+                        snippet = snippet_elem.get_text() if snippet_elem else ""
+                        
+                        if url and title:
+                            sources.append(ResearchSource(
+                                name="zenrows",
+                                url=url,
+                                title=title,
+                                snippet=snippet,
+                                relevance_score=0.9 - (i * 0.05)  # Decreasing relevance
+                            ))
+                    except Exception as e:
+                        logger.warning(f"Failed to parse search result: {e}")
+                        continue
+                
+                logger.info(f"ZenRows returned {len(sources)} sources for query: {query}")
+                return sources
+            else:
+                logger.error(f"ZenRows API error: {response.status_code} - {response.text}")
+                return []
+                
     except Exception as e:
         logger.error(f"ZenRows search failed: {e}")
         return []
@@ -159,10 +213,96 @@ async def search_zenrows(query: str, api_key: str, max_results: int = 10) -> Lis
 async def search_apify(query: str, api_token: str, max_results: int = 10) -> List[ResearchSource]:
     """Search using Apify actors."""
     try:
-        # TODO: Implement Apify actor calls
-        logger.warning("Apify search not yet implemented")
-        return []
+        # Use Apify's Google Search Results Scraper actor
+        actor_id = "apify/google-search-results-scraper"
         
+        # Start the actor run
+        async with httpx.AsyncClient() as client:
+            # Start actor run
+            run_response = await client.post(
+                f"https://api.apify.com/v2/acts/{actor_id}/runs",
+                headers={
+                    "Authorization": f"Bearer {api_token}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "queries": [query],
+                    "maxPagesPerQuery": 1,
+                    "resultsPerPage": max_results,
+                    "mobileResults": False,
+                    "languageCode": "en",
+                    "countryCode": "US"
+                },
+                timeout=30.0
+            )
+            
+            if run_response.status_code != 201:
+                logger.error(f"Apify actor start failed: {run_response.status_code}")
+                return []
+            
+            run_data = run_response.json()
+            run_id = run_data["data"]["id"]
+            
+            # Wait for the run to complete (with timeout)
+            max_wait_time = 60  # seconds
+            wait_time = 0
+            
+            while wait_time < max_wait_time:
+                status_response = await client.get(
+                    f"https://api.apify.com/v2/actor-runs/{run_id}",
+                    headers={"Authorization": f"Bearer {api_token}"},
+                    timeout=10.0
+                )
+                
+                if status_response.status_code == 200:
+                    status_data = status_response.json()
+                    status = status_data["data"]["status"]
+                    
+                    if status == "SUCCEEDED":
+                        break
+                    elif status in ["FAILED", "ABORTED", "TIMED-OUT"]:
+                        logger.error(f"Apify run failed with status: {status}")
+                        return []
+                
+                await asyncio.sleep(2)
+                wait_time += 2
+            
+            if wait_time >= max_wait_time:
+                logger.error("Apify run timed out")
+                return []
+            
+            # Get the results
+            results_response = await client.get(
+                f"https://api.apify.com/v2/datasets/{run_data['data']['defaultDatasetId']}/items",
+                headers={"Authorization": f"Bearer {api_token}"},
+                timeout=30.0
+            )
+            
+            if results_response.status_code == 200:
+                results_data = results_response.json()
+                sources = []
+                
+                for item in results_data:
+                    if "organicResults" in item:
+                        for i, result in enumerate(item["organicResults"][:max_results]):
+                            try:
+                                sources.append(ResearchSource(
+                                    name="apify",
+                                    url=result.get("url", ""),
+                                    title=result.get("title", ""),
+                                    snippet=result.get("description", ""),
+                                    relevance_score=0.85 - (i * 0.05)  # Decreasing relevance
+                                ))
+                            except Exception as e:
+                                logger.warning(f"Failed to parse Apify result: {e}")
+                                continue
+                
+                logger.info(f"Apify returned {len(sources)} sources for query: {query}")
+                return sources
+            else:
+                logger.error(f"Apify results fetch failed: {results_response.status_code}")
+                return []
+                
     except Exception as e:
         logger.error(f"Apify search failed: {e}")
         return []
@@ -320,7 +460,7 @@ async def conduct_deep_research(
         for query in base_queries:
             research_request = ResearchRequest(
                 query=query,
-                sources=["serper", "tavily", "zenrows"],
+                sources=["serper", "tavily", "zenrows", "apify"],
                 max_results_per_source=max_results_per_query,
                 include_content=True,
                 summarize=False  # We'll summarize at the end
@@ -469,17 +609,19 @@ async def research_server_health():
         "serper": "configured" if os.getenv("SERPER_API_KEY") else "missing",
         "tavily": "configured" if os.getenv("TAVILY_API_KEY") else "missing",
         "zenrows": "configured" if os.getenv("ZENROWS_API_KEY") else "missing",
-        "apify": "configured" if os.getenv("APIFY_API_TOKEN") else "missing"
+        "apify": "configured" if os.getenv("APIFY_API_TOKEN") else "missing",
+        "bright_data": "not_implemented"
     }
     
     return {
         "status": "healthy",
-        "service": "research_server",
-        "stored_research": len(research_store),
+        "service": "sophia-mcp-research",
+        "version": "1.0.0",
         "api_keys": api_keys_status,
+        "research_store_size": len(research_store),
         "capabilities": [
             "multi_source_search",
-            "deep_research",
+            "deep_research", 
             "content_summarization",
             "source_deduplication"
         ]

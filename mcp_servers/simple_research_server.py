@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 # Pydantic models
 class ResearchRequest(BaseModel):
     query: str
-    sources: Optional[List[str]] = ["serper", "tavily"]
+    sources: Optional[List[str]] = ["serper", "tavily", "apify", "zenrows"]
     max_results_per_source: Optional[int] = 5
     include_content: Optional[bool] = True
     summarize: Optional[bool] = True
@@ -123,6 +123,133 @@ async def search_tavily(query: str, api_key: str, max_results: int = 5) -> List[
                 
     except Exception as e:
         logger.error(f"Tavily search failed: {e}")
+        return []
+
+async def search_apify(query: str, api_key: str, max_results: int = 5) -> List[ResearchSource]:
+    """Search using Apify Google Search Scraper."""
+    try:
+        async with httpx.AsyncClient() as client:
+            # Start Apify actor run
+            response = await client.post(
+                "https://api.apify.com/v2/acts/apify~google-search-scraper/runs",
+                headers={"Authorization": f"Bearer {api_key}"},
+                json={
+                    "queries": [query],
+                    "resultsPerPage": max_results,
+                    "countryCode": "US",
+                    "languageCode": "en",
+                    "mobileResults": False,
+                    "includeUnfilteredResults": False
+                },
+                timeout=60.0
+            )
+            
+            if response.status_code == 201:
+                run_data = response.json()
+                run_id = run_data["data"]["id"]
+                
+                # Wait for completion and get results
+                await asyncio.sleep(5)  # Wait for processing
+                
+                results_response = await client.get(
+                    f"https://api.apify.com/v2/acts/apify~google-search-scraper/runs/{run_id}/dataset/items",
+                    headers={"Authorization": f"Bearer {api_key}"},
+                    timeout=30.0
+                )
+                
+                if results_response.status_code == 200:
+                    results = results_response.json()
+                    sources = []
+                    
+                    for result in results:
+                        if result.get("organicResults"):
+                            for organic in result["organicResults"][:max_results]:
+                                sources.append(ResearchSource(
+                                    name="apify",
+                                    url=organic.get("url", ""),
+                                    title=organic.get("title", ""),
+                                    snippet=organic.get("description", ""),
+                                    relevance_score=0.75
+                                ))
+                    
+                    logger.info(f"Apify returned {len(sources)} results for query: {query}")
+                    return sources
+                else:
+                    logger.error(f"Apify results error: {results_response.status_code}")
+                    return []
+            else:
+                logger.error(f"Apify API error: {response.status_code} - {response.text}")
+                return []
+                
+    except Exception as e:
+        logger.error(f"Apify search failed: {e}")
+        return []
+
+async def search_zenrows(query: str, api_key: str, max_results: int = 5) -> List[ResearchSource]:
+    """Search using ZenRows web scraping for Google results."""
+    try:
+        async with httpx.AsyncClient() as client:
+            # Use ZenRows to scrape Google search results
+            google_url = f"https://www.google.com/search?q={query}&num={max_results}"
+            
+            response = await client.get(
+                "https://api.zenrows.com/v1/",
+                params={
+                    "url": google_url,
+                    "apikey": api_key,
+                    "js_render": "true",
+                    "premium_proxy": "true",
+                    "proxy_country": "US"
+                },
+                timeout=45.0
+            )
+            
+            if response.status_code == 200:
+                # Parse HTML content for search results
+                html_content = response.text
+                sources = []
+                
+                # Simple regex parsing for Google results
+                import re
+                
+                # Extract search result patterns
+                title_pattern = r'<h3[^>]*>([^<]+)</h3>'
+                url_pattern = r'<a[^>]*href="([^"]*)"[^>]*>'
+                snippet_pattern = r'<span[^>]*>([^<]{50,200})</span>'
+                
+                titles = re.findall(title_pattern, html_content)
+                urls = re.findall(url_pattern, html_content)
+                snippets = re.findall(snippet_pattern, html_content)
+                
+                # Filter valid URLs (not Google internal)
+                valid_results = []
+                for i, url in enumerate(urls):
+                    if not any(x in url for x in ['google.com', 'youtube.com', 'maps.google']):
+                        if i < len(titles) and i < len(snippets):
+                            valid_results.append({
+                                'title': titles[i] if i < len(titles) else 'No title',
+                                'url': url,
+                                'snippet': snippets[i] if i < len(snippets) else 'No description'
+                            })
+                
+                # Create sources from valid results
+                for result in valid_results[:max_results]:
+                    sources.append(ResearchSource(
+                        name="zenrows",
+                        url=result['url'],
+                        title=result['title'],
+                        snippet=result['snippet'],
+                        relevance_score=0.7
+                    ))
+                
+                logger.info(f"ZenRows returned {len(sources)} results for query: {query}")
+                return sources
+            else:
+                logger.error(f"ZenRows API error: {response.status_code} - {response.text}")
+                return []
+                
+    except Exception as e:
+        logger.error(f"ZenRows search failed: {e}")
         return []
 
 def generate_simple_summary(query: str, sources: List[ResearchSource]) -> str:

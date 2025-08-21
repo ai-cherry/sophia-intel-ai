@@ -1,0 +1,12 @@
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100   114  100   114    0     0   1486      0 --:--:-- --:--:-- --:--:--  1500
+HTTP/2 200 
+server: Fly/da35c1382 (2025-08-20)
+date: Thu, 21 Aug 2025 15:21:51 GMT
+content-length: 114
+content-type: application/json
+via: 2 fly.io
+fly-request-id: 01K36KHP0PRDYNC7KQ17FKH4C8-iad
+
+{"service":"sophia-dashboard-live","status":"healthy","timestamp":"2025-08-21T15:21:51.388607","version":"4.1.0"}

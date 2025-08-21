@@ -1,0 +1,12 @@
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100    62  100    62    0     0    755      0 --:--:-- --:--:-- --:--:--   765
+HTTP/2 200 
+date: Thu, 21 Aug 2025 15:18:45 GMT
+server: Fly/da35c1382 (2025-08-20)
+content-length: 62
+content-type: application/json
+via: 2 fly.io
+fly-request-id: 01K36KC1KSVANSZJ4WH3SC2KFP-iad
+
+{"status":"healthy","service":"code-server","version":"4.2.0"}---

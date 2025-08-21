@@ -1,0 +1,9 @@
+HTTP/2 200 
+date: Thu, 21 Aug 2025 16:39:27 GMT
+server: Fly/6e6a4dd217 (2025-08-21)
+content-length: 65
+content-type: application/json
+via: 2 fly.io, 2 fly.io
+fly-request-id: 01K36QZQD771VK0YBMQGQBPVAX-iad
+
+{"status":"ok","service":"sophia-research-mcp","version":"4.2.0"}

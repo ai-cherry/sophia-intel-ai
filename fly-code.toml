@@ -1,18 +1,24 @@
-app = "sophia-context-v42"
+app = "sophia-code"
 primary_region = "iad"
 
 [build]
-  dockerfile = "fly/Dockerfile.context-standalone"
+  dockerfile = "Dockerfile.code"
 
 [env]
   PORT = "8080"
-  PYTHONPATH = "/app"
 
 [[services]]
   internal_port = 8080
+  processes = ["app"]
   protocol = "tcp"
+  script_checks = []
+  [services.concurrency]
+    hard_limit = 25
+    soft_limit = 20
+    type = "connections"
 
   [[services.ports]]
+    force_https = true
     handlers = ["http"]
     port = 80
 
@@ -20,23 +26,18 @@ primary_region = "iad"
     handlers = ["tls", "http"]
     port = 443
 
-  [services.concurrency]
-    hard_limit = 25
-    soft_limit = 20
-    type = "connections"
-
   [[services.tcp_checks]]
-    grace_period = "10s"
+    grace_period = "1s"
     interval = "15s"
     restart_limit = 0
     timeout = "2s"
 
   [[services.http_checks]]
-    grace_period = "10s"
-    interval = "30s"
+    interval = "10s"
+    grace_period = "5s"
     method = "get"
-    path = "/health"
+    path = "/healthz"
     protocol = "http"
-    restart_limit = 0
-    timeout = "5s"
+    timeout = "2s"
+    tls_skip_verify = false
 

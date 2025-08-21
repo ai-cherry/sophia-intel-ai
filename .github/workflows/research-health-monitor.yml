@@ -1,0 +1,72 @@
+name: 🏥 Research Service Health Monitor
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - 'mcp_servers/research_router.py'
+      - 'mcp_servers/app.py'
+      - 'docker/production/Dockerfile.mcp'
+
+jobs:
+  health-research:
+    name: Health — research /healthz until green
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      URL: https://sophia-research.fly.dev
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Wait for /healthz (research)
+        env:
+          MAX_ATTEMPTS: "30"
+          SLEEP_SECONDS: "10"
+        run: |
+          mkdir -p proofs/healthz
+          attempts=${MAX_ATTEMPTS}
+          i=1
+          while [ $i -le $attempts ]; do
+            out="$(curl -i -sS "${URL}/healthz" || true)"
+            code="$(printf "%s" "$out" | head -n1 | awk '{print $2}')"
+            printf "Attempt %02d/%02d → HTTP %s\n" "$i" "$attempts" "${code:-N/A}"
+            printf "%s\n" "$out" > "proofs/healthz/research.txt"
+            if [ "$code" = "200" ]; then
+              echo "✅ ${URL}/healthz is healthy."
+              exit 0
+            fi
+            sleep "${SLEEP_SECONDS}"
+            i=$((i+1))
+          done
+          echo "❌ ${URL}/healthz never returned 200 after $attempts attempts" | tee "proofs/healthz/research_fail.txt"
+          exit 1
+
+      - name: On failure - attach Fly logs (tail)
+        if: failure()
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          mkdir -p proofs/research
+          # Install flyctl
+          curl -L https://fly.io/install.sh | sh
+          export PATH="$HOME/.fly/bin:$PATH"
+          flyctl logs -a sophia-research --since 15m | tail -n 200 > proofs/research/log_tail_full.txt || true
+          tail -n 20 proofs/research/log_tail_full.txt > proofs/research/log_tail_last20.txt || true
+          # Extract first traceback line for quick diagnosis
+          grep -n "Traceback\|Error\|Exception" proofs/research/log_tail_full.txt | head -1 > proofs/research/error_summary.txt || echo "No traceback found" > proofs/research/error_summary.txt
+
+      - name: Commit health proofs
+        if: always()
+        run: |
+          git config user.name  "sophia-bot"
+          git config user.email "sophia-bot@users.noreply.github.com"
+          git add proofs/healthz/*.txt proofs/research/*.txt 2>/dev/null || true
+          if ! git diff --cached --quiet; then
+            git commit -m "[proof] research: healthz wait + logs"
+            git push
+          else
+            echo "No proof changes to commit."
+          fi
+

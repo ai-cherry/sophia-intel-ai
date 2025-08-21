@@ -1,12 +1,12 @@
-app = "sophia-research"
+app = "sophia-context-v42"
 primary_region = "iad"
 
 [build]
-  dockerfile = "fly/Dockerfile.research"
+  dockerfile = "fly/Dockerfile.context"
 
 [env]
   PORT = "8080"
-  MCP_ROLE = "research"
+  MCP_ROLE = "context"
 
 [[services]]
   protocol = "tcp"
@@ -19,7 +19,7 @@ primary_region = "iad"
     port = 443
     handlers = ["tls","http"]
 
-  [[services.http_checks]]
+  [services.http_checks]
     method = "GET"
     path = "/healthz"
     interval = "10s"
@@ -27,7 +27,7 @@ primary_region = "iad"
     grace_period = "10s"
 
 [vm]
-  memory = "512mb"
+  memory = "1gb"
   cpu_kind = "shared"
   cpus = 1
 

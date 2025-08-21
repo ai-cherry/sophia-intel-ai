@@ -1,0 +1,44 @@
+{
+  "version": "4.2.0",
+  "generated_at": "2025-08-21T07:50:00Z",
+  "services": [
+    {
+      "name": "sophia-code",
+      "url": "https://sophia-code.fly.dev",
+      "health_endpoint": "/healthz",
+      "expected_status": 200,
+      "proof_file": "proofs/healthz/sophia-code.txt"
+    },
+    {
+      "name": "sophia-research",
+      "url": "https://sophia-research.fly.dev",
+      "health_endpoint": "/healthz",
+      "expected_status": 200,
+      "proof_file": "proofs/healthz/sophia-research.txt",
+      "endpoint_proofs": [
+        {
+          "method": "POST",
+          "path": "/search",
+          "body": {"query":"AI orchestration platforms","max_sources":5},
+          "proof_file": "proofs/endpoints/research-search.json"
+        }
+      ]
+    },
+    {
+      "name": "sophia-context",
+      "url": "https://sophia-context-v42.fly.dev",
+      "health_endpoint": "/healthz",
+      "expected_status": 200,
+      "proof_file": "proofs/healthz/sophia-context.txt",
+      "endpoint_proofs": [
+        {
+          "method": "POST",
+          "path": "/context/search",
+          "body": {"query":"AgentManager create_swarm","k":5},
+          "proof_file": "proofs/endpoints/context-search.json"
+        }
+      ]
+    }
+  ]
+}
+

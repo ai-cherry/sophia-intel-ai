@@ -1,0 +1,17 @@
+$ curl -i https://sophia-research.fly.dev/healthz
+Date: Wed, 21 Aug 2025 07:03:00 GMT
+Command executed at: 2025-08-21T07:03:00Z
+
+curl: (7) Failed to connect to sophia-research.fly.dev port 443: Connection refused
+
+$ curl -i https://sophia-research.fly.dev/health
+Date: Wed, 21 Aug 2025 07:03:05 GMT
+Command executed at: 2025-08-21T07:03:05Z
+
+curl: (7) Failed to connect to sophia-research.fly.dev port 443: Connection refused
+
+Status: ❌ FAILED
+Service is completely non-responsive
+Both /healthz and /health endpoints fail
+Requires immediate investigation and redeployment
+

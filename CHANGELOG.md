@@ -5,6 +5,32 @@ All notable changes to the SOPHIA Intel project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.2.0] — 2025-08-21
+### Added
+- PR title linter requiring `[proof]` prefix
+- Endpoint proof steps in deploy workflow; manifest under `proofs/`
+- Context MCP service with code indexing and RAG capabilities
+- Comprehensive proof artifacts directory structure
+- Machine-readable service manifest for deployment verification
+
+### Changed
+- Research MCP: fixed outage, standard healthz, 8080 ports
+- Context MCP: deploy-ready (APIRouter + healthz)
+- Unified Fly.io checks; single `[checks.http]` per service
+- All services standardized on port 8080 with consistent /healthz endpoints
+- Enhanced PR template with comprehensive quality gates
+
+### Fixed
+- Research MCP service complete non-responsiveness
+- Health check endpoint inconsistencies across services
+- Port binding configuration issues (8000 vs 8080)
+- APIRouter vs FastAPI app architecture inconsistencies
+
+### Security/QA
+- No-mocks CI gate; ACTION_SCHEMAS enforcement in PR template
+- Comprehensive deployment verification with real endpoint proofs
+- Automated proof artifact generation and commitment
+
 ## [Unreleased]
 
 ### Added

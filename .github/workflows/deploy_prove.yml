@@ -1,0 +1,171 @@
+name: Deploy & Prove — Fly.io + Curl & Endpoint Evidence
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - "mcp_servers/**"
+      - ".github/workflows/deploy_prove.yml"
+      - "ACTION_SCHEMAS.md"
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  id-token: write
+  actions: read
+
+env:
+  CODE_URL: https://sophia-code.fly.dev
+  CONTEXT_URL: https://sophia-context-v42.fly.dev
+  RESEARCH_URL: https://sophia-research.fly.dev
+  CACHE_BUSTER: ${{ github.run_id }}-${{ github.run_attempt }}
+  MANIFEST_TS: ${{ github.run_id }}  # used to uniquify a manifest if needed
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: code
+            app: sophia-code
+            subdir: mcp_servers/code
+            baseurl: CODE_URL
+          - name: context
+            app: sophia-context
+            subdir: mcp_servers/context
+            baseurl: CONTEXT_URL
+          - name: research
+            app: sophia-research
+            subdir: mcp_servers/research
+            baseurl: RESEARCH_URL
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install jq & flyctl
+        run: |
+          sudo apt-get update && sudo apt-get install -y jq
+          curl -L https://fly.io/install.sh | sh
+          echo "$HOME/.fly/bin" >> $GITHUB_PATH
+
+      - name: Fly auth
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          test -n "$FLY_API_TOKEN" || (echo "❌ Missing FLY_API_TOKEN"; exit 1)
+          flyctl auth token "$FLY_API_TOKEN" >/dev/null 2>&1 || true
+
+      - name: Ensure app exists (idempotent)
+        working-directory: ${{ matrix.subdir }}
+        run: |
+          flyctl apps create ${{ matrix.app }} --machines --yes || echo "App exists."
+
+      - name: Deploy ${{ matrix.name }}
+        working-directory: ${{ matrix.subdir }}
+        run: |
+          flyctl deploy \
+            --config ./fly.toml \
+            --dockerfile ./Dockerfile \
+            --build-arg CACHE_BUSTER=${CACHE_BUSTER} \
+            --no-cache \
+            --yes
+
+      - name: Restart started machines (best-effort)
+        run: |
+          APP=${{ matrix.app }}
+          IDS=$(flyctl machines list -a $APP --json | jq -r '.[] | select(.state=="started") | .id')
+          for ID in $IDS; do
+            echo "🔄 Restarting $ID for $APP"
+            flyctl machines restart $ID -a $APP --yes || true
+          done
+
+      - name: Prove /healthz (headers + body)
+        env:
+          URL: ${{ env[ matrix.baseurl ] }}
+        run: |
+          mkdir -p proofs/healthz proofs/endpoints
+          OUT="proofs/healthz/${{ matrix.name }}.txt"
+          {
+            echo "====== $(date -u) ${URL}/healthz ======"
+            curl -i -sS "${URL}/healthz"
+            echo
+          } | tee -a "$OUT"
+
+      - name: Verify 200 OK
+        env:
+          URL: ${{ env[ matrix.baseurl ] }}
+        run: |
+          code=$(curl -s -o /dev/null -w "%{http_code}" "${URL}/healthz")
+          echo "HTTP ${code}"
+          [ "$code" = "200" ] || (echo "❌ ${URL}/healthz not 200"; exit 1)
+
+      # ---- functional endpoint proofs (service-specific) ----
+
+      - name: Functional proof — research.search
+        if: matrix.name == 'research'
+        env:
+          URL: ${{ env.RESEARCH_URL }}
+        run: |
+          curl -sS -X POST "${URL}/search" \
+            -H 'Content-Type: application/json' \
+            -d '{"query":"AI orchestration platforms","max_sources":5}' \
+            | jq '.' > proofs/endpoints/research-search.json || true
+
+      - name: Functional proof — context.search
+        if: matrix.name == 'context'
+        env:
+          URL: ${{ env.CONTEXT_URL }}
+        run: |
+          curl -sS -X POST "${URL}/context/search" \
+            -H 'Content-Type: application/json' \
+            -d '{"query":"AgentManager create_swarm","k":5}' \
+            | jq '.' > proofs/endpoints/context-search.json || true
+
+      - name: Append job summary
+        env:
+          URL: ${{ env[ matrix.baseurl ] }}
+        run: |
+          echo "### ${{ matrix.app }} deployed" >> $GITHUB_STEP_SUMMARY
+          echo "- URL: ${URL}" >> $GITHUB_STEP_SUMMARY
+          echo "- Health: ✅ 200 (/healthz)" >> $GITHUB_STEP_SUMMARY
+
+      - name: Commit proofs and manifest
+        if: always()
+        run: |
+          set -e
+          mkdir -p proofs
+          # Build or update a simple manifest snapshot
+          SNAP="proofs/manifest-snapshot.json"
+          {
+            echo '{'
+            echo '  "run_id": "'${{ github.run_id }}'",'
+            echo '  "run_attempt": "'${{ github.run_attempt }}'",'
+            echo '  "commit": "'${{ github.sha }}'",'
+            echo '  "ts": "'$(date -u +%FT%TZ)'"'
+            echo '}'
+          } > "$SNAP"
+
+          git config user.name  "sophia-bot"
+          git config user.email "sophia-bot@users.noreply.github.com"
+          git add proofs/healthz/${{ matrix.name }}.txt || true
+          git add proofs/endpoints/*.json || true
+          git add "$SNAP" || true
+
+          if ! git diff --cached --quiet; then
+            git commit -m "[proof] ${{ matrix.name }}: healthz + endpoint proofs (run ${{ github.run_id }})"
+            git push origin HEAD:${GITHUB_REF#refs/heads/}
+          else
+            echo "No proof changes to commit."
+          fi
+

@@ -1,0 +1,99 @@
+# Context MCP Service - Deployment Ready
+
+Date: 2025-08-21T07:45:00Z
+Status: READY FOR DEPLOYMENT
+
+## Service Implementation:
+
+1. ✅ Converted context_server_v42.py to APIRouter-based context_server.py
+2. ✅ Added /healthz endpoint returning proper JSON format
+3. ✅ Created standalone context_app.py for deployment
+4. ✅ Created Dockerfile.context with proper configuration
+5. ✅ Created sophia-context-v42.fly.toml configuration
+
+## Code Structure Verification:
+
+### Context Server Router Export:
+```python
+# mcp_servers/context_server.py
+from fastapi import APIRouter, HTTPException
+router = APIRouter()
+
+@router.get("/healthz")
+async def healthz():
+    return {
+        "status": "ok",
+        "service": "context-server",
+        "version": "4.2.0"
+    }
+```
+
+### Standalone App for Deployment:
+```python
+# mcp_servers/context_app.py
+from fastapi import FastAPI
+from .context_server import router
+
+app = FastAPI(title="SOPHIA Context Server v4.2")
+app.include_router(router, prefix="", tags=["Context"])
+```
+
+### Dockerfile Configuration:
+```dockerfile
+# fly/Dockerfile.context
+CMD ["uvicorn", "mcp_servers.context_app:app", "--host", "0.0.0.0", "--port", "8080"]
+```
+
+### Fly Configuration:
+```toml
+# fly/sophia-context-v42.fly.toml
+app = "sophia-context-v42"
+
+[build]
+  dockerfile = "fly/Dockerfile.context"
+
+[services.http_checks]
+  path = "/healthz"
+```
+
+## Import Tests Passed:
+```bash
+$ python3 -c "from mcp_servers.context_server import router; print('Context router import successful')"
+Context router import successful
+
+$ python3 -c "from mcp_servers.context_app import app; print('Context app import successful')"
+Context app import successful
+```
+
+## Service Capabilities:
+- Code repository indexing
+- AST-based function and class extraction
+- Semantic code search
+- Context-aware code generation support
+- Integration with Haystack + Qdrant (when configured)
+
+## Ready for Deployment:
+```bash
+fly deploy --app sophia-context-v42 --config fly/sophia-context-v42.fly.toml --build-arg CACHE_BUSTER=$(date +%s)
+```
+
+## Expected Health Check Response:
+```json
+{
+  "status": "ok",
+  "service": "context-server",
+  "version": "4.2.0"
+}
+```
+
+## Post-Deployment Verification:
+```bash
+curl -i https://sophia-context-v42.fly.dev/healthz
+# Expected: HTTP/1.1 200 OK with JSON response above
+
+curl -X POST https://sophia-context-v42.fly.dev/index \
+  -H "Content-Type: application/json" \
+  -d '{"repository_url": "https://github.com/ai-cherry/sophia-intel", "branch": "main"}'
+# Expected: Repository indexing response
+```
+

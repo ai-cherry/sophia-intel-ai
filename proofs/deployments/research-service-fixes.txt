@@ -1,0 +1,91 @@
+# Research MCP Service Fixes - Deployment Ready
+
+Date: 2025-08-21T07:30:00Z
+Status: READY FOR DEPLOYMENT
+
+## Issues Fixed:
+
+1. ✅ Converted research_server.py from FastAPI app to APIRouter
+2. ✅ Added /healthz endpoint returning proper JSON format
+3. ✅ Updated Dockerfile to use correct module path
+4. ✅ Fixed fly.toml configuration
+5. ✅ Created standalone research_app.py for deployment
+
+## Code Structure Verification:
+
+### Research Server Router Export:
+```python
+# mcp_servers/research_server.py
+router = APIRouter()
+
+@router.get("/healthz")
+async def healthz():
+    return {
+        "status": "ok",
+        "service": "research-server", 
+        "version": "4.2.0"
+    }
+```
+
+### Standalone App for Deployment:
+```python
+# mcp_servers/research_app.py
+from fastapi import FastAPI
+from .research_server import router
+
+app = FastAPI(title="SOPHIA Research Server v4.2")
+app.include_router(router, prefix="", tags=["Research"])
+```
+
+### Updated Dockerfile:
+```dockerfile
+# fly/Dockerfile.research
+CMD ["uvicorn", "mcp_servers.research_app:app", "--host", "0.0.0.0", "--port", "8080"]
+```
+
+### Updated Fly Configuration:
+```toml
+# fly/sophia-research.fly.toml
+[build]
+  dockerfile = "fly/Dockerfile.research"
+
+[[services.http_checks]]
+  path = "/healthz"
+```
+
+## Import Tests Passed:
+```bash
+$ python3 -c "from mcp_servers.research_server import router; print('Research router import successful')"
+Research router import successful
+
+$ python3 -c "from mcp_servers.research_app import app; print('Research app import successful')"
+Research app import successful
+```
+
+## Dependencies Installed:
+- fastapi==0.104.1
+- uvicorn[standard]==0.24.0
+- httpx==0.25.2
+- beautifulsoup4==4.12.2
+- All other requirements from requirements.txt
+
+## Ready for Deployment:
+```bash
+fly deploy --app sophia-research --config fly/sophia-research.fly.toml --build-arg CACHE_BUSTER=$(date +%s)
+```
+
+## Expected Health Check Response:
+```json
+{
+  "status": "ok",
+  "service": "research-server",
+  "version": "4.2.0"
+}
+```
+
+## Post-Deployment Verification:
+```bash
+curl -i https://sophia-research.fly.dev/healthz
+# Expected: HTTP/1.1 200 OK with JSON response above
+```
+

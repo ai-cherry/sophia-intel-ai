@@ -1,0 +1,60 @@
+name: PR Title Lint — Require [proof] Prefix
+
+on:
+  pull_request_target:
+    types: [opened, edited, reopened, synchronize]
+
+permissions:
+  pull-requests: write   # to leave a review comment
+  contents: read
+
+jobs:
+  check-title:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Validate PR title format
+        id: validate
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = context.payload.pull_request.title || "";
+            const number = context.payload.pull_request.number;
+            const owner = context.repo.owner;
+            const repo  = context.repo.repo;
+
+            // Require: [proof] <something>
+            const ok = /^\[proof\]\s.+/i.test(title);
+
+            if (!ok) {
+              const body = [
+                `❌ **PR title check failed**`,
+                ``,
+                `This repository enforces a reality-first workflow: every PR must begin with \`[proof]\`.`,
+                ``,
+                `**Current title:**`,
+                `> ${title || "(empty title)"}`,
+                ``,
+                `**Expected format:**`,
+                `\`[proof] <scope>: <change>\``,
+                ``,
+                `Examples:`,
+                `- \`[proof] code-mcp: add /healthz and register actions\``,
+                `- \`[proof] context-mcp: index→search endpoints (Haystack+Qdrant)\``,
+                `- \`[proof] ci: fail on mock stubs or unhealthy /healthz\``,
+                ``,
+                `Also make sure your PR includes real artifacts per the template (curl outputs under \`proofs/\`, PR/commit SHAs, screenshots when relevant).`
+              ].join("\n");
+
+              // Post a review comment (dismissable)
+              await github.rest.pulls.createReview({
+                owner, repo, pull_number: number,
+                event: "REQUEST_CHANGES",
+                body
+              });
+
+              core.setFailed("PR title must start with [proof] and a space, e.g., [proof] context-mcp: add /healthz");
+            } else {
+              core.notice("PR title OK (prefix [proof] present).");
+            }
+

@@ -1,0 +1,9 @@
+HTTP/2 200 
+date: Thu, 21 Aug 2025 14:32:52 GMT
+server: Fly/da35c1382 (2025-08-20)
+content-length: 62
+content-type: application/json
+via: 2 fly.io
+fly-request-id: 01K36GR0MRM1M5YBH518307PS4-iad
+
+{"status":"healthy","service":"code-server","version":"4.2.0"}

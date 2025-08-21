@@ -168,7 +168,7 @@ async def _zenrows_google_search(query: str, api_key: str, sources: List[Researc
         # Construct Google search URL
         search_url = f"https://www.google.com/search?q={query.replace(' ', '+')}&num={max_results}"
         
-        # ZenRows API endpoint
+        # ZenRows API endpoint with simpler parameters
         zenrows_url = "https://api.zenrows.com/v1/"
         
         params = {
@@ -177,50 +177,57 @@ async def _zenrows_google_search(query: str, api_key: str, sources: List[Researc
             "js_render": "true",  # Enable JavaScript rendering
             "premium_proxy": "true",  # Use premium residential proxies
             "proxy_country": "US",  # Use US proxies
-            "wait": "2000",  # Wait 2 seconds for page load
-            "css_extractor": json.dumps({
-                "results": {
-                    "selector": ".g",  # Google search result containers
-                    "type": "list",
-                    "output": {
-                        "title": {"selector": "h3", "output": "text"},
-                        "link": {"selector": "a", "output": "@href"},
-                        "snippet": {"selector": ".VwiC3b", "output": "text"}
-                    }
-                }
-            })
         }
         
         async with httpx.AsyncClient() as client:
             response = await client.get(
                 zenrows_url,
                 params=params,
-                timeout=60.0  # ZenRows can take longer due to proxy routing
+                timeout=30.0  # Reduced timeout
             )
             
             if response.status_code == 200:
-                data = response.json()
+                html_content = response.text
+                logger.info(f"ZenRows returned HTML content of length: {len(html_content)}")
                 
-                if "results" in data and isinstance(data["results"], list):
-                    for result in data["results"][:max_results]:
-                        if result.get("title") and result.get("link"):
-                            # Clean up the link (remove Google redirect)
-                            link = result["link"]
-                            if link.startswith("/url?q="):
-                                link = link.split("/url?q=")[1].split("&")[0]
-                            
-                            sources.append(ResearchSource(
-                                name="zenrows-google",
-                                url=link,
-                                title=result["title"],
-                                snippet=result.get("snippet", ""),
-                                relevance_score=0.8
-                            ))
+                # Simple regex parsing for Google results
+                import re
+                
+                # Extract titles and URLs using regex patterns
+                title_pattern = r'<h3[^>]*>([^<]+)</h3>'
+                url_pattern = r'<a[^>]*href="(/url\?q=)?([^"&]+)"[^>]*>'
+                snippet_pattern = r'<span[^>]*class="[^"]*VwiC3b[^"]*"[^>]*>([^<]+)</span>'
+                
+                titles = re.findall(title_pattern, html_content)
+                urls = re.findall(url_pattern, html_content)
+                snippets = re.findall(snippet_pattern, html_content)
+                
+                logger.info(f"ZenRows extracted: {len(titles)} titles, {len(urls)} URLs, {len(snippets)} snippets")
+                
+                # Process results
+                for i in range(min(len(titles), len(urls), max_results)):
+                    title = titles[i] if i < len(titles) else ""
+                    url = urls[i][1] if i < len(urls) and len(urls[i]) > 1 else (urls[i][0] if i < len(urls) else "")
+                    snippet = snippets[i] if i < len(snippets) else ""
+                    
+                    # Clean up URL
+                    if url.startswith("http") and "google.com" not in url:
+                        sources.append(ResearchSource(
+                            name="zenrows",
+                            url=url,
+                            title=title,
+                            snippet=snippet,
+                            relevance_score=0.7
+                        ))
+                        
+                logger.info(f"ZenRows added {len([s for s in sources if s.name == 'zenrows'])} sources")
             else:
-                logger.error(f"ZenRows Google search failed: {response.status_code}")
+                logger.error(f"ZenRows Google search failed: {response.status_code} - {response.text}")
                 
     except Exception as e:
         logger.error(f"ZenRows Google search failed: {e}")
+        import traceback
+        logger.error(f"ZenRows traceback: {traceback.format_exc()}")
 
 async def _zenrows_specialized_scraping(query: str, api_key: str, sources: List[ResearchSource], max_results: int):
     """Perform specialized scraping using ZenRows based on query content."""
@@ -493,12 +500,16 @@ async def search_apify(query: str, api_token: str, max_results: int = 10) -> Lis
     try:
         sources = []
         
-        # Use Google Search Results Scraper actor for general queries
-        google_actor_id = "apify/google-search-scraper"
+        # Use the sync endpoint for faster results
+        apify_url = "https://api.apify.com/v2/acts/apify~google-search-scraper/run-sync-get-dataset-items"
         
-        # Prepare input for Google Search Scraper
-        actor_input = {
-            "queries": [query],
+        headers = {
+            "Authorization": f"Bearer {api_token}",
+            "Content-Type": "application/json"
+        }
+        
+        payload = {
+            "queries": query,
             "maxPagesPerQuery": 1,
             "resultsPerPage": max_results,
             "mobileResults": False,
@@ -507,77 +518,39 @@ async def search_apify(query: str, api_token: str, max_results: int = 10) -> Lis
         }
         
         async with httpx.AsyncClient() as client:
-            # Start the actor run
-            run_response = await client.post(
-                f"https://api.apify.com/v2/acts/{google_actor_id}/runs",
-                headers={
-                    "Authorization": f"Bearer {api_token}",
-                    "Content-Type": "application/json"
-                },
-                json=actor_input,
+            response = await client.post(
+                apify_url,
+                headers=headers,
+                json=payload,
                 timeout=30.0
             )
             
-            if run_response.status_code != 201:
-                logger.error(f"Apify actor start failed: {run_response.status_code}")
-                return []
+            logger.info(f"Apify response status: {response.status_code}")
             
-            run_data = run_response.json()
-            run_id = run_data["data"]["id"]
-            
-            # Wait for the run to complete (with timeout)
-            max_wait_time = 60  # seconds
-            wait_interval = 2   # seconds
-            waited_time = 0
-            
-            while waited_time < max_wait_time:
-                status_response = await client.get(
-                    f"https://api.apify.com/v2/acts/{google_actor_id}/runs/{run_id}",
-                    headers={"Authorization": f"Bearer {api_token}"},
-                    timeout=10.0
-                )
+            if response.status_code == 200:
+                data = response.json()
+                logger.info(f"Apify returned {len(data)} items")
                 
-                if status_response.status_code == 200:
-                    status_data = status_response.json()
-                    status = status_data["data"]["status"]
-                    
-                    if status == "SUCCEEDED":
-                        break
-                    elif status in ["FAILED", "ABORTED", "TIMED-OUT"]:
-                        logger.error(f"Apify actor run failed with status: {status}")
-                        return []
+                for item in data[:max_results]:
+                    if item.get("title") and item.get("url"):
+                        sources.append(ResearchSource(
+                            name="apify",
+                            url=item["url"],
+                            title=item["title"],
+                            snippet=item.get("description", ""),
+                            relevance_score=0.8
+                        ))
+                        
+                logger.info(f"Apify added {len([s for s in sources if s.name == 'apify'])} sources")
+            else:
+                logger.error(f"Apify search failed: {response.status_code} - {response.text}")
                 
-                await asyncio.sleep(wait_interval)
-                waited_time += wait_interval
-            
-            # Get the results
-            results_response = await client.get(
-                f"https://api.apify.com/v2/acts/{google_actor_id}/runs/{run_id}/dataset/items",
-                headers={"Authorization": f"Bearer {api_token}"},
-                timeout=30.0
-            )
-            
-            if results_response.status_code == 200:
-                results_data = results_response.json()
-                
-                for item in results_data:
-                    if "organicResults" in item:
-                        for result in item["organicResults"][:max_results]:
-                            sources.append(ResearchSource(
-                                name="apify",
-                                url=result.get("url", ""),
-                                title=result.get("title", ""),
-                                snippet=result.get("description", ""),
-                                relevance_score=0.75  # Apify provides good quality results
-                            ))
-            
-            # Try additional specialized scraping if query suggests specific domains
-            await _apify_specialized_scraping(query, api_token, sources, max_results, client)
-            
         return sources[:max_results]
         
     except Exception as e:
         logger.error(f"Apify search failed: {e}")
+        import traceback
+        logger.error(f"Apify traceback: {traceback.format_exc()}")
         return []
 
 async def _apify_specialized_scraping(query: str, api_token: str, sources: List[ResearchSource], max_results: int, client: httpx.AsyncClient):

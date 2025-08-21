@@ -146,26 +146,683 @@ async def search_tavily(query: str, api_key: str, max_results: int = 10) -> List
         return []
 
 async def search_zenrows(query: str, api_key: str, max_results: int = 10) -> List[ResearchSource]:
-    """Search using ZenRows for web scraping."""
+    """Search using ZenRows for proxy-based web scraping."""
     try:
-        # TODO: Implement ZenRows web scraping
-        logger.warning("ZenRows search not yet implemented")
-        return []
+        sources = []
+        
+        # First, use ZenRows to scrape Google search results
+        await _zenrows_google_search(query, api_key, sources, max_results)
+        
+        # Then try specialized scraping based on query content
+        await _zenrows_specialized_scraping(query, api_key, sources, max_results)
+        
+        return sources[:max_results]
         
     except Exception as e:
         logger.error(f"ZenRows search failed: {e}")
         return []
 
-async def search_apify(query: str, api_token: str, max_results: int = 10) -> List[ResearchSource]:
-    """Search using Apify actors."""
+async def _zenrows_google_search(query: str, api_key: str, sources: List[ResearchSource], max_results: int):
+    """Scrape Google search results using ZenRows."""
     try:
-        # TODO: Implement Apify actor calls
-        logger.warning("Apify search not yet implemented")
-        return []
+        # Construct Google search URL
+        search_url = f"https://www.google.com/search?q={query.replace(' ', '+')}&num={max_results}"
+        
+        # ZenRows API endpoint
+        zenrows_url = "https://api.zenrows.com/v1/"
+        
+        params = {
+            "url": search_url,
+            "apikey": api_key,
+            "js_render": "true",  # Enable JavaScript rendering
+            "premium_proxy": "true",  # Use premium residential proxies
+            "proxy_country": "US",  # Use US proxies
+            "wait": "2000",  # Wait 2 seconds for page load
+            "css_extractor": json.dumps({
+                "results": {
+                    "selector": ".g",  # Google search result containers
+                    "type": "list",
+                    "output": {
+                        "title": {"selector": "h3", "output": "text"},
+                        "link": {"selector": "a", "output": "@href"},
+                        "snippet": {"selector": ".VwiC3b", "output": "text"}
+                    }
+                }
+            })
+        }
+        
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                zenrows_url,
+                params=params,
+                timeout=60.0  # ZenRows can take longer due to proxy routing
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                if "results" in data and isinstance(data["results"], list):
+                    for result in data["results"][:max_results]:
+                        if result.get("title") and result.get("link"):
+                            # Clean up the link (remove Google redirect)
+                            link = result["link"]
+                            if link.startswith("/url?q="):
+                                link = link.split("/url?q=")[1].split("&")[0]
+                            
+                            sources.append(ResearchSource(
+                                name="zenrows-google",
+                                url=link,
+                                title=result["title"],
+                                snippet=result.get("snippet", ""),
+                                relevance_score=0.8
+                            ))
+            else:
+                logger.error(f"ZenRows Google search failed: {response.status_code}")
+                
+    except Exception as e:
+        logger.error(f"ZenRows Google search failed: {e}")
+
+async def _zenrows_specialized_scraping(query: str, api_key: str, sources: List[ResearchSource], max_results: int):
+    """Perform specialized scraping using ZenRows based on query content."""
+    try:
+        query_lower = query.lower()
+        
+        # Reddit scraping for community insights
+        if any(keyword in query_lower for keyword in ["reddit", "community", "discussion", "opinion"]):
+            await _zenrows_reddit_scraping(query, api_key, sources)
+        
+        # News site scraping for current events
+        if any(keyword in query_lower for keyword in ["news", "breaking", "latest", "current"]):
+            await _zenrows_news_scraping(query, api_key, sources)
+        
+        # E-commerce scraping for product information
+        if any(keyword in query_lower for keyword in ["product", "price", "review", "buy", "shop"]):
+            await _zenrows_ecommerce_scraping(query, api_key, sources)
+        
+        # Academic/research scraping
+        if any(keyword in query_lower for keyword in ["research", "study", "academic", "paper", "journal"]):
+            await _zenrows_academic_scraping(query, api_key, sources)
+            
+    except Exception as e:
+        logger.error(f"ZenRows specialized scraping failed: {e}")
+
+async def _zenrows_reddit_scraping(query: str, api_key: str, sources: List[ResearchSource]):
+    """Scrape Reddit using ZenRows."""
+    try:
+        # Search Reddit
+        reddit_search_url = f"https://www.reddit.com/search/?q={query.replace(' ', '+')}&sort=relevance&t=month"
+        
+        params = {
+            "url": reddit_search_url,
+            "apikey": api_key,
+            "js_render": "true",
+            "premium_proxy": "true",
+            "proxy_country": "US",
+            "wait": "3000",
+            "css_extractor": json.dumps({
+                "posts": {
+                    "selector": "[data-testid='post-container']",
+                    "type": "list",
+                    "output": {
+                        "title": {"selector": "h3", "output": "text"},
+                        "link": {"selector": "a[data-click-id='body']", "output": "@href"},
+                        "subreddit": {"selector": "[data-testid='subreddit-name']", "output": "text"},
+                        "score": {"selector": "[data-testid='vote-arrows'] span", "output": "text"},
+                        "comments": {"selector": "[data-testid='comment-count']", "output": "text"}
+                    }
+                }
+            })
+        }
+        
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                "https://api.zenrows.com/v1/",
+                params=params,
+                timeout=60.0
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                if "posts" in data and isinstance(data["posts"], list):
+                    for post in data["posts"][:5]:  # Limit Reddit results
+                        if post.get("title") and post.get("link"):
+                            link = post["link"]
+                            if not link.startswith("http"):
+                                link = f"https://www.reddit.com{link}"
+                            
+                            sources.append(ResearchSource(
+                                name="zenrows-reddit",
+                                url=link,
+                                title=f"Reddit ({post.get('subreddit', 'r/unknown')}): {post['title']}",
+                                snippet=f"Score: {post.get('score', 'N/A')} | Comments: {post.get('comments', 'N/A')}",
+                                relevance_score=0.7
+                            ))
+                            
+    except Exception as e:
+        logger.error(f"ZenRows Reddit scraping failed: {e}")
+
+async def _zenrows_news_scraping(query: str, api_key: str, sources: List[ResearchSource]):
+    """Scrape news sites using ZenRows."""
+    try:
+        # List of news sites to scrape
+        news_sites = [
+            f"https://www.reuters.com/search/news?blob={query.replace(' ', '%20')}",
+            f"https://apnews.com/search?q={query.replace(' ', '+')}",
+            f"https://www.bbc.com/search?q={query.replace(' ', '+')}"
+        ]
+        
+        for site_url in news_sites[:2]:  # Limit to 2 news sites
+            try:
+                params = {
+                    "url": site_url,
+                    "apikey": api_key,
+                    "js_render": "true",
+                    "premium_proxy": "true",
+                    "proxy_country": "US",
+                    "wait": "3000",
+                    "css_extractor": json.dumps({
+                        "articles": {
+                            "selector": "article, .story, .search-result",
+                            "type": "list",
+                            "output": {
+                                "title": {"selector": "h1, h2, h3, .headline", "output": "text"},
+                                "link": {"selector": "a", "output": "@href"},
+                                "summary": {"selector": "p, .summary, .description", "output": "text"},
+                                "date": {"selector": "time, .date", "output": "text"}
+                            }
+                        }
+                    })
+                }
+                
+                async with httpx.AsyncClient() as client:
+                    response = await client.get(
+                        "https://api.zenrows.com/v1/",
+                        params=params,
+                        timeout=60.0
+                    )
+                    
+                    if response.status_code == 200:
+                        data = response.json()
+                        
+                        if "articles" in data and isinstance(data["articles"], list):
+                            for article in data["articles"][:3]:  # Limit per site
+                                if article.get("title") and article.get("link"):
+                                    link = article["link"]
+                                    if not link.startswith("http"):
+                                        # Construct full URL
+                                        from urllib.parse import urljoin
+                                        link = urljoin(site_url, link)
+                                    
+                                    site_name = "Reuters" if "reuters" in site_url else "AP News" if "apnews" in site_url else "BBC"
+                                    
+                                    sources.append(ResearchSource(
+                                        name="zenrows-news",
+                                        url=link,
+                                        title=f"{site_name}: {article['title']}",
+                                        snippet=article.get("summary", "")[:300],
+                                        relevance_score=0.85,
+                                        published_date=article.get("date", "")
+                                    ))
+                                    
+            except Exception as e:
+                logger.error(f"ZenRows news scraping failed for {site_url}: {e}")
+                continue
+                
+    except Exception as e:
+        logger.error(f"ZenRows news scraping failed: {e}")
+
+async def _zenrows_ecommerce_scraping(query: str, api_key: str, sources: List[ResearchSource]):
+    """Scrape e-commerce sites using ZenRows."""
+    try:
+        # Amazon product search
+        amazon_url = f"https://www.amazon.com/s?k={query.replace(' ', '+')}"
+        
+        params = {
+            "url": amazon_url,
+            "apikey": api_key,
+            "js_render": "true",
+            "premium_proxy": "true",
+            "proxy_country": "US",
+            "wait": "4000",
+            "css_extractor": json.dumps({
+                "products": {
+                    "selector": "[data-component-type='s-search-result']",
+                    "type": "list",
+                    "output": {
+                        "title": {"selector": "h2 a span", "output": "text"},
+                        "link": {"selector": "h2 a", "output": "@href"},
+                        "price": {"selector": ".a-price-whole", "output": "text"},
+                        "rating": {"selector": ".a-icon-alt", "output": "text"},
+                        "reviews": {"selector": ".a-size-base", "output": "text"}
+                    }
+                }
+            })
+        }
+        
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                "https://api.zenrows.com/v1/",
+                params=params,
+                timeout=60.0
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                if "products" in data and isinstance(data["products"], list):
+                    for product in data["products"][:5]:  # Limit Amazon results
+                        if product.get("title") and product.get("link"):
+                            link = product["link"]
+                            if not link.startswith("http"):
+                                link = f"https://www.amazon.com{link}"
+                            
+                            price_str = f"${product.get('price', 'N/A')}" if product.get('price') else "Price N/A"
+                            rating_str = product.get('rating', 'No rating')
+                            reviews_str = product.get('reviews', 'No reviews')
+                            
+                            sources.append(ResearchSource(
+                                name="zenrows-amazon",
+                                url=link,
+                                title=f"Amazon: {product['title']}",
+                                snippet=f"{price_str} | {rating_str} | {reviews_str}",
+                                relevance_score=0.8
+                            ))
+                            
+    except Exception as e:
+        logger.error(f"ZenRows e-commerce scraping failed: {e}")
+
+async def _zenrows_academic_scraping(query: str, api_key: str, sources: List[ResearchSource]):
+    """Scrape academic sources using ZenRows."""
+    try:
+        # Google Scholar search
+        scholar_url = f"https://scholar.google.com/scholar?q={query.replace(' ', '+')}"
+        
+        params = {
+            "url": scholar_url,
+            "apikey": api_key,
+            "js_render": "true",
+            "premium_proxy": "true",
+            "proxy_country": "US",
+            "wait": "3000",
+            "css_extractor": json.dumps({
+                "papers": {
+                    "selector": ".gs_r",
+                    "type": "list",
+                    "output": {
+                        "title": {"selector": ".gs_rt a", "output": "text"},
+                        "link": {"selector": ".gs_rt a", "output": "@href"},
+                        "authors": {"selector": ".gs_a", "output": "text"},
+                        "snippet": {"selector": ".gs_rs", "output": "text"},
+                        "citations": {"selector": ".gs_fl a", "output": "text"}
+                    }
+                }
+            })
+        }
+        
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                "https://api.zenrows.com/v1/",
+                params=params,
+                timeout=60.0
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                if "papers" in data and isinstance(data["papers"], list):
+                    for paper in data["papers"][:4]:  # Limit academic results
+                        if paper.get("title") and paper.get("link"):
+                            sources.append(ResearchSource(
+                                name="zenrows-scholar",
+                                url=paper["link"],
+                                title=f"Scholar: {paper['title']}",
+                                snippet=f"Authors: {paper.get('authors', 'N/A')} | {paper.get('snippet', '')}",
+                                relevance_score=0.9,  # Academic sources are highly relevant
+                                published_date=paper.get('citations', '')
+                            ))
+                            
+    except Exception as e:
+        logger.error(f"ZenRows academic scraping failed: {e}")
+
+# Helper function to safely import json
+import json
+
+async def search_apify(query: str, api_token: str, max_results: int = 10) -> List[ResearchSource]:
+    """Search using Apify actors for comprehensive web scraping."""
+    try:
+        sources = []
+        
+        # Use Google Search Results Scraper actor for general queries
+        google_actor_id = "apify/google-search-scraper"
+        
+        # Prepare input for Google Search Scraper
+        actor_input = {
+            "queries": [query],
+            "maxPagesPerQuery": 1,
+            "resultsPerPage": max_results,
+            "mobileResults": False,
+            "languageCode": "en",
+            "countryCode": "US"
+        }
+        
+        async with httpx.AsyncClient() as client:
+            # Start the actor run
+            run_response = await client.post(
+                f"https://api.apify.com/v2/acts/{google_actor_id}/runs",
+                headers={
+                    "Authorization": f"Bearer {api_token}",
+                    "Content-Type": "application/json"
+                },
+                json=actor_input,
+                timeout=30.0
+            )
+            
+            if run_response.status_code != 201:
+                logger.error(f"Apify actor start failed: {run_response.status_code}")
+                return []
+            
+            run_data = run_response.json()
+            run_id = run_data["data"]["id"]
+            
+            # Wait for the run to complete (with timeout)
+            max_wait_time = 60  # seconds
+            wait_interval = 2   # seconds
+            waited_time = 0
+            
+            while waited_time < max_wait_time:
+                status_response = await client.get(
+                    f"https://api.apify.com/v2/acts/{google_actor_id}/runs/{run_id}",
+                    headers={"Authorization": f"Bearer {api_token}"},
+                    timeout=10.0
+                )
+                
+                if status_response.status_code == 200:
+                    status_data = status_response.json()
+                    status = status_data["data"]["status"]
+                    
+                    if status == "SUCCEEDED":
+                        break
+                    elif status in ["FAILED", "ABORTED", "TIMED-OUT"]:
+                        logger.error(f"Apify actor run failed with status: {status}")
+                        return []
+                
+                await asyncio.sleep(wait_interval)
+                waited_time += wait_interval
+            
+            # Get the results
+            results_response = await client.get(
+                f"https://api.apify.com/v2/acts/{google_actor_id}/runs/{run_id}/dataset/items",
+                headers={"Authorization": f"Bearer {api_token}"},
+                timeout=30.0
+            )
+            
+            if results_response.status_code == 200:
+                results_data = results_response.json()
+                
+                for item in results_data:
+                    if "organicResults" in item:
+                        for result in item["organicResults"][:max_results]:
+                            sources.append(ResearchSource(
+                                name="apify",
+                                url=result.get("url", ""),
+                                title=result.get("title", ""),
+                                snippet=result.get("description", ""),
+                                relevance_score=0.75  # Apify provides good quality results
+                            ))
+            
+            # Try additional specialized scraping if query suggests specific domains
+            await _apify_specialized_scraping(query, api_token, sources, max_results, client)
+            
+        return sources[:max_results]
         
     except Exception as e:
         logger.error(f"Apify search failed: {e}")
         return []
+
+async def _apify_specialized_scraping(query: str, api_token: str, sources: List[ResearchSource], max_results: int, client: httpx.AsyncClient):
+    """Perform specialized scraping based on query content."""
+    try:
+        query_lower = query.lower()
+        
+        # LinkedIn scraping for professional/business queries
+        if any(keyword in query_lower for keyword in ["linkedin", "professional", "business", "company", "executive"]):
+            await _scrape_linkedin_apify(query, api_token, sources, client)
+        
+        # Twitter/X scraping for social media insights
+        if any(keyword in query_lower for keyword in ["twitter", "social media", "trending", "sentiment"]):
+            await _scrape_twitter_apify(query, api_token, sources, client)
+        
+        # News scraping for current events
+        if any(keyword in query_lower for keyword in ["news", "breaking", "latest", "current events"]):
+            await _scrape_news_apify(query, api_token, sources, client)
+        
+        # E-commerce scraping for product research
+        if any(keyword in query_lower for keyword in ["product", "price", "review", "amazon", "shopping"]):
+            await _scrape_ecommerce_apify(query, api_token, sources, client)
+            
+    except Exception as e:
+        logger.error(f"Specialized Apify scraping failed: {e}")
+
+async def _scrape_linkedin_apify(query: str, api_token: str, sources: List[ResearchSource], client: httpx.AsyncClient):
+    """Scrape LinkedIn using Apify."""
+    try:
+        actor_id = "apify/linkedin-company-scraper"
+        
+        # Extract company names from query if possible
+        company_urls = []
+        if "linkedin.com/company/" in query:
+            company_urls = [query]
+        else:
+            # Use a simple heuristic to find potential company names
+            words = query.split()
+            for word in words:
+                if len(word) > 3 and word.isalpha():
+                    company_urls.append(f"https://www.linkedin.com/company/{word.lower()}")
+        
+        if not company_urls:
+            return
+        
+        actor_input = {
+            "startUrls": company_urls[:3],  # Limit to 3 companies
+            "maxEmployees": 10
+        }
+        
+        # Quick run with shorter timeout for specialized scraping
+        run_response = await client.post(
+            f"https://api.apify.com/v2/acts/{actor_id}/runs",
+            headers={
+                "Authorization": f"Bearer {api_token}",
+                "Content-Type": "application/json"
+            },
+            json=actor_input,
+            timeout=20.0
+        )
+        
+        if run_response.status_code == 201:
+            run_data = run_response.json()
+            run_id = run_data["data"]["id"]
+            
+            # Wait briefly for results
+            await asyncio.sleep(10)
+            
+            results_response = await client.get(
+                f"https://api.apify.com/v2/acts/{actor_id}/runs/{run_id}/dataset/items",
+                headers={"Authorization": f"Bearer {api_token}"},
+                timeout=15.0
+            )
+            
+            if results_response.status_code == 200:
+                results_data = results_response.json()
+                
+                for item in results_data[:2]:  # Limit results
+                    if item.get("companyName"):
+                        sources.append(ResearchSource(
+                            name="apify-linkedin",
+                            url=item.get("companyUrl", ""),
+                            title=f"LinkedIn: {item.get('companyName', '')}",
+                            snippet=f"Industry: {item.get('industry', 'N/A')}, Size: {item.get('companySize', 'N/A')}, Description: {item.get('description', '')[:200]}...",
+                            relevance_score=0.8
+                        ))
+                        
+    except Exception as e:
+        logger.error(f"LinkedIn Apify scraping failed: {e}")
+
+async def _scrape_twitter_apify(query: str, api_token: str, sources: List[ResearchSource], client: httpx.AsyncClient):
+    """Scrape Twitter/X using Apify."""
+    try:
+        actor_id = "apify/twitter-scraper"
+        
+        actor_input = {
+            "searchTerms": [query],
+            "maxTweets": 20,
+            "onlyImage": False,
+            "onlyQuote": False,
+            "onlyTwitterBlue": False,
+            "onlyVerified": False
+        }
+        
+        run_response = await client.post(
+            f"https://api.apify.com/v2/acts/{actor_id}/runs",
+            headers={
+                "Authorization": f"Bearer {api_token}",
+                "Content-Type": "application/json"
+            },
+            json=actor_input,
+            timeout=20.0
+        )
+        
+        if run_response.status_code == 201:
+            run_data = run_response.json()
+            run_id = run_data["data"]["id"]
+            
+            await asyncio.sleep(15)  # Wait for Twitter scraping
+            
+            results_response = await client.get(
+                f"https://api.apify.com/v2/acts/{actor_id}/runs/{run_id}/dataset/items",
+                headers={"Authorization": f"Bearer {api_token}"},
+                timeout=15.0
+            )
+            
+            if results_response.status_code == 200:
+                results_data = results_response.json()
+                
+                for item in results_data[:5]:  # Limit Twitter results
+                    if item.get("text"):
+                        sources.append(ResearchSource(
+                            name="apify-twitter",
+                            url=item.get("url", ""),
+                            title=f"Twitter: @{item.get('author', {}).get('userName', 'unknown')}",
+                            snippet=item.get("text", "")[:300],
+                            relevance_score=0.7,
+                            published_date=item.get("createdAt", "")
+                        ))
+                        
+    except Exception as e:
+        logger.error(f"Twitter Apify scraping failed: {e}")
+
+async def _scrape_news_apify(query: str, api_token: str, sources: List[ResearchSource], client: httpx.AsyncClient):
+    """Scrape news sources using Apify."""
+    try:
+        actor_id = "apify/google-news-scraper"
+        
+        actor_input = {
+            "searchTerms": [query],
+            "maxArticles": 15,
+            "timeRange": "7d",  # Last 7 days
+            "language": "en"
+        }
+        
+        run_response = await client.post(
+            f"https://api.apify.com/v2/acts/{actor_id}/runs",
+            headers={
+                "Authorization": f"Bearer {api_token}",
+                "Content-Type": "application/json"
+            },
+            json=actor_input,
+            timeout=20.0
+        )
+        
+        if run_response.status_code == 201:
+            run_data = run_response.json()
+            run_id = run_data["data"]["id"]
+            
+            await asyncio.sleep(12)
+            
+            results_response = await client.get(
+                f"https://api.apify.com/v2/acts/{actor_id}/runs/{run_id}/dataset/items",
+                headers={"Authorization": f"Bearer {api_token}"},
+                timeout=15.0
+            )
+            
+            if results_response.status_code == 200:
+                results_data = results_response.json()
+                
+                for item in results_data[:8]:  # Limit news results
+                    sources.append(ResearchSource(
+                        name="apify-news",
+                        url=item.get("url", ""),
+                        title=item.get("title", ""),
+                        snippet=item.get("snippet", ""),
+                        relevance_score=0.85,  # News is usually highly relevant
+                        published_date=item.get("publishedAt", "")
+                    ))
+                    
+    except Exception as e:
+        logger.error(f"News Apify scraping failed: {e}")
+
+async def _scrape_ecommerce_apify(query: str, api_token: str, sources: List[ResearchSource], client: httpx.AsyncClient):
+    """Scrape e-commerce sites using Apify."""
+    try:
+        # Use Amazon scraper for product research
+        actor_id = "apify/amazon-product-scraper"
+        
+        actor_input = {
+            "searchTerms": [query],
+            "maxProducts": 10,
+            "includeReviews": True,
+            "maxReviews": 5
+        }
+        
+        run_response = await client.post(
+            f"https://api.apify.com/v2/acts/{actor_id}/runs",
+            headers={
+                "Authorization": f"Bearer {api_token}",
+                "Content-Type": "application/json"
+            },
+            json=actor_input,
+            timeout=20.0
+        )
+        
+        if run_response.status_code == 201:
+            run_data = run_response.json()
+            run_id = run_data["data"]["id"]
+            
+            await asyncio.sleep(20)  # Amazon scraping takes longer
+            
+            results_response = await client.get(
+                f"https://api.apify.com/v2/acts/{actor_id}/runs/{run_id}/dataset/items",
+                headers={"Authorization": f"Bearer {api_token}"},
+                timeout=15.0
+            )
+            
+            if results_response.status_code == 200:
+                results_data = results_response.json()
+                
+                for item in results_data[:5]:  # Limit product results
+                    price = item.get("price", {})
+                    price_str = f"${price.get('value', 'N/A')}" if price else "Price N/A"
+                    
+                    sources.append(ResearchSource(
+                        name="apify-amazon",
+                        url=item.get("url", ""),
+                        title=f"Amazon: {item.get('title', '')}",
+                        snippet=f"{price_str} - Rating: {item.get('stars', 'N/A')}/5 - {item.get('description', '')[:200]}...",
+                        relevance_score=0.8
+                    ))
+                    
+    except Exception as e:
+        logger.error(f"E-commerce Apify scraping failed: {e}")
 
 async def search_bright_data(query: str, credentials: Dict, max_results: int = 10) -> List[ResearchSource]:
     """Search using Bright Data."""

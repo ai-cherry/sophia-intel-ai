@@ -1,0 +1,128 @@
+name: 🚀 Deploy Context Service
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - 'mcp_servers/context_server.py'
+      - 'mcp_servers/app.py'
+      - 'docker/production/Dockerfile.mcp'
+
+jobs:
+  deploy-context:
+    name: Deploy Context (create-if-missing → health until green)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      APP: sophia-context-v42
+      URL: https://sophia-context-v42.fly.dev
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install flyctl
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Ensure app exists (idempotent)
+        env: 
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          flyctl apps show $APP >/dev/null 2>&1 || flyctl apps create $APP --machines --yes
+
+      - name: Deploy (context)
+        env: 
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          # Create fly.toml for context service if it doesn't exist
+          mkdir -p fly
+          cat > fly/sophia-context.fly.toml << 'EOF'
+          app = "sophia-context-v42"
+          primary_region = "iad"
+
+          [build]
+            dockerfile = "../docker/production/Dockerfile.mcp"
+
+          [env]
+            PORT = "8080"
+            MCP_ROLE = "context"
+
+          [[services]]
+            protocol = "tcp"
+            internal_port = 8080
+
+            [[services.ports]]
+              port = 80
+              handlers = ["http"]
+            [[services.ports]]
+              port = 443
+              handlers = ["tls","http"]
+
+            [[services.http_checks]]
+              method = "GET"
+              path = "/healthz"
+              interval = "10s"
+              timeout  = "2s"
+              grace_period = "60s"
+
+          [vm]
+            memory = "512mb"
+            cpu_kind = "shared"
+            cpus = 1
+          EOF
+          
+          flyctl deploy \
+            --config ./fly/sophia-context.fly.toml \
+            --dockerfile ./docker/production/Dockerfile.mcp \
+            --build-arg CACHE_BUSTER=${{ github.run_id }} \
+            --no-cache --yes
+
+      - name: Restart started machines (best-effort)
+        env: 
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          # Install jq for JSON parsing
+          sudo apt-get update && sudo apt-get install -y jq
+          IDS=$(flyctl machines list -a $APP --json | jq -r '.[] | select(.state=="started") | .id' || true)
+          for ID in $IDS; do flyctl machines restart $ID -a $APP --yes || true; done
+
+      - name: Wait for /healthz (context)
+        env:
+          MAX_ATTEMPTS: "30"
+          SLEEP_SECONDS: "10"
+        run: |
+          mkdir -p proofs/healthz
+          i=1
+          while [ $i -le ${MAX_ATTEMPTS} ]; do
+            out="$(curl -i -sS "${URL}/healthz" || true)"
+            code="$(printf "%s" "$out" | head -n1 | awk '{print $2}')"
+            printf "Attempt %02d/%02d → HTTP %s\n" "$i" "${MAX_ATTEMPTS}" "${code:-N/A}"
+            printf "%s\n" "$out" > proofs/healthz/context.txt
+            [ "$code" = "200" ] && exit 0
+            sleep "${SLEEP_SECONDS}"; i=$((i+1))
+          done
+          echo "never returned 200" | tee proofs/healthz/context_fail.txt
+          exit 1
+
+      - name: On failure - attach logs + summary
+        if: failure()
+        env: 
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          mkdir -p proofs/context
+          flyctl logs -a $APP --since 15m | tail -n 200 > proofs/context/log_tail_full.txt || true
+          tail -n 20 proofs/context/log_tail_full.txt > proofs/context/log_tail_last20.txt || true
+          echo "### $APP failure — probable cause" >> $GITHUB_STEP_SUMMARY
+          LINE="$(grep -m1 -E 'Traceback|ERROR|Exception|panic|UnhandledPromiseRejection' proofs/context/log_tail_full.txt || true)"
+          if [ -n "$LINE" ]; then printf '\n```\n%s\n```\n' "$LINE" >> "$GITHUB_STEP_SUMMARY"; else echo "_No obvious traceback._" >> "$GITHUB_STEP_SUMMARY"; fi
+
+      - name: Commit proofs (context)
+        if: always()
+        run: |
+          git config user.name  "sophia-bot"
+          git config user.email "sophia-bot@users.noreply.github.com"
+          git add proofs/healthz/context*.txt proofs/context/*.txt 2>/dev/null || true
+          if ! git diff --cached --quiet; then
+            git commit -m "[proof] context: deploy + health + logs"
+            git push
+          fi
+

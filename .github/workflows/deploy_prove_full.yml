@@ -1,0 +1,357 @@
+name: Deploy & Prove — Sophia v4.2 (Full, Cloud-Only)
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: "PR to merge after proofs pass"
+        required: false
+        default: "429"
+      dashboard_url:
+        description: "Dashboard base URL"
+        required: false
+        default: "https://sophia-dashboard.fly.dev"
+
+concurrency:
+  group: deploy-prove-full-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+env:
+  CODE_URL: https://sophia-code.fly.dev
+  CONTEXT_URL: https://sophia-context-v42.fly.dev
+  RESEARCH_URL: https://sophia-research.fly.dev
+
+jobs:
+  secrets-gate:
+    name: 0) Secrets Gate (no plaintext)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check required secrets
+        id: check
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
+          SERPER_API_KEY: ${{ secrets.SERPER_API_KEY }}
+        run: |
+          mkdir -p proofs/secrets
+          missing=()
+
+          if [ -z "$FLY_API_TOKEN" ]; then missing+=("FLY_API_TOKEN"); fi
+
+          # Research provider: at least one
+          if [ -z "$TAVILY_API_KEY" ] && [ -z "$SERPER_API_KEY" ]; then
+            missing+=("TAVILY_API_KEY|SERPER_API_KEY (need at least one)")
+          fi
+
+          printf '%s\n' '{ "missing": [' > proofs/secrets/missing.json
+          for i in "${!missing[@]}"; do
+            printf '  "%s"%s\n' "${missing[$i]}" $([ $i -lt $((${#missing[@]}-1)) ] && echo "," || echo "") >> proofs/secrets/missing.json
+          done
+          printf '%s\n' '] }' >> proofs/secrets/missing.json
+
+          echo "Missing: ${missing[*]}"
+          # do not fail here—allow deploy to proceed for health proofs
+      - name: Commit secrets gate proof
+        run: |
+          git config user.name  "sophia-bot"
+          git config user.email "sophia-bot@users.noreply.github.com"
+          git add proofs/secrets/missing.json
+          git commit -m "[proof] secrets: gate report" || true
+          git push || true
+
+  deploy-matrix:
+    name: 1) Deploy & Health — code/context/research
+    runs-on: ubuntu-latest
+    needs: [secrets-gate]
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: code
+            app: sophia-code
+            subdir: mcp_servers/code
+            url: ${{ env.CODE_URL }}
+          - name: context
+            app: sophia-context-v42
+            subdir: mcp_servers/context
+            url: ${{ env.CONTEXT_URL }}
+          - name: research
+            app: sophia-research
+            subdir: mcp_servers/research
+            url: ${{ env.RESEARCH_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install deps (jq + flyctl)
+        run: |
+          sudo apt-get update && sudo apt-get install -y jq
+          curl -L https://fly.io/install.sh | sh
+          echo "$HOME/.fly/bin" >> $GITHUB_PATH
+
+      - name: Ensure app exists (idempotent)
+        env: 
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          if ! flyctl apps show ${{ matrix.app }} >/dev/null 2>&1; then
+            flyctl apps create ${{ matrix.app }} --machines --yes
+          fi
+
+      - name: Deploy ${{ matrix.name }}
+        env: 
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          # Use the main MCP Dockerfile for all services
+          flyctl deploy \
+            --config ./fly/sophia-${{ matrix.name }}.fly.toml \
+            --dockerfile ./docker/production/Dockerfile.mcp \
+            --build-arg CACHE_BUSTER=${{ github.run_id }} \
+            --no-cache --yes
+
+      - name: Restart started machines (best-effort)
+        env: 
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          IDS=$(flyctl machines list -a ${{ matrix.app }} --json | jq -r '.[] | select(.state=="started") | .id')
+          for ID in $IDS; do flyctl machines restart $ID -a ${{ matrix.app }} --yes || true; done
+
+      - name: Wait for /healthz (until green)
+        env:
+          URL: ${{ matrix.url }}
+          MAX_ATTEMPTS: "30"
+          SLEEP_SECONDS: "10"
+        run: |
+          mkdir -p proofs/healthz
+          i=1
+          while [ $i -le ${MAX_ATTEMPTS} ]; do
+            out="$(curl -i -sS "${URL}/healthz" || true)"
+            code="$(printf "%s" "$out" | head -n1 | awk '{print $2}')"
+            printf "%02d/%02d → HTTP %s\n" "$i" "${MAX_ATTEMPTS}" "${code:-N/A}"
+            printf "%s\n" "$out" > "proofs/healthz/${{ matrix.name }}.txt"
+            [ "$code" = "200" ] && exit 0
+            sleep "${SLEEP_SECONDS}"; i=$((i+1))
+          done
+          echo "never returned 200" | tee "proofs/healthz/${{ matrix.name }}_fail.txt"
+          exit 1
+
+      - name: On failure - attach Fly logs (tail)
+        if: failure()
+        env: 
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          mkdir -p "proofs/${{ matrix.name }}"
+          flyctl logs -a ${{ matrix.app }} --since 15m | tail -n 200 > "proofs/${{ matrix.name }}/log_tail_full.txt" || true
+          tail -n 20 "proofs/${{ matrix.name }}/log_tail_full.txt" > "proofs/${{ matrix.name }}/log_tail_last20.txt" || true
+
+      - name: On failure - summarize probable cause
+        if: failure()
+        env:
+          SUITE: ${{ matrix.name }}
+          APP: ${{ matrix.app }}
+        run: |
+          LOG="proofs/${SUITE}/log_tail_full.txt"
+          echo "### ${APP} failure — probable cause" >> "$GITHUB_STEP_SUMMARY"
+          if [ -f "$LOG" ]; then
+            LINE="$(grep -m1 -E 'Traceback|ERROR|Exception|panic|UnhandledPromiseRejection' "$LOG" || true)"
+            if [ -n "$LINE" ]; then
+              printf '\n```\n%s\n```\n' "$LINE" >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "_No obvious traceback found in last 15m logs._" >> "$GITHUB_STEP_SUMMARY"
+            fi
+            echo "<details><summary>Last 20 log lines</summary>" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            tail -n 20 "$LOG" | sed 's/</\&lt;/g;s/>/\&gt;/g' >> "$GITHUB_STEP_SUMMARY"
+            echo "</details>" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "_Log file not found: ${LOG}_" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Commit health proofs
+        if: always()
+        run: |
+          git config user.name  "sophia-bot"
+          git config user.email "sophia-bot@users.noreply.github.com"
+          git add proofs/healthz/*.txt proofs/${{ matrix.name }}/*.txt 2>/dev/null || true
+          git commit -m "[proof] ${{ matrix.name }}: healthz + logs" || true
+          git push || true
+
+  endpoint-proofs:
+    name: 2) Endpoint Proofs
+    runs-on: ubuntu-latest
+    needs: [deploy-matrix]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Proof — research.search
+        env:
+          URL: ${{ env.RESEARCH_URL }}
+          TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
+          SERPER_API_KEY: ${{ secrets.SERPER_API_KEY }}
+        run: |
+          mkdir -p proofs/endpoints
+          code=$(curl -s -o /dev/null -w "%{http_code}" "${URL}/healthz")
+          if [ "$code" = "200" ]; then
+            curl -sS -X POST "${URL}/search" \
+              -H 'Content-Type: application/json' \
+              -d '{"query":"AI orchestration platforms","max_sources":5}' \
+              | jq '.' > proofs/endpoints/research-search.json || \
+              printf '%s\n' '{ "status":"failure","errors":[{"provider":"research","code":"endpoint-failed"}] }' > proofs/endpoints/research-search.json
+          else
+            printf '%s\n' '{ "status":"failure","errors":[{"provider":"research","code":"healthz-not-200"}] }' > proofs/endpoints/research-search.json
+          fi
+      - name: Proof — context.search
+        env:
+          URL: ${{ env.CONTEXT_URL }}
+        run: |
+          mkdir -p proofs/endpoints
+          code=$(curl -s -o /dev/null -w "%{http_code}" "${URL}/healthz")
+          if [ "$code" = "200" ]; then
+            curl -sS -X POST "${URL}/context/search" \
+              -H 'Content-Type: application/json' \
+              -d '{"query":"AgentManager create_swarm","k":3}' \
+              | jq '.' > proofs/endpoints/context-search.json || \
+              printf '%s\n' '{ "status":"failure","errors":[{"provider":"context","code":"endpoint-failed"}] }' > proofs/endpoints/context-search.json
+          else
+            printf '%s\n' '{ "status":"failure","errors":[{"provider":"context","code":"healthz-not-200"}] }' > proofs/endpoints/context-search.json
+          fi
+      - name: Commit endpoint proofs
+        run: |
+          git config user.name  "sophia-bot"
+          git config user.email "sophia-bot@users.noreply.github.com"
+          git add proofs/endpoints/*.json 2>/dev/null || true
+          git commit -m "[proof] endpoints: research.search + context.search" || true
+          git push || true
+
+  screenshot-dashboard:
+    name: 3) Screenshot Dashboard Tiles
+    runs-on: ubuntu-latest
+    needs: [deploy-matrix]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: 
+          node-version: "20"
+      - name: Install Playwright (Chromium)
+        run: |
+          npm -y init >/dev/null 2>&1
+          npm i playwright@1.47.2 --no-fund --no-audit
+          npx playwright install chromium --with-deps
+      - name: Write screenshot script
+        run: |
+          cat > take-screenshot.mjs <<'JS'
+          import { chromium } from 'playwright';
+          const url = process.env.DASHBOARD_URL || 'https://sophia-dashboard.fly.dev';
+          const out = 'proofs/screens/ai_factory_overview.png';
+          const browser = await chromium.launch();
+          const page = await browser.newPage({ viewport: { width: 1400, height: 900 }});
+          await page.goto(url, { waitUntil: 'networkidle' });
+          await page.waitForTimeout(1500);
+          await page.screenshot({ path: out, fullPage: true });
+          await browser.close();
+          console.log('Saved:', out);
+          JS
+      - name: Run screenshot
+        env:
+          DASHBOARD_URL: ${{ github.event.inputs.dashboard_url }}
+        run: |
+          mkdir -p proofs/screens
+          node take-screenshot.mjs
+      - name: Commit screenshot
+        run: |
+          git config user.name  "sophia-bot"
+          git config user.email "sophia-bot@users.noreply.github.com"
+          git add proofs/screens/ai_factory_overview.png
+          git commit -m "[proof] dashboard: tiles screenshot" || true
+          git push || true
+
+  merge-pr:
+    name: 4) Merge PR (gated)
+    runs-on: ubuntu-latest
+    needs: [deploy-matrix, endpoint-proofs, screenshot-dashboard]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Gate check — research/context green + endpoint proofs present
+        id: gate
+        run: |
+          set -e
+          test -f proofs/healthz/research.txt
+          test -f proofs/healthz/context.txt
+          grep -q " 200 " proofs/healthz/research.txt
+          grep -q " 200 " proofs/healthz/context.txt
+          test -f proofs/endpoints/research-search.json
+          test -f proofs/endpoints/context-search.json
+      - name: Merge PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR: ${{ github.event.inputs.pr_number }}
+        run: |
+          mkdir -p proofs/merge
+          curl -sSL -X PUT \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/${{ github.repository }}/pulls/${PR}/merge \
+            -d '{"commit_title":"[proof] v4.2: deploy & prove (research+context green)","merge_method":"squash"}' \
+            | tee proofs/merge/merge_response.json
+      - name: Commit merge proof
+        run: |
+          git config user.name  "sophia-bot"
+          git config user.email "sophia-bot@users.noreply.github.com"
+          git add proofs/merge/merge_response.json
+          git commit -m "[proof] merge: PR ${{ github.event.inputs.pr_number }}" || true
+          git push || true
+
+  final-report:
+    name: 5) Final Report (docs/DEPLOYMENT_READY_FINAL.md)
+    runs-on: ubuntu-latest
+    needs: [merge-pr]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Write final report
+        run: |
+          mkdir -p docs
+          NOW="$(date -u +%FT%TZ)"
+          cat > docs/DEPLOYMENT_READY_FINAL.md <<'MD'
+          # SOPHIA v4.2 — Deployment Ready (Final)
+
+          This document summarizes the full cloud-only deploy & prove run.
+
+          ## Run Summary
+          - Date (UTC): __NOW__
+          - Repo: __REPO__
+          - PR: __PR__
+          - Workflow Run: __RUN_URL__
+
+          ## Health Proofs
+          - research: proofs/healthz/research.txt
+          - context:  proofs/healthz/context.txt
+          - code:     proofs/healthz/code.txt (if present)
+
+          ## Endpoint Proofs
+          - proofs/endpoints/research-search.json
+          - proofs/endpoints/context-search.json
+
+          ## Dashboard
+          - proofs/screens/ai_factory_overview.png
+
+          ## Merge
+          - proofs/merge/merge_response.json
+
+          ---
+          _Generated automatically by Deploy & Prove — Sophia v4.2 (Full)_
+          MD
+          sed -i "s#__NOW__#${NOW}#g" docs/DEPLOYMENT_READY_FINAL.md
+          sed -i "s#__REPO__#${{ github.repository }}#g" docs/DEPLOYMENT_READY_FINAL.md
+          sed -i "s#__PR__#${{ github.event.inputs.pr_number }}#g" docs/DEPLOYMENT_READY_FINAL.md
+          sed -i "s#__RUN_URL__#https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}#g" docs/DEPLOYMENT_READY_FINAL.md
+      - name: Commit final report
+        run: |
+          git config user.name  "sophia-bot"
+          git config user.email "sophia-bot@users.noreply.github.com"
+          git add docs/DEPLOYMENT_READY_FINAL.md
+          git commit -m "[proof] deployment: final report" || true
+          git push || true
+

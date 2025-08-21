@@ -1,0 +1,161 @@
+{
+  "total_count": 13,
+  "workflows": [
+    {
+      "id": 180668243,
+      "node_id": "W_kwDOPbZuv84KxMdT",
+      "name": "Sophia AI Swarm Deployment",
+      "path": ".github/workflows/swarm-deployment.yml",
+      "state": "active",
+      "created_at": "2025-08-11T18:40:41.000-07:00",
+      "updated_at": "2025-08-11T18:40:41.000-07:00",
+      "url": "https://api.github.com/repos/ai-cherry/sophia-intel/actions/workflows/180668243",
+      "html_url": "https://github.com/ai-cherry/sophia-intel/blob/main/.github/workflows/swarm-deployment.yml",
+      "badge_url": "https://github.com/ai-cherry/sophia-intel/workflows/Sophia%20AI%20Swarm%20Deployment/badge.svg"
+    },
+    {
+      "id": 180919688,
+      "node_id": "W_kwDOPbZuv84KyJ2I",
+      "name": "PR Sanity",
+      "path": ".github/workflows/pr-sanity.yml",
+      "state": "active",
+      "created_at": "2025-08-12T17:04:28.000-07:00",
+      "updated_at": "2025-08-12T17:04:28.000-07:00",
+      "url": "https://api.github.com/repos/ai-cherry/sophia-intel/actions/workflows/180919688",
+      "html_url": "https://github.com/ai-cherry/sophia-intel/blob/main/.github/workflows/pr-sanity.yml",
+      "badge_url": "https://github.com/ai-cherry/sophia-intel/workflows/PR%20Sanity/badge.svg"
+    },
+    {
+      "id": 181234335,
+      "node_id": "W_kwDOPbZuv84KzWqf",
+      "name": "ci-cd",
+      "path": ".github/workflows/deploy.yml",
+      "state": "active",
+      "created_at": "2025-08-13T22:34:13.000-07:00",
+      "updated_at": "2025-08-20T12:31:59.000-07:00",
+      "url": "https://api.github.com/repos/ai-cherry/sophia-intel/actions/workflows/181234335",
+      "html_url": "https://github.com/ai-cherry/sophia-intel/blob/main/.github/workflows/deploy.yml",
+      "badge_url": "https://github.com/ai-cherry/sophia-intel/workflows/ci-cd/badge.svg"
+    },
+    {
+      "id": 181664472,
+      "node_id": "W_kwDOPbZuv84K0_rY",
+      "name": "SOPHIA Intel CI/CD Pipeline",
+      "path": ".github/workflows/ci-cd-pipeline.yml",
+      "state": "active",
+      "created_at": "2025-08-15T16:40:07.000-07:00",
+      "updated_at": "2025-08-15T16:40:07.000-07:00",
+      "url": "https://api.github.com/repos/ai-cherry/sophia-intel/actions/workflows/181664472",
+      "html_url": "https://github.com/ai-cherry/sophia-intel/blob/main/.github/workflows/ci-cd-pipeline.yml",
+      "badge_url": "https://github.com/ai-cherry/sophia-intel/workflows/SOPHIA%20Intel%20CI/CD%20Pipeline/badge.svg"
+    },
+    {
+      "id": 181807069,
+      "node_id": "W_kwDOPbZuv84K1ifd",
+      "name": "🏥 SOPHIA Intel Monitoring & Health Checks",
+      "path": ".github/workflows/monitoring.yml",
+      "state": "active",
+      "created_at": "2025-08-16T16:20:17.000-07:00",
+      "updated_at": "2025-08-16T16:20:17.000-07:00",
+      "url": "https://api.github.com/repos/ai-cherry/sophia-intel/actions/workflows/181807069",
+      "html_url": "https://github.com/ai-cherry/sophia-intel/blob/main/.github/workflows/monitoring.yml",
+      "badge_url": "https://github.com/ai-cherry/sophia-intel/workflows/%F0%9F%8F%A5%20SOPHIA%20Intel%20Monitoring%20&%20Health%20Checks/badge.svg"
+    },
+    {
+      "id": 181894114,
+      "node_id": "W_kwDOPbZuv84K13vi",
+      "name": "Test SOPHIA Intel",
+      "path": ".github/workflows/test.yml",
+      "state": "active",
+      "created_at": "2025-08-17T08:07:37.000-07:00",
+      "updated_at": "2025-08-17T08:07:37.000-07:00",
+      "url": "https://api.github.com/repos/ai-cherry/sophia-intel/actions/workflows/181894114",
+      "html_url": "https://github.com/ai-cherry/sophia-intel/blob/main/.github/workflows/test.yml",
+      "badge_url": "https://github.com/ai-cherry/sophia-intel/workflows/Test%20SOPHIA%20Intel/badge.svg"
+    },
+    {
+      "id": 182078851,
+      "node_id": "W_kwDOPbZuv84K2k2D",
+      "name": "🚀 Deploy SOPHIA Intel to Fly.io",
+      "path": ".github/workflows/fly-deploy.yml",
+      "state": "active",
+      "created_at": "2025-08-18T06:41:33.000-07:00",
+      "updated_at": "2025-08-18T06:41:33.000-07:00",
+      "url": "https://api.github.com/repos/ai-cherry/sophia-intel/actions/workflows/182078851",
+      "html_url": "https://github.com/ai-cherry/sophia-intel/blob/main/.github/workflows/fly-deploy.yml",
+      "badge_url": "https://github.com/ai-cherry/sophia-intel/workflows/%F0%9F%9A%80%20Deploy%20SOPHIA%20Intel%20to%20Fly.io/badge.svg"
+    },
+    {
+      "id": 182435857,
+      "node_id": "W_kwDOPbZuv84K38AR",
+      "name": "Deploy SOPHIA V4 with Retry Logic",
+      "path": ".github/workflows/deploy_retry.yml",
+      "state": "active",
+      "created_at": "2025-08-19T09:47:19.000-07:00",
+      "updated_at": "2025-08-19T09:47:19.000-07:00",
+      "url": "https://api.github.com/repos/ai-cherry/sophia-intel/actions/workflows/182435857",
+      "html_url": "https://github.com/ai-cherry/sophia-intel/blob/main/.github/workflows/deploy_retry.yml",
+      "badge_url": "https://github.com/ai-cherry/sophia-intel/workflows/Deploy%20SOPHIA%20V4%20with%20Retry%20Logic/badge.svg"
+    },
+    {
+      "id": 182517465,
+      "node_id": "W_kwDOPbZuv84K4P7Z",
+      "name": "SOPHIA V4 Ultimate Autonomous CI/CD",
+      "path": ".github/workflows/ci-cd.yml",
+      "state": "active",
+      "created_at": "2025-08-19T15:14:50.000-07:00",
+      "updated_at": "2025-08-19T15:14:50.000-07:00",
+      "url": "https://api.github.com/repos/ai-cherry/sophia-intel/actions/workflows/182517465",
+      "html_url": "https://github.com/ai-cherry/sophia-intel/blob/main/.github/workflows/ci-cd.yml",
+      "badge_url": "https://github.com/ai-cherry/sophia-intel/workflows/SOPHIA%20V4%20Ultimate%20Autonomous%20CI/CD/badge.svg"
+    },
+    {
+      "id": 182711484,
+      "node_id": "W_kwDOPbZuv84K4_S8",
+      "name": "🤠 SOPHIA AI Swarm Weekly Cleanup",
+      "path": ".github/workflows/weekly-cleanup.yml",
+      "state": "active",
+      "created_at": "2025-08-20T07:05:20.000-07:00",
+      "updated_at": "2025-08-20T07:05:20.000-07:00",
+      "url": "https://api.github.com/repos/ai-cherry/sophia-intel/actions/workflows/182711484",
+      "html_url": "https://github.com/ai-cherry/sophia-intel/blob/main/.github/workflows/weekly-cleanup.yml",
+      "badge_url": "https://github.com/ai-cherry/sophia-intel/workflows/%F0%9F%A4%A0%20SOPHIA%20AI%20Swarm%20Weekly%20Cleanup/badge.svg"
+    },
+    {
+      "id": 183036038,
+      "node_id": "W_kwDOPbZuv84K6OiG",
+      "name": "🏥 Research Service Health Monitor",
+      "path": ".github/workflows/research-health-monitor.yml",
+      "state": "active",
+      "created_at": "2025-08-21T08:30:03.000-07:00",
+      "updated_at": "2025-08-21T08:30:03.000-07:00",
+      "url": "https://api.github.com/repos/ai-cherry/sophia-intel/actions/workflows/183036038",
+      "html_url": "https://github.com/ai-cherry/sophia-intel/blob/main/.github/workflows/research-health-monitor.yml",
+      "badge_url": "https://github.com/ai-cherry/sophia-intel/workflows/%F0%9F%8F%A5%20Research%20Service%20Health%20Monitor/badge.svg"
+    },
+    {
+      "id": 183037462,
+      "node_id": "W_kwDOPbZuv84K6O4W",
+      "name": "🚀 Deploy Context Service",
+      "path": ".github/workflows/deploy-context.yml",
+      "state": "active",
+      "created_at": "2025-08-21T08:36:05.000-07:00",
+      "updated_at": "2025-08-21T08:36:05.000-07:00",
+      "url": "https://api.github.com/repos/ai-cherry/sophia-intel/actions/workflows/183037462",
+      "html_url": "https://github.com/ai-cherry/sophia-intel/blob/main/.github/workflows/deploy-context.yml",
+      "badge_url": "https://github.com/ai-cherry/sophia-intel/workflows/%F0%9F%9A%80%20Deploy%20Context%20Service/badge.svg"
+    },
+    {
+      "id": 183040500,
+      "node_id": "W_kwDOPbZuv84K6Pn0",
+      "name": ".github/workflows/deploy_prove_full.yml",
+      "path": ".github/workflows/deploy_prove_full.yml",
+      "state": "active",
+      "created_at": "2025-08-21T08:46:45.000-07:00",
+      "updated_at": "2025-08-21T08:46:46.000-07:00",
+      "url": "https://api.github.com/repos/ai-cherry/sophia-intel/actions/workflows/183040500",
+      "html_url": "https://github.com/ai-cherry/sophia-intel/blob/main/.github/workflows/deploy_prove_full.yml",
+      "badge_url": "https://github.com/ai-cherry/sophia-intel/workflows/.github/workflows/deploy_prove_full.yml/badge.svg"
+    }
+  ]
+}

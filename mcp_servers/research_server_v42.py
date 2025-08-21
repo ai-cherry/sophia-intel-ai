@@ -122,11 +122,6 @@ async def health_check():
         }
     }
 
-@app.get("/healthz")
-async def healthz_check():
-    """Healthz endpoint for Fly.io health checks"""
-    return {"status": "ok"}
-
 @app.post("/search", response_model=SearchResponse)
 async def search_endpoint(request: SearchRequest):
     """Enhanced multi-source research endpoint"""
@@ -951,8 +946,4 @@ def _generate_fallback_summary(sources: List[ResearchSource]) -> str:
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
-
-
-# Export router for main app
-router = app
 

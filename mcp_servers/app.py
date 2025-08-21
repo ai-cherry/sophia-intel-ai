@@ -13,7 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
 # Import routers
-from .code_server import router as code_router
+from .code_server import app as code_app
 from .context_server import router as context_router
 from .memory_server import router as memory_router
 from .research_server import router as research_router
@@ -76,7 +76,7 @@ def create_app(service: str = None) -> FastAPI:
     # Include routers based on service
     if service == "all":
         # Include all routers for development/testing
-        app.include_router(code_router, prefix="/code", tags=["Code Operations"])
+        app.mount("/code", code_app)
         app.include_router(context_router, prefix="/context", tags=["Context Management"])
         app.include_router(memory_router, prefix="/memory", tags=["Memory Operations"])
         app.include_router(research_router, prefix="/research", tags=["Research Operations"])
@@ -87,7 +87,8 @@ def create_app(service: str = None) -> FastAPI:
         app.include_router(feedback_router, prefix="/feedback", tags=["Feedback Management"])
         
     elif service == "code":
-        app.include_router(code_router, prefix="", tags=["Code Operations"])
+        # Mount the code app directly since it's a FastAPI app, not a router
+        return code_app
     elif service == "context":
         app.include_router(context_router, prefix="", tags=["Context Management"])
     elif service == "memory":

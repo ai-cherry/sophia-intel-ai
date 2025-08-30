@@ -1,42 +1,55 @@
 """
 Centralized Portkey client management for slim-agno.
-All LLM and embedding calls route through Portkey gateway.
+All LLM and embedding calls route through Portkey gateway with observability.
+Enhanced with role-based routing, caching, and quality gates.
 """
 
 import os
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Literal
 from openai import OpenAI, AsyncOpenAI
 from app import settings
-
-# ============================================
-# Chat/Completion Client (Portkey → OpenRouter)
-# ============================================
-
-CHAT = OpenAI(
-    base_url=settings.OPENAI_BASE_URL,  # https://api.portkey.ai/v1
-    api_key=settings.OPENAI_API_KEY,    # Portkey VK for OpenRouter
+from app.portkey_config import (
+    PortkeyGateway, Role, ObservabilityHeaders,
+    LoadBalanceStrategy, FallbackStrategy, ABTestStrategy,
+    MODEL_RECOMMENDATIONS
 )
 
-ASYNC_CHAT = AsyncOpenAI(
-    base_url=settings.OPENAI_BASE_URL,
-    api_key=settings.OPENAI_API_KEY,
-)
+# ============================================
+# Enhanced Gateway Instance
+# ============================================
+
+# Initialize the enhanced Portkey gateway
+gateway = PortkeyGateway()
+
+# Legacy clients for backward compatibility
+CHAT = gateway.chat_client
+ASYNC_CHAT = gateway.async_chat_client
+EMBED = gateway.embed_client
+ASYNC_EMBED = gateway.async_embed_client
 
 def chat(
     messages: List[Dict[str, str]], 
     model: str = "openai/gpt-4o",
     system: Optional[str] = None,
     temperature: float = 0.7,
+    role: Optional[Role] = None,
+    swarm: Optional[str] = None,
+    ticket_id: Optional[str] = None,
+    use_fallback: bool = False,
     **kwargs
 ) -> str:
     """
-    Synchronous chat completion via Portkey → OpenRouter.
+    Enhanced synchronous chat completion via Portkey → OpenRouter.
     
     Args:
         messages: List of message dictionaries with 'role' and 'content'
         model: OpenRouter model ID (e.g., "openai/gpt-4o", "anthropic/claude-3.5-sonnet")
         system: Optional system message to prepend
-        temperature: Sampling temperature
+        temperature: Sampling temperature (auto-adjusted by role)
+        role: Agent role for tracking and optimization
+        swarm: Swarm identifier for observability
+        ticket_id: Task/ticket identifier
+        use_fallback: Enable automatic fallback on failure
         **kwargs: Additional parameters for the completion
     
     Returns:
@@ -47,44 +60,69 @@ def chat(
         msgs.append({"role": "system", "content": system})
     msgs.extend(messages)
     
-    response = CHAT.chat.completions.create(
-        model=model,
+    # Use fallback strategy if requested
+    routing_strategy = None
+    if use_fallback:
+        routing_strategy = FallbackStrategy([
+            {"virtual_key": "@openrouter-prod-vk", "override_params": {"model": model}},
+            {"virtual_key": "@openrouter-prod-vk", "override_params": {"model": "openai/gpt-4o"}},
+            {"virtual_key": "@openrouter-prod-vk", "override_params": {"model": "anthropic/claude-3.5-sonnet"}}
+        ])
+    
+    # Use enhanced gateway with observability
+    return gateway.chat(
         messages=msgs,
+        model=model,
         temperature=temperature,
-        extra_headers={
-            "HTTP-Referer": settings.HTTP_REFERER,
-            "X-Title": settings.X_TITLE,
-        },
+        role=role,
+        swarm=swarm,
+        ticket_id=ticket_id,
+        routing_strategy=routing_strategy,
         **kwargs
     )
-    return response.choices[0].message.content
 
 async def async_chat(
     messages: List[Dict[str, str]], 
     model: str = "openai/gpt-4o",
     system: Optional[str] = None,
     temperature: float = 0.7,
+    role: Optional[Role] = None,
+    swarm: Optional[str] = None,
+    ticket_id: Optional[str] = None,
+    stream: bool = False,
+    use_fallback: bool = False,
     **kwargs
-) -> str:
+):
     """
-    Asynchronous chat completion via Portkey → OpenRouter.
+    Enhanced asynchronous chat completion via Portkey → OpenRouter.
+    Supports streaming and automatic fallback.
     """
     msgs = []
     if system:
         msgs.append({"role": "system", "content": system})
     msgs.extend(messages)
     
-    response = await ASYNC_CHAT.chat.completions.create(
-        model=model,
+    # Use fallback strategy if requested
+    routing_strategy = None
+    if use_fallback:
+        routing_strategy = FallbackStrategy([
+            {"virtual_key": "@openrouter-prod-vk", "override_params": {"model": model}},
+            {"virtual_key": "@openrouter-prod-vk", "override_params": {"model": "openai/gpt-4o"}},
+            {"virtual_key": "@openrouter-prod-vk", "override_params": {"model": "anthropic/claude-3.5-sonnet"}}
+        ])
+    
+    # Use enhanced gateway
+    return await gateway.achat(
         messages=msgs,
+        model=model,
         temperature=temperature,
-        extra_headers={
-            "HTTP-Referer": settings.HTTP_REFERER,
-            "X-Title": settings.X_TITLE,
-        },
+        role=role,
+        swarm=swarm,
+        ticket_id=ticket_id,
+        routing_strategy=routing_strategy,
+        stream=stream,
         **kwargs
     )
-    return response.choices[0].message.content
 
 def chat_with_tools(
     messages: List[Dict[str, str]],
@@ -120,55 +158,69 @@ def chat_with_tools(
     return response
 
 # ============================================
-# Embeddings Client (Portkey → Together AI)
+# Role-based Model Selection
 # ============================================
 
-EMBED = OpenAI(
-    base_url=settings.EMBED_BASE_URL,  # https://api.portkey.ai/v1
-    api_key=settings.EMBED_API_KEY or settings.TOGETHER_API_KEY,  # Portkey VK for Together
-)
+def get_model_for_role(role: Role, pool: Literal["fast", "heavy", "balanced"] = "balanced") -> str:
+    """Get recommended model for a given role."""
+    if role in MODEL_RECOMMENDATIONS:
+        rec = MODEL_RECOMMENDATIONS[role]
+        if role == Role.GENERATOR:
+            return rec[pool][0] if pool in rec else rec["balanced"][0]
+        return rec["default"]
+    return Models.GPT4O  # Default fallback
 
-ASYNC_EMBED = AsyncOpenAI(
-    base_url=settings.EMBED_BASE_URL,
-    api_key=settings.EMBED_API_KEY or settings.TOGETHER_API_KEY,
-)
+def get_temperature_for_role(role: Role) -> float:
+    """Get optimal temperature for a given role."""
+    if role in MODEL_RECOMMENDATIONS:
+        return MODEL_RECOMMENDATIONS[role].get("temperature", 0.7)
+    return 0.7
 
 def embed_texts(
     texts: List[str], 
-    model: Optional[str] = None
+    model: Optional[str] = None,
+    use_cache: bool = True
 ) -> List[List[float]]:
     """
-    Generate embeddings via Portkey → Together AI.
+    Generate embeddings via Portkey → Together AI with caching.
     
     Args:
         texts: List of text strings to embed
         model: Optional model override (defaults to EMBED_MODEL)
+        use_cache: Whether to use caching for embeddings
     
     Returns:
         List of embedding vectors
     """
     model = model or settings.EMBED_MODEL or settings.TOGETHER_EMBED_MODEL
     
-    response = EMBED.embeddings.create(
-        model=model,
-        input=texts
-    )
-    return [item.embedding for item in response.data]
+    # Use enhanced gateway with caching
+    if use_cache:
+        from app.memory.embed_router import embed_with_cache
+        return embed_with_cache(texts, model)
+    else:
+        return gateway.embed(texts, model)
 
 async def async_embed_texts(
     texts: List[str], 
-    model: Optional[str] = None
+    model: Optional[str] = None,
+    batch_size: int = 100
 ) -> List[List[float]]:
     """
-    Asynchronously generate embeddings via Portkey → Together AI.
+    Asynchronously generate embeddings via Portkey → Together AI with batching.
+    
+    Args:
+        texts: List of text strings to embed
+        model: Optional model override
+        batch_size: Batch size for large embedding requests
+    
+    Returns:
+        List of embedding vectors
     """
     model = model or settings.EMBED_MODEL or settings.TOGETHER_EMBED_MODEL
     
-    response = await ASYNC_EMBED.embeddings.create(
-        model=model,
-        input=texts
-    )
-    return [item.embedding for item in response.data]
+    # Use enhanced gateway with batching
+    return await gateway.aembed(texts, model, batch_size)
 
 # ============================================
 # Model Name Constants (OpenRouter format)

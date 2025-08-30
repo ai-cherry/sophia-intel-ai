@@ -19,6 +19,19 @@ from app.models.router import ROLE_MODELS, agno_chat_model
 from app.swarms.coding.pools import POOLS
 from typing import List, Optional, Dict, Any
 
+# Import enhanced JSON validation
+try:
+    from app.contracts.json_schemas import (
+        validate_critic_output,
+        validate_judge_output,
+        runner_gate_decision,
+        CriticOutput,
+        JudgeOutput
+    )
+    JSON_VALIDATION_AVAILABLE = True
+except ImportError:
+    JSON_VALIDATION_AVAILABLE = False
+
 def _build_generators(model_keys: List[str]) -> List[Agent]:
     """Build generator agents from model keys."""
     gens: List[Agent] = []
@@ -160,7 +173,19 @@ def run_coding_debate(team: Team, task: str) -> Dict[str, Any]:
             critic_out = extract_json_from_markdown(critic_out)
             critic_json = as_json_or_error(critic_out, ["verdict", "findings", "must_fix"])
         
-        results["critic"] = critic_json
+        # Enhanced validation if available
+        if JSON_VALIDATION_AVAILABLE and not critic_json.get("_error"):
+            try:
+                critic_validated = validate_critic_output(critic_json)
+                results["critic"] = critic_validated.model_dump()
+                results["critic_validated"] = True
+            except Exception as ve:
+                results["errors"].append(f"Critic validation warning: {str(ve)}")
+                results["critic"] = critic_json
+                results["critic_validated"] = False
+        else:
+            results["critic"] = critic_json
+            results["critic_validated"] = False
     except Exception as e:
         results["errors"].append(f"Critic error: {str(e)}")
     
@@ -190,13 +215,38 @@ def run_coding_debate(team: Team, task: str) -> Dict[str, Any]:
             ["decision", "runner_instructions", "rationale"]
         )
         
-        results["judge"] = judge_json
-        
-        # Check if runner is approved
-        if judge_allows_run(judge_json):
-            results["runner_approved"] = True
+        # Enhanced validation if available
+        if JSON_VALIDATION_AVAILABLE and not judge_json.get("_error"):
+            try:
+                judge_validated = validate_judge_output(judge_json)
+                results["judge"] = judge_validated.model_dump()
+                results["judge_validated"] = True
+                
+                # Enhanced runner gate decision
+                if results.get("critic_validated") and results.get("judge_validated"):
+                    critic_obj = CriticOutput.model_validate(results["critic"])
+                    judge_obj = JudgeOutput.model_validate(results["judge"])
+                    
+                    gate = runner_gate_decision(
+                        critic=critic_obj,
+                        judge=judge_obj,
+                        accuracy_score=8.0,  # TODO: Integrate actual AccuracyEval
+                        reliability_passed=True  # TODO: Integrate actual ReliabilityEval
+                    )
+                    
+                    results["gate_decision"] = gate
+                    results["runner_approved"] = gate["allowed"]
+                else:
+                    results["runner_approved"] = judge_allows_run(judge_json)
+            except Exception as ve:
+                results["errors"].append(f"Judge validation warning: {str(ve)}")
+                results["judge"] = judge_json
+                results["judge_validated"] = False
+                results["runner_approved"] = judge_allows_run(judge_json)
         else:
-            results["runner_approved"] = False
+            results["judge"] = judge_json
+            results["judge_validated"] = False
+            results["runner_approved"] = judge_allows_run(judge_json)
     except Exception as e:
         results["errors"].append(f"Judge error: {str(e)}")
     

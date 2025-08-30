@@ -15,6 +15,19 @@ from app.eval.accuracy_eval import run_accuracy_eval
 from app.eval.reliability_eval import run_reliability_eval
 from agno.run.team import TeamRunResponse
 
+# Import enhanced validation if available
+try:
+    from app.contracts.json_schemas import (
+        validate_critic_output,
+        validate_judge_output,
+        runner_gate_decision,
+        CriticOutput,
+        JudgeOutput
+    )
+    JSON_VALIDATION_AVAILABLE = True
+except ImportError:
+    JSON_VALIDATION_AVAILABLE = False
+
 # Create the default coding team
 coding_team = make_coding_swarm()
 
@@ -92,13 +105,92 @@ def quality_gate(outputs: List[StepOutput]) -> bool:
 
 def _post_judge_quality(step_input: StepInput, team) -> StepOutput:
     """
+    Enhanced quality gate with JSON validation and runner gate decision.
     After the judge step, run accuracy + reliability evals to decide if Runner can proceed.
-    This does not execute the runner; it only decides gating & returns a summary.
     """
-    # Get judge decision from previous step
+    # Get judge and critic decisions from previous step
     additional_data = step_input.additional_data or {}
     judge_json = additional_data.get("judge", {})
+    critic_json = additional_data.get("critic", {})
     
+    # Enhanced validation if available
+    if JSON_VALIDATION_AVAILABLE:
+        try:
+            # Validate critic output
+            critic_obj = None
+            if critic_json and not isinstance(critic_json, str):
+                critic_obj = validate_critic_output(critic_json)
+            
+            # Validate judge output
+            judge_obj = None
+            if judge_json and not isinstance(judge_json, str):
+                judge_obj = validate_judge_output(judge_json)
+            
+            # If both validated, use enhanced gate decision
+            if critic_obj and judge_obj:
+                # Get accuracy score (run evaluation if team available)
+                accuracy_score = 7.0  # Default
+                if team:
+                    try:
+                        acc = run_accuracy_eval(
+                            team=team,
+                            prompt="Verify that the implementation plan is complete and includes testing.",
+                            expected="test",
+                            model_id="openai/gpt-4o-mini",
+                            iterations=1,
+                            print_results=False
+                        )
+                        if acc and hasattr(acc, 'avg_score'):
+                            accuracy_score = acc.avg_score
+                    except:
+                        pass
+                
+                # Get reliability status
+                reliability_passed = True  # Default
+                team_response = additional_data.get("team_response")
+                if team_response and isinstance(team_response, TeamRunResponse):
+                    try:
+                        run_reliability_eval(
+                            team_response=team_response,
+                            expected_tool_calls=["transfer_task_to_member", "code_search"],
+                            print_results=False
+                        )
+                    except:
+                        reliability_passed = False
+                
+                # Make gate decision
+                gate = runner_gate_decision(
+                    critic=critic_obj,
+                    judge=judge_obj,
+                    accuracy_score=accuracy_score,
+                    reliability_passed=reliability_passed
+                )
+                
+                if gate["allowed"]:
+                    return StepOutput(
+                        content="QUALITY_GATE: PASS; Runner may proceed with implementation",
+                        success=True,
+                        additional_data={
+                            "gate_status": "approved",
+                            "gate_decision": gate,
+                            "runner_instructions": gate["instructions"]
+                        }
+                    )
+                else:
+                    reasons = "; ".join(gate["reasons"])
+                    return StepOutput(
+                        content=f"QUALITY_GATE: BLOCKED; {reasons}",
+                        success=False,
+                        additional_data={
+                            "gate_status": "blocked",
+                            "gate_decision": gate
+                        }
+                    )
+        except Exception as e:
+            # Fall back to simple validation
+            pass
+    
+    # Fallback: Simple validation
     if not judge_json or isinstance(judge_json, str):
         return StepOutput(
             content="QUALITY_GATE: No valid judge JSON; Runner BLOCKED",

@@ -1,121 +1,240 @@
+from textwrap import dedent
+from typing import List, Optional
 from agno import Agent
-from app.models.router import chat_model, MODELS
+from app.models.router import agno_chat_model, ROLE_MODELS, ROLE_PARAMS
 from app.tools.code_search import CodeSearch
 from app.tools.repo_fs import ReadFile, WriteFile, ListDirectory
 from app.tools.git_ops import GitStatus, GitDiff, GitCommit, GitAdd
 from app.tools.test_ops import RunTests, RunTypeCheck
 from app.tools.lint_ops import RunLint, FormatCode
+from app.swarms.contracts import PLANNER_SCHEMA, CRITIC_SCHEMA, JUDGE_SCHEMA, GENERATOR_SCHEMA
 
-def create_lead_agent() -> Agent:
-    """Create the Lead agent that coordinates the team."""
+# System prompts for role-specific behavior
+PLANNER_SYS = dedent(f"""
+You are the Planner. Convert vague goals into an executable plan.
+Return a strict JSON object per PLANNER_SCHEMA; do not include extra text.
+
+{PLANNER_SCHEMA}
+
+Focus on:
+- Breaking down complex tasks into milestones and epics
+- Identifying dependencies between stories
+- Assessing global risks
+- Suggesting appropriate tools
+- Defining success metrics
+""")
+
+CRITIC_SYS = dedent(f"""
+You are the Critic. Provide a structured review of all proposals.
+Return strict JSON per CRITIC_SCHEMA; no extra prose.
+
+{CRITIC_SCHEMA}
+
+Review across these dimensions:
+- Security: authentication, authorization, data protection
+- Data integrity: validation, consistency, persistence
+- Logic correctness: edge cases, error handling, algorithms
+- Performance: time complexity, space usage, scalability
+- Usability: API design, error messages, documentation
+- Maintainability: code clarity, test coverage, modularity
+""")
+
+JUDGE_SYS = dedent(f"""
+You are the Judge. Compare and merge proposals using the quality rubric.
+Return strict JSON per JUDGE_SCHEMA; no extra prose.
+
+{JUDGE_SCHEMA}
+
+Decision criteria:
+- accept: proposal meets all requirements
+- merge: combine best aspects of multiple proposals
+- reject: critical issues that cannot be fixed
+
+Always include concrete runner_instructions for implementation.
+""")
+
+GENERATOR_SYS = dedent(f"""
+You are a Code Generator. Create implementation plans with tests.
+When asked, return JSON per GENERATOR_SCHEMA:
+
+{GENERATOR_SCHEMA}
+
+Focus on:
+- Minimal diff approach
+- Comprehensive test coverage
+- Clear implementation steps
+- Risk assessment
+""")
+
+def make_planner(name: str = "Planner") -> Agent:
+    """Create a planning agent with strategic capabilities."""
+    m_id = ROLE_MODELS["planner"]
+    params = ROLE_PARAMS.get("planner", {})
+    
     return Agent(
-        name="Lead",
-        description="Team lead that coordinates work and makes architectural decisions",
-        model=chat_model(MODELS["planner"]),
+        name=name,
+        role="Plan tasks with dependencies and success metrics",
+        model=agno_chat_model(m_id, **params),
+        instructions=PLANNER_SYS,
+        tools=[CodeSearch(), ListDirectory(), GitStatus()],
+        reasoning=True,
+        markdown=True,
+        show_tool_calls=True
+    )
+
+def make_generator(
+    name: str,
+    model_key: str,
+    tools: Optional[List] = None,
+    role_note: str = "Implement spec with tests and minimal diff"
+) -> Agent:
+    """Create a code generation agent with specific model."""
+    m_id = ROLE_MODELS.get(model_key, model_key)
+    params = ROLE_PARAMS.get(model_key, {})
+    
+    default_tools = [
+        CodeSearch(),
+        ReadFile(),
+        ListDirectory(),
+        RunTests(),
+        RunTypeCheck()
+    ]
+    
+    return Agent(
+        name=name,
+        role=role_note,
+        model=agno_chat_model(m_id, **params),
+        instructions=GENERATOR_SYS,
+        tools=tools or default_tools,
+        markdown=True,
+        show_tool_calls=True
+    )
+
+def make_critic(name: str = "Critic") -> Agent:
+    """Create a review agent with structured critique capabilities."""
+    m_id = ROLE_MODELS["critic"]
+    params = ROLE_PARAMS.get("critic", {})
+    
+    return Agent(
+        name=name,
+        role="Structured review across security/data/logic/perf/UX",
+        model=agno_chat_model(m_id, **params),
+        instructions=CRITIC_SYS,
+        tools=[
+            CodeSearch(),
+            ReadFile(),
+            GitDiff(),
+            RunLint(),
+            RunTypeCheck()
+        ],
+        markdown=True,
+        show_tool_calls=True
+    )
+
+def make_judge(name: str = "Judge") -> Agent:
+    """Create a decision agent with merge capabilities."""
+    m_id = ROLE_MODELS["judge"]
+    params = ROLE_PARAMS.get("judge", {})
+    
+    return Agent(
+        name=name,
+        role="Select or merge proposals; instruct Runner",
+        model=agno_chat_model(m_id, **params),
+        instructions=JUDGE_SYS,
+        tools=[
+            GitStatus(),
+            GitDiff(),
+            RunTests()
+        ],
+        markdown=True,
+        show_tool_calls=True
+    )
+
+def make_lead(name: str = "Lead-Engineer") -> Agent:
+    """Create a coordination agent to orchestrate the team."""
+    m_id = ROLE_MODELS.get("planner")  # Lead uses planner model
+    params = ROLE_PARAMS.get("planner", {})
+    
+    return Agent(
+        name=name,
+        role="Coordinate debate; enforce constraints; route tasks",
+        model=agno_chat_model(m_id, **params),
+        instructions=dedent("""
+        You are the Lead Engineer coordinating the team.
+        
+        Your responsibilities:
+        - Route tasks to appropriate team members
+        - Coordinate parallel work when possible
+        - Enforce quality gates and constraints
+        - Synthesize multiple proposals
+        - Ensure all acceptance criteria are met
+        
+        When coordinating:
+        1. First, have generators propose competing approaches
+        2. Then, have the critic review all proposals
+        3. If revision needed, have generators apply fixes
+        4. Finally, have the judge make the final decision
+        """),
         tools=[
             CodeSearch(),
             ListDirectory(),
             GitStatus()
         ],
-        instructions="""
-        You are the team lead responsible for:
-        - Breaking down complex tasks into smaller subtasks
-        - Assigning work to appropriate team members
-        - Ensuring code quality and consistency
-        - Making architectural decisions
-        - Coordinating between team members
-        """
+        markdown=True,
+        show_tool_calls=True
     )
 
-def create_coder_a_agent() -> Agent:
-    """Create Coder A agent specialized in implementation."""
+def make_runner(name: str = "Runner") -> Agent:
+    """Create an execution agent with write permissions (gated by judge)."""
+    m_id = ROLE_MODELS.get("fast")  # Runner uses fast model
+    params = ROLE_PARAMS.get("fast", {})
+    
     return Agent(
-        name="Coder-A",
-        description="Senior developer focused on implementation and best practices",
-        model=chat_model(MODELS["coder_a"]),
+        name=name,
+        role="Execute approved changes with write permissions",
+        model=agno_chat_model(m_id, **params),
+        instructions=dedent("""
+        You are the Runner, responsible for executing approved changes.
+        
+        CRITICAL: You may ONLY execute if you have explicit judge approval.
+        Check for runner_instructions from the judge before any action.
+        
+        When executing:
+        1. Follow runner_instructions exactly
+        2. Make minimal, precise changes
+        3. Run tests after changes
+        4. Report success/failure clearly
+        """),
         tools=[
-            CodeSearch(),
             ReadFile(),
-            WriteFile(),
-            ListDirectory(),
+            WriteFile(),  # Write tools ONLY for runner
+            GitAdd(),
+            GitCommit(),
             RunTests(),
-            RunTypeCheck()
-        ],
-        instructions="""
-        You are a senior developer responsible for:
-        - Writing clean, maintainable code
-        - Implementing features according to specifications
-        - Following best practices and design patterns
-        - Writing unit tests
-        - Ensuring type safety
-        """
-    )
-
-def create_coder_b_agent() -> Agent:
-    """Create Coder B agent specialized in optimization and refactoring."""
-    return Agent(
-        name="Coder-B",
-        description="Developer focused on optimization and code improvement",
-        model=chat_model(MODELS["coder_b"]),
-        tools=[
-            CodeSearch(),
-            ReadFile(),
-            WriteFile(),
             RunLint(),
             FormatCode()
         ],
-        instructions="""
-        You are a developer responsible for:
-        - Optimizing code performance
-        - Refactoring for better readability
-        - Ensuring code follows style guidelines
-        - Identifying and fixing code smells
-        - Improving code efficiency
-        """
+        markdown=True,
+        show_tool_calls=True
     )
+
+# Backward compatibility functions
+def create_lead_agent() -> Agent:
+    """Legacy: Create the Lead agent that coordinates the team."""
+    return make_lead()
+
+def create_coder_a_agent() -> Agent:
+    """Legacy: Create Coder A agent specialized in implementation."""
+    return make_generator("Coder-A", "coderA")
+
+def create_coder_b_agent() -> Agent:
+    """Legacy: Create Coder B agent specialized in optimization."""
+    return make_generator("Coder-B", "coderB")
 
 def create_critic_agent() -> Agent:
-    """Create Critic agent for code review."""
-    return Agent(
-        name="Critic",
-        description="Code reviewer that provides feedback and ensures quality",
-        model=chat_model(MODELS["critic"]),
-        tools=[
-            CodeSearch(),
-            ReadFile(),
-            GitDiff(),
-            RunLint(),
-            RunTypeCheck()
-        ],
-        instructions="""
-        You are a code reviewer responsible for:
-        - Reviewing code changes for quality
-        - Identifying potential bugs and issues
-        - Ensuring adherence to coding standards
-        - Providing constructive feedback
-        - Verifying test coverage
-        """
-    )
+    """Legacy: Create Critic agent for code review."""
+    return make_critic()
 
 def create_judge_agent() -> Agent:
-    """Create Judge agent for final decisions."""
-    return Agent(
-        name="Judge",
-        description="Final decision maker on code quality and merge readiness",
-        model=chat_model(MODELS["judge"]),
-        tools=[
-            GitStatus(),
-            GitDiff(),
-            RunTests(),
-            GitCommit(),
-            GitAdd()
-        ],
-        instructions="""
-        You are the final decision maker responsible for:
-        - Approving or rejecting code changes
-        - Ensuring all quality criteria are met
-        - Making final decisions on disputes
-        - Authorizing commits and merges
-        - Maintaining project standards
-        """
-    )
+    """Legacy: Create Judge agent for final decisions."""
+    return make_judge()

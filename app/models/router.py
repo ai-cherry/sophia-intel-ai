@@ -1,14 +1,41 @@
 from agno import OpenAIChat
+from agno.models.openai import OpenAIChat as AgnoOpenAIChat
 from app import settings
 
-# Model mappings for OpenRouter model IDs
-MODELS = {
-    "planner": "openai/gpt-4o",
-    "critic": "openai/gpt-4o-mini", 
-    "judge": "openai/gpt-4o-mini",
-    "coder_a": "anthropic/claude-3.5-sonnet",
-    "coder_b": "deepseek/deepseek-coder"
+# Role→Model mappings using latest OpenRouter models
+ROLE_MODELS = {
+    # Strategic/Planning roles
+    "planner": "x-ai/grok-2-1212",           # Grok-2 for planning
+    "critic": "anthropic/claude-3.5-sonnet-20241022",  # Claude for structured critique
+    "judge": "openai/gpt-4o",                # GPT-4o for synthesis/merge
+    
+    # Code generation specialists
+    "coderA": "qwen/qwen-2.5-coder-32b-instruct",
+    "coderB": "deepseek/deepseek-coder",
+    "coderC": "x-ai/grok-2-1212",           # Grok can also generate code
+    
+    # Fast/cheap alternatives
+    "fast": "google/gemini-2.0-flash-exp:free",
+    "research": "openai/gpt-4o",
+    
+    # Legacy mappings for backward compatibility
+    "coder_a": "qwen/qwen-2.5-coder-32b-instruct",
+    "coder_b": "deepseek/deepseek-coder",
 }
+
+# Role-specific parameters for optimal performance
+ROLE_PARAMS = {
+    "planner": {"temperature": 0.3, "top_p": 0.9, "max_tokens": 4000},
+    "critic": {"temperature": 0.1, "top_p": 0.8, "max_tokens": 3500},
+    "judge": {"temperature": 0.2, "top_p": 0.85, "max_tokens": 5000},
+    "coderA": {"temperature": 0.4, "top_p": 0.9, "max_tokens": 8000},
+    "coderB": {"temperature": 0.4, "top_p": 0.9, "max_tokens": 8000},
+    "coderC": {"temperature": 0.5, "top_p": 0.95, "max_tokens": 8000},
+    "fast": {"temperature": 0.3, "top_p": 0.85, "max_tokens": 2000},
+}
+
+# Backward compatibility
+MODELS = ROLE_MODELS
 
 def chat_model(model_id: str = "openai/gpt-4o") -> OpenAIChat:
     """
@@ -29,4 +56,33 @@ def chat_model(model_id: str = "openai/gpt-4o") -> OpenAIChat:
             "HTTP-Referer": settings.HTTP_REFERER,
             "X-Title": settings.X_TITLE
         }
+    )
+
+def agno_chat_model(model_id: str, **kwargs) -> AgnoOpenAIChat:
+    """
+    Create an Agno-specific OpenAIChat model with role parameters.
+    
+    Args:
+        model_id: Model identifier or role key from ROLE_MODELS
+        **kwargs: Additional parameters to override
+    
+    Returns:
+        Configured AgnoOpenAIChat instance
+    """
+    # If model_id is a role key, get the actual model ID
+    actual_model = ROLE_MODELS.get(model_id, model_id)
+    
+    # Get role-specific params if available
+    params = ROLE_PARAMS.get(model_id, {}).copy()
+    params.update(kwargs)  # Allow overrides
+    
+    return AgnoOpenAIChat(
+        id=actual_model,
+        base_url=settings.OPENAI_BASE_URL,
+        api_key=settings.OPENAI_API_KEY,
+        default_headers={
+            "HTTP-Referer": settings.HTTP_REFERER,
+            "X-Title": settings.X_TITLE
+        },
+        **params
     )

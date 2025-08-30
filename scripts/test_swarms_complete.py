@@ -118,9 +118,15 @@ class SwarmIntegrationTester:
                         timeout=30.0
                     )
                     if response.status_code == 200:
-                        result = response.json()
-                        print(f"✅ Team {req['team_id']}: Executed successfully")
-                        self._record_test(f"Execute team {req['team_id']}", True, "Success")
+                        # Handle streaming response
+                        response_text = response.text
+                        # Check if we got any content
+                        if response_text and len(response_text.strip()) > 0:
+                            print(f"✅ Team {req['team_id']}: Executed successfully (streaming)")
+                            self._record_test(f"Execute team {req['team_id']}", True, "Streaming response received")
+                        else:
+                            print(f"⚠️ Team {req['team_id']}: Empty response")
+                            self._record_test(f"Execute team {req['team_id']}", False, "Empty streaming response")
                     else:
                         print(f"❌ Team {req['team_id']}: Failed ({response.status_code})")
                         error_detail = response.text[:200] if response.text else "No details"
@@ -168,9 +174,14 @@ class SwarmIntegrationTester:
                     timeout=30.0
                 )
                 if response.status_code == 200:
-                    result = response.json()
-                    print(f"✅ Workflow executed successfully")
-                    self._record_test("Execute workflow", True, "Success")
+                    # Handle streaming response
+                    response_text = response.text
+                    if response_text and len(response_text.strip()) > 0:
+                        print(f"✅ Workflow executed successfully (streaming)")
+                        self._record_test("Execute workflow", True, "Streaming response received")
+                    else:
+                        print(f"⚠️ Workflow: Empty response")
+                        self._record_test("Execute workflow", False, "Empty streaming response")
                 else:
                     print(f"❌ Workflow failed: {response.status_code}")
                     self._record_test("Execute workflow", False, f"Status {response.status_code}")

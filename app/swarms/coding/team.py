@@ -18,6 +18,7 @@ from app.swarms.approval import judge_allows_run
 from app.models.router import ROLE_MODELS, agno_chat_model
 from app.swarms.coding.pools import POOLS
 from typing import List, Optional, Dict, Any
+from app.utils.response_handler import ResponseHandler, ModelResponseValidator
 
 # Import enhanced JSON validation
 try:
@@ -161,17 +162,19 @@ def run_coding_debate(team: Team, task: str) -> Dict[str, Any]:
         critic_response = team.run(critic_prompt)
         critic_out = critic_response.content or ""
         
-        # Try to extract JSON from markdown if present
-        critic_out = extract_json_from_markdown(critic_out)
-        critic_json = as_json_or_error(critic_out, ["verdict", "findings", "must_fix"])
+        # Use new response handler for robust extraction
+        critic_json = ResponseHandler.extract_json(critic_out)
         
-        if critic_json.get("_error"):
-            # One retry with more explicit prompt
+        if not critic_json:
+            # Retry with more explicit prompt
             critic_out = team.run(
-                "Critic: Reformat your review as valid JSON only, following CRITIC_SCHEMA exactly."
+                "Critic: Reformat your review as valid JSON only, following CRITIC_SCHEMA exactly:\n" +
+                '{"verdict":"pass|revise", "findings":{...}, "must_fix":[...], "nice_to_have":[...]}'
             ).content or ""
-            critic_out = extract_json_from_markdown(critic_out)
-            critic_json = as_json_or_error(critic_out, ["verdict", "findings", "must_fix"])
+            critic_json = ResponseHandler.extract_json(critic_out)
+        
+        # Validate and normalize the response
+        critic_json = ModelResponseValidator.validate_critic_response(critic_json or {})
         
         # Enhanced validation if available
         if JSON_VALIDATION_AVAILABLE and not critic_json.get("_error"):
@@ -208,12 +211,19 @@ def run_coding_debate(team: Team, task: str) -> Dict[str, Any]:
         judge_response = team.run(judge_prompt)
         judge_out = judge_response.content or ""
         
-        # Extract and validate judge JSON
-        judge_out = extract_json_from_markdown(judge_out)
-        judge_json = as_json_or_error(
-            judge_out,
-            ["decision", "runner_instructions", "rationale"]
-        )
+        # Use new response handler for robust extraction
+        judge_json = ResponseHandler.extract_json(judge_out)
+        
+        if not judge_json:
+            # Retry with more explicit prompt
+            judge_out = team.run(
+                "Judge: Return valid JSON only with this structure:\n" +
+                '{"decision":"accept|merge|reject", "runner_instructions":["step1","step2"], "rationale":"reason"}'
+            ).content or ""
+            judge_json = ResponseHandler.extract_json(judge_out)
+        
+        # Validate and normalize the response
+        judge_json = ModelResponseValidator.validate_judge_response(judge_json or {})
         
         # Enhanced validation if available
         if JSON_VALIDATION_AVAILABLE and not judge_json.get("_error"):

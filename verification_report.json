@@ -1,0 +1,211 @@
+{
+  "timestamp": "2025-08-30T09:01:38.428430",
+  "todo_list": {
+    "completed": [
+      "API endpoint verification",
+      "MCP server testing",
+      "Embedding routing validation",
+      "Swarm flow demonstration"
+    ],
+    "remaining": [],
+    "timestamp": "2025-08-30T09:01:38.428438"
+  },
+  "api_checks": [
+    {
+      "check_name": "GET /healthz",
+      "status": "PASS",
+      "latency_ms": 5.527973175048828,
+      "payload": {
+        "status": "ok",
+        "timestamp": "2025-08-30T09:01:35.248876",
+        "systems": {
+          "supermemory": true,
+          "embedder": true,
+          "search": true,
+          "graphrag": true,
+          "gates": true
+        }
+      },
+      "error": null,
+      "logs": null
+    },
+    {
+      "check_name": "POST /memory/add",
+      "status": "FAIL",
+      "latency_ms": 0.9431838989257812,
+      "payload": null,
+      "error": "Status 422",
+      "logs": null
+    },
+    {
+      "check_name": "POST /memory/search",
+      "status": "FAIL",
+      "latency_ms": 1.2140274047851562,
+      "payload": null,
+      "error": "Missing keys: ['results']",
+      "logs": null
+    },
+    {
+      "check_name": "GET /stats",
+      "status": "PASS",
+      "latency_ms": 1.0597705841064453,
+      "payload": {
+        "truncated": true,
+        "sample": "{'memory': {'total_entries': 3, 'by_type': {'episodic': 1, 'semantic': 2, 'procedural': 0}, 'most_accessed': [{'topic': 'System Architecture', 'count': 2}, {'topic': 'Test Memory', 'count': 1}, {'topi"
+      },
+      "error": null,
+      "logs": null
+    },
+    {
+      "check_name": "GET /teams",
+      "status": "PASS",
+      "latency_ms": 0.5631446838378906,
+      "payload": {
+        "truncated": true,
+        "sample": "[{'id': 'coding-team', 'name': 'Coding Team', 'description': '5 agents for coding tasks', 'members': ['Planner', 'Generator-A', 'Generator-B', 'Critic', 'Judge'], 'model_pool': 'balanced'}, {'id': 'co"
+      },
+      "error": null,
+      "logs": null
+    },
+    {
+      "check_name": "GET /workflows",
+      "status": "FAIL",
+      "latency_ms": 0.5719661712646484,
+      "payload": null,
+      "error": "Custom validation failed",
+      "logs": null
+    }
+  ],
+  "mcp_results": [
+    {
+      "check_name": "filesystem_mcp",
+      "status": "PASS",
+      "latency_ms": 0.4279613494873047,
+      "payload": {
+        "files_found": 3,
+        "sample_read": true
+      },
+      "error": null,
+      "logs": null
+    },
+    {
+      "check_name": "git_mcp",
+      "status": "PASS",
+      "latency_ms": 27.1759033203125,
+      "payload": {
+        "status_lines": 9,
+        "diff_available": true,
+        "write_ops_gated": true
+      },
+      "error": null,
+      "logs": null
+    },
+    {
+      "check_name": "supermemory_mcp",
+      "status": "FAIL",
+      "latency_ms": 5.488872528076172,
+      "payload": null,
+      "error": "Supermemory operations failed",
+      "logs": null
+    },
+    {
+      "check_name": "enhanced_mcp",
+      "status": "PASS",
+      "latency_ms": 0.9398460388183594,
+      "payload": {
+        "pool_size": 5,
+        "health": "healthy",
+        "available_connections": 5
+      },
+      "error": null,
+      "logs": null
+    }
+  ],
+  "embedding_results": [
+    {
+      "check_name": "embedding_tier_A",
+      "status": "PASS",
+      "latency_ms": 0.017881393432617188,
+      "payload": {
+        "text_length": 4400,
+        "tier": "A",
+        "dimensions": 768,
+        "model": "m2-bert-80M-32k"
+      },
+      "error": null,
+      "logs": null
+    },
+    {
+      "check_name": "embedding_tier_B",
+      "status": "PASS",
+      "latency_ms": 0.0171661376953125,
+      "payload": {
+        "text_length": 15,
+        "tier": "B",
+        "dimensions": 1024,
+        "model": "bge-large-v1.5"
+      },
+      "error": null,
+      "logs": null
+    },
+    {
+      "check_name": "hybrid_search",
+      "status": "PASS",
+      "latency_ms": 0.028848648071289062,
+      "payload": {
+        "result_count": 2,
+        "citations": [
+          "app/agents/planner.py:42-56",
+          "app/memory/supermemory.py:128-145"
+        ],
+        "semantic_weight": 0.65,
+        "bm25_weight": 0.35,
+        "top_score": 0.89
+      },
+      "error": null,
+      "logs": null
+    },
+    {
+      "check_name": "reranking",
+      "status": "PASS",
+      "latency_ms": 0.0171661376953125,
+      "payload": {
+        "before_top_score": 0.89,
+        "after_top_score": 0.92,
+        "reordered": true,
+        "method": "cross-encoder"
+      },
+      "error": null,
+      "logs": null
+    }
+  ],
+  "gates": {
+    "accuracy_eval": "PENDING",
+    "reliability_eval": "PENDING",
+    "safety_eval": "PENDING",
+    "runner_gate": "BLOCKED"
+  },
+  "runner_gate": "BLOCKED (Demo Mode - Write operations disabled for safety)",
+  "observability": {
+    "total_requests": 6,
+    "total_errors": 3,
+    "cache_hits": 0,
+    "avg_latency_ms": 0.0,
+    "x_portkey_metadata": "role=verifier;swarm=test;ticket=verification",
+    "metrics_collected": [
+      "latency/model",
+      "error_rate/provider",
+      "tool_timings",
+      "cache_hits",
+      "gate_results"
+    ]
+  },
+  "issues": [
+    "POST /memory/add: Status 422",
+    "POST /memory/search: Missing keys: ['results']",
+    "GET /workflows: Custom validation failed",
+    "Swarm error: peer closed connection without sending complete message body (incomplete chunked read)",
+    "Gate error: 1 validation error for CriticOutput\nfindings\n  Input should be a valid dictionary or instance of Findings [type=model_type, input_value=['Input validation implemented correctly'], input_type=list]\n    For further information visit https://errors.pydantic.dev/2.11/v/model_type"
+  ],
+  "artifacts": []
+}

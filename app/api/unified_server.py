@@ -322,7 +322,17 @@ async def search_memory(request: SearchRequest):
     return {
         "query": request.query,
         "count": len(entries),
-        "entries": [
+        "results": [
+            {
+                "topic": e.topic,
+                "content": e.content,
+                "source": e.source,
+                "tags": e.tags,
+                "type": e.memory_type.value
+            }
+            for e in entries
+        ],
+        "entries": [  # Keep for backward compatibility
             {
                 "topic": e.topic,
                 "content": e.content,

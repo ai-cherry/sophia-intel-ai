@@ -231,13 +231,23 @@ class AccuracyEval:
         
         # Incorporate critic feedback if available
         if critic_output:
-            if critic_output.verdict == "pass":
+            # Handle both dict and object formats
+            if isinstance(critic_output, dict):
+                verdict = critic_output.get("verdict")
+                must_fix = critic_output.get("must_fix", [])
+                confidence_score = critic_output.get("confidence_score", 0.7)
+            else:
+                verdict = critic_output.verdict
+                must_fix = critic_output.must_fix
+                confidence_score = critic_output.confidence_score
+            
+            if verdict == "pass":
                 score += 2.0
             else:
                 score += 0.5
-                failures.extend(critic_output.must_fix)
+                failures.extend(must_fix)
             
-            details["critic_confidence"] = critic_output.confidence_score
+            details["critic_confidence"] = confidence_score
         
         # Check acceptance criteria coverage (simplified)
         criteria_keywords = set()
@@ -406,16 +416,24 @@ class ReliabilityEval:
         
         # Check judge decision consistency
         if judge_output:
-            if judge_output.decision == "reject":
+            # Handle both dict and object formats
+            if isinstance(judge_output, dict):
+                decision = judge_output.get("decision")
+                runner_instructions = judge_output.get("runner_instructions", [])
+            else:
+                decision = judge_output.decision
+                runner_instructions = judge_output.runner_instructions
+            
+            if decision == "reject":
                 # Should not have write tools
                 write_tools = {"repo_fs.write", "repo_fs.patch", "git.commit", "git.push"}
                 if write_tools & actual_tool_names:
                     failures.append("Write tools called despite judge rejection")
                 else:
                     score += 1.0
-            elif judge_output.decision in ["accept", "merge"]:
+            elif decision in ["accept", "merge"]:
                 # Should have runner instructions
-                if judge_output.runner_instructions:
+                if runner_instructions:
                     score += 1.0
                 else:
                     warnings.append("Judge approved but no runner instructions")

@@ -1,0 +1,118 @@
+{
+  "timestamp": "2025-08-30T16:25:50.118762",
+  "tests": [
+    {
+      "name": "Health check",
+      "success": true,
+      "details": "{'status': 'ok', 'timestamp': '2025-08-30T16:25:50.141215', 'systems': {'supermemory': True, 'embedder': True, 'search': True, 'graphrag': True, 'gates': True}}",
+      "timestamp": "2025-08-30T16:25:50.141868"
+    },
+    {
+      "name": "Get teams",
+      "success": true,
+      "details": "4 teams",
+      "timestamp": "2025-08-30T16:25:50.146419"
+    },
+    {
+      "name": "Execute team SIMPLEX",
+      "success": false,
+      "details": "Expecting value: line 1 column 1 (char 0)",
+      "timestamp": "2025-08-30T16:25:53.258931"
+    },
+    {
+      "name": "Execute team CONSENSUS",
+      "success": false,
+      "details": "Expecting value: line 1 column 1 (char 0)",
+      "timestamp": "2025-08-30T16:25:56.371833"
+    },
+    {
+      "name": "Get workflows",
+      "success": true,
+      "details": "2 workflows",
+      "timestamp": "2025-08-30T16:25:56.383907"
+    },
+    {
+      "name": "Execute workflow",
+      "success": false,
+      "details": "Expecting value: line 1 column 1 (char 0)",
+      "timestamp": "2025-08-30T16:25:58.891635"
+    },
+    {
+      "name": "Memory storage",
+      "success": true,
+      "details": "Success",
+      "timestamp": "2025-08-30T16:25:58.905550"
+    },
+    {
+      "name": "Memory search",
+      "success": true,
+      "details": "1 results",
+      "timestamp": "2025-08-30T16:25:58.908011"
+    },
+    {
+      "name": "Hybrid search",
+      "success": true,
+      "details": "0 results",
+      "timestamp": "2025-08-30T16:25:58.914913"
+    },
+    {
+      "name": "MCP filesystem config",
+      "success": true,
+      "details": "Enabled",
+      "timestamp": "2025-08-30T16:25:58.914977"
+    },
+    {
+      "name": "MCP git config",
+      "success": true,
+      "details": "Enabled",
+      "timestamp": "2025-08-30T16:25:58.914981"
+    },
+    {
+      "name": "MCP supermemory config",
+      "success": true,
+      "details": "Enabled",
+      "timestamp": "2025-08-30T16:25:58.914983"
+    },
+    {
+      "name": "Statistics",
+      "success": true,
+      "details": "Success",
+      "timestamp": "2025-08-30T16:25:58.922518"
+    },
+    {
+      "name": "Pattern imports",
+      "success": true,
+      "details": "All patterns imported",
+      "timestamp": "2025-08-30T16:25:58.934391"
+    },
+    {
+      "name": "Adversarial Debate pattern",
+      "success": true,
+      "details": "Initialized",
+      "timestamp": "2025-08-30T16:25:58.934401"
+    },
+    {
+      "name": "Quality Gates pattern",
+      "success": true,
+      "details": "Initialized",
+      "timestamp": "2025-08-30T16:25:58.934408"
+    },
+    {
+      "name": "Consensus pattern",
+      "success": true,
+      "details": "Initialized",
+      "timestamp": "2025-08-30T16:25:58.934413"
+    },
+    {
+      "name": "AG UI connection",
+      "success": true,
+      "details": "Port 3000",
+      "timestamp": "2025-08-30T16:25:58.948069"
+    }
+  ],
+  "summary": {
+    "total": 18,
+    "passed": 15,
+    "failed": 3
+  }
+}

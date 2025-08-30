@@ -1,19 +1,28 @@
-# SophIA-Intel-AI
+# Sophia Intel AI - Production-Ready Multi-Agent System
 
-Advanced AI Agent Orchestration System with unified API, multi-tiered memory, intelligent routing, and comprehensive swarm patterns.
+[![Version](https://img.shields.io/badge/version-1.8.1-blue.svg)]()
+[![Python](https://img.shields.io/badge/python-3.11+-green.svg)]()
+[![License](https://img.shields.io/badge/license-MIT-purple.svg)]()
+[![Status](https://img.shields.io/badge/status-active-success.svg)]()
+
+Advanced AI Agent Orchestration System with unified API, multi-tiered memory, intelligent routing, and comprehensive swarm patterns. Production-ready with enterprise-grade security, monitoring, and scalability.
 
 ## 🚀 Architecture Overview
 
-SophIA-Intel-AI is a sophisticated AI agent orchestration framework that combines:
-- **Unified API Gateway** through FastAPI
-- **Portkey → OpenRouter** for 300+ LLM models
+Sophia Intel AI is a sophisticated AI agent orchestration framework that combines:
+- **Unified API Gateway** through FastAPI with SSE streaming
+- **Portkey → OpenRouter** for 499+ LLM models (August 2025)
+- **Latest Models**: GPT-5, Claude-4, Gemini 2.5, DeepSeek V3.1, X.AI Grok
 - **Together AI** for high-quality embeddings
 - **Weaviate v1.32** for vector storage with RQ compression
+- **PostgreSQL** for persistent memory (production)
+- **Redis** for caching and rate limiting
 - **Dual-tier Embeddings** with intelligent routing
 - **HybridSearch** combining semantic and BM25 retrieval
 - **GraphRAG** for knowledge graph-powered retrieval
-- **Evaluation Gates** for quality control
+- **Evaluation Gates** with safety, compliance, and performance checks
 - **Advanced Swarm Patterns** for complex reasoning
+- **MCP Servers** for filesystem, git, and memory operations
 
 ### Architecture Diagram
 

@@ -245,6 +245,57 @@ async def health():
         }
     }
 
+@app.get("/config")
+async def get_config():
+    """Get runtime configuration (dev mode only)."""
+    # Only allow in development mode
+    if not os.getenv("LOCAL_DEV_MODE", "false").lower() == "true":
+        raise HTTPException(status_code=403, detail="Config endpoint only available in dev mode")
+    
+    return {
+        "environment": "development" if os.getenv("LOCAL_DEV_MODE") else "production",
+        "server": {
+            "api_port": os.getenv("AGENT_API_PORT", "8003"),
+            "ui_port": os.getenv("AGENT_UI_PORT", "3000"),
+            "allowed_origins": os.getenv("ALLOWED_ORIGINS", "http://localhost:3000").split(","),
+            "rate_limit": os.getenv("RATE_LIMIT_PER_MINUTE", "60")
+        },
+        "features": {
+            "mcp_servers": {
+                "filesystem": os.getenv("ENABLE_MCP_FILESYSTEM", "true").lower() == "true",
+                "git": os.getenv("ENABLE_MCP_GIT", "true").lower() == "true",
+                "supermemory": os.getenv("ENABLE_MCP_SUPERMEMORY", "true").lower() == "true"
+            },
+            "evaluation_gates": ["security", "accuracy", "consistency", "safety"],
+            "swarm_patterns": ["adversarial_debate", "quality_gates", "consensus", "dynamic_roles"],
+            "model_pools": ["premium", "balanced", "free"]
+        },
+        "models": {
+            "provider": "openrouter",
+            "available_count": 499,
+            "latest_models": [
+                "openai/gpt-5",
+                "anthropic/claude-4",
+                "google/gemini-2.5-pro",
+                "deepseek/deepseek-r1",
+                "x-ai/grok-code-fast-1"
+            ],
+            "fallback_chain": ["primary", "secondary", "free"],
+            "default_pool": os.getenv("DEFAULT_MODEL_POOL", "balanced")
+        },
+        "database": {
+            "memory_backend": "supermemory" if not os.getenv("DATABASE_URL") else "postgresql",
+            "vector_store": "in-memory" if not os.getenv("FAISS_INDEX_PATH") else "faiss",
+            "cache": "none" if not os.getenv("REDIS_URL") else "redis"
+        },
+        "security": {
+            "authentication": "none" if not os.getenv("JWT_SECRET") else "jwt",
+            "rate_limiting": os.getenv("ENABLE_RATE_LIMIT", "false").lower() == "true",
+            "cors_enabled": True,
+            "audit_logging": os.getenv("ENABLE_AUDIT_LOG", "false").lower() == "true"
+        }
+    }
+
 @app.get("/teams", response_model=List[TeamInfo])
 async def get_teams():
     """Get available teams with their configurations."""

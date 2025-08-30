@@ -399,24 +399,24 @@ gateway = PortkeyGateway()
 
 MODEL_RECOMMENDATIONS = {
     Role.PLANNER: {
-        "default": "xai/grok-4",
-        "alternatives": ["openai/gpt-4o", "anthropic/claude-3.7-sonnet"],
+        "default": "openai/gpt-5",
+        "alternatives": ["anthropic/claude-opus-4", "google/gemini-2.5-pro"],
         "temperature": 0.3
     },
     Role.CRITIC: {
-        "default": "anthropic/claude-3.7-sonnet",
-        "alternatives": ["openai/gpt-4o", "google/gemini-2.0-flash-thinking-exp"],
+        "default": "anthropic/claude-3.7-sonnet:thinking",
+        "alternatives": ["anthropic/claude-3.7-sonnet", "openai/gpt-5"],
         "temperature": 0.1
     },
     Role.JUDGE: {
         "default": "openai/gpt-5",
-        "alternatives": ["openai/gpt-4o", "anthropic/claude-3.7-sonnet"],
+        "alternatives": ["anthropic/claude-opus-4", "openai/o3"],
         "temperature": 0.2
     },
     Role.GENERATOR: {
-        "fast": ["xai/grok-code-fast-1", "openai/gpt-4o-mini"],
-        "heavy": ["deepseek/deepseek-v3.1", "qwen/qwen3-coder-480b-a35b"],
-        "balanced": ["openai/gpt-4o", "anthropic/claude-3.7-sonnet"],
+        "fast": ["deepseek/deepseek-chat-v3.1:free", "google/gemini-2.5-flash"],
+        "heavy": ["openai/gpt-5", "anthropic/claude-opus-4", "x-ai/grok-3"],
+        "balanced": ["google/gemini-2.5-pro", "deepseek/deepseek-chat-v3.1"],
         "temperature": 0.7
     }
 }

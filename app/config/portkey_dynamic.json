@@ -1,0 +1,263 @@
+{
+  "version": "2025.08",
+  "description": "Dynamic Portkey configuration for latest OpenRouter models (August 2025)",
+  "strategy": {
+    "mode": "conditional",
+    "conditions": [
+      {
+        "query": {
+          "params.model": {"$eq": "latest-gpt"}
+        },
+        "then": "gpt5-target"
+      },
+      {
+        "query": {
+          "params.model": {"$eq": "latest-claude"}
+        },
+        "then": "claude4-target"
+      },
+      {
+        "query": {
+          "params.model": {"$eq": "latest-gemini"}
+        },
+        "then": "gemini25-target"
+      },
+      {
+        "query": {
+          "params.model": {"$eq": "best-reasoning"}
+        },
+        "then": "reasoning-target"
+      },
+      {
+        "query": {
+          "params.model": {"$eq": "best-coding"}
+        },
+        "then": "coding-target"
+      },
+      {
+        "query": {
+          "params.model": {"$eq": "best-vision"}
+        },
+        "then": "vision-target"
+      },
+      {
+        "query": {
+          "params.model": {"$eq": "free-tier"}
+        },
+        "then": "free-target"
+      },
+      {
+        "query": {
+          "$and": [
+            {"metadata.priority": {"$eq": "critical"}},
+            {"metadata.budget": {"$gte": 100}}
+          ]
+        },
+        "then": "premium-target"
+      },
+      {
+        "query": {
+          "metadata.cost_sensitive": {"$eq": true}
+        },
+        "then": "cost-optimized-target"
+      }
+    ],
+    "default": "balanced-target"
+  },
+  "targets": [
+    {
+      "name": "gpt5-target",
+      "virtual_key": "openrouter-main",
+      "override_params": {
+        "model": "openai/gpt-5",
+        "extra_body": {
+          "provider": {
+            "order": ["openai"],
+            "allow_fallbacks": true,
+            "fallback_models": ["openai/gpt-5-mini", "openai/gpt-4o"]
+          }
+        }
+      },
+      "retry": {
+        "attempts": 3,
+        "on_status_codes": [429, 502, 503]
+      }
+    },
+    {
+      "name": "claude4-target",
+      "virtual_key": "openrouter-main",
+      "override_params": {
+        "model": "anthropic/claude-opus-4",
+        "extra_body": {
+          "provider": {
+            "order": ["anthropic"],
+            "allow_fallbacks": true,
+            "fallback_models": ["anthropic/claude-sonnet-4", "anthropic/claude-3.7-sonnet"]
+          }
+        }
+      }
+    },
+    {
+      "name": "gemini25-target",
+      "virtual_key": "openrouter-main",
+      "override_params": {
+        "model": "google/gemini-2.5-pro",
+        "extra_body": {
+          "provider": {
+            "order": ["google"],
+            "allow_fallbacks": true,
+            "fallback_models": ["google/gemini-2.5-flash", "google/gemini-2.0-flash-001"]
+          }
+        }
+      }
+    },
+    {
+      "name": "reasoning-target",
+      "virtual_key": "openrouter-main",
+      "override_params": {
+        "model": "deepseek/deepseek-r1",
+        "extra_body": {
+          "provider": {
+            "order": ["deepseek", "openai"],
+            "allow_fallbacks": true,
+            "fallback_models": ["openai/o3", "anthropic/claude-3.7-sonnet:thinking"]
+          }
+        }
+      }
+    },
+    {
+      "name": "coding-target",
+      "virtual_key": "openrouter-main",
+      "override_params": {
+        "model": "x-ai/grok-code-fast-1",
+        "extra_body": {
+          "provider": {
+            "order": ["x-ai", "qwen", "deepseek"],
+            "allow_fallbacks": true,
+            "fallback_models": ["qwen/qwen3-coder", "mistralai/codestral-2501", "deepseek/deepseek-chat-v3.1"]
+          }
+        }
+      }
+    },
+    {
+      "name": "vision-target",
+      "virtual_key": "openrouter-main",
+      "override_params": {
+        "model": "google/gemini-2.5-flash-image-preview",
+        "extra_body": {
+          "provider": {
+            "order": ["google", "openai"],
+            "allow_fallbacks": true,
+            "fallback_models": ["openai/gpt-5", "anthropic/claude-opus-4"]
+          }
+        }
+      }
+    },
+    {
+      "name": "free-target",
+      "virtual_key": "openrouter-main",
+      "override_params": {
+        "model": "deepseek/deepseek-chat-v3.1:free",
+        "extra_body": {
+          "provider": {
+            "order": ["deepseek", "meta-llama", "qwen"],
+            "allow_fallbacks": true,
+            "fallback_models": [
+              "deepseek/deepseek-r1:free",
+              "meta-llama/llama-4-maverick:free",
+              "qwen/qwen3-235b-a22b:free",
+              "mistralai/mistral-small-3.2-24b-instruct:free"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "premium-target",
+      "virtual_key": "openrouter-main",
+      "override_params": {
+        "model": "openai/gpt-5",
+        "extra_body": {
+          "provider": {
+            "order": ["openai", "anthropic"],
+            "allow_fallbacks": true,
+            "data_collection": "deny",
+            "fallback_models": ["anthropic/claude-opus-4", "openai/o3-pro"]
+          }
+        }
+      },
+      "retry": {
+        "attempts": 5,
+        "on_status_codes": [429, 502, 503]
+      },
+      "cache": {
+        "mode": "simple",
+        "max_age": 3600
+      }
+    },
+    {
+      "name": "cost-optimized-target",
+      "virtual_key": "openrouter-main",
+      "override_params": {
+        "model": "deepseek/deepseek-chat-v3.1",
+        "extra_body": {
+          "provider": {
+            "order": ["deepseek", "meta-llama", "qwen"],
+            "allow_fallbacks": true,
+            "prefer_free_tier": true,
+            "fallback_models": [
+              "deepseek/deepseek-chat-v3.1:free",
+              "meta-llama/llama-3.3-70b-instruct:free",
+              "qwen/qwen3-235b-a22b:free"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "balanced-target",
+      "virtual_key": "openrouter-main",
+      "override_params": {
+        "model": "google/gemini-2.5-pro",
+        "extra_body": {
+          "provider": {
+            "order": ["google", "deepseek", "anthropic"],
+            "allow_fallbacks": true,
+            "fallback_models": [
+              "deepseek/deepseek-chat-v3.1",
+              "anthropic/claude-3.7-sonnet",
+              "openai/gpt-4o"
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "model_aliases": {
+    "gpt-latest": "openai/gpt-5",
+    "claude-latest": "anthropic/claude-opus-4",
+    "gemini-latest": "google/gemini-2.5-pro",
+    "deepseek-latest": "deepseek/deepseek-chat-v3.1",
+    "llama-latest": "meta-llama/llama-4-maverick",
+    "reasoning-best": "deepseek/deepseek-r1",
+    "coding-best": "x-ai/grok-code-fast-1",
+    "vision-best": "google/gemini-2.5-flash-image-preview",
+    "free-best": "deepseek/deepseek-chat-v3.1:free"
+  },
+  "deprecated_mappings": {
+    "openai/gpt-4": "openai/gpt-4o",
+    "openai/gpt-4-turbo": "openai/gpt-4o",
+    "openai/gpt-3.5-turbo": "openai/gpt-4o-mini",
+    "anthropic/claude-2": "anthropic/claude-3.5-sonnet",
+    "anthropic/claude-instant": "anthropic/claude-3.5-haiku",
+    "google/gemini-pro": "google/gemini-2.5-pro",
+    "deepseek/deepseek-coder": "deepseek/deepseek-chat-v3.1",
+    "meta-llama/llama-2-70b": "meta-llama/llama-3.3-70b-instruct"
+  },
+  "monitoring": {
+    "health_check_interval": 900,
+    "model_refresh_interval": 21600,
+    "alert_on_failure_count": 3,
+    "track_usage_metrics": true
+  }
+}

@@ -2,25 +2,34 @@ from agno import OpenAIChat
 from agno.models.openai import OpenAIChat as AgnoOpenAIChat
 from app import settings
 
-# Role→Model mappings using latest OpenRouter models
+# Role→Model mappings using latest OpenRouter models (August 2025)
 ROLE_MODELS = {
-    # Strategic/Planning roles
-    "planner": "x-ai/grok-2-1212",           # Grok-2 for planning
-    "critic": "anthropic/claude-3.5-sonnet-20241022",  # Claude for structured critique
-    "judge": "openai/gpt-4o",                # GPT-4o for synthesis/merge
+    # Strategic/Planning roles - Latest models
+    "planner": "openai/gpt-5",                      # GPT-5 for advanced planning
+    "critic": "anthropic/claude-3.7-sonnet",        # Claude 3.7 with thinking mode
+    "judge": "openai/gpt-5",                        # GPT-5 for synthesis/merge
     
-    # Code generation specialists
-    "coderA": "qwen/qwen-2.5-coder-32b-instruct",
-    "coderB": "deepseek/deepseek-coder",
-    "coderC": "x-ai/grok-2-1212",           # Grok can also generate code
+    # Code generation specialists - Latest coding models
+    "coderA": "x-ai/grok-code-fast-1",             # Grok Code Fast for primary coding
+    "coderB": "qwen/qwen3-coder",                  # Qwen3 Coder as alternative
+    "coderC": "mistralai/codestral-2501",          # Latest Codestral
     
-    # Fast/cheap alternatives
-    "fast": "google/gemini-2.0-flash-exp:free",
-    "research": "openai/gpt-4o",
+    # Reasoning and analysis
+    "reasoning": "deepseek/deepseek-r1",           # DeepSeek R1 for reasoning
+    "analyzer": "google/gemini-2.5-pro",           # Gemini 2.5 Pro for analysis
+    "validator": "anthropic/claude-3.7-sonnet:thinking",  # Claude thinking mode
+    
+    # Fast/cheap alternatives - Free tier models
+    "fast": "deepseek/deepseek-chat-v3.1:free",    # Free DeepSeek V3.1
+    "research": "google/gemini-2.5-flash",         # Fast Gemini 2.5
+    "free": "meta-llama/llama-4-maverick:free",    # Free Llama 4
+    
+    # Vision-capable models
+    "vision": "google/gemini-2.5-flash-image-preview",  # Image generation/analysis
     
     # Legacy mappings for backward compatibility
-    "coder_a": "qwen/qwen-2.5-coder-32b-instruct",
-    "coder_b": "deepseek/deepseek-coder",
+    "coder_a": "x-ai/grok-code-fast-1",
+    "coder_b": "qwen/qwen3-coder",
 }
 
 # Role-specific parameters for optimal performance

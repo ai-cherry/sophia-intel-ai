@@ -43,7 +43,7 @@ export function TeamWorkflowPanel() {
   const loadTeamsAndWorkflows = async () => {
     try {
       const [teamsData, workflowsData] = await Promise.all([
-        fetchJSON<Team[]>('/agents', {}, 2, endpoint),
+        fetchJSON<Team[]>('/teams', {}, 2, endpoint),
         fetchJSON<Workflow[]>('/workflows', {}, 2, endpoint),
       ]);
       setTeams(teamsData || []);
@@ -63,7 +63,7 @@ export function TeamWorkflowPanel() {
     try {
       const parsedData = JSON.parse(additionalData);
       
-      await streamText(`${endpoint}/run/team`, {
+      await streamText(`${endpoint}/teams/run`, {
         method: 'POST',
         body: JSON.stringify({
           team_id: selectedTeam.id,
@@ -100,7 +100,7 @@ export function TeamWorkflowPanel() {
     try {
       const parsedData = JSON.parse(additionalData);
       
-      await streamText(`${endpoint}/run/workflow`, {
+      await streamText(`${endpoint}/workflows/run`, {
         method: 'POST',
         body: JSON.stringify({
           workflow_id: selectedWorkflow.id,

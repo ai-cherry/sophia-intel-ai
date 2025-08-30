@@ -190,6 +190,14 @@ class RunRequest(BaseModel):
     use_graphrag: bool = False
     use_memory: bool = True
 
+class MemoryRequest(BaseModel):
+    """Memory add request."""
+    topic: str
+    content: str
+    source: str
+    tags: List[str] = Field(default_factory=list)
+    memory_type: str = "semantic"
+
 class SearchRequest(BaseModel):
     """Search request."""
     query: str
@@ -284,23 +292,17 @@ async def get_workflows():
 # ============================================
 
 @app.post("/memory/add")
-async def add_memory(
-    topic: str,
-    content: str,
-    source: str,
-    tags: List[str] = [],
-    memory_type: str = "semantic"
-):
+async def add_memory(request: MemoryRequest):
     """Add entry to Supermemory."""
     if not state.supermemory:
         raise HTTPException(status_code=503, detail="Supermemory not initialized")
     
     entry = MemoryEntry(
-        topic=topic,
-        content=content,
-        source=source,
-        tags=tags,
-        memory_type=MemoryType(memory_type)
+        topic=request.topic,
+        content=request.content,
+        source=request.source,
+        tags=request.tags,
+        memory_type=MemoryType(request.memory_type)
     )
     
     result = await state.supermemory.add_to_memory(entry)
@@ -466,7 +468,8 @@ async def execute_team_with_gates(
             }
         }
     
-    yield f"data: {json.dumps({'phase': 'gates', 'token': f'🚪 Runner Gate: {gate_result[\"status\"]}', 'gates': gate_result})}\n\n"
+    gate_status = gate_result["status"]
+    yield f"data: {json.dumps({'phase': 'gates', 'token': f'🚪 Runner Gate: {gate_status}', 'gates': gate_result})}\n\n"
     
     # Final result
     final_response = {

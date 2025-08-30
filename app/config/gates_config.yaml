@@ -1,0 +1,29 @@
+
+thresholds:
+  accuracy: 0.85
+  quality: 0.80
+  safety: 0.95
+  completeness: 0.75
+  coherence: 0.70
+
+weights:
+  semantic: 0.6
+  bm25: 0.4
+  graph: 0.2
+
+evaluation_gates:
+  critic:
+    min_score: 0.7
+    required_fields: ["feedback", "suggestions", "score"]
+  judge:
+    min_score: 0.8
+    required_fields: ["decision", "reasoning", "confidence"]
+  runner:
+    safety_check: true
+    require_approval: false
+
+retry_strategies:
+  low_quality: "expand_team"
+  medium_quality: "increase_creativity"
+  timeout: "simplify_problem"
+  error: "fallback_model"

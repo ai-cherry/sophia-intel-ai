@@ -1,0 +1,189 @@
+{
+  "version": "1.0",
+  "description": "Portkey routing configuration for Sophia Intel AI",
+  "virtual_keys": {
+    "openrouter": {
+      "provider": "openrouter",
+      "key_env": "OPENROUTER_API_KEY",
+      "models": [
+        "qwen/qwen-2.5-coder-32b-instruct",
+        "deepseek/deepseek-coder-v2",
+        "deepseek/deepseek-reasoner",
+        "mistral/mistral-large",
+        "perplexity/llama-3.1-sonar-large"
+      ]
+    },
+    "anthropic": {
+      "provider": "anthropic",
+      "key_env": "ANTHROPIC_API_KEY",
+      "models": [
+        "claude-3-7-sonnet",
+        "claude-3-haiku",
+        "claude-3-sonnet"
+      ]
+    },
+    "openai": {
+      "provider": "openai",
+      "key_env": "OPENAI_NATIVE_API_KEY",
+      "models": [
+        "gpt-4o",
+        "gpt-4o-mini"
+      ]
+    },
+    "groq": {
+      "provider": "groq",
+      "key_env": "GROQ_API_KEY",
+      "models": [
+        "llama-3.1-70b",
+        "mixtral-8x7b"
+      ]
+    },
+    "deepseek": {
+      "provider": "deepseek",
+      "key_env": "DEEPSEEK_API_KEY",
+      "models": [
+        "deepseek-coder-6.7b",
+        "deepseek-reasoner"
+      ]
+    }
+  },
+  "routing_rules": [
+    {
+      "name": "Planning Tasks",
+      "pattern": "planner|architect",
+      "primary": "anthropic/claude-3-7-sonnet",
+      "fallbacks": [
+        "openai/gpt-4o",
+        "openrouter/mistral/mistral-large"
+      ],
+      "retry_on": ["rate_limit", "timeout"],
+      "max_retries": 3
+    },
+    {
+      "name": "Code Generation",
+      "pattern": "coder|generator",
+      "load_balance": [
+        {
+          "model": "openrouter/qwen/qwen-2.5-coder-32b-instruct",
+          "weight": 0.4
+        },
+        {
+          "model": "openrouter/deepseek/deepseek-coder-v2",
+          "weight": 0.3
+        },
+        {
+          "model": "openai/gpt-4o",
+          "weight": 0.3
+        }
+      ],
+      "cache_ttl": 3600
+    },
+    {
+      "name": "Fast Tasks",
+      "pattern": "fast|quick|prototype",
+      "primary": "openrouter/deepseek/deepseek-coder-6.7b",
+      "fallbacks": [
+        "groq/llama-3.1-70b",
+        "openai/gpt-4o-mini"
+      ],
+      "timeout": 10000,
+      "cache_ttl": 1800
+    },
+    {
+      "name": "Security Analysis",
+      "pattern": "security|vulnerability",
+      "primary": "anthropic/claude-3-haiku",
+      "fallbacks": [
+        "openai/gpt-4o"
+      ],
+      "temperature": 0.2,
+      "guardrails": {
+        "pii_detection": true,
+        "redact_secrets": true
+      }
+    },
+    {
+      "name": "Research Tasks",
+      "pattern": "research|explore",
+      "primary": "openrouter/perplexity/llama-3.1-sonar-large",
+      "fallbacks": [
+        "openai/gpt-4o",
+        "anthropic/claude-3-sonnet"
+      ],
+      "temperature": 0.7
+    },
+    {
+      "name": "Judge/Reasoning",
+      "pattern": "judge|reason|evaluate",
+      "primary": "openrouter/deepseek/deepseek-reasoner",
+      "fallbacks": [
+        "openai/gpt-4o",
+        "anthropic/claude-3-7-sonnet"
+      ],
+      "temperature": 0.3,
+      "max_tokens": 4096
+    }
+  ],
+  "global_settings": {
+    "retry_strategy": {
+      "max_attempts": 3,
+      "backoff_multiplier": 2,
+      "initial_delay": 1000
+    },
+    "rate_limits": {
+      "requests_per_minute": 100,
+      "tokens_per_minute": 100000
+    },
+    "budgets": {
+      "daily_limit_usd": 100,
+      "alert_threshold": 0.8
+    },
+    "observability": {
+      "log_requests": true,
+      "log_responses": false,
+      "trace_latency": true,
+      "export_to": "langfuse"
+    },
+    "caching": {
+      "enabled": true,
+      "default_ttl": 3600,
+      "max_cache_size_mb": 1000
+    }
+  },
+  "cost_optimization": {
+    "strategies": [
+      {
+        "name": "Use cheaper models for simple tasks",
+        "condition": "token_count < 500",
+        "action": "route_to_mini_models"
+      },
+      {
+        "name": "Cache frequent queries",
+        "condition": "similarity > 0.95",
+        "action": "return_cached_response"
+      },
+      {
+        "name": "Batch similar requests",
+        "condition": "queue_size > 5",
+        "action": "batch_process"
+      }
+    ]
+  },
+  "failover_chains": {
+    "critical_path": [
+      "openai/gpt-4o",
+      "anthropic/claude-3-7-sonnet",
+      "openrouter/mistral/mistral-large"
+    ],
+    "standard_path": [
+      "openrouter/qwen/qwen-2.5-coder-32b-instruct",
+      "openai/gpt-4o-mini",
+      "groq/llama-3.1-70b"
+    ],
+    "economy_path": [
+      "groq/mixtral-8x7b",
+      "openrouter/deepseek/deepseek-coder-6.7b",
+      "openai/gpt-4o-mini"
+    ]
+  }
+}

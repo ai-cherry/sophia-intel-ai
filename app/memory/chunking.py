@@ -1,5 +1,8 @@
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional, Tuple
 import re
+import os
+import hashlib
+from pathlib import Path
 
 def chunk_code(
     content: str, 
@@ -147,3 +150,138 @@ def _detect_language(filepath: str) -> str:
         if filepath.lower().endswith(ext):
             return lang
     return 'unknown'
+
+def produce_chunks_for_index(
+    filepath: str,
+    content: Optional[str] = None,
+    priority: Optional[str] = None
+) -> Tuple[List[str], List[str], List[Dict]]:
+    """
+    Produce chunks ready for indexing with IDs, texts, and payloads.
+    
+    Args:
+        filepath: Path to the file
+        content: File content (will read if not provided)
+        priority: Priority level for routing (high/medium/low)
+    
+    Returns:
+        Tuple of (ids, texts, payloads) ready for upsert_chunks_dual
+    """
+    if content is None:
+        with open(filepath, 'r', encoding='utf-8') as f:
+            content = f.read()
+    
+    # Generate chunks
+    chunks = chunk_code(content, filepath)
+    
+    ids = []
+    texts = []
+    payloads = []
+    
+    for i, chunk in enumerate(chunks):
+        # Generate stable chunk ID
+        chunk_data = f"{filepath}:{chunk['start_line']}:{chunk['end_line']}"
+        chunk_id = hashlib.sha256(chunk_data.encode()).hexdigest()[:16]
+        
+        ids.append(chunk_id)
+        texts.append(chunk["content"])
+        payloads.append({
+            "path": filepath,
+            "lang": chunk["language"],
+            "start_line": chunk["start_line"],
+            "end_line": chunk["end_line"],
+            "chunk_id": chunk_id,
+            "priority": priority or _infer_priority(filepath, chunk["language"])
+        })
+    
+    return ids, texts, payloads
+
+def discover_source_files(
+    root_dir: str = ".",
+    include_patterns: Optional[List[str]] = None,
+    exclude_patterns: Optional[List[str]] = None
+) -> List[str]:
+    """
+    Discover source files for indexing.
+    
+    Args:
+        root_dir: Root directory to search
+        include_patterns: File patterns to include (e.g., ["*.py", "*.ts"])
+        exclude_patterns: Patterns to exclude (e.g., ["*test*", "*.min.js"])
+    
+    Returns:
+        List of file paths to index
+    """
+    if include_patterns is None:
+        include_patterns = [
+            "*.py", "*.js", "*.ts", "*.jsx", "*.tsx",
+            "*.java", "*.cpp", "*.c", "*.cs", "*.go",
+            "*.rs", "*.rb", "*.php", "*.swift", "*.kt"
+        ]
+    
+    if exclude_patterns is None:
+        exclude_patterns = [
+            "*test*", "*spec*", "*.min.js", "*vendor*",
+            "*node_modules*", "*__pycache__*", "*.pyc",
+            "*dist/*", "*build/*", "*target/*"
+        ]
+    
+    files = []
+    root = Path(root_dir)
+    
+    for pattern in include_patterns:
+        for filepath in root.rglob(pattern):
+            # Check exclusions
+            skip = False
+            for exc in exclude_patterns:
+                if filepath.match(exc):
+                    skip = True
+                    break
+            
+            if not skip and filepath.is_file():
+                # Check file size (skip very large files)
+                if filepath.stat().st_size < 500_000:  # 500KB limit
+                    files.append(str(filepath))
+    
+    return sorted(set(files))
+
+def _infer_priority(filepath: str, language: str) -> str:
+    """
+    Infer chunk priority based on file characteristics.
+    
+    Args:
+        filepath: File path
+        language: Detected language
+    
+    Returns:
+        Priority level (high/medium/low)
+    """
+    # High priority patterns
+    high_priority = [
+        "main", "index", "app", "core", "api",
+        "schema", "model", "config", "settings"
+    ]
+    
+    # Low priority patterns
+    low_priority = [
+        "test", "spec", "mock", "fixture", "example",
+        "demo", "sample", "docs", "readme"
+    ]
+    
+    filepath_lower = filepath.lower()
+    
+    # Check for high priority indicators
+    for pattern in high_priority:
+        if pattern in filepath_lower:
+            return "high"
+    
+    # Check for low priority indicators
+    for pattern in low_priority:
+        if pattern in filepath_lower:
+            return "low"
+    
+    # Complex languages get higher priority
+    if language in ["rust", "cpp", "java", "scala"]:
+        return "high"
+    
+    return "medium"

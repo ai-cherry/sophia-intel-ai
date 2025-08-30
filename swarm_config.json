@@ -1,0 +1,158 @@
+{
+  "quality_gates": {
+    "min_quality_threshold": 0.7,
+    "max_retry_rounds": 3,
+    "retry_strategies": {
+      "low_quality": {
+        "threshold": 0.4,
+        "action": "expand_agent_team"
+      },
+      "medium_quality": {
+        "threshold": 0.6,
+        "action": "increase_creativity_parameters"
+      }
+    }
+  },
+  "safety_config": {
+    "max_risk_level": 0.7,
+    "prohibited_actions": [
+      "file_delete",
+      "network_access",
+      "system_modification",
+      "credential_access"
+    ],
+    "require_human_approval": [
+      "code_execution",
+      "data_modification",
+      "external_api_calls",
+      "file_system_write"
+    ],
+    "risk_assessment": {
+      "low": {
+        "max_score": 0.3,
+        "auto_approve": true
+      },
+      "medium": {
+        "max_score": 0.7,
+        "require_review": true
+      },
+      "high": {
+        "max_score": 1.0,
+        "require_human_approval": true
+      }
+    }
+  },
+  "role_assignment": {
+    "complexity_thresholds": {
+      "simple": {
+        "max": 0.3,
+        "roles": ["generator", "validator"]
+      },
+      "medium": {
+        "max": 0.7,
+        "roles": ["planner", "generator", "critic"]
+      },
+      "complex": {
+        "max": 1.0,
+        "roles": ["planner", "specialist_a", "specialist_b", "critic", "judge"]
+      }
+    },
+    "domain_specializations": {
+      "code": ["code_analyzer", "code_generator", "test_creator", "reviewer"],
+      "research": ["researcher", "fact_checker", "synthesizer", "editor"],
+      "analysis": ["data_collector", "analyzer", "visualizer", "interpreter"]
+    },
+    "safety_levels": {
+      "low": {
+        "roles": ["generator", "validator"]
+      },
+      "medium": {
+        "roles": ["planner", "generator", "safety_reviewer"]
+      },
+      "high": {
+        "roles": ["planner", "generator", "safety_critic", "human_approver"]
+      }
+    }
+  },
+  "consensus_config": {
+    "agreement_threshold": 0.7,
+    "tie_breaking_methods": {
+      "small_group": {
+        "max_agents": 3,
+        "method": "judge_agent"
+      },
+      "large_group": {
+        "min_agents": 4,
+        "method": "ranked_voting"
+      },
+      "expert_override": {
+        "enabled": true,
+        "expert_weight": 2.0
+      }
+    },
+    "voting_methods": ["plurality", "ranked_choice", "weighted_expertise"]
+  },
+  "adaptive_parameters": {
+    "performance_thresholds": {
+      "poor": {
+        "max": 0.6,
+        "adjustments": {
+          "temperature": 0.1,
+          "agent_count": 1
+        }
+      },
+      "good": {
+        "max": 0.85,
+        "adjustments": {
+          "temperature": 0.0,
+          "agent_count": 0
+        }
+      },
+      "excellent": {
+        "min": 0.85,
+        "adjustments": {
+          "temperature": -0.05,
+          "agent_count": 0
+        }
+      }
+    },
+    "parameters": {
+      "temperature": {
+        "min": 0.1,
+        "max": 1.0,
+        "default": 0.7
+      },
+      "agent_count": {
+        "min": 2,
+        "max": 10,
+        "default": 3
+      },
+      "retry_attempts": {
+        "min": 1,
+        "max": 5,
+        "default": 3
+      }
+    },
+    "learning_rate": 0.1,
+    "history_window": 5
+  },
+  "knowledge_transfer": {
+    "domain_mappings": {
+      "source_domains": ["coding", "research", "analysis", "creative"],
+      "transfer_success_threshold": 0.6,
+      "similarity_metrics": ["semantic", "structural", "procedural"]
+    },
+    "transferable_elements": [
+      "problem_decomposition",
+      "validation_methods",
+      "quality_criteria",
+      "collaboration_patterns"
+    ],
+    "adaptation_strategies": [
+      "terminology_mapping",
+      "constraint_adjustment",
+      "tool_substitution",
+      "process_modification"
+    ]
+  }
+}

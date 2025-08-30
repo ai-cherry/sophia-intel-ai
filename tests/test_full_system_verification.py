@@ -138,6 +138,7 @@ class FullSystemVerification:
                 body={
                     "topic": "verification-test",
                     "content": "Automated verification entry",
+                    "source": "test_verification",
                     "tags": ["test", "verification"],
                     "memory_type": "episodic"
                 },
@@ -170,7 +171,7 @@ class FullSystemVerification:
             # 6. Workflows
             result = await self._check_endpoint(
                 client, "GET", "/workflows",
-                validate_fn=lambda data: any("PR" in w.get("id", "") for w in data)
+                validate_fn=lambda data: any("pr" in w.get("id", "").lower() for w in data)
             )
             results.append(result)
         
@@ -613,6 +614,7 @@ class FullSystemVerification:
                     json={
                         "topic": "mcp-verification",
                         "content": "Testing supermemory MCP integration",
+                        "source": "mcp_test",
                         "tags": ["test", "mcp"],
                         "memory_type": "procedural"
                     }

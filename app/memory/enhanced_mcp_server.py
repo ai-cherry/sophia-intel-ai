@@ -56,8 +56,9 @@ class MCPServerConfig:
     connection_pool_size: int = 10
     connection_timeout: float = 30.0
     retry_attempts: int = 3
-    retry_delay: float = 0.1
+    retry_delay: float = 0.5  # Increased for better exponential backoff
     enable_metrics: bool = True
+    enable_health_endpoint: bool = True
 
 class EnhancedMCPServer:
     """Enhanced MCP server with connection pooling and error recovery."""
@@ -69,19 +70,30 @@ class EnhancedMCPServer:
         self._metrics = {"requests": 0, "errors": 0, "avg_latency": 0.0}
         
     async def initialize_pool(self):
-        """Initialize database connection pool."""
+        """Initialize database connection pool with exponential backoff."""
         if self._pool_initialized:
             return
             
         self._connection_pool = asyncio.Queue(maxsize=self.config.connection_pool_size)
         
-        # Pre-populate pool with connections
-        for _ in range(self.config.connection_pool_size):
-            conn = await aiosqlite.connect(
-                self.config.db_path,
-                timeout=self.config.connection_timeout
-            )
-            await self._connection_pool.put(conn)
+        # Pre-populate pool with connections (with retry logic)
+        for i in range(self.config.connection_pool_size):
+            retry_delay = self.config.retry_delay
+            for attempt in range(self.config.retry_attempts):
+                try:
+                    conn = await aiosqlite.connect(
+                        self.config.db_path,
+                        timeout=self.config.connection_timeout
+                    )
+                    await self._connection_pool.put(conn)
+                    break
+                except Exception as e:
+                    if attempt == self.config.retry_attempts - 1:
+                        logger.error(f"Failed to create connection {i} after {self.config.retry_attempts} attempts: {e}")
+                        raise
+                    logger.warning(f"Connection {i} attempt {attempt + 1} failed, retrying in {retry_delay}s...")
+                    await asyncio.sleep(retry_delay)
+                    retry_delay *= 2  # Exponential backoff
         
         self._pool_initialized = True
         logger.info(f"Initialized connection pool with {self.config.connection_pool_size} connections")

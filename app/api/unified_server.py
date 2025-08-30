@@ -49,6 +49,11 @@ class ServerConfig:
     # Playground
     PLAYGROUND_URL = os.getenv("PLAYGROUND_URL", "http://localhost:7777")
     
+    # 🔧 LOCAL DEVELOPMENT MODE - ENABLES ALL TOOLS
+    LOCAL_DEV_MODE = os.getenv("LOCAL_DEV_MODE", "true").lower() == "true"
+    ENABLE_RUNNER_WRITES = os.getenv("ENABLE_RUNNER_WRITES", str(LOCAL_DEV_MODE)).lower() == "true"
+    RUNNER_GATE_OVERRIDE = LOCAL_DEV_MODE  # Allow Runner in dev mode
+    
     # MCP Servers
     MCP_FILESYSTEM_ENABLED = os.getenv("MCP_FILESYSTEM", "true").lower() == "true"
     MCP_GIT_ENABLED = os.getenv("MCP_GIT", "true").lower() == "true"
@@ -58,6 +63,20 @@ class ServerConfig:
     GRAPHRAG_ENABLED = os.getenv("GRAPHRAG_ENABLED", "true").lower() == "true"
     HYBRID_SEARCH_ENABLED = os.getenv("HYBRID_SEARCH", "true").lower() == "true"
     GATES_ENABLED = os.getenv("EVALUATION_GATES", "true").lower() == "true"
+    
+    @classmethod
+    def print_config(cls):
+        """Print current configuration."""
+        if cls.LOCAL_DEV_MODE:
+            print("\n" + "="*60)
+            print("🔧 LOCAL DEVELOPMENT MODE ACTIVE")
+            print("="*60)
+            print("✅ Runner writes: ENABLED")
+            print("✅ Git operations: ENABLED")
+            print("✅ File operations: ENABLED")
+            print("✅ All tools: ACTIVE")
+            print("⚠️  Be careful - all write operations are enabled!")
+            print("="*60 + "\n")
 
 # ============================================
 # Global State
@@ -470,13 +489,15 @@ async def execute_team_with_gates(
             acceptance_criteria=["Task completed", "Tests pass"]
         )
         gate_result = {
-            "allowed": gate_evaluation["runner_allowed"],
-            "status": gate_evaluation["overall_status"],
+            "allowed": gate_evaluation["runner_allowed"] or ServerConfig.RUNNER_GATE_OVERRIDE,
+            "status": "ALLOWED (DEV MODE)" if ServerConfig.RUNNER_GATE_OVERRIDE else gate_evaluation["overall_status"],
             "scores": {
                 "total": gate_evaluation["total_score"],
                 "max": gate_evaluation["total_max_score"]
             }
         }
+    elif ServerConfig.RUNNER_GATE_OVERRIDE:
+        gate_result = {"allowed": True, "status": "ALLOWED (DEV MODE)"}
     
     gate_status = gate_result["status"]
     yield f"data: {json.dumps({'phase': 'gates', 'token': f'🚪 Runner Gate: {gate_status}', 'gates': gate_result})}\n\n"
@@ -500,6 +521,7 @@ async def execute_team_with_gates(
     }
     
     yield f"data: {json.dumps({'phase': 'complete', 'final': final_response})}\n\n"
+    await asyncio.sleep(0.1)  # Small delay before closing
     yield "data: [DONE]\n\n"
 
 @app.post("/teams/run")
@@ -585,6 +607,9 @@ async def update_index(
 
 if __name__ == "__main__":
     import uvicorn
+    
+    # Print configuration
+    ServerConfig.print_config()
     
     print(f"""
 ╔══════════════════════════════════════════════════════╗

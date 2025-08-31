@@ -1,113 +1,113 @@
 {
-  "timestamp": "2025-08-30T16:43:47.072558",
+  "timestamp": "2025-08-30T16:58:37.508051",
   "tests": [
     {
       "name": "Health check",
       "success": true,
-      "details": "{'status': 'ok', 'timestamp': '2025-08-30T16:43:47.101745', 'systems': {'supermemory': True, 'embedder': True, 'search': True, 'graphrag': True, 'gates': True}}",
-      "timestamp": "2025-08-30T16:43:47.102294"
+      "details": "{'status': 'ok', 'timestamp': '2025-08-30T16:58:37.541648', 'systems': {'supermemory': True, 'embedder': True, 'search': True, 'graphrag': True, 'gates': True}}",
+      "timestamp": "2025-08-30T16:58:37.542293"
     },
     {
       "name": "Get teams",
       "success": true,
       "details": "4 teams",
-      "timestamp": "2025-08-30T16:43:47.106557"
+      "timestamp": "2025-08-30T16:58:37.547169"
     },
     {
       "name": "Execute team SIMPLEX",
       "success": true,
       "details": "Streaming response received",
-      "timestamp": "2025-08-30T16:43:50.219884"
+      "timestamp": "2025-08-30T16:58:42.860271"
     },
     {
       "name": "Execute team CONSENSUS",
       "success": true,
       "details": "Streaming response received",
-      "timestamp": "2025-08-30T16:43:53.332322"
+      "timestamp": "2025-08-30T16:58:48.175326"
     },
     {
       "name": "Get workflows",
       "success": true,
       "details": "2 workflows",
-      "timestamp": "2025-08-30T16:43:53.344975"
+      "timestamp": "2025-08-30T16:58:48.181558"
     },
     {
       "name": "Execute workflow",
       "success": true,
       "details": "Streaming response received",
-      "timestamp": "2025-08-30T16:43:55.856101"
+      "timestamp": "2025-08-30T16:58:50.687197"
     },
     {
       "name": "Memory storage",
       "success": true,
       "details": "Success",
-      "timestamp": "2025-08-30T16:43:55.865917"
+      "timestamp": "2025-08-30T16:58:50.695576"
     },
     {
       "name": "Memory search",
       "success": true,
       "details": "1 results",
-      "timestamp": "2025-08-30T16:43:55.867774"
+      "timestamp": "2025-08-30T16:58:50.697757"
     },
     {
       "name": "Hybrid search",
       "success": true,
       "details": "0 results",
-      "timestamp": "2025-08-30T16:43:55.873345"
+      "timestamp": "2025-08-30T16:58:50.704062"
     },
     {
       "name": "MCP filesystem config",
       "success": true,
       "details": "Enabled",
-      "timestamp": "2025-08-30T16:43:55.873433"
+      "timestamp": "2025-08-30T16:58:50.704125"
     },
     {
       "name": "MCP git config",
       "success": true,
       "details": "Enabled",
-      "timestamp": "2025-08-30T16:43:55.873441"
+      "timestamp": "2025-08-30T16:58:50.704128"
     },
     {
       "name": "MCP supermemory config",
       "success": true,
       "details": "Enabled",
-      "timestamp": "2025-08-30T16:43:55.873443"
+      "timestamp": "2025-08-30T16:58:50.704130"
     },
     {
       "name": "Statistics",
       "success": true,
       "details": "Success",
-      "timestamp": "2025-08-30T16:43:55.879381"
+      "timestamp": "2025-08-30T16:58:50.711065"
     },
     {
       "name": "Pattern imports",
       "success": true,
       "details": "All patterns imported",
-      "timestamp": "2025-08-30T16:43:55.889977"
+      "timestamp": "2025-08-30T16:58:50.722501"
     },
     {
       "name": "Adversarial Debate pattern",
       "success": true,
       "details": "Initialized",
-      "timestamp": "2025-08-30T16:43:55.889993"
+      "timestamp": "2025-08-30T16:58:50.722514"
     },
     {
       "name": "Quality Gates pattern",
       "success": true,
       "details": "Initialized",
-      "timestamp": "2025-08-30T16:43:55.890000"
+      "timestamp": "2025-08-30T16:58:50.722522"
     },
     {
       "name": "Consensus pattern",
       "success": true,
       "details": "Initialized",
-      "timestamp": "2025-08-30T16:43:55.890004"
+      "timestamp": "2025-08-30T16:58:50.722528"
     },
     {
       "name": "AG UI connection",
       "success": true,
       "details": "Port 3000",
-      "timestamp": "2025-08-30T16:43:55.901816"
+      "timestamp": "2025-08-30T16:58:50.738410"
     }
   ],
   "summary": {

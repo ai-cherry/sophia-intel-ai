@@ -1,0 +1,265 @@
+# Metadata Taxonomy for Sophia Intel AI
+# Standardized tags and categories for memory entries and code classification
+
+taxonomy:
+  # Agent roles in the swarm
+  agent_roles:
+    - lead           # Team leader, orchestrates other agents
+    - generator      # Code/content generator
+    - critic         # Reviews and critiques output
+    - judge          # Makes final decisions
+    - reviewer       # Code reviewer
+    - architect      # System design
+    - analyst        # Analysis and research
+    - tester         # Testing and validation
+    - documenter     # Documentation writer
+    - optimizer      # Performance optimization
+    - security       # Security analysis
+    - debugger       # Bug fixing
+
+  # System components
+  components:
+    - api            # API endpoints and server
+    - ui             # User interface
+    - database       # Database layer
+    - memory         # Memory system
+    - search         # Search functionality
+    - swarm          # Agent swarms
+    - embeddings     # Embedding generation
+    - graphrag       # Knowledge graph
+    - gates          # Evaluation gates
+    - plugins        # Plugin system
+    - mcp            # MCP servers
+    - tools          # Tool implementations
+    - workflows      # Workflow definitions
+    - config         # Configuration
+    - monitoring     # Metrics and observability
+
+  # Programming languages
+  languages:
+    - python         # Python code
+    - typescript     # TypeScript code
+    - javascript     # JavaScript code
+    - sql            # SQL queries
+    - yaml           # YAML configuration
+    - json           # JSON data
+    - markdown       # Documentation
+    - dockerfile     # Docker files
+    - bash           # Shell scripts
+    - html           # HTML markup
+    - css            # Stylesheets
+    - toml           # TOML configuration
+
+  # Code complexity levels
+  complexity:
+    - trivial        # Simple, straightforward code
+    - simple         # Basic complexity
+    - moderate       # Average complexity
+    - complex        # High complexity
+    - critical       # Critical system components
+
+  # Memory types
+  memory_types:
+    - episodic       # Specific events and experiences
+    - semantic       # Facts and general knowledge
+    - procedural     # How-to knowledge
+    - working        # Temporary task memory
+    - reference      # Reference documentation
+    - contextual     # Context-specific information
+
+  # Task priorities
+  priorities:
+    - low            # Low priority
+    - medium         # Medium priority
+    - high           # High priority
+    - critical       # Critical priority
+    - emergency      # Emergency fixes
+
+  # Quality levels
+  quality:
+    - draft          # Initial draft
+    - review         # Under review
+    - approved       # Approved for use
+    - production     # Production ready
+    - deprecated     # Marked for removal
+
+  # Security levels
+  security:
+    - public         # Public information
+    - internal       # Internal use only
+    - confidential   # Confidential data
+    - secret         # Secret information
+    - top_secret     # Highest security
+
+  # Document types
+  document_types:
+    - code           # Source code
+    - test           # Test files
+    - config         # Configuration files
+    - docs           # Documentation
+    - api_spec       # API specifications
+    - design         # Design documents
+    - requirements   # Requirements docs
+    - readme         # README files
+    - changelog      # Change logs
+    - license        # License files
+
+  # Development stages
+  stages:
+    - planning       # Planning phase
+    - development    # Active development
+    - testing        # Testing phase
+    - review         # Code review
+    - staging        # Staging deployment
+    - production     # Production deployment
+    - maintenance    # Maintenance mode
+    - archived       # Archived/inactive
+
+  # Error categories
+  error_types:
+    - syntax         # Syntax errors
+    - runtime        # Runtime errors
+    - logic          # Logic errors
+    - performance    # Performance issues
+    - security       # Security vulnerabilities
+    - compatibility  # Compatibility issues
+    - configuration  # Configuration errors
+    - network        # Network errors
+    - database       # Database errors
+    - validation     # Validation errors
+
+  # Test categories
+  test_types:
+    - unit           # Unit tests
+    - integration    # Integration tests
+    - e2e            # End-to-end tests
+    - performance    # Performance tests
+    - security       # Security tests
+    - smoke          # Smoke tests
+    - regression     # Regression tests
+    - acceptance     # Acceptance tests
+
+  # Optimization targets
+  optimization:
+    - speed          # Execution speed
+    - memory         # Memory usage
+    - disk           # Disk usage
+    - network        # Network usage
+    - readability    # Code readability
+    - maintainability # Maintainability
+    - scalability    # Scalability
+    - reliability    # Reliability
+
+# Validation rules for tags
+validation:
+  # Maximum number of tags per entry
+  max_tags: 10
+  
+  # Minimum number of tags per entry
+  min_tags: 1
+  
+  # Required tag categories for different entry types
+  required_tags:
+    code:
+      - languages
+      - components
+      - complexity
+    documentation:
+      - document_types
+      - components
+    memory:
+      - memory_types
+    test:
+      - test_types
+      - components
+  
+  # Tag naming conventions
+  naming:
+    # Use lowercase
+    case: lower
+    # Use underscores for multi-word tags
+    separator: _
+    # Maximum tag length
+    max_length: 50
+    # Minimum tag length
+    min_length: 2
+
+# Tag relationships and hierarchies
+relationships:
+  # Parent-child relationships
+  hierarchies:
+    api:
+      - api.endpoints
+      - api.middleware
+      - api.authentication
+      - api.validation
+    ui:
+      - ui.components
+      - ui.pages
+      - ui.hooks
+      - ui.state
+    database:
+      - database.models
+      - database.migrations
+      - database.queries
+  
+  # Related tags (commonly used together)
+  related:
+    - [python, fastapi, api]
+    - [typescript, react, ui]
+    - [testing, pytest, unit]
+    - [security, authentication, validation]
+    - [memory, embeddings, search]
+    - [swarm, agents, orchestration]
+  
+  # Mutually exclusive tags
+  exclusive:
+    - [draft, production]
+    - [public, secret]
+    - [simple, complex]
+    - [deprecated, production]
+
+# Auto-tagging rules
+auto_tagging:
+  # File extension to language mapping
+  extensions:
+    .py: python
+    .ts: typescript
+    .tsx: typescript
+    .js: javascript
+    .jsx: javascript
+    .sql: sql
+    .yml: yaml
+    .yaml: yaml
+    .json: json
+    .md: markdown
+    .dockerfile: dockerfile
+    .sh: bash
+    .html: html
+    .css: css
+    .toml: toml
+  
+  # Path to component mapping
+  paths:
+    app/api: api
+    app/ui: ui
+    app/memory: memory
+    app/swarms: swarm
+    app/plugins: plugins
+    tests: test
+    docs: docs
+  
+  # Content patterns to tags
+  patterns:
+    - pattern: "class.*Test"
+      tags: [test]
+    - pattern: "def test_"
+      tags: [test, unit]
+    - pattern: "@router\."
+      tags: [api, endpoints]
+    - pattern: "React.FC"
+      tags: [ui, components]
+    - pattern: "async def"
+      tags: [python]
+    - pattern: "SELECT.*FROM"
+      tags: [sql, database]

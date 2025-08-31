@@ -130,7 +130,10 @@ async def run_team(request: RunRequest):
         # Simulate processing
         yield f"data: {json.dumps({'token': 'Processing with team: '})}\n\n"
         yield f"data: {json.dumps({'token': request.team_id or 'default'})}\n\n"
-        task_newline = "\n\nTask: "; yield f"data: {json.dumps({047token047: task_newline})}\n\n"        # Simulate some work
+        task_newline = "\n\nTask: "
+        yield f"data: {json.dumps({'token': task_newline})}\n\n"
+        yield f"data: {json.dumps({'token': request.message})}\n\n"
+        # Simulate some work
         await asyncio.sleep(1)
         
         # Return structured response

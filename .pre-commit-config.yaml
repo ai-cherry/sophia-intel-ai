@@ -1,0 +1,188 @@
+# Pre-commit hooks for code quality
+# Install: pre-commit install
+# Run manually: pre-commit run --all-files
+
+default_language_version:
+  python: python3.11
+
+repos:
+  # General fixes
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: ^(.*\.md|.*\.mdx)$
+      - id: end-of-file-fixer
+        exclude: ^(.*\.md|.*\.mdx)$
+      - id: check-yaml
+        args: [--unsafe]
+      - id: check-json
+      - id: check-toml
+      - id: check-added-large-files
+        args: [--maxkb=1000]
+      - id: check-case-conflict
+      - id: check-merge-conflict
+      - id: check-docstring-first
+      - id: debug-statements
+      - id: mixed-line-ending
+        args: [--fix=lf]
+      - id: name-tests-test
+        args: [--pytest-test-first]
+      - id: requirements-txt-fixer
+
+  # Security
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.4.0
+    hooks:
+      - id: detect-secrets
+        args: [--baseline, .secrets.baseline]
+        exclude: ^(.*\.lock|package-lock\.json|pnpm-lock\.yaml)$
+
+  # Python formatting
+  - repo: https://github.com/psf/black
+    rev: 23.12.1
+    hooks:
+      - id: black
+        language_version: python3.11
+        args: [--line-length=100]
+
+  # Python imports
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        args: [--profile, black, --line-length, "100"]
+
+  # Python linting
+  - repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: v0.1.9
+    hooks:
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+
+  # Python type checking
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.8.0
+    hooks:
+      - id: mypy
+        additional_dependencies:
+          - pydantic>=2.5.0
+          - fastapi>=0.104.0
+          - sqlalchemy>=2.0.0
+        args: [--ignore-missing-imports, --strict-optional]
+        exclude: ^(tests/|scripts/|migrations/)
+
+  # Python docstrings
+  - repo: https://github.com/PyCQA/pydocstyle
+    rev: 6.3.0
+    hooks:
+      - id: pydocstyle
+        args: [--convention=google]
+        exclude: ^(tests/|migrations/|__pycache__/)
+        files: ^app/.*\.py$
+
+  # YAML formatting
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v3.1.0
+    hooks:
+      - id: prettier
+        types_or: [yaml, json, markdown]
+        exclude: ^(pnpm-lock\.yaml|package-lock\.json|.*\.min\.json)$
+
+  # Shell script checks
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.9.0.6
+    hooks:
+      - id: shellcheck
+        args: [--severity=warning]
+
+  # Markdown linting
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.38.0
+    hooks:
+      - id: markdownlint
+        args: [--fix]
+        exclude: ^(CHANGELOG\.md|docs/api/)
+
+  # SQL formatting
+  - repo: https://github.com/sqlfluff/sqlfluff
+    rev: 3.0.0a1
+    hooks:
+      - id: sqlfluff-lint
+        args: [--dialect, sqlite]
+        files: ^.*\.sql$
+      - id: sqlfluff-fix
+        args: [--dialect, sqlite]
+        files: ^.*\.sql$
+
+  # Dockerfile linting
+  - repo: https://github.com/hadolint/hadolint
+    rev: v2.12.1-beta
+    hooks:
+      - id: hadolint-docker
+        args: [--ignore, DL3008, --ignore, DL3009]
+
+  # Git commit message linting
+  - repo: https://github.com/jorisroovers/gitlint
+    rev: v0.19.1
+    hooks:
+      - id: gitlint
+        args: [--msg-filename]
+
+  # Custom hooks
+  - repo: local
+    hooks:
+      - id: no-print-statements
+        name: No print statements
+        entry: '\bprint\('
+        language: pygrep
+        types: [python]
+        exclude: ^(scripts/|tests/|.*_test\.py|.*debug.*\.py)$
+      
+      - id: no-todos
+        name: No TODO comments in production
+        entry: '#\s*(TODO|FIXME|XXX)'
+        language: pygrep
+        types: [python]
+        exclude: ^(tests/|scripts/|docs/)
+        stages: [commit]
+      
+      - id: requirements-sync
+        name: Sync requirements
+        entry: python scripts/sync_requirements.py
+        language: system
+        files: ^(requirements.*\.txt|pyproject\.toml)$
+        pass_filenames: false
+      
+      - id: api-schema-update
+        name: Update OpenAPI schema
+        entry: python scripts/update_openapi.py
+        language: system
+        files: ^app/api/.*\.py$
+        pass_filenames: false
+
+# Configuration for specific hooks
+exclude: |
+  (?x)^(
+    .*\.egg-info/.*|
+    \.git/.*|
+    \.mypy_cache/.*|
+    \.pytest_cache/.*|
+    \.ruff_cache/.*|
+    \.tox/.*|
+    \.venv/.*|
+    build/.*|
+    dist/.*|
+    node_modules/.*|
+    venv/.*|
+    __pycache__/.*|
+    .*\.pyc|
+    .*\.pyo|
+    .*\.pyd|
+    .*\.db|
+    .*\.sqlite|
+    .*\.log
+  )$
+
+fail_fast: false
+default_stages: [commit, push]

@@ -749,6 +749,57 @@ async def update_index(
     }
 
 # ============================================
+# Agno-Compatible Endpoints (Aliases)
+# ============================================
+
+@app.get("/agents", response_model=List[TeamInfo])
+async def get_agents_compat():
+    """Agno-compatible alias for teams endpoint."""
+    return await get_teams()
+
+@app.post("/run/team")
+async def run_team_compat(request: RunRequest):
+    """Agno-compatible alias for team execution."""
+    return await run_team(request)
+
+@app.post("/run/workflow")
+async def run_workflow_compat(request: RunRequest):
+    """Agno-compatible alias for workflow execution."""
+    return await run_workflow(request)
+
+@app.get("/v1/playground/agents", response_model=List[TeamInfo])
+async def get_playground_agents():
+    """Agno playground-compatible agents endpoint."""
+    teams = await get_teams()
+    # Transform to agent format if needed
+    for team in teams:
+        if not hasattr(team, 'agent_id'):
+            team.agent_id = team.id
+    return teams
+
+@app.get("/v1/playground/teams", response_model=List[TeamInfo])
+async def get_playground_teams():
+    """Agno playground-compatible teams endpoint."""
+    return await get_teams()
+
+@app.post("/v1/playground/agents/{agent_id}/runs")
+async def run_playground_agent(agent_id: str, request: RunRequest):
+    """Agno playground-compatible agent run endpoint."""
+    request.team_id = agent_id
+    return await run_team(request)
+
+@app.post("/v1/playground/teams/{team_id}/runs")
+async def run_playground_team(team_id: str, request: RunRequest):
+    """Agno playground-compatible team run endpoint."""
+    request.team_id = team_id
+    return await run_team(request)
+
+@app.get("/v1/playground/status")
+async def playground_status():
+    """Agno playground-compatible status endpoint."""
+    return await health_check()
+
+# ============================================
 # Main Entry Point
 # ============================================
 

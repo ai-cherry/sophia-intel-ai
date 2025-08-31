@@ -27,7 +27,9 @@ from app.contracts.json_schemas import (
     runner_gate_decision
 )
 from app.portkey_config import gateway, Role, MODEL_RECOMMENDATIONS
-# Note: Import swarm execution when needed to avoid startup errors
+# Import swarm execution system
+from app.swarms.unified_enhanced_orchestrator import UnifiedSwarmOrchestrator
+from app.api.real_swarm_execution import stream_real_swarm_execution
 
 # ============================================
 # Configuration
@@ -93,6 +95,7 @@ class GlobalState:
         self.knowledge_graph = None
         self.graph_rag = None
         self.gate_manager = None
+        self.orchestrator = None
         self.initialized = False
     
     async def initialize(self):
@@ -107,9 +110,10 @@ class GlobalState:
             self.supermemory = SupermemoryStore()
             print("  ✅ Supermemory MCP initialized")
         
-        # Initialize embedder
-        self.embedder = DualTierEmbedder()
-        print("  ✅ Dual-tier embedder initialized")
+        # Initialize ModernBERT embedder (2025 SOTA)
+        from app.memory.modernbert_embeddings import ModernBERTEmbedder
+        self.embedder = ModernBERTEmbedder()
+        print("  ✅ ModernBERT embedder initialized (Voyage-3-large/Cohere v3)")
         
         # Initialize search engine
         if ServerConfig.HYBRID_SEARCH_ENABLED:
@@ -126,6 +130,10 @@ class GlobalState:
         if ServerConfig.GATES_ENABLED:
             self.gate_manager = EvaluationGateManager()
             print("  ✅ Evaluation gates initialized")
+        
+        # Initialize orchestrator for real swarm execution
+        self.orchestrator = UnifiedSwarmOrchestrator()
+        print("  ✅ Swarm orchestrator initialized")
         
         self.initialized = True
         print("✅ All systems initialized successfully")
@@ -665,9 +673,9 @@ async def execute_team_with_gates(
 
 @app.post("/teams/run")
 async def run_team(request: RunRequest):
-    """Run a team with streaming response."""
+    """Run a team with real swarm execution and streaming response."""
     return StreamingResponse(
-        execute_team_with_gates(request),
+        stream_real_swarm_execution(request, state),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",

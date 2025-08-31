@@ -70,14 +70,32 @@ class RealAPIGateway:
         logger.info("✅ All API keys validated successfully")
 
     def setup_providers(self):
-        """Setup provider configurations."""
+        """Setup provider configurations with Portkey as primary gateway."""
+        # Portkey configuration with virtual keys and OpenRouter/Together AI integration
+        portkey_config = {
+            "retry": {
+                "attempts": 3,
+                "on_status_codes": [429, 500, 502, 503, 504]
+            },
+            "cache": {
+                "enabled": True,
+                "ttl": 3600
+            },
+            "fallbacks": [
+                {"provider": "openrouter"},
+                {"provider": "together"}
+            ]
+        }
+        
         self.providers = {
             Provider.PORTKEY: {
                 "base_url": "https://api.portkey.ai/v1",
                 "headers": {
                     "x-portkey-api-key": os.getenv("PORTKEY_API_KEY"),
-                    "Content-Type": "application/json"
-                }
+                    "x-portkey-config": json.dumps(portkey_config),
+                    "content-type": "application/json"
+                },
+                "config": portkey_config
             },
             Provider.OPENAI: {
                 "base_url": "https://api.openai.com/v1",

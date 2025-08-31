@@ -16,21 +16,26 @@ from datetime import datetime
 from contextlib import asynccontextmanager
 
 # Import our enhanced systems
-from app.memory.supermemory_mcp import SupermemoryStore, MemoryEntry, MemoryType
-from app.memory.dual_tier_embeddings import DualTierEmbedder
-from app.memory.hybrid_search import HybridSearchEngine
-from app.memory.graph_rag import KnowledgeGraph, GraphRAGEngine
-from app.evaluation.gates import EvaluationGateManager
-from app.contracts.json_schemas import (
-    validate_critic_output,
-    validate_judge_output,
-    runner_gate_decision
+from app.api.advanced_gateway_2025 import (
+    get_advanced_gateway,
+    chat_with_gpt5,
+    chat_with_gemini25_pro,
+    chat_with_claude_sonnet4,
+    generate_embeddings_32k,
+    smart_route_chat,
+    TaskType
 )
-from app.portkey_config import get_gateway, Role, MODEL_RECOMMENDATIONS
-# Import swarm execution system
-from app.swarms.unified_enhanced_orchestrator import UnifiedSwarmOrchestrator
-from app.api.real_swarm_execution import stream_real_swarm_execution
-from app.api.real_streaming import stream_real_ai_execution
+from app.api.health import router as health_router
+
+# Import consolidated memory and vector systems
+try:
+    from pulumi.mcp_server.src.unified_memory import UnifiedMemorySystem
+    from pulumi.vector_store.src.modern_embeddings import ModernEmbeddingSystem
+except ImportError:
+    # Fallback to app-level imports
+    UnifiedMemorySystem = None
+    ModernEmbeddingSystem = None
+
 # Import API routers
 from app.api.routers import swarms as swarms_router
 
@@ -184,6 +189,7 @@ app = FastAPI(
 
 # Include routers
 app.include_router(swarms_router.router, prefix="/api", tags=["swarms"])
+app.include_router(health_router, prefix="", tags=["health"])
 
 # CORS middleware
 app.add_middleware(

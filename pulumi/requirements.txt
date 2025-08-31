@@ -1,0 +1,12 @@
+# Pulumi Infrastructure Dependencies
+pulumi>=3.95.0
+pulumi-aws>=6.15.0
+pulumi-gcp>=7.8.0
+pulumi-azure-native>=2.26.0
+
+# Cloud providers
+pulumi-fly>=0.1.0
+pulumi-digitalocean>=4.25.0
+
+# Utilities
+pyyaml>=6.0.1

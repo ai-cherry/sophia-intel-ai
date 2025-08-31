@@ -197,6 +197,39 @@ services:
       retries: 3
 
   # ==============================================
+  # AGENT UI (Next.js Frontend)
+  # ==============================================
+  agent-ui:
+    build:
+      context: ./agent-ui
+      dockerfile: Dockerfile
+    container_name: sophia-agent-ui
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://unified-api:8003
+      - NEXT_PUBLIC_DEFAULT_ENDPOINT=http://unified-api:8003
+      - NEXT_PUBLIC_PLAYGROUND_URL=http://unified-api:8003
+      - NEXT_PUBLIC_BRIDGE_URL=http://agno-bridge:7777
+      - NEXT_PUBLIC_USE_BRIDGE=false
+    env_file:
+      - agent-ui/.env.local
+    depends_on:
+      unified-api:
+        condition: service_healthy
+    volumes:
+      - ./agent-ui/src:/app/src:ro
+      - ./agent-ui/public:/app/public:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 45s
+
+  # ==============================================
   # MONITORING - Prometheus (Optional)
   # ==============================================
   prometheus:
@@ -213,6 +246,7 @@ services:
       - '--storage.tsdb.path=/prometheus'
       - '--web.console.libraries=/etc/prometheus/console_libraries'
       - '--web.console.templates=/etc/prometheus/consoles'
+    profiles: ["monitoring"]
 
   # ==============================================
   # MONITORING - Grafana (Optional)
@@ -229,6 +263,7 @@ services:
       - grafana_data:/var/lib/grafana
       - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
       - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    profiles: ["monitoring"]
 
 # ==============================================
 # PERSISTENT VOLUMES

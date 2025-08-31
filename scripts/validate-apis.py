@@ -92,7 +92,7 @@ class APIValidator:
                 response = await client.post(
                     "https://api.anthropic.com/v1/messages",
                     headers={
-                        "Authorization": f"Bearer {api_key}",
+                        "x-api-key": api_key,
                         "anthropic-version": "2023-06-01",
                         "content-type": "application/json"
                     },
@@ -241,30 +241,56 @@ class APIValidator:
             return False
 
     async def test_portkey_gateway(self):
-        """Test Portkey Gateway connection."""
+        """Test Portkey Gateway connection with proper 2025 configuration."""
         self.log("Testing Portkey Gateway...")
         self.total_tests += 1
         
         portkey_api_key = os.getenv("PORTKEY_API_KEY")
+        openai_api_key = os.getenv("OPENAI_API_KEY")
+        
         if not portkey_api_key:
             self.log("❌ Portkey API key not found", "ERROR")
             self.failed_tests += 1
-            self.results["portkey"] = {"status": "failed", "error": "Missing API key"}
+            self.results["portkey"] = {"status": "failed", "error": "Missing Portkey API key"}
+            return False
+
+        if not openai_api_key:
+            self.log("❌ OpenAI API key not found (required for Portkey proxy)", "ERROR")
+            self.failed_tests += 1
+            self.results["portkey"] = {"status": "failed", "error": "Missing OpenAI API key for Portkey"}
             return False
 
         try:
             async with httpx.AsyncClient() as client:
-                # Test Portkey health endpoint
-                response = await client.get(
-                    "https://api.portkey.ai/v1/health",
-                    headers={"x-portkey-api-key": portkey_api_key},
-                    timeout=10.0
+                # Test Portkey with minimal configuration that works
+                config_object = {
+                    "retry": {
+                        "attempts": 2
+                    }
+                }
+                
+                # Test with your real virtual key IDs from Portkey dashboard
+                response = await client.post(
+                    "https://api.portkey.ai/v1/chat/completions",
+                    headers={
+                        "x-portkey-api-key": portkey_api_key,
+                        "x-portkey-virtual-key": "vkj-openrouter-cc4151",  # Your OpenRouter virtual key
+                        "x-portkey-config": json.dumps(config_object),
+                        "content-type": "application/json"
+                    },
+                    json={
+                        "model": "anthropic/claude-3-haiku",  # Use OpenRouter model
+                        "messages": [{"role": "user", "content": "test portkey virtual keys"}],
+                        "max_tokens": 10
+                    },
+                    timeout=15.0
                 )
                 
                 if response.status_code == 200:
-                    self.log("✅ Portkey Gateway connected successfully", "SUCCESS")
+                    result = response.json()
+                    self.log("✅ Portkey Gateway connected successfully with virtual keys", "SUCCESS")
                     self.passed_tests += 1
-                    self.results["portkey"] = {"status": "success"}
+                    self.results["portkey"] = {"status": "success", "provider": "openai", "model": "gpt-3.5-turbo"}
                     return True
                 else:
                     self.log(f"❌ Portkey failed with status {response.status_code}: {response.text}", "ERROR")

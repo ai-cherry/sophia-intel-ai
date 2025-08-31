@@ -1,6 +1,14 @@
+"""
+Agent builders for the Coding Swarm.
+
+This module provides factory functions for creating specialized agents
+with appropriate models, tools, and instructions for software development tasks.
+"""
+
 from textwrap import dedent
 from typing import List, Optional
-from agno import Agent
+from agno.agent import Agent
+from agno.tools import Tool
 from app.models.router import agno_chat_model, ROLE_MODELS, ROLE_PARAMS
 from app.tools.code_search import CodeSearch
 from app.tools.repo_fs import ReadFile, WriteFile, ListDirectory
@@ -84,13 +92,24 @@ def make_planner(name: str = "Planner") -> Agent:
 
 def make_generator(
     name: str,
-    model_key: str,
-    tools: Optional[List] = None,
+    model_name: str,
+    tools: Optional[List[Tool]] = None,
     role_note: str = "Implement spec with tests and minimal diff"
 ) -> Agent:
-    """Create a code generation agent with specific model."""
-    m_id = ROLE_MODELS.get(model_key, model_key)
-    params = ROLE_PARAMS.get(model_key, {})
+    """
+    Create a code generation agent with specific model.
+    
+    Args:
+        name: Agent name for identification
+        model_name: Model name from ROLE_MODELS or direct model ID
+        tools: List of tools to provide to the agent
+        role_note: Specific role description for the agent
+        
+    Returns:
+        Configured Agent instance
+    """
+    m_id = ROLE_MODELS.get(model_name, model_name)
+    params = ROLE_PARAMS.get(model_name, {})
     
     default_tools = [
         CodeSearch(),

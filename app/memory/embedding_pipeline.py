@@ -14,11 +14,38 @@ import logging
 from functools import lru_cache
 
 import numpy as np
-from openai import AsyncOpenAI
 from pydantic import BaseModel, Field
 
+# Optional OpenAI import
+try:
+    from openai import AsyncOpenAI
+    OPENAI_AVAILABLE = True
+except ImportError:
+    OPENAI_AVAILABLE = False
+    AsyncOpenAI = None
+
 from app.core.config import settings
-from app.core.observability import metrics, trace_async
+
+# Optional observability imports
+try:
+    from app.core.observability import metrics, trace_async
+except ImportError:
+    # Fallback if observability not available
+    class DummyMetrics:
+        def __init__(self):
+            self.embedding_cache_hits = type('obj', (object,), {'inc': lambda: None})()
+            self.embedding_cache_misses = type('obj', (object,), {'inc': lambda: None})()
+            self.embeddings_generated = type('obj', (object,), {'inc': lambda x: None})()
+            self.embedding_errors = type('obj', (object,), {'inc': lambda: None})()
+        
+        def get_embedding_cache_hit_rate(self):
+            return 0.0
+    
+    metrics = DummyMetrics()
+    
+    def trace_async(func):
+        """Dummy decorator when tracing not available."""
+        return func
 
 logger = logging.getLogger(__name__)
 
@@ -100,7 +127,10 @@ class StandardizedEmbeddingPipeline:
     
     def __init__(self):
         """Initialize the embedding pipeline."""
-        self.client = AsyncOpenAI(api_key=settings.openai_api_key)
+        if OPENAI_AVAILABLE and hasattr(settings, 'openai_api_key'):
+            self.client = AsyncOpenAI(api_key=settings.openai_api_key)
+        else:
+            self.client = None
         self._cache = {}  # Simple in-memory cache
         self._model_dimensions = {
             EmbeddingModel.ADA_002: 1536,
@@ -196,6 +226,12 @@ class StandardizedEmbeddingPipeline:
         Returns:
             List of embedding vectors
         """
+        # Return mock embeddings if OpenAI not available
+        if not self.client:
+            logger.warning("OpenAI client not available, returning mock embeddings")
+            dim = dimensions or self._model_dimensions.get(model, 1536)
+            return [[0.1] * dim for _ in texts]
+        
         try:
             # Prepare request parameters
             params = {

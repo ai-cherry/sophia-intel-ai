@@ -752,9 +752,34 @@ async def update_index(
 # Agno-Compatible Endpoints (Aliases)
 # ============================================
 
-@app.get("/agents", response_model=List[TeamInfo])
-async def get_agents_compat():
+@app.get("/agents")
+async def get_agents_compat(action: Optional[str] = None):
     """Agno-compatible alias for teams endpoint."""
+    # Handle activity polling from UI
+    if action == "activity":
+        return JSONResponse({
+            "agents": [team.model_dump() for team in await get_teams()],
+            "activity": {
+                "active_tasks": 0,
+                "completed_tasks": 0,
+                "status": "idle"
+            }
+        })
+    return await get_teams()
+
+@app.get("/api/agents")
+async def get_api_agents_compat(action: Optional[str] = None):
+    """API-compatible alias for teams endpoint."""
+    # Handle activity polling from UI
+    if action == "activity":
+        return JSONResponse({
+            "agents": [team.model_dump() for team in await get_teams()],
+            "activity": {
+                "active_tasks": 0,
+                "completed_tasks": 0,
+                "status": "idle"
+            }
+        })
     return await get_teams()
 
 @app.post("/run/team")

@@ -1,5 +1,5 @@
 {
-  "timestamp": "2025-08-31T16:36:58.889792",
+  "timestamp": "2025-08-31T16:55:00.400242",
   "summary": {
     "total_tests": 6,
     "passed_tests": 6,
@@ -11,9 +11,10 @@
       "status": "success",
       "version": "7.4.3"
     },
-    "qdrant": {
+    "weaviate": {
       "status": "success",
-      "collections": 14
+      "version": "1.32.1",
+      "features": "v1.32+ with RQ compression"
     },
     "openrouter": {
       "status": "success",

@@ -12,11 +12,13 @@ RUN npm install -g pnpm && pnpm install
 # Copy source code (excluding node_modules to avoid conflicts)
 COPY src ./src
 COPY public ./public
-COPY *.config.* ./
-COPY *.json ./
-COPY *.md ./
-COPY *.ts ./
-COPY *.js ./
+COPY next.config.ts ./
+COPY tailwind.config.ts ./
+COPY postcss.config.mjs ./
+COPY tsconfig.json ./
+COPY package.json ./
+COPY package-lock.json ./
+COPY components.json ./
 
 # Set environment variables for build
 ARG NEXT_PUBLIC_API_URL=http://localhost:8003

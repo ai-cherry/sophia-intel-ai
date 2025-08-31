@@ -27,7 +27,7 @@ class GlobalState:
         self.graph_rag = None
         self.gate_manager = None
         self.redis_client = None
-        self.qdrant_client = None
+        self.weaviate_client = None
         self.initialized = False
         
         # Validate required environment variables
@@ -137,28 +137,40 @@ def get_redis_client(state: GlobalState = Depends(get_state)):
     
     return state.redis_client
 
-def get_qdrant_client(state: GlobalState = Depends(get_state)):
-    """Get Qdrant client - REAL connection."""
-    if not state.qdrant_client:
+def get_weaviate_client(state: GlobalState = Depends(get_state)):
+    """Get Weaviate client - REAL connection with v1.32+ features."""
+    if not state.weaviate_client:
         try:
-            from qdrant_client import QdrantClient
-            qdrant_url = os.getenv("QDRANT_URL")
-            qdrant_api_key = os.getenv("QDRANT_API_KEY")
+            import weaviate
+            from weaviate.classes.init import Auth
             
-            if not qdrant_url or not qdrant_api_key:
-                raise ValueError("QDRANT_URL and QDRANT_API_KEY environment variables must be set")
-                
-            state.qdrant_client = QdrantClient(url=qdrant_url, api_key=qdrant_api_key)
+            weaviate_url = os.getenv("WEAVIATE_URL", "http://localhost:8080")
+            weaviate_api_key = os.getenv("WEAVIATE_API_KEY")
+            
+            # Use local Weaviate for development, cloud for production
+            if "localhost" in weaviate_url:
+                state.weaviate_client = weaviate.connect_to_local(
+                    host=weaviate_url.replace("http://", "").replace(":8080", ""),
+                    port=8080
+                )
+            else:
+                if not weaviate_api_key:
+                    raise ValueError("WEAVIATE_API_KEY required for cloud connection")
+                state.weaviate_client = weaviate.connect_to_weaviate_cloud(
+                    cluster_url=weaviate_url,
+                    auth_credentials=Auth.api_key(weaviate_api_key)
+                )
+            
             # Test connection
-            state.qdrant_client.get_collections()
-            logger.info("✅ Real Qdrant connection established")
+            state.weaviate_client.collections.list_all()
+            logger.info("✅ Real Weaviate v1.32+ connection established")
         except Exception as e:
-            logger.error(f"❌ Failed to connect to Qdrant: {e}")
+            logger.error(f"❌ Failed to connect to Weaviate: {e}")
             if os.getenv("FAIL_ON_MOCK_FALLBACK", "false").lower() == "true":
-                raise HTTPException(status_code=503, detail=f"Qdrant unavailable: {e}")
-            raise ConnectionError(f"Qdrant connection failed: {e}")
+                raise HTTPException(status_code=503, detail=f"Weaviate unavailable: {e}")
+            raise ConnectionError(f"Weaviate connection failed: {e}")
     
-    return state.qdrant_client
+    return state.weaviate_client
 
 def initialize_dependencies(unified_state=None):
     """Initialize dependencies with REAL service connections."""
@@ -172,7 +184,7 @@ def initialize_dependencies(unified_state=None):
     # Pre-validate all critical services
     try:
         redis_client = get_redis_client(Depends(get_state))
-        qdrant_client = get_qdrant_client(Depends(get_state))
+        weaviate_client = get_weaviate_client(Depends(get_state))
         logger.info("✅ All critical dependencies validated successfully")
         _global_state.initialized = True
     except Exception as e:

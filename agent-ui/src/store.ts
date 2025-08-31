@@ -103,7 +103,7 @@ export const usePlaygroundStore = create<PlaygroundStore>()(
       hasStorage: false,
       setHasStorage: (hasStorage) => set(() => ({ hasStorage })),
       chatInputRef: { current: null },
-      selectedEndpoint: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8003',
+      selectedEndpoint: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000',
       setSelectedEndpoint: (selectedEndpoint) =>
         set(() => ({ selectedEndpoint })),
       agents: [],

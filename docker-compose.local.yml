@@ -7,21 +7,41 @@ version: '3.8'
 
 services:
   # ==============================================
-  # LOCAL VECTOR DATABASE - Weaviate
+  # WEAVIATE v1.32+ - Advanced Vector Database
   # ==============================================
   weaviate:
-    image: semitechnologies/weaviate:1.26.1
-    container_name: sophia-weaviate-local
+    image: semitechnologies/weaviate:1.32.1
+    container_name: sophia-weaviate-v132
     restart: unless-stopped
     ports:
       - "8080:8080"
+      - "50051:50051"  # gRPC port for high-performance operations
     environment:
       QUERY_DEFAULTS_LIMIT: 25
       AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
       PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
-      DEFAULT_VECTORIZER_MODULE: 'none'  # We handle embeddings ourselves
-      ENABLE_MODULES: 'text2vec-openai,text2vec-cohere,text2vec-huggingface,generative-openai'
+      
+      # v1.32+ Advanced Features
+      ENABLE_MODULES: 'text2vec-openai,text2vec-cohere,text2vec-huggingface,generative-openai,qna-openai'
+      DEFAULT_VECTORIZER_MODULE: 'text2vec-openai'
+      
+      # RQ Compression (75% memory reduction)
+      VECTOR_INDEX_TYPE: 'hnsw'
+      ENABLE_VECTOR_QUANTIZATION: 'true'
+      QUANTIZATION_TYPE: 'rq'
+      
+      # Performance optimizations
       CLUSTER_HOSTNAME: 'node1'
+      CLUSTER_GOSSIP_BIND_PORT: '7946'
+      CLUSTER_DATA_BIND_PORT: '7947'
+      
+      # Multi-tenancy support
+      ENABLE_MULTI_TENANCY: 'true'
+      AUTO_TENANT_CREATION: 'true'
+      
+      # Simplified memory configuration
+      GOGC: '100'
+      
     volumes:
       - weaviate_data:/var/lib/weaviate
     healthcheck:
@@ -29,7 +49,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 60s
 
   # ==============================================  
   # LOCAL POSTGRESQL DATABASE

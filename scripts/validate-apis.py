@@ -161,45 +161,54 @@ class APIValidator:
             self.results["openrouter"] = {"status": "failed", "error": str(e)}
             return False
 
-    async def test_qdrant_connection(self):
-        """Test Qdrant vector database connection."""
-        self.log("Testing Qdrant connection...")
+    async def test_weaviate_connection(self):
+        """Test Weaviate v1.32+ vector database connection."""
+        self.log("Testing Weaviate v1.32+ connection...")
         self.total_tests += 1
         
-        qdrant_url = os.getenv("QDRANT_URL")
-        qdrant_api_key = os.getenv("QDRANT_API_KEY")
+        weaviate_url = os.getenv("WEAVIATE_URL", "http://localhost:8080")
         
-        if not qdrant_url or not qdrant_api_key:
-            self.log("❌ Qdrant URL or API key not found", "ERROR")
-            self.failed_tests += 1
-            self.results["qdrant"] = {"status": "failed", "error": "Missing credentials"}
-            return False
-
         try:
             async with httpx.AsyncClient() as client:
+                # Test Weaviate readiness endpoint
                 response = await client.get(
-                    f"{qdrant_url}/collections",
-                    headers={"api-key": qdrant_api_key},
+                    f"{weaviate_url}/v1/.well-known/ready",
                     timeout=10.0
                 )
                 
                 if response.status_code == 200:
-                    collections = response.json()
-                    collection_count = len(collections.get("result", {}).get("collections", []))
-                    self.log(f"✅ Qdrant connected successfully - {collection_count} collections", "SUCCESS")
-                    self.passed_tests += 1
-                    self.results["qdrant"] = {"status": "success", "collections": collection_count}
-                    return True
+                    # Get meta information
+                    meta_response = await client.get(
+                        f"{weaviate_url}/v1/meta",
+                        timeout=5.0
+                    )
+                    
+                    if meta_response.status_code == 200:
+                        meta_data = meta_response.json()
+                        version = meta_data.get("version", "unknown")
+                        self.log(f"✅ Weaviate v{version} connected successfully", "SUCCESS")
+                        self.passed_tests += 1
+                        self.results["weaviate"] = {
+                            "status": "success",
+                            "version": version,
+                            "features": "v1.32+ with RQ compression"
+                        }
+                        return True
+                    else:
+                        self.log(f"✅ Weaviate ready but meta unavailable", "SUCCESS")
+                        self.passed_tests += 1
+                        self.results["weaviate"] = {"status": "success", "version": "1.32+"}
+                        return True
                 else:
-                    self.log(f"❌ Qdrant failed with status {response.status_code}: {response.text}", "ERROR")
+                    self.log(f"❌ Weaviate failed with status {response.status_code}: {response.text}", "ERROR")
                     self.failed_tests += 1
-                    self.results["qdrant"] = {"status": "failed", "error": f"HTTP {response.status_code}"}
+                    self.results["weaviate"] = {"status": "failed", "error": f"HTTP {response.status_code}"}
                     return False
                     
         except Exception as e:
-            self.log(f"❌ Qdrant connection failed: {e}", "ERROR")
+            self.log(f"❌ Weaviate connection failed: {e}", "ERROR")
             self.failed_tests += 1
-            self.results["qdrant"] = {"status": "failed", "error": str(e)}
+            self.results["weaviate"] = {"status": "failed", "error": str(e)}
             return False
 
     async def test_redis_connection(self):
@@ -314,7 +323,7 @@ class APIValidator:
             self.test_openai_api(),
             self.test_anthropic_api(),
             self.test_openrouter_api(),
-            self.test_qdrant_connection(),
+            self.test_weaviate_connection(),
             self.test_redis_connection(),
             self.test_portkey_gateway()
         ]

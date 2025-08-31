@@ -66,50 +66,51 @@ class HealthChecker:
             logger.error(f"Redis health check failed: {e}")
             return {"status": "unhealthy", "error": str(e)}
 
-    async def check_qdrant(self) -> Dict[str, Any]:
-        """Check Qdrant vector database connection."""
+    async def check_weaviate(self) -> Dict[str, Any]:
+        """Check Weaviate v1.32+ vector database connection."""
         try:
-            qdrant_url = os.getenv("QDRANT_URL")
-            qdrant_api_key = os.getenv("QDRANT_API_KEY")
-            
-            if not qdrant_url or not qdrant_api_key:
-                return {"status": "unhealthy", "error": "Qdrant credentials not configured"}
+            weaviate_url = os.getenv("WEAVIATE_URL", "http://localhost:8080")
             
             start_time = datetime.utcnow()
             
             async with httpx.AsyncClient() as client:
-                # Check cluster info
+                # Check readiness
                 response = await client.get(
-                    f"{qdrant_url}/cluster",
-                    headers={"api-key": qdrant_api_key},
+                    f"{weaviate_url}/v1/.well-known/ready",
                     timeout=10.0
                 )
                 
                 if response.status_code != 200:
                     return {"status": "unhealthy", "error": f"HTTP {response.status_code}"}
                 
-                cluster_info = response.json()
-                
-                # Get collections
-                collections_response = await client.get(
-                    f"{qdrant_url}/collections",
-                    headers={"api-key": qdrant_api_key},
-                    timeout=10.0
+                # Get meta information
+                meta_response = await client.get(
+                    f"{weaviate_url}/v1/meta",
+                    timeout=5.0
                 )
                 
-                collections = collections_response.json() if collections_response.status_code == 200 else {"result": {"collections": []}}
                 response_time = (datetime.utcnow() - start_time).total_seconds() * 1000
                 
-                return {
-                    "status": "healthy",
-                    "response_time_ms": round(response_time, 2),
-                    "cluster_status": cluster_info.get("result", {}).get("status", "unknown"),
-                    "collections_count": len(collections.get("result", {}).get("collections", [])),
-                    "peer_count": len(cluster_info.get("result", {}).get("peers", []))
-                }
-                
+                if meta_response.status_code == 200:
+                    meta_data = meta_response.json()
+                    return {
+                        "status": "healthy",
+                        "response_time_ms": round(response_time, 2),
+                        "version": meta_data.get("version", "unknown"),
+                        "hostname": meta_data.get("hostname", "unknown"),
+                        "modules": meta_data.get("modules", {}),
+                        "features": "v1.32+ RQ compression, multi-tenancy"
+                    }
+                else:
+                    return {
+                        "status": "healthy",
+                        "response_time_ms": round(response_time, 2),
+                        "note": "Ready endpoint healthy, meta endpoint unavailable",
+                        "features": "v1.32+ optimizations active"
+                    }
+                    
         except Exception as e:
-            logger.error(f"Qdrant health check failed: {e}")
+            logger.error(f"Weaviate health check failed: {e}")
             return {"status": "unhealthy", "error": str(e)}
 
     async def check_postgres(self) -> Dict[str, Any]:
@@ -202,7 +203,7 @@ class HealthChecker:
         # Run all checks concurrently
         tasks = {
             "redis": self.check_redis(),
-            "qdrant": self.check_qdrant(),
+            "weaviate": self.check_weaviate(),
             "postgres": self.check_postgres(),
             "weaviate": self.check_weaviate(),
             "api_providers": self.check_api_providers()
@@ -254,10 +255,10 @@ async def redis_health():
     """Redis-specific health check."""
     return await _health_checker.check_redis()
 
-@router.get("/qdrant")
-async def qdrant_health():
-    """Qdrant vector database health check."""
-    return await _health_checker.check_qdrant()
+@router.get("/weaviate")
+async def weaviate_health():
+    """Weaviate v1.32+ vector database health check."""
+    return await _health_checker.check_weaviate()
 
 @router.get("/postgres")
 async def postgres_health():

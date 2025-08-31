@@ -1,0 +1,327 @@
+name: CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # ============================================
+  # Build and Push Docker Images
+  # ============================================
+  build-and-push:
+    name: Build and Push Images
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Extract version
+        id: version
+        run: |
+          if [[ $GITHUB_REF == refs/tags/* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/}
+          else
+            VERSION=latest
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+      
+      - name: Build and push API image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.api
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/api:${{ steps.version.outputs.version }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/api:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            VERSION=${{ steps.version.outputs.version }}
+            BUILD_DATE=${{ github.event.head_commit.timestamp }}
+            VCS_REF=${{ github.sha }}
+      
+      - name: Build and push UI image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./ui
+          file: ./ui/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/ui:${{ steps.version.outputs.version }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/ui:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      
+      - name: Build and push Agent UI image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./agent-ui
+          file: ./agent-ui/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/agent-ui:${{ steps.version.outputs.version }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/agent-ui:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ============================================
+  # Deploy to Staging
+  # ============================================
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    if: github.ref == 'refs/heads/main' || github.event.inputs.environment == 'staging'
+    environment:
+      name: staging
+      url: https://staging.sophia-intel.ai
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+      
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig --name sophia-staging --region us-east-1
+      
+      - name: Deploy with Helm
+        run: |
+          helm upgrade --install sophia-intel ./helm \
+            --namespace sophia-staging \
+            --create-namespace \
+            --set image.tag=${{ needs.build-and-push.outputs.version }} \
+            --set image.registry=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} \
+            --set environment=staging \
+            --values ./helm/values.staging.yaml \
+            --wait \
+            --timeout 10m
+      
+      - name: Run smoke tests
+        run: |
+          kubectl run smoke-test \
+            --image=curlimages/curl:latest \
+            --rm \
+            --attach \
+            --restart=Never \
+            --namespace sophia-staging \
+            -- curl -f http://sophia-intel-api:8000/healthz
+      
+      - name: Notify Slack
+        if: always()
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              "text": "Staging Deployment: ${{ job.status }}",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Staging Deployment*\n*Status:* ${{ job.status }}\n*Version:* ${{ needs.build-and-push.outputs.version }}\n*Actor:* ${{ github.actor }}"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  # ============================================
+  # Deploy to Production
+  # ============================================
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [build-and-push, deploy-staging]
+    if: startsWith(github.ref, 'refs/tags/v') || github.event.inputs.environment == 'production'
+    environment:
+      name: production
+      url: https://sophia-intel.ai
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.PROD_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PROD_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+      
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig --name sophia-production --region us-east-1
+      
+      - name: Backup current deployment
+        run: |
+          kubectl get all -n sophia-production -o yaml > backup-$(date +%Y%m%d-%H%M%S).yaml
+      
+      - name: Deploy with Helm (Blue-Green)
+        run: |
+          # Deploy to green environment
+          helm upgrade --install sophia-intel-green ./helm \
+            --namespace sophia-production \
+            --create-namespace \
+            --set image.tag=${{ needs.build-and-push.outputs.version }} \
+            --set image.registry=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} \
+            --set environment=production \
+            --set deployment.strategy=bluegreen \
+            --set deployment.slot=green \
+            --values ./helm/values.production.yaml \
+            --wait \
+            --timeout 15m
+          
+          # Run production tests
+          kubectl run prod-test \
+            --image=sophia-intel/test-runner:latest \
+            --rm \
+            --attach \
+            --restart=Never \
+            --namespace sophia-production \
+            -- pytest tests/production
+          
+          # Switch traffic to green
+          kubectl patch service sophia-intel-api \
+            -n sophia-production \
+            -p '{"spec":{"selector":{"deployment":"green"}}}'
+          
+          # Wait for traffic switch
+          sleep 30
+          
+          # Delete old blue deployment
+          helm uninstall sophia-intel-blue -n sophia-production || true
+      
+      - name: Run health checks
+        run: |
+          for i in {1..10}; do
+            if curl -f https://sophia-intel.ai/healthz; then
+              echo "Health check passed"
+              break
+            fi
+            echo "Health check attempt $i failed, retrying..."
+            sleep 10
+          done
+      
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            ./CHANGELOG.md
+            ./docs/release-notes.md
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Notify team
+        if: always()
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              "text": "🚀 Production Deployment: ${{ job.status }}",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*🚀 Production Deployment*\n*Status:* ${{ job.status }}\n*Version:* ${{ needs.build-and-push.outputs.version }}\n*URL:* https://sophia-intel.ai\n*Actor:* ${{ github.actor }}"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  # ============================================
+  # Rollback (Manual Trigger)
+  # ============================================
+  rollback:
+    name: Rollback Production
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && failure()
+    environment:
+      name: production
+    
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.PROD_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PROD_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+      
+      - name: Rollback deployment
+        run: |
+          aws eks update-kubeconfig --name sophia-production --region us-east-1
+          helm rollback sophia-intel -n sophia-production
+      
+      - name: Notify rollback
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              "text": "🔄 Production Rollback Completed",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*🔄 Production Rollback*\n*Status:* Completed\n*Actor:* ${{ github.actor }}"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

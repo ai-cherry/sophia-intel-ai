@@ -15,6 +15,14 @@ import tiktoken
 from pathlib import Path
 
 from app.portkey_config import gateway, Role
+from app.memory.embedding_pipeline import (
+    StandardizedEmbeddingPipeline,
+    EmbeddingModel,
+    EmbeddingPurpose,
+    EmbeddingRequest,
+    EmbeddingResult,
+    cosine_similarity as calc_cosine_similarity
+)
 
 # ============================================
 # Configuration
@@ -298,12 +306,15 @@ class EmbeddingRouter:
 class DualTierEmbedder:
     """
     Dual-tier embedding engine with caching and routing.
+    Integrates with standardized embedding pipeline for OpenAI models.
     """
     
     def __init__(self, config: Optional[EmbeddingConfig] = None):
         self.config = config or EmbeddingConfig()
         self.router = EmbeddingRouter(self.config)
         self.cache = EmbeddingCache(self.config.cache_db_path)
+        # Initialize standardized pipeline for OpenAI models
+        self.standard_pipeline = StandardizedEmbeddingPipeline()
     
     async def embed_single(
         self,

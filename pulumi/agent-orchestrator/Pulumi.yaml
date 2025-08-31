@@ -1,0 +1,18 @@
+name: agent-orchestrator
+runtime: python
+description: LLM execution and swarm orchestration service for Sophia Intel AI
+
+backend:
+  url: https://app.pulumi.com
+
+template:
+  config:
+    agent-orchestrator:environment:
+      description: Environment name (dev, staging, prod)
+      default: dev
+    agent-orchestrator:max_concurrent_swarms:
+      description: Maximum concurrent swarm executions
+      default: 10
+    agent-orchestrator:lambda_labs_gpu_count:
+      description: Number of Lambda Labs GPU instances
+      default: 2

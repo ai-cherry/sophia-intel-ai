@@ -6,6 +6,10 @@ Uses direct OpenAI client integration.
 from typing import Dict, Any, Optional
 import os
 from openai import OpenAI, AsyncOpenAI
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv('.env.local')
 
 # Role→Model mappings 
 ROLE_MODELS = {
@@ -38,7 +42,13 @@ class SimpleOpenAIChat:
     def __init__(self, model: str = "gpt-4", **kwargs):
         self.model = model
         self.params = kwargs
-        self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY", "dummy-key"))
+        
+        # Get real API key, fail if not available
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key or api_key == "dummy-key":
+            raise ValueError("OPENAI_API_KEY environment variable must be set with a valid API key")
+            
+        self.client = OpenAI(api_key=api_key)
         
     def invoke(self, messages, **kwargs):
         """Simple invoke method."""
@@ -50,7 +60,11 @@ class SimpleOpenAIChat:
             )
             return response.choices[0].message.content
         except Exception as e:
-            return f"Mock response for: {messages[-1].get('content', 'unknown')[:50]}..."
+            # Log the error and re-raise - no mock fallbacks allowed
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"OpenAI API call failed: {e}")
+            raise Exception(f"OpenAI API call failed: {e}") from e
 
 
 def agno_chat_model(model_id: str, **params) -> SimpleOpenAIChat:

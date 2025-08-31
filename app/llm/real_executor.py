@@ -9,7 +9,7 @@ import logging
 from typing import Dict, List, Any, Optional, AsyncGenerator
 from datetime import datetime
 
-from app.portkey_config import gateway, Role, MODEL_RECOMMENDATIONS
+from app.portkey_config import get_gateway, Role, MODEL_RECOMMENDATIONS
 from app.swarms.coding.models import PoolType
 
 logger = logging.getLogger(__name__)
@@ -19,7 +19,7 @@ class RealLLMExecutor:
     """Execute real LLM calls through Portkey gateway."""
     
     def __init__(self):
-        self.gateway = gateway
+        self.gateway = get_gateway()
         self.session_id = None
         
     async def execute(

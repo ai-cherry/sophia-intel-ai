@@ -14,7 +14,7 @@ from enum import Enum
 import tiktoken
 from pathlib import Path
 
-from app.portkey_config import gateway, Role
+from app.portkey_config import get_gateway, Role
 from app.memory.embedding_pipeline import (
     StandardizedEmbeddingPipeline,
     EmbeddingModel,

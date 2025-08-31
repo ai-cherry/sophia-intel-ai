@@ -66,11 +66,11 @@ export function TeamWorkflowPanel() {
       await streamText(`${endpoint}/teams/run`, {
         method: 'POST',
         body: JSON.stringify({
-          team_id: selectedTeam.id,
           message,
+          team_id: selectedTeam.id,
+          pool,
           additional_data: {
             ...parsedData,
-            pool,
             priority,
           },
         }),

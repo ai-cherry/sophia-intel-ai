@@ -1,0 +1,18 @@
+name: vector-store
+runtime: python
+description: Vector database and embedding services for Sophia Intel AI
+
+backend:
+  url: https://app.pulumi.com
+
+template:
+  config:
+    vector-store:environment:
+      description: Environment name (dev, staging, prod)
+      default: dev
+    vector-store:weaviate_memory_gb:
+      description: Weaviate memory allocation in GB
+      default: 2
+    vector-store:embedding_cache_size:
+      description: Embedding cache size limit
+      default: 10000

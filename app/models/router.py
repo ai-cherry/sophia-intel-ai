@@ -2,34 +2,34 @@ from agno import OpenAIChat
 from agno.models.openai import OpenAIChat as AgnoOpenAIChat
 from app import settings
 
-# Role→Model mappings using latest OpenRouter models (August 2025)
+# Role→Model mappings using OpenAI models for demo
 ROLE_MODELS = {
-    # Strategic/Planning roles - Latest models
-    "planner": "openai/gpt-5",                      # GPT-5 for advanced planning
-    "critic": "anthropic/claude-3.7-sonnet",        # Claude 3.7 with thinking mode
-    "judge": "openai/gpt-5",                        # GPT-5 for synthesis/merge
+    # Strategic/Planning roles - GPT-4 for complex tasks
+    "planner": "gpt-4o-mini",                      # GPT-4o-mini for planning
+    "critic": "gpt-4o-mini",                       # GPT-4o-mini for review
+    "judge": "gpt-4o-mini",                        # GPT-4o-mini for decisions
     
-    # Code generation specialists - Latest coding models
-    "coderA": "x-ai/grok-code-fast-1",             # Grok Code Fast for primary coding
-    "coderB": "qwen/qwen3-coder",                  # Qwen3 Coder as alternative
-    "coderC": "mistralai/codestral-2501",          # Latest Codestral
+    # Code generation specialists - GPT models
+    "coderA": "gpt-4o-mini",                       # GPT-4o-mini for primary coding
+    "coderB": "gpt-4o-mini",                       # GPT-4o-mini as alternative
+    "coderC": "gpt-4o-mini",                       # GPT-4o-mini for code
     
     # Reasoning and analysis
-    "reasoning": "deepseek/deepseek-r1",           # DeepSeek R1 for reasoning
-    "analyzer": "google/gemini-2.5-pro",           # Gemini 2.5 Pro for analysis
-    "validator": "anthropic/claude-3.7-sonnet:thinking",  # Claude thinking mode
+    "reasoning": "gpt-4o-mini",                    # GPT-4o-mini for reasoning
+    "analyzer": "gpt-4o-mini",                     # GPT-4o-mini for analysis
+    "validator": "gpt-4o-mini",                    # GPT-4o-mini for validation
     
-    # Fast/cheap alternatives - Free tier models
-    "fast": "deepseek/deepseek-chat-v3.1:free",    # Free DeepSeek V3.1
-    "research": "google/gemini-2.5-flash",         # Fast Gemini 2.5
-    "free": "meta-llama/llama-4-maverick:free",    # Free Llama 4
+    # Fast/cheap alternatives
+    "fast": "gpt-3.5-turbo",                      # GPT-3.5 for fast responses
+    "research": "gpt-4o-mini",                     # GPT-4o-mini for research
+    "free": "gpt-3.5-turbo",                      # GPT-3.5 as free tier
     
     # Vision-capable models
-    "vision": "google/gemini-2.5-flash-image-preview",  # Image generation/analysis
+    "vision": "gpt-4o",                           # GPT-4o with vision
     
     # Legacy mappings for backward compatibility
-    "coder_a": "x-ai/grok-code-fast-1",
-    "coder_b": "qwen/qwen3-coder",
+    "coder_a": "gpt-4o-mini",
+    "coder_b": "gpt-4o-mini",
 }
 
 # Role-specific parameters for optimal performance
@@ -89,9 +89,5 @@ def agno_chat_model(model_id: str, **kwargs) -> AgnoOpenAIChat:
         id=actual_model,
         base_url=settings.OPENAI_BASE_URL,
         api_key=settings.OPENAI_API_KEY,
-        default_headers={
-            "HTTP-Referer": settings.HTTP_REFERER,
-            "X-Title": settings.X_TITLE
-        },
         **params
     )

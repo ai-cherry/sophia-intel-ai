@@ -168,32 +168,37 @@ class PortkeyGateway:
         
     def _setup_clients(self):
         """Initialize OpenAI clients with Portkey configuration."""
-        # Chat client (OpenRouter)
+        # Get the real Portkey API key from environment
+        portkey_key = os.getenv("PORTKEY_API_KEY")
+        if not portkey_key:
+            raise ValueError("PORTKEY_API_KEY environment variable is required")
+        
+        # Chat client (OpenRouter via Portkey)
         self.chat_client = OpenAI(
             base_url=self.config.base_url,
-            api_key=f"pk_live_{self.config.openrouter_vk}",
+            api_key=portkey_key,
             max_retries=self.config.max_retries,
             timeout=self.config.timeout_ms / 1000  # Convert to seconds
         )
         
         self.async_chat_client = AsyncOpenAI(
             base_url=self.config.base_url,
-            api_key=f"pk_live_{self.config.openrouter_vk}",
+            api_key=portkey_key,
             max_retries=self.config.max_retries,
             timeout=self.config.timeout_ms / 1000
         )
         
-        # Embedding client (Together)
+        # Embedding client (also via Portkey)
         self.embed_client = OpenAI(
             base_url=self.config.base_url,
-            api_key=f"pk_live_{self.config.together_vk}",
+            api_key=portkey_key,
             max_retries=self.config.max_retries,
             timeout=self.config.timeout_ms / 1000
         )
         
         self.async_embed_client = AsyncOpenAI(
             base_url=self.config.base_url,
-            api_key=f"pk_live_{self.config.together_vk}",
+            api_key=portkey_key,
             max_retries=self.config.max_retries,
             timeout=self.config.timeout_ms / 1000
         )
@@ -253,6 +258,13 @@ class PortkeyGateway:
                 "max_age": self.config.cache_max_age_seconds
             })
         
+        # Add Portkey config for OpenRouter
+        config = {
+            "provider": "openrouter", 
+            "api_key": os.getenv('OPENROUTER_API_KEY')
+        }
+        headers["x-portkey-config"] = json.dumps(config)
+        
         # Make the request
         response = self.chat_client.chat.completions.create(
             model=model,
@@ -298,6 +310,13 @@ class PortkeyGateway:
         if stream:
             headers["x-portkey-stream"] = "true"
             kwargs["stream"] = True
+        
+        # Add Portkey config for OpenRouter
+        config = {
+            "provider": "openrouter", 
+            "api_key": os.getenv('OPENROUTER_API_KEY')
+        }
+        headers["x-portkey-config"] = json.dumps(config)
         
         response = await self.async_chat_client.chat.completions.create(
             model=model,
@@ -390,8 +409,22 @@ class PortkeyGateway:
 # Default Gateway Instance
 # ============================================
 
-# Create default gateway instance
-gateway = PortkeyGateway()
+# Lazy gateway initialization
+_gateway = None
+
+def get_gateway():
+    """Get or create the global gateway instance."""
+    global _gateway
+    if _gateway is None:
+        _gateway = PortkeyGateway()
+    return _gateway
+
+# Create gateway instance for backward compatibility
+try:
+    gateway = PortkeyGateway()
+except:
+    # If initialization fails, use lazy loading
+    gateway = None
 
 # ============================================
 # Model Recommendations by Role
@@ -399,24 +432,24 @@ gateway = PortkeyGateway()
 
 MODEL_RECOMMENDATIONS = {
     Role.PLANNER: {
-        "default": "openai/gpt-5",
-        "alternatives": ["anthropic/claude-opus-4", "google/gemini-2.5-pro"],
+        "default": "openai/gpt-4o",
+        "alternatives": ["anthropic/claude-3.5-sonnet", "google/gemini-pro"],
         "temperature": 0.3
     },
     Role.CRITIC: {
-        "default": "anthropic/claude-3.7-sonnet:thinking",
-        "alternatives": ["anthropic/claude-3.7-sonnet", "openai/gpt-5"],
+        "default": "anthropic/claude-3.5-sonnet",
+        "alternatives": ["openai/gpt-4o", "google/gemini-pro"],
         "temperature": 0.1
     },
     Role.JUDGE: {
-        "default": "openai/gpt-5",
-        "alternatives": ["anthropic/claude-opus-4", "openai/o3"],
+        "default": "openai/gpt-4o",
+        "alternatives": ["anthropic/claude-3.5-sonnet", "google/gemini-pro"],
         "temperature": 0.2
     },
     Role.GENERATOR: {
-        "fast": ["deepseek/deepseek-chat-v3.1:free", "google/gemini-2.5-flash"],
-        "heavy": ["openai/gpt-5", "anthropic/claude-opus-4", "x-ai/grok-3"],
-        "balanced": ["google/gemini-2.5-pro", "deepseek/deepseek-chat-v3.1"],
+        "fast": ["openai/gpt-4o-mini", "google/gemini-flash"],
+        "heavy": ["openai/gpt-4o", "anthropic/claude-3.5-sonnet"],
+        "balanced": ["openai/gpt-4o", "google/gemini-pro"],
         "temperature": 0.7
     }
 }

@@ -244,14 +244,15 @@ class SupermemoryStore:
         with sqlite3.connect(self.db_path) as conn:
             # Build query
             if use_fts and query:
-                # Use FTS5 for text search
+                # Use FTS5 for text search (sanitize query for FTS5)
+                sanitized_query = query.replace('"', '').replace("'", "").replace(".", " ")
                 base_query = """
                     SELECT DISTINCT m.*
                     FROM memory_entries m
                     JOIN memory_fts f ON m.hash_id = f.hash_id
                     WHERE memory_fts MATCH ?
                 """
-                params = [query]
+                params = [f'"{sanitized_query}"']
             else:
                 # Regular search
                 base_query = """

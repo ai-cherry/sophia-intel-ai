@@ -8,13 +8,13 @@ with appropriate models, tools, and instructions for software development tasks.
 from textwrap import dedent
 from typing import List, Optional
 from agno.agent import Agent
-from agno.tools import Tool
-from app.models.router import agno_chat_model, ROLE_MODELS, ROLE_PARAMS
-from app.tools.code_search import CodeSearch
-from app.tools.repo_fs import ReadFile, WriteFile, ListDirectory
-from app.tools.git_ops import GitStatus, GitDiff, GitCommit, GitAdd
-from app.tools.test_ops import RunTests, RunTypeCheck
-from app.tools.lint_ops import RunLint, FormatCode
+from agno.tools import Function as Tool
+from app.models.simple_router import agno_chat_model, ROLE_MODELS, ROLE_PARAMS
+from app.tools.basic_tools import (
+    CodeSearch, ReadFile, WriteFile, ListDirectory,
+    GitStatus, GitDiff, GitCommit, GitAdd,
+    RunTests, RunTypeCheck, RunLint, FormatCode
+)
 from app.swarms.contracts import PLANNER_SCHEMA, CRITIC_SCHEMA, JUDGE_SCHEMA, GENERATOR_SCHEMA
 
 # System prompts for role-specific behavior

@@ -5,12 +5,17 @@ Provides metrics, tracing, and logging capabilities.
 
 from prometheus_client import Counter, Histogram, Gauge, generate_latest, CONTENT_TYPE_LATEST
 from opentelemetry import trace
-from opentelemetry.exporter.jaeger import JaegerExporter
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
 from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
+
+try:
+    from opentelemetry.exporter.jaeger.thrift import JaegerExporter
+except ImportError:
+    # Fallback - disable Jaeger if not available
+    JaegerExporter = None
 
 from fastapi import Request, Response
 from fastapi.responses import PlainTextResponse
@@ -18,7 +23,7 @@ import time
 import logging
 import asyncio
 from functools import wraps
-from typing import Callable, Any, Optional
+from typing import Callable, Any, Optional, Dict
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
@@ -154,8 +159,8 @@ component_health = Gauge(
 
 def setup_tracing(jaeger_endpoint: Optional[str] = None):
     """Initialize OpenTelemetry tracing with Jaeger."""
-    if not jaeger_endpoint:
-        logger.info("Tracing disabled (no Jaeger endpoint)")
+    if not jaeger_endpoint or JaegerExporter is None:
+        logger.info("Tracing disabled (no Jaeger endpoint or exporter unavailable)")
         return None
     
     try:

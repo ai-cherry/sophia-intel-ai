@@ -1,0 +1,102 @@
+# Pulumi ESC Environment - Development
+# Centralized configuration and secrets for Sophia Intel AI dev environment
+
+imports:
+  - sophia-intel-base
+
+values:
+  # Environment Configuration
+  environment: dev
+  region: iad
+  domain: sophia-intel-ai-dev.fly.dev
+  
+  # Feature Flags for Development
+  features:
+    debug_mode: true
+    verbose_logging: true
+    experimental_features: true
+    hot_reload: true
+    mock_external_apis: false
+    
+  # Resource Scaling (Development)
+  scaling:
+    api_gateway:
+      instances: 1
+      memory_mb: 512
+      cpu_cores: 0.5
+    agent_orchestrator:
+      instances: 1
+      memory_mb: 2048
+      cpu_cores: 1.0
+    vector_store:
+      instances: 1
+      memory_mb: 1024
+      cpu_cores: 1.0
+    mcp_server:
+      instances: 1
+      memory_mb: 1024
+      cpu_cores: 1.0
+      
+  # Development Database Configuration
+  database:
+    postgres:
+      max_connections: 20
+      connection_timeout: 10
+    redis:
+      memory_mb: 128
+      max_connections: 20
+    weaviate:
+      memory_gb: 1
+      
+  # Model Configuration for Development
+  models:
+    default_pools:
+      fast: "groq/llama-3.2-90b-text-preview"
+      balanced: "openai/gpt-4o-mini"
+      heavy: "anthropic/claude-3.5-sonnet"
+    embedding_tiers:
+      tier_s: "voyage-3-large"
+      tier_a: "cohere/embed-multilingual-v3.0"
+      tier_b: "BAAI/bge-base-en-v1.5"
+      
+  # Development Limits
+  limits:
+    daily_budget_usd: 10
+    max_concurrent_swarms: 3
+    request_timeout_seconds: 30
+    max_tokens_per_request: 4096
+    
+  # Monitoring (Reduced for dev)
+  monitoring:
+    log_level: DEBUG
+    metrics_retention_days: 7
+    trace_sampling_rate: 1.0
+    enable_profiling: true
+
+pulumiConfig:
+  # Pulumi-specific configuration
+  pulumi:backend: https://app.pulumi.com
+  
+environmentVariables:
+  # Export all configuration as environment variables
+  ENVIRONMENT: ${environment}
+  LOG_LEVEL: ${monitoring.log_level}
+  DEBUG_MODE: ${features.debug_mode}
+  DOMAIN: ${domain}
+  REGION: ${region}
+  
+  # Database URLs (will be populated by stack outputs)
+  POSTGRES_URL: ${POSTGRES_CONNECTION_STRING}
+  REDIS_URL: ${REDIS_CONNECTION_STRING}
+  WEAVIATE_URL: ${WEAVIATE_CONNECTION_STRING}
+  
+  # Model configuration
+  DEFAULT_FAST_MODEL: ${models.default_pools.fast}
+  DEFAULT_BALANCED_MODEL: ${models.default_pools.balanced} 
+  DEFAULT_HEAVY_MODEL: ${models.default_pools.heavy}
+  
+  # Scaling configuration
+  API_GATEWAY_INSTANCES: ${scaling.api_gateway.instances}
+  AGENT_ORCHESTRATOR_INSTANCES: ${scaling.agent_orchestrator.instances}
+  VECTOR_STORE_INSTANCES: ${scaling.vector_store.instances}
+  MCP_SERVER_INSTANCES: ${scaling.mcp_server.instances}

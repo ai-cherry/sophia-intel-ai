@@ -23,7 +23,7 @@ from app.swarms.coding.team import (
     make_coding_swarm,
     run_coding_debate
 )
-from app.memory.supermemory_mcp import get_supermemory_instance
+from app.memory.supermemory_mcp import SupermemoryStore
 
 logger = logging.getLogger(__name__)
 

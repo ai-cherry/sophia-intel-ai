@@ -1,0 +1,153 @@
+# Pulumi ESC Base Environment - Shared Configuration
+# Base configuration imported by all environments
+
+values:
+  # Shared Project Configuration
+  project_name: sophia-intel-ai
+  organization: sophia-intel-ai
+  
+  # Provider Configuration
+  providers:
+    portkey:
+      base_url: https://api.portkey.ai/v1
+      api_key:
+        fn::secret: ${PORTKEY_API_KEY}
+      virtual_keys:
+        openrouter:
+          fn::secret: ${PORTKEY_OPENROUTER_VK}
+        anthropic:
+          fn::secret: ${PORTKEY_ANTHROPIC_VK}
+        openai:
+          fn::secret: ${PORTKEY_OPENAI_VK}
+        together:
+          fn::secret: ${PORTKEY_TOGETHER_VK}
+        groq:
+          fn::secret: ${PORTKEY_GROQ_VK}
+    
+    openrouter:
+      api_key:
+        fn::secret: ${OPENROUTER_API_KEY}
+      base_url: https://openrouter.ai/api/v1
+      
+    anthropic:
+      api_key:
+        fn::secret: ${ANTHROPIC_API_KEY}
+      base_url: https://api.anthropic.com
+      
+    openai:
+      api_key:
+        fn::secret: ${OPENAI_API_KEY}
+      organization:
+        fn::secret: ${OPENAI_ORG_ID}
+        
+    together:
+      api_key:
+        fn::secret: ${TOGETHER_API_KEY}
+      base_url: https://api.together.xyz/v1
+      
+    groq:
+      api_key:
+        fn::secret: ${GROQ_API_KEY}
+      base_url: https://api.groq.com/openai/v1
+    
+    # Infrastructure providers
+    lambda_labs:
+      api_key:
+        fn::secret: ${LAMBDA_LABS_API_KEY}
+      base_url: https://cloud.lambdalabs.com/api/v1
+      
+    neon:
+      api_key:
+        fn::secret: ${NEON_API_KEY}
+      database_url:
+        fn::secret: ${NEON_DATABASE_URL}
+        
+    fly:
+      api_token:
+        fn::secret: ${FLY_API_TOKEN}
+      
+  # Database Connection Templates
+  database_templates:
+    postgres:
+      connection_string_template: "postgresql://user:password@host:port/database?sslmode=require"
+      ssl_mode: require
+      port: 5432
+    redis:
+      connection_string_template: "redis://host:port/db"
+      port: 6379
+    weaviate:
+      connection_string_template: "http://host:port"
+      port: 8080
+      
+  # Shared Model Configuration
+  shared_models:
+    embedding_models:
+      tier_s: "voyage-3-large"
+      tier_a: "cohere/embed-multilingual-v3.0" 
+      tier_b: "BAAI/bge-base-en-v1.5"
+    llm_models:
+      fast: ["groq/llama-3.2-90b-text-preview", "openai/gpt-4o-mini"]
+      balanced: ["openai/gpt-4o", "anthropic/claude-3.5-sonnet"]
+      heavy: ["anthropic/claude-3.5-sonnet", "qwen/qwen-2.5-coder-32b-instruct", "openai/gpt-4o"]
+      
+  # Shared Security Configuration
+  shared_security:
+    jwt_secret:
+      fn::secret: ${JWT_SECRET}
+    encryption_key:
+      fn::secret: ${ENCRYPTION_KEY}
+    api_keys:
+      internal_service_key:
+        fn::secret: ${INTERNAL_SERVICE_API_KEY}
+      webhook_secret:
+        fn::secret: ${WEBHOOK_SECRET}
+        
+  # Container Registry Configuration
+  registry:
+    base_url: ghcr.io/sophia-intel-ai
+    username: sophia-intel-ai
+    password:
+      fn::secret: ${GITHUB_TOKEN}
+      
+  # Observability Configuration
+  observability:
+    datadog:
+      api_key:
+        fn::secret: ${DATADOG_API_KEY}
+      site: datadoghq.com
+    prometheus:
+      enabled: true
+      port: 9090
+    jaeger:
+      enabled: true
+      endpoint: http://jaeger:14268/api/traces
+
+environmentVariables:
+  # Export shared secrets and configuration
+  PORTKEY_API_KEY: ${providers.portkey.api_key}
+  PORTKEY_BASE_URL: ${providers.portkey.base_url}
+  PORTKEY_OPENROUTER_VK: ${providers.portkey.virtual_keys.openrouter}
+  PORTKEY_ANTHROPIC_VK: ${providers.portkey.virtual_keys.anthropic}
+  PORTKEY_OPENAI_VK: ${providers.portkey.virtual_keys.openai}
+  PORTKEY_TOGETHER_VK: ${providers.portkey.virtual_keys.together}
+  PORTKEY_GROQ_VK: ${providers.portkey.virtual_keys.groq}
+  
+  OPENROUTER_API_KEY: ${providers.openrouter.api_key}
+  ANTHROPIC_API_KEY: ${providers.anthropic.api_key}
+  OPENAI_API_KEY: ${providers.openai.api_key}
+  OPENAI_ORG_ID: ${providers.openai.organization}
+  TOGETHER_API_KEY: ${providers.together.api_key}
+  GROQ_API_KEY: ${providers.groq.api_key}
+  
+  LAMBDA_LABS_API_KEY: ${providers.lambda_labs.api_key}
+  NEON_DATABASE_URL: ${providers.neon.database_url}
+  FLY_API_TOKEN: ${providers.fly.api_token}
+  
+  JWT_SECRET: ${shared_security.jwt_secret}
+  ENCRYPTION_KEY: ${shared_security.encryption_key}
+  INTERNAL_SERVICE_API_KEY: ${shared_security.api_keys.internal_service_key}
+  
+  CONTAINER_REGISTRY: ${registry.base_url}
+  GITHUB_TOKEN: ${registry.password}
+  
+  DATADOG_API_KEY: ${observability.datadog.api_key}

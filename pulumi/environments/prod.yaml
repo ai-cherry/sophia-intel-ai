@@ -1,0 +1,171 @@
+# Pulumi ESC Environment - Production
+# Production configuration and secrets for Sophia Intel AI
+
+imports:
+  - sophia-intel-base
+
+values:
+  # Environment Configuration
+  environment: prod
+  region: iad
+  domain: sophia-intel-ai.com
+  
+  # Production Feature Flags
+  features:
+    debug_mode: false
+    verbose_logging: false
+    experimental_features: false
+    hot_reload: false
+    mock_external_apis: false
+    security_hardened: true
+    
+  # Production Scaling
+  scaling:
+    api_gateway:
+      instances: 3
+      memory_mb: 1024
+      cpu_cores: 1.0
+      auto_scaling:
+        min: 2
+        max: 10
+        cpu_threshold: 70
+    agent_orchestrator:
+      instances: 5
+      memory_mb: 4096
+      cpu_cores: 4.0
+      auto_scaling:
+        min: 3
+        max: 20
+        cpu_threshold: 75
+    vector_store:
+      instances: 3
+      memory_mb: 2048
+      cpu_cores: 2.0
+      auto_scaling:
+        min: 2
+        max: 15
+        cpu_threshold: 80
+    mcp_server:
+      instances: 3
+      memory_mb: 2048
+      cpu_cores: 2.0
+      auto_scaling:
+        min: 2
+        max: 12
+        cpu_threshold: 75
+        
+  # Production Database Configuration
+  database:
+    postgres:
+      max_connections: 200
+      connection_timeout: 30
+      pool_size: 50
+      ssl_mode: require
+      backup_retention_days: 30
+    redis:
+      memory_mb: 1024
+      max_connections: 200
+      cluster_mode: true
+      persistence: true
+    weaviate:
+      memory_gb: 8
+      replicas: 3
+      backup_enabled: true
+      
+  # Production Model Configuration
+  models:
+    default_pools:
+      fast: "groq/llama-3.2-90b-text-preview,openai/gpt-4o-mini"
+      balanced: "openai/gpt-4o,anthropic/claude-3.5-sonnet"
+      heavy: "anthropic/claude-3.5-sonnet,openai/gpt-4o,qwen/qwen-2.5-coder-32b-instruct"
+    embedding_tiers:
+      tier_s: "voyage-3-large"
+      tier_a: "cohere/embed-multilingual-v3.0"
+      tier_b: "BAAI/bge-base-en-v1.5"
+    failover_chains:
+      primary: ["anthropic/claude-3.5-sonnet", "openai/gpt-4o"]
+      secondary: ["openai/gpt-4o", "groq/llama-3.2-90b-text-preview"]
+      
+  # Production Limits and Security
+  limits:
+    daily_budget_usd: 500
+    alert_threshold_usd: 400
+    max_concurrent_swarms: 50
+    request_timeout_seconds: 120
+    max_tokens_per_request: 8192
+    rate_limit_per_minute: 1000
+    
+  # Production Security
+  security:
+    api_key_rotation_days: 30
+    tls_min_version: "1.3"
+    cors_strict_mode: true
+    request_logging: true
+    audit_trail: true
+    vulnerability_scanning: true
+    
+  # Production Monitoring & Observability
+  monitoring:
+    log_level: INFO
+    metrics_retention_days: 90
+    trace_sampling_rate: 0.1
+    enable_profiling: false
+    alerting:
+      error_rate_threshold: 0.01
+      latency_p95_threshold_ms: 500
+      availability_threshold: 99.9
+    observability_stack:
+      prometheus: true
+      grafana: true
+      jaeger: true
+      datadog: true
+      
+  # Production Reliability
+  reliability:
+    circuit_breaker: true
+    retry_attempts: 5
+    backoff_strategy: exponential
+    health_checks:
+      interval: 15
+      timeout: 5
+      failure_threshold: 3
+    disaster_recovery:
+      multi_region: true
+      backup_frequency: hourly
+      rto_minutes: 30
+      rpo_minutes: 15
+
+pulumiConfig:
+  pulumi:backend: https://app.pulumi.com
+  
+environmentVariables:
+  # Production Environment Variables
+  ENVIRONMENT: ${environment}
+  LOG_LEVEL: ${monitoring.log_level}
+  DEBUG_MODE: ${features.debug_mode}
+  DOMAIN: ${domain}
+  REGION: ${region}
+  
+  # Security
+  SECURITY_HARDENED: ${features.security_hardened}
+  TLS_MIN_VERSION: ${security.tls_min_version}
+  API_RATE_LIMIT: ${limits.rate_limit_per_minute}
+  
+  # Database configuration
+  POSTGRES_MAX_CONNECTIONS: ${database.postgres.max_connections}
+  REDIS_CLUSTER_MODE: ${database.redis.cluster_mode}
+  WEAVIATE_REPLICAS: ${database.weaviate.replicas}
+  
+  # Model configuration
+  PRIMARY_MODEL_CHAIN: ${models.failover_chains.primary}
+  SECONDARY_MODEL_CHAIN: ${models.failover_chains.secondary}
+  
+  # Monitoring
+  METRICS_RETENTION_DAYS: ${monitoring.metrics_retention_days}
+  TRACE_SAMPLING_RATE: ${monitoring.trace_sampling_rate}
+  ERROR_RATE_THRESHOLD: ${monitoring.alerting.error_rate_threshold}
+  
+  # Reliability
+  CIRCUIT_BREAKER_ENABLED: ${reliability.circuit_breaker}
+  RETRY_ATTEMPTS: ${reliability.retry_attempts}
+  HEALTH_CHECK_INTERVAL: ${reliability.health_checks.interval}

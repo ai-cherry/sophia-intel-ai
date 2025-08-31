@@ -13,6 +13,10 @@ import json
 import httpx
 import logging
 from datetime import datetime
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv('.env.local')
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -27,19 +31,22 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:3000",
-        "http://localhost:3001", 
+        os.getenv("FRONTEND_URL", "http://localhost:3000"),
+        "http://localhost:3001",
         "http://localhost:3002",
-        "http://localhost:7777"
+        os.getenv("AGNO_BRIDGE_URL", "http://localhost:7777")
     ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Configuration
-UNIFIED_API_URL = "http://localhost:8003"  # Our real API server
-AGNO_API_KEY = "phi-0cnOaV2N-MKID0LJTszPjAdj7XhunqMQFG4IwLPG9dI"  # Your provided key
+# Configuration - Use environment variables instead of hardcoded values
+UNIFIED_API_URL = os.getenv("UNIFIED_API_URL", "http://localhost:8003")
+AGNO_API_KEY = os.getenv("AGNO_API_KEY")
+
+if not AGNO_API_KEY:
+    raise ValueError("AGNO_API_KEY environment variable must be set")
 
 # ============================================
 # Data Models
@@ -165,26 +172,12 @@ async def get_agents():
                 return agents
     except Exception as e:
         logger.error(f"Failed to fetch teams: {e}")
-    
-    # Return default agents if API is down
-    return [
-        AgentInfo(
-            agent_id="strategic-swarm",
-            name="Strategic Planning Agent",
-            description="High-level strategy and architecture planning",
-            model={"provider": "openai", "name": "gpt-4", "model": "gpt-4o"},
-            storage=True,
-            tools=["planning", "analysis", "documentation"]
-        ),
-        AgentInfo(
-            agent_id="development-swarm",
-            name="Development Agent",
-            description="Core development and implementation",
-            model={"provider": "openai", "name": "gpt-4", "model": "gpt-4o"},
-            storage=True,
-            tools=["coding", "testing", "debugging"]
-        )
-    ]
+        # FAIL FAST - No mock fallbacks allowed in production
+        if os.getenv("FAIL_ON_MOCK_FALLBACK", "false").lower() == "true":
+            raise HTTPException(status_code=503, detail=f"Unified server unavailable: {e}")
+        
+        # Minimal fallback only for development
+        return []
 
 @app.get("/v1/playground/teams", response_model=List[TeamInfo])
 async def get_teams():
@@ -270,16 +263,12 @@ async def run_agent(agent_id: str = None, request: RunRequest = None):
     
     except httpx.RequestError as e:
         logger.error(f"Failed to run team: {e}")
-        # Fallback to mock response
-        async def mock_stream():
-            yield f"data: {json.dumps({'event': 'RunStarted', 'data': {'message': 'Starting agent...'}})}\n\n"
-            await asyncio.sleep(0.5)
-            yield f"data: {json.dumps({'event': 'RunResponse', 'data': {'content': 'Processing: ' + request.message}})}\n\n"
-            await asyncio.sleep(0.5)
-            yield f"data: {json.dumps({'event': 'RunCompleted', 'data': {'status': 'success'}})}\n\n"
-            yield "data: [DONE]\n\n"
-        
-        return StreamingResponse(mock_stream(), media_type="text/event-stream")
+        # FAIL FAST - No mock fallbacks allowed in production
+        if os.getenv("FAIL_ON_MOCK_FALLBACK", "false").lower() == "true":
+            raise HTTPException(status_code=503, detail=f"Team execution failed: {e}")
+            
+        # Return error response instead of mock
+        raise HTTPException(status_code=503, detail="Unified server unavailable for team execution")
 
 @app.post("/v1/playground/teams/{team_id}/runs")
 async def run_team(team_id: str, request: RunRequest):
@@ -311,14 +300,11 @@ async def run_workflow(request: RunRequest):
                     )
     except Exception as e:
         logger.error(f"Failed to run workflow: {e}")
-    
-    # Fallback response
-    async def mock_workflow():
-        yield f"data: {json.dumps({'event': 'WorkflowStarted', 'data': {'message': 'Starting workflow...'}})}\n\n"
-        yield f"data: {json.dumps({'event': 'WorkflowCompleted', 'data': {'status': 'success'}})}\n\n"
-        yield "data: [DONE]\n\n"
-    
-    return StreamingResponse(mock_workflow(), media_type="text/event-stream")
+        # FAIL FAST - No mock fallbacks allowed
+        if os.getenv("FAIL_ON_MOCK_FALLBACK", "false").lower() == "true":
+            raise HTTPException(status_code=503, detail=f"Workflow execution failed: {e}")
+            
+        raise HTTPException(status_code=503, detail="Workflow execution unavailable")
 
 # ============================================
 # Session Management (for Agno compatibility)

@@ -26,7 +26,7 @@ from app.contracts.json_schemas import (
     validate_judge_output,
     runner_gate_decision
 )
-from app.portkey_config import gateway, Role, MODEL_RECOMMENDATIONS
+from app.portkey_config import get_gateway, Role, MODEL_RECOMMENDATIONS
 # Import swarm execution system
 from app.swarms.unified_enhanced_orchestrator import UnifiedSwarmOrchestrator
 from app.api.real_swarm_execution import stream_real_swarm_execution

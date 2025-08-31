@@ -19,12 +19,11 @@ from app.swarms.coding.agents import (
 )
 from app.swarms.coding.models import SwarmConfiguration, PoolType
 from app.swarms.coding.pools import POOLS
-from app.tools.code_search import CodeSearch
-from app.tools.file_operations import ReadFile, WriteFile
-from app.tools.git_operations import GitStatus, GitDiff
-from app.tools.run_tests import RunTests
+from app.tools.basic_tools import (
+    CodeSearch, ReadFile, WriteFile, GitStatus, GitDiff, RunTests
+)
 from app.tools.list_directory import ListDirectory
-from app.models.router import agno_chat_model
+from app.models.simple_router import agno_chat_model
 
 logger = logging.getLogger(__name__)
 

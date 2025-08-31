@@ -8,14 +8,14 @@ import { useEffect, useState } from 'react';
  */
 
 export function SwarmVisualization({ swarmId, status }: { swarmId: string; status: string }) {
-  const swarmIcons = {
+  const swarmIcons: Record<string, string> = {
     'strategic-swarm': '🎯',
     'development-swarm': '💻',
     'security-swarm': '🔒',
     'research-swarm': '🔬'
   };
 
-  const statusColors = {
+  const statusColors: Record<string, string> = {
     'running': 'text-green-500',
     'completed': 'text-blue-500',
     'error': 'text-red-500',
@@ -76,7 +76,7 @@ export function StreamingIndicator({ isStreaming }: { isStreaming: boolean }) {
 }
 
 export function AgentCard({ agent, role, status }: { agent: string; role: string; status: string }) {
-  const roleColors = {
+  const roleColors: Record<string, string> = {
     'generator': 'border-green-600',
     'validator': 'border-blue-600',
     'analyzer': 'border-purple-600',

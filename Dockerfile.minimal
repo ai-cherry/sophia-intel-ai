@@ -1,0 +1,52 @@
+# ==============================================
+# Sophia Intel AI - Minimal Setup with NL Interface
+# Phase 2, Week 3-4: Natural Language Interface
+# ==============================================
+
+FROM python:3.11-slim
+
+# Set working directory
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    gcc \
+    g++ \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements first for better caching
+COPY requirements.txt .
+
+# Install Python dependencies
+RUN pip install --no-cache-dir \
+    fastapi \
+    uvicorn \
+    redis \
+    requests \
+    pydantic \
+    weaviate-client \
+    psycopg2-binary \
+    streamlit \
+    python-multipart \
+    httpx \
+    aiofiles
+
+# Copy application code
+COPY app/ /app/app/
+COPY n8n/ /app/n8n/
+
+# Create necessary directories
+RUN mkdir -p /app/data /app/logs
+
+# Expose ports
+EXPOSE 8003 8501
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8003/health || exit 1
+
+# Default command - run both API server and Streamlit
+CMD uvicorn app.api.nl_endpoints:router --host 0.0.0.0 --port 8003 --reload & \
+    streamlit run app/ui/streamlit_chat.py --server.port 8501 --server.address 0.0.0.0

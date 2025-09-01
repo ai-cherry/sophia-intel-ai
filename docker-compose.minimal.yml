@@ -135,6 +135,39 @@ services:
       timeout: 10s
       retries: 3
 
+  # ==============================================
+  # N8N - Workflow Automation
+  # ==============================================
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: sophia-n8n
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_HOST=0.0.0.0
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - NODE_ENV=production
+      - WEBHOOK_URL=http://n8n:5678/
+      - N8N_ENCRYPTION_KEY=sophia_n8n_secret_key_2024
+      - N8N_USER_MANAGEMENT_DISABLED=true
+      - N8N_BASIC_AUTH_ACTIVE=false
+      - N8N_METRICS=true
+      - EXECUTIONS_PROCESS=main
+      - N8N_LOG_LEVEL=info
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./n8n/workflows:/home/node/.n8n/workflows
+    depends_on:
+      - postgres
+      - redis
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5678/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
 volumes:
   ollama_data:
     driver: local
@@ -143,6 +176,8 @@ volumes:
   redis_data:
     driver: local
   postgres_data:
+    driver: local
+  n8n_data:
     driver: local
 
 networks:

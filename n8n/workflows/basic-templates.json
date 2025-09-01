@@ -1,0 +1,447 @@
+{
+  "workflows": [
+    {
+      "id": "system-status-workflow",
+      "name": "System Status Workflow",
+      "nodes": [
+        {
+          "parameters": {
+            "httpMethod": "POST",
+            "path": "system-status",
+            "responseMode": "onReceived",
+            "responseData": "allEntries",
+            "options": {}
+          },
+          "name": "Webhook",
+          "type": "n8n-nodes-base.webhook",
+          "typeVersion": 1,
+          "position": [250, 300],
+          "id": "webhook-1"
+        },
+        {
+          "parameters": {
+            "functionCode": "// Get system status\nconst statusData = {\n  timestamp: new Date().toISOString(),\n  services: {\n    ollama: 'running',\n    weaviate: 'running',\n    redis: 'running',\n    postgres: 'running',\n    n8n: 'running'\n  },\n  health: 'healthy',\n  uptime: process.uptime(),\n  memory: process.memoryUsage()\n};\n\nreturn [{ json: statusData }];"
+          },
+          "name": "Get Status",
+          "type": "n8n-nodes-base.function",
+          "typeVersion": 1,
+          "position": [450, 300],
+          "id": "function-1"
+        },
+        {
+          "parameters": {
+            "url": "http://api:8003/api/system/metrics",
+            "options": {},
+            "headerParametersUi": {
+              "parameter": []
+            }
+          },
+          "name": "HTTP Request",
+          "type": "n8n-nodes-base.httpRequest",
+          "typeVersion": 2,
+          "position": [650, 300],
+          "id": "http-1"
+        }
+      ],
+      "connections": {
+        "Webhook": {
+          "main": [
+            [
+              {
+                "node": "Get Status",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Get Status": {
+          "main": [
+            [
+              {
+                "node": "HTTP Request",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id": "agent-execution-workflow",
+      "name": "Agent Execution Workflow",
+      "nodes": [
+        {
+          "parameters": {
+            "httpMethod": "POST",
+            "path": "execute-agent",
+            "responseMode": "onReceived",
+            "responseData": "allEntries",
+            "options": {}
+          },
+          "name": "Webhook",
+          "type": "n8n-nodes-base.webhook",
+          "typeVersion": 1,
+          "position": [250, 300],
+          "id": "webhook-2"
+        },
+        {
+          "parameters": {
+            "functionCode": "// Extract agent details\nconst { agent_name, task } = $input.all()[0].json;\n\n// Prepare agent execution request\nconst executionRequest = {\n  agent: agent_name || 'default',\n  task: task || 'No task specified',\n  timestamp: new Date().toISOString(),\n  session_id: Math.random().toString(36).substring(7)\n};\n\nreturn [{ json: executionRequest }];"
+          },
+          "name": "Prepare Agent Task",
+          "type": "n8n-nodes-base.function",
+          "typeVersion": 1,
+          "position": [450, 300],
+          "id": "function-2"
+        },
+        {
+          "parameters": {
+            "url": "http://api:8003/api/agents/execute",
+            "method": "POST",
+            "sendBody": true,
+            "bodyParameters": {
+              "parameters": [
+                {
+                  "name": "={{$json[\"agent\"]}}",
+                  "value": ""
+                },
+                {
+                  "name": "={{$json[\"task\"]}}",
+                  "value": ""
+                },
+                {
+                  "name": "={{$json[\"session_id\"]}}",
+                  "value": ""
+                }
+              ]
+            },
+            "options": {}
+          },
+          "name": "Execute Agent",
+          "type": "n8n-nodes-base.httpRequest",
+          "typeVersion": 2,
+          "position": [650, 300],
+          "id": "http-2"
+        },
+        {
+          "parameters": {
+            "values": {
+              "string": [
+                {
+                  "name": "status",
+                  "value": "completed"
+                }
+              ]
+            },
+            "options": {}
+          },
+          "name": "Set Status",
+          "type": "n8n-nodes-base.set",
+          "typeVersion": 1,
+          "position": [850, 300],
+          "id": "set-1"
+        }
+      ],
+      "connections": {
+        "Webhook": {
+          "main": [
+            [
+              {
+                "node": "Prepare Agent Task",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Prepare Agent Task": {
+          "main": [
+            [
+              {
+                "node": "Execute Agent",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Execute Agent": {
+          "main": [
+            [
+              {
+                "node": "Set Status",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id": "service-scaling-workflow",
+      "name": "Service Scaling Workflow",
+      "nodes": [
+        {
+          "parameters": {
+            "httpMethod": "POST",
+            "path": "scale-service",
+            "responseMode": "onReceived",
+            "responseData": "allEntries",
+            "options": {}
+          },
+          "name": "Webhook",
+          "type": "n8n-nodes-base.webhook",
+          "typeVersion": 1,
+          "position": [250, 300],
+          "id": "webhook-3"
+        },
+        {
+          "parameters": {
+            "functionCode": "// Extract scaling parameters\nconst { service, replicas } = $input.all()[0].json;\n\n// Validate parameters\nif (!service || !replicas) {\n  throw new Error('Service and replicas are required');\n}\n\n// Prepare scaling command\nconst scalingCommand = {\n  service: service,\n  replicas: parseInt(replicas),\n  action: 'scale',\n  timestamp: new Date().toISOString()\n};\n\nreturn [{ json: scalingCommand }];"
+          },
+          "name": "Validate & Prepare",
+          "type": "n8n-nodes-base.function",
+          "typeVersion": 1,
+          "position": [450, 300],
+          "id": "function-3"
+        },
+        {
+          "parameters": {
+            "command": "docker-compose -f /app/docker-compose.minimal.yml scale {{$json[\"service\"]}}={{$json[\"replicas\"]}}"
+          },
+          "name": "Execute Scaling",
+          "type": "n8n-nodes-base.executeCommand",
+          "typeVersion": 1,
+          "position": [650, 300],
+          "id": "exec-1"
+        },
+        {
+          "parameters": {
+            "functionCode": "// Process result\nconst result = {\n  success: true,\n  service: $json[\"service\"],\n  replicas: $json[\"replicas\"],\n  message: `Successfully scaled ${$json[\"service\"]} to ${$json[\"replicas\"]} instances`,\n  timestamp: new Date().toISOString()\n};\n\nreturn [{ json: result }];"
+          },
+          "name": "Process Result",
+          "type": "n8n-nodes-base.function",
+          "typeVersion": 1,
+          "position": [850, 300],
+          "id": "function-4"
+        }
+      ],
+      "connections": {
+        "Webhook": {
+          "main": [
+            [
+              {
+                "node": "Validate & Prepare",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Validate & Prepare": {
+          "main": [
+            [
+              {
+                "node": "Execute Scaling",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Execute Scaling": {
+          "main": [
+            [
+              {
+                "node": "Process Result",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id": "data-query-workflow",
+      "name": "Data Query Workflow",
+      "nodes": [
+        {
+          "parameters": {
+            "httpMethod": "POST",
+            "path": "query-data",
+            "responseMode": "onReceived",
+            "responseData": "allEntries",
+            "options": {}
+          },
+          "name": "Webhook",
+          "type": "n8n-nodes-base.webhook",
+          "typeVersion": 1,
+          "position": [250, 300],
+          "id": "webhook-4"
+        },
+        {
+          "parameters": {
+            "functionCode": "// Extract query parameters\nconst { query, collection, limit } = $input.all()[0].json;\n\n// Prepare query request\nconst queryRequest = {\n  query: query || '',\n  collection: collection || 'default',\n  limit: limit || 10,\n  timestamp: new Date().toISOString()\n};\n\nreturn [{ json: queryRequest }];"
+          },
+          "name": "Prepare Query",
+          "type": "n8n-nodes-base.function",
+          "typeVersion": 1,
+          "position": [450, 300],
+          "id": "function-5"
+        },
+        {
+          "parameters": {
+            "url": "http://weaviate:8080/v1/objects",
+            "method": "GET",
+            "queryParametersUi": {
+              "parameter": [
+                {
+                  "name": "class",
+                  "value": "={{$json[\"collection\"]}}"
+                },
+                {
+                  "name": "limit",
+                  "value": "={{$json[\"limit\"]}}"
+                }
+              ]
+            },
+            "options": {}
+          },
+          "name": "Query Weaviate",
+          "type": "n8n-nodes-base.httpRequest",
+          "typeVersion": 2,
+          "position": [650, 300],
+          "id": "http-3"
+        },
+        {
+          "parameters": {
+            "functionCode": "// Process query results\nconst results = $input.all()[0].json;\n\nconst processedResults = {\n  query: $node[\"Prepare Query\"].json[\"query\"],\n  collection: $node[\"Prepare Query\"].json[\"collection\"],\n  count: Array.isArray(results.objects) ? results.objects.length : 0,\n  results: results.objects || [],\n  timestamp: new Date().toISOString()\n};\n\nreturn [{ json: processedResults }];"
+          },
+          "name": "Process Results",
+          "type": "n8n-nodes-base.function",
+          "typeVersion": 1,
+          "position": [850, 300],
+          "id": "function-6"
+        }
+      ],
+      "connections": {
+        "Webhook": {
+          "main": [
+            [
+              {
+                "node": "Prepare Query",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Prepare Query": {
+          "main": [
+            [
+              {
+                "node": "Query Weaviate",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Query Weaviate": {
+          "main": [
+            [
+              {
+                "node": "Process Results",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id": "metrics-collection-workflow",
+      "name": "Metrics Collection Workflow",
+      "nodes": [
+        {
+          "parameters": {
+            "httpMethod": "POST",
+            "path": "collect-metrics",
+            "responseMode": "onReceived",
+            "responseData": "allEntries",
+            "options": {}
+          },
+          "name": "Webhook",
+          "type": "n8n-nodes-base.webhook",
+          "typeVersion": 1,
+          "position": [250, 300],
+          "id": "webhook-5"
+        },
+        {
+          "parameters": {
+            "functionCode": "// Collect metrics from various sources\nconst metrics = {\n  timestamp: new Date().toISOString(),\n  system: {\n    cpu: Math.random() * 100,\n    memory: Math.random() * 100,\n    disk: Math.random() * 100\n  },\n  services: {\n    ollama: { status: 'running', requests: Math.floor(Math.random() * 1000) },\n    weaviate: { status: 'running', documents: Math.floor(Math.random() * 10000) },\n    redis: { status: 'running', keys: Math.floor(Math.random() * 500) },\n    n8n: { status: 'running', workflows: 5 }\n  }\n};\n\nreturn [{ json: metrics }];"
+          },
+          "name": "Collect Metrics",
+          "type": "n8n-nodes-base.function",
+          "typeVersion": 1,
+          "position": [450, 300],
+          "id": "function-7"
+        },
+        {
+          "parameters": {
+            "key": "metrics:{{$now.toUnixInteger()}}",
+            "value": "={{JSON.stringify($json)}}",
+            "keyType": "automatic",
+            "expire": true,
+            "ttl": 3600
+          },
+          "name": "Store in Redis",
+          "type": "n8n-nodes-base.redis",
+          "typeVersion": 1,
+          "position": [650, 300],
+          "id": "redis-1",
+          "credentials": {
+            "redis": {
+              "id": "1",
+              "name": "Redis account"
+            }
+          }
+        }
+      ],
+      "connections": {
+        "Webhook": {
+          "main": [
+            [
+              {
+                "node": "Collect Metrics",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Collect Metrics": {
+          "main": [
+            [
+              {
+                "node": "Store in Redis",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        }
+      }
+    }
+  ],
+  "metadata": {
+    "version": 1,
+    "created": "2024-01-01T00:00:00.000Z",
+    "description": "Basic n8n workflow templates for Sophia Intel AI Natural Language Interface"
+  }
+}

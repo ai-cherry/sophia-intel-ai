@@ -106,7 +106,7 @@ services:
     container_name: sophia-api-minimal
     restart: unless-stopped
     ports:
-      - "8003:8003"
+      - "8000:8003"
     environment:
       # Service URLs
       OLLAMA_URL: 'http://ollama:11434'
@@ -143,7 +143,7 @@ services:
     container_name: sophia-n8n
     restart: unless-stopped
     ports:
-      - "5678:5678"
+      - "8300:5678"
     environment:
       - N8N_HOST=0.0.0.0
       - N8N_PORT=5678

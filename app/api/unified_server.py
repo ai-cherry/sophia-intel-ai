@@ -20,7 +20,6 @@ import os
 from datetime import datetime
 from contextlib import asynccontextmanager
 import logging
-import os
 
 # Import enhanced configuration system following ADR-006
 from app.config.env_loader import get_env_config, validate_environment, print_env_status

@@ -6,10 +6,10 @@ import { cn } from '@/lib/utils';
 interface OutputPhase {
   phase: string;
   token: string;
-  critic?: any;
-  judge?: any;
-  gates?: any;
-  final?: any;
+  critic?: Record<string, unknown>;
+  judge?: Record<string, unknown>;
+  gates?: Record<string, unknown>;
+  final?: Record<string, unknown>;
 }
 
 interface EnhancedOutputProps {

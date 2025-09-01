@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
 interface CriticReportProps {
-  data: CriticReview | string | any;
+  data: CriticReview | string | Record<string, unknown>;
 }
 
 export function CriticReport({ data }: CriticReportProps) {
@@ -137,7 +137,7 @@ export function CriticReport({ data }: CriticReportProps) {
   );
 }
 
-function safe(s: string): any {
+function safe(s: string): CriticReview | null {
   try {
     return JSON.parse(s);
   } catch {

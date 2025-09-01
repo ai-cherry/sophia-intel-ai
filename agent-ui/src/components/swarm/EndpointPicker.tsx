@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { usePlaygroundStore } from '@/store';
-import { fetchJSON } from '@/lib/fetchUtils';
 import { testEndpoint } from '@/lib/endpointUtils';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';

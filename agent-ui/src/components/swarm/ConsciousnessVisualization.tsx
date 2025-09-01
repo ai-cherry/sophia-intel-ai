@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
-import Icon from '@/components/ui/icon';
 
 interface ConsciousnessDimension {
   name: string;

@@ -9,8 +9,33 @@ import logging
 from typing import Dict, List, Any, Optional, AsyncGenerator
 from datetime import datetime
 
-from app.portkey_config import get_gateway, Role, MODEL_RECOMMENDATIONS
-from app.swarms.coding.models import PoolType
+from app.api.advanced_gateway_2025 import AdvancedAIGateway2025, TaskType # Corrected import
+from app.elite_portkey_config import EliteAgentConfig # For model configs
+from app.swarms.coding.models import PoolType # Assuming this is still needed
+
+# Define Role enum locally if not already defined globally or imported
+# This ensures Role is available after removing app.portkey_config
+from enum import Enum
+class Role(Enum):
+    PLANNER = "planner"
+    GENERATOR = "generator"
+    CRITIC = "critic"
+    JUDGE = "judge"
+    LEAD = "lead"
+    RUNNER = "runner"
+    ARCHITECT = "architect"
+    SECURITY = "security"
+    PERFORMANCE = "performance"
+    TESTING = "testing"
+    DEBUGGER = "debugger"
+    REFACTORER = "refactorer"
+    SPAWNER = "spawner"
+    EVOLUTIONIST = "evolutionist"
+    CONSCIOUSNESS = "consciousness"
+    FAST_CODER = "fast_coder"
+    HEAVY_CODER = "heavy_coder"
+    BALANCED_CODER = "balanced_coder"
+
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +44,7 @@ class RealLLMExecutor:
     """Execute real LLM calls through Portkey gateway."""
     
     def __init__(self):
-        self.gateway = get_gateway()
+        self.gateway: AdvancedAIGateway2025 = AdvancedAIGateway2025() # Use the new gateway
         self.session_id = None
         
     async def execute(
@@ -72,24 +97,26 @@ class RealLLMExecutor:
     
     async def _execute_streaming(
         self,
-        messages: List[Dict[str, str]], 
-        model: str, 
+        messages: List[Dict[str, str]],
+        model_name: str, # Changed from 'model' to 'model_name'
         temperature: float,
         role: Optional[Role]
-    ) -> Dict[str, Any]:
-        """Execute streaming LLM call."""
+    ) -> AsyncGenerator[Dict[str, Any], None]: # Changed return type to AsyncGenerator
+        """Execute streaming LLM call using Portkey gateway."""
         try:
-            stream = await self.gateway.achat(
+            stream_response = await self.gateway.chat_completion(
                 messages=messages,
-                model=model,
+                task_type=TaskType.GENERAL, # Default to GENERAL, can be refined
+                stream=True,
+                model_name=model_name,
                 temperature=temperature,
-                role=role,
-                stream=True
             )
             
+            # Iterate through the streaming response directly from Portkey's result
             full_content = ""
-            async for chunk in stream:
-                if chunk.choices[0].delta.content:
+            async for chunk in stream_response:
+                # Assuming Portkey's streamed chunks have a 'choices' attribute
+                if chunk.choices and chunk.choices[0].delta and chunk.choices[0].delta.content:
                     content_chunk = chunk.choices[0].delta.content
                     full_content += content_chunk
                     yield {
@@ -98,14 +125,16 @@ class RealLLMExecutor:
                         "timestamp": datetime.now().isoformat()
                     }
             
-            # Final result
+            # Final result with token counts (if available from final chunk or inferred)
+            # Note: Streaming responses often provide token counts in the final chunk or via metadata
             yield {
                 "type": "complete",
                 "content": full_content,
                 "success": True,
-                "model": model,
+                "model": model_name,
                 "timestamp": datetime.now().isoformat(),
-                "token_count": len(full_content.split())
+                "token_count": len(full_content.split()), # Simplified count, ideally from API response
+                "role": role.value if role else None
             }
             
         except Exception as e:
@@ -119,27 +148,33 @@ class RealLLMExecutor:
     
     async def _execute_non_streaming(
         self,
-        messages: List[Dict[str, str]], 
-        model: str, 
+        messages: List[Dict[str, str]],
+        model_name: str, # Changed from 'model' to 'model_name'
         temperature: float,
         role: Optional[Role]
     ) -> Dict[str, Any]:
         """Execute non-streaming LLM call."""
         try:
-            content = await self.gateway.achat(
+            # Use gateway.chat_completion with the new args
+            response = await self.gateway.chat_completion(
                 messages=messages,
-                model=model,
+                task_type=TaskType.GENERAL, # Default to GENERAL, can be refined based on role/context
+                stream=False,
+                model_name=model_name, # Pass model_name
                 temperature=temperature,
-                role=role,
-                stream=False
+                # Additional Portkey config can be passed via kwargs too
             )
+            
+            content = response.get("choices", [{}])[0].get("message", {}).get("content", "")
             
             return {
                 "content": content,
                 "success": True,
-                "model": model,
+                "model": response.get("model_name"),
                 "timestamp": datetime.now().isoformat(),
-                "token_count": len(content.split()) if content else 0,
+                "token_count": response.get("metrics", {}).get("total_tokens", 0), # Get from Portkey response
+                "input_tokens": response.get("metrics", {}).get("prompt_tokens", 0),
+                "output_tokens": response.get("metrics", {}).get("completion_tokens", 0),
                 "role": role.value if role else None
             }
             
@@ -148,26 +183,18 @@ class RealLLMExecutor:
             raise
     
     def _select_model(self, pool: str, role: Optional[Role]) -> str:
-        """Select appropriate model based on pool and role."""
-        try:
-            pool_type = PoolType(pool.lower())
-        except ValueError:
-            pool_type = PoolType.BALANCED
-            
-        # Role-specific model selection
-        if role and role in MODEL_RECOMMENDATIONS:
-            if role == Role.GENERATOR:
-                pool_models = MODEL_RECOMMENDATIONS[role].get(pool_type.value, [])
-                if pool_models:
-                    return pool_models[0]  # First model in pool
-                return MODEL_RECOMMENDATIONS[role]["balanced"][0]
-            else:
-                return MODEL_RECOMMENDATIONS[role]["default"]
+        """Select appropriate model based on pool and role from EliteAgentConfig."""
+        role_key = role.value if role else "generator"
         
-        # Default pool-based selection
-        generator_models = MODEL_RECOMMENDATIONS[Role.GENERATOR]
-        pool_models = generator_models.get(pool_type.value, generator_models["balanced"])
-        return pool_models[0] if pool_models else "openai/gpt-4o"
+        # Prioritize role-specific model
+        if role_key in EliteAgentConfig.MODELS:
+            return EliteAgentConfig.MODELS[role_key]
+        
+        # Fallback to pool-based selection if role has no direct mapping
+        # This logic needs to be refined if 'pool' maps to different models than roles
+        # For now, it will default to generator if a specific role model isn't found
+        default_model = EliteAgentConfig.MODELS["generator"]
+        return default_model
     
     def _build_messages(self, prompt: str, context: Optional[Dict[str, Any]] = None) -> List[Dict[str, str]]:
         """Build messages array for the LLM."""
@@ -194,11 +221,9 @@ class RealLLMExecutor:
         return messages
     
     def _get_temperature_for_role(self, role: Optional[Role]) -> float:
-        """Get appropriate temperature for role."""
-        if not role:
-            return 0.7
-            
-        return MODEL_RECOMMENDATIONS.get(role, {}).get("temperature", 0.7)
+        """Get appropriate temperature for role from EliteAgentConfig."""
+        role_key = role.value if role else "generator"
+        return EliteAgentConfig.TEMPERATURES.get(role_key, 0.7)
 
     async def generate_code_streaming(
         self,
@@ -322,9 +347,11 @@ Provide execution details and any issues found."""
         return prompt
 
     async def embed_text(self, texts: List[str]) -> List[List[float]]:
-        """Generate embeddings for text using real embedding models."""
+        """Generate embeddings for text using real embedding models via the unified gateway."""
         try:
-            embeddings = await self.gateway.aembed(texts)
+            embeddings_response = await self.gateway.generate_embeddings(texts) # Current gateway already handles this
+            # Assuming embeddings_response has a 'data' field containing list of dicts with 'embedding' key
+            embeddings = [item["embedding"] for item in embeddings_response.get("data", [{}]) if "embedding" in item]
             logger.info(f"Generated embeddings for {len(texts)} texts")
             return embeddings
         except Exception as e:

@@ -38,11 +38,18 @@ class ModelConfig2025:
 
 class AdvancedAIGateway2025:
     """Production AI Gateway with latest 2025 models and virtual keys."""
-    
+
     def __init__(self):
         self.validate_environment()
         self.setup_latest_models()
         self.setup_portkey_configs()
+        self.cache_metrics = {
+            "hits": 0,
+            "misses": 0,
+            "total_requests": 0,
+            "cost_saved": 0.0,
+            "last_reset": None
+        }
     
     def validate_environment(self):
         """Validate required API keys."""
@@ -106,7 +113,7 @@ class AdvancedAIGateway2025:
         }
 
     def setup_portkey_configs(self):
-        """Setup Portkey configurations for each task type."""
+        """Setup Portkey configurations for each task type with advanced semantic caching."""
         self.portkey_configs = {
             "llm_config": {
                 "strategy": {"mode": "single"},
@@ -116,41 +123,52 @@ class AdvancedAIGateway2025:
                 },
                 "cache": {
                     "enabled": True,
-                    "mode": "semantic", 
-                    "ttl": 1800
+                    "mode": "semantic",
+                    "ttl": 1800,
+                    "similarity_threshold": 0.95,
+                    "embedding_model": "togethercomputer/m2-bert-80M-32k-retrieval",
+                    "max_cache_size": 10000,
+                    "cache_eviction_policy": "lru"
                 },
                 "metadata": {
                     "environment": "production",
                     "version": "2025.1"
                 }
             },
-            
+
             "embedding_config": {
                 "strategy": {"mode": "single"},
                 "retry": {"attempts": 2},
                 "cache": {
                     "enabled": True,
                     "mode": "semantic",
-                    "ttl": 3600
+                    "ttl": 3600,
+                    "similarity_threshold": 0.98,
+                    "embedding_model": "togethercomputer/m2-bert-80M-32k-retrieval",
+                    "max_cache_size": 5000,
+                    "cache_eviction_policy": "lru"
                 },
                 "metadata": {"service": "embeddings"}
             }
         }
 
-    async def chat_completion(self, 
-                            messages: List[Dict[str, str]], 
+    async def chat_completion(self,
+                            messages: List[Dict[str, str]],
                             task_type: TaskType = TaskType.GENERAL,
                             stream: bool = False,
                             **kwargs) -> Dict[str, Any]:
-        """Execute chat completion with latest 2025 models via Portkey virtual keys."""
-        
+        """Execute chat completion with latest 2025 models via Portkey virtual keys and semantic caching."""
+
+        # Update cache metrics
+        self.cache_metrics["total_requests"] += 1
+
         config = self.model_configs[task_type]
-        
+
         # Determine config type
-        portkey_config = (self.portkey_configs["embedding_config"] 
-                         if task_type == TaskType.EMBEDDINGS 
+        portkey_config = (self.portkey_configs["embedding_config"]
+                         if task_type == TaskType.EMBEDDINGS
                          else self.portkey_configs["llm_config"])
-        
+
         # Setup headers for Portkey with virtual keys
         headers = {
             "x-portkey-api-key": os.getenv("PORTKEY_API_KEY"),
@@ -158,7 +176,7 @@ class AdvancedAIGateway2025:
             "x-portkey-provider": config.virtual_key,  # Use virtual key
             "content-type": "application/json"
         }
-        
+
         # Prepare payload
         payload = {
             "model": config.model_name,
@@ -168,17 +186,17 @@ class AdvancedAIGateway2025:
             "stream": stream
         }
         payload.update(kwargs)
-        
+
         # Make API call through Portkey
         async with httpx.AsyncClient(timeout=config.timeout) as client:
             logger.info(f"Calling {task_type.value} model: {config.model_name} via {config.virtual_key}")
-            
+
             response = await client.post(
                 "https://api.portkey.ai/v1/chat/completions",
                 headers=headers,
                 json=payload
             )
-            
+
             if response.status_code != 200:
                 error_details = response.text
                 logger.error(f"Portkey API failed: {response.status_code} - {error_details}")
@@ -187,12 +205,23 @@ class AdvancedAIGateway2025:
                     request=response.request,
                     response=response
                 )
-            
+
             result = response.json()
             result["task_type"] = task_type.value
             result["virtual_key"] = config.virtual_key
             result["model_name"] = config.model_name
-            
+
+            # Track cache performance metrics
+            if "cache_hit" in result.get("metadata", {}):
+                if result["metadata"]["cache_hit"]:
+                    self.cache_metrics["hits"] += 1
+                    # Estimate cost savings (rough approximation)
+                    self.cache_metrics["cost_saved"] += 0.001  # $0.001 per cached request
+                    logger.info("Cache hit - cost saved")
+                else:
+                    self.cache_metrics["misses"] += 1
+                    logger.info("Cache miss - new request processed")
+
             return result
 
     async def generate_embeddings(self, 
@@ -302,7 +331,7 @@ class AdvancedAIGateway2025:
     async def health_check(self) -> Dict[str, Any]:
         """Comprehensive health check for all virtual key providers."""
         health_status = {}
-        
+
         # Test each task type
         for task_type in [TaskType.REASONING, TaskType.FAST, TaskType.EMBEDDINGS]:
             try:
@@ -322,12 +351,12 @@ class AdvancedAIGateway2025:
                         task_type=task_type
                     )
                     health_status[task_type.value] = {
-                        "status": "healthy", 
+                        "status": "healthy",
                         "model": result.get("model_name"),
                         "virtual_key": result.get("virtual_key"),
                         "response_received": bool(result.get("choices"))
                     }
-                    
+
             except Exception as e:
                 health_status[task_type.value] = {
                     "status": "unhealthy",
@@ -335,11 +364,11 @@ class AdvancedAIGateway2025:
                     "model": self.model_configs[task_type].model_name,
                     "virtual_key": self.model_configs[task_type].virtual_key
                 }
-        
+
         # Overall health
         healthy_count = sum(1 for status in health_status.values() if status["status"] == "healthy")
         total_count = len(health_status)
-        
+
         return {
             "overall_status": "healthy" if healthy_count == total_count else "degraded",
             "healthy_services": healthy_count,
@@ -351,6 +380,99 @@ class AdvancedAIGateway2025:
             "latest_models_available": await self.get_latest_models(),
             "services": health_status
         }
+
+    def get_cache_statistics(self) -> Dict[str, Any]:
+        """Get comprehensive cache performance statistics."""
+        total = self.cache_metrics["total_requests"]
+        hits = self.cache_metrics["hits"]
+        misses = self.cache_metrics["misses"]
+
+        hit_rate = (hits / total * 100) if total > 0 else 0
+        cost_savings_percentage = (hits / total * 100) if total > 0 else 0
+
+        return {
+            "total_requests": total,
+            "cache_hits": hits,
+            "cache_misses": misses,
+            "hit_rate_percentage": round(hit_rate, 2),
+            "estimated_cost_saved": round(self.cache_metrics["cost_saved"], 4),
+            "cost_savings_percentage": round(cost_savings_percentage, 2),
+            "cache_config": {
+                "llm_cache_ttl": self.portkey_configs["llm_config"]["cache"]["ttl"],
+                "embedding_cache_ttl": self.portkey_configs["embedding_config"]["cache"]["ttl"],
+                "similarity_threshold_llm": self.portkey_configs["llm_config"]["cache"]["similarity_threshold"],
+                "similarity_threshold_embeddings": self.portkey_configs["embedding_config"]["cache"]["similarity_threshold"]
+            }
+        }
+
+    async def invalidate_cache(self, pattern: Optional[str] = None, model: Optional[str] = None) -> Dict[str, Any]:
+        """Invalidate cache entries based on pattern or model."""
+        try:
+            # Prepare invalidation request
+            headers = {
+                "x-portkey-api-key": os.getenv("PORTKEY_API_KEY"),
+                "content-type": "application/json"
+            }
+
+            payload = {}
+            if pattern:
+                payload["pattern"] = pattern
+            if model:
+                payload["model"] = model
+
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.post(
+                    "https://api.portkey.ai/v1/cache/invalidate",
+                    headers=headers,
+                    json=payload
+                )
+
+                if response.status_code == 200:
+                    result = response.json()
+                    logger.info(f"Cache invalidation successful: {result}")
+                    return {
+                        "success": True,
+                        "entries_invalidated": result.get("entries_invalidated", 0),
+                        "pattern": pattern,
+                        "model": model
+                    }
+                else:
+                    logger.error(f"Cache invalidation failed: {response.status_code}")
+                    return {
+                        "success": False,
+                        "error": f"HTTP {response.status_code}",
+                        "pattern": pattern,
+                        "model": model
+                    }
+
+        except Exception as e:
+            logger.error(f"Cache invalidation error: {e}")
+            return {
+                "success": False,
+                "error": str(e),
+                "pattern": pattern,
+                "model": model
+            }
+
+    async def clear_all_cache(self) -> Dict[str, Any]:
+        """Clear all cached entries across all models."""
+        return await self.invalidate_cache()
+
+    async def invalidate_model_cache(self, model_name: str) -> Dict[str, Any]:
+        """Invalidate cache for a specific model."""
+        return await self.invalidate_cache(model=model_name)
+
+    def reset_cache_metrics(self):
+        """Reset cache performance metrics."""
+        from datetime import datetime
+        self.cache_metrics = {
+            "hits": 0,
+            "misses": 0,
+            "total_requests": 0,
+            "cost_saved": 0.0,
+            "last_reset": datetime.now().isoformat()
+        }
+        logger.info("Cache metrics reset")
 
 # Global instance
 _advanced_gateway = None

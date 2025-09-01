@@ -1,0 +1,295 @@
+{
+  "dashboard": {
+    "title": "AI Orchestrator - Comprehensive Monitoring",
+    "description": "Complete monitoring dashboard for Sophia Intel AI Orchestrator with cost tracking, caching metrics, and AI service performance",
+    "tags": ["sophia", "ai", "orchestrator", "monitoring"],
+    "timezone": "UTC",
+    "panels": [
+      {
+        "title": "System Overview",
+        "type": "row",
+        "gridPos": {"h": 1, "w": 24, "x": 0, "y": 0}
+      },
+      {
+        "title": "Service Health Status",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "up{job=~\"sophia-.*\"}",
+            "legendFormat": "{{job}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              {"options": {"0": {"text": "DOWN", "color": "red"}, "1": {"text": "UP", "color": "green"}}}
+            ]
+          }
+        },
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 1}
+      },
+      {
+        "title": "API Response Time (95th percentile)",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job=~\"sophia-.*\"}[5m]))",
+            "legendFormat": "95th percentile"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "s",
+            "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "orange", "value": 0.5}, {"color": "red", "value": 1.0}]}
+          }
+        },
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 1}
+      },
+      {
+        "title": "Total API Requests",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "sum(rate(http_requests_total{job=~\"sophia-.*\"}[5m]))",
+            "legendFormat": "Requests/sec"
+          }
+        ],
+        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 1}
+      },
+      {
+        "title": "Error Rate",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "sum(rate(http_requests_total{status=~\"5..\",job=~\"sophia-.*\"}[5m])) / sum(rate(http_requests_total{job=~\"sophia-.*\"}[5m])) * 100",
+            "legendFormat": "Error %"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "orange", "value": 1}, {"color": "red", "value": 5}]}
+          }
+        },
+        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 1}
+      },
+      {
+        "title": "Cost Monitoring",
+        "type": "row",
+        "gridPos": {"h": 1, "w": 24, "x": 0, "y": 5}
+      },
+      {
+        "title": "Hourly API Cost",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(llm_api_cost_total[1h])",
+            "legendFormat": "API Cost ($/hour)"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyUSD",
+            "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "orange", "value": 100}, {"color": "red", "value": 500}]}
+          }
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 6}
+      },
+      {
+        "title": "Cost by Provider",
+        "type": "barchart",
+        "targets": [
+          {
+            "expr": "sum(rate(llm_api_cost_total[1h])) by (provider)",
+            "legendFormat": "{{provider}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyUSD"
+          }
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 6}
+      },
+      {
+        "title": "Semantic Caching Performance",
+        "type": "row",
+        "gridPos": {"h": 1, "w": 24, "x": 0, "y": 14}
+      },
+      {
+        "title": "Cache Hit Rate",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "llm_cache_hits_total / (llm_cache_hits_total + llm_cache_misses_total) * 100",
+            "legendFormat": "Cache Hit %"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "orange", "value": 50}, {"color": "green", "value": 75}]}
+          }
+        },
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 15}
+      },
+      {
+        "title": "Cache Savings",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "llm_cache_cost_saved_total",
+            "legendFormat": "Cost Saved ($)"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyUSD"
+          }
+        },
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 15}
+      },
+      {
+        "title": "Cache Hit/Miss Ratio",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(llm_cache_hits_total[5m])",
+            "legendFormat": "Cache Hits"
+          },
+          {
+            "expr": "rate(llm_cache_misses_total[5m])",
+            "legendFormat": "Cache Misses"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 15}
+      },
+      {
+        "title": "AI Service Performance",
+        "type": "row",
+        "gridPos": {"h": 1, "w": 24, "x": 0, "y": 23}
+      },
+      {
+        "title": "LLM Response Times by Model",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(llm_request_duration_seconds_bucket[5m])) by (model)",
+            "legendFormat": "{{model}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "s"
+          }
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 24}
+      },
+      {
+        "title": "Token Usage by Model",
+        "type": "barchart",
+        "targets": [
+          {
+            "expr": "sum(rate(llm_tokens_total[1h])) by (model)",
+            "legendFormat": "{{model}}"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 24}
+      },
+      {
+        "title": "Swarm Performance",
+        "type": "row",
+        "gridPos": {"h": 1, "w": 24, "x": 0, "y": 32}
+      },
+      {
+        "title": "Swarm Success Rate",
+        "type": "gauge",
+        "targets": [
+          {
+            "expr": "consensus_swarm_success_rate * 100",
+            "legendFormat": "Success Rate"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100,
+            "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "orange", "value": 80}, {"color": "green", "value": 95}]}
+          }
+        },
+        "gridPos": {"h": 8, "w": 8, "x": 0, "y": 33}
+      },
+      {
+        "title": "Agent Performance by Role",
+        "type": "table",
+        "targets": [
+          {
+            "expr": "sum(rate(agent_execution_duration_seconds[1h])) by (role)",
+            "legendFormat": "{{role}}"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 8, "x": 8, "y": 33}
+      },
+      {
+        "title": "GPU Utilization",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "lambda_gpu_utilization_percent",
+            "legendFormat": "GPU Usage %"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "max": 100
+          }
+        },
+        "gridPos": {"h": 8, "w": 8, "x": 16, "y": 33}
+      },
+      {
+        "title": "Infrastructure",
+        "type": "row",
+        "gridPos": {"h": 1, "w": 24, "x": 0, "y": 41}
+      },
+      {
+        "title": "Memory Usage",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "(container_memory_usage_bytes / container_spec_memory_limit_bytes) * 100",
+            "legendFormat": "{{container}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent"
+          }
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 42}
+      },
+      {
+        "title": "CPU Usage",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(cpu_usage_seconds_total[5m]) * 100",
+            "legendFormat": "{{container}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent"
+          }
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 42}
+      }
+    ],
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "refresh": "30s"
+  }
+}

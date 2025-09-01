@@ -53,64 +53,145 @@ class SwarmOrchestrator:
     
     async def run_debate(self, task: str, context: Optional[Dict[str, Any]] = None) -> DebateResult:
         """
-        Run a complete debate cycle for the given task.
-        
+        Run a complete debate cycle for the given task with circuit breaker protection.
+
         Args:
             task: The coding task to solve
             context: Optional context for the task
-            
+
         Returns:
             DebateResult with all outputs and validation status
         """
         start_time = time.time()
-        
+
         # Initialize result
         result = DebateResult(
             task=task,
             team_id=self.team.name,
             session_id=context.get("session_id") if context else None
         )
-        
+
         try:
-            # Search for related memories if enabled
+            # Circuit breaker: Check if memory system is healthy
             if self.config.use_memory and self.memory:
-                await self._search_related_memories(task, result)
-            
-            # Round 1: Generate proposals
-            await self._run_proposal_round(task, context, result)
-            
-            # Round 2: Critic review
-            await self._run_critic_round(result)
-            
-            # Round 3: Apply fixes if needed
-            if result.critic and result.critic.verdict == "revise":
-                await self._run_revision_round(result)
-                # Re-run critic after fixes
-                await self._run_critic_round(result)
-            
-            # Round 4: Judge decision
+                memory_healthy = await self._check_memory_health()
+                if memory_healthy:
+                    await self._search_related_memories(task, result)
+                else:
+                    self.logger.warning("Memory system unhealthy, skipping memory search")
+                    result.errors.append("Memory system unavailable")
+
+            # Optimized round execution with early returns for fast mode
+            if self._is_fast_mode():
+                # Fast mode: Skip complex rounds
+                await self._run_fast_proposal_round(task, context, result)
+            else:
+                # Full mode: Complete debate cycle
+                # Round 1: Generate proposals
+                await self._run_proposal_round(task, context, result)
+
+                # Round 2: Critic review (with fallback)
+                if not await self._run_critic_round(result):
+                    self.logger.warning("Critic round failed, proceeding with basic validation")
+
+                # Round 3: Apply fixes if needed
+                if result.critic and result.critic.verdict == "revise":
+                    await self._run_revision_round(result)
+                    # Re-run critic after fixes
+                    await self._run_critic_round(result)
+
+            # Round 4: Judge decision (always attempted)
             await self._run_judge_round(result)
-            
-            # Compute gate decision
+
+            # Compute gate decision with safer logic
             await self._compute_gate_decision(result)
-            
-            # Store results in memory if enabled
+
+            # Store results (circuit breaker protected)
             if self.config.store_results and self.memory:
-                await self._store_results_in_memory(result)
-            
+                if await self._check_memory_health():
+                    await self._store_results_in_memory(result)
+                else:
+                    self.logger.debug("Skipping result storage due to memory health")
+
         except asyncio.TimeoutError:
             error_msg = f"Debate timed out after {self.config.timeout_seconds} seconds"
             self.logger.error(error_msg)
             result.errors.append(error_msg)
+            result.runner_approved = False  # Fail-safe on timeout
         except Exception as e:
             error_msg = f"Unexpected error in debate: {str(e)}"
             self.logger.exception(error_msg)
             result.errors.append(error_msg)
+            result.runner_approved = False  # Fail-safe on error
         finally:
             # Record execution time
             result.execution_time_ms = int((time.time() - start_time) * 1000)
-        
+
+            # Track performance
+            self._track_performance(result)
+
         return result
+
+    def _is_fast_mode(self) -> bool:
+        """Check if running in fast optimization mode."""
+        return self.config.get("optimization", "balanced").lower() in ["speed", "fast"]
+
+    async def _check_memory_health(self) -> bool:
+        """Circuit breaker check for memory system health."""
+        if not self.memory:
+            return False
+
+        try:
+            # Simple health check - attempt a basic operation
+            await asyncio.wait_for(
+                asyncio.to_thread(self.memory.search_memory, "", limit=1),
+                timeout=0.5  # Fast timeout for health check
+            )
+            return True
+        except Exception as e:
+            self.logger.debug(f"Memory health check failed: {e}")
+            return False
+
+    async def _run_fast_proposal_round(self, task: str, context: Optional[Dict[str, Any]],
+                                      result: DebateResult) -> None:
+        """Optimized proposal round for fast mode."""
+        self.logger.info("Running fast proposal round")
+
+        try:
+            # Simplified prompt for speed
+            prompt = f"Generate solution for: {task}"
+            if context:
+                prompt += f"\n\nContext: {context}"
+
+            # Single response with timeout
+            response = await asyncio.wait_for(
+                asyncio.to_thread(self.team.run, prompt),
+                timeout=self.config.timeout_seconds / 2
+            )
+
+            self.logger.info("Fast proposals generated successfully")
+
+        except asyncio.TimeoutError:
+            error_msg = "Fast proposal round timed out"
+            self.logger.error(error_msg)
+            result.errors.append(error_msg)
+
+    def _track_performance(self, result: DebateResult) -> None:
+        """Track performance metrics for optimization."""
+        try:
+            # Simple performance tracking
+            metrics = {
+                "task_length": len(result.task) if result.task else 0,
+                "execution_time_ms": result.execution_time_ms,
+                "error_count": len(result.errors),
+                "approved": result.runner_approved or False
+            }
+
+            # Could store in memory or local tracking
+            self.logger.debug(f"Performance tracked: {metrics}")
+
+        except Exception as e:
+            self.logger.debug(f"Performance tracking failed: {e}")
     
     async def _search_related_memories(self, task: str, result: DebateResult) -> None:
         """Search for related memories and add to result."""

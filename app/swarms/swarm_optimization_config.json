@@ -1,0 +1,119 @@
+{
+  "optimization_modes": {
+    "lite": {
+      "description": "Speed-optimized mode for simple tasks",
+      "enabled_patterns": ["safety", "quality_gates"],
+      "max_agents": 3,
+      "timeout_seconds": 10,
+      "memory_enabled": false,
+      "store_results": false,
+      "circuit_breaker": {
+        "failure_threshold": 2,
+        "recovery_timeout": 15
+      }
+    },
+    "balanced": {
+      "description": "Default balanced mode",
+      "enabled_patterns": ["safety", "quality_gates", "debate", "strategy_archive"],
+      "max_agents": 5,
+      "timeout_seconds": 30,
+      "memory_enabled": true,
+      "store_results": true,
+      "circuit_breaker": {
+        "failure_threshold": 3,
+        "recovery_timeout": 30
+      }
+    },
+    "quality": {
+      "description": "Comprehensive quality-focused mode",
+      "enabled_patterns": ["all"],
+      "max_agents": 10,
+      "timeout_seconds": 60,
+      "memory_enabled": true,
+      "store_results": true,
+      "consensus_enabled": true,
+      "adaptive_params_enabled": true,
+      "circuit_breaker": {
+        "failure_threshold": 5,
+        "recovery_timeout": 60
+      }
+    }
+  },
+  "pattern_cost_analysis": {
+    "safety": {
+      "avg_execution_time": 0.1,
+      "memory_usage_mb": 10,
+      "cpu_overhead_percent": 5,
+      "reliability_score": 0.98
+    },
+    "quality_gates": {
+      "avg_execution_time": 0.3,
+      "memory_usage_mb": 25,
+      "cpu_overhead_percent": 8,
+      "reliability_score": 0.95
+    },
+    "debate": {
+      "avg_execution_time": 2.5,
+      "memory_usage_mb": 100,
+      "cpu_overhead_percent": 25,
+      "reliability_score": 0.90
+    },
+    "strategy_archive": {
+      "avg_execution_time": 0.4,
+      "memory_usage_mb": 50,
+      "cpu_overhead_percent": 10,
+      "reliability_score": 0.92
+    },
+    "consensus": {
+      "avg_execution_time": 1.8,
+      "memory_usage_mb": 80,
+      "cpu_overhead_percent": 20,
+      "reliability_score": 0.88
+    }
+  },
+  "degradation_strategies": {
+    "memory_failure": {
+      "action": "disable_memory_operations",
+      "fallback_mode": "lite",
+      "min_agents_fallback": 3,
+      "timeout_multiplier": 0.7
+    },
+    "consensus_failure": {
+      "action": "skip_consensus_round",
+      "alternative": "simple_judge_decision",
+      "quality_impact": -0.1
+    },
+    "debate_failure": {
+      "action": "use_single_round",
+      "alternative": "sequential_critique",
+      "speed_boost": 0.4
+    }
+  },
+  "task_complexity_analysis": {
+    "simple_keywords": ["fix", "update", "change", "modify", "add", "remove"],
+    "medium_keywords": ["implement", "create", "integrate", "optimize", "improve"],
+    "complex_keywords": ["architect", "design", "refactor", "scale", "migrate", "enterprise"],
+    "complexity_thresholds": {
+      "simple": 0.3,
+      "medium": 0.7,
+      "complex": 1.0
+    }
+  },
+  "performance_targets": {
+    "average_execution_time": {
+      "lite": 8.0,
+      "balanced": 25.0,
+      "quality": 50.0
+    },
+    "memory_usage_target_mb": {
+      "lite": 50,
+      "balanced": 150,
+      "quality": 300
+    },
+    "cpu_usage_target_percent": {
+      "lite": 15,
+      "balanced": 35,
+      "quality": 60
+    }
+  }
+}

@@ -108,3 +108,61 @@ groups:
         annotations:
           summary: "PostgreSQL queries slow"
           description: "Average query time is {{ $value }}s"
+
+  - name: sophia_cost_monitoring
+    rules:
+      - alert: HighAPICostRate
+        expr: rate(llm_api_cost_total[1h]) > 500
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High API cost rate detected"
+          description: "API costs exceeding $500/hour threshold: ${{ $value }}/hour"
+
+      - alert: CacheHitRateLow
+        expr: llm_cache_hits_total / (llm_cache_hits_total + llm_cache_misses_total) < 0.5
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Low cache hit rate"
+          description: "Cache hit rate dropped below 50%: {{ $value | humanizePercentage }}"
+
+      - alert: SemanticCacheFailure
+        expr: increase(llm_cache_errors_total[5m]) > 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Semantic cache errors increasing"
+          description: "{{ $value }} cache errors in the last 5 minutes"
+
+  - name: sophia_ai_performance
+    rules:
+      - alert: LLMResponseTimeHigh
+        expr: histogram_quantile(0.95, rate(llm_request_duration_seconds_bucket[5m])) > 30
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High LLM response times"
+          description: "95th percentile LLM response time is {{ $value }}s"
+
+      - alert: TokenLimitApproaching
+        expr: llm_tokens_remaining < 1000
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Token limit approaching"
+          description: "Only {{ $value }} tokens remaining before rate limit"
+
+      - alert: ModelFallbackTriggered
+        expr: increase(llm_fallback_triggers_total[5m]) > 3
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Model fallback triggered frequently"
+          description: "{{ $value }} model fallbacks in the last 5 minutes"

@@ -92,3 +92,10 @@ local/
 *.local
 environment_analysis.json
 verification_report.json
+.nx/installation
+.nx/cache
+.nx/workspace-data
+
+
+.cursor/rules/nx-rules.mdc
+.github/instructions/nx.instructions.md

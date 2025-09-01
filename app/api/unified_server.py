@@ -39,6 +39,39 @@ except ImportError:
 # Import API routers
 from app.api.routers import swarms as swarms_router
 
+# Import missing components for real execution
+from app.swarms.unified_enhanced_orchestrator import UnifiedSwarmOrchestrator
+
+# Import memory classes with try/catch for production deployment
+try:
+    from pulumi.mcp_server.src.unified_memory import MemoryEntry, MemoryType
+except ImportError:
+    # Create stub classes for deployment if pulumi modules not available
+    class MemoryType:
+        SEMANTIC = "semantic"
+        EPISODIC = "episodic"
+        PROCEDURAL = "procedural"
+    
+    class MemoryEntry:
+        def __init__(self, topic, content, source, tags=None, memory_type=None):
+            self.topic = topic
+            self.content = content
+            self.source = source
+            self.tags = tags or []
+            self.memory_type = memory_type or MemoryType.SEMANTIC
+
+# Import streaming functions with error handling
+try:
+    from app.api.real_streaming import stream_real_ai_execution
+    from app.api.real_swarm_execution import stream_real_swarm_execution
+except ImportError as e:
+    # Create fallback streaming functions for deployment
+    async def stream_real_ai_execution(request):
+        yield '{"status": "fallback", "message": "Real streaming not available"}'
+    
+    async def stream_real_swarm_execution(request, state):
+        yield 'data: {"status": "fallback", "message": "Real swarm execution not available"}\n\n'
+
 # ============================================
 # Configuration
 # ============================================

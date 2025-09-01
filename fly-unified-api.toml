@@ -132,7 +132,7 @@ kill_timeout = "5s"
   app = "web"
   
 [processes.web]
-  cmd = ["gunicorn", "app.api.unified_server:app", "--workers", "4", "--worker-class", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8003", "--timeout", "120"]
+  cmd = ["gunicorn", "app.main:app", "--worker-class", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8003"]
 
 # GPU workload process (when Lambda Labs is available)
 [[processes]]

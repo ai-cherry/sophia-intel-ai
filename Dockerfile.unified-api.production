@@ -42,7 +42,8 @@ RUN pip install --no-cache-dir \
     httpx==0.25.2 \
     sqlalchemy==2.0.23 \
     alembic==1.13.1 \
-    prometheus-client==0.19.0
+    prometheus-client==0.19.0 \
+    slowapi==0.1.9
 
 # Production stage
 FROM python:3.11-slim AS production
@@ -88,7 +89,7 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
 EXPOSE 8003
 
 # Production startup command with gunicorn
-CMD ["gunicorn", "app.main:app", \
+CMD ["gunicorn", "app.api.unified_server:app", \
      "--worker-class", "uvicorn.workers.UvicornWorker", \
      "--workers", "4", \
      "--bind", "0.0.0.0:8003", \

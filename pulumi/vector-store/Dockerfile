@@ -32,8 +32,8 @@ RUN pip install --no-cache-dir \
     python-dotenv
 
 # Copy application code
-COPY src/ ./src/
-COPY . ./
+COPY pulumi/vector-store/src/ ./src/
+COPY pulumi/vector-store/ ./
 
 # Create non-root user
 RUN useradd -m -u 1000 sophia && chown -R sophia:sophia /app

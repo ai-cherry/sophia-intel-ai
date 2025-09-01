@@ -55,7 +55,7 @@ kill_timeout = "10s"
   
   [[services.ports]]
     port = 50051
-    handlers = ["grpc"]  # gRPC port for high-performance operations
+    handlers = ["http"]  # gRPC over HTTP/2 for high-performance operations
   
   [services.concurrency]
     type = "connections"

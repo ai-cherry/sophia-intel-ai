@@ -17,5 +17,8 @@ sqlalchemy==2.0.23
 # Vector stores - Weaviate v1.32+ only
 weaviate-client==4.9.3
 
+# Rate limiting
+slowapi==0.1.9
+
 # Additional utilities
 python-multipart==0.0.6

@@ -16,8 +16,8 @@ RUN apt-get update && apt-get install -y \
 # Create app directory
 WORKDIR /app
 
-# Copy requirements
-COPY requirements.txt ./
+# Copy requirements from mcp-server directory
+COPY pulumi/mcp-server/requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Install additional MCP dependencies
@@ -31,9 +31,9 @@ RUN pip install --no-cache-dir \
     sqlalchemy \
     sqlite-fts4
 
-# Copy application code
-COPY src/ ./src/
-COPY . ./
+# Copy application code from correct paths
+COPY pulumi/mcp-server/src/ ./src/
+COPY pulumi/mcp-server/ ./
 
 # Create non-root user
 RUN useradd -m -u 1000 sophia && \

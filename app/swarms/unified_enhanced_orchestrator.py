@@ -9,6 +9,7 @@ Integrates the 8 improvement patterns into all existing swarm types:
 
 import asyncio
 import json
+import random
 from typing import Dict, Any, List, Optional, Tuple
 from datetime import datetime
 from pathlib import Path
@@ -26,29 +27,70 @@ from app.swarms.improved_swarm import (
     KnowledgeTransferSystem,
     MCPUIIntegration
 )
+from app.swarms.memory_enhanced_swarm import (
+    MemoryEnhancedImprovedSwarm,
+    MemoryEnhancedCodingTeam,
+    MemoryEnhancedCodingSwarm,
+    MemoryEnhancedFastSwarm,
+    MemoryEnhancedGenesisSwarm
+)
+from app.swarms.memory_integration import SwarmMemoryClient, SwarmMemoryEventType
+from app.memory.supermemory_mcp import MemoryType
 
 logger = logging.getLogger(__name__)
 
 
 class UnifiedSwarmOrchestrator:
     """
-    Orchestrates all swarm types with unified improvements.
-    Each swarm gets the 8 enhancement patterns while maintaining its unique characteristics.
+    Orchestrates all swarm types with unified improvements and memory integration.
+    Each swarm gets the 8 enhancement patterns plus full memory capabilities following ADR-005.
     """
     
     def __init__(self):
         self.swarm_registry = {}
         self.global_strategy_archive = StrategyArchive("tmp/global_strategy_archive.json")
         self.global_safety_system = None
+        self.global_memory_client: Optional[SwarmMemoryClient] = None
         self.global_metrics = {
             "total_executions": 0,
             "swarm_usage": {},
             "pattern_effectiveness": {},
-            "cross_swarm_transfers": 0
+            "cross_swarm_transfers": 0,
+            "memory_operations": 0,
+            "memory_integrations": 0
         }
         
-        # Initialize all swarm types
+        # Initialize all swarm types with memory integration
         self._initialize_swarms()
+        
+    async def initialize_memory_integration(self):
+        """Initialize global memory integration for orchestrator."""
+        try:
+            self.global_memory_client = SwarmMemoryClient("orchestrator", "global_orchestrator")
+            await self.global_memory_client.initialize()
+            
+            # Initialize memory for all swarms
+            for swarm_name, swarm_info in self.swarm_registry.items():
+                swarm = swarm_info["swarm"]
+                if hasattr(swarm, 'initialize_full_system'):
+                    await swarm.initialize_full_system()
+                    logger.info(f"Memory integration initialized for {swarm_name}")
+            
+            # Log orchestrator initialization
+            if self.global_memory_client:
+                await self.global_memory_client.log_swarm_event(
+                    SwarmMemoryEventType.SWARM_INITIALIZED,
+                    {
+                        "orchestrator_type": "unified_enhanced",
+                        "swarm_count": len(self.swarm_registry),
+                        "memory_integration": "enabled"
+                    }
+                )
+            
+            logger.info("Global memory integration initialized for orchestrator")
+            
+        except Exception as e:
+            logger.error(f"Failed to initialize memory integration: {e}")
     
     def _initialize_swarms(self):
         """Initialize all swarm types with enhancements."""
@@ -114,7 +156,7 @@ class UnifiedSwarmOrchestrator:
         return base_config
     
     def _create_enhanced_coding_team(self, config: Dict) -> Dict:
-        """Create enhanced standard coding team."""
+        """Create memory-enhanced standard coding team."""
         
         agents = [
             "planner_grok4",
@@ -124,22 +166,24 @@ class UnifiedSwarmOrchestrator:
             "judge_gpt5"
         ]
         
-        swarm = ImprovedAgentSwarm(agents, "swarm_config.json")
+        swarm = MemoryEnhancedCodingTeam(agents)
         
         # Customize for coding team
         swarm.config["optimization"] = "balanced"
         swarm.config["parallel_execution"] = True
+        swarm.config["memory_enhanced"] = True
         
         return {
             "swarm": swarm,
             "type": "coding_team",
-            "description": "5-agent balanced team for general coding tasks",
+            "description": "5-agent memory-enhanced team for general coding tasks",
             "ui_enabled": True,
-            "mcp_servers": ["filesystem", "git", "supermemory"]
+            "memory_enabled": True,
+            "mcp_servers": ["filesystem", "git", "supermemory", "unified_memory"]
         }
     
     def _create_enhanced_coding_swarm(self, config: Dict) -> Dict:
-        """Create enhanced advanced coding swarm."""
+        """Create memory-enhanced advanced coding swarm."""
         
         agents = [
             "lead_agent",
@@ -154,22 +198,25 @@ class UnifiedSwarmOrchestrator:
             "code_reviewer"
         ]
         
-        swarm = ImprovedAgentSwarm(agents, "swarm_config.json")
+        swarm = MemoryEnhancedCodingSwarm(agents)
         
         # Enable all patterns for comprehensive coverage
         swarm.config["use_all_patterns"] = True
         swarm.config["specialist_routing"] = True
+        swarm.config["memory_enhanced"] = True
+        swarm.config["inter_swarm_communication"] = True
         
         return {
             "swarm": swarm,
             "type": "coding_swarm",
-            "description": "10+ agent swarm for complex projects",
+            "description": "10+ agent memory-enhanced swarm for complex projects",
             "ui_enabled": True,
-            "mcp_servers": ["filesystem", "git", "supermemory", "enhanced_mcp"]
+            "memory_enabled": True,
+            "mcp_servers": ["filesystem", "git", "supermemory", "unified_memory", "weaviate"]
         }
     
     def _create_enhanced_fast_swarm(self, config: Dict) -> Dict:
-        """Create enhanced fast coding swarm."""
+        """Create memory-enhanced fast coding swarm."""
         
         agents = [
             "fast_planner",
@@ -177,23 +224,26 @@ class UnifiedSwarmOrchestrator:
             "fast_validator"
         ]
         
-        swarm = ImprovedAgentSwarm(agents, "swarm_config.json")
+        swarm = MemoryEnhancedFastSwarm(agents)
         
-        # Optimize for speed
+        # Optimize for speed with lightweight memory integration
         swarm.quality_gates.min_quality = 0.6  # Lower threshold for speed
         swarm.quality_gates.max_retries = 1  # Fewer retries
         swarm.debate_system = None  # Skip debate for speed
+        swarm.config["memory_enhanced"] = True
+        swarm.config["lightweight_memory"] = True
         
         return {
             "swarm": swarm,
             "type": "coding_swarm_fast",
-            "description": "3-agent speed-optimized swarm",
+            "description": "3-agent speed-optimized swarm with lightweight memory",
             "ui_enabled": True,
-            "mcp_servers": ["filesystem", "supermemory"]
+            "memory_enabled": True,
+            "mcp_servers": ["filesystem", "supermemory", "unified_memory"]
         }
     
     def _create_enhanced_genesis_swarm(self, config: Dict) -> Dict:
-        """Create enhanced GENESIS swarm with self-evolution."""
+        """Create memory-enhanced GENESIS swarm with self-evolution and advanced memory integration."""
         
         # Start with base agents
         base_agents = [
@@ -208,7 +258,7 @@ class UnifiedSwarmOrchestrator:
         
         # Add domain commanders
         commanders = [
-            f"commander_{domain}" 
+            f"commander_{domain}"
             for domain in ["frontend", "backend", "database", "api", "testing"]
         ]
         
@@ -221,22 +271,28 @@ class UnifiedSwarmOrchestrator:
             "security_paranoid"
         ]
         
-        # Add meta agents
+        # Add meta agents including memory specialists
         meta_agents = [
             "agent_spawner",
             "swarm_evolutionist",
-            "consciousness_observer"
+            "consciousness_observer",
+            "memory_strategist",
+            "knowledge_synthesizer"
         ]
         
         all_agents = base_agents + commanders + scientists + meta_agents
         
-        swarm = ImprovedAgentSwarm(all_agents, "swarm_config.json")
+        swarm = MemoryEnhancedGenesisSwarm(all_agents)
         
-        # Enable advanced features
+        # Enable advanced features with memory enhancement
         swarm.config["enable_evolution"] = True
         swarm.config["dynamic_spawning"] = True
         swarm.config["consciousness_tracking"] = True
         swarm.config["emergence_detection"] = True
+        swarm.config["memory_enhanced"] = True
+        swarm.config["advanced_memory_features"] = True
+        swarm.config["memory_based_evolution"] = True
+        swarm.config["consciousness_memory_correlation"] = True
         
         # Add evolution-specific components
         swarm.evolution_engine = EvolutionEngine(swarm)
@@ -245,9 +301,11 @@ class UnifiedSwarmOrchestrator:
         return {
             "swarm": swarm,
             "type": "genesis_swarm",
-            "description": "30+ agent self-evolving swarm",
+            "description": "30+ agent self-evolving swarm with advanced memory integration",
             "ui_enabled": True,
-            "mcp_servers": ["filesystem", "git", "supermemory", "enhanced_mcp", "graphrag"]
+            "memory_enabled": True,
+            "advanced_memory": True,
+            "mcp_servers": ["filesystem", "git", "supermemory", "unified_memory", "weaviate", "enhanced_mcp", "graphrag"]
         }
     
     async def select_optimal_swarm(self, task: Dict) -> str:
@@ -321,8 +379,11 @@ class UnifiedSwarmOrchestrator:
                 "successful_patterns": [global_pattern]
             }
         
-        # Execute with selected swarm
-        result = await swarm.solve_with_improvements(task)
+        # Execute with memory enhancement if available
+        if hasattr(swarm, 'solve_with_memory_integration'):
+            result = await swarm.solve_with_memory_integration(task)
+        else:
+            result = await swarm.solve_with_improvements(task)
         
         # Track metrics
         execution_time = (datetime.now() - start_time).total_seconds()
@@ -344,31 +405,374 @@ class UnifiedSwarmOrchestrator:
             **result,
             "swarm_used": swarm_type,
             "global_execution_time": execution_time,
-            "safety_check": safety_result
+            "safety_check": safety_result,
+            "orchestrator_memory_enhanced": self.global_memory_client is not None
         }
     
+    async def execute_with_memory_enhancement(self, task: Dict) -> Dict:
+        """
+        Execute task with full memory enhancement and inter-swarm coordination.
+        This is the new primary execution method following ADR-005.
+        """
+        start_time = datetime.now()
+        
+        # Initialize memory integration if not done
+        if not self.global_memory_client:
+            await self.initialize_memory_integration()
+        
+        # Safety check first (memory-enhanced)
+        is_safe, safety_result = await self._memory_enhanced_safety_check(task)
+        if not is_safe:
+            return safety_result
+        
+        # Memory-enhanced swarm selection
+        swarm_type = await self._memory_enhanced_swarm_selection(task)
+        logger.info(f"Memory-enhanced selection: {swarm_type} for task")
+        
+        # Get swarm instance
+        swarm_info = self.swarm_registry[swarm_type]
+        swarm = swarm_info["swarm"]
+        
+        # Process inter-swarm messages before execution
+        if hasattr(swarm, 'process_inter_swarm_messages'):
+            await swarm.process_inter_swarm_messages()
+        
+        # Load memory-enhanced global patterns
+        await self._apply_global_memory_patterns(task, swarm)
+        
+        # Execute with memory integration
+        if hasattr(swarm, 'solve_with_memory_integration'):
+            result = await swarm.solve_with_memory_integration(task)
+        else:
+            result = await swarm.solve_with_improvements(task)
+        
+        # Track metrics with memory data
+        execution_time = (datetime.now() - start_time).total_seconds()
+        self._update_global_metrics(swarm_type, result, execution_time)
+        
+        # Memory-enhanced global knowledge sharing
+        if result.get("quality_score", 0) > 0.8:
+            await self._memory_enhanced_global_sharing(swarm_type, task, result)
+        
+        # Log global execution
+        if self.global_memory_client:
+            await self.global_memory_client.log_swarm_event(
+                SwarmMemoryEventType.TASK_COMPLETED,
+                {
+                    "orchestrator_execution": True,
+                    "swarm_used": swarm_type,
+                    "task_type": task.get("type", "general"),
+                    "quality_score": result.get("quality_score", 0),
+                    "memory_enhanced": result.get("memory_enhanced", False),
+                    "execution_time": execution_time
+                }
+            )
+        
+        return {
+            **result,
+            "swarm_used": swarm_type,
+            "global_execution_time": execution_time,
+            "safety_check": safety_result,
+            "orchestrator_memory_enhanced": True,
+            "global_memory_patterns_applied": True
+        }
+    
+    async def _memory_enhanced_safety_check(self, task: Dict) -> Tuple[bool, Dict]:
+        """Memory-enhanced safety check using global patterns."""
+        # Standard safety check
+        is_safe, safety_result = await self.global_safety_system.check_safety(task)
+        
+        # Enhance with global memory patterns
+        if self.global_memory_client and is_safe:
+            try:
+                # Search for global safety incidents
+                safety_memories = await self.global_memory_client.search_memory(
+                    query=f"safety risk incident {task.get('type', '')}",
+                    limit=10,
+                    memory_type=MemoryType.EPISODIC,
+                    tags=["safety", "risk", "incident"]
+                )
+                
+                if len(safety_memories) > 3:
+                    safety_result["global_risk_analysis"] = {
+                        "historical_incidents": len(safety_memories),
+                        "risk_level": "elevated",
+                        "recommendation": "Exercise additional caution based on historical patterns"
+                    }
+                    
+            except Exception as e:
+                logger.warning(f"Global memory safety check failed: {e}")
+        
+        return is_safe, safety_result
+    
+    async def _memory_enhanced_swarm_selection(self, task: Dict) -> str:
+        """Enhanced swarm selection using memory-based performance patterns."""
+        # Standard selection
+        standard_selection = await self.select_optimal_swarm(task)
+        
+        # Enhance with memory data
+        if self.global_memory_client:
+            try:
+                # Search for similar task performance patterns
+                task_type = task.get("type", "general")
+                performance_patterns = await self.global_memory_client.search_memory(
+                    query=f"swarm performance {task_type}",
+                    limit=10,
+                    memory_type=MemoryType.EPISODIC,
+                    tags=["performance", "metrics"]
+                )
+                
+                if performance_patterns:
+                    # Analyze which swarms performed best for similar tasks
+                    swarm_performance = {}
+                    for pattern in performance_patterns:
+                        try:
+                            content = json.loads(pattern.get("content", "{}"))
+                            swarm_used = content.get("swarm_used", "")
+                            quality_score = content.get("quality_score", 0)
+                            
+                            if swarm_used and quality_score > 0:
+                                if swarm_used not in swarm_performance:
+                                    swarm_performance[swarm_used] = []
+                                swarm_performance[swarm_used].append(quality_score)
+                        except json.JSONDecodeError:
+                            continue
+                    
+                    # Find best performing swarm
+                    if swarm_performance:
+                        best_swarm = max(
+                            swarm_performance.items(),
+                            key=lambda x: sum(x[1]) / len(x[1])  # Average performance
+                        )[0]
+                        
+                        # Use memory-based selection if significantly better
+                        avg_performance = sum(swarm_performance[best_swarm]) / len(swarm_performance[best_swarm])
+                        if avg_performance > 0.85 and best_swarm in self.swarm_registry:
+                            logger.info(f"Memory-enhanced selection: {best_swarm} (avg quality: {avg_performance:.2f})")
+                            return best_swarm
+                            
+            except Exception as e:
+                logger.warning(f"Memory-enhanced selection failed: {e}")
+        
+        return standard_selection
+    
+    async def _apply_global_memory_patterns(self, task: Dict, swarm):
+        """Apply global memory patterns to enhance swarm execution."""
+        if not self.global_memory_client:
+            return
+        
+        try:
+            # Load global successful patterns for this task type
+            task_type = task.get("type", "general")
+            global_patterns = await self.global_memory_client.retrieve_patterns(
+                pattern_name=f"global_{task_type}",
+                limit=3
+            )
+            
+            # Apply patterns to swarm if available
+            if global_patterns and hasattr(swarm, 'strategy_archive'):
+                for pattern in global_patterns:
+                    pattern_data = pattern.get("pattern_data", {})
+                    
+                    # Inject global pattern into swarm's strategy archive
+                    if task_type not in swarm.strategy_archive.patterns["problem_types"]:
+                        swarm.strategy_archive.patterns["problem_types"][task_type] = {"successful_patterns": []}
+                    
+                    swarm.strategy_archive.patterns["problem_types"][task_type]["successful_patterns"].append({
+                        "pattern_id": f"global_{pattern.get('pattern_name', 'unknown')}",
+                        "roles": pattern_data.get("agent_roles", []),
+                        "interaction_sequence": "global_memory_enhanced",
+                        "success_score": pattern.get("success_score", 0.8),
+                        "usage_count": 1,
+                        "global_pattern": True
+                    })
+                
+                logger.info(f"Applied {len(global_patterns)} global patterns to {swarm.swarm_type}")
+                
+        except Exception as e:
+            logger.warning(f"Failed to apply global memory patterns: {e}")
+    
+    async def _memory_enhanced_global_sharing(self, swarm_type: str, task: Dict, result: Dict):
+        """Share successful execution globally through memory system."""
+        if not self.global_memory_client:
+            return
+        
+        try:
+            task_type = task.get("type", "general")
+            
+            # Store global pattern
+            global_pattern_data = {
+                "source_swarm": swarm_type,
+                "task_characteristics": {
+                    "type": task_type,
+                    "complexity": await self._analyze_task_complexity(task),
+                    "scope": task.get("scope", "medium"),
+                    "urgency": task.get("urgency", "normal")
+                },
+                "execution_strategy": {
+                    "agent_roles": result.get("agent_roles", []),
+                    "patterns_used": result.get("patterns_used", []),
+                    "quality_score": result.get("quality_score", 0),
+                    "execution_time": result.get("execution_time", 0),
+                    "memory_enhanced": result.get("memory_enhanced", False)
+                },
+                "outcome": {
+                    "success": result.get("success", True),
+                    "quality_score": result.get("quality_score", 0),
+                    "memory_integration_data": result.get("memory_integration", {})
+                }
+            }
+            
+            await self.global_memory_client.store_pattern(
+                pattern_name=f"global_{task_type}",
+                pattern_data=global_pattern_data,
+                success_score=result.get("quality_score", 0),
+                context={
+                    "global_sharing": True,
+                    "source_swarm": swarm_type,
+                    "orchestrator": "unified_enhanced"
+                }
+            )
+            
+            # Store global learning
+            await self.global_memory_client.store_learning(
+                learning_type="global_execution_pattern",
+                content=f"Swarm {swarm_type} successfully executed {task_type} with quality {result.get('quality_score', 0):.2f}",
+                confidence=min(result.get("quality_score", 0) + 0.1, 1.0),
+                context={"swarm_type": swarm_type, "global_pattern": True}
+            )
+            
+            logger.info(f"Shared global knowledge from {swarm_type} execution")
+            
+        except Exception as e:
+            logger.error(f"Failed to share global knowledge: {e}")
+    
+    async def validate_memory_integration(self) -> Dict[str, Any]:
+        """Validate memory integration across all swarms."""
+        validation = {
+            "orchestrator_memory_client": self.global_memory_client is not None,
+            "swarm_validations": {},
+            "overall_status": "unknown",
+            "memory_operations_functional": False
+        }
+        
+        # Test global memory client
+        if self.global_memory_client:
+            try:
+                stats = await self.global_memory_client.get_memory_stats()
+                validation["memory_operations_functional"] = "error" not in stats
+                validation["global_memory_stats"] = stats
+            except Exception as e:
+                validation["global_memory_error"] = str(e)
+        
+        # Validate each swarm's memory integration
+        for swarm_name, swarm_info in self.swarm_registry.items():
+            swarm = swarm_info["swarm"]
+            
+            if hasattr(swarm, 'validate_memory_integration'):
+                try:
+                    swarm_validation = await swarm.validate_memory_integration()
+                    validation["swarm_validations"][swarm_name] = swarm_validation
+                except Exception as e:
+                    validation["swarm_validations"][swarm_name] = {"error": str(e)}
+            else:
+                validation["swarm_validations"][swarm_name] = {"memory_enhanced": False}
+        
+        # Determine overall status
+        memory_enabled_swarms = sum(
+            1 for v in validation["swarm_validations"].values()
+            if v.get("swarm_memory_client", False)
+        )
+        
+        if validation["orchestrator_memory_client"] and memory_enabled_swarms == len(self.swarm_registry):
+            validation["overall_status"] = "fully_integrated"
+        elif memory_enabled_swarms > 0:
+            validation["overall_status"] = "partially_integrated"
+        else:
+            validation["overall_status"] = "not_integrated"
+        
+        validation["integration_summary"] = {
+            "total_swarms": len(self.swarm_registry),
+            "memory_enabled_swarms": memory_enabled_swarms,
+            "integration_percentage": (memory_enabled_swarms / len(self.swarm_registry)) * 100 if self.swarm_registry else 0
+        }
+        
+        return validation
+    
     def _update_global_metrics(self, swarm_type: str, result: Dict, execution_time: float):
-        """Update global metrics."""
+        """Update global metrics including memory integration data."""
         self.global_metrics["total_executions"] += 1
         
         if swarm_type not in self.global_metrics["swarm_usage"]:
             self.global_metrics["swarm_usage"][swarm_type] = 0
         self.global_metrics["swarm_usage"][swarm_type] += 1
         
-        # Track pattern effectiveness
-        for pattern in ["adversarial_debate", "quality_gates", "strategy_archive"]:
+        # Track memory integration metrics
+        if result.get("memory_enhanced"):
+            self.global_metrics["memory_integrations"] += 1
+            
+        memory_integration = result.get("memory_integration", {})
+        if memory_integration.get("active"):
+            self.global_metrics["memory_operations"] += memory_integration.get("memory_operations", {}).get("memory_ops_count", 0)
+        
+        # Track pattern effectiveness including memory patterns
+        patterns = ["adversarial_debate", "quality_gates", "strategy_archive", "memory_integration"]
+        for pattern in patterns:
             if pattern not in self.global_metrics["pattern_effectiveness"]:
                 self.global_metrics["pattern_effectiveness"][pattern] = []
             
-            # Simple effectiveness tracking
-            self.global_metrics["pattern_effectiveness"][pattern].append(
-                result.get("quality_score", 0)
-            )
+            # Track effectiveness
+            if pattern == "memory_integration" and result.get("memory_enhanced"):
+                # Memory integration effectiveness based on patterns applied
+                effectiveness = memory_integration.get("patterns_applied", 0) / 10.0  # Normalize
+                self.global_metrics["pattern_effectiveness"][pattern].append(min(effectiveness, 1.0))
+            else:
+                self.global_metrics["pattern_effectiveness"][pattern].append(
+                    result.get("quality_score", 0)
+                )
     
     async def _cross_swarm_transfer(self, source_swarm: str, task_type: str, result: Dict):
-        """Transfer successful patterns between swarms."""
+        """Transfer successful patterns between swarms using memory system."""
         
-        # Transfer successful patterns to other swarms
+        # Memory-enhanced cross-swarm transfer
+        if self.global_memory_client:
+            try:
+                # Create knowledge package for transfer
+                knowledge_package = {
+                    "source_swarm": source_swarm,
+                    "task_type": task_type,
+                    "success_score": result.get("quality_score", 0),
+                    "agent_roles": result.get("agent_roles", []),
+                    "execution_strategies": result.get("patterns_used", []),
+                    "memory_enhancement_data": result.get("memory_integration", {}),
+                    "timestamp": datetime.now().isoformat()
+                }
+                
+                # Send to all related swarms through memory system
+                for target_swarm_name, target_info in self.swarm_registry.items():
+                    if target_swarm_name != source_swarm:
+                        await self.global_memory_client.send_message_to_swarm(
+                            target_swarm_type=target_swarm_name,
+                            message={
+                                "type": "global_knowledge_transfer",
+                                "knowledge_package": knowledge_package
+                            },
+                            priority="normal"
+                        )
+                
+                self.global_metrics["cross_swarm_transfers"] += 1
+                logger.info(f"Memory-enhanced knowledge transfer from {source_swarm} to all swarms")
+                
+            except Exception as e:
+                logger.error(f"Memory-enhanced transfer failed: {e}")
+                # Fallback to standard transfer
+                await self._standard_cross_swarm_transfer(source_swarm, task_type, result)
+        else:
+            # Standard transfer if memory not available
+            await self._standard_cross_swarm_transfer(source_swarm, task_type, result)
+    
+    async def _standard_cross_swarm_transfer(self, source_swarm: str, task_type: str, result: Dict):
+        """Standard cross-swarm transfer (fallback)."""
         for target_swarm_name, target_info in self.swarm_registry.items():
             if target_swarm_name != source_swarm:
                 target_swarm = target_info["swarm"]
@@ -407,7 +811,9 @@ class UnifiedSwarmOrchestrator:
             "swarm_metrics": swarm_metrics,
             "global_patterns_archived": len(
                 self.global_strategy_archive.patterns.get("problem_types", {})
-            )
+            ),
+            "memory_integration_active": self.global_memory_client is not None,
+            "memory_enhanced_swarms": sum(1 for info in self.swarm_registry.values() if info.get("memory_enabled", False))
         }
     
     def create_unified_control_panel(self) -> Dict:
@@ -440,7 +846,19 @@ class UnifiedSwarmOrchestrator:
                         "data": {
                             "total_executions": metrics["global"]["total_executions"],
                             "cross_swarm_transfers": metrics["global"]["cross_swarm_transfers"],
-                            "patterns_archived": metrics["global_patterns_archived"]
+                            "patterns_archived": metrics["global_patterns_archived"],
+                            "memory_operations": metrics["global"]["memory_operations"],
+                            "memory_integrations": metrics["global"]["memory_integrations"],
+                            "memory_enhanced_swarms": metrics["memory_enhanced_swarms"]
+                        }
+                    },
+                    {
+                        "name": "Memory Integration Status",
+                        "type": "status",
+                        "data": {
+                            "global_memory_active": metrics["memory_integration_active"],
+                            "enhanced_swarms": metrics["memory_enhanced_swarms"],
+                            "total_swarms": len(self.swarm_registry)
                         }
                     },
                     {

@@ -242,7 +242,7 @@ fly deploy --app sophia-weaviate -c docker-compose.weaviate.yml
 
 ### 4.1 Deploy UI to Vercel
 ```bash
-cd /Users/lynnmusil/sophia-intel-ai/ui
+cd /Users/lynnmusil/sophia-intel-ai/agent-ui
 
 # Install Vercel CLI
 npm i -g vercel
@@ -251,11 +251,6 @@ npm i -g vercel
 vercel --prod \
   --env NEXT_PUBLIC_API_URL=https://sophia-intel-ai.fly.dev \
   --env NEXT_PUBLIC_DEFAULT_ENDPOINT=https://sophia-intel-ai.fly.dev
-
-# Deploy agent-ui
-cd ../agent-ui
-vercel --prod \
-  --env NEXT_PUBLIC_API_URL=https://sophia-intel-ai.fly.dev
 ```
 
 ### 4.2 Alternative: Deploy UI to Fly.io
@@ -263,9 +258,9 @@ vercel --prod \
 # Dockerfile.ui
 FROM node:18-alpine
 WORKDIR /app
-COPY ui/package*.json ./
+COPY agent-ui/package*.json ./
 RUN npm ci --only=production
-COPY ui/ .
+COPY agent-ui/ .
 RUN npm run build
 EXPOSE 3000
 CMD ["npm", "start"]
@@ -431,7 +426,7 @@ docker run -p 8000:8000 --env-file .env.production sophia-api
 fly deploy --app sophia-intel-ai
 
 # 3. Deploy UI to Vercel
-cd ui && vercel --prod
+cd agent-ui && vercel --prod
 
 # 4. Monitor deployment
 fly status --app sophia-intel-ai

@@ -1,6 +1,6 @@
 # =============================================================================
-# Pulumi ESC Production Environment - Sophia Intel AI
-# Production configuration inheriting from base with production overrides
+# Pulumi ESC Staging Environment - Sophia Intel AI  
+# Staging configuration inheriting from base - production-like testing
 # =============================================================================
 
 imports:
@@ -8,232 +8,205 @@ imports:
 
 values:
   # =============================================================================
-  # PRODUCTION ENVIRONMENT CONFIGURATION
+  # STAGING ENVIRONMENT CONFIGURATION
   # =============================================================================
   
   environment:
-    name: "prod"
-    type: "production"
+    name: "staging"
+    type: "staging"
     region: "iad"
-    domain: "sophia-intel-ai.com"
+    domain: "staging.sophia-intel-ai.com"
     
-  # Production Service URLs (Fly.io deployed services)
+  # Staging Service URLs (Fly.io staging deployment)
   service_urls:
-    unified_api_url: "https://sophia-api.fly.dev"
-    agno_bridge_url: "https://sophia-agno-bridge.fly.dev"
-    frontend_url: "https://sophia-ui.fly.dev"
-    mcp_server_url: "https://sophia-mcp.fly.dev"
-    vector_store_url: "https://sophia-vector.fly.dev"
-    weaviate_url: "https://sophia-weaviate.fly.dev"
+    unified_api_url: "https://sophia-api-staging.fly.dev"
+    agno_bridge_url: "https://sophia-agno-bridge-staging.fly.dev"
+    frontend_url: "https://sophia-ui-staging.fly.dev"
+    mcp_server_url: "https://sophia-mcp-staging.fly.dev"
+    vector_store_url: "https://sophia-vector-staging.fly.dev"
+    weaviate_url: "https://sophia-weaviate-staging.fly.dev"
     
-  # Production Database Configuration (High-availability)
+  # Staging Database Configuration (Production-like but smaller scale)
   database:
     postgres:
-      # Neon PostgreSQL Production
+      # Neon PostgreSQL Staging Branch
       host: "app-sparkling-wildflower-99699121.neon.tech"
       port: 5432
-      database: "sophia_prod"
-      max_connections: 200
-      connection_timeout: 30
-      pool_size: 50
+      database: "sophia_staging"
+      max_connections: 100
+      connection_timeout: 20
+      pool_size: 25
       ssl_mode: "require"
-      backup_retention_days: 30
-      read_replicas: 2
+      backup_retention_days: 7
       
     redis:
-      # Redis Cloud Production Cluster
+      # Redis staging instance
       host: "redis-15014.fcrce172.us-east-1-1.ec2.redns.redis-cloud.com"
       port: 15014
-      memory_mb: 2048
-      max_connections: 500
-      cluster_mode: true
+      memory_mb: 512
+      max_connections: 200
+      cluster_mode: false  # Simpler for staging
       persistence: true
-      backup_enabled: true
       
     weaviate:
-      host: "sophia-weaviate.fly.dev"
+      host: "sophia-weaviate-staging.fly.dev"
       port: 443
       protocol: "https"
-      memory_gb: 16
-      replicas: 3
-      backup_enabled: true
+      memory_gb: 4
+      replicas: 1  # Single replica for staging
+      backup_enabled: false  # Not needed for staging
       
-  # Production Feature Flags (Security-focused)
+  # Staging Feature Flags (Production-like with some debugging)
   features:
-    # Override base features for production
+    # Production-like but with some debug capabilities
     debug_mode: false
-    verbose_logging: false
-    experimental_features: false
+    verbose_logging: true  # More logging than prod
+    experimental_features: true  # Test new features
     hot_reload: false
     mock_external_apis: false
     
-    # Production-specific features
+    # Staging-specific features
     security_hardened: true
     audit_trail: true
     rate_limiting: true
-    ip_whitelisting: false  # Set to true if needed
-    vulnerability_scanning: true
+    vulnerability_scanning: false  # Optional for staging
     
-    # Disable development features
+    # Enable some development features for testing
     local_development: false
     auto_reload: false
-    detailed_errors: false
+    detailed_errors: true  # Help with debugging
     disable_auth: false
     
-  # Production Scaling (High-availability with auto-scaling)
+  # Staging Scaling (Between dev and prod)
   scaling:
     api_gateway:
-      instances: 3
-      memory_mb: 1024
-      cpu_cores: 1.0
+      instances: 2
+      memory_mb: 768
+      cpu_cores: 0.75
       auto_scaling:
         enabled: true
-        min: 2
-        max: 10
-        cpu_threshold: 70
-        memory_threshold: 80
+        min: 1
+        max: 5
+        cpu_threshold: 75
         
     agent_orchestrator:
-      instances: 5
-      memory_mb: 4096
-      cpu_cores: 4.0
+      instances: 2
+      memory_mb: 2048
+      cpu_cores: 2.0
       auto_scaling:
         enabled: true
-        min: 3
-        max: 20
-        cpu_threshold: 75
-        memory_threshold: 85
+        min: 1
+        max: 8
+        cpu_threshold: 80
         
     vector_store:
-      instances: 3
-      memory_mb: 2048
-      cpu_cores: 2.0
+      instances: 2
+      memory_mb: 1536
+      cpu_cores: 1.5
       auto_scaling:
         enabled: true
-        min: 2
-        max: 15
-        cpu_threshold: 80
-        memory_threshold: 85
+        min: 1
+        max: 6
+        cpu_threshold: 85
         
     mcp_server:
-      instances: 3
-      memory_mb: 2048
-      cpu_cores: 2.0
+      instances: 2
+      memory_mb: 1536
+      cpu_cores: 1.5
       auto_scaling:
         enabled: true
-        min: 2
-        max: 12
-        cpu_threshold: 75
-        memory_threshold: 80
+        min: 1
+        max: 6
+        cpu_threshold: 80
         
-  # Production Model Configuration (High-performance with failover)
+  # Staging Model Configuration (Production models with cost controls)
   models:
-    # Override base models for production (redundancy and performance)
+    # Use production models but with more cost-conscious defaults
     default_pools:
-      fast: "groq/llama-3.2-90b-text-preview,openai/gpt-4o-mini,anthropic/claude-3-haiku"
-      balanced: "openai/gpt-4o,anthropic/claude-3.5-sonnet,groq/llama-3.2-90b-text-preview"
-      heavy: "anthropic/claude-3.5-sonnet,openai/gpt-4o,qwen/qwen-2.5-coder-32b-instruct"
+      fast: "groq/llama-3.2-90b-text-preview,openai/gpt-4o-mini"
+      balanced: "openai/gpt-4o-mini,anthropic/claude-3.5-sonnet"  # Cheaper default
+      heavy: "anthropic/claude-3.5-sonnet,openai/gpt-4o"
       
-    # Production embedding configuration (redundancy)
+    # Staging embedding configuration
     embeddings:
-      primary: "voyage-3-large"
-      secondary: "cohere/embed-multilingual-v3.0"
+      primary: "cohere/embed-multilingual-v3.0"  # Cost-effective primary
+      secondary: "voyage-3-large"  # Premium when needed
       fallback: "BAAI/bge-base-en-v1.5"
       
-    # Model failover chains for production reliability
+    # Model failover chains for staging
     failover_chains:
-      primary: ["anthropic/claude-3.5-sonnet", "openai/gpt-4o"]
-      secondary: ["openai/gpt-4o", "groq/llama-3.2-90b-text-preview"]
-      emergency: ["openai/gpt-4o-mini", "anthropic/claude-3-haiku"]
+      primary: ["anthropic/claude-3.5-sonnet", "openai/gpt-4o-mini"]
+      secondary: ["openai/gpt-4o-mini", "groq/llama-3.2-90b-text-preview"]
       
-  # Production Limits (Enterprise-scale)
+  # Staging Limits (Between dev and prod)
   limits:
-    daily_budget_usd: 1000  # Increased for production workload
-    alert_threshold_usd: 800
-    max_concurrent_swarms: 100
-    max_concurrent_requests: 500
-    request_timeout_seconds: 120
-    max_tokens_per_request: 16384  # Higher for production use cases
-    rate_limit_per_minute: 2000
-    burst_rate_limit: 5000
+    daily_budget_usd: 200  # Reasonable for staging testing
+    alert_threshold_usd: 150
+    max_concurrent_swarms: 25
+    max_concurrent_requests: 100
+    request_timeout_seconds: 90
+    max_tokens_per_request: 8192
+    rate_limit_per_minute: 500
     
-  # Production Security (Hardened)
+  # Staging Security (Production-like with relaxed testing features)
   security:
-    api_key_rotation_days: 30
-    tls_min_version: "1.3"
+    api_key_rotation_days: 60  # Less frequent than prod
+    tls_min_version: "1.2"  # Slightly relaxed
     cors_strict_mode: true
-    cors_origins: ["https://sophia-intel-ai.com", "https://app.sophia-intel-ai.com"]
+    cors_origins: ["https://staging.sophia-intel-ai.com", "https://sophia-ui-staging.fly.dev"]
     request_logging: true
     audit_trail: true
-    vulnerability_scanning: true
-    ip_rate_limiting: true
-    ddos_protection: true
-    waf_enabled: true
+    vulnerability_scanning: false  # Optional for staging
     
-  # Production Monitoring & Observability (Enterprise-grade)
+  # Staging Monitoring (Detailed for testing)
   monitoring:
-    log_level: "INFO"
-    metrics_retention_days: 90
-    trace_sampling_rate: 0.1  # 10% sampling for production
-    enable_profiling: false  # Disabled for performance
+    log_level: "INFO"  # Detailed but not debug
+    metrics_retention_days: 30
+    trace_sampling_rate: 0.5  # 50% sampling for thorough testing
+    enable_profiling: true  # Enabled for performance testing
     
-    # Production alerting configuration
+    # Staging alerting (less strict than production)
     alerting:
       enabled: true
-      error_rate_threshold: 0.01  # 1% error rate alert
-      latency_p95_threshold_ms: 500
-      latency_p99_threshold_ms: 1000
-      availability_threshold: 99.9
-      disk_usage_threshold: 85
-      memory_usage_threshold: 90
+      error_rate_threshold: 0.05  # 5% error rate alert
+      latency_p95_threshold_ms: 1000
+      availability_threshold: 99.0  # Slightly lower than prod
       
-    # Full observability stack for production
+    # Observability stack for staging
     observability_stack:
       prometheus: true
       grafana: true
       jaeger: true
-      datadog: true
-      newrelic: false  # Optional
-      honeycomb: false  # Optional
+      datadog: false  # Optional for staging
       
-  # Production Reliability (High-availability)
+  # Staging Reliability (Simplified from production)
   reliability:
     circuit_breaker: true
-    retry_attempts: 5
+    retry_attempts: 3
     backoff_strategy: "exponential"
-    jitter: true
     
     health_checks:
       enabled: true
-      interval_seconds: 15
-      timeout_seconds: 5
+      interval_seconds: 30
+      timeout_seconds: 10
       failure_threshold: 3
-      success_threshold: 2
       
     disaster_recovery:
-      enabled: true
-      multi_region: true
-      backup_frequency: "hourly"
-      backup_retention_days: 90
-      point_in_time_recovery: true
-      rto_minutes: 30  # Recovery Time Objective
-      rpo_minutes: 15  # Recovery Point Objective
-      
-    load_balancing:
-      strategy: "round_robin"
-      health_check_enabled: true
-      sticky_sessions: false
+      enabled: false  # Not needed for staging
+      multi_region: false
+      backup_frequency: "daily"
+      backup_retention_days: 7
 
 # =============================================================================
-# PRODUCTION ENVIRONMENT VARIABLES
-# Extends base environment variables with production-specific overrides
+# STAGING ENVIRONMENT VARIABLES
+# Extends base environment variables with staging-specific overrides
 # =============================================================================
 environmentVariables:
   # =============================================================================
   # ENVIRONMENT IDENTIFICATION
   # =============================================================================
   
-  NODE_ENV: "production"
+  NODE_ENV: "staging"
   ENVIRONMENT: ${environment.name}
   ENV_TYPE: ${environment.type}
   DEBUG: "false"
@@ -242,7 +215,7 @@ environmentVariables:
   REGION: ${environment.region}
   
   # =============================================================================
-  # PRODUCTION SERVICE URLS
+  # STAGING SERVICE URLS
   # =============================================================================
   
   UNIFIED_API_URL: ${service_urls.unified_api_url}
@@ -251,24 +224,24 @@ environmentVariables:
   MCP_SERVER_URL: ${service_urls.mcp_server_url}
   VECTOR_STORE_URL: ${service_urls.vector_store_url}
   
-  # Next.js production configuration
+  # Next.js staging configuration
   NEXT_PUBLIC_API_URL: ${service_urls.agno_bridge_url}
   NEXT_PUBLIC_DEFAULT_ENDPOINT: ${service_urls.agno_bridge_url}
   NEXT_PUBLIC_PLAYGROUND_URL: ${service_urls.agno_bridge_url}
   NEXT_PUBLIC_BRIDGE_URL: ${service_urls.agno_bridge_url}
   NEXT_PUBLIC_UNIFIED_API_URL: ${service_urls.agno_bridge_url}
   NEXT_PUBLIC_USE_BRIDGE: "true"
-  NEXT_PUBLIC_ENV: "production"
+  NEXT_PUBLIC_ENV: "staging"
   
   # =============================================================================
-  # DATABASE URLS (Production - Cloud)
+  # DATABASE URLS (Staging - Cloud but smaller scale)
   # =============================================================================
   
   WEAVIATE_URL: ${service_urls.weaviate_url}
   REDIS_URL: "redis://default:${REDIS_PASSWORD}@${database.redis.host}:${database.redis.port}"
   POSTGRES_URL: "postgresql://sophia:${POSTGRES_PASSWORD}@${database.postgres.host}:${database.postgres.port}/${database.postgres.database}?sslmode=require"
   
-  # Production database configuration
+  # Staging database configuration
   POSTGRES_MAX_CONNECTIONS: ${database.postgres.max_connections}
   POSTGRES_POOL_SIZE: ${database.postgres.pool_size}
   POSTGRES_SSL_MODE: ${database.postgres.ssl_mode}
@@ -278,10 +251,9 @@ environmentVariables:
   REDIS_CLUSTER_MODE: ${database.redis.cluster_mode}
   
   WEAVIATE_REPLICAS: ${database.weaviate.replicas}
-  WEAVIATE_BACKUP_ENABLED: ${database.weaviate.backup_enabled}
   
   # =============================================================================
-  # PRODUCTION MODEL CONFIGURATION
+  # STAGING MODEL CONFIGURATION
   # =============================================================================
   
   DEFAULT_FAST_MODELS: ${models.default_pools.fast}
@@ -290,14 +262,13 @@ environmentVariables:
   
   PRIMARY_MODEL_CHAIN: ${models.failover_chains.primary}
   SECONDARY_MODEL_CHAIN: ${models.failover_chains.secondary}
-  EMERGENCY_MODEL_CHAIN: ${models.failover_chains.emergency}
   
   EMBED_MODEL_PRIMARY: ${models.embeddings.primary}
   EMBED_MODEL_SECONDARY: ${models.embeddings.secondary}
   EMBED_MODEL_FALLBACK: ${models.embeddings.fallback}
   
   # =============================================================================
-  # PRODUCTION LIMITS AND CONTROLS
+  # STAGING LIMITS AND CONTROLS
   # =============================================================================
   
   DAILY_BUDGET_USD: ${limits.daily_budget_usd}
@@ -307,10 +278,9 @@ environmentVariables:
   REQUEST_TIMEOUT_SECONDS: ${limits.request_timeout_seconds}
   MAX_TOKENS_PER_REQUEST: ${limits.max_tokens_per_request}
   API_RATE_LIMIT: ${limits.rate_limit_per_minute}
-  BURST_RATE_LIMIT: ${limits.burst_rate_limit}
   
   # =============================================================================
-  # PRODUCTION SECURITY
+  # STAGING SECURITY
   # =============================================================================
   
   SECURITY_HARDENED: ${features.security_hardened}
@@ -318,10 +288,9 @@ environmentVariables:
   CORS_STRICT_MODE: ${security.cors_strict_mode}
   CORS_ORIGINS: ${security.cors_origins}
   AUDIT_TRAIL: ${security.audit_trail}
-  WAF_ENABLED: ${security.waf_enabled}
   
   # =============================================================================
-  # PRODUCTION MONITORING
+  # STAGING MONITORING
   # =============================================================================
   
   METRICS_RETENTION_DAYS: ${monitoring.metrics_retention_days}
@@ -329,14 +298,14 @@ environmentVariables:
   ERROR_RATE_THRESHOLD: ${monitoring.alerting.error_rate_threshold}
   LATENCY_P95_THRESHOLD_MS: ${monitoring.alerting.latency_p95_threshold_ms}
   AVAILABILITY_THRESHOLD: ${monitoring.alerting.availability_threshold}
+  ENABLE_PROFILING: ${monitoring.enable_profiling}
   
   PROMETHEUS_ENABLED: ${monitoring.observability_stack.prometheus}
   GRAFANA_ENABLED: ${monitoring.observability_stack.grafana}
   JAEGER_ENABLED: ${monitoring.observability_stack.jaeger}
-  DATADOG_ENABLED: ${monitoring.observability_stack.datadog}
   
   # =============================================================================
-  # PRODUCTION RELIABILITY
+  # STAGING RELIABILITY
   # =============================================================================
   
   CIRCUIT_BREAKER_ENABLED: ${reliability.circuit_breaker}
@@ -346,13 +315,6 @@ environmentVariables:
   HEALTH_CHECK_ENABLED: ${reliability.health_checks.enabled}
   HEALTH_CHECK_INTERVAL: ${reliability.health_checks.interval_seconds}
   HEALTH_CHECK_TIMEOUT: ${reliability.health_checks.timeout_seconds}
-  HEALTH_CHECK_FAILURE_THRESHOLD: ${reliability.health_checks.failure_threshold}
-  
-  # Disaster recovery
-  MULTI_REGION_ENABLED: ${reliability.disaster_recovery.multi_region}
-  BACKUP_FREQUENCY: ${reliability.disaster_recovery.backup_frequency}
-  RTO_MINUTES: ${reliability.disaster_recovery.rto_minutes}
-  RPO_MINUTES: ${reliability.disaster_recovery.rpo_minutes}
   
   # =============================================================================
   # SCALING CONFIGURATION
@@ -363,26 +325,18 @@ environmentVariables:
   API_GATEWAY_MAX_INSTANCES: ${scaling.api_gateway.auto_scaling.max}
   
   AGENT_ORCHESTRATOR_INSTANCES: ${scaling.agent_orchestrator.instances}
-  AGENT_ORCHESTRATOR_MIN_INSTANCES: ${scaling.agent_orchestrator.auto_scaling.min}
-  AGENT_ORCHESTRATOR_MAX_INSTANCES: ${scaling.agent_orchestrator.auto_scaling.max}
-  
   VECTOR_STORE_INSTANCES: ${scaling.vector_store.instances}
-  VECTOR_STORE_MIN_INSTANCES: ${scaling.vector_store.auto_scaling.min}
-  VECTOR_STORE_MAX_INSTANCES: ${scaling.vector_store.auto_scaling.max}
-  
   MCP_SERVER_INSTANCES: ${scaling.mcp_server.instances}
-  MCP_SERVER_MIN_INSTANCES: ${scaling.mcp_server.auto_scaling.min}
-  MCP_SERVER_MAX_INSTANCES: ${scaling.mcp_server.auto_scaling.max}
   
   # =============================================================================
-  # PRODUCTION APPLICATION CONFIGURATION
+  # STAGING APPLICATION CONFIGURATION
   # =============================================================================
   
-  # Disable development features
+  # Controlled staging settings
   LOCAL_DEV_MODE: "false"
-  ENABLE_RUNNER_WRITES: "false"  # Restricted in production
-  ENABLE_GIT_WRITES: "false"     # Restricted in production
-  ENABLE_FILE_WRITES: "false"    # Restricted in production
+  ENABLE_RUNNER_WRITES: "true"   # Allow for testing
+  ENABLE_GIT_WRITES: "true"      # Allow for testing  
+  ENABLE_FILE_WRITES: "true"     # Allow for testing
   ENABLE_HOT_RELOAD: "false"
   ENABLE_DEBUG_UI: "false"
 
@@ -391,4 +345,4 @@ environmentVariables:
 # =============================================================================
 pulumiConfig:
   pulumi:backend: https://app.pulumi.com
-  pulumi:project: sophia-intel-ai-prod
+  pulumi:project: sophia-intel-ai-staging

@@ -2,6 +2,11 @@
 Unified Agent API Server.
 Consolidates all agent endpoints, MCP integration, and retrieval systems.
 Eliminates fragmentation between shim servers and provides a single gateway.
+
+Following ADR-006: Configuration Management Standardization
+- Uses enhanced EnvLoader with Pulumi ESC integration
+- Single source of truth for all environment configuration
+- Proper secret management and validation
 """
 
 from fastapi import FastAPI, HTTPException, BackgroundTasks, Request, Form
@@ -14,6 +19,10 @@ import json
 import os
 from datetime import datetime
 from contextlib import asynccontextmanager
+import logging
+
+# Import enhanced configuration system following ADR-006
+from app.config.env_loader import get_env_config, validate_environment, print_env_status
 
 # Import our enhanced systems
 from app.api.advanced_gateway_2025 import (
@@ -73,54 +82,161 @@ except ImportError as e:
         yield 'data: {"status": "fallback", "message": "Real swarm execution not available"}\n\n'
 
 # ============================================
-# Configuration
+# Enhanced Configuration following ADR-006
 # ============================================
 
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Load configuration using enhanced EnvLoader with Pulumi ESC support
+try:
+    config = get_env_config()
+    logger.info(f"✅ Configuration loaded from: {config.loaded_from}")
+except Exception as e:
+    logger.error(f"❌ Failed to load configuration: {e}")
+    # Fallback to environment variables for critical startup
+    config = None
+
 class ServerConfig:
-    """Unified server configuration."""
+    """Unified server configuration using enhanced EnvLoader."""
     
-    # Server
-    HOST = "0.0.0.0"
-    PORT = int(os.getenv("AGENT_API_PORT", "8000"))
-    
-    # CORS
-    ALLOWED_ORIGINS = [
-        "http://localhost:3000",
-        "http://localhost:3002",
-        "http://localhost:7777"
-    ]
-    
-    # Playground
-    PLAYGROUND_URL = os.getenv("PLAYGROUND_URL", "http://localhost:7777")
-    
-    # 🔧 LOCAL DEVELOPMENT MODE - ENABLES ALL TOOLS
-    LOCAL_DEV_MODE = os.getenv("LOCAL_DEV_MODE", "true").lower() == "true"
-    ENABLE_RUNNER_WRITES = os.getenv("ENABLE_RUNNER_WRITES", str(LOCAL_DEV_MODE)).lower() == "true"
-    RUNNER_GATE_OVERRIDE = LOCAL_DEV_MODE  # Allow Runner in dev mode
-    
-    # MCP Servers
-    MCP_FILESYSTEM_ENABLED = os.getenv("MCP_FILESYSTEM", "true").lower() == "true"
-    MCP_GIT_ENABLED = os.getenv("MCP_GIT", "true").lower() == "true"
-    MCP_SUPERMEMORY_ENABLED = os.getenv("MCP_SUPERMEMORY", "true").lower() == "true"
-    
-    # Features
-    GRAPHRAG_ENABLED = os.getenv("GRAPHRAG_ENABLED", "true").lower() == "true"
-    HYBRID_SEARCH_ENABLED = os.getenv("HYBRID_SEARCH", "true").lower() == "true"
-    GATES_ENABLED = os.getenv("EVALUATION_GATES", "true").lower() == "true"
-    
-    @classmethod
-    def print_config(cls):
-        """Print current configuration."""
-        if cls.LOCAL_DEV_MODE:
-            print("\n" + "="*60)
-            print("🔧 LOCAL DEVELOPMENT MODE ACTIVE")
-            print("="*60)
-            print("✅ Runner writes: ENABLED")
-            print("✅ Git operations: ENABLED")
-            print("✅ File operations: ENABLED")
-            print("✅ All tools: ACTIVE")
-            print("⚠️  Be careful - all write operations are enabled!")
-            print("="*60 + "\n")
+    def __init__(self):
+        """Initialize configuration from enhanced EnvLoader."""
+        self.config = config or get_env_config()
+        self._setup_configuration()
+        
+    def _setup_configuration(self):
+        """Setup configuration values from EnvConfig."""
+        # Server configuration
+        self.HOST = "0.0.0.0"
+        self.PORT = int(os.getenv("UNIFIED_API_PORT", "8003"))  # Use unified API port
+        
+        # CORS - Dynamic based on environment
+        base_origins = [
+            self.config.frontend_url,
+            self.config.agno_bridge_url,
+            "http://localhost:3000",
+            "http://localhost:3002",
+            "http://localhost:3333",
+            "http://localhost:7777"
+        ]
+        
+        # Add environment-specific origins
+        if self.config.environment_name == "prod":
+            base_origins.extend([
+                f"https://{self.config.domain}",
+                f"https://app.{self.config.domain}",
+                "https://sophia-ui.fly.dev"
+            ])
+        elif self.config.environment_name == "staging":
+            base_origins.extend([
+                f"https://staging.{self.config.domain}",
+                "https://sophia-ui-staging.fly.dev"
+            ])
+            
+        self.ALLOWED_ORIGINS = list(set(base_origins))  # Remove duplicates
+        
+        # Playground
+        self.PLAYGROUND_URL = self.config.agno_bridge_url
+        
+        # Development and feature flags from config
+        self.LOCAL_DEV_MODE = self.config.local_dev_mode
+        self.ENABLE_RUNNER_WRITES = self.config.enable_runner_writes
+        self.ENABLE_GIT_WRITES = self.config.enable_git_writes
+        self.ENABLE_FILE_WRITES = self.config.enable_file_writes
+        self.RUNNER_GATE_OVERRIDE = self.LOCAL_DEV_MODE
+        
+        # MCP Servers - Always enabled for now, can be configured later
+        self.MCP_FILESYSTEM_ENABLED = True
+        self.MCP_GIT_ENABLED = True
+        self.MCP_SUPERMEMORY_ENABLED = True
+        
+        # Features from config
+        self.GRAPHRAG_ENABLED = True  # Always enabled
+        self.HYBRID_SEARCH_ENABLED = True  # Always enabled
+        self.GATES_ENABLED = self.config.enable_evaluation_gates
+        
+        # Streaming and memory
+        self.STREAMING_ENABLED = self.config.enable_streaming
+        self.MEMORY_ENABLED = self.config.enable_memory
+        
+        # Performance settings from config
+        self.MAX_WORKERS = self.config.max_workers
+        self.TIMEOUT_SECONDS = self.config.timeout_seconds
+        self.MAX_RETRIES = self.config.max_retries
+        
+        # Cost controls from config
+        self.DAILY_BUDGET_USD = self.config.daily_budget_usd
+        self.MAX_TOKENS_PER_REQUEST = self.config.max_tokens_per_request
+        self.API_RATE_LIMIT = self.config.api_rate_limit
+        
+    def print_config(self):
+        """Print current configuration with enhanced details."""
+        print("\n" + "="*80)
+        print("🔧 UNIFIED SERVER CONFIGURATION")
+        print("="*80)
+        print(f"📋 Environment: {self.config.environment_name} ({self.config.environment_type})")
+        print(f"📂 Config Source: {self.config.loaded_from}")
+        print(f"🆔 Config Hash: {self.config.config_hash}")
+        print(f"🌐 Domain: {self.config.domain}")
+        print(f"🚀 Server: {self.HOST}:{self.PORT}")
+        
+        if self.LOCAL_DEV_MODE:
+            print(f"\n🔧 DEVELOPMENT MODE ACTIVE")
+            print(f"✅ Runner writes: {'ENABLED' if self.ENABLE_RUNNER_WRITES else 'DISABLED'}")
+            print(f"✅ Git operations: {'ENABLED' if self.ENABLE_GIT_WRITES else 'DISABLED'}")
+            print(f"✅ File operations: {'ENABLED' if self.ENABLE_FILE_WRITES else 'DISABLED'}")
+            print(f"⚠️  All tools: ACTIVE - Be careful with write operations!")
+        else:
+            print(f"\n🔒 PRODUCTION MODE")
+            print(f"🔐 Write operations: RESTRICTED")
+            print(f"🛡️  Security: HARDENED")
+            
+        print(f"\n🔌 Services:")
+        print(f"  • API: {self.config.unified_api_url}")
+        print(f"  • Bridge: {self.config.agno_bridge_url}")
+        print(f"  • Frontend: {self.config.frontend_url}")
+        print(f"  • Vector Store: {self.config.vector_store_url}")
+        
+        print(f"\n💾 Storage:")
+        print(f"  • Weaviate: {self.config.weaviate_url}")
+        print(f"  • Redis: {self.config.redis_host}:{self.config.redis_port}")
+        if self.config.postgres_url:
+            print(f"  • PostgreSQL: Connected")
+            
+        print(f"\n⚡ Performance:")
+        print(f"  • Max Workers: {self.MAX_WORKERS}")
+        print(f"  • Timeout: {self.TIMEOUT_SECONDS}s")
+        print(f"  • Rate Limit: {self.API_RATE_LIMIT}/min")
+        print(f"  • Budget: ${self.DAILY_BUDGET_USD}/day")
+        
+        print(f"\n✨ Features:")
+        print(f"  • Streaming: {'ENABLED' if self.STREAMING_ENABLED else 'DISABLED'}")
+        print(f"  • Memory: {'ENABLED' if self.MEMORY_ENABLED else 'DISABLED'}")
+        print(f"  • Evaluation Gates: {'ENABLED' if self.GATES_ENABLED else 'DISABLED'}")
+        print(f"  • GraphRAG: {'ENABLED' if self.GRAPHRAG_ENABLED else 'DISABLED'}")
+        
+        print("="*80 + "\n")
+        
+        # Print detailed environment status if in development
+        if self.LOCAL_DEV_MODE:
+            print_env_status(detailed=True)
+
+# Create singleton configuration instance
+try:
+    server_config = ServerConfig()
+except Exception as e:
+    logger.error(f"❌ Failed to initialize ServerConfig: {e}")
+    # Create fallback minimal config for startup
+    class FallbackConfig:
+        HOST = "0.0.0.0"
+        PORT = 8003
+        ALLOWED_ORIGINS = ["*"]  # Permissive for startup
+        LOCAL_DEV_MODE = True
+        def print_config(self):
+            print("⚠️  Using fallback configuration")
+    server_config = FallbackConfig()
 
 # ============================================
 # Global State

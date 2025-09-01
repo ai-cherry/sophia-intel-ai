@@ -1,6 +1,11 @@
 """
 Agno Bridge Server - Provides Agno-compatible API endpoints.
 Bridges between Agno UI expectations and our unified server implementation.
+
+Following ADR-006: Configuration Management Standardization
+- Uses enhanced EnvLoader with Pulumi ESC integration
+- Single source of truth for all environment configuration
+- Proper secret management and validation
 """
 
 import os
@@ -14,43 +19,91 @@ import json
 import httpx
 import logging
 from datetime import datetime
-from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv('.env.local')
+# Import enhanced configuration system following ADR-006
+from app.config.env_loader import get_env_config, validate_environment, print_env_status
 
+# Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Load configuration using enhanced EnvLoader
+try:
+    config = get_env_config()
+    logger.info(f"✅ Agno Bridge configuration loaded from: {config.loaded_from}")
+except Exception as e:
+    logger.error(f"❌ Failed to load configuration: {e}")
+    config = None
+
 app = FastAPI(
     title="Agno Bridge Server",
-    description="Bridges Agno UI to Sophia Intel AI unified server",
+    description="Bridges Agno UI to Sophia Intel AI unified server - ADR-006 compliant",
     version="2.0.0"
 )
 
-# CORS for UI access
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        os.getenv("FRONTEND_URL", "http://localhost:3000"),
+# Enhanced CORS configuration using config
+cors_origins = []
+if config:
+    cors_origins = [
+        config.frontend_url,
+        config.agno_bridge_url,
+        config.unified_api_url,
+        "http://localhost:3000",
         "http://localhost:3001",
         "http://localhost:3002",
-        os.getenv("AGNO_BRIDGE_URL", "http://localhost:7777")
-    ],
+        "http://localhost:3333",
+        "http://localhost:7777"
+    ]
+    
+    # Add environment-specific origins
+    if config.environment_name == "prod":
+        cors_origins.extend([
+            f"https://{config.domain}",
+            f"https://app.{config.domain}",
+            "https://sophia-ui.fly.dev"
+        ])
+    elif config.environment_name == "staging":
+        cors_origins.extend([
+            f"https://staging.{config.domain}",
+            "https://sophia-ui-staging.fly.dev"
+        ])
+else:
+    # Fallback CORS for startup issues
+    cors_origins = ["*"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=list(set(cors_origins)),  # Remove duplicates
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Configuration - Use environment variables instead of hardcoded values
-UNIFIED_API_URL = os.getenv("UNIFIED_API_URL", "http://localhost:8003")
-AGNO_API_KEY = os.getenv("AGNO_API_KEY", "phi-0cnOaV2N-MKID0LJTszPjAdj7XhunqMQFG4IwLPG9dI")
-
-# Add direct swarm integration for when unified server isn't available
-USE_DIRECT_SWARMS = os.getenv("USE_DIRECT_SWARMS", "true").lower() == "true"
+# Enhanced configuration using EnvConfig
+if config:
+    UNIFIED_API_URL = config.unified_api_url
+    AGNO_API_KEY = config.agno_api_key
+    USE_DIRECT_SWARMS = config.local_dev_mode  # Enable in dev mode
+    BRIDGE_PORT = config.playground_port
+    BRIDGE_HOST = config.playground_host
+else:
+    # Fallback configuration
+    UNIFIED_API_URL = os.getenv("UNIFIED_API_URL", "http://localhost:8003")
+    AGNO_API_KEY = os.getenv("AGNO_API_KEY", "")
+    USE_DIRECT_SWARMS = True
+    BRIDGE_PORT = 7777
+    BRIDGE_HOST = "0.0.0.0"
 
 if not AGNO_API_KEY:
-    logger.warning("AGNO_API_KEY not set, using default for development")
+    logger.warning("⚠️  AGNO_API_KEY not configured - some features may not work")
+
+# Configuration validation
+if config:
+    validation = validate_environment()
+    if validation.get("overall_status") == "unhealthy":
+        logger.warning("⚠️  Configuration validation failed - bridge may have limited functionality")
+        for issue in validation.get("critical_issues", []):
+            logger.error(f"❌ {issue}")
 
 # ============================================
 # Data Models

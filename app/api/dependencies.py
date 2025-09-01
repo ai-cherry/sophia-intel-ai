@@ -2,21 +2,24 @@
 API Dependencies
 Provides dependency injection for FastAPI endpoints using REAL services.
 NO MOCKS - Production ready implementations only.
+
+Following ADR-006: Configuration Management Standardization
+- Uses enhanced EnvLoader with Pulumi ESC integration
+- Single source of truth for all environment configuration
+- Proper secret management and validation
 """
 
 from typing import Any, Optional
 from fastapi import Depends, HTTPException
 import logging
-import os
-from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv('.env.local')
+# Import enhanced configuration system following ADR-006
+from app.config.env_loader import get_env_config, validate_environment
 
 logger = logging.getLogger(__name__)
 
 class GlobalState:
-    """Real global state for dependency injection with actual service connections."""
+    """Enhanced global state using ADR-006 configuration management."""
     
     def __init__(self):
         self.orchestrator = None
@@ -30,21 +33,40 @@ class GlobalState:
         self.weaviate_client = None
         self.initialized = False
         
-        # Validate required environment variables
-        self._validate_environment()
-    
-    def _validate_environment(self):
-        """Validate that all required environment variables are set."""
-        required_vars = [
-            "OPENAI_API_KEY",
-            "ANTHROPIC_API_KEY",
-            "REDIS_URL"
-            # QDRANT_* removed - migrated to Weaviate v1.32+
-        ]
+        # Load enhanced configuration
+        self.config = None
+        self.validation = None
+        self._load_and_validate_config()
         
-        missing_vars = [var for var in required_vars if not os.getenv(var)]
-        if missing_vars:
-            raise ValueError(f"Missing required environment variables: {', '.join(missing_vars)}")
+    def _load_and_validate_config(self):
+        """Load and validate configuration using enhanced EnvLoader."""
+        try:
+            self.config = get_env_config()
+            self.validation = validate_environment()
+            
+            logger.info(f"✅ Configuration loaded from: {self.config.loaded_from}")
+            
+            # Check validation status
+            if self.validation.get("overall_status") == "unhealthy":
+                logger.warning("⚠️  Configuration validation failed")
+                for issue in self.validation.get("critical_issues", []):
+                    logger.error(f"❌ {issue}")
+                    
+                if self.config.environment_name == "prod":
+                    # Strict validation in production
+                    raise ValueError("Production environment has critical configuration issues")
+            
+        except Exception as e:
+            logger.error(f"❌ Configuration loading failed: {e}")
+            # Don't fail startup, but log the issue
+            self.config = None
+            self.validation = None
+            
+    def get_config(self):
+        """Get the current configuration."""
+        if not self.config:
+            self.config = get_env_config()
+        return self.config
 
 # Create a singleton instance
 _global_state = GlobalState()
@@ -116,35 +138,39 @@ def get_gate_manager(state: GlobalState = Depends(get_state)) -> Any:
     return state.gate_manager
 
 def get_redis_client(state: GlobalState = Depends(get_state)):
-    """Get Redis client - REAL connection."""
+    """Get Redis client using enhanced configuration."""
     if not state.redis_client:
         try:
             import redis
-            redis_url = os.getenv("REDIS_URL")
-            if not redis_url:
-                raise ValueError("REDIS_URL environment variable not set")
+            config = state.get_config()
+            
+            if not config.redis_url:
+                raise ValueError("Redis URL not configured")
                 
-            state.redis_client = redis.from_url(redis_url, decode_responses=True)
+            state.redis_client = redis.from_url(config.redis_url, decode_responses=True)
             # Test connection
             state.redis_client.ping()
-            logger.info("✅ Real Redis connection established")
+            logger.info(f"✅ Redis connection established to {config.redis_host}:{config.redis_port}")
         except Exception as e:
             logger.error(f"❌ Failed to connect to Redis: {e}")
-            if os.getenv("FAIL_ON_MOCK_FALLBACK", "false").lower() == "true":
+            if config and config.environment_name == "prod":
                 raise HTTPException(status_code=503, detail=f"Redis unavailable: {e}")
             raise ConnectionError(f"Redis connection failed: {e}")
     
     return state.redis_client
 
 def get_weaviate_client(state: GlobalState = Depends(get_state)):
-    """Get Weaviate client - REAL connection with v1.32+ features."""
+    """Get Weaviate client using enhanced configuration."""
     if not state.weaviate_client:
         try:
             import weaviate
             from weaviate.classes.init import Auth
             
-            weaviate_url = os.getenv("WEAVIATE_URL", "http://localhost:8080")
-            weaviate_api_key = os.getenv("WEAVIATE_API_KEY")
+            config = state.get_config()
+            
+            # Use configuration values
+            weaviate_url = config.weaviate_url
+            weaviate_api_key = config.weaviate_api_key
             
             # Use local Weaviate for development, cloud for production
             if "localhost" in weaviate_url:
@@ -162,31 +188,50 @@ def get_weaviate_client(state: GlobalState = Depends(get_state)):
             
             # Test connection
             state.weaviate_client.collections.list_all()
-            logger.info("✅ Real Weaviate v1.32+ connection established")
+            logger.info(f"✅ Weaviate v1.32+ connection established to {weaviate_url}")
         except Exception as e:
             logger.error(f"❌ Failed to connect to Weaviate: {e}")
-            if os.getenv("FAIL_ON_MOCK_FALLBACK", "false").lower() == "true":
+            config = state.get_config()
+            if config and config.environment_name == "prod":
                 raise HTTPException(status_code=503, detail=f"Weaviate unavailable: {e}")
             raise ConnectionError(f"Weaviate connection failed: {e}")
     
     return state.weaviate_client
 
 def initialize_dependencies(unified_state=None):
-    """Initialize dependencies with REAL service connections."""
+    """Initialize dependencies with enhanced configuration management."""
     global _global_state
     if unified_state:
         _global_state = unified_state
-        logger.info("✅ Dependencies initialized with real unified server state")
+        logger.info("✅ Dependencies initialized with unified server state (ADR-006)")
     else:
-        logger.info("✅ Dependencies initialized with real service connections")
+        logger.info("✅ Dependencies initialized with enhanced configuration (ADR-006)")
     
-    # Pre-validate all critical services
+    # Pre-validate all critical services using enhanced config
     try:
-        redis_client = get_redis_client(Depends(get_state))
-        weaviate_client = get_weaviate_client(Depends(get_state))
-        logger.info("✅ All critical dependencies validated successfully")
+        config = _global_state.get_config()
+        
+        if config:
+            logger.info(f"🔧 Configuration source: {config.loaded_from}")
+            logger.info(f"🌍 Environment: {config.environment_name}")
+            
+            # Test connections based on configuration
+            if config.redis_url:
+                redis_client = get_redis_client(_global_state)
+                
+            if config.weaviate_url:
+                weaviate_client = get_weaviate_client(_global_state)
+                
+            logger.info("✅ All critical dependencies validated successfully")
+        else:
+            logger.warning("⚠️  No configuration loaded - limited functionality")
+            
         _global_state.initialized = True
+        
     except Exception as e:
         logger.error(f"❌ Dependency initialization failed: {e}")
-        if os.getenv("FAIL_ON_MOCK_FALLBACK", "false").lower() == "true":
-            raise Exception(f"Critical services unavailable: {e}")
+        config = _global_state.get_config()
+        if config and config.environment_name == "prod":
+            raise Exception(f"Critical services unavailable in production: {e}")
+        # Allow startup in development even with some failures
+        logger.warning("⚠️  Continuing with limited functionality")

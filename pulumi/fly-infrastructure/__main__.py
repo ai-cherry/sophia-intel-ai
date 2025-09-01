@@ -1,6 +1,11 @@
 """
 Fly.io Infrastructure Provisioning for Sophia Intel AI
 Provisions all 6 microservices with proper scaling, storage, and networking
+
+Following ADR-006: Configuration Management Standardization
+- Uses Pulumi ESC environments for unified configuration
+- Environment-specific scaling and resource allocation
+- Encrypted secret management for all service configurations
 """
 
 import pulumi
@@ -202,45 +207,72 @@ class FlyApp(pulumi.dynamic.Resource):
 
 
 def main():
-    """Main infrastructure provisioning function"""
+    """Main infrastructure provisioning function using ESC configuration"""
     
-    config = pulumi.Config()
-    environment = config.get("environment") or "prod"
-    primary_region = config.get("primary_region") or "sjc"  # San Jose
-    secondary_region = config.get("secondary_region") or "iad"  # Washington DC
+    # Get environment from ESC
+    environment = os.getenv("PULUMI_ESC_ENVIRONMENT", "dev")
     
-    # Get API token from environment or config
-    fly_api_token = os.environ.get("FLY_API_TOKEN") or config.require_secret("fly_api_token")
+    # Use ESC environment variables (loaded automatically by Pulumi)
+    primary_region = pulumi.Config().get("REGION") or "iad"  # Washington DC for better connectivity
+    secondary_region = "sjc"  # San Jose as secondary
     
-    print(f"🚀 Provisioning Sophia Intel AI infrastructure in {environment}")
+    # Get API token from ESC
+    fly_api_token = pulumi.Config().get_secret("FLY_API_TOKEN")
+    
+    # Environment-specific configuration
+    if environment == "prod":
+        org_slug = "sophia-intel-ai"
+        enable_autoscaling = True
+        backup_enabled = True
+        monitoring_level = "comprehensive"
+    elif environment == "staging":
+        org_slug = "sophia-intel-ai"
+        enable_autoscaling = True
+        backup_enabled = False
+        monitoring_level = "standard"
+    else:  # dev
+        org_slug = "sophia-intel-ai"
+        enable_autoscaling = False
+        backup_enabled = False
+        monitoring_level = "basic"
+    
+    print(f"🚀 Provisioning Sophia Intel AI infrastructure in {environment} (ADR-006)")
     print(f"🌍 Primary region: {primary_region}, Secondary region: {secondary_region}")
+    print(f"🔧 Configuration: Pulumi ESC with hierarchical environments")
+    print(f"🔐 Security: Encrypted secrets and proper RBAC")
     
     # Service specifications based on requirements
     service_specs = {
-        # 1. Weaviate Vector Database (Foundation Service)
+        # 1. Weaviate Vector Database (Foundation Service) - ESC Enhanced
         "sophia-weaviate": FlyAppSpec(
             name="sophia-weaviate",
             image="semitechnologies/weaviate:1.32.1",
             port=8080,
-            memory_mb=2048,
-            cpu_cores=2.0,
-            min_instances=1,
-            max_instances=4,  # As specified in requirements
-            volume_size_gb=20,  # 20GB for vector data
+            memory_mb=4096 if environment == "prod" else 2048 if environment == "staging" else 1024,
+            cpu_cores=4.0 if environment == "prod" else 2.0 if environment == "staging" else 1.0,
+            min_instances=2 if environment == "prod" else 1,
+            max_instances=8 if environment == "prod" else 4 if environment == "staging" else 2,
+            volume_size_gb=50 if environment == "prod" else 20 if environment == "staging" else 10,
             health_check_path="/v1/.well-known/ready",
             env_vars={
-                "QUERY_DEFAULTS_LIMIT": "25",
-                "AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED": "true",
+                "ENVIRONMENT": environment,
+                "QUERY_DEFAULTS_LIMIT": "50" if environment == "prod" else "25",
+                "AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED": "false" if environment == "prod" else "true",
                 "PERSISTENCE_DATA_PATH": "/var/lib/weaviate",
                 "ENABLE_MODULES": "text2vec-openai,text2vec-cohere,text2vec-huggingface,generative-openai,qna-openai",
                 "DEFAULT_VECTORIZER_MODULE": "text2vec-openai",
                 "VECTOR_INDEX_TYPE": "hnsw",
                 "ENABLE_VECTOR_QUANTIZATION": "true",
                 "QUANTIZATION_TYPE": "rq",
-                "CLUSTER_HOSTNAME": "node1",
+                "CLUSTER_HOSTNAME": f"weaviate-{environment}",
                 "ENABLE_MULTI_TENANCY": "true",
-                "AUTO_TENANT_CREATION": "true",
-                "GOGC": "100"
+                "AUTO_TENANT_CREATION": "true" if environment != "prod" else "false",
+                "GOGC": "100",
+                "LOG_LEVEL": "info" if environment == "prod" else "debug",
+                # ESC configuration
+                "OPENAI_API_KEY": pulumi.Config().get_secret("OPENAI_API_KEY"),
+                "COHERE_API_KEY": pulumi.Config().get_secret("COHERE_API_KEY") or "",
+                "HUGGINGFACE_API_TOKEN": pulumi.Config().get_secret("HUGGINGFACE_API_TOKEN") or ""
             }
         ),
         
@@ -294,34 +326,65 @@ def main():
             }
         ),
         
-        # 4. Unified API - Main Orchestrator (Critical Service)
+        # 4. Unified API - Main Orchestrator (Critical Service) - ESC Enhanced
         "sophia-api": FlyAppSpec(
             name="sophia-api",
             dockerfile="Dockerfile.unified-api.production",
             port=8003,
-            memory_mb=4096,
-            cpu_cores=4.0,
-            min_instances=2,  # Higher availability for main API
-            max_instances=20,  # As specified in requirements (critical service)
-            volume_size_gb=15,  # 15GB for API data and logs
+            memory_mb=8192 if environment == "prod" else 4096 if environment == "staging" else 2048,
+            cpu_cores=6.0 if environment == "prod" else 4.0 if environment == "staging" else 2.0,
+            min_instances=3 if environment == "prod" else 2 if environment == "staging" else 1,
+            max_instances=25 if environment == "prod" else 15 if environment == "staging" else 5,
+            volume_size_gb=30 if environment == "prod" else 15 if environment == "staging" else 5,
             health_check_path="/healthz",
             env_vars={
                 "PORT": "8003",
+                "ENVIRONMENT": environment,
                 "PYTHONPATH": "/app",
                 "PYTHONUNBUFFERED": "1",
                 "LOCAL_DEV_MODE": "false",
+                
+                # Service URLs (internal networking)
                 "WEAVIATE_URL": "http://sophia-weaviate.internal:8080",
                 "MCP_SERVER_URL": "http://sophia-mcp.internal:8004",
                 "VECTOR_STORE_URL": "http://sophia-vector.internal:8005",
-                "DEFAULT_FAST_MODEL": "groq/llama-3.2-90b-text-preview",
-                "DEFAULT_BALANCED_MODEL": "openai/gpt-4o-mini",
-                "DEFAULT_HEAVY_MODEL": "anthropic/claude-3.5-sonnet",
-                "PORTKEY_BASE_URL": "https://api.portkey.ai/v1",
+                
+                # Model configuration from ESC
+                "DEFAULT_FAST_MODELS": pulumi.Config().get("DEFAULT_FAST_MODELS") or "groq/llama-3.2-90b-text-preview,openai/gpt-4o-mini",
+                "DEFAULT_BALANCED_MODELS": pulumi.Config().get("DEFAULT_BALANCED_MODELS") or "openai/gpt-4o,anthropic/claude-3.5-sonnet",
+                "DEFAULT_HEAVY_MODELS": pulumi.Config().get("DEFAULT_HEAVY_MODELS") or "anthropic/claude-3.5-sonnet,qwen/qwen-2.5-coder-32b-instruct,openai/gpt-4o",
+                
+                # Gateway and API keys from ESC
+                "PORTKEY_API_KEY": pulumi.Config().get_secret("PORTKEY_API_KEY"),
+                "PORTKEY_BASE_URL": pulumi.Config().get("PORTKEY_BASE_URL") or "https://api.portkey.ai/v1",
+                "ANTHROPIC_API_KEY": pulumi.Config().get_secret("ANTHROPIC_API_KEY"),
+                "OPENAI_API_KEY": pulumi.Config().get_secret("OPENAI_API_KEY"),
+                "GROQ_API_KEY": pulumi.Config().get_secret("GROQ_API_KEY"),
+                "DEEPSEEK_API_KEY": pulumi.Config().get_secret("DEEPSEEK_API_KEY"),
+                
+                # Database connections from ESC
+                "REDIS_URL": pulumi.Config().get_secret("REDIS_URL"),
+                "POSTGRES_URL": pulumi.Config().get_secret("POSTGRES_URL") or "",
+                
+                # Performance and security settings
                 "USE_REAL_APIS": "true",
                 "ENABLE_API_VALIDATION": "true",
                 "FAIL_ON_MOCK_FALLBACK": "true",
                 "ENABLE_CONSENSUS_SWARMS": "true",
-                "ENABLE_MEMORY_DEDUPLICATION": "true"
+                "ENABLE_MEMORY_DEDUPLICATION": "true",
+                
+                # Cost controls from ESC
+                "DAILY_BUDGET_USD": pulumi.Config().get("DAILY_BUDGET_USD") or "100",
+                "MAX_TOKENS_PER_REQUEST": pulumi.Config().get("MAX_TOKENS_PER_REQUEST") or "4096",
+                "API_RATE_LIMIT": pulumi.Config().get("API_RATE_LIMIT") or "100",
+                
+                # Security settings from ESC
+                "JWT_SECRET": pulumi.Config().get_secret("JWT_SECRET"),
+                "API_SECRET_KEY": pulumi.Config().get_secret("API_SECRET_KEY"),
+                
+                # Monitoring
+                "LOG_LEVEL": "INFO" if environment == "prod" else "DEBUG",
+                "ENABLE_PROFILING": "false" if environment == "prod" else "true"
             }
         ),
         

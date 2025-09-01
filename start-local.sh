@@ -2,6 +2,11 @@
 # ==============================================
 # SOPHIA INTEL AI - LOCAL DEVELOPMENT STARTUP
 # Production Ready with Real APIs - No Mocks
+#
+# Following ADR-006: Configuration Management Standardization
+# - Uses enhanced EnvLoader with Pulumi ESC integration
+# - Environment-aware configuration loading
+# - Proper secret management and validation
 # ==============================================
 
 set -euo pipefail
@@ -41,9 +46,27 @@ show_banner() {
     echo "════════════════════════════════════════════════════════════════"
     echo "  🧠 SOPHIA INTEL AI - LOCAL DEVELOPMENT ENVIRONMENT"
     echo "  🚀 Production Ready with Real APIs - No Mocks"
+    echo "  🔧 ADR-006: Enhanced Configuration Management"
     echo "  📅 $(date '+%Y-%m-%d %H:%M:%S')"
     echo "════════════════════════════════════════════════════════════════"
     echo -e "${NC}"
+    
+    # Show configuration source
+    if python3 -c "
+from app.config.env_loader import get_env_config
+try:
+    config = get_env_config()
+    print(f'📂 Configuration: {config.loaded_from}')
+    print(f'🌍 Environment: {config.environment_name} ({config.environment_type})')
+    print(f'🆔 Config Hash: {config.config_hash}')
+except:
+    print('📂 Configuration: fallback (.env files)')
+" 2>/dev/null; then
+        :
+    else
+        echo "📂 Configuration: Loading..."
+    fi
+    echo -e "${CYAN}════════════════════════════════════════════════════════════════${NC}"
 }
 
 check_dependencies() {
@@ -79,8 +102,8 @@ check_dependencies() {
     log "SUCCESS" "All system dependencies are available"
 }
 
-validate_apis() {
-    log "HEADER" "🔍 VALIDATING API CONNECTIONS"
+validate_configuration() {
+    log "HEADER" "🔍 VALIDATING ENHANCED CONFIGURATION (ADR-006)"
     
     # Install validation dependencies
     pip3 install -q python-dotenv httpx redis || {
@@ -88,12 +111,44 @@ validate_apis() {
         exit 1
     }
     
-    # Run API validation
+    # Test enhanced EnvLoader configuration
+    log "INFO" "Testing enhanced EnvLoader with Pulumi ESC integration..."
+    if python3 -c "
+from app.config.env_loader import get_env_config, validate_environment, print_env_status
+import sys
+
+try:
+    config = get_env_config()
+    validation = validate_environment()
+    
+    print(f'Configuration loaded from: {config.loaded_from}')
+    print(f'Environment: {config.environment_name} ({config.environment_type})')
+    print(f'Overall status: {validation.get(\"overall_status\")}')
+    
+    if validation.get('overall_status') == 'unhealthy':
+        print('❌ Configuration validation failed')
+        for issue in validation.get('critical_issues', []):
+            print(f'  • {issue}')
+        sys.exit(1)
+    else:
+        print('✅ Enhanced configuration validation successful')
+        
+except Exception as e:
+    print(f'❌ Configuration loading failed: {e}')
+    sys.exit(1)
+"; then
+        log "SUCCESS" "✅ Enhanced configuration system validated"
+    else
+        log "ERROR" "❌ Enhanced configuration validation failed"
+        exit 1
+    fi
+    
+    # Run traditional API validation
     log "INFO" "Testing all API connections with real keys..."
     if python3 scripts/validate-apis.py; then
         log "SUCCESS" "✅ All APIs validated successfully"
     else
-        log "ERROR" "❌ API validation failed. Check your .env.local file"
+        log "ERROR" "❌ API validation failed. Check your configuration"
         log "ERROR" "Review the validation results in: $VALIDATION_RESULTS"
         exit 1
     fi

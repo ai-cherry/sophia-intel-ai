@@ -36,8 +36,7 @@ cp .env.example .env
 # Edit .env with your API keys
 
 # Install UI dependencies
-cd ui && npm install
-cd ../agent-ui && npm install
+cd agent-ui && npm install
 cd ..
 ```
 
@@ -65,8 +64,7 @@ sophia-intel-ai/
 │   │   └── base.py
 │   └── tasks/             # Background tasks
 │       └── indexing.py
-├── ui/                    # Next.js UI
-├── agent-ui/             # Agent playground UI
+├── agent-ui/             # Next.js Agent playground UI
 ├── tests/                # Test suite
 │   ├── unit/
 │   ├── integration/
@@ -99,8 +97,7 @@ git checkout -b feature/your-feature-name
 # Or manually:
 python -m app.api.unified_server &
 python -m app.agno_bridge &
-cd ui && npm run dev &
-cd ../agent-ui && npm run dev &
+cd agent-ui && npm run dev &
 ```
 
 ### 3. Write Tests

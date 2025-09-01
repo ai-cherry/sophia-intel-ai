@@ -1,18 +1,30 @@
+---
+title: Agent Swarms Documentation
+type: reference
+status: active
+version: 2.0.0
+last_updated: 2025-09-01
+ai_context: high
+tags: [swarms, orchestration, agents]
+---
+
 # Agent Swarms Documentation
 
 ## Overview
 
-Sophia Intel AI implements a sophisticated swarm intelligence system with 4 specialized teams comprising 24+ agents that work collaboratively to solve complex problems.
+Sophia Intel AI implements a sophisticated swarm intelligence system with 4 specialized teams comprising 24+ agents that work collaboratively to solve complex problems. This system follows the orchestration standards defined in [.ai-instructions/orchestration-standards.md](../../.ai-instructions/orchestration-standards.md).
 
 ## Swarm Architecture
 
 ### Core Principles
 
-1. **Parallel Execution**: Agents work simultaneously on different aspects
-2. **Role Specialization**: Each agent has specific expertise
-3. **Consensus Building**: Multiple agents validate critical decisions
-4. **Dynamic Routing**: Tasks are assigned based on agent capabilities
-5. **Emergent Intelligence**: Complex behaviors emerge from simple agent interactions
+1. **Simplicity First**: Start with single agents, scale to swarms when needed (OpenAI Swarm pattern)
+2. **Parallel Execution**: Agents work simultaneously on different aspects
+3. **Role Specialization**: Each agent has specific expertise and clear handoff protocols
+4. **Consensus Building**: Multiple agents validate critical decisions
+5. **Dynamic Routing**: Tasks are assigned based on agent capabilities
+6. **Emergent Intelligence**: Complex behaviors emerge from simple agent interactions
+7. **Safety Boundaries**: All agents operate within defined safety constraints
 
 ## Available Swarms
 
@@ -94,10 +106,16 @@ Sophia Intel AI implements a sophisticated swarm intelligence system with 4 spec
 
 ## Swarm Execution Patterns
 
+All patterns integrate with the UnifiedOrchestratorFacade and follow the standards in `.ai-instructions/orchestration-standards.md`.
+
 ### Sequential Pattern
 ```python
-# Agents execute in sequence, each building on previous results
-result = await orchestrator.execute_sequential(
+# For linear, predictable workflows
+# Each agent processes the output of the previous
+from app.orchestration.unified_facade import UnifiedOrchestratorFacade
+
+facade = UnifiedOrchestratorFacade()
+result = await facade.execute_sequential(
     agents=["StrategicAnalyst", "RiskAssessor", "DecisionValidator"],
     task="Evaluate new feature proposal"
 )

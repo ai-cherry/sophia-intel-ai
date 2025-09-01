@@ -9,7 +9,7 @@ ai_context: high
 
 # 📚 Documentation Index
 
-_Auto-generated on 2025-09-01 15:20:09_
+_Auto-generated on 2025-09-01 15:31:41_
 
 ## Quick Links
 - [README](../README.md) - Project overview
@@ -51,10 +51,13 @@ _Auto-generated on 2025-09-01 15:20:09_
 
 ## Swarms
 - [AI Swarm Preparation Implementation Plan](swarms/AI_SWARM_PREPARATION.md)
-- [Agent Swarms Documentation](swarms/README.md)
+- [Readme](swarms/README.md)
+- [Protocols](swarms/protocols.md)
+- [Safety](swarms/safety.md)
 
 ## Reference
 - [Agno 1.8.1 Migration Guide](AGNO_MIGRATION_GUIDE.md)
+- [Cleanup Summary](CLEANUP_SUMMARY.md)
 - [Current State](CURRENT_STATE.md)
 - [📚 Document Management Strategy for AI Coding Swarms](DOCUMENT_MANAGEMENT_STRATEGY.md)
 - [Fly Io Current Inventory](FLY_IO_CURRENT_INVENTORY.md)

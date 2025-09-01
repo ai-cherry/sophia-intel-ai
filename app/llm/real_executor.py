@@ -10,6 +10,11 @@ from datetime import datetime
 from app.api.advanced_gateway_2025 import AdvancedAIGateway2025, TaskType # Corrected import
 from app.elite_portkey_config import EliteAgentConfig # For model configs
 from app.swarms.coding.models import PoolType # Assuming this is still needed
+# Unified embedding coordinator (preferred path)
+try:
+    from app.memory.embedding_coordinator import get_embedding_coordinator
+except Exception:
+    get_embedding_coordinator = None
 
 # Define Role enum locally if not already defined globally or imported
 # This ensures Role is available after removing app.portkey_config
@@ -344,18 +349,39 @@ Provide execution details and any issues found."""
         
         return prompt
 
-    async def embed_text(self, texts: List[str]) -> List[List[float]]:
-        """Generate embeddings for text using real embedding models via the unified gateway."""
+    async def embed_text(self, texts: List[str], strategy: str = "auto") -> List[List[float]]:
+        """Generate embeddings for text using unified coordinator with graceful fallback."""
+        # Prefer the local unified coordinator (embed_router + cache) when available
         try:
-            embeddings_response = await self.gateway.generate_embeddings(texts) # Current gateway already handles this
-            # Assuming embeddings_response has a 'data' field containing list of dicts with 'embedding' key
-            embeddings = [item["embedding"] for item in embeddings_response.get("data", [{}]) if "embedding" in item]
-            logger.info(f"Generated embeddings for {len(texts)} texts")
-            return embeddings
+            if get_embedding_coordinator:
+                # Run sync coordinator in a thread to avoid blocking event loop
+                import asyncio
+                coordinator = get_embedding_coordinator()
+                result = await asyncio.to_thread(
+                    coordinator.generate_embeddings,
+                    texts,
+                    strategy
+                )
+                embeddings = result.get("embeddings", [])
+                if embeddings:
+                    logger.info(f"Generated embeddings via coordinator ({result.get('strategy_used')}) for {len(texts)} texts")
+                    return embeddings
         except Exception as e:
-            logger.error(f"Embedding generation failed: {e}")
-            # Return zero vectors as fallback
-            return [[0.0] * 1024 for _ in texts]
+            logger.warning(f"Coordinator embedding failed, falling back to gateway: {e}")
+        # Fallback to gateway (Portkey) if coordinator not available or failed
+        try:
+            embeddings_response = await self.gateway.generate_embeddings(texts)
+            # Expecting {'data': [{'embedding': [...]}, ...]}
+            embeddings = [item["embedding"] for item in embeddings_response.get("data", []) if "embedding" in item]
+            if embeddings:
+                logger.info(f"Generated embeddings via gateway for {len(texts)} texts")
+                return embeddings
+            raise ValueError("Gateway returned no embeddings")
+        except Exception as e:
+            logger.error(f"Embedding generation failed: {e}", exc_info=True)
+            # Return zero vectors as last resort (dimension heuristic)
+            fallback_dim = 1024
+            return [[0.0] * fallback_dim for _ in texts]
 
 
 # Global instance

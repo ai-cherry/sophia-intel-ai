@@ -76,7 +76,7 @@ class TestTeamEndpoints:
     @pytest.mark.asyncio
     async def test_execute_team(self, authenticated_client: AsyncClient, sample_team_request):
         """Test team execution."""
-        with patch('app.swarms.orchestrator.SwarmOrchestrator.execute_task') as mock_execute:
+        with patch('app.swarms.SwarmOrchestrator.execute_task') as mock_execute:
             mock_execute.return_value = {
                 "status": "success",
                 "result": "Test result"
@@ -100,7 +100,7 @@ class TestTeamEndpoints:
             "stream": True
         }
         
-        with patch('app.swarms.orchestrator.SwarmOrchestrator.execute_stream') as mock_stream:
+        with patch('app.swarms.SwarmOrchestrator.execute_stream') as mock_stream:
             async def stream_generator():
                 yield {"type": "start", "team": "test_team"}
                 yield {"type": "agent", "content": "Processing..."}
@@ -134,7 +134,7 @@ class TestTeamEndpoints:
             "team_id": "non_existent_team"
         }
         
-        with patch('app.swarms.orchestrator.SwarmOrchestrator.execute_task') as mock_execute:
+        with patch('app.swarms.SwarmOrchestrator.execute_task') as mock_execute:
             mock_execute.side_effect = ValueError("Team not found")
             
             response = await authenticated_client.post(
@@ -374,7 +374,7 @@ class TestErrorHandling:
     @pytest.mark.asyncio
     async def test_internal_error(self, authenticated_client: AsyncClient):
         """Test internal server error handling."""
-        with patch('app.swarms.orchestrator.SwarmOrchestrator.execute_task') as mock_execute:
+        with patch('app.swarms.SwarmOrchestrator.execute_task') as mock_execute:
             mock_execute.side_effect = Exception("Internal error")
             
             response = await authenticated_client.post(

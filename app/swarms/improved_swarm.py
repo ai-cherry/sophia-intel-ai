@@ -184,7 +184,7 @@ class QualityGateSystem:
 class StrategyArchive:
     """Archives and reuses successful agent interaction patterns."""
     
-    def __init__(self, archive_path: str = "tmp/strategy_archive.json"):
+    def __init__(self, archive_path: str = "data/strategy_archive.json"):
         self.archive_path = Path(archive_path)
         self.patterns = self._load_archive()
     
@@ -766,6 +766,23 @@ class ImprovedAgentSwarm:
         is_safe, safety_result = await self.safety_system.check_safety(problem)
         if not is_safe:
             return safety_result
+
+        # Dynamic mode selection from upstream dispatcher (if provided)
+        # Allows NL dispatcher or API caller to select lite/balanced/quality per-task
+        desired_mode = problem.get("mode", self.optimization_mode)
+        if desired_mode and desired_mode != self.optimization_mode:
+            logger.info(f"Switching optimization mode: {self.optimization_mode} -> {desired_mode}")
+            self.optimization_mode = desired_mode
+            # Re-initialize patterns based on new mode
+            self.patterns = self._initialize_patterns_selectively()
+            # Refresh pattern handles
+            self.debate_system = self.patterns.get("debate")
+            self.quality_gates = self.patterns.get("quality_gates", self._create_minimal_quality_gates())
+            self.strategy_archive = self.patterns.get("strategy_archive")
+            self.role_assigner = self.patterns.get("role_assigner")
+            self.consensus_system = self.patterns.get("consensus")
+            self.param_manager = self.patterns.get("param_manager")
+            self.transfer_system = self.patterns.get("transfer_system")
         
         # Pattern 5: Dynamic role assignment
         problem_type = problem.get("type", "general")

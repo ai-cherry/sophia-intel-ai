@@ -20,8 +20,12 @@ import requests
 from app.nl_interface.quicknlp import QuickNLP, CommandIntent, ParsedCommand
 from app.nl_interface.intents import get_intent_pattern, format_help_text
 from app.agents.simple_orchestrator import SimpleAgentOrchestrator, AgentRole
+# Smart dispatcher (routes NL → swarms/orchestrator/memory)
+try:
+    from app.nl_interface.command_dispatcher import SmartCommandDispatcher
+except Exception:
+    SmartCommandDispatcher = None
 from app.nl_interface.memory_connector import NLMemoryConnector, NLInteraction
-from app.nl_interface.command_dispatcher import SmartCommandDispatcher, ExecutionMode
 
 # Configure comprehensive logging
 logging.basicConfig(
@@ -40,6 +44,14 @@ router = APIRouter(
 # Initialize components
 nlp_processor = QuickNLP()
 agent_orchestrator = SimpleAgentOrchestrator()
+
+# Initialize smart dispatcher if available
+try:
+    dispatcher = SmartCommandDispatcher()
+    logger.info("SmartCommandDispatcher initialized in nl_endpoints")
+except Exception as _e:
+    logger.warning(f"SmartCommandDispatcher unavailable: {_e}")
+    dispatcher = None
 memory_connector = None
 smart_dispatcher = None
 
@@ -277,18 +289,16 @@ async def list_available_intents() -> List[IntentInfo]:
     """
     try:
         commands = nlp_processor.get_available_commands()
-        
-        intents = []
-        for cmd in commands:
-            intents.append(IntentInfo(
+        intents = [
+            IntentInfo(
                 name=cmd["intent"],
                 description=cmd["description"],
                 examples=cmd["examples"],
-                entities=[]  # Extract from patterns if needed
-            ))
-        
+                entities=[]
+            )
+            for cmd in commands
+        ]
         return intents
-        
     except Exception as e:
         logger.error(f"Error listing intents: {e}")
         raise HTTPException(status_code=500, detail=str(e))

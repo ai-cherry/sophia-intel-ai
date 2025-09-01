@@ -13,10 +13,16 @@ from dataclasses import dataclass, field
 from enum import Enum
 from datetime import datetime
 import aiohttp
-from aioredis import Redis, create_redis_pool
 
 import redis
 import requests
+
+# Optional aioredis import for async Redis support
+try:
+    from aioredis import Redis, create_redis_pool
+    AIOREDIS_AVAILABLE = True
+except ImportError:
+    AIOREDIS_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
@@ -484,13 +490,17 @@ class OptimizedAgentOrchestrator(SimpleAgentOrchestrator):
                 }
             )
             
-            # Create Redis async pool
-            self.redis_pool = await create_redis_pool(
-                self.redis_client.connection_pool.connection_kwargs['host'],
-                minsize=5,
-                maxsize=self.pool_size,
-                encoding='utf-8'
-            )
+            # Create Redis async pool if aioredis is available
+            if AIOREDIS_AVAILABLE:
+                self.redis_pool = await create_redis_pool(
+                    self.redis_client.connection_pool.connection_kwargs['host'],
+                    minsize=5,
+                    maxsize=self.pool_size,
+                    encoding='utf-8'
+                )
+            else:
+                logger.warning("aioredis not available - using sync Redis only")
+                self.redis_pool = None
             
             logger.info("Connection pools initialized successfully")
             

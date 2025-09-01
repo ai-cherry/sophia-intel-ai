@@ -26,6 +26,16 @@ from app.utils.response_handler import ResponseHandler, ModelResponseValidator
 from app.memory.supermemory_mcp import SupermemoryMCP
 from app.memory.types import MemoryEntry, MemoryType
 
+# Optional optimizer and circuit breaker integration
+try:
+    from app.swarms.performance_optimizer import SwarmOptimizer, performance_monitoring, CircuitBreakerOpenException
+except Exception:
+    SwarmOptimizer = None
+    performance_monitoring = None
+
+    class CircuitBreakerOpenException(Exception):
+        pass
+
 logger = logging.getLogger(__name__)
 
 
@@ -50,6 +60,11 @@ class SwarmOrchestrator:
         self.config = config
         self.memory = memory
         self.logger = logging.getLogger(f"{__name__}.{team.name}")
+        # Initialize optimizer if available (for circuit breakers and performance tracking)
+        try:
+            self.optimizer = SwarmOptimizer() if SwarmOptimizer else None
+        except Exception:
+            self.optimizer = None
     
     async def run_debate(self, task: str, context: Optional[Dict[str, Any]] = None) -> DebateResult:
         """
@@ -197,14 +212,20 @@ class SwarmOrchestrator:
     async def _search_related_memories(self, task: str, result: DebateResult) -> None:
         """Search for related memories and add to result."""
         try:
-            memories = await self.memory.search_memory(
-                query=task,
-                limit=self.config.memory_search_limit
-            )
-            
+            # Use circuit breaker and performance monitoring if optimizer is available
+            if self.optimizer and performance_monitoring:
+                async with performance_monitoring(self.optimizer, "memory_search"):
+                    cb = self.optimizer.get_circuit_breaker("memory")
+                    memories = await cb.call(self.memory.search_memory, query=task, limit=self.config.memory_search_limit)
+            else:
+                memories = await self.memory.search_memory(
+                    query=task,
+                    limit=self.config.memory_search_limit
+                )
+
             for memory in memories:
                 result.related_memories.append(memory.topic)
-            
+
             self.logger.info(f"Found {len(memories)} related memories")
         except Exception as e:
             self.logger.warning(f"Memory search failed: {e}")
@@ -222,10 +243,17 @@ class SwarmOrchestrator:
                 prompt += f"\n\nContext:\n{context}"
             
             # Execute team response
-            response = await asyncio.wait_for(
-                asyncio.to_thread(self.team.print_response, prompt, False),
-                timeout=self.config.timeout_seconds / 3
-            )
+            if self.optimizer and performance_monitoring:
+                async with performance_monitoring(self.optimizer, "proposal_generation"):
+                    response = await asyncio.wait_for(
+                        asyncio.to_thread(self.team.print_response, prompt, False),
+                        timeout=self.config.timeout_seconds / 3
+                    )
+            else:
+                response = await asyncio.wait_for(
+                    asyncio.to_thread(self.team.print_response, prompt, False),
+                    timeout=self.config.timeout_seconds / 3
+                )
             
             # Parse generator outputs (simplified for now)
             # In production, would parse actual generator responses
@@ -257,10 +285,17 @@ class SwarmOrchestrator:
             }
             """
             
-            response = await asyncio.wait_for(
-                asyncio.to_thread(self.team.run, critic_prompt),
-                timeout=self.config.timeout_seconds / 3
-            )
+            if self.optimizer and performance_monitoring:
+                async with performance_monitoring(self.optimizer, "critic_review"):
+                    response = await asyncio.wait_for(
+                        asyncio.to_thread(self.team.run, critic_prompt),
+                        timeout=self.config.timeout_seconds / 3
+                    )
+            else:
+                response = await asyncio.wait_for(
+                    asyncio.to_thread(self.team.run, critic_prompt),
+                    timeout=self.config.timeout_seconds / 3
+                )
             
             # Extract and validate JSON
             critic_json = ResponseHandler.extract_json(response.content or "")

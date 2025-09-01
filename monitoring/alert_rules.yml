@@ -1,0 +1,110 @@
+# Alerting Rules for Sophia Intel AI Production Deployment
+
+groups:
+  - name: sophia_service_health
+    rules:
+      - alert: ServiceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: '{{ $labels.job }}'
+        annotations:
+          summary: "Service {{ $labels.job }} is down"
+          description: "Service {{ $labels.job }} has been down for more than 1 minute"
+
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) > 0.05
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value | humanizePercentage }} for {{ $labels.job }}"
+
+  - name: sophia_performance
+    rules:
+      - alert: HighLatency
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 0.5
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High API latency"
+          description: "95th percentile latency is {{ $value }}s for {{ $labels.job }}"
+
+      - alert: HighMemoryUsage
+        expr: (container_memory_usage_bytes / container_spec_memory_limit_bytes) * 100 > 85
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage"
+          description: "Memory usage is {{ $value | humanizePercentage }} for {{ $labels.job }}"
+
+      - alert: HighCPUUsage  
+        expr: rate(cpu_usage_seconds_total[5m]) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage"
+          description: "CPU usage is {{ $value | humanizePercentage }} for {{ $labels.job }}"
+
+  - name: sophia_ai_services
+    rules:
+      - alert: WeaviateConnectionFail
+        expr: weaviate_database_available != 1
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Weaviate database unavailable"
+          description: "Weaviate vector database is not responding"
+
+      - alert: ConsensusSwarmFailure
+        expr: consensus_swarm_success_rate < 0.9
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Consensus swarm degraded"
+          description: "Consensus success rate dropped to {{ $value | humanizePercentage }}"
+
+      - alert: MemoryDeduplicationLow
+        expr: memory_deduplication_rate < 0.85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Memory deduplication efficiency low"
+          description: "Deduplication rate is {{ $value | humanizePercentage }}"
+
+      - alert: GPUTaskQueueHigh
+        expr: lambda_gpu_queue_length > 10
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "GPU task queue backing up"
+          description: "{{ $value }} tasks waiting for GPU processing"
+
+  - name: sophia_external_services
+    rules:
+      - alert: RedisConnectionFail
+        expr: redis_connected_clients < 1
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Redis connection lost"
+          description: "Redis Cloud connection unavailable"
+
+      - alert: NeonPostgreSQLSlow
+        expr: postgresql_query_duration_seconds > 1.0
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "PostgreSQL queries slow"
+          description: "Average query time is {{ $value }}s"

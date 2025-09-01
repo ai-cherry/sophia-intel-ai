@@ -1,0 +1,102 @@
+# Fly.io Configuration for Sophia Intel AI
+app = "sophia-intel-ai"
+primary_region = "sjc"  # San Jose - closest to California
+kill_signal = "SIGINT"
+kill_timeout = "5s"
+
+[build]
+  dockerfile = "Dockerfile.production"
+
+[env]
+  PORT = "8000"
+  PYTHONPATH = "/app"
+  LOCAL_DEV_MODE = "false"
+  
+  # Public environment variables (non-sensitive)
+  REDIS_HOST = "redis-15014.us-east-1-1.ec2.redns.redis-cloud.com"
+  REDIS_PORT = "15014"
+  REDIS_USERNAME = "default"
+  
+  # Neon PostgreSQL (public endpoints)
+  NEON_REST_API_ENDPOINT = "https://app-sparkling-wildflower-99699121.dpl.myneon.app"
+  NEON_PROJECT_ID = "rough-union-72390895"
+  NEON_BRANCH_ID = "br-green-firefly-afykrx78"
+  
+  # Lambda Labs
+  LAMBDA_CLOUD_ENDPOINT = "https://cloud.lambdalabs.com/api/v1"
+  
+  # Feature flags
+  USE_REAL_APIS = "true"
+  ENABLE_API_VALIDATION = "true"
+
+[experimental]
+  auto_rollback = true
+  enable_consul = true
+
+[services]
+  protocol = "tcp"
+  internal_port = 8000
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 2
+
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+    force_https = true
+
+  [[services.ports]]
+    port = 443
+    handlers = ["tls", "http"]
+  
+  [services.concurrency]
+    type = "connections"
+    hard_limit = 100
+    soft_limit = 80
+
+  [[services.tcp_checks]]
+    interval = "15s"
+    timeout = "2s"
+    grace_period = "1s"
+    restart_limit = 6
+
+  [[services.http_checks]]
+    interval = "30s"
+    grace_period = "5s"
+    method = "GET"
+    path = "/healthz"
+    protocol = "http"
+    timeout = "2s"
+    tls_skip_verify = false
+    
+    [services.http_checks.headers]
+      X-Health-Check = "fly.io"
+
+# Persistent storage for data
+[mounts]
+  source = "sophia_data"
+  destination = "/data"
+  initial_size = "10gb"
+
+# Static files
+[[statics]]
+  guest_path = "/app/static"
+  url_prefix = "/static/"
+
+# Metrics endpoint for monitoring
+[metrics]
+  port = 9091
+  path = "/metrics"
+
+# Process groups for scaling different components
+[[processes]]
+  app = "web"
+  
+[processes.web]
+  cmd = ["gunicorn", "app.api.unified_server:app", "--workers", "4", "--worker-class", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8000"]
+
+# Machine configuration
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 2
+  memory_mb = 4096

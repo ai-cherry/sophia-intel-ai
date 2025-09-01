@@ -1,0 +1,16 @@
+# Performance testing configuration
+tests:
+  load_test:
+    target: https://sophia-api.fly.dev
+    duration: 300s
+    rate: 100/s
+    
+  stress_test:
+    target: https://sophia-api.fly.dev
+    duration: 60s
+    rate: 500/s
+    
+  gpu_workload:
+    target: https://sophia-api.fly.dev/api/gpu/execute
+    duration: 120s
+    rate: 5/s

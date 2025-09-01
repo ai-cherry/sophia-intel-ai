@@ -1,0 +1,142 @@
+# Fly.io Configuration for Sophia Unified API (Main Orchestrator)
+app = "sophia-api"
+primary_region = "sjc"  # San Jose - closest to California
+kill_signal = "SIGINT"
+kill_timeout = "5s"
+
+[build]
+  dockerfile = "Dockerfile.unified-api.production"
+
+[env]
+  PORT = "8003"
+  PYTHONPATH = "/app"
+  PYTHONUNBUFFERED = "1"
+  LOCAL_DEV_MODE = "false"
+  
+  # Internal service URLs (Fly.io internal networking)
+  WEAVIATE_URL = "http://sophia-weaviate.internal:8080"
+  MCP_SERVER_URL = "http://sophia-mcp.internal:8004"
+  VECTOR_STORE_URL = "http://sophia-vector.internal:8005"
+  
+  # External services
+  REDIS_HOST = "redis-15014.fcrce172.us-east-1-1.ec2.redns.redis-cloud.com"
+  REDIS_PORT = "15014"
+  REDIS_USERNAME = "default"
+  
+  # Neon PostgreSQL
+  NEON_REST_API_ENDPOINT = "https://app-sparkling-wildflower-99699121.dpl.myneon.app"
+  NEON_PROJECT_ID = "rough-union-72390895"
+  NEON_BRANCH_ID = "br-green-firefly-afykrx78"
+  
+  # Lambda Labs GPU
+  LAMBDA_CLOUD_ENDPOINT = "https://cloud.lambdalabs.com/api/v1"
+  
+  # Model configuration
+  DEFAULT_FAST_MODEL = "groq/llama-3.2-90b-text-preview"
+  DEFAULT_BALANCED_MODEL = "openai/gpt-4o-mini"
+  DEFAULT_HEAVY_MODEL = "anthropic/claude-3.5-sonnet"
+  
+  # Gateway configuration
+  PORTKEY_BASE_URL = "https://api.portkey.ai/v1"
+  
+  # Feature flags
+  USE_REAL_APIS = "true"
+  ENABLE_API_VALIDATION = "true"
+  FAIL_ON_MOCK_FALLBACK = "true"
+  ENABLE_CONSENSUS_SWARMS = "true"
+  ENABLE_MEMORY_DEDUPLICATION = "true"
+
+[experimental]
+  auto_rollback = true
+  enable_consul = true
+
+[services]
+  protocol = "tcp"
+  internal_port = 8003
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 2  # Higher availability for main API
+
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+    force_https = true
+
+  [[services.ports]]
+    port = 443
+    handlers = ["tls", "http"]
+  
+  [services.concurrency]
+    type = "connections"
+    hard_limit = 250
+    soft_limit = 200
+
+  [[services.tcp_checks]]
+    interval = "15s"
+    timeout = "3s"
+    grace_period = "1s"
+    restart_limit = 6
+
+  [[services.http_checks]]
+    interval = "30s"
+    grace_period = "5s"
+    method = "GET"
+    path = "/healthz"
+    protocol = "http"
+    timeout = "3s"
+    tls_skip_verify = false
+    
+    [services.http_checks.headers]
+      X-Health-Check = "fly.io"
+
+# Persistent storage for API data and logs
+[mounts]
+  source = "api_data"
+  destination = "/data"
+  initial_size = "15gb"
+
+# Metrics endpoint for monitoring
+[metrics]
+  port = 9091
+  path = "/metrics"
+
+# Machine configuration - Higher specs for main orchestrator
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 4
+  memory_mb = 4096
+  
+# Aggressive auto-scaling for main API service
+[scaling]
+  min_machines_running = 2
+  max_machines_running = 20
+  
+  [[scaling.metrics]]
+    type = "cpu"
+    target = 60  # Scale earlier for main API
+  
+  [[scaling.metrics]]
+    type = "memory"
+    target = 70
+    
+  [[scaling.metrics]]
+    type = "requests"
+    target = 150
+    
+  [[scaling.metrics]]
+    type = "response_time"
+    target = "200ms"  # Keep response times low
+
+# Process groups for different workloads
+[[processes]]
+  app = "web"
+  
+[processes.web]
+  cmd = ["gunicorn", "app.api.unified_server:app", "--workers", "4", "--worker-class", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8003", "--timeout", "120"]
+
+# GPU workload process (when Lambda Labs is available)
+[[processes]]
+  app = "gpu-worker"
+  
+[processes.gpu-worker]
+  cmd = ["python", "-m", "app.gpu.lambda_executor", "--port", "8006"]

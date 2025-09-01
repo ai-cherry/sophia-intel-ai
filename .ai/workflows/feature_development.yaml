@@ -1,0 +1,129 @@
+workflow: "feature_development"
+version: "1.0.0"
+description: "Standard workflow for new feature implementation"
+created: "2025-09-01"
+
+stages:
+  planning:
+    agent: "claude"
+    priority: 100
+    timeout: 1800  # 30 minutes
+    tasks:
+      - id: "create_todo"
+        name: "Create TODO list"
+        required: true
+      - id: "design_api"
+        name: "Design API schema"
+        required: true
+      - id: "write_tests"
+        name: "Write test cases"
+        required: true
+    outputs:
+      - todo_list.md
+      - api_spec.yaml
+      - test_plan.md
+    validation:
+      - todo_items_count: ">0"
+      - api_endpoints_defined: true
+      - test_coverage_planned: ">80%"
+    
+  implementation:
+    agent: "roo"
+    priority: 90
+    depends_on: ["planning"]
+    timeout: 7200  # 2 hours
+    tasks:
+      - id: "backend_impl"
+        name: "Implement backend"
+        parallel: false
+      - id: "frontend_impl"
+        name: "Implement frontend"
+        parallel: false
+      - id: "write_tests"
+        name: "Write unit tests"
+        parallel: true
+    validation:
+      - all_tests_pass: true
+      - no_type_errors: true
+      - no_lint_errors: true
+      - coverage_minimum: 80
+    rollback_on_failure: true
+    
+  security_validation:
+    agent: "swarm:security"
+    priority: 80
+    depends_on: ["implementation"]
+    timeout: 900  # 15 minutes
+    tasks:
+      - id: "security_scan"
+        name: "Security audit"
+      - id: "dependency_check"
+        name: "Dependency vulnerabilities"
+      - id: "compliance_check"
+        name: "Compliance review"
+    validation:
+      - no_high_vulnerabilities: true
+      - dependencies_up_to_date: true
+      - compliance_passed: true
+    blocking: true  # Must pass to continue
+    
+  documentation:
+    agent: "swarm:research"
+    priority: 70
+    depends_on: ["implementation"]
+    parallel: true  # Can run alongside security
+    timeout: 1800
+    tasks:
+      - id: "update_readme"
+        name: "Update README"
+      - id: "api_docs"
+        name: "Generate API docs"
+      - id: "create_adr"
+        name: "Create ADR if needed"
+    outputs:
+      - README.md
+      - docs/api.md
+      - docs/ADR/*.md
+
+handoff_rules:
+  - type: "explicit_completion"
+    require_validation: true
+    preserve_context: true
+  - type: "on_failure"
+    action: "rollback"
+    notify_all: true
+  - type: "on_success"
+    action: "proceed"
+    cleanup_temp_files: true
+
+communication:
+  channels:
+    - type: "file"
+      path: "/tmp/sophia-workflow"
+    - type: "redis"
+      key: "workflow:feature_development"
+  status_updates:
+    frequency: 300  # Every 5 minutes
+    format: "json"
+    
+quality_gates:
+  - stage: "planning"
+    gate: "completeness"
+    threshold: 100
+  - stage: "implementation"
+    gate: "test_coverage"
+    threshold: 80
+  - stage: "security_validation"
+    gate: "vulnerability_count"
+    threshold: 0
+    
+metrics:
+  track:
+    - total_duration
+    - stage_durations
+    - error_count
+    - rollback_count
+    - test_coverage
+    - vulnerability_count
+  report_to: "console"
+  format: "markdown"

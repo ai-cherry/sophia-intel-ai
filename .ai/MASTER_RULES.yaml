@@ -1,0 +1,268 @@
+version: "3.0.0"
+framework: "sophia-intel-ai"
+last_updated: "2025-09-01"
+applies_to: ["claude-coder", "roo-coder", "cursor", "custom-swarms"]
+
+# === UNIVERSAL ENFORCEMENT LAYER ===
+enforcement:
+  truth_verification:
+    required_evidence:
+      - terminal_output: true
+      - api_responses: true
+      - file_paths: true
+      - test_results: true
+    forbidden_phrases:
+      - "should work"
+      - "in theory"
+      - "mock implementation"
+      - "placeholder"
+      - "hypothetically"
+      - "simulated"
+      - "fake data"
+    verification_commands: |
+      pytest tests/ -v --cov
+      git status --porcelain
+      docker ps | grep sophia
+      curl -f http://localhost:8000/healthz
+
+  anti_mock_policy:
+    prohibited_patterns:
+      - "Mock*"
+      - "Fake*"
+      - "Stub*"
+      - "Example*"
+      - "Demo*"
+      - "Sample*"
+      - "Test*Service"
+    required_implementations:
+      - real_api_endpoints: true
+      - actual_database_writes: true
+      - persistent_file_creation: true
+      - network_connectivity: true
+    validation_script: ".ai/scripts/detect_mocks.py"
+
+  zero_debris:
+    pre_task_cleanup: |
+      find . -name "*.backup" -o -name "*.old" -o -name "*_deprecated*" -o -name "*_temp*" | xargs rm -f
+      git clean -fdx --dry-run
+    post_task_cleanup: |
+      git status --porcelain | grep -E "^\?\?" && echo "WARNING: Untracked files detected"
+      find . -type f -size 0 -delete
+      find . -name "*.pyc" -o -name "__pycache__" | xargs rm -rf
+    max_file_age_hours: 24
+    auto_cleanup: true
+    forbidden_files:
+      - "scratch.*"
+      - "test.*"
+      - "temp.*"
+      - "tmp.*"
+      - "old.*"
+      - "backup.*"
+
+# === AGENT COORDINATION METADATA ===
+agents:
+  claude_coder:
+    role: "architect"
+    priority: 100
+    capabilities: 
+      - "system_design"
+      - "complex_logic"
+      - "documentation"
+      - "testing_strategy"
+    task_scope: 
+      - "architecture_decisions"
+      - "api_design"
+      - "test_planning"
+      - "code_review"
+    communication: "stdio"
+    context_limit: 200000
+    temperature: 0.3
+    
+  roo_coder:
+    role: "builder"
+    priority: 90
+    capabilities:
+      - "implementation"
+      - "refactoring"
+      - "optimization"
+      - "debugging"
+    task_scope:
+      - "code_synthesis"
+      - "bug_fixes"
+      - "performance_tuning"
+      - "feature_implementation"
+    communication: "http"
+    context_limit: 128000
+    temperature: 0.5
+    
+  swarm_agents:
+    strategic:
+      role: "planner"
+      priority: 95
+      capabilities: ["task_breakdown", "dependency_analysis", "resource_planning"]
+      task_scope: ["project_planning", "milestone_tracking", "risk_assessment"]
+      temperature: 0.2
+      
+    development:
+      role: "implementer"
+      priority: 85
+      capabilities: ["coding", "testing", "debugging", "optimization"]
+      task_scope: ["feature_development", "unit_testing", "integration"]
+      temperature: 0.5
+      
+    security:
+      role: "validator"
+      priority: 80
+      capabilities: ["security_audit", "compliance_check", "vulnerability_scan"]
+      task_scope: ["code_review", "dependency_audit", "security_testing"]
+      temperature: 0.1
+      
+    research:
+      role: "explorer"
+      priority: 70
+      capabilities: ["research", "documentation", "learning", "analysis"]
+      task_scope: ["technology_research", "best_practices", "documentation"]
+      temperature: 0.7
+
+# === CONFLICT RESOLUTION ===
+orchestration:
+  conflict_policy: "priority-arbitration"
+  hand_off_protocol: "explicit-completion"
+  resource_locking: true
+  duplicate_detection: true
+  max_retries: 3
+  timeout_seconds: 300
+  
+  task_allocation:
+    strategy: "capability-match"
+    load_balancing: true
+    max_parallel: 3
+    queue_type: "priority"
+    
+  communication_channels:
+    shared_memory: "redis://localhost:6379/agent-coordination"
+    state_store: "weaviate://localhost:8080/agent-state"
+    file_exchange: "/tmp/sophia-agent-exchange"
+    
+  error_handling:
+    on_failure: "rollback"
+    notify_agents: true
+    preserve_state: true
+    max_rollback_depth: 3
+
+# === TECH STACK CONSTRAINTS ===
+tech_stack:
+  approved:
+    backend: 
+      - "FastAPI==0.104.1"
+      - "Python>=3.11"
+      - "Pydantic==2.5.0"
+      - "SQLAlchemy==2.0.23"
+    frontend:
+      - "Next.js>=14.0"
+      - "React>=18.0"
+      - "TypeScript>=5.0"
+      - "Tailwind>=3.0"
+      - "Zustand==4.4.1"
+    database:
+      - "PostgreSQL>=15"
+      - "Redis>=7.0"
+      - "Weaviate>=1.32"
+    infrastructure:
+      - "Docker>=20.10"
+      - "Docker Compose>=2.0"
+      - "Fly.io"
+      - "Pulumi>=3.0"
+    ai_gateway:
+      - "Portkey"
+      - "OpenRouter"
+      - "Together AI"
+  
+  forbidden_additions:
+    - "New web frameworks"
+    - "Alternative ORMs"
+    - "Additional CSS frameworks"
+    - "New state management libraries"
+    - "Duplicate functionality libraries"
+  
+  evaluation_criteria:
+    existing_solution_percentage: 90
+    improvement_factor_required: 10
+    longevity_years_minimum: 2
+    community_support_required: true
+    security_audit_required: true
+
+# === QUALITY GATES ===
+quality_gates:
+  code_quality:
+    python:
+      linting: "ruff check --fix"
+      type_checking: "mypy --strict"
+      formatting: "black --check"
+      testing: "pytest --cov-min=80"
+      security: "bandit -r app/"
+      
+    typescript:
+      linting: "eslint --fix"
+      type_checking: "tsc --noEmit"
+      testing: "jest --coverage"
+      formatting: "prettier --check"
+    
+  performance:
+    api_latency_p50_ms: 100
+    api_latency_p99_ms: 500
+    memory_usage_mb: 512
+    startup_time_seconds: 30
+    concurrent_requests: 100
+    
+  reliability:
+    accuracy_eval_minimum: 90
+    reliability_eval_minimum: 95
+    uptime_percent_minimum: 99.9
+    error_rate_maximum: 0.1
+    
+  security:
+    dependency_scan: true
+    secret_scan: true
+    vulnerability_threshold: "medium"
+    compliance_checks: ["OWASP", "CWE"]
+
+# === DOCUMENTATION REQUIREMENTS ===
+documentation:
+  required_files:
+    - "README.md"
+    - "CONTRIBUTING.md"
+    - ".ai/RULES.md"
+    - "docs/architecture.md"
+    
+  inline_requirements:
+    python_docstrings: true
+    typescript_jsdoc: true
+    complex_logic_comments: true
+    
+  maximum_sizes:
+    readme_lines: 500
+    doc_file_lines: 1000
+    comment_lines: 5
+    
+  update_policy: "maintain-not-expand"
+
+# === MONITORING AND REPORTING ===
+monitoring:
+  metrics_collection:
+    - task_completion_time
+    - error_rate
+    - code_quality_score
+    - test_coverage
+    - performance_metrics
+    
+  reporting_format:
+    summary: "markdown"
+    detailed: "json"
+    frequency: "per_task"
+    
+  alerting:
+    on_failure: true
+    on_degradation: true
+    on_violation: true
+    channels: ["console", "log_file"]

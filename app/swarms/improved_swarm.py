@@ -612,27 +612,45 @@ class KnowledgeTransferSystem:
 # ============================================
 
 class ImprovedAgentSwarm:
-    """Unified improved agent swarm with all 8 enhancement patterns."""
+    """Unified improved agent swarm with optimized pattern selection."""
     
     def __init__(self, agents: List, config_file: str = "swarm_config.json"):
         self.agents = agents
         self.config = self._load_config(config_file)
         
-        # Initialize all pattern systems
-        self.debate_system = AdversarialDebateSystem(agents)
-        self.quality_gates = QualityGateSystem(self.config.get("quality_gates", {}))
-        self.strategy_archive = StrategyArchive()
-        self.safety_system = SafetyBoundarySystem(self.config.get("safety_config", {}))
-        self.role_assigner = DynamicRoleAssigner(self.config.get("role_assignment", {}))
-        self.consensus_system = ConsensusSystem(self.config.get("consensus_config", {}))
-        self.param_manager = AdaptiveParameterManager(self.config.get("adaptive_parameters", {}))
-        self.transfer_system = KnowledgeTransferSystem(self.config.get("knowledge_transfer", {}))
+        # Initialize optimizer for pattern selection
+        try:
+            from app.swarms.performance_optimizer import SwarmOptimizer
+            self.optimizer = SwarmOptimizer()
+        except ImportError:
+            logger.warning("SwarmOptimizer not available - using basic optimization")
+            self.optimizer = None
+
+        # Initialize patterns based on optimization mode
+        self.optimization_mode = self.config.get("optimization", "balanced")
+        self.enabled_patterns = self.config.get("enabled_patterns", ["all"])
         
-        # Performance tracking
+        # Always initialize safety system (critical)
+        self.safety_system = SafetyBoundarySystem(self.config.get("safety_config", {}))
+        
+        # Initialize patterns based on configuration
+        self.patterns = self._initialize_patterns_selectively()
+        
+        # Backward compatibility attributes
+        self.debate_system = self.patterns.get("debate")
+        self.quality_gates = self.patterns.get("quality_gates", self._create_minimal_quality_gates())
+        self.strategy_archive = self.patterns.get("strategy_archive")
+        self.role_assigner = self.patterns.get("role_assigner")
+        self.consensus_system = self.patterns.get("consensus")
+        self.param_manager = self.patterns.get("param_manager")
+        self.transfer_system = self.patterns.get("transfer_system")
+        
+        # Performance tracking with optimization awareness
         self.performance_history = []
         self.pattern_usage_stats = {}
+        self.pattern_effectiveness = {}
         
-        logger.info("Improved Agent Swarm initialized with all 8 enhancement patterns")
+        logger.info(f"Improved Agent Swarm initialized with {self.optimization_mode} mode ({len(self.patterns)} patterns)")
     
     def _load_config(self, config_file: str) -> Dict:
         """Load configuration from file."""
@@ -644,9 +662,61 @@ class ImprovedAgentSwarm:
         # Return default config if file doesn't exist
         return self._get_default_config()
     
+    def _initialize_patterns_selectively(self) -> Dict[str, Any]:
+        """Initialize patterns based on optimization configuration."""
+        patterns = {}
+        
+        # Determine which patterns to enable based on mode and config
+        if self.enabled_patterns == ["all"] or "all" in self.enabled_patterns:
+            # Enable patterns based on optimization mode
+            if self.optimization_mode == "lite":
+                enabled = ["quality_gates"]
+            elif self.optimization_mode == "balanced":
+                enabled = ["quality_gates", "debate", "strategy_archive", "role_assigner"]
+            else:  # quality mode
+                enabled = ["debate", "quality_gates", "strategy_archive", "role_assigner", 
+                          "consensus", "param_manager", "transfer_system"]
+        else:
+            enabled = self.enabled_patterns
+        
+        # Initialize enabled patterns
+        if "debate" in enabled:
+            patterns["debate"] = AdversarialDebateSystem(self.agents)
+        
+        if "quality_gates" in enabled:
+            patterns["quality_gates"] = QualityGateSystem(self.config.get("quality_gates", {}))
+        
+        if "strategy_archive" in enabled:
+            patterns["strategy_archive"] = StrategyArchive()
+        
+        if "role_assigner" in enabled:
+            patterns["role_assigner"] = DynamicRoleAssigner(self.config.get("role_assignment", {}))
+        
+        if "consensus" in enabled:
+            patterns["consensus"] = ConsensusSystem(self.config.get("consensus_config", {}))
+        
+        if "param_manager" in enabled:
+            patterns["param_manager"] = AdaptiveParameterManager(self.config.get("adaptive_parameters", {}))
+        
+        if "transfer_system" in enabled:
+            patterns["transfer_system"] = KnowledgeTransferSystem(self.config.get("knowledge_transfer", {}))
+        
+        return patterns
+
+    def _create_minimal_quality_gates(self) -> QualityGateSystem:
+        """Create minimal quality gates when not enabled."""
+        minimal_config = {
+            "min_quality_threshold": 0.6,
+            "max_retry_rounds": 1,
+            "retry_strategies": {}
+        }
+        return QualityGateSystem(minimal_config)
+
     def _get_default_config(self) -> Dict:
-        """Get default configuration."""
+        """Get default configuration with optimization settings."""
         return {
+            "optimization": "balanced",
+            "enabled_patterns": ["all"],
             "quality_gates": {
                 "min_quality_threshold": 0.7,
                 "max_retry_rounds": 3,

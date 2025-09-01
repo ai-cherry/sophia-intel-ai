@@ -16,6 +16,7 @@ export { StreamView } from './StreamView';
 
 // Enhanced Components
 export { EnhancedOutput } from './EnhancedOutput';
+export { ConsciousnessVisualization } from './ConsciousnessVisualization';
 
 // UI Enhancement Components
 export {

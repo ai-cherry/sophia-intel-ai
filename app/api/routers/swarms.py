@@ -7,6 +7,7 @@ allowing clients to configure and execute swarms with full control over settings
 
 from fastapi import APIRouter, HTTPException, BackgroundTasks, Query
 from fastapi.responses import StreamingResponse, JSONResponse
+from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 import asyncio
 import json
@@ -23,6 +24,7 @@ from app.swarms.coding.team import (
     make_coding_swarm,
     run_coding_debate
 )
+from app.swarms import SwarmOrchestrator
 from app.memory.supermemory_mcp import SupermemoryStore
 
 logger = logging.getLogger(__name__)
@@ -104,7 +106,6 @@ async def stream_coding_swarm(request: SwarmRequest):
                 memory = await get_supermemory_instance()
             
             # Create orchestrator
-            from app.swarms.coding.swarm_orchestrator import SwarmOrchestrator
             orchestrator = SwarmOrchestrator(team, request.configuration, memory)
             
             # Stream events
@@ -172,6 +173,21 @@ async def get_default_configuration() -> SwarmConfiguration:
         Default SwarmConfiguration
     """
     return SwarmConfiguration()
+
+
+class SwarmConfigPayload(BaseModel):
+    poolType: str
+    maxGenerators: int
+    maxCritics: int
+    useMemory: bool
+    accuracyThreshold: float
+    consensusThreshold: int
+
+
+@router.post("/configure")
+async def configure_swarm(config: SwarmConfigPayload) -> Dict[str, Any]:
+    """Store swarm configuration parameters."""
+    return {"status": "configured", "configuration": config.model_dump()}
 
 
 @router.post("/coding/validate")

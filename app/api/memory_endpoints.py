@@ -217,6 +217,22 @@ async def retrieve_memory(hash_id: str) -> Dict[str, Any]:
         logger.error(f"Failed to retrieve memory: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
+@router.get("/deduplicate")
+async def report_duplicates(threshold: float = 0.8) -> Dict[str, Any]:
+    """Report potential duplicate memories grouped by topic."""
+    try:
+        from app.api.unified_server import state
+
+        if not state.supermemory:
+            raise HTTPException(status_code=503, detail="Memory system not initialized")
+
+        report = await state.supermemory.find_duplicates(threshold)
+        return {"duplicates": report, "threshold": threshold}
+    except Exception as e:
+        logger.error(f"Failed to generate deduplication report: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @router.put("/update")
 async def update_memory(request: MemoryUpdateRequest) -> Dict[str, Any]:
     """Update an existing memory entry."""

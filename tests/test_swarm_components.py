@@ -130,7 +130,7 @@ class TestSwarmOrchestrator(unittest.TestCase):
     
     def test_orchestrator_initialization(self):
         """Test orchestrator initialization."""
-        from app.swarms.coding.swarm_orchestrator import SwarmOrchestrator
+        from app.swarms import SwarmOrchestrator
         
         orchestrator = SwarmOrchestrator(
             team=self.mock_team,
@@ -145,7 +145,7 @@ class TestSwarmOrchestrator(unittest.TestCase):
     @patch('asyncio.wait_for')
     async def test_run_debate_async(self, mock_wait_for):
         """Test async debate execution."""
-        from app.swarms.coding.swarm_orchestrator import SwarmOrchestrator
+        from app.swarms import SwarmOrchestrator
         from app.swarms.coding.models import DebateResult
         
         # Setup

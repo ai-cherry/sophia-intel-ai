@@ -24,7 +24,7 @@ from app.api.unified_server import app
 from app.core.config import settings
 from app.memory.supermemory_mcp import SupermemoryStore
 from app.memory.embedding_pipeline import StandardizedEmbeddingPipeline
-from app.swarms.orchestrator import SwarmOrchestrator
+from app.swarms import SwarmOrchestrator
 
 # ============================================
 # Test Configuration

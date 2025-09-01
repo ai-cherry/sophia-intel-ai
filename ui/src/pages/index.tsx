@@ -58,6 +58,18 @@ export default function Home() {
                   Execute complex workflows like PR Lifecycle with quality gates.
                 </p>
               </Link>
+
+              <Link
+                href="/swarm-configurator"
+                className="block p-6 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow"
+              >
+                <h3 className="text-xl font-semibold text-blue-600 mb-2">
+                  Swarm Configurator
+                </h3>
+                <p className="text-gray-600">
+                  Tune parameters for swarm patterns including ConsensusSwarm.
+                </p>
+              </Link>
             </div>
           </section>
 

@@ -14,6 +14,12 @@ from pathlib import Path
 import asyncio
 from enum import Enum
 
+from .deduplication import (
+    compute_minhash,
+    minhash_similarity,
+    group_near_duplicates,
+)
+
 # ============================================
 # Configuration
 # ============================================
@@ -39,14 +45,17 @@ class MemoryEntry:
     memory_type: MemoryType = MemoryType.SEMANTIC
     embedding_vector: Optional[List[float]] = None
     hash_id: Optional[str] = None
+    minhash_signature: Optional[List[int]] = None
     
     def __post_init__(self):
-        """Generate hash ID for deduplication."""
+        """Generate hash ID and MinHash signature for deduplication."""
         if not self.hash_id:
             content_hash = hashlib.sha256(
                 f"{self.topic}:{self.content}:{self.source}".encode()
             ).hexdigest()[:16]
             self.hash_id = content_hash
+        if self.minhash_signature is None:
+            self.minhash_signature = compute_minhash(self.content)
     
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for storage."""
@@ -58,7 +67,8 @@ class MemoryEntry:
             "tags": json.dumps(self.tags),
             "timestamp": self.timestamp.isoformat(),
             "memory_type": self.memory_type.value,
-            "embedding_vector": json.dumps(self.embedding_vector) if self.embedding_vector else None
+            "embedding_vector": json.dumps(self.embedding_vector) if self.embedding_vector else None,
+            "minhash": json.dumps(self.minhash_signature) if self.minhash_signature else None,
         }
 
 # ============================================
@@ -89,10 +99,17 @@ class SupermemoryStore:
                     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     memory_type TEXT NOT NULL,
                     embedding_vector TEXT,
+                    minhash TEXT,
                     access_count INTEGER DEFAULT 0,
                     last_accessed TIMESTAMP
                 )
             """)
+
+            # Ensure minhash column exists for existing databases
+            try:
+                conn.execute("ALTER TABLE memory_entries ADD COLUMN minhash TEXT")
+            except sqlite3.OperationalError:
+                pass
             
             # Indexes for fast retrieval
             conn.execute("""
@@ -154,68 +171,91 @@ class SupermemoryStore:
         entry: MemoryEntry,
         deduplicate: bool = True
     ) -> Dict[str, Any]:
-        """
-        Add entry to memory with deduplication.
-        
-        Args:
-            entry: Memory entry to add
-            deduplicate: Whether to check for duplicates
-        
-        Returns:
-            Result with status and entry ID
-        """
+        """Add entry to memory with MinHash deduplication."""
         start_time = asyncio.get_event_loop().time()
-        
+
         with sqlite3.connect(self.db_path) as conn:
-            # Check for duplicate if enabled
             if deduplicate:
                 existing = conn.execute(
                     "SELECT hash_id FROM memory_entries WHERE hash_id = ?",
-                    (entry.hash_id,)
+                    (entry.hash_id,),
                 ).fetchone()
-                
+
                 if existing:
-                    # Update access count
-                    conn.execute("""
-                        UPDATE memory_entries 
+                    conn.execute(
+                        """
+                        UPDATE memory_entries
                         SET access_count = access_count + 1,
                             last_accessed = CURRENT_TIMESTAMP
                         WHERE hash_id = ?
-                    """, (entry.hash_id,))
+                        """,
+                        (entry.hash_id,),
+                    )
                     conn.commit()
-                    
                     latency_ms = (asyncio.get_event_loop().time() - start_time) * 1000
                     return {
                         "status": "duplicate",
                         "hash_id": entry.hash_id,
-                        "latency_ms": latency_ms
+                        "latency_ms": latency_ms,
                     }
-            
-            # Insert new entry
+
+                entry.minhash_signature = compute_minhash(entry.content)
+                rows = conn.execute(
+                    "SELECT hash_id, minhash FROM memory_entries WHERE topic = ?",
+                    (entry.topic,),
+                ).fetchall()
+                for row_hash, row_sig in rows:
+                    if not row_sig:
+                        continue
+                    sim = minhash_similarity(entry.minhash_signature, json.loads(row_sig))
+                    if sim >= 0.9:
+                        latency_ms = (asyncio.get_event_loop().time() - start_time) * 1000
+                        return {
+                            "status": "near_duplicate",
+                            "hash_id": row_hash,
+                            "latency_ms": latency_ms,
+                        }
+
             entry_dict = entry.to_dict()
-            conn.execute("""
-                INSERT OR REPLACE INTO memory_entries 
-                (hash_id, topic, content, source, tags, timestamp, memory_type, embedding_vector)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                entry_dict["hash_id"],
-                entry_dict["topic"],
-                entry_dict["content"],
-                entry_dict["source"],
-                entry_dict["tags"],
-                entry_dict["timestamp"],
-                entry_dict["memory_type"],
-                entry_dict["embedding_vector"]
-            ))
+            conn.execute(
+                """
+                INSERT OR REPLACE INTO memory_entries
+                (hash_id, topic, content, source, tags, timestamp, memory_type, embedding_vector, minhash)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    entry_dict["hash_id"],
+                    entry_dict["topic"],
+                    entry_dict["content"],
+                    entry_dict["source"],
+                    entry_dict["tags"],
+                    entry_dict["timestamp"],
+                    entry_dict["memory_type"],
+                    entry_dict["embedding_vector"],
+                    entry_dict["minhash"],
+                ),
+            )
             conn.commit()
-        
+
         latency_ms = (asyncio.get_event_loop().time() - start_time) * 1000
         return {
             "status": "added",
             "hash_id": entry.hash_id,
-            "latency_ms": latency_ms
+            "latency_ms": latency_ms,
         }
-    
+
+    async def find_duplicates(self, threshold: float = 0.8) -> Dict[str, List[Dict[str, Any]]]:
+        """Find near-duplicate memory entries grouped by topic."""
+        with sqlite3.connect(self.db_path) as conn:
+            rows = conn.execute(
+                "SELECT hash_id, topic, content, minhash FROM memory_entries"
+            ).fetchall()
+        entries = []
+        for hash_id, topic, content, minhash in rows:
+            sig = json.loads(minhash) if minhash else compute_minhash(content)
+            entries.append({"hash_id": hash_id, "topic": topic, "minhash": sig})
+        return group_near_duplicates(entries, threshold)
+
     async def search_memory(
         self,
         query: str,

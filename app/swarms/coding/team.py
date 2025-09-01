@@ -18,7 +18,7 @@ from app.swarms.coding.models import (
     PoolType
 )
 from app.swarms.coding.team_factory import TeamFactory
-from app.swarms.coding.swarm_orchestrator import SwarmOrchestrator
+from app.swarms import SwarmOrchestrator
 from app.memory.supermemory_mcp import SupermemoryMCP
 
 logger = logging.getLogger(__name__)

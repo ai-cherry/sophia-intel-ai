@@ -372,7 +372,7 @@ app.add_middleware(TimingMiddleware)
 # tests/unit/test_orchestrator.py
 import pytest
 from unittest.mock import Mock, AsyncMock
-from app.swarms.orchestrator import SwarmOrchestrator
+from app.swarms import SwarmOrchestrator
 
 @pytest.fixture
 def orchestrator():

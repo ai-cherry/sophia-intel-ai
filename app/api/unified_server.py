@@ -12,6 +12,7 @@ from typing import List, Dict, Any, Optional, AsyncGenerator
 import asyncio
 import json
 import os
+import logging
 from datetime import datetime
 from contextlib import asynccontextmanager
 
@@ -38,6 +39,9 @@ except ImportError:
 
 # Import API routers
 from app.api.routers import swarms as swarms_router
+from app.swarms import UnifiedSwarmOrchestrator
+
+logger = logging.getLogger(__name__)
 
 # ============================================
 # Configuration
@@ -79,15 +83,15 @@ class ServerConfig:
     def print_config(cls):
         """Print current configuration."""
         if cls.LOCAL_DEV_MODE:
-            print("\n" + "="*60)
-            print("🔧 LOCAL DEVELOPMENT MODE ACTIVE")
-            print("="*60)
-            print("✅ Runner writes: ENABLED")
-            print("✅ Git operations: ENABLED")
-            print("✅ File operations: ENABLED")
-            print("✅ All tools: ACTIVE")
-            print("⚠️  Be careful - all write operations are enabled!")
-            print("="*60 + "\n")
+            logger.info("\n" + "=" * 60)
+            logger.info("🔧 LOCAL DEVELOPMENT MODE ACTIVE")
+            logger.info("=" * 60)
+            logger.info("✅ Runner writes: ENABLED")
+            logger.info("✅ Git operations: ENABLED")
+            logger.info("✅ File operations: ENABLED")
+            logger.info("✅ All tools: ACTIVE")
+            logger.info("⚠️  Be careful - all write operations are enabled!")
+            logger.info("=" * 60 + "\n")
 
 # ============================================
 # Global State
@@ -111,46 +115,46 @@ class GlobalState:
         if self.initialized:
             return
         
-        print("🚀 Initializing unified agent systems...")
+        logger.info("🚀 Initializing unified agent systems...")
         
         # Initialize Supermemory
         if ServerConfig.MCP_SUPERMEMORY_ENABLED:
             # self.supermemory = SupermemoryStore()  # Commented out - missing import
-            print("  ✅ Supermemory MCP initialized")
+            logger.info("  ✅ Supermemory MCP initialized")
         
         # Initialize ModernBERT embedder (2025 SOTA)
         from app.memory.modernbert_embeddings import ModernBERTEmbedder
         self.embedder = ModernBERTEmbedder()
-        print("  ✅ ModernBERT embedder initialized (Voyage-3-large/Cohere v3)")
+        logger.info("  ✅ ModernBERT embedder initialized (Voyage-3-large/Cohere v3)")
         
         # Initialize search engine
         if ServerConfig.HYBRID_SEARCH_ENABLED:
             # self.search_engine = HybridSearchEngine(embedder=self.embedder)  # Commented out - missing import
-            print("  ✅ Hybrid search engine initialized")
+            logger.info("  ✅ Hybrid search engine initialized")
         
         # Initialize GraphRAG
         if ServerConfig.GRAPHRAG_ENABLED:
             # self.knowledge_graph = KnowledgeGraph()  # Commented out - missing imports
             # self.graph_rag = GraphRAGEngine(self.knowledge_graph)
             pass
-            print("  ✅ GraphRAG system initialized")
+            logger.info("  ✅ GraphRAG system initialized")
         
         # Initialize evaluation gates
         if ServerConfig.GATES_ENABLED:
             # self.gate_manager = EvaluationGateManager()  # Commented out - missing import
             pass
-            print("  ✅ Evaluation gates initialized")
+            logger.info("  ✅ Evaluation gates initialized")
         
         # Initialize orchestrator for real swarm execution
         self.orchestrator = UnifiedSwarmOrchestrator()
-        print("  ✅ Swarm orchestrator initialized")
-        
+        logger.info("  ✅ Swarm orchestrator initialized")
+
         self.initialized = True
-        print("✅ All systems initialized successfully")
+        logger.info("✅ All systems initialized successfully")
     
     async def cleanup(self):
         """Cleanup resources."""
-        print("🧹 Cleaning up resources...")
+        logger.info("🧹 Cleaning up resources...")
         self.initialized = False
 
 state = GlobalState()
@@ -167,11 +171,11 @@ async def lifespan(app: FastAPI):
     
     # Register MCP servers (simulation - in production, use actual MCP client)
     if ServerConfig.MCP_FILESYSTEM_ENABLED:
-        print("📁 MCP Filesystem server registered")
+        logger.info("📁 MCP Filesystem server registered")
     if ServerConfig.MCP_GIT_ENABLED:
-        print("🔀 MCP Git server registered")
+        logger.info("🔀 MCP Git server registered")
     if ServerConfig.MCP_SUPERMEMORY_ENABLED:
-        print("🧠 MCP Supermemory server registered")
+        logger.info("🧠 MCP Supermemory server registered")
     
     yield
     
@@ -774,10 +778,10 @@ async def playground_status():
 if __name__ == "__main__":
     import uvicorn
     
-    # Print configuration
+    # Log configuration
     ServerConfig.print_config()
-    
-    print(f"""
+
+    logger.info(f"""
 ╔══════════════════════════════════════════════════════╗
 ║           UNIFIED AGENT API SERVER                    ║
 ║                                                        ║

@@ -16,6 +16,7 @@ import os
 from fastapi import HTTPException, Security, Header, Request
 from fastapi.security import APIKeyHeader, APIKeyQuery
 from starlette.middleware.base import BaseHTTPMiddleware
+from app.core.connections import http_get, http_post, get_connection_manager
 
 logger = logging.getLogger(__name__)
 
@@ -85,11 +86,11 @@ class RateLimiter:
         
         self.last_cleanup = current_time
     
-    def get_remaining(self, key: str, limit: int, window: int = 60) -> int:
+    async def get_remaining(self, key: str, limit: int, window: int = 60) -> int:
         """Get remaining requests for a key"""
         current_time = time.time()
         cutoff_time = current_time - window
-        timestamps = [t for t in self.requests.get(key, []) if t > cutoff_time]
+        timestamps = [t for t in self.await http_get(key, []) if t > cutoff_time]
         return max(0, limit - len(timestamps))
 
 

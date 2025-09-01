@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from enum import Enum
 from openai import OpenAI, AsyncOpenAI
 import hashlib
+from app.core.circuit_breaker import with_circuit_breaker, get_llm_circuit_breaker, get_weaviate_circuit_breaker, get_redis_circuit_breaker, get_webhook_circuit_breaker
 
 # ============================================
 # Configuration Constants
@@ -54,6 +55,7 @@ class PortkeyConfig:
     timeout_ms: int = 30000
     stream_timeout_ms: int = 600000
     
+    @with_circuit_breaker("external_api")
     def __post_init__(self):
         # Load VKs from environment
         self.openrouter_vk = os.getenv("VK_OPENROUTER", "")
@@ -84,6 +86,7 @@ class ObservabilityHeaders:
     swarm: Optional[str] = None
     ticket_id: Optional[str] = None
     
+    @with_circuit_breaker("external_api")
     def to_headers(self) -> Dict[str, str]:
         """Convert to HTTP headers."""
         headers = {}
@@ -120,6 +123,7 @@ class ObservabilityHeaders:
 class LoadBalanceStrategy:
     """Load balancing across multiple providers."""
     
+    @with_circuit_breaker("external_api")
     def __init__(self, targets: List[Dict[str, Any]]):
         self.targets = targets
         
@@ -166,6 +170,7 @@ class PortkeyGateway:
         self.config = config or PortkeyConfig()
         self._setup_clients()
         
+    @with_circuit_breaker("external_api")
     def _setup_clients(self):
         """Initialize OpenAI clients with Portkey configuration."""
         # Get the real Portkey API key from environment
@@ -203,6 +208,7 @@ class PortkeyGateway:
             timeout=self.config.timeout_ms / 1000
         )
     
+    @with_circuit_breaker("external_api")
     def chat(
         self,
         messages: List[Dict[str, str]],
@@ -276,6 +282,7 @@ class PortkeyGateway:
         
         return response.choices[0].message.content
     
+    @with_circuit_breaker("external_api")
     async def achat(
         self,
         messages: List[Dict[str, str]],
@@ -331,6 +338,7 @@ class PortkeyGateway:
         else:
             return response.choices[0].message.content
     
+    @with_circuit_breaker("external_api")
     def embed(
         self,
         texts: List[str],
@@ -412,6 +420,7 @@ class PortkeyGateway:
 # Lazy gateway initialization
 _gateway = None
 
+@with_circuit_breaker("external_api")
 def get_gateway():
     """Get or create the global gateway instance."""
     global _gateway

@@ -14,6 +14,7 @@ from qdrant_client import QdrantClient
 from weaviate.classes.config import Configure, Property, DataType, VectorDistances
 from weaviate.classes.init import Auth, AdditionalConfig, Timeout
 from dotenv import load_dotenv
+from app.core.circuit_breaker import with_circuit_breaker, get_llm_circuit_breaker, get_weaviate_circuit_breaker, get_redis_circuit_breaker, get_webhook_circuit_breaker
 
 # Load environment variables
 load_dotenv('.env.local')
@@ -21,12 +22,14 @@ load_dotenv('.env.local')
 class WeaviateV132Setup:
     """Advanced Weaviate v1.32+ setup with Portkey integration."""
     
+    @with_circuit_breaker("external_api")
     def __init__(self):
         self.portkey_api_key = os.getenv("PORTKEY_API_KEY")
         self.openrouter_vk = os.getenv("PORTKEY_OPENROUTER_VK", "vkj-openrouter-cc4151")
         self.together_vk = os.getenv("PORTKEY_TOGETHER_VK", "together-ai-670469")
         self.agent_swarms = ["strategic", "development", "security", "research"]
         
+    @with_circuit_breaker("external_api")
     def create_production_client(self):
         """Create Weaviate Cloud client with your Portkey virtual keys."""
         weaviate_url = os.getenv("WEAVIATE_URL", "http://localhost:8080")
@@ -49,6 +52,7 @@ class WeaviateV132Setup:
                 )
             )
     
+    @with_circuit_breaker("external_api")
     def get_portkey_headers(self):
         """Get Portkey headers with your real virtual keys."""
         return {
@@ -57,6 +61,7 @@ class WeaviateV132Setup:
             "X-Portkey-Config": json.dumps(self.get_portkey_config())
         }
     
+    @with_circuit_breaker("external_api")
     def get_portkey_config(self):
         """Portkey configuration optimized for embeddings."""
         return {
@@ -427,6 +432,7 @@ class QdrantToWeaviateMigrator:
                     uuid=point["uuid"]
                 )
     
+    @with_circuit_breaker("external_api")
     def print_migration_summary(self, results: Dict, total_time: float):
         """Print comprehensive migration summary."""
         print(f"\n" + "="*80)

@@ -12,6 +12,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 import asyncio
 from enum import Enum
+from app.core.circuit_breaker import with_circuit_breaker, get_llm_circuit_breaker, get_weaviate_circuit_breaker, get_redis_circuit_breaker, get_webhook_circuit_breaker
 
 # ============================================
 # Configuration
@@ -215,6 +216,7 @@ class SupermemoryStore:
             "latency_ms": latency_ms
         }
     
+    @with_circuit_breaker("database")
     async def search_memory(
         self,
         query: str,
@@ -438,6 +440,7 @@ class SupermemoryMCP:
     def __init__(self):
         self.store = SupermemoryStore()
     
+    @with_circuit_breaker("database")
     async def handle_request(self, request: Dict[str, Any]) -> Dict[str, Any]:
         """
         Handle MCP request.
@@ -523,6 +526,7 @@ async def memorize_task_learnings(
         )
         await store.add_to_memory(entry)
 
+@with_circuit_breaker("database")
 async def recall_relevant_memories(
     query: str,
     limit: int = 10
@@ -544,6 +548,7 @@ async def recall_relevant_memories(
 # CLI Interface
 # ============================================
 
+@with_circuit_breaker("database")
 async def main():
     """CLI for Supermemory testing."""
     import argparse

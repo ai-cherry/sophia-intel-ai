@@ -14,6 +14,7 @@ from enum import Enum
 import tiktoken
 
 from app.memory.embedding_pipeline import (
+from app.core.circuit_breaker import with_circuit_breaker, get_llm_circuit_breaker, get_weaviate_circuit_breaker, get_redis_circuit_breaker, get_webhook_circuit_breaker
     StandardizedEmbeddingPipeline
 )
 
@@ -178,6 +179,7 @@ class EmbeddingCache:
             ))
             conn.commit()
     
+    @with_circuit_breaker("redis")
     def get_stats(self) -> Dict[str, Any]:
         """Get cache statistics."""
         with sqlite3.connect(self.db_path) as conn:
@@ -309,6 +311,7 @@ class DualTierEmbedder:
         # Initialize standardized pipeline for OpenAI models
         self.standard_pipeline = StandardizedEmbeddingPipeline()
     
+    @with_circuit_breaker("redis")
     async def embed_single(
         self,
         text: str,
@@ -355,6 +358,7 @@ class DualTierEmbedder:
         
         return embedding, tier
     
+    @with_circuit_breaker("redis")
     async def embed_batch(
         self,
         texts: List[str],

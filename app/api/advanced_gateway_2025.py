@@ -12,6 +12,7 @@ from typing import Dict, Any, List, Optional
 from dataclasses import dataclass
 from enum import Enum
 from dotenv import load_dotenv
+from app.core.circuit_breaker import with_circuit_breaker, get_llm_circuit_breaker, get_weaviate_circuit_breaker, get_redis_circuit_breaker, get_webhook_circuit_breaker
 
 # Load environment variables
 load_dotenv('.env.local')
@@ -39,6 +40,7 @@ class ModelConfig2025:
 class AdvancedAIGateway2025:
     """Production AI Gateway with latest 2025 models and virtual keys."""
 
+    @with_circuit_breaker("external_api")
     def __init__(self):
         self.validate_environment()
         self.setup_latest_models()
@@ -51,6 +53,7 @@ class AdvancedAIGateway2025:
             "last_reset": None
         }
     
+    @with_circuit_breaker("external_api")
     def validate_environment(self):
         """Validate required API keys."""
         required_keys = [
@@ -65,6 +68,7 @@ class AdvancedAIGateway2025:
         
         logger.info("✅ All virtual key dependencies validated")
 
+    @with_circuit_breaker("external_api")
     def setup_latest_models(self):
         """Setup latest August 2025 model configurations."""
         self.model_configs = {
@@ -112,6 +116,7 @@ class AdvancedAIGateway2025:
             )
         }
 
+    @with_circuit_breaker("external_api")
     def setup_portkey_configs(self):
         """Setup Portkey configurations for each task type with advanced semantic caching."""
         self.portkey_configs = {
@@ -152,6 +157,7 @@ class AdvancedAIGateway2025:
             }
         }
 
+    @with_circuit_breaker("external_api")
     async def chat_completion(self,
                             messages: List[Dict[str, str]],
                             task_type: TaskType = TaskType.GENERAL,
@@ -224,6 +230,7 @@ class AdvancedAIGateway2025:
 
             return result
 
+    @with_circuit_breaker("external_api")
     async def generate_embeddings(self, 
                                 texts: List[str],
                                 model: str = "togethercomputer/m2-bert-80M-32k-retrieval") -> Dict[str, Any]:
@@ -296,6 +303,7 @@ class AdvancedAIGateway2025:
                 logger.error(f"All models failed. Primary: {primary_error}, Fallback: {fallback_error}")
                 raise Exception(f"Smart routing failed: {primary_error}")
 
+    @with_circuit_breaker("external_api")
     async def get_latest_models(self) -> Dict[str, List[str]]:
         """Get available latest 2025 models from OpenRouter."""
         try:
@@ -328,6 +336,7 @@ class AdvancedAIGateway2025:
             logger.error(f"Error fetching models: {e}")
             return {"error": str(e)}
 
+    @with_circuit_breaker("external_api")
     async def health_check(self) -> Dict[str, Any]:
         """Comprehensive health check for all virtual key providers."""
         health_status = {}
@@ -381,6 +390,7 @@ class AdvancedAIGateway2025:
             "services": health_status
         }
 
+    @with_circuit_breaker("external_api")
     def get_cache_statistics(self) -> Dict[str, Any]:
         """Get comprehensive cache performance statistics."""
         total = self.cache_metrics["total_requests"]
@@ -405,6 +415,7 @@ class AdvancedAIGateway2025:
             }
         }
 
+    @with_circuit_breaker("external_api")
     async def invalidate_cache(self, pattern: Optional[str] = None, model: Optional[str] = None) -> Dict[str, Any]:
         """Invalidate cache entries based on pattern or model."""
         try:
@@ -485,21 +496,25 @@ def get_advanced_gateway() -> AdvancedAIGateway2025:
     return _advanced_gateway
 
 # Convenience functions for easy integration
+@with_circuit_breaker("external_api")
 async def chat_with_gpt5(messages: List[Dict[str, str]], **kwargs) -> Dict[str, Any]:
     """Chat with latest GPT-5 via OpenRouter virtual key."""
     gateway = get_advanced_gateway()
     return await gateway.smart_chat(messages, TaskType.REASONING, **kwargs)
 
+@with_circuit_breaker("external_api")
 async def chat_with_gemini25_pro(messages: List[Dict[str, str]], **kwargs) -> Dict[str, Any]:
     """Chat with Gemini 2.5 Pro (1M context) via OpenRouter virtual key."""
     gateway = get_advanced_gateway()
     return await gateway.smart_chat(messages, TaskType.CREATIVE, **kwargs)
 
+@with_circuit_breaker("external_api")
 async def chat_with_claude_sonnet4(messages: List[Dict[str, str]], **kwargs) -> Dict[str, Any]:
     """Chat with Claude Sonnet 4 via OpenRouter virtual key."""
     gateway = get_advanced_gateway()
     return await gateway.smart_chat(messages, TaskType.CODING, **kwargs)
 
+@with_circuit_breaker("llm")
 async def generate_embeddings_32k(texts: List[str]) -> Dict[str, Any]:
     """Generate embeddings with 32k context via Together AI virtual key."""
     gateway = get_advanced_gateway()

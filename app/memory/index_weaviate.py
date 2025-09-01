@@ -6,6 +6,7 @@ from app import settings
 from app.memory.embed_router import (
     choose_model_for_chunk, embed_with_cache, MODEL_A, MODEL_B, DIM_A, DIM_B
 )
+from app.core.circuit_breaker import with_circuit_breaker
 
 def _client():
     """Get Weaviate client instance (local/no-auth by default)."""
@@ -130,6 +131,7 @@ async def upsert_chunks_dual(ids, texts, payloads, lang=""):
                         props = {**payloads[i], "content": texts[i]}
                         batch.add_data_object(props, collection_b, uuid=str(ids[i]), vector=vecsB[k])
 
+@with_circuit_breaker("database")
 async def hybrid_search_merge(query: str, k: int = 8, semantic_weight: float = 0.65):
     """
     Query both collections with vector + BM25 and merge results.
@@ -292,6 +294,7 @@ def ensure_schema_legacy(client):
     ensure_schema(settings.WEAVIATE_CLASS_CODE, DIM_B)
     ensure_schema(settings.WEAVIATE_CLASS_DOC, DIM_B)
 
+@with_circuit_breaker("database")
 async def search_by_vector(
     vector: List[float],
     class_name: str = None,

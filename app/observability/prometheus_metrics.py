@@ -9,6 +9,7 @@ from typing import Dict
 import time
 import logging
 from functools import wraps
+from app.core.circuit_breaker import with_circuit_breaker, get_llm_circuit_breaker, get_weaviate_circuit_breaker, get_redis_circuit_breaker, get_webhook_circuit_breaker
 
 logger = logging.getLogger(__name__)
 
@@ -359,6 +360,7 @@ def get_metrics_content_type() -> str:
 
 
 # Example usage functions
+@with_circuit_breaker("external_api")
 async def update_system_metrics():
     """Periodically update system metrics."""
     while True:

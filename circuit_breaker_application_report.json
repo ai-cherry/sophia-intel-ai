@@ -1,12 +1,12 @@
 {
   "files_analyzed": 118,
-  "files_updated": 44,
+  "files_updated": 41,
   "circuit_breakers_added": {
-    "external_api": 50,
-    "database": 39,
-    "llm": 14,
-    "redis": 13,
-    "webhook": 15
+    "external_api": 57,
+    "database": 38,
+    "redis": 9,
+    "llm": 7,
+    "webhook": 8
   },
   "functions_protected": [
     "portkey_config.py:get_gateway",
@@ -28,10 +28,6 @@
     "real_executor.py:embed_text",
     "config.py:validate_required_keys",
     "config.py:get_active_features",
-    "connections.py:redis_get",
-    "connections.py:redis_set",
-    "connections.py:redis_delete",
-    "connections.py:redis_exists",
     "observability.py:check_search_system",
     "cost_monitor.py:_get_current_metrics",
     "cost_monitor.py:cleanup_old_data",
@@ -40,8 +36,6 @@
     "dual_tier_embeddings.py:embed_batch",
     "dual_tier_embeddings.py:get_stats",
     "embed_router.py:embed_batch",
-    "enhanced_memory.py:_init_weaviate",
-    "enhanced_memory.py:search_memory",
     "index_weaviate.py:hybrid_search_merge",
     "index_weaviate.py:search_by_vector",
     "modernbert_embeddings.py:embed_text",
@@ -63,12 +57,6 @@
     "mcp_security.py:verify_token",
     "mcp_security.py:revoke_session",
     "mcp_security.py:get_active_sessions",
-    "simple_orchestrator.py:__init__",
-    "simple_orchestrator.py:_execute_executor",
-    "simple_orchestrator.py:__init__",
-    "simple_orchestrator.py:_trigger_n8n_workflow",
-    "simple_orchestrator.py:get_metrics",
-    "simple_orchestrator.py:reset_metrics",
     "server_v2.py:setup_routes",
     "server_v2.py:get_or_generate_embedding",
     "server_v2.py:store_memory",
@@ -141,5 +129,9 @@
     "chat_orchestrator.py:_get_memory_context",
     "chat_orchestrator.py:_handle_memory_operation"
   ],
-  "errors": []
+  "errors": [
+    "app/core/connections.py: invalid syntax (<unknown>, line 99)",
+    "app/memory/enhanced_memory.py: invalid syntax (<unknown>, line 88)",
+    "app/agents/simple_orchestrator.py: invalid syntax (<unknown>, line 385)"
+  ]
 }

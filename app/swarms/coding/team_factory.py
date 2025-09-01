@@ -24,6 +24,7 @@ from app.tools.basic_tools import (
 )
 from app.tools.list_directory import ListDirectory
 from app.models.simple_router import agno_chat_model
+from app.core.circuit_breaker import with_circuit_breaker, get_llm_circuit_breaker, get_weaviate_circuit_breaker, get_redis_circuit_breaker, get_webhook_circuit_breaker
 
 logger = logging.getLogger(__name__)
 
@@ -178,6 +179,7 @@ class TeamFactory:
         ]
     
     @staticmethod
+    @with_circuit_breaker("external_api")
     def _build_pool_generators(model_ids: List[str]) -> List[Agent]:
         """
         Build generators from a pool of model IDs.

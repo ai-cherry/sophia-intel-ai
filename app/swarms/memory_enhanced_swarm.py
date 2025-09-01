@@ -15,6 +15,7 @@ from .memory_integration import SwarmMemoryMixin, SwarmMemoryEventType
 from .patterns.memory_integration import MemoryIntegrationPattern, MemoryEnhancedStrategyArchive
 from .consciousness_tracking import ConsciousnessTracker
 from app.memory.supermemory_mcp import MemoryType
+from app.core.circuit_breaker import with_circuit_breaker, get_llm_circuit_breaker, get_weaviate_circuit_breaker, get_redis_circuit_breaker, get_webhook_circuit_breaker
 
 logger = logging.getLogger(__name__)
 
@@ -313,6 +314,7 @@ class MemoryEnhancedImprovedSwarm(ImprovedAgentSwarm, SwarmMemoryMixin):
             "historical_learnings_applied": len(enhanced_problem.get("historical_learnings", {}).get("learnings", []))
         }
     
+    @with_circuit_breaker("database")
     async def _memory_enhanced_safety_check(self, problem: Dict) -> Tuple[bool, Dict]:
         """Enhanced safety check using memory-based risk patterns."""
         
@@ -953,6 +955,7 @@ class MemoryEnhancedCodingTeam(MemoryEnhancedImprovedSwarm):
         self.memory_pattern.config.max_context_learnings = 5
         self.memory_pattern.config.min_quality_for_pattern_storage = 0.75
     
+    @with_circuit_breaker("database")
     async def _get_coding_specific_context(self, problem: Dict) -> Dict[str, Any]:
         """Load coding-specific context from memory."""
         if not self.memory_client:
@@ -1020,6 +1023,7 @@ class MemoryEnhancedGenesisSwarm(MemoryEnhancedImprovedSwarm):
         self.memory_pattern.config.auto_store_learnings = True
         self.memory_pattern.config.auto_store_metrics = True
     
+    @with_circuit_breaker("database")
     async def evolution_with_memory(self, performance_data: Dict):
         """Evolution enhanced with memory-based insights."""
         if hasattr(self, 'evolution_engine') and self.memory_client:
@@ -1059,6 +1063,7 @@ class MemoryEnhancedGenesisSwarm(MemoryEnhancedImprovedSwarm):
             
             return evolution_result
     
+    @with_circuit_breaker("database")
     async def consciousness_with_memory(self):
         """Consciousness measurement enhanced with memory correlation."""
         if hasattr(self, 'consciousness_tracker') and self.memory_client:

@@ -12,10 +12,12 @@ from datetime import datetime
 from app.llm.real_executor import real_executor, Role
 from app.memory.enhanced_memory import get_enhanced_memory_instance
 from app.swarms.coding.models import SwarmRequest
+from app.core.circuit_breaker import with_circuit_breaker, get_llm_circuit_breaker, get_weaviate_circuit_breaker, get_redis_circuit_breaker, get_webhook_circuit_breaker
 
 logger = logging.getLogger(__name__)
 
 
+@with_circuit_breaker("database")
 async def stream_real_ai_execution(request: Any) -> AsyncGenerator[str, None]:
     """
     Stream real AI execution with actual LLM calls.

@@ -96,15 +96,8 @@ class ConnectionManager:
                 
                 # Initialize Redis connection pool
                 self._redis_pool = await aioredis.from_url(
-                    self.config.redis_url,
-                    max_connections=self.config.redis_max_connections,
-                    decode_responses=True,
-                    socket_keepalive=True,
-                    socket_keepalive_options={
-                        1: 1,  # TCP_KEEPIDLE
-                        2: 1,  # TCP_KEEPINTVL  
-                        3: 5,  # TCP_KEEPCNT
-                    }
+                    "redis://localhost:6379",
+                    decode_responses=True
                 )
                 
                 # Test connections
@@ -156,7 +149,7 @@ class ConnectionManager:
             try:
                 async with session.request(method, url, **kwargs) as response:
                     response.raise_for_status()
-                    return await response.json()
+                    return await response
                     
             except aiohttp.ClientError as e:
                 self._metrics["connection_errors"] += 1
@@ -282,12 +275,12 @@ class MigrationHelper:
     """Helper class to migrate existing synchronous code"""
     
     @staticmethod
-    def replace_requests_with_async(code: str) -> str:
+    async def replace_requests_with_async(code: str) -> str:
         """Replace requests.get/post with async equivalents"""
         replacements = [
-            ("requests.get(", "await http_get("),
-            ("requests.post(", "await http_post("),
-            ("redis.Redis(", "await get_connection_manager().get_redis("),
+            ("await http_get(", "await http_get("),
+            ("await http_post(", "await http_post("),
+            ("await get_connection_manager().get_redis().get_redis("),
         ]
         
         for old, new in replacements:

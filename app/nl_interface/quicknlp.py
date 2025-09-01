@@ -15,6 +15,8 @@ from functools import lru_cache, cached_property
 import hashlib
 
 import requests
+from app.core.connections import http_get, http_post, get_connection_manager
+from app.core.circuit_breaker import with_circuit_breaker, get_llm_circuit_breaker, get_weaviate_circuit_breaker, get_redis_circuit_breaker, get_webhook_circuit_breaker
 
 logger = logging.getLogger(__name__)
 
@@ -214,7 +216,7 @@ class QuickNLP:
         
         return {"target": target}
     
-    def _extract_with_ollama(self, text: str) -> Tuple[CommandIntent, Dict[str, Any], float]:
+    async def _extract_with_ollama(self, text: str) -> Tuple[CommandIntent, Dict[str, Any], float]:
         """
         Use Ollama to extract intent when patterns don't match
         """
@@ -230,7 +232,7 @@ class QuickNLP:
             }}
             """
             
-            response = requests.post(
+            response = await http_post(
                 f"{self.ollama_url}/api/generate",
                 json={
                     "model": "llama3.2",
@@ -242,7 +244,7 @@ class QuickNLP:
             )
             
             if response.status_code == 200:
-                result = response.json()
+                result = response
                 parsed = json.loads(result.get("response", "{}"))
                 
                 intent_str = parsed.get("intent", "unknown")
@@ -256,6 +258,7 @@ class QuickNLP:
         
         return CommandIntent.UNKNOWN, {}, 0.0
     
+    @with_circuit_breaker("webhook")
     def _get_workflow_trigger(self, intent: CommandIntent) -> Optional[str]:
         """
         Map intent to n8n workflow trigger

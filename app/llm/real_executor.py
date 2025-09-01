@@ -19,6 +19,8 @@ except Exception:
 # Define Role enum locally if not already defined globally or imported
 # This ensures Role is available after removing app.portkey_config
 from enum import Enum
+from app.core.circuit_breaker import with_circuit_breaker
+
 class Role(Enum):
     PLANNER = "planner"
     GENERATOR = "generator"
@@ -98,6 +100,7 @@ class RealLLMExecutor:
                 "timestamp": datetime.now().isoformat()
             }
     
+    @with_circuit_breaker("external_api")
     async def _execute_streaming(
         self,
         messages: List[Dict[str, str]],
@@ -149,6 +152,7 @@ class RealLLMExecutor:
                 "error": str(e)
             }
     
+    @with_circuit_breaker("external_api")
     async def _execute_non_streaming(
         self,
         messages: List[Dict[str, str]],
@@ -349,6 +353,7 @@ Provide execution details and any issues found."""
         
         return prompt
 
+    @with_circuit_breaker("external_api")
     async def embed_text(self, texts: List[str], strategy: str = "auto") -> List[List[float]]:
         """Generate embeddings for text using unified coordinator with graceful fallback."""
         # Prefer the local unified coordinator (embed_router + cache) when available

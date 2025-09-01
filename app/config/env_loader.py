@@ -16,6 +16,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 import logging
+from app.core.circuit_breaker import with_circuit_breaker, get_llm_circuit_breaker, get_weaviate_circuit_breaker, get_redis_circuit_breaker, get_webhook_circuit_breaker
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -471,6 +472,7 @@ class EnhancedEnvLoader:
         self._update_config_from_env()
         self.config.environment_name = self.environment
         
+    @with_circuit_breaker("external_api")
     def _update_config_from_env(self) -> None:
         """Update config object from environment variables with comprehensive mapping."""
         
@@ -684,6 +686,7 @@ class EnhancedEnvLoader:
             
         return validation
         
+    @with_circuit_breaker("external_api")
     def _validate_llm_gateway(self) -> Dict[str, Any]:
         """Validate LLM gateway configuration."""
         status = {
@@ -706,6 +709,7 @@ class EnhancedEnvLoader:
             
         return status
         
+    @with_circuit_breaker("external_api")
     def _validate_providers(self) -> Dict[str, Any]:
         """Validate LLM provider configuration."""
         status = {

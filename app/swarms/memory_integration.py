@@ -15,6 +15,7 @@ import aiohttp
 
 from app.config.env_loader import get_env_config
 from app.memory.supermemory_mcp import MemoryEntry, MemoryType
+from app.core.circuit_breaker import with_circuit_breaker, get_llm_circuit_breaker, get_weaviate_circuit_breaker, get_redis_circuit_breaker, get_webhook_circuit_breaker
 
 logger = logging.getLogger(__name__)
 
@@ -178,6 +179,7 @@ class SwarmMemoryClient:
             self._cache_for_retry("store", entry_data)
             raise
     
+    @with_circuit_breaker("database")
     async def search_memory(
         self,
         query: str,
@@ -279,6 +281,7 @@ class SwarmMemoryClient:
             # Buffer for retry
             self.event_buffer.append(event)
     
+    @with_circuit_breaker("database")
     async def get_swarm_history(
         self,
         event_types: Optional[List[SwarmMemoryEventType]] = None,
@@ -357,6 +360,7 @@ class SwarmMemoryClient:
             metadata={"success_score": success_score}
         )
     
+    @with_circuit_breaker("database")
     async def retrieve_patterns(
         self,
         pattern_name: Optional[str] = None,
@@ -444,6 +448,7 @@ class SwarmMemoryClient:
             }
         )
     
+    @with_circuit_breaker("database")
     async def get_messages_for_swarm(
         self,
         priority_filter: Optional[str] = None,
@@ -534,6 +539,7 @@ class SwarmMemoryClient:
         
         logger.info(f"Stored learning: {learning_type} (confidence: {confidence:.2f})")
     
+    @with_circuit_breaker("database")
     async def retrieve_learnings(
         self,
         learning_type: Optional[str] = None,
@@ -651,6 +657,7 @@ class SwarmMemoryClient:
             metadata={"execution_time": metrics.get("execution_time", 0)}
         )
     
+    @with_circuit_breaker("database")
     async def get_performance_trends(
         self,
         metric_name: Optional[str] = None,
@@ -825,6 +832,7 @@ class SwarmMemoryMixin:
                 context={"execution_time": result.get("execution_time", 0)}
             )
     
+    @with_circuit_breaker("database")
     async def _load_relevant_context(self, task: Dict[str, Any]) -> Dict[str, Any]:
         """Load relevant context from memory for task execution."""
         if not self._memory_initialized:

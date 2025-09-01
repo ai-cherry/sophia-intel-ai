@@ -16,6 +16,8 @@ from dotenv import load_dotenv
 load_dotenv('.env.local')
 
 from .gateway import get_api_gateway
+from app.core.connections import redis_get, redis_set, get_connection_manager
+from app.core.circuit_breaker import with_circuit_breaker, get_llm_circuit_breaker, get_weaviate_circuit_breaker, get_redis_circuit_breaker, get_webhook_circuit_breaker
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/health", tags=["health"])
@@ -35,7 +37,7 @@ class HealthChecker:
                 return {"status": "unhealthy", "error": "REDIS_URL not configured"}
             
             start_time = datetime.utcnow()
-            client = redis.from_url(redis_url, decode_responses=True)
+            client = await get_connection_manager().get_redis()
             
             # Test basic operations
             ping_result = client.ping()
@@ -275,6 +277,7 @@ async def api_providers_health():
     return await _health_checker.check_api_providers()
 
 @router.get("/environment")
+@with_circuit_breaker("external_api")
 async def environment_check():
     """Check critical environment variables (without exposing values)."""
     critical_vars = [

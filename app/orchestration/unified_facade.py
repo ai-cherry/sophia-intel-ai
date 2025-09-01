@@ -17,6 +17,7 @@ from app.swarms.swarm_optimizer import SwarmOptimizer
 from app.swarms.patterns.performance_monitoring import performance_monitoring
 from app.mcp.unified_memory import UnifiedMemoryStore
 from app.security.mcp_security import MCPSecurityFramework
+from app.core.circuit_breaker import with_circuit_breaker, get_llm_circuit_breaker, get_weaviate_circuit_breaker, get_redis_circuit_breaker, get_webhook_circuit_breaker
 
 logger = logging.getLogger(__name__)
 
@@ -177,6 +178,7 @@ class UnifiedOrchestratorFacade:
         
         return config
     
+    @with_circuit_breaker("database")
     async def _inject_memory_context(self, request: SwarmRequest) -> Dict:
         """Inject relevant memory context for the task"""
         if not request.use_memory:

@@ -17,6 +17,7 @@ import base64
 import logging
 from dataclasses import dataclass
 from enum import Enum
+from app.core.circuit_breaker import with_circuit_breaker, get_llm_circuit_breaker, get_weaviate_circuit_breaker, get_redis_circuit_breaker, get_webhook_circuit_breaker
 
 logger = logging.getLogger(__name__)
 
@@ -127,6 +128,7 @@ class MCPSecurityFramework:
         
         return default_permissions
     
+    @with_circuit_breaker("redis")
     async def generate_assistant_token(
         self,
         assistant_id: str,
@@ -198,6 +200,7 @@ class MCPSecurityFramework:
             "session_id": session_id
         }
     
+    @with_circuit_breaker("redis")
     async def verify_token(self, token: str) -> Optional[Dict]:
         """Verify and decrypt assistant token"""
         if not self.redis:
@@ -356,6 +359,7 @@ class MCPSecurityFramework:
         # Also log to standard logger
         logger.info(f"AUDIT: {event} - {json.dumps(data)}")
     
+    @with_circuit_breaker("redis")
     async def revoke_session(self, session_id: str):
         """Revoke a session"""
         if not self.redis:
@@ -374,6 +378,7 @@ class MCPSecurityFramework:
         
         await self._audit_log("session_revoked", {"session_id": session_id})
     
+    @with_circuit_breaker("redis")
     async def get_active_sessions(self, assistant_id: Optional[str] = None) -> List[Dict]:
         """Get list of active sessions"""
         if not self.redis:

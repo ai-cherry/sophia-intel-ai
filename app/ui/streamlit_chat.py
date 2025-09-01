@@ -10,6 +10,7 @@ import os
 from datetime import datetime
 from typing import Dict, Any, List
 import uuid
+from app.core.connections import http_get, http_post, get_connection_manager
 
 
 # Page configuration
@@ -117,10 +118,10 @@ def get_command_suggestions(text: str) -> List[str]:
     return filtered[:5] if filtered else suggestions[:5]
 
 
-def process_nl_command(text: str, session_id: str = None) -> Dict[str, Any]:
+async def process_nl_command(text: str, session_id: str = None) -> Dict[str, Any]:
     """Process natural language command via API"""
     try:
-        response = requests.post(
+        response = await http_post(
             f"{st.session_state.api_base_url}/api/nl/process",
             json={
                 "text": text,
@@ -131,7 +132,7 @@ def process_nl_command(text: str, session_id: str = None) -> Dict[str, Any]:
         )
         
         if response.status_code == 200:
-            return response.json()
+            return response
         else:
             return {
                 "success": False,
@@ -146,32 +147,32 @@ def process_nl_command(text: str, session_id: str = None) -> Dict[str, Any]:
         }
 
 
-def get_system_status() -> Dict[str, Any]:
+async def get_system_status() -> Dict[str, Any]:
     """Get system status"""
     try:
-        response = requests.get(
+        response = await http_get(
             f"{st.session_state.api_base_url}/api/nl/system/status",
             timeout=5
         )
         
         if response.status_code == 200:
-            return response.json()
+            return response
         else:
             return {"error": "Failed to get status"}
     except Exception as e:
         return {"error": str(e)}
 
 
-def get_available_intents() -> List[Dict[str, Any]]:
+async def get_available_intents() -> List[Dict[str, Any]]:
     """Get available intents from API"""
     try:
-        response = requests.get(
+        response = await http_get(
             f"{st.session_state.api_base_url}/api/nl/intents",
             timeout=5
         )
         
         if response.status_code == 200:
-            return response.json()
+            return response
         else:
             return []
     except Exception as e:
@@ -179,16 +180,16 @@ def get_available_intents() -> List[Dict[str, Any]]:
         return []
 
 
-def get_agent_status(session_id: str) -> Dict[str, Any]:
+async def get_agent_status(session_id: str) -> Dict[str, Any]:
     """Get agent execution status"""
     try:
-        response = requests.get(
+        response = await http_get(
             f"{st.session_state.api_base_url}/api/nl/agents/status/{session_id}",
             timeout=5
         )
         
         if response.status_code == 200:
-            return response.json()
+            return response
         else:
             return {"error": "No status available"}
     except Exception as e:

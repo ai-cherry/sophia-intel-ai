@@ -15,6 +15,8 @@ import logging
 
 # Import enhanced configuration system following ADR-006
 from app.config.env_loader import get_env_config, validate_environment
+from app.core.connections import redis_get, redis_set, get_connection_manager
+from app.core.circuit_breaker import with_circuit_breaker, get_llm_circuit_breaker, get_weaviate_circuit_breaker, get_redis_circuit_breaker, get_webhook_circuit_breaker
 
 logger = logging.getLogger(__name__)
 
@@ -137,7 +139,7 @@ def get_gate_manager(state: GlobalState = Depends(get_state)) -> Any:
     
     return state.gate_manager
 
-def get_redis_client(state: GlobalState = Depends(get_state)):
+async def get_redis_client(state: GlobalState = Depends(get_state)):
     """Get Redis client using enhanced configuration."""
     if not state.redis_client:
         try:
@@ -147,7 +149,7 @@ def get_redis_client(state: GlobalState = Depends(get_state)):
             if not config.redis_url:
                 raise ValueError("Redis URL not configured")
                 
-            state.redis_client = redis.from_url(config.redis_url, decode_responses=True)
+            state.redis_client = await get_connection_manager().get_redis()
             # Test connection
             state.redis_client.ping()
             logger.info(f"✅ Redis connection established to {config.redis_host}:{config.redis_port}")
@@ -159,6 +161,7 @@ def get_redis_client(state: GlobalState = Depends(get_state)):
     
     return state.redis_client
 
+@with_circuit_breaker("external_api")
 def get_weaviate_client(state: GlobalState = Depends(get_state)):
     """Get Weaviate client using enhanced configuration."""
     if not state.weaviate_client:

@@ -19,6 +19,8 @@ from opentelemetry.instrumentation.redis import RedisInstrumentor
 from opentelemetry.instrumentation.logging import LoggingInstrumentor
 import logging
 from typing import Dict, Any, Optional
+from app.core.connections import http_get, http_post, get_connection_manager
+from app.core.circuit_breaker import with_circuit_breaker, get_llm_circuit_breaker, get_weaviate_circuit_breaker, get_redis_circuit_breaker, get_webhook_circuit_breaker
 
 logger = logging.getLogger(__name__)
 
@@ -151,10 +153,11 @@ if __name__ == "__main__":
     configure_opentelemetry(app, enable_console_exporter=True)
 
     @app.get("/test_endpoint")
+    @with_circuit_breaker("external_api")
     async def test_endpoint():
         # Example of tracing an internal HTTP call
         with get_tracer().start_as_current_span("custom_internal_work"):
-            response = requests.get("https://www.example.com") # This HTTPX call will be traced
+            response = await http_get("https://www.example.com") # This HTTPX call will be traced
             
             # Simulate an LLM call with custom tracing
             trace_llm_call(

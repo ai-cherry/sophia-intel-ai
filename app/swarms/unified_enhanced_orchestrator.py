@@ -28,6 +28,7 @@ from app.swarms.memory_enhanced_swarm import (
 from app.swarms.memory_integration import SwarmMemoryClient, SwarmMemoryEventType
 from app.swarms.consciousness_tracking import ConsciousnessTracker
 from app.memory.supermemory_mcp import MemoryType
+from app.core.circuit_breaker import with_circuit_breaker, get_llm_circuit_breaker, get_weaviate_circuit_breaker, get_redis_circuit_breaker, get_webhook_circuit_breaker
 
 logger = logging.getLogger(__name__)
 
@@ -502,6 +503,7 @@ class UnifiedSwarmOrchestrator:
             "global_memory_patterns_applied": True
         }
     
+    @with_circuit_breaker("database")
     async def _memory_enhanced_safety_check(self, task: Dict) -> Tuple[bool, Dict]:
         """Memory-enhanced safety check using global patterns."""
         # Standard safety check
@@ -530,6 +532,7 @@ class UnifiedSwarmOrchestrator:
         
         return is_safe, safety_result
     
+    @with_circuit_breaker("database")
     async def _memory_enhanced_swarm_selection(self, task: Dict) -> str:
         """Enhanced swarm selection using memory-based performance patterns."""
         # Standard selection

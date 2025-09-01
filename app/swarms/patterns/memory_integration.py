@@ -12,6 +12,7 @@ import logging
 from .base import SwarmPattern, PatternConfig, PatternResult
 from ..memory_integration import SwarmMemoryClient, SwarmMemoryEventType
 from app.memory.supermemory_mcp import MemoryType
+from app.core.circuit_breaker import with_circuit_breaker, get_llm_circuit_breaker, get_weaviate_circuit_breaker, get_redis_circuit_breaker, get_webhook_circuit_breaker
 
 logger = logging.getLogger(__name__)
 
@@ -393,6 +394,7 @@ class MemoryIntegrationPattern(SwarmPattern):
     # Memory-Enhanced Decision Making
     # ============================================
     
+    @with_circuit_breaker("database")
     async def enhance_decision_with_memory(
         self,
         decision_context: Dict[str, Any],

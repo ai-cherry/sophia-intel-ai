@@ -24,6 +24,8 @@ try:
 except Exception:
     SmartCommandDispatcher = None
 from app.nl_interface.memory_connector import NLMemoryConnector, NLInteraction
+from app.core.connections import http_get, http_post, get_connection_manager
+from app.core.circuit_breaker import with_circuit_breaker, get_llm_circuit_breaker, get_weaviate_circuit_breaker, get_redis_circuit_breaker, get_webhook_circuit_breaker
 
 # Configure comprehensive logging
 logging.basicConfig(
@@ -137,6 +139,7 @@ class IntentInfo(BaseModel):
 # ============================================
 
 @router.post("/process", response_model=NLProcessResponse)
+@with_circuit_breaker("webhook")
 async def process_natural_language(
     request: NLProcessRequest,
     background_tasks: BackgroundTasks,
@@ -303,6 +306,7 @@ async def list_available_intents() -> List[IntentInfo]:
 
 
 @router.post("/workflows/trigger")
+@with_circuit_breaker("webhook")
 async def trigger_workflow(
     request: WorkflowTriggerRequest,
     background_tasks: BackgroundTasks
@@ -347,6 +351,7 @@ async def trigger_workflow(
 
 
 @router.get("/workflows/status/{execution_id}", response_model=WorkflowStatusResponse)
+@with_circuit_breaker("webhook")
 async def get_workflow_status(execution_id: str) -> WorkflowStatusResponse:
     """
     Get workflow execution status
@@ -487,6 +492,7 @@ async def get_agent_status(session_id: str) -> Dict[str, Any]:
 # ============================================
 
 @router.get("/system/status")
+@with_circuit_breaker("webhook")
 async def get_system_status() -> Dict[str, Any]:
     """
     Get system status including all services
@@ -500,14 +506,14 @@ async def get_system_status() -> Dict[str, Any]:
         
         # Check Ollama
         try:
-            response = requests.get("http://localhost:11434/api/tags", timeout=2)
+            response = await http_get("http://localhost:11434/api/tags", timeout=2)
             status["services"]["ollama"] = "running" if response.status_code == 200 else "error"
         except:
             status["services"]["ollama"] = "offline"
         
         # Check Weaviate
         try:
-            response = requests.get("http://localhost:8080/v1/.well-known/ready", timeout=2)
+            response = await http_get("http://localhost:8080/v1/.well-known/ready", timeout=2)
             status["services"]["weaviate"] = "running" if response.status_code == 200 else "error"
         except:
             status["services"]["weaviate"] = "offline"
@@ -515,7 +521,7 @@ async def get_system_status() -> Dict[str, Any]:
         # Check Redis
         try:
             import redis
-            r = redis.from_url("redis://localhost:6379")
+            r = await get_connection_manager().get_redis()
             r.ping()
             status["services"]["redis"] = "running"
         except:
@@ -523,7 +529,7 @@ async def get_system_status() -> Dict[str, Any]:
         
         # Check n8n
         try:
-            response = requests.get("http://localhost:5678/healthz", timeout=2)
+            response = await http_get("http://localhost:5678/healthz", timeout=2)
             status["services"]["n8n"] = "running" if response.status_code == 200 else "error"
         except:
             status["services"]["n8n"] = "offline"
@@ -546,6 +552,7 @@ async def get_system_status() -> Dict[str, Any]:
 # ============================================
 
 @router.post("/workflows/callback")
+@with_circuit_breaker("webhook")
 async def workflow_callback(
     workflow_id: str,
     status: str,
@@ -602,6 +609,7 @@ async def workflow_callback(
 # Helper Functions
 # ============================================
 
+@with_circuit_breaker("external_api")
 async def trigger_workflow_async(workflow_id: str, payload: Dict[str, Any]) -> Dict[str, Any]:
     """
     Trigger n8n workflow asynchronously
@@ -613,7 +621,7 @@ async def trigger_workflow_async(workflow_id: str, payload: Dict[str, Any]) -> D
         payload["completion_webhook"] = "http://api:8003/api/nl/workflows/callback"
         
         # Call n8n webhook endpoint
-        response = requests.post(
+        response = await http_post(
             f"http://localhost:5678/webhook/{workflow_id}",
             json=payload,
             timeout=30
@@ -621,7 +629,7 @@ async def trigger_workflow_async(workflow_id: str, payload: Dict[str, Any]) -> D
         
         if response.status_code == 200:
             logger.info(f"Workflow {workflow_id} triggered successfully")
-            return response.json()
+            return response
         else:
             logger.error(f"Workflow trigger failed with status {response.status_code}")
             return {"error": f"Workflow trigger failed: {response.status_code}"}

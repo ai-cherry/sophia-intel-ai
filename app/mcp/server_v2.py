@@ -24,6 +24,7 @@ from app.security.mcp_security import (
 )
 from app.memory.unified_memory import UnifiedMemoryStore
 from app.core.cost_monitor import get_cost_monitor, CostRequest
+from app.core.circuit_breaker import with_circuit_breaker, get_llm_circuit_breaker, get_weaviate_circuit_breaker, get_redis_circuit_breaker, get_webhook_circuit_breaker
 
 # Configure structured logging
 logger = structlog.get_logger()
@@ -178,6 +179,7 @@ class EnhancedMCPServer:
                     span.set_status(Status(StatusCode.ERROR, str(e)))
                     raise
     
+    @with_circuit_breaker("database")
     def setup_routes(self):
         """Define API routes"""
         
@@ -259,6 +261,7 @@ class EnhancedMCPServer:
                 }
         
         @self.app.post("/mcp/memory/store")
+        @with_circuit_breaker("llm")
         async def store_memory(
             request: MemoryStoreRequest,
             token_payload: dict = Depends(self.verify_token)
@@ -326,6 +329,7 @@ class EnhancedMCPServer:
                 }
         
         @self.app.post("/mcp/memory/search")
+        @with_circuit_breaker("database")
         async def search_memory(
             request: MemorySearchRequest,
             token_payload: dict = Depends(self.verify_token)
@@ -492,6 +496,7 @@ class EnhancedMCPServer:
         except RateLimitError as e:
             raise HTTPException(status_code=429, detail=str(e))
     
+    @with_circuit_breaker("llm")
     async def get_or_generate_embedding(self, text: str) -> List[float]:
         """Get cached or generate new embedding"""
         # Check cache first

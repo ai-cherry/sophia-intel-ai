@@ -23,6 +23,7 @@ except ImportError:
     AsyncOpenAI = None
 
 from app.core.config import settings
+from app.core.circuit_breaker import with_circuit_breaker, get_llm_circuit_breaker, get_weaviate_circuit_breaker, get_redis_circuit_breaker, get_webhook_circuit_breaker
 
 # Optional observability imports
 try:
@@ -139,6 +140,7 @@ class StandardizedEmbeddingPipeline:
         }
     
     @trace_async
+    @with_circuit_breaker("llm")
     async def generate_embeddings(
         self,
         request: EmbeddingRequest
@@ -433,6 +435,7 @@ class BatchEmbeddingProcessor:
         
         return processed_documents
     
+    @with_circuit_breaker("llm")
     async def _process_batch(
         self,
         batch: List[Dict[str, Any]],

@@ -7,7 +7,7 @@ Addresses critical reliability issues identified in architectural audit
 import asyncio
 import time
 import logging
-from typing import Callable, Optional, Dict, Any, TypeVar, Generic
+from typing import Callable, Optional, Dict, Any, TypeVar, Generic, List
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
@@ -29,9 +29,9 @@ class CircuitState(Enum):
 @dataclass
 class CircuitBreakerConfig:
     """Configuration for circuit breaker"""
-    failure_threshold: int = 5          # Failures before opening
+    failure_threshold: int = 3          # Failures before opening (lowered for faster detection)
     success_threshold: int = 2          # Successes in half-open before closing
-    timeout: float = 60.0               # Seconds before trying half-open
+    timeout: float = 30.0               # Seconds before trying half-open (faster recovery)
     expected_exception: type = Exception  # Exception types to catch
     exclude_exceptions: tuple = ()       # Exceptions to not catch
     

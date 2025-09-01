@@ -18,6 +18,7 @@ from app.nl_interface.memory_connector import NLMemoryConnector, NLInteraction
 from app.swarms.performance_optimizer import SwarmOptimizer, CircuitBreaker, GracefulDegradationManager
 from app.swarms.improved_swarm import ImprovedAgentSwarm
 from app.agents.simple_orchestrator import OptimizedAgentOrchestrator, AgentRole
+from app.core.circuit_breaker import with_circuit_breaker, get_llm_circuit_breaker, get_weaviate_circuit_breaker, get_redis_circuit_breaker, get_webhook_circuit_breaker
 
 logger = logging.getLogger(__name__)
 
@@ -68,6 +69,7 @@ class SmartCommandDispatcher:
     Integrates memory, swarms, agents, and optimization patterns
     """
     
+    @with_circuit_breaker("webhook")
     def __init__(
         self,
         ollama_url: str = "http://localhost:11434",
@@ -568,6 +570,7 @@ class SmartCommandDispatcher:
                 "quality_score": 0.9
             }
     
+    @with_circuit_breaker("webhook")
     async def _get_system_status(self) -> Dict[str, Any]:
         """Get comprehensive system status"""
         return {

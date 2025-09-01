@@ -7,6 +7,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field, validator, SecretStr
 from typing import Optional, List, Dict
 from pathlib import Path
+from app.core.circuit_breaker import with_circuit_breaker, get_llm_circuit_breaker, get_weaviate_circuit_breaker, get_redis_circuit_breaker, get_webhook_circuit_breaker
 
 class AppSettings(BaseSettings):
     """
@@ -191,6 +192,7 @@ class AppSettings(BaseSettings):
             raise ValueError(f"Log level must be one of {allowed}")
         return v.upper()
     
+    @with_circuit_breaker("external_api")
     def validate_required_keys(self) -> Dict[str, bool]:
         """Check if required API keys are present."""
         validations = {}
@@ -208,6 +210,7 @@ class AppSettings(BaseSettings):
             
         return validations
     
+    @with_circuit_breaker("database")
     def get_active_features(self) -> Dict[str, bool]:
         """Return status of all features."""
         return {

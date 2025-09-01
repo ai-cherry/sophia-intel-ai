@@ -11,6 +11,7 @@ import json
 import time
 from typing import List, Tuple, Optional
 from openai import OpenAI
+from app.core.circuit_breaker import with_circuit_breaker, get_llm_circuit_breaker, get_weaviate_circuit_breaker, get_redis_circuit_breaker, get_webhook_circuit_breaker
 
 # Configuration from environment
 EMBED_BASE_URL = os.getenv("EMBED_BASE_URL", "https://api.portkey.ai/v1")
@@ -67,6 +68,7 @@ def _cache_put(conn, sha: str, model: str, vec: List[float]) -> None:
     )
     conn.commit()
 
+@with_circuit_breaker("external_api")
 def embed_batch(texts: List[str], model: str) -> List[List[float]]:
     """
     Call Portkey→Together through OpenAI SDK for batch embedding.

@@ -21,6 +21,7 @@ from app.swarms.coding.team import (
     execute_swarm_request
 )
 from app.swarms import SwarmOrchestrator
+from app.core.circuit_breaker import with_circuit_breaker, get_llm_circuit_breaker, get_weaviate_circuit_breaker, get_redis_circuit_breaker, get_webhook_circuit_breaker
 
 logger = logging.getLogger(__name__)
 
@@ -220,6 +221,7 @@ async def validate_configuration(config: SwarmConfiguration) -> Dict[str, Any]:
 
 
 @router.get("/coding/history")
+@with_circuit_breaker("database")
 async def get_swarm_history(
     limit: int = Query(10, ge=1, le=100),
     session_id: Optional[str] = None,

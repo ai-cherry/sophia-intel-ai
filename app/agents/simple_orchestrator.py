@@ -85,7 +85,7 @@ class SimpleAgentOrchestrator:
         ollama_url: str = "http://localhost:11434",
         n8n_url: str = "http://localhost:5678"
     ):
-        self.redis_client = redis.from_url(redis_url)
+        self.redis_client = await get_connection_manager().get_redis()
         self.ollama_url = ollama_url
         self.n8n_url = n8n_url
         self.agent_executors = self._initialize_executors()
@@ -291,7 +291,7 @@ class SimpleAgentOrchestrator:
         
         try:
             # Trigger n8n workflow
-            response = requests.post(
+            response = await http_post(
                 f"{self.n8n_url}/webhook/{workflow_id}",
                 json={
                     "context": context.state,
@@ -301,7 +301,7 @@ class SimpleAgentOrchestrator:
             )
             
             return {
-                "execution_result": response.json() if response.status_code == 200 else {"error": response.text},
+                "execution_result": response if response.status_code == 200 else {"error": response.text},
                 "status_code": response.status_code,
                 "timestamp": datetime.now().isoformat()
             }
@@ -330,7 +330,7 @@ class SimpleAgentOrchestrator:
     async def _call_ollama(self, prompt: str, model: str = "llama3.2") -> Dict[str, Any]:
         """Call Ollama API for LLM processing"""
         try:
-            response = requests.post(
+            response = await http_post(
                 f"{self.ollama_url}/api/generate",
                 json={
                     "model": model,
@@ -342,7 +342,7 @@ class SimpleAgentOrchestrator:
             )
             
             if response.status_code == 200:
-                result = response.json()
+                result = response
                 try:
                     return json.loads(result.get("response", "{}"))
                 except json.JSONDecodeError:
@@ -382,7 +382,7 @@ class SimpleAgentOrchestrator:
     async def get_context(self, session_id: str) -> Optional[Dict[str, Any]]:
         """Retrieve execution context from Redis"""
         key = f"execution:{session_id}"
-        value = self.redis_client.get(key)
+        value = await redis_get(key)
         
         if value:
             return json.loads(value)
@@ -560,7 +560,7 @@ class OptimizedAgentOrchestrator(SimpleAgentOrchestrator):
                     }
                 ) as response:
                     if response.status == 200:
-                        result = await response.json()
+                        result = await response
                         
                         try:
                             parsed_response = json.loads(result.get("response", "{}"))
@@ -715,17 +715,17 @@ class OptimizedAgentOrchestrator(SimpleAgentOrchestrator):
                     json=payload
                 ) as response:
                     if response.status == 200:
-                        return await response.json()
+                        return await response
                     else:
                         return {"error": f"n8n error: {response.status}"}
             else:
                 # Fall back to sync requests
-                response = requests.post(
+                response = await http_post(
                     f"{self.n8n_url}/webhook/{workflow_id}",
                     json=payload,
                     timeout=30
                 )
-                return response.json() if response.status_code == 200 else {"error": response.text}
+                return response if response.status_code == 200 else {"error": response.text}
                 
         except Exception as e:
             logger.error(f"n8n workflow trigger failed: {e}")
@@ -766,6 +766,7 @@ class OptimizedAgentOrchestrator(SimpleAgentOrchestrator):
 
 # Import hashlib for cache key generation
 import hashlib
+from app.core.connections import http_get, http_post, get_connection_manager
 
 
 # Example usage

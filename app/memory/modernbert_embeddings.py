@@ -17,6 +17,7 @@ from pathlib import Path
 import numpy as np
 
 from app.portkey_config import gateway
+from app.core.circuit_breaker import with_circuit_breaker, get_llm_circuit_breaker, get_weaviate_circuit_breaker, get_redis_circuit_breaker, get_webhook_circuit_breaker
 
 # ============================================
 # Enhanced Configuration for 2025 Models
@@ -148,6 +149,7 @@ class ModernBERTEmbedder:
         else:
             return EmbeddingTier.TIER_B
     
+    @with_circuit_breaker("llm")
     async def embed_text(
         self,
         text: str,
@@ -197,6 +199,7 @@ class ModernBERTEmbedder:
         
         return embedding, metadata
     
+    @with_circuit_breaker("external_api")
     async def _generate_embedding(
         self,
         text: str,

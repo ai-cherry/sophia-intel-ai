@@ -23,6 +23,7 @@ except ImportError:
 
 from app.memory.types import MemoryEntry, MemoryType
 from app.llm.real_executor import real_executor
+from app.core.connections import redis_get, redis_set, get_connection_manager
 
 logger = logging.getLogger(__name__)
 
@@ -84,7 +85,7 @@ class EnhancedMemoryStore:
         # Initialize Redis if available
         try:
             import redis.asyncio as aioredis
-            self.redis_client = aioredis.from_url(self.config.REDIS_URL)
+            self.redis_client = await get_connection_manager().get_redis()
             await self.redis_client.ping()
             logger.info("Redis cache initialized")
         except Exception as e:
@@ -300,7 +301,7 @@ class EnhancedMemoryStore:
         
         if self.redis_client:
             try:
-                cached = await self.redis_client.get(cache_key)
+                cached = await redis_get(cache_key)
                 if cached:
                     logger.info("Search results from cache")
                     return [SearchResult(**json.loads(item)) for item in json.loads(cached)]

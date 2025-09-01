@@ -28,6 +28,7 @@ from app.memory.embed_router import (
     DIM_A,
     DIM_B,
 )
+from app.core.circuit_breaker import with_circuit_breaker
 
 logger = logging.getLogger(__name__)
 
@@ -94,6 +95,7 @@ class UnifiedEmbeddingCoordinator:
             out.append(_average_vectors(a_norm, b_norm))
         return out
 
+    @with_circuit_breaker("llm")
     def generate_embeddings(
         self,
         texts: List[str],

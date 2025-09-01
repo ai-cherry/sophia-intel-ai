@@ -7,6 +7,7 @@ import os
 import json
 from typing import Dict, Any, Optional, List
 from dataclasses import dataclass
+from app.core.circuit_breaker import with_circuit_breaker, get_llm_circuit_breaker, get_weaviate_circuit_breaker, get_redis_circuit_breaker, get_webhook_circuit_breaker
 
 # ============================================
 # Elite Model Registry - ONLY THE BEST
@@ -350,6 +351,7 @@ class ElitePortkeyGateway:
         self.optimizations = EliteOptimizations()
         self._setup_clients()
     
+    @with_circuit_breaker("external_api")
     def _setup_clients(self):
         """Initialize elite model clients."""
         from openai import AsyncOpenAI
@@ -368,6 +370,7 @@ class ElitePortkeyGateway:
             }
         )
     
+    @with_circuit_breaker("external_api")
     async def elite_completion(
         self,
         role: str,
@@ -465,6 +468,7 @@ class ElitePortkeyGateway:
 # Usage Examples
 # ============================================
 
+@with_circuit_breaker("external_api")
 async def demo_elite_models():
     """Demonstrate the elite fucking models in action."""
     

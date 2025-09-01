@@ -21,6 +21,7 @@ from datetime import datetime
 
 # Import enhanced configuration system following ADR-006
 from app.config.env_loader import get_env_config, validate_environment
+from app.core.circuit_breaker import with_circuit_breaker, get_llm_circuit_breaker, get_weaviate_circuit_breaker, get_redis_circuit_breaker, get_webhook_circuit_breaker
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -443,6 +444,7 @@ async def add_memory(request: Dict[str, Any]):
         return {"status": "error", "message": str(e)}
 
 @app.post("/memory/search")
+@with_circuit_breaker("database")
 async def search_memory(request: Dict[str, Any]):
     """Search agent memory."""
     try:

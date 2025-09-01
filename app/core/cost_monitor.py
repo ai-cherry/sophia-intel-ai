@@ -12,6 +12,7 @@ from dataclasses import dataclass, field
 import logging
 import redis.asyncio as redis
 from contextlib import asynccontextmanager
+from app.core.circuit_breaker import with_circuit_breaker, get_llm_circuit_breaker, get_weaviate_circuit_breaker, get_redis_circuit_breaker, get_webhook_circuit_breaker
 
 logger = logging.getLogger(__name__)
 
@@ -224,6 +225,7 @@ class RealTimeCostMonitor:
         # Request counter
         await self.redis.incr('request_count')
 
+    @with_circuit_breaker("redis")
     async def _get_current_metrics(self) -> Dict[str, float]:
         """Get current spending metrics."""
         int(time.time())
@@ -349,6 +351,7 @@ class RealTimeCostMonitor:
         spenders.sort(key=lambda x: x['total_cost'], reverse=True)
         return spenders[:10]
 
+    @with_circuit_breaker("redis")
     async def cleanup_old_data(self, days_to_keep: int = 90) -> None:
         """Clean up old cost data to prevent Redis bloat."""
         cutoff_timestamp = int((datetime.now() - timedelta(days=days_to_keep)).timestamp())

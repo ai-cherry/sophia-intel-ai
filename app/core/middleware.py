@@ -20,6 +20,7 @@ from collections import defaultdict
 from circuitbreaker import circuit
 
 from app.core.config import settings
+from app.core.circuit_breaker import with_circuit_breaker, get_llm_circuit_breaker, get_weaviate_circuit_breaker, get_redis_circuit_breaker, get_webhook_circuit_breaker
 
 logger = logging.getLogger(__name__)
 
@@ -208,6 +209,7 @@ class CircuitBreakerMiddleware:
         # Configure circuit breakers for external services
         self.configure_breakers()
     
+    @with_circuit_breaker("external_api")
     def configure_breakers(self):
         """Configure circuit breakers for known services."""
         

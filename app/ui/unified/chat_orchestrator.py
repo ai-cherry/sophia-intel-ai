@@ -15,6 +15,7 @@ from app.orchestration.mode_normalizer import get_mode_normalizer
 from app.api.nl_processor import QuickNLPProcessor
 from app.mcp.unified_memory import UnifiedMemoryStore
 from app.core.websocket_manager import WebSocketManager
+from app.core.circuit_breaker import with_circuit_breaker, get_llm_circuit_breaker, get_weaviate_circuit_breaker, get_redis_circuit_breaker, get_webhook_circuit_breaker
 
 logger = logging.getLogger(__name__)
 
@@ -212,6 +213,7 @@ class UnifiedChatOrchestrator:
                 }
             }
     
+    @with_circuit_breaker("database")
     async def _get_memory_context(
         self,
         message: str,
@@ -391,6 +393,7 @@ class UnifiedChatOrchestrator:
                 }
             )
     
+    @with_circuit_breaker("database")
     async def _handle_memory_operation(self, nl_result: Any) -> Dict[str, Any]:
         """Handle memory-specific operations"""
         operation = nl_result.memory_operation

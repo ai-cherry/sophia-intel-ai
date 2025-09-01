@@ -22,6 +22,7 @@ from app.swarms.coding.models import (
 from app.utils.response_handler import ResponseHandler, ModelResponseValidator
 from app.memory.supermemory_mcp import SupermemoryMCP
 from app.memory.types import MemoryEntry, MemoryType
+from app.core.circuit_breaker import with_circuit_breaker, get_llm_circuit_breaker, get_weaviate_circuit_breaker, get_redis_circuit_breaker, get_webhook_circuit_breaker
 
 # Optional optimizer and circuit breaker integration
 try:
@@ -149,6 +150,7 @@ class SwarmOrchestrator:
         mode = self.config.get("optimization", "balanced").lower()
         return mode in ["speed", "fast", "lite"]
 
+    @with_circuit_breaker("database")
     async def _check_memory_health(self) -> bool:
         """Circuit breaker check for memory system health."""
         if not self.memory:
@@ -206,6 +208,7 @@ class SwarmOrchestrator:
         except Exception as e:
             self.logger.debug(f"Performance tracking failed: {e}")
     
+    @with_circuit_breaker("database")
     async def _search_related_memories(self, task: str, result: DebateResult) -> None:
         """Search for related memories and add to result."""
         try:

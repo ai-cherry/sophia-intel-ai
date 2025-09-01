@@ -6,6 +6,7 @@ Replaces all mock responses with actual swarm orchestration.
 import json
 from typing import Dict, Any, AsyncGenerator
 from datetime import datetime
+from app.core.circuit_breaker import with_circuit_breaker, get_llm_circuit_breaker, get_weaviate_circuit_breaker, get_redis_circuit_breaker, get_webhook_circuit_breaker
 
 async def execute_real_swarm(
     orchestrator,
@@ -56,6 +57,7 @@ async def execute_real_swarm(
             "real_execution": True
         }
 
+@with_circuit_breaker("database")
 async def stream_real_swarm_execution(
     request,
     state

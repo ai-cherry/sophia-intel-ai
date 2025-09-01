@@ -4,6 +4,7 @@ Enhanced code search with hybrid retrieval and citations.
 
 from agno import Tool
 from app.memory.index_weaviate import hybrid_search_merge
+from app.core.circuit_breaker import with_circuit_breaker, get_llm_circuit_breaker, get_weaviate_circuit_breaker, get_redis_circuit_breaker, get_webhook_circuit_breaker
 
 class CodeSearch(Tool):
     """Tool for searching code with hybrid BM25 + vector search."""
@@ -38,6 +39,8 @@ class CodeSearch(Tool):
         "required": ["query"]
     }
     
+    @with_circuit_breaker("database")
+    @with_circuit_breaker("database")
     async def run(
         self,
         query: str,

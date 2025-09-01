@@ -14,6 +14,7 @@ from portkey_ai import Portkey, PORTKEY_GATEWAY_URL
 from openai import AsyncOpenAI
 
 from .openrouter_latest import OpenRouterLatest, ModelTier, TaskType
+from app.core.circuit_breaker import with_circuit_breaker, get_llm_circuit_breaker, get_weaviate_circuit_breaker, get_redis_circuit_breaker, get_webhook_circuit_breaker
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +30,7 @@ class DynamicPortkeyClient:
     - Deprecated model handling
     """
     
+    @with_circuit_breaker("external_api")
     def __init__(self, 
                  portkey_api_key: str,
                  openrouter_api_key: str,
@@ -80,6 +82,7 @@ class DynamicPortkeyClient:
         self.last_refresh = None
         self.health_status = {}
         
+    @with_circuit_breaker("external_api")
     def _generate_portkey_config(self) -> Dict[str, Any]:
         """Generate Portkey configuration with OpenRouter virtual key."""
         return {
@@ -97,12 +100,14 @@ class DynamicPortkeyClient:
             }
         }
         
+    @with_circuit_breaker("external_api")
     async def refresh_models(self) -> None:
         """Refresh available models from OpenRouter."""
         self.model_cache = await self.openrouter.refresh_model_cache()
         self.last_refresh = datetime.now()
         logger.info(f"Refreshed model cache: {len(self.model_cache)} models available")
         
+    @with_circuit_breaker("external_api")
     async def get_model_for_task(self,
                                  task: Union[str, TaskType] = TaskType.GENERAL,
                                  budget: Union[str, ModelTier] = ModelTier.BALANCED) -> str:
@@ -135,6 +140,7 @@ class DynamicPortkeyClient:
             return True
         return datetime.now() - self.last_refresh > timedelta(hours=6)
         
+    @with_circuit_breaker("external_api")
     async def create_completion(self,
                               messages: List[Dict[str, str]],
                               model: Optional[str] = None,
@@ -251,6 +257,7 @@ class DynamicPortkeyClient:
         async for chunk in response:
             yield chunk
             
+    @with_circuit_breaker("external_api")
     async def check_model_health(self, model_id: str) -> Dict[str, Any]:
         """
         Check health status of a specific model.
@@ -312,6 +319,7 @@ class DynamicPortkeyClient:
                 
         return report
         
+    @with_circuit_breaker("external_api")
     def estimate_cost(self, 
                      model_id: str,
                      prompt_tokens: int,
@@ -329,6 +337,7 @@ class DynamicPortkeyClient:
         """
         return self.openrouter.estimate_cost(model_id, prompt_tokens, completion_tokens)
         
+    @with_circuit_breaker("external_api")
     async def get_available_models(self,
                                   tier: Optional[Union[str, ModelTier]] = None,
                                   max_cost: Optional[float] = None) -> List[str]:
@@ -410,6 +419,7 @@ class DynamicPortkeyClient:
 
 
 # Convenience functions
+@with_circuit_breaker("external_api")
 async def create_dynamic_client() -> DynamicPortkeyClient:
     """Create a dynamic Portkey client with environment configuration."""
     from dotenv import load_dotenv

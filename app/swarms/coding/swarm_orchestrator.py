@@ -8,8 +8,7 @@ validation, memory integration, and result aggregation.
 import logging
 import time
 import asyncio
-from typing import Dict, Any, Optional, List
-from datetime import datetime
+from typing import Dict, Any, Optional
 
 from agno.team import Team
 from app.swarms.coding.models import (
@@ -17,11 +16,9 @@ from app.swarms.coding.models import (
     CriticOutput,
     JudgeOutput,
     GateDecision,
-    GeneratorProposal,
     SwarmConfiguration,
     RiskLevel
 )
-from app.swarms.approval import get_risk_level
 from app.utils.response_handler import ResponseHandler, ModelResponseValidator
 from app.memory.supermemory_mcp import SupermemoryMCP
 from app.memory.types import MemoryEntry, MemoryType

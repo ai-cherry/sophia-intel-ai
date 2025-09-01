@@ -43,7 +43,6 @@ class MemoryEntry:
 
 class SupermemoryMCP:
     """Mock SupermemoryMCP for testing."""
-    pass
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

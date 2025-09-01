@@ -7,12 +7,8 @@ This test suite validates the experimental evolution engine functionality,
 including safety controls, genetic algorithms, and integration points.
 """
 
-import asyncio
 import pytest
-import json
-import random
-from typing import Dict, Any, List
-from datetime import datetime, timedelta
+from typing import Dict, Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from app.swarms.evolution.experimental_evolution_engine import (
@@ -429,7 +425,7 @@ class TestExperimentalEvolutionEngine:
         
         # Mock the safety check to return True (trigger rollback)
         with patch.object(engine, '_check_experimental_safety', return_value=True):
-            result = await engine.experimental_evolve_population("test_swarm", performance_data)
+            await engine.experimental_evolve_population("test_swarm", performance_data)
         
         # Should have triggered rollback
         assert engine.evolution_stats['rollbacks'] >= 0  # Rollback could be attempted

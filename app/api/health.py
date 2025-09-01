@@ -4,8 +4,7 @@ Production-ready health checks for all external services
 """
 
 import os
-import asyncio
-from typing import Dict, Any, List
+from typing import Dict, Any
 from fastapi import APIRouter, HTTPException
 from datetime import datetime
 import redis

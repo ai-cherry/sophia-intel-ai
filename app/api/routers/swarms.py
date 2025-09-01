@@ -6,9 +6,8 @@ allowing clients to configure and execute swarms with full control over settings
 """
 
 from fastapi import APIRouter, HTTPException, BackgroundTasks, Query
-from fastapi.responses import StreamingResponse, JSONResponse
+from fastapi.responses import StreamingResponse
 from typing import Optional, List, Dict, Any
-import asyncio
 import json
 import logging
 
@@ -19,12 +18,9 @@ from app.swarms.coding.models import (
     PoolType
 )
 from app.swarms.coding.team import (
-    execute_swarm_request,
-    make_coding_swarm,
-    run_coding_debate
+    execute_swarm_request
 )
 from app.swarms import SwarmOrchestrator
-from app.memory.supermemory_mcp import SupermemoryStore
 
 logger = logging.getLogger(__name__)
 

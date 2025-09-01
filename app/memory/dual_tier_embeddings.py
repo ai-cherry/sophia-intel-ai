@@ -8,20 +8,13 @@ import json
 import hashlib
 import sqlite3
 import asyncio
-from typing import List, Dict, Any, Optional, Tuple, Union
+from typing import List, Dict, Any, Optional, Tuple
 from dataclasses import dataclass
 from enum import Enum
 import tiktoken
-from pathlib import Path
 
-from app.portkey_config import get_gateway, Role
 from app.memory.embedding_pipeline import (
-    StandardizedEmbeddingPipeline,
-    EmbeddingModel,
-    EmbeddingPurpose,
-    EmbeddingRequest,
-    EmbeddingResult,
-    cosine_similarity as calc_cosine_similarity
+    StandardizedEmbeddingPipeline
 )
 
 # ============================================
@@ -504,7 +497,6 @@ def cosine_similarity(
     embedding2: List[float]
 ) -> float:
     """Calculate cosine similarity between embeddings."""
-    import math
     
     # Normalize vectors
     norm1 = normalize_embedding(embedding1)

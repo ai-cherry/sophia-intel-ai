@@ -6,7 +6,7 @@ various agent compositions based on requirements and resource pools.
 """
 
 import logging
-from typing import List, Optional, Dict, Any
+from typing import List
 from agno.team import Team
 from agno.agent import Agent
 

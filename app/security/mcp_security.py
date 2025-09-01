@@ -42,23 +42,18 @@ class Session:
 
 class SecurityError(Exception):
     """Base security exception"""
-    pass
 
 class AuthenticationError(SecurityError):
     """Authentication failed"""
-    pass
 
 class AuthorizationError(SecurityError):
     """Authorization failed"""
-    pass
 
 class TokenExpiredError(SecurityError):
     """Token has expired"""
-    pass
 
 class RateLimitError(SecurityError):
     """Rate limit exceeded"""
-    pass
 
 class MCPSecurityFramework:
     """

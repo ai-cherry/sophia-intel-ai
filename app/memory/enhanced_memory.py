@@ -5,16 +5,13 @@ Combines SQLite for metadata with Weaviate for semantic search.
 
 import os
 import json
-import asyncio
 import logging
-from typing import List, Dict, Any, Optional, Union
+from typing import List, Optional
 from dataclasses import dataclass, asdict
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 import sqlite3
 import hashlib
-import redis
-from contextlib import asynccontextmanager
 
 # Vector database imports
 try:

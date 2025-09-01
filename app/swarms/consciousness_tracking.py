@@ -12,17 +12,14 @@ This system provides:
 - Consciousness development tracking
 """
 
-import asyncio
 import json
-import random
 import logging
 import numpy as np
-from typing import Dict, Any, List, Optional, Tuple, Union
+from typing import Dict, Any, List, Optional
 from dataclasses import dataclass, field, asdict
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
 from collections import deque
-from pathlib import Path
 
 from .memory_integration import SwarmMemoryClient, SwarmMemoryEventType
 from app.memory.supermemory_mcp import MemoryType

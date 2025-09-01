@@ -4,10 +4,9 @@ Provides abstraction layer for storage operations.
 """
 
 from abc import ABC, abstractmethod
-from typing import Generic, TypeVar, List, Optional, Dict, Any, Union
+from typing import Generic, TypeVar, List, Optional, Dict, Any
 from datetime import datetime
 from pydantic import BaseModel
-import logging
 
 from app.core.logging_config import LoggerFactory
 
@@ -27,12 +26,10 @@ class IRepository(ABC, Generic[T, ID]):
     @abstractmethod
     async def create(self, entity: T) -> T:
         """Create a new entity."""
-        pass
     
     @abstractmethod
     async def get(self, id: ID) -> Optional[T]:
         """Get entity by ID."""
-        pass
     
     @abstractmethod
     async def get_many(
@@ -43,27 +40,22 @@ class IRepository(ABC, Generic[T, ID]):
         order_by: Optional[str] = None
     ) -> List[T]:
         """Get multiple entities with filters."""
-        pass
     
     @abstractmethod
     async def update(self, id: ID, entity: T) -> Optional[T]:
         """Update an entity."""
-        pass
     
     @abstractmethod
     async def delete(self, id: ID) -> bool:
         """Delete an entity."""
-        pass
     
     @abstractmethod
     async def exists(self, id: ID) -> bool:
         """Check if entity exists."""
-        pass
     
     @abstractmethod
     async def count(self, filters: Optional[Dict[str, Any]] = None) -> int:
         """Count entities with filters."""
-        pass
 
 # ============================================
 # Transaction Support
@@ -75,22 +67,18 @@ class ITransactional(ABC):
     @abstractmethod
     async def begin_transaction(self):
         """Begin a transaction."""
-        pass
     
     @abstractmethod
     async def commit(self):
         """Commit the current transaction."""
-        pass
     
     @abstractmethod
     async def rollback(self):
         """Rollback the current transaction."""
-        pass
     
     @abstractmethod
     async def in_transaction(self) -> bool:
         """Check if in a transaction."""
-        pass
 
 # ============================================
 # Unit of Work Pattern
@@ -102,22 +90,18 @@ class IUnitOfWork(ABC):
     @abstractmethod
     async def __aenter__(self):
         """Enter context manager."""
-        pass
     
     @abstractmethod
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         """Exit context manager."""
-        pass
     
     @abstractmethod
     async def commit(self):
         """Commit all changes."""
-        pass
     
     @abstractmethod
     async def rollback(self):
         """Rollback all changes."""
-        pass
 
 # ============================================
 # Base Repository Implementation
@@ -374,7 +358,6 @@ class ISpecification(ABC, Generic[T]):
     @abstractmethod
     def is_satisfied_by(self, entity: T) -> bool:
         """Check if entity satisfies specification."""
-        pass
     
     def and_(self, other: 'ISpecification[T]') -> 'ISpecification[T]':
         """Combine with AND."""

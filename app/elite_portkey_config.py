@@ -5,11 +5,8 @@ This is what happens when you demand only the absolute peak AI models.
 
 import os
 import json
-import time
 from typing import Dict, Any, Optional, List
 from dataclasses import dataclass
-from enum import Enum
-import hashlib
 
 # ============================================
 # Elite Model Registry - ONLY THE BEST
@@ -403,9 +400,9 @@ class ElitePortkeyGateway:
         
         # Get optimal routing
         if swarm_mode:
-            routing = self.routing.get_swarm_routing(swarm_mode)
+            self.routing.get_swarm_routing(swarm_mode)
         else:
-            routing = self.routing.get_optimal_route(role, task_complexity)
+            self.routing.get_optimal_route(role, task_complexity)
         
         # Determine caching strategy
         model_tier = self.optimizations.get_model_tier(model)

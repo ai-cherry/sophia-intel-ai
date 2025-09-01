@@ -3,12 +3,10 @@ AI Rules Loader for Swarm Agents
 Loads and enforces rules from the .ai directory structure
 """
 
-import os
 import yaml
 import re
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Tuple
-from datetime import datetime
 import logging
 
 logger = logging.getLogger(__name__)

@@ -3,9 +3,7 @@ Enhanced code search with hybrid retrieval and citations.
 """
 
 from agno import Tool
-from typing import Optional, List, Dict, Any
 from app.memory.index_weaviate import hybrid_search_merge
-import asyncio
 
 class CodeSearch(Tool):
     """Tool for searching code with hybrid BM25 + vector search."""
@@ -201,6 +199,6 @@ class SmartCodeSearch(CodeSearch):
                 show_citations=show_citations
             )
             
-        except Exception as e:
+        except Exception:
             # Fallback to basic search
             return await super().run(query, limit, semantic_weight, show_citations)

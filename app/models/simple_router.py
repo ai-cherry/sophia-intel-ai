@@ -3,9 +3,8 @@ Simplified model router for agent system.
 Uses direct OpenAI client integration.
 """
 
-from typing import Dict, Any, Optional
 import os
-from openai import OpenAI, AsyncOpenAI
+from openai import OpenAI
 from dotenv import load_dotenv
 
 # Load environment variables

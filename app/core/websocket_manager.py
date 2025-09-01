@@ -4,12 +4,11 @@ Handles WebSocket connections for live swarm execution, memory updates, and metr
 """
 
 import asyncio
-import json
-from typing import Dict, Set, Any, Optional
+from typing import Dict, Set, Any
 from datetime import datetime
 import logging
 from fastapi import WebSocket, WebSocketDisconnect
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 
 logger = logging.getLogger(__name__)
 
@@ -370,7 +369,7 @@ class WebSocketManager:
         async def websocket_endpoint(websocket: WebSocket, client_id: str, session_id: str):
             await ws_manager.websocket_endpoint(websocket, client_id, session_id)
         """
-        connection = await self.connect(websocket, client_id, session_id)
+        await self.connect(websocket, client_id, session_id)
         
         try:
             while True:

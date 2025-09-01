@@ -19,7 +19,7 @@ import requests
 
 # Optional aioredis import for async Redis support
 try:
-    from aioredis import Redis, create_redis_pool
+    from aioredis import create_redis_pool
     AIOREDIS_AVAILABLE = True
 except ImportError:
     AIOREDIS_AVAILABLE = False

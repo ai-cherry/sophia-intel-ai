@@ -1,6 +1,5 @@
 from agno import Tool
 import subprocess
-from typing import Optional
 
 class RunLint(Tool):
     """Tool for running linting on the codebase."""

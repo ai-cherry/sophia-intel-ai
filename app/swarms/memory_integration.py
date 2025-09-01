@@ -4,12 +4,11 @@ Implements ADR-005: Memory System Integration Architecture
 Connects swarm orchestrators with Supermemory MCP and Weaviate systems.
 """
 
-import asyncio
 import json
 import hashlib
 import logging
-from typing import Dict, Any, List, Optional, Union
-from dataclasses import dataclass, asdict, field
+from typing import Dict, Any, List, Optional
+from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 import aiohttp

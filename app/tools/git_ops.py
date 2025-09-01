@@ -1,6 +1,5 @@
 from agno import Tool
 import subprocess
-from typing import Optional
 
 class GitStatus(Tool):
     """Tool for checking git status."""

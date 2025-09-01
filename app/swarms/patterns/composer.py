@@ -2,12 +2,12 @@
 Swarm Composer for combining multiple patterns into complex behaviors.
 """
 
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 from dataclasses import dataclass
 import asyncio
 import logging
 
-from .base import SwarmPattern, PatternConfig, PatternResult
+from .base import SwarmPattern
 from . import (
     AdversarialDebatePattern,
     QualityGatesPattern,

@@ -3,7 +3,6 @@ Real Swarm Execution Module
 Replaces all mock responses with actual swarm orchestration.
 """
 
-import asyncio
 import json
 from typing import Dict, Any, AsyncGenerator
 from datetime import datetime

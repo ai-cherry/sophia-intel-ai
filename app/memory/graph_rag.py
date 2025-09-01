@@ -10,10 +10,9 @@ import re
 import networkx as nx
 import sqlite3
 from typing import List, Dict, Any, Optional, Set, Tuple
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-import hashlib
 from collections import defaultdict
 
 # ============================================

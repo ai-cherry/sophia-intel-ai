@@ -10,11 +10,10 @@ from typing import List, Dict, Any, Optional, AsyncGenerator
 from datetime import datetime
 import logging
 
-from app.core.config import settings
-from app.core.middleware import with_retry, with_timeout
+from app.core.middleware import with_timeout
 from app.core.observability import track_swarm_execution
 from app.api.dependencies import get_orchestrator, get_state
-from app.models.schemas import TeamInfo, RunRequest, RunResponse
+from app.models.schemas import TeamInfo
 
 logger = logging.getLogger(__name__)
 

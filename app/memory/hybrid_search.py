@@ -3,19 +3,13 @@ Enhanced Hybrid Search with BM25 + Vector + Cross-Encoder Re-ranking.
 Combines multiple retrieval methods for optimal results.
 """
 
-import os
-import json
 import math
-import numpy as np
-from typing import List, Dict, Any, Optional, Tuple, Union
+from typing import List, Dict, Any, Optional, Tuple
 from dataclasses import dataclass, field
-from enum import Enum
-import sqlite3
 from collections import Counter, defaultdict
 import re
 
 from app.memory.dual_tier_embeddings import DualTierEmbedder, cosine_similarity
-from app.portkey_config import gateway, Role
 
 # ============================================
 # Configuration

@@ -17,21 +17,16 @@ Key Features:
 - Real-time adaptation capabilities (experimental)
 """
 
-import asyncio
-import json
 import random
 import logging
-from typing import Dict, Any, List, Optional, Tuple, Union
+from typing import Dict, Any, List, Optional, Tuple
 from dataclasses import dataclass, field, asdict
 from datetime import datetime, timedelta
 from enum import Enum
-from pathlib import Path
-import numpy as np
 from copy import deepcopy
 
 from app.swarms.memory_integration import SwarmMemoryClient, SwarmMemoryEventType
-from app.swarms.consciousness_tracking import ConsciousnessTracker, ConsciousnessType
-from app.memory.supermemory_mcp import MemoryType
+from app.swarms.consciousness_tracking import ConsciousnessTracker
 
 logger = logging.getLogger(__name__)
 
@@ -1417,7 +1412,7 @@ class ExperimentalEvolutionEngine:
             return
         
         consciousness_level = consciousness_data.get('consciousness_level', 0)
-        development_stage = consciousness_data.get('development_stage', 'nascent')
+        consciousness_data.get('development_stage', 'nascent')
         
         # Adjust mutation rate based on consciousness level
         base_mutation_rate = self.config.mutation_rate

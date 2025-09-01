@@ -20,9 +20,7 @@ try:
     from app.contracts.json_schemas import (
         validate_critic_output,
         validate_judge_output,
-        runner_gate_decision,
-        CriticOutput,
-        JudgeOutput
+        runner_gate_decision
     )
     JSON_VALIDATION_AVAILABLE = True
 except ImportError:
@@ -186,7 +184,7 @@ def _post_judge_quality(step_input: StepInput, team) -> StepOutput:
                             "gate_decision": gate
                         }
                     )
-        except Exception as e:
+        except Exception:
             # Fall back to simple validation
             pass
     

@@ -16,19 +16,10 @@ from pathlib import Path
 import logging
 
 from app.swarms.improved_swarm import (
-    ImprovedAgentSwarm,
-    AdversarialDebateSystem,
-    QualityGateSystem,
     StrategyArchive,
-    SafetyBoundarySystem,
-    DynamicRoleAssigner,
-    ConsensusSystem,
-    AdaptiveParameterManager,
-    KnowledgeTransferSystem,
-    MCPUIIntegration
+    SafetyBoundarySystem
 )
 from app.swarms.memory_enhanced_swarm import (
-    MemoryEnhancedImprovedSwarm,
     MemoryEnhancedCodingTeam,
     MemoryEnhancedCodingSwarm,
     MemoryEnhancedFastSwarm,

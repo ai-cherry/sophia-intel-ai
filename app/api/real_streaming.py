@@ -6,13 +6,12 @@ Replaces mock responses with actual AI-generated content.
 import asyncio
 import json
 import logging
-from typing import AsyncGenerator, Dict, Any
+from typing import AsyncGenerator, Any
 from datetime import datetime
 
 from app.llm.real_executor import real_executor, Role
 from app.memory.enhanced_memory import get_enhanced_memory_instance
-from app.swarms.coding.team import make_coding_swarm, execute_swarm_request
-from app.swarms.coding.models import SwarmRequest, SwarmConfiguration, PoolType
+from app.swarms.coding.models import SwarmRequest
 
 logger = logging.getLogger(__name__)
 

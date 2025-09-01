@@ -3,7 +3,6 @@ Unified Orchestrator Facade
 Central routing and coordination for all swarm types and MCP assistants
 """
 
-import asyncio
 import json
 from typing import Dict, Any, Optional, AsyncGenerator, List
 from datetime import datetime
@@ -526,7 +525,6 @@ class MCPAssistantCoordinator:
     async def initialize(self):
         """Initialize connection to MCP assistant"""
         # This would connect to the actual MCP bridge adapter
-        pass
     
     async def execute_task(self, task: str, context: Dict) -> Dict:
         """Execute task with this assistant"""

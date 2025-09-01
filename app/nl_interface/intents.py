@@ -2,8 +2,8 @@
 Intent definitions and patterns for Natural Language Interface
 """
 
-from typing import Dict, List, Any
-from dataclasses import dataclass, field
+from typing import Dict, List
+from dataclasses import dataclass
 
 
 @dataclass

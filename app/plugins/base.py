@@ -4,7 +4,7 @@ Base classes and interfaces for dynamic plugin loading.
 """
 
 from abc import ABC, abstractmethod
-from typing import Dict, Any, List, Optional, Type
+from typing import Dict, Any, List, Optional
 from pydantic import BaseModel, Field
 from datetime import datetime
 import logging
@@ -89,7 +89,6 @@ class SwarmPlugin(Plugin):
         Returns:
             Task execution result
         """
-        pass
     
     @abstractmethod
     def get_agents(self) -> List[Dict[str, Any]]:
@@ -98,7 +97,6 @@ class SwarmPlugin(Plugin):
         Returns:
             List of agent configurations
         """
-        pass
     
     @abstractmethod
     def get_capabilities(self) -> List[str]:
@@ -107,7 +105,6 @@ class SwarmPlugin(Plugin):
         Returns:
             List of capability strings
         """
-        pass
 
 class ToolPlugin(Plugin):
     """Base class for tool plugins."""
@@ -127,7 +124,6 @@ class ToolPlugin(Plugin):
         Returns:
             Operation result
         """
-        pass
     
     @abstractmethod
     def get_operations(self) -> List[str]:
@@ -136,7 +132,6 @@ class ToolPlugin(Plugin):
         Returns:
             List of operation names
         """
-        pass
 
 class MemoryPlugin(Plugin):
     """Base class for memory plugins."""
@@ -158,7 +153,6 @@ class MemoryPlugin(Plugin):
         Returns:
             Success status
         """
-        pass
     
     @abstractmethod
     async def retrieve(
@@ -173,7 +167,6 @@ class MemoryPlugin(Plugin):
         Returns:
             Stored value or None
         """
-        pass
     
     @abstractmethod
     async def search(
@@ -190,7 +183,6 @@ class MemoryPlugin(Plugin):
         Returns:
             Search results
         """
-        pass
 
 # ============================================
 # Plugin Interfaces

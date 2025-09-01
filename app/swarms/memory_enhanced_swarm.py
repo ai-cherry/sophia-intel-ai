@@ -3,27 +3,17 @@ Memory-Enhanced Swarm System
 Extends ImprovedAgentSwarm with full memory integration following ADR-005.
 """
 
-import asyncio
 import json
 import logging
 from typing import Dict, Any, List, Optional, Tuple
 from datetime import datetime
-from pathlib import Path
 
 from .improved_swarm import (
-    ImprovedAgentSwarm,
-    AdversarialDebateSystem,
-    QualityGateSystem,
-    SafetyBoundarySystem,
-    DynamicRoleAssigner,
-    ConsensusSystem,
-    AdaptiveParameterManager,
-    KnowledgeTransferSystem,
-    MCPUIIntegration
+    ImprovedAgentSwarm
 )
-from .memory_integration import SwarmMemoryClient, SwarmMemoryMixin, SwarmMemoryEventType
-from .patterns.memory_integration import MemoryIntegrationPattern, MemoryIntegrationConfig, MemoryEnhancedStrategyArchive
-from .consciousness_tracking import ConsciousnessTracker, ConsciousnessType
+from .memory_integration import SwarmMemoryMixin, SwarmMemoryEventType
+from .patterns.memory_integration import MemoryIntegrationPattern, MemoryEnhancedStrategyArchive
+from .consciousness_tracking import ConsciousnessTracker
 from app.memory.supermemory_mcp import MemoryType
 
 logger = logging.getLogger(__name__)

@@ -4,7 +4,7 @@ Provides directory listing functionality for agents.
 """
 
 import os
-from typing import Dict, Any, List
+from typing import Dict, Any
 
 
 class ListDirectory:

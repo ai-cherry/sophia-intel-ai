@@ -3,7 +3,6 @@ Unified Chat Orchestrator
 Central controller for the integrated chat UI with swarms, NL, and memory
 """
 
-import asyncio
 import json
 from typing import Dict, Any, Optional, AsyncGenerator, List
 from datetime import datetime

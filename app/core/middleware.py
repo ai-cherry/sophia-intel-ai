@@ -3,27 +3,23 @@ Middleware for Rate Limiting, Error Handling, and Resilience
 Provides production-ready middleware for the Sophia Intel AI system.
 """
 
-from fastapi import Request, Response, HTTPException, status
+from fastapi import Request, HTTPException, status
 from fastapi.responses import JSONResponse
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
-from slowapi.middleware import SlowAPIMiddleware
 import httpx
-from typing import Callable, Optional, Dict, Any, List
+from typing import Callable
 import time
 import asyncio
 import logging
-import json
 import traceback
 from datetime import datetime, timedelta
 from functools import wraps
 from collections import defaultdict
-import redis
 from circuitbreaker import circuit
 
 from app.core.config import settings
-from app.core.observability import http_requests_total, http_request_duration
 
 logger = logging.getLogger(__name__)
 
@@ -160,7 +156,7 @@ class ErrorHandlingMiddleware:
                 }
             )
             
-        except RateLimitExceeded as e:
+        except RateLimitExceeded:
             # Handle rate limit exceptions
             return JSONResponse(
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,

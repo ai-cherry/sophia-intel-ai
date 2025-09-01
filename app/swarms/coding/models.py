@@ -5,7 +5,7 @@ This module defines Pydantic models for all swarm inputs and outputs,
 ensuring type safety and validation throughout the system.
 """
 
-from typing import List, Dict, Any, Optional, Literal
+from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, Field, ConfigDict
 from datetime import datetime
 from enum import Enum

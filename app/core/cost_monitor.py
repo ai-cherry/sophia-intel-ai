@@ -226,7 +226,7 @@ class RealTimeCostMonitor:
 
     async def _get_current_metrics(self) -> Dict[str, float]:
         """Get current spending metrics."""
-        now = int(time.time())
+        int(time.time())
 
         # Get hourly spend (last hour)
         hourly_keys = await self.redis.keys('costs:hourly:*')

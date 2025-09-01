@@ -5,7 +5,6 @@ Automatically adapts to model availability and manages fallbacks.
 
 import os
 import json
-import asyncio
 from typing import Dict, Any, List, Optional, Union
 from datetime import datetime, timedelta
 import logging
@@ -13,7 +12,6 @@ from pathlib import Path
 
 from portkey_ai import Portkey, PORTKEY_GATEWAY_URL
 from openai import AsyncOpenAI
-import httpx
 
 from .openrouter_latest import OpenRouterLatest, ModelTier, TaskType
 

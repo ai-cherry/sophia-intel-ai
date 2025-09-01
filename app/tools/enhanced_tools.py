@@ -1,9 +1,8 @@
 """Enhanced tools with error handling, safety checks, and validation."""
 import asyncio
 import logging
-import os
 import subprocess
-from typing import Dict, Any, Optional, List, Union
+from typing import Dict, Any, Optional, List
 from dataclasses import dataclass
 from pathlib import Path
 import json

@@ -36,7 +36,6 @@ class KnowledgeTransferPattern(SwarmPattern):
         
     async def _teardown(self) -> None:
         """Cleanup knowledge transfer system."""
-        pass
         
     async def execute(self, context: Dict[str, Any], agents: List[Any]) -> PatternResult:
         """Execute with knowledge transfer."""

@@ -1,7 +1,5 @@
 from agno import Tool
-import subprocess
 from pathlib import Path
-from typing import Optional
 
 class StartPlayground(Tool):
     """Tool for starting the Agno Playground."""

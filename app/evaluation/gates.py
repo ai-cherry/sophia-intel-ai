@@ -3,14 +3,12 @@ Evaluation Gates for Quality Control.
 AccuracyEval and ReliabilityEval gates that must pass before Runner execution.
 """
 
-import os
 import json
 import re
-from typing import List, Dict, Any, Optional, Set, Tuple
+from typing import List, Dict, Any, Optional
 from dataclasses import dataclass, field
 from enum import Enum
 from datetime import datetime
-import hashlib
 
 from app.contracts.json_schemas import (
     CriticOutput,

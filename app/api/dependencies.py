@@ -9,7 +9,7 @@ Following ADR-006: Configuration Management Standardization
 - Proper secret management and validation
 """
 
-from typing import Any, Optional
+from typing import Any
 from fastapi import Depends, HTTPException
 import logging
 
@@ -217,10 +217,10 @@ def initialize_dependencies(unified_state=None):
             
             # Test connections based on configuration
             if config.redis_url:
-                redis_client = get_redis_client(_global_state)
+                get_redis_client(_global_state)
                 
             if config.weaviate_url:
-                weaviate_client = get_weaviate_client(_global_state)
+                get_weaviate_client(_global_state)
                 
             logger.info("✅ All critical dependencies validated successfully")
         else:

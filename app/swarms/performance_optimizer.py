@@ -3,11 +3,10 @@ Swarm Performance Optimizer - Circuit Breaker and Performance Monitoring
 Provides robust optimization utilities for AI agent swarms with graceful degradation.
 """
 
-import asyncio
 import time
 import json
 import logging
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, Optional
 from dataclasses import dataclass, field
 from contextlib import asynccontextmanager
 
@@ -88,7 +87,6 @@ class CircuitBreaker:
 
 class CircuitBreakerOpenException(Exception):
     """Exception raised when circuit breaker is open."""
-    pass
 
 
 @dataclass
@@ -351,10 +349,8 @@ class SwarmOptimizer:
         try:
             # Execute swarm function
             result = await swarm_func(*args, **kwargs)
-            success = True
         except Exception as e:
             result = None
-            success = False
             logger.error(f"Swarm execution benchmarked failed: {e}")
 
         execution_time = time.time() - start_time
@@ -441,7 +437,7 @@ async def performance_monitoring(optimizer: SwarmOptimizer, pattern_name: str):
             execution_time, True, memory_used
         )
 
-    except Exception as e:
+    except Exception:
         # Record failed execution
         execution_time = time.time() - start_time
         optimizer.get_performance_metrics(pattern_name).record_execution(

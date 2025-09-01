@@ -1,7 +1,5 @@
 from agno import Tool
-import os
 from pathlib import Path
-from typing import Optional
 
 class ReadFile(Tool):
     """Tool for reading file contents from the repository."""

@@ -7,7 +7,7 @@ import os
 import json
 import time
 from typing import Dict, Any, Optional, List
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 from enum import Enum
 from openai import OpenAI, AsyncOpenAI
 import hashlib

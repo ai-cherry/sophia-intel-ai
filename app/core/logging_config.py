@@ -5,7 +5,6 @@ Provides consistent logging across all modules with structured output.
 
 import logging
 import logging.config
-import sys
 import json
 from pathlib import Path
 from typing import Dict, Any, Optional
@@ -321,7 +320,6 @@ class LogContext:
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Clear context variables."""
         # Context vars are automatically cleaned up
-        pass
 
 # ============================================
 # Utility Functions

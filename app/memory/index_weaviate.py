@@ -1,7 +1,7 @@
 import os
 import weaviate
 import weaviate.classes as wvc
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 from app import settings
 from app.memory.embed_router import (
     choose_model_for_chunk, embed_with_cache, MODEL_A, MODEL_B, DIM_A, DIM_B
@@ -143,7 +143,6 @@ async def hybrid_search_merge(query: str, k: int = 8, semantic_weight: float = 0
     Returns:
         Merged and ranked results
     """
-    from math import exp
     
     # Generate query embeddings for both tiers
     qA = embed_with_cache([query], MODEL_A)[0]

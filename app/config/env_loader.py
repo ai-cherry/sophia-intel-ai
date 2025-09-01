@@ -9,10 +9,9 @@ Following ADR-006: Configuration Management Standardization
 import os
 import subprocess
 import json
-import time
 import hashlib
 from pathlib import Path
-from typing import Dict, Any, Optional, List, Union
+from typing import Dict, Any, Optional, List
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from dotenv import load_dotenv

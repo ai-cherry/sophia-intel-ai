@@ -10,7 +10,6 @@ from pathlib import Path
 import asyncio
 import logging
 import hashlib
-import json
 from datetime import datetime
 from dataclasses import dataclass, asdict
 from enum import Enum

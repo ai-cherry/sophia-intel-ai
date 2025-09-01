@@ -3,13 +3,12 @@ Prometheus Metrics Exporter for Sophia Intel AI
 Provides comprehensive metrics for cost tracking, caching, LLM performance, and system health.
 """
 
-from prometheus_client import Counter, Histogram, Gauge, Summary, CollectorRegistry, generate_latest
+from prometheus_client import Counter, Histogram, Gauge, CollectorRegistry, generate_latest
 from prometheus_client import CONTENT_TYPE_LATEST
-from typing import Optional, Dict, Any
+from typing import Dict
 import time
 import logging
 from functools import wraps
-from datetime import datetime
 
 logger = logging.getLogger(__name__)
 

@@ -9,19 +9,18 @@ Following ADR-006: Configuration Management Standardization
 """
 
 import os
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse, JSONResponse
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import List, Dict, Any, Optional, AsyncGenerator
-import asyncio
 import json
 import httpx
 import logging
 from datetime import datetime
 
 # Import enhanced configuration system following ADR-006
-from app.config.env_loader import get_env_config, validate_environment, print_env_status
+from app.config.env_loader import get_env_config, validate_environment
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

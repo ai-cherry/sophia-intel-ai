@@ -11,7 +11,6 @@ from dataclasses import dataclass, field
 
 from app.swarms.performance_optimizer import (
     SwarmOptimizer,
-    CircuitBreaker,
     GracefulDegradationManager,
     CircuitBreakerOpenException,
     performance_monitoring

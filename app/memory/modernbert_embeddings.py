@@ -9,14 +9,14 @@ import json
 import hashlib
 import sqlite3
 import asyncio
-from typing import List, Dict, Any, Optional, Tuple, Union
+from typing import List, Dict, Any, Optional, Tuple
 from dataclasses import dataclass
 from enum import Enum
 import tiktoken
 from pathlib import Path
 import numpy as np
 
-from app.portkey_config import gateway, Role
+from app.portkey_config import gateway
 
 # ============================================
 # Enhanced Configuration for 2025 Models
@@ -166,13 +166,13 @@ class ModernBERTEmbedder:
         # Get model configuration
         if tier == EmbeddingTier.TIER_S:
             model = self.config.tier_s_model
-            expected_dim = self.config.tier_s_dim
+            self.config.tier_s_dim
         elif tier == EmbeddingTier.TIER_A:
             model = self.config.tier_a_model
-            expected_dim = self.config.tier_a_dim
+            self.config.tier_a_dim
         else:
             model = self.config.tier_b_model
-            expected_dim = self.config.tier_b_dim
+            self.config.tier_b_dim
         
         # Check cache first
         text_hash = hashlib.sha256(text.encode()).hexdigest()
@@ -373,4 +373,3 @@ class ModernBERTEmbedder:
 # Compatibility wrapper for existing code
 class DualTierEmbedder(ModernBERTEmbedder):
     """Compatibility wrapper to maintain existing API."""
-    pass

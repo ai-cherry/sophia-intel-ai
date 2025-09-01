@@ -88,17 +88,14 @@ class SwarmPattern(ABC):
         Returns:
             PatternResult containing execution outcome
         """
-        pass
     
     @abstractmethod
     async def _setup(self) -> None:
         """Setup pattern-specific resources."""
-        pass
     
     @abstractmethod
     async def _teardown(self) -> None:
         """Teardown pattern-specific resources."""
-        pass
     
     def get_metrics(self) -> Dict[str, Any]:
         """Get pattern execution metrics."""

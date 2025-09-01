@@ -9,7 +9,7 @@ Following ADR-006: Configuration Management Standardization
 - Proper secret management and validation
 """
 
-from fastapi import FastAPI, HTTPException, BackgroundTasks, Request, Form, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, Request, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, JSONResponse
 from pydantic import BaseModel, Field
@@ -22,26 +22,15 @@ from contextlib import asynccontextmanager
 import logging
 
 # Import enhanced configuration system following ADR-006
-from app.config.env_loader import get_env_config, validate_environment, print_env_status
+from app.config.env_loader import get_env_config, print_env_status
 
 # Import OpenTelemetry configuration
 from app.observability.otel_config import configure_opentelemetry, trace_llm_call
 
 # Import our enhanced systems
-from app.api.advanced_gateway_2025 import (
-    get_advanced_gateway,
-    chat_with_gpt5,
-    chat_with_gemini25_pro,
-    chat_with_claude_sonnet4,
-    generate_embeddings_32k,
-    smart_route_chat,
-    TaskType
-)
 from app.api.health import router as health_router
 
 # Import unified chat and WebSocket systems
-from app.ui.unified.chat_orchestrator import UnifiedChatOrchestrator
-from app.core.websocket_manager import WebSocketManager
 
 # Import consolidated memory and vector systems
 try:
@@ -80,7 +69,7 @@ except ImportError:
 try:
     from app.api.real_streaming import stream_real_ai_execution
     from app.api.real_swarm_execution import stream_real_swarm_execution
-except ImportError as e:
+except ImportError:
     # Create fallback streaming functions for deployment
     async def stream_real_ai_execution(request):
         yield '{"status": "fallback", "message": "Real streaming not available"}'
@@ -290,13 +279,11 @@ class GlobalState:
         if server_config.GRAPHRAG_ENABLED:
             # self.knowledge_graph = KnowledgeGraph()  # Commented out - missing imports
             # self.graph_rag = GraphRAGEngine(self.knowledge_graph)
-            pass
             print("  ✅ GraphRAG system initialized")
         
         # Initialize evaluation gates
         if server_config.GATES_ENABLED:
             # self.gate_manager = EvaluationGateManager()  # Commented out - missing import
-            pass
             print("  ✅ Evaluation gates initialized")
         
         # Initialize orchestrator for real swarm execution

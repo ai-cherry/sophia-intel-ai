@@ -3,12 +3,9 @@ OpenRouter Latest Model Integration (August 2025).
 Dynamic model management with automatic updates and fallbacks.
 """
 
-import os
-import asyncio
 import httpx
-import json
-from typing import Dict, Any, List, Optional, Tuple
-from dataclasses import dataclass, field
+from typing import Dict, Any, List, Optional
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
 import logging

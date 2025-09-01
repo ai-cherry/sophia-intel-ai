@@ -29,7 +29,7 @@ opentelemetry-instrumentation-redis==0.43b0
 opentelemetry-instrumentation-logging==0.43b0
 opentelemetry-semantic-conventions==0.43b0
 opentelemetry-semantic-conventions-ai==0.1.0
-protobuf==5.29.5
+protobuf>=3.19,<5.0  # Compatible with opentelemetry-proto
 
 # Vector stores - MIGRATED TO WEAVIATE v1.32+
 # weaviate-client # Temporarily removed due to native build issues on macOS

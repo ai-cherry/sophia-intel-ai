@@ -3,16 +3,12 @@ Enhanced MCP Server v2
 Production-ready MCP server with full observability and security
 """
 
-import asyncio
-import json
 import time
 import uuid
 from typing import Dict, List, Optional, Any
 from datetime import datetime
-from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Depends, HTTPException, Request, BackgroundTasks
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 import structlog

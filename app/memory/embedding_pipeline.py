@@ -3,15 +3,13 @@ Standardized Embedding Pipeline for Sophia Intel AI
 Provides consistent embedding generation with metadata tracking.
 """
 
-from typing import List, Dict, Any, Optional, Tuple, Union
+from typing import List, Dict, Any, Optional, Tuple
 from dataclasses import dataclass, field, asdict
 from datetime import datetime
 from enum import Enum
 import hashlib
-import json
 import asyncio
 import logging
-from functools import lru_cache
 
 import numpy as np
 from pydantic import BaseModel, Field

@@ -3,8 +3,6 @@ Real LLM Executor with Portkey Integration
 Replaces all mock/template responses with actual LLM calls.
 """
 
-import asyncio
-import json
 import logging
 from typing import Dict, List, Any, Optional, AsyncGenerator
 from datetime import datetime

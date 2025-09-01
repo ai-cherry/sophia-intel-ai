@@ -4,11 +4,10 @@ Provides API key validation, rate limiting, and security headers
 """
 
 import hashlib
-import hmac
 import time
 import logging
 from typing import Dict, Any, Optional, List
-from datetime import datetime, timedelta
+from datetime import datetime
 from dataclasses import dataclass
 from collections import defaultdict
 import json
@@ -17,7 +16,6 @@ import os
 from fastapi import HTTPException, Security, Header, Request
 from fastapi.security import APIKeyHeader, APIKeyQuery
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.responses import Response
 
 logger = logging.getLogger(__name__)
 

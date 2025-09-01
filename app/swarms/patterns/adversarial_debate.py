@@ -5,7 +5,7 @@ Adversarial Debate Pattern for solution quality improvement through structured a
 import random
 import asyncio
 from typing import Dict, Any, List, Optional
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 import logging
 import time

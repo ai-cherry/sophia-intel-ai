@@ -1,7 +1,5 @@
 from agno import Tool
 import subprocess
-from pathlib import Path
-from typing import Optional
 
 class RunTests(Tool):
     """Tool for running tests."""

@@ -40,7 +40,6 @@ class DynamicRolesPattern(SwarmPattern):
         
     async def _teardown(self) -> None:
         """Cleanup role system."""
-        pass
         
     async def execute(self, context: Dict[str, Any], agents: List[Any]) -> PatternResult:
         """Execute with dynamic role assignment."""

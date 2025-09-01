@@ -5,8 +5,6 @@ Strategy Archive Pattern for historical strategy tracking and reuse.
 from typing import Dict, Any, List, Optional
 from dataclasses import dataclass
 import pickle
-import json
-from datetime import datetime
 import logging
 
 from .base import SwarmPattern, PatternConfig, PatternResult

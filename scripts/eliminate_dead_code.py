@@ -253,11 +253,16 @@ def main():
         action="store_true",
         help="Skip import cleaning"
     )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Skip confirmation prompt"
+    )
     
     args = parser.parse_args()
     
     # Safety check
-    if args.live:
+    if args.live and not args.force:
         print("⚠️  WARNING: This will permanently modify files!")
         response = input("Are you sure you want to continue? (yes/no): ")
         if response.lower() != "yes":

@@ -3,7 +3,7 @@ Quality Gates Pattern with automatic retry strategies.
 """
 
 import asyncio
-from typing import Dict, Any, List, Optional, Callable
+from typing import Dict, Any, List, Optional
 from dataclasses import dataclass, field
 from datetime import datetime
 import logging

@@ -4,12 +4,10 @@ Optimizes embedding generation by skipping unchanged content.
 """
 
 import os
-import json
 import hashlib
 import asyncio
-from pathlib import Path
 from typing import List, Dict, Tuple, Optional, Set
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 from datetime import datetime
 import sqlite3
 import aiofiles
@@ -17,7 +15,6 @@ from tqdm.asyncio import tqdm
 
 from app.memory.chunking import produce_chunks_for_index, discover_source_files
 from app.memory.index_weaviate import upsert_chunks_dual
-from app.portkey_config import gateway, Role
 
 # ============================================
 # Configuration

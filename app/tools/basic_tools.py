@@ -5,7 +5,7 @@ These are simplified tools that work with the current agno version.
 
 import os
 import subprocess
-from typing import Dict, Any, List
+from typing import Dict, Any
 
 
 def search_code(query: str, path: str = ".") -> Dict[str, Any]:

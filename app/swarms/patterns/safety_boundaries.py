@@ -37,7 +37,6 @@ class SafetyBoundariesPattern(SwarmPattern):
         
     async def _teardown(self) -> None:
         """Cleanup safety systems."""
-        pass
         
     async def execute(self, context: Dict[str, Any], agents: List[Any]) -> PatternResult:
         """Execute with safety boundaries."""

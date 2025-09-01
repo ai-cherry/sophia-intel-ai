@@ -1,0 +1,111 @@
+{
+  "timestamp": "2025-09-01T16:11:24.609968",
+  "dry_run": false,
+  "removed_files": [
+    {
+      "path": "app/playground.py",
+      "reason": "orphaned",
+      "lines": 69,
+      "size": 2618
+    },
+    {
+      "path": "app/server_shim.py",
+      "reason": "orphaned",
+      "lines": 210,
+      "size": 6811
+    },
+    {
+      "path": "app/api/code_generator_server.py",
+      "reason": "orphaned",
+      "lines": 649,
+      "size": 18190
+    },
+    {
+      "path": "app/api/gateway.py",
+      "reason": "orphaned",
+      "lines": 401,
+      "size": 15616
+    },
+    {
+      "path": "app/models/router.py",
+      "reason": "orphaned",
+      "lines": 93,
+      "size": 3615
+    },
+    {
+      "path": "app/gpu/lambda_executor.py",
+      "reason": "orphaned",
+      "lines": 327,
+      "size": 13099
+    },
+    {
+      "path": "app/rag/basic_rag.py",
+      "reason": "orphaned",
+      "lines": 382,
+      "size": 13316
+    },
+    {
+      "path": "app/agno_v2/playground.py",
+      "reason": "orphaned",
+      "lines": 402,
+      "size": 12807
+    },
+    {
+      "path": "app/agno_v2/playground_with_env.py",
+      "reason": "orphaned",
+      "lines": 453,
+      "size": 14852
+    },
+    {
+      "path": "app/config/local_dev_config.py",
+      "reason": "orphaned",
+      "lines": 125,
+      "size": 4323
+    },
+    {
+      "path": "app/ports.py",
+      "reason": "orphaned",
+      "lines": 283,
+      "size": 9213
+    },
+    {
+      "path": "app/settings.py",
+      "reason": "orphaned",
+      "lines": 28,
+      "size": 1194
+    },
+    {
+      "path": "app/memory/embed_together.py",
+      "reason": "duplicate",
+      "lines": 31,
+      "size": 987
+    },
+    {
+      "path": "app/memory/weaviate_store.py",
+      "reason": "duplicate",
+      "lines": 456,
+      "size": 15502
+    },
+    {
+      "path": "app/api/memory_endpoints.py",
+      "reason": "duplicate",
+      "lines": 424,
+      "size": 14787
+    }
+  ],
+  "cleaned_imports": [
+    "app/swarms/consciousness_tracking.py",
+    "app/memory/graph_rag.py",
+    "app/models/portkey_dynamic_client.py",
+    "app/memory/hybrid_search.py",
+    "app/memory/embedding_pipeline.py",
+    "app/swarms/memory_enhanced_swarm.py"
+  ],
+  "errors": [],
+  "summary": {
+    "files_removed": 15,
+    "total_lines_removed": 4333,
+    "total_bytes_removed": 146930,
+    "imports_cleaned": 6
+  }
+}

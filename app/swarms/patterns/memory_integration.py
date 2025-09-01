@@ -4,13 +4,13 @@ Implements ADR-005 memory integration as a composable swarm pattern.
 """
 
 from typing import Dict, Any, List, Optional
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 import json
 import logging
 
 from .base import SwarmPattern, PatternConfig, PatternResult
-from ..memory_integration import SwarmMemoryClient, SwarmMemoryEventType, SwarmMemoryEvent
+from ..memory_integration import SwarmMemoryClient, SwarmMemoryEventType
 from app.memory.supermemory_mcp import MemoryType
 
 logger = logging.getLogger(__name__)

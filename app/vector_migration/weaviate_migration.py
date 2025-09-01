@@ -8,13 +8,11 @@ import weaviate
 import os
 import json
 import time
-import statistics
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, AsyncGenerator
+from datetime import datetime
+from typing import Dict, List, AsyncGenerator
 from qdrant_client import QdrantClient
 from weaviate.classes.config import Configure, Property, DataType, VectorDistances
 from weaviate.classes.init import Auth, AdditionalConfig, Timeout
-from weaviate.classes.query import Filter, MetadataQuery, HybridFusion
 from dotenv import load_dotenv
 
 # Load environment variables

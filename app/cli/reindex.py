@@ -5,8 +5,7 @@ Usage: python -m app.cli.reindex [options]
 
 import asyncio
 import click
-from pathlib import Path
-from typing import List, Optional
+from typing import Optional
 from app.memory.incremental_indexer import IncrementalIndexer, IndexStateManager
 from app.memory.embed_router import clear_cache as clear_embed_cache, DIM_A, DIM_B
 from app.memory.index_weaviate import ensure_schema

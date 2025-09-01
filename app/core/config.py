@@ -5,9 +5,8 @@ Single source of truth for all configuration values.
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field, validator, SecretStr
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict
 from pathlib import Path
-import os
 
 class AppSettings(BaseSettings):
     """

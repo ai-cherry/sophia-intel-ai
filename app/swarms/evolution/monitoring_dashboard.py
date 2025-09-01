@@ -9,9 +9,8 @@ safety alerts, and performance tracking.
 """
 
 import asyncio
-import json
 import logging
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta
 from dataclasses import dataclass, asdict
 from collections import defaultdict
@@ -19,9 +18,7 @@ import statistics
 
 from .experimental_evolution_engine import (
     ExperimentalEvolutionEngine,
-    ExperimentalMode,
-    SwarmChromosome,
-    ExperimentalFitnessEvaluation
+    SwarmChromosome
 )
 from .integration_adapter import ExperimentalSwarmEvolutionAdapter
 from app.swarms.memory_integration import SwarmMemoryClient

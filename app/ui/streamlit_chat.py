@@ -6,12 +6,10 @@ Enhanced with persistence, suggestions, copy/export features
 import streamlit as st
 import requests
 import json
-import time
 import os
 from datetime import datetime
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 import uuid
-import pickle
 
 
 # Page configuration

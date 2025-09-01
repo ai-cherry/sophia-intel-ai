@@ -9,7 +9,6 @@ from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
-from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
 
 try:
     from opentelemetry.exporter.jaeger.thrift import JaegerExporter
@@ -237,7 +236,7 @@ def track_memory_operation(operation: str):
             try:
                 result = await func(*args, **kwargs)
                 return result
-            except Exception as e:
+            except Exception:
                 status = "error"
                 raise
             finally:
@@ -253,7 +252,7 @@ def track_memory_operation(operation: str):
             try:
                 result = func(*args, **kwargs)
                 return result
-            except Exception as e:
+            except Exception:
                 status = "error"
                 raise
             finally:
@@ -280,7 +279,7 @@ def track_search_operation(mode: str):
                 elif isinstance(result, dict) and "results" in result:
                     result_count = len(result["results"])
                 return result
-            except Exception as e:
+            except Exception:
                 status = "error"
                 raise
             finally:
@@ -305,7 +304,7 @@ def track_swarm_execution(team_id: str):
             try:
                 result = await func(*args, **kwargs)
                 return result
-            except Exception as e:
+            except Exception:
                 status = "error"
                 raise
             finally:

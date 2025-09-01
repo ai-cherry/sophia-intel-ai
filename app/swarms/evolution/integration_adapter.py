@@ -8,17 +8,14 @@ This adapter allows existing swarm orchestrators to optionally use experimental
 evolution features while maintaining backward compatibility and safety.
 """
 
-import asyncio
-import json
 import logging
-from typing import Dict, Any, List, Optional, Union
+from typing import Dict, Any, List, Optional
 from datetime import datetime
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 
 from .experimental_evolution_engine import (
     ExperimentalEvolutionEngine,
     ExperimentalMode,
-    ExperimentalEvolutionConfig,
     SwarmChromosome,
     create_experimental_evolution_engine
 )

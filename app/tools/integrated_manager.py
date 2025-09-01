@@ -1,11 +1,9 @@
 """Integrated Tool Manager with shared context and orchestration."""
 import asyncio
 import logging
-from typing import Dict, Any, List, Optional, Callable, Union
+from typing import Dict, Any, List, Optional
 from dataclasses import dataclass, field
 from datetime import datetime
-from contextlib import asynccontextmanager
-import json
 from pathlib import Path
 
 # Tool imports - using mock tools for now since agno isn't available

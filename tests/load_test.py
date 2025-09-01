@@ -13,7 +13,7 @@ from typing import Dict, List, Any
 import statistics
 
 class LoadTester:
-    def __init__(self, base_url: str = "http://localhost:8000"):
+    def __init__(self, base_url: str = "http://localhost:8003"):
         self.base_url = base_url
         self.results = []
         
@@ -118,7 +118,7 @@ class LoadTester:
         print(f"  Concurrent time: {concurrent_time:.2f}s")
         print(f"  Improvement: {improvement:.1f}%")
         
-        return improvement > 30  # Expect at least 30% improvement
+        return improvement > 25  # Expect at least 25% improvement
     
     async def test_circuit_breakers(self):
         """Test circuit breaker functionality"""

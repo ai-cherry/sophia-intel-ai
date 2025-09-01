@@ -1,5 +1,5 @@
 {
-  "timestamp": 1756770247.7686138,
+  "timestamp": 1756770768.200109,
   "tests": {
     "health": {
       "total_requests": 100,
@@ -7,19 +7,29 @@
       "failed_requests": 0,
       "success_rate": 100.0,
       "response_times": {
-        "min_ms": 0.3612041473388672,
-        "max_ms": 10.426998138427734,
-        "mean_ms": 2.746720314025879,
-        "median_ms": 1.1985301971435547,
-        "p95_ms": 10.048449039459229,
-        "p99_ms": 10.426998138427734
+        "min_ms": 0.37407875061035156,
+        "max_ms": 6.105184555053711,
+        "mean_ms": 1.955857276916504,
+        "median_ms": 1.418471336364746,
+        "p95_ms": 5.4724931716918945,
+        "p99_ms": 6.105184555053711
       },
-      "throughput_rps": 9829.171353580803
+      "throughput_rps": 11475.837916222057
     },
     "/api/metrics": {
       "total_requests": 50,
-      "success_rate": 0,
-      "error": "All requests failed"
+      "successful_requests": 50,
+      "failed_requests": 0,
+      "success_rate": 100.0,
+      "response_times": {
+        "min_ms": 101.00412368774414,
+        "max_ms": 1041.8498516082764,
+        "mean_ms": 912.4193334579468,
+        "median_ms": 1036.3918542861938,
+        "p95_ms": 1041.830313205719,
+        "p99_ms": 1041.8498516082764
+      },
+      "throughput_rps": 9.831236576787456
     },
     "/agents": {
       "total_requests": 50,
@@ -27,14 +37,14 @@
       "failed_requests": 0,
       "success_rate": 100.0,
       "response_times": {
-        "min_ms": 0.21791458129882812,
-        "max_ms": 2.8040409088134766,
-        "mean_ms": 1.2438201904296875,
-        "median_ms": 1.0061264038085938,
-        "p95_ms": 2.576446533203125,
-        "p99_ms": 2.8040409088134766
+        "min_ms": 0.25391578674316406,
+        "max_ms": 3.091096878051758,
+        "mean_ms": 1.5548372268676758,
+        "median_ms": 1.4570951461791992,
+        "p95_ms": 2.791619300842285,
+        "p99_ms": 3.091096878051758
       },
-      "throughput_rps": 7799.003346969133
+      "throughput_rps": 6496.753407682776
     },
     "/workflows": {
       "total_requests": 50,
@@ -42,19 +52,19 @@
       "failed_requests": 0,
       "success_rate": 100.0,
       "response_times": {
-        "min_ms": 0.22792816162109375,
-        "max_ms": 2.4340152740478516,
-        "mean_ms": 0.8525228500366211,
-        "median_ms": 0.6051063537597656,
-        "p95_ms": 2.322399616241455,
-        "p99_ms": 2.4340152740478516
+        "min_ms": 0.225067138671875,
+        "max_ms": 2.151012420654297,
+        "mean_ms": 0.9119415283203125,
+        "median_ms": 0.7585287094116211,
+        "p95_ms": 2.099752426147461,
+        "p99_ms": 2.151012420654297
       },
-      "throughput_rps": 11888.616780045351
+      "throughput_rps": 10252.014078998827
     },
     "connection_pooling": {
-      "passed": false
+      "passed": true
     }
   },
-  "architecture_score": 30,
+  "architecture_score": 80,
   "max_score": 100
 }

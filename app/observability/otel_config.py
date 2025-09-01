@@ -18,7 +18,7 @@ from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
 from opentelemetry.instrumentation.redis import RedisInstrumentor
 from opentelemetry.instrumentation.logging import LoggingInstrumentor
 import logging
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from app.core.connections import http_get, http_post, get_connection_manager
 from app.core.circuit_breaker import with_circuit_breaker, get_llm_circuit_breaker, get_weaviate_circuit_breaker, get_redis_circuit_breaker, get_webhook_circuit_breaker
 

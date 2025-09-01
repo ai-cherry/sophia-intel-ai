@@ -15,7 +15,13 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv('.env.local')
 
-from .gateway import get_api_gateway
+try:
+    from .gateway import get_api_gateway
+except ImportError:
+    # Fallback if gateway module not available
+    async def get_api_gateway():
+        return None
+
 from app.core.connections import redis_get, redis_set, get_connection_manager
 from app.core.circuit_breaker import with_circuit_breaker, get_llm_circuit_breaker, get_weaviate_circuit_breaker, get_redis_circuit_breaker, get_webhook_circuit_breaker
 

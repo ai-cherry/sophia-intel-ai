@@ -38,9 +38,8 @@ class GlobalState:
         required_vars = [
             "OPENAI_API_KEY",
             "ANTHROPIC_API_KEY",
-            "REDIS_URL",
-            "QDRANT_URL",
-            "QDRANT_API_KEY"
+            "REDIS_URL"
+            # QDRANT_* removed - migrated to Weaviate v1.32+
         ]
         
         missing_vars = [var for var in required_vars if not os.getenv(var)]

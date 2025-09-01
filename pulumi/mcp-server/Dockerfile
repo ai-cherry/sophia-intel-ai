@@ -26,7 +26,6 @@ RUN pip install --no-cache-dir \
     uvicorn[standard] \
     redis \
     psycopg2-binary \
-    qdrant-client \
     weaviate-client \
     python-dotenv \
     sqlalchemy \

@@ -136,18 +136,16 @@ docker logs sophia-postgres-local
 docker exec -it sophia-postgres-local psql -U sophia -d sophia -c "SELECT version();"
 ```
 
-**❌ Problem: "Qdrant vector database unavailable"**
+**❌ Problem: "Weaviate vector database unavailable"**
 ```bash
-# Test Qdrant Cloud connection
-curl -H "api-key: $QDRANT_API_KEY" \
-     "$QDRANT_URL/collections"
+# Test Weaviate connection
+curl -s http://localhost:8080/v1/.well-known/ready
 
-# Check Qdrant container (if using local)
+# Check Weaviate container
 docker ps | grep weaviate
 
-# Verify Qdrant credentials
-echo "URL: $QDRANT_URL"
-echo "Key: ${QDRANT_API_KEY:0:10}..."
+# Verify Weaviate health
+curl -s http://localhost:8080/v1/meta | jq '.version'
 ```
 
 ### Service Integration Issues
@@ -332,7 +330,7 @@ curl http://localhost:8003/health/detailed | jq
 
 # Individual service health
 curl http://localhost:8003/health/redis | jq
-curl http://localhost:8003/health/qdrant | jq
+curl http://localhost:8003/health/weaviate | jq
 curl http://localhost:8003/health/api-providers | jq
 
 # Environment validation

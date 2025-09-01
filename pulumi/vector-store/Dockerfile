@@ -25,7 +25,6 @@ RUN pip install --no-cache-dir \
     fastapi[all] \
     uvicorn[standard] \
     weaviate-client \
-    qdrant-client \
     sentence-transformers \
     transformers \
     torch \

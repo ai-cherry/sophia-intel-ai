@@ -29,7 +29,7 @@
 | **Pulumi CLI** | ✅ | 3.186.0 | Working (3.192.0 available) |
 | **Docker** | ✅ | Running | All services operational |
 | **Redis** | ✅ | Running | Port 6380 |
-| **Qdrant** | ✅ | Running | Port 6333 |
+| **Weaviate v1.32+** | ✅ | Running | Port 8080 |
 
 ## 🔑 API Key Gap Analysis
 
@@ -55,7 +55,7 @@
 - Core Agno framework (v1.8.1)
 - Weaviate vector database (v1.32.0)
 - All critical Python packages
-- Docker services (PostgreSQL, Redis, Qdrant)
+- Docker services (PostgreSQL, Redis, Weaviate v1.32+)
 - Local development environment
 
 ⚠️ **What Needs Configuration:**

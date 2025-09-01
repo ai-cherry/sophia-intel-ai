@@ -9,8 +9,7 @@ redis==5.0.1
 psycopg2-binary==2.9.9
 sqlalchemy==2.0.23
 
-# Vector stores
-qdrant-client==1.7.0
+# Vector stores - Weaviate v1.32+ only
 weaviate-client==3.25.3
 
 # Additional utilities

@@ -101,11 +101,11 @@ values:
       environment: ${PINECONE_ENVIRONMENT}
       index: sophia-intel
       
-    qdrant:
-      url: ${QDRANT_URL}
+    weaviate:
+      url: ${WEAVIATE_URL}
       apiKey:
-        fn::secret: ${QDRANT_API_KEY}
-      collection: sophia-intel
+        fn::secret: ${WEAVIATE_API_KEY}
+      collection: UnifiedMemoryEntries
 
   # Databases
   database:

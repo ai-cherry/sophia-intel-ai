@@ -45,7 +45,7 @@ class EnvConfig:
     weaviate_url: str = "http://localhost:8080"
     weaviate_api_key: str = ""
     pinecone_api_key: str = ""
-    qdrant_api_key: str = ""
+    # qdrant_api_key removed - migrated to Weaviate v1.32+
     
     # Database
     database_url: str = ""

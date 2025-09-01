@@ -5,8 +5,8 @@ pydantic==2.5.0
 python-dotenv==1.0.0
 
 # Vector databases
+# Vector store - Weaviate v1.32+ only
 weaviate-client==3.25.3
-qdrant-client==1.7.0
 
 # Machine learning
 sentence-transformers==2.2.2

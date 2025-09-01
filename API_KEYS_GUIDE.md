@@ -28,8 +28,7 @@ The following API keys are already configured in your `.env.local` file:
 ### Vector Databases & Memory
 | Provider | Key Variable | Status | Usage |
 |----------|--------------|---------|--------|
-| **Qdrant Cloud** | `QDRANT_API_KEY` | ✅ Configured | Vector similarity search |
-| **Qdrant Cloud** | `QDRANT_URL` | ✅ Configured | Cloud instance endpoint |
+| **Weaviate v1.32+** | `WEAVIATE_URL` | ✅ Configured | Vector similarity search |
 | **Redis Cloud** | `REDIS_URL` | ✅ Configured | Cache and session storage |
 | **MEM0** | `MEM0_API_KEY` | ✅ Configured | Long-term memory management |
 
@@ -123,8 +122,8 @@ curl -H "Authorization: Bearer $OPENAI_API_KEY" \
 - Streaming format differs from OpenAI
 - Rate limits per model vary
 
-**Qdrant Issues:**
-- Collection must exist before use
+**Weaviate Issues:**
+- Collection auto-created if not exists
 - Vector dimensions must match
 - API key format: Bearer token
 
@@ -144,8 +143,7 @@ graph TD
     C --> F[OpenRouter]
     
     B --> G[Vector Store]
-    G --> H[Qdrant]
-    G --> I[Weaviate Local]
+    G --> I[Weaviate v1.32+]
     
     B --> J[Memory System]
     J --> K[Redis]
@@ -166,7 +164,7 @@ graph TD
 | OpenAI | $50-100 | GPT-4 queries |
 | Anthropic | $30-60 | Claude queries |
 | OpenRouter | $20-40 | Fallback queries |
-| Qdrant Cloud | $20-30 | Vector storage |
+| Weaviate Cloud | $25-35 | Vector storage |
 | Redis Cloud | $15-25 | Caching |
 | Neon PostgreSQL | $10-20 | Database |
 | **Total** | **$145-275** | **Per month** |
@@ -195,8 +193,8 @@ graph TD
 ## 📞 **Support Contacts**
 
 - **OpenAI**: https://help.openai.com
-- **Anthropic**: https://support.anthropic.com  
-- **Qdrant**: https://qdrant.tech/support
+- **Anthropic**: https://support.anthropic.com
+- **Weaviate**: https://weaviate.io/developers/support
 - **Neon**: https://neon.tech/docs/support
 - **Portkey**: https://portkey.ai/docs
 

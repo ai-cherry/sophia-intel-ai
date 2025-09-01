@@ -20,5 +20,5 @@ anthropic==0.8.1
 
 # Vector stores - MIGRATED TO WEAVIATE v1.32+
 weaviate-client==4.9.3
-# Legacy for migration only
-qdrant-client==1.7.0
+# Vector database - Weaviate v1.32+ only
+# qdrant-client removed - migration complete

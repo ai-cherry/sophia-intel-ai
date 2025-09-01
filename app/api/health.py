@@ -283,9 +283,8 @@ async def environment_check():
         "ANTHROPIC_API_KEY", 
         "OPENROUTER_API_KEY",
         "PORTKEY_API_KEY",
-        "QDRANT_URL",
-        "QDRANT_API_KEY",
         "REDIS_URL",
+        # QDRANT_* removed - migrated to Weaviate v1.32+
         "POSTGRES_URL"
     ]
     

@@ -23,6 +23,7 @@ from app.swarms.coding.team import (
     make_coding_swarm,
     run_coding_debate
 )
+from app.swarms import SwarmOrchestrator
 from app.memory.supermemory_mcp import SupermemoryStore
 
 logger = logging.getLogger(__name__)
@@ -104,7 +105,6 @@ async def stream_coding_swarm(request: SwarmRequest):
                 memory = await get_supermemory_instance()
             
             # Create orchestrator
-            from app.swarms.coding.swarm_orchestrator import SwarmOrchestrator
             orchestrator = SwarmOrchestrator(team, request.configuration, memory)
             
             # Stream events

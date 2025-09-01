@@ -1,7 +1,7 @@
 """
 Natural Language API Endpoints
 FastAPI endpoints for NL processing and workflow integration
-Enhanced with standardized responses and comprehensive logging
+Enhanced with standardized responses, comprehensive logging, and swarm integration
 """
 
 import uuid
@@ -21,6 +21,7 @@ from app.nl_interface.quicknlp import QuickNLP, CommandIntent, ParsedCommand
 from app.nl_interface.intents import get_intent_pattern, format_help_text
 from app.agents.simple_orchestrator import SimpleAgentOrchestrator, AgentRole
 from app.nl_interface.memory_connector import NLMemoryConnector, NLInteraction
+from app.nl_interface.command_dispatcher import SmartCommandDispatcher, ExecutionMode
 
 # Configure comprehensive logging
 logging.basicConfig(
@@ -40,10 +41,13 @@ router = APIRouter(
 nlp_processor = QuickNLP()
 agent_orchestrator = SimpleAgentOrchestrator()
 memory_connector = None
+smart_dispatcher = None
 
-# Initialize memory connector on startup
-async def initialize_memory():
-    global memory_connector
+# Initialize components on startup
+async def initialize_components():
+    global memory_connector, smart_dispatcher
+    
+    # Initialize memory connector
     try:
         memory_connector = NLMemoryConnector()
         await memory_connector.connect()
@@ -51,6 +55,16 @@ async def initialize_memory():
     except Exception as e:
         logger.warning(f"Memory connector initialization failed: {e}")
         memory_connector = None
+    
+    # Initialize smart dispatcher
+    try:
+        smart_dispatcher = SmartCommandDispatcher(
+            config_file="app/config/nl_swarm_integration.json"
+        )
+        logger.info("SmartCommandDispatcher initialized successfully")
+    except Exception as e:
+        logger.warning(f"SmartCommandDispatcher initialization failed: {e}")
+        smart_dispatcher = None
 
 
 # ============================================
@@ -119,7 +133,7 @@ async def process_natural_language(
     req: Request
 ) -> NLProcessResponse:
     """
-    Process natural language command and execute corresponding workflow
+    Process natural language command with intelligent routing via SmartCommandDispatcher
     """
     start_time = time.time()
     session_id = request.session_id or str(uuid.uuid4())
@@ -127,6 +141,42 @@ async def process_natural_language(
     # Log incoming request
     logger.info(f"Processing NL request - Session: {session_id[:8]}, Text: '{request.text}'")
     
+    # Use SmartCommandDispatcher if available
+    if smart_dispatcher:
+        try:
+            # Process with smart dispatcher for intelligent routing
+            execution_result = await smart_dispatcher.process_command(
+                text=request.text,
+                session_id=session_id,
+                user_context=request.context
+            )
+            
+            # Extract response data
+            response_data = execution_result.response if isinstance(execution_result.response, dict) else {}
+            
+            return NLProcessResponse(
+                success=execution_result.success,
+                intent=response_data.get("intent", "unknown"),
+                response=str(response_data.get("response", execution_result.response)),
+                data={
+                    "execution_mode": execution_result.execution_mode.value,
+                    "patterns_used": execution_result.patterns_used,
+                    "quality_score": execution_result.quality_score,
+                    "context": request.context
+                },
+                workflow_id=response_data.get("workflow_id"),
+                session_id=session_id,
+                entities=response_data.get("entities", {}),
+                confidence=response_data.get("confidence", execution_result.quality_score),
+                execution_time_ms=execution_result.execution_time * 1000,
+                error=execution_result.error
+            )
+            
+        except Exception as e:
+            logger.error(f"SmartDispatcher failed, falling back to simple processing: {e}")
+            # Fall through to simple processing
+    
+    # Fallback to simple processing if SmartDispatcher not available
     try:
         # Process the natural language text
         parsed_command: ParsedCommand = nlp_processor.process(request.text)
@@ -197,7 +247,8 @@ async def process_natural_language(
             response=response_text,
             data={
                 "entities": parsed_command.entities,
-                "context": request.context
+                "context": request.context,
+                "execution_mode": "simple"
             },
             workflow_id=parsed_command.workflow_trigger,
             session_id=session_id,
@@ -623,6 +674,133 @@ async def execute_agent_workflow(
 
 
 # ============================================
+# Swarm Integration Endpoints
+# ============================================
+
+@router.get("/swarm/status/{session_id}")
+async def get_swarm_status(session_id: str) -> Dict[str, Any]:
+    """
+    Get real-time swarm execution status for a session
+    """
+    if not smart_dispatcher:
+        raise HTTPException(status_code=503, detail="SmartDispatcher not available")
+    
+    try:
+        status = await smart_dispatcher.get_session_status(session_id)
+        return {
+            "success": True,
+            **status
+        }
+    except Exception as e:
+        logger.error(f"Error getting swarm status: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/swarm/performance")
+async def get_swarm_performance() -> Dict[str, Any]:
+    """
+    Get comprehensive swarm performance metrics
+    """
+    if not smart_dispatcher:
+        raise HTTPException(status_code=503, detail="SmartDispatcher not available")
+    
+    try:
+        metrics = smart_dispatcher._get_performance_metrics()
+        return {
+            "success": True,
+            "timestamp": datetime.now().isoformat(),
+            **metrics
+        }
+    except Exception as e:
+        logger.error(f"Error getting swarm performance: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/swarm/optimize")
+async def optimize_swarm_mode(
+    session_id: str = Query(..., description="Session ID to optimize"),
+    optimization_goal: str = Query("balanced", description="Optimization goal: speed, quality, or balanced")
+) -> Dict[str, Any]:
+    """
+    Optimize swarm execution mode for a specific session
+    """
+    if not smart_dispatcher:
+        raise HTTPException(status_code=503, detail="SmartDispatcher not available")
+    
+    if optimization_goal not in ["speed", "quality", "balanced"]:
+        raise HTTPException(status_code=400, detail="Invalid optimization goal")
+    
+    try:
+        result = await smart_dispatcher.optimize_for_session(session_id, optimization_goal)
+        return {
+            "success": True,
+            **result
+        }
+    except Exception as e:
+        logger.error(f"Error optimizing swarm mode: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/swarm/modes")
+async def get_execution_modes() -> Dict[str, Any]:
+    """
+    Get available execution modes and their configurations
+    """
+    return {
+        "success": True,
+        "modes": {
+            "lite": {
+                "name": "Lite Mode",
+                "description": "Fast, simple execution for basic commands",
+                "complexity_threshold": 0.3,
+                "patterns": ["quick_nlp", "simple_execution"]
+            },
+            "balanced": {
+                "name": "Balanced Mode",
+                "description": "Balanced speed and quality for moderate complexity",
+                "complexity_threshold": 0.7,
+                "patterns": ["memory_enrichment", "orchestrator", "quality_gates"]
+            },
+            "quality": {
+                "name": "Quality Mode",
+                "description": "High-quality execution for complex tasks",
+                "complexity_threshold": 1.0,
+                "patterns": ["memory_enrichment", "swarm", "debate", "quality_gates", "consensus"]
+            }
+        }
+    }
+
+
+@router.post("/swarm/reset")
+async def reset_swarm_metrics() -> Dict[str, Any]:
+    """
+    Reset swarm performance metrics (useful for testing)
+    """
+    if not smart_dispatcher:
+        raise HTTPException(status_code=503, detail="SmartDispatcher not available")
+    
+    try:
+        smart_dispatcher.optimizer.reset_metrics()
+        smart_dispatcher.execution_stats = {
+            "total_commands": 0,
+            "success_count": 0,
+            "failure_count": 0,
+            "mode_usage": {"lite": 0, "balanced": 0, "quality": 0},
+            "avg_execution_time": 0,
+            "total_execution_time": 0
+        }
+        
+        return {
+            "success": True,
+            "message": "Swarm metrics reset successfully",
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Error resetting swarm metrics: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============================================
 # Health Check
 # ============================================
 
@@ -634,5 +812,6 @@ async def health_check() -> Dict[str, str]:
     return {
         "status": "healthy",
         "service": "natural-language-interface",
-        "timestamp": datetime.now().isoformat()
+        "timestamp": datetime.now().isoformat(),
+        "smart_dispatcher": "available" if smart_dispatcher else "unavailable"
     }

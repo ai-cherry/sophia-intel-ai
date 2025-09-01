@@ -1,3 +1,13 @@
+---
+title: Claude Configuration Guide
+type: guide
+status: active
+version: 1.0.0
+last_updated: 2024-09-01
+ai_context: high
+tags: [claude, configuration, automation]
+---
+
 # Empowering Claude for Autonomous Development
 
 ## 🤖 Auto-Proceed Configuration

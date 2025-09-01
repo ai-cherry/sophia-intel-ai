@@ -9,7 +9,7 @@ Following ADR-006: Configuration Management Standardization
 - Proper secret management and validation
 """
 
-from fastapi import FastAPI, HTTPException, BackgroundTasks, Request, Form
+from fastapi import FastAPI, HTTPException, BackgroundTasks, Request, Form, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, JSONResponse
 from pydantic import BaseModel, Field
@@ -38,6 +38,10 @@ from app.api.advanced_gateway_2025 import (
     TaskType
 )
 from app.api.health import router as health_router
+
+# Import unified chat and WebSocket systems
+from app.ui.unified.chat_orchestrator import UnifiedChatOrchestrator
+from app.core.websocket_manager import WebSocketManager
 
 # Import consolidated memory and vector systems
 try:
@@ -256,6 +260,8 @@ class GlobalState:
         self.graph_rag = None
         self.gate_manager = None
         self.orchestrator = None
+        self.chat_orchestrator = None
+        self.ws_manager = None
         self.initialized = False
     
     async def initialize(self):

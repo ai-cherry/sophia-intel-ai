@@ -1,3 +1,13 @@
+---
+title: Sophia Intel AI
+type: reference
+status: active
+version: 2.0.0
+last_updated: 2024-09-01
+ai_context: high
+tags: [overview, quickstart, architecture]
+---
+
 # Sophia Intel AI - Production-Ready AI Coding Platform
 
 [![Quality Gate](https://img.shields.io/badge/Quality-Production%20Ready-brightgreen)]()

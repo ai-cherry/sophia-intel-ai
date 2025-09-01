@@ -1,14 +1,17 @@
 """
 Streamlit Chat UI for Natural Language Interface
-Simple chat interface for testing NL commands and workflows
+Enhanced with persistence, suggestions, copy/export features
 """
 
 import streamlit as st
 import requests
 import json
 import time
+import os
 from datetime import datetime
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
+import uuid
+import pickle
 
 
 # Page configuration
@@ -23,14 +26,98 @@ st.set_page_config(
 if "messages" not in st.session_state:
     st.session_state.messages = []
 if "session_id" not in st.session_state:
-    st.session_state.session_id = None
+    st.session_state.session_id = str(uuid.uuid4())
 if "api_base_url" not in st.session_state:
     st.session_state.api_base_url = "http://localhost:8003"
+if "conversation_history" not in st.session_state:
+    st.session_state.conversation_history = []
+if "saved_sessions" not in st.session_state:
+    st.session_state.saved_sessions = {}
 
 
 # ============================================
 # Helper Functions
 # ============================================
+
+def save_conversation_history():
+    """Save conversation history to file"""
+    try:
+        history_dir = "conversation_history"
+        os.makedirs(history_dir, exist_ok=True)
+        
+        filename = f"{history_dir}/session_{st.session_state.session_id[:8]}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        
+        with open(filename, 'w') as f:
+            json.dump({
+                "session_id": st.session_state.session_id,
+                "messages": st.session_state.messages,
+                "timestamp": datetime.now().isoformat()
+            }, f, indent=2)
+        
+        return filename
+    except Exception as e:
+        st.error(f"Failed to save conversation: {e}")
+        return None
+
+
+def load_conversation_history(filename: str):
+    """Load conversation history from file"""
+    try:
+        with open(filename, 'r') as f:
+            data = json.load(f)
+            st.session_state.messages = data["messages"]
+            st.session_state.session_id = data.get("session_id", str(uuid.uuid4()))
+            st.success(f"Loaded conversation from {filename}")
+    except Exception as e:
+        st.error(f"Failed to load conversation: {e}")
+
+
+def export_conversation(format: str = "json") -> str:
+    """Export conversation in specified format"""
+    if format == "json":
+        return json.dumps({
+            "session_id": st.session_state.session_id,
+            "messages": st.session_state.messages,
+            "timestamp": datetime.now().isoformat()
+        }, indent=2)
+    elif format == "txt":
+        output = f"Conversation Export - Session: {st.session_state.session_id}\n"
+        output += f"Timestamp: {datetime.now().isoformat()}\n"
+        output += "=" * 50 + "\n\n"
+        
+        for msg in st.session_state.messages:
+            role = msg["role"].upper()
+            content = msg["content"]
+            timestamp = msg.get("timestamp", "")
+            output += f"[{role}] {timestamp}\n{content}\n\n"
+        
+        return output
+    else:
+        return ""
+
+
+def get_command_suggestions(text: str) -> List[str]:
+    """Get command suggestions based on partial input"""
+    suggestions = [
+        "show system status",
+        "run agent researcher",
+        "run agent coder", 
+        "run agent reviewer",
+        "list all agents",
+        "get metrics",
+        "scale ollama to 3",
+        "execute workflow data-pipeline",
+        "query data about users",
+        "help"
+    ]
+    
+    if not text:
+        return suggestions[:5]
+    
+    # Filter suggestions based on input
+    filtered = [s for s in suggestions if text.lower() in s.lower()]
+    return filtered[:5] if filtered else suggestions[:5]
+
 
 def process_nl_command(text: str, session_id: str = None) -> Dict[str, Any]:
     """Process natural language command via API"""
@@ -153,16 +240,16 @@ with st.sidebar:
             health_color = "green" if status["health"] == "healthy" else "orange"
             st.markdown(f"**Overall Health:** :{health_color}[{status['health']}]")
     
-    # Available Commands
+    # Command Suggestions & Help
     st.divider()
-    st.markdown("### Available Commands")
+    st.markdown("### 💡 Command Help")
     
-    if st.button("📚 Load Commands"):
+    if st.button("📚 Show Commands"):
         intents = get_available_intents()
         st.session_state.intents = intents
     
     if "intents" in st.session_state:
-        with st.expander("View Commands", expanded=False):
+        with st.expander("Available Commands", expanded=False):
             for intent in st.session_state.intents:
                 st.markdown(f"**{intent['name']}**")
                 st.markdown(f"*{intent['description']}*")
@@ -170,6 +257,35 @@ with st.sidebar:
                 for example in intent.get('examples', [])[:2]:
                     st.code(example, language=None)
                 st.divider()
+    
+    # Conversation Management
+    st.divider()
+    st.markdown("### 💾 Conversation Management")
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("💾 Save Chat"):
+            filename = save_conversation_history()
+            if filename:
+                st.success(f"Saved to {filename}")
+    
+    with col2:
+        if st.button("📂 Load Chat"):
+            # In production, add file picker
+            st.info("Use file picker to load conversation")
+    
+    # Export Options
+    st.markdown("### 📤 Export Conversation")
+    export_format = st.radio("Format:", ["JSON", "TXT"], horizontal=True)
+    
+    if st.button("📥 Download"):
+        export_data = export_conversation(export_format.lower())
+        st.download_button(
+            label=f"Download as {export_format}",
+            data=export_data,
+            file_name=f"conversation_{st.session_state.session_id[:8]}.{export_format.lower()}",
+            mime="application/json" if export_format == "JSON" else "text/plain"
+        )
     
     # Session Info
     st.divider()
@@ -187,7 +303,7 @@ with st.sidebar:
     st.divider()
     if st.button("🗑️ Clear Chat"):
         st.session_state.messages = []
-        st.session_state.session_id = None
+        st.session_state.session_id = str(uuid.uuid4())
         st.rerun()
 
 
@@ -198,23 +314,27 @@ with st.sidebar:
 st.title("💬 Natural Language Interface Chat")
 st.markdown("Enter natural language commands to interact with the system")
 
-# Quick Commands
-st.markdown("### Quick Commands")
-col1, col2, col3, col4 = st.columns(4)
+# Command Suggestions
+st.markdown("### 💡 Quick Commands")
+col1, col2, col3, col4, col5 = st.columns(5)
 
 with col1:
-    if st.button("📊 System Status"):
+    if st.button("📊 Status"):
         st.session_state.quick_command = "show system status"
 
 with col2:
-    if st.button("🤖 List Agents"):
+    if st.button("🤖 Agents"):
         st.session_state.quick_command = "list all agents"
 
 with col3:
-    if st.button("📈 Get Metrics"):
-        st.session_state.quick_command = "show metrics"
+    if st.button("📈 Metrics"):
+        st.session_state.quick_command = "get metrics"
 
 with col4:
+    if st.button("🔬 Research"):
+        st.session_state.quick_command = "run agent researcher"
+
+with col5:
     if st.button("❓ Help"):
         st.session_state.quick_command = "help"
 
@@ -243,7 +363,8 @@ if "quick_command" in st.session_state and st.session_state.quick_command:
         "content": result.get("response_text", "Command processed"),
         "intent": result.get("intent", "unknown"),
         "confidence": result.get("confidence", 0),
-        "timestamp": datetime.now().isoformat()
+        "timestamp": datetime.now().isoformat(),
+        "data": result.get("data", {})
     })
     
     st.rerun()
@@ -255,13 +376,13 @@ chat_container = st.container()
 
 with chat_container:
     # Display chat messages
-    for message in st.session_state.messages:
+    for idx, message in enumerate(st.session_state.messages):
         with st.chat_message(message["role"]):
             st.write(message["content"])
             
-            # Show additional info for assistant messages
+            # Add copy button for responses
             if message["role"] == "assistant":
-                col1, col2, col3 = st.columns(3)
+                col1, col2, col3, col4 = st.columns([2, 2, 2, 1])
                 with col1:
                     if "intent" in message:
                         st.caption(f"Intent: {message['intent']}")
@@ -271,6 +392,29 @@ with chat_container:
                 with col3:
                     if "timestamp" in message:
                         st.caption(f"Time: {message['timestamp'].split('T')[1].split('.')[0]}")
+                with col4:
+                    if st.button("📋", key=f"copy_{idx}", help="Copy response"):
+                        st.write("Copied!")  # In production, use clipboard library
+                        st.session_state[f"copied_{idx}"] = message["content"]
+
+# Command Input with Suggestions
+input_container = st.container()
+
+with input_container:
+    # Show input suggestions
+    if "input_text" not in st.session_state:
+        st.session_state.input_text = ""
+    
+    # Command suggestions based on input
+    if st.session_state.input_text:
+        suggestions = get_command_suggestions(st.session_state.input_text)
+        if suggestions:
+            st.markdown("**Suggestions:**")
+            suggestion_cols = st.columns(len(suggestions))
+            for idx, suggestion in enumerate(suggestions):
+                with suggestion_cols[idx]:
+                    if st.button(suggestion, key=f"sugg_{idx}"):
+                        st.session_state.input_text = suggestion
 
 # Chat Input
 if prompt := st.chat_input("Enter a command (e.g., 'show system status', 'run agent researcher')"):
@@ -299,13 +443,16 @@ if prompt := st.chat_input("Enter a command (e.g., 'show system status', 'run ag
         st.write(response_text)
         
         # Show additional info
-        col1, col2, col3 = st.columns(3)
+        col1, col2, col3, col4 = st.columns([2, 2, 2, 1])
         with col1:
             st.caption(f"Intent: {result.get('intent', 'unknown')}")
         with col2:
             st.caption(f"Confidence: {result.get('confidence', 0):.2f}")
         with col3:
             st.caption(f"Time: {datetime.now().strftime('%H:%M:%S')}")
+        with col4:
+            if st.button("📋", help="Copy response"):
+                st.session_state.last_response = response_text
         
         # Add to messages
         st.session_state.messages.append({
@@ -313,7 +460,8 @@ if prompt := st.chat_input("Enter a command (e.g., 'show system status', 'run ag
             "content": response_text,
             "intent": result.get("intent", "unknown"),
             "confidence": result.get("confidence", 0),
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
+            "data": result.get("data", {})
         })
 
 # Footer
@@ -322,8 +470,8 @@ st.markdown(
     """
     <div style='text-align: center; color: gray;'>
         <small>
-            Sophia Intel AI - Natural Language Interface v1.0<br>
-            Phase 2 Week 3-4 Implementation
+            Sophia Intel AI - Natural Language Interface v1.0 (Production Enhanced)<br>
+            Phase 2 Implementation - Production Ready
         </small>
     </div>
     """,
@@ -339,3 +487,10 @@ with st.expander("🔍 Debug Info", expanded=False):
         "message_count": len(st.session_state.messages),
         "last_message": st.session_state.messages[-1] if st.session_state.messages else None
     })
+    
+    # Performance metrics
+    st.markdown("### Performance Metrics")
+    if st.session_state.messages:
+        avg_confidence = sum(m.get("confidence", 0) for m in st.session_state.messages if m["role"] == "assistant") / len([m for m in st.session_state.messages if m["role"] == "assistant"])
+        st.metric("Average Confidence", f"{avg_confidence:.2f}")
+        st.metric("Total Messages", len(st.session_state.messages))

@@ -134,7 +134,8 @@ class SwarmOrchestrator:
 
     def _is_fast_mode(self) -> bool:
         """Check if running in fast optimization mode."""
-        return self.config.get("optimization", "balanced").lower() in ["speed", "fast"]
+        mode = self.config.get("optimization", "balanced").lower()
+        return mode in ["speed", "fast", "lite"]
 
     async def _check_memory_health(self) -> bool:
         """Circuit breaker check for memory system health."""

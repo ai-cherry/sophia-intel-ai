@@ -9,7 +9,6 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
-  ToolSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 import axios from 'axios';
 import { createClient } from 'redis';
@@ -188,7 +187,7 @@ async function main() {
   );
 
   // Define available tools
-  const tools: ToolSchema[] = [
+  const tools = [
     {
       name: 'store_memory',
       description: 'Store a memory in the Sophia knowledge base',
@@ -322,7 +321,7 @@ async function main() {
       const result = await mcpClient.callTool(name, args);
       
       // Cache result
-      await redis.setex(cacheKey, 300, JSON.stringify(result));
+      await redis.setEx(cacheKey, 300, JSON.stringify(result));
       
       return {
         content: [

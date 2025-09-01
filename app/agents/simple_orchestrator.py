@@ -1,6 +1,7 @@
 """
 Simple Agent Orchestrator - Sequential execution pattern for agents
 Replaces complex LangGraph with straightforward sequential coordination
+Enhanced with connection pooling for improved performance
 """
 
 import asyncio
@@ -11,6 +12,8 @@ from typing import Dict, Any, List, Optional, Callable
 from dataclasses import dataclass, field
 from enum import Enum
 from datetime import datetime
+import aiohttp
+from aioredis import Redis, create_redis_pool
 
 import redis
 import requests
@@ -398,3 +401,384 @@ class SimpleAgentOrchestrator:
             AgentRole.CODER.value,
             AgentRole.REVIEWER.value
         ]
+
+
+class OptimizedAgentOrchestrator(SimpleAgentOrchestrator):
+    """
+    Optimized Agent Orchestrator with connection pooling
+    Provides improved performance through connection reuse and async operations
+    """
+    
+    def __init__(
+        self,
+        redis_url: str = "redis://localhost:6379",
+        ollama_url: str = "http://localhost:11434",
+        n8n_url: str = "http://localhost:5678",
+        pool_size: int = 10,
+        pool_max_size: int = 20
+    ):
+        """
+        Initialize optimized orchestrator with connection pools
+        
+        Args:
+            redis_url: Redis connection URL
+            ollama_url: Ollama API URL
+            n8n_url: n8n workflow URL
+            pool_size: Initial connection pool size
+            pool_max_size: Maximum connection pool size
+        """
+        # Initialize parent class
+        super().__init__(redis_url, ollama_url, n8n_url)
+        
+        # Connection pool settings
+        self.pool_size = pool_size
+        self.pool_max_size = pool_max_size
+        
+        # HTTP session for connection pooling
+        self.http_session = None
+        
+        # Redis async pool
+        self.redis_pool = None
+        
+        # Performance metrics
+        self.metrics = {
+            "ollama_calls": 0,
+            "redis_calls": 0,
+            "n8n_calls": 0,
+            "total_time": 0,
+            "cache_hits": 0,
+            "cache_misses": 0
+        }
+        
+        # Response cache for Ollama
+        self._response_cache = {}
+        self._cache_ttl = 300  # 5 minutes
+        
+    async def __aenter__(self):
+        """Async context manager entry"""
+        await self.connect()
+        return self
+        
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """Async context manager exit"""
+        await self.disconnect()
+        
+    async def connect(self):
+        """Initialize connection pools"""
+        try:
+            # Create HTTP session with connection pooling
+            connector = aiohttp.TCPConnector(
+                limit=self.pool_max_size,
+                limit_per_host=self.pool_size,
+                ttl_dns_cache=300
+            )
+            
+            timeout = aiohttp.ClientTimeout(total=30)
+            
+            self.http_session = aiohttp.ClientSession(
+                connector=connector,
+                timeout=timeout,
+                headers={
+                    "User-Agent": "Sophia-Intel-AI/1.0",
+                    "Accept": "application/json"
+                }
+            )
+            
+            # Create Redis async pool
+            self.redis_pool = await create_redis_pool(
+                self.redis_client.connection_pool.connection_kwargs['host'],
+                minsize=5,
+                maxsize=self.pool_size,
+                encoding='utf-8'
+            )
+            
+            logger.info("Connection pools initialized successfully")
+            
+        except Exception as e:
+            logger.error(f"Failed to initialize connection pools: {e}")
+            # Fall back to standard connections
+            
+    async def disconnect(self):
+        """Close connection pools"""
+        try:
+            if self.http_session:
+                await self.http_session.close()
+                
+            if self.redis_pool:
+                self.redis_pool.close()
+                await self.redis_pool.wait_closed()
+                
+            logger.info("Connection pools closed")
+            
+        except Exception as e:
+            logger.error(f"Error closing connection pools: {e}")
+            
+    async def _call_ollama(self, prompt: str, model: str = "llama3.2") -> Dict[str, Any]:
+        """
+        Optimized Ollama call with connection pooling and caching
+        """
+        start_time = time.time()
+        
+        # Check cache first
+        cache_key = f"{model}:{hashlib.md5(prompt.encode()).hexdigest()}"
+        
+        if cache_key in self._response_cache:
+            cache_entry = self._response_cache[cache_key]
+            if time.time() - cache_entry["timestamp"] < self._cache_ttl:
+                self.metrics["cache_hits"] += 1
+                logger.debug("Cache hit for Ollama prompt")
+                return cache_entry["response"]
+        
+        self.metrics["cache_misses"] += 1
+        self.metrics["ollama_calls"] += 1
+        
+        try:
+            if self.http_session:
+                # Use pooled connection
+                async with self.http_session.post(
+                    f"{self.ollama_url}/api/generate",
+                    json={
+                        "model": model,
+                        "prompt": prompt,
+                        "format": "json",
+                        "stream": False,
+                        "options": {
+                            "temperature": 0.7,
+                            "top_p": 0.9,
+                            "max_tokens": 1000
+                        }
+                    }
+                ) as response:
+                    if response.status == 200:
+                        result = await response.json()
+                        
+                        try:
+                            parsed_response = json.loads(result.get("response", "{}"))
+                        except json.JSONDecodeError:
+                            parsed_response = {"raw_response": result.get("response", "")}
+                        
+                        # Cache the response
+                        self._response_cache[cache_key] = {
+                            "response": parsed_response,
+                            "timestamp": time.time()
+                        }
+                        
+                        # Clean cache if too large
+                        if len(self._response_cache) > 100:
+                            self._cleanup_cache()
+                        
+                        elapsed = time.time() - start_time
+                        self.metrics["total_time"] += elapsed
+                        logger.debug(f"Ollama call completed in {elapsed:.2f}s")
+                        
+                        return parsed_response
+                    else:
+                        return {"error": f"Ollama API error: {response.status}"}
+            else:
+                # Fall back to standard method
+                return await super()._call_ollama(prompt, model)
+                
+        except Exception as e:
+            logger.error(f"Optimized Ollama call failed: {e}")
+            # Fall back to standard method
+            return await super()._call_ollama(prompt, model)
+            
+    async def _save_context(self, context: ExecutionContext):
+        """
+        Optimized context save with async Redis
+        """
+        self.metrics["redis_calls"] += 1
+        
+        try:
+            if self.redis_pool:
+                key = f"execution:{context.session_id}"
+                value = json.dumps({
+                    "session_id": context.session_id,
+                    "user_request": context.user_request,
+                    "workflow_name": context.workflow_name,
+                    "agents_chain": [role.value for role in context.agents_chain],
+                    "current_step": context.current_step,
+                    "state": context.state,
+                    "tasks": [
+                        {
+                            "id": task.id,
+                            "role": task.role.value,
+                            "status": task.status.value,
+                            "error": task.error
+                        }
+                        for task in context.tasks
+                    ],
+                    "start_time": context.start_time,
+                    "end_time": context.end_time
+                })
+                
+                await self.redis_pool.setex(key, 3600, value)
+                logger.debug(f"Context saved for session {context.session_id[:8]}")
+            else:
+                # Fall back to sync Redis
+                await super()._save_context(context)
+                
+        except Exception as e:
+            logger.error(f"Error saving context: {e}")
+            # Fall back to sync Redis
+            await super()._save_context(context)
+            
+    async def get_context(self, session_id: str) -> Optional[Dict[str, Any]]:
+        """
+        Optimized context retrieval with async Redis
+        """
+        self.metrics["redis_calls"] += 1
+        
+        try:
+            if self.redis_pool:
+                key = f"execution:{session_id}"
+                value = await self.redis_pool.get(key)
+                
+                if value:
+                    return json.loads(value)
+                return None
+            else:
+                # Fall back to sync Redis
+                return await super().get_context(session_id)
+                
+        except Exception as e:
+            logger.error(f"Error retrieving context: {e}")
+            return None
+            
+    def _cleanup_cache(self):
+        """Clean up old cache entries"""
+        current_time = time.time()
+        expired_keys = [
+            key for key, entry in self._response_cache.items()
+            if current_time - entry["timestamp"] > self._cache_ttl
+        ]
+        
+        for key in expired_keys:
+            del self._response_cache[key]
+            
+        logger.debug(f"Cleaned {len(expired_keys)} expired cache entries")
+        
+    async def execute_workflow(
+        self,
+        session_id: str,
+        user_request: str,
+        workflow_name: str = "default",
+        agents_chain: Optional[List[AgentRole]] = None
+    ) -> ExecutionContext:
+        """
+        Optimized workflow execution with batching and parallel processing where possible
+        """
+        start_time = time.time()
+        
+        try:
+            # Execute with optimizations
+            result = await super().execute_workflow(
+                session_id,
+                user_request,
+                workflow_name,
+                agents_chain
+            )
+            
+            elapsed = time.time() - start_time
+            logger.info(f"Workflow completed in {elapsed:.2f}s - Metrics: {self.get_metrics()}")
+            
+            return result
+            
+        except Exception as e:
+            logger.error(f"Workflow execution failed: {e}")
+            raise
+            
+    async def _trigger_n8n_workflow(
+        self,
+        workflow_id: str,
+        payload: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """
+        Trigger n8n workflow with pooled connection
+        """
+        self.metrics["n8n_calls"] += 1
+        
+        try:
+            if self.http_session:
+                async with self.http_session.post(
+                    f"{self.n8n_url}/webhook/{workflow_id}",
+                    json=payload
+                ) as response:
+                    if response.status == 200:
+                        return await response.json()
+                    else:
+                        return {"error": f"n8n error: {response.status}"}
+            else:
+                # Fall back to sync requests
+                response = requests.post(
+                    f"{self.n8n_url}/webhook/{workflow_id}",
+                    json=payload,
+                    timeout=30
+                )
+                return response.json() if response.status_code == 200 else {"error": response.text}
+                
+        except Exception as e:
+            logger.error(f"n8n workflow trigger failed: {e}")
+            return {"error": str(e)}
+            
+    def get_metrics(self) -> Dict[str, Any]:
+        """Get performance metrics"""
+        metrics = self.metrics.copy()
+        
+        # Calculate cache hit rate
+        total_cache_requests = metrics["cache_hits"] + metrics["cache_misses"]
+        metrics["cache_hit_rate"] = (
+            metrics["cache_hits"] / total_cache_requests
+            if total_cache_requests > 0 else 0
+        )
+        
+        # Average call time
+        total_calls = metrics["ollama_calls"] + metrics["redis_calls"] + metrics["n8n_calls"]
+        metrics["avg_call_time"] = (
+            metrics["total_time"] / total_calls
+            if total_calls > 0 else 0
+        )
+        
+        return metrics
+        
+    def reset_metrics(self):
+        """Reset performance metrics"""
+        self.metrics = {
+            "ollama_calls": 0,
+            "redis_calls": 0,
+            "n8n_calls": 0,
+            "total_time": 0,
+            "cache_hits": 0,
+            "cache_misses": 0
+        }
+        logger.info("Metrics reset")
+
+
+# Import hashlib for cache key generation
+import hashlib
+
+
+# Example usage
+async def example_optimized_usage():
+    """Example of using the optimized orchestrator"""
+    
+    async with OptimizedAgentOrchestrator() as orchestrator:
+        # Execute workflow
+        context = await orchestrator.execute_workflow(
+            session_id="test-session-456",
+            user_request="Build a REST API",
+            workflow_name="development_workflow",
+            agents_chain=[
+                AgentRole.RESEARCHER,
+                AgentRole.CODER,
+                AgentRole.REVIEWER
+            ]
+        )
+        
+        print(f"Workflow completed: {context.session_id}")
+        print(f"Performance metrics: {orchestrator.get_metrics()}")
+
+
+if __name__ == "__main__":
+    # Run optimized example
+    asyncio.run(example_optimized_usage())

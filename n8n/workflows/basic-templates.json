@@ -3,6 +3,7 @@
     {
       "id": "system-status-workflow",
       "name": "System Status Workflow",
+      "completion_webhook": "http://api:8003/api/nl/workflows/callback",
       "nodes": [
         {
           "parameters": {
@@ -41,6 +42,80 @@
           "typeVersion": 2,
           "position": [650, 300],
           "id": "http-1"
+        },
+        {
+          "parameters": {
+            "url": "http://api:8003/api/nl/workflows/callback",
+            "method": "POST",
+            "sendBody": true,
+            "bodyParameters": {
+              "parameters": [
+                {
+                  "name": "workflow_id",
+                  "value": "system-status-workflow"
+                },
+                {
+                  "name": "status",
+                  "value": "completed"
+                },
+                {
+                  "name": "result",
+                  "value": "={{JSON.stringify($node[\"Get Status\"].json)}}"
+                },
+                {
+                  "name": "execution_id",
+                  "value": "={{$executionId}}"
+                },
+                {
+                  "name": "timestamp",
+                  "value": "={{new Date().toISOString()}}"
+                }
+              ]
+            },
+            "options": {}
+          },
+          "name": "Completion Callback",
+          "type": "n8n-nodes-base.httpRequest",
+          "typeVersion": 2,
+          "position": [850, 300],
+          "id": "callback-1"
+        },
+        {
+          "parameters": {
+            "url": "http://api:8003/api/nl/workflows/callback",
+            "method": "POST",
+            "sendBody": true,
+            "bodyParameters": {
+              "parameters": [
+                {
+                  "name": "workflow_id",
+                  "value": "system-status-workflow"
+                },
+                {
+                  "name": "status",
+                  "value": "failed"
+                },
+                {
+                  "name": "error",
+                  "value": "={{$json[\"error\"]}}"
+                },
+                {
+                  "name": "execution_id",
+                  "value": "={{$executionId}}"
+                },
+                {
+                  "name": "timestamp",
+                  "value": "={{new Date().toISOString()}}"
+                }
+              ]
+            },
+            "options": {}
+          },
+          "name": "Error Callback",
+          "type": "n8n-nodes-base.httpRequest",
+          "typeVersion": 2,
+          "position": [850, 450],
+          "id": "error-callback-1"
         }
       ],
       "connections": {
@@ -65,12 +140,24 @@
               }
             ]
           ]
+        },
+        "HTTP Request": {
+          "main": [
+            [
+              {
+                "node": "Completion Callback",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
         }
       }
     },
     {
       "id": "agent-execution-workflow",
       "name": "Agent Execution Workflow",
+      "completion_webhook": "http://api:8003/api/nl/workflows/callback",
       "nodes": [
         {
           "parameters": {
@@ -88,7 +175,7 @@
         },
         {
           "parameters": {
-            "functionCode": "// Extract agent details\nconst { agent_name, task } = $input.all()[0].json;\n\n// Prepare agent execution request\nconst executionRequest = {\n  agent: agent_name || 'default',\n  task: task || 'No task specified',\n  timestamp: new Date().toISOString(),\n  session_id: Math.random().toString(36).substring(7)\n};\n\nreturn [{ json: executionRequest }];"
+            "functionCode": "// Extract agent details\nconst { agent_name, task, completion_webhook } = $input.all()[0].json;\n\n// Prepare agent execution request\nconst executionRequest = {\n  agent: agent_name || 'default',\n  task: task || 'No task specified',\n  timestamp: new Date().toISOString(),\n  session_id: Math.random().toString(36).substring(7),\n  completion_webhook: completion_webhook || 'http://api:8003/api/nl/workflows/callback'\n};\n\nreturn [{ json: executionRequest }];"
           },
           "name": "Prepare Agent Task",
           "type": "n8n-nodes-base.function",
@@ -104,16 +191,16 @@
             "bodyParameters": {
               "parameters": [
                 {
-                  "name": "={{$json[\"agent\"]}}",
-                  "value": ""
+                  "name": "agent",
+                  "value": "={{$json[\"agent\"]}}"
                 },
                 {
-                  "name": "={{$json[\"task\"]}}",
-                  "value": ""
+                  "name": "task",
+                  "value": "={{$json[\"task\"]}}"
                 },
                 {
-                  "name": "={{$json[\"session_id\"]}}",
-                  "value": ""
+                  "name": "session_id",
+                  "value": "={{$json[\"session_id\"]}}"
                 }
               ]
             },
@@ -127,21 +214,48 @@
         },
         {
           "parameters": {
-            "values": {
-              "string": [
+            "url": "={{$node[\"Prepare Agent Task\"].json[\"completion_webhook\"]}}",
+            "method": "POST",
+            "sendBody": true,
+            "bodyParameters": {
+              "parameters": [
+                {
+                  "name": "workflow_id",
+                  "value": "agent-execution-workflow"
+                },
                 {
                   "name": "status",
                   "value": "completed"
+                },
+                {
+                  "name": "agent_name",
+                  "value": "={{$node[\"Prepare Agent Task\"].json[\"agent\"]}}"
+                },
+                {
+                  "name": "session_id",
+                  "value": "={{$node[\"Prepare Agent Task\"].json[\"session_id\"]}}"
+                },
+                {
+                  "name": "result",
+                  "value": "={{JSON.stringify($node[\"Execute Agent\"].json)}}"
+                },
+                {
+                  "name": "execution_id",
+                  "value": "={{$executionId}}"
+                },
+                {
+                  "name": "timestamp",
+                  "value": "={{new Date().toISOString()}}"
                 }
               ]
             },
             "options": {}
           },
-          "name": "Set Status",
-          "type": "n8n-nodes-base.set",
-          "typeVersion": 1,
+          "name": "Completion Callback",
+          "type": "n8n-nodes-base.httpRequest",
+          "typeVersion": 2,
           "position": [850, 300],
-          "id": "set-1"
+          "id": "callback-2"
         }
       ],
       "connections": {
@@ -171,7 +285,7 @@
           "main": [
             [
               {
-                "node": "Set Status",
+                "node": "Completion Callback",
                 "type": "main",
                 "index": 0
               }
@@ -183,6 +297,7 @@
     {
       "id": "service-scaling-workflow",
       "name": "Service Scaling Workflow",
+      "completion_webhook": "http://api:8003/api/nl/workflows/callback",
       "nodes": [
         {
           "parameters": {
@@ -200,7 +315,7 @@
         },
         {
           "parameters": {
-            "functionCode": "// Extract scaling parameters\nconst { service, replicas } = $input.all()[0].json;\n\n// Validate parameters\nif (!service || !replicas) {\n  throw new Error('Service and replicas are required');\n}\n\n// Prepare scaling command\nconst scalingCommand = {\n  service: service,\n  replicas: parseInt(replicas),\n  action: 'scale',\n  timestamp: new Date().toISOString()\n};\n\nreturn [{ json: scalingCommand }];"
+            "functionCode": "// Extract scaling parameters\nconst { service, replicas, completion_webhook } = $input.all()[0].json;\n\n// Validate parameters\nif (!service || !replicas) {\n  throw new Error('Service and replicas are required');\n}\n\n// Prepare scaling command\nconst scalingCommand = {\n  service: service,\n  replicas: parseInt(replicas),\n  action: 'scale',\n  timestamp: new Date().toISOString(),\n  completion_webhook: completion_webhook || 'http://api:8003/api/nl/workflows/callback'\n};\n\nreturn [{ json: scalingCommand }];"
           },
           "name": "Validate & Prepare",
           "type": "n8n-nodes-base.function",
@@ -220,13 +335,58 @@
         },
         {
           "parameters": {
-            "functionCode": "// Process result\nconst result = {\n  success: true,\n  service: $json[\"service\"],\n  replicas: $json[\"replicas\"],\n  message: `Successfully scaled ${$json[\"service\"]} to ${$json[\"replicas\"]} instances`,\n  timestamp: new Date().toISOString()\n};\n\nreturn [{ json: result }];"
+            "functionCode": "// Process result\nconst result = {\n  success: true,\n  service: $node[\"Validate & Prepare\"].json[\"service\"],\n  replicas: $node[\"Validate & Prepare\"].json[\"replicas\"],\n  message: `Successfully scaled ${$node[\"Validate & Prepare\"].json[\"service\"]} to ${$node[\"Validate & Prepare\"].json[\"replicas\"]} instances`,\n  timestamp: new Date().toISOString()\n};\n\nreturn [{ json: result }];"
           },
           "name": "Process Result",
           "type": "n8n-nodes-base.function",
           "typeVersion": 1,
           "position": [850, 300],
           "id": "function-4"
+        },
+        {
+          "parameters": {
+            "url": "={{$node[\"Validate & Prepare\"].json[\"completion_webhook\"]}}",
+            "method": "POST",
+            "sendBody": true,
+            "bodyParameters": {
+              "parameters": [
+                {
+                  "name": "workflow_id",
+                  "value": "service-scaling-workflow"
+                },
+                {
+                  "name": "status",
+                  "value": "completed"
+                },
+                {
+                  "name": "service",
+                  "value": "={{$node[\"Validate & Prepare\"].json[\"service\"]}}"
+                },
+                {
+                  "name": "replicas",
+                  "value": "={{$node[\"Validate & Prepare\"].json[\"replicas\"]}}"
+                },
+                {
+                  "name": "result",
+                  "value": "={{JSON.stringify($node[\"Process Result\"].json)}}"
+                },
+                {
+                  "name": "execution_id",
+                  "value": "={{$executionId}}"
+                },
+                {
+                  "name": "timestamp",
+                  "value": "={{new Date().toISOString()}}"
+                }
+              ]
+            },
+            "options": {}
+          },
+          "name": "Completion Callback",
+          "type": "n8n-nodes-base.httpRequest",
+          "typeVersion": 2,
+          "position": [1050, 300],
+          "id": "callback-3"
         }
       ],
       "connections": {
@@ -262,12 +422,24 @@
               }
             ]
           ]
+        },
+        "Process Result": {
+          "main": [
+            [
+              {
+                "node": "Completion Callback",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
         }
       }
     },
     {
       "id": "data-query-workflow",
       "name": "Data Query Workflow",
+      "completion_webhook": "http://api:8003/api/nl/workflows/callback",
       "nodes": [
         {
           "parameters": {
@@ -285,7 +457,7 @@
         },
         {
           "parameters": {
-            "functionCode": "// Extract query parameters\nconst { query, collection, limit } = $input.all()[0].json;\n\n// Prepare query request\nconst queryRequest = {\n  query: query || '',\n  collection: collection || 'default',\n  limit: limit || 10,\n  timestamp: new Date().toISOString()\n};\n\nreturn [{ json: queryRequest }];"
+            "functionCode": "// Extract query parameters\nconst { query, collection, limit, completion_webhook } = $input.all()[0].json;\n\n// Prepare query request\nconst queryRequest = {\n  query: query || '',\n  collection: collection || 'default',\n  limit: limit || 10,\n  timestamp: new Date().toISOString(),\n  completion_webhook: completion_webhook || 'http://api:8003/api/nl/workflows/callback'\n};\n\nreturn [{ json: queryRequest }];"
           },
           "name": "Prepare Query",
           "type": "n8n-nodes-base.function",
@@ -326,6 +498,47 @@
           "typeVersion": 1,
           "position": [850, 300],
           "id": "function-6"
+        },
+        {
+          "parameters": {
+            "url": "={{$node[\"Prepare Query\"].json[\"completion_webhook\"]}}",
+            "method": "POST",
+            "sendBody": true,
+            "bodyParameters": {
+              "parameters": [
+                {
+                  "name": "workflow_id",
+                  "value": "data-query-workflow"
+                },
+                {
+                  "name": "status",
+                  "value": "completed"
+                },
+                {
+                  "name": "query",
+                  "value": "={{$node[\"Prepare Query\"].json[\"query\"]}}"
+                },
+                {
+                  "name": "result",
+                  "value": "={{JSON.stringify($node[\"Process Results\"].json)}}"
+                },
+                {
+                  "name": "execution_id",
+                  "value": "={{$executionId}}"
+                },
+                {
+                  "name": "timestamp",
+                  "value": "={{new Date().toISOString()}}"
+                }
+              ]
+            },
+            "options": {}
+          },
+          "name": "Completion Callback",
+          "type": "n8n-nodes-base.httpRequest",
+          "typeVersion": 2,
+          "position": [1050, 300],
+          "id": "callback-4"
         }
       ],
       "connections": {
@@ -361,12 +574,24 @@
               }
             ]
           ]
+        },
+        "Process Results": {
+          "main": [
+            [
+              {
+                "node": "Completion Callback",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
         }
       }
     },
     {
       "id": "metrics-collection-workflow",
       "name": "Metrics Collection Workflow",
+      "completion_webhook": "http://api:8003/api/nl/workflows/callback",
       "nodes": [
         {
           "parameters": {
@@ -384,7 +609,7 @@
         },
         {
           "parameters": {
-            "functionCode": "// Collect metrics from various sources\nconst metrics = {\n  timestamp: new Date().toISOString(),\n  system: {\n    cpu: Math.random() * 100,\n    memory: Math.random() * 100,\n    disk: Math.random() * 100\n  },\n  services: {\n    ollama: { status: 'running', requests: Math.floor(Math.random() * 1000) },\n    weaviate: { status: 'running', documents: Math.floor(Math.random() * 10000) },\n    redis: { status: 'running', keys: Math.floor(Math.random() * 500) },\n    n8n: { status: 'running', workflows: 5 }\n  }\n};\n\nreturn [{ json: metrics }];"
+            "functionCode": "// Collect metrics from various sources\nconst { completion_webhook } = $input.all()[0].json;\n\nconst metrics = {\n  timestamp: new Date().toISOString(),\n  system: {\n    cpu: Math.random() * 100,\n    memory: Math.random() * 100,\n    disk: Math.random() * 100\n  },\n  services: {\n    ollama: { status: 'running', requests: Math.floor(Math.random() * 1000) },\n    weaviate: { status: 'running', documents: Math.floor(Math.random() * 10000) },\n    redis: { status: 'running', keys: Math.floor(Math.random() * 500) },\n    n8n: { status: 'running', workflows: 5 }\n  },\n  completion_webhook: completion_webhook || 'http://api:8003/api/nl/workflows/callback'\n};\n\nreturn [{ json: metrics }];"
           },
           "name": "Collect Metrics",
           "type": "n8n-nodes-base.function",
@@ -411,6 +636,43 @@
               "name": "Redis account"
             }
           }
+        },
+        {
+          "parameters": {
+            "url": "={{$node[\"Collect Metrics\"].json[\"completion_webhook\"]}}",
+            "method": "POST",
+            "sendBody": true,
+            "bodyParameters": {
+              "parameters": [
+                {
+                  "name": "workflow_id",
+                  "value": "metrics-collection-workflow"
+                },
+                {
+                  "name": "status",
+                  "value": "completed"
+                },
+                {
+                  "name": "metrics",
+                  "value": "={{JSON.stringify($node[\"Collect Metrics\"].json)}}"
+                },
+                {
+                  "name": "execution_id",
+                  "value": "={{$executionId}}"
+                },
+                {
+                  "name": "timestamp",
+                  "value": "={{new Date().toISOString()}}"
+                }
+              ]
+            },
+            "options": {}
+          },
+          "name": "Completion Callback",
+          "type": "n8n-nodes-base.httpRequest",
+          "typeVersion": 2,
+          "position": [850, 300],
+          "id": "callback-5"
         }
       ],
       "connections": {
@@ -435,13 +697,25 @@
               }
             ]
           ]
+        },
+        "Store in Redis": {
+          "main": [
+            [
+              {
+                "node": "Completion Callback",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
         }
       }
     }
   ],
   "metadata": {
-    "version": 1,
+    "version": 2,
     "created": "2024-01-01T00:00:00.000Z",
-    "description": "Basic n8n workflow templates for Sophia Intel AI Natural Language Interface"
+    "updated": "2025-01-01T00:00:00.000Z",
+    "description": "Enhanced n8n workflow templates with completion callbacks for Sophia Intel AI Natural Language Interface"
   }
 }

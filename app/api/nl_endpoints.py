@@ -1,16 +1,18 @@
 """
 Natural Language API Endpoints
 FastAPI endpoints for NL processing and workflow integration
+Enhanced with standardized responses and comprehensive logging
 """
 
 import uuid
 import asyncio
 import logging
+import time
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 from pydantic import BaseModel, Field
 
-from fastapi import APIRouter, HTTPException, BackgroundTasks, Query
+from fastapi import APIRouter, HTTPException, BackgroundTasks, Query, Request
 from fastapi.responses import JSONResponse
 import requests
 
@@ -18,7 +20,13 @@ import requests
 from app.nl_interface.quicknlp import QuickNLP, CommandIntent, ParsedCommand
 from app.nl_interface.intents import get_intent_pattern, format_help_text
 from app.agents.simple_orchestrator import SimpleAgentOrchestrator, AgentRole
+from app.nl_interface.memory_connector import NLMemoryConnector, NLInteraction
 
+# Configure comprehensive logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s'
+)
 logger = logging.getLogger(__name__)
 
 # Initialize router
@@ -31,6 +39,18 @@ router = APIRouter(
 # Initialize components
 nlp_processor = QuickNLP()
 agent_orchestrator = SimpleAgentOrchestrator()
+memory_connector = None
+
+# Initialize memory connector on startup
+async def initialize_memory():
+    global memory_connector
+    try:
+        memory_connector = NLMemoryConnector()
+        await memory_connector.connect()
+        logger.info("Memory connector initialized successfully")
+    except Exception as e:
+        logger.warning(f"Memory connector initialization failed: {e}")
+        memory_connector = None
 
 
 # ============================================
@@ -44,16 +64,22 @@ class NLProcessRequest(BaseModel):
     session_id: Optional[str] = Field(default=None, description="Session ID for tracking")
 
 
-class NLProcessResponse(BaseModel):
-    """Response model for NL processing"""
+class StandardResponse(BaseModel):
+    """Standardized response format for all endpoints"""
     success: bool
-    intent: str
-    entities: Dict[str, Any]
-    confidence: float
-    workflow_trigger: Optional[str]
-    session_id: str
-    response_text: str
-    timestamp: str
+    intent: Optional[str] = None
+    response: str
+    data: Optional[Dict[str, Any]] = None
+    workflow_id: Optional[str] = None
+    session_id: Optional[str] = None
+    timestamp: str = Field(default_factory=lambda: datetime.now().isoformat())
+    execution_time_ms: Optional[float] = None
+    error: Optional[str] = None
+
+class NLProcessResponse(StandardResponse):
+    """Response model for NL processing"""
+    entities: Optional[Dict[str, Any]] = None
+    confidence: Optional[float] = None
 
 
 class WorkflowTriggerRequest(BaseModel):
@@ -89,17 +115,24 @@ class IntentInfo(BaseModel):
 @router.post("/process", response_model=NLProcessResponse)
 async def process_natural_language(
     request: NLProcessRequest,
-    background_tasks: BackgroundTasks
+    background_tasks: BackgroundTasks,
+    req: Request
 ) -> NLProcessResponse:
     """
     Process natural language command and execute corresponding workflow
     """
+    start_time = time.time()
+    session_id = request.session_id or str(uuid.uuid4())
+    
+    # Log incoming request
+    logger.info(f"Processing NL request - Session: {session_id[:8]}, Text: '{request.text}'")
+    
     try:
-        # Generate session ID if not provided
-        session_id = request.session_id or str(uuid.uuid4())
-        
         # Process the natural language text
         parsed_command: ParsedCommand = nlp_processor.process(request.text)
+        
+        logger.info(f"Parsed command - Intent: {parsed_command.intent.value}, Confidence: {parsed_command.confidence:.2f}")
+        logger.debug(f"Entities: {parsed_command.entities}")
         
         # Get intent pattern for response formatting
         intent_pattern = get_intent_pattern(parsed_command.intent.value)
@@ -113,9 +146,23 @@ async def process_natural_language(
         else:
             response_text = f"Processing command: {parsed_command.intent.value}"
         
+        # Store interaction in memory if available
+        if memory_connector:
+            interaction = NLInteraction(
+                session_id=session_id,
+                timestamp=datetime.now().isoformat(),
+                user_input=request.text,
+                intent=parsed_command.intent.value,
+                entities=parsed_command.entities,
+                confidence=parsed_command.confidence,
+                response=response_text,
+                workflow_id=parsed_command.workflow_trigger
+            )
+            background_tasks.add_task(memory_connector.store_interaction, interaction)
+        
         # If workflow trigger is available, execute it
         if parsed_command.workflow_trigger:
-            # Execute workflow in background
+            logger.info(f"Triggering workflow: {parsed_command.workflow_trigger}")
             background_tasks.add_task(
                 trigger_workflow_async,
                 parsed_command.workflow_trigger,
@@ -131,8 +178,8 @@ async def process_natural_language(
         if parsed_command.intent == CommandIntent.HELP:
             response_text = format_help_text()
         elif parsed_command.intent == CommandIntent.RUN_AGENT:
-            # Trigger agent execution
             agent_name = parsed_command.entities.get("agent_name", "default")
+            logger.info(f"Starting agent execution: {agent_name}")
             background_tasks.add_task(
                 execute_agent_async,
                 session_id,
@@ -141,20 +188,35 @@ async def process_natural_language(
             )
             response_text = f"Starting agent '{agent_name}'..."
         
+        execution_time = (time.time() - start_time) * 1000
+        logger.info(f"Request processed successfully in {execution_time:.2f}ms")
+        
         return NLProcessResponse(
             success=True,
             intent=parsed_command.intent.value,
+            response=response_text,
+            data={
+                "entities": parsed_command.entities,
+                "context": request.context
+            },
+            workflow_id=parsed_command.workflow_trigger,
+            session_id=session_id,
             entities=parsed_command.entities,
             confidence=parsed_command.confidence,
-            workflow_trigger=parsed_command.workflow_trigger,
-            session_id=session_id,
-            response_text=response_text,
-            timestamp=datetime.now().isoformat()
+            execution_time_ms=execution_time
         )
         
     except Exception as e:
-        logger.error(f"Error processing NL command: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        execution_time = (time.time() - start_time) * 1000
+        logger.error(f"Error processing NL command: {e}", exc_info=True)
+        
+        return NLProcessResponse(
+            success=False,
+            response=f"Failed to process command: {str(e)}",
+            session_id=session_id,
+            execution_time_ms=execution_time,
+            error=str(e)
+        )
 
 
 @router.get("/intents", response_model=List[IntentInfo])
@@ -421,6 +483,63 @@ async def get_system_status() -> Dict[str, Any]:
 
 
 # ============================================
+# Workflow Callback Handler
+# ============================================
+
+@router.post("/workflows/callback")
+async def workflow_callback(
+    workflow_id: str,
+    status: str,
+    execution_id: str,
+    timestamp: str,
+    result: Optional[Dict[str, Any]] = None,
+    error: Optional[str] = None,
+    session_id: Optional[str] = None
+) -> StandardResponse:
+    """
+    Handle workflow completion callbacks from n8n
+    """
+    logger.info(f"Received workflow callback - ID: {workflow_id}, Status: {status}, Execution: {execution_id}")
+    
+    try:
+        # Store callback information
+        callback_data = {
+            "workflow_id": workflow_id,
+            "status": status,
+            "execution_id": execution_id,
+            "timestamp": timestamp,
+            "result": result,
+            "error": error
+        }
+        
+        # Update memory if available
+        if memory_connector and session_id:
+            # Retrieve the original interaction and update it
+            history = await memory_connector.retrieve_session_history(session_id, limit=1)
+            if history:
+                interaction = history[0]
+                interaction["execution_result"] = callback_data
+                # Store updated interaction
+                await memory_connector.store_interaction(NLInteraction(**interaction))
+        
+        logger.info(f"Workflow {workflow_id} completed with status: {status}")
+        
+        return StandardResponse(
+            success=True,
+            response=f"Workflow {workflow_id} callback processed",
+            data=callback_data,
+            workflow_id=workflow_id
+        )
+        
+    except Exception as e:
+        logger.error(f"Error processing workflow callback: {e}", exc_info=True)
+        return StandardResponse(
+            success=False,
+            response="Failed to process workflow callback",
+            error=str(e)
+        )
+
+# ============================================
 # Helper Functions
 # ============================================
 
@@ -428,7 +547,12 @@ async def trigger_workflow_async(workflow_id: str, payload: Dict[str, Any]) -> D
     """
     Trigger n8n workflow asynchronously
     """
+    logger.debug(f"Triggering workflow {workflow_id} with payload: {payload}")
+    
     try:
+        # Add completion webhook to payload
+        payload["completion_webhook"] = "http://api:8003/api/nl/workflows/callback"
+        
         # Call n8n webhook endpoint
         response = requests.post(
             f"http://localhost:5678/webhook/{workflow_id}",
@@ -437,12 +561,14 @@ async def trigger_workflow_async(workflow_id: str, payload: Dict[str, Any]) -> D
         )
         
         if response.status_code == 200:
+            logger.info(f"Workflow {workflow_id} triggered successfully")
             return response.json()
         else:
+            logger.error(f"Workflow trigger failed with status {response.status_code}")
             return {"error": f"Workflow trigger failed: {response.status_code}"}
             
     except Exception as e:
-        logger.error(f"Error triggering workflow: {e}")
+        logger.error(f"Error triggering workflow: {e}", exc_info=True)
         return {"error": str(e)}
 
 
@@ -450,6 +576,8 @@ async def execute_agent_async(session_id: str, task: str, agent_name: str):
     """
     Execute agent asynchronously
     """
+    logger.debug(f"Executing agent {agent_name} for session {session_id[:8]}")
+    
     try:
         agent_role_map = {
             "researcher": AgentRole.RESEARCHER,
@@ -460,14 +588,19 @@ async def execute_agent_async(session_id: str, task: str, agent_name: str):
         
         agent_role = agent_role_map.get(agent_name.lower(), AgentRole.RESEARCHER)
         
-        await agent_orchestrator.execute_workflow(
+        result = await agent_orchestrator.execute_workflow(
             session_id=session_id,
             user_request=task,
             workflow_name=f"{agent_name}_workflow",
             agents_chain=[agent_role]
         )
+        
+        logger.info(f"Agent {agent_name} execution completed for session {session_id[:8]}")
+        return result
+        
     except Exception as e:
-        logger.error(f"Error executing agent: {e}")
+        logger.error(f"Error executing agent: {e}", exc_info=True)
+        raise
 
 
 async def execute_agent_workflow(

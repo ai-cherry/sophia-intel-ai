@@ -63,7 +63,7 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     ports:
-      - "8003:8003"
+      - "8000:8003"
     environment:
       LOCAL_DEV_MODE: 'true'
       AGENT_API_PORT: '8003'

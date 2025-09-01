@@ -106,7 +106,7 @@ services:
     container_name: sophia-unified-api
     restart: unless-stopped
     ports:
-      - "8003:8003"
+      - "8000:8003"
     environment:
       # Environment configuration (ADR-006)
       - NODE_ENV=development

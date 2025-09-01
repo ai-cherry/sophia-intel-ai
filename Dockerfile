@@ -36,7 +36,7 @@ WORKDIR /app
 
 # Copy application code
 COPY --chown=agno:agno app/ ./app/
-COPY --chown=agno:agno ui/ ./ui/
+COPY --chown=agno:agno agent-ui/ ./agent-ui/
 
 # Switch to non-root user
 USER agno

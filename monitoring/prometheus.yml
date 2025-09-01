@@ -1,0 +1,97 @@
+# Prometheus Configuration for Sophia Intel AI Microservices
+# Enterprise monitoring with comprehensive service discovery
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    environment: 'production'
+    deployment: 'sophia-intel-ai'
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+
+# Load rules once and periodically evaluate them
+rule_files:
+  - "alert_rules.yml"
+
+# Scrape configurations
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Sophia Intel AI Services
+  - job_name: 'sophia-weaviate'
+    static_configs:
+      - targets: ['sophia-weaviate.internal:8080']
+    metrics_path: '/v1/metrics'
+    scrape_interval: 30s
+
+  - job_name: 'sophia-mcp-server'
+    static_configs:
+      - targets: ['sophia-mcp.internal:8004']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+
+  - job_name: 'sophia-vector-store'
+    static_configs:
+      - targets: ['sophia-vector.internal:8005']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+
+  - job_name: 'sophia-unified-api'
+    static_configs:
+      - targets: ['sophia-api.internal:8003']
+    metrics_path: '/metrics'
+    scrape_interval: 10s  # More frequent for main API
+
+  - job_name: 'sophia-agno-bridge'
+    static_configs:
+      - targets: ['sophia-bridge.internal:7777']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+
+  - job_name: 'sophia-agent-ui'
+    static_configs:
+      - targets: ['sophia-ui.internal:3000']
+    metrics_path: '/api/metrics'
+    scrape_interval: 30s
+
+  # External service monitoring
+  - job_name: 'neon-postgres'
+    static_configs:
+      - targets: ['ep-proud-surf-123456.us-west-2.aws.neon.tech:5432']
+    metrics_path: '/metrics'
+    scrape_interval: 60s
+
+  - job_name: 'redis-cloud'
+    static_configs:
+      - targets: ['redis-15014.fcrce172.us-east-1-1.ec2.redns.redis-cloud.com:15014']
+    scrape_interval: 30s
+
+  # Lambda Labs GPU monitoring (when active)
+  - job_name: 'lambda-labs-gpu'
+    static_configs:
+      - targets: ['cloud.lambdalabs.com:443']
+    metrics_path: '/api/v1/metrics'
+    scrape_interval: 60s
+    scheme: https
+
+  # Fly.io platform metrics (manual configuration)
+  - job_name: 'fly-platform'
+    static_configs:
+      - targets:
+          - 'sophia-api.fly.dev'
+          - 'sophia-weaviate.fly.dev'
+          - 'sophia-mcp.fly.dev'
+          - 'sophia-vector.fly.dev'
+          - 'sophia-bridge.fly.dev'
+          - 'sophia-ui.fly.dev'
+    scheme: https
+    metrics_path: '/metrics'

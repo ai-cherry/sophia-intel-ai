@@ -1,24 +1,72 @@
-# Pulumi ESC Environment - Development
-# Centralized configuration and secrets for Sophia Intel AI dev environment
+# =============================================================================
+# Pulumi ESC Development Environment - Sophia Intel AI
+# Development-specific configuration inheriting from base
+# =============================================================================
 
 imports:
-  - sophia-intel-base
+  - base  # Import all shared secrets and configuration
 
 values:
-  # Environment Configuration
-  environment: dev
-  region: iad
-  domain: sophia-intel-ai-dev.fly.dev
+  # =============================================================================
+  # DEVELOPMENT ENVIRONMENT OVERRIDES
+  # =============================================================================
   
-  # Feature Flags for Development
+  environment:
+    name: "dev"
+    type: "development"
+    region: "iad"
+    domain: "sophia-intel-ai-dev.fly.dev"
+    
+  # Development-specific Service URLs (local development)
+  service_urls:
+    unified_api_url: "http://localhost:8003"
+    agno_bridge_url: "http://localhost:7777"
+    frontend_url: "http://localhost:3333"  # Updated to match running terminal
+    mcp_server_url: "http://localhost:8004"
+    vector_store_url: "http://localhost:8005"
+    weaviate_url: "http://localhost:8080"
+    redis_url: "redis://localhost:6379"
+    postgres_url: "postgresql://sophia:sophia_secure_password_2024@postgres:5432/sophia"
+    
+  # Development Database Configuration
+  database:
+    postgres:
+      host: "localhost"
+      port: 5432
+      database: "sophia"
+      username: "sophia"
+      max_connections: 20
+      connection_timeout: 10
+      ssl_mode: "disable"  # Local development
+    redis:
+      host: "localhost"
+      port: 6379
+      database: 0
+      memory_mb: 256
+      max_connections: 50
+    weaviate:
+      host: "localhost"
+      port: 8080
+      memory_gb: 2
+      
+  # Development-specific Feature Flags
   features:
+    # Override base features for development
     debug_mode: true
     verbose_logging: true
     experimental_features: true
     hot_reload: true
     mock_external_apis: false
+    enable_profiling: true
+    enable_metrics: true
     
-  # Resource Scaling (Development)
+    # Development-only features
+    local_development: true
+    auto_reload: true
+    detailed_errors: true
+    disable_auth: false  # Keep auth for testing
+    
+  # Development Resource Scaling (minimal for local)
   scaling:
     api_gateway:
       instances: 1
@@ -37,66 +85,172 @@ values:
       memory_mb: 1024
       cpu_cores: 1.0
       
-  # Development Database Configuration
-  database:
-    postgres:
-      max_connections: 20
-      connection_timeout: 10
-    redis:
-      memory_mb: 128
-      max_connections: 20
-    weaviate:
-      memory_gb: 1
-      
-  # Model Configuration for Development
+  # Development Model Configuration (cost-conscious)
   models:
+    # Override base model pools for development (cheaper/faster models)
     default_pools:
-      fast: "groq/llama-3.2-90b-text-preview"
-      balanced: "openai/gpt-4o-mini"
-      heavy: "anthropic/claude-3.5-sonnet"
-    embedding_tiers:
-      tier_s: "voyage-3-large"
-      tier_a: "cohere/embed-multilingual-v3.0"
-      tier_b: "BAAI/bge-base-en-v1.5"
+      fast: "groq/llama-3.2-90b-text-preview"  # Free/cheap
+      balanced: "openai/gpt-4o-mini"  # Cost-effective
+      heavy: "anthropic/claude-3.5-sonnet"  # When needed
       
-  # Development Limits
+    # Development embedding preferences (cost-conscious)
+    embeddings:
+      primary: "BAAI/bge-base-en-v1.5"  # Free local option
+      fallback: "cohere/embed-multilingual-v3.0"
+      
+  # Development Limits (reduced for cost control)
   limits:
-    daily_budget_usd: 10
-    max_concurrent_swarms: 3
-    request_timeout_seconds: 30
-    max_tokens_per_request: 4096
+    daily_budget_usd: 25  # Increased from 10 for active development
+    max_concurrent_swarms: 5
+    max_concurrent_requests: 10
+    request_timeout_seconds: 60  # Longer for debugging
+    max_tokens_per_request: 8192  # Allow longer responses for dev
+    rate_limit_per_minute: 200
     
-  # Monitoring (Reduced for dev)
+  # Development Monitoring (detailed for debugging)
   monitoring:
-    log_level: DEBUG
+    log_level: "DEBUG"
     metrics_retention_days: 7
-    trace_sampling_rate: 1.0
+    trace_sampling_rate: 1.0  # 100% sampling for dev
     enable_profiling: true
+    enable_detailed_logs: true
+    console_logging: true
+    file_logging: true
+    
+  # Development Security (relaxed for local dev)
+  security:
+    cors_origins: ["http://localhost:3333", "http://localhost:3000", "http://localhost:7777"]
+    api_rate_limit: 200  # Higher for development
+    jwt_expiry_hours: 24  # Longer sessions for dev
+    require_https: false  # Allow HTTP for local dev
+    
+  # Application Configuration (development-specific)
+  application:
+    playground_port: 7777
+    playground_host: "127.0.0.1"
+    agent_ui_port: 3333  # Updated to match current setup
+    agent_ui_host: "127.0.0.1"
+    enable_hot_reload: true
+    enable_debug_ui: true
 
-pulumiConfig:
-  # Pulumi-specific configuration
-  pulumi:backend: https://app.pulumi.com
-  
+# =============================================================================
+# DEVELOPMENT ENVIRONMENT VARIABLES
+# Extends base environment variables with dev-specific overrides
+# =============================================================================
 environmentVariables:
-  # Export all configuration as environment variables
-  ENVIRONMENT: ${environment}
+  # =============================================================================
+  # ENVIRONMENT IDENTIFICATION
+  # =============================================================================
+  
+  NODE_ENV: "development"
+  ENVIRONMENT: ${environment.name}
+  ENV_TYPE: ${environment.type}
+  DEBUG: "true"
   LOG_LEVEL: ${monitoring.log_level}
-  DEBUG_MODE: ${features.debug_mode}
-  DOMAIN: ${domain}
-  REGION: ${region}
   
-  # Database URLs (will be populated by stack outputs)
-  POSTGRES_URL: ${POSTGRES_CONNECTION_STRING}
-  REDIS_URL: ${REDIS_CONNECTION_STRING}
-  WEAVIATE_URL: ${WEAVIATE_CONNECTION_STRING}
+  # =============================================================================
+  # DEVELOPMENT SERVICE URLS
+  # =============================================================================
   
-  # Model configuration
+  UNIFIED_API_URL: ${service_urls.unified_api_url}
+  AGNO_BRIDGE_URL: ${service_urls.agno_bridge_url}
+  FRONTEND_URL: ${service_urls.frontend_url}
+  MCP_SERVER_URL: ${service_urls.mcp_server_url}
+  VECTOR_STORE_URL: ${service_urls.vector_store_url}
+  
+  # Next.js specific (for agent-ui)
+  NEXT_PUBLIC_API_URL: ${service_urls.agno_bridge_url}
+  NEXT_PUBLIC_DEFAULT_ENDPOINT: ${service_urls.agno_bridge_url}
+  NEXT_PUBLIC_PLAYGROUND_URL: ${service_urls.agno_bridge_url}
+  NEXT_PUBLIC_BRIDGE_URL: ${service_urls.agno_bridge_url}
+  NEXT_PUBLIC_UNIFIED_API_URL: ${service_urls.agno_bridge_url}
+  NEXT_PUBLIC_USE_BRIDGE: "true"
+  NEXT_PUBLIC_ENV: "development"
+  
+  # =============================================================================
+  # DATABASE URLS (Development - Local/Docker)
+  # =============================================================================
+  
+  WEAVIATE_URL: ${service_urls.weaviate_url}
+  REDIS_URL: ${service_urls.redis_url}
+  POSTGRES_URL: ${service_urls.postgres_url}
+  
+  # Neon Database (for when using cloud resources in dev)
+  NEON_REST_API_ENDPOINT: "https://app-sparkling-wildflower-99699121.dpl.myneon.app"
+  NEON_PROJECT_ID: "rough-union-72390895"
+  NEON_BRANCH_ID: "br-green-firefly-afykrx78"
+  
+  # Redis specific (development instance)
+  REDIS_HOST: ${database.redis.host}
+  REDIS_PORT: ${database.redis.port}
+  REDIS_USERNAME: "default"
+  
+  # =============================================================================
+  # DEVELOPMENT MODEL CONFIGURATION
+  # =============================================================================
+  
   DEFAULT_FAST_MODEL: ${models.default_pools.fast}
-  DEFAULT_BALANCED_MODEL: ${models.default_pools.balanced} 
+  DEFAULT_BALANCED_MODEL: ${models.default_pools.balanced}
   DEFAULT_HEAVY_MODEL: ${models.default_pools.heavy}
   
-  # Scaling configuration
+  EMBED_MODEL: ${models.embeddings.primary}
+  EMBED_DIMENSION: "768"
+  
+  # =============================================================================
+  # DEVELOPMENT LIMITS AND CONTROLS
+  # =============================================================================
+  
+  DAILY_BUDGET_USD: ${limits.daily_budget_usd}
+  MAX_CONCURRENT_SWARMS: ${limits.max_concurrent_swarms}
+  REQUEST_TIMEOUT_SECONDS: ${limits.request_timeout_seconds}
+  MAX_TOKENS_PER_REQUEST: ${limits.max_tokens_per_request}
+  API_RATE_LIMIT: ${security.api_rate_limit}
+  
+  # =============================================================================
+  # APPLICATION CONFIGURATION
+  # =============================================================================
+  
+  PLAYGROUND_PORT: ${application.playground_port}
+  PLAYGROUND_HOST: ${application.playground_host}
+  AGENT_UI_PORT: ${application.agent_ui_port}
+  
+  # Development flags
+  LOCAL_DEV_MODE: "true"
+  ENABLE_RUNNER_WRITES: "true"
+  ENABLE_GIT_WRITES: "true"
+  ENABLE_FILE_WRITES: "true"
+  ENABLE_HOT_RELOAD: ${application.enable_hot_reload}
+  ENABLE_DEBUG_UI: ${application.enable_debug_ui}
+  
+  # =============================================================================
+  # MONITORING CONFIGURATION
+  # =============================================================================
+  
+  METRICS_RETENTION_DAYS: ${monitoring.metrics_retention_days}
+  TRACE_SAMPLING_RATE: ${monitoring.trace_sampling_rate}
+  ENABLE_PROFILING: ${monitoring.enable_profiling}
+  CONSOLE_LOGGING: ${monitoring.console_logging}
+  
+  # =============================================================================
+  # SCALING CONFIGURATION
+  # =============================================================================
+  
   API_GATEWAY_INSTANCES: ${scaling.api_gateway.instances}
   AGENT_ORCHESTRATOR_INSTANCES: ${scaling.agent_orchestrator.instances}
   VECTOR_STORE_INSTANCES: ${scaling.vector_store.instances}
   MCP_SERVER_INSTANCES: ${scaling.mcp_server.instances}
+  
+  # =============================================================================
+  # DEVELOPMENT SECURITY (Relaxed)
+  # =============================================================================
+  
+  CORS_ORIGINS: "http://localhost:3333,http://localhost:3000,http://localhost:7777"
+  REQUIRE_HTTPS: ${security.require_https}
+  JWT_EXPIRY_HOURS: ${security.jwt_expiry_hours}
+
+# =============================================================================
+# PULUMI CONFIGURATION
+# =============================================================================
+pulumiConfig:
+  pulumi:backend: https://app.pulumi.com
+  pulumi:project: sophia-intel-ai-dev

@@ -1,0 +1,84 @@
+---
+agent: "roo"
+role: "builder"
+priority: 90
+globs: ["src/**/*.ts", "app/**/*.py", "agent-ui/**/*.tsx"]
+alwaysApply: false
+dependencies: ["claude:architect"]
+tags: ["implementation", "optimization", "refactoring"]
+version: "1.0.0"
+created: "2025-09-01"
+modified: "2025-09-01"
+---
+
+# Roo Coder Implementation Rules
+
+## Core Responsibilities
+- Rapid feature implementation
+- Code optimization and refactoring
+- Bug fixes and debugging
+- Performance improvements
+- Integration with existing code
+
+## Implementation Standards
+1. **Follow Existing Patterns**
+   - Study surrounding code first
+   - Match existing style exactly
+   - Use established utilities
+   - No new dependencies without approval
+
+2. **Performance First**
+   - Optimize for speed over elegance
+   - Minimize API calls
+   - Use caching where appropriate
+   - Profile before and after changes
+
+## Code Synthesis Rules
+- Use existing libraries and utilities
+- No reinventing the wheel
+- Prefer composition over inheritance
+- Keep functions small (<50 lines)
+
+## Testing Requirements
+- Unit test coverage: minimum 80%
+- Integration tests for all endpoints
+- Performance benchmarks required
+- Show actual test output
+
+## Communication Protocol
+- HTTP endpoint for Cursor/IDE integration
+- Report progress every 10 minutes
+- Flag blockers immediately
+- Use structured JSON for responses
+
+## Handoff Protocol
+1. Wait for architect's plan completion
+2. Verify all dependencies available
+3. Report blockers immediately
+4. Update progress in TODO list
+5. Mark tasks complete only after testing
+
+## Quality Checks
+```bash
+# Python
+black app/ --check
+ruff check app/
+pytest tests/ -v
+
+# TypeScript
+npm run lint
+npm run type-check
+npm test
+```
+
+## Forbidden Actions
+- NO new frameworks
+- NO mock services
+- NO commented-out code
+- NO console.log in production
+
+## Evidence Requirements
+- Show actual terminal output
+- Include performance metrics
+- Provide before/after comparisons
+- Document all changes made

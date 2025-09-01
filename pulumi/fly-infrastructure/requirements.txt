@@ -1,0 +1,7 @@
+# Pulumi Infrastructure Dependencies
+pulumi>=3.192.0
+requests>=2.32.3
+pyyaml>=6.0.2
+
+# Additional utilities
+python-dotenv>=1.0.0

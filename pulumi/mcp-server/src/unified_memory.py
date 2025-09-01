@@ -33,9 +33,17 @@ try:
 except ImportError:
     REDIS_AVAILABLE = False
 
-from app.llm.real_executor import real_executor
-
 logger = logging.getLogger(__name__)
+
+# Conditional import for real_executor to handle missing API keys gracefully
+try:
+    from app.llm.real_executor import real_executor
+    REAL_EXECUTOR_AVAILABLE = True
+except (ImportError, ValueError) as e:
+    # Handle cases where API keys are missing or real_executor fails to initialize
+    real_executor = None
+    REAL_EXECUTOR_AVAILABLE = False
+    logger.warning(f"Real executor not available, re-ranking will use fallback: {e}")
 
 
 class MemoryType(Enum):
@@ -491,36 +499,253 @@ class UnifiedMemoryStore:
         
         return results[:limit]
 
-    # Implement remaining methods...
     async def _vector_search(self, query: str, limit: int, memory_type: Optional[MemoryType]) -> List[SearchResult]:
         """Vector similarity search implementation."""
-        # Implementation similar to enhanced_memory.py but with connection pooling
-        pass
+        if not self.weaviate_client:
+            return []
+            
+        try:
+            collection = self.weaviate_client.collections.get(self.config.weaviate_collection)
+            
+            # Build where filter for memory type
+            where_filter = None
+            if memory_type:
+                where_filter = wvc.query.Filter.by_property("memory_type").equal(memory_type.value)
+            
+            # Perform vector search
+            response = collection.query.near_text(
+                query=query,
+                limit=limit,
+                where=where_filter,
+                return_metadata=wvc.query.MetadataQuery(distance=True)
+            )
+            
+            results = []
+            for obj in response.objects:
+                # Create memory entry from Weaviate object
+                entry = MemoryEntry(
+                    topic=obj.properties.get("topic", ""),
+                    content=obj.properties.get("content", ""),
+                    source=obj.properties.get("source", ""),
+                    tags=obj.properties.get("tags", []),
+                    memory_type=MemoryType(obj.properties.get("memory_type", MemoryType.SEMANTIC.value)),
+                    hash_id=obj.properties.get("hash_id", "")
+                )
+                
+                # Calculate vector score (1 - distance for similarity)
+                vector_score = 1.0 - obj.metadata.distance if obj.metadata.distance else 0.0
+                
+                results.append(SearchResult(
+                    entry=entry,
+                    vector_score=vector_score
+                ))
+            
+            return results
+            
+        except Exception as e:
+            logger.error(f"Vector search failed: {e}")
+            return []
         
     async def _fts_search(self, query: str, limit: int, memory_type: Optional[MemoryType]) -> List[SearchResult]:
         """Full-text search implementation."""
-        # Implementation similar to enhanced_memory.py but with async connections
-        pass
+        if not self.config.enable_fts:
+            return []
+            
+        try:
+            async with self.get_connection() as conn:
+                # Build FTS query
+                fts_query = f"""
+                    SELECT me.*,
+                           bm25(memory_fts) as fts_score,
+                           snippet(memory_fts, 1, '<b>', '</b>', '...', 32) as snippet
+                    FROM memory_fts
+                    JOIN memory_entries me ON memory_fts.rowid = me.id
+                    WHERE memory_fts MATCH ?
+                """
+                
+                params = [query]
+                
+                # Add memory type filter if specified
+                if memory_type:
+                    fts_query += " AND me.memory_type = ?"
+                    params.append(memory_type.value)
+                
+                fts_query += " ORDER BY bm25(memory_fts) LIMIT ?"
+                params.append(limit)
+                
+                cursor = await conn.execute(fts_query, params)
+                rows = await cursor.fetchall()
+                
+                results = []
+                for row in rows:
+                    # Create memory entry from row
+                    entry = MemoryEntry(
+                        topic=row["topic"],
+                        content=row["content"],
+                        source=row["source"],
+                        tags=json.loads(row["tags"]) if row["tags"] else [],
+                        memory_type=MemoryType(row["memory_type"]),
+                        hash_id=row["hash_id"]
+                    )
+                    
+                    results.append(SearchResult(
+                        entry=entry,
+                        fts_score=float(row["fts_score"])
+                    ))
+                
+                return results
+                
+        except Exception as e:
+            logger.error(f"FTS search failed: {e}")
+            return []
         
     def _combine_results(self, results: List[SearchResult], limit: int) -> List[SearchResult]:
         """Combine and deduplicate search results."""
-        # Implementation from enhanced_memory.py
-        pass
+        if not results:
+            return []
+        
+        # Deduplicate by hash_id
+        seen_hashes = set()
+        unique_results = []
+        
+        for result in results:
+            hash_id = result.entry.hash_id
+            if hash_id not in seen_hashes:
+                seen_hashes.add(hash_id)
+                unique_results.append(result)
+        
+        # Combine scores using weighted average
+        for result in unique_results:
+            scores = []
+            weights = []
+            
+            if result.vector_score is not None:
+                scores.append(result.vector_score)
+                weights.append(0.7)  # Higher weight for vector similarity
+            
+            if result.fts_score is not None:
+                # Normalize FTS score (BM25 can be negative)
+                normalized_fts = max(0, min(1, result.fts_score / 10))
+                scores.append(normalized_fts)
+                weights.append(0.3)
+            
+            if scores:
+                result.combined_score = sum(s * w for s, w in zip(scores, weights)) / sum(weights)
+            else:
+                result.combined_score = 0.0
+        
+        # Sort by combined score and return top results
+        unique_results.sort(key=lambda r: r.combined_score or 0, reverse=True)
+        return unique_results[:limit]
         
     async def _rerank_results(self, query: str, results: List[SearchResult]) -> List[SearchResult]:
-        """Re-rank results using LLM."""
-        # Implementation from enhanced_memory.py
-        pass
+        """Re-rank results using LLM with error handling."""
+        if len(results) <= 1:
+            return results
+            
+        try:
+            # Prepare content for re-ranking
+            contexts = []
+            for i, result in enumerate(results):
+                context = f"{i+1}. {result.entry.topic}: {result.entry.content[:200]}..."
+                contexts.append(context)
+            
+            # Create re-ranking prompt
+            rerank_prompt = f"""
+            Given the query: "{query}"
+            
+            Rank these memory entries by relevance (1 = most relevant):
+            
+            {chr(10).join(contexts)}
+            
+            Return only the numbers in order of relevance (e.g., "3,1,4,2"):
+            """
+            
+            # Use real_executor for re-ranking if available
+            if REAL_EXECUTOR_AVAILABLE and real_executor:
+                try:
+                    response = await real_executor.execute(rerank_prompt, model="anthropic/claude-3-haiku-20240307")
+                    
+                    # Parse ranking response
+                    ranking_str = response.strip()
+                    rankings = [int(x.strip()) - 1 for x in ranking_str.split(",")]  # Convert to 0-based
+                    
+                    # Reorder results based on ranking
+                    reranked = []
+                    for rank_idx in rankings:
+                        if 0 <= rank_idx < len(results):
+                            result = results[rank_idx]
+                            # Update rerank score based on position
+                            result.rerank_score = 1.0 - (len(reranked) / len(results))
+                            reranked.append(result)
+                    
+                    # Add any missing results
+                    for i, result in enumerate(results):
+                        if result not in reranked:
+                            result.rerank_score = 0.1  # Low score for unranked
+                            reranked.append(result)
+                    
+                    return reranked
+                    
+                except Exception as api_error:
+                    logger.warning(f"LLM re-ranking failed, using score-based fallback: {api_error}")
+            else:
+                logger.debug("Real executor not available, using score-based ranking")
+            
+            # Fallback to score-based ranking
+            for i, result in enumerate(results):
+                result.rerank_score = 1.0 - (i / len(results))
+            return sorted(results, key=lambda r: r.combined_score or 0, reverse=True)
+                
+        except Exception as e:
+            logger.error(f"Re-ranking failed completely: {e}")
+            return results
         
     async def _update_access_stats(self, hash_ids: List[str]):
         """Update access statistics."""
-        # Implementation with connection pooling
-        pass
+        if not hash_ids:
+            return
+            
+        try:
+            async with self.get_connection() as conn:
+                # Update access count and last accessed time for all hash_ids
+                placeholders = ",".join("?" * len(hash_ids))
+                await conn.execute(f"""
+                    UPDATE memory_entries
+                    SET access_count = access_count + 1,
+                        last_accessed = CURRENT_TIMESTAMP
+                    WHERE hash_id IN ({placeholders})
+                """, hash_ids)
+                await conn.commit()
+                
+        except Exception as e:
+            logger.error(f"Failed to update access stats: {e}")
         
     async def _invalidate_search_cache(self, topic: str):
         """Invalidate search cache."""
-        # Implementation from enhanced_memory.py
-        pass
+        if not self.redis_client:
+            return
+            
+        try:
+            # Find all cache keys related to this topic
+            pattern = f"search:*{hashlib.md5(topic.encode()).hexdigest()[:8]}*"
+            
+            # Use scan to find matching keys
+            keys = []
+            cursor = 0
+            while True:
+                cursor, batch_keys = await self.redis_client.scan(cursor, match=pattern, count=100)
+                keys.extend(batch_keys)
+                if cursor == 0:
+                    break
+            
+            # Delete matching keys
+            if keys:
+                await self.redis_client.delete(*keys)
+                logger.debug(f"Invalidated {len(keys)} cache entries for topic: {topic}")
+                
+        except Exception as e:
+            logger.warning(f"Cache invalidation failed: {e}")
 
     async def get_stats(self) -> Dict[str, Any]:
         """Get comprehensive memory statistics."""

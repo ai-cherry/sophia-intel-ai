@@ -171,8 +171,8 @@ CREATE INDEX IF NOT EXISTS api_calls_user_id_idx ON api_calls(user_id);
 CREATE TABLE IF NOT EXISTS vector_sync (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     memory_id UUID REFERENCES memory_entries(id),
-    vector_store_id VARCHAR(200), -- Weaviate/Qdrant object ID
-    vector_store_type VARCHAR(50), -- 'weaviate', 'qdrant', 'pinecone'
+    vector_store_id VARCHAR(200), -- Weaviate object ID
+    vector_store_type VARCHAR(50) DEFAULT 'weaviate', -- 'weaviate' only (qdrant removed)
     sync_status VARCHAR(20) DEFAULT 'pending', -- 'pending', 'synced', 'failed'
     last_synced TIMESTAMP WITH TIME ZONE,
     error_message TEXT

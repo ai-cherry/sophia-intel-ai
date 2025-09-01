@@ -76,8 +76,8 @@ jobs:
       - name: Build and push UI image
         uses: docker/build-push-action@v5
         with:
-          context: ./ui
-          file: ./ui/Dockerfile
+          context: ./agent-ui
+          file: ./agent-ui/Dockerfile
           push: true
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/ui:${{ steps.version.outputs.version }}

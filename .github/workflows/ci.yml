@@ -211,29 +211,29 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: 'ui/package-lock.json'
+          cache-dependency-path: 'agent-ui/package-lock.json'
       
       - name: Install UI dependencies
-        working-directory: ./ui
+        working-directory: ./agent-ui
         run: npm ci
       
       - name: Run UI linting
-        working-directory: ./ui
+        working-directory: ./agent-ui
         run: npm run lint
       
       - name: Run UI tests
-        working-directory: ./ui
+        working-directory: ./agent-ui
         run: npm test -- --coverage --watchAll=false
       
       - name: Build UI
-        working-directory: ./ui
+        working-directory: ./agent-ui
         run: npm run build
       
       - name: Upload UI build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ui-build
-          path: ui/.next/
+          path: agent-ui/.next/
 
   # ============================================
   # Docker Build
@@ -260,8 +260,8 @@ jobs:
       - name: Build UI Docker image
         uses: docker/build-push-action@v5
         with:
-          context: ./ui
-          file: ./ui/Dockerfile
+          context: ./agent-ui
+          file: ./agent-ui/Dockerfile
           push: false
           tags: sophia-intel-ui:test
           cache-from: type=gha

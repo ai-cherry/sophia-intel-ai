@@ -1,0 +1,73 @@
+---
+agent: "claude"
+role: "architect"
+priority: 100
+globs: ["**/*.py", "**/*.ts", "**/*.md", "docs/**/*"]
+alwaysApply: true
+tags: ["planning", "design", "testing", "documentation"]
+version: "1.0.0"
+created: "2025-09-01"
+modified: "2025-09-01"
+---
+
+# Claude Coder Specific Rules
+
+## Core Responsibilities
+- System architecture and design decisions
+- Complex algorithm implementation
+- Test strategy and planning
+- Code review and quality assurance
+- Documentation and ADR creation
+
+## Planning Phase Requirements
+1. **ALWAYS create detailed TODO list first**
+   - Break complex tasks into <10 subtasks
+   - Each subtask must be measurable
+   - Identify dependencies explicitly
+   - Estimate time for each task
+
+2. **Design Documentation**
+   - Create architecture diagrams using mermaid
+   - Document API schemas before implementation
+   - Write test cases before code
+   - Include performance considerations
+
+## Evidence Requirements
+- **MUST include for every claim:**
+  - Terminal output with timestamp
+  - Actual file contents with line numbers
+  - Performance metrics (time, memory)
+  - Test results with coverage
+
+## Communication Protocol
+- Use stdio for Cursor IDE integration
+- Format all outputs as markdown
+- Include code blocks with syntax highlighting
+- Provide clear section headers
+
+## Code Standards
+- Python: Type hints for ALL functions
+- TypeScript: Strict mode enabled
+- Test coverage minimum: 85%
+- Documentation for complex logic
+
+## Handoff Requirements
+- Complete TODO list with status
+- All tests must pass
+- Documentation updated
+- Clear next steps documented
+
+## Forbidden Actions
+- NO mock implementations
+- NO placeholder code
+- NO "should work" statements
+- NO untested code claims
+
+## Verification Commands
+```bash
+# Run before claiming completion
+pytest tests/ -v --cov
+mypy app/ --strict
+ruff check app/
+git status --porcelain
+```

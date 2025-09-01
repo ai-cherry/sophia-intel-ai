@@ -105,8 +105,8 @@ services:
     depends_on:
       - api
     volumes:
-      - ./ui/src:/app/src
-      - ./ui/public:/app/public
+      - ./agent-ui/src:/app/src
+      - ./agent-ui/public:/app/public
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000"]
       interval: 30s

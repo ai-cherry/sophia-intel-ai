@@ -103,6 +103,9 @@ class SwarmMemoryClient:
             logger.info(f"Memory client connected to MCP server: {self.mcp_server_url}")
         except Exception as e:
             logger.warning(f"MCP server connection failed, using local fallback: {e}")
+        
+        # Ensure this returns None explicitly for proper async/await behavior
+        return None
     
     async def close(self):
         """Close memory client connections."""

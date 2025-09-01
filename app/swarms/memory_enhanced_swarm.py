@@ -23,6 +23,7 @@ from .improved_swarm import (
 )
 from .memory_integration import SwarmMemoryClient, SwarmMemoryMixin, SwarmMemoryEventType
 from .patterns.memory_integration import MemoryIntegrationPattern, MemoryIntegrationConfig, MemoryEnhancedStrategyArchive
+from .consciousness_tracking import ConsciousnessTracker, ConsciousnessType
 from app.memory.supermemory_mcp import MemoryType
 
 logger = logging.getLogger(__name__)
@@ -54,6 +55,9 @@ class MemoryEnhancedImprovedSwarm(ImprovedAgentSwarm, SwarmMemoryMixin):
         self.memory_pattern = MemoryIntegrationPattern()
         self.memory_enhanced_archive: Optional[MemoryEnhancedStrategyArchive] = None
         
+        # Consciousness tracking integration
+        self.consciousness_tracker: Optional[ConsciousnessTracker] = None
+        
         # Memory-enhanced execution tracking
         self.memory_execution_log = []
         self.context_cache = {}
@@ -70,9 +74,12 @@ class MemoryEnhancedImprovedSwarm(ImprovedAgentSwarm, SwarmMemoryMixin):
             # Replace file-based strategy archive with memory-enhanced version
             if self.memory_client:
                 self.memory_enhanced_archive = MemoryEnhancedStrategyArchive(
-                    self.swarm_type, 
+                    self.swarm_type,
                     self.memory_client
                 )
+            
+            # Initialize consciousness tracking
+            await self.initialize_consciousness_tracking()
             
             # Load initial context from memory
             await self._load_initial_context()
@@ -82,6 +89,24 @@ class MemoryEnhancedImprovedSwarm(ImprovedAgentSwarm, SwarmMemoryMixin):
         except Exception as e:
             logger.error(f"Failed to initialize full system: {e}")
             # Continue without memory integration if it fails
+    
+    async def initialize_consciousness_tracking(self):
+        """Initialize consciousness tracking for the swarm."""
+        if not self.memory_client:
+            logger.warning("Memory client not available for consciousness tracking")
+            return
+        
+        try:
+            self.consciousness_tracker = ConsciousnessTracker(
+                self.swarm_type,
+                self.swarm_id,
+                self.memory_client
+            )
+            
+            logger.info(f"🧠 Consciousness tracking initialized for {self.swarm_type}:{self.swarm_id}")
+            
+        except Exception as e:
+            logger.error(f"Failed to initialize consciousness tracking: {e}")
     
     async def _load_initial_context(self):
         """Load initial context from memory system."""
@@ -165,6 +190,11 @@ class MemoryEnhancedImprovedSwarm(ImprovedAgentSwarm, SwarmMemoryMixin):
         # Execute original solve_with_improvements with enhancements
         base_result = await self._execute_enhanced_solve(enhanced_problem)
         
+        # Measure consciousness after execution
+        consciousness_result = await self._measure_post_execution_consciousness(problem, base_result)
+        if consciousness_result:
+            base_result["consciousness_measurement"] = consciousness_result
+        
         # Post-execution memory operations
         await self._post_execution_memory_operations(problem, base_result, relevant_context)
         
@@ -191,6 +221,10 @@ class MemoryEnhancedImprovedSwarm(ImprovedAgentSwarm, SwarmMemoryMixin):
             "timestamp": datetime.now().isoformat()
         })
         
+        # Include consciousness data in result
+        if consciousness_result:
+            enhanced_result["consciousness_data"] = consciousness_result
+        
         return enhanced_result
     
     async def _load_relevant_context(self, problem: Dict[str, Any]) -> Dict[str, Any]:
@@ -198,7 +232,7 @@ class MemoryEnhancedImprovedSwarm(ImprovedAgentSwarm, SwarmMemoryMixin):
         if not self.memory_client:
             return {}
         
-        return await self.memory_client._load_relevant_context(problem)
+        return await super()._load_relevant_context(problem)
     
     def _enhance_problem_with_memory(self, problem: Dict, context: Dict) -> Dict:
         """Enhance problem with memory insights."""
@@ -620,7 +654,7 @@ class MemoryEnhancedImprovedSwarm(ImprovedAgentSwarm, SwarmMemoryMixin):
             await self._capture_execution_learnings(problem, result, context)
             
             # Store execution completion
-            await self.memory_client._store_task_execution(problem, result)
+            await self._store_task_execution(problem, result)
             
         except Exception as e:
             logger.error(f"Post-execution memory operations failed: {e}")
@@ -845,6 +879,73 @@ class MemoryEnhancedImprovedSwarm(ImprovedAgentSwarm, SwarmMemoryMixin):
             
         except Exception as e:
             logger.error(f"Failed to cleanup full system: {e}")
+    
+    async def _measure_post_execution_consciousness(self, problem: Dict, result: Dict) -> Optional[Dict[str, Any]]:
+        """Measure consciousness after task execution."""
+        if not self.consciousness_tracker:
+            return None
+        
+        try:
+            # Prepare context for consciousness measurement
+            context = {
+                "task": problem,
+                "agent_count": len(self.agents),
+                "execution_data": {
+                    "quality_score": result.get("quality_score", 0.5),
+                    "execution_time": result.get("execution_time", 0),
+                    "success": result.get("success", True),
+                    "agent_roles": result.get("agent_roles", []),
+                    "patterns_used": result.get("patterns_used", []),
+                    "memory_enhanced": result.get("memory_enhanced", False),
+                    "memory_patterns_applied": result.get("memory_patterns_applied", 0),
+                    "agent_response_times": [0.5] * len(self.agents),  # Simulated
+                    "task_assignments": {f"agent_{i}": 2 for i in range(len(self.agents))},  # Simulated
+                    "communication": {
+                        "clarity_score": 0.7,
+                        "relevance_score": 0.8,
+                        "info_sharing_score": 0.6,
+                        "feedback_score": 0.7
+                    }
+                },
+                "performance_data": {
+                    "quality_scores": [result.get("quality_score", 0.5)],
+                    "speed_score": min(1.0, 10.0 / max(result.get("execution_time", 1), 0.1)),
+                    "efficiency_score": result.get("quality_score", 0.5) * 0.8,
+                    "reliability_score": 0.8 if result.get("success", True) else 0.3
+                },
+                "memory_data": result.get("memory_integration", {}),
+                "learning_data": {
+                    "learnings_count": len(result.get("patterns_used", [])),
+                    "avg_confidence": 0.7
+                }
+            }
+            
+            # Perform consciousness measurement
+            measurements = await self.consciousness_tracker.measure_consciousness(context)
+            
+            if measurements:
+                # Get comprehensive consciousness metrics
+                consciousness_metrics = self.consciousness_tracker.get_consciousness_metrics()
+                
+                # Correlate with performance
+                performance_correlation = await self.consciousness_tracker.correlate_consciousness_with_performance(
+                    context["performance_data"]
+                )
+                
+                return {
+                    "consciousness_level": self.consciousness_tracker.consciousness_profile.current_level,
+                    "development_stage": self.consciousness_tracker.consciousness_profile.development_stage,
+                    "maturity_score": self.consciousness_tracker.consciousness_profile.maturity_score,
+                    "measurements": {k.value: v.value for k, v in measurements.items()},
+                    "emergence_events": len(self.consciousness_tracker.emergence_events),
+                    "breakthrough_patterns": len(self.consciousness_tracker.breakthrough_patterns),
+                    "performance_correlation": performance_correlation,
+                    "consciousness_metrics": consciousness_metrics
+                }
+            
+        except Exception as e:
+            logger.error(f"Failed to measure consciousness: {e}")
+            return None
 
 
 # ============================================

@@ -57,10 +57,20 @@ class MemoryIntegrationPattern(SwarmPattern):
         self.swarm_context: Dict[str, Any] = {}
         self.memory_operations_log: List[Dict] = []
         
+    async def initialize(self) -> None:
+        """Initialize memory integration pattern - public interface."""
+        await self._setup()
+        return None  # Explicit return for proper async/await behavior
+        
     async def _setup(self) -> None:
         """Initialize memory integration pattern."""
         # Memory client will be initialized when swarm info is available
         logger.info("Memory integration pattern initialized")
+        
+    async def cleanup(self) -> None:
+        """Cleanup memory integration pattern - public interface."""
+        await self._teardown()
+        return None  # Explicit return for proper async/await behavior
         
     async def _teardown(self) -> None:
         """Cleanup memory integration pattern."""

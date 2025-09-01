@@ -263,7 +263,7 @@ class GlobalState:
         print("🚀 Initializing unified agent systems...")
         
         # Initialize Supermemory
-        if ServerConfig.MCP_SUPERMEMORY_ENABLED:
+        if server_config.MCP_SUPERMEMORY_ENABLED:
             # self.supermemory = SupermemoryStore()  # Commented out - missing import
             print("  ✅ Supermemory MCP initialized")
         
@@ -273,19 +273,19 @@ class GlobalState:
         print("  ✅ ModernBERT embedder initialized (Voyage-3-large/Cohere v3)")
         
         # Initialize search engine
-        if ServerConfig.HYBRID_SEARCH_ENABLED:
+        if server_config.HYBRID_SEARCH_ENABLED:
             # self.search_engine = HybridSearchEngine(embedder=self.embedder)  # Commented out - missing import
             print("  ✅ Hybrid search engine initialized")
         
         # Initialize GraphRAG
-        if ServerConfig.GRAPHRAG_ENABLED:
+        if server_config.GRAPHRAG_ENABLED:
             # self.knowledge_graph = KnowledgeGraph()  # Commented out - missing imports
             # self.graph_rag = GraphRAGEngine(self.knowledge_graph)
             pass
             print("  ✅ GraphRAG system initialized")
         
         # Initialize evaluation gates
-        if ServerConfig.GATES_ENABLED:
+        if server_config.GATES_ENABLED:
             # self.gate_manager = EvaluationGateManager()  # Commented out - missing import
             pass
             print("  ✅ Evaluation gates initialized")
@@ -315,11 +315,11 @@ async def lifespan(app: FastAPI):
     await state.initialize()
     
     # Register MCP servers (simulation - in production, use actual MCP client)
-    if ServerConfig.MCP_FILESYSTEM_ENABLED:
+    if server_config.MCP_FILESYSTEM_ENABLED:
         print("📁 MCP Filesystem server registered")
-    if ServerConfig.MCP_GIT_ENABLED:
+    if server_config.MCP_GIT_ENABLED:
         print("🔀 MCP Git server registered")
-    if ServerConfig.MCP_SUPERMEMORY_ENABLED:
+    if server_config.MCP_SUPERMEMORY_ENABLED:
         print("🧠 MCP Supermemory server registered")
     
     yield
@@ -345,7 +345,7 @@ app.include_router(health_router, prefix="", tags=["health"])
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=ServerConfig.ALLOWED_ORIGINS,
+    allow_origins=server_config.ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -924,18 +924,18 @@ if __name__ == "__main__":
     import uvicorn
     
     # Print configuration
-    ServerConfig.print_config()
+    server_config.print_config()
     
     print(f"""
 ╔══════════════════════════════════════════════════════╗
 ║           UNIFIED AGENT API SERVER                    ║
 ║                                                        ║
 ║  Endpoints:                                            ║
-║  - Health:     http://localhost:{ServerConfig.PORT}/healthz     ║
-║  - Teams:      http://localhost:{ServerConfig.PORT}/teams       ║
-║  - Workflows:  http://localhost:{ServerConfig.PORT}/workflows   ║
-║  - Search:     http://localhost:{ServerConfig.PORT}/search      ║
-║  - Memory:     http://localhost:{ServerConfig.PORT}/memory/*    ║
+║  - Health:     http://localhost:{server_config.PORT}/healthz     ║
+║  - Teams:      http://localhost:{server_config.PORT}/teams       ║
+║  - Workflows:  http://localhost:{server_config.PORT}/workflows   ║
+║  - Search:     http://localhost:{server_config.PORT}/search      ║
+║  - Memory:     http://localhost:{server_config.PORT}/memory/*    ║
 ║                                                        ║
 ║  Features:                                             ║
 ║  ✅ Supermemory MCP                                   ║
@@ -949,7 +949,7 @@ if __name__ == "__main__":
     
     uvicorn.run(
         app,
-        host=ServerConfig.HOST,
-        port=ServerConfig.PORT,
+        host=server_config.HOST,
+        port=server_config.PORT,
         log_level="info"
     )

@@ -67,12 +67,14 @@ class SwarmPattern(ABC):
         if not self._initialized:
             await self._setup()
             self._initialized = True
+        return None  # Explicit return for proper async/await behavior
             
     async def cleanup(self) -> None:
         """Cleanup pattern resources."""
         if self._initialized:
             await self._teardown()
             self._initialized = False
+        return None  # Explicit return for proper async/await behavior
     
     @abstractmethod
     async def execute(self, context: Dict[str, Any], agents: List[Any]) -> PatternResult:

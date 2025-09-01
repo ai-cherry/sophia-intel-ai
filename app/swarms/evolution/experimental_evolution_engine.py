@@ -30,6 +30,7 @@ import numpy as np
 from copy import deepcopy
 
 from app.swarms.memory_integration import SwarmMemoryClient, SwarmMemoryEventType
+from app.swarms.consciousness_tracking import ConsciousnessTracker, ConsciousnessType
 from app.memory.supermemory_mcp import MemoryType
 
 logger = logging.getLogger(__name__)
@@ -147,29 +148,32 @@ class ExperimentalEvolutionConfig:
 @dataclass
 class SwarmChromosome:
     """Chromosome representation for experimental swarm configuration evolution."""
+    # Required parameters (no defaults) must come first
     chromosome_id: str
     swarm_type: str
     generation: int
-    experimental_variant: bool = False  # Flag for experimental mutations
     
-    # Agent configuration genes
+    # Agent configuration genes (required)
     agent_roles: List[str]
     agent_parameters: Dict[str, Dict[str, float]]  # agent_name -> param -> value
     
-    # Swarm behavior genes  
+    # Swarm behavior genes (required)
     coordination_style: str  # "hierarchical", "peer_to_peer", "hybrid", "experimental"
     communication_pattern: str  # "broadcast", "targeted", "adaptive", "experimental"
     consensus_mechanism: str  # "majority", "weighted", "expert", "experimental"
     
-    # Performance genes
+    # Performance genes (required)
     quality_threshold: float
     speed_preference: float  # 0.0 = quality focused, 1.0 = speed focused
     risk_tolerance: float
     
-    # Adaptation genes
+    # Adaptation genes (required)
     learning_rate: float
     memory_utilization: float
     pattern_recognition_sensitivity: float
+    
+    # Optional parameters with defaults come after required ones
+    experimental_variant: bool = False  # Flag for experimental mutations
     
     # Experimental genes (only active in experimental modes)
     experimental_creativity: float = 0.5
@@ -357,11 +361,13 @@ class ExperimentalEvolutionEngine:
     Use with caution in production environments!
     """
     
-    def __init__(self, config: Optional[ExperimentalEvolutionConfig] = None, 
-                 memory_client: Optional[SwarmMemoryClient] = None):
-        """Initialize the experimental evolution engine."""
+    def __init__(self, config: Optional[ExperimentalEvolutionConfig] = None,
+                 memory_client: Optional[SwarmMemoryClient] = None,
+                 consciousness_tracker: Optional[ConsciousnessTracker] = None):
+        """Initialize the experimental evolution engine with consciousness integration."""
         self.config = config or ExperimentalEvolutionConfig()
         self.memory_client = memory_client
+        self.consciousness_tracker = consciousness_tracker
         
         # Validate configuration
         config_issues = self.config.validate()
@@ -392,7 +398,7 @@ class ExperimentalEvolutionEngine:
         self.safety_violations: List[Dict[str, Any]] = []
         self.experimental_warnings: List[Dict[str, Any]] = []
         
-        # Experimental statistics
+        # Experimental statistics with consciousness integration
         self.evolution_stats = {
             'total_generations': 0,
             'successful_evolutions': 0,
@@ -401,7 +407,10 @@ class ExperimentalEvolutionEngine:
             'patterns_discovered': 0,
             'experimental_mutations': 0,
             'experimental_discoveries': 0,
-            'safety_interventions': 0
+            'safety_interventions': 0,
+            'consciousness_guided_evolutions': 0,
+            'consciousness_fitness_correlations': 0,
+            'consciousness_breakthroughs': 0
         }
         
         logger.info(f"🧪 Experimental evolution engine initialized - Mode: {self.config.mode.value}")
@@ -1245,6 +1254,294 @@ class ExperimentalEvolutionEngine:
                 logger.warning(f"Failed to store experimental shutdown data: {e}")
         
         logger.info(f"🧪 Experimental evolution engine shutdown complete - Stats: {self.evolution_stats}")
+    
+    # ============================================
+    # Consciousness-Evolution Integration Methods
+    # ============================================
+    
+    async def evolve_with_consciousness_guidance(self, swarm_type: str, performance_data: Dict[str, Any],
+                                               consciousness_data: Optional[Dict[str, Any]] = None) -> Optional[SwarmChromosome]:
+        """
+        Evolve population using consciousness metrics as additional fitness criteria.
+        Integrates consciousness measurements into genetic algorithm selection and mutation.
+        """
+        if not self._can_evolve_experimental(swarm_type):
+            return None
+        
+        try:
+            logger.info(f"🧠🧪 Starting consciousness-guided evolution for {swarm_type}")
+            
+            population = self.populations.get(swarm_type, [])
+            if not population:
+                logger.error(f"No population found for consciousness-guided evolution: {swarm_type}")
+                return None
+            
+            # Enhanced fitness evaluation with consciousness
+            consciousness_enhanced_evaluations = await self._evaluate_consciousness_enhanced_fitness(
+                swarm_type, population, performance_data, consciousness_data
+            )
+            
+            # Consciousness-informed selection
+            survivors, elites = self._consciousness_guided_selection(population, consciousness_enhanced_evaluations)
+            
+            # Consciousness-informed mutation
+            await self._consciousness_guided_mutation(survivors + elites, consciousness_data)
+            
+            # Update population
+            new_population = elites + survivors
+            self.populations[swarm_type] = new_population[:len(population)]
+            self.generation_counter[swarm_type] += 1
+            
+            # Track consciousness-guided evolution stats
+            self.evolution_stats['consciousness_guided_evolutions'] += 1
+            if consciousness_data:
+                self.evolution_stats['consciousness_fitness_correlations'] += 1
+                
+                # Check for consciousness breakthroughs
+                consciousness_level = consciousness_data.get('consciousness_level', 0)
+                if consciousness_level > 0.85:
+                    self.evolution_stats['consciousness_breakthroughs'] += 1
+            
+            # Store results with consciousness correlation
+            if self.memory_client:
+                await self._store_consciousness_evolution_results(swarm_type, consciousness_enhanced_evaluations, consciousness_data)
+            
+            best_chromosome = max(new_population, key=lambda c: c.fitness_score)
+            logger.info(f"🧠🧪 Consciousness-guided evolution complete for {swarm_type} - Best fitness: {best_chromosome.fitness_score:.3f}")
+            
+            return best_chromosome
+            
+        except Exception as e:
+            logger.error(f"🧠🧪 Consciousness-guided evolution failed for {swarm_type}: {e}")
+            return None
+    
+    async def _evaluate_consciousness_enhanced_fitness(self, swarm_type: str, population: List[SwarmChromosome],
+                                                     performance_data: Dict[str, Any],
+                                                     consciousness_data: Optional[Dict[str, Any]]) -> List[ExperimentalFitnessEvaluation]:
+        """Evaluate fitness with consciousness metrics integration."""
+        evaluations = []
+        
+        # Get base fitness evaluations
+        base_evaluations = await self._evaluate_experimental_fitness(swarm_type, population, performance_data)
+        
+        # Enhance with consciousness data if available
+        for base_eval in base_evaluations:
+            enhanced_eval = base_eval
+            
+            if consciousness_data:
+                # Add consciousness bonus to fitness
+                consciousness_level = consciousness_data.get('consciousness_level', 0)
+                development_stage = consciousness_data.get('development_stage', 'nascent')
+                emergence_events = consciousness_data.get('emergence_events', 0)
+                
+                # Calculate consciousness fitness bonus
+                consciousness_bonus = self._calculate_consciousness_fitness_bonus(
+                    consciousness_level, development_stage, emergence_events
+                )
+                
+                # Apply bonus to overall fitness
+                enhanced_eval.overall_fitness = min(1.0, base_eval.overall_fitness + consciousness_bonus)
+                
+                # Track consciousness metrics in evaluation
+                enhanced_eval.experimental_breakthrough_potential = max(
+                    enhanced_eval.experimental_breakthrough_potential,
+                    consciousness_level * 0.8  # Consciousness contributes to breakthrough potential
+                )
+            
+            evaluations.append(enhanced_eval)
+        
+        return evaluations
+    
+    def _calculate_consciousness_fitness_bonus(self, consciousness_level: float,
+                                             development_stage: str, emergence_events: int) -> float:
+        """Calculate fitness bonus based on consciousness metrics."""
+        # Base bonus from consciousness level
+        level_bonus = consciousness_level * 0.1  # Max 10% bonus
+        
+        # Stage bonus
+        stage_bonuses = {
+            'nascent': 0.0,
+            'developing': 0.01,
+            'maturing': 0.02,
+            'advanced': 0.03,
+            'transcendent': 0.05
+        }
+        stage_bonus = stage_bonuses.get(development_stage, 0.0)
+        
+        # Emergence events bonus
+        emergence_bonus = min(0.02, emergence_events * 0.005)  # Max 2% bonus, 0.5% per event
+        
+        total_bonus = level_bonus + stage_bonus + emergence_bonus
+        return min(0.15, total_bonus)  # Cap total consciousness bonus at 15%
+    
+    def _consciousness_guided_selection(self, population: List[SwarmChromosome],
+                                      evaluations: List[ExperimentalFitnessEvaluation]) -> Tuple[List[SwarmChromosome], List[SwarmChromosome]]:
+        """Selection phase guided by consciousness metrics."""
+        # Standard selection but with consciousness-enhanced fitness
+        sorted_evaluations = sorted(evaluations, key=lambda e: e.overall_fitness, reverse=True)
+        sorted_population = [next(c for c in population if c.chromosome_id == e.chromosome_id)
+                           for e in sorted_evaluations]
+        
+        population_size = len(sorted_population)
+        elite_count = max(1, int(population_size * self.config.elite_preservation))
+        survivor_count = max(2, int(population_size * self.config.selection_pressure))
+        
+        # Prioritize chromosomes that showed consciousness development
+        consciousness_enhanced_survivors = []
+        regular_survivors = []
+        
+        for chromosome in sorted_population[:survivor_count]:
+            # Check if this chromosome contributed to consciousness development
+            if hasattr(chromosome, 'consciousness_contribution') and chromosome.consciousness_contribution > 0.1:
+                consciousness_enhanced_survivors.append(chromosome)
+            else:
+                regular_survivors.append(chromosome)
+        
+        # Combine with preference for consciousness-enhanced
+        survivors = consciousness_enhanced_survivors + regular_survivors
+        survivors = survivors[:survivor_count]  # Ensure we don't exceed limit
+        
+        elites = sorted_population[:elite_count]
+        
+        logger.debug(f"🧠🧪 Consciousness-guided selection: {len(consciousness_enhanced_survivors)} consciousness-enhanced, "
+                    f"{len(regular_survivors)} regular survivors")
+        
+        return survivors, elites
+    
+    async def _consciousness_guided_mutation(self, chromosomes: List[SwarmChromosome],
+                                           consciousness_data: Optional[Dict[str, Any]]):
+        """Apply mutations guided by consciousness insights."""
+        if not consciousness_data:
+            # Fall back to standard mutation
+            await self._experimental_mutation_phase(chromosomes, False)
+            return
+        
+        consciousness_level = consciousness_data.get('consciousness_level', 0)
+        development_stage = consciousness_data.get('development_stage', 'nascent')
+        
+        # Adjust mutation rate based on consciousness level
+        base_mutation_rate = self.config.mutation_rate
+        
+        # Higher consciousness = more conservative mutations (preserve good traits)
+        # Lower consciousness = more exploratory mutations (search for improvements)
+        if consciousness_level > 0.7:
+            adjusted_mutation_rate = base_mutation_rate * 0.7  # More conservative
+        elif consciousness_level < 0.3:
+            adjusted_mutation_rate = base_mutation_rate * 1.3  # More exploratory
+        else:
+            adjusted_mutation_rate = base_mutation_rate
+        
+        # Apply consciousness-guided mutations
+        mutations_applied = 0
+        for chromosome in chromosomes:
+            if random.random() < adjusted_mutation_rate:
+                # Apply mutation with consciousness bias
+                await self._apply_consciousness_guided_mutation(chromosome, consciousness_data)
+                mutations_applied += 1
+        
+        logger.debug(f"🧠🧪 Applied {mutations_applied} consciousness-guided mutations "
+                    f"(rate: {adjusted_mutation_rate:.3f}, consciousness: {consciousness_level:.3f})")
+    
+    async def _apply_consciousness_guided_mutation(self, chromosome: SwarmChromosome,
+                                                 consciousness_data: Dict[str, Any]):
+        """Apply a single consciousness-guided mutation."""
+        consciousness_level = consciousness_data.get('consciousness_level', 0)
+        measurements = consciousness_data.get('measurements', {})
+        
+        # Identify which consciousness dimensions are strong/weak
+        weak_dimensions = [dim for dim, value in measurements.items() if value < 0.5]
+        strong_dimensions = [dim for dim, value in measurements.items() if value > 0.8]
+        
+        # Mutate parameters related to weak dimensions more aggressively
+        if weak_dimensions:
+            # Focus mutations on improving weak areas
+            target_params = []
+            if 'coordination_effectiveness' in weak_dimensions:
+                target_params.extend(['collaboration', 'coordination'])
+            if 'adaptive_learning' in weak_dimensions:
+                target_params.extend(['learning_rate', 'adaptability'])
+            if 'pattern_recognition' in weak_dimensions:
+                target_params.append('pattern_recognition_sensitivity')
+            
+            # Apply targeted mutations
+            for param in target_params:
+                if param in ['collaboration', 'learning_rate', 'pattern_recognition_sensitivity']:
+                    current_value = getattr(chromosome, param, 0.5)
+                    # Mutate toward higher values for weak dimensions
+                    improvement_bias = random.uniform(0.05, 0.15)
+                    new_value = min(1.0, current_value + improvement_bias)
+                    setattr(chromosome, param, new_value)
+        
+        # Preserve strong dimensions with minimal mutation
+        elif strong_dimensions and consciousness_level > 0.7:
+            # Very small mutations to preserve good traits
+            for param in ['quality_threshold', 'risk_tolerance']:
+                current_value = getattr(chromosome, param, 0.5)
+                small_mutation = random.uniform(-0.02, 0.02)
+                new_value = max(0.0, min(1.0, current_value + small_mutation))
+                setattr(chromosome, param, new_value)
+    
+    async def _store_consciousness_evolution_results(self, swarm_type: str,
+                                                   evaluations: List[ExperimentalFitnessEvaluation],
+                                                   consciousness_data: Optional[Dict[str, Any]]):
+        """Store evolution results with consciousness correlation data."""
+        if not self.memory_client:
+            return
+        
+        try:
+            generation = self.generation_counter.get(swarm_type, 1)
+            best_fitness = max(e.overall_fitness for e in evaluations)
+            
+            # Enhanced storage with consciousness correlation
+            consciousness_evolution_data = {
+                'evolution_type': 'consciousness_guided',
+                'swarm_type': swarm_type,
+                'generation': generation,
+                'best_fitness': best_fitness,
+                'population_size': len(evaluations),
+                'consciousness_integration': consciousness_data is not None
+            }
+            
+            if consciousness_data:
+                consciousness_evolution_data.update({
+                    'consciousness_level': consciousness_data.get('consciousness_level', 0),
+                    'development_stage': consciousness_data.get('development_stage', 'nascent'),
+                    'emergence_events': consciousness_data.get('emergence_events', 0),
+                    'consciousness_fitness_correlation': self._calculate_consciousness_fitness_correlation(
+                        evaluations, consciousness_data
+                    )
+                })
+            
+            await self.memory_client.store_learning(
+                learning_type="consciousness_guided_evolution",
+                content=f"🧠🧪 Consciousness-guided evolution generation {generation}: "
+                       f"fitness={best_fitness:.3f}, consciousness={consciousness_data.get('consciousness_level', 0):.3f if consciousness_data else 'N/A'}",
+                confidence=min(best_fitness + 0.1, 1.0),
+                context=consciousness_evolution_data
+            )
+            
+        except Exception as e:
+            logger.warning(f"🧠🧪 Failed to store consciousness-evolution results: {e}")
+    
+    def _calculate_consciousness_fitness_correlation(self, evaluations: List[ExperimentalFitnessEvaluation],
+                                                   consciousness_data: Dict[str, Any]) -> float:
+        """Calculate correlation between consciousness metrics and fitness scores."""
+        if not evaluations or not consciousness_data:
+            return 0.0
+        
+        consciousness_level = consciousness_data.get('consciousness_level', 0)
+        avg_fitness = sum(e.overall_fitness for e in evaluations) / len(evaluations)
+        
+        # Simple correlation: higher consciousness should correlate with higher average fitness
+        # This is a simplified correlation measure
+        if consciousness_level > 0.7 and avg_fitness > 0.7:
+            return 0.8  # Strong positive correlation
+        elif consciousness_level > 0.5 and avg_fitness > 0.5:
+            return 0.6  # Moderate positive correlation
+        elif abs(consciousness_level - avg_fitness) < 0.2:
+            return 0.4  # Weak positive correlation
+        else:
+            return 0.1  # Little to no correlation
 
 
 # Factory function for creating experimental evolution engines

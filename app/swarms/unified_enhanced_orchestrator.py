@@ -35,6 +35,7 @@ from app.swarms.memory_enhanced_swarm import (
     MemoryEnhancedGenesisSwarm
 )
 from app.swarms.memory_integration import SwarmMemoryClient, SwarmMemoryEventType
+from app.swarms.consciousness_tracking import ConsciousnessTracker
 from app.memory.supermemory_mcp import MemoryType
 
 logger = logging.getLogger(__name__)
@@ -51,23 +52,34 @@ class UnifiedSwarmOrchestrator:
         self.global_strategy_archive = StrategyArchive("tmp/global_strategy_archive.json")
         self.global_safety_system = None
         self.global_memory_client: Optional[SwarmMemoryClient] = None
+        self.global_consciousness_tracker: Optional[ConsciousnessTracker] = None
         self.global_metrics = {
             "total_executions": 0,
             "swarm_usage": {},
             "pattern_effectiveness": {},
             "cross_swarm_transfers": 0,
             "memory_operations": 0,
-            "memory_integrations": 0
+            "memory_integrations": 0,
+            "consciousness_measurements": 0,
+            "emergence_events": 0,
+            "pattern_breakthroughs": 0
         }
         
         # Initialize all swarm types with memory integration
         self._initialize_swarms()
         
     async def initialize_memory_integration(self):
-        """Initialize global memory integration for orchestrator."""
+        """Initialize global memory integration and consciousness tracking for orchestrator."""
         try:
             self.global_memory_client = SwarmMemoryClient("orchestrator", "global_orchestrator")
             await self.global_memory_client.initialize()
+            
+            # Initialize global consciousness tracking
+            self.global_consciousness_tracker = ConsciousnessTracker(
+                "global_orchestrator",
+                "global_unified_orchestrator",
+                self.global_memory_client
+            )
             
             # Initialize memory for all swarms
             for swarm_name, swarm_info in self.swarm_registry.items():
@@ -75,6 +87,11 @@ class UnifiedSwarmOrchestrator:
                 if hasattr(swarm, 'initialize_full_system'):
                     await swarm.initialize_full_system()
                     logger.info(f"Memory integration initialized for {swarm_name}")
+                
+                # Initialize consciousness tracking for each swarm
+                if hasattr(swarm, 'initialize_consciousness_tracking'):
+                    await swarm.initialize_consciousness_tracking()
+                    logger.info(f"Consciousness tracking initialized for {swarm_name}")
             
             # Log orchestrator initialization
             if self.global_memory_client:
@@ -83,14 +100,15 @@ class UnifiedSwarmOrchestrator:
                     {
                         "orchestrator_type": "unified_enhanced",
                         "swarm_count": len(self.swarm_registry),
-                        "memory_integration": "enabled"
+                        "memory_integration": "enabled",
+                        "consciousness_tracking": "enabled"
                     }
                 )
             
-            logger.info("Global memory integration initialized for orchestrator")
+            logger.info("Global memory integration and consciousness tracking initialized for orchestrator")
             
         except Exception as e:
-            logger.error(f"Failed to initialize memory integration: {e}")
+            logger.error(f"Failed to initialize memory integration and consciousness tracking: {e}")
     
     def _initialize_swarms(self):
         """Initialize all swarm types with enhancements."""
@@ -294,9 +312,9 @@ class UnifiedSwarmOrchestrator:
         swarm.config["memory_based_evolution"] = True
         swarm.config["consciousness_memory_correlation"] = True
         
-        # Add evolution-specific components
+        # Add evolution-specific components with enhanced consciousness tracking
         swarm.evolution_engine = EvolutionEngine(swarm)
-        swarm.consciousness_tracker = ConsciousnessTracker(swarm)
+        # Note: Enhanced consciousness tracker will be initialized via memory integration
         
         return {
             "swarm": swarm,
@@ -385,7 +403,12 @@ class UnifiedSwarmOrchestrator:
         else:
             result = await swarm.solve_with_improvements(task)
         
-        # Track metrics
+        # Measure consciousness after execution
+        consciousness_result = await self._measure_swarm_consciousness(swarm_type, swarm, task, result)
+        if consciousness_result:
+            result["consciousness_data"] = consciousness_result
+        
+        # Track metrics including consciousness
         execution_time = (datetime.now() - start_time).total_seconds()
         self._update_global_metrics(swarm_type, result, execution_time)
         
@@ -446,7 +469,18 @@ class UnifiedSwarmOrchestrator:
         else:
             result = await swarm.solve_with_improvements(task)
         
-        # Track metrics with memory data
+        # Measure consciousness after execution (enhanced)
+        consciousness_result = await self._measure_swarm_consciousness(swarm_type, swarm, task, result, enhanced=True)
+        if consciousness_result:
+            result["consciousness_data"] = consciousness_result
+        
+        # Process collective consciousness if global tracker available
+        if self.global_consciousness_tracker:
+            collective_data = await self._process_collective_consciousness(swarm_type, consciousness_result)
+            if collective_data:
+                result["collective_consciousness"] = collective_data
+        
+        # Track metrics with memory data and consciousness
         execution_time = (datetime.now() - start_time).total_seconds()
         self._update_global_metrics(swarm_type, result, execution_time)
         
@@ -647,6 +681,145 @@ class UnifiedSwarmOrchestrator:
         except Exception as e:
             logger.error(f"Failed to share global knowledge: {e}")
     
+    async def _measure_swarm_consciousness(self, swarm_type: str, swarm, task: Dict, result: Dict, enhanced: bool = False) -> Optional[Dict[str, Any]]:
+        """Measure consciousness for a swarm after task execution."""
+        try:
+            # Get or create consciousness tracker for the swarm
+            consciousness_tracker = None
+            
+            if hasattr(swarm, 'consciousness_tracker') and swarm.consciousness_tracker:
+                consciousness_tracker = swarm.consciousness_tracker
+            elif hasattr(swarm, 'memory_client') and swarm.memory_client:
+                # Create consciousness tracker if swarm has memory integration
+                consciousness_tracker = ConsciousnessTracker(
+                    swarm_type,
+                    f"{swarm_type}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+                    swarm.memory_client
+                )
+                swarm.consciousness_tracker = consciousness_tracker
+            
+            if not consciousness_tracker:
+                return None
+            
+            # Prepare context for consciousness measurement
+            context = {
+                "task": task,
+                "agent_count": len(getattr(swarm, 'agents', [])),
+                "execution_data": {
+                    "quality_score": result.get("quality_score", 0.5),
+                    "execution_time": result.get("execution_time", 0),
+                    "success": result.get("success", True),
+                    "agent_roles": result.get("agent_roles", []),
+                    "patterns_used": result.get("patterns_used", []),
+                    "agent_response_times": [0.5, 0.6, 0.4, 0.5],  # Simulated for now
+                    "task_assignments": {"agent_1": 2, "agent_2": 3, "agent_3": 2},  # Simulated
+                    "communication": {
+                        "clarity_score": 0.7,
+                        "relevance_score": 0.8,
+                        "info_sharing_score": 0.6,
+                        "feedback_score": 0.7
+                    },
+                    "role_performance": {
+                        "adherence_scores": [0.8, 0.7, 0.9, 0.6]
+                    },
+                    "conflicts": [],
+                    "resolved_conflicts": 0
+                },
+                "performance_data": {
+                    "quality_scores": [result.get("quality_score", 0.5)],
+                    "speed_score": min(1.0, 10.0 / max(result.get("execution_time", 1), 0.1)),
+                    "efficiency_score": result.get("quality_score", 0.5) * 0.8,
+                    "reliability_score": 0.8 if result.get("success", True) else 0.3
+                },
+                "memory_data": result.get("memory_integration", {}),
+                "learning_data": {
+                    "learnings_count": len(result.get("patterns_used", [])),
+                    "avg_confidence": 0.7
+                }
+            }
+            
+            # Measure consciousness
+            measurements = await consciousness_tracker.measure_consciousness(context)
+            
+            if measurements:
+                # Update global consciousness metrics
+                self.global_metrics["consciousness_measurements"] += 1
+                if hasattr(consciousness_tracker, 'emergence_events'):
+                    self.global_metrics["emergence_events"] += len(consciousness_tracker.emergence_events)
+                if hasattr(consciousness_tracker, 'breakthrough_patterns'):
+                    self.global_metrics["pattern_breakthroughs"] += len(consciousness_tracker.breakthrough_patterns)
+                
+                # Get consciousness metrics
+                consciousness_data = consciousness_tracker.get_consciousness_metrics()
+                
+                # Correlate with performance
+                performance_correlation = await consciousness_tracker.correlate_consciousness_with_performance(
+                    context["performance_data"]
+                )
+                
+                return {
+                    "consciousness_level": consciousness_tracker.consciousness_profile.current_level,
+                    "development_stage": consciousness_tracker.consciousness_profile.development_stage,
+                    "maturity_score": consciousness_tracker.consciousness_profile.maturity_score,
+                    "measurements": {k.value: v.value for k, v in measurements.items()},
+                    "emergence_events": len(consciousness_tracker.emergence_events),
+                    "breakthrough_patterns": len(consciousness_tracker.breakthrough_patterns),
+                    "performance_correlation": performance_correlation,
+                    "consciousness_metrics": consciousness_data,
+                    "enhanced_measurement": enhanced
+                }
+            
+        except Exception as e:
+            logger.error(f"Failed to measure consciousness for {swarm_type}: {e}")
+            return None
+    
+    async def _process_collective_consciousness(self, swarm_type: str, consciousness_result: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+        """Process collective consciousness data across all swarms."""
+        if not self.global_consciousness_tracker or not consciousness_result:
+            return None
+        
+        try:
+            # Collect consciousness data from all active swarms
+            global_consciousness_data = {
+                "active_swarms": len([info for info in self.swarm_registry.values()
+                                    if hasattr(info["swarm"], 'consciousness_tracker')]),
+                "average_consciousness": 0.0,
+                "collective_trajectory": [],
+                "swarm_consciousness_levels": {}
+            }
+            
+            # Calculate collective metrics
+            consciousness_levels = []
+            for name, info in self.swarm_registry.items():
+                swarm = info["swarm"]
+                if hasattr(swarm, 'consciousness_tracker') and swarm.consciousness_tracker:
+                    level = swarm.consciousness_tracker.consciousness_profile.current_level
+                    consciousness_levels.append(level)
+                    global_consciousness_data["swarm_consciousness_levels"][name] = level
+            
+            if consciousness_levels:
+                global_consciousness_data["average_consciousness"] = sum(consciousness_levels) / len(consciousness_levels)
+                global_consciousness_data["collective_trajectory"] = consciousness_levels
+            
+            # Correlate individual swarm with collective
+            correlation_data = await self.global_consciousness_tracker.correlate_with_collective_consciousness(
+                global_consciousness_data
+            )
+            
+            return {
+                "global_data": global_consciousness_data,
+                "correlation": correlation_data,
+                "collective_insights": {
+                    "swarm_synchronization": correlation_data.get("synchronization_score", 0),
+                    "collective_contribution": correlation_data.get("collective_contribution", 0),
+                    "relative_performance": correlation_data.get("relative_position", 1.0)
+                }
+            }
+            
+        except Exception as e:
+            logger.error(f"Failed to process collective consciousness: {e}")
+            return None
+
     async def validate_memory_integration(self) -> Dict[str, Any]:
         """Validate memory integration across all swarms."""
         validation = {
@@ -1090,10 +1263,11 @@ class EvolutionEngine:
         }
 
 
-class ConsciousnessTracker:
+class LegacyConsciousnessTracker:
     """
-    Advanced consciousness tracking system for GENESIS swarm.
+    Legacy consciousness tracking system for GENESIS swarm.
     Monitors and quantifies emergent swarm intelligence behaviors.
+    Note: This is deprecated - use app.swarms.consciousness_tracking.ConsciousnessTracker instead.
     """
     
     def __init__(self, swarm):

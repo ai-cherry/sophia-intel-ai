@@ -57,7 +57,6 @@ async def execute_real_swarm(
             "real_execution": True
         }
 
-@with_circuit_breaker("database")
 async def stream_real_swarm_execution(
     request,
     state

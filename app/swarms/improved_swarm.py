@@ -152,11 +152,40 @@ class QualityGateSystem:
         }
     
     async def _execute_workflow(self, problem, agents):
-        """Execute the agent workflow."""
-        return {
-            "solution": f"Solution for {problem}",
-            "confidence": random.uniform(0.4, 1.0)
-        }
+        """Execute the agent workflow WITH REAL LLM via OpenRouter."""
+        # Import REAL OpenRouter gateway
+        from app.api.openrouter_gateway import execute_real_llm_call
+        
+        # Make REAL API call via OpenRouter
+        try:
+            # Build prompt from problem
+            prompt = problem.get("query") or problem.get("description") or str(problem)
+            
+            # Execute with REAL OpenRouter API
+            response = await execute_real_llm_call(
+                prompt=prompt,
+                role="generator",  # Use generator role for problem solving
+                temperature=0.7,
+                max_tokens=2048
+            )
+            
+            # Return REAL response from OpenRouter
+            return {
+                "solution": response.get("content", ""),
+                "confidence": response.get("metadata", {}).get("real_api_call", False) and 0.9 or 0.5,
+                "model_used": response.get("metadata", {}).get("model_used", "unknown"),
+                "real_api": response.get("metadata", {}).get("real_api_call", False),
+                "provider": response.get("metadata", {}).get("provider", "unknown")
+            }
+        except Exception as e:
+            logger.error(f"OpenRouter API call failed: {e}")
+            # Still try to return something useful
+            return {
+                "solution": f"Error with OpenRouter API: {str(e)}",
+                "confidence": 0.1,
+                "error": str(e),
+                "real_api": False
+            }
     
     async def _assess_quality(self, result):
         """Assess solution quality."""
@@ -831,10 +860,11 @@ class ImprovedAgentSwarm:
             )
         
         # Pattern 7: Update adaptive parameters
-        self.param_manager.update_parameters(initial_result)
+        if self.param_manager:
+            self.param_manager.update_parameters(initial_result)
         
         # Pattern 8: Attempt knowledge transfer
-        if initial_result["quality_score"] > 0.85:
+        if initial_result["quality_score"] > 0.85 and self.transfer_system:
             for target_domain in ["code", "research", "analysis"]:
                 if target_domain != problem_type:
                     await self.transfer_system.attempt_transfer(

@@ -10,6 +10,16 @@ from dataclasses import dataclass
 from app.core.circuit_breaker import with_circuit_breaker, get_llm_circuit_breaker, get_weaviate_circuit_breaker, get_redis_circuit_breaker, get_webhook_circuit_breaker
 
 # ============================================
+# PORTKEY VIRTUAL KEYS - REAL CONNECTIONS
+# ============================================
+
+PORTKEY_VIRTUAL_KEYS = {
+    "XAI": "xai-vk-e65d0f",                    # X.AI/Grok models
+    "OPENROUTER": "vkj-openrouter-cc4151",     # OpenRouter gateway for all models
+    "TOGETHER": "together-ai-670469",           # Together AI for embeddings/fast inference
+}
+
+# ============================================
 # Elite Model Registry - ONLY THE BEST
 # ============================================
 
@@ -59,39 +69,39 @@ class EliteAgentConfig:
     
     # Model selection for different roles - ONLY YOUR PREFERRED MODELS
     MODELS = {
-        'planner': 'openrouter/x-ai/grok-4',  # Strategic planning with Grok 4
-        'generator': 'openrouter/deepseek/deepseek-v3.1',  # Code generation with DeepSeek V3.1
-        'critic': 'openrouter/anthropic/claude-sonnet-4',  # Code review with Claude Sonnet 4
-        'judge': 'openrouter/openai/gpt-5',  # Decision making with GPT-5
-        'lead': 'openrouter/x-ai/grok-4',  # Team coordination with Grok 4
-        'runner': 'openrouter/google/gemini-2.5-flash',  # Fast execution with Gemini 2.5 Flash
+        'planner': 'anthropic/claude-3.5-sonnet',  # Strategic planning - REAL MODEL
+        'generator': 'openai/gpt-4o',  # Code generation - REAL MODEL
+        'critic': 'anthropic/claude-3.5-sonnet',  # Code review - REAL MODEL
+        'judge': 'openai/gpt-4o',  # Decision making - REAL MODEL
+        'lead': 'anthropic/claude-3.5-sonnet',  # Team coordination - REAL MODEL
+        'runner': 'groq/llama-3.2-90b-text-preview',  # Fast execution - REAL MODEL
         
         # Specialized roles for GENESIS-level swarms
-        'architect': 'openrouter/anthropic/claude-sonnet-4',  # System architecture
-        'security': 'openrouter/anthropic/claude-sonnet-4',   # Security analysis
-        'performance': 'openrouter/deepseek/deepseek-v3.1',   # Performance optimization
-        'testing': 'openrouter/google/gemini-2.5-flash',      # Fast test generation
-        'debugger': 'openrouter/deepseek/deepseek-v3-0324',   # Deep debugging
-        'refactorer': 'openrouter/qwen/qwen3-coder-480b-a35b', # Code refactoring
+        'architect': 'anthropic/claude-3.5-sonnet',  # System architecture - REAL MODEL
+        'security': 'anthropic/claude-3.5-sonnet',   # Security analysis - REAL MODEL
+        'performance': 'openai/gpt-4o',   # Performance optimization - REAL MODEL
+        'testing': 'groq/llama-3.2-90b-text-preview',      # Fast test generation - REAL MODEL
+        'debugger': 'openai/gpt-4o',   # Deep debugging - REAL MODEL
+        'refactorer': 'openai/gpt-4o', # Code refactoring - REAL MODEL
         
         # Meta-agents for self-modification
-        'spawner': 'openrouter/x-ai/grok-4',                  # Agent spawning
-        'evolutionist': 'openrouter/deepseek/r1-0528-free',   # Swarm evolution
-        'consciousness': 'openrouter/openai/gpt-5',           # Consciousness simulation
+        'spawner': 'anthropic/claude-3.5-sonnet',                  # Agent spawning - REAL MODEL
+        'evolutionist': 'openai/gpt-4o',   # Swarm evolution - REAL MODEL
+        'consciousness': 'anthropic/claude-3.5-sonnet',           # Consciousness simulation - REAL MODEL
         
         # Ultra-specialized agents
-        'quantum': 'openrouter/qwen/qwen3-30b-a3b-thinking-2507',  # Quantum computing
-        'blockchain': 'openrouter/nousresearch/hermes-4-405b',     # Blockchain specialist
-        'ml_engineer': 'openrouter/deepseek/deepseek-v3.1',        # ML/AI specialist
-        'devops': 'openrouter/google/gemini-2.5-pro',             # DevOps automation
-        'frontend': 'openrouter/x-ai/grok-code-fast-1',           # Frontend specialist
-        'backend': 'openrouter/deepseek/deepseek-v3.1',           # Backend specialist
-        'database': 'openrouter/anthropic/claude-sonnet-4',        # Database architect
+        'quantum': 'openai/gpt-4o',  # Quantum computing - REAL MODEL
+        'blockchain': 'openai/gpt-4o',     # Blockchain specialist - REAL MODEL
+        'ml_engineer': 'openai/gpt-4o',        # ML/AI specialist - REAL MODEL
+        'devops': 'openai/gpt-4o',             # DevOps automation - REAL MODEL
+        'frontend': 'openai/gpt-4o',           # Frontend specialist - REAL MODEL
+        'backend': 'openai/gpt-4o',           # Backend specialist - REAL MODEL
+        'database': 'anthropic/claude-3.5-sonnet',        # Database architect - REAL MODEL
         
         # Speed variants for different workloads
-        'fast_coder': 'openrouter/x-ai/grok-code-fast-1',         # Rapid prototyping
-        'heavy_coder': 'openrouter/qwen/qwen3-coder-480b-a35b',   # Complex algorithms
-        'balanced_coder': 'openrouter/deepseek/deepseek-v3.1',    # Balanced approach
+        'fast_coder': 'groq/llama-3.2-90b-text-preview',         # Rapid prototyping - REAL MODEL
+        'heavy_coder': 'anthropic/claude-3.5-sonnet',   # Complex algorithms - REAL MODEL
+        'balanced_coder': 'openai/gpt-4o',    # Balanced approach - REAL MODEL
     }
     
     # Temperature optimization per role

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API Connection Test</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1a1a1a; color: #fff; }
+        .test { margin: 10px 0; padding: 10px; border: 1px solid #333; }
+        .success { background: #1a3a1a; border-color: #0f0; }
+        .error { background: #3a1a1a; border-color: #f00; }
+        button { padding: 10px 20px; margin: 10px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>API Connection Test</h1>
+    <button onclick="testAPI('http://localhost:8000')">Test Port 8000</button>
+    <button onclick="testAPI('http://localhost:8003')">Test Port 8003</button>
+    <button onclick="clearLocalStorage()">Clear LocalStorage</button>
+    <div id="results"></div>
+
+    <script>
+        async function testAPI(url) {
+            const resultsDiv = document.getElementById('results');
+            const testDiv = document.createElement('div');
+            testDiv.className = 'test';
+            
+            try {
+                const response = await fetch(`${url}/teams`);
+                const data = await response.json();
+                testDiv.className = 'test success';
+                testDiv.innerHTML = `✅ ${url} - SUCCESS<br>Response: ${JSON.stringify(data).substring(0, 200)}...`;
+            } catch (error) {
+                testDiv.className = 'test error';
+                testDiv.innerHTML = `❌ ${url} - FAILED<br>Error: ${error.message}`;
+            }
+            
+            resultsDiv.insertBefore(testDiv, resultsDiv.firstChild);
+        }
+
+        function clearLocalStorage() {
+            localStorage.clear();
+            const testDiv = document.createElement('div');
+            testDiv.className = 'test success';
+            testDiv.innerHTML = '🗑️ LocalStorage cleared - refresh the main app now';
+            document.getElementById('results').insertBefore(testDiv, document.getElementById('results').firstChild);
+        }
+
+        // Check localStorage
+        window.onload = () => {
+            const stored = localStorage.getItem('endpoint-storage');
+            if (stored) {
+                const testDiv = document.createElement('div');
+                testDiv.className = 'test';
+                testDiv.innerHTML = `📦 LocalStorage content: ${stored}`;
+                document.getElementById('results').appendChild(testDiv);
+            }
+        }
+    </script>
+</body>
+</html>

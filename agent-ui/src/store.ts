@@ -103,7 +103,7 @@ export const usePlaygroundStore = create<PlaygroundStore>()(
       hasStorage: false,
       setHasStorage: (hasStorage) => set(() => ({ hasStorage })),
       chatInputRef: { current: null },
-      selectedEndpoint: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000',
+      selectedEndpoint: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8003',
       setSelectedEndpoint: (selectedEndpoint) =>
         set(() => ({ selectedEndpoint })),
       agents: [],
@@ -130,11 +130,28 @@ export const usePlaygroundStore = create<PlaygroundStore>()(
     }),
     {
       name: 'endpoint-storage',
+      version: 2, // Bump version to trigger migration
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         selectedEndpoint: state.selectedEndpoint
       }),
+      migrate: (persistedState: any, version: number) => {
+        // Migrate from old ports to 8003
+        if (version < 2 && persistedState.selectedEndpoint) {
+          if (persistedState.selectedEndpoint.includes(':8000') || 
+              persistedState.selectedEndpoint.includes(':7777')) {
+            persistedState.selectedEndpoint = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8003';
+          }
+        }
+        return persistedState;
+      },
       onRehydrateStorage: () => (state) => {
+        // Clean up legacy storage key
+        try {
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('swarm-endpoint');
+          }
+        } catch {}
         state?.setHydrated?.()
       }
     }

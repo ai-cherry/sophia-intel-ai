@@ -164,12 +164,26 @@ const useAIChatStreamHandler = () => {
           return
         }
 
-        formData.append('stream', 'true')
-        formData.append('session_id', sessionId ?? '')
+        // Convert FormData to JSON for team/agent endpoints
+        const requestPayload = mode === 'team' ? {
+          message: formData.get('message') as string,
+          team_id: teamId,
+          stream: true,
+          session_id: sessionId ?? ''
+        } : mode === 'agent' ? {
+          message: formData.get('message') as string,
+          agent_id: agentId,
+          stream: true,
+          session_id: sessionId ?? ''
+        } : null
+
+        if (!requestPayload) {
+          throw new Error('Invalid mode')
+        }
 
         await streamResponse({
           apiUrl: playgroundRunUrl,
-          requestBody: formData,
+          requestBody: requestPayload,
           onChunk: (chunk: RunResponse) => {
             if (
               chunk.event === RunEvent.RunStarted ||

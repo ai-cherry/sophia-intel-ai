@@ -299,7 +299,8 @@ class MemoryEnhancedImprovedSwarm(ImprovedAgentSwarm, SwarmMemoryMixin):
             )
         
         # Update adaptive parameters with memory context
-        self.param_manager.update_parameters(initial_result)
+        if self.param_manager:
+            self.param_manager.update_parameters(initial_result)
         
         # Attempt knowledge transfer with memory enhancement
         if initial_result.get("quality_score", 0) > 0.85:

@@ -102,18 +102,20 @@ export function EntitySelector() {
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent className="border-none bg-primaryAccent font-dmmono shadow-lg">
-        {currentEntities.map((entity, index) => (
-          <SelectItem
-            className="cursor-pointer"
-            key={`${entity.value}-${index}`}
-            value={entity.value}
-          >
-            <div className="flex items-center gap-3 text-xs font-medium uppercase">
-              <Icon type={'user'} size="xs" />
-              {entity.label}
-            </div>
-          </SelectItem>
-        ))}
+        {currentEntities
+          .filter((entity) => entity.value && entity.value !== '')
+          .map((entity, index) => (
+            <SelectItem
+              className="cursor-pointer"
+              key={`${entity.value}-${index}`}
+              value={entity.value}
+            >
+              <div className="flex items-center gap-3 text-xs font-medium uppercase">
+                <Icon type={'user'} size="xs" />
+                {entity.label}
+              </div>
+            </SelectItem>
+          ))}
       </SelectContent>
     </Select>
   )

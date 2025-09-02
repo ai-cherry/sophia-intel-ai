@@ -22,14 +22,17 @@ export const getPlaygroundAgentsAPI = async (
     }
     const data = await response.json()
     // Transform the API response into the expected shape.
-    const agents: ComboboxAgent[] = data.map((item: Agent) => ({
-      value: item.agent_id || '',
-      label: item.name || '',
-      model: {
-        provider: item.model?.provider || ''
-      },
-      storage: !!item.storage
-    }))
+    // Transform and filter to ensure non-empty values
+    const agents: ComboboxAgent[] = data
+      .map((item: Agent) => ({
+        value: item.agent_id || item.id || item.name || '',
+        label: item.name || item.id || item.agent_id || 'Unknown',
+        model: {
+          provider: item.model?.provider || item.model_pool || 'unknown'
+        },
+        storage: !!item.storage
+      }))
+      .filter((agent) => agent.value !== '')
     return agents
   } catch {
     toast.error('Error fetching playground agents')
@@ -107,14 +110,17 @@ export const getPlaygroundTeamsAPI = async (
     }
     const data = await response.json()
     // Transform the API response into the expected shape.
-    const teams: ComboboxTeam[] = data.map((item: Team) => ({
-      value: item.team_id || '',
-      label: item.name || '',
-      model: {
-        provider: item.model?.provider || ''
-      },
-      storage: !!item.storage
-    }))
+    // Transform and filter to ensure non-empty values
+    const teams: ComboboxTeam[] = data
+      .map((item: Team) => ({
+        value: item.team_id || item.id || item.name || '',
+        label: item.name || item.id || item.team_id || 'Unknown',
+        model: {
+          provider: item.model?.provider || item.model_pool || 'unknown'
+        },
+        storage: !!item.storage
+      }))
+      .filter((team) => team.value !== '')
     return teams
   } catch {
     toast.error('Error fetching playground teams')

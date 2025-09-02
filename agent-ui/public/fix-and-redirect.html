@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Fixing API Connection...</title>
+    <style>
+        body { 
+            font-family: system-ui, -apple-system, sans-serif; 
+            padding: 40px; 
+            background: #0a0a0a; 
+            color: #fff; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        .status { 
+            margin: 20px 0; 
+            padding: 20px; 
+            border: 2px solid #333; 
+            border-radius: 8px;
+            background: #1a1a1a;
+            max-width: 600px;
+        }
+        .success { border-color: #0f0; background: #0a1a0a; }
+        .info { border-color: #08f; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Fixing Agent UI Configuration</h1>
+    <div id="status"></div>
+
+    <script>
+        const statusDiv = document.getElementById('status');
+        
+        // Clear the old cached endpoint
+        const oldStorage = localStorage.getItem('endpoint-storage');
+        if (oldStorage) {
+            statusDiv.innerHTML = `
+                <div class="status info">
+                    <h3>Found cached configuration:</h3>
+                    <pre>${oldStorage}</pre>
+                </div>
+            `;
+            
+            // Clear it
+            localStorage.clear();
+            
+            // Set the correct endpoint
+            localStorage.setItem('endpoint-storage', JSON.stringify({
+                state: {
+                    selectedEndpoint: 'http://localhost:8003'
+                },
+                version: 0
+            }));
+            
+            setTimeout(() => {
+                statusDiv.innerHTML += `
+                    <div class="status success">
+                        <h3>✅ Configuration Fixed!</h3>
+                        <p>• Cleared old cached endpoint</p>
+                        <p>• Set new endpoint to port 8003</p>
+                        <p>• Redirecting to Agent UI in 2 seconds...</p>
+                    </div>
+                `;
+                
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 2000);
+            }, 1000);
+        } else {
+            statusDiv.innerHTML = `
+                <div class="status success">
+                    <h3>✅ No cached configuration found</h3>
+                    <p>Setting correct endpoint to port 8003...</p>
+                </div>
+            `;
+            
+            localStorage.setItem('endpoint-storage', JSON.stringify({
+                state: {
+                    selectedEndpoint: 'http://localhost:8003'
+                },
+                version: 0
+            }));
+            
+            setTimeout(() => {
+                window.location.href = '/';
+            }, 2000);
+        }
+    </script>
+</body>
+</html>

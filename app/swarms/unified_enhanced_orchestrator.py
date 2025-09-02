@@ -944,15 +944,18 @@ class UnifiedSwarmOrchestrator:
             if target_swarm_name != source_swarm:
                 target_swarm = target_info["swarm"]
                 
-                # Attempt transfer
-                success = await target_swarm.transfer_system.attempt_transfer(
-                    task_type,
-                    task_type,  # Same domain for now
-                    {
-                        "roles": result.get("agent_roles", []),
-                        "quality": result.get("quality_score", 0)
-                    }
-                )
+                # Attempt transfer if transfer_system exists
+                if hasattr(target_swarm, 'transfer_system') and target_swarm.transfer_system:
+                    success = await target_swarm.transfer_system.attempt_transfer(
+                        task_type,
+                        task_type,  # Same domain for now
+                        {
+                            "roles": result.get("agent_roles", []),
+                            "quality": result.get("quality_score", 0)
+                        }
+                    )
+                else:
+                    success = False
                 
                 if success:
                     self.global_metrics["cross_swarm_transfers"] += 1

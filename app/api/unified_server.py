@@ -69,7 +69,7 @@ except ImportError:
 # Import streaming functions with error handling
 try:
     from app.api.real_streaming import stream_real_ai_execution
-    from app.api.real_swarm_execution import stream_real_swarm_execution
+    from app.api.real_swarm_execution import stream_real_swarm_execution, execute_real_swarm
 except ImportError:
     # Create fallback streaming functions for deployment
     async def stream_real_ai_execution(request):
@@ -404,6 +404,68 @@ class SearchRequest(BaseModel):
     use_reranker: bool = True
     include_graph: bool = False
 
+def _extract_solution(payload: dict) -> str:
+    try:
+        if not payload:
+            return "Error: Empty result"
+        r = payload
+        
+        # Check if execution failed
+        if isinstance(r, dict) and r.get("success") == False:
+            error_msg = r.get("error", "Unknown error")
+            logger.warning(f"Swarm execution failed: {error_msg}")
+            # Try to extract any partial result even on failure
+            if "result" in r and r["result"]:
+                # Try to extract from failed result
+                pass  # Continue to paths below
+            else:
+                return f"Error: {error_msg}"
+        
+        # Try common content paths - updated for improved_swarm structure
+        paths = [
+            ["result", "solution"],  # Main path from improved_swarm
+            ["result", "result", "solution"],  # Doubly nested
+            ["result", "final", "content"],
+            ["final", "content"],
+            ["content"],
+            ["solution"],  # Direct solution field
+            ["choices", 0, "message", "content"],
+            ["output", "text"],
+        ]
+        
+        # Log the structure for debugging
+        if "result" in r:
+            logger.debug(f"Result structure keys: {list(r['result'].keys()) if isinstance(r['result'], dict) else 'not a dict'}")
+            if isinstance(r['result'], dict) and "result" in r['result']:
+                logger.debug(f"Nested result keys: {list(r['result']['result'].keys()) if isinstance(r['result']['result'], dict) else 'not a dict'}")
+        
+        for path in paths:
+            cur = r
+            ok = True
+            for p in path:
+                if isinstance(p, int):
+                    if isinstance(cur, list) and len(cur) > p:
+                        cur = cur[p]
+                    else:
+                        ok = False
+                        break
+                else:
+                    if isinstance(cur, dict) and p in cur:
+                        cur = cur[p]
+                    else:
+                        ok = False
+                        break
+            if ok and isinstance(cur, str) and cur.strip():
+                logger.info(f"Found solution at path: {path}")
+                return cur
+        
+        # Nothing found - log what we have
+        logger.warning(f"Could not extract solution. Top-level keys: {list(r.keys()) if isinstance(r, dict) else 'not a dict'}")
+        return payload.get("message", "Error: No solution generated")
+    except Exception as e:
+        logger.error(f"Error extracting solution: {e}")
+        return f"Error: Unable to parse result ({e})"
+
 # ============================================
 # Health & Discovery Endpoints
 # ============================================
@@ -718,74 +780,39 @@ async def execute_team_with_gates(
     yield "data: [DONE]\n\n"
 
 @app.post("/teams/run")
-@with_circuit_breaker("external_api")
 async def run_team(request: RunRequest):
     """Run a team with real swarm execution and streaming response."""
     # Check if streaming is requested (default to True)
     if request.stream is False:
-        # For non-streaming, use a simpler response
+        # Use REAL executor for non-streaming - NO MOCKS
         try:
-            # Import the real LLM executor for non-streaming
-            from app.llm.real_executor import real_executor
-            
-            trace_start_time = time.time() # Add this line
-            response = await real_executor.execute(
-                prompt=request.message,
-                model_pool=request.pool,
-                stream=False
-            )
-            trace_latency_ms = int((time.time() - trace_start_time) * 1000) # Add this line
-
-            # Determine provider and model from response or request.pool
-            # This is a simplified extraction; real_executor might return more details
-            provider = "openai" # Default provider, refine based on real_executor's actual LLM routing
-            model = request.pool # Use pool as a placeholder model name if not explicitly returned
-            if 'model_name' in response: # If real_executor returns model name
-                model = response['model_name']
-            if 'provider_name' in response: # If real_executor returns provider name
-                provider = response['provider_name']
-
-            # Call trace_llm_call
-            trace_llm_call(
-                provider=provider,
-                model=model,
-                prompt=request.message,
-                response=response.get("content", ""),
-                input_tokens=response.get("input_tokens", 0),
-                output_tokens=response.get("output_tokens", 0),
-                latency_ms=trace_latency_ms,
-                user_id=request.additional_data.get("user_id"), # Assuming user_id can be in additional_data
-                session_id=request.additional_data.get("session_id"), # Assuming session_id can be in additional_data
-                tool_calls=response.get("tool_calls")
+            # Execute through real swarm
+            result = await execute_real_swarm(
+                state.orchestrator,
+                request.team_id or "development-swarm",
+                request.message,
+                [],  # context will be loaded by swarm
+                state
             )
             
-            result = {
-                "team_id": request.team_id,
-                "message": request.message,
-                "response": response.get("content", "Hello! I'm the Development & Implementation Swarm. How can I help you today?"),
-                "critic": response.get("critic", ""),
-                "judge": response.get("judge", ""),
-                "gates": response.get("gates", {}),
-                "tool_calls": response.get("tool_calls", []),
+            # Return REAL response
+            return JSONResponse({
+                "content": _extract_solution(result),
+                "success": result.get("success", bool(_extract_solution(result)) and not _extract_solution(result).startswith("Error:")),
+                "team": request.team_id,
+                "model": result.get("model", "swarm-orchestrated"),
+                "swarm_used": result.get("swarm_used"),
+                "quality_score": result.get("result", {}).get("quality_score"),
+                "tokens": result.get("result", {}).get("token_count"),
                 "created_at": datetime.now().isoformat()
-            }
-            
-            return JSONResponse(result)
+            })
         except Exception as e:
-            # Fallback response if executor fails
-            result = {
-                "team_id": request.team_id,
-                "message": request.message,
-                "response": f"Hello! I'm ready to help. (Note: Real swarm execution encountered an issue: {str(e)})",
-                "critic": "",
-                "judge": "",
-                "gates": {"status": "fallback"},
-                "tool_calls": [],
-                "created_at": datetime.now().isoformat()
-            }
-            return JSONResponse(result)
+            logger.error(f"Real swarm execution failed: {e}")
+            # FAIL PROPERLY - don't return mock
+            raise HTTPException(status_code=500, detail=f"Swarm execution failed: {str(e)}")
     
     # Default to streaming response
+    # stream_real_swarm_execution is already an async generator, no need to wrap
     return StreamingResponse(
         stream_real_swarm_execution(request, state),
         media_type="text/event-stream",

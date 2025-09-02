@@ -62,18 +62,22 @@ export interface Model {
 }
 
 export interface Agent {
-  agent_id: string
+  agent_id?: string
+  id?: string
   name: string
   description: string
-  model: Model
+  model?: Model
+  model_pool?: string
   storage?: boolean
 }
 
 export interface Team {
-  team_id: string
+  team_id?: string
+  id?: string
   name: string
   description: string
-  model: Model
+  model?: Model
+  model_pool?: string
   storage?: boolean
 }
 

@@ -4,34 +4,35 @@ Complete Cloud Deployment and Monitoring Script for Sophia Intel AI
 Deploys all 6 services to Fly.io and sets up real-time monitoring
 """
 
+import json
 import os
 import subprocess
 import time
-import json
-import requests
-from typing import Dict, List, Optional, Any
 from datetime import datetime
+from typing import Any
+
+import requests
 
 
 class ProductionDeploymentManager:
     """Manages production deployment and monitoring"""
-    
+
     def __init__(self):
         self.fly_api_token = os.environ.get("FLY_API_TOKEN")
         if not self.fly_api_token:
             raise ValueError("FLY_API_TOKEN environment variable is required")
-        
+
         os.environ["FLY_API_TOKEN"] = self.fly_api_token
-        
+
         self.services = [
             {"name": "sophia-weaviate", "config": "fly-weaviate.toml", "priority": 1},
-            {"name": "sophia-mcp", "config": "fly-mcp-server.toml", "priority": 2}, 
+            {"name": "sophia-mcp", "config": "fly-mcp-server.toml", "priority": 2},
             {"name": "sophia-vector", "config": "fly-vector-store.toml", "priority": 3},
             {"name": "sophia-api", "config": "fly-unified-api.toml", "priority": 4},
             {"name": "sophia-bridge", "config": "fly-agno-bridge.toml", "priority": 5},
             {"name": "sophia-ui", "config": "fly-agent-ui.toml", "priority": 6}
         ]
-    
+
     def install_fly_cli(self) -> bool:
         """Install Fly CLI if not present"""
         try:
@@ -41,13 +42,13 @@ class ProductionDeploymentManager:
                 return True
         except FileNotFoundError:
             pass
-        
+
         print("📥 Installing Fly CLI...")
         try:
             # Install Fly CLI for macOS
             install_cmd = ["curl", "-L", "https://fly.io/install.sh", "|", "sh"]
             result = subprocess.run(" ".join(install_cmd), shell=True, capture_output=True, text=True)
-            
+
             if result.returncode == 0:
                 print("✅ Fly CLI installed successfully")
                 return True
@@ -57,7 +58,7 @@ class ProductionDeploymentManager:
         except Exception as e:
             print(f"❌ Fly CLI installation error: {e}")
             return False
-    
+
     def authenticate_fly(self) -> bool:
         """Authenticate with Fly.io"""
         try:
@@ -67,7 +68,7 @@ class ProductionDeploymentManager:
                 text=True,
                 capture_output=True
             )
-            
+
             if result.returncode == 0:
                 print("✅ Fly.io authentication successful")
                 return True
@@ -77,60 +78,60 @@ class ProductionDeploymentManager:
         except Exception as e:
             print(f"❌ Authentication error: {e}")
             return False
-    
+
     def create_fly_app(self, app_name: str) -> bool:
         """Create Fly.io application if it doesn't exist"""
         try:
             # Check if app exists
             check_cmd = ["fly", "status", "--app", app_name]
             check_result = subprocess.run(check_cmd, capture_output=True, text=True)
-            
+
             if check_result.returncode == 0:
                 print(f"📱 App {app_name} already exists")
                 return True
-            
+
             # Create new app
             create_cmd = ["fly", "apps", "create", app_name, "--org", "personal"]
             create_result = subprocess.run(create_cmd, capture_output=True, text=True)
-            
+
             if create_result.returncode == 0:
                 print(f"✅ Created Fly.io app: {app_name}")
                 return True
             else:
                 print(f"⚠️  App creation warning for {app_name}: {create_result.stderr}")
                 return True  # Continue anyway, might be name conflict
-                
+
         except Exception as e:
             print(f"❌ App creation error for {app_name}: {e}")
             return False
-    
-    def deploy_service(self, service: Dict[str, Any]) -> Dict[str, Any]:
+
+    def deploy_service(self, service: dict[str, Any]) -> dict[str, Any]:
         """Deploy a single service and monitor health"""
-        
+
         app_name = service["name"]
         config_file = service["config"]
-        
+
         print(f"\n🚀 Deploying {app_name}...")
-        
+
         # 1. Create app if needed
         if not self.create_fly_app(app_name):
             return {"status": "failed", "error": "App creation failed"}
-        
+
         # 2. Deploy the service
         try:
             deploy_cmd = [
-                "fly", "deploy", 
+                "fly", "deploy",
                 "--config", config_file,
                 "--app", app_name,
                 "--remote-only",
                 "--detach"
             ]
-            
+
             deploy_result = subprocess.run(deploy_cmd, capture_output=True, text=True, timeout=600)
-            
+
             if deploy_result.returncode == 0:
                 print(f"✅ Deployment initiated for {app_name}")
-                
+
                 # 3. Monitor deployment status
                 deployment_status = self.monitor_deployment(app_name)
                 return {
@@ -142,11 +143,11 @@ class ProductionDeploymentManager:
             else:
                 print(f"⚠️  Deployment issue for {app_name}: {deploy_result.stderr}")
                 return {
-                    "status": "warning", 
+                    "status": "warning",
                     "app_name": app_name,
                     "error": deploy_result.stderr
                 }
-                
+
         except subprocess.TimeoutExpired:
             print(f"⏱️  Deployment timeout for {app_name} (continuing in background)")
             return {
@@ -157,22 +158,22 @@ class ProductionDeploymentManager:
         except Exception as e:
             print(f"❌ Deployment error for {app_name}: {e}")
             return {"status": "failed", "error": str(e)}
-    
-    def monitor_deployment(self, app_name: str, max_wait: int = 300) -> Dict[str, Any]:
+
+    def monitor_deployment(self, app_name: str, max_wait: int = 300) -> dict[str, Any]:
         """Monitor deployment health and status"""
-        
+
         print(f"⏳ Monitoring deployment health for {app_name}...")
         start_time = time.time()
-        
+
         while time.time() - start_time < max_wait:
             try:
                 # Check app status
                 status_cmd = ["fly", "status", "--app", app_name, "--json"]
                 status_result = subprocess.run(status_cmd, capture_output=True, text=True)
-                
+
                 if status_result.returncode == 0:
                     status_data = json.loads(status_result.stdout)
-                    
+
                     # Check if any machines are running
                     allocations = status_data.get("Allocations", [])
                     if allocations:
@@ -184,25 +185,25 @@ class ProductionDeploymentManager:
                                 "running_instances": running_count,
                                 "total_allocations": len(allocations)
                             }
-                
+
                 print(f"⏳ Waiting for {app_name} to start... ({int(time.time() - start_time)}s)")
                 time.sleep(30)
-                
+
             except Exception as e:
                 print(f"⚠️  Monitoring error for {app_name}: {e}")
                 time.sleep(30)
-        
+
         print(f"⏱️  Health check timeout for {app_name}")
         return {"status": "timeout", "waited_seconds": max_wait}
-    
-    def test_service_endpoint(self, app_name: str, health_path: str = "/health") -> Dict[str, Any]:
+
+    def test_service_endpoint(self, app_name: str, health_path: str = "/health") -> dict[str, Any]:
         """Test service endpoint health"""
-        
+
         url = f"https://{app_name}.fly.dev{health_path}"
-        
+
         try:
             response = requests.get(url, timeout=10)
-            
+
             return {
                 "url": url,
                 "status_code": response.status_code,
@@ -215,10 +216,10 @@ class ProductionDeploymentManager:
                 "healthy": False,
                 "error": str(e)
             }
-    
+
     def set_production_secrets(self, app_name: str) -> bool:
         """Set production secrets for a service"""
-        
+
         # Define secrets per service
         secrets_map = {
             "sophia-weaviate": {
@@ -244,27 +245,27 @@ class ProductionDeploymentManager:
             },
             "sophia-ui": {}  # Frontend doesn't need backend secrets
         }
-        
+
         service_secrets = secrets_map.get(app_name, {})
-        
+
         if not service_secrets:
             print(f"ℹ️  No secrets configured for {app_name}")
             return True
-        
+
         # Filter out empty secrets
         filtered_secrets = {k: v for k, v in service_secrets.items() if v}
-        
+
         if not filtered_secrets:
             print(f"⚠️  No non-empty secrets found for {app_name}")
             return True
-        
+
         try:
             # Set secrets in bulk
             secret_pairs = [f"{key}={value}" for key, value in filtered_secrets.items()]
             secrets_cmd = ["fly", "secrets", "set"] + secret_pairs + ["--app", app_name]
-            
+
             result = subprocess.run(secrets_cmd, capture_output=True, text=True)
-            
+
             if result.returncode == 0:
                 print(f"🔐 Set {len(filtered_secrets)} secrets for {app_name}")
                 return True
@@ -274,61 +275,61 @@ class ProductionDeploymentManager:
         except Exception as e:
             print(f"❌ Secrets error for {app_name}: {e}")
             return False
-    
-    def deploy_all_services(self) -> Dict[str, Any]:
+
+    def deploy_all_services(self) -> dict[str, Any]:
         """Deploy all services in dependency order with monitoring"""
-        
+
         print("🚀 Starting Production Deployment of Sophia Intel AI")
         print("=" * 70)
-        
+
         deployment_results = {}
-        
+
         # Sort services by priority (dependencies first)
         sorted_services = sorted(self.services, key=lambda x: x["priority"])
-        
+
         for service in sorted_services:
             app_name = service["name"]
-            
+
             # Set secrets first
             secrets_success = self.set_production_secrets(app_name)
-            
+
             # Deploy service
             deploy_result = self.deploy_service(service)
             deploy_result["secrets_configured"] = secrets_success
-            
+
             deployment_results[app_name] = deploy_result
-            
+
             # Wait between deployments to avoid overwhelming the system
             if service != sorted_services[-1]:  # Don't wait after last service
                 print("⏸️  Waiting 30 seconds before next deployment...")
                 time.sleep(30)
-        
+
         return deployment_results
-    
-    def monitor_all_services(self, deployment_results: Dict[str, Any]) -> Dict[str, Any]:
+
+    def monitor_all_services(self, deployment_results: dict[str, Any]) -> dict[str, Any]:
         """Monitor all deployed services"""
-        
+
         print("\n📊 MONITORING DEPLOYED SERVICES")
         print("=" * 50)
-        
+
         monitoring_results = {}
-        
+
         # Test health endpoints
         health_endpoints = {
             "sophia-weaviate": "/v1/.well-known/ready",
             "sophia-mcp": "/health",
-            "sophia-vector": "/health", 
+            "sophia-vector": "/health",
             "sophia-api": "/healthz",
             "sophia-bridge": "/healthz",
             "sophia-ui": "/"
         }
-        
+
         for app_name, health_path in health_endpoints.items():
             if deployment_results.get(app_name, {}).get("status") in ["deployed", "deploying"]:
                 print(f"🔍 Testing {app_name} health endpoint...")
                 health_result = self.test_service_endpoint(app_name, health_path)
                 monitoring_results[app_name] = health_result
-                
+
                 if health_result.get("healthy"):
                     print(f"✅ {app_name} is healthy ({health_result['response_time_ms']:.0f}ms)")
                 else:
@@ -336,17 +337,17 @@ class ProductionDeploymentManager:
             else:
                 print(f"⏭️  Skipping {app_name} - not deployed successfully")
                 monitoring_results[app_name] = {"status": "not_deployed"}
-        
+
         return monitoring_results
-    
-    def generate_deployment_report(self, 
-                                 deployment_results: Dict[str, Any],
-                                 monitoring_results: Dict[str, Any]) -> str:
+
+    def generate_deployment_report(self,
+                                 deployment_results: dict[str, Any],
+                                 monitoring_results: dict[str, Any]) -> str:
         """Generate comprehensive deployment and monitoring report"""
-        
+
         successful_deployments = len([r for r in deployment_results.values() if r.get("status") == "deployed"])
         healthy_services = len([r for r in monitoring_results.values() if r.get("healthy")])
-        
+
         report = f"""
 # Production Deployment Report - Sophia Intel AI
 **Deployment Date**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}
@@ -359,34 +360,34 @@ class ProductionDeploymentManager:
 
 ## 🏗️ Service Deployment Status
 """
-        
+
         for service in self.services:
             app_name = service["name"]
             deploy_status = deployment_results.get(app_name, {})
             health_status = monitoring_results.get(app_name, {})
-            
+
             status_emoji = "✅" if deploy_status.get("status") == "deployed" else "⚠️"
             health_emoji = "🟢" if health_status.get("healthy") else "🔴"
-            
+
             report += f"\n### {status_emoji} **{app_name}**\n"
             report += f"- **Deployment**: {deploy_status.get('status', 'unknown')}\n"
             report += f"- **Health**: {health_emoji} {'Healthy' if health_status.get('healthy') else 'Unhealthy'}\n"
-            
+
             if deploy_status.get("public_url"):
                 report += f"- **URL**: {deploy_status['public_url']}\n"
-            
+
             if health_status.get("response_time_ms"):
                 report += f"- **Response Time**: {health_status['response_time_ms']:.0f}ms\n"
-        
-        report += f"""
+
+        report += """
 ## 🔗 Service URLs
 """
-        
+
         for service in self.services:
             app_name = service["name"]
             report += f"- **{app_name}**: https://{app_name}.fly.dev\n"
-        
-        report += f"""
+
+        report += """
 ## 🎯 Next Steps
 1. **Verify all services** are responding correctly
 2. **Configure load testing** to validate auto-scaling
@@ -399,51 +400,51 @@ Access Fly.io dashboard: https://fly.io/dashboard
 Monitor logs: `fly logs --app <service-name>`
 Check metrics: `fly metrics --app <service-name>`
 """
-        
+
         return report
 
 
 def main():
     """Main deployment and monitoring function"""
-    
+
     print("🚀 SOPHIA INTEL AI - PRODUCTION DEPLOYMENT & MONITORING")
     print("=" * 70)
-    
+
     try:
         # Initialize deployment manager
         manager = ProductionDeploymentManager()
-        
+
         # Install and authenticate Fly CLI
         if not manager.install_fly_cli():
             print("❌ Fly CLI installation failed")
             return False
-        
+
         if not manager.authenticate_fly():
             print("❌ Fly.io authentication failed")
             return False
-        
+
         print("✅ Deployment environment ready")
         print("\n🎯 Starting deployment of all 6 services...")
-        
+
         # Deploy all services
         deployment_results = manager.deploy_all_services()
-        
+
         # Wait for services to stabilize
         print("\n⏳ Waiting 2 minutes for services to stabilize...")
         time.sleep(120)
-        
+
         # Monitor all services
         monitoring_results = manager.monitor_all_services(deployment_results)
-        
+
         # Generate report
         report = manager.generate_deployment_report(deployment_results, monitoring_results)
-        
+
         # Save report
         with open("PRODUCTION_DEPLOYMENT_REPORT.md", "w") as f:
             f.write(report)
-        
-        print(f"\n💾 Deployment report saved: PRODUCTION_DEPLOYMENT_REPORT.md")
-        
+
+        print("\n💾 Deployment report saved: PRODUCTION_DEPLOYMENT_REPORT.md")
+
         # Save JSON results for automation
         with open("production-deployment-results.json", "w") as f:
             json.dump({
@@ -452,24 +453,24 @@ def main():
                 "timestamp": datetime.now().isoformat(),
                 "success_rate": len([r for r in deployment_results.values() if r.get("status") == "deployed"]) / len(manager.services)
             }, f, indent=2)
-        
+
         # Final summary
         successful = len([r for r in deployment_results.values() if r.get("status") == "deployed"])
         healthy = len([r for r in monitoring_results.values() if r.get("healthy")])
-        
+
         print("\n" + "=" * 70)
         print("📊 FINAL DEPLOYMENT STATUS")
         print("=" * 70)
         print(f"✅ Services Deployed: {successful}/{len(manager.services)}")
         print(f"🟢 Services Healthy: {healthy}/{len(manager.services)}")
-        
+
         if successful == len(manager.services) and healthy == len(manager.services):
             print("🎉 DEPLOYMENT SUCCESS: All services deployed and healthy!")
             return True
         else:
             print("⚠️  PARTIAL DEPLOYMENT: Some services need attention")
             return False
-        
+
     except Exception as e:
         print(f"❌ Deployment failed: {e}")
         return False

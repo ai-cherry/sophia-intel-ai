@@ -1,15 +1,14 @@
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
-from typing import List, Dict, Any
-import json
 from datetime import datetime, timedelta
+
+from fastapi import APIRouter
+from pydantic import BaseModel
 
 router = APIRouter(prefix="/costs", tags=["costs"])
 
 class CostSummary(BaseModel):
     total: float
-    daily_breakdown: Dict[str, float]
-    model_breakdown: Dict[str, float]
+    daily_breakdown: dict[str, float]
+    model_breakdown: dict[str, float]
     budget: float
     used: float
     remaining: float
@@ -17,7 +16,7 @@ class CostSummary(BaseModel):
 class DailyCost(BaseModel):
     date: str
     cost: float
-    model_usage: Dict[str, float]
+    model_usage: dict[str, float]
 
 class ModelCost(BaseModel):
     model: str

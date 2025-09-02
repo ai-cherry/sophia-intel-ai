@@ -1,4 +1,4 @@
-with open('app/server_shim.py', 'r') as f:
+with open('app/server_shim.py') as f:
     content = f.read()
 
 # Fix the f-string backslash issue

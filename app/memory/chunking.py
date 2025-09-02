@@ -1,13 +1,14 @@
-from typing import List, Dict, Any, Optional, Tuple
 import hashlib
 from pathlib import Path
+from typing import Any
+
 
 def chunk_code(
-    content: str, 
+    content: str,
     filepath: str,
     max_chunk_size: int = 1500,
     overlap_size: int = 200
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """
     Chunk code into overlapping segments.
     
@@ -25,10 +26,10 @@ def chunk_code(
     current_chunk = []
     current_size = 0
     start_line = 1
-    
+
     for i, line in enumerate(lines, 1):
         line_size = len(line) + 1  # +1 for newline
-        
+
         if current_size + line_size > max_chunk_size and current_chunk:
             chunk_content = '\n'.join(current_chunk)
             chunks.append({
@@ -38,7 +39,7 @@ def chunk_code(
                 "start_line": start_line,
                 "end_line": i - 1
             })
-            
+
             # Calculate overlap
             overlap_lines = []
             overlap_size_count = 0
@@ -49,14 +50,14 @@ def chunk_code(
                     overlap_size_count += line_len
                 else:
                     break
-            
+
             current_chunk = overlap_lines
             current_size = overlap_size_count
             start_line = i - len(overlap_lines)
-        
+
         current_chunk.append(line)
         current_size += line_size
-    
+
     if current_chunk:
         chunks.append({
             "content": '\n'.join(current_chunk),
@@ -65,7 +66,7 @@ def chunk_code(
             "start_line": start_line,
             "end_line": len(lines)
         })
-    
+
     return chunks
 
 def chunk_document(
@@ -74,7 +75,7 @@ def chunk_document(
     source: str,
     max_chunk_size: int = 2000,
     overlap_size: int = 200
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """
     Chunk document into overlapping segments.
     
@@ -90,16 +91,16 @@ def chunk_document(
     """
     chunks = []
     start = 0
-    
+
     while start < len(content):
         end = min(start + max_chunk_size, len(content))
-        
+
         # Try to break at sentence boundary
         if end < len(content):
             last_period = content.rfind('.', start, end)
             if last_period > start + max_chunk_size // 2:
                 end = last_period + 1
-        
+
         chunk_content = content[start:end]
         chunks.append({
             "content": chunk_content,
@@ -107,9 +108,9 @@ def chunk_document(
             "source": source,
             "metadata": f"chunk_{len(chunks) + 1}"
         })
-        
+
         start = max(start + 1, end - overlap_size)
-    
+
     return chunks
 
 def _detect_language(filepath: str) -> str:
@@ -143,7 +144,7 @@ def _detect_language(filepath: str) -> str:
         '.yml': 'yaml',
         '.md': 'markdown'
     }
-    
+
     for ext, lang in ext_map.items():
         if filepath.lower().endswith(ext):
             return lang
@@ -151,9 +152,9 @@ def _detect_language(filepath: str) -> str:
 
 def produce_chunks_for_index(
     filepath: str,
-    content: Optional[str] = None,
-    priority: Optional[str] = None
-) -> Tuple[List[str], List[str], List[Dict]]:
+    content: str | None = None,
+    priority: str | None = None
+) -> tuple[list[str], list[str], list[dict]]:
     """
     Produce chunks ready for indexing with IDs, texts, and payloads.
     
@@ -166,21 +167,21 @@ def produce_chunks_for_index(
         Tuple of (ids, texts, payloads) ready for upsert_chunks_dual
     """
     if content is None:
-        with open(filepath, 'r', encoding='utf-8') as f:
+        with open(filepath, encoding='utf-8') as f:
             content = f.read()
-    
+
     # Generate chunks
     chunks = chunk_code(content, filepath)
-    
+
     ids = []
     texts = []
     payloads = []
-    
+
     for i, chunk in enumerate(chunks):
         # Generate stable chunk ID
         chunk_data = f"{filepath}:{chunk['start_line']}:{chunk['end_line']}"
         chunk_id = hashlib.sha256(chunk_data.encode()).hexdigest()[:16]
-        
+
         ids.append(chunk_id)
         texts.append(chunk["content"])
         payloads.append({
@@ -191,14 +192,14 @@ def produce_chunks_for_index(
             "chunk_id": chunk_id,
             "priority": priority or _infer_priority(filepath, chunk["language"])
         })
-    
+
     return ids, texts, payloads
 
 def discover_source_files(
     root_dir: str = ".",
-    include_patterns: Optional[List[str]] = None,
-    exclude_patterns: Optional[List[str]] = None
-) -> List[str]:
+    include_patterns: list[str] | None = None,
+    exclude_patterns: list[str] | None = None
+) -> list[str]:
     """
     Discover source files for indexing.
     
@@ -216,17 +217,17 @@ def discover_source_files(
             "*.java", "*.cpp", "*.c", "*.cs", "*.go",
             "*.rs", "*.rb", "*.php", "*.swift", "*.kt"
         ]
-    
+
     if exclude_patterns is None:
         exclude_patterns = [
             "*test*", "*spec*", "*.min.js", "*vendor*",
             "*node_modules*", "*__pycache__*", "*.pyc",
             "*dist/*", "*build/*", "*target/*"
         ]
-    
+
     files = []
     root = Path(root_dir)
-    
+
     for pattern in include_patterns:
         for filepath in root.rglob(pattern):
             # Check exclusions
@@ -235,12 +236,12 @@ def discover_source_files(
                 if filepath.match(exc):
                     skip = True
                     break
-            
+
             if not skip and filepath.is_file():
                 # Check file size (skip very large files)
                 if filepath.stat().st_size < 500_000:  # 500KB limit
                     files.append(str(filepath))
-    
+
     return sorted(set(files))
 
 def _infer_priority(filepath: str, language: str) -> str:
@@ -259,27 +260,27 @@ def _infer_priority(filepath: str, language: str) -> str:
         "main", "index", "app", "core", "api",
         "schema", "model", "config", "settings"
     ]
-    
+
     # Low priority patterns
     low_priority = [
         "test", "spec", "mock", "fixture", "example",
         "demo", "sample", "docs", "readme"
     ]
-    
+
     filepath_lower = filepath.lower()
-    
+
     # Check for high priority indicators
     for pattern in high_priority:
         if pattern in filepath_lower:
             return "high"
-    
+
     # Check for low priority indicators
     for pattern in low_priority:
         if pattern in filepath_lower:
             return "low"
-    
+
     # Complex languages get higher priority
     if language in ["rust", "cpp", "java", "scala"]:
         return "high"
-    
+
     return "medium"

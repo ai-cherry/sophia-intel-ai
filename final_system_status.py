@@ -3,8 +3,9 @@
 Final System Status Check - Production Readiness
 """
 
+
 import requests
-import json
+
 
 def check_service(name, url, check_type="GET", data=None):
     """Check if a service is running and accessible"""
@@ -13,7 +14,7 @@ def check_service(name, url, check_type="GET", data=None):
             response = requests.get(url, timeout=2)
         else:
             response = requests.post(url, json=data, timeout=2)
-        
+
         if response.status_code in [200, 201]:
             print(f"✅ {name}: RUNNING at {url}")
             return True
@@ -59,7 +60,7 @@ print("\n🔌 API ENDPOINTS:")
 print("-" * 40)
 services_ok &= check_service("Teams List", "http://localhost:8003/teams")
 services_ok &= check_service("Swarm Status", "http://localhost:8003/mcp/swarm-status")
-services_ok &= check_service("Teams Run", "http://localhost:8003/teams/run", "POST", 
+services_ok &= check_service("Teams Run", "http://localhost:8003/teams/run", "POST",
                             {"message": "test", "team_id": "strategic-swarm"})
 
 print("\n🔒 CORS CONFIGURATION:")

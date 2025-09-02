@@ -1,14 +1,16 @@
 """Enhanced Supermemory MCP Server with reliability improvements."""
 import asyncio
-import aiosqlite
-from contextlib import asynccontextmanager
-from typing import AsyncContextManager, Dict, Any
-import logging
-from dataclasses import dataclass
-import json
-from fastapi import HTTPException
-from datetime import datetime
 import hashlib
+import json
+import logging
+from contextlib import asynccontextmanager
+from dataclasses import dataclass
+from datetime import datetime
+from typing import Any, AsyncContextManager
+
+import aiosqlite
+from fastapi import HTTPException
+
 
 @dataclass
 class MemoryEntry:
@@ -21,14 +23,14 @@ class MemoryEntry:
     memory_type: str = "episodic"
     embedding_vector: list = None
     hash_id: str = None
-    
+
     def __post_init__(self):
         if not self.timestamp:
             self.timestamp = datetime.now()
         if not self.hash_id:
             content_hash = hashlib.sha256(f"{self.topic}:{self.content}".encode()).hexdigest()
             self.hash_id = content_hash[:16]
-    
+
     def to_dict(self):
         return {
             "hash_id": self.hash_id,
@@ -61,20 +63,20 @@ class MCPServerConfig:
 
 class EnhancedMCPServer:
     """Enhanced MCP server with connection pooling and error recovery."""
-    
+
     def __init__(self, config: MCPServerConfig = None):
         self.config = config or MCPServerConfig()
         self._connection_pool: asyncio.Queue = None
         self._pool_initialized = False
         self._metrics = {"requests": 0, "errors": 0, "avg_latency": 0.0}
-        
+
     async def initialize_pool(self):
         """Initialize database connection pool with exponential backoff."""
         if self._pool_initialized:
             return
-            
+
         self._connection_pool = asyncio.Queue(maxsize=self.config.connection_pool_size)
-        
+
         # Pre-populate pool with connections (with retry logic)
         for i in range(self.config.connection_pool_size):
             retry_delay = self.config.retry_delay
@@ -93,7 +95,7 @@ class EnhancedMCPServer:
                     logger.warning(f"Connection {i} attempt {attempt + 1} failed, retrying in {retry_delay}s...")
                     await asyncio.sleep(retry_delay)
                     retry_delay *= 2  # Exponential backoff
-        
+
         self._pool_initialized = True
         logger.info(f"Initialized connection pool with {self.config.connection_pool_size} connections")
 
@@ -102,7 +104,7 @@ class EnhancedMCPServer:
         """Get database connection from pool with timeout."""
         if not self._pool_initialized:
             await self.initialize_pool()
-        
+
         try:
             # Get connection with timeout
             conn = await asyncio.wait_for(
@@ -121,23 +123,23 @@ class EnhancedMCPServer:
     async def execute_with_retry(self, operation, *args, **kwargs):
         """Execute operation with exponential backoff retry."""
         last_exception = None
-        
+
         for attempt in range(self.config.retry_attempts):
             try:
                 start_time = asyncio.get_event_loop().time()
                 result = await operation(*args, **kwargs)
-                
+
                 # Update metrics
                 if self.config.enable_metrics:
                     latency = (asyncio.get_event_loop().time() - start_time) * 1000
                     self._metrics["requests"] += 1
                     self._metrics["avg_latency"] = (
-                        (self._metrics["avg_latency"] * (self._metrics["requests"] - 1) + latency) 
+                        (self._metrics["avg_latency"] * (self._metrics["requests"] - 1) + latency)
                         / self._metrics["requests"]
                     )
-                
+
                 return result
-                
+
             except Exception as e:
                 last_exception = e
                 if attempt < self.config.retry_attempts - 1:
@@ -148,10 +150,10 @@ class EnhancedMCPServer:
                     logger.error(f"Operation failed after {self.config.retry_attempts} attempts: {e}")
                     if self.config.enable_metrics:
                         self._metrics["errors"] += 1
-        
+
         raise last_exception
 
-    async def add_to_memory_enhanced(self, entry: MemoryEntry) -> Dict[str, Any]:
+    async def add_to_memory_enhanced(self, entry: MemoryEntry) -> dict[str, Any]:
         """Enhanced memory addition with connection pooling."""
         async def _add_operation():
             async with self.get_connection() as conn:
@@ -161,7 +163,7 @@ class EnhancedMCPServer:
                     (entry.hash_id,)
                 )
                 existing = await cursor.fetchone()
-                
+
                 if existing:
                     # Update access count
                     await conn.execute("""
@@ -172,7 +174,7 @@ class EnhancedMCPServer:
                     """, (entry.hash_id,))
                     await conn.commit()
                     return {"status": "duplicate", "hash_id": entry.hash_id}
-                
+
                 # Insert new entry
                 entry_dict = entry.to_dict()
                 await conn.execute("""
@@ -182,10 +184,10 @@ class EnhancedMCPServer:
                 """, tuple(entry_dict.values()))
                 await conn.commit()
                 return {"status": "added", "hash_id": entry.hash_id}
-        
+
         return await self.execute_with_retry(_add_operation)
 
-    async def get_metrics(self) -> Dict[str, Any]:
+    async def get_metrics(self) -> dict[str, Any]:
         """Get server performance metrics."""
         pool_stats = {
             "pool_size": self.config.connection_pool_size,
@@ -193,7 +195,7 @@ class EnhancedMCPServer:
         }
         return {**self._metrics, **pool_stats}
 
-    async def health_check(self) -> Dict[str, str]:
+    async def health_check(self) -> dict[str, str]:
         """Enhanced health check with connection testing."""
         try:
             async with self.get_connection() as conn:
@@ -208,10 +210,10 @@ class EnhancedMCPServer:
         """Gracefully close all connections."""
         if not self._connection_pool:
             return
-            
+
         logger.info("Closing connection pool...")
         connections = []
-        
+
         # Collect all connections
         while not self._connection_pool.empty():
             try:
@@ -219,11 +221,11 @@ class EnhancedMCPServer:
                 connections.append(conn)
             except asyncio.QueueEmpty:
                 break
-        
+
         # Close connections
         for conn in connections:
             await conn.close()
-            
+
         logger.info(f"Closed {len(connections)} database connections")
 
 # Usage example
@@ -234,15 +236,15 @@ async def main():
         retry_attempts=3,
         enable_metrics=True
     )
-    
+
     server = EnhancedMCPServer(config)
-    
+
     try:
         # Initialize and test
         await server.initialize_pool()
         health = await server.health_check()
         print(f"Server health: {health}")
-        
+
         # Example memory operation
         entry = MemoryEntry(
             topic="Enhanced MCP",
@@ -250,14 +252,14 @@ async def main():
             source="mcp_enhancement.py",
             tags=["improvement", "reliability"]
         )
-        
+
         result = await server.add_to_memory_enhanced(entry)
         print(f"Memory operation: {result}")
-        
+
         # Get metrics
         metrics = await server.get_metrics()
         print(f"Server metrics: {metrics}")
-        
+
     finally:
         await server.close()
 

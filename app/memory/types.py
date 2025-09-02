@@ -6,7 +6,6 @@ Shared types for memory entries and operations.
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import List, Optional
 
 
 class MemoryType(Enum):
@@ -22,12 +21,12 @@ class MemoryEntry:
     topic: str
     content: str
     source: str
-    tags: List[str] = field(default_factory=list)
+    tags: list[str] = field(default_factory=list)
     timestamp: datetime = field(default_factory=datetime.now)
     memory_type: MemoryType = MemoryType.SEMANTIC
-    embedding_vector: Optional[List[float]] = None
-    hash_id: Optional[str] = None
-    
+    embedding_vector: list[float] | None = None
+    hash_id: str | None = None
+
     def __post_init__(self):
         """Generate hash ID for deduplication."""
         if not self.hash_id:

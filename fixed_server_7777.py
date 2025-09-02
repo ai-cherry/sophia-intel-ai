@@ -1,9 +1,10 @@
-from fastapi import FastAPI
-from fastapi.responses import StreamingResponse
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
 import json
 import time
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
 
 app = FastAPI()
 
@@ -45,22 +46,22 @@ def generate_response(request: TeamRequest):
     # Simulate streaming response with proper SSE format
     yield f"data: {json.dumps({'token': 'Starting task with team: '})}\n\n"
     yield f"data: {json.dumps({'token': request.team_id or 'default'})}\n\n"
-    
+
     yield f"data: {json.dumps({'token': '\n\nTask: '})}\n\n"
     yield f"data: {json.dumps({'token': request.message})}\n\n"
-    
+
     yield f"data: {json.dumps({'token': '\n\n🔄 Processing...'})}\n\n"
     time.sleep(1)
-    
+
     yield f"data: {json.dumps({'token': '\n✅ Critic Review: PASS'})}\n\n"
     time.sleep(0.5)
-    
+
     yield f"data: {json.dumps({'token': '\n⚖️ Judge Decision: ACCEPT'})}\n\n"
     time.sleep(0.5)
-    
+
     yield f"data: {json.dumps({'token': '\n🚪 Runner Gate: ALLOWED'})}\n\n"
     time.sleep(0.5)
-    
+
     yield f"data: {json.dumps({'token': '\n\n📊 Task completed successfully!'})}\n\n"
     yield "data: [DONE]\n\n"
 
@@ -70,7 +71,7 @@ async def run_team(request: TeamRequest):
         generate_response(request),
         media_type="text/event-stream",
         headers={
-            "Cache-Control": "no-cache", 
+            "Cache-Control": "no-cache",
             "Connection": "keep-alive",
             "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Headers": "*"
@@ -83,7 +84,7 @@ async def run_workflow(request: TeamRequest):
         generate_response(request),
         media_type="text/event-stream",
         headers={
-            "Cache-Control": "no-cache", 
+            "Cache-Control": "no-cache",
             "Connection": "keep-alive",
             "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Headers": "*"

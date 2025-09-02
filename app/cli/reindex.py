@@ -4,12 +4,15 @@ Usage: python -m app.cli.reindex [options]
 """
 
 import asyncio
-import click
-from typing import Optional
-from app.memory.incremental_indexer import IncrementalIndexer, IndexStateManager
-from app.memory.embed_router import clear_cache as clear_embed_cache, DIM_A, DIM_B
-from app.memory.index_weaviate import ensure_schema
 import os
+
+import click
+
+from app.memory.embed_router import DIM_A, DIM_B
+from app.memory.embed_router import clear_cache as clear_embed_cache
+from app.memory.incremental_indexer import IncrementalIndexer, IndexStateManager
+from app.memory.index_weaviate import ensure_schema
+
 
 @click.command()
 @click.option(
@@ -58,12 +61,12 @@ def reindex(
     exclude: tuple,
     clear_cache: bool,
     batch_size: int,
-    priority: Optional[str],
+    priority: str | None,
     force: bool,
     stats: bool
 ):
     """Incrementally reindex source code with change detection."""
-    
+
     # Show stats if requested
     if stats:
         state_manager = IndexStateManager()
@@ -73,26 +76,26 @@ def reindex(
         click.echo(f"  Chunks indexed: {stats_data['chunks_indexed']}")
         click.echo(f"  Total size: {stats_data['total_size_mb']:.2f} MB")
         return
-    
+
     # Clear cache if requested
     if clear_cache:
         click.echo("🧹 Clearing embedding cache...")
         clear_embed_cache()
-    
+
     # Ensure collections exist
     click.echo("📦 Ensuring Weaviate collections exist...")
     collection_a = os.getenv("WEAVIATE_COLLECTION_A", "CodeChunk_A")
     collection_b = os.getenv("WEAVIATE_COLLECTION_B", "CodeChunk_B")
     ensure_schema(collection_a, DIM_A)
     ensure_schema(collection_b, DIM_B)
-    
+
     # Initialize incremental indexer
     indexer = IncrementalIndexer(batch_size=batch_size)
-    
+
     click.echo(f"🔍 Scanning directory: {root}")
     click.echo(f"  Force re-index: {force}")
     click.echo(f"  Priority: {priority or 'auto'}")
-    
+
     # Run incremental indexing
     async def run_indexing():
         return await indexer.index_directory(
@@ -102,9 +105,9 @@ def reindex(
             priority=priority,
             force=force
         )
-    
+
     stats_result = asyncio.run(run_indexing())
-    
+
     # Report results
     click.echo("\n✅ Indexing Complete:")
     if 'summary' in stats_result:
@@ -112,10 +115,10 @@ def reindex(
         click.echo(f"  📁 Total files: {summary['total_files']}")
         click.echo(f"  ✨ New/Updated: {summary['indexed'] + summary['updated']}")
         click.echo(f"  ⏭️  Skipped (unchanged): {summary['skipped']}")
-    
+
     click.echo(f"  📝 Chunks created: {stats_result.get('chunks_created', 0)}")
     click.echo(f"  ♻️  Chunks reused: {stats_result.get('chunks_reused', 0)}")
-    
+
     if stats_result.get('errors'):
         errors = stats_result['errors']
         click.echo(f"\n⚠️  {len(errors)} errors occurred:")
@@ -123,7 +126,7 @@ def reindex(
             click.echo(f"  - {error_info['path']}: {error_info['error']}")
         if len(errors) > 5:
             click.echo(f"  ... and {len(errors) - 5} more")
-    
+
     # Performance summary
     total_processed = stats_result.get('files_processed', 0) + stats_result.get('files_updated', 0)
     if total_processed > 0:

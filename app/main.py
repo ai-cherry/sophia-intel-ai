@@ -1,10 +1,12 @@
-from fastapi import FastAPI
-from app.security.enhanced_middleware import setup_middleware
-from app.api import advanced_gateway_2025, unified_gateway
-from app.swarms.communication.message_bus import MessageBus
 import logging
-from app.deployments import service_discovery
+
+from fastapi import FastAPI
+
+from app.api import advanced_gateway_2025, unified_gateway
 from app.deployment import orchestrator
+from app.deployments import service_discovery
+from app.security.enhanced_middleware import setup_middleware
+from app.swarms.communication.message_bus import MessageBus
 
 logger = logging.getLogger(__name__)
 app = FastAPI()
@@ -20,7 +22,7 @@ app.include_router(unified_gateway.router)
 @app.on_event("startup")
 async def startup_event():
     logger.info("🚀 Starting up AI Orchestrator services")
-    
+
     # Initialize message bus
     app.state.message_bus = MessageBus()
     try:
@@ -29,7 +31,7 @@ async def startup_event():
     except Exception as e:
         logger.error(f"Failed to initialize message bus: {str(e)}")
         raise
-    
+
     # Initialize deployment services
     orchestrator.initialize_services()
     service_discovery.init_service_discovery()

@@ -6,17 +6,21 @@ caching, refresh mechanisms, and comprehensive validation.
 Following ADR-006: Configuration Management Standardization
 """
 
+import hashlib
+import json
+import logging
 import os
 import subprocess
-import json
-import hashlib
-from pathlib import Path
-from typing import Dict, Any, Optional, List, Tuple
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
+from pathlib import Path
+from typing import Any
+
 from dotenv import load_dotenv
-import logging
-from app.core.circuit_breaker import with_circuit_breaker, get_llm_circuit_breaker, get_weaviate_circuit_breaker, get_redis_circuit_breaker, get_webhook_circuit_breaker
+
+from app.core.circuit_breaker import (
+    with_circuit_breaker,
+)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -25,7 +29,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class EnvConfig:
     """Complete environment configuration for all services following ADR-006."""
-    
+
     # =============================================================================
     # ENVIRONMENT METADATA
     # =============================================================================
@@ -36,23 +40,23 @@ class EnvConfig:
     loaded_from: str = ""  # Track source: esc, env_file, environment
     loaded_at: datetime = field(default_factory=datetime.now)
     config_hash: str = ""
-    
+
     # =============================================================================
     # LLM PROVIDER CONFIGURATION
     # =============================================================================
-    
+
     # Primary Gateway (Portkey)
     openai_base_url: str = "https://api.portkey.ai/v1"
     openai_api_key: str = ""
     portkey_api_key: str = ""
     portkey_base_url: str = "https://api.portkey.ai/v1"
-    
+
     # Portkey Virtual Keys
     portkey_openrouter_vk: str = ""
     portkey_anthropic_vk: str = ""
     portkey_together_vk: str = ""
     portkey_xai_vk: str = ""
-    
+
     # Direct Provider APIs
     agno_api_key: str = ""
     anthropic_api_key: str = ""
@@ -65,7 +69,7 @@ class EnvConfig:
     gemini_api_key: str = ""
     mistral_api_key: str = ""
     cohere_api_key: str = ""
-    
+
     # =============================================================================
     # MEMORY AND VECTOR STORE CONFIGURATION
     # =============================================================================
@@ -73,16 +77,16 @@ class EnvConfig:
     weaviate_api_key: str = ""
     weaviate_batch_size: int = 100
     weaviate_timeout: int = 30
-    
+
     # MEM0 Integration
     mem0_api_key: str = ""
     mem0_account_name: str = ""
     mem0_account_id: str = ""
-    
+
     # =============================================================================
     # DATABASE CONFIGURATION
     # =============================================================================
-    
+
     # PostgreSQL (Neon)
     postgres_url: str = ""
     neon_api_key: str = ""
@@ -91,7 +95,7 @@ class EnvConfig:
     neon_branch_id: str = ""
     neon_password: str = ""
     postgres_password: str = ""
-    
+
     # Redis
     redis_url: str = "redis://localhost:6379"
     redis_host: str = "localhost"
@@ -100,7 +104,7 @@ class EnvConfig:
     redis_password: str = ""
     redis_user_key: str = ""
     redis_account_key: str = ""
-    
+
     # =============================================================================
     # INFRASTRUCTURE CONFIGURATION
     # =============================================================================
@@ -110,7 +114,7 @@ class EnvConfig:
     lambda_cloud_endpoint: str = "https://cloud.lambdalabs.com/api/v1"
     docker_pat: str = ""
     github_token: str = ""
-    
+
     # =============================================================================
     # SEARCH AND DATA APIs
     # =============================================================================
@@ -120,7 +124,7 @@ class EnvConfig:
     serper_api_key: str = ""
     tavily_api_key: str = ""
     newsdata_api_key: str = ""
-    
+
     # =============================================================================
     # OBSERVABILITY AND MONITORING
     # =============================================================================
@@ -130,7 +134,7 @@ class EnvConfig:
     arize_api_key: str = ""
     arize_space_id: str = ""
     dd_api_key: str = ""
-    
+
     # =============================================================================
     # SECURITY CONFIGURATION
     # =============================================================================
@@ -138,7 +142,7 @@ class EnvConfig:
     api_secret_key: str = ""
     encryption_key: str = ""
     neon_auth_jwks_url: str = ""
-    
+
     # =============================================================================
     # SERVICE URLs
     # =============================================================================
@@ -147,7 +151,7 @@ class EnvConfig:
     frontend_url: str = "http://localhost:3333"
     mcp_server_url: str = "http://localhost:8004"
     vector_store_url: str = "http://localhost:8005"
-    
+
     # =============================================================================
     # APPLICATION CONFIGURATION
     # =============================================================================
@@ -156,7 +160,7 @@ class EnvConfig:
     agent_ui_port: int = 3333
     agent_ui_host: str = "127.0.0.1"
     local_dev_mode: bool = True
-    
+
     # =============================================================================
     # FEATURE FLAGS
     # =============================================================================
@@ -173,7 +177,7 @@ class EnvConfig:
     enable_file_writes: bool = True
     debug_mode: bool = False
     verbose_logging: bool = False
-    
+
     # =============================================================================
     # PERFORMANCE AND COST CONTROLS
     # =============================================================================
@@ -187,21 +191,21 @@ class EnvConfig:
     max_requests_per_minute: int = 60
     api_rate_limit: int = 100
     api_rate_window: int = 60
-    
+
     # =============================================================================
     # MODEL CONFIGURATION
     # =============================================================================
     # Orchestrator model (restricted to GPT-5)
     orchestrator_model: str = "openai/gpt-5"
-    
+
     # Agent swarm allowed models
     agent_swarm_models: str = "x-ai/grok-code-fast-1,google/gemini-2.5-flash,google/gemini-2.5-pro,deepseek/deepseek-chat-v3-0324,deepseek/deepseek-chat-v3.1,qwen/qwen3-30b-a3b,qwen/qwen3-coder,openai/gpt-5,deepseek/deepseek-r1-0528:free,openai/gpt-4o-mini,z-ai/glm-4.5"
-    
+
     # Legacy model tiers (deprecated)
     default_fast_models: str = "groq/llama-3.2-90b-text-preview,openai/gpt-4o-mini"
     default_balanced_models: str = "openai/gpt-4o,anthropic/claude-3.5-sonnet"
     default_heavy_models: str = "anthropic/claude-3.5-sonnet,qwen/qwen-2.5-coder-32b-instruct,openai/gpt-4o"
-    
+
     # Embedding models (Together AI via Portkey)
     embedding_primary_model: str = "togethercomputer/m2-bert-80M-8k-retrieval"
     embedding_fallback_models: str = "BAAI/bge-large-en-v1.5,BAAI/bge-base-en-v1.5"
@@ -209,7 +213,7 @@ class EnvConfig:
     embedding_cache_ttl: int = 3600
     embedding_similarity_threshold: float = 0.95
     embedding_batch_size: int = 32
-    
+
     # Legacy embedding tiers (deprecated)
     embed_model_tier_s: str = "voyage-3-large"
     embed_model_tier_a: str = "cohere/embed-multilingual-v3.0"
@@ -218,12 +222,12 @@ class EnvConfig:
 
 class PulumiESCClient:
     """Enhanced Pulumi ESC client with caching and error handling."""
-    
+
     def __init__(self):
-        self.cache: Dict[str, Dict] = {}
+        self.cache: dict[str, dict] = {}
         self.cache_ttl = 300  # 5 minutes
-        self.cache_timestamps: Dict[str, datetime] = {}
-        
+        self.cache_timestamps: dict[str, datetime] = {}
+
     def is_available(self) -> bool:
         """Check if Pulumi ESC CLI is available."""
         try:
@@ -236,8 +240,8 @@ class PulumiESCClient:
             return result.returncode == 0
         except:
             return False
-            
-    def open_environment(self, environment: str, force_refresh: bool = False) -> Optional[Dict]:
+
+    def open_environment(self, environment: str, force_refresh: bool = False) -> dict | None:
         """
         Open a Pulumi ESC environment with caching.
         
@@ -252,7 +256,7 @@ class PulumiESCClient:
         if not force_refresh and self._is_cached(environment):
             logger.info(f"Using cached ESC environment: {environment}")
             return self.cache[environment]
-            
+
         try:
             logger.info(f"Loading ESC environment: {environment}")
             result = subprocess.run(
@@ -261,20 +265,20 @@ class PulumiESCClient:
                 text=True,
                 timeout=30
             )
-            
+
             if result.returncode == 0:
                 env_data = json.loads(result.stdout)
-                
+
                 # Cache the result
                 self.cache[environment] = env_data
                 self.cache_timestamps[environment] = datetime.now()
-                
+
                 logger.info(f"Successfully loaded ESC environment: {environment}")
                 return env_data
             else:
                 logger.error(f"Failed to load ESC environment {environment}: {result.stderr}")
                 return None
-                
+
         except subprocess.TimeoutExpired:
             logger.error(f"Timeout loading ESC environment: {environment}")
             return None
@@ -284,21 +288,21 @@ class PulumiESCClient:
         except Exception as e:
             logger.error(f"Error loading ESC environment {environment}: {e}")
             return None
-            
+
     def _is_cached(self, environment: str) -> bool:
         """Check if environment data is cached and not expired."""
         if environment not in self.cache or environment not in self.cache_timestamps:
             return False
-            
+
         cache_age = datetime.now() - self.cache_timestamps[environment]
         return cache_age < timedelta(seconds=self.cache_ttl)
-        
+
     def refresh_cache(self, environment: str) -> bool:
         """Refresh cached environment data."""
         result = self.open_environment(environment, force_refresh=True)
         return result is not None
-        
-    def list_environments(self) -> List[str]:
+
+    def list_environments(self) -> list[str]:
         """List available ESC environments."""
         try:
             result = subprocess.run(
@@ -307,14 +311,14 @@ class PulumiESCClient:
                 text=True,
                 timeout=10
             )
-            
+
             if result.returncode == 0:
                 environments = json.loads(result.stdout)
                 return [env["name"] for env in environments]
             else:
                 logger.error(f"Failed to list ESC environments: {result.stderr}")
                 return []
-                
+
         except Exception as e:
             logger.error(f"Error listing ESC environments: {e}")
             return []
@@ -325,8 +329,8 @@ class EnhancedEnvLoader:
     Enhanced environment loader with Pulumi ESC integration, caching,
     and comprehensive validation following ADR-006.
     """
-    
-    def __init__(self, env_file: Optional[str] = None, environment: Optional[str] = None):
+
+    def __init__(self, env_file: str | None = None, environment: str | None = None):
         """
         Initialize enhanced environment loader.
         
@@ -344,11 +348,11 @@ class EnhancedEnvLoader:
             ".env",
             "agent-ui/.env.local"
         ]
-        
+
     def _detect_environment(self) -> str:
         """Auto-detect environment from various sources."""
         # Priority order: ENV var > hostname > git branch > default
-        
+
         # Check environment variables
         if env := os.getenv("SOPHIA_ENVIRONMENT"):
             return env
@@ -361,14 +365,14 @@ class EnhancedEnvLoader:
                 return "staging"
             else:
                 return "dev"
-                
+
         # Check hostname patterns
         hostname = os.getenv("HOSTNAME", "")
         if "prod" in hostname or "production" in hostname:
             return "prod"
         elif "staging" in hostname or "stage" in hostname:
             return "staging"
-            
+
         # Check if running on Fly.io
         if os.getenv("FLY_APP_NAME"):
             app_name = os.getenv("FLY_APP_NAME", "")
@@ -376,10 +380,10 @@ class EnhancedEnvLoader:
                 return "prod"
             elif "staging" in app_name or "stage" in app_name:
                 return "staging"
-                
+
         # Default to development
         return "dev"
-        
+
     def load_configuration(self, force_refresh: bool = False) -> EnvConfig:
         """
         Load configuration with intelligent source selection and fallback.
@@ -391,7 +395,7 @@ class EnhancedEnvLoader:
             Loaded and validated configuration
         """
         logger.info(f"Loading configuration for environment: {self.environment}")
-        
+
         # Strategy 1: Try Pulumi ESC first (production preferred approach)
         if self._should_use_esc():
             if self._load_from_esc(force_refresh):
@@ -401,7 +405,7 @@ class EnhancedEnvLoader:
                 return self.config
             else:
                 logger.warning("Failed to load from ESC, falling back to .env files")
-        
+
         # Strategy 2: Fallback to .env files
         if self._load_from_env_files():
             logger.info("Successfully loaded configuration from .env files")
@@ -413,58 +417,58 @@ class EnhancedEnvLoader:
             self._load_from_environment_vars()
             self.config.loaded_from = "environment_vars"
             self.config.loaded_at = datetime.now()
-            
+
         return self.config
-        
+
     def _should_use_esc(self) -> bool:
         """Determine if ESC should be used based on environment and availability."""
         # Force ESC usage with environment variable
         if os.getenv("USE_PULUMI_ESC", "").lower() == "true":
             return True
-            
+
         # Use ESC for non-development environments if available
         if self.environment in ["staging", "prod"] and self.esc_client.is_available():
             return True
-            
+
         # Use ESC for development if explicitly configured and available
         if self.environment == "dev" and self.esc_client.is_available():
             # Check if ESC environment exists
             environments = self.esc_client.list_environments()
             return self.environment in environments
-            
+
         return False
-        
+
     def _load_from_esc(self, force_refresh: bool = False) -> bool:
         """Load configuration from Pulumi ESC."""
         try:
             env_data = self.esc_client.open_environment(self.environment, force_refresh)
             if not env_data:
                 return False
-                
+
             # Extract environment variables from ESC response
             env_vars = env_data.get("environmentVariables", {})
-            
+
             # Set environment variables from ESC
             for key, value in env_vars.items():
                 os.environ[key] = str(value)
-                
+
             # Update config from loaded environment variables
             self._update_config_from_env()
-            
+
             # Set environment metadata
             self.config.environment_name = self.environment
             self._set_environment_metadata(env_data)
-            
+
             return True
-            
+
         except Exception as e:
             logger.error(f"Error loading from ESC: {e}")
             return False
-            
+
     def _load_from_env_files(self) -> bool:
         """Load configuration from .env files with fallback chain."""
         loaded = False
-        
+
         for env_file in self.fallback_files:
             env_path = Path(env_file)
             if env_path.exists():
@@ -476,41 +480,41 @@ class EnhancedEnvLoader:
                 except Exception as e:
                     logger.warning(f"Failed to load {env_file}: {e}")
                     continue
-                    
+
         if loaded:
             self._update_config_from_env()
             self.config.environment_name = self.environment
-            
+
         return loaded
-        
+
     def _load_from_environment_vars(self) -> None:
         """Load configuration from existing environment variables as fallback."""
         logger.info("Loading configuration from environment variables")
         self._update_config_from_env()
         self.config.environment_name = self.environment
-        
+
     @with_circuit_breaker("external_api")
     def _update_config_from_env(self) -> None:
         """Update config object from environment variables with comprehensive mapping."""
-        
+
         # Environment metadata
         self.config.environment_name = os.getenv("ENVIRONMENT", self.config.environment_name)
         self.config.environment_type = os.getenv("ENV_TYPE", self.config.environment_type)
         self.config.domain = os.getenv("DOMAIN", self.config.domain)
         self.config.region = os.getenv("REGION", self.config.region)
-        
+
         # LLM Provider Configuration
         self.config.openai_base_url = os.getenv("OPENAI_BASE_URL", self.config.openai_base_url)
         self.config.openai_api_key = os.getenv("OPENAI_API_KEY", "")
         self.config.portkey_api_key = os.getenv("PORTKEY_API_KEY", "")
         self.config.portkey_base_url = os.getenv("PORTKEY_BASE_URL", self.config.portkey_base_url)
-        
+
         # Portkey Virtual Keys
         self.config.portkey_openrouter_vk = os.getenv("PORTKEY_OPENROUTER_VK", "")
         self.config.portkey_anthropic_vk = os.getenv("PORTKEY_ANTHROPIC_VK", "")
         self.config.portkey_together_vk = os.getenv("PORTKEY_TOGETHER_VK", "")
         self.config.portkey_xai_vk = os.getenv("PORTKEY_XAI_VK", "")
-        
+
         # Direct Provider APIs
         self.config.agno_api_key = os.getenv("AGNO_API_KEY", "")
         self.config.anthropic_api_key = os.getenv("ANTHROPIC_API_KEY", "")
@@ -523,18 +527,18 @@ class EnhancedEnvLoader:
         self.config.gemini_api_key = os.getenv("GEMINI_API_KEY", "")
         self.config.mistral_api_key = os.getenv("MISTRAL_API_KEY", "")
         self.config.cohere_api_key = os.getenv("COHERE_API_KEY", "")
-        
+
         # Memory and Vector Store
         self.config.weaviate_url = os.getenv("WEAVIATE_URL", self.config.weaviate_url)
         self.config.weaviate_api_key = os.getenv("WEAVIATE_API_KEY", "")
         self.config.weaviate_batch_size = int(os.getenv("WEAVIATE_BATCH_SIZE", "100"))
         self.config.weaviate_timeout = int(os.getenv("WEAVIATE_TIMEOUT", "30"))
-        
+
         # MEM0
         self.config.mem0_api_key = os.getenv("MEM0_API_KEY", "")
         self.config.mem0_account_name = os.getenv("MEM0_ACCOUNT_NAME", "")
         self.config.mem0_account_id = os.getenv("MEM0_ACCOUNT_ID", "")
-        
+
         # Database Configuration
         self.config.postgres_url = os.getenv("POSTGRES_URL", "")
         self.config.neon_api_key = os.getenv("NEON_API_KEY", "")
@@ -543,7 +547,7 @@ class EnhancedEnvLoader:
         self.config.neon_branch_id = os.getenv("NEON_BRANCH_ID", "")
         self.config.neon_password = os.getenv("NEON_PASSWORD", "")
         self.config.postgres_password = os.getenv("POSTGRES_PASSWORD", "")
-        
+
         # Redis
         self.config.redis_url = os.getenv("REDIS_URL", self.config.redis_url)
         self.config.redis_host = os.getenv("REDIS_HOST", self.config.redis_host)
@@ -552,7 +556,7 @@ class EnhancedEnvLoader:
         self.config.redis_password = os.getenv("REDIS_PASSWORD", "")
         self.config.redis_user_key = os.getenv("REDIS_USER_KEY", "")
         self.config.redis_account_key = os.getenv("REDIS_ACCOUNT_KEY", "")
-        
+
         # Infrastructure
         self.config.pulumi_access_token = os.getenv("PULUMI_ACCESS_TOKEN", "")
         self.config.fly_api_token = os.getenv("FLY_API_TOKEN", "")
@@ -560,7 +564,7 @@ class EnhancedEnvLoader:
         self.config.lambda_cloud_endpoint = os.getenv("LAMBDA_CLOUD_ENDPOINT", self.config.lambda_cloud_endpoint)
         self.config.docker_pat = os.getenv("DOCKER_PAT", "")
         self.config.github_token = os.getenv("GITHUB_TOKEN", "")
-        
+
         # Search and Data APIs
         self.config.huggingface_api_token = os.getenv("HUGGINGFACE_API_TOKEN", "")
         self.config.exa_api_key = os.getenv("EXA_API_KEY", "")
@@ -568,7 +572,7 @@ class EnhancedEnvLoader:
         self.config.serper_api_key = os.getenv("SERPER_API_KEY", "")
         self.config.tavily_api_key = os.getenv("TAVILY_API_KEY", "")
         self.config.newsdata_api_key = os.getenv("NEWSDATA_API_KEY", "")
-        
+
         # Observability
         self.config.langfuse_api_key = os.getenv("LANGFUSE_API_KEY", "")
         self.config.langchain_api_key = os.getenv("LANGCHAIN_API_KEY", "")
@@ -576,27 +580,27 @@ class EnhancedEnvLoader:
         self.config.arize_api_key = os.getenv("ARIZE_API_KEY", "")
         self.config.arize_space_id = os.getenv("ARIZE_SPACE_ID", "")
         self.config.dd_api_key = os.getenv("DD_API_KEY", "")
-        
+
         # Security
         self.config.jwt_secret = os.getenv("JWT_SECRET", "")
         self.config.api_secret_key = os.getenv("API_SECRET_KEY", "")
         self.config.encryption_key = os.getenv("ENCRYPTION_KEY", "")
         self.config.neon_auth_jwks_url = os.getenv("NEON_AUTH_JWKS_URL", "")
-        
+
         # Service URLs
         self.config.unified_api_url = os.getenv("UNIFIED_API_URL", self.config.unified_api_url)
         self.config.agno_bridge_url = os.getenv("AGNO_BRIDGE_URL", self.config.agno_bridge_url)
         self.config.frontend_url = os.getenv("FRONTEND_URL", self.config.frontend_url)
         self.config.mcp_server_url = os.getenv("MCP_SERVER_URL", self.config.mcp_server_url)
         self.config.vector_store_url = os.getenv("VECTOR_STORE_URL", self.config.vector_store_url)
-        
+
         # Application
         self.config.playground_port = int(os.getenv("PLAYGROUND_PORT", str(self.config.playground_port)))
         self.config.playground_host = os.getenv("PLAYGROUND_HOST", self.config.playground_host)
         self.config.agent_ui_port = int(os.getenv("AGENT_UI_PORT", str(self.config.agent_ui_port)))
         self.config.agent_ui_host = os.getenv("AGENT_UI_HOST", self.config.agent_ui_host)
         self.config.local_dev_mode = os.getenv("LOCAL_DEV_MODE", "true").lower() == "true"
-        
+
         # Feature Flags
         self.config.enable_streaming = os.getenv("ENABLE_STREAMING", "true").lower() == "true"
         self.config.enable_memory = os.getenv("ENABLE_MEMORY", "true").lower() == "true"
@@ -611,7 +615,7 @@ class EnhancedEnvLoader:
         self.config.enable_file_writes = os.getenv("ENABLE_FILE_WRITES", "true").lower() == "true"
         self.config.debug_mode = os.getenv("DEBUG", "false").lower() == "true"
         self.config.verbose_logging = os.getenv("VERBOSE_LOGGING", "false").lower() == "true"
-        
+
         # Performance and Cost Controls
         self.config.max_workers = int(os.getenv("MAX_WORKERS", str(self.config.max_workers)))
         self.config.timeout_seconds = int(os.getenv("TIMEOUT_SECONDS", str(self.config.timeout_seconds)))
@@ -623,14 +627,14 @@ class EnhancedEnvLoader:
         self.config.max_requests_per_minute = int(os.getenv("MAX_REQUESTS_PER_MINUTE", str(self.config.max_requests_per_minute)))
         self.config.api_rate_limit = int(os.getenv("API_RATE_LIMIT", str(self.config.api_rate_limit)))
         self.config.api_rate_window = int(os.getenv("API_RATE_WINDOW", str(self.config.api_rate_window)))
-        
+
         # Model Configuration
         self.config.orchestrator_model = os.getenv("ORCHESTRATOR_MODEL", self.config.orchestrator_model)
         self.config.agent_swarm_models = os.getenv("AGENT_SWARM_MODELS", self.config.agent_swarm_models)
         self.config.default_fast_models = os.getenv("DEFAULT_FAST_MODELS", self.config.default_fast_models)
         self.config.default_balanced_models = os.getenv("DEFAULT_BALANCED_MODELS", self.config.default_balanced_models)
         self.config.default_heavy_models = os.getenv("DEFAULT_HEAVY_MODELS", self.config.default_heavy_models)
-        
+
         # Embedding Configuration
         self.config.embedding_primary_model = os.getenv("EMBEDDING_PRIMARY_MODEL", self.config.embedding_primary_model)
         self.config.embedding_fallback_models = os.getenv("EMBEDDING_FALLBACK_MODELS", self.config.embedding_fallback_models)
@@ -638,17 +642,17 @@ class EnhancedEnvLoader:
         self.config.embedding_cache_ttl = int(os.getenv("EMBEDDING_CACHE_TTL", str(self.config.embedding_cache_ttl)))
         self.config.embedding_similarity_threshold = float(os.getenv("EMBEDDING_SIMILARITY_THRESHOLD", str(self.config.embedding_similarity_threshold)))
         self.config.embedding_batch_size = int(os.getenv("EMBEDDING_BATCH_SIZE", str(self.config.embedding_batch_size)))
-        
+
         # Legacy embedding tiers
         self.config.embed_model_tier_s = os.getenv("EMBED_MODEL_TIER_S", self.config.embed_model_tier_s)
         self.config.embed_model_tier_a = os.getenv("EMBED_MODEL_TIER_A", self.config.embed_model_tier_a)
         self.config.embed_model_tier_b = os.getenv("EMBED_MODEL_TIER_B", self.config.embed_model_tier_b)
-        
+
         # Generate config hash for change detection
         config_str = json.dumps(self.__dict__, default=str, sort_keys=True)
         self.config.config_hash = hashlib.md5(config_str.encode()).hexdigest()[:16]
-        
-    def _set_environment_metadata(self, env_data: Dict) -> None:
+
+    def _set_environment_metadata(self, env_data: dict) -> None:
         """Set environment metadata from ESC data."""
         values = env_data.get("values", {})
         if "environment" in values:
@@ -657,8 +661,8 @@ class EnhancedEnvLoader:
                 self.config.environment_type = env_config.get("type", self.config.environment_type)
                 self.config.domain = env_config.get("domain", self.config.domain)
                 self.config.region = env_config.get("region", self.config.region)
-                
-    def validate_configuration(self) -> Dict[str, Any]:
+
+    def validate_configuration(self) -> dict[str, Any]:
         """
         Comprehensive configuration validation with detailed diagnostics.
         
@@ -673,50 +677,50 @@ class EnhancedEnvLoader:
             "recommendations": [],
             "component_status": {}
         }
-        
+
         # LLM Gateway Validation
         gateway_status = self._validate_llm_gateway()
         validation["component_status"]["llm_gateway"] = gateway_status
-        
+
         # Provider Validation
         providers_status = self._validate_providers()
         validation["component_status"]["providers"] = providers_status
-        
+
         # Database Validation
         database_status = self._validate_databases()
         validation["component_status"]["databases"] = database_status
-        
+
         # Infrastructure Validation
         infra_status = self._validate_infrastructure()
         validation["component_status"]["infrastructure"] = infra_status
-        
+
         # Security Validation
         security_status = self._validate_security()
         validation["component_status"]["security"] = security_status
-        
+
         # Determine overall status
         all_critical = all(
             status.get("status") == "healthy"
             for status in [gateway_status, providers_status, database_status]
         )
-        
+
         if all_critical:
             validation["overall_status"] = "healthy"
             validation["ready_for_production"] = security_status.get("status") == "healthy"
         else:
             validation["overall_status"] = "degraded"
             validation["ready_for_production"] = False
-            
+
         # Collect issues and recommendations
         for component, status in validation["component_status"].items():
             validation["critical_issues"].extend(status.get("critical_issues", []))
             validation["warnings"].extend(status.get("warnings", []))
             validation["recommendations"].extend(status.get("recommendations", []))
-            
+
         return validation
-        
+
     @with_circuit_breaker("external_api")
-    def _validate_llm_gateway(self) -> Dict[str, Any]:
+    def _validate_llm_gateway(self) -> dict[str, Any]:
         """Validate LLM gateway configuration."""
         status = {
             "status": "unknown",
@@ -724,7 +728,7 @@ class EnhancedEnvLoader:
             "warnings": [],
             "recommendations": []
         }
-        
+
         # Check primary gateway
         if not self.config.openai_api_key and not self.config.portkey_api_key:
             status["critical_issues"].append("No LLM gateway API key configured")
@@ -735,11 +739,11 @@ class EnhancedEnvLoader:
         else:
             status["status"] = "degraded"
             status["warnings"].append("Using direct OpenAI API instead of Portkey gateway")
-            
+
         return status
-        
+
     @with_circuit_breaker("external_api")
-    def _validate_providers(self) -> Dict[str, Any]:
+    def _validate_providers(self) -> dict[str, Any]:
         """Validate LLM provider configuration."""
         status = {
             "status": "unknown",
@@ -747,16 +751,16 @@ class EnhancedEnvLoader:
             "warnings": [],
             "recommendations": []
         }
-        
+
         providers = [
             self.config.anthropic_api_key,
             self.config.openrouter_api_key,
             self.config.groq_api_key,
             self.config.together_api_key
         ]
-        
+
         active_providers = sum(1 for key in providers if key)
-        
+
         if active_providers == 0:
             status["critical_issues"].append("No LLM provider API keys configured")
             status["status"] = "unhealthy"
@@ -766,10 +770,10 @@ class EnhancedEnvLoader:
         else:
             status["status"] = "healthy"
             status["recommendations"].append(f"Good provider redundancy with {active_providers} providers")
-            
+
         return status
-        
-    def _validate_databases(self) -> Dict[str, Any]:
+
+    def _validate_databases(self) -> dict[str, Any]:
         """Validate database configuration."""
         status = {
             "status": "unknown",
@@ -777,34 +781,34 @@ class EnhancedEnvLoader:
             "warnings": [],
             "recommendations": []
         }
-        
+
         issues = 0
-        
+
         # Check PostgreSQL
         if not self.config.postgres_url:
             status["warnings"].append("No PostgreSQL connection configured")
             issues += 1
-            
+
         # Check Redis
         if not self.config.redis_url:
             status["warnings"].append("No Redis connection configured")
             issues += 1
-            
+
         # Check Weaviate
         if not self.config.weaviate_url:
             status["critical_issues"].append("No Weaviate vector database configured")
             issues += 1
-            
+
         if issues == 0:
             status["status"] = "healthy"
         elif issues <= 2:
             status["status"] = "degraded"
         else:
             status["status"] = "unhealthy"
-            
+
         return status
-        
-    def _validate_infrastructure(self) -> Dict[str, Any]:
+
+    def _validate_infrastructure(self) -> dict[str, Any]:
         """Validate infrastructure configuration."""
         status = {
             "status": "healthy",
@@ -812,16 +816,16 @@ class EnhancedEnvLoader:
             "warnings": [],
             "recommendations": []
         }
-        
+
         if self.config.environment_name == "prod":
             if not self.config.fly_api_token:
                 status["warnings"].append("No Fly.io API token for production deployment")
             if not self.config.pulumi_access_token:
                 status["warnings"].append("No Pulumi access token for infrastructure management")
-                
+
         return status
-        
-    def _validate_security(self) -> Dict[str, Any]:
+
+    def _validate_security(self) -> dict[str, Any]:
         """Validate security configuration."""
         status = {
             "status": "unknown",
@@ -829,20 +833,20 @@ class EnhancedEnvLoader:
             "warnings": [],
             "recommendations": []
         }
-        
+
         issues = 0
-        
+
         # Check JWT secret
         if not self.config.jwt_secret:
             status["critical_issues"].append("No JWT secret configured")
             issues += 1
         elif len(self.config.jwt_secret) < 32:
             status["warnings"].append("JWT secret is too short (< 32 characters)")
-            
+
         # Check API secret
         if not self.config.api_secret_key:
             status["warnings"].append("No API secret key configured")
-            
+
         # Production-specific security checks
         if self.config.environment_name == "prod":
             if self.config.debug_mode:
@@ -850,92 +854,92 @@ class EnhancedEnvLoader:
                 issues += 1
             if self.config.verbose_logging:
                 status["warnings"].append("Verbose logging enabled in production")
-                
+
         status["status"] = "unhealthy" if issues > 0 else "healthy"
         return status
-        
+
     def refresh_configuration(self) -> bool:
         """Refresh configuration from source."""
         try:
             old_hash = self.config.config_hash
             self.load_configuration(force_refresh=True)
             new_hash = self.config.config_hash
-            
+
             if old_hash != new_hash:
                 logger.info("Configuration refreshed - changes detected")
                 return True
             else:
                 logger.info("Configuration refreshed - no changes")
                 return False
-                
+
         except Exception as e:
             logger.error(f"Failed to refresh configuration: {e}")
             return False
-            
+
     def get_config(self) -> EnvConfig:
         """Get the loaded configuration."""
         return self.config
-        
+
     def print_status(self, detailed: bool = False) -> None:
         """Print comprehensive configuration status."""
         validation = self.validate_configuration()
-        
+
         print("\n" + "="*80)
         print("🔧 SOPHIA INTEL AI - ENVIRONMENT CONFIGURATION STATUS")
         print("="*80)
-        
+
         # Environment info
         print(f"\n📋 Environment: {self.config.environment_name} ({self.config.environment_type})")
         print(f"📂 Loaded from: {self.config.loaded_from}")
         print(f"⏰ Loaded at: {self.config.loaded_at.strftime('%Y-%m-%d %H:%M:%S')}")
         print(f"🆔 Config hash: {self.config.config_hash}")
-        
+
         # Overall status
         status_icon = "🟢" if validation["overall_status"] == "healthy" else "🟡" if validation["overall_status"] == "degraded" else "🔴"
         print(f"\n{status_icon} Overall Status: {validation['overall_status'].upper()}")
         print(f"🚀 Production Ready: {'YES' if validation['ready_for_production'] else 'NO'}")
-        
+
         # Component status
-        print(f"\n📊 Component Status:")
+        print("\n📊 Component Status:")
         for component, status in validation["component_status"].items():
             status_icon = "🟢" if status["status"] == "healthy" else "🟡" if status["status"] == "degraded" else "🔴"
             print(f"  {status_icon} {component.replace('_', ' ').title()}: {status['status']}")
-            
+
         # Issues and warnings
         if validation["critical_issues"]:
             print(f"\n❌ Critical Issues ({len(validation['critical_issues'])}):")
             for issue in validation["critical_issues"]:
                 print(f"  • {issue}")
-                
+
         if validation["warnings"]:
             print(f"\n⚠️  Warnings ({len(validation['warnings'])}):")
             for warning in validation["warnings"]:
                 print(f"  • {warning}")
-                
+
         if validation["recommendations"]:
             print(f"\n💡 Recommendations ({len(validation['recommendations'])}):")
             for rec in validation["recommendations"]:
                 print(f"  • {rec}")
-                
+
         if detailed:
             self._print_detailed_config()
-            
+
         print("="*80)
-        
+
     def _print_detailed_config(self) -> None:
         """Print detailed configuration for debugging."""
-        print(f"\n🔍 Detailed Configuration:")
-        print(f"  • Service URLs:")
+        print("\n🔍 Detailed Configuration:")
+        print("  • Service URLs:")
         print(f"    - API: {self.config.unified_api_url}")
         print(f"    - Bridge: {self.config.agno_bridge_url}")
         print(f"    - Frontend: {self.config.frontend_url}")
-        print(f"  • Databases:")
+        print("  • Databases:")
         print(f"    - Weaviate: {self.config.weaviate_url}")
         print(f"    - Redis: {self.config.redis_host}:{self.config.redis_port}")
-        print(f"  • Models:")
+        print("  • Models:")
         print(f"    - Fast: {self.config.default_fast_models}")
         print(f"    - Balanced: {self.config.default_balanced_models}")
-        print(f"  • Limits:")
+        print("  • Limits:")
         print(f"    - Budget: ${self.config.daily_budget_usd}/day")
         print(f"    - Tokens: {self.config.max_tokens_per_request}")
         print(f"    - Rate: {self.config.api_rate_limit}/min")
@@ -946,9 +950,9 @@ class EnhancedEnvLoader:
 # =============================================================================
 
 # Global singleton instance
-_env_loader: Optional[EnhancedEnvLoader] = None
+_env_loader: EnhancedEnvLoader | None = None
 
-def get_env_config(environment: Optional[str] = None, force_refresh: bool = False) -> EnvConfig:
+def get_env_config(environment: str | None = None, force_refresh: bool = False) -> EnvConfig:
     """
     Get the global environment configuration with caching.
     
@@ -960,14 +964,14 @@ def get_env_config(environment: Optional[str] = None, force_refresh: bool = Fals
         EnvConfig object with all settings
     """
     global _env_loader
-    
+
     if _env_loader is None or force_refresh:
         _env_loader = EnhancedEnvLoader(environment=environment)
         _env_loader.load_configuration(force_refresh=force_refresh)
-        
+
     return _env_loader.get_config()
 
-def validate_environment(environment: Optional[str] = None) -> Dict[str, Any]:
+def validate_environment(environment: str | None = None) -> dict[str, Any]:
     """
     Validate environment configuration with detailed diagnostics.
     
@@ -982,7 +986,7 @@ def validate_environment(environment: Optional[str] = None) -> Dict[str, Any]:
     loader.config = config
     return loader.validate_configuration()
 
-def print_env_status(detailed: bool = False, environment: Optional[str] = None) -> None:
+def print_env_status(detailed: bool = False, environment: str | None = None) -> None:
     """
     Print environment configuration status.
     
@@ -1007,7 +1011,7 @@ def refresh_env_config() -> bool:
         return _env_loader.refresh_configuration()
     return False
 
-def get_service_manifest() -> Dict[str, Any]:
+def get_service_manifest() -> dict[str, Any]:
     """
     Generate a service manifest with all configuration needed by clients.
     
@@ -1015,11 +1019,11 @@ def get_service_manifest() -> Dict[str, Any]:
         JSON-serializable manifest with service URLs, models, and settings
     """
     config = get_env_config()
-    
+
     # Parse model lists
     agent_models = [m.strip() for m in config.agent_swarm_models.split(',')]
     embedding_fallbacks = [m.strip() for m in config.embedding_fallback_models.split(',')]
-    
+
     manifest = {
         "environment": {
             "name": config.environment_name,
@@ -1098,28 +1102,29 @@ def get_service_manifest() -> Dict[str, Any]:
         "timestamp": datetime.now().isoformat(),
         "version": "2.0.0"
     }
-    
+
     return manifest
 
-async def check_service_health() -> Dict[str, Any]:
+async def check_service_health() -> dict[str, Any]:
     """
     Check health status of all configured services.
     
     Returns:
         Health status for each service
     """
-    import aiohttp
     import asyncio
-    
+
+    import aiohttp
+
     config = get_env_config()
     health_status = {}
-    
+
     services_to_check = [
         ("unified_api", f"{config.unified_api_url}/healthz"),
         ("weaviate", f"{config.weaviate_url}/v1/.well-known/ready"),
     ]
-    
-    async def check_service(name: str, url: str) -> Tuple[str, Dict[str, Any]]:
+
+    async def check_service(name: str, url: str) -> tuple[str, dict[str, Any]]:
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.get(url, timeout=5) as response:
@@ -1131,31 +1136,31 @@ async def check_service_health() -> Dict[str, Any]:
             return name, {"status": "timeout", "error": "Request timed out"}
         except Exception as e:
             return name, {"status": "error", "error": str(e)}
-    
+
     # Check services in parallel
     tasks = [check_service(name, url) for name, url in services_to_check]
     results = await asyncio.gather(*tasks)
-    
+
     for name, status in results:
         health_status[name] = status
-    
+
     # Check Redis separately (different protocol)
     try:
         import redis
-        r = redis.Redis(host=config.redis_host, port=config.redis_port, 
+        r = redis.Redis(host=config.redis_host, port=config.redis_port,
                        password=config.redis_password, socket_timeout=5)
         r.ping()
         health_status["redis"] = {"status": "healthy"}
     except Exception as e:
         health_status["redis"] = {"status": "error", "error": str(e)}
-    
+
     return health_status
 
 
 if __name__ == "__main__":
     # Enhanced CLI for testing and diagnostics
     import argparse
-    
+
     parser = argparse.ArgumentParser(description="Sophia Intel AI Environment Configuration")
     parser.add_argument("--environment", "-e", choices=["dev", "staging", "prod"],
                        help="Override environment detection")
@@ -1165,12 +1170,12 @@ if __name__ == "__main__":
                        help="Run validation only")
     parser.add_argument("--refresh", "-r", action="store_true",
                        help="Force refresh configuration")
-    
+
     args = parser.parse_args()
-    
+
     print("🚀 Sophia Intel AI - Environment Configuration Loader")
     print("Following ADR-006: Configuration Management Standardization")
-    
+
     try:
         if args.validate:
             validation = validate_environment(args.environment)
@@ -1179,11 +1184,11 @@ if __name__ == "__main__":
         else:
             config = get_env_config(args.environment, args.refresh)
             print_env_status(args.detailed, args.environment)
-            
-            print(f"\n✅ Configuration loaded successfully!")
+
+            print("\n✅ Configuration loaded successfully!")
             print(f"Environment: {config.environment_name}")
             print(f"Loaded from: {config.loaded_from}")
-            
+
     except Exception as e:
         logger.error(f"Failed to load configuration: {e}")
         print(f"\n❌ Configuration loading failed: {e}")

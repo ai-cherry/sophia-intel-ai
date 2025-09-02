@@ -5,23 +5,19 @@ This module exposes the coding swarm functionality through REST API endpoints,
 allowing clients to configure and execute swarms with full control over settings.
 """
 
-from fastapi import APIRouter, HTTPException, BackgroundTasks, Query
-from fastapi.responses import StreamingResponse
-from typing import Optional, List, Dict, Any
 import json
 import logging
+from typing import Any
 
-from app.swarms.coding.models import (
-    SwarmRequest,
-    SwarmConfiguration,
-    DebateResult,
-    PoolType
-)
-from app.swarms.coding.team import (
-    execute_swarm_request
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Query
+from fastapi.responses import StreamingResponse
+
+from app.core.circuit_breaker import (
+    with_circuit_breaker,
 )
 from app.swarms import SwarmOrchestrator
-from app.core.circuit_breaker import with_circuit_breaker, get_llm_circuit_breaker, get_weaviate_circuit_breaker, get_redis_circuit_breaker, get_webhook_circuit_breaker
+from app.swarms.coding.models import DebateResult, PoolType, SwarmConfiguration, SwarmRequest
+from app.swarms.coding.team import execute_swarm_request
 
 logger = logging.getLogger(__name__)
 
@@ -55,19 +51,19 @@ async def execute_coding_swarm(
     """
     try:
         logger.info(f"Executing coding swarm for task: {request.task[:50]}...")
-        
+
         # Execute the swarm
         result = await execute_swarm_request(request)
-        
+
         # Log metrics in background
         background_tasks.add_task(
             log_swarm_metrics,
             result,
             request.configuration
         )
-        
+
         return result
-        
+
     except ValueError as e:
         logger.error(f"Invalid configuration: {e}")
         raise HTTPException(status_code=400, detail=str(e))
@@ -95,38 +91,38 @@ async def stream_coding_swarm(request: SwarmRequest):
             # Create team
             from app.swarms.coding.team_factory import TeamFactory
             team = TeamFactory.create_team(request.configuration)
-            
+
             # Get memory if enabled
             memory = None
             if request.configuration.use_memory:
                 memory = await get_supermemory_instance()
-            
+
             # Create orchestrator
             orchestrator = SwarmOrchestrator(team, request.configuration, memory)
-            
+
             # Stream events
             yield json.dumps({
                 "event": "start",
                 "team": team.name,
                 "task": request.task
             }) + "\n"
-            
+
             # Run debate with streaming
             # (In production, would modify orchestrator to support streaming)
             result = await orchestrator.run_debate(request.task, request.context)
-            
+
             # Stream final result
             yield json.dumps({
                 "event": "complete",
                 "result": result.model_dump()
             }) + "\n"
-            
+
         except Exception as e:
             yield json.dumps({
                 "event": "error",
                 "message": str(e)
             }) + "\n"
-    
+
     return StreamingResponse(
         generate_stream(),
         media_type="application/x-ndjson"
@@ -134,7 +130,7 @@ async def stream_coding_swarm(request: SwarmRequest):
 
 
 @router.get("/coding/pools")
-async def get_available_pools() -> Dict[str, Any]:
+async def get_available_pools() -> dict[str, Any]:
     """
     Get available model pools for swarm configuration.
     
@@ -142,7 +138,7 @@ async def get_available_pools() -> Dict[str, Any]:
         Dictionary with pool names and their descriptions
     """
     from app.swarms.coding.pools import POOLS
-    
+
     pools_info = {}
     for pool_name, models in POOLS.items():
         pools_info[pool_name] = {
@@ -150,7 +146,7 @@ async def get_available_pools() -> Dict[str, Any]:
             "description": f"{pool_name.capitalize()} pool with {len(models)} models",
             "recommended_for": get_pool_recommendation(pool_name)
         }
-    
+
     return {
         "pools": pools_info,
         "default": "balanced"
@@ -172,7 +168,7 @@ async def get_default_configuration() -> SwarmConfiguration:
 
 
 @router.post("/coding/validate")
-async def validate_configuration(config: SwarmConfiguration) -> Dict[str, Any]:
+async def validate_configuration(config: SwarmConfiguration) -> dict[str, Any]:
     """
     Validate a swarm configuration without executing.
     
@@ -183,40 +179,40 @@ async def validate_configuration(config: SwarmConfiguration) -> Dict[str, Any]:
         Validation result with any warnings or suggestions
     """
     from app.swarms.coding.team_factory import TeamFactory
-    
+
     result = {
         "valid": True,
         "warnings": [],
         "suggestions": []
     }
-    
+
     try:
         TeamFactory.validate_configuration(config)
     except ValueError as e:
         result["valid"] = False
         result["warnings"].append(str(e))
-    
+
     # Add suggestions
     if config.max_generators > 6:
         result["suggestions"].append(
             "Consider reducing max_generators for better coordination"
         )
-    
+
     if config.timeout_seconds < 60:
         result["suggestions"].append(
             "Very short timeout may not allow complex tasks to complete"
         )
-    
+
     if config.accuracy_threshold > 9:
         result["suggestions"].append(
             "Very high accuracy threshold may reject valid solutions"
         )
-    
+
     if config.enable_file_write and not config.include_runner:
         result["warnings"].append(
             "File write enabled but no runner agent included"
         )
-    
+
     return result
 
 
@@ -224,9 +220,9 @@ async def validate_configuration(config: SwarmConfiguration) -> Dict[str, Any]:
 @with_circuit_breaker("database")
 async def get_swarm_history(
     limit: int = Query(10, ge=1, le=100),
-    session_id: Optional[str] = None,
-    team_id: Optional[str] = None
-) -> List[Dict[str, Any]]:
+    session_id: str | None = None,
+    team_id: str | None = None
+) -> list[dict[str, Any]]:
     """
     Get history of swarm executions from memory.
     
@@ -240,17 +236,17 @@ async def get_swarm_history(
     """
     try:
         memory = await get_supermemory_instance()
-        
+
         # Build search query
         query = "swarm_result"
         if session_id:
             query += f" session:{session_id}"
         if team_id:
             query += f" team:{team_id}"
-        
+
         # Search memory
         entries = await memory.search_memory(query, limit=limit)
-        
+
         # Format results
         history = []
         for entry in entries:
@@ -266,9 +262,9 @@ async def get_swarm_history(
                 })
             except:
                 continue
-        
+
         return history
-        
+
     except Exception as e:
         logger.warning(f"Failed to retrieve history: {e}")
         return []
@@ -305,16 +301,16 @@ async def quick_coding_swarm(
             include_runner=enable_runner,
             use_memory=use_memory
         )
-        
+
         # Create request
         request = SwarmRequest(
             task=task,
             configuration=config
         )
-        
+
         # Execute
         return await execute_swarm_request(request)
-        
+
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
@@ -340,19 +336,19 @@ async def log_swarm_metrics(result: DebateResult, config: SwarmConfiguration):
         "generators": config.max_generators,
         "memory_used": config.use_memory
     }
-    
+
     if result.critic:
         metrics["critic_verdict"] = result.critic.verdict.value
         metrics["critic_confidence"] = result.critic.confidence_score
-    
+
     if result.judge:
         metrics["judge_decision"] = result.judge.decision.value
         metrics["judge_confidence"] = result.judge.confidence_score
-    
+
     if result.gate_decision:
         metrics["gate_allowed"] = result.gate_decision.allowed
         metrics["risk_level"] = result.gate_decision.risk_level.value
-    
+
     logger.info(f"Swarm metrics: {json.dumps(metrics)}")
 
 

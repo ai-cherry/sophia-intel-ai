@@ -3,8 +3,9 @@
 Test Portkey with OpenRouter as the unified provider.
 """
 
-import os
 import asyncio
+import os
+
 import httpx
 from dotenv import load_dotenv
 
@@ -13,18 +14,18 @@ load_dotenv('.env.local', override=True)
 
 async def test_portkey_with_openrouter():
     """Test Portkey using OpenRouter as the provider for all models."""
-    
+
     portkey_key = os.getenv("PORTKEY_API_KEY")
     openrouter_key = os.getenv("OPENROUTER_API_KEY")
-    
+
     if not portkey_key or not openrouter_key:
         print("❌ Missing API keys")
         return False
-        
+
     print("\n" + "="*60)
     print("🔐 Testing Portkey → OpenRouter Integration")
     print("="*60)
-    
+
     # Test different models through Portkey → OpenRouter
     test_cases = [
         {
@@ -48,12 +49,12 @@ async def test_portkey_with_openrouter():
             "provider": "openrouter"
         }
     ]
-    
+
     async with httpx.AsyncClient(timeout=30.0) as client:
         for test in test_cases:
             print(f"\n📝 Testing: {test['name']}")
             print(f"   Model: {test['model']}")
-            
+
             try:
                 # Method 1: Using Portkey headers with OpenRouter provider
                 response = await client.post(
@@ -73,7 +74,7 @@ async def test_portkey_with_openrouter():
                         "temperature": 0.1
                     }
                 )
-                
+
                 if response.status_code == 200:
                     result = response.json()
                     content = result.get("choices", [{}])[0].get("message", {}).get("content", "")
@@ -87,14 +88,14 @@ async def test_portkey_with_openrouter():
                         print(f"      → Error: {error.get('error', {}).get('message', 'Unknown')}")
                     except:
                         pass
-                        
+
             except Exception as e:
                 print(f"   ❌ Error: {str(e)[:100]}")
-                
+
     print("\n" + "="*60)
     print("📊 Configuration Instructions")
     print("="*60)
-    
+
     print("""
 To make this work, in Portkey dashboard:
 
@@ -117,20 +118,20 @@ To make this work, in Portkey dashboard:
    - Automatic fallbacks
    - Cost tracking
     """)
-    
+
     return True
 
 async def test_direct_openrouter():
     """Test OpenRouter directly to confirm it works."""
-    
+
     openrouter_key = os.getenv("OPENROUTER_API_KEY")
-    
+
     if not openrouter_key:
         print("❌ OpenRouter key not found")
         return False
-        
+
     print("\n🔍 Testing Direct OpenRouter Connection...")
-    
+
     async with httpx.AsyncClient(timeout=30.0) as client:
         response = await client.post(
             "https://openrouter.ai/api/v1/chat/completions",
@@ -146,7 +147,7 @@ async def test_direct_openrouter():
                 "max_tokens": 10
             }
         )
-        
+
         if response.status_code == 200:
             result = response.json()
             content = result.get("choices", [{}])[0].get("message", {}).get("content", "")
@@ -158,17 +159,17 @@ async def test_direct_openrouter():
 
 async def main():
     """Run all tests."""
-    
+
     # Test direct OpenRouter first
     openrouter_ok = await test_direct_openrouter()
-    
+
     if openrouter_ok:
         print("\n✅ OpenRouter is working directly")
         print("Now testing Portkey integration...")
-        
+
     # Test Portkey with OpenRouter
     await test_portkey_with_openrouter()
-    
+
     print("\n" + "="*60)
     print("✨ Summary")
     print("="*60)

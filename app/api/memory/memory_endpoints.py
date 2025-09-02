@@ -1,6 +1,7 @@
-from fastapi import APIRouter, HTTPException, Depends
+
+from fastapi import APIRouter
+
 from app.mcp.memory_adapter import UnifiedMemoryAdapter
-from typing import List, Dict, Any
 
 router = APIRouter(prefix="/api/memory", tags=["memory"])
 
@@ -9,8 +10,8 @@ memory_adapter = UnifiedMemoryAdapter()
 @router.post("/store")
 async def store_memory(
     session_id: str,
-    messages: List[Dict],
-    metadata: Dict = {}
+    messages: list[dict],
+    metadata: dict = {}
 ):
     result = await memory_adapter.store_conversation(
         session_id, messages, metadata

@@ -4,56 +4,52 @@ Real-time visualization of system performance metrics after optimization
 """
 
 import asyncio
-import time
 from datetime import datetime, timedelta
-from typing import Dict, Any, List, Optional
-import json
-from pathlib import Path
+from typing import Any
 
+import uvicorn
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
-from fastapi.staticfiles import StaticFiles
-import uvicorn
 
-from app.core.connections import get_connection_manager
 from app.core.circuit_breaker import _circuit_manager
+from app.core.connections import get_connection_manager
 
 app = FastAPI(title="Sophia Intel AI - Performance Dashboard")
 
 
 class PerformanceMonitor:
     """Collect and aggregate performance metrics"""
-    
+
     def __init__(self):
-        self.metrics_history: List[Dict[str, Any]] = []
+        self.metrics_history: list[dict[str, Any]] = []
         self.max_history = 1000  # Keep last 1000 data points
-        
-    async def collect_metrics(self) -> Dict[str, Any]:
+
+    async def collect_metrics(self) -> dict[str, Any]:
         """Collect current performance metrics"""
         timestamp = datetime.now().isoformat()
-        
+
         # Get connection pool metrics
         conn_manager = await get_connection_manager()
         connection_metrics = conn_manager.get_metrics()
-        
+
         # Get circuit breaker states
         circuit_states = _circuit_manager.get_all_states()
         open_circuits = _circuit_manager.get_open_circuits()
-        
+
         # Calculate aggregate metrics
         total_circuit_calls = sum(
-            state.get("total_calls", 0) 
+            state.get("total_calls", 0)
             for state in circuit_states.values()
         )
-        
+
         avg_success_rate = 0
         if circuit_states:
             success_rates = [
-                state.get("success_rate", 0) 
+                state.get("success_rate", 0)
                 for state in circuit_states.values()
             ]
             avg_success_rate = sum(success_rates) / len(success_rates)
-        
+
         metrics = {
             "timestamp": timestamp,
             "connections": {
@@ -77,14 +73,14 @@ class PerformanceMonitor:
                 "response_time_ms": self._calculate_avg_response_time()
             }
         }
-        
+
         # Add to history
         self.metrics_history.append(metrics)
         if len(self.metrics_history) > self.max_history:
             self.metrics_history.pop(0)
-        
+
         return metrics
-    
+
     def _get_memory_usage(self) -> float:
         """Get current memory usage in MB"""
         try:
@@ -93,7 +89,7 @@ class PerformanceMonitor:
             return process.memory_info().rss / 1024 / 1024
         except:
             return 0
-    
+
     def _get_cpu_usage(self) -> float:
         """Get current CPU usage percentage"""
         try:
@@ -101,15 +97,15 @@ class PerformanceMonitor:
             return psutil.cpu_percent(interval=0.1)
         except:
             return 0
-    
+
     def _calculate_avg_response_time(self) -> float:
         """Calculate average response time from recent requests"""
         # This would integrate with actual request tracking
         # For now, return a simulated value
         import random
         return random.uniform(50, 200)
-    
-    def get_history(self, minutes: int = 5) -> List[Dict[str, Any]]:
+
+    def get_history(self, minutes: int = 5) -> list[dict[str, Any]]:
         """Get metrics history for the last N minutes"""
         cutoff = datetime.now() - timedelta(minutes=minutes)
         return [
@@ -132,16 +128,16 @@ async def dashboard():
 async def websocket_endpoint(websocket: WebSocket):
     """WebSocket endpoint for real-time metrics"""
     await websocket.accept()
-    
+
     try:
         while True:
             # Collect and send metrics
             metrics = await monitor.collect_metrics()
             await websocket.send_json(metrics)
-            
+
             # Wait before next update
             await asyncio.sleep(2)  # Update every 2 seconds
-            
+
     except WebSocketDisconnect:
         pass
     except Exception as e:

@@ -5,10 +5,9 @@ Tests all deployed services and endpoints
 """
 
 import sys
-import json
-import time
+from typing import Any
+
 import httpx
-from typing import Dict, Any
 
 # Service endpoints
 SERVICES = {
@@ -31,7 +30,7 @@ AGNO_ENDPOINTS = [
     "/api/ws/status",
 ]
 
-def check_service(name: str, config: Dict[str, Any]) -> bool:
+def check_service(name: str, config: dict[str, Any]) -> bool:
     """Check if a service is running"""
     if config["type"] == "redis":
         try:
@@ -43,7 +42,7 @@ def check_service(name: str, config: Dict[str, Any]) -> bool:
         except Exception as e:
             print(f"❌ {name}: Failed - {e}")
             return False
-    
+
     elif config["type"] == "http":
         try:
             with httpx.Client(timeout=5.0) as client:
@@ -57,14 +56,14 @@ def check_service(name: str, config: Dict[str, Any]) -> bool:
         except Exception as e:
             print(f"❌ {name}: Not accessible - {str(e)[:50]}")
             return False
-    
+
     return False
 
 def test_agno_endpoints():
     """Test new AGNO/MCP endpoints"""
     print("\n🔍 Testing AGNO/MCP Endpoints:")
     base_url = "http://localhost:8005"
-    
+
     with httpx.Client(timeout=5.0) as client:
         for endpoint in AGNO_ENDPOINTS:
             try:
@@ -86,17 +85,17 @@ def main():
     print("=" * 60)
     print("🚀 SOPHIA INTEL AI - DEPLOYMENT VERIFICATION")
     print("=" * 60)
-    
+
     # Check all services
     print("\n📊 Core Services Status:")
     all_healthy = True
     for name, config in SERVICES.items():
         if not check_service(name, config):
             all_healthy = False
-    
+
     # Test AGNO endpoints
     test_agno_endpoints()
-    
+
     # Summary
     print("\n" + "=" * 60)
     if all_healthy:

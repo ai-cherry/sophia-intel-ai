@@ -3,12 +3,12 @@ Observability and Monitoring for Sophia Intel AI
 Provides metrics, tracing, and logging capabilities.
 """
 
-from prometheus_client import Counter, Histogram, Gauge, generate_latest, CONTENT_TYPE_LATEST
 from opentelemetry import trace
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from prometheus_client import CONTENT_TYPE_LATEST, Counter, Gauge, Histogram, generate_latest
 
 try:
     from opentelemetry.exporter.jaeger.thrift import JaegerExporter
@@ -16,15 +16,20 @@ except ImportError:
     # Fallback - disable Jaeger if not available
     JaegerExporter = None
 
+import asyncio
+import logging
+import time
+from collections.abc import Callable
+from datetime import datetime
+from functools import wraps
+from typing import Any
+
 from fastapi import Request, Response
 from fastapi.responses import PlainTextResponse
-import time
-import logging
-import asyncio
-from functools import wraps
-from typing import Callable, Any, Optional, Dict
-from datetime import datetime
-from app.core.circuit_breaker import with_circuit_breaker, get_llm_circuit_breaker, get_weaviate_circuit_breaker, get_redis_circuit_breaker, get_webhook_circuit_breaker
+
+from app.core.circuit_breaker import (
+    with_circuit_breaker,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -157,30 +162,30 @@ component_health = Gauge(
 # Tracing Setup
 # ============================================
 
-def setup_tracing(jaeger_endpoint: Optional[str] = None):
+def setup_tracing(jaeger_endpoint: str | None = None):
     """Initialize OpenTelemetry tracing with Jaeger."""
     if not jaeger_endpoint or JaegerExporter is None:
         logger.info("Tracing disabled (no Jaeger endpoint or exporter unavailable)")
         return None
-    
+
     try:
         # Create Jaeger exporter
         jaeger_exporter = JaegerExporter(
             agent_host_name=jaeger_endpoint.split(':')[0],
             agent_port=int(jaeger_endpoint.split(':')[1]) if ':' in jaeger_endpoint else 6831,
         )
-        
+
         # Create tracer provider
         provider = TracerProvider()
         processor = BatchSpanProcessor(jaeger_exporter)
         provider.add_span_processor(processor)
-        
+
         # Set global tracer provider
         trace.set_tracer_provider(provider)
-        
+
         logger.info(f"Tracing enabled with Jaeger at {jaeger_endpoint}")
         return trace.get_tracer(__name__)
-        
+
     except Exception as e:
         logger.error(f"Failed to setup tracing: {e}")
         return None
@@ -191,35 +196,35 @@ def setup_tracing(jaeger_endpoint: Optional[str] = None):
 
 class MetricsMiddleware:
     """Middleware to collect request metrics."""
-    
+
     async def __call__(self, request: Request, call_next):
         # Skip metrics endpoint itself
         if request.url.path == "/metrics":
             return await call_next(request)
-        
+
         # Start timer
         start_time = time.time()
-        
+
         # Process request
         response = await call_next(request)
-        
+
         # Record metrics
         duration = time.time() - start_time
-        
+
         http_requests_total.labels(
             method=request.method,
             endpoint=request.url.path,
             status=response.status_code
         ).inc()
-        
+
         http_request_duration.labels(
             method=request.method,
             endpoint=request.url.path
         ).observe(duration)
-        
+
         # Add custom headers
         response.headers["X-Request-Duration"] = str(duration)
-        
+
         return response
 
 # ============================================
@@ -233,7 +238,7 @@ def track_memory_operation(operation: str):
         async def async_wrapper(*args, **kwargs):
             start_time = time.time()
             status = "success"
-            
+
             try:
                 result = await func(*args, **kwargs)
                 return result
@@ -244,12 +249,12 @@ def track_memory_operation(operation: str):
                 duration = time.time() - start_time
                 memory_operations_total.labels(operation=operation, status=status).inc()
                 memory_operation_duration.labels(operation=operation).observe(duration)
-        
+
         @wraps(func)
         def sync_wrapper(*args, **kwargs):
             start_time = time.time()
             status = "success"
-            
+
             try:
                 result = func(*args, **kwargs)
                 return result
@@ -260,7 +265,7 @@ def track_memory_operation(operation: str):
                 duration = time.time() - start_time
                 memory_operations_total.labels(operation=operation, status=status).inc()
                 memory_operation_duration.labels(operation=operation).observe(duration)
-        
+
         return async_wrapper if asyncio.iscoroutinefunction(func) else sync_wrapper
     return decorator
 
@@ -272,7 +277,7 @@ def track_search_operation(mode: str):
             start_time = time.time()
             status = "success"
             result_count = 0
-            
+
             try:
                 result = await func(*args, **kwargs)
                 if isinstance(result, list):
@@ -289,7 +294,7 @@ def track_search_operation(mode: str):
                 search_latency.labels(mode=mode).observe(duration)
                 if result_count > 0:
                     search_results_count.labels(mode=mode).observe(result_count)
-        
+
         return wrapper
     return decorator
 
@@ -301,7 +306,7 @@ def track_swarm_execution(team_id: str):
             swarm_active_executions.inc()
             start_time = time.time()
             status = "success"
-            
+
             try:
                 result = await func(*args, **kwargs)
                 return result
@@ -313,7 +318,7 @@ def track_swarm_execution(team_id: str):
                 swarm_active_executions.dec()
                 swarm_executions_total.labels(team_id=team_id, status=status).inc()
                 swarm_execution_duration.labels(team_id=team_id).observe(duration)
-        
+
         return wrapper
     return decorator
 
@@ -323,10 +328,10 @@ def track_swarm_execution(team_id: str):
 
 class MetricsCollector:
     """Collects and exposes system metrics."""
-    
+
     def __init__(self):
         self.start_time = datetime.utcnow()
-    
+
     async def collect_system_metrics(self, state: Any):
         """Collect metrics from system state."""
         try:
@@ -335,7 +340,7 @@ class MetricsCollector:
                 stats = await state.supermemory.get_stats()
                 memory_entries_total.set(stats.get("total_entries", 0))
                 embedding_cache_size.set(stats.get("embedding_cache_size", 0))
-                
+
                 # Cache hit rate
                 cache_hits = stats.get("cache_hits", 0)
                 cache_misses = stats.get("cache_misses", 0)
@@ -343,7 +348,7 @@ class MetricsCollector:
                     memory_cache_hits.inc(cache_hits)
                 if cache_misses > 0:
                     memory_cache_misses.inc(cache_misses)
-            
+
             # Component health
             components = {
                 "supermemory": state.supermemory is not None,
@@ -353,17 +358,17 @@ class MetricsCollector:
                 "gate_manager": state.gate_manager is not None,
                 "orchestrator": state.orchestrator is not None
             }
-            
+
             for component, healthy in components.items():
                 component_health.labels(component=component).set(1 if healthy else 0)
-            
+
             # Overall system health
             all_healthy = all(components.values())
             system_health.set(1 if all_healthy else 0)
-            
+
         except Exception as e:
             logger.error(f"Failed to collect metrics: {e}")
-    
+
     def get_metrics(self) -> str:
         """Generate Prometheus metrics output."""
         return generate_latest().decode('utf-8')
@@ -378,10 +383,10 @@ async def metrics_endpoint(request: Request) -> Response:
     from app.api.unified_server import state
     collector = MetricsCollector()
     await collector.collect_system_metrics(state)
-    
+
     # Generate metrics
     metrics = collector.get_metrics()
-    
+
     return PlainTextResponse(
         content=metrics,
         media_type=CONTENT_TYPE_LATEST
@@ -393,19 +398,19 @@ async def metrics_endpoint(request: Request) -> Response:
 
 def instrument_app(app):
     """Add instrumentation to FastAPI app."""
-    
+
     # Add OpenTelemetry instrumentation
     FastAPIInstrumentor.instrument_app(app)
     HTTPXClientInstrumentor().instrument()
-    
+
     # Add metrics middleware
     app.add_middleware(MetricsMiddleware)
-    
+
     # Add metrics endpoint
     @app.get("/metrics", include_in_schema=False)
     async def get_metrics(request: Request):
         return await metrics_endpoint(request)
-    
+
     logger.info("Observability instrumentation added")
 
 # ============================================
@@ -414,17 +419,17 @@ def instrument_app(app):
 
 class HealthChecker:
     """Performs health checks on system components."""
-    
+
     @staticmethod
-    async def check_memory_system(state: Any) -> Dict[str, Any]:
+    async def check_memory_system(state: Any) -> dict[str, Any]:
         """Check memory system health."""
         try:
             if not state.supermemory:
                 return {"healthy": False, "reason": "Not initialized"}
-            
+
             # Try a simple operation
             stats = await state.supermemory.get_stats()
-            
+
             return {
                 "healthy": True,
                 "entries": stats.get("total_entries", 0),
@@ -432,40 +437,40 @@ class HealthChecker:
             }
         except Exception as e:
             return {"healthy": False, "reason": str(e)}
-    
+
     @staticmethod
     @with_circuit_breaker("database")
-    async def check_search_system(state: Any) -> Dict[str, Any]:
+    async def check_search_system(state: Any) -> dict[str, Any]:
         """Check search system health."""
         try:
             if not state.search_engine:
                 return {"healthy": False, "reason": "Not initialized"}
-            
+
             # Try a test query
             results = await state.search_engine.hybrid_search(
                 query="test",
                 limit=1
             )
-            
+
             return {"healthy": True, "responsive": True}
         except Exception as e:
             return {"healthy": False, "reason": str(e)}
-    
+
     @staticmethod
-    async def check_all_systems(state: Any) -> Dict[str, Any]:
+    async def check_all_systems(state: Any) -> dict[str, Any]:
         """Comprehensive health check."""
         checks = {
             "memory": await HealthChecker.check_memory_system(state),
             "search": await HealthChecker.check_search_system(state),
             "timestamp": datetime.utcnow().isoformat()
         }
-        
+
         all_healthy = all(
-            check.get("healthy", False) 
-            for check in checks.values() 
+            check.get("healthy", False)
+            for check in checks.values()
             if isinstance(check, dict)
         )
-        
+
         return {
             "healthy": all_healthy,
             "checks": checks

@@ -3,12 +3,12 @@ Swarm Performance Optimizer - Circuit Breaker and Performance Monitoring
 Provides robust optimization utilities for AI agent swarms with graceful degradation.
 """
 
-import time
 import json
 import logging
-from typing import Dict, Any, Optional
-from dataclasses import dataclass, field
+import time
 from contextlib import asynccontextmanager
+from dataclasses import dataclass, field
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -137,35 +137,35 @@ class SwarmBenchmarkData:
     """Benchmarking data for swarm performance."""
 
     task_complexity_score: float
-    pattern_weights: Dict[str, float] = field(default_factory=dict)
+    pattern_weights: dict[str, float] = field(default_factory=dict)
     total_execution_time: float = 0.0
     memory_usage_mb: float = 0.0
     quality_score: float = 0.0
-    final_result: Optional[Dict] = None
+    final_result: dict | None = None
 
 
 class GracefulDegradationManager:
     """Manages graceful degradation when components fail."""
 
     def __init__(self):
-        self.degraded_components: Dict[str, Dict[str, Any]] = {}
-        self.recovery_attempts: Dict[str, int] = {}
+        self.degraded_components: dict[str, dict[str, Any]] = {}
+        self.recovery_attempts: dict[str, int] = {}
         self.max_recovery_attempts = 3
 
         # Load degradation strategies from config
         self.degradation_strategies = self._load_degradation_strategies()
 
-    def _load_degradation_strategies(self) -> Dict[str, Dict[str, Any]]:
+    def _load_degradation_strategies(self) -> dict[str, dict[str, Any]]:
         """Load degradation strategies from configuration."""
         try:
-            with open("app/swarms/swarm_optimization_config.json", 'r') as f:
+            with open("app/swarms/swarm_optimization_config.json") as f:
                 config = json.load(f)
                 return config.get("degradation_strategies", {})
         except (FileNotFoundError, json.JSONDecodeError) as e:
             logger.warning(f"Could not load degradation strategies: {e}")
             return self._get_default_strategies()
 
-    def _get_default_strategies(self) -> Dict[str, Dict[str, Any]]:
+    def _get_default_strategies(self) -> dict[str, dict[str, Any]]:
         """Default degradation strategies."""
         return {
             "memory_failure": {
@@ -198,7 +198,7 @@ class GracefulDegradationManager:
         """Check if a component is available."""
         return component_name not in self.degraded_components
 
-    def get_degradation_strategy(self, component_name: str) -> Dict[str, Any]:
+    def get_degradation_strategy(self, component_name: str) -> dict[str, Any]:
         """Get degradation strategy for a component."""
         return self.degradation_strategies.get(component_name, {
             "action": "skip_operation",
@@ -237,24 +237,24 @@ class SwarmOptimizer:
     """Main optimization manager for swarm operations."""
 
     def __init__(self):
-        self.circuit_breakers: Dict[str, CircuitBreaker] = {}
-        self.performance_metrics: Dict[str, PatternPerformanceMetrics] = {}
+        self.circuit_breakers: dict[str, CircuitBreaker] = {}
+        self.performance_metrics: dict[str, PatternPerformanceMetrics] = {}
         self.degradation_manager = GracefulDegradationManager()
-        self.task_complexity_cache: Dict[str, float] = {}
+        self.task_complexity_cache: dict[str, float] = {}
 
         # Load optimization configuration
         self.config = self._load_config()
 
-    def _load_config(self) -> Dict[str, Any]:
+    def _load_config(self) -> dict[str, Any]:
         """Load optimization configuration."""
         try:
-            with open("app/swarms/swarm_optimization_config.json", 'r') as f:
+            with open("app/swarms/swarm_optimization_config.json") as f:
                 return json.load(f)
         except (FileNotFoundError, json.JSONDecodeError) as e:
             logger.warning(f"Could not load optimization config: {e}")
             return self._get_default_config()
 
-    def _get_default_config(self) -> Dict[str, Any]:
+    def _get_default_config(self) -> dict[str, Any]:
         """Default optimization configuration."""
         return {
             "circuit_breaker_defaults": {
@@ -282,7 +282,7 @@ class SwarmOptimizer:
 
         return self.performance_metrics[pattern_name]
 
-    def calculate_task_complexity(self, task: Dict[str, Any]) -> float:
+    def calculate_task_complexity(self, task: dict[str, Any]) -> float:
         """Calculate task complexity score (0-1)."""
         # Cache the result
         task_hash = hash(str(task))
@@ -320,12 +320,12 @@ class SwarmOptimizer:
         self.task_complexity_cache[task_hash] = complexity_score
         return complexity_score
 
-    def get_optimal_swarm_config(self, task: Dict[str, Any]) -> Dict[str, Any]:
+    def get_optimal_swarm_config(self, task: dict[str, Any]) -> dict[str, Any]:
         """Get optimal swarm configuration for a task."""
         complexity = self.calculate_task_complexity(task)
         return self._get_config_for_complexity(complexity, task)
 
-    def _get_config_for_complexity(self, complexity: float, task: Dict[str, Any]) -> Dict[str, Any]:
+    def _get_config_for_complexity(self, complexity: float, task: dict[str, Any]) -> dict[str, Any]:
         """Get configuration based on task complexity."""
         modes = self.config.get("optimization_modes", {})
 
@@ -340,7 +340,7 @@ class SwarmOptimizer:
         else:
             return modes.get("balanced", {})
 
-    async def benchmark_swarm_execution(self, swarm_func, task: Dict[str, Any],
+    async def benchmark_swarm_execution(self, swarm_func, task: dict[str, Any],
                                        *args, **kwargs) -> SwarmBenchmarkData:
         """Benchmark a swarm execution for performance optimization."""
         start_time = time.time()
@@ -374,7 +374,7 @@ class SwarmOptimizer:
         logger.info(f"Benchmarked swarm execution: {execution_time:.2f}s, complexity: {benchmark.task_complexity_score:.2f}")
         return benchmark
 
-    def get_optimization_recommendations(self) -> Dict[str, Any]:
+    def get_optimization_recommendations(self) -> dict[str, Any]:
         """Generate optimization recommendations based on performance data."""
         recommendations = {
             "pattern_performance": {},

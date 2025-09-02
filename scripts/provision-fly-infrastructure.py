@@ -4,34 +4,35 @@ Direct Fly.io Infrastructure Provisioning Script for Sophia Intel AI
 Provisions all 6 microservices using Fly.io REST API directly
 """
 
-import os
 import json
-import requests
+import os
 import sys
 import time
-from typing import Dict, Any, List, Optional
 from dataclasses import dataclass
+from typing import Any
+
+import requests
 
 
 @dataclass
 class ServiceSpec:
     """Specification for a Fly.io service"""
     name: str
-    image: Optional[str] = None
-    dockerfile: Optional[str] = None
+    image: str | None = None
+    dockerfile: str | None = None
     port: int = 8080
     memory_mb: int = 1024
     cpu_cores: float = 1.0
     min_instances: int = 1
     max_instances: int = 4
     volume_size_gb: int = 5
-    env_vars: Optional[Dict[str, str]] = None
+    env_vars: dict[str, str] | None = None
     health_check_path: str = "/health"
 
 
 class FlyInfrastructureProvisioner:
     """Provisions Fly.io infrastructure using direct API calls"""
-    
+
     def __init__(self, api_token: str):
         self.api_token = api_token
         self.headers = {
@@ -40,20 +41,20 @@ class FlyInfrastructureProvisioner:
         }
         self.base_url = "https://api.fly.io/v1"
         self.org_slug = "personal"  # Use personal org
-        
-    def create_app(self, app_name: str) -> Dict[str, Any]:
+
+    def create_app(self, app_name: str) -> dict[str, Any]:
         """Create a Fly.io application"""
         payload = {
             "app_name": app_name,
             "org_slug": self.org_slug
         }
-        
+
         response = requests.post(
             f"{self.base_url}/apps",
             headers=self.headers,
             json=payload
         )
-        
+
         if response.status_code in [200, 201]:
             print(f"✅ Created Fly.io app: {app_name}")
             return response.json()
@@ -72,21 +73,21 @@ class FlyInfrastructureProvisioner:
         else:
             print(f"⚠️  Failed to create app {app_name}: {response.status_code} - {response.text}")
             return {"name": app_name, "status": "error", "error": response.text}
-    
-    def create_volume(self, app_name: str, volume_name: str, size_gb: int, region: str = "sjc") -> Dict[str, Any]:
+
+    def create_volume(self, app_name: str, volume_name: str, size_gb: int, region: str = "sjc") -> dict[str, Any]:
         """Create a persistent volume for an app"""
         payload = {
             "name": volume_name,
             "size_gb": size_gb,
             "region": region
         }
-        
+
         response = requests.post(
             f"{self.base_url}/apps/{app_name}/volumes",
             headers=self.headers,
             json=payload
         )
-        
+
         if response.status_code in [200, 201]:
             print(f"💾 Created {size_gb}GB volume '{volume_name}' for {app_name}")
             return response.json()
@@ -96,24 +97,24 @@ class FlyInfrastructureProvisioner:
         else:
             print(f"⚠️  Volume creation warning for {app_name}: {response.text}")
             return {"name": volume_name, "size_gb": size_gb, "region": region, "status": "warning"}
-    
-    def deploy_service(self, spec: ServiceSpec, primary_region: str = "sjc") -> Dict[str, Any]:
+
+    def deploy_service(self, spec: ServiceSpec, primary_region: str = "sjc") -> dict[str, Any]:
         """Deploy a service with app and volume"""
-        
+
         print(f"\n🚀 Deploying {spec.name}...")
-        
+
         # 1. Create the application
         app_info = self.create_app(spec.name)
-        
+
         # 2. Create volume if needed
         volume_info = None
         if spec.volume_size_gb > 0:
             volume_name = f"{spec.name.replace('-', '_')}_data"
             volume_info = self.create_volume(spec.name, volume_name, spec.volume_size_gb, primary_region)
-        
+
         # 3. Generate fly.toml configuration
         toml_config = self.generate_fly_toml(spec, volume_info, primary_region)
-        
+
         # 4. Write the fly.toml file
         toml_filename = f"fly-{spec.name}.toml"
         try:
@@ -122,7 +123,7 @@ class FlyInfrastructureProvisioner:
             print(f"📄 Generated {toml_filename}")
         except Exception as e:
             print(f"⚠️  Could not write {toml_filename}: {str(e)}")
-        
+
         return {
             "app_name": spec.name,
             "app_info": app_info,
@@ -132,10 +133,10 @@ class FlyInfrastructureProvisioner:
             "internal_url": f"http://{spec.name}.internal:{spec.port}",
             "status": "configured"
         }
-    
-    def generate_fly_toml(self, spec: ServiceSpec, volume_info: Optional[Dict], primary_region: str) -> str:
+
+    def generate_fly_toml(self, spec: ServiceSpec, volume_info: dict | None, primary_region: str) -> str:
         """Generate fly.toml configuration for a service"""
-        
+
         toml_lines = [
             f'app = "{spec.name}"',
             f'primary_region = "{primary_region}"',
@@ -144,18 +145,18 @@ class FlyInfrastructureProvisioner:
             '',
             '[build]'
         ]
-        
+
         if spec.dockerfile:
             toml_lines.append(f'  dockerfile = "{spec.dockerfile}"')
         elif spec.image:
             toml_lines.append(f'  image = "{spec.image}"')
-        
+
         # Environment variables
         if spec.env_vars:
             toml_lines.extend(['', '[env]'])
             for key, value in spec.env_vars.items():
                 toml_lines.append(f'  {key} = "{value}"')
-        
+
         # Experimental features
         toml_lines.extend([
             '',
@@ -163,7 +164,7 @@ class FlyInfrastructureProvisioner:
             '  auto_rollback = true',
             '  enable_consul = true'
         ])
-        
+
         # Services configuration
         toml_lines.extend([
             '',
@@ -197,7 +198,7 @@ class FlyInfrastructureProvisioner:
             '    timeout = "10s"',
             '    tls_skip_verify = false'
         ])
-        
+
         # Volumes configuration
         if volume_info and spec.volume_size_gb > 0:
             toml_lines.extend([
@@ -207,7 +208,7 @@ class FlyInfrastructureProvisioner:
                 '  destination = "/data"',
                 f'  initial_size = "{spec.volume_size_gb}gb"'
             ])
-        
+
         # Machine configuration
         toml_lines.extend([
             '',
@@ -216,7 +217,7 @@ class FlyInfrastructureProvisioner:
             f'  cpus = {spec.cpu_cores}',
             f'  memory_mb = {spec.memory_mb}'
         ])
-        
+
         # Auto-scaling configuration
         toml_lines.extend([
             '',
@@ -232,24 +233,24 @@ class FlyInfrastructureProvisioner:
             '    type = "memory"',
             '    target = 75'
         ])
-        
+
         return '\n'.join(toml_lines)
 
 
 def main():
     """Main provisioning function"""
-    
+
     # Get API token from environment
     fly_api_token = os.environ.get("FLY_API_TOKEN")
     if not fly_api_token:
         print("❌ FLY_API_TOKEN environment variable is required")
         sys.exit(1)
-    
+
     provisioner = FlyInfrastructureProvisioner(fly_api_token)
-    
+
     print("🚀 Starting Sophia Intel AI Infrastructure Provisioning")
     print("=" * 60)
-    
+
     # Define service specifications based on requirements
     services = [
         # 1. Weaviate Vector Database (Foundation Service)
@@ -278,7 +279,7 @@ def main():
                 "GOGC": "100"
             }
         ),
-        
+
         # 2. MCP Memory Management Server
         ServiceSpec(
             name="sophia-mcp",
@@ -301,7 +302,7 @@ def main():
                 "ENABLE_MCP_PROTOCOL": "true"
             }
         ),
-        
+
         # 3. Vector Store with 3-tier embeddings
         ServiceSpec(
             name="sophia-vector",
@@ -328,7 +329,7 @@ def main():
                 "ENABLE_EMBEDDING_CACHE": "true"
             }
         ),
-        
+
         # 4. Unified API - Main Orchestrator (Critical Service)
         ServiceSpec(
             name="sophia-api",
@@ -359,7 +360,7 @@ def main():
                 "ENABLE_MEMORY_DEDUPLICATION": "true"
             }
         ),
-        
+
         # 5. Agno Bridge - UI Compatibility Layer
         ServiceSpec(
             name="sophia-bridge",
@@ -386,7 +387,7 @@ def main():
                 "ENABLE_API_VALIDATION": "true"
             }
         ),
-        
+
         # 6. Agent UI - Next.js Frontend
         ServiceSpec(
             name="sophia-ui",
@@ -414,12 +415,12 @@ def main():
             }
         )
     ]
-    
+
     # Provision all services
     deployed_services = {}
     total_storage = 0
     total_max_instances = 0
-    
+
     for service_spec in services:
         try:
             result = provisioner.deploy_service(service_spec, "sjc")
@@ -430,19 +431,19 @@ def main():
         except Exception as e:
             print(f"❌ Failed to configure {service_spec.name}: {str(e)}")
             deployed_services[service_spec.name] = {"error": str(e)}
-    
+
     # Generate summary report
     print("\n" + "=" * 60)
     print("📊 SOPHIA INTEL AI INFRASTRUCTURE DEPLOYMENT SUMMARY")
     print("=" * 60)
-    
+
     successful_deployments = len([s for s in deployed_services.values() if 'error' not in s])
     print(f"🏗️  Total Services Configured: {successful_deployments}/{len(services)}")
     print(f"💾 Total Storage Provisioned: {total_storage}GB")
     print(f"⚖️  Total Maximum Instances: {total_max_instances}")
-    print(f"🌍 Primary Region: sjc (San Jose)")
-    print(f"🌍 Secondary Region: iad (Washington DC)")
-    
+    print("🌍 Primary Region: sjc (San Jose)")
+    print("🌍 Secondary Region: iad (Washington DC)")
+
     print("\n📱 SERVICE ENDPOINTS:")
     for service_name, result in deployed_services.items():
         if 'error' not in result:
@@ -451,24 +452,24 @@ def main():
             print(f"    - Internal: {result['internal_url']}")
         else:
             print(f"  • {service_name}: ❌ CONFIGURATION FAILED - {result['error']}")
-    
+
     print("\n🔗 INTERNAL NETWORKING:")
     print("  Services communicate via Fly.io internal networking (.internal domains)")
     print("  Health checks configured for all services")
     print("  TLS/HTTPS enabled for all public endpoints")
-    
+
     print("\n⚖️  AUTO-SCALING CONFIGURATION:")
     for service_spec in services:
         print(f"  • {service_spec.name}: {service_spec.min_instances}-{service_spec.max_instances} instances")
         print(f"    Memory: {service_spec.memory_mb}MB, CPU: {service_spec.cpu_cores} cores, Storage: {service_spec.volume_size_gb}GB")
-    
+
     print("\n🎯 NEXT STEPS:")
     print("  1. Deploy each service using: fly deploy --config fly-<service-name>.toml")
     print("  2. Configure secrets via: fly secrets set KEY=VALUE --app <service-name>")
     print("  3. Test internal service communication")
     print("  4. Validate health check endpoints")
     print("  5. Monitor auto-scaling behavior")
-    
+
     # Save deployment results to file
     deployment_summary = {
         "deployment_summary": {
@@ -494,13 +495,13 @@ def main():
             for service_spec in services
         }
     }
-    
+
     with open("fly-deployment-results.json", "w") as f:
         json.dump(deployment_summary, indent=2, fp=f)
-    
-    print(f"\n💾 Deployment results saved to: fly-deployment-results.json")
+
+    print("\n💾 Deployment results saved to: fly-deployment-results.json")
     print("✅ Infrastructure provisioning complete!")
-    
+
     return successful_deployments == len(services)
 
 

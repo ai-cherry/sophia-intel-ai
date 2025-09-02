@@ -2,14 +2,14 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from app.weaviate.weaviate_client import WeaviateClient
 from app.embeddings.together_embeddings import (
-    TogetherEmbeddingService,
     EmbeddingModel,
+    TogetherEmbeddingService,
     get_embedding_service,
 )
+from app.weaviate.weaviate_client import WeaviateClient
 
 logger = logging.getLogger(__name__)
 
@@ -19,9 +19,9 @@ class GraphSearchRequest:
     query: str
     top_k: int = 10
     hops: int = 0  # placeholder for future multi-hop support
-    filters: Dict[str, Any] = field(default_factory=dict)
-    start_nodes: List[str] = field(default_factory=list)
-    model: Optional[str] = None  # EmbeddingModel value
+    filters: dict[str, Any] = field(default_factory=dict)
+    start_nodes: list[str] = field(default_factory=list)
+    model: str | None = None  # EmbeddingModel value
 
 
 @dataclass
@@ -29,19 +29,19 @@ class GraphSearchHit:
     id: str
     text: str
     score: float
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     # For future multi-hop graph paths
-    path: List[str] = field(default_factory=list)
+    path: list[str] = field(default_factory=list)
 
 
 @dataclass
 class GraphSearchResult:
-    hits: List[GraphSearchHit]
+    hits: list[GraphSearchHit]
     query: str
     top_k: int
     hops: int
     used_model: str
-    notes: Optional[str] = None
+    notes: str | None = None
 
 
 class GraphRetriever:
@@ -57,8 +57,8 @@ class GraphRetriever:
 
     def __init__(
         self,
-        weaviate_client: Optional[WeaviateClient] = None,
-        embedding_service: Optional[TogetherEmbeddingService] = None,
+        weaviate_client: WeaviateClient | None = None,
+        embedding_service: TogetherEmbeddingService | None = None,
     ):
         self.weaviate = weaviate_client or WeaviateClient()
         self.embedder = embedding_service or get_embedding_service()
@@ -88,7 +88,7 @@ class GraphRetriever:
             repo_path=repo_path,
         )
 
-        hits: List[GraphSearchHit] = []
+        hits: list[GraphSearchHit] = []
         for h in vec_hits:
             hits.append(
                 GraphSearchHit(

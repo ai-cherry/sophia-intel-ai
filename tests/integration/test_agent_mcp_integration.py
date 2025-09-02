@@ -5,34 +5,32 @@ This demonstrates the complete integration and coordination.
 """
 
 import asyncio
-import httpx
-import json
 import sys
-from datetime import datetime
 from pathlib import Path
+
+import httpx
 
 # Add app to path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from app.memory.supermemory_mcp import SupermemoryStore, MemoryEntry
 from app.memory.dual_tier_embeddings import DualTierEmbedder
-from app.memory.hybrid_search import HybridSearchEngine
 from app.memory.enhanced_mcp_server import EnhancedMCPServer, MCPServerConfig
+from app.memory.supermemory_mcp import MemoryEntry, SupermemoryStore
 from app.tools.integrated_manager import IntegratedToolManager
 
 BASE_URL = "http://localhost:8001"
 
 class AgentMCPIntegrationTest:
     """Test suite proving agent-MCP integration."""
-    
+
     def __init__(self):
         self.results = {}
-        
+
     async def test_mcp_servers_active(self):
         """Verify all MCP servers are running and responsive."""
         print("\n🔍 TESTING MCP SERVERS")
         print("=" * 60)
-        
+
         # Test Enhanced MCP Server
         print("\n1️⃣ Enhanced MCP Server with Connection Pooling:")
         config = MCPServerConfig(
@@ -40,31 +38,31 @@ class AgentMCPIntegrationTest:
             retry_attempts=3,
             enable_metrics=True
         )
-        
+
         mcp_server = EnhancedMCPServer(config)
         try:
             await mcp_server.initialize_pool()
             print("  ✅ Connection pool initialized: 5 connections")
-            
+
             health = await mcp_server.health_check()
             print(f"  ✅ Health check: {health['status']}")
-            
+
             metrics = await mcp_server.get_metrics()
             print(f"  ✅ Metrics active: {metrics['available_connections']} connections available")
-            
+
             self.results['enhanced_mcp'] = True
         except Exception as e:
             print(f"  ❌ Failed: {e}")
             self.results['enhanced_mcp'] = False
         finally:
             await mcp_server.close()
-        
+
         # Test Supermemory MCP
         print("\n2️⃣ Supermemory MCP (Persistent Memory):")
         try:
             memory_store = SupermemoryStore()
             await memory_store.initialize()
-            
+
             # Add a test memory
             test_entry = MemoryEntry(
                 topic="Integration Test",
@@ -73,32 +71,32 @@ class AgentMCPIntegrationTest:
                 tags=["test", "integration"],
                 memory_type="episodic"
             )
-            
+
             result = await memory_store.add_to_memory(test_entry)
             print(f"  ✅ Memory added: {result}")
-            
+
             # Search memory
             search_results = await memory_store.search_memory("integration", limit=5)
             print(f"  ✅ Memory search working: {len(search_results)} results")
-            
+
             # Get stats
             stats = await memory_store.get_memory_stats()
             print(f"  ✅ Memory stats: {stats['total_entries']} total entries")
-            
+
             self.results['supermemory_mcp'] = True
         except Exception as e:
             print(f"  ❌ Failed: {e}")
             self.results['supermemory_mcp'] = False
-        
+
         return all(self.results.values())
-    
+
     async def test_embedding_systems(self):
         """Test dual-tier embedding systems."""
         print("\n🧮 TESTING EMBEDDING SYSTEMS")
         print("=" * 60)
-        
+
         embedder = DualTierEmbedder()
-        
+
         # Test different content types
         test_texts = [
             {
@@ -114,7 +112,7 @@ class AgentMCPIntegrationTest:
                 "metadata": {"priority": "critical", "retention": "permanent"}
             }
         ]
-        
+
         print("\n📊 Embedding Analysis:")
         for i, item in enumerate(test_texts, 1):
             tier = embedder._determine_tier(item["text"], item["metadata"])
@@ -122,83 +120,83 @@ class AgentMCPIntegrationTest:
             print(f"  → Tier: {tier}")
             print(f"  → Priority: {item['metadata']['priority']}")
             print(f"  → Dimension: {'768D' if tier == 'A' else '1024D'}")
-        
+
         # Test batch embedding
         texts = [item["text"] for item in test_texts]
         metadatas = [item["metadata"] for item in test_texts]
-        
+
         results = await embedder.embed_batch(texts, metadatas)
-        
+
         print(f"\n  ✅ Batch embedding complete: {len(results)} embeddings")
         print(f"  ✅ Tier-A assignments: {results['tier_a_count']}")
         print(f"  ✅ Tier-B assignments: {results['tier_b_count']}")
-        
+
         self.results['embeddings'] = True
         return True
-    
+
     async def test_agent_mcp_interaction(self):
         """Test how agents interact with MCP servers."""
         print("\n🤝 TESTING AGENT-MCP INTERACTION")
         print("=" * 60)
-        
+
         # Initialize integrated tool manager (used by agents)
         manager = IntegratedToolManager()
-        
+
         # Create a session context (represents an agent task)
         context = await manager.create_context(
             session_id="agent_test_001",
             task_description="Implement user authentication with MCP memory"
         )
-        
+
         print(f"\n✅ Agent session created: {context.session_id}")
         print(f"   Task: {context.task_description}")
-        
+
         # Agent reads from memory
         print("\n📖 Agent Reading from Memory:")
         memory_result = await self._simulate_agent_memory_read(manager, context.session_id)
-        print(f"   → Agent searched for: 'authentication patterns'")
+        print("   → Agent searched for: 'authentication patterns'")
         print(f"   → Found {memory_result.get('count', 0)} relevant memories")
-        
+
         # Agent writes to memory
         print("\n✍️ Agent Writing to Memory:")
         write_result = await self._simulate_agent_memory_write(manager, context.session_id)
-        print(f"   → Agent stored: New authentication implementation")
+        print("   → Agent stored: New authentication implementation")
         print(f"   → Status: {write_result.get('status', 'unknown')}")
-        
+
         # Agent uses tools with shared context
         print("\n🔧 Agent Using Tools with Context:")
         tool_result = await manager.execute_tool(
             session_id=context.session_id,
             tool_name="git_status"
         )
-        print(f"   → Tool: git_status")
+        print("   → Tool: git_status")
         print(f"   → Success: {tool_result.success}")
         print(f"   → Execution time: {tool_result.execution_time_ms:.2f}ms")
-        
+
         # Show context evolution
         summary = await manager.get_context_summary(context.session_id)
-        print(f"\n📊 Context Evolution:")
+        print("\n📊 Context Evolution:")
         print(f"   → Executions: {summary['execution_count']}")
         print(f"   → Modified files: {summary['modified_files']}")
         print(f"   → Last tools: {summary['last_tools']}")
-        
+
         self.results['agent_mcp_interaction'] = True
         return True
-    
+
     async def _simulate_agent_memory_read(self, manager, session_id):
         """Simulate agent reading from memory."""
         # In real system, agent would use memory through API
         memory_store = SupermemoryStore()
         await memory_store.initialize()
-        
+
         results = await memory_store.search_memory("authentication", limit=5)
         return {"count": len(results), "results": results}
-    
+
     async def _simulate_agent_memory_write(self, manager, session_id):
         """Simulate agent writing to memory."""
         memory_store = SupermemoryStore()
         await memory_store.initialize()
-        
+
         entry = MemoryEntry(
             topic="Authentication Implementation",
             content="JWT-based authentication with refresh tokens",
@@ -206,15 +204,15 @@ class AgentMCPIntegrationTest:
             tags=["auth", "jwt", "security"],
             memory_type="procedural"
         )
-        
+
         result = await memory_store.add_to_memory(entry)
         return {"status": "success", "entry_id": entry.hash_id}
-    
+
     async def test_unified_api_integration(self):
         """Test the unified API that coordinates everything."""
         print("\n🌐 TESTING UNIFIED API INTEGRATION")
         print("=" * 60)
-        
+
         async with httpx.AsyncClient(timeout=30.0) as client:
             # Test health endpoint
             print("\n1. Health Check:")
@@ -222,7 +220,7 @@ class AgentMCPIntegrationTest:
             health_data = health.json()
             print(f"   ✅ API Status: {health_data['status']}")
             print(f"   ✅ Systems: {list(health_data['systems'].keys())}")
-            
+
             # Test memory addition through API
             print("\n2. Memory Operations via API:")
             memory_add = await client.post(
@@ -236,7 +234,7 @@ class AgentMCPIntegrationTest:
             )
             add_result = memory_add.json()
             print(f"   ✅ Memory added via API: {add_result['status']}")
-            
+
             # Test memory search through API
             memory_search = await client.post(
                 f"{BASE_URL}/memory/search",
@@ -244,7 +242,7 @@ class AgentMCPIntegrationTest:
             )
             search_result = memory_search.json()
             print(f"   ✅ Memory search via API: {search_result['count']} results")
-            
+
             # Test stats endpoint
             print("\n3. System Statistics:")
             stats = await client.get(f"{BASE_URL}/stats")
@@ -252,49 +250,49 @@ class AgentMCPIntegrationTest:
             print(f"   ✅ Memory entries: {stats_data['memory']['total_entries']}")
             print(f"   ✅ Cache entries: {stats_data['embeddings']['cache']['total_cached']}")
             print(f"   ✅ Graph entities: {stats_data['graph']['total_entities']}")
-            
+
             self.results['unified_api'] = True
             return True
-    
+
     async def run_all_tests(self):
         """Run all integration tests."""
         print("🚀 AGENT-MCP INTEGRATION TEST SUITE")
         print("=" * 60)
         print("Proving all systems are active and coordinated...")
-        
+
         tests = [
             ("MCP Servers", self.test_mcp_servers_active),
             ("Embedding Systems", self.test_embedding_systems),
             ("Agent-MCP Interaction", self.test_agent_mcp_interaction),
             ("Unified API", self.test_unified_api_integration)
         ]
-        
+
         for name, test_func in tests:
             try:
                 await test_func()
             except Exception as e:
                 print(f"\n❌ {name} failed: {e}")
                 self.results[name] = False
-        
+
         # Summary
         print("\n" + "=" * 60)
         print("📊 INTEGRATION TEST RESULTS")
         print("=" * 60)
-        
+
         for key, value in self.results.items():
             status = "✅ ACTIVE" if value else "❌ FAILED"
             print(f"{key:25} {status}")
-        
+
         success_rate = sum(1 for v in self.results.values() if v) / len(self.results) * 100
         print(f"\n🎯 Integration Score: {success_rate:.1f}%")
-        
+
         if success_rate == 100:
             print("🎉 PERFECT! All systems are active and coordinated!")
         elif success_rate >= 75:
             print("✅ GOOD! Most systems are working properly")
         else:
             print("⚠️ Some systems need attention")
-        
+
         return success_rate == 100
 
 # ==============================================================================
@@ -303,7 +301,7 @@ class AgentMCPIntegrationTest:
 
 class SwarmDecisionProcess:
     """Explains how each swarm processes directions and determines actions."""
-    
+
     @staticmethod
     def explain_standard_team():
         """Explain 5-agent team decision process."""
@@ -352,7 +350,7 @@ class SwarmDecisionProcess:
            • Monitors execution metrics
            • Stores results in MCP memory
         """
-    
+
     @staticmethod
     def explain_advanced_swarm():
         """Explain 10+ agent swarm decision process."""
@@ -407,7 +405,7 @@ class SwarmDecisionProcess:
            • Triggers deployment pipeline
            • Updates MCP with project learnings
         """
-    
+
     @staticmethod
     def explain_genesis_swarm():
         """Explain GENESIS swarm decision process."""
@@ -484,31 +482,31 @@ class SwarmDecisionProcess:
 
 async def main():
     """Run integration tests and explain swarm processes."""
-    
+
     # Run integration tests
     print("=" * 60)
     print("PART 1: PROVING SYSTEM INTEGRATION")
     print("=" * 60)
-    
+
     tester = AgentMCPIntegrationTest()
     integration_success = await tester.run_all_tests()
-    
+
     # Explain swarm decision processes
     print("\n" + "=" * 60)
     print("PART 2: SWARM DECISION PROCESSES")
     print("=" * 60)
-    
+
     explainer = SwarmDecisionProcess()
-    
+
     print(explainer.explain_standard_team())
     print(explainer.explain_advanced_swarm())
     print(explainer.explain_genesis_swarm())
-    
+
     # Summary
     print("\n" + "=" * 60)
     print("INTEGRATION SUMMARY")
     print("=" * 60)
-    
+
     print("""
     ✅ MCP SERVERS: Provide persistent memory and context
     ✅ EMBEDDINGS: Dual-tier system for intelligent routing
@@ -521,7 +519,7 @@ async def main():
     for memory, context, and coordination. Each swarm has a unique
     decision process optimized for its complexity level.
     """)
-    
+
     return 0 if integration_success else 1
 
 if __name__ == "__main__":

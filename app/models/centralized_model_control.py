@@ -3,8 +3,8 @@ CENTRALIZED MODEL CONTROL
 Only use these specific models - NO OTHERS!
 """
 
-from typing import Dict, List, Optional
 from enum import Enum
+
 
 class ModelPurpose(Enum):
     """Model usage purposes"""
@@ -22,7 +22,7 @@ class CentralizedModelControl:
     CENTRALIZED MODEL CONTROL - ONLY USE THESE MODELS!
     Dashboard integration for model selection and monitoring
     """
-    
+
     # ONLY THESE MODELS - NO OTHERS!
     APPROVED_MODELS = {
         # PRIMARY MODELS
@@ -38,7 +38,7 @@ class CentralizedModelControl:
             "priority": 2,
             "cost_tier": "premium"
         },
-        
+
         # SPECIALIZED MODELS (FROM YOUR LIST)
         "x-ai/grok-code-fast-1": {
             "purpose": ModelPurpose.FAST_CODING,
@@ -89,7 +89,7 @@ class CentralizedModelControl:
             "cost_tier": "standard"
         }
     }
-    
+
     # TASK-TO-MODEL MAPPING
     TASK_ROUTING = {
         "critical_decision": ["openai/gpt-5", "x-ai/grok-4"],  # GPT-5 decides, Grok-4 counters
@@ -100,7 +100,7 @@ class CentralizedModelControl:
         "quick_tasks": ["openai/gpt-5-mini", "x-ai/grok-code-fast-1"],
         "deep_reasoning": ["qwen/qwen3-30b-a3b-thinking-2507", "openai/gpt-5"]
     }
-    
+
     def __init__(self):
         self.active_model = "openai/gpt-5"  # Default to most important
         self.fallback_chain = [
@@ -108,9 +108,9 @@ class CentralizedModelControl:
             "x-ai/grok-4",
             "qwen/qwen3-30b-a3b-thinking-2507"
         ]
-        self.usage_stats = {model: 0 for model in self.APPROVED_MODELS}
-        self.model_health = {model: "healthy" for model in self.APPROVED_MODELS}
-    
+        self.usage_stats = dict.fromkeys(self.APPROVED_MODELS, 0)
+        self.model_health = dict.fromkeys(self.APPROVED_MODELS, "healthy")
+
     def select_model(self, task_type: str, importance: str = "normal") -> str:
         """
         Select appropriate model based on task and importance
@@ -122,29 +122,29 @@ class CentralizedModelControl:
         elif importance == "counter":
             # Use Grok-4 for counter-reasoning
             return "x-ai/grok-4"
-        
+
         # Get models for task type
         models = self.TASK_ROUTING.get(task_type, ["openai/gpt-5"])
-        
+
         # Return first healthy model
         for model in models:
             if self.model_health.get(model) == "healthy":
                 return model
-        
+
         # Fallback to GPT-5
         return "openai/gpt-5"
-    
+
     def validate_model(self, model: str) -> bool:
         """Check if model is in approved list"""
         return model in self.APPROVED_MODELS
-    
-    def get_model_info(self, model: str) -> Optional[Dict]:
+
+    def get_model_info(self, model: str) -> dict | None:
         """Get information about a model"""
         if not self.validate_model(model):
             raise ValueError(f"Model {model} is NOT APPROVED! Use only: {list(self.APPROVED_MODELS.keys())}")
         return self.APPROVED_MODELS.get(model)
-    
-    def get_dashboard_data(self) -> Dict:
+
+    def get_dashboard_data(self) -> dict:
         """Get data for dashboard display"""
         return {
             "approved_models": list(self.APPROVED_MODELS.keys()),
@@ -157,19 +157,19 @@ class CentralizedModelControl:
                 "counter_reasoning": "x-ai/grok-4"
             }
         }
-    
+
     def update_model_health(self, model: str, status: str):
         """Update model health status"""
         if self.validate_model(model):
             self.model_health[model] = status
-            
+
             # If primary model fails, switch to fallback
             if model == self.active_model and status != "healthy":
                 for fallback in self.fallback_chain:
                     if self.model_health.get(fallback) == "healthy":
                         self.active_model = fallback
                         break
-    
+
     def record_usage(self, model: str):
         """Record model usage for monitoring"""
         if self.validate_model(model):

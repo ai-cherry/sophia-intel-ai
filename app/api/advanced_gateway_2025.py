@@ -4,15 +4,19 @@ Latest August 2025 models with virtual keys and smart routing.
 NO OpenAI dependency required.
 """
 
-import os
 import json
-import httpx
 import logging
-from typing import Dict, Any, List, Optional
+import os
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any
+
+import httpx
 from dotenv import load_dotenv
-from app.core.circuit_breaker import with_circuit_breaker, get_llm_circuit_breaker, get_weaviate_circuit_breaker, get_redis_circuit_breaker, get_webhook_circuit_breaker
+
+from app.core.circuit_breaker import (
+    with_circuit_breaker,
+)
 
 # Load environment variables
 load_dotenv('.env.local')
@@ -22,7 +26,7 @@ logger = logging.getLogger(__name__)
 class TaskType(Enum):
     """Task-based model routing."""
     REASONING = "reasoning"
-    CREATIVE = "creative" 
+    CREATIVE = "creative"
     CODING = "coding"
     FAST = "fast"
     GENERAL = "general"
@@ -52,20 +56,20 @@ class AdvancedAIGateway2025:
             "cost_saved": 0.0,
             "last_reset": None
         }
-    
+
     @with_circuit_breaker("external_api")
     def validate_environment(self):
         """Validate required API keys."""
         required_keys = [
             "PORTKEY_API_KEY",
-            "OPENROUTER_API_KEY", 
+            "OPENROUTER_API_KEY",
             "ANTHROPIC_API_KEY"
         ]
-        
+
         missing_keys = [key for key in required_keys if not os.getenv(key)]
         if missing_keys:
             raise ValueError(f"Missing required API keys: {', '.join(missing_keys)}")
-        
+
         logger.info("✅ All virtual key dependencies validated")
 
     @with_circuit_breaker("external_api")
@@ -79,35 +83,35 @@ class AdvancedAIGateway2025:
                 max_tokens=4000,
                 temperature=0.3
             ),
-            
+
             TaskType.CREATIVE: ModelConfig2025(
                 model_name="google/gemini-2.0-flash-exp",  # Latest Gemini via OpenRouter
                 virtual_key="vkj-openrouter-cc4151",  # Your OpenRouter virtual key
                 max_tokens=6000,
                 temperature=0.8
             ),
-            
+
             TaskType.CODING: ModelConfig2025(
                 model_name="anthropic/claude-3.5-sonnet-20241022",  # Latest Claude via OpenRouter
                 virtual_key="vkj-openrouter-cc4151",  # Your OpenRouter virtual key
                 max_tokens=4000,
                 temperature=0.2
             ),
-            
+
             TaskType.FAST: ModelConfig2025(
                 model_name="openai/gpt-4o-mini-2024-07-18",  # Speed optimized via OpenRouter
                 virtual_key="vkj-openrouter-cc4151",  # Your OpenRouter virtual key
                 max_tokens=2000,
                 temperature=0.7
             ),
-            
+
             TaskType.GENERAL: ModelConfig2025(
                 model_name="anthropic/claude-3.5-sonnet-20241022",  # Reliable default
                 virtual_key="vkj-openrouter-cc4151",  # Your OpenRouter virtual key
                 max_tokens=3000,
                 temperature=0.7
             ),
-            
+
             TaskType.EMBEDDINGS: ModelConfig2025(
                 model_name="togethercomputer/m2-bert-80M-32k-retrieval",  # 32k context
                 virtual_key="together-ai-670469",  # Your Together AI virtual key
@@ -159,10 +163,10 @@ class AdvancedAIGateway2025:
 
     @with_circuit_breaker("external_api")
     async def chat_completion(self,
-                            messages: List[Dict[str, str]],
+                            messages: list[dict[str, str]],
                             task_type: TaskType = TaskType.GENERAL,
                             stream: bool = False,
-                            **kwargs) -> Dict[str, Any]:
+                            **kwargs) -> dict[str, Any]:
         """Execute chat completion with latest 2025 models via Portkey virtual keys and semantic caching."""
 
         # Update cache metrics
@@ -231,32 +235,32 @@ class AdvancedAIGateway2025:
             return result
 
     @with_circuit_breaker("external_api")
-    async def generate_embeddings(self, 
-                                texts: List[str],
-                                model: str = "togethercomputer/m2-bert-80M-32k-retrieval") -> Dict[str, Any]:
+    async def generate_embeddings(self,
+                                texts: list[str],
+                                model: str = "togethercomputer/m2-bert-80M-32k-retrieval") -> dict[str, Any]:
         """Generate embeddings using Together AI via Portkey virtual keys."""
-        
+
         headers = {
             "x-portkey-api-key": os.getenv("PORTKEY_API_KEY"),
             "x-portkey-config": json.dumps(self.portkey_configs["embedding_config"]),
             "x-portkey-provider": "@TOGETHER_EMBEDDINGS",
             "content-type": "application/json"
         }
-        
+
         payload = {
             "input": texts,
             "model": model
         }
-        
+
         async with httpx.AsyncClient(timeout=30.0) as client:
             logger.info(f"Generating embeddings with {model} via Together AI")
-            
+
             response = await client.post(
                 "https://api.portkey.ai/v1/embeddings",
                 headers=headers,
                 json=payload
             )
-            
+
             if response.status_code != 200:
                 error_details = response.text
                 raise httpx.HTTPStatusError(
@@ -264,26 +268,26 @@ class AdvancedAIGateway2025:
                     request=response.request,
                     response=response
                 )
-            
+
             result = response.json()
             result["provider"] = "together_ai"
             result["virtual_key"] = "@TOGETHER_EMBEDDINGS"
-            
+
             return result
 
-    async def smart_chat(self, 
-                        messages: List[Dict[str, str]], 
+    async def smart_chat(self,
+                        messages: list[dict[str, str]],
                         task_type: TaskType = TaskType.GENERAL,
-                        **kwargs) -> Dict[str, Any]:
+                        **kwargs) -> dict[str, Any]:
         """Smart model routing based on task type with latest 2025 models."""
-        
+
         try:
             # Primary attempt with latest models
             return await self.chat_completion(messages, task_type, **kwargs)
-            
+
         except Exception as primary_error:
             logger.warning(f"Primary model {task_type.value} failed: {primary_error}")
-            
+
             # Smart fallback based on task type
             fallback_map = {
                 TaskType.REASONING: TaskType.GENERAL,
@@ -292,19 +296,19 @@ class AdvancedAIGateway2025:
                 TaskType.FAST: TaskType.GENERAL,
                 TaskType.GENERAL: TaskType.FAST
             }
-            
+
             fallback_type = fallback_map.get(task_type, TaskType.FAST)
-            
+
             try:
                 logger.info(f"Trying fallback: {fallback_type.value}")
                 return await self.chat_completion(messages, fallback_type, **kwargs)
-                
+
             except Exception as fallback_error:
                 logger.error(f"All models failed. Primary: {primary_error}, Fallback: {fallback_error}")
                 raise Exception(f"Smart routing failed: {primary_error}")
 
     @with_circuit_breaker("external_api")
-    async def get_latest_models(self) -> Dict[str, List[str]]:
+    async def get_latest_models(self) -> dict[str, list[str]]:
         """Get available latest 2025 models from OpenRouter."""
         try:
             async with httpx.AsyncClient() as client:
@@ -313,11 +317,11 @@ class AdvancedAIGateway2025:
                     headers={"Authorization": f"Bearer {os.getenv('OPENROUTER_API_KEY')}"},
                     timeout=10.0
                 )
-                
+
                 if response.status_code == 200:
                     data = response.json()
                     models = data.get("data", [])
-                    
+
                     # Filter latest 2025 models
                     latest_models = {
                         "gpt_5_models": [m["id"] for m in models if "gpt-5" in m["id"]],
@@ -326,18 +330,18 @@ class AdvancedAIGateway2025:
                         "llama_4_models": [m["id"] for m in models if "llama-4" in m["id"]],
                         "all_models": [m["id"] for m in models]
                     }
-                    
+
                     return latest_models
                 else:
                     logger.error(f"Failed to get models: {response.status_code}")
                     return {"error": f"HTTP {response.status_code}"}
-                    
+
         except Exception as e:
             logger.error(f"Error fetching models: {e}")
             return {"error": str(e)}
 
     @with_circuit_breaker("external_api")
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """Comprehensive health check for all virtual key providers."""
         health_status = {}
 
@@ -391,7 +395,7 @@ class AdvancedAIGateway2025:
         }
 
     @with_circuit_breaker("external_api")
-    def get_cache_statistics(self) -> Dict[str, Any]:
+    def get_cache_statistics(self) -> dict[str, Any]:
         """Get comprehensive cache performance statistics."""
         total = self.cache_metrics["total_requests"]
         hits = self.cache_metrics["hits"]
@@ -416,7 +420,7 @@ class AdvancedAIGateway2025:
         }
 
     @with_circuit_breaker("external_api")
-    async def invalidate_cache(self, pattern: Optional[str] = None, model: Optional[str] = None) -> Dict[str, Any]:
+    async def invalidate_cache(self, pattern: str | None = None, model: str | None = None) -> dict[str, Any]:
         """Invalidate cache entries based on pattern or model."""
         try:
             # Prepare invalidation request
@@ -465,11 +469,11 @@ class AdvancedAIGateway2025:
                 "model": model
             }
 
-    async def clear_all_cache(self) -> Dict[str, Any]:
+    async def clear_all_cache(self) -> dict[str, Any]:
         """Clear all cached entries across all models."""
         return await self.invalidate_cache()
 
-    async def invalidate_model_cache(self, model_name: str) -> Dict[str, Any]:
+    async def invalidate_model_cache(self, model_name: str) -> dict[str, Any]:
         """Invalidate cache for a specific model."""
         return await self.invalidate_cache(model=model_name)
 
@@ -497,33 +501,33 @@ def get_advanced_gateway() -> AdvancedAIGateway2025:
 
 # Convenience functions for easy integration
 @with_circuit_breaker("external_api")
-async def chat_with_gpt5(messages: List[Dict[str, str]], **kwargs) -> Dict[str, Any]:
+async def chat_with_gpt5(messages: list[dict[str, str]], **kwargs) -> dict[str, Any]:
     """Chat with latest GPT-5 via OpenRouter virtual key."""
     gateway = get_advanced_gateway()
     return await gateway.smart_chat(messages, TaskType.REASONING, **kwargs)
 
 @with_circuit_breaker("external_api")
-async def chat_with_gemini25_pro(messages: List[Dict[str, str]], **kwargs) -> Dict[str, Any]:
+async def chat_with_gemini25_pro(messages: list[dict[str, str]], **kwargs) -> dict[str, Any]:
     """Chat with Gemini 2.5 Pro (1M context) via OpenRouter virtual key."""
     gateway = get_advanced_gateway()
     return await gateway.smart_chat(messages, TaskType.CREATIVE, **kwargs)
 
 @with_circuit_breaker("external_api")
-async def chat_with_claude_sonnet4(messages: List[Dict[str, str]], **kwargs) -> Dict[str, Any]:
+async def chat_with_claude_sonnet4(messages: list[dict[str, str]], **kwargs) -> dict[str, Any]:
     """Chat with Claude Sonnet 4 via OpenRouter virtual key."""
     gateway = get_advanced_gateway()
     return await gateway.smart_chat(messages, TaskType.CODING, **kwargs)
 
 @with_circuit_breaker("llm")
-async def generate_embeddings_32k(texts: List[str]) -> Dict[str, Any]:
+async def generate_embeddings_32k(texts: list[str]) -> dict[str, Any]:
     """Generate embeddings with 32k context via Together AI virtual key."""
     gateway = get_advanced_gateway()
     return await gateway.generate_embeddings(texts)
 
-async def smart_route_chat(messages: List[Dict[str, str]], task_hint: str = "general") -> Dict[str, Any]:
+async def smart_route_chat(messages: list[dict[str, str]], task_hint: str = "general") -> dict[str, Any]:
     """Automatically route to best model based on task hint."""
     gateway = get_advanced_gateway()
-    
+
     # Smart task detection
     task_keywords = {
         TaskType.REASONING: ["analyze", "reason", "logic", "math", "problem", "think"],
@@ -531,16 +535,16 @@ async def smart_route_chat(messages: List[Dict[str, str]], task_hint: str = "gen
         TaskType.CODING: ["code", "program", "debug", "function", "algorithm", "python"],
         TaskType.FAST: ["quick", "simple", "fast", "brief", "short"]
     }
-    
+
     # Detect task type from content
     content = " ".join([m.get("content", "") for m in messages]).lower()
     task_hint_lower = task_hint.lower()
-    
+
     detected_task = TaskType.GENERAL
     for task_type, keywords in task_keywords.items():
         if any(keyword in content or keyword in task_hint_lower for keyword in keywords):
             detected_task = task_type
             break
-    
+
     logger.info(f"Smart routing detected task: {detected_task.value}")
     return await gateway.smart_chat(messages, detected_task)

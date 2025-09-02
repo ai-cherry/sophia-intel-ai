@@ -3,11 +3,12 @@ Plugin Architecture for Sophia Intel AI
 Base classes and interfaces for dynamic plugin loading.
 """
 
-from abc import ABC, abstractmethod
-from typing import Dict, Any, List, Optional
-from pydantic import BaseModel, Field
-from datetime import datetime
 import logging
+from abc import ABC, abstractmethod
+from datetime import datetime
+from typing import Any
+
+from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
 
@@ -21,9 +22,9 @@ class PluginMetadata(BaseModel):
     version: str = Field(..., description="Semantic version")
     description: str = Field(..., description="Plugin description")
     author: str = Field(..., description="Plugin author")
-    entry_points: List[str] = Field(default_factory=list, description="Entry points")
-    dependencies: List[str] = Field(default_factory=list, description="Required dependencies")
-    tags: List[str] = Field(default_factory=list, description="Plugin tags")
+    entry_points: list[str] = Field(default_factory=list, description="Entry points")
+    dependencies: list[str] = Field(default_factory=list, description="Required dependencies")
+    tags: list[str] = Field(default_factory=list, description="Plugin tags")
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 # ============================================
@@ -32,14 +33,14 @@ class PluginMetadata(BaseModel):
 
 class Plugin(ABC):
     """Base class for all plugins."""
-    
+
     def __init__(self):
-        self.metadata: Optional[PluginMetadata] = None
+        self.metadata: PluginMetadata | None = None
         self._initialized = False
-        self._config: Dict[str, Any] = {}
-    
+        self._config: dict[str, Any] = {}
+
     @abstractmethod
-    async def initialize(self, config: Dict[str, Any]) -> None:
+    async def initialize(self, config: dict[str, Any]) -> None:
         """Initialize plugin with configuration.
         
         Args:
@@ -47,18 +48,18 @@ class Plugin(ABC):
         """
         self._config = config
         self._initialized = True
-    
+
     @abstractmethod
     async def cleanup(self) -> None:
         """Cleanup plugin resources."""
         self._initialized = False
-    
+
     @property
     def is_initialized(self) -> bool:
         """Check if plugin is initialized."""
         return self._initialized
-    
-    def validate_config(self, config: Dict[str, Any]) -> bool:
+
+    def validate_config(self, config: dict[str, Any]) -> bool:
         """Validate plugin configuration.
         
         Args:
@@ -71,12 +72,12 @@ class Plugin(ABC):
 
 class SwarmPlugin(Plugin):
     """Base class for swarm plugins."""
-    
+
     @abstractmethod
     async def execute_task(
         self,
         task: str,
-        context: Dict[str, Any],
+        context: dict[str, Any],
         stream: bool = False
     ) -> Any:
         """Execute a swarm task.
@@ -89,17 +90,17 @@ class SwarmPlugin(Plugin):
         Returns:
             Task execution result
         """
-    
+
     @abstractmethod
-    def get_agents(self) -> List[Dict[str, Any]]:
+    def get_agents(self) -> list[dict[str, Any]]:
         """Get list of agents in the swarm.
         
         Returns:
             List of agent configurations
         """
-    
+
     @abstractmethod
-    def get_capabilities(self) -> List[str]:
+    def get_capabilities(self) -> list[str]:
         """Get swarm capabilities.
         
         Returns:
@@ -108,12 +109,12 @@ class SwarmPlugin(Plugin):
 
 class ToolPlugin(Plugin):
     """Base class for tool plugins."""
-    
+
     @abstractmethod
     async def execute(
         self,
         operation: str,
-        parameters: Dict[str, Any]
+        parameters: dict[str, Any]
     ) -> Any:
         """Execute a tool operation.
         
@@ -124,9 +125,9 @@ class ToolPlugin(Plugin):
         Returns:
             Operation result
         """
-    
+
     @abstractmethod
-    def get_operations(self) -> List[str]:
+    def get_operations(self) -> list[str]:
         """Get available operations.
         
         Returns:
@@ -135,13 +136,13 @@ class ToolPlugin(Plugin):
 
 class MemoryPlugin(Plugin):
     """Base class for memory plugins."""
-    
+
     @abstractmethod
     async def store(
         self,
         key: str,
         value: Any,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: dict[str, Any] | None = None
     ) -> bool:
         """Store data in memory.
         
@@ -153,12 +154,12 @@ class MemoryPlugin(Plugin):
         Returns:
             Success status
         """
-    
+
     @abstractmethod
     async def retrieve(
         self,
         key: str
-    ) -> Optional[Any]:
+    ) -> Any | None:
         """Retrieve data from memory.
         
         Args:
@@ -167,13 +168,13 @@ class MemoryPlugin(Plugin):
         Returns:
             Stored value or None
         """
-    
+
     @abstractmethod
     async def search(
         self,
         query: str,
         limit: int = 10
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Search memory.
         
         Args:
@@ -190,7 +191,7 @@ class MemoryPlugin(Plugin):
 
 class IPluginValidator:
     """Interface for plugin validation."""
-    
+
     def validate_metadata(self, metadata: PluginMetadata) -> bool:
         """Validate plugin metadata."""
         required_fields = ['name', 'version', 'description', 'author']
@@ -198,12 +199,12 @@ class IPluginValidator:
             if not getattr(metadata, field, None):
                 return False
         return True
-    
-    def validate_dependencies(self, dependencies: List[str]) -> bool:
+
+    def validate_dependencies(self, dependencies: list[str]) -> bool:
         """Validate plugin dependencies."""
         # Check if all dependencies are available
         return True  # Implement actual check
-    
+
     def validate_interface(self, plugin: Plugin) -> bool:
         """Validate plugin implements required interface."""
         required_methods = {
@@ -211,7 +212,7 @@ class IPluginValidator:
             ToolPlugin: ['execute', 'get_operations'],
             MemoryPlugin: ['store', 'retrieve', 'search']
         }
-        
+
         plugin_type = type(plugin).__bases__[0]
         if plugin_type in required_methods:
             for method in required_methods[plugin_type]:
@@ -228,14 +229,14 @@ class PluginEvent(BaseModel):
     plugin_name: str
     event_type: str
     timestamp: datetime = Field(default_factory=datetime.utcnow)
-    data: Dict[str, Any] = Field(default_factory=dict)
+    data: dict[str, Any] = Field(default_factory=dict)
 
 class PluginEventHandler:
     """Handle plugin events."""
-    
+
     def __init__(self):
-        self._handlers: Dict[str, List[callable]] = {}
-    
+        self._handlers: dict[str, list[callable]] = {}
+
     def register_handler(
         self,
         event_type: str,
@@ -250,7 +251,7 @@ class PluginEventHandler:
         if event_type not in self._handlers:
             self._handlers[event_type] = []
         self._handlers[event_type].append(handler)
-    
+
     async def emit(
         self,
         event: PluginEvent
@@ -273,27 +274,27 @@ class PluginEventHandler:
 
 class PluginHooks:
     """Hooks for plugin lifecycle."""
-    
+
     @staticmethod
     async def on_load(plugin: Plugin) -> None:
         """Called when plugin is loaded."""
         logger.info(f"Plugin {plugin.metadata.name} loaded")
-    
+
     @staticmethod
     async def on_initialize(plugin: Plugin) -> None:
         """Called when plugin is initialized."""
         logger.info(f"Plugin {plugin.metadata.name} initialized")
-    
+
     @staticmethod
     async def on_execute(plugin: Plugin, task: str) -> None:
         """Called before plugin executes task."""
         logger.debug(f"Plugin {plugin.metadata.name} executing: {task}")
-    
+
     @staticmethod
     async def on_cleanup(plugin: Plugin) -> None:
         """Called when plugin is cleaned up."""
         logger.info(f"Plugin {plugin.metadata.name} cleaned up")
-    
+
     @staticmethod
     async def on_error(plugin: Plugin, error: Exception) -> None:
         """Called when plugin encounters error."""

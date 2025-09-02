@@ -12,28 +12,28 @@ Backed by the existing embed_router (Portkey Virtual Keys) with SQLite cache.
 
 from __future__ import annotations
 
-import os
 import logging
-from typing import List, Dict, Any, Optional, Tuple
-from datetime import datetime
-
 import math
+import os
+from datetime import datetime
+from typing import Any
+
+from app.core.circuit_breaker import with_circuit_breaker
 
 # Reuse existing dual-tier router and cache
 from app.memory.embed_router import (
-    choose_model_for_chunk,
-    embed_with_cache,
-    MODEL_A,
-    MODEL_B,
     DIM_A,
     DIM_B,
+    MODEL_A,
+    MODEL_B,
+    choose_model_for_chunk,
+    embed_with_cache,
 )
-from app.core.circuit_breaker import with_circuit_breaker
 
 logger = logging.getLogger(__name__)
 
 
-def _l2_normalize(vec: List[float]) -> List[float]:
+def _l2_normalize(vec: list[float]) -> list[float]:
     """L2-normalize a vector to unit length to stabilize ensemble combination."""
     norm = math.sqrt(sum(v * v for v in vec))
     if norm == 0.0:
@@ -41,7 +41,7 @@ def _l2_normalize(vec: List[float]) -> List[float]:
     return [v / norm for v in vec]
 
 
-def _average_vectors(a: List[float], b: List[float]) -> List[float]:
+def _average_vectors(a: list[float], b: list[float]) -> list[float]:
     """Average two vectors (assumes same dimension)."""
     if len(a) != len(b):
         # Pad the smaller to the larger with zeros
@@ -49,7 +49,7 @@ def _average_vectors(a: List[float], b: List[float]) -> List[float]:
             a = a + [0.0] * (len(b) - len(a))
         else:
             b = b + [0.0] * (len(a) - len(b))
-    return [(x + y) / 2.0 for x, y in zip(a, b)]
+    return [(x + y) / 2.0 for x, y in zip(a, b, strict=False)]
 
 
 class UnifiedEmbeddingCoordinator:
@@ -64,13 +64,13 @@ class UnifiedEmbeddingCoordinator:
         self.strategies = ["performance", "accuracy", "hybrid", "auto"]
 
     def _batch_by_model(
-        self, texts: List[str], langs: Optional[List[Optional[str]]] = None, priorities: Optional[List[Optional[str]]] = None
-    ) -> Dict[str, List[Tuple[int, str]]]:
+        self, texts: list[str], langs: list[str | None] | None = None, priorities: list[str | None] | None = None
+    ) -> dict[str, list[tuple[int, str]]]:
         """
         Partition texts into batches by the selected model using choose_model_for_chunk.
         Returns dict[model_name] = list of (index, text).
         """
-        batches: Dict[str, List[Tuple[int, str]]] = {}
+        batches: dict[str, list[tuple[int, str]]] = {}
         for i, text in enumerate(texts):
             lang = (langs[i] if langs and i < len(langs) else None)
             pri = (priorities[i] if priorities and i < len(priorities) else None)
@@ -78,18 +78,18 @@ class UnifiedEmbeddingCoordinator:
             batches.setdefault(model, []).append((i, text))
         return batches
 
-    def _embed_model(self, model: str, batch: List[str]) -> List[List[float]]:
+    def _embed_model(self, model: str, batch: list[str]) -> list[list[float]]:
         """Embed a batch of texts using a specific model with caching."""
         return embed_with_cache(batch, model=model)
 
-    def _combine_hybrid(self, texts: List[str]) -> List[List[float]]:
+    def _combine_hybrid(self, texts: list[str]) -> list[list[float]]:
         """
         Hybrid: compute both Tier A and Tier B, normalize, then average.
         """
         v_a = embed_with_cache(texts, model=MODEL_A)
         v_b = embed_with_cache(texts, model=MODEL_B)
-        out: List[List[float]] = []
-        for a_vec, b_vec in zip(v_a, v_b):
+        out: list[list[float]] = []
+        for a_vec, b_vec in zip(v_a, v_b, strict=False):
             a_norm = _l2_normalize(a_vec)
             b_norm = _l2_normalize(b_vec)
             out.append(_average_vectors(a_norm, b_norm))
@@ -98,11 +98,11 @@ class UnifiedEmbeddingCoordinator:
     @with_circuit_breaker("llm")
     def generate_embeddings(
         self,
-        texts: List[str],
-        strategy: Optional[str] = None,
-        langs: Optional[List[Optional[str]]] = None,
-        priorities: Optional[List[Optional[str]]] = None,
-    ) -> Dict[str, Any]:
+        texts: list[str],
+        strategy: str | None = None,
+        langs: list[str | None] | None = None,
+        priorities: list[str | None] | None = None,
+    ) -> dict[str, Any]:
         """
         Generate embeddings with a selected strategy.
 
@@ -131,7 +131,7 @@ class UnifiedEmbeddingCoordinator:
             }
 
         use_strategy = (strategy or self.default_strategy).lower()
-        provider_models: Dict[int, str] = {}
+        provider_models: dict[int, str] = {}
 
         if use_strategy == "performance":
             # Tier B only
@@ -176,7 +176,7 @@ class UnifiedEmbeddingCoordinator:
         # Default: auto (per-text model selection)
         batches = self._batch_by_model(texts, langs=langs, priorities=priorities)
         # Prepare output buffer
-        outputs: List[Optional[List[float]]] = [None] * len(texts)
+        outputs: list[list[float] | None] = [None] * len(texts)
 
         for model, pairs in batches.items():
             idxs = [i for i, _t in pairs]
@@ -204,7 +204,7 @@ class UnifiedEmbeddingCoordinator:
 
 
 # Singleton accessor
-_coordinator_singleton: Optional[UnifiedEmbeddingCoordinator] = None
+_coordinator_singleton: UnifiedEmbeddingCoordinator | None = None
 
 
 def get_embedding_coordinator() -> UnifiedEmbeddingCoordinator:

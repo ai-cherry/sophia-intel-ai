@@ -1,9 +1,7 @@
 from __future__ import annotations
 
-from typing import List
 
-
-def chunk_text(text: str, max_chunk_size: int = 1000, max_chunks: int = 1000) -> List[str]:
+def chunk_text(text: str, max_chunk_size: int = 1000, max_chunks: int = 1000) -> list[str]:
     """
     Simple, stable text chunker that splits text into manageable chunks.
     
@@ -42,8 +40,8 @@ def chunk_text(text: str, max_chunk_size: int = 1000, max_chunks: int = 1000) ->
     if not text:
         return []
 
-    chunks: List[str] = []
-    current: List[str] = []
+    chunks: list[str] = []
+    current: list[str] = []
     current_len = 0
 
     # Prefer paragraphs but keep single newlines

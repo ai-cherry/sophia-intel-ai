@@ -1,10 +1,10 @@
-from openai import AsyncOpenAI
-import httpx
-import os
 import logging
-from typing import List, Dict, Any, Optional
+import os
 import time
-from prometheus_client import Counter, Histogram, CollectorRegistry, REGISTRY
+
+import httpx
+from openai import AsyncOpenAI
+from prometheus_client import REGISTRY, Counter, Histogram
 
 # Initialize Prometheus metrics with duplicate handling
 try:
@@ -128,7 +128,7 @@ class OpenRouterGateway:
             )
         )
 
-    async def chat_completion(self, model: str, messages: List[Dict], **kwargs):
+    async def chat_completion(self, model: str, messages: list[dict], **kwargs):
         """Unified chat completion for OpenRouter models with GPT-5 optimizations"""
         # GPT-5 specific text transformation when enabled
         if model == "openai/gpt-5" and kwargs.get("think_hard"):
@@ -149,7 +149,7 @@ class OpenRouterGateway:
             model_latency_seconds.labels(model=model).observe(latency)
             self._track_cost(model, completion.usage)
             return completion
-        except Exception as e:
+        except Exception:
             # Fallback chain on failure
             fallback_model = self._get_fallback(model)
             if fallback_model:
@@ -166,7 +166,7 @@ class OpenRouterGateway:
         model_info = AVAILABLE_MODELS[model]
         input_cost = (usage.prompt_tokens / 1_000_000) * model_info["input_cost"]
         output_cost = (usage.completion_tokens / 1_000_000) * model_info["output_cost"]
-        
+
         # Update Prometheus counters
         model_tokens_total.labels(model=model, type="input").inc(usage.prompt_tokens)
         model_tokens_total.labels(model=model, type="output").inc(usage.completion_tokens)
@@ -174,33 +174,33 @@ class OpenRouterGateway:
         model_cost_usd_total.labels(model=model, type="output").inc(output_cost)
         model_cost_usd_today.labels(model=model).inc(input_cost + output_cost)
 
-    def _get_fallback(self, model: str) -> Optional[str]:
+    def _get_fallback(self, model: str) -> str | None:
         """Generate fallback chain for unavailable models"""
         fallback_chain = {
             "openai/gpt-5": [
-                "anthropic/claude-sonnet-4", 
-                "google/gemini-2.5-pro", 
+                "anthropic/claude-sonnet-4",
+                "google/gemini-2.5-pro",
                 "z-ai/glm-4.5-air"
             ],
             "x-ai/grok-4": [
-                "anthropic/claude-sonnet-4", 
-                "google/gemini-2.5-pro", 
+                "anthropic/claude-sonnet-4",
+                "google/gemini-2.5-pro",
                 "z-ai/glm-4.5-air"
             ],
             "anthropic/claude-sonnet-4": [
-                "google/gemini-2.5-pro", 
+                "google/gemini-2.5-pro",
                 "z-ai/glm-4.5-air"
             ],
             "x-ai/grok-code-fast-1": [
-                "google/gemini-2.5-flash", 
+                "google/gemini-2.5-flash",
                 "z-ai/glm-4.5-air"
             ],
             "google/gemini-2.5-flash": [
-                "google/gemini-2.5-pro", 
+                "google/gemini-2.5-pro",
                 "z-ai/glm-4.5-air"
             ],
             "google/gemini-2.5-pro": [
-                "google/gemini-2.5-flash", 
+                "google/gemini-2.5-flash",
                 "z-ai/glm-4.5-air"
             ],
             "deepseek/deepseek-chat-v3.1": [
@@ -215,7 +215,7 @@ if __name__ == "__main__":
     import asyncio
     import logging
     logging.basicConfig(level=logging.INFO)
-    
+
     async def test_gateway():
         gateway = OpenRouterGateway()
         print("Testing GPT-5 with think_hard")
@@ -227,7 +227,7 @@ if __name__ == "__main__":
             think_hard=True
         )
         print(f"GPT-5 Response: {response.choices[0].message.content}")
-        
+
         print("\nTesting fallback chain (invalid model)")
         try:
             response = await gateway.chat_completion(
@@ -238,5 +238,5 @@ if __name__ == "__main__":
             print(f"Fallback Response: {response.choices[0].message.content}")
         except Exception as e:
             print(f"Fallback failed: {str(e)}")
-    
+
     asyncio.run(test_gateway())

@@ -5,16 +5,18 @@ Focused test for consciousness measurement functionality.
 """
 
 import asyncio
+
 from app.swarms.consciousness_tracking import ConsciousnessTracker
+
 
 async def test_consciousness_measurement():
     """Test basic consciousness measurement."""
     print("🧠 Testing consciousness measurement...")
-    
+
     # Create tracker
     tracker = ConsciousnessTracker("test_swarm", "test_swarm_001")
     print(f"   ✅ Tracker created: {tracker}")
-    
+
     # Test context data
     test_context = {
         "agent_count": 5,
@@ -52,19 +54,19 @@ async def test_consciousness_measurement():
             "avg_confidence": 0.7
         }
     }
-    
+
     try:
         # Test consciousness measurement
         measurements = await tracker.measure_consciousness(test_context)
         print(f"   📊 Measurements returned: {len(measurements)} dimensions")
-        
+
         if measurements:
             for dim_type, measurement in measurements.items():
                 print(f"      {dim_type.value}: {measurement.value:.3f} (confidence: {measurement.confidence:.3f})")
-            print(f"   ✅ Consciousness measurement - SUCCESS")
+            print("   ✅ Consciousness measurement - SUCCESS")
         else:
-            print(f"   🚨 Consciousness measurement - FAILED (empty result)")
-            
+            print("   🚨 Consciousness measurement - FAILED (empty result)")
+
     except Exception as e:
         print(f"   🚨 Consciousness measurement - ERROR: {e}")
         import traceback

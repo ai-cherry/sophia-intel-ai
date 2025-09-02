@@ -4,10 +4,10 @@ Final End-to-End OpenRouter Integration Test
 """
 
 import asyncio
-import httpx
-import json
-import os
 from datetime import datetime
+
+import httpx
+
 
 async def test_complete_flow():
     """Test complete integration flow"""
@@ -15,13 +15,13 @@ async def test_complete_flow():
     print("FINAL OPENROUTER INTEGRATION TEST")
     print("=" * 60)
     print(f"Timestamp: {datetime.now().isoformat()}\n")
-    
+
     results = {
         "services": {},
         "models": {},
         "features": {}
     }
-    
+
     # 1. Test all services are running
     print("1️⃣ Testing Service Availability...")
     services = {
@@ -31,7 +31,7 @@ async def test_complete_flow():
         "MCP Memory": "http://localhost:8001/health",
         "MCP Code Review": "http://localhost:8003/health"
     }
-    
+
     async with httpx.AsyncClient(timeout=3.0) as client:
         for name, url in services.items():
             try:
@@ -41,7 +41,7 @@ async def test_complete_flow():
             except:
                 results["services"][name] = False
                 print(f"  {name}: ❌")
-    
+
     # 2. Test model availability
     print("\n2️⃣ Testing Model Registry...")
     try:
@@ -49,7 +49,7 @@ async def test_complete_flow():
         if response.status_code == 200:
             models = response.json()
             print(f"  Found {len(models)} models")
-            
+
             # Check for key models
             key_models = ["gpt-5", "claude", "gemini", "deepseek"]
             for key in key_models:
@@ -60,7 +60,7 @@ async def test_complete_flow():
             print(f"  ❌ Models endpoint returned {response.status_code}")
     except Exception as e:
         print(f"  ❌ Models test failed: {e}")
-    
+
     # 3. Test cost tracking
     print("\n3️⃣ Testing Cost Tracking...")
     try:
@@ -75,8 +75,8 @@ async def test_complete_flow():
             print(f"  ❌ Metrics endpoint returned {response.status_code}")
     except:
         results["features"]["cost_tracking"] = False
-        print(f"  ❌ Cost tracking unavailable")
-    
+        print("  ❌ Cost tracking unavailable")
+
     # 4. Test fallback mechanism
     print("\n4️⃣ Testing Fallback Chains...")
     try:
@@ -86,20 +86,20 @@ async def test_complete_flow():
             "model": "invalid-model-xyz",
             "max_tokens": 10
         }
-        
+
         response = await client.post(
             "http://localhost:8005/chat/completions",
             json=test_payload,
             timeout=5.0
         )
-        
+
         # If we get a response despite invalid model, fallback worked
         results["features"]["fallback"] = response.status_code in [200, 400, 404]
         print(f"  Fallback mechanism: {'✅' if results['features']['fallback'] else '❌'}")
     except:
         results["features"]["fallback"] = False
-        print(f"  ❌ Fallback test failed")
-    
+        print("  ❌ Fallback test failed")
+
     # 5. Test WebSocket availability
     print("\n5️⃣ Testing WebSocket Endpoints...")
     ws_endpoints = ["/ws/bus", "/ws/swarm", "/ws/teams"]
@@ -107,7 +107,7 @@ async def test_complete_flow():
         # Just check if the unified API is running (WebSocket test requires actual connection)
         results["features"][f"ws_{endpoint}"] = results["services"].get("Unified API", False)
         print(f"  ws://localhost:8005{endpoint}: {'✅' if results['features'][f'ws_{endpoint}'] else '❌'}")
-    
+
     # 6. Test UI cost panel
     print("\n6️⃣ Testing UI Components...")
     try:
@@ -117,26 +117,26 @@ async def test_complete_flow():
         print(f"  Streamlit cost panel: {'✅' if has_streamlit else '⚠️ Manual verification needed'}")
     except:
         results["features"]["ui_cost_panel"] = False
-        print(f"  ❌ UI test failed")
-    
+        print("  ❌ UI test failed")
+
     # Generate final report
     print("\n" + "=" * 60)
     print("INTEGRATION TEST SUMMARY")
     print("=" * 60)
-    
+
     # Calculate scores
     service_score = sum(1 for v in results["services"].values() if v)
     model_score = sum(1 for v in results["models"].values() if v)
     feature_score = sum(1 for v in results["features"].values() if v)
-    
+
     total_tests = len(results["services"]) + len(results["models"]) + len(results["features"])
     passed_tests = service_score + model_score + feature_score
-    
+
     print(f"\nServices: {service_score}/{len(results['services'])}")
     print(f"Models: {model_score}/{len(results['models'])}")
     print(f"Features: {feature_score}/{len(results['features'])}")
     print(f"\nOverall: {passed_tests}/{total_tests} tests passed ({passed_tests/total_tests*100:.0f}%)")
-    
+
     # Final verdict
     print("\n" + "=" * 60)
     if passed_tests >= total_tests * 0.8:
@@ -149,7 +149,7 @@ async def test_complete_flow():
         print("❌ INTEGRATION NOT READY")
         print("Major issues need to be resolved")
     print("=" * 60)
-    
+
     return passed_tests / total_tests
 
 if __name__ == "__main__":

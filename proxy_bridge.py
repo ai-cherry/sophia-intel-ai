@@ -3,11 +3,11 @@
 Proxy bridge to connect UI on 7777 to API server on 8000
 """
 
+import httpx
+import uvicorn
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
-import httpx
-import uvicorn
 
 app = FastAPI()
 
@@ -25,22 +25,22 @@ BACKEND_URL = "http://localhost:8000"
 @app.api_route("/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
 async def proxy(path: str, request: Request):
     """Proxy all requests to the backend server."""
-    
+
     # Build the backend URL
     url = f"{BACKEND_URL}/{path}"
-    
+
     # Get the query params
     params = dict(request.query_params)
-    
+
     # Get headers
     headers = dict(request.headers)
     headers.pop("host", None)
-    
+
     # Get body if present
     body = None
     if request.method in ["POST", "PUT"]:
         body = await request.body()
-    
+
     # Make the request to backend
     async with httpx.AsyncClient(timeout=60.0) as client:
         response = await client.request(
@@ -51,19 +51,19 @@ async def proxy(path: str, request: Request):
             content=body,
             follow_redirects=True
         )
-        
+
         # Check if it's a streaming response
         if "text/event-stream" in response.headers.get("content-type", ""):
             async def stream():
                 async for chunk in response.aiter_bytes():
                     yield chunk
-            
+
             return StreamingResponse(
                 stream(),
                 media_type=response.headers.get("content-type"),
                 headers=dict(response.headers)
             )
-        
+
         # Return regular response
         return Response(
             content=response.content,

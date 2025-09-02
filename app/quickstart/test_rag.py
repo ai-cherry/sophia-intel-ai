@@ -4,18 +4,19 @@ Quick Test Script for RAG Pipeline
 Phase 2, Week 1-2: Verify RAG pipeline functionality
 """
 
+import argparse
+import json
 import os
 import sys
-import json
 import time
-import argparse
-from typing import Dict, Any
 from datetime import datetime
+from typing import Any
 
 # Add parent directory to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from rag.basic_rag import BasicRAGPipeline, RAGConfig
+
 
 # Color codes for terminal output
 class Colors:
@@ -60,7 +61,7 @@ def print_info(message: str):
 def test_connection(rag: BasicRAGPipeline) -> bool:
     """Test connections to Weaviate and Ollama"""
     print_section("Testing Connections")
-    
+
     try:
         stats = rag.get_stats()
         if stats["status"] == "success":
@@ -80,7 +81,7 @@ def test_connection(rag: BasicRAGPipeline) -> bool:
 def test_ingestion(rag: BasicRAGPipeline) -> bool:
     """Test document ingestion"""
     print_section("Testing Document Ingestion")
-    
+
     # Sample documents to ingest
     documents = [
         {
@@ -111,7 +112,7 @@ def test_ingestion(rag: BasicRAGPipeline) -> bool:
             "source": "rag_explained.txt"
         }
     ]
-    
+
     success_count = 0
     for doc in documents:
         try:
@@ -123,15 +124,15 @@ def test_ingestion(rag: BasicRAGPipeline) -> bool:
                 print_error(f"Failed to ingest {doc['source']}: {result.get('error')}")
         except Exception as e:
             print_error(f"Failed to ingest {doc['source']}: {e}")
-    
+
     print_info(f"Successfully ingested {success_count}/{len(documents)} documents")
     return success_count > 0
 
 
-def test_queries(rag: BasicRAGPipeline) -> Dict[str, Any]:
+def test_queries(rag: BasicRAGPipeline) -> dict[str, Any]:
     """Test various queries and measure performance"""
     print_section("Testing Query and Retrieval")
-    
+
     test_queries = [
         "What is Artificial Intelligence?",
         "Explain the difference between Machine Learning and Deep Learning",
@@ -139,29 +140,29 @@ def test_queries(rag: BasicRAGPipeline) -> Dict[str, Any]:
         "How does a neural network work?",
         "What is Sophia Intel AI?"  # This should trigger "don't know" response
     ]
-    
+
     results = []
     total_time = 0
-    
+
     for i, query in enumerate(test_queries, 1):
         print(f"\n{Colors.PURPLE}Query {i}: {query}{Colors.END}")
-        
+
         start_time = time.time()
         try:
             response = rag.query(query, return_sources=True)
             elapsed_time = time.time() - start_time
             total_time += elapsed_time
-            
+
             if response["status"] == "success":
                 print(f"{Colors.GREEN}Answer:{Colors.END} {response['answer'][:200]}...")
-                
+
                 if "sources" in response and response["sources"]:
                     print(f"{Colors.CYAN}Sources:{Colors.END}")
                     for source in response["sources"][:2]:  # Show first 2 sources
                         print(f"  • {source['source']}: {source['content'][:100]}...")
-                
+
                 print(f"{Colors.YELLOW}Response time: {elapsed_time:.2f}s{Colors.END}")
-                
+
                 results.append({
                     "query": query,
                     "success": True,
@@ -182,7 +183,7 @@ def test_queries(rag: BasicRAGPipeline) -> Dict[str, Any]:
                 "success": False,
                 "error": str(e)
             })
-    
+
     # Calculate metrics
     successful_queries = [r for r in results if r.get("success")]
     if successful_queries:
@@ -191,7 +192,7 @@ def test_queries(rag: BasicRAGPipeline) -> Dict[str, Any]:
     else:
         avg_time = 0
         avg_sources = 0
-    
+
     return {
         "total_queries": len(test_queries),
         "successful_queries": len(successful_queries),
@@ -205,7 +206,7 @@ def test_queries(rag: BasicRAGPipeline) -> Dict[str, Any]:
 def test_file_ingestion(rag: BasicRAGPipeline) -> bool:
     """Test file ingestion capability"""
     print_section("Testing File Ingestion")
-    
+
     # Create a test file
     test_file = "test_document.txt"
     test_content = """
@@ -222,21 +223,21 @@ def test_file_ingestion(rag: BasicRAGPipeline) -> bool:
     
     This test ensures that the file ingestion pipeline works correctly.
     """
-    
+
     try:
         # Write test file
         with open(test_file, 'w') as f:
             f.write(test_content)
-        
+
         # Ingest the file
         result = rag.ingest_file(test_file)
-        
+
         # Clean up
         os.remove(test_file)
-        
+
         if result["status"] == "success":
             print_success(f"Successfully ingested file: {result['chunks_created']} chunks created")
-            
+
             # Test query on the ingested content
             response = rag.query("What features are being tested in the test document?")
             if response["status"] == "success":
@@ -246,7 +247,7 @@ def test_file_ingestion(rag: BasicRAGPipeline) -> bool:
         else:
             print_error(f"File ingestion failed: {result.get('error')}")
             return False
-            
+
     except Exception as e:
         print_error(f"File ingestion test failed: {e}")
         if os.path.exists(test_file):
@@ -254,19 +255,19 @@ def test_file_ingestion(rag: BasicRAGPipeline) -> bool:
         return False
 
 
-def benchmark_performance(rag: BasicRAGPipeline) -> Dict[str, Any]:
+def benchmark_performance(rag: BasicRAGPipeline) -> dict[str, Any]:
     """Run performance benchmarks"""
     print_section("Performance Benchmarks")
-    
+
     benchmarks = {}
-    
+
     # Test ingestion speed
     print_info("Testing ingestion speed...")
     large_text = " ".join(["This is a test sentence." for _ in range(1000)])
     start_time = time.time()
     result = rag.ingest_text(large_text, "benchmark_doc")
     ingestion_time = time.time() - start_time
-    
+
     if result["status"] == "success":
         benchmarks["ingestion"] = {
             "chunks": result["chunks_created"],
@@ -274,7 +275,7 @@ def benchmark_performance(rag: BasicRAGPipeline) -> Dict[str, Any]:
             "chunks_per_second": result["chunks_created"] / ingestion_time
         }
         print_success(f"Ingestion: {result['chunks_created']} chunks in {ingestion_time:.2f}s")
-    
+
     # Test query speed
     print_info("Testing query speed...")
     query_times = []
@@ -282,7 +283,7 @@ def benchmark_performance(rag: BasicRAGPipeline) -> Dict[str, Any]:
         start_time = time.time()
         rag.query("What is a test sentence?")
         query_times.append(time.time() - start_time)
-    
+
     avg_query_time = sum(query_times) / len(query_times)
     benchmarks["query"] = {
         "average_time": avg_query_time,
@@ -290,7 +291,7 @@ def benchmark_performance(rag: BasicRAGPipeline) -> Dict[str, Any]:
         "max_time": max(query_times)
     }
     print_success(f"Query: avg {avg_query_time:.2f}s, min {min(query_times):.2f}s, max {max(query_times):.2f}s")
-    
+
     return benchmarks
 
 
@@ -302,35 +303,35 @@ def main():
     parser.add_argument("--model", default="llama3.2:3b", help="LLM model to use")
     parser.add_argument("--clear", action="store_true", help="Clear existing collection before testing")
     parser.add_argument("--benchmark", action="store_true", help="Run performance benchmarks")
-    
+
     args = parser.parse_args()
-    
+
     print_header("🧪 SOPHIA INTEL AI - RAG PIPELINE TEST")
     print(f"Started at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    
+
     # Configure RAG
     config = RAGConfig(
         ollama_base_url=args.ollama_url,
         weaviate_url=args.weaviate_url,
         llm_model=args.model
     )
-    
-    print_info(f"Configuration:")
+
+    print_info("Configuration:")
     print(f"  • Ollama URL: {config.ollama_base_url}")
     print(f"  • Weaviate URL: {config.weaviate_url}")
     print(f"  • LLM Model: {config.llm_model}")
-    
+
     try:
         # Initialize RAG pipeline
         print_section("Initializing RAG Pipeline")
         rag = BasicRAGPipeline(config)
         print_success("RAG pipeline initialized")
-        
+
         # Clear collection if requested
         if args.clear:
             print_info("Clearing existing collection...")
             rag.clear_collection()
-        
+
         # Run tests
         test_results = {
             "timestamp": datetime.now().isoformat(),
@@ -341,7 +342,7 @@ def main():
             },
             "tests": {}
         }
-        
+
         # Test 1: Connection
         if test_connection(rag):
             test_results["tests"]["connection"] = "passed"
@@ -349,31 +350,31 @@ def main():
             test_results["tests"]["connection"] = "failed"
             print_error("Connection test failed. Exiting...")
             return
-        
+
         # Test 2: Ingestion
         if test_ingestion(rag):
             test_results["tests"]["ingestion"] = "passed"
         else:
             test_results["tests"]["ingestion"] = "failed"
-        
+
         # Test 3: Queries
         query_results = test_queries(rag)
         test_results["tests"]["queries"] = query_results
-        
+
         # Test 4: File Ingestion
         if test_file_ingestion(rag):
             test_results["tests"]["file_ingestion"] = "passed"
         else:
             test_results["tests"]["file_ingestion"] = "failed"
-        
+
         # Test 5: Benchmarks (optional)
         if args.benchmark:
             benchmark_results = benchmark_performance(rag)
             test_results["benchmarks"] = benchmark_results
-        
+
         # Print summary
         print_header("📊 TEST SUMMARY")
-        
+
         print_section("Test Results")
         for test_name, result in test_results["tests"].items():
             if isinstance(result, str):
@@ -384,20 +385,20 @@ def main():
                 print(f"📊 Queries: {result['successful_queries']}/{result['total_queries']} ({success_rate:.0f}%)")
                 print(f"   • Avg response time: {result['average_response_time']:.2f}s")
                 print(f"   • Avg sources retrieved: {result['average_sources_retrieved']:.1f}")
-        
+
         # Save results to file
         results_file = f"rag_test_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
         with open(results_file, 'w') as f:
             json.dump(test_results, f, indent=2)
         print_info(f"Results saved to: {results_file}")
-        
+
         # Final stats
         stats = rag.get_stats()
         print_section("Final Statistics")
         print(f"Total documents in collection: {stats['document_count']}")
-        
+
         print_header("✨ RAG PIPELINE TEST COMPLETED")
-        
+
     except Exception as e:
         print_error(f"Test failed with error: {e}")
         import traceback

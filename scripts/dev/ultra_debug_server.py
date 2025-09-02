@@ -1,9 +1,9 @@
-from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import StreamingResponse
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, ValidationError
 import json
-import time
+
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
+from pydantic import BaseModel, ValidationError
 
 app = FastAPI()
 
@@ -43,60 +43,60 @@ async def get_workflows():
 @app.post("/teams/run")
 async def run_team_ultra_debug(request: Request):
     print(f"\n{'='*60}")
-    print(f"ULTRA DEBUG: INCOMING REQUEST")
+    print("ULTRA DEBUG: INCOMING REQUEST")
     print(f"{'='*60}")
-    
+
     # Headers
-    print(f"Headers:")
+    print("Headers:")
     for key, value in request.headers.items():
         print(f"  {key}: {value}")
-    
+
     # Raw body
     raw_body = await request.body()
     print(f"\nRaw Body ({len(raw_body)} bytes):")
     print(f"  {raw_body!r}")
-    
+
     try:
         # Parse JSON
         json_data = json.loads(raw_body)
-        print(f"\nParsed JSON:")
+        print("\nParsed JSON:")
         print(f"  {json.dumps(json_data, indent=2)}")
-        
+
         # Check each field
-        print(f"\nField Analysis:")
+        print("\nField Analysis:")
         print(f"  message: {json_data.get('message')!r} (type: {type(json_data.get('message'))})")
         print(f"  team_id: {json_data.get('team_id')!r} (type: {type(json_data.get('team_id'))})")
         print(f"  additional_data: {json_data.get('additional_data')!r} (type: {type(json_data.get('additional_data'))})")
-        
+
         # Try Pydantic validation
-        print(f"\nPydantic Validation:")
+        print("\nPydantic Validation:")
         try:
             validated = TeamRequest(**json_data)
             print(f"  SUCCESS: {validated}")
-            
+
             # Generate successful response
             def generate_response():
                 yield f"data: {json.dumps({'token': f'✅ SUCCESS! Team: {validated.team_id}, Message: {validated.message}'})}\n\n"
                 yield f"data: {json.dumps({'token': '\n🎉 Validation passed!'})}\n\n"
                 yield "data: [DONE]\n\n"
-            
+
             return StreamingResponse(
                 generate_response(),
                 media_type="text/event-stream",
                 headers={"Cache-Control": "no-cache", "Connection": "keep-alive"}
             )
-            
+
         except ValidationError as ve:
             print(f"  VALIDATION ERROR: {ve}")
-            print(f"  Error details:")
+            print("  Error details:")
             for error in ve.errors():
                 print(f"    - {error}")
             raise HTTPException(status_code=422, detail=str(ve))
-            
+
     except json.JSONDecodeError as je:
         print(f"\nJSON DECODE ERROR: {je}")
         raise HTTPException(status_code=400, detail=f"Invalid JSON: {je}")
-    
+
     except Exception as e:
         print(f"\nUNEXPECTED ERROR: {e}")
         raise HTTPException(status_code=500, detail=str(e))

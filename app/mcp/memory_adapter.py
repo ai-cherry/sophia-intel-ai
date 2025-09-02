@@ -1,10 +1,8 @@
-import redis.asyncio as redis
-import httpx
 import json
-from typing import List, Dict, Any, Optional
-from datetime import datetime, timedelta
-import hashlib
-import asyncio
+
+import httpx
+import redis.asyncio as redis
+
 
 class UnifiedMemoryAdapter:
     def __init__(
@@ -22,21 +20,21 @@ class UnifiedMemoryAdapter:
     async def store_conversation(
         self,
         session_id: str,
-        messages: List[Dict],
-        metadata: Optional[Dict] = None
-    ) -> Dict:
+        messages: list[dict],
+        metadata: dict | None = None
+    ) -> dict:
         try:
             # Validate session_id format
             if not re.match(r"^[a-zA-Z0-9_-]{1,100}$", session_id):
                 raise ValueError("Invalid session ID format")
-            
+
             # Serialize messages
             serialized = json.dumps(messages)
-            
+
             # Store in Redis
             key = f"memory:session:{session_id}"
             await self.redis.setex(key, self.ttl, serialized)
-            
+
             # Send to MCP server
             async with httpx.AsyncClient() as client:
                 response = await client.post(
@@ -48,7 +46,7 @@ class UnifiedMemoryAdapter:
                     }
                 )
                 response.raise_for_status()
-            
+
             return {
                 "success": True,
                 "memory_id": session_id,
@@ -70,7 +68,7 @@ class UnifiedMemoryAdapter:
         session_id: str,
         last_n: int = 10,
         include_system: bool = False
-    ) -> Dict:
+    ) -> dict:
         # Check Redis cache first
         key = f"memory:session:{session_id}"
         cached = await self.redis.get(key)
@@ -83,7 +81,7 @@ class UnifiedMemoryAdapter:
                 "metadata": {},
                 "token_count": len(json.dumps(filtered))
             }
-        
+
         # Fallback to MCP server
         async with httpx.AsyncClient() as client:
             response = await client.post(

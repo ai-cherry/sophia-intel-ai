@@ -1,8 +1,9 @@
 from __future__ import annotations
-from typing import Optional
+
 from agno.eval.accuracy import AccuracyEval, AccuracyResult
 from agno.models.openai import OpenAIChat
 from agno.team import Team
+
 
 def run_accuracy_eval(
     team: Team,
@@ -24,5 +25,5 @@ def run_accuracy_eval(
         expected_output=expected,
         num_iterations=iterations,
     )
-    result: Optional[AccuracyResult] = evaluation.run(print_results=print_results)
+    result: AccuracyResult | None = evaluation.run(print_results=print_results)
     return result

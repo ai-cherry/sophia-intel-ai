@@ -4,16 +4,16 @@ Shows how to implement all the optimization patterns together effectively.
 """
 
 import asyncio
-import time
 import logging
-from typing import Dict, Any, List, Optional
+import time
 from dataclasses import dataclass, field
+from typing import Any
 
 from app.swarms.performance_optimizer import (
-    SwarmOptimizer,
-    GracefulDegradationManager,
     CircuitBreakerOpenException,
-    performance_monitoring
+    GracefulDegradationManager,
+    SwarmOptimizer,
+    performance_monitoring,
 )
 
 logger = logging.getLogger(__name__)
@@ -27,9 +27,9 @@ class OptimizedSwarmConfig:
     max_agents: int = 5
     timeout_seconds: float = 30.0
     optimization_mode: str = "balanced"
-    enabled_patterns: List[str] = field(default_factory=lambda: ["safety", "quality_gates"])
+    enabled_patterns: list[str] = field(default_factory=lambda: ["safety", "quality_gates"])
     memory_enabled: bool = True
-    circuit_breaker_config: Dict[str, Any] = field(default_factory=dict)
+    circuit_breaker_config: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self):
         """Validate configuration after initialization."""
@@ -51,7 +51,7 @@ class OptimizedSwarm:
     - Dynamic configuration
     """
 
-    def __init__(self, config: OptimizedSwarmConfig, optimizer: Optional[SwarmOptimizer] = None):
+    def __init__(self, config: OptimizedSwarmConfig, optimizer: SwarmOptimizer | None = None):
         self.config = config
         self.optimizer = optimizer or SwarmOptimizer()
 
@@ -73,7 +73,7 @@ class OptimizedSwarm:
 
         logger.info(f"Optimized swarm {config.name} initialized with mode: {config.optimization_mode}")
 
-    def _initialize_agents(self) -> List[Dict[str, Any]]:
+    def _initialize_agents(self) -> list[dict[str, Any]]:
         """Initialize agents based on configuration."""
         agents = []
 
@@ -88,7 +88,7 @@ class OptimizedSwarm:
 
         return agents
 
-    async def solve_problem(self, problem: Dict[str, Any]) -> Dict[str, Any]:
+    async def solve_problem(self, problem: dict[str, Any]) -> dict[str, Any]:
         """
         Solve a problem using the optimized swarm approach.
 
@@ -209,7 +209,7 @@ class OptimizedSwarm:
                 "system_health_score": self.degradation_manager.get_system_health_score()
             }
 
-    async def _perform_memory_operations(self, problem: Dict[str, Any]) -> Dict[str, Any]:
+    async def _perform_memory_operations(self, problem: dict[str, Any]) -> dict[str, Any]:
         """Perform memory-enhanced operations with protection."""
         # Simulate memory search and retrieval
         await asyncio.sleep(0.1)  # Simulate network round-trip
@@ -221,7 +221,7 @@ class OptimizedSwarm:
             "confidence_score": 0.85
         }
 
-    async def _execute_safety_check(self, problem: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_safety_check(self, problem: dict[str, Any]) -> dict[str, Any]:
         """Execute safety pattern."""
         await asyncio.sleep(0.05)  # Fast safety check
 
@@ -239,8 +239,8 @@ class OptimizedSwarm:
             "approval_required": risk_score > 0.7
         }
 
-    async def _execute_quality_gates(self, problem: Dict[str, Any],
-                                   memory_result: Optional[Dict] = None) -> Dict[str, Any]:
+    async def _execute_quality_gates(self, problem: dict[str, Any],
+                                   memory_result: dict | None = None) -> dict[str, Any]:
         """Execute quality gates pattern."""
         await asyncio.sleep(0.3)  # Quality assessment time
 
@@ -261,7 +261,7 @@ class OptimizedSwarm:
             ]
         }
 
-    async def _execute_debate(self, problem: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_debate(self, problem: dict[str, Any]) -> dict[str, Any]:
         """Execute debate pattern."""
         await asyncio.sleep(2.5)  # Debate is time-intensive
 
@@ -273,7 +273,7 @@ class OptimizedSwarm:
             "confidence_score": 0.8
         }
 
-    async def _execute_consensus(self, problem: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_consensus(self, problem: dict[str, Any]) -> dict[str, Any]:
         """Execute consensus pattern."""
         await asyncio.sleep(1.8)  # Consensus process time
 
@@ -285,7 +285,7 @@ class OptimizedSwarm:
             "agreement_level": 0.85
         }
 
-    async def _execute_strategy_archive(self, problem: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_strategy_archive(self, problem: dict[str, Any]) -> dict[str, Any]:
         """Execute strategy archive pattern."""
         await asyncio.sleep(0.4)  # Strategy retrieval time
 
@@ -296,7 +296,7 @@ class OptimizedSwarm:
             "applied_pattern": True
         }
 
-    async def _execute_generic_pattern(self, problem: Dict[str, Any], pattern_name: str) -> Dict[str, Any]:
+    async def _execute_generic_pattern(self, problem: dict[str, Any], pattern_name: str) -> dict[str, Any]:
         """Execute generic pattern implementation."""
         await asyncio.sleep(0.1)  # Generic pattern time
 
@@ -306,7 +306,7 @@ class OptimizedSwarm:
             "result": f"Generic {pattern_name} result"
         }
 
-    async def _generate_solution(self, problem: Dict[str, Any], pattern_results: Dict[Any, Any]) -> Dict[str, Any]:
+    async def _generate_solution(self, problem: dict[str, Any], pattern_results: dict[Any, Any]) -> dict[str, Any]:
         """Generate final solution from pattern results."""
         await asyncio.sleep(0.2)  # Solution synthesis time
 
@@ -331,7 +331,7 @@ class OptimizedSwarm:
             "quality_passes": quality_result.get("passed", False)
         }
 
-    async def _store_solution(self, problem: Dict[str, Any], solution: Dict[str, Any]):
+    async def _store_solution(self, problem: dict[str, Any], solution: dict[str, Any]):
         """Store solution in memory with protection."""
         # Simulate memory storage with appropriate delay
         await asyncio.sleep(0.15)
@@ -339,13 +339,13 @@ class OptimizedSwarm:
         # In practice, this would store the solution for future learning
         logger.debug(f"Stored solution for problem: {problem.get('description', '')[:50]}...")
 
-    def _merge_configs(self, base_config: Dict[str, Any], task_config: Dict[str, Any]) -> Dict[str, Any]:
+    def _merge_configs(self, base_config: dict[str, Any], task_config: dict[str, Any]) -> dict[str, Any]:
         """Merge base configuration with task-specific configuration."""
         merged = base_config.copy()
         merged.update(task_config)
         return merged
 
-    def _update_execution_stats(self, result: Dict[str, Any], success: bool):
+    def _update_execution_stats(self, result: dict[str, Any], success: bool):
         """Update execution statistics."""
         self.execution_stats["total_executions"] += 1
 
@@ -374,7 +374,7 @@ class OptimizedSwarm:
             if pattern not in self.execution_stats["patterns_used"]:
                 self.execution_stats["patterns_used"].append(pattern)
 
-    def get_performance_report(self) -> Dict[str, Any]:
+    def get_performance_report(self) -> dict[str, Any]:
         """Generate comprehensive performance report."""
         success_rate = self.execution_stats["successful_executions"] / max(self.execution_stats["total_executions"], 1)
 
@@ -539,7 +539,7 @@ async def compare_swarm_modes():
             print("   ❌ Failed to execute")
 
 
-def get_patterns_for_mode(mode: str) -> List[str]:
+def get_patterns_for_mode(mode: str) -> list[str]:
     """Get appropriate patterns for each mode."""
     if mode == "lite":
         return ["safety", "quality_gates"]

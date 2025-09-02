@@ -5,14 +5,18 @@ Prevents unexpected bills by tracking all LLM API calls in real-time
 
 import asyncio
 import json
-import time
-from datetime import datetime, timedelta
-from typing import Dict, Any, Optional, List
-from dataclasses import dataclass, field
 import logging
-import redis.asyncio as redis
+import time
 from contextlib import asynccontextmanager
-from app.core.circuit_breaker import with_circuit_breaker, get_llm_circuit_breaker, get_weaviate_circuit_breaker, get_redis_circuit_breaker, get_webhook_circuit_breaker
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from typing import Any
+
+import redis.asyncio as redis
+
+from app.core.circuit_breaker import (
+    with_circuit_breaker,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +52,7 @@ class AlertSystem:
             'monthly': 50000.0  # $50000/month
         }
 
-    async def send_alert(self, alert_type: str, data: Dict[str, Any]) -> None:
+    async def send_alert(self, alert_type: str, data: dict[str, Any]) -> None:
         """Send cost alert via multiple channels."""
         alert_message = {
             'type': alert_type,
@@ -86,8 +90,8 @@ class RealTimeCostMonitor:
 
     def __init__(self, redis_url: str = "redis://localhost:6379"):
         self.redis_url = redis_url
-        self.redis: Optional[redis.Redis] = None
-        self.alert_system: Optional[AlertSystem] = None
+        self.redis: redis.Redis | None = None
+        self.alert_system: AlertSystem | None = None
         self.initialized = False
 
         # Cost rates per token (as of 2025)
@@ -226,7 +230,7 @@ class RealTimeCostMonitor:
         await self.redis.incr('request_count')
 
     @with_circuit_breaker("redis")
-    async def _get_current_metrics(self) -> Dict[str, float]:
+    async def _get_current_metrics(self) -> dict[str, float]:
         """Get current spending metrics."""
         int(time.time())
 
@@ -267,7 +271,7 @@ class RealTimeCostMonitor:
             'request_count': request_count
         }
 
-    async def _check_alerts(self, metrics: Dict[str, float]) -> None:
+    async def _check_alerts(self, metrics: dict[str, float]) -> None:
         """Check if any alert thresholds have been exceeded."""
         if not self.alert_system:
             return
@@ -296,7 +300,7 @@ class RealTimeCostMonitor:
                 'period': 'monthly'
             })
 
-    async def get_cost_report(self, time_window: str = 'daily') -> Dict[str, Any]:
+    async def get_cost_report(self, time_window: str = 'daily') -> dict[str, Any]:
         """Get detailed cost report for specified time window."""
         if not self.initialized:
             await self.initialize()
@@ -321,7 +325,7 @@ class RealTimeCostMonitor:
             'time_window': time_window
         }
 
-    async def _get_top_spenders(self, entity_type: str, time_window: str) -> List[Dict[str, Any]]:
+    async def _get_top_spenders(self, entity_type: str, time_window: str) -> list[dict[str, Any]]:
         """Get top spenders for given entity type and time window."""
         # This is a simplified implementation
         # In production, you'd want more sophisticated aggregation
@@ -374,7 +378,7 @@ class RealTimeCostMonitor:
         logger.info(f"Cleaned up cost data older than {days_to_keep} days")
 
 # Global singleton instance
-_cost_monitor: Optional[RealTimeCostMonitor] = None
+_cost_monitor: RealTimeCostMonitor | None = None
 
 async def get_cost_monitor() -> RealTimeCostMonitor:
     """Get the global cost monitor instance."""

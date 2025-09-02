@@ -4,53 +4,43 @@ Provides real-time streaming chat interface for AI Orchestra
 Integrates with SmartCommandDispatcher and UnifiedOrchestratorFacade
 """
 
-import json
 import asyncio
+import json
 import logging
 import time
-from typing import Dict, Any, Optional, AsyncGenerator, List, Callable
-from dataclasses import dataclass, field, asdict
-from datetime import datetime, timedelta
-from enum import Enum
+from collections.abc import AsyncGenerator, Callable
 from contextlib import asynccontextmanager
+from dataclasses import asdict, dataclass, field
+from datetime import datetime, timedelta
+from typing import Any
 
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, HTTPException, Depends, status
+from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.responses import StreamingResponse
 
-from app.nl_interface.command_dispatcher import (
-    SmartCommandDispatcher, 
-    ExecutionMode,
-    ExecutionResult,
-    EnrichedCommand
-)
-from app.orchestration.unified_facade import (
-    UnifiedOrchestratorFacade,
-    SwarmRequest,
-    SwarmEvent,
-    SwarmType,
-    OptimizationMode
-)
 from app.agents.orchestra_manager import (
-    OrchestraManager,
-    ManagerContext,
     ManagerIntegration,
-    ManagerMood
+    OrchestraManager,
 )
 from app.api.contracts import (
-    APIVersion,
+    APIContractFactory,
+    BackwardCompatibilityAdapter,
     ChatRequestV1,
     ChatRequestV2,
     ChatResponseV1,
     ChatResponseV2,
+    RequestValidationMiddleware,
     StreamTokenV1,
     WebSocketMessage,
     WebSocketMessageType,
-    WebSocketChatData,
-    APIContractFactory,
-    BackwardCompatibilityAdapter,
-    RequestValidationMiddleware,
-    OptimizationMode as ContractOptimizationMode,
-    SwarmType as ContractSwarmType
+)
+from app.nl_interface.command_dispatcher import (
+    ExecutionResult,
+    SmartCommandDispatcher,
+)
+from app.orchestration.unified_facade import (
+    OptimizationMode,
+    SwarmType,
+    UnifiedOrchestratorFacade,
 )
 
 logger = logging.getLogger(__name__)
@@ -64,21 +54,21 @@ class ConnectionState:
     connected: bool = True
     last_activity: datetime = field(default_factory=datetime.utcnow)
     message_count: int = 0
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 # ==================== Error Boundaries and Circuit Breakers ====================
 
 class WebSocketErrorBoundary:
     """Error boundary for WebSocket handlers"""
-    
+
     def __init__(self, connection_state: 'ConnectionState', fallback_message: str = "An error occurred"):
         self.connection = connection_state
         self.fallback_message = fallback_message
         self.logger = logging.getLogger(__name__)
-    
+
     async def __aenter__(self):
         return self
-    
+
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         if exc_type:
             self.logger.error(f"WebSocket error caught: {exc_val}", exc_info=True)
@@ -94,26 +84,26 @@ class WebSocketErrorBoundary:
 
 class CircuitBreaker:
     """Circuit breaker for external service calls"""
-    
+
     def __init__(self, name: str, failure_threshold: int = 5, timeout_seconds: int = 60, half_open_requests: int = 1):
         self.name = name
         self.failure_threshold = failure_threshold
         self.timeout_seconds = timeout_seconds
         self.half_open_requests = half_open_requests
-        
+
         self.failures = 0
-        self.last_failure_time: Optional[datetime] = None
+        self.last_failure_time: datetime | None = None
         self.state = "CLOSED"  # CLOSED, OPEN, HALF_OPEN
         self.half_open_attempts = 0
         self.success_count = 0
         self.total_calls = 0
-        
+
         self.logger = logging.getLogger(f"CircuitBreaker.{name}")
-    
+
     async def call(self, func: Callable, *args, **kwargs):
         """Execute function with circuit breaker protection"""
         self.total_calls += 1
-        
+
         # Check if circuit should be reset
         if self.state == "OPEN":
             if self._should_attempt_reset():
@@ -122,27 +112,27 @@ class CircuitBreaker:
                 self.logger.info(f"Circuit {self.name} entering HALF_OPEN state")
             else:
                 raise Exception(f"Circuit breaker {self.name} is OPEN")
-        
+
         # Check half-open limit
         if self.state == "HALF_OPEN":
             if self.half_open_attempts >= self.half_open_requests:
                 raise Exception(f"Circuit breaker {self.name} half-open limit reached")
             self.half_open_attempts += 1
-        
+
         try:
             result = await func(*args, **kwargs)
             self._on_success()
             return result
-        except Exception as e:
+        except Exception:
             self._on_failure()
             raise
-    
+
     def _should_attempt_reset(self) -> bool:
         """Check if enough time has passed to attempt reset"""
         if not self.last_failure_time:
             return True
         return (datetime.utcnow() - self.last_failure_time).seconds >= self.timeout_seconds
-    
+
     def _on_success(self):
         """Handle successful call"""
         self.success_count += 1
@@ -152,20 +142,20 @@ class CircuitBreaker:
             self.logger.info(f"Circuit {self.name} closed after successful half-open test")
         elif self.state == "CLOSED":
             self.failures = 0  # Reset failure count on success
-    
+
     def _on_failure(self):
         """Handle failed call"""
         self.failures += 1
         self.last_failure_time = datetime.utcnow()
-        
+
         if self.state == "HALF_OPEN":
             self.state = "OPEN"
             self.logger.warning(f"Circuit {self.name} reopened after half-open failure")
         elif self.failures >= self.failure_threshold:
             self.state = "OPEN"
             self.logger.warning(f"Circuit {self.name} opened after {self.failures} failures")
-    
-    def get_state(self) -> Dict[str, Any]:
+
+    def get_state(self) -> dict[str, Any]:
         """Get current circuit breaker state"""
         return {
             "name": self.name,
@@ -178,27 +168,27 @@ class CircuitBreaker:
 
 class ConnectionTimeoutManager:
     """Manages connection timeouts and cleanup"""
-    
+
     def __init__(self, idle_timeout_seconds: int = 300, check_interval_seconds: int = 30):
         self.idle_timeout = timedelta(seconds=idle_timeout_seconds)
         self.check_interval = check_interval_seconds
-        self.connections: Dict[str, ConnectionState] = {}
-        self._cleanup_task: Optional[asyncio.Task] = None
+        self.connections: dict[str, ConnectionState] = {}
+        self._cleanup_task: asyncio.Task | None = None
         self.logger = logging.getLogger(__name__)
-    
+
     def add_connection(self, key: str, connection: ConnectionState):
         """Add connection to be monitored"""
         self.connections[key] = connection
         if not self._cleanup_task:
             self._cleanup_task = asyncio.create_task(self._cleanup_loop())
-    
+
     def remove_connection(self, key: str):
         """Remove connection from monitoring"""
         self.connections.pop(key, None)
         if not self.connections and self._cleanup_task:
             self._cleanup_task.cancel()
             self._cleanup_task = None
-    
+
     async def _cleanup_loop(self):
         """Periodic cleanup of idle connections"""
         while self.connections:
@@ -209,19 +199,19 @@ class ConnectionTimeoutManager:
                 break
             except Exception as e:
                 self.logger.error(f"Error in cleanup loop: {e}")
-    
+
     async def _check_connections(self):
         """Check and cleanup idle connections"""
         now = datetime.utcnow()
         to_remove = []
-        
+
         for key, conn in list(self.connections.items()):
             idle_time = now - conn.last_activity
-            
+
             if idle_time > self.idle_timeout:
                 self.logger.info(f"Closing idle connection {key} (idle for {idle_time.seconds}s)")
                 to_remove.append(key)
-                
+
                 try:
                     await conn.websocket.send_json({
                         "type": "timeout",
@@ -236,7 +226,7 @@ class ConnectionTimeoutManager:
                     await conn.websocket.send_json({"type": "ping"})
                 except:
                     to_remove.append(key)
-        
+
         for key in to_remove:
             self.remove_connection(key)
 
@@ -247,7 +237,7 @@ class ChatOrchestrator:
     Main chat orchestration engine with WebSocket support
     Coordinates between NL processing, swarm execution, and streaming
     """
-    
+
     def __init__(
         self,
         ollama_url: str = "http://localhost:11434",
@@ -263,21 +253,21 @@ class ChatOrchestrator:
             mcp_server_url=mcp_server_url,
             n8n_url=n8n_url
         )
-        
+
         self.unified_orchestrator = UnifiedOrchestratorFacade()
-        
+
         # Initialize Orchestra Manager
         self.orchestra_manager = OrchestraManager(name="Maestro")
         self.manager_integration = ManagerIntegration(self.orchestra_manager)
-        
+
         # Connection management (will be injected)
-        self.connection_pool: Optional[WebSocketConnectionPool] = None
-        self.session_manager: Optional[SessionStateManager] = None
-        
+        self.connection_pool: WebSocketConnectionPool | None = None
+        self.session_manager: SessionStateManager | None = None
+
         # Local connection tracking
-        self.active_connections: Dict[str, ConnectionState] = {}
-        self.session_history: Dict[str, List[Dict]] = {}
-        
+        self.active_connections: dict[str, ConnectionState] = {}
+        self.session_history: dict[str, list[dict]] = {}
+
         # Performance tracking
         self.metrics = {
             "total_messages": 0,
@@ -286,7 +276,7 @@ class ChatOrchestrator:
             "total_response_time": 0.0,
             "errors": 0
         }
-        
+
         # Circuit breakers for each component
         self.circuit_breakers = {
             "dispatcher": CircuitBreaker("dispatcher", failure_threshold=3, timeout_seconds=30),
@@ -294,36 +284,36 @@ class ChatOrchestrator:
             "manager": CircuitBreaker("manager", failure_threshold=5, timeout_seconds=20),
             "memory": CircuitBreaker("memory", failure_threshold=3, timeout_seconds=30)
         }
-        
+
         # Connection timeout manager
         self.timeout_manager = ConnectionTimeoutManager(
             idle_timeout_seconds=300,  # 5 minutes
             check_interval_seconds=30
         )
-        
+
         # API contract support
         self.contract_factory = APIContractFactory()
         self.compatibility_adapter = BackwardCompatibilityAdapter()
         self.validation_middleware = RequestValidationMiddleware()
-        
+
         # Initialize flag
         self.initialized = False
-        
+
         logger.info("ChatOrchestrator created with error boundaries and circuit breakers")
-    
+
     async def initialize(self):
         """Initialize async components"""
         if self.initialized:
             return
-        
+
         logger.info("Initializing ChatOrchestrator components")
-        
+
         # Initialize unified orchestrator
         await self.unified_orchestrator.initialize()
-        
+
         self.initialized = True
         logger.info("ChatOrchestrator initialized successfully")
-    
+
     async def handle_chat(self, request: Union[ChatRequestV1, ChatRequestV2]) -> Union[ChatResponseV1, ChatResponseV2]:
         """
         Handle REST chat request
@@ -336,7 +326,7 @@ class ChatOrchestrator:
         """
         start_time = time.time()
         self.metrics["total_messages"] += 1
-        
+
         try:
             # Prepare manager context
             history = self.session_history.get(request.session_id, [])
@@ -346,7 +336,7 @@ class ChatOrchestrator:
                 conversation_history=history,
                 system_state=system_state
             )
-            
+
             # Process through manager for intent and initial response with circuit breaker
             manager_result = await self.circuit_breakers["manager"].call(
                 lambda: self.manager_integration.process_message(
@@ -354,12 +344,12 @@ class ChatOrchestrator:
                     manager_context
                 )
             )
-            
+
             # Add manager's initial response to metadata
             request.user_context["manager_response"] = manager_result["response"]
             request.user_context["detected_intent"] = manager_result["intent"]
             request.user_context["confidence"] = manager_result["confidence"]
-            
+
             # Process through command dispatcher with circuit breaker
             result = await self.circuit_breakers["dispatcher"].call(
                 self.command_dispatcher.process_command,
@@ -367,7 +357,7 @@ class ChatOrchestrator:
                 session_id=request.session_id,
                 user_context=request.user_context
             )
-            
+
             # Generate manager's result response
             final_response = self.manager_integration.process_result(
                 intent=manager_result["intent"],
@@ -380,18 +370,18 @@ class ChatOrchestrator:
                 },
                 context=manager_context
             )
-            
+
             # Update session history
             self._update_session_history(
                 request.session_id,
                 request.message,
                 result
             )
-            
+
             # Update metrics
             execution_time = time.time() - start_time
             self._update_metrics(execution_time)
-            
+
             # Create response data
             response_data = {
                 "session_id": request.session_id,
@@ -407,20 +397,20 @@ class ChatOrchestrator:
                     "confidence": manager_result["confidence"]
                 }
             }
-            
+
             # Add V2-specific fields if applicable
             if isinstance(request, ChatRequestV2):
                 response_data["manager_response"] = final_response
                 response_data["intent"] = manager_result["intent"]
                 response_data["confidence"] = manager_result["confidence"]
-            
+
             # Create versioned response
             return await self.validation_middleware.validate_response(request, response_data)
-            
+
         except Exception as e:
             logger.error(f"Chat handling failed: {e}")
             self.metrics["errors"] += 1
-            
+
             # Create error response
             error_data = {
                 "session_id": request.session_id,
@@ -431,9 +421,9 @@ class ChatOrchestrator:
                 "success": False,
                 "error": str(e)
             }
-            
+
             return await self.validation_middleware.validate_response(request, error_data)
-    
+
     async def websocket_endpoint(
         self,
         websocket: WebSocket,
@@ -449,17 +439,17 @@ class ChatOrchestrator:
             session_id: Session identifier
         """
         await websocket.accept()
-        
+
         # Create connection state
         connection = ConnectionState(
             client_id=client_id,
             session_id=session_id,
             websocket=websocket
         )
-        
+
         # Register connection
         connection_key = f"{client_id}:{session_id}"
-        
+
         # Check connection pool if available
         if self.connection_pool:
             if not await self.connection_pool.acquire_connection(connection_key, connection):
@@ -469,25 +459,25 @@ class ChatOrchestrator:
                 })
                 await websocket.close()
                 return
-        
+
         self.active_connections[connection_key] = connection
         self.metrics["active_connections"] += 1
-        
+
         # Add to timeout manager
         self.timeout_manager.add_connection(connection_key, connection)
-        
+
         logger.info(f"WebSocket connected: {connection_key}")
-        
+
         # Send initial status
         await self._send_status(connection, "connected")
-        
+
         try:
             while connection.connected:
                 # Receive message
                 raw_message = await websocket.receive_text()
                 connection.last_activity = datetime.utcnow()
                 connection.message_count += 1
-                
+
                 # Parse and handle message with error boundary
                 async with WebSocketErrorBoundary(connection, "Failed to process message"):
                     try:
@@ -500,7 +490,7 @@ class ChatOrchestrator:
                             data=json.loads(raw_message)
                         )
                     await self._handle_websocket_message(connection, message)
-                    
+
         except WebSocketDisconnect:
             logger.info(f"WebSocket disconnected: {connection_key}")
         except Exception as e:
@@ -508,18 +498,18 @@ class ChatOrchestrator:
         finally:
             # Clean up connection
             connection.connected = False
-            
+
             if connection_key in self.active_connections:
                 del self.active_connections[connection_key]
                 self.metrics["active_connections"] -= 1
-            
+
             # Release from connection pool if available
             if self.connection_pool:
                 await self.connection_pool.release_connection(connection_key)
-            
+
             # Remove from timeout manager
             self.timeout_manager.remove_connection(connection_key)
-    
+
     async def _handle_websocket_message(
         self,
         connection: ConnectionState,
@@ -533,7 +523,7 @@ class ChatOrchestrator:
             message: Parsed WebSocket message
         """
         msg_type = message.type if isinstance(message.type, str) else message.type.value
-        
+
         if msg_type == WebSocketMessageType.CHAT.value:
             await self._handle_chat_message(connection, message.data)
         elif msg_type == WebSocketMessageType.COMMAND.value:
@@ -542,11 +532,11 @@ class ChatOrchestrator:
             await self._handle_control_message(connection, message.data)
         else:
             await self._send_error(connection, f"Unknown message type: {msg_type}")
-    
+
     async def _handle_chat_message(
         self,
         connection: ConnectionState,
-        data: Dict[str, Any]
+        data: dict[str, Any]
     ):
         """
         Handle chat message with streaming response
@@ -556,13 +546,13 @@ class ChatOrchestrator:
             data: Message data
         """
         start_time = time.time()
-        
+
         # Extract message and context
         message_text = data.get("message", "")
         user_context = data.get("context", {})
         swarm_type = data.get("swarm_type")
         optimization_mode = data.get("optimization_mode", "balanced")
-        
+
         # Prepare manager context
         history = self.session_history.get(connection.session_id, [])
         system_state = await self._get_system_state()
@@ -571,7 +561,7 @@ class ChatOrchestrator:
             conversation_history=history,
             system_state=system_state
         )
-        
+
         # Get manager's interpretation with error boundary
         try:
             manager_result = await self.circuit_breakers["manager"].call(
@@ -589,7 +579,7 @@ class ChatOrchestrator:
                 "confidence": 0.0,
                 "response": "I'm having trouble understanding. Let me try to help anyway."
             }
-        
+
         # Send manager's initial response
         await self._send_token(connection, StreamTokenV1(
             type="manager",
@@ -599,15 +589,15 @@ class ChatOrchestrator:
                 "confidence": manager_result["confidence"]
             }
         ))
-        
+
         # Send processing status
         await self._send_status(connection, "processing")
-        
+
         try:
             # Add manager context to user context
             user_context["manager_intent"] = manager_result["intent"]
             user_context["manager_confidence"] = manager_result["confidence"]
-            
+
             # Stream tokens as they're generated
             async for token in self.stream_tokens(
                 message=message_text,
@@ -617,7 +607,7 @@ class ChatOrchestrator:
                 optimization_mode=optimization_mode
             ):
                 await self._send_token(connection, token)
-            
+
             # Generate manager's final response
             final_response = self.manager_integration.process_result(
                 intent=manager_result["intent"],
@@ -628,32 +618,32 @@ class ChatOrchestrator:
                 },
                 context=manager_context
             )
-            
+
             # Send manager's conclusion
             await self._send_token(connection, StreamTokenV1(
                 type="manager_conclusion",
                 content=final_response,
                 metadata={"manager": self.orchestra_manager.name}
             ))
-            
+
             # Send completion status
             execution_time = time.time() - start_time
             await self._send_status(connection, "completed", {
                 "execution_time": execution_time
             })
-            
+
             # Update metrics
             self._update_metrics(execution_time)
-            
+
         except Exception as e:
             logger.error(f"Chat message processing failed: {e}")
             await self._send_error(connection, str(e))
             self.metrics["errors"] += 1
-    
+
     async def _handle_command_message(
         self,
         connection: ConnectionState,
-        data: Dict[str, Any]
+        data: dict[str, Any]
     ):
         """
         Handle command message (direct dispatcher commands)
@@ -663,24 +653,24 @@ class ChatOrchestrator:
             data: Command data
         """
         command = data.get("command", "")
-        
+
         # Process command through dispatcher
         result = await self.command_dispatcher.process_command(
             text=command,
             session_id=connection.session_id,
             user_context=data.get("context", {})
         )
-        
+
         # Send result
         await self._send_message(connection, {
             "type": "command_result",
             "result": asdict(result) if hasattr(result, "__dict__") else result
         })
-    
+
     async def _handle_control_message(
         self,
         connection: ConnectionState,
-        data: Dict[str, Any]
+        data: dict[str, Any]
     ):
         """
         Handle control messages (ping, status, etc.)
@@ -690,7 +680,7 @@ class ChatOrchestrator:
             data: Control data
         """
         control_type = data.get("type", "")
-        
+
         if control_type == "ping":
             await self._send_message(connection, {"type": "pong"})
         elif control_type == "status":
@@ -706,13 +696,13 @@ class ChatOrchestrator:
             })
         else:
             await self._send_error(connection, f"Unknown control type: {control_type}")
-    
+
     async def stream_tokens(
         self,
         message: str,
         session_id: str,
-        user_context: Optional[Dict[str, Any]] = None,
-        swarm_type: Optional[str] = None,
+        user_context: dict[str, Any] | None = None,
+        swarm_type: str | None = None,
         optimization_mode: str = "balanced"
     ) -> AsyncGenerator[StreamTokenV1, None]:
         """
@@ -747,12 +737,12 @@ class ChatOrchestrator:
                 user_context
             ):
                 yield token
-    
+
     async def _stream_command_tokens(
         self,
         message: str,
         session_id: str,
-        user_context: Optional[Dict[str, Any]] = None
+        user_context: dict[str, Any] | None = None
     ) -> AsyncGenerator[StreamTokenV1, None]:
         """
         Stream tokens through command dispatcher
@@ -771,11 +761,11 @@ class ChatOrchestrator:
             session_id=session_id,
             user_context=user_context or {}
         )
-        
+
         # Convert result to tokens
         if result.success:
             response_text = json.dumps(result.response) if isinstance(result.response, dict) else str(result.response)
-            
+
             # Simulate token streaming (in real implementation, this would come from LLM)
             words = response_text.split()
             for i, word in enumerate(words):
@@ -789,7 +779,7 @@ class ChatOrchestrator:
                 )
                 # Small delay to simulate streaming
                 await asyncio.sleep(0.01)
-            
+
             # Send completion token
             yield StreamTokenV1(
                 type="complete",
@@ -806,14 +796,14 @@ class ChatOrchestrator:
                 content=result.error,
                 metadata={"execution_mode": result.execution_mode.value}
             )
-    
+
     async def _stream_swarm_tokens(
         self,
         message: str,
         session_id: str,
         swarm_type: str,
         optimization_mode: str,
-        user_context: Optional[Dict[str, Any]] = None
+        user_context: dict[str, Any] | None = None
     ) -> AsyncGenerator[StreamTokenV1, None]:
         """
         Stream tokens through swarm orchestrator
@@ -838,7 +828,7 @@ class ChatOrchestrator:
             stream=True,
             metadata=user_context
         )
-        
+
         # Stream events from swarm
         async for event in self.unified_orchestrator.execute(request):
             if event.event_type == "started":
@@ -872,12 +862,12 @@ class ChatOrchestrator:
                     content=event.data.get("error"),
                     metadata={"swarm": event.swarm}
                 )
-    
+
     async def process_command(
         self,
         command: str,
-        context: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        context: dict[str, Any]
+    ) -> dict[str, Any]:
         """
         Process a command directly
         
@@ -893,7 +883,7 @@ class ChatOrchestrator:
             session_id=context.get("session_id", "default"),
             user_context=context
         )
-        
+
         return {
             "success": result.success,
             "response": result.response,
@@ -901,13 +891,13 @@ class ChatOrchestrator:
             "quality_score": result.quality_score,
             "error": result.error
         }
-    
+
     # ==================== Helper Methods ====================
-    
+
     async def _send_message(
         self,
         connection: ConnectionState,
-        message: Dict[str, Any]
+        message: dict[str, Any]
     ):
         """Send message to WebSocket connection"""
         if connection.connected:
@@ -916,7 +906,7 @@ class ChatOrchestrator:
             except Exception as e:
                 logger.error(f"Failed to send message: {e}")
                 connection.connected = False
-    
+
     async def _send_token(
         self,
         connection: ConnectionState,
@@ -927,12 +917,12 @@ class ChatOrchestrator:
             "type": "stream_token",
             "data": token.dict()
         })
-    
+
     async def _send_status(
         self,
         connection: ConnectionState,
         status: str,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: dict[str, Any] | None = None
     ):
         """Send status update to connection"""
         await self._send_message(connection, {
@@ -940,7 +930,7 @@ class ChatOrchestrator:
             "status": status,
             "metadata": metadata or {}
         })
-    
+
     async def _send_error(
         self,
         connection: ConnectionState,
@@ -951,7 +941,7 @@ class ChatOrchestrator:
             "type": "error",
             "error": error
         })
-    
+
     def _update_session_history(
         self,
         session_id: str,
@@ -969,7 +959,7 @@ class ChatOrchestrator:
                 "execution_time": result.execution_time
             }
         }
-        
+
         # Use session manager if available
         if self.session_manager:
             # Fire and forget - don't await to avoid blocking
@@ -980,25 +970,25 @@ class ChatOrchestrator:
             # Fallback to local storage
             if session_id not in self.session_history:
                 self.session_history[session_id] = []
-            
+
             self.session_history[session_id].append(entry)
-            
+
             # Keep only last 100 messages per session
             if len(self.session_history[session_id]) > 100:
                 self.session_history[session_id] = self.session_history[session_id][-100:]
-    
+
     def _update_metrics(self, execution_time: float):
         """Update performance metrics"""
         self.metrics["total_response_time"] += execution_time
         self.metrics["avg_response_time"] = (
             self.metrics["total_response_time"] / self.metrics["total_messages"]
         )
-    
-    async def get_metrics(self) -> Dict[str, Any]:
+
+    async def get_metrics(self) -> dict[str, Any]:
         """Get current metrics"""
         dispatcher_metrics = self.command_dispatcher._get_performance_metrics()
         orchestrator_metrics = await self.unified_orchestrator.get_metrics()
-        
+
         return {
             "chat_orchestrator": self.metrics,
             "command_dispatcher": dispatcher_metrics,
@@ -1012,8 +1002,8 @@ class ChatOrchestrator:
             "total_history_entries": sum(len(h) for h in self.session_history.values()),
             "active_connections": len(self.active_connections)
         }
-    
-    async def _get_system_state(self, include_metrics: bool = False) -> Dict[str, Any]:
+
+    async def _get_system_state(self, include_metrics: bool = False) -> dict[str, Any]:
         """Get current system state for manager context"""
         base_state = {
             "health": self._calculate_health(),
@@ -1021,52 +1011,51 @@ class ChatOrchestrator:
             "avg_response_time": self.metrics["avg_response_time"],
             "components": self._get_component_status()
         }
-        
+
         if include_metrics:
             base_state["detailed_metrics"] = await self.get_metrics()
-        
+
         return base_state
-    
+
     def _calculate_health(self) -> float:
         """Calculate system health score"""
         total = max(1, self.metrics.get("total_messages", 1))
         errors = self.metrics.get("errors", 0)
         return 1.0 - (errors / total)
-    
-    def _get_component_status(self) -> Dict[str, str]:
+
+    def _get_component_status(self) -> dict[str, str]:
         """Get status of each component"""
         return {
             "dispatcher": "available" if self.command_dispatcher else "unavailable",
             "orchestrator": "available" if self.unified_orchestrator else "unavailable",
             "manager": "available" if self.orchestra_manager else "unavailable"
         }
-    
+
     async def shutdown(self):
         """Graceful shutdown"""
         logger.info("Shutting down ChatOrchestrator")
-        
+
         # Close all WebSocket connections
         for connection in self.active_connections.values():
             await self._send_status(connection, "shutdown")
             await connection.websocket.close()
-        
+
         # Shutdown components
         await self.command_dispatcher.shutdown()
-        
+
         # Cancel timeout manager
         if self.timeout_manager._cleanup_task:
             self.timeout_manager._cleanup_task.cancel()
-        
+
         logger.info("ChatOrchestrator shutdown complete")
 
 # ==================== FastAPI Router with Dependency Injection ====================
 
 from app.infrastructure.dependency_injection import (
-    get_container,
-    initialize_container,
     ServiceConfig,
+    SessionStateManager,
     WebSocketConnectionPool,
-    SessionStateManager
+    initialize_container,
 )
 
 # Create router
@@ -1079,22 +1068,22 @@ _di_container = None
 async def lifespan(app):
     """Manage application lifecycle with DI"""
     global _di_container
-    
+
     # Initialize DI container
     config = ServiceConfig.from_env()
     _di_container = await initialize_container(config)
-    
+
     # Get and initialize orchestrator
     orchestrator = await _di_container.resolve(ChatOrchestrator)
-    
+
     logger.info("Application started with dependency injection")
-    
+
     yield
-    
+
     # Cleanup
     if _di_container:
         await _di_container.dispose()
-    
+
     logger.info("Application shutdown complete")
 
 async def get_orchestrator() -> ChatOrchestrator:
@@ -1104,7 +1093,7 @@ async def get_orchestrator() -> ChatOrchestrator:
         # Fallback initialization if not in lifespan context
         config = ServiceConfig.from_env()
         _di_container = await initialize_container(config)
-    
+
     return await _di_container.resolve(ChatOrchestrator)
 
 async def get_connection_pool() -> WebSocketConnectionPool:
@@ -1113,7 +1102,7 @@ async def get_connection_pool() -> WebSocketConnectionPool:
     if not _di_container:
         config = ServiceConfig.from_env()
         _di_container = await initialize_container(config)
-    
+
     return await _di_container.resolve(WebSocketConnectionPool)
 
 async def get_session_manager() -> SessionStateManager:
@@ -1122,7 +1111,7 @@ async def get_session_manager() -> SessionStateManager:
     if not _di_container:
         config = ServiceConfig.from_env()
         _di_container = await initialize_container(config)
-    
+
     return await _di_container.resolve(SessionStateManager)
 
 # ==================== REST Endpoints ====================
@@ -1163,7 +1152,7 @@ async def chat_v2(
 
 @router.post("/chat")
 async def chat(
-    request: Dict[str, Any],
+    request: dict[str, Any],
     orchestrator: ChatOrchestrator = Depends(get_orchestrator)
 ):
     """
@@ -1179,14 +1168,14 @@ async def chat(
     # Use validation middleware to parse versioned request
     validation_middleware = RequestValidationMiddleware()
     validated_request = await validation_middleware.validate_request(request)
-    
+
     # Process and return versioned response
     response = await orchestrator.handle_chat(validated_request)
     return response.dict()
 
 @router.post("/stream")
 async def chat_stream(
-    request: Dict[str, Any],
+    request: dict[str, Any],
     orchestrator: ChatOrchestrator = Depends(get_orchestrator)
 ):
     """
@@ -1202,16 +1191,16 @@ async def chat_stream(
     # Parse request
     validation_middleware = RequestValidationMiddleware()
     validated_request = await validation_middleware.validate_request(request)
-    
+
     async def generate():
         # Extract fields based on version
         swarm_type = None
         optimization_mode = "balanced"
-        
+
         if isinstance(validated_request, ChatRequestV2):
             swarm_type = validated_request.swarm_type
             optimization_mode = validated_request.optimization_mode or "balanced"
-        
+
         async for token in orchestrator.stream_tokens(
             message=validated_request.message,
             session_id=validated_request.session_id,
@@ -1220,7 +1209,7 @@ async def chat_stream(
             optimization_mode=optimization_mode
         ):
             yield json.dumps(token.dict()) + "\n"
-    
+
     return StreamingResponse(
         generate(),
         media_type="application/x-ndjson"
@@ -1229,7 +1218,7 @@ async def chat_stream(
 @router.get("/metrics")
 async def get_metrics(
     orchestrator: ChatOrchestrator = Depends(get_orchestrator)
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Get chat orchestrator metrics
     
@@ -1245,7 +1234,7 @@ async def get_metrics(
 async def get_session(
     session_id: str,
     orchestrator: ChatOrchestrator = Depends(get_orchestrator)
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Get session information
     
@@ -1285,12 +1274,13 @@ async def websocket_endpoint(
     # Inject connection pool if not already set
     if not orchestrator.connection_pool:
         orchestrator.connection_pool = connection_pool
-    
+
     await orchestrator.websocket_endpoint(websocket, client_id, session_id)
 
 # ==================== Health Check Endpoints ====================
 
 from enum import Enum as PythonEnum
+
 
 class HealthStatus(str, PythonEnum):
     """Health status enum"""
@@ -1302,7 +1292,7 @@ class HealthStatus(str, PythonEnum):
 async def health_check(
     orchestrator: ChatOrchestrator = Depends(get_orchestrator),
     connection_pool: WebSocketConnectionPool = Depends(get_connection_pool)
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Health check endpoint
     
@@ -1310,14 +1300,14 @@ async def health_check(
         Health status of all components
     """
     checks = {}
-    
+
     # Check orchestrator
     checks["orchestrator"] = {
         "status": HealthStatus.HEALTHY if orchestrator.initialized else HealthStatus.UNHEALTHY,
         "initialized": orchestrator.initialized,
         "active_connections": len(orchestrator.active_connections)
     }
-    
+
     # Check connection pool
     pool_metrics = connection_pool.get_metrics()
     pool_utilization = pool_metrics.get("utilization", 0)
@@ -1325,7 +1315,7 @@ async def health_check(
         "status": HealthStatus.HEALTHY if pool_utilization < 0.9 else HealthStatus.DEGRADED,
         "metrics": pool_metrics
     }
-    
+
     # Check circuit breakers
     circuit_breaker_health = HealthStatus.HEALTHY
     for name, cb in orchestrator.circuit_breakers.items():
@@ -1335,12 +1325,12 @@ async def health_check(
             break
         elif state["state"] == "HALF_OPEN":
             circuit_breaker_health = HealthStatus.DEGRADED
-    
+
     checks["circuit_breakers"] = {
         "status": circuit_breaker_health,
         "states": {name: cb.get_state() for name, cb in orchestrator.circuit_breakers.items()}
     }
-    
+
     # Overall status
     overall_status = HealthStatus.HEALTHY
     for check in checks.values():
@@ -1349,7 +1339,7 @@ async def health_check(
             break
         elif check["status"] == HealthStatus.DEGRADED:
             overall_status = HealthStatus.DEGRADED
-    
+
     return {
         "status": overall_status,
         "timestamp": datetime.utcnow().isoformat(),
@@ -1359,7 +1349,7 @@ async def health_check(
 @router.get("/ready")
 async def readiness_probe(
     orchestrator: ChatOrchestrator = Depends(get_orchestrator)
-) -> Dict[str, bool]:
+) -> dict[str, bool]:
     """
     Readiness probe endpoint
     
@@ -1368,11 +1358,11 @@ async def readiness_probe(
     """
     if not orchestrator.initialized:
         raise HTTPException(status_code=503, detail="Service not ready")
-    
+
     return {"ready": True}
 
 @router.get("/live")
-async def liveness_probe() -> Dict[str, bool]:
+async def liveness_probe() -> dict[str, bool]:
     """
     Liveness probe endpoint
     
@@ -1383,7 +1373,6 @@ async def liveness_probe() -> Dict[str, bool]:
 
 # ==================== Export ====================
 
-from typing import Union
 
 __all__ = [
     "ChatOrchestrator",

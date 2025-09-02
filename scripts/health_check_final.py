@@ -4,9 +4,9 @@ Final comprehensive health check for all systems.
 """
 
 import asyncio
-import aiohttp
-import json
 from datetime import datetime
+
+import aiohttp
 
 GREEN = '\033[92m'
 RED = '\033[91m'
@@ -16,16 +16,16 @@ RESET = '\033[0m'
 
 async def check_all_systems():
     """Comprehensive health check of all components."""
-    
+
     print(f"\n{BLUE}{'='*60}{RESET}")
     print(f"{BLUE}Sophia Intel AI - Final System Health Check{RESET}")
     print(f"{BLUE}{'='*60}{RESET}\n")
-    
+
     results = {}
-    
+
     async with aiohttp.ClientSession() as session:
         # 1. API Server Health
-        print(f"Checking API Server...")
+        print("Checking API Server...")
         try:
             async with session.get("http://localhost:8003/healthz") as resp:
                 if resp.status == 200:
@@ -41,9 +41,9 @@ async def check_all_systems():
         except Exception as e:
             print(f"{RED}  ❌ API Server: OFFLINE ({e}){RESET}")
             results["api_server"] = False
-        
+
         # 2. UI Dashboard
-        print(f"\nChecking UI Dashboard...")
+        print("\nChecking UI Dashboard...")
         try:
             async with session.get("http://localhost:3001") as resp:
                 if resp.status == 200:
@@ -55,9 +55,9 @@ async def check_all_systems():
         except Exception as e:
             print(f"{RED}  ❌ UI Dashboard: OFFLINE ({e}){RESET}")
             results["ui"] = False
-        
+
         # 3. Real Orchestrator Test
-        print(f"\nChecking Real Orchestrator...")
+        print("\nChecking Real Orchestrator...")
         try:
             payload = {
                 "team_id": "strategic-swarm",
@@ -82,9 +82,9 @@ async def check_all_systems():
         except Exception as e:
             print(f"{RED}  ❌ Orchestrator: OFFLINE ({e}){RESET}")
             results["orchestrator"] = False
-        
+
         # 4. MCP Servers
-        print(f"\nChecking MCP Servers...")
+        print("\nChecking MCP Servers...")
         mcp_active = results.get("api_server", False)  # Based on health check
         if mcp_active:
             print(f"{GREEN}  ✅ MCP Filesystem: REGISTERED{RESET}")
@@ -94,9 +94,9 @@ async def check_all_systems():
         else:
             print(f"{RED}  ❌ MCP Servers: Check API health{RESET}")
             results["mcp"] = False
-        
+
         # 5. Swarm Teams
-        print(f"\nChecking AI Swarms...")
+        print("\nChecking AI Swarms...")
         try:
             async with session.get("http://localhost:8003/teams") as resp:
                 if resp.status == 200:
@@ -111,9 +111,9 @@ async def check_all_systems():
         except Exception as e:
             print(f"{RED}  ❌ Swarms: OFFLINE ({e}){RESET}")
             results["swarms"] = False
-        
+
         # 6. Embeddings Test
-        print(f"\nChecking ModernBERT Embeddings...")
+        print("\nChecking ModernBERT Embeddings...")
         try:
             test_payload = {
                 "topic": "health_check",
@@ -133,19 +133,19 @@ async def check_all_systems():
         except Exception as e:
             print(f"{RED}  ❌ ModernBERT: OFFLINE ({e}){RESET}")
             results["embeddings"] = False
-    
+
     # Summary
     print(f"\n{YELLOW}{'='*60}{RESET}")
     print(f"{YELLOW}SYSTEM STATUS SUMMARY{RESET}")
     print(f"{YELLOW}{'='*60}{RESET}\n")
-    
+
     all_healthy = all(results.values())
     failed_systems = [k for k, v in results.items() if not v]
-    
+
     print(f"Total Systems: {len(results)}")
     print(f"Healthy: {sum(results.values())}")
     print(f"Failed: {len(failed_systems)}")
-    
+
     if all_healthy:
         print(f"\n{GREEN}🎉 ALL SYSTEMS OPERATIONAL!{RESET}")
         print(f"{GREEN}✅ Production Ready{RESET}")
@@ -155,9 +155,9 @@ async def check_all_systems():
         print(f"\n{RED}⚠️  ISSUES DETECTED:{RESET}")
         for system in failed_systems:
             print(f"  • {system}")
-    
+
     print(f"\n{BLUE}Timestamp: {datetime.now().isoformat()}{RESET}\n")
-    
+
     return all_healthy
 
 if __name__ == "__main__":

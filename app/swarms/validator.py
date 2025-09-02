@@ -3,9 +3,10 @@ JSON validation utilities for structured agent outputs.
 """
 
 import json
-from typing import List, Dict, Any
+from typing import Any
 
-def as_json_or_error(content: str, required: List[str]) -> Dict[str, Any]:
+
+def as_json_or_error(content: str, required: list[str]) -> dict[str, Any]:
     """
     Parse JSON content and validate required fields.
     
@@ -20,11 +21,11 @@ def as_json_or_error(content: str, required: List[str]) -> Dict[str, Any]:
         data = json.loads(content)
     except Exception as e:
         return {"_error": "invalid-json", "raw": content, "exception": str(e)}
-    
+
     missing = [k for k in required if k not in data]
     if missing:
         return {"_error": f"missing-keys:{missing}", "raw": data}
-    
+
     return data
 
 def extract_json_from_markdown(content: str) -> str:

@@ -5,10 +5,10 @@ Tests all major components and integration points.
 """
 
 import asyncio
-import httpx
 import json
 import sys
-from typing import Dict, Any
+
+import httpx
 
 BASE_URL = "http://localhost:8001"
 
@@ -17,11 +17,11 @@ async def test_health() -> bool:
     async with httpx.AsyncClient() as client:
         response = await client.get(f"{BASE_URL}/healthz")
         data = response.json()
-        
+
         print("✅ Health Check:")
         print(f"  Status: {data['status']}")
         print(f"  Systems: {data['systems']}")
-        
+
         return all(data['systems'].values())
 
 async def test_teams() -> bool:
@@ -29,11 +29,11 @@ async def test_teams() -> bool:
     async with httpx.AsyncClient() as client:
         response = await client.get(f"{BASE_URL}/teams")
         teams = response.json()
-        
+
         print("\n✅ Teams Available:")
         for team in teams:
             print(f"  - {team['name']} ({team['id']})")
-        
+
         return len(teams) == 4
 
 async def test_memory() -> bool:
@@ -51,24 +51,24 @@ async def test_memory() -> bool:
             }
         )
         add_data = add_response.json()
-        
+
         # Search memory
         search_response = await client.post(
             f"{BASE_URL}/memory/search",
             json={"query": "test", "top_k": 5}
         )
         search_data = search_response.json()
-        
+
         print("\n✅ Memory System:")
         print(f"  Added: {add_data['status']}")
         print(f"  Found: {search_data['count']} entries")
-        
+
         return add_data['status'] == 'added' and search_data['count'] > 0
 
 async def test_streaming() -> bool:
     """Test streaming team execution."""
     print("\n✅ Testing Streaming Execution:")
-    
+
     async with httpx.AsyncClient(timeout=30.0) as client:
         async with client.stream(
             'POST',
@@ -92,7 +92,7 @@ async def test_streaming() -> bool:
                                 print(f"  Phase: {phase}")
                     except json.JSONDecodeError:
                         continue
-            
+
             expected_phases = ['planning', 'memory', 'setup', 'generation', 'critic', 'judge', 'gates']
             return all(phase in phases_seen for phase in expected_phases[:4])  # At least first 4 phases
 
@@ -101,19 +101,19 @@ async def test_stats() -> bool:
     async with httpx.AsyncClient() as client:
         response = await client.get(f"{BASE_URL}/stats")
         stats = response.json()
-        
+
         print("\n✅ System Statistics:")
         print(f"  Memory entries: {stats['memory']['total_entries']}")
         print(f"  Graph entities: {stats['graph']['total_entities']}")
         print(f"  Cache entries: {stats['embeddings']['cache']['total_cached']}")
-        
+
         return 'memory' in stats and 'embeddings' in stats
 
 async def main():
     """Run all tests."""
     print("🧪 UNIFIED SYSTEM TEST SUITE")
     print("=" * 40)
-    
+
     tests = [
         ("Health Check", test_health),
         ("Teams Discovery", test_teams),
@@ -121,7 +121,7 @@ async def main():
         ("Streaming Execution", test_streaming),
         ("Statistics", test_stats)
     ]
-    
+
     results = []
     for name, test_func in tests:
         try:
@@ -130,19 +130,19 @@ async def main():
         except Exception as e:
             print(f"\n❌ {name} failed: {e}")
             results.append((name, False))
-    
+
     print("\n" + "=" * 40)
     print("📊 TEST RESULTS:")
-    
+
     passed = 0
     for name, result in results:
         status = "✅ PASSED" if result else "❌ FAILED"
         print(f"  {name}: {status}")
         if result:
             passed += 1
-    
+
     print(f"\n🎯 Total: {passed}/{len(tests)} tests passed")
-    
+
     if passed == len(tests):
         print("🎉 ALL TESTS PASSED!")
         return 0

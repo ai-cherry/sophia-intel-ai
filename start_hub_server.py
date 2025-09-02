@@ -1,18 +1,20 @@
 """
 Minimal server to run the hub interface
 """
-import os
 import sys
+
 sys.path.insert(0, '/Users/lynnmusil/sophia-intel-ai')
 
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import PlainTextResponse
-from app.api.hub.hub_controller import router as hub_router
-from pydantic import BaseModel
-from typing import List, Dict, Any, Optional
 import time
+from typing import Any
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import PlainTextResponse
+from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
+
+from app.api.hub.hub_controller import router as hub_router
 
 app = FastAPI(
     title="Sophia Intel AI Hub",
@@ -41,18 +43,18 @@ class Message(BaseModel):
 
 class ChatRequest(BaseModel):
     model: str
-    messages: List[Message]
-    max_tokens: Optional[int] = 100
-    temperature: Optional[float] = 0.7
-    stream: Optional[bool] = False
+    messages: list[Message]
+    max_tokens: int | None = 100
+    temperature: float | None = 0.7
+    stream: bool | None = False
 
 class ChatResponse(BaseModel):
     id: str
     object: str = "chat.completion"
     created: int
     model: str
-    choices: List[Dict[str, Any]]
-    usage: Dict[str, int]
+    choices: list[dict[str, Any]]
+    usage: dict[str, int]
 
 # Basic health check
 @app.get("/health")

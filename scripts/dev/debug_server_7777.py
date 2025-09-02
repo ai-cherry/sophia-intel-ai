@@ -1,9 +1,10 @@
-from fastapi import FastAPI, Request
-from fastapi.responses import StreamingResponse
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
 import json
 import time
+
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
 
 app = FastAPI()
 
@@ -45,38 +46,38 @@ async def get_workflows():
 async def run_team_debug(request: Request):
     # Get raw body first
     raw_body = await request.body()
-    print(f"\n=== DEBUG: RAW REQUEST ===")
+    print("\n=== DEBUG: RAW REQUEST ===")
     print(f"Content-Type: {request.headers.get('content-type')}")
     print(f"Raw body: {raw_body}")
-    
+
     try:
         json_body = await request.json()
         print(f"Parsed JSON: {json_body}")
-        
+
         # Try to validate with Pydantic
         team_request = TeamRequest(**json_body)
         print(f"Pydantic validation SUCCESS: {team_request}")
-        
+
         def generate_response():
             yield f"data: {json.dumps({'token': 'Starting task with team: '})}\\n\\n"
             yield f"data: {json.dumps({'token': team_request.team_id or 'default'})}\\n\\n"
-            
+
             task_prefix = "\\n\\nTask: "
             yield f"data: {json.dumps({'token': task_prefix})}\\n\\n"
             yield f"data: {json.dumps({'token': team_request.message})}\\n\\n"
-            
+
             yield f"data: {json.dumps({'token': '\\n\\n🔄 Processing...'})}\\n\\n"
             time.sleep(1)
-            
+
             yield f"data: {json.dumps({'token': '\\n✅ Critic Review: PASS'})}\\n\\n"
             time.sleep(0.5)
-            
+
             yield f"data: {json.dumps({'token': '\\n⚖️ Judge Decision: ACCEPT'})}\\n\\n"
             time.sleep(0.5)
-            
+
             yield f"data: {json.dumps({'token': '\\n🚪 Runner Gate: ALLOWED'})}\\n\\n"
             time.sleep(0.5)
-            
+
             yield f"data: {json.dumps({'token': '\\n\\n📊 Task completed successfully!'})}\\n\\n"
             yield "data: [DONE]\\n\\n"
 
@@ -85,7 +86,7 @@ async def run_team_debug(request: Request):
             media_type="text/plain",
             headers={"Cache-Control": "no-cache", "Connection": "keep-alive"}
         )
-        
+
     except Exception as e:
         print(f"ERROR: {str(e)}")
         print(f"Exception type: {type(e)}")
@@ -98,14 +99,14 @@ async def run_workflow(request: TeamRequest):
     def generate_response():
         yield f"data: {json.dumps({'token': 'Starting workflow: '})}\\n\\n"
         yield f"data: {json.dumps({'token': request.team_id or 'default'})}\\n\\n"
-        
+
         task_prefix = "\\n\\nTask: "
         yield f"data: {json.dumps({'token': task_prefix})}\\n\\n"
         yield f"data: {json.dumps({'token': request.message})}\\n\\n"
-        
+
         yield f"data: {json.dumps({'token': '\\n\\n🔄 Processing workflow...'})}\\n\\n"
         time.sleep(1)
-        
+
         yield f"data: {json.dumps({'token': '\\n✅ Workflow completed!'})}\\n\\n"
         yield "data: [DONE]\\n\\n"
 

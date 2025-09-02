@@ -1,6 +1,8 @@
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
-from app.errors import APIError, ValidationError, RateLimitExceeded, ServiceUnavailable
+
+from app.errors import APIError, RateLimitExceeded, ServiceUnavailable, ValidationError
+
 
 def setup_error_handling(app: FastAPI):
     @app.exception_handler(APIError)

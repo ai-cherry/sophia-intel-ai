@@ -3,17 +3,13 @@ FastAPI endpoints for Portkey Unified Router
 Provides HTTP API for routing and analytics
 """
 
-from fastapi import APIRouter, HTTPException, Depends
-from typing import Dict, Any, List, Optional
-from pydantic import BaseModel
 from datetime import datetime
+from typing import Any
 
-from app.api.portkey_unified_router import (
-    unified_router, 
-    RoutingStrategy, 
-    RouteConfig,
-    ModelTier
-)
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
+
+from app.api.portkey_unified_router import ModelTier, RouteConfig, RoutingStrategy, unified_router
 from app.swarms.agno_teams import ExecutionStrategy
 
 router = APIRouter(prefix="/portkey-routing", tags=["portkey", "routing"])
@@ -24,20 +20,20 @@ class RouteSelectionRequest(BaseModel):
     agent_role: str
     task_complexity: float = 0.5
     execution_strategy: str = "balanced"
-    routing_strategy: Optional[str] = "balanced"
-    max_cost_per_request: Optional[float] = 0.05
+    routing_strategy: str | None = "balanced"
+    max_cost_per_request: float | None = 0.05
     fallback_enabled: bool = True
     cache_enabled: bool = True
 
 
 class CompletionRequest(BaseModel):
-    messages: List[Dict[str, str]]
+    messages: list[dict[str, str]]
     agent_role: str
     task_complexity: float = 0.5
     execution_strategy: str = "balanced"
-    routing_config: Optional[Dict[str, Any]] = None
-    temperature: Optional[float] = None
-    max_tokens: Optional[int] = None
+    routing_config: dict[str, Any] | None = None
+    temperature: float | None = None
+    max_tokens: int | None = None
 
 
 class RouteSelectionResponse(BaseModel):
@@ -48,8 +44,8 @@ class RouteSelectionResponse(BaseModel):
     routing_strategy: str
     task_complexity: float
     model_tier: str
-    fallback_models: List[str]
-    routing_metadata: Dict[str, Any]
+    fallback_models: list[str]
+    routing_metadata: dict[str, Any]
 
 
 class CompletionResponse(BaseModel):
@@ -57,7 +53,7 @@ class CompletionResponse(BaseModel):
     model_used: str
     completion_time_ms: float
     attempt: int
-    routing_decision: Dict[str, Any]
+    routing_decision: dict[str, Any]
     success: bool
 
 
@@ -65,7 +61,7 @@ class AnalyticsResponse(BaseModel):
     daily_cost: float
     total_requests: int
     cache_hit_rate: float
-    model_statistics: Dict[str, Any]
+    model_statistics: dict[str, Any]
     routing_cache_size: int
     timestamp: str
 
@@ -91,11 +87,11 @@ async def select_optimal_model(
             execution_strategy = ExecutionStrategy(request.execution_strategy.lower())
         except ValueError:
             raise HTTPException(
-                status_code=400, 
+                status_code=400,
                 detail=f"Invalid execution strategy: {request.execution_strategy}"
             )
-        
-        # Parse routing strategy  
+
+        # Parse routing strategy
         routing_strategy = RoutingStrategy.BALANCED
         if request.routing_strategy:
             try:
@@ -105,7 +101,7 @@ async def select_optimal_model(
                     status_code=400,
                     detail=f"Invalid routing strategy: {request.routing_strategy}"
                 )
-        
+
         # Build route config
         route_config = RouteConfig(
             strategy=routing_strategy,
@@ -113,7 +109,7 @@ async def select_optimal_model(
             fallback_enabled=request.fallback_enabled,
             cache_enabled=request.cache_enabled
         )
-        
+
         # Get routing decision
         result = await router_instance.select_optimal_model(
             agent_role=request.agent_role,
@@ -121,9 +117,9 @@ async def select_optimal_model(
             execution_strategy=execution_strategy,
             route_config=route_config
         )
-        
+
         return RouteSelectionResponse(**result)
-        
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Model selection failed: {str(e)}")
 
@@ -145,12 +141,12 @@ async def route_completion(
                 status_code=400,
                 detail=f"Invalid execution strategy: {request.execution_strategy}"
             )
-        
+
         # Build route config from request
         route_config = None
         if request.routing_config:
             route_config = RouteConfig(**request.routing_config)
-        
+
         # Route completion
         result = await router_instance.route_completion(
             messages=request.messages,
@@ -161,9 +157,9 @@ async def route_completion(
             temperature=request.temperature,
             max_tokens=request.max_tokens
         )
-        
+
         return CompletionResponse(**result)
-        
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Completion routing failed: {str(e)}")
 
@@ -176,7 +172,7 @@ async def get_routing_analytics(router_instance = Depends(get_router)):
     try:
         analytics = await router_instance.get_routing_analytics()
         return AnalyticsResponse(**analytics)
-    
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Analytics retrieval failed: {str(e)}")
 
@@ -186,11 +182,11 @@ async def list_approved_models():
     """
     List all approved models with their configurations
     """
-    from app.swarms.agno_teams import SophiaAGNOTeam
     from app.elite_portkey_config import EliteAgentConfig
-    
+    from app.swarms.agno_teams import SophiaAGNOTeam
+
     config = EliteAgentConfig()
-    
+
     models_info = {}
     for role, model in SophiaAGNOTeam.APPROVED_MODELS.items():
         models_info[role] = {
@@ -199,7 +195,7 @@ async def list_approved_models():
             "max_tokens": config.MAX_TOKENS.get(role, 4000),
             "purpose": role.replace("_", " ").title()
         }
-    
+
     return {
         "approved_models": models_info,
         "total_models": len(models_info),
@@ -217,11 +213,11 @@ async def health_check():
     try:
         if not unified_router.session:
             await unified_router.initialize()
-        
+
         # Check if we have models registered
         model_count = len(unified_router.model_registry)
         cache_size = len(unified_router.routing_cache)
-        
+
         return {
             "status": "healthy",
             "models_registered": model_count,
@@ -229,7 +225,7 @@ async def health_check():
             "virtual_keys_configured": len(unified_router.VIRTUAL_KEYS),
             "timestamp": datetime.now().isoformat()
         }
-        
+
     except Exception as e:
         return {
             "status": "unhealthy",
@@ -246,13 +242,13 @@ async def clear_routing_cache(router_instance = Depends(get_router)):
     try:
         cache_size_before = len(router_instance.routing_cache)
         router_instance.routing_cache.clear()
-        
+
         return {
             "success": True,
             "cleared_entries": cache_size_before,
             "message": f"Cleared {cache_size_before} cache entries"
         }
-        
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Cache clear failed: {str(e)}")
 
@@ -264,9 +260,9 @@ async def get_model_usage(model: str, router_instance = Depends(get_router)):
     """
     if model not in router_instance.model_registry:
         raise HTTPException(status_code=404, detail=f"Model {model} not found")
-    
+
     metrics = router_instance.model_registry[model]
-    
+
     return {
         "model": model,
         "avg_latency_ms": metrics.avg_latency_ms,
@@ -292,7 +288,7 @@ async def get_routing_strategies():
             "weight_factors": "70% cost, 20% performance, 10% availability"
         },
         RoutingStrategy.PERFORMANCE_FIRST.value: {
-            "name": "Performance First", 
+            "name": "Performance First",
             "description": "Prioritizes fastest and most reliable models",
             "weight_factors": "80% performance, 10% cost, 10% availability"
         },
@@ -312,7 +308,7 @@ async def get_routing_strategies():
             "weight_factors": "50% performance, 30% availability, 20% cost + tier bonus"
         }
     }
-    
+
     return {
         "strategies": strategies,
         "default": RoutingStrategy.BALANCED.value,

@@ -16,16 +16,16 @@ Patterns:
 - knowledge_transfer: Cross-swarm learning
 """
 
-from .base import SwarmPattern, PatternConfig, PatternResult
-from .adversarial_debate import AdversarialDebatePattern
-from .quality_gates import QualityGatesPattern
-from .strategy_archive import StrategyArchivePattern
-from .safety_boundaries import SafetyBoundariesPattern
-from .dynamic_roles import DynamicRolesPattern
-from .consensus import ConsensusPattern
 from .adaptive_parameters import AdaptiveParametersPattern
-from .knowledge_transfer import KnowledgeTransferPattern
+from .adversarial_debate import AdversarialDebatePattern
+from .base import PatternConfig, PatternResult, SwarmPattern
 from .composer import SwarmComposer
+from .consensus import ConsensusPattern
+from .dynamic_roles import DynamicRolesPattern
+from .knowledge_transfer import KnowledgeTransferPattern
+from .quality_gates import QualityGatesPattern
+from .safety_boundaries import SafetyBoundariesPattern
+from .strategy_archive import StrategyArchivePattern
 
 __all__ = [
     'SwarmPattern',

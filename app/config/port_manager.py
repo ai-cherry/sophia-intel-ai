@@ -6,16 +6,16 @@ This module provides centralized port management for the entire Sophia Intel AI 
 All services MUST use this configuration to avoid conflicts.
 """
 
-import os
-from typing import Dict, Optional, List, Tuple
-from enum import Enum
 import json
+import os
+from enum import Enum
 from pathlib import Path
+
 
 class ServiceType(Enum):
     """Service categories for port allocation"""
     FRONTEND = "frontend"      # 3000-3999
-    DATABASE = "database"      # 6000-6999  
+    DATABASE = "database"      # 6000-6999
     MCP = "mcp"               # 8000-8099
     API = "api"               # 8000-8099
     MONITORING = "monitoring"  # 8000-8099
@@ -35,7 +35,7 @@ class PortConfig:
     my_port = config.get_port("unified_api")
     ```
     """
-    
+
     # MASTER PORT REGISTRY - DO NOT MODIFY WITHOUT UPDATING PORT_ASSIGNMENTS.md
     _PORTS = {
         # Frontend Services (3000-3999)
@@ -46,7 +46,7 @@ class PortConfig:
             "health": "/",
             "required": True
         },
-        
+
         # Database Services (6000-6999)
         "redis": {
             "port": 6379,
@@ -55,7 +55,7 @@ class PortConfig:
             "health": None,  # TCP connection
             "required": True
         },
-        
+
         # MCP Services (8000-8099)
         "mcp_memory_alt": {
             "port": 8000,
@@ -128,7 +128,7 @@ class PortConfig:
             "health": "/v1",
             "required": False
         },
-        
+
         # Alternative UIs (8500-8599)
         "streamlit": {
             "port": 8501,
@@ -138,12 +138,12 @@ class PortConfig:
             "required": True
         }
     }
-    
+
     def __init__(self):
         """Initialize port configuration"""
         self._load_overrides()
         self._validate_configuration()
-    
+
     def _load_overrides(self):
         """Load environment variable overrides"""
         # Allow environment variables to override ports
@@ -156,7 +156,7 @@ class PortConfig:
                     print(f"Port override: {service_name} -> {override_port}")
                 except ValueError:
                     print(f"Invalid port override for {env_var}: {os.environ[env_var]}")
-    
+
     def _validate_configuration(self):
         """Validate no port conflicts exist"""
         port_map = {}
@@ -168,7 +168,7 @@ class PortConfig:
                     f"both configured for port {port}"
                 )
             port_map[port] = service_name
-    
+
     def get_port(self, service_name: str) -> int:
         """
         Get port for a service
@@ -185,7 +185,7 @@ class PortConfig:
         if service_name not in self._PORTS:
             raise KeyError(f"Unknown service: {service_name}. Available: {list(self._PORTS.keys())}")
         return self._PORTS[service_name]["port"]
-    
+
     def get_service_url(self, service_name: str, host: str = "localhost") -> str:
         """
         Get full URL for a service
@@ -198,33 +198,33 @@ class PortConfig:
             Full URL (e.g., "http://localhost:8005")
         """
         port = self.get_port(service_name)
-        
+
         # Redis uses redis:// protocol
         if service_name == "redis":
             return f"redis://{host}:{port}"
-        
+
         return f"http://{host}:{port}"
-    
-    def get_health_endpoint(self, service_name: str) -> Optional[str]:
+
+    def get_health_endpoint(self, service_name: str) -> str | None:
         """Get health check endpoint for a service"""
         if service_name not in self._PORTS:
             return None
         return self._PORTS[service_name].get("health")
-    
-    def get_websocket_endpoints(self, service_name: str) -> List[str]:
+
+    def get_websocket_endpoints(self, service_name: str) -> list[str]:
         """Get WebSocket endpoints for a service"""
         if service_name not in self._PORTS:
             return []
         return self._PORTS[service_name].get("websockets", [])
-    
-    def get_required_services(self) -> List[str]:
+
+    def get_required_services(self) -> list[str]:
         """Get list of required services that must be running"""
         return [
             name for name, config in self._PORTS.items()
             if config.get("required", False)
         ]
-    
-    def get_available_ports(self, service_type: Optional[ServiceType] = None) -> List[int]:
+
+    def get_available_ports(self, service_type: ServiceType | None = None) -> list[int]:
         """Get list of available (not required) ports"""
         available = []
         for name, config in self._PORTS.items():
@@ -232,15 +232,15 @@ class PortConfig:
                 if service_type is None or config["type"] == service_type:
                     available.append(config["port"])
         return sorted(available)
-    
-    def export_config(self, output_path: Optional[str] = None) -> Dict:
+
+    def export_config(self, output_path: str | None = None) -> dict:
         """Export configuration to JSON"""
         config = {
             "version": "1.0.0",
             "timestamp": os.environ.get("BUILD_TIMESTAMP", ""),
             "services": {}
         }
-        
+
         for name, service_config in self._PORTS.items():
             config["services"][name] = {
                 "port": service_config["port"],
@@ -251,15 +251,15 @@ class PortConfig:
                 "required": service_config.get("required", False),
                 "url": self.get_service_url(name)
             }
-        
+
         if output_path:
             Path(output_path).parent.mkdir(parents=True, exist_ok=True)
             with open(output_path, "w") as f:
                 json.dump(config, f, indent=2)
-        
+
         return config
-    
-    def validate_runtime(self) -> Tuple[bool, List[str]]:
+
+    def validate_runtime(self) -> tuple[bool, list[str]]:
         """
         Validate runtime configuration
         
@@ -267,7 +267,7 @@ class PortConfig:
             Tuple of (is_valid, list_of_errors)
         """
         errors = []
-        
+
         # Check for port conflicts
         port_map = {}
         for name, config in self._PORTS.items():
@@ -277,12 +277,12 @@ class PortConfig:
                     f"Port conflict: {name} and {port_map[port]} both on port {port}"
                 )
             port_map[port] = name
-        
+
         # Check port ranges
         for name, config in self._PORTS.items():
             port = config["port"]
             service_type = config["type"]
-            
+
             # Validate port ranges by type
             if service_type == ServiceType.FRONTEND and not (3000 <= port < 4000):
                 errors.append(f"{name}: Frontend service port {port} not in range 3000-3999")
@@ -293,9 +293,9 @@ class PortConfig:
                 errors.append(f"{name}: API/MCP service port {port} not in range 8000-8099")
             elif service_type == ServiceType.ALTERNATIVE_UI and not (8500 <= port < 8600):
                 errors.append(f"{name}: Alternative UI port {port} not in range 8500-8599")
-        
+
         return (len(errors) == 0, errors)
-    
+
     def __str__(self) -> str:
         """String representation of port configuration"""
         lines = ["Port Configuration:"]
@@ -348,7 +348,7 @@ if __name__ == "__main__":
         print("❌ Configuration errors:")
         for error in errors:
             print(f"  - {error}")
-    
+
     # Export configuration
     config.export_config("port_config_export.json")
     print("\n📄 Configuration exported to port_config_export.json")

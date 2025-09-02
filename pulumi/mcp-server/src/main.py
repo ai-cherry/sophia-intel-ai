@@ -4,14 +4,15 @@ Memory and tool management service with Model Context Protocol support.
 Consolidated from enhanced_memory.py, supermemory_mcp.py, and enhanced_mcp_server.py
 """
 
-from fastapi import FastAPI, HTTPException, Request
+import os
+from datetime import datetime
+from typing import Any
+
+import uvicorn
+from dotenv import load_dotenv
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import Dict, Any, List, Optional
-import os
-import uvicorn
-from datetime import datetime
-from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
@@ -41,18 +42,18 @@ class MemoryAddRequest(BaseModel):
     content: str
     topic: str
     source: str = "mcp-server"
-    tags: List[str] = []
+    tags: list[str] = []
     memory_type: str = "semantic"
 
 class MemorySearchRequest(BaseModel):
     query: str
     limit: int = 10
-    memory_type: Optional[str] = None
+    memory_type: str | None = None
 
 class HealthResponse(BaseModel):
     status: str
     timestamp: str
-    systems: Dict[str, bool]
+    systems: dict[str, bool]
     version: str
 
 @app.on_event("startup")
@@ -85,7 +86,7 @@ async def health_check():
         "redis_backend": os.getenv("REDIS_URL") is not None,
         "weaviate_backend": os.getenv("WEAVIATE_URL") is not None
     }
-    
+
     return HealthResponse(
         status="healthy" if memory_system else "degraded",
         timestamp=datetime.utcnow().isoformat(),
@@ -98,7 +99,7 @@ async def add_memory(request: MemoryAddRequest):
     """Add entry to unified memory system."""
     if not memory_system:
         raise HTTPException(status_code=503, detail="Memory system not available")
-    
+
     try:
         result = await memory_system.add_memory(
             content=request.content,
@@ -116,7 +117,7 @@ async def search_memory(request: MemorySearchRequest):
     """Search unified memory system."""
     if not memory_system:
         raise HTTPException(status_code=503, detail="Memory system not available")
-    
+
     try:
         results = await memory_system.search_memory(
             query=request.query,
@@ -136,7 +137,7 @@ async def get_memory_stats():
     """Get memory system statistics."""
     if not memory_system:
         raise HTTPException(status_code=503, detail="Memory system not available")
-    
+
     try:
         stats = await memory_system.get_stats()
         return stats
@@ -151,7 +152,7 @@ async def get_memory_types():
         "default": "semantic",
         "descriptions": {
             "semantic": "Factual knowledge and concepts",
-            "episodic": "Specific events and experiences", 
+            "episodic": "Specific events and experiences",
             "procedural": "How-to knowledge and processes"
         }
     }
@@ -168,7 +169,7 @@ async def list_available_tools():
                 "parameters": ["content", "topic", "source", "tags", "memory_type"]
             },
             {
-                "name": "memory_search", 
+                "name": "memory_search",
                 "description": "Search memory content",
                 "parameters": ["query", "limit", "memory_type"]
             },
@@ -181,16 +182,16 @@ async def list_available_tools():
     }
 
 @app.post("/tools/execute")
-async def execute_tool(request: Dict[str, Any]):
+async def execute_tool(request: dict[str, Any]):
     """Execute MCP tool."""
     tool_name = request.get("tool")
     params = request.get("parameters", {})
-    
+
     if tool_name == "memory_add":
         add_req = MemoryAddRequest(**params)
         return await add_memory(add_req)
     elif tool_name == "memory_search":
-        search_req = MemorySearchRequest(**params) 
+        search_req = MemorySearchRequest(**params)
         return await search_memory(search_req)
     elif tool_name == "memory_stats":
         return await get_memory_stats()
@@ -204,7 +205,7 @@ if __name__ == "__main__":
     print("✅ Model Context Protocol Support")
     print("✅ Unified Memory Backend")
     print("=" * 50)
-    
+
     uvicorn.run(
         app,
         host="0.0.0.0",

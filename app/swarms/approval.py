@@ -2,9 +2,10 @@
 Approval gates for controlling agent actions.
 """
 
-from typing import Dict, Any
+from typing import Any
 
-def judge_allows_run(judge_json: Dict[str, Any]) -> bool:
+
+def judge_allows_run(judge_json: dict[str, Any]) -> bool:
     """
     Check if judge decision allows runner to proceed.
     
@@ -18,7 +19,7 @@ def judge_allows_run(judge_json: Dict[str, Any]) -> bool:
     instr = judge_json.get("runner_instructions") or []
     return ok and len(instr) > 0
 
-def critic_requires_revision(critic_json: Dict[str, Any]) -> bool:
+def critic_requires_revision(critic_json: dict[str, Any]) -> bool:
     """
     Check if critic verdict requires revision.
     
@@ -30,7 +31,7 @@ def critic_requires_revision(critic_json: Dict[str, Any]) -> bool:
     """
     return critic_json.get("verdict") == "revise"
 
-def get_risk_level(generator_json: Dict[str, Any]) -> str:
+def get_risk_level(generator_json: dict[str, Any]) -> str:
     """
     Extract risk level from generator output.
     

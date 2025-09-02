@@ -1,6 +1,6 @@
-from fastapi import APIRouter, HTTPException
+
+from fastapi import APIRouter
 from pydantic import BaseModel
-from typing import List, Dict, Any
 
 router = APIRouter(prefix="/embeddings", tags=["embeddings"])
 
@@ -9,18 +9,18 @@ class EmbeddingRequest(BaseModel):
     model: str = "text-embedding-ada-002"
 
 class BatchEmbeddingRequest(BaseModel):
-    texts: List[str]
+    texts: list[str]
     model: str = "text-embedding-ada-002"
 
 class EmbeddingResponse(BaseModel):
-    embedding: List[float]
+    embedding: list[float]
     model: str
-    usage: Dict[str, int]
+    usage: dict[str, int]
 
 class BatchEmbeddingResponse(BaseModel):
-    embeddings: List[EmbeddingResponse]
+    embeddings: list[EmbeddingResponse]
     model: str
-    usage: Dict[str, int]
+    usage: dict[str, int]
 
 @router.post("/create")
 async def create_embedding(request: EmbeddingRequest):

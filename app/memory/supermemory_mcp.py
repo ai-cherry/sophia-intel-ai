@@ -3,16 +3,19 @@ Supermemory MCP Server Integration.
 Universal, persistent memory layer shared by agents/tools.
 """
 
-import os
-import json
+import asyncio
 import hashlib
+import json
+import os
 import sqlite3
-from typing import List, Dict, Any, Optional
 from dataclasses import dataclass, field
 from datetime import datetime
-import asyncio
 from enum import Enum
-from app.core.circuit_breaker import with_circuit_breaker, get_llm_circuit_breaker, get_weaviate_circuit_breaker, get_redis_circuit_breaker, get_webhook_circuit_breaker
+from typing import Any
+
+from app.core.circuit_breaker import (
+    with_circuit_breaker,
+)
 
 # ============================================
 # Configuration
@@ -34,12 +37,12 @@ class MemoryEntry:
     topic: str
     content: str
     source: str
-    tags: List[str] = field(default_factory=list)
+    tags: list[str] = field(default_factory=list)
     timestamp: datetime = field(default_factory=datetime.now)
     memory_type: MemoryType = MemoryType.SEMANTIC
-    embedding_vector: Optional[List[float]] = None
-    hash_id: Optional[str] = None
-    
+    embedding_vector: list[float] | None = None
+    hash_id: str | None = None
+
     def __post_init__(self):
         """Generate hash ID for deduplication."""
         if not self.hash_id:
@@ -47,8 +50,8 @@ class MemoryEntry:
                 f"{self.topic}:{self.content}:{self.source}".encode()
             ).hexdigest()[:16]
             self.hash_id = content_hash
-    
-    def to_dict(self) -> Dict[str, Any]:
+
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for storage."""
         return {
             "hash_id": self.hash_id,
@@ -69,15 +72,15 @@ class SupermemoryStore:
     """
     Persistent memory store with deduplication and semantic search.
     """
-    
+
     def __init__(self, db_path: str = MEMORY_DB_PATH):
         self.db_path = db_path
         self._ensure_db()
-    
+
     def _ensure_db(self):
         """Ensure database exists with proper schema."""
         os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
-        
+
         with sqlite3.connect(self.db_path) as conn:
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS memory_entries (
@@ -93,23 +96,23 @@ class SupermemoryStore:
                     last_accessed TIMESTAMP
                 )
             """)
-            
+
             # Indexes for fast retrieval
             conn.execute("""
                 CREATE INDEX IF NOT EXISTS idx_topic 
                 ON memory_entries(topic)
             """)
-            
+
             conn.execute("""
                 CREATE INDEX IF NOT EXISTS idx_memory_type 
                 ON memory_entries(memory_type)
             """)
-            
+
             conn.execute("""
                 CREATE INDEX IF NOT EXISTS idx_timestamp 
                 ON memory_entries(timestamp DESC)
             """)
-            
+
             # FTS5 for full-text search
             conn.execute("""
                 CREATE VIRTUAL TABLE IF NOT EXISTS memory_fts USING fts5(
@@ -121,7 +124,7 @@ class SupermemoryStore:
                     content_rowid=rowid
                 )
             """)
-            
+
             # Triggers to keep FTS in sync
             conn.execute("""
                 CREATE TRIGGER IF NOT EXISTS memory_fts_insert 
@@ -130,7 +133,7 @@ class SupermemoryStore:
                     VALUES (new.hash_id, new.topic, new.content, new.tags);
                 END
             """)
-            
+
             conn.execute("""
                 CREATE TRIGGER IF NOT EXISTS memory_fts_update 
                 AFTER UPDATE ON memory_entries BEGIN
@@ -139,21 +142,21 @@ class SupermemoryStore:
                     WHERE hash_id = new.hash_id;
                 END
             """)
-            
+
             conn.execute("""
                 CREATE TRIGGER IF NOT EXISTS memory_fts_delete 
                 AFTER DELETE ON memory_entries BEGIN
                     DELETE FROM memory_fts WHERE hash_id = old.hash_id;
                 END
             """)
-            
+
             conn.commit()
-    
+
     async def add_to_memory(
         self,
         entry: MemoryEntry,
         deduplicate: bool = True
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Add entry to memory with deduplication.
         
@@ -165,7 +168,7 @@ class SupermemoryStore:
             Result with status and entry ID
         """
         start_time = asyncio.get_event_loop().time()
-        
+
         with sqlite3.connect(self.db_path) as conn:
             # Check for duplicate if enabled
             if deduplicate:
@@ -173,7 +176,7 @@ class SupermemoryStore:
                     "SELECT hash_id FROM memory_entries WHERE hash_id = ?",
                     (entry.hash_id,)
                 ).fetchone()
-                
+
                 if existing:
                     # Update access count
                     conn.execute("""
@@ -183,14 +186,14 @@ class SupermemoryStore:
                         WHERE hash_id = ?
                     """, (entry.hash_id,))
                     conn.commit()
-                    
+
                     latency_ms = (asyncio.get_event_loop().time() - start_time) * 1000
                     return {
                         "status": "duplicate",
                         "hash_id": entry.hash_id,
                         "latency_ms": latency_ms
                     }
-            
+
             # Insert new entry
             entry_dict = entry.to_dict()
             conn.execute("""
@@ -208,24 +211,24 @@ class SupermemoryStore:
                 entry_dict["embedding_vector"]
             ))
             conn.commit()
-        
+
         latency_ms = (asyncio.get_event_loop().time() - start_time) * 1000
         return {
             "status": "added",
             "hash_id": entry.hash_id,
             "latency_ms": latency_ms
         }
-    
+
     @with_circuit_breaker("database")
     async def search_memory(
         self,
         query: str,
-        memory_types: Optional[List[MemoryType]] = None,
-        tags: Optional[List[str]] = None,
-        source_pattern: Optional[str] = None,
+        memory_types: list[MemoryType] | None = None,
+        tags: list[str] | None = None,
+        source_pattern: str | None = None,
         limit: int = MAX_RESULTS,
         use_fts: bool = True
-    ) -> List[MemoryEntry]:
+    ) -> list[MemoryEntry]:
         """
         Search memory with multiple filters.
         
@@ -241,7 +244,7 @@ class SupermemoryStore:
             List of matching memory entries
         """
         start_time = asyncio.get_event_loop().time()
-        
+
         with sqlite3.connect(self.db_path) as conn:
             # Build query
             if use_fts and query:
@@ -261,38 +264,38 @@ class SupermemoryStore:
                     WHERE (topic LIKE ? OR content LIKE ?)
                 """
                 params = [f"%{query}%", f"%{query}%"]
-            
+
             # Add filters
             conditions = []
-            
+
             if memory_types:
                 type_placeholders = ",".join(["?"] * len(memory_types))
                 conditions.append(f"memory_type IN ({type_placeholders})")
                 params.extend([t.value for t in memory_types])
-            
+
             if tags:
                 for tag in tags:
                     conditions.append("tags LIKE ?")
                     params.append(f"%{tag}%")
-            
+
             if source_pattern:
                 conditions.append("source LIKE ?")
                 params.append(f"%{source_pattern}%")
-            
+
             if conditions:
                 if use_fts and query:
                     base_query += " AND " + " AND ".join(conditions)
                 else:
                     base_query += " AND " + " AND ".join(conditions)
-            
+
             # Add ordering and limit
             base_query += " ORDER BY timestamp DESC LIMIT ?"
             params.append(limit)
-            
+
             # Execute query
             cursor = conn.execute(base_query, params)
             rows = cursor.fetchall()
-            
+
             # Convert to MemoryEntry objects
             entries = []
             for row in rows:
@@ -307,7 +310,7 @@ class SupermemoryStore:
                     hash_id=row[0]
                 )
                 entries.append(entry)
-            
+
             # Update access counts
             if entries:
                 hash_ids = [e.hash_id for e in entries]
@@ -319,20 +322,20 @@ class SupermemoryStore:
                     WHERE hash_id IN ({placeholders})
                 """, hash_ids)
                 conn.commit()
-        
+
         latency_ms = (asyncio.get_event_loop().time() - start_time) * 1000
-        
+
         # Check latency target
         if latency_ms > LATENCY_TARGET_MS:
             print(f"⚠️ Supermemory search exceeded target: {latency_ms:.0f}ms > {LATENCY_TARGET_MS}ms")
-        
+
         return entries
-    
-    async def get_stats(self) -> Dict[str, Any]:
+
+    async def get_stats(self) -> dict[str, Any]:
         """Get memory statistics."""
         with sqlite3.connect(self.db_path) as conn:
             total = conn.execute("SELECT COUNT(*) FROM memory_entries").fetchone()[0]
-            
+
             by_type = {}
             for memory_type in MemoryType:
                 count = conn.execute(
@@ -340,19 +343,19 @@ class SupermemoryStore:
                     (memory_type.value,)
                 ).fetchone()[0]
                 by_type[memory_type.value] = count
-            
+
             most_accessed = conn.execute("""
                 SELECT topic, access_count 
                 FROM memory_entries 
                 ORDER BY access_count DESC 
                 LIMIT 5
             """).fetchall()
-            
+
             return {
                 "total_entries": total,
                 "by_type": by_type,
                 "most_accessed": [
-                    {"topic": row[0], "count": row[1]} 
+                    {"topic": row[0], "count": row[1]}
                     for row in most_accessed
                 ]
             }
@@ -365,20 +368,20 @@ class MemoryPatterns:
     """
     Common patterns for memory usage.
     """
-    
+
     @staticmethod
     def create_decision_memory(
         decision: str,
-        rationale: List[str],
+        rationale: list[str],
         source: str,
-        alternatives: Optional[List[str]] = None
+        alternatives: list[str] | None = None
     ) -> MemoryEntry:
         """Create memory entry for architectural decisions."""
         content = f"Decision: {decision}\n"
         content += f"Rationale: {'; '.join(rationale)}\n"
         if alternatives:
             content += f"Alternatives considered: {', '.join(alternatives)}"
-        
+
         return MemoryEntry(
             topic=f"Decision: {decision[:50]}",
             content=content,
@@ -386,19 +389,19 @@ class MemoryPatterns:
             tags=["decision", "architecture"],
             memory_type=MemoryType.SEMANTIC
         )
-    
+
     @staticmethod
     def create_pattern_memory(
         pattern_name: str,
         implementation: str,
-        use_cases: List[str],
+        use_cases: list[str],
         source: str
     ) -> MemoryEntry:
         """Create memory entry for code patterns."""
         content = f"Pattern: {pattern_name}\n"
         content += f"Implementation:\n{implementation}\n"
         content += f"Use cases: {'; '.join(use_cases)}"
-        
+
         return MemoryEntry(
             topic=f"Pattern: {pattern_name}",
             content=content,
@@ -406,20 +409,20 @@ class MemoryPatterns:
             tags=["pattern", "reusable"],
             memory_type=MemoryType.PROCEDURAL
         )
-    
+
     @staticmethod
     def create_edge_case_memory(
         issue: str,
         solution: str,
         source: str,
-        prevention: Optional[str] = None
+        prevention: str | None = None
     ) -> MemoryEntry:
         """Create memory entry for edge cases."""
         content = f"Issue: {issue}\n"
         content += f"Solution: {solution}\n"
         if prevention:
             content += f"Prevention: {prevention}"
-        
+
         return MemoryEntry(
             topic=f"Edge case: {issue[:50]}",
             content=content,
@@ -436,12 +439,12 @@ class SupermemoryMCP:
     """
     MCP server interface for Supermemory.
     """
-    
+
     def __init__(self):
         self.store = SupermemoryStore()
-    
+
     @with_circuit_breaker("database")
-    async def handle_request(self, request: Dict[str, Any]) -> Dict[str, Any]:
+    async def handle_request(self, request: dict[str, Any]) -> dict[str, Any]:
         """
         Handle MCP request.
         
@@ -453,7 +456,7 @@ class SupermemoryMCP:
         """
         method = request.get("method")
         params = request.get("params", {})
-        
+
         if method == "add_to_memory":
             entry = MemoryEntry(
                 topic=params["topic"],
@@ -464,7 +467,7 @@ class SupermemoryMCP:
             )
             result = await self.store.add_to_memory(entry)
             return {"result": result}
-        
+
         elif method == "search_memory":
             entries = await self.store.search_memory(
                 query=params.get("query", ""),
@@ -489,11 +492,11 @@ class SupermemoryMCP:
                     "count": len(entries)
                 }
             }
-        
+
         elif method == "get_stats":
             stats = await self.store.get_stats()
             return {"result": stats}
-        
+
         else:
             return {"error": f"Unknown method: {method}"}
 
@@ -503,7 +506,7 @@ class SupermemoryMCP:
 
 async def memorize_task_learnings(
     task: str,
-    learnings: List[str],
+    learnings: list[str],
     source: str
 ) -> None:
     """
@@ -515,7 +518,7 @@ async def memorize_task_learnings(
         source: Source file or context
     """
     store = SupermemoryStore()
-    
+
     for learning in learnings:
         entry = MemoryEntry(
             topic=f"Learning: {task[:30]}",
@@ -530,7 +533,7 @@ async def memorize_task_learnings(
 async def recall_relevant_memories(
     query: str,
     limit: int = 10
-) -> List[MemoryEntry]:
+) -> list[MemoryEntry]:
     """
     Recall memories relevant to a query.
     
@@ -552,18 +555,18 @@ async def recall_relevant_memories(
 async def main():
     """CLI for Supermemory testing."""
     import argparse
-    
+
     parser = argparse.ArgumentParser(description="Supermemory MCP")
     parser.add_argument("--add", help="Add memory entry")
     parser.add_argument("--search", help="Search memories")
     parser.add_argument("--stats", action="store_true", help="Show statistics")
     parser.add_argument("--topic", help="Topic for new entry")
     parser.add_argument("--source", default="cli", help="Source for new entry")
-    
+
     args = parser.parse_args()
-    
+
     store = SupermemoryStore()
-    
+
     if args.add and args.topic:
         entry = MemoryEntry(
             topic=args.topic,
@@ -573,7 +576,7 @@ async def main():
         )
         result = await store.add_to_memory(entry)
         print(f"✅ Memory added: {result}")
-    
+
     elif args.search:
         entries = await store.search_memory(args.search)
         print(f"\n📚 Found {len(entries)} memories:")
@@ -582,7 +585,7 @@ async def main():
             print(f"  Content: {entry.content[:100]}...")
             print(f"  Source: {entry.source}")
             print(f"  Tags: {', '.join(entry.tags)}")
-    
+
     elif args.stats:
         stats = await store.get_stats()
         print("\n📊 Supermemory Statistics:")

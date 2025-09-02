@@ -3,14 +3,17 @@ FastAPI endpoints for Resilient WebSocket Management
 Provides HTTP and WebSocket endpoints for MCP communication
 """
 
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, HTTPException, Depends
-from typing import Dict, Any, Optional
-from pydantic import BaseModel
-import asyncio
-import json
 import logging
+from typing import Any
 
-from app.core.resilient_websocket import mcp_ws_manager, ResilientWebSocketClient, ReconnectionConfig
+from fastapi import APIRouter, Depends, HTTPException, WebSocket
+from pydantic import BaseModel
+
+from app.core.resilient_websocket import (
+    ReconnectionConfig,
+    ResilientWebSocketClient,
+    mcp_ws_manager,
+)
 
 router = APIRouter(prefix="/ws", tags=["websocket", "mcp"])
 logger = logging.getLogger(__name__)
@@ -20,7 +23,7 @@ logger = logging.getLogger(__name__)
 class MCPMessageRequest(BaseModel):
     server: str
     method: str
-    params: Optional[Dict[str, Any]] = None
+    params: dict[str, Any] | None = None
     expect_response: bool = True
     timeout: float = 30.0
 
@@ -37,7 +40,7 @@ class ReconnectionConfigModel(BaseModel):
 class MCPServerConfig(BaseModel):
     name: str
     url: str
-    reconnect_config: Optional[ReconnectionConfigModel] = None
+    reconnect_config: ReconnectionConfigModel | None = None
 
 
 async def get_ws_manager():
@@ -76,20 +79,20 @@ async def send_mcp_message(
             params=request.params,
             expect_response=request.expect_response
         )
-        
+
         if response is None and request.expect_response:
             raise HTTPException(
                 status_code=503,
                 detail=f"No response from MCP server '{request.server}'"
             )
-        
+
         return {
             "success": True,
             "response": response,
             "server": request.server,
             "method": request.method
         }
-        
+
     except Exception as e:
         logger.error(f"Failed to send MCP message: {e}")
         raise HTTPException(
@@ -106,7 +109,7 @@ async def get_mcp_health(ws_manager = Depends(get_ws_manager)):
     try:
         health_status = await ws_manager.get_mcp_health()
         return health_status
-        
+
     except Exception as e:
         logger.error(f"Failed to get MCP health: {e}")
         raise HTTPException(
@@ -122,13 +125,13 @@ async def get_mcp_metrics(ws_manager = Depends(get_ws_manager)):
     """
     try:
         metrics = {}
-        
+
         for server_name, client in ws_manager.mcp_clients.items():
             metrics[server_name] = client.get_metrics()
-        
+
         # Add WebSocket manager metrics
         metrics["websocket_manager"] = ws_manager.get_metrics()
-        
+
         return {
             "mcp_servers": metrics,
             "summary": {
@@ -140,7 +143,7 @@ async def get_mcp_metrics(ws_manager = Depends(get_ws_manager)):
                 "active_websocket_connections": ws_manager.metrics["active_connections"]
             }
         }
-        
+
     except Exception as e:
         logger.error(f"Failed to get MCP metrics: {e}")
         raise HTTPException(
@@ -163,12 +166,12 @@ async def add_mcp_server(
                 status_code=409,
                 detail=f"MCP server '{config.name}' already exists"
             )
-        
+
         # Build reconnection config
         reconnect_config = None
         if config.reconnect_config:
             reconnect_config = ReconnectionConfig(**config.reconnect_config.dict())
-        
+
         # Create new client
         client = ResilientWebSocketClient(
             url=config.url,
@@ -179,19 +182,19 @@ async def add_mcp_server(
                 "status_update": ws_manager._handle_status_update
             }
         )
-        
+
         # Set up callbacks
         client.on_connected = lambda: ws_manager._on_mcp_connected(config.name)
         client.on_disconnected = lambda: ws_manager._on_mcp_disconnected(config.name)
         client.on_error = lambda e: ws_manager._on_mcp_error(config.name, e)
-        
+
         # Add to manager
         ws_manager.mcp_clients[config.name] = client
         ws_manager.mcp_servers[config.name] = config.url
-        
+
         # Attempt initial connection
         connected = await client.connect()
-        
+
         return {
             "success": True,
             "server": config.name,
@@ -199,7 +202,7 @@ async def add_mcp_server(
             "connected": connected,
             "message": f"MCP server '{config.name}' added successfully"
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -224,19 +227,19 @@ async def remove_mcp_server(
                 status_code=404,
                 detail=f"MCP server '{server_name}' not found"
             )
-        
+
         # Disconnect and remove client
         client = ws_manager.mcp_clients[server_name]
         await client.disconnect(reason="Server removed")
-        
+
         del ws_manager.mcp_clients[server_name]
         ws_manager.mcp_servers.pop(server_name, None)
-        
+
         return {
             "success": True,
             "message": f"MCP server '{server_name}' removed successfully"
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -261,27 +264,27 @@ async def reconnect_mcp_server(
                 status_code=404,
                 detail=f"MCP server '{server_name}' not found"
             )
-        
+
         client = ws_manager.mcp_clients[server_name]
-        
+
         # Disconnect if connected
         if client.state.value == "connected":
             await client.disconnect(reason="Manual reconnection")
-        
+
         # Reset reconnection state
         client.reconnect_attempts = 0
         client.circuit_breaker_open = False
-        
+
         # Attempt reconnection
         connected = await client.connect()
-        
+
         return {
             "success": True,
             "server": server_name,
             "connected": connected,
             "message": f"Reconnection attempt for '{server_name}' completed"
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -298,7 +301,7 @@ async def list_mcp_servers(ws_manager = Depends(get_ws_manager)):
     List all configured MCP servers
     """
     servers = {}
-    
+
     for server_name, client in ws_manager.mcp_clients.items():
         servers[server_name] = {
             "name": server_name,
@@ -309,7 +312,7 @@ async def list_mcp_servers(ws_manager = Depends(get_ws_manager)):
             "reconnect_attempts": client.reconnect_attempts,
             "circuit_breaker_open": client.circuit_breaker_open
         }
-    
+
     return {
         "servers": servers,
         "total": len(servers),
@@ -320,7 +323,7 @@ async def list_mcp_servers(ws_manager = Depends(get_ws_manager)):
 @router.post("/mcp/broadcast")
 async def broadcast_to_websocket_clients(
     channel: str,
-    message: Dict[str, Any],
+    message: dict[str, Any],
     ws_manager = Depends(get_ws_manager)
 ):
     """
@@ -328,16 +331,16 @@ async def broadcast_to_websocket_clients(
     """
     try:
         await ws_manager.broadcast(channel, message)
-        
+
         subscriber_count = len(ws_manager.channels.get(channel, set()))
-        
+
         return {
             "success": True,
             "channel": channel,
             "subscribers": subscriber_count,
             "message": "Broadcast sent successfully"
         }
-        
+
     except Exception as e:
         logger.error(f"Failed to broadcast message: {e}")
         raise HTTPException(
@@ -352,14 +355,14 @@ async def list_websocket_channels(ws_manager = Depends(get_ws_manager)):
     List all active WebSocket channels and their subscribers
     """
     channels = {}
-    
+
     for channel_name, subscribers in ws_manager.channels.items():
         channels[channel_name] = {
             "name": channel_name,
             "subscribers": len(subscribers),
             "subscriber_ids": list(subscribers)
         }
-    
+
     return {
         "channels": channels,
         "total_channels": len(channels),
@@ -374,7 +377,7 @@ async def get_websocket_status(ws_manager = Depends(get_ws_manager)):
     """
     mcp_health = await ws_manager.get_mcp_health()
     ws_metrics = ws_manager.get_metrics()
-    
+
     return {
         "websocket_manager": {
             "active_connections": ws_metrics["active_connections"],
@@ -401,13 +404,13 @@ async def health_check():
     try:
         if not mcp_ws_manager.mcp_clients:
             await mcp_ws_manager.initialize()
-        
+
         return {
             "status": "healthy",
             "service": "resilient-websocket",
             "mcp_servers": len(mcp_ws_manager.mcp_clients)
         }
-        
+
     except Exception as e:
         logger.error(f"Health check failed: {e}")
         return {

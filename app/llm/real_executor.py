@@ -5,12 +5,12 @@ Replaces all mock/template responses with actual LLM calls.
 
 import logging
 import time
-from typing import Dict, List, Any, Optional, AsyncGenerator
+from collections.abc import AsyncGenerator
 from datetime import datetime
+from typing import Any
 
-from app.api.advanced_gateway_2025 import AdvancedAIGateway2025, TaskType # Corrected import
-from app.elite_portkey_config import EliteAgentConfig # For model configs
-from app.swarms.coding.models import PoolType # Assuming this is still needed
+from app.api.advanced_gateway_2025 import AdvancedAIGateway2025, TaskType  # Corrected import
+from app.elite_portkey_config import EliteAgentConfig  # For model configs
 from app.llm.response_models import LLMResponse, ResponseStatus, TokenStats
 
 # Unified embedding coordinator (preferred path)
@@ -22,7 +22,9 @@ except Exception:
 # Define Role enum locally if not already defined globally or imported
 # This ensures Role is available after removing app.portkey_config
 from enum import Enum
+
 from app.core.circuit_breaker import with_circuit_breaker
+
 
 class Role(Enum):
     PLANNER = "planner"
@@ -50,21 +52,21 @@ logger = logging.getLogger(__name__)
 
 class RealLLMExecutor:
     """Execute real LLM calls through Portkey gateway."""
-    
+
     def __init__(self):
         self.gateway: AdvancedAIGateway2025 = AdvancedAIGateway2025() # Use the new gateway
         self.session_id = None
-        
+
     async def execute(
         self,
         prompt: str,
         model_pool: str = "balanced",
         stream: bool = False,
-        role: Optional[Role] = None,
-        context: Optional[Dict[str, Any]] = None,
-        task_type: Optional[TaskType] = None,
-        trace_id: Optional[str] = None,
-        session_id: Optional[str] = None
+        role: Role | None = None,
+        context: dict[str, Any] | None = None,
+        task_type: TaskType | None = None,
+        trace_id: str | None = None,
+        session_id: str | None = None
     ) -> LLMResponse:
         """
         Execute real LLM call with fallback chain and proper model selection.
@@ -85,24 +87,24 @@ class RealLLMExecutor:
         # Determine task type from role if not provided
         if not task_type:
             task_type = self._get_task_type_from_role(role)
-        
+
         # Build messages
         messages = self._build_messages(prompt, context)
-        
+
         # Get temperature for role
         temperature = self._get_temperature_for_role(role)
-        
+
         # Define fallback chain based on model pool
         fallback_models = self._get_fallback_chain(model_pool, role)
-        
+
         attempts = []
         last_error = None
-        
+
         # Try each model in the fallback chain
         for model in fallback_models:
             try:
                 logger.info(f"Attempting LLM call: model={model}, pool={model_pool}, role={role}")
-                
+
                 if stream:
                     # For now, streaming returns dict - TODO: update streaming to return LLMResponse
                     result = await self._execute_streaming(messages, model, temperature, role)
@@ -118,7 +120,7 @@ class RealLLMExecutor:
                     response = await self._execute_non_streaming(
                         messages, model, temperature, role, task_type
                     )
-                    
+
                     if response.success:
                         response.trace_id = trace_id
                         response.session_id = session_id
@@ -132,7 +134,7 @@ class RealLLMExecutor:
                             "timestamp": response.timestamp.isoformat()
                         })
                         last_error = response.error
-                        
+
             except Exception as e:
                 logger.warning(f"Model {model} failed: {e}")
                 attempts.append({
@@ -142,14 +144,14 @@ class RealLLMExecutor:
                 })
                 last_error = str(e)
                 continue
-        
+
         # All models failed - check cache as last resort
         cached_response = await self._check_cache(prompt, model_pool)
         if cached_response:
             cached_response.status = ResponseStatus.CACHED
             cached_response.attempts = attempts
             return cached_response
-        
+
         # Return error response
         return LLMResponse(
             content="",
@@ -161,15 +163,15 @@ class RealLLMExecutor:
             trace_id=trace_id,
             session_id=session_id
         )
-    
+
     @with_circuit_breaker("external_api")
     async def _execute_streaming(
         self,
-        messages: List[Dict[str, str]],
+        messages: list[dict[str, str]],
         model_name: str, # Changed from 'model' to 'model_name'
         temperature: float,
-        role: Optional[Role]
-    ) -> AsyncGenerator[Dict[str, Any], None]: # Changed return type to AsyncGenerator
+        role: Role | None
+    ) -> AsyncGenerator[dict[str, Any], None]: # Changed return type to AsyncGenerator
         """Execute streaming LLM call using Portkey gateway."""
         try:
             stream_response = await self.gateway.chat_completion(
@@ -179,7 +181,7 @@ class RealLLMExecutor:
                 model_name=model_name,
                 temperature=temperature,
             )
-            
+
             # Iterate through the streaming response directly from Portkey's result
             full_content = ""
             async for chunk in stream_response:
@@ -192,7 +194,7 @@ class RealLLMExecutor:
                         "content": content_chunk,
                         "timestamp": datetime.now().isoformat()
                     }
-            
+
             # Final result with token counts (if available from final chunk or inferred)
             # Note: Streaming responses often provide token counts in the final chunk or via metadata
             yield {
@@ -204,7 +206,7 @@ class RealLLMExecutor:
                 "token_count": len(full_content.split()), # Simplified count, ideally from API response
                 "role": role.value if role else None
             }
-            
+
         except Exception as e:
             logger.error(f"Streaming execution failed: {e}")
             yield {
@@ -213,19 +215,19 @@ class RealLLMExecutor:
                 "success": False,
                 "error": str(e)
             }
-    
+
     @with_circuit_breaker("external_api")
     async def _execute_non_streaming(
         self,
-        messages: List[Dict[str, str]],
+        messages: list[dict[str, str]],
         model_name: str, # Changed from 'model' to 'model_name'
         temperature: float,
-        role: Optional[Role],
+        role: Role | None,
         task_type: TaskType = TaskType.GENERAL
     ) -> LLMResponse:
         """Execute non-streaming LLM call and return standardized response."""
         start_time = time.time()
-        
+
         try:
             # Use gateway.chat_completion with the new args
             response = await self.gateway.chat_completion(
@@ -235,9 +237,9 @@ class RealLLMExecutor:
                 model_name=model_name,
                 temperature=temperature,
             )
-            
+
             content = response.get("choices", [{}])[0].get("message", {}).get("content", "")
-            
+
             # Extract token stats if available
             metrics = response.get("metrics", {})
             token_stats = TokenStats(
@@ -245,9 +247,9 @@ class RealLLMExecutor:
                 completion_tokens=metrics.get("completion_tokens", 0),
                 total_tokens=metrics.get("total_tokens", 0)
             )
-            
+
             latency_ms = (time.time() - start_time) * 1000
-            
+
             return LLMResponse(
                 content=content,
                 success=True,
@@ -263,62 +265,62 @@ class RealLLMExecutor:
                     "temperature": temperature
                 }
             )
-            
+
         except Exception as e:
             logger.error(f"Non-streaming execution failed: {e}")
             return LLMResponse.from_error(
                 error=str(e),
                 error_code="LLM_EXECUTION_ERROR"
             )
-    
-    def _select_model(self, pool: str, role: Optional[Role]) -> str:
+
+    def _select_model(self, pool: str, role: Role | None) -> str:
         """Select appropriate model based on pool and role from EliteAgentConfig."""
         role_key = role.value if role else "generator"
-        
+
         # Prioritize role-specific model
         if role_key in EliteAgentConfig.MODELS:
             return EliteAgentConfig.MODELS[role_key]
-        
+
         # Fallback to pool-based selection if role has no direct mapping
         # This logic needs to be refined if 'pool' maps to different models than roles
         # For now, it will default to generator if a specific role model isn't found
         default_model = EliteAgentConfig.MODELS["generator"]
         return default_model
-    
-    def _build_messages(self, prompt: str, context: Optional[Dict[str, Any]] = None) -> List[Dict[str, str]]:
+
+    def _build_messages(self, prompt: str, context: dict[str, Any] | None = None) -> list[dict[str, str]]:
         """Build messages array for the LLM."""
         messages = []
-        
+
         # Add system message based on context
         if context and context.get("system_prompt"):
             messages.append({
                 "role": "system",
                 "content": context["system_prompt"]
             })
-        
+
         # Add context as conversation history if provided
         if context and context.get("conversation_history"):
             for msg in context["conversation_history"]:
                 messages.append(msg)
-        
+
         # Add user prompt
         messages.append({
-            "role": "user", 
+            "role": "user",
             "content": prompt
         })
-        
+
         return messages
-    
-    def _get_temperature_for_role(self, role: Optional[Role]) -> float:
+
+    def _get_temperature_for_role(self, role: Role | None) -> float:
         """Get appropriate temperature for role from EliteAgentConfig."""
         role_key = role.value if role else "generator"
         return EliteAgentConfig.TEMPERATURES.get(role_key, 0.7)
-    
-    def _get_task_type_from_role(self, role: Optional[Role]) -> TaskType:
+
+    def _get_task_type_from_role(self, role: Role | None) -> TaskType:
         """Determine task type from role."""
         if not role:
             return TaskType.GENERAL
-        
+
         role_task_mapping = {
             Role.PLANNER: TaskType.PLANNING,
             Role.GENERATOR: TaskType.CODE_GENERATION,
@@ -330,10 +332,10 @@ class RealLLMExecutor:
             Role.PERFORMANCE: TaskType.OPTIMIZATION,
             Role.ARCHITECT: TaskType.ARCHITECTURE,
         }
-        
+
         return role_task_mapping.get(role, TaskType.GENERAL)
-    
-    def _get_fallback_chain(self, model_pool: str, role: Optional[Role]) -> List[str]:
+
+    def _get_fallback_chain(self, model_pool: str, role: Role | None) -> list[str]:
         """Get fallback model chain based on pool and role."""
         # Define fallback chains for different pools
         fallback_chains = {
@@ -341,13 +343,13 @@ class RealLLMExecutor:
             "balanced": ["google/gemini-2.5-pro", "qwen/qwen3-30b-a3b", "anthropic/claude-sonnet-4"],
             "heavy": ["openai/gpt-5", "x-ai/grok-4", "anthropic/claude-sonnet-4"],
         }
-        
+
         # Get primary model for the role
         primary_model = self._select_model(model_pool, role)
-        
+
         # Get fallback chain for the pool
         chain = fallback_chains.get(model_pool, fallback_chains["balanced"])
-        
+
         # Put primary model first if not already in chain
         if primary_model not in chain:
             chain = [primary_model] + chain
@@ -355,10 +357,10 @@ class RealLLMExecutor:
             # Move primary model to front
             chain.remove(primary_model)
             chain = [primary_model] + chain
-        
+
         return chain[:3]  # Limit to 3 attempts
-    
-    async def _check_cache(self, prompt: str, model_pool: str) -> Optional[LLMResponse]:
+
+    async def _check_cache(self, prompt: str, model_pool: str) -> LLMResponse | None:
         """Check cache for previous response to similar prompt."""
         # TODO: Implement semantic cache lookup
         # For now, return None (no cache hit)
@@ -369,8 +371,8 @@ class RealLLMExecutor:
         task: str,
         role: Role = Role.GENERATOR,
         pool: str = "balanced",
-        context: Optional[Dict[str, Any]] = None
-    ) -> AsyncGenerator[Dict[str, Any], None]:
+        context: dict[str, Any] | None = None
+    ) -> AsyncGenerator[dict[str, Any], None]:
         """
         Generate code with streaming response.
         
@@ -385,7 +387,7 @@ class RealLLMExecutor:
         """
         # Build appropriate prompt for coding
         coding_prompt = self._build_coding_prompt(task, role, context)
-        
+
         try:
             async for chunk in self._execute_streaming(
                 messages=self._build_messages(coding_prompt, context),
@@ -394,7 +396,7 @@ class RealLLMExecutor:
                 role=role
             ):
                 yield chunk
-                
+
         except Exception as e:
             logger.error(f"Code generation streaming failed: {e}")
             yield {
@@ -403,8 +405,8 @@ class RealLLMExecutor:
                 "success": False,
                 "error": str(e)
             }
-    
-    def _build_coding_prompt(self, task: str, role: Role, context: Optional[Dict[str, Any]]) -> str:
+
+    def _build_coding_prompt(self, task: str, role: Role, context: dict[str, Any] | None) -> str:
         """Build role-specific coding prompt."""
         base_prompts = {
             Role.PLANNER: f"""You are a technical planner. Analyze this coding task and create a structured plan:
@@ -471,9 +473,9 @@ Focus on:
 
 Provide execution details and any issues found."""
         }
-        
+
         prompt = base_prompts.get(role, base_prompts[Role.GENERATOR])
-        
+
         # Add context if provided
         if context:
             if context.get("memory_results"):
@@ -482,11 +484,11 @@ Provide execution details and any issues found."""
                 prompt += f"\n\nRelevant code from repository:\n{context['code_search_results']}"
             if context.get("conversation_history"):
                 prompt += f"\n\nPrevious discussion:\n{context['conversation_history'][-3:]}"  # Last 3 messages
-        
+
         return prompt
 
     @with_circuit_breaker("external_api")
-    async def embed_text(self, texts: List[str], strategy: str = "auto") -> List[List[float]]:
+    async def embed_text(self, texts: list[str], strategy: str = "auto") -> list[list[float]]:
         """Generate embeddings for text using unified coordinator with graceful fallback."""
         # Prefer the local unified coordinator (embed_router + cache) when available
         try:
@@ -527,26 +529,26 @@ real_executor = RealLLMExecutor()
 
 # Backward compatibility functions
 async def execute_with_real_llm(
-    problem: Dict, 
-    agents: List[str], 
+    problem: dict,
+    agents: list[str],
     pool: str = "balanced"
-) -> Dict:
+) -> dict:
     """Execute problem with real LLM calls (backward compatible)."""
     try:
         # Convert old format to new
         task = problem.get("query") or problem.get("description") or str(problem)
-        
+
         # Use first agent role or default to generator
         role_map = {
             "code_generator": Role.GENERATOR,
-            "planner": Role.PLANNER, 
+            "planner": Role.PLANNER,
             "critic": Role.CRITIC,
             "judge": Role.JUDGE,
             "runner": Role.RUNNER
         }
-        
+
         agent_role = role_map.get(agents[0] if agents else "generator", Role.GENERATOR)
-        
+
         # Execute with real LLM
         result = await real_executor.execute(
             prompt=task,
@@ -554,7 +556,7 @@ async def execute_with_real_llm(
             role=agent_role,
             context=problem.get("context")
         )
-        
+
         return {
             "solution": result["content"],
             "confidence": 0.85 if result["success"] else 0.3,
@@ -563,7 +565,7 @@ async def execute_with_real_llm(
             "model": result.get("model"),
             "success": result["success"]
         }
-        
+
     except Exception as e:
         logger.error(f"Legacy LLM execution failed: {e}")
         return {

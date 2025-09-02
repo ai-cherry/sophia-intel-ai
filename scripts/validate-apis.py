@@ -4,13 +4,14 @@ API Key Validation Utility
 Tests all external API connections with real keys - NO MOCKS
 """
 
+import asyncio
+import json
 import os
 import sys
-import asyncio
+from datetime import datetime
+
 import httpx
 from dotenv import load_dotenv
-from datetime import datetime
-import json
 
 # Load environment variables
 load_dotenv('.env.local')
@@ -39,7 +40,7 @@ class APIValidator:
         """Test OpenAI API connection."""
         self.log("Testing OpenAI API...")
         self.total_tests += 1
-        
+
         api_key = os.getenv("OPENAI_API_KEY")
         if not api_key or api_key == "dummy-key":
             self.log("❌ OpenAI API key not found or is dummy", "ERROR")
@@ -54,7 +55,7 @@ class APIValidator:
                     headers={"Authorization": f"Bearer {api_key}"},
                     timeout=10.0
                 )
-                
+
                 if response.status_code == 200:
                     models = response.json()
                     model_count = len(models.get("data", []))
@@ -67,7 +68,7 @@ class APIValidator:
                     self.failed_tests += 1
                     self.results["openai"] = {"status": "failed", "error": f"HTTP {response.status_code}"}
                     return False
-                    
+
         except Exception as e:
             self.log(f"❌ OpenAI API connection failed: {e}", "ERROR")
             self.failed_tests += 1
@@ -78,7 +79,7 @@ class APIValidator:
         """Test Anthropic API connection."""
         self.log("Testing Anthropic API...")
         self.total_tests += 1
-        
+
         api_key = os.getenv("ANTHROPIC_API_KEY")
         if not api_key:
             self.log("❌ Anthropic API key not found", "ERROR")
@@ -103,7 +104,7 @@ class APIValidator:
                     },
                     timeout=10.0
                 )
-                
+
                 if response.status_code == 200:
                     result = response.json()
                     self.log("✅ Anthropic API connected successfully", "SUCCESS")
@@ -115,7 +116,7 @@ class APIValidator:
                     self.failed_tests += 1
                     self.results["anthropic"] = {"status": "failed", "error": f"HTTP {response.status_code}"}
                     return False
-                    
+
         except Exception as e:
             self.log(f"❌ Anthropic API connection failed: {e}", "ERROR")
             self.failed_tests += 1
@@ -126,7 +127,7 @@ class APIValidator:
         """Test OpenRouter API connection."""
         self.log("Testing OpenRouter API...")
         self.total_tests += 1
-        
+
         api_key = os.getenv("OPENROUTER_API_KEY")
         if not api_key:
             self.log("❌ OpenRouter API key not found", "ERROR")
@@ -141,7 +142,7 @@ class APIValidator:
                     headers={"Authorization": f"Bearer {api_key}"},
                     timeout=10.0
                 )
-                
+
                 if response.status_code == 200:
                     models = response.json()
                     model_count = len(models.get("data", []))
@@ -154,7 +155,7 @@ class APIValidator:
                     self.failed_tests += 1
                     self.results["openrouter"] = {"status": "failed", "error": f"HTTP {response.status_code}"}
                     return False
-                    
+
         except Exception as e:
             self.log(f"❌ OpenRouter API connection failed: {e}", "ERROR")
             self.failed_tests += 1
@@ -165,9 +166,9 @@ class APIValidator:
         """Test Weaviate v1.32+ vector database connection."""
         self.log("Testing Weaviate v1.32+ connection...")
         self.total_tests += 1
-        
+
         weaviate_url = os.getenv("WEAVIATE_URL", "http://localhost:8080")
-        
+
         try:
             async with httpx.AsyncClient() as client:
                 # Test Weaviate readiness endpoint
@@ -175,14 +176,14 @@ class APIValidator:
                     f"{weaviate_url}/v1/.well-known/ready",
                     timeout=10.0
                 )
-                
+
                 if response.status_code == 200:
                     # Get meta information
                     meta_response = await client.get(
                         f"{weaviate_url}/v1/meta",
                         timeout=5.0
                     )
-                    
+
                     if meta_response.status_code == 200:
                         meta_data = meta_response.json()
                         version = meta_data.get("version", "unknown")
@@ -195,7 +196,7 @@ class APIValidator:
                         }
                         return True
                     else:
-                        self.log(f"✅ Weaviate ready but meta unavailable", "SUCCESS")
+                        self.log("✅ Weaviate ready but meta unavailable", "SUCCESS")
                         self.passed_tests += 1
                         self.results["weaviate"] = {"status": "success", "version": "1.32+"}
                         return True
@@ -204,7 +205,7 @@ class APIValidator:
                     self.failed_tests += 1
                     self.results["weaviate"] = {"status": "failed", "error": f"HTTP {response.status_code}"}
                     return False
-                    
+
         except Exception as e:
             self.log(f"❌ Weaviate connection failed: {e}", "ERROR")
             self.failed_tests += 1
@@ -215,7 +216,7 @@ class APIValidator:
         """Test Redis connection."""
         self.log("Testing Redis connection...")
         self.total_tests += 1
-        
+
         redis_url = os.getenv("REDIS_URL")
         if not redis_url:
             self.log("❌ Redis URL not found", "ERROR")
@@ -226,7 +227,7 @@ class APIValidator:
         try:
             import redis
             client = redis.from_url(redis_url, decode_responses=True)
-            
+
             # Test connection
             result = client.ping()
             if result:
@@ -242,7 +243,7 @@ class APIValidator:
                 self.failed_tests += 1
                 self.results["redis"] = {"status": "failed", "error": "Ping failed"}
                 return False
-                
+
         except Exception as e:
             self.log(f"❌ Redis connection failed: {e}", "ERROR")
             self.failed_tests += 1
@@ -253,10 +254,10 @@ class APIValidator:
         """Test Portkey Gateway connection with proper 2025 configuration."""
         self.log("Testing Portkey Gateway...")
         self.total_tests += 1
-        
+
         portkey_api_key = os.getenv("PORTKEY_API_KEY")
         openai_api_key = os.getenv("OPENAI_API_KEY")
-        
+
         if not portkey_api_key:
             self.log("❌ Portkey API key not found", "ERROR")
             self.failed_tests += 1
@@ -277,7 +278,7 @@ class APIValidator:
                         "attempts": 2
                     }
                 }
-                
+
                 # Test with your real virtual key IDs from Portkey dashboard
                 response = await client.post(
                     "https://api.portkey.ai/v1/chat/completions",
@@ -294,7 +295,7 @@ class APIValidator:
                     },
                     timeout=15.0
                 )
-                
+
                 if response.status_code == 200:
                     result = response.json()
                     self.log("✅ Portkey Gateway connected successfully with virtual keys", "SUCCESS")
@@ -306,7 +307,7 @@ class APIValidator:
                     self.failed_tests += 1
                     self.results["portkey"] = {"status": "failed", "error": f"HTTP {response.status_code}"}
                     return False
-                    
+
         except Exception as e:
             self.log(f"❌ Portkey connection failed: {e}", "ERROR")
             self.failed_tests += 1
@@ -317,7 +318,7 @@ class APIValidator:
         """Run all API validation tests."""
         self.log("🚀 Starting API validation tests...", "INFO")
         self.log("=" * 60)
-        
+
         # Run all tests
         tests = [
             self.test_openai_api(),
@@ -327,19 +328,19 @@ class APIValidator:
             self.test_redis_connection(),
             self.test_portkey_gateway()
         ]
-        
+
         await asyncio.gather(*tests, return_exceptions=True)
-        
+
         # Print summary
         self.log("=" * 60)
         self.log("📊 VALIDATION SUMMARY", "INFO")
         self.log(f"Total Tests: {self.total_tests}")
         self.log(f"✅ Passed: {self.passed_tests}", "SUCCESS")
         self.log(f"❌ Failed: {self.failed_tests}", "ERROR")
-        
+
         success_rate = (self.passed_tests / self.total_tests * 100) if self.total_tests > 0 else 0
         self.log(f"📈 Success Rate: {success_rate:.1f}%")
-        
+
         if self.failed_tests > 0:
             self.log("❌ DEPLOYMENT NOT READY - Fix failed APIs before proceeding", "ERROR")
             return False
@@ -359,23 +360,23 @@ class APIValidator:
             },
             "results": self.results
         }
-        
+
         with open(filename, "w") as f:
             json.dump(results_data, f, indent=2)
-        
+
         self.log(f"📁 Results saved to {filename}")
 
 async def main():
     """Main entry point."""
     validator = APIValidator()
-    
+
     try:
         success = await validator.run_all_tests()
         validator.save_results()
-        
+
         # Exit with appropriate code
         sys.exit(0 if success else 1)
-        
+
     except KeyboardInterrupt:
         validator.log("\n⏹️  Validation cancelled by user", "WARNING")
         sys.exit(1)

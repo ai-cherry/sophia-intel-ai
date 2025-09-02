@@ -1,9 +1,11 @@
-from agno import Tool
 import subprocess
+
+from agno import Tool
+
 
 class GitStatus(Tool):
     """Tool for checking git status."""
-    
+
     name = "git_status"
     description = "Check the current git status of the repository"
     parameters = {
@@ -11,7 +13,7 @@ class GitStatus(Tool):
         "properties": {},
         "required": []
     }
-    
+
     async def run(self) -> str:
         """Get git status."""
         try:
@@ -21,10 +23,10 @@ class GitStatus(Tool):
                 text=True,
                 check=True
             )
-            
+
             if not result.stdout:
                 return "Working directory is clean"
-            
+
             return f"Git status:\n{result.stdout}"
         except subprocess.CalledProcessError as e:
             return f"Git error: {e.stderr}"
@@ -34,7 +36,7 @@ class GitStatus(Tool):
 
 class GitDiff(Tool):
     """Tool for showing git differences."""
-    
+
     name = "git_diff"
     description = "Show git differences for staged or unstaged changes"
     parameters = {
@@ -48,24 +50,24 @@ class GitDiff(Tool):
         },
         "required": []
     }
-    
+
     async def run(self, staged: bool = False) -> str:
         """Get git diff."""
         try:
             cmd = ["git", "diff"]
             if staged:
                 cmd.append("--cached")
-            
+
             result = subprocess.run(
                 cmd,
                 capture_output=True,
                 text=True,
                 check=True
             )
-            
+
             if not result.stdout:
                 return f"No {'staged' if staged else 'unstaged'} changes"
-            
+
             return f"Git diff ({'staged' if staged else 'unstaged'}):\n{result.stdout}"
         except subprocess.CalledProcessError as e:
             return f"Git error: {e.stderr}"
@@ -75,7 +77,7 @@ class GitDiff(Tool):
 
 class GitCommit(Tool):
     """Tool for creating git commits."""
-    
+
     name = "git_commit"
     description = "Create a git commit with the staged changes"
     parameters = {
@@ -88,7 +90,7 @@ class GitCommit(Tool):
         },
         "required": ["message"]
     }
-    
+
     async def run(self, message: str) -> str:
         """Create a git commit."""
         try:
@@ -98,10 +100,10 @@ class GitCommit(Tool):
                 capture_output=True,
                 text=True
             )
-            
+
             if not status.stdout:
                 return "No staged changes to commit. Use 'git add' first."
-            
+
             # Create the commit
             result = subprocess.run(
                 ["git", "commit", "-m", message],
@@ -109,7 +111,7 @@ class GitCommit(Tool):
                 text=True,
                 check=True
             )
-            
+
             return f"Commit created successfully:\n{result.stdout}"
         except subprocess.CalledProcessError as e:
             return f"Git error: {e.stderr}"
@@ -119,7 +121,7 @@ class GitCommit(Tool):
 
 class GitAdd(Tool):
     """Tool for staging files for commit."""
-    
+
     name = "git_add"
     description = "Stage files for commit"
     parameters = {
@@ -133,7 +135,7 @@ class GitAdd(Tool):
         },
         "required": []
     }
-    
+
     async def run(self, filepath: str = ".") -> str:
         """Stage files for commit."""
         try:
@@ -143,7 +145,7 @@ class GitAdd(Tool):
                 text=True,
                 check=True
             )
-            
+
             return f"Successfully staged: {filepath}"
         except subprocess.CalledProcessError as e:
             return f"Git error: {e.stderr}"

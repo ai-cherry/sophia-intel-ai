@@ -31,19 +31,19 @@ Usage:
 """
 
 from .experimental_evolution_engine import (
-    ExperimentalEvolutionEngine,
-    ExperimentalMode,
+    EXPERIMENTAL_EVOLUTION_EXAMPLES,
     ExperimentalEvolutionConfig,
+    ExperimentalEvolutionEngine,
+    ExperimentalFitnessEvaluation,
+    ExperimentalMode,
     ExperimentalSafetyBounds,
     SwarmChromosome,
-    ExperimentalFitnessEvaluation,
     create_experimental_evolution_engine,
-    EXPERIMENTAL_EVOLUTION_EXAMPLES
 )
 
 __all__ = [
     'ExperimentalEvolutionEngine',
-    'ExperimentalMode', 
+    'ExperimentalMode',
     'ExperimentalEvolutionConfig',
     'ExperimentalSafetyBounds',
     'SwarmChromosome',

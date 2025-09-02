@@ -4,16 +4,15 @@ REAL AI Server - Direct OpenRouter Integration
 This makes our swarms actually intelligent!
 """
 
+import json
+from collections.abc import AsyncGenerator
+from datetime import datetime
+
+import httpx
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-from typing import Optional, AsyncGenerator
-import httpx
-import json
-import asyncio
-import os
-from datetime import datetime
 
 # FastAPI app
 app = FastAPI(title="Real AI Swarm Server")
@@ -35,18 +34,18 @@ class SwarmRequest(BaseModel):
     message: str
     team_id: str
     stream: bool = True
-    session_id: Optional[str] = None
+    session_id: str | None = None
 
 async def call_openrouter(model: str, messages: list, stream: bool = True) -> AsyncGenerator:
     """Direct OpenRouter API call for REAL AI responses"""
-    
+
     headers = {
         "Authorization": f"Bearer {OPENROUTER_API_KEY}",
         "HTTP-Referer": "http://localhost:8000",
         "X-Title": "Real AI Swarm",
         "Content-Type": "application/json"
     }
-    
+
     data = {
         "model": model,
         "messages": messages,
@@ -54,7 +53,7 @@ async def call_openrouter(model: str, messages: list, stream: bool = True) -> As
         "temperature": 0.7,
         "max_tokens": 2000
     }
-    
+
     async with httpx.AsyncClient(timeout=60.0) as client:
         if stream:
             async with client.stream("POST", OPENROUTER_BASE, json=data, headers=headers) as response:
@@ -79,30 +78,30 @@ async def call_openrouter(model: str, messages: list, stream: bool = True) -> As
 @app.post("/teams/run")
 async def run_team(request: SwarmRequest):
     """Execute REAL AI swarm with actual model responses"""
-    
+
     # Model selection based on team - YOUR FAVORITE MODELS
     models = {
         "strategic-swarm": "qwen/qwen3-30b-a3b-thinking-2507",  # Deep thinking for strategy
         "coding-swarm": "x-ai/grok-5",  # Grok 5 for code generation
         "debate-swarm": "deepseek/deepseek-r1-0528:free"  # Free model for debate
     }
-    
+
     model = models.get(request.team_id, "openai/gpt-4o-mini")  # Fallback to gpt-4o-mini
-    
+
     # System prompts for each swarm
     prompts = {
         "strategic-swarm": "You are a strategic planning AI. Provide detailed analysis and actionable strategies.",
         "coding-swarm": "You are an expert coder. Write complete, working code with comments and best practices.",
         "debate-swarm": "You are an analytical AI. Provide multiple perspectives and thorough evaluation."
     }
-    
+
     system_prompt = prompts.get(request.team_id, "You are a helpful AI assistant.")
-    
+
     messages = [
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": request.message}
     ]
-    
+
     if request.stream:
         async def generate_stream():
             """Stream REAL AI responses"""
@@ -115,23 +114,23 @@ async def run_team(request: SwarmRequest):
                         "session_id": request.session_id or f"session_{int(datetime.now().timestamp())}"
                     }
                     yield f"data: {json.dumps(data)}\n\n"
-                
+
                 # Send done signal
                 yield f"data: {json.dumps({'done': True, 'team_id': request.team_id})}\n\n"
-                
+
             except Exception as e:
                 error_data = {"error": str(e), "done": True}
                 yield f"data: {json.dumps(error_data)}\n\n"
-        
+
         return StreamingResponse(generate_stream(), media_type="text/event-stream")
-    
+
     else:
         # Non-streaming response
         try:
             full_response = ""
             async for chunk in call_openrouter(model, messages, stream=False):
                 full_response += chunk
-            
+
             return {
                 "team_id": request.team_id,
                 "session_id": request.session_id or f"session_{int(datetime.now().timestamp())}",

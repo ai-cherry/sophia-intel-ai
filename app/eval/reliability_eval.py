@@ -1,11 +1,12 @@
 from __future__ import annotations
-from typing import Optional, List
+
 from agno.eval.reliability import ReliabilityEval, ReliabilityResult
 from agno.run.team import TeamRunResponse
 
+
 def run_reliability_eval(
     team_response: TeamRunResponse,
-    expected_tool_calls: List[str],
+    expected_tool_calls: list[str],
     print_results: bool = True,
 ) -> ReliabilityResult:
     """
@@ -16,7 +17,7 @@ def run_reliability_eval(
         team_response=team_response,
         expected_tool_calls=expected_tool_calls,
     )
-    result: Optional[ReliabilityResult] = evaluation.run(print_results=print_results)
+    result: ReliabilityResult | None = evaluation.run(print_results=print_results)
     if result:
         result.assert_passed()
     return result

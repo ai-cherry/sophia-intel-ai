@@ -4,10 +4,8 @@ Script to complete the refactoring of the SophIA-Intel-AI system.
 This script generates all remaining pattern modules and configuration files.
 """
 
-import os
-from pathlib import Path
 import json
-import yaml
+from pathlib import Path
 
 # Base directory
 BASE_DIR = Path("/Users/lynnmusil/sophia-intel-ai")
@@ -664,7 +662,7 @@ CONFIG_FILES = {
             ]
         }
     },
-    
+
     "app/config/gates_config.yaml": """
 thresholds:
   accuracy: 0.85
@@ -747,14 +745,14 @@ concurrency:
 def create_pattern_files():
     """Create all pattern module files."""
     patterns_dir = BASE_DIR / "app" / "swarms" / "patterns"
-    
+
     for pattern_name, content in PATTERN_TEMPLATES.items():
         file_path = patterns_dir / f"{pattern_name}.py"
         print(f"Creating {file_path}")
-        
+
         with open(file_path, "w") as f:
             f.write(content)
-            
+
     print(f"✅ Created {len(PATTERN_TEMPLATES)} pattern modules")
 
 
@@ -763,23 +761,23 @@ def create_config_files():
     for file_path, content in CONFIG_FILES.items():
         full_path = BASE_DIR / file_path
         full_path.parent.mkdir(parents=True, exist_ok=True)
-        
+
         print(f"Creating {full_path}")
-        
+
         if file_path.endswith(".json"):
             with open(full_path, "w") as f:
                 json.dump(content, f, indent=2)
         elif file_path.endswith(".yaml"):
             with open(full_path, "w") as f:
                 f.write(content)
-                
+
     print(f"✅ Created {len(CONFIG_FILES)} configuration files")
 
 
 def create_composer():
     """Create the swarm composer for pattern composition."""
     composer_path = BASE_DIR / "app" / "swarms" / "patterns" / "composer.py"
-    
+
     composer_content = '''"""
 Swarm Composer for combining multiple patterns into complex behaviors.
 """
@@ -937,11 +935,11 @@ class SwarmComposer:
         for pattern in self.patterns.values():
             await pattern.cleanup()
 '''
-    
+
     print(f"Creating {composer_path}")
     with open(composer_path, "w") as f:
         f.write(composer_content)
-    
+
     print("✅ Created swarm composer")
 
 
@@ -949,16 +947,16 @@ def main():
     """Run the complete refactoring."""
     print("🚀 Starting SophIA-Intel-AI Refactoring")
     print("="*60)
-    
+
     # Create pattern modules
     create_pattern_files()
-    
+
     # Create configuration files
     create_config_files()
-    
+
     # Create composer
     create_composer()
-    
+
     print("\n" + "="*60)
     print("✅ Refactoring structure created successfully!")
     print("\nNext steps:")
@@ -966,7 +964,7 @@ def main():
     print("2. Run tests to verify functionality")
     print("3. Update API endpoints to use new configuration")
     print("4. Set up CI/CD pipeline")
-    
+
 
 if __name__ == "__main__":
     main()

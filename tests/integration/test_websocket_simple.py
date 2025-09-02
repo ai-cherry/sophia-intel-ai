@@ -4,14 +4,15 @@ Simple WebSocket test for MCP monitoring
 """
 
 import asyncio
-import json
+
 import httpx
+
 
 async def test_websocket_via_http():
     """Test WebSocket endpoint via HTTP first"""
-    
+
     print("Testing MCP Server endpoints...\n")
-    
+
     # Test endpoints
     endpoints = [
         ("MCP Code Review", "http://localhost:8003/health"),
@@ -20,7 +21,7 @@ async def test_websocket_via_http():
         ("Teams Endpoint", "http://localhost:8005/teams/"),
         ("MCP Embeddings", "http://localhost:8005/mcp/embeddings"),
     ]
-    
+
     async with httpx.AsyncClient() as client:
         for name, url in endpoints:
             try:
@@ -32,7 +33,7 @@ async def test_websocket_via_http():
             except Exception as e:
                 print(f"❌ {name}: {e}")
             print()
-    
+
     # Check if WebSocket endpoint exists
     print("\nChecking WebSocket endpoint registration...")
     try:

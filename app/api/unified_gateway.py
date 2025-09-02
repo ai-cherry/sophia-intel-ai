@@ -1,10 +1,17 @@
-from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
-from app.models.requests import EmbeddingRequest, MemoryStoreRequest, MemorySearchRequest, MemoryUpdateRequest, MemoryDeleteRequest, ChatRequest
-from app.observability.prometheus_metrics import record_cost
-from app.memory.unified_memory import UnifiedMemoryStore
 from bleach import clean
-from app.swarms.communication.message_bus import MessageBus, MessageType, SwarmMessage
+from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
+
 from app.api.openrouter_gateway import OpenRouterGateway
+from app.models.requests import (
+    ChatRequest,
+    EmbeddingRequest,
+    MemoryDeleteRequest,
+    MemorySearchRequest,
+    MemoryStoreRequest,
+    MemoryUpdateRequest,
+)
+from app.observability.prometheus_metrics import record_cost
+from app.swarms.communication.message_bus import MessageBus, MessageType
 
 router = APIRouter()
 openrouter_gateway = OpenRouterGateway()
@@ -24,7 +31,7 @@ async def chat_endpoint(request: ChatRequest):
             stop=request.stop
         )
         return {"choices": [{"message": {"content": response.choices[0].message.content}}]}
-    
+
     # Fallback to default OpenAI client (for non-OpenRouter models)
     # [Add default OpenAI client handling here]
     raise HTTPException(status_code=404, detail="OpenRouter model not found")
@@ -66,29 +73,29 @@ async def health_check():
 @router.websocket("/ws/swarm")
 async def websocket_swarm_endpoint(websocket: WebSocket):
     await websocket.accept()
-    
+
     # Parse query parameters
     query_params = websocket.query_params
     thread_id = query_params.get("thread_id", None)
     agent_id = query_params.get("agent_id", None)
     pattern = query_params.get("pattern", None)
     message_type = query_params.get("type", None)
-    
+
     # Convert types if needed
     if message_type:
         try:
             message_type = MessageType(message_type.upper())
         except:
             message_type = None
-    
+
     # Initialize message bus (using global instance)
     if "bus" not in websocket.app.state:
         bus = MessageBus()
         await bus.initialize()
         websocket.app.state.bus = bus
-    
+
     bus = websocket.app.state.bus
-    
+
     try:
         # Start subscription to the message bus
         async for message in bus.subscribe(
@@ -98,7 +105,7 @@ async def websocket_swarm_endpoint(websocket: WebSocket):
             # Filter messages based on parameters
             if thread_id and message.thread_id != thread_id:
                 continue
-            
+
             # Format message for UI
             msg_data = {
                 "id": message.id,
@@ -112,10 +119,10 @@ async def websocket_swarm_endpoint(websocket: WebSocket):
                 "trace_id": message.trace_id,
                 "span_id": message.span_id
             }
-            
+
             # Send formatted message to UI
             await websocket.send_json(msg_data)
-    
+
     except WebSocketDisconnect:
         logger.info("Client disconnected from swarm WebSocket")
     except Exception as e:

@@ -4,23 +4,23 @@ Provides directory listing functionality for agents.
 """
 
 import os
-from typing import Dict, Any
+from typing import Any
 
 
 class ListDirectory:
     """Directory listing tool."""
-    
-    def __call__(self, dir_path: str = ".") -> Dict[str, Any]:
+
+    def __call__(self, dir_path: str = ".") -> dict[str, Any]:
         """List directory contents."""
         return list_directory(dir_path)
 
 
-def list_directory(dir_path: str = ".") -> Dict[str, Any]:
+def list_directory(dir_path: str = ".") -> dict[str, Any]:
     """List directory contents safely."""
     try:
         if not os.path.exists(dir_path):
             return {"error": f"Directory not found: {dir_path}"}
-            
+
         items = []
         for item in os.listdir(dir_path):
             full_path = os.path.join(dir_path, item)
@@ -37,7 +37,7 @@ def list_directory(dir_path: str = ".") -> Dict[str, Any]:
                     "type": "unknown",
                     "size": 0
                 })
-            
+
         return {
             "directory": dir_path,
             "items": items[:50],  # Limit to 50 items for performance
@@ -46,7 +46,7 @@ def list_directory(dir_path: str = ".") -> Dict[str, Any]:
         }
     except Exception as e:
         return {
-            "directory": dir_path, 
+            "directory": dir_path,
             "error": str(e),
             "items": [],
             "total": 0,

@@ -9,20 +9,23 @@ Following ADR-006: Configuration Management Standardization
 - Proper secret management and validation
 """
 
-from typing import Any
-from fastapi import Depends, HTTPException
 import logging
+from typing import Any
+
+from fastapi import Depends, HTTPException
 
 # Import enhanced configuration system following ADR-006
 from app.config.env_loader import get_env_config, validate_environment
-from app.core.connections import redis_get, redis_set, get_connection_manager
-from app.core.circuit_breaker import with_circuit_breaker, get_llm_circuit_breaker, get_weaviate_circuit_breaker, get_redis_circuit_breaker, get_webhook_circuit_breaker
+from app.core.circuit_breaker import (
+    with_circuit_breaker,
+)
+from app.core.connections import get_connection_manager
 
 logger = logging.getLogger(__name__)
 
 class GlobalState:
     """Enhanced global state using ADR-006 configuration management."""
-    
+
     def __init__(self):
         self.orchestrator = None
         self.supermemory = None
@@ -34,36 +37,36 @@ class GlobalState:
         self.redis_client = None
         self.weaviate_client = None
         self.initialized = False
-        
+
         # Load enhanced configuration
         self.config = None
         self.validation = None
         self._load_and_validate_config()
-        
+
     def _load_and_validate_config(self):
         """Load and validate configuration using enhanced EnvLoader."""
         try:
             self.config = get_env_config()
             self.validation = validate_environment()
-            
+
             logger.info(f"✅ Configuration loaded from: {self.config.loaded_from}")
-            
+
             # Check validation status
             if self.validation.get("overall_status") == "unhealthy":
                 logger.warning("⚠️  Configuration validation failed")
                 for issue in self.validation.get("critical_issues", []):
                     logger.error(f"❌ {issue}")
-                    
+
                 if self.config.environment_name == "prod":
                     # Strict validation in production
                     raise ValueError("Production environment has critical configuration issues")
-            
+
         except Exception as e:
             logger.error(f"❌ Configuration loading failed: {e}")
             # Don't fail startup, but log the issue
             self.config = None
             self.validation = None
-            
+
     def get_config(self):
         """Get the current configuration."""
         if not self.config:
@@ -90,7 +93,7 @@ def get_orchestrator(state: GlobalState = Depends(get_state)) -> Any:
             if os.getenv("FAIL_ON_MOCK_FALLBACK", "false").lower() == "true":
                 raise HTTPException(status_code=503, detail=f"Orchestrator service unavailable: {e}")
             raise ImportError(f"UnifiedSwarmOrchestrator not available: {e}")
-    
+
     return state.orchestrator
 
 def get_memory_store(state: GlobalState = Depends(get_state)) -> Any:
@@ -106,7 +109,7 @@ def get_memory_store(state: GlobalState = Depends(get_state)) -> Any:
             if os.getenv("FAIL_ON_MOCK_FALLBACK", "false").lower() == "true":
                 raise HTTPException(status_code=503, detail=f"Memory service unavailable: {e}")
             raise ImportError(f"UnifiedMemorySystem not available: {e}")
-    
+
     return state.supermemory
 
 def get_search_engine(state: GlobalState = Depends(get_state)) -> Any:
@@ -122,7 +125,7 @@ def get_search_engine(state: GlobalState = Depends(get_state)) -> Any:
             if os.getenv("FAIL_ON_MOCK_FALLBACK", "false").lower() == "true":
                 raise HTTPException(status_code=503, detail=f"Search service unavailable: {e}")
             raise ImportError(f"ModernEmbeddingSystem not available: {e}")
-    
+
     return state.search_engine
 
 def get_gate_manager(state: GlobalState = Depends(get_state)) -> Any:
@@ -136,19 +139,18 @@ def get_gate_manager(state: GlobalState = Depends(get_state)) -> Any:
             logger.warning(f"EvaluationGateManager not available: {e}")
             # This is optional, so we can proceed without it
             state.gate_manager = None
-    
+
     return state.gate_manager
 
 async def get_redis_client(state: GlobalState = Depends(get_state)):
     """Get Redis client using enhanced configuration."""
     if not state.redis_client:
         try:
-            import redis
             config = state.get_config()
-            
+
             if not config.redis_url:
                 raise ValueError("Redis URL not configured")
-                
+
             state.redis_client = await get_connection_manager().get_redis()
             # Test connection
             state.redis_client.ping()
@@ -158,7 +160,7 @@ async def get_redis_client(state: GlobalState = Depends(get_state)):
             if config and config.environment_name == "prod":
                 raise HTTPException(status_code=503, detail=f"Redis unavailable: {e}")
             raise ConnectionError(f"Redis connection failed: {e}")
-    
+
     return state.redis_client
 
 @with_circuit_breaker("external_api")
@@ -168,13 +170,13 @@ def get_weaviate_client(state: GlobalState = Depends(get_state)):
         try:
             import weaviate
             from weaviate.classes.init import Auth
-            
+
             config = state.get_config()
-            
+
             # Use configuration values
             weaviate_url = config.weaviate_url
             weaviate_api_key = config.weaviate_api_key
-            
+
             # Use local Weaviate for development, cloud for production
             if "localhost" in weaviate_url:
                 state.weaviate_client = weaviate.connect_to_local(
@@ -188,7 +190,7 @@ def get_weaviate_client(state: GlobalState = Depends(get_state)):
                     cluster_url=weaviate_url,
                     auth_credentials=Auth.api_key(weaviate_api_key)
                 )
-            
+
             # Test connection
             state.weaviate_client.collections.list_all()
             logger.info(f"✅ Weaviate v1.32+ connection established to {weaviate_url}")
@@ -198,7 +200,7 @@ def get_weaviate_client(state: GlobalState = Depends(get_state)):
             if config and config.environment_name == "prod":
                 raise HTTPException(status_code=503, detail=f"Weaviate unavailable: {e}")
             raise ConnectionError(f"Weaviate connection failed: {e}")
-    
+
     return state.weaviate_client
 
 def initialize_dependencies(unified_state=None):
@@ -209,28 +211,28 @@ def initialize_dependencies(unified_state=None):
         logger.info("✅ Dependencies initialized with unified server state (ADR-006)")
     else:
         logger.info("✅ Dependencies initialized with enhanced configuration (ADR-006)")
-    
+
     # Pre-validate all critical services using enhanced config
     try:
         config = _global_state.get_config()
-        
+
         if config:
             logger.info(f"🔧 Configuration source: {config.loaded_from}")
             logger.info(f"🌍 Environment: {config.environment_name}")
-            
+
             # Test connections based on configuration
             if config.redis_url:
                 get_redis_client(_global_state)
-                
+
             if config.weaviate_url:
                 get_weaviate_client(_global_state)
-                
+
             logger.info("✅ All critical dependencies validated successfully")
         else:
             logger.warning("⚠️  No configuration loaded - limited functionality")
-            
+
         _global_state.initialized = True
-        
+
     except Exception as e:
         logger.error(f"❌ Dependency initialization failed: {e}")
         config = _global_state.get_config()

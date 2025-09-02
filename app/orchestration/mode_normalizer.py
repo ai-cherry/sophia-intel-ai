@@ -4,10 +4,10 @@ Ensures consistent optimization modes across all swarm implementations
 """
 
 import json
-from typing import Dict, Any, Optional
+import logging
 from dataclasses import dataclass
 from enum import Enum
-import logging
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +35,7 @@ class ModeNormalizer:
     """
     Normalizes and manages optimization modes across different swarm implementations
     """
-    
+
     # Mode aliases mapping to unified modes
     MODE_ALIASES = {
         # Lite/Fast modes
@@ -44,13 +44,13 @@ class ModeNormalizer:
         "lite": UnifiedMode.LITE,
         "quick": UnifiedMode.LITE,
         "minimal": UnifiedMode.LITE,
-        
+
         # Balanced/Normal modes
         "balanced": UnifiedMode.BALANCED,
         "normal": UnifiedMode.BALANCED,
         "standard": UnifiedMode.BALANCED,
         "default": UnifiedMode.BALANCED,
-        
+
         # Quality/Thorough modes
         "quality": UnifiedMode.QUALITY,
         "thorough": UnifiedMode.QUALITY,
@@ -58,7 +58,7 @@ class ModeNormalizer:
         "full": UnifiedMode.QUALITY,
         "complete": UnifiedMode.QUALITY
     }
-    
+
     # Default configurations for each mode
     DEFAULT_CONFIGS = {
         UnifiedMode.LITE: ModeConfig(
@@ -111,17 +111,17 @@ class ModeNormalizer:
             circuit_breaker_threshold=0.9
         )
     }
-    
-    def __init__(self, config_path: Optional[str] = None):
+
+    def __init__(self, config_path: str | None = None):
         self.config_path = config_path or "app/swarms/swarm_optimization_config.json"
         self.custom_configs = self._load_custom_configs()
-        
-    def _load_custom_configs(self) -> Dict[UnifiedMode, ModeConfig]:
+
+    def _load_custom_configs(self) -> dict[UnifiedMode, ModeConfig]:
         """Load custom configurations from file"""
         try:
-            with open(self.config_path, "r") as f:
+            with open(self.config_path) as f:
                 data = json.load(f)
-            
+
             custom = {}
             for mode_name, config in data.get("optimization_modes", {}).items():
                 unified_mode = self.normalize_mode(mode_name)
@@ -137,14 +137,14 @@ class ModeNormalizer:
                     use_consensus=config.get("use_consensus", self.DEFAULT_CONFIGS[unified_mode].use_consensus),
                     circuit_breaker_threshold=config.get("circuit_breaker_threshold", self.DEFAULT_CONFIGS[unified_mode].circuit_breaker_threshold)
                 )
-            
+
             logger.info(f"Loaded custom configs for modes: {list(custom.keys())}")
             return custom
-            
+
         except Exception as e:
             logger.warning(f"Failed to load custom configs: {e}, using defaults")
             return {}
-    
+
     def normalize_mode(self, mode: str) -> UnifiedMode:
         """
         Normalize any mode string to a UnifiedMode enum
@@ -157,10 +157,10 @@ class ModeNormalizer:
         """
         if isinstance(mode, UnifiedMode):
             return mode
-        
+
         mode_lower = mode.lower().strip()
         return self.MODE_ALIASES.get(mode_lower, UnifiedMode.BALANCED)
-    
+
     def get_config(self, mode: Any) -> ModeConfig:
         """
         Get configuration for a mode
@@ -172,15 +172,15 @@ class ModeNormalizer:
             ModeConfig for the specified mode
         """
         unified_mode = self.normalize_mode(str(mode))
-        
+
         # Check custom configs first
         if unified_mode in self.custom_configs:
             return self.custom_configs[unified_mode]
-        
+
         # Fall back to defaults
         return self.DEFAULT_CONFIGS[unified_mode]
-    
-    def adapt_for_swarm(self, mode: Any, swarm_type: str) -> Dict[str, Any]:
+
+    def adapt_for_swarm(self, mode: Any, swarm_type: str) -> dict[str, Any]:
         """
         Adapt mode configuration for specific swarm implementation
         
@@ -192,7 +192,7 @@ class ModeNormalizer:
             Dictionary of configuration parameters for the swarm
         """
         config = self.get_config(mode)
-        
+
         if swarm_type == "coding":
             # Adapt for CodingSwarmOrchestrator
             return {
@@ -203,7 +203,7 @@ class ModeNormalizer:
                 "use_judge": config.use_judge,
                 "use_memory": config.use_memory
             }
-        
+
         elif swarm_type == "improved":
             # Adapt for ImprovedAgentSwarm
             return {
@@ -213,7 +213,7 @@ class ModeNormalizer:
                 "timeout": config.timeout,
                 "use_consensus": config.use_consensus
             }
-        
+
         elif swarm_type == "simple":
             # Adapt for SimpleAgentOrchestrator
             return {
@@ -221,7 +221,7 @@ class ModeNormalizer:
                 "timeout": config.timeout,
                 "max_agents": config.max_agents
             }
-        
+
         else:
             # Generic configuration
             return {
@@ -231,7 +231,7 @@ class ModeNormalizer:
                 "max_rounds": config.max_rounds,
                 "patterns": config.enabled_patterns
             }
-    
+
     def should_use_fast_path(self, mode: Any) -> bool:
         """
         Determine if fast path should be used for given mode
@@ -244,8 +244,8 @@ class ModeNormalizer:
         """
         unified_mode = self.normalize_mode(str(mode))
         return unified_mode == UnifiedMode.LITE
-    
-    def get_circuit_breaker_config(self, mode: Any) -> Dict[str, Any]:
+
+    def get_circuit_breaker_config(self, mode: Any) -> dict[str, Any]:
         """
         Get circuit breaker configuration for mode
         
@@ -256,14 +256,14 @@ class ModeNormalizer:
             Circuit breaker configuration
         """
         config = self.get_config(mode)
-        
+
         return {
             "failure_threshold": int(5 * (1 - config.circuit_breaker_threshold)),
             "recovery_timeout": config.timeout // 2,
             "expected_exception": Exception,
             "name": f"cb_{config.name}"
         }
-    
+
     def get_degradation_strategy(self, current_mode: Any) -> UnifiedMode:
         """
         Get degradation strategy - what mode to fall back to
@@ -275,14 +275,14 @@ class ModeNormalizer:
             Mode to degrade to
         """
         unified_mode = self.normalize_mode(str(current_mode))
-        
+
         if unified_mode == UnifiedMode.QUALITY:
             return UnifiedMode.BALANCED
         elif unified_mode == UnifiedMode.BALANCED:
             return UnifiedMode.LITE
         else:
             return UnifiedMode.LITE  # Already at lowest
-    
+
     def calculate_mode_cost(self, mode: Any) -> float:
         """
         Calculate relative cost of a mode (0.0 to 1.0)
@@ -294,13 +294,13 @@ class ModeNormalizer:
             Relative cost (0.0 = cheapest, 1.0 = most expensive)
         """
         config = self.get_config(mode)
-        
+
         # Calculate based on timeout, agents, rounds, and patterns
         timeout_cost = config.timeout / 300  # Normalized to max timeout
         agent_cost = config.max_agents / 10  # Normalized to max agents
         round_cost = config.max_rounds / 5  # Normalized to max rounds
         pattern_cost = len(config.enabled_patterns) / 8  # Normalized to max patterns
-        
+
         # Weighted average
         return (
             timeout_cost * 0.3 +
@@ -308,7 +308,7 @@ class ModeNormalizer:
             round_cost * 0.2 +
             pattern_cost * 0.2
         )
-    
+
     def select_mode_for_task(
         self,
         task_complexity: float,
@@ -334,25 +334,25 @@ class ModeNormalizer:
             "critical": 1.0
         }
         urgency_score = urgency_scores.get(urgency, 0.5)
-        
+
         # Calculate mode score
         # High complexity + low urgency + high resources = Quality
         # Low complexity + high urgency + low resources = Lite
-        
+
         quality_score = (
             task_complexity * 0.5 +
             (1 - urgency_score) * 0.3 +
             resource_availability * 0.2
         )
-        
+
         if quality_score > 0.7:
             return UnifiedMode.QUALITY
         elif quality_score > 0.4:
             return UnifiedMode.BALANCED
         else:
             return UnifiedMode.LITE
-    
-    def merge_configs(self, base_config: Dict, overrides: Dict) -> Dict:
+
+    def merge_configs(self, base_config: dict, overrides: dict) -> dict:
         """
         Merge configuration with overrides
         
@@ -364,13 +364,13 @@ class ModeNormalizer:
             Merged configuration
         """
         merged = base_config.copy()
-        
+
         for key, value in overrides.items():
             if key in merged and isinstance(merged[key], dict) and isinstance(value, dict):
                 merged[key] = self.merge_configs(merged[key], value)
             else:
                 merged[key] = value
-        
+
         return merged
 
 

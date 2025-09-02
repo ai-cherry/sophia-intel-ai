@@ -5,10 +5,11 @@ Phase 2 Week 3-4 Implementation
 
 import logging
 from contextlib import asynccontextmanager
+
+import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-import uvicorn
 
 # Import our NL endpoints
 from app.api.nl_endpoints import router as nl_router
@@ -27,12 +28,12 @@ async def lifespan(app: FastAPI):
     # Startup
     logger.info("Starting Sophia Intel AI - Natural Language Interface")
     logger.info("Phase 2 Week 3-4 Implementation")
-    
+
     # Initialize services
     logger.info("Initializing services...")
-    
+
     yield
-    
+
     # Shutdown
     logger.info("Shutting down Natural Language Interface")
 

@@ -3,12 +3,13 @@ OpenRouter Latest Model Integration (August 2025).
 Dynamic model management with automatic updates and fallbacks.
 """
 
-import httpx
-from typing import Dict, Any, List, Optional
+import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-import logging
+from typing import Any
+
+import httpx
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +44,7 @@ class ModelInfo:
     supports_audio: bool = False
     is_free: bool = False
     provider: str = ""
-    
+
     @property
     def is_premium(self) -> bool:
         """Check if model is premium tier."""
@@ -55,7 +56,7 @@ class OpenRouterLatest:
     OpenRouter integration with latest models (August 2025).
     Includes GPT-5, Claude-4, Gemini 2.5, DeepSeek V3.1, etc.
     """
-    
+
     # Latest flagship models as of August 2025
     LATEST_MODELS = {
         # OpenAI GPT-5 Series
@@ -65,47 +66,47 @@ class OpenRouterLatest:
         "openai/gpt-5-nano": {"tier": ModelTier.BALANCED, "context": 400000},
         "openai/o3-pro": {"tier": ModelTier.PREMIUM, "context": 128000},
         "openai/o3": {"tier": ModelTier.PREMIUM, "context": 128000},
-        
+
         # Anthropic Claude 4 Series
         "anthropic/claude-opus-4": {"tier": ModelTier.PREMIUM, "context": 200000},
         "anthropic/claude-sonnet-4": {"tier": ModelTier.PREMIUM, "context": 1000000},
         "anthropic/claude-3.7-sonnet": {"tier": ModelTier.BALANCED, "context": 200000},
         "anthropic/claude-3.7-sonnet:thinking": {"tier": ModelTier.BALANCED, "context": 200000},
-        
+
         # Google Gemini 2.5 Series
         "google/gemini-2.5-pro": {"tier": ModelTier.BALANCED, "context": 1000000},
         "google/gemini-2.5-flash": {"tier": ModelTier.BALANCED, "context": 1000000},
         "google/gemini-2.5-flash-image-preview": {"tier": ModelTier.BALANCED, "context": 1000000},
         "google/gemini-2.0-flash-001": {"tier": ModelTier.BALANCED, "context": 1000000},
-        
+
         # DeepSeek V3.1 Series
         "deepseek/deepseek-chat-v3.1": {"tier": ModelTier.BALANCED, "context": 164000},
         "deepseek/deepseek-chat-v3.1:free": {"tier": ModelTier.FREE, "context": 164000},
         "deepseek/deepseek-r1": {"tier": ModelTier.BALANCED, "context": 128000},
         "deepseek/deepseek-r1:free": {"tier": ModelTier.FREE, "context": 128000},
-        
+
         # X.AI Grok Series
         "x-ai/grok-code-fast-1": {"tier": ModelTier.BALANCED, "context": 128000},
         "x-ai/grok-3": {"tier": ModelTier.PREMIUM, "context": 128000},
         "x-ai/grok-3-mini": {"tier": ModelTier.BALANCED, "context": 128000},
-        
+
         # Meta Llama Latest
         "meta-llama/llama-4-maverick": {"tier": ModelTier.BALANCED, "context": 128000},
         "meta-llama/llama-4-maverick:free": {"tier": ModelTier.FREE, "context": 128000},
         "meta-llama/llama-3.3-70b-instruct": {"tier": ModelTier.BALANCED, "context": 128000},
         "meta-llama/llama-3.3-70b-instruct:free": {"tier": ModelTier.FREE, "context": 128000},
-        
+
         # Qwen Latest
         "qwen/qwen3-coder": {"tier": ModelTier.BALANCED, "context": 32768},
         "qwen/qwen3-235b-a22b": {"tier": ModelTier.PREMIUM, "context": 32768},
         "qwen/qwen3-235b-a22b:free": {"tier": ModelTier.FREE, "context": 32768},
-        
+
         # Mistral Latest
         "mistralai/mistral-medium-3.1": {"tier": ModelTier.BALANCED, "context": 128000},
         "mistralai/codestral-2501": {"tier": ModelTier.BALANCED, "context": 128000},
         "mistralai/mistral-small-3.2-24b-instruct:free": {"tier": ModelTier.FREE, "context": 128000},
     }
-    
+
     # Task-optimized model recommendations
     MODEL_RECOMMENDATIONS = {
         TaskType.REASONING: {
@@ -134,7 +135,7 @@ class OpenRouterLatest:
             ModelTier.FREE: ["google/gemini-2.5-flash-image-preview:free"]
         }
     }
-    
+
     def __init__(self, api_key: str, referer: str = "http://localhost:3000", app_name: str = "Sophia-Intel-AI"):
         """Initialize OpenRouter client with latest configuration."""
         self.api_key = api_key
@@ -145,42 +146,42 @@ class OpenRouterLatest:
             "X-Title": app_name,
             "Content-Type": "application/json"
         }
-        
+
         # Model cache
-        self.model_cache: Dict[str, ModelInfo] = {}
-        self.cache_timestamp: Optional[datetime] = None
+        self.model_cache: dict[str, ModelInfo] = {}
+        self.cache_timestamp: datetime | None = None
         self.cache_ttl = timedelta(hours=6)
-        
+
         # Health monitoring
-        self.model_health: Dict[str, Dict[str, Any]] = {}
-        self.fallback_chains: Dict[str, List[str]] = self._build_fallback_chains()
-        
-    def _build_fallback_chains(self) -> Dict[str, List[str]]:
+        self.model_health: dict[str, dict[str, Any]] = {}
+        self.fallback_chains: dict[str, list[str]] = self._build_fallback_chains()
+
+    def _build_fallback_chains(self) -> dict[str, list[str]]:
         """Build fallback chains for each primary model."""
         return {
             # GPT-5 fallbacks
             "openai/gpt-5": ["openai/gpt-5-mini", "openai/gpt-4o", "openai/gpt-4o-mini"],
             "openai/gpt-5-mini": ["openai/gpt-5-nano", "openai/gpt-4o-mini"],
-            
+
             # Claude-4 fallbacks
             "anthropic/claude-opus-4": ["anthropic/claude-sonnet-4", "anthropic/claude-3.7-sonnet", "anthropic/claude-3.5-sonnet"],
             "anthropic/claude-3.7-sonnet:thinking": ["anthropic/claude-3.7-sonnet", "anthropic/claude-3.5-sonnet"],
-            
+
             # DeepSeek fallbacks
             "deepseek/deepseek-r1": ["deepseek/deepseek-chat-v3.1", "deepseek/deepseek-r1:free"],
             "deepseek/deepseek-chat-v3.1": ["deepseek/deepseek-chat-v3.1:free", "qwen/qwen3-coder"],
-            
+
             # Gemini fallbacks
             "google/gemini-2.5-pro": ["google/gemini-2.5-flash", "google/gemini-2.0-flash-001"],
-            
+
             # X.AI fallbacks
             "x-ai/grok-code-fast-1": ["qwen/qwen3-coder", "mistralai/codestral-2501", "deepseek/deepseek-chat-v3.1"],
-            
+
             # Generic fallback for unknown models
             "default": ["openai/gpt-4o-mini", "deepseek/deepseek-chat-v3.1:free", "meta-llama/llama-3.3-70b-instruct:free"]
         }
-        
-    async def refresh_model_cache(self) -> Dict[str, ModelInfo]:
+
+    async def refresh_model_cache(self) -> dict[str, ModelInfo]:
         """Fetch and cache the latest model list from OpenRouter."""
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
@@ -188,11 +189,11 @@ class OpenRouterLatest:
                     f"{self.base_url}/models",
                     headers=self.headers
                 )
-                
+
                 if response.status_code == 200:
                     data = response.json()
                     self.model_cache.clear()
-                    
+
                     for model_data in data.get("data", []):
                         model_id = model_data.get("id")
                         if model_id:
@@ -209,27 +210,27 @@ class OpenRouterLatest:
                                 is_free=":free" in model_id,
                                 provider=model_id.split("/")[0] if "/" in model_id else ""
                             )
-                    
+
                     self.cache_timestamp = datetime.now()
                     logger.info(f"Refreshed model cache: {len(self.model_cache)} models available")
-                    
+
         except Exception as e:
             logger.error(f"Failed to refresh model cache: {e}")
-            
+
         return self.model_cache
-        
+
     def should_refresh_cache(self) -> bool:
         """Check if cache needs refreshing."""
         if not self.cache_timestamp:
             return True
         return datetime.now() - self.cache_timestamp > self.cache_ttl
-        
-    async def get_best_model(self, 
+
+    async def get_best_model(self,
                             task: TaskType = TaskType.GENERAL,
                             tier: ModelTier = ModelTier.BALANCED,
                             require_vision: bool = False,
                             require_functions: bool = False,
-                            max_cost_per_1m: Optional[float] = None) -> str:
+                            max_cost_per_1m: float | None = None) -> str:
         """
         Get the best available model for the task and requirements.
         
@@ -246,15 +247,15 @@ class OpenRouterLatest:
         # Refresh cache if needed
         if self.should_refresh_cache():
             await self.refresh_model_cache()
-            
+
         # Get recommended models for task and tier
         recommendations = self.MODEL_RECOMMENDATIONS.get(task, {}).get(tier, [])
-        
+
         # Filter by requirements
         for model_id in recommendations:
             if model_id in self.model_cache:
                 model = self.model_cache[model_id]
-                
+
                 # Check requirements
                 if require_vision and not model.supports_vision:
                     continue
@@ -264,26 +265,26 @@ class OpenRouterLatest:
                     total_cost = model.pricing_prompt + model.pricing_completion
                     if total_cost > max_cost_per_1m:
                         continue
-                        
+
                 # Check health
                 if await self.check_model_health(model_id):
                     return model_id
-                    
+
         # Fallback to any available model
         fallback_order = [
             "openai/gpt-4o-mini",
             "deepseek/deepseek-chat-v3.1:free",
             "meta-llama/llama-3.3-70b-instruct:free"
         ]
-        
+
         for model_id in fallback_order:
             if await self.check_model_health(model_id):
                 logger.warning(f"Using fallback model: {model_id}")
                 return model_id
-                
+
         # Last resort
         return "openai/gpt-4o-mini"
-        
+
     async def check_model_health(self, model_id: str) -> bool:
         """Check if a model is healthy and available."""
         # Check cache first
@@ -293,7 +294,7 @@ class OpenRouterLatest:
                 age = datetime.now() - health["checked_at"]
                 if age < timedelta(minutes=15):
                     return health.get("available", False)
-                    
+
         # Perform health check
         try:
             async with httpx.AsyncClient(timeout=10.0) as client:
@@ -307,16 +308,16 @@ class OpenRouterLatest:
                         "temperature": 0
                     }
                 )
-                
+
                 available = response.status_code == 200
                 self.model_health[model_id] = {
                     "available": available,
                     "checked_at": datetime.now(),
                     "response_time": response.elapsed.total_seconds() if hasattr(response, 'elapsed') else None
                 }
-                
+
                 return available
-                
+
         except Exception as e:
             logger.debug(f"Model {model_id} health check failed: {e}")
             self.model_health[model_id] = {
@@ -325,13 +326,13 @@ class OpenRouterLatest:
                 "error": str(e)
             }
             return False
-            
+
     async def create_completion_with_fallback(self,
-                                             messages: List[Dict[str, str]],
-                                             model: Optional[str] = None,
+                                             messages: list[dict[str, str]],
+                                             model: str | None = None,
                                              task: TaskType = TaskType.GENERAL,
                                              tier: ModelTier = ModelTier.BALANCED,
-                                             **kwargs) -> Dict[str, Any]:
+                                             **kwargs) -> dict[str, Any]:
         """
         Create completion with automatic fallback on failure.
         
@@ -348,10 +349,10 @@ class OpenRouterLatest:
         # Determine primary model
         if not model:
             model = await self.get_best_model(task, tier)
-            
+
         # Get fallback chain
         fallback_models = [model] + self.fallback_chains.get(model, self.fallback_chains["default"])
-        
+
         last_error = None
         for attempt_model in fallback_models:
             try:
@@ -365,7 +366,7 @@ class OpenRouterLatest:
                             **kwargs
                         }
                     )
-                    
+
                     if response.status_code == 200:
                         result = response.json()
                         result["_model_used"] = attempt_model
@@ -373,54 +374,54 @@ class OpenRouterLatest:
                         return result
                     else:
                         last_error = f"HTTP {response.status_code}: {response.text}"
-                        
+
             except Exception as e:
                 last_error = str(e)
                 logger.warning(f"Model {attempt_model} failed: {e}")
                 continue
-                
+
         # All models failed
         raise Exception(f"All models failed. Last error: {last_error}")
-        
-    def get_model_info(self, model_id: str) -> Optional[ModelInfo]:
+
+    def get_model_info(self, model_id: str) -> ModelInfo | None:
         """Get cached information about a specific model."""
         return self.model_cache.get(model_id)
-        
-    def get_available_models(self, 
-                           tier: Optional[ModelTier] = None,
-                           max_cost: Optional[float] = None,
-                           require_vision: bool = False) -> List[str]:
+
+    def get_available_models(self,
+                           tier: ModelTier | None = None,
+                           max_cost: float | None = None,
+                           require_vision: bool = False) -> list[str]:
         """Get list of available models matching criteria."""
         models = []
-        
+
         for model_id, info in self.model_cache.items():
             # Filter by tier
             if tier:
                 model_tier = self.LATEST_MODELS.get(model_id, {}).get("tier")
                 if model_tier != tier:
                     continue
-                    
+
             # Filter by cost
             if max_cost:
                 total_cost = info.pricing_prompt + info.pricing_completion
                 if total_cost > max_cost:
                     continue
-                    
+
             # Filter by capabilities
             if require_vision and not info.supports_vision:
                 continue
-                
+
             models.append(model_id)
-            
+
         return sorted(models)
-        
+
     def estimate_cost(self, model_id: str, prompt_tokens: int, completion_tokens: int) -> float:
         """Estimate cost for a completion."""
         info = self.model_cache.get(model_id)
         if not info:
             return 0.0
-            
+
         prompt_cost = (prompt_tokens / 1_000_000) * info.pricing_prompt
         completion_cost = (completion_tokens / 1_000_000) * info.pricing_completion
-        
+
         return prompt_cost + completion_cost

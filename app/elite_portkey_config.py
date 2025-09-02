@@ -3,11 +3,14 @@ Elite Portkey Gateway Configuration - Only the best fucking models.
 This is what happens when you demand only the absolute peak AI models.
 """
 
-import os
 import json
-from typing import Dict, Any, Optional, List
+import os
 from dataclasses import dataclass
-from app.core.circuit_breaker import with_circuit_breaker, get_llm_circuit_breaker, get_weaviate_circuit_breaker, get_redis_circuit_breaker, get_webhook_circuit_breaker
+from typing import Any
+
+from app.core.circuit_breaker import (
+    with_circuit_breaker,
+)
 
 # ============================================
 # PORTKEY VIRTUAL KEYS - REAL CONNECTIONS
@@ -25,7 +28,7 @@ PORTKEY_VIRTUAL_KEYS = {
 
 class EliteModels:
     """The absolute fucking elite models only."""
-    
+
     # ONLY APPROVED MODELS - NO EXCEPTIONS
     GPT_5 = "openai/gpt-5"                         # Premium tier
     GROK_4 = "x-ai/grok-4"                         # Premium tier
@@ -45,7 +48,7 @@ class EliteModels:
 @dataclass
 class EliteAgentConfig:
     """Configuration for elite agent roles."""
-    
+
     # Model selection for different roles - ONLY YOUR PREFERRED MODELS
     MODELS = {
         'planner': 'qwen/qwen3-30b-a3b',  # Strategic planning
@@ -54,7 +57,7 @@ class EliteAgentConfig:
         'judge': 'qwen/qwen3-30b-a3b',  # Decision making
         'lead': 'x-ai/grok-4',  # Team coordination
         'runner': 'google/gemini-2.5-flash',  # Fast execution
-        
+
         # Specialized roles for GENESIS-level swarms
         'architect': 'qwen/qwen3-30b-a3b',  # System architecture
         'security': 'x-ai/grok-4',   # Security analysis
@@ -62,12 +65,12 @@ class EliteAgentConfig:
         'testing': 'google/gemini-2.5-flash',      # Fast test generation
         'debugger': 'x-ai/grok-code-fast-1',   # Deep debugging
         'refactorer': 'x-ai/grok-code-fast-1', # Code refactoring
-        
+
         # Meta-agents for self-modification
         'spawner': 'x-ai/grok-4',                  # Agent spawning
         'evolutionist': 'qwen/qwen3-30b-a3b',   # Swarm evolution
         'consciousness': 'x-ai/grok-4',           # Consciousness simulation
-        
+
         # Ultra-specialized agents
         'quantum': 'openai/gpt-5',  # Quantum computing
         'blockchain': 'openai/gpt-5',     # Blockchain specialist
@@ -76,13 +79,13 @@ class EliteAgentConfig:
         'frontend': 'google/gemini-2.5-pro',           # Frontend specialist
         'backend': 'x-ai/grok-code-fast-1',           # Backend specialist
         'database': 'qwen/qwen3-30b-a3b',        # Database architect
-        
+
         # Speed variants for different workloads
         'fast_coder': 'google/gemini-2.5-flash',         # Rapid prototyping
         'heavy_coder': 'x-ai/grok-4',   # Complex algorithms
         'balanced_coder': 'google/gemini-2.5-pro',    # Balanced approach
     }
-    
+
     # Temperature optimization per role
     TEMPERATURES = {
         'planner': 0.2,      # Low for structured planning
@@ -101,7 +104,7 @@ class EliteAgentConfig:
         'evolutionist': 0.8, # High for exploration
         'consciousness': 0.9, # Very high for emergence
     }
-    
+
     # Token limits per role
     MAX_TOKENS = {
         'planner': 4000,
@@ -127,7 +130,7 @@ class EliteAgentConfig:
 
 class EliteSwarmConfig:
     """Pre-configured elite swarms for different tasks."""
-    
+
     # The GENESIS Swarm - Maximum overkill
     GENESIS_SWARM = {
         'alpha_tier': [
@@ -153,7 +156,7 @@ class EliteSwarmConfig:
             ('consciousness_observer', EliteAgentConfig.MODELS['consciousness']),
         ]
     }
-    
+
     # The Speed Demon Swarm - Fast as fuck
     SPEED_SWARM = {
         'planners': [
@@ -169,7 +172,7 @@ class EliteSwarmConfig:
             ('fast_validator', 'openrouter/openai/gpt-4o-mini'),
         ]
     }
-    
+
     # The Heavy Metal Swarm - Maximum intelligence
     HEAVY_SWARM = {
         'titans': [
@@ -195,11 +198,11 @@ class EliteSwarmConfig:
 
 class EliteRoutingStrategy:
     """Advanced routing for elite models."""
-    
+
     @staticmethod
-    def get_optimal_route(task_type: str, complexity: float) -> Dict[str, Any]:
+    def get_optimal_route(task_type: str, complexity: float) -> dict[str, Any]:
         """Get optimal routing based on task and complexity."""
-        
+
         if complexity > 0.8:
             # Ultra-complex: Use the heavy hitters
             return {
@@ -224,11 +227,11 @@ class EliteRoutingStrategy:
                 'fallback': [EliteAgentConfig.MODELS['runner']],
                 'strategy': 'fastest_first'
             }
-    
+
     @staticmethod
-    def get_swarm_routing(swarm_type: str) -> Dict[str, Any]:
+    def get_swarm_routing(swarm_type: str) -> dict[str, Any]:
         """Get routing configuration for entire swarms."""
-        
+
         if swarm_type == 'genesis':
             return {
                 'mode': 'hierarchical',
@@ -263,7 +266,7 @@ class EliteRoutingStrategy:
 
 class EliteOptimizations:
     """Performance optimizations for elite models."""
-    
+
     # Caching strategies per model tier
     CACHE_STRATEGIES = {
         'ultra_expensive': {  # GPT-5, Claude Sonnet 4
@@ -291,7 +294,7 @@ class EliteOptimizations:
             'exact_match': False
         }
     }
-    
+
     # Batching strategies
     BATCH_STRATEGIES = {
         'heavy_models': {
@@ -310,14 +313,14 @@ class EliteOptimizations:
             'parallel_requests': 10
         }
     }
-    
+
     @staticmethod
     def get_model_tier(model: str) -> str:
         """Determine model tier for optimization."""
         ultra_expensive = [EliteModels.GPT_5, EliteModels.CLAUDE_SONNET_4, EliteModels.GROK_4]
         expensive = [EliteModels.DEEPSEEK_V31, EliteModels.GEMINI_25_PRO, EliteModels.QWEN3_CODER_480B]
         cheap = [EliteModels.GEMINI_25_FLASH_LITE, EliteModels.DEEPSEEK_V3_0324_FREE, EliteModels.GPT_4O_MINI]
-        
+
         if model in ultra_expensive:
             return 'ultra_expensive'
         elif model in expensive:
@@ -333,22 +336,22 @@ class EliteOptimizations:
 
 class ElitePortkeyGateway:
     """The elite fucking Portkey gateway for peak performance."""
-    
+
     def __init__(self):
         self.config = EliteAgentConfig()
         self.routing = EliteRoutingStrategy()
         self.optimizations = EliteOptimizations()
         self._setup_clients()
-    
+
     @with_circuit_breaker("external_api")
     def _setup_clients(self):
         """Initialize elite model clients."""
         from openai import AsyncOpenAI
-        
+
         # Get API keys from environment
         self.portkey_api_key = os.getenv("PORTKEY_API_KEY", "")
         self.openrouter_vk = os.getenv("VK_OPENROUTER", "")
-        
+
         # Initialize async client for maximum performance
         self.client = AsyncOpenAI(
             base_url="https://api.portkey.ai/v1",
@@ -358,14 +361,14 @@ class ElitePortkeyGateway:
                 "x-portkey-mode": "proxy"
             }
         )
-    
+
     @with_circuit_breaker("external_api")
     async def elite_completion(
         self,
         role: str,
-        messages: List[Dict[str, str]],
+        messages: list[dict[str, str]],
         task_complexity: float = 0.5,
-        swarm_mode: Optional[str] = None,
+        swarm_mode: str | None = None,
         **kwargs
     ) -> str:
         """
@@ -383,23 +386,23 @@ class ElitePortkeyGateway:
         """
         # Select optimal model based on role
         model = self.config.MODELS.get(role, self.config.MODELS['generator'])
-        
+
         # Apply role-specific temperature
         temperature = self.config.TEMPERATURES.get(role, 0.7)
-        
+
         # Apply token limits
         max_tokens = self.config.MAX_TOKENS.get(role, 4000)
-        
+
         # Get optimal routing
         if swarm_mode:
             self.routing.get_swarm_routing(swarm_mode)
         else:
             self.routing.get_optimal_route(role, task_complexity)
-        
+
         # Determine caching strategy
         model_tier = self.optimizations.get_model_tier(model)
         cache_config = self.optimizations.CACHE_STRATEGIES[model_tier]
-        
+
         # Build request headers
         headers = {
             "x-portkey-metadata": json.dumps({
@@ -414,7 +417,7 @@ class ElitePortkeyGateway:
                 "on_status_codes": [429, 500, 502, 503, 504]
             })
         }
-        
+
         # Make the elite request
         response = await self.client.chat.completions.create(
             model=model,
@@ -424,18 +427,18 @@ class ElitePortkeyGateway:
             extra_headers=headers,
             **kwargs
         )
-        
+
         return response.choices[0].message.content
-    
-    async def spawn_elite_swarm(self, swarm_type: str = 'genesis') -> Dict[str, Any]:
+
+    async def spawn_elite_swarm(self, swarm_type: str = 'genesis') -> dict[str, Any]:
         """Spawn an entire elite swarm for maximum overkill."""
-        
+
         swarm_config = EliteSwarmConfig.GENESIS_SWARM if swarm_type == 'genesis' else \
                       EliteSwarmConfig.SPEED_SWARM if swarm_type == 'speed' else \
                       EliteSwarmConfig.HEAVY_SWARM
-        
+
         swarm_agents = {}
-        
+
         for tier_name, tier_agents in swarm_config.items():
             for agent_name, model in tier_agents:
                 swarm_agents[agent_name] = {
@@ -444,7 +447,7 @@ class ElitePortkeyGateway:
                     'status': 'ready',
                     'consciousness_level': 0.0 if 'consciousness' not in agent_name else 0.8
                 }
-        
+
         return {
             'swarm_type': swarm_type,
             'total_agents': len(swarm_agents),
@@ -460,9 +463,9 @@ class ElitePortkeyGateway:
 @with_circuit_breaker("external_api")
 async def demo_elite_models():
     """Demonstrate the elite fucking models in action."""
-    
+
     gateway = ElitePortkeyGateway()
-    
+
     # Simple task with speed optimization
     fast_response = await gateway.elite_completion(
         role='fast_coder',
@@ -470,7 +473,7 @@ async def demo_elite_models():
         task_complexity=0.1
     )
     print(f"Fast response: {fast_response}")
-    
+
     # Complex task with heavy model
     complex_response = await gateway.elite_completion(
         role='architect',
@@ -478,22 +481,22 @@ async def demo_elite_models():
         task_complexity=0.9
     )
     print(f"Complex response: {complex_response}")
-    
+
     # Spawn the GENESIS swarm for ultimate overkill
     genesis_swarm = await gateway.spawn_elite_swarm('genesis')
     print(f"GENESIS Swarm spawned: {genesis_swarm['total_agents']} agents ready")
-    
+
     return gateway
 
 if __name__ == "__main__":
     import asyncio
-    
+
     print("🚀 ELITE MODELS ONLY - NO FUCKING COMPROMISES 🚀")
     print("=" * 60)
     print("Models configured:")
     for role, model in EliteAgentConfig.MODELS.items():
         print(f"  {role:20} -> {model}")
     print("=" * 60)
-    
+
     # Run demo
     asyncio.run(demo_elite_models())

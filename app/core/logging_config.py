@@ -3,13 +3,13 @@ Centralized Logging Configuration for Sophia Intel AI
 Provides consistent logging across all modules with structured output.
 """
 
+import json
 import logging
 import logging.config
-import json
-from pathlib import Path
-from typing import Dict, Any, Optional
-from datetime import datetime
 import traceback
+from datetime import datetime
+from pathlib import Path
+from typing import Any
 
 from app.core.config import settings
 
@@ -19,7 +19,7 @@ from app.core.config import settings
 
 class StructuredFormatter(logging.Formatter):
     """JSON structured logging formatter."""
-    
+
     def format(self, record: logging.LogRecord) -> str:
         """Format log record as JSON."""
         log_obj = {
@@ -31,7 +31,7 @@ class StructuredFormatter(logging.Formatter):
             "function": record.funcName,
             "line": record.lineno,
         }
-        
+
         # Add extra fields
         if hasattr(record, 'user_id'):
             log_obj['user_id'] = record.user_id
@@ -41,7 +41,7 @@ class StructuredFormatter(logging.Formatter):
             log_obj['trace_id'] = record.trace_id
         if hasattr(record, 'team_id'):
             log_obj['team_id'] = record.team_id
-        
+
         # Add exception info if present
         if record.exc_info:
             log_obj['exception'] = {
@@ -49,12 +49,12 @@ class StructuredFormatter(logging.Formatter):
                 'message': str(record.exc_info[1]),
                 'traceback': traceback.format_exception(*record.exc_info)
             }
-        
+
         return json.dumps(log_obj)
 
 class ColoredFormatter(logging.Formatter):
     """Colored console formatter for development."""
-    
+
     COLORS = {
         'DEBUG': '\033[36m',      # Cyan
         'INFO': '\033[32m',       # Green
@@ -63,14 +63,14 @@ class ColoredFormatter(logging.Formatter):
         'CRITICAL': '\033[35m',   # Magenta
         'RESET': '\033[0m'
     }
-    
+
     def format(self, record: logging.LogRecord) -> str:
         """Format with colors for console output."""
         if settings.environment == "development":
             levelname = record.levelname
             record.levelname = f"{self.COLORS.get(levelname, '')}{levelname}{self.COLORS['RESET']}"
             record.msg = f"{self.COLORS.get(levelname, '')}{record.msg}{self.COLORS['RESET']}"
-        
+
         return super().format(record)
 
 # ============================================
@@ -79,7 +79,7 @@ class ColoredFormatter(logging.Formatter):
 
 class RequestIdFilter(logging.Filter):
     """Add request ID to log records."""
-    
+
     def filter(self, record: logging.LogRecord) -> bool:
         """Add request context to record."""
         # Get request ID from context (would be set by middleware)
@@ -90,16 +90,16 @@ class RequestIdFilter(logging.Filter):
 
 class SensitiveDataFilter(logging.Filter):
     """Filter out sensitive data from logs."""
-    
+
     SENSITIVE_KEYS = [
         'password', 'token', 'api_key', 'secret', 'authorization',
         'credit_card', 'ssn', 'email', 'phone'
     ]
-    
+
     def filter(self, record: logging.LogRecord) -> bool:
         """Redact sensitive information."""
         message = record.getMessage()
-        
+
         # Redact sensitive keys in message
         for key in self.SENSITIVE_KEYS:
             if key in message.lower():
@@ -107,27 +107,27 @@ class SensitiveDataFilter(logging.Filter):
                 import re
                 pattern = rf'{key}["\']?\s*[:=]\s*["\']?[\w\-\.]+'
                 message = re.sub(pattern, f'{key}=***REDACTED***', message, flags=re.IGNORECASE)
-        
+
         record.msg = message
         record.args = ()  # Clear args to prevent re-formatting
-        
+
         return True
 
 # ============================================
 # Logging Configuration
 # ============================================
 
-def get_logging_config() -> Dict[str, Any]:
+def get_logging_config() -> dict[str, Any]:
     """Get logging configuration dictionary."""
-    
+
     # Ensure logs directory exists
     logs_dir = Path(settings.logs_dir)
     logs_dir.mkdir(exist_ok=True)
-    
+
     config = {
         "version": 1,
         "disable_existing_loggers": False,
-        
+
         "formatters": {
             "structured": {
                 "()": StructuredFormatter
@@ -142,7 +142,7 @@ def get_logging_config() -> Dict[str, Any]:
                 "datefmt": "%Y-%m-%d %H:%M:%S"
             }
         },
-        
+
         "filters": {
             "request_id": {
                 "()": RequestIdFilter
@@ -151,7 +151,7 @@ def get_logging_config() -> Dict[str, Any]:
                 "()": SensitiveDataFilter
             }
         },
-        
+
         "handlers": {
             "console": {
                 "class": "logging.StreamHandler",
@@ -179,7 +179,7 @@ def get_logging_config() -> Dict[str, Any]:
                 "backupCount": 5
             }
         },
-        
+
         "loggers": {
             # App loggers
             "app": {
@@ -207,7 +207,7 @@ def get_logging_config() -> Dict[str, Any]:
                 "handlers": ["console", "file"],
                 "propagate": False
             },
-            
+
             # Third-party loggers
             "uvicorn": {
                 "level": "INFO",
@@ -235,13 +235,13 @@ def get_logging_config() -> Dict[str, Any]:
                 "propagate": False
             }
         },
-        
+
         "root": {
             "level": settings.log_level,
             "handlers": ["console", "file"]
         }
     }
-    
+
     # Add Sentry handler if configured
     if hasattr(settings, 'sentry_dsn') and settings.sentry_dsn:
         config["handlers"]["sentry"] = {
@@ -251,7 +251,7 @@ def get_logging_config() -> Dict[str, Any]:
         for logger in config["loggers"].values():
             if "error_file" in logger.get("handlers", []):
                 logger["handlers"].append("sentry")
-    
+
     return config
 
 # ============================================
@@ -260,21 +260,21 @@ def get_logging_config() -> Dict[str, Any]:
 
 class LoggerFactory:
     """Factory for creating configured loggers."""
-    
+
     _configured = False
-    
+
     @classmethod
-    def configure(cls, config: Optional[Dict[str, Any]] = None) -> None:
+    def configure(cls, config: dict[str, Any] | None = None) -> None:
         """Configure logging system."""
         if cls._configured:
             return
-        
+
         if config is None:
             config = get_logging_config()
-        
+
         logging.config.dictConfig(config)
         cls._configured = True
-        
+
         # Log configuration complete
         logger = logging.getLogger(__name__)
         logger.info(
@@ -285,13 +285,13 @@ class LoggerFactory:
                 "logs_dir": str(settings.logs_dir)
             }
         )
-    
+
     @classmethod
     def get_logger(cls, name: str) -> logging.Logger:
         """Get a configured logger."""
         if not cls._configured:
             cls.configure()
-        
+
         return logging.getLogger(name)
 
 # ============================================
@@ -300,23 +300,23 @@ class LoggerFactory:
 
 class LogContext:
     """Context manager for adding context to logs."""
-    
+
     def __init__(self, **kwargs):
         """Initialize with context values."""
         self.context = kwargs
         self.token = None
-    
+
     def __enter__(self):
         """Set context variables."""
         import contextvars
-        
+
         # Store context in contextvars
         for key, value in self.context.items():
             var = contextvars.ContextVar(key, default=None)
             self.token = var.set(value)
-        
+
         return self
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Clear context variables."""
         # Context vars are automatically cleaned up
@@ -329,7 +329,7 @@ def log_function_call(logger: logging.Logger):
     """Decorator to log function calls."""
     def decorator(func):
         from functools import wraps
-        
+
         @wraps(func)
         def wrapper(*args, **kwargs):
             logger.debug(
@@ -340,7 +340,7 @@ def log_function_call(logger: logging.Logger):
                     "kwargs": str(kwargs)[:100]
                 }
             )
-            
+
             try:
                 result = func(*args, **kwargs)
                 logger.debug(
@@ -355,7 +355,7 @@ def log_function_call(logger: logging.Logger):
                     exc_info=True
                 )
                 raise
-        
+
         @wraps(func)
         async def async_wrapper(*args, **kwargs):
             logger.debug(
@@ -366,7 +366,7 @@ def log_function_call(logger: logging.Logger):
                     "kwargs": str(kwargs)[:100]
                 }
             )
-            
+
             try:
                 result = await func(*args, **kwargs)
                 logger.debug(
@@ -381,21 +381,21 @@ def log_function_call(logger: logging.Logger):
                     exc_info=True
                 )
                 raise
-        
+
         import asyncio
         return async_wrapper if asyncio.iscoroutinefunction(func) else wrapper
-    
+
     return decorator
 
 def setup_logging():
     """Setup logging for the application."""
     LoggerFactory.configure()
-    
+
     # Set third-party log levels
     logging.getLogger("urllib3").setLevel(logging.WARNING)
     logging.getLogger("requests").setLevel(logging.WARNING)
     logging.getLogger("httpcore").setLevel(logging.WARNING)
-    
+
     logger = LoggerFactory.get_logger(__name__)
     logger.info("Sophia Intel AI logging initialized")
 

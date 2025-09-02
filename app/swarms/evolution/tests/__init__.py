@@ -15,16 +15,16 @@ Or run specific test classes:
 
 from .test_experimental_evolution import (
     TestExperimentalEvolutionConfig,
-    TestSwarmChromosome,
     TestExperimentalEvolutionEngine,
-    TestIntegrationAdapter,
     TestFactoryFunctions,
-    TestSafetyValidation
+    TestIntegrationAdapter,
+    TestSafetyValidation,
+    TestSwarmChromosome,
 )
 
 __all__ = [
     'TestExperimentalEvolutionConfig',
-    'TestSwarmChromosome', 
+    'TestSwarmChromosome',
     'TestExperimentalEvolutionEngine',
     'TestIntegrationAdapter',
     'TestFactoryFunctions',
@@ -51,7 +51,7 @@ def get_test_info():
             "Configuration validation",
             "Genetic algorithm operations",
             "Safety controls and rollback",
-            "Integration adapter functionality", 
+            "Integration adapter functionality",
             "Factory function safety",
             "Edge case handling"
         ]

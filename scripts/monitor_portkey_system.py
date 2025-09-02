@@ -4,21 +4,18 @@ Comprehensive monitoring script for the Portkey + OpenRouter + Together AI setup
 This script verifies that all components are working and provides real-time status.
 """
 
-import os
 import asyncio
-import httpx
 import json
-import time
+import os
 from datetime import datetime
-from typing import Dict, List, Any, Optional
+from typing import Any
+
+import httpx
 from dotenv import load_dotenv
 from rich.console import Console
-from rich.table import Table
 from rich.panel import Panel
-from rich.live import Live
-from rich.layout import Layout
-from rich.text import Text
 from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.table import Table
 
 # Load environment
 load_dotenv('.env.local', override=True)
@@ -27,12 +24,12 @@ console = Console()
 
 class PortkeySystemMonitor:
     """Monitor the complete Portkey system with all providers."""
-    
+
     def __init__(self):
         self.portkey_key = os.getenv("PORTKEY_API_KEY")
         self.openrouter_key = os.getenv("OPENROUTER_API_KEY")
         self.together_key = os.getenv("TOGETHER_API_KEY")
-        
+
         self.status = {
             "portkey": "🔄 Checking...",
             "openrouter": "🔄 Checking...",
@@ -41,7 +38,7 @@ class PortkeySystemMonitor:
             "embeddings": "🔄 Checking...",
             "last_check": None
         }
-        
+
         # Critical models to monitor
         self.critical_models = [
             {"name": "GPT-4o", "id": "openai/gpt-4o", "type": "chat"},
@@ -55,7 +52,7 @@ class PortkeySystemMonitor:
             {"name": "Groq Llama", "id": "groq/llama-3.1-70b-versatile", "type": "chat"},
             {"name": "M2-BERT", "id": "togethercomputer/m2-bert-80M-8k-retrieval", "type": "embedding"}
         ]
-        
+
     async def check_portkey_health(self) -> bool:
         """Check if Portkey gateway is accessible."""
         try:
@@ -65,7 +62,7 @@ class PortkeySystemMonitor:
                     "provider": "openrouter",
                     "api_key": self.openrouter_key
                 }
-                
+
                 response = await client.get(
                     "https://api.portkey.ai/v1/models",
                     headers={
@@ -73,7 +70,7 @@ class PortkeySystemMonitor:
                         "x-portkey-config": json.dumps(config)
                     }
                 )
-                
+
                 if response.status_code == 200:
                     self.status["portkey"] = "✅ Online"
                     return True
@@ -83,7 +80,7 @@ class PortkeySystemMonitor:
         except Exception as e:
             self.status["portkey"] = f"❌ Error: {str(e)[:30]}"
             return False
-            
+
     async def check_openrouter_health(self) -> bool:
         """Check OpenRouter direct access."""
         try:
@@ -94,7 +91,7 @@ class PortkeySystemMonitor:
                         "Authorization": f"Bearer {self.openrouter_key}"
                     }
                 )
-                
+
                 if response.status_code == 200:
                     models = response.json().get("data", [])
                     self.status["openrouter"] = f"✅ Online ({len(models)} models)"
@@ -105,7 +102,7 @@ class PortkeySystemMonitor:
         except Exception as e:
             self.status["openrouter"] = f"❌ Error: {str(e)[:30]}"
             return False
-            
+
     async def check_together_health(self) -> bool:
         """Check Together AI direct access."""
         try:
@@ -116,7 +113,7 @@ class PortkeySystemMonitor:
                         "Authorization": f"Bearer {self.together_key}"
                     }
                 )
-                
+
                 if response.status_code == 200:
                     self.status["together"] = "✅ Online"
                     return True
@@ -126,8 +123,8 @@ class PortkeySystemMonitor:
         except Exception as e:
             self.status["together"] = f"❌ Error: {str(e)[:30]}"
             return False
-            
-    async def test_model(self, model: Dict[str, str]) -> bool:
+
+    async def test_model(self, model: dict[str, str]) -> bool:
         """Test a specific model through Portkey."""
         try:
             async with httpx.AsyncClient(timeout=15.0) as client:
@@ -143,7 +140,7 @@ class PortkeySystemMonitor:
                             }
                         }
                     }
-                    
+
                     response = await client.post(
                         "https://api.portkey.ai/v1/chat/completions",
                         headers={
@@ -158,14 +155,14 @@ class PortkeySystemMonitor:
                             "temperature": 0.1
                         }
                     )
-                    
+
                 elif model["type"] == "embedding":
                     # Test embedding model
                     config = {
                         "provider": "together-ai",
                         "api_key": self.together_key
                     }
-                    
+
                     response = await client.post(
                         "https://api.portkey.ai/v1/embeddings",
                         headers={
@@ -178,31 +175,31 @@ class PortkeySystemMonitor:
                             "input": "Test"
                         }
                     )
-                
+
                 if response.status_code == 200:
                     self.status["models"][model["name"]] = "✅"
                     return True
                 else:
                     self.status["models"][model["name"]] = f"⚠️ {response.status_code}"
                     return False
-                    
-        except Exception as e:
+
+        except Exception:
             self.status["models"][model["name"]] = "❌"
             return False
-            
+
     async def test_all_models(self):
         """Test all critical models."""
         tasks = []
         for model in self.critical_models:
             tasks.append(self.test_model(model))
-        
+
         results = await asyncio.gather(*tasks)
         return all(results)
-        
-    async def get_model_pricing(self) -> Dict[str, Any]:
+
+    async def get_model_pricing(self) -> dict[str, Any]:
         """Get pricing information for popular models."""
         pricing = {}
-        
+
         try:
             async with httpx.AsyncClient(timeout=10.0) as client:
                 response = await client.get(
@@ -211,10 +208,10 @@ class PortkeySystemMonitor:
                         "Authorization": f"Bearer {self.openrouter_key}"
                     }
                 )
-                
+
                 if response.status_code == 200:
                     models = response.json().get("data", [])
-                    
+
                     # Get pricing for our critical models
                     for model in models:
                         model_id = model.get("id")
@@ -224,35 +221,35 @@ class PortkeySystemMonitor:
                                 "completion": model.get("pricing", {}).get("completion"),
                                 "context": model.get("context_length", 0)
                             }
-                            
+
         except Exception:
             pass
-            
+
         return pricing
-        
+
     def create_status_table(self) -> Table:
         """Create a status table for display."""
         table = Table(title="🔐 Portkey System Status", show_header=True)
         table.add_column("Component", style="cyan")
         table.add_column("Status", style="green")
-        
+
         table.add_row("Portkey Gateway", self.status["portkey"])
         table.add_row("OpenRouter", self.status["openrouter"])
         table.add_row("Together AI", self.status["together"])
-        
+
         return table
-        
+
     def create_models_table(self) -> Table:
         """Create a models status table."""
         table = Table(title="🤖 Model Availability", show_header=True)
         table.add_column("Model", style="cyan")
         table.add_column("Status", style="green")
-        
+
         for name, status in self.status["models"].items():
             table.add_row(name, status)
-            
+
         return table
-        
+
     async def continuous_monitor(self, interval: int = 30):
         """Continuously monitor the system."""
         console.print(Panel.fit(
@@ -260,31 +257,31 @@ class PortkeySystemMonitor:
             "Monitoring all components and models...",
             border_style="cyan"
         ))
-        
+
         while True:
             # Update status
             await self.check_portkey_health()
             await self.check_openrouter_health()
             await self.check_together_health()
             await self.test_all_models()
-            
+
             self.status["last_check"] = datetime.now().strftime("%H:%M:%S")
-            
+
             # Clear and display
             console.clear()
-            
+
             # Display header
             console.print(Panel.fit(
                 f"[bold cyan]Portkey System Monitor[/bold cyan]\n"
                 f"Last check: {self.status['last_check']}",
                 border_style="cyan"
             ))
-            
+
             # Display status tables
             console.print(self.create_status_table())
             console.print()
             console.print(self.create_models_table())
-            
+
             # Display summary
             all_good = (
                 "✅" in self.status["portkey"] and
@@ -292,7 +289,7 @@ class PortkeySystemMonitor:
                 "✅" in self.status["together"] and
                 all("✅" in v for v in self.status["models"].values())
             )
-            
+
             if all_good:
                 console.print(Panel.fit(
                     "[bold green]✅ All Systems Operational[/bold green]\n"
@@ -309,104 +306,104 @@ class PortkeySystemMonitor:
                     issues.append("• OpenRouter connection issue")
                 if "✅" not in self.status["together"]:
                     issues.append("• Together AI connection issue")
-                    
+
                 failed_models = [k for k, v in self.status["models"].items() if "✅" not in v]
                 if failed_models:
                     issues.append(f"• {len(failed_models)} models unavailable")
-                    
+
                 console.print(Panel.fit(
                     "[bold yellow]⚠️ Issues Detected[/bold yellow]\n" +
                     "\n".join(issues),
                     border_style="yellow"
                 ))
-            
+
             # Wait for next check
             console.print(f"\nNext check in {interval} seconds... (Press Ctrl+C to exit)")
             await asyncio.sleep(interval)
-            
+
     async def quick_test(self):
         """Run a quick test of all components."""
         console.print(Panel.fit(
             "[bold cyan]Quick System Test[/bold cyan]",
             border_style="cyan"
         ))
-        
+
         with Progress(
             SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
             console=console
         ) as progress:
-            
+
             # Test Portkey
             task = progress.add_task("Testing Portkey Gateway...", total=1)
             portkey_ok = await self.check_portkey_health()
             progress.update(task, completed=1)
-            
+
             # Test OpenRouter
             task = progress.add_task("Testing OpenRouter...", total=1)
             openrouter_ok = await self.check_openrouter_health()
             progress.update(task, completed=1)
-            
+
             # Test Together
             task = progress.add_task("Testing Together AI...", total=1)
             together_ok = await self.check_together_health()
             progress.update(task, completed=1)
-            
+
             # Test Models
             task = progress.add_task("Testing Models...", total=len(self.critical_models))
             for model in self.critical_models:
                 await self.test_model(model)
                 progress.advance(task)
-                
+
         # Display results
         console.print()
         console.print(self.create_status_table())
         console.print()
         console.print(self.create_models_table())
-        
+
         # Get pricing info
         console.print("\n[bold cyan]Fetching pricing information...[/bold cyan]")
         pricing = await self.get_model_pricing()
-        
+
         if pricing:
             pricing_table = Table(title="💰 Model Pricing (per 1M tokens)")
             pricing_table.add_column("Model", style="cyan")
             pricing_table.add_column("Input", style="yellow")
             pricing_table.add_column("Output", style="yellow")
             pricing_table.add_column("Context", style="magenta")
-            
+
             for model_id, info in pricing.items():
                 model_name = next((m["name"] for m in self.critical_models if m["id"] == model_id), model_id)
                 # Handle pricing which might be string or float
                 prompt_val = info.get('prompt')
                 completion_val = info.get('completion')
-                
+
                 if prompt_val and isinstance(prompt_val, (int, float)):
                     input_price = f"${float(prompt_val):.2f}"
                 elif prompt_val:
                     input_price = str(prompt_val)
                 else:
                     input_price = "N/A"
-                    
+
                 if completion_val and isinstance(completion_val, (int, float)):
                     output_price = f"${float(completion_val):.2f}"
                 elif completion_val:
                     output_price = str(completion_val)
                 else:
                     output_price = "N/A"
-                    
+
                 context = f"{info['context']:,}" if info.get('context') else "N/A"
                 pricing_table.add_row(model_name, input_price, output_price, context)
-                
+
             console.print()
             console.print(pricing_table)
-            
+
         # Summary
         all_good = (
             portkey_ok and openrouter_ok and together_ok and
             all("✅" in v for v in self.status["models"].values())
         )
-        
+
         console.print()
         if all_good:
             console.print(Panel.fit(
@@ -434,9 +431,9 @@ class PortkeySystemMonitor:
 async def main():
     """Main monitoring function."""
     import sys
-    
+
     monitor = PortkeySystemMonitor()
-    
+
     if "--monitor" in sys.argv or "-m" in sys.argv:
         # Continuous monitoring mode
         interval = 30
@@ -444,12 +441,12 @@ async def main():
             idx = sys.argv.index("--interval")
             if idx + 1 < len(sys.argv):
                 interval = int(sys.argv[idx + 1])
-                
+
         await monitor.continuous_monitor(interval)
     else:
         # Quick test mode
         await monitor.quick_test()
-        
+
         console.print("\n[dim]Tip: Run with --monitor for continuous monitoring[/dim]")
         console.print("[dim]Example: python3 scripts/monitor_portkey_system.py --monitor --interval 60[/dim]")
 

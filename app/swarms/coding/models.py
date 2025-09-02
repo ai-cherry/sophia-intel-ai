@@ -5,10 +5,11 @@ This module defines Pydantic models for all swarm inputs and outputs,
 ensuring type safety and validation throughout the system.
 """
 
-from typing import List, Dict, Any, Optional
-from pydantic import BaseModel, Field, ConfigDict
 from datetime import datetime
 from enum import Enum
+from typing import Any
+
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class PoolType(str, Enum):
@@ -43,21 +44,21 @@ class RiskLevel(str, Enum):
 class CriticOutput(BaseModel):
     """Structured output from the Critic agent."""
     verdict: CriticVerdict
-    findings: Dict[str, List[str]] = Field(default_factory=dict)
-    must_fix: List[str] = Field(default_factory=list)
-    nice_to_have: List[str] = Field(default_factory=list, alias="nice_to_haves")
+    findings: dict[str, list[str]] = Field(default_factory=dict)
+    must_fix: list[str] = Field(default_factory=list)
+    nice_to_have: list[str] = Field(default_factory=list, alias="nice_to_haves")
     confidence_score: float = Field(default=0.0, ge=0.0, le=1.0)
-    
+
     model_config = ConfigDict(populate_by_name=True)
 
 
 class JudgeOutput(BaseModel):
     """Structured output from the Judge agent."""
     decision: JudgeDecision
-    runner_instructions: List[str] = Field(default_factory=list)
+    runner_instructions: list[str] = Field(default_factory=list)
     rationale: str = ""
     confidence_score: float = Field(default=0.0, ge=0.0, le=1.0)
-    risk_assessment: Optional[RiskLevel] = None
+    risk_assessment: RiskLevel | None = None
 
 
 class GateDecision(BaseModel):
@@ -68,7 +69,7 @@ class GateDecision(BaseModel):
     reliability_passed: bool
     risk_level: RiskLevel
     requires_approval: bool = False
-    approval_actions: List[str] = Field(default_factory=list)
+    approval_actions: list[str] = Field(default_factory=list)
 
 
 class GeneratorProposal(BaseModel):
@@ -76,71 +77,71 @@ class GeneratorProposal(BaseModel):
     agent_name: str
     approach: str
     code_changes: str
-    test_code: Optional[str] = None
+    test_code: str | None = None
     risk_level: RiskLevel = RiskLevel.UNKNOWN
     confidence: float = Field(default=0.0, ge=0.0, le=1.0)
-    tools_used: List[str] = Field(default_factory=list)
+    tools_used: list[str] = Field(default_factory=list)
 
 
 class DebateResult(BaseModel):
     """Complete result from a coding swarm debate."""
     task: str
-    team_id: Optional[str] = None
-    session_id: Optional[str] = None
-    
+    team_id: str | None = None
+    session_id: str | None = None
+
     # Agent outputs
-    proposals: List[GeneratorProposal] = Field(default_factory=list)
-    critic: Optional[CriticOutput] = None
-    judge: Optional[JudgeOutput] = None
-    
+    proposals: list[GeneratorProposal] = Field(default_factory=list)
+    critic: CriticOutput | None = None
+    judge: JudgeOutput | None = None
+
     # Validation status
     critic_validated: bool = False
     judge_validated: bool = False
-    
+
     # Gate decision
-    gate_decision: Optional[GateDecision] = None
+    gate_decision: GateDecision | None = None
     runner_approved: bool = False
-    
+
     # Metadata
-    errors: List[str] = Field(default_factory=list)
-    warnings: List[str] = Field(default_factory=list)
-    execution_time_ms: Optional[int] = None
+    errors: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+    execution_time_ms: int | None = None
     timestamp: datetime = Field(default_factory=datetime.utcnow)
-    
+
     # Memory integration
-    memory_entries_created: List[str] = Field(default_factory=list)
-    related_memories: List[str] = Field(default_factory=list)
+    memory_entries_created: list[str] = Field(default_factory=list)
+    related_memories: list[str] = Field(default_factory=list)
 
 
 class SwarmConfiguration(BaseModel):
     """Configuration for creating and running a coding swarm."""
     # Team composition
     pool: PoolType = PoolType.BALANCED
-    concurrent_models: List[str] = Field(default_factory=list)
+    concurrent_models: list[str] = Field(default_factory=list)
     include_default_pair: bool = True
     include_runner: bool = False
     max_generators: int = Field(default=4, ge=1, le=10)
-    
+
     # Execution settings
     max_rounds: int = Field(default=3, ge=1, le=10)
     stream_responses: bool = False
     timeout_seconds: int = Field(default=300, ge=30, le=1800)
-    
+
     # Evaluation gates
     accuracy_threshold: float = Field(default=7.0, ge=0.0, le=10.0)
     reliability_checks_enabled: bool = True
     auto_approve_low_risk: bool = False
-    
+
     # Memory integration
     use_memory: bool = True
     memory_search_limit: int = Field(default=5, ge=0, le=20)
     store_results: bool = True
-    
+
     # Tool access
     enable_file_write: bool = False
     enable_test_execution: bool = True
     enable_git_operations: bool = False
-    
+
     model_config = ConfigDict(use_enum_values=True)
 
 
@@ -148,6 +149,6 @@ class SwarmRequest(BaseModel):
     """Request to execute a coding swarm."""
     task: str = Field(..., min_length=1, max_length=10000)
     configuration: SwarmConfiguration = Field(default_factory=SwarmConfiguration)
-    context: Dict[str, Any] = Field(default_factory=dict)
-    session_id: Optional[str] = None
-    team_id: Optional[str] = None
+    context: dict[str, Any] = Field(default_factory=dict)
+    session_id: str | None = None
+    team_id: str | None = None

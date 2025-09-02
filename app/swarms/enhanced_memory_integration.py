@@ -4,32 +4,30 @@ Implements automatic metadata extraction and tagging for swarm memories
 Following AGNO and MCP conventions
 """
 
-import json
 import hashlib
 import logging
 import os
 import re
-from typing import Dict, Any, List, Optional, Tuple
-from dataclasses import dataclass, field
 from datetime import datetime
-from enum import Enum
+from typing import Any
+
 import aiohttp
 
 from app.config.env_loader import get_env_config
-from app.memory.supermemory_mcp import MemoryEntry, MemoryType
 from app.core.circuit_breaker import with_circuit_breaker
+from app.memory.supermemory_mcp import MemoryType
 
 logger = logging.getLogger(__name__)
 
 
 class AutoTagExtractor:
     """Automatic tag extraction from content and context"""
-    
+
     @staticmethod
-    def extract_code_patterns(content: str) -> List[str]:
+    def extract_code_patterns(content: str) -> list[str]:
         """Extract programming patterns from code content"""
         tags = []
-        
+
         # Language detection
         if "def " in content or "import " in content:
             tags.append("lang:python")
@@ -37,7 +35,7 @@ class AutoTagExtractor:
             tags.append("lang:javascript")
         elif "public class" in content or "private " in content:
             tags.append("lang:java")
-        
+
         # Pattern detection
         patterns = {
             r"async\s+def": "pattern:async",
@@ -48,18 +46,18 @@ class AutoTagExtractor:
             r"yield\s+": "pattern:generator",
             r"lambda\s+": "pattern:lambda",
         }
-        
+
         for pattern, tag in patterns.items():
             if re.search(pattern, content, re.IGNORECASE):
                 tags.append(tag)
-        
+
         return tags
-    
+
     @staticmethod
-    def extract_semantic_tags(content: str) -> List[str]:
+    def extract_semantic_tags(content: str) -> list[str]:
         """Extract semantic meaning from content"""
         tags = []
-        
+
         # Keywords indicating specific domains
         domains = {
             "memory": ["memory", "store", "retrieve", "cache"],
@@ -69,19 +67,19 @@ class AutoTagExtractor:
             "testing": ["test", "assert", "mock", "fixture"],
             "security": ["auth", "token", "encrypt", "password"],
         }
-        
+
         content_lower = content.lower()
         for domain, keywords in domains.items():
             if any(keyword in content_lower for keyword in keywords):
                 tags.append(f"domain:{domain}")
-        
+
         return tags
-    
+
     @staticmethod
-    def extract_metadata_tags(metadata: Dict[str, Any]) -> List[str]:
+    def extract_metadata_tags(metadata: dict[str, Any]) -> list[str]:
         """Extract tags from metadata structure"""
         tags = []
-        
+
         # Extract from execution context
         if metadata:
             # Performance metrics
@@ -93,13 +91,13 @@ class AutoTagExtractor:
                     tags.append("perf:normal")
                 else:
                     tags.append("perf:slow")
-            
+
             # Error states
             if metadata.get('error'):
                 tags.append("status:error")
                 error_type = metadata.get('error_type', 'unknown')
                 tags.append(f"error:{error_type}")
-            
+
             # Success metrics
             if 'success_rate' in metadata:
                 rate = metadata['success_rate']
@@ -109,7 +107,7 @@ class AutoTagExtractor:
                     tags.append("quality:medium")
                 else:
                     tags.append("quality:low")
-        
+
         return tags
 
 
@@ -117,41 +115,41 @@ class EnhancedSwarmMemoryClient:
     """
     Enhanced memory client with automatic tagging and metadata extraction
     """
-    
+
     def __init__(self, swarm_type: str, swarm_id: str):
         self.swarm_type = swarm_type
         self.swarm_id = swarm_id
         self.config = get_env_config()
         self.mcp_server_url = self.config.mcp_server_url
-        self.session: Optional[aiohttp.ClientSession] = None
+        self.session: aiohttp.ClientSession | None = None
         self.tag_extractor = AutoTagExtractor()
         self.context_stack = []  # Track execution context
-        
-    def push_context(self, context: Dict[str, Any]):
+
+    def push_context(self, context: dict[str, Any]):
         """Push execution context for auto-tagging"""
         self.context_stack.append(context)
-    
-    def pop_context(self) -> Optional[Dict[str, Any]]:
+
+    def pop_context(self) -> dict[str, Any] | None:
         """Pop execution context"""
         return self.context_stack.pop() if self.context_stack else None
-    
-    def get_current_context(self) -> Dict[str, Any]:
+
+    def get_current_context(self) -> dict[str, Any]:
         """Get merged current context"""
         merged = {}
         for context in self.context_stack:
             merged.update(context)
         return merged
-    
+
     async def store_memory(
         self,
         topic: str,
         content: str,
         memory_type: MemoryType = MemoryType.EPISODIC,
-        tags: Optional[List[str]] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        tags: list[str] | None = None,
+        metadata: dict[str, Any] | None = None,
         auto_tag: bool = True,
         context_aware: bool = True
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Store memory with automatic tagging and context awareness
         
@@ -164,15 +162,15 @@ class EnhancedSwarmMemoryClient:
             auto_tag: Enable automatic tag extraction
             context_aware: Use execution context for tagging
         """
-        
+
         # Merge with current context if enabled
         if context_aware:
             current_context = self.get_current_context()
             metadata = {**current_context, **(metadata or {})}
-        
+
         # Initialize tags list
         tags_list = list(tags or [])
-        
+
         # Add base tags
         tags_list.extend([
             self.swarm_type,
@@ -180,33 +178,33 @@ class EnhancedSwarmMemoryClient:
             f"swarm_id:{self.swarm_id}",
             f"memory_type:{memory_type.value}"
         ])
-        
+
         # Auto-tag extraction
         if auto_tag:
             # Extract from content
             tags_list.extend(self.tag_extractor.extract_code_patterns(content))
             tags_list.extend(self.tag_extractor.extract_semantic_tags(content))
-            
+
             # Extract from metadata
             if metadata:
                 tags_list.extend(self.tag_extractor.extract_metadata_tags(metadata))
-        
+
         # Process required metadata fields
         if metadata:
             # Required fields with hierarchical tagging
             field_processors = {
                 'task_id': lambda v: [f"task:{v}", f"task_hash:{hashlib.md5(v.encode()).hexdigest()[:8]}"],
                 'agent_role': lambda v: [f"role:{v}", f"team:{metadata.get('team', 'default')}"],
-                'repo_path': lambda v: [f"repo:{os.path.basename(v)}", f"vcs:git"],
+                'repo_path': lambda v: [f"repo:{os.path.basename(v)}", "vcs:git"],
                 'file_path': lambda v: self._process_file_path(v),
                 'execution_pattern': lambda v: [f"pattern:{v}", f"strategy:{metadata.get('strategy', 'default')}"],
                 'model_used': lambda v: [f"model:{v}", f"provider:{v.split('/')[0] if '/' in v else 'unknown'}"]
             }
-            
+
             for field, processor in field_processors.items():
                 if field in metadata:
                     tags_list.extend(processor(str(metadata[field])))
-        
+
         # Remove duplicates while preserving order
         seen = set()
         unique_tags = []
@@ -214,7 +212,7 @@ class EnhancedSwarmMemoryClient:
             if tag not in seen:
                 seen.add(tag)
                 unique_tags.append(tag)
-        
+
         # Create memory entry
         entry_data = {
             "topic": topic,
@@ -230,21 +228,21 @@ class EnhancedSwarmMemoryClient:
                 "context_depth": len(self.context_stack)
             }
         }
-        
+
         # Store via MCP server
         return await self._store_to_mcp(entry_data)
-    
-    def _process_file_path(self, file_path: str) -> List[str]:
+
+    def _process_file_path(self, file_path: str) -> list[str]:
         """Process file path into hierarchical tags"""
         tags = []
-        
+
         # Basic file info
         basename = os.path.basename(file_path)
         dirname = os.path.dirname(file_path)
         ext = os.path.splitext(file_path)[1]
-        
+
         tags.append(f"file:{basename}")
-        
+
         if ext:
             tags.append(f"ext:{ext}")
             # Language mapping
@@ -258,7 +256,7 @@ class EnhancedSwarmMemoryClient:
             }
             if ext in lang_map:
                 tags.append(f"lang:{lang_map[ext]}")
-        
+
         # Directory hierarchy
         if dirname:
             parts = dirname.split(os.sep)
@@ -266,15 +264,15 @@ class EnhancedSwarmMemoryClient:
                 tags.append(f"module:{parts[-1]}")
                 if len(parts) > 1:
                     tags.append(f"package:{parts[-2]}")
-        
+
         return tags
-    
+
     @with_circuit_breaker("mcp_server")
-    async def _store_to_mcp(self, entry_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def _store_to_mcp(self, entry_data: dict[str, Any]) -> dict[str, Any]:
         """Store entry to MCP server with circuit breaker"""
         if not self.session:
             self.session = aiohttp.ClientSession()
-        
+
         try:
             async with self.session.post(
                 f"{self.mcp_server_url}/memory/store",
@@ -292,32 +290,32 @@ class EnhancedSwarmMemoryClient:
         except Exception as e:
             logger.error(f"MCP storage error: {e}")
             return {"error": str(e)}
-    
+
     async def search_memories(
         self,
         query: str,
-        tags: Optional[List[str]] = None,
+        tags: list[str] | None = None,
         limit: int = 10,
-        memory_type: Optional[MemoryType] = None
-    ) -> List[Dict[str, Any]]:
+        memory_type: MemoryType | None = None
+    ) -> list[dict[str, Any]]:
         """Search memories with tag filtering"""
         search_params = {
             "query": query,
             "limit": limit,
             "filters": {}
         }
-        
+
         # Add tag filters
         if tags:
             search_params["filters"]["tags"] = tags
-        
+
         # Add memory type filter
         if memory_type:
             search_params["filters"]["memory_type"] = memory_type.value
-        
+
         # Add swarm context
         search_params["filters"]["swarm_type"] = self.swarm_type
-        
+
         try:
             async with self.session.post(
                 f"{self.mcp_server_url}/memory/search",
@@ -338,9 +336,9 @@ def create_swarm_context(
     task_id: str,
     agent_role: str,
     repo_path: str,
-    file_path: Optional[str] = None,
+    file_path: str | None = None,
     **kwargs
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Create standard swarm execution context"""
     context = {
         "task_id": task_id,
@@ -348,13 +346,13 @@ def create_swarm_context(
         "repo_path": repo_path,
         "timestamp": datetime.utcnow().isoformat()
     }
-    
+
     if file_path:
         context["file_path"] = file_path
-    
+
     # Add any additional context
     context.update(kwargs)
-    
+
     return context
 
 
@@ -362,13 +360,13 @@ async def auto_tag_and_store(
     memory_client: EnhancedSwarmMemoryClient,
     content: str,
     topic: str,
-    execution_context: Dict[str, Any]
-) -> Dict[str, Any]:
+    execution_context: dict[str, Any]
+) -> dict[str, Any]:
     """Helper to auto-tag and store with context"""
-    
+
     # Push context
     memory_client.push_context(execution_context)
-    
+
     try:
         # Store with auto-tagging
         result = await memory_client.store_memory(

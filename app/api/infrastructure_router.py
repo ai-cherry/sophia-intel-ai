@@ -3,11 +3,11 @@ Infrastructure Router for AGNO InfraOpsSwarm
 Handles infrastructure task execution and swarm management
 """
 
+import logging
+from typing import Any
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from typing import Dict, Any, Optional
-import asyncio
-import logging
 
 # Import the InfraOpsSwarm
 from app.infrastructure.agno_infraops_swarm import InfraOpsSwarm
@@ -23,7 +23,7 @@ class InfrastructureTaskRequest(BaseModel):
     """Request model for infrastructure tasks"""
     type: str
     description: str
-    context: Dict[str, Any] = {}
+    context: dict[str, Any] = {}
     require_approval: bool = False
     priority: int = 5
 
@@ -40,10 +40,10 @@ async def execute_infrastructure_task(request: InfrastructureTaskRequest):
             "require_approval": request.require_approval,
             "priority": request.priority
         }
-        
+
         result = await infra_swarm.execute_infrastructure_task(task)
         return result
-        
+
     except Exception as e:
         logger.error(f"Infrastructure task execution failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -87,9 +87,9 @@ async def security_scan(description: str = "Scan for exposed secrets"):
             "require_approval": False,
             "priority": 8
         }
-        
+
         result = await infra_swarm.execute_infrastructure_task(task)
-        
+
         # Simulate scanning for exposed secrets
         scan_results = {
             "scan_type": "security_scan",
@@ -100,7 +100,7 @@ async def security_scan(description: str = "Scan for exposed secrets"):
                     "finding": "All API keys are properly configured as environment variables"
                 },
                 {
-                    "severity": "info", 
+                    "severity": "info",
                     "finding": "No hardcoded credentials found in codebase"
                 },
                 {
@@ -119,9 +119,9 @@ async def security_scan(description: str = "Scan for exposed secrets"):
             },
             "swarm_result": result
         }
-        
+
         return scan_results
-        
+
     except Exception as e:
         logger.error(f"Security scan failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))

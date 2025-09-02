@@ -8,17 +8,20 @@ Implements comprehensive migration from Qdrant to Weaviate with:
 - Production-ready configuration
 """
 
+import asyncio
+import logging
 import os
 import sys
-import json
-import asyncio
-from datetime import datetime
-from typing import List, Dict, Any, Optional
+
 import weaviate
-from weaviate.classes.config import Configure, Property, DataType, ReferenceProperty, VectorDistances
-from weaviate.classes.tenants import Tenant
 from dotenv import load_dotenv
-import logging
+from weaviate.classes.config import (
+    Configure,
+    DataType,
+    Property,
+    VectorDistances,
+)
+from weaviate.classes.tenants import Tenant
 
 # Load environment variables
 load_dotenv('.env.local')
@@ -32,14 +35,14 @@ logger = logging.getLogger(__name__)
 
 class WeaviateMigration:
     """Handles migration to Weaviate v1.32+ with advanced features."""
-    
+
     def __init__(self):
         """Initialize Weaviate client with v4 API."""
         self.client = None
         self.collections_config = self._define_collections()
         self.tenant_configs = self._define_tenants()
-        
-    def _define_collections(self) -> Dict[str, Dict]:
+
+    def _define_collections(self) -> dict[str, dict]:
         """Define 14 specialized collections with RQ compression."""
         return {
             # Core Agent Collections
@@ -62,7 +65,7 @@ class WeaviateMigration:
                     "quantizer": {"type": "rq", "rescoreLimit": 20}  # RQ compression
                 }
             },
-            
+
             "CodeRepository": {
                 "description": "Code snippets and technical documentation",
                 "vectorizer": "text2vec-openai",
@@ -82,7 +85,7 @@ class WeaviateMigration:
                     "quantizer": {"type": "rq", "rescoreLimit": 20}
                 }
             },
-            
+
             "ResearchDocuments": {
                 "description": "Research papers, articles, and documentation",
                 "vectorizer": "text2vec-openai",
@@ -102,7 +105,7 @@ class WeaviateMigration:
                     "quantizer": {"type": "rq", "rescoreLimit": 20}
                 }
             },
-            
+
             "TaskWorkflow": {
                 "description": "Task tracking and workflow management",
                 "vectorizer": "text2vec-openai",
@@ -124,7 +127,7 @@ class WeaviateMigration:
                     "quantizer": {"type": "rq", "rescoreLimit": 10}
                 }
             },
-            
+
             "ToolRegistry": {
                 "description": "Available tools and their configurations",
                 "vectorizer": "text2vec-openai",
@@ -144,7 +147,7 @@ class WeaviateMigration:
                     "quantizer": {"type": "rq", "rescoreLimit": 10}
                 }
             },
-            
+
             "ProjectKnowledge": {
                 "description": "Project-specific knowledge and context",
                 "vectorizer": "text2vec-openai",
@@ -164,7 +167,7 @@ class WeaviateMigration:
                     "quantizer": {"type": "rq", "rescoreLimit": 20}
                 }
             },
-            
+
             "SecurityPolicies": {
                 "description": "Security policies and compliance rules",
                 "vectorizer": "text2vec-openai",
@@ -184,7 +187,7 @@ class WeaviateMigration:
                     "quantizer": {"type": "rq", "rescoreLimit": 10}
                 }
             },
-            
+
             "APIDocumentation": {
                 "description": "API endpoints and integration guides",
                 "vectorizer": "text2vec-openai",
@@ -204,7 +207,7 @@ class WeaviateMigration:
                     "quantizer": {"type": "rq", "rescoreLimit": 10}
                 }
             },
-            
+
             "ErrorLogs": {
                 "description": "System errors and debugging information",
                 "vectorizer": "text2vec-openai",
@@ -225,7 +228,7 @@ class WeaviateMigration:
                     "quantizer": {"type": "rq", "rescoreLimit": 10}
                 }
             },
-            
+
             "UserFeedback": {
                 "description": "User feedback and interaction history",
                 "vectorizer": "text2vec-openai",
@@ -245,7 +248,7 @@ class WeaviateMigration:
                     "quantizer": {"type": "rq", "rescoreLimit": 10}
                 }
             },
-            
+
             "TeamCollaboration": {
                 "description": "Team collaboration and shared resources",
                 "vectorizer": "text2vec-openai",
@@ -265,7 +268,7 @@ class WeaviateMigration:
                     "quantizer": {"type": "rq", "rescoreLimit": 10}
                 }
             },
-            
+
             "ModelRegistry": {
                 "description": "AI model configurations and performance metrics",
                 "vectorizer": "text2vec-openai",
@@ -285,7 +288,7 @@ class WeaviateMigration:
                     "quantizer": {"type": "rq", "rescoreLimit": 10}
                 }
             },
-            
+
             "DeploymentConfigs": {
                 "description": "Deployment configurations and infrastructure settings",
                 "vectorizer": "text2vec-openai",
@@ -305,7 +308,7 @@ class WeaviateMigration:
                     "quantizer": {"type": "rq", "rescoreLimit": 10}
                 }
             },
-            
+
             "AnalyticsData": {
                 "description": "Analytics and performance data",
                 "vectorizer": "text2vec-openai",
@@ -326,12 +329,12 @@ class WeaviateMigration:
                 }
             }
         }
-    
-    def _define_tenants(self) -> Dict[str, List[str]]:
+
+    def _define_tenants(self) -> dict[str, list[str]]:
         """Define multi-tenancy for 4 agent swarms."""
         return {
             "strategic_swarm": [
-                "AgentMemory", "TaskWorkflow", "ProjectKnowledge", 
+                "AgentMemory", "TaskWorkflow", "ProjectKnowledge",
                 "TeamCollaboration", "ModelRegistry", "AnalyticsData"
             ],
             "development_swarm": [
@@ -347,7 +350,7 @@ class WeaviateMigration:
                 "ModelRegistry", "AnalyticsData", "TeamCollaboration"
             ]
         }
-    
+
     def connect(self):
         """Connect to Weaviate instance."""
         try:
@@ -364,8 +367,8 @@ class WeaviateMigration:
         except Exception as e:
             logger.error(f"❌ Failed to connect to Weaviate: {e}")
             return False
-    
-    def create_collection(self, name: str, config: Dict) -> bool:
+
+    def create_collection(self, name: str, config: dict) -> bool:
         """Create a single collection with RQ compression."""
         try:
             # Build properties list
@@ -378,7 +381,7 @@ class WeaviateMigration:
                     index_searchable=prop.get("indexSearchable", True)
                 )
                 properties.append(prop_config)
-            
+
             # Create collection with v4 API
             self.client.collections.create(
                 name=name,
@@ -394,14 +397,14 @@ class WeaviateMigration:
                 properties=properties,
                 multi_tenancy_config=Configure.multi_tenancy(enabled=True)
             )
-            
+
             logger.info(f"✅ Created collection: {name} with RQ compression")
             return True
-            
+
         except Exception as e:
             logger.error(f"❌ Failed to create collection {name}: {e}")
             return False
-    
+
     def _map_data_type(self, dtype: str):
         """Map string data types to Weaviate DataType."""
         mapping = {
@@ -414,7 +417,7 @@ class WeaviateMigration:
             "object": DataType.TEXT  # Store objects as JSON strings
         }
         return mapping.get(dtype, DataType.TEXT)
-    
+
     def create_tenants(self):
         """Create tenants for each agent swarm."""
         try:
@@ -430,50 +433,50 @@ class WeaviateMigration:
         except Exception as e:
             logger.error(f"❌ Failed to create tenants: {e}")
             return False
-    
+
     def create_all_collections(self):
         """Create all 14 collections."""
         success_count = 0
         failed_count = 0
-        
+
         for name, config in self.collections_config.items():
             if self.create_collection(name, config):
                 success_count += 1
             else:
                 failed_count += 1
-        
+
         logger.info(f"📊 Collection creation complete: {success_count} successful, {failed_count} failed")
         return failed_count == 0
-    
+
     def verify_migration(self):
         """Verify all collections and tenants are properly configured."""
         try:
             collections = self.client.collections.list_all()
             logger.info(f"📋 Found {len(collections)} collections")
-            
+
             for collection_name in collections:
                 collection = self.client.collections.get(collection_name)
                 config = collection.config.get()
-                
+
                 # Check for RQ compression
                 if hasattr(config.vector_index_config, 'quantizer'):
                     logger.info(f"✅ {collection_name}: RQ compression enabled")
                 else:
                     logger.warning(f"⚠️ {collection_name}: No RQ compression")
-                
+
                 # Check multi-tenancy
                 tenants = collection.tenants.get()
                 if tenants:
                     logger.info(f"✅ {collection_name}: {len(tenants)} tenants configured")
                 else:
                     logger.info(f"ℹ️ {collection_name}: No tenants (might not need them)")
-            
+
             return True
-            
+
         except Exception as e:
             logger.error(f"❌ Verification failed: {e}")
             return False
-    
+
     def cleanup_existing(self):
         """Remove existing collections for clean migration."""
         try:
@@ -485,7 +488,7 @@ class WeaviateMigration:
         except Exception as e:
             logger.warning(f"⚠️ Cleanup warning: {e}")
             return False
-    
+
     def close(self):
         """Close Weaviate connection."""
         if self.client:
@@ -496,31 +499,31 @@ async def main():
     """Run the migration."""
     logger.info("🚀 Starting Weaviate v1.32+ Migration")
     logger.info("=" * 60)
-    
+
     migration = WeaviateMigration()
-    
+
     # Connect to Weaviate
     if not migration.connect():
         logger.error("Failed to connect to Weaviate. Ensure Docker container is running.")
         sys.exit(1)
-    
+
     try:
         # Optional: Clean up existing collections
         logger.info("🧹 Cleaning up existing collections...")
         migration.cleanup_existing()
-        
+
         # Create all collections with RQ compression
         logger.info("📦 Creating 14 specialized collections with RQ compression...")
         if not migration.create_all_collections():
             logger.error("Some collections failed to create")
             sys.exit(1)
-        
+
         # Create multi-tenancy for agent swarms
         logger.info("👥 Setting up multi-tenancy for 4 agent swarms...")
         if not migration.create_tenants():
             logger.error("Failed to create tenants")
             sys.exit(1)
-        
+
         # Verify migration
         logger.info("🔍 Verifying migration...")
         if migration.verify_migration():
@@ -534,10 +537,10 @@ async def main():
         else:
             logger.error("Migration verification failed")
             sys.exit(1)
-            
+
     finally:
         migration.close()
-    
+
     logger.info("=" * 60)
     logger.info("🎉 Weaviate migration complete! Ready for production use.")
 

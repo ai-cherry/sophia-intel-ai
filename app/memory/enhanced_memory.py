@@ -3,14 +3,13 @@ Enhanced Memory System with Pattern Storage
 Stores and retrieves execution patterns, shared context, and swarm knowledge.
 """
 
-import json
-import asyncio
-from typing import Dict, List, Any, Optional, Tuple
-from dataclasses import dataclass, field
-from datetime import datetime, timedelta
-from collections import defaultdict
 import hashlib
+import json
 import logging
+from collections import defaultdict
+from dataclasses import dataclass, field
+from datetime import datetime
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -21,33 +20,33 @@ class SharedContext:
     session_id: str
     task: str
     objective: str
-    constraints: List[str] = field(default_factory=list)
-    preferences: Dict[str, Any] = field(default_factory=dict)
-    memory_refs: List[str] = field(default_factory=list)
-    discovered_facts: Dict[str, Any] = field(default_factory=dict)
+    constraints: list[str] = field(default_factory=list)
+    preferences: dict[str, Any] = field(default_factory=dict)
+    memory_refs: list[str] = field(default_factory=list)
+    discovered_facts: dict[str, Any] = field(default_factory=dict)
     cost_budget: float = 100.0
     cost_spent: float = 0.0
     token_budget: int = 100000
     tokens_used: int = 0
     created_at: datetime = field(default_factory=datetime.now)
     updated_at: datetime = field(default_factory=datetime.now)
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    
+    metadata: dict[str, Any] = field(default_factory=dict)
+
     def add_fact(self, key: str, value: Any) -> None:
         """Add a discovered fact to shared context."""
         self.discovered_facts[key] = value
         self.updated_at = datetime.now()
-        
+
     def update_cost(self, cost: float, tokens: int) -> bool:
         """Update cost and check budget."""
         self.cost_spent += cost
         self.tokens_used += tokens
         self.updated_at = datetime.now()
-        
+
         # Check if within budget
         return self.cost_spent <= self.cost_budget and self.tokens_used <= self.token_budget
-        
-    def to_dict(self) -> Dict[str, Any]:
+
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for persistence."""
         return {
             "session_id": self.session_id,
@@ -79,7 +78,7 @@ class PatternInstance:
     input_hash: str
     output_summary: str
     timestamp: datetime = field(default_factory=datetime.now)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 class EnhancedMemorySystem:
@@ -87,34 +86,34 @@ class EnhancedMemorySystem:
     Enhanced memory system for swarm orchestration.
     Manages patterns, shared context, and persistent knowledge.
     """
-    
+
     def __init__(self, cache_ttl: int = 3600):
         """Initialize enhanced memory system."""
         # Pattern storage
-        self.patterns: Dict[str, Dict[str, Any]] = {}
-        self.pattern_instances: List[PatternInstance] = []
-        self.pattern_index: Dict[str, List[str]] = defaultdict(list)  # task_type -> pattern_ids
-        
+        self.patterns: dict[str, dict[str, Any]] = {}
+        self.pattern_instances: list[PatternInstance] = []
+        self.pattern_index: dict[str, list[str]] = defaultdict(list)  # task_type -> pattern_ids
+
         # Shared context storage
-        self.active_contexts: Dict[str, SharedContext] = {}
-        self.context_history: List[SharedContext] = []
-        
+        self.active_contexts: dict[str, SharedContext] = {}
+        self.context_history: list[SharedContext] = []
+
         # Knowledge base
-        self.knowledge_base: Dict[str, Any] = {}
-        self.fact_cache: Dict[str, Tuple[Any, datetime]] = {}
+        self.knowledge_base: dict[str, Any] = {}
+        self.fact_cache: dict[str, tuple[Any, datetime]] = {}
         self.cache_ttl = cache_ttl
-        
+
         # Metrics
-        self.access_count: Dict[str, int] = defaultdict(int)
-        self.success_rates: Dict[str, float] = defaultdict(float)
-        
+        self.access_count: dict[str, int] = defaultdict(int)
+        self.success_rates: dict[str, float] = defaultdict(float)
+
     async def store_pattern(
         self,
         pattern_id: str,
         name: str,
         pattern_type: str,
-        steps: List[Dict[str, Any]],
-        metadata: Dict[str, Any] = None
+        steps: list[dict[str, Any]],
+        metadata: dict[str, Any] = None
     ) -> None:
         """Store a reusable execution pattern."""
         pattern = {
@@ -129,15 +128,15 @@ class EnhancedMemorySystem:
             "total_cost": 0.0,
             "avg_duration_ms": 0.0
         }
-        
+
         self.patterns[pattern_id] = pattern
-        
+
         # Index by type
         if pattern_type:
             self.pattern_index[pattern_type].append(pattern_id)
-            
+
         logger.info(f"Stored pattern: {name} ({pattern_type})")
-        
+
     async def record_pattern_usage(
         self,
         pattern_id: str,
@@ -153,7 +152,7 @@ class EnhancedMemorySystem:
         if pattern_id not in self.patterns:
             logger.warning(f"Pattern {pattern_id} not found")
             return
-            
+
         # Create instance record
         instance = PatternInstance(
             pattern_id=pattern_id,
@@ -166,69 +165,69 @@ class EnhancedMemorySystem:
             output_summary=str(output_data)[:200]
         )
         self.pattern_instances.append(instance)
-        
+
         # Update pattern metrics
         pattern = self.patterns[pattern_id]
         pattern["usage_count"] += 1
         if success:
             pattern["success_count"] += 1
         pattern["total_cost"] += cost
-        
+
         # Update average duration
         prev_avg = pattern["avg_duration_ms"]
         pattern["avg_duration_ms"] = (
             (prev_avg * (pattern["usage_count"] - 1) + duration_ms) / pattern["usage_count"]
         )
-        
+
         # Update success rate
         self.success_rates[pattern_id] = pattern["success_count"] / pattern["usage_count"]
-        
+
         logger.info(f"Recorded pattern usage: {pattern_id} (success={success})")
-        
+
     async def get_best_pattern(
         self,
         task_type: str,
-        constraints: Dict[str, Any] = None
-    ) -> Optional[Dict[str, Any]]:
+        constraints: dict[str, Any] = None
+    ) -> dict[str, Any] | None:
         """Get the best pattern for a task type."""
         pattern_ids = self.pattern_index.get(task_type, [])
         if not pattern_ids:
             return None
-            
+
         # Score patterns based on success rate and usage
         best_pattern = None
         best_score = -1
-        
+
         for pattern_id in pattern_ids:
             pattern = self.patterns.get(pattern_id)
             if not pattern:
                 continue
-                
+
             # Check constraints
             if constraints:
                 if constraints.get("max_cost") and pattern["avg_duration_ms"] > constraints["max_cost"]:
                     continue
                 if constraints.get("min_success_rate") and self.success_rates[pattern_id] < constraints["min_success_rate"]:
                     continue
-                    
+
             # Calculate score (weighted by success rate and usage)
             success_rate = self.success_rates.get(pattern_id, 0)
             usage_normalized = min(pattern["usage_count"] / 100, 1.0)  # Normalize to 0-1
             score = (success_rate * 0.7) + (usage_normalized * 0.3)
-            
+
             if score > best_score:
                 best_score = score
                 best_pattern = pattern
-                
+
         return best_pattern
-        
+
     async def create_shared_context(
         self,
         session_id: str,
         task: str,
         objective: str,
-        constraints: List[str] = None,
-        preferences: Dict[str, Any] = None,
+        constraints: list[str] = None,
+        preferences: dict[str, Any] = None,
         cost_budget: float = 100.0,
         token_budget: int = 100000
     ) -> SharedContext:
@@ -242,27 +241,27 @@ class EnhancedMemorySystem:
             cost_budget=cost_budget,
             token_budget=token_budget
         )
-        
+
         self.active_contexts[session_id] = context
         logger.info(f"Created shared context for session: {session_id}")
-        
+
         return context
-        
-    async def get_shared_context(self, session_id: str) -> Optional[SharedContext]:
+
+    async def get_shared_context(self, session_id: str) -> SharedContext | None:
         """Get shared context for a session."""
         return self.active_contexts.get(session_id)
-        
+
     async def update_shared_context(
         self,
         session_id: str,
-        updates: Dict[str, Any]
+        updates: dict[str, Any]
     ) -> bool:
         """Update shared context with new information."""
         context = self.active_contexts.get(session_id)
         if not context:
             logger.warning(f"Context not found for session: {session_id}")
             return False
-            
+
         # Update fields
         for key, value in updates.items():
             if key == "discovered_facts":
@@ -274,23 +273,23 @@ class EnhancedMemorySystem:
                 context.tokens_used += value.get("tokens", 0)
             elif hasattr(context, key):
                 setattr(context, key, value)
-                
+
         context.updated_at = datetime.now()
         return True
-        
+
     async def finalize_context(self, session_id: str) -> None:
         """Move context from active to history."""
         context = self.active_contexts.pop(session_id, None)
         if context:
             self.context_history.append(context)
             logger.info(f"Finalized context for session: {session_id}")
-            
+
     async def store_knowledge(
         self,
         key: str,
         value: Any,
         category: str = "general",
-        tags: List[str] = None
+        tags: list[str] = None
     ) -> None:
         """Store knowledge in the persistent knowledge base."""
         knowledge_entry = {
@@ -300,19 +299,19 @@ class EnhancedMemorySystem:
             "created_at": datetime.now().isoformat(),
             "access_count": 0
         }
-        
+
         self.knowledge_base[key] = knowledge_entry
-        
+
         # Update cache
         self.fact_cache[key] = (value, datetime.now())
-        
+
         logger.info(f"Stored knowledge: {key} ({category})")
-        
+
     async def get_knowledge(
         self,
         key: str,
         use_cache: bool = True
-    ) -> Optional[Any]:
+    ) -> Any | None:
         """Retrieve knowledge from the knowledge base."""
         # Check cache first
         if use_cache and key in self.fact_cache:
@@ -320,86 +319,86 @@ class EnhancedMemorySystem:
             if (datetime.now() - timestamp).total_seconds() < self.cache_ttl:
                 self.access_count[key] += 1
                 return value
-                
+
         # Get from knowledge base
         entry = self.knowledge_base.get(key)
         if entry:
             value = entry["value"]
             entry["access_count"] += 1
             self.access_count[key] += 1
-            
+
             # Update cache
             self.fact_cache[key] = (value, datetime.now())
-            
+
             return value
-            
+
         return None
-        
+
     async def search_knowledge(
         self,
         query: str,
-        category: Optional[str] = None,
-        tags: Optional[List[str]] = None,
+        category: str | None = None,
+        tags: list[str] | None = None,
         limit: int = 10
-    ) -> List[Tuple[str, Any]]:
+    ) -> list[tuple[str, Any]]:
         """Search the knowledge base."""
         results = []
-        
+
         for key, entry in self.knowledge_base.items():
             # Filter by category
             if category and entry["category"] != category:
                 continue
-                
+
             # Filter by tags
             if tags and not any(tag in entry["tags"] for tag in tags):
                 continue
-                
+
             # Simple text matching
             if query.lower() in key.lower() or query.lower() in str(entry["value"]).lower():
                 results.append((key, entry["value"]))
-                
+
         # Sort by access count and limit
         results.sort(key=lambda x: self.access_count.get(x[0], 0), reverse=True)
-        
+
         return results[:limit]
-        
+
     async def get_related_patterns(
         self,
         pattern_id: str,
         limit: int = 5
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Get patterns related to a given pattern."""
         pattern = self.patterns.get(pattern_id)
         if not pattern:
             return []
-            
+
         pattern_type = pattern.get("type")
         related = []
-        
+
         # Find patterns of the same type
         for pid in self.pattern_index.get(pattern_type, []):
             if pid != pattern_id:
                 related_pattern = self.patterns.get(pid)
                 if related_pattern:
                     related.append(related_pattern)
-                    
+
         # Sort by success rate and limit
         related.sort(key=lambda p: self.success_rates.get(p["id"], 0), reverse=True)
-        
+
         return related[:limit]
-        
+
     def _hash_data(self, data: Any) -> str:
         """Create a hash of input data."""
         data_str = json.dumps(data, sort_keys=True, default=str)
         return hashlib.md5(data_str.encode()).hexdigest()
-        
-    async def get_statistics(self) -> Dict[str, Any]:
+
+    async def get_statistics(self) -> dict[str, Any]:
         """Get memory system statistics."""
         return {
             "patterns": {
                 "total": len(self.patterns),
                 "by_type": {
-                    ptype: len(pids) 
+                    ptype: len(pids)
                     for ptype, pids in self.pattern_index.items()
                 },
                 "total_usage": sum(p["usage_count"] for p in self.patterns.values()),
@@ -421,8 +420,8 @@ class EnhancedMemorySystem:
                 )[:5]
             }
         }
-        
-    async def export_memory(self) -> Dict[str, Any]:
+
+    async def export_memory(self) -> dict[str, Any]:
         """Export entire memory state for persistence."""
         return {
             "patterns": self.patterns,
@@ -449,13 +448,13 @@ class EnhancedMemorySystem:
             "knowledge_base": self.knowledge_base,
             "statistics": await self.get_statistics()
         }
-        
-    async def import_memory(self, data: Dict[str, Any]) -> None:
+
+    async def import_memory(self, data: dict[str, Any]) -> None:
         """Import memory state from exported data."""
         # Import patterns
         self.patterns = data.get("patterns", {})
         self.pattern_index = defaultdict(list, data.get("pattern_index", {}))
-        
+
         # Import pattern instances
         self.pattern_instances = []
         for pi_data in data.get("pattern_instances", []):
@@ -471,13 +470,13 @@ class EnhancedMemorySystem:
                 timestamp=datetime.fromisoformat(pi_data["timestamp"])
             )
             self.pattern_instances.append(instance)
-            
+
         # Import knowledge base
         self.knowledge_base = data.get("knowledge_base", {})
-        
+
         # Recalculate success rates
         for pattern_id, pattern in self.patterns.items():
             if pattern["usage_count"] > 0:
                 self.success_rates[pattern_id] = pattern["success_count"] / pattern["usage_count"]
-                
+
         logger.info(f"Imported memory with {len(self.patterns)} patterns and {len(self.knowledge_base)} knowledge entries")

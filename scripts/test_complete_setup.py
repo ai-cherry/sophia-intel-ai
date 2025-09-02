@@ -4,10 +4,11 @@ Test the complete Portkey setup with all providers and models.
 Includes OpenRouter chat models, Together AI embeddings, and z-ai/glm-4.5.
 """
 
-import os
 import asyncio
-import httpx
 import json
+import os
+
+import httpx
 from dotenv import load_dotenv
 
 # Load environment
@@ -15,18 +16,18 @@ load_dotenv('.env.local', override=True)
 
 class CompleteSetupTester:
     """Test all configured providers and models."""
-    
+
     def __init__(self):
         self.portkey_key = os.getenv("PORTKEY_API_KEY")
         self.openrouter_key = os.getenv("OPENROUTER_API_KEY")
         self.together_key = os.getenv("TOGETHER_API_KEY")
-        
+
     async def test_chat_models(self):
         """Test various chat models through Portkey → OpenRouter."""
         print("\n" + "="*60)
         print("🤖 TESTING CHAT MODELS (Portkey → OpenRouter)")
         print("="*60)
-        
+
         # Models to test
         models = [
             {
@@ -60,12 +61,12 @@ class CompleteSetupTester:
                 "prompt": "Say 'GLM working' in 2 words"
             }
         ]
-        
+
         async with httpx.AsyncClient(timeout=30.0) as client:
             for test in models:
                 print(f"\n📝 Testing {test['name']}...")
                 print(f"   Model: {test['model']}")
-                
+
                 # Portkey config for OpenRouter
                 config = {
                     "provider": "openrouter",
@@ -77,7 +78,7 @@ class CompleteSetupTester:
                         }
                     }
                 }
-                
+
                 try:
                     response = await client.post(
                         "https://api.portkey.ai/v1/chat/completions",
@@ -93,7 +94,7 @@ class CompleteSetupTester:
                             "temperature": 0.1
                         }
                     )
-                    
+
                     if response.status_code == 200:
                         result = response.json()
                         content = result.get("choices", [{}])[0].get("message", {}).get("content", "")
@@ -101,23 +102,23 @@ class CompleteSetupTester:
                     else:
                         print(f"   ❌ Failed: Status {response.status_code}")
                         if response.status_code == 404:
-                            print(f"      Model might not be available")
-                            
+                            print("      Model might not be available")
+
                 except Exception as e:
                     print(f"   ❌ Error: {str(e)[:100]}")
-                    
+
     async def test_embeddings(self):
         """Test embeddings through Portkey → Together AI."""
         print("\n" + "="*60)
         print("🔢 TESTING EMBEDDINGS (Portkey → Together AI)")
         print("="*60)
-        
+
         # Fix: Use "together-ai" instead of "together"
         config = {
             "provider": "together-ai",  # Correct provider name
             "api_key": self.together_key
         }
-        
+
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.post(
@@ -132,7 +133,7 @@ class CompleteSetupTester:
                         "input": "Test embedding through Portkey gateway"
                     }
                 )
-                
+
                 if response.status_code == 200:
                     result = response.json()
                     embedding_dim = len(result.get("data", [{}])[0].get("embedding", []))
@@ -144,16 +145,16 @@ class CompleteSetupTester:
                         print(f"   Error: {error}")
                     except:
                         pass
-                        
+
         except Exception as e:
             print(f"❌ Error: {e}")
-            
+
     async def test_direct_access(self):
         """Test direct access to providers (bypass Portkey)."""
         print("\n" + "="*60)
         print("🔍 TESTING DIRECT PROVIDER ACCESS")
         print("="*60)
-        
+
         # Test OpenRouter directly
         print("\n1. OpenRouter Direct:")
         try:
@@ -171,7 +172,7 @@ class CompleteSetupTester:
                         "max_tokens": 10
                     }
                 )
-                
+
                 if response.status_code == 200:
                     result = response.json()
                     content = result.get("choices", [{}])[0].get("message", {}).get("content", "")
@@ -180,7 +181,7 @@ class CompleteSetupTester:
                     print(f"  ❌ OpenRouter: Failed ({response.status_code})")
         except Exception as e:
             print(f"  ❌ OpenRouter Error: {e}")
-            
+
         # Test Together AI directly
         print("\n2. Together AI Direct:")
         try:
@@ -198,7 +199,7 @@ class CompleteSetupTester:
                         "max_tokens": 10
                     }
                 )
-                
+
                 if response.status_code == 200:
                     result = response.json()
                     content = result.get("choices", [{}])[0].get("message", {}).get("content", "")
@@ -207,18 +208,18 @@ class CompleteSetupTester:
                     print(f"  ❌ Together AI: Failed ({response.status_code})")
         except Exception as e:
             print(f"  ❌ Together AI Error: {e}")
-            
+
     def print_configuration_summary(self):
         """Print current configuration summary."""
         print("\n" + "="*60)
         print("📊 CONFIGURATION SUMMARY")
         print("="*60)
-        
+
         print("\n🔑 API Keys:")
         print(f"  • PORTKEY_API_KEY: ...{self.portkey_key[-10:] if self.portkey_key else 'Not set'}")
         print(f"  • OPENROUTER_API_KEY: ...{self.openrouter_key[-10:] if self.openrouter_key else 'Not set'}")
         print(f"  • TOGETHER_API_KEY: ...{self.together_key[-10:] if self.together_key else 'Not set'}")
-        
+
         print("\n📦 Available Resources:")
         print("  • Chat Models: 300+ via OpenRouter")
         print("    - GPT-4o, GPT-4o-mini")
@@ -235,29 +236,29 @@ class CompleteSetupTester:
         print("    - Caching & fallbacks")
         print("    - Observability")
         print("    - Cost tracking")
-        
+
     async def run_all_tests(self):
         """Run all tests."""
         print("\n" + "="*60)
         print("🚀 COMPLETE SYSTEM TEST")
         print("="*60)
-        
+
         # Test direct access first
         await self.test_direct_access()
-        
+
         # Test chat models through Portkey
         await self.test_chat_models()
-        
+
         # Test embeddings through Portkey
         await self.test_embeddings()
-        
+
         # Print configuration summary
         self.print_configuration_summary()
-        
+
         print("\n" + "="*60)
         print("✅ TESTING COMPLETE!")
         print("="*60)
-        
+
         print("\n💡 Quick Start Examples:")
         print("""
 # Chat completion (any OpenRouter model):

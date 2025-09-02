@@ -8,27 +8,20 @@ Usage:
     python embedding_cli.py similarity "text1" "text2"
 """
 
+import argparse
 import json
 import sys
-import argparse
-from pathlib import Path
-from typing import List, Optional
-import numpy as np
 
-from together_embeddings import (
-    TogetherEmbeddingService,
-    EmbeddingConfig,
-    EmbeddingModel
-)
+from together_embeddings import EmbeddingModel, TogetherEmbeddingService
 
 
-def load_texts_from_file(filepath: str) -> List[str]:
+def load_texts_from_file(filepath: str) -> list[str]:
     """Load texts from file, one per line."""
-    with open(filepath, 'r', encoding='utf-8') as f:
+    with open(filepath, encoding='utf-8') as f:
         return [line.strip() for line in f if line.strip()]
 
 
-def save_embeddings_to_file(embeddings: List[List[float]], filepath: str, metadata: dict = None):
+def save_embeddings_to_file(embeddings: list[list[float]], filepath: str, metadata: dict = None):
     """Save embeddings to JSON file."""
     data = {
         "embeddings": embeddings,
@@ -36,7 +29,7 @@ def save_embeddings_to_file(embeddings: List[List[float]], filepath: str, metada
         "count": len(embeddings),
         "metadata": metadata or {}
     }
-    
+
     with open(filepath, 'w', encoding='utf-8') as f:
         json.dump(data, f, indent=2)
 
@@ -44,7 +37,7 @@ def save_embeddings_to_file(embeddings: List[List[float]], filepath: str, metada
 def cmd_embed(args):
     """Generate embedding for a single text."""
     service = TogetherEmbeddingService()
-    
+
     # Parse model
     model = None
     if args.model:
@@ -63,10 +56,10 @@ def cmd_embed(args):
             print(f"Unknown model: {args.model}")
             print(f"Available models: {', '.join(model_map.keys())}")
             return 1
-    
+
     # Generate embedding
     result = service.embed([args.text], model=model, use_cache=not args.no_cache)
-    
+
     # Output
     if args.output:
         save_embeddings_to_file(
@@ -85,11 +78,11 @@ def cmd_embed(args):
         print(f"Tokens used: {result.tokens_used}")
         print(f"Latency: {result.latency_ms:.2f}ms")
         print(f"Cached: {result.cached}")
-        
+
         if args.verbose:
-            print(f"\nEmbedding vector (first 10 dims):")
+            print("\nEmbedding vector (first 10 dims):")
             print(result.embeddings[0][:10])
-    
+
     return 0
 
 
@@ -100,9 +93,9 @@ def cmd_batch(args):
         texts = [line.strip() for line in sys.stdin if line.strip()]
     else:
         texts = load_texts_from_file(args.input)
-    
+
     print(f"Loaded {len(texts)} texts")
-    
+
     # Parse model
     model = None
     if args.model:
@@ -113,11 +106,11 @@ def cmd_batch(args):
             "bge-base": EmbeddingModel.BGE_BASE,
         }
         model = model_map.get(args.model)
-    
+
     # Generate embeddings
     service = TogetherEmbeddingService()
     result = service.embed(texts, model=model, use_cache=not args.no_cache)
-    
+
     # Save results
     output_file = args.output or "embeddings.json"
     save_embeddings_to_file(
@@ -132,7 +125,7 @@ def cmd_batch(args):
             "cache_misses": result.metadata.get("cache_misses", 0)
         }
     )
-    
+
     print(f"Generated {len(result.embeddings)} embeddings")
     print(f"Model: {result.model}")
     print(f"Dimensions: {result.dimensions}")
@@ -140,7 +133,7 @@ def cmd_batch(args):
     print(f"Cache misses: {result.metadata.get('cache_misses', 0)}")
     print(f"Latency: {result.latency_ms:.2f}ms")
     print(f"Saved to {output_file}")
-    
+
     return 0
 
 
@@ -152,13 +145,13 @@ def cmd_search(args):
     else:
         print("Reading documents from stdin (one per line, end with Ctrl+D):")
         documents = [line.strip() for line in sys.stdin if line.strip()]
-    
+
     if not documents:
         print("No documents provided")
         return 1
-    
+
     print(f"Searching {len(documents)} documents")
-    
+
     # Parse model
     model = None
     if args.model:
@@ -167,7 +160,7 @@ def cmd_search(args):
             "bge-large": EmbeddingModel.BGE_LARGE,
         }
         model = model_map.get(args.model)
-    
+
     # Search
     service = TogetherEmbeddingService()
     results = service.search(
@@ -176,7 +169,7 @@ def cmd_search(args):
         top_k=args.top_k,
         model=model
     )
-    
+
     # Display results
     print(f"\nTop {args.top_k} results for query: '{args.query}'\n")
     for i, (idx, score, doc) in enumerate(results, 1):
@@ -185,7 +178,7 @@ def cmd_search(args):
         print(f"{i}. [Score: {score:.4f}] (Doc #{idx})")
         print(f"   {display_doc}")
         print()
-    
+
     # Save results if requested
     if args.output:
         with open(args.output, 'w', encoding='utf-8') as f:
@@ -194,14 +187,14 @@ def cmd_search(args):
                 for idx, score, doc in results
             ], f, indent=2)
         print(f"Results saved to {args.output}")
-    
+
     return 0
 
 
 def cmd_similarity(args):
     """Calculate similarity between two texts."""
     service = TogetherEmbeddingService()
-    
+
     # Parse model
     model = None
     if args.model:
@@ -211,21 +204,21 @@ def cmd_similarity(args):
             "bge-base": EmbeddingModel.BGE_BASE,
         }
         model = model_map.get(args.model)
-    
+
     # Generate embeddings
     result = service.embed([args.text1, args.text2], model=model)
-    
+
     # Calculate similarity
     similarity = service.similarity(
         result.embeddings[0],
         result.embeddings[1]
     )
-    
+
     print(f"Model: {result.model}")
     print(f"Text 1: {args.text1[:50]}...")
     print(f"Text 2: {args.text2[:50]}...")
     print(f"\nCosine Similarity: {similarity:.4f}")
-    
+
     # Interpretation
     if similarity > 0.9:
         print("Interpretation: Very similar (likely duplicates or paraphrases)")
@@ -237,7 +230,7 @@ def cmd_similarity(args):
         print("Interpretation: Weakly related")
     else:
         print("Interpretation: Unrelated")
-    
+
     return 0
 
 
@@ -245,18 +238,18 @@ def cmd_recommend(args):
     """Recommend best model for use case."""
     # Estimate token count (rough approximation)
     token_count = len(args.text.split()) * 1.3
-    
+
     recommended = TogetherEmbeddingService.recommend_model(
         text_length=int(token_count),
         use_case=args.use_case,
         language=args.language
     )
-    
+
     print(f"Text length: ~{int(token_count)} tokens")
     print(f"Use case: {args.use_case}")
     print(f"Language: {args.language}")
     print(f"\nRecommended model: {recommended.value}")
-    
+
     # Model details
     model_info = {
         EmbeddingModel.M2_BERT_32K: "32K context, best for long documents",
@@ -266,10 +259,10 @@ def cmd_recommend(args):
         EmbeddingModel.UAE_LARGE: "512 tokens, maximum accuracy",
         EmbeddingModel.E5_MULTILINGUAL: "514 tokens, 100+ languages",
     }
-    
+
     if recommended in model_info:
         print(f"Details: {model_info[recommended]}")
-    
+
     return 0
 
 
@@ -278,9 +271,9 @@ def main():
         description="Together AI Embeddings CLI",
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
-    
+
     subparsers = parser.add_subparsers(dest="command", help="Commands")
-    
+
     # Embed command
     embed_parser = subparsers.add_parser("embed", help="Generate embedding for text")
     embed_parser.add_argument("text", help="Text to embed")
@@ -288,14 +281,14 @@ def main():
     embed_parser.add_argument("--output", "-o", help="Output file (JSON)")
     embed_parser.add_argument("--no-cache", action="store_true", help="Disable cache")
     embed_parser.add_argument("--verbose", "-v", action="store_true", help="Verbose output")
-    
+
     # Batch command
     batch_parser = subparsers.add_parser("batch", help="Generate embeddings for multiple texts")
     batch_parser.add_argument("input", help="Input file (one text per line) or '-' for stdin")
     batch_parser.add_argument("--output", "-o", help="Output file (JSON)")
     batch_parser.add_argument("--model", help="Model to use")
     batch_parser.add_argument("--no-cache", action="store_true", help="Disable cache")
-    
+
     # Search command
     search_parser = subparsers.add_parser("search", help="Search documents semantically")
     search_parser.add_argument("query", help="Search query")
@@ -303,26 +296,26 @@ def main():
     search_parser.add_argument("--top-k", "-k", type=int, default=5, help="Number of results")
     search_parser.add_argument("--model", help="Model to use")
     search_parser.add_argument("--output", "-o", help="Save results to file")
-    
+
     # Similarity command
     sim_parser = subparsers.add_parser("similarity", help="Calculate similarity between texts")
     sim_parser.add_argument("text1", help="First text")
     sim_parser.add_argument("text2", help="Second text")
     sim_parser.add_argument("--model", help="Model to use")
-    
+
     # Recommend command
     rec_parser = subparsers.add_parser("recommend", help="Recommend best model for use case")
     rec_parser.add_argument("text", help="Sample text")
     rec_parser.add_argument("--use-case", default="general",
                            choices=["rag", "search", "clustering", "classification", "general"])
     rec_parser.add_argument("--language", default="en", help="Language code (e.g., en, zh, multi)")
-    
+
     args = parser.parse_args()
-    
+
     if not args.command:
         parser.print_help()
         return 1
-    
+
     # Execute command
     commands = {
         "embed": cmd_embed,
@@ -331,7 +324,7 @@ def main():
         "similarity": cmd_similarity,
         "recommend": cmd_recommend,
     }
-    
+
     try:
         return commands[args.command](args)
     except Exception as e:

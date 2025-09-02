@@ -4,9 +4,9 @@ Provides consistent response structure across all LLM interactions.
 """
 
 from dataclasses import dataclass, field
-from typing import Optional, Dict, Any, List
 from datetime import datetime
 from enum import Enum
+from typing import Any
 
 
 class ResponseStatus(Enum):
@@ -26,7 +26,7 @@ class TokenStats:
     completion_tokens: int = 0
     total_tokens: int = 0
     cached_tokens: int = 0
-    
+
     @property
     def cost_estimate(self) -> float:
         """Estimate cost in USD based on token usage."""
@@ -46,34 +46,34 @@ class LLMResponse:
     content: str
     success: bool
     status: ResponseStatus
-    
+
     # Model information
     model: str = "unknown"
     provider: str = "unknown"
-    task_type: Optional[str] = None
-    
+    task_type: str | None = None
+
     # Timing information
     timestamp: datetime = field(default_factory=datetime.now)
     latency_ms: float = 0.0
-    
+
     # Token and cost tracking
-    token_stats: Optional[TokenStats] = None
+    token_stats: TokenStats | None = None
     estimated_cost: float = 0.0
-    
+
     # Error handling
-    error: Optional[str] = None
-    error_code: Optional[str] = None
-    
+    error: str | None = None
+    error_code: str | None = None
+
     # Metadata
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    trace_id: Optional[str] = None
-    session_id: Optional[str] = None
-    
+    metadata: dict[str, Any] = field(default_factory=dict)
+    trace_id: str | None = None
+    session_id: str | None = None
+
     # Fallback chain information
-    attempts: List[Dict[str, Any]] = field(default_factory=list)
-    final_model: Optional[str] = None
-    
-    def to_dict(self) -> Dict[str, Any]:
+    attempts: list[dict[str, Any]] = field(default_factory=list)
+    final_model: str | None = None
+
+    def to_dict(self) -> dict[str, Any]:
         """Convert response to dictionary for JSON serialization."""
         return {
             "content": self.content,
@@ -99,9 +99,9 @@ class LLMResponse:
             "attempts": self.attempts,
             "final_model": self.final_model
         }
-    
+
     @classmethod
-    def from_error(cls, error: str, error_code: Optional[str] = None) -> "LLMResponse":
+    def from_error(cls, error: str, error_code: str | None = None) -> "LLMResponse":
         """Create an error response."""
         return cls(
             content="",
@@ -110,7 +110,7 @@ class LLMResponse:
             error=error,
             error_code=error_code
         )
-    
+
     @classmethod
     def from_cache(cls, content: str, original_model: str) -> "LLMResponse":
         """Create a response from cache."""

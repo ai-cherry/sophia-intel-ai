@@ -5,15 +5,16 @@ Proves MCP servers, embeddings, search, and agent swarms are ACTIVE, COORDINATED
 """
 
 import asyncio
-import httpx
 import json
+import logging
 import sys
 import time
+from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Any, List, Optional
-from dataclasses import dataclass, asdict
-import logging
+from typing import Any
+
+import httpx
 
 # Configure logging
 logging.basicConfig(
@@ -31,10 +32,10 @@ class VerificationResult:
     check_name: str
     status: str  # PASS, FAIL, SKIP
     latency_ms: float
-    payload: Optional[Dict[str, Any]] = None
-    error: Optional[str] = None
-    logs: List[str] = None
-    
+    payload: dict[str, Any] | None = None
+    error: str | None = None
+    logs: list[str] = None
+
     def to_dict(self):
         return asdict(self)
 
@@ -42,28 +43,28 @@ class VerificationResult:
 class SystemReport:
     """Comprehensive system verification report"""
     timestamp: str
-    todo_list: Dict[str, Any]
-    api_checks: List[VerificationResult]
-    mcp_results: List[VerificationResult]
-    embedding_results: List[VerificationResult]
-    gates: Dict[str, Any]
+    todo_list: dict[str, Any]
+    api_checks: list[VerificationResult]
+    mcp_results: list[VerificationResult]
+    embedding_results: list[VerificationResult]
+    gates: dict[str, Any]
     runner_gate: str
-    observability: Dict[str, Any]
-    issues: List[str]
-    artifacts: List[str]
-    
+    observability: dict[str, Any]
+    issues: list[str]
+    artifacts: list[str]
+
     def to_json(self):
         return json.dumps(asdict(self), indent=2, default=str)
 
 class FullSystemVerification:
     """Complete system verification and demonstration"""
-    
+
     def __init__(self):
         self.api_base = "http://localhost:8001"
         self.ui_base = "http://localhost:3002"
         self.playground_base = "http://localhost:7777"
         self.weaviate_url = "http://localhost:8080"
-        
+
         self.results = []
         self.issues = []
         self.artifacts = []
@@ -73,30 +74,30 @@ class FullSystemVerification:
             "cache_hits": 0,
             "latency_total_ms": 0
         }
-        
+
     async def run_full_verification(self) -> SystemReport:
         """Run complete verification suite"""
         logger.info("=" * 80)
         logger.info("FULL SYSTEM VERIFICATION STARTING")
         logger.info("=" * 80)
-        
+
         start_time = datetime.now()
-        
+
         # Phase 1: API Health Checks
         api_results = await self.verify_api_endpoints()
-        
+
         # Phase 2: MCP Server Verification
         mcp_results = await self.verify_mcp_servers()
-        
+
         # Phase 3: Embedding and Retrieval
         embedding_results = await self.verify_embeddings_and_retrieval()
-        
+
         # Phase 4: Swarm Decision Flow
         swarm_results = await self.verify_swarm_decision_flow()
-        
+
         # Phase 5: Gates and Safety
         gate_results = await self.verify_gates_and_safety()
-        
+
         # Generate Report
         report = SystemReport(
             timestamp=datetime.now().isoformat(),
@@ -110,20 +111,20 @@ class FullSystemVerification:
             issues=self.issues,
             artifacts=self.artifacts
         )
-        
+
         duration = (datetime.now() - start_time).total_seconds()
         logger.info(f"Verification completed in {duration:.2f} seconds")
-        
+
         return report
-    
-    async def verify_api_endpoints(self) -> List[VerificationResult]:
+
+    async def verify_api_endpoints(self) -> list[VerificationResult]:
         """Verify all API endpoints are responding correctly"""
         logger.info("\n" + "=" * 60)
         logger.info("PHASE 1: API ENDPOINT VERIFICATION")
         logger.info("=" * 60)
-        
+
         results = []
-        
+
         async with httpx.AsyncClient(timeout=30.0) as client:
             # 1. Health Check
             result = await self._check_endpoint(
@@ -131,7 +132,7 @@ class FullSystemVerification:
                 expected_keys=["status", "systems"]
             )
             results.append(result)
-            
+
             # 2. Memory Add
             result = await self._check_endpoint(
                 client, "POST", "/memory/add",
@@ -145,7 +146,7 @@ class FullSystemVerification:
                 expected_keys=["status"]
             )
             results.append(result)
-            
+
             # 3. Memory Search
             result = await self._check_endpoint(
                 client, "POST", "/memory/search",
@@ -153,64 +154,62 @@ class FullSystemVerification:
                 expected_keys=["results", "count"]
             )
             results.append(result)
-            
+
             # 4. Stats
             result = await self._check_endpoint(
                 client, "GET", "/stats",
                 expected_keys=["memory", "embeddings", "graph"]
             )
             results.append(result)
-            
+
             # 5. Teams
             result = await self._check_endpoint(
                 client, "GET", "/teams",
                 validate_fn=lambda data: len(data) >= 3
             )
             results.append(result)
-            
+
             # 6. Workflows
             result = await self._check_endpoint(
                 client, "GET", "/workflows",
                 validate_fn=lambda data: any("pr" in w.get("id", "").lower() for w in data)
             )
             results.append(result)
-        
+
         self._print_phase_summary("API Endpoints", results)
         return results
-    
-    async def verify_mcp_servers(self) -> List[VerificationResult]:
+
+    async def verify_mcp_servers(self) -> list[VerificationResult]:
         """Verify MCP server interactions"""
         logger.info("\n" + "=" * 60)
         logger.info("PHASE 2: MCP SERVER VERIFICATION")
         logger.info("=" * 60)
-        
+
         results = []
-        
+
         # Import MCP components
         try:
-            from app.memory.supermemory_mcp import SupermemoryStore, MemoryEntry
-            from app.memory.enhanced_mcp_server import EnhancedMCPServer, MCPServerConfig
-            
+
             # 1. Filesystem MCP
             logger.info("\n📁 Testing Filesystem MCP:")
             fs_result = await self._verify_filesystem_mcp()
             results.append(fs_result)
-            
+
             # 2. Git MCP
             logger.info("\n🔀 Testing Git MCP:")
             git_result = await self._verify_git_mcp()
             results.append(git_result)
-            
+
             # 3. Supermemory MCP
             logger.info("\n🧠 Testing Supermemory MCP:")
             memory_result = await self._verify_supermemory_mcp()
             results.append(memory_result)
-            
+
             # 4. Enhanced MCP with pooling
             logger.info("\n🔌 Testing Enhanced MCP:")
             enhanced_result = await self._verify_enhanced_mcp()
             results.append(enhanced_result)
-            
+
         except Exception as e:
             logger.error(f"MCP verification failed: {e}")
             self.issues.append(f"MCP import error: {str(e)}")
@@ -220,18 +219,18 @@ class FullSystemVerification:
                 latency_ms=0,
                 error=str(e)
             ))
-        
+
         self._print_phase_summary("MCP Servers", results)
         return results
-    
-    async def verify_embeddings_and_retrieval(self) -> List[VerificationResult]:
+
+    async def verify_embeddings_and_retrieval(self) -> list[VerificationResult]:
         """Verify embedding routing and retrieval with citations"""
         logger.info("\n" + "=" * 60)
         logger.info("PHASE 3: EMBEDDINGS AND RETRIEVAL")
         logger.info("=" * 60)
-        
+
         results = []
-        
+
         try:
             # 1. Test Tier-A routing (long content)
             logger.info("\n🅰️ Testing Tier-A Embedding (768D):")
@@ -242,7 +241,7 @@ class FullSystemVerification:
                 expected_dim=768
             )
             results.append(tier_a_result)
-            
+
             # 2. Test Tier-B routing (short content)
             logger.info("\n🅱️ Testing Tier-B Embedding (1024D):")
             short_text = "Quick debug log"
@@ -252,17 +251,17 @@ class FullSystemVerification:
                 expected_dim=1024
             )
             results.append(tier_b_result)
-            
+
             # 3. Test hybrid search with citations
             logger.info("\n🔍 Testing Hybrid Search:")
             search_result = await self._test_hybrid_search_with_citations()
             results.append(search_result)
-            
+
             # 4. Test reranking
             logger.info("\n📊 Testing Reranking:")
             rerank_result = await self._test_reranking()
             results.append(rerank_result)
-            
+
         except Exception as e:
             logger.error(f"Embedding verification failed: {e}")
             self.issues.append(f"Embedding error: {str(e)}")
@@ -272,22 +271,22 @@ class FullSystemVerification:
                 latency_ms=0,
                 error=str(e)
             ))
-        
+
         self._print_phase_summary("Embeddings & Retrieval", results)
         return results
-    
-    async def verify_swarm_decision_flow(self) -> Dict[str, Any]:
+
+    async def verify_swarm_decision_flow(self) -> dict[str, Any]:
         """Verify swarm decision-making process"""
         logger.info("\n" + "=" * 60)
         logger.info("PHASE 4: SWARM DECISION FLOW")
         logger.info("=" * 60)
-        
+
         results = []
-        
+
         async with httpx.AsyncClient(timeout=60.0) as client:
             # Test team execution with stream capture
             logger.info("\n🤖 Testing Swarm Execution:")
-            
+
             test_request = {
                 "team_id": "coding-team",
                 "message": "Add input validation to the user registration endpoint",
@@ -296,11 +295,11 @@ class FullSystemVerification:
                     "use_memory": True
                 }
             }
-            
+
             phases_observed = []
             tokens_collected = []
             json_blocks = {}
-            
+
             try:
                 async with client.stream(
                     'POST',
@@ -311,39 +310,39 @@ class FullSystemVerification:
                         if line.startswith('data: '):
                             try:
                                 data = json.loads(line[6:])
-                                
+
                                 # Track phases
                                 if 'phase' in data:
                                     phase = data['phase']
                                     phases_observed.append(phase)
                                     logger.info(f"  ✅ Phase: {phase}")
-                                
+
                                 # Collect tokens
                                 if 'token' in data:
                                     tokens_collected.append(data['token'])
-                                
+
                                 # Capture JSON blocks
                                 if 'critic_json' in data:
                                     json_blocks['critic'] = data['critic_json']
                                     self._validate_critic_json(data['critic_json'])
-                                
+
                                 if 'judge_json' in data:
                                     json_blocks['judge'] = data['judge_json']
                                     self._validate_judge_json(data['judge_json'])
-                                
+
                                 if 'gates' in data:
                                     json_blocks['gates'] = data['gates']
-                                
+
                                 if 'citations' in data:
                                     json_blocks['citations'] = data['citations']
-                                
+
                             except json.JSONDecodeError:
                                 continue
-                
+
                 # Verify decision flow
                 expected_flow = ['planning', 'memory', 'generation', 'critic', 'judge', 'gates']
                 flow_verified = all(phase in phases_observed for phase in expected_flow[:4])
-                
+
                 results.append(VerificationResult(
                     check_name="swarm_decision_flow",
                     status="PASS" if flow_verified else "FAIL",
@@ -355,12 +354,12 @@ class FullSystemVerification:
                         "flow_verified": flow_verified
                     }
                 ))
-                
-                logger.info(f"\n📋 Decision Flow Summary:")
+
+                logger.info("\n📋 Decision Flow Summary:")
                 logger.info(f"  Phases: {' → '.join(phases_observed)}")
                 logger.info(f"  Tokens: {len(tokens_collected)}")
                 logger.info(f"  JSON Blocks: {list(json_blocks.keys())}")
-                
+
             except Exception as e:
                 logger.error(f"Swarm verification failed: {e}")
                 self.issues.append(f"Swarm error: {str(e)}")
@@ -370,31 +369,31 @@ class FullSystemVerification:
                     latency_ms=0,
                     error=str(e)
                 ))
-        
+
         return {
             "results": results,
             "phases": phases_observed,
             "json_blocks": json_blocks
         }
-    
-    async def verify_gates_and_safety(self) -> Dict[str, Any]:
+
+    async def verify_gates_and_safety(self) -> dict[str, Any]:
         """Verify evaluation gates and runner safety"""
         logger.info("\n" + "=" * 60)
         logger.info("PHASE 5: GATES AND SAFETY")
         logger.info("=" * 60)
-        
+
         gate_results = {
             "accuracy_eval": "PENDING",
             "reliability_eval": "PENDING",
             "safety_eval": "PENDING",
             "runner_gate": "BLOCKED"
         }
-        
+
         try:
             # Test gate evaluations
+            from app.contracts.json_schemas import CriticOutput, GeneratorProposal
             from app.evaluation.gates import AccuracyEval, ReliabilityEval, SafetyEval
-            from app.contracts.json_schemas import GeneratorProposal, CriticOutput
-            
+
             # Mock proposal for testing
             test_proposal = GeneratorProposal(
                 approach="Implement comprehensive input validation with type checking",
@@ -404,7 +403,7 @@ class FullSystemVerification:
                 estimated_loc=50,
                 risk_level="low"
             )
-            
+
             # Mock critic output
             test_critic = CriticOutput(
                 verdict="pass",
@@ -412,7 +411,7 @@ class FullSystemVerification:
                 must_fix=[],
                 minimal_patch_notes="All checks passed"
             )
-            
+
             # 1. Accuracy Gate
             logger.info("\n✅ Testing Accuracy Gate:")
             accuracy_eval = AccuracyEval()
@@ -423,7 +422,7 @@ class FullSystemVerification:
             )
             gate_results["accuracy_eval"] = "PASS" if accuracy_result["passes_accuracy"] else "FAIL"
             logger.info(f"  Result: {gate_results['accuracy_eval']}")
-            
+
             # 2. Reliability Gate
             logger.info("\n🔒 Testing Reliability Gate:")
             reliability_eval = ReliabilityEval()
@@ -433,47 +432,47 @@ class FullSystemVerification:
             )
             gate_results["reliability_eval"] = "PASS" if reliability_result["passes_reliability"] else "FAIL"
             logger.info(f"  Result: {gate_results['reliability_eval']}")
-            
+
             # 3. Safety Gate
             logger.info("\n🛡️ Testing Safety Gate:")
             safety_eval = SafetyEval()
             safety_result = safety_eval.evaluate_safety(test_proposal)
             gate_results["safety_eval"] = "PASS" if safety_result["is_safe"] else "FAIL"
             logger.info(f"  Result: {gate_results['safety_eval']}")
-            
+
             # 4. Runner Gate (should be BLOCKED in demo mode)
             logger.info("\n🏃 Testing Runner Gate:")
             all_gates_pass = all(v == "PASS" for k, v in gate_results.items() if k != "runner_gate")
             judge_allows = False  # In demo mode
-            
+
             if all_gates_pass and judge_allows:
                 gate_results["runner_gate"] = "ALLOWED"
             else:
                 gate_results["runner_gate"] = "BLOCKED"
-            
+
             logger.info(f"  Status: {gate_results['runner_gate']} (Demo Mode)")
-            
+
         except Exception as e:
             logger.error(f"Gate verification failed: {e}")
             self.issues.append(f"Gate error: {str(e)}")
-        
+
         return gate_results
-    
+
     # Helper Methods
-    
+
     async def _check_endpoint(
         self,
         client: httpx.AsyncClient,
         method: str,
         path: str,
-        body: Optional[Dict] = None,
-        expected_keys: Optional[List[str]] = None,
-        validate_fn: Optional[callable] = None
+        body: dict | None = None,
+        expected_keys: list[str] | None = None,
+        validate_fn: callable | None = None
     ) -> VerificationResult:
         """Check a single endpoint"""
         endpoint = f"{self.api_base}{path}"
         start_time = time.time()
-        
+
         try:
             if method == "GET":
                 response = await client.get(endpoint)
@@ -481,25 +480,25 @@ class FullSystemVerification:
                 response = await client.post(endpoint, json=body)
             else:
                 raise ValueError(f"Unsupported method: {method}")
-            
+
             latency_ms = (time.time() - start_time) * 1000
             self.metrics["requests"] += 1
-            
+
             if response.status_code == 200:
                 data = response.json()
-                
+
                 # Validate expected keys
                 if expected_keys:
                     missing = [k for k in expected_keys if k not in str(data)]
                     if missing:
                         raise ValueError(f"Missing keys: {missing}")
-                
+
                 # Custom validation
                 if validate_fn and not validate_fn(data):
                     raise ValueError("Custom validation failed")
-                
+
                 logger.info(f"  ✅ {method} {path}: 200 OK ({latency_ms:.1f}ms)")
-                
+
                 return VerificationResult(
                     check_name=f"{method} {path}",
                     status="PASS",
@@ -508,34 +507,34 @@ class FullSystemVerification:
                 )
             else:
                 raise ValueError(f"Status {response.status_code}")
-                
+
         except Exception as e:
             self.metrics["errors"] += 1
             logger.error(f"  ❌ {method} {path}: {e}")
             self.issues.append(f"{method} {path}: {str(e)}")
-            
+
             return VerificationResult(
                 check_name=f"{method} {path}",
                 status="FAIL",
                 latency_ms=(time.time() - start_time) * 1000,
                 error=str(e)
             )
-    
+
     async def _verify_filesystem_mcp(self) -> VerificationResult:
         """Verify filesystem MCP operations"""
         start_time = time.time()
-        
+
         try:
             # Test listing current directory
             test_path = Path.cwd()
             files = list(test_path.glob("*.md"))[:3]
-            
+
             if files:
                 logger.info(f"  ✅ Listed {len(files)} files")
                 # Test reading one file
                 content = files[0].read_text()[:100]
                 logger.info(f"  ✅ Read file: {files[0].name} ({len(content)} chars)")
-                
+
                 return VerificationResult(
                     check_name="filesystem_mcp",
                     status="PASS",
@@ -544,7 +543,7 @@ class FullSystemVerification:
                 )
             else:
                 raise ValueError("No files found")
-                
+
         except Exception as e:
             return VerificationResult(
                 check_name="filesystem_mcp",
@@ -552,12 +551,12 @@ class FullSystemVerification:
                 latency_ms=(time.time() - start_time) * 1000,
                 error=str(e)
             )
-    
+
     async def _verify_git_mcp(self) -> VerificationResult:
         """Verify git MCP operations"""
         import subprocess
         start_time = time.time()
-        
+
         try:
             # Test git status
             result = subprocess.run(
@@ -566,10 +565,10 @@ class FullSystemVerification:
                 text=True,
                 timeout=5
             )
-            
+
             if result.returncode == 0:
-                logger.info(f"  ✅ Git status executed")
-                
+                logger.info("  ✅ Git status executed")
+
                 # Test git diff
                 diff_result = subprocess.run(
                     ["git", "diff", "--stat"],
@@ -577,10 +576,10 @@ class FullSystemVerification:
                     text=True,
                     timeout=5
                 )
-                
-                logger.info(f"  ✅ Git diff executed")
-                logger.info(f"  🔒 Write operations (add/commit) correctly gated")
-                
+
+                logger.info("  ✅ Git diff executed")
+                logger.info("  🔒 Write operations (add/commit) correctly gated")
+
                 return VerificationResult(
                     check_name="git_mcp",
                     status="PASS",
@@ -593,7 +592,7 @@ class FullSystemVerification:
                 )
             else:
                 raise ValueError(f"Git status failed: {result.stderr}")
-                
+
         except Exception as e:
             return VerificationResult(
                 check_name="git_mcp",
@@ -601,11 +600,11 @@ class FullSystemVerification:
                 latency_ms=(time.time() - start_time) * 1000,
                 error=str(e)
             )
-    
+
     async def _verify_supermemory_mcp(self) -> VerificationResult:
         """Verify supermemory MCP operations"""
         start_time = time.time()
-        
+
         try:
             async with httpx.AsyncClient() as client:
                 # Add memory
@@ -619,22 +618,22 @@ class FullSystemVerification:
                         "memory_type": "procedural"
                     }
                 )
-                
+
                 if add_response.status_code == 200:
-                    logger.info(f"  ✅ Memory added successfully")
-                    
+                    logger.info("  ✅ Memory added successfully")
+
                     # Search memory
                     search_response = await client.post(
                         f"{self.api_base}/memory/search",
                         json={"query": "mcp", "top_k": 3}
                     )
-                    
+
                     if search_response.status_code == 200:
                         results = search_response.json()
                         logger.info(f"  ✅ Memory search returned {results.get('count', 0)} results")
-                        
+
                         latency_ms = (time.time() - start_time) * 1000
-                        
+
                         return VerificationResult(
                             check_name="supermemory_mcp",
                             status="PASS",
@@ -645,9 +644,9 @@ class FullSystemVerification:
                                 "latency_target_met": latency_ms < 400
                             }
                         )
-            
+
             raise ValueError("Supermemory operations failed")
-            
+
         except Exception as e:
             return VerificationResult(
                 check_name="supermemory_mcp",
@@ -655,32 +654,32 @@ class FullSystemVerification:
                 latency_ms=(time.time() - start_time) * 1000,
                 error=str(e)
             )
-    
+
     async def _verify_enhanced_mcp(self) -> VerificationResult:
         """Verify enhanced MCP with connection pooling"""
         start_time = time.time()
-        
+
         try:
             from app.memory.enhanced_mcp_server import EnhancedMCPServer, MCPServerConfig
-            
+
             config = MCPServerConfig(
                 connection_pool_size=5,
                 retry_attempts=3,
                 enable_metrics=True
             )
-            
+
             server = EnhancedMCPServer(config)
-            
+
             try:
                 await server.initialize_pool()
-                logger.info(f"  ✅ Connection pool initialized: 5 connections")
-                
+                logger.info("  ✅ Connection pool initialized: 5 connections")
+
                 health = await server.health_check()
                 logger.info(f"  ✅ Health check: {health['status']}")
-                
+
                 metrics = await server.get_metrics()
                 logger.info(f"  ✅ Metrics: {metrics['available_connections']} connections available")
-                
+
                 return VerificationResult(
                     check_name="enhanced_mcp",
                     status="PASS",
@@ -691,10 +690,10 @@ class FullSystemVerification:
                         "available_connections": metrics['available_connections']
                     }
                 )
-                
+
             finally:
                 await server.close()
-                
+
         except Exception as e:
             return VerificationResult(
                 check_name="enhanced_mcp",
@@ -702,7 +701,7 @@ class FullSystemVerification:
                 latency_ms=(time.time() - start_time) * 1000,
                 error=str(e)
             )
-    
+
     async def _test_embedding_tier(
         self,
         text: str,
@@ -711,16 +710,16 @@ class FullSystemVerification:
     ) -> VerificationResult:
         """Test embedding tier routing"""
         start_time = time.time()
-        
+
         try:
             # Simulate tier routing based on text length
             actual_tier = "A" if len(text) > 500 else "B"
             actual_dim = 768 if actual_tier == "A" else 1024
-            
+
             if actual_tier == expected_tier:
                 logger.info(f"  ✅ Routed to Tier-{actual_tier} ({actual_dim}D)")
                 logger.info(f"  📊 Text length: {len(text)} chars")
-                
+
                 return VerificationResult(
                     check_name=f"embedding_tier_{expected_tier}",
                     status="PASS",
@@ -734,7 +733,7 @@ class FullSystemVerification:
                 )
             else:
                 raise ValueError(f"Expected Tier-{expected_tier}, got Tier-{actual_tier}")
-                
+
         except Exception as e:
             return VerificationResult(
                 check_name=f"embedding_tier_{expected_tier}",
@@ -742,11 +741,11 @@ class FullSystemVerification:
                 latency_ms=(time.time() - start_time) * 1000,
                 error=str(e)
             )
-    
+
     async def _test_hybrid_search_with_citations(self) -> VerificationResult:
         """Test hybrid search with citations"""
         start_time = time.time()
-        
+
         try:
             # Simulate hybrid search
             mock_results = [
@@ -767,17 +766,17 @@ class FullSystemVerification:
                     "content": "async def search_memory(query):"
                 }
             ]
-            
+
             # Format citations
             citations = [
                 f"{r['path']}:{r['start_line']}-{r['end_line']}"
                 for r in mock_results
             ]
-            
+
             logger.info(f"  ✅ Hybrid search returned {len(mock_results)} results")
             logger.info(f"  📍 Citations: {citations}")
-            logger.info(f"  🔄 BM25 weight: 0.35, Vector weight: 0.65")
-            
+            logger.info("  🔄 BM25 weight: 0.35, Vector weight: 0.65")
+
             return VerificationResult(
                 check_name="hybrid_search",
                 status="PASS",
@@ -790,7 +789,7 @@ class FullSystemVerification:
                     "top_score": mock_results[0]["score"]
                 }
             )
-            
+
         except Exception as e:
             return VerificationResult(
                 check_name="hybrid_search",
@@ -798,19 +797,19 @@ class FullSystemVerification:
                 latency_ms=(time.time() - start_time) * 1000,
                 error=str(e)
             )
-    
+
     async def _test_reranking(self) -> VerificationResult:
         """Test search result reranking"""
         start_time = time.time()
-        
+
         try:
             # Simulate reranking
             before_scores = [0.89, 0.76, 0.72, 0.68, 0.65]
             after_scores = [0.92, 0.88, 0.71, 0.69, 0.64]  # Reranked
-            
-            logger.info(f"  ✅ Reranking applied to top-5 results")
+
+            logger.info("  ✅ Reranking applied to top-5 results")
             logger.info(f"  📊 Score change: {before_scores[1]} → {after_scores[0]} (item reordered)")
-            
+
             return VerificationResult(
                 check_name="reranking",
                 status="PASS",
@@ -822,7 +821,7 @@ class FullSystemVerification:
                     "method": "cross-encoder"
                 }
             )
-            
+
         except Exception as e:
             return VerificationResult(
                 check_name="reranking",
@@ -830,24 +829,24 @@ class FullSystemVerification:
                 latency_ms=(time.time() - start_time) * 1000,
                 error=str(e)
             )
-    
-    def _validate_critic_json(self, critic_json: Dict):
+
+    def _validate_critic_json(self, critic_json: dict):
         """Validate critic JSON schema"""
         required_fields = ["verdict", "findings", "must_fix", "minimal_patch_notes"]
         missing = [f for f in required_fields if f not in critic_json]
         if missing:
             raise ValueError(f"Critic JSON missing fields: {missing}")
-        logger.info(f"    ✅ Critic JSON validated")
-    
-    def _validate_judge_json(self, judge_json: Dict):
+        logger.info("    ✅ Critic JSON validated")
+
+    def _validate_judge_json(self, judge_json: dict):
         """Validate judge JSON schema"""
         required_fields = ["decision", "runner_instructions", "rationale"]
         missing = [f for f in required_fields if f not in judge_json]
         if missing:
             raise ValueError(f"Judge JSON missing fields: {missing}")
-        logger.info(f"    ✅ Judge JSON validated")
-    
-    def _get_todo_status(self) -> Dict[str, Any]:
+        logger.info("    ✅ Judge JSON validated")
+
+    def _get_todo_status(self) -> dict[str, Any]:
         """Get current todo status"""
         return {
             "completed": [
@@ -859,12 +858,12 @@ class FullSystemVerification:
             "remaining": [],
             "timestamp": datetime.now().isoformat()
         }
-    
+
     def _get_runner_gate_status(self) -> str:
         """Get runner gate status"""
         return "BLOCKED (Demo Mode - Write operations disabled for safety)"
-    
-    def _collect_observability_metrics(self) -> Dict[str, Any]:
+
+    def _collect_observability_metrics(self) -> dict[str, Any]:
         """Collect observability metrics"""
         return {
             "total_requests": self.metrics["requests"],
@@ -880,12 +879,12 @@ class FullSystemVerification:
                 "gate_results"
             ]
         }
-    
-    def _print_phase_summary(self, phase: str, results: List[VerificationResult]):
+
+    def _print_phase_summary(self, phase: str, results: list[VerificationResult]):
         """Print summary for a verification phase"""
         passed = sum(1 for r in results if r.status == "PASS")
         failed = sum(1 for r in results if r.status == "FAIL")
-        
+
         logger.info(f"\n📊 {phase} Summary:")
         logger.info(f"  ✅ Passed: {passed}")
         logger.info(f"  ❌ Failed: {failed}")
@@ -897,22 +896,22 @@ async def main():
     print("FULL SYSTEM VERIFICATION AND DEMONSTRATION")
     print("Proving MCP, Embeddings, Search, and Swarms are ACTIVE and COORDINATED")
     print("🚀 " * 20 + "\n")
-    
+
     verifier = FullSystemVerification()
-    
+
     try:
         # Run complete verification
         report = await verifier.run_full_verification()
-        
+
         # Save report
         report_path = Path("verification_report.json")
         report_path.write_text(report.to_json())
-        
+
         # Print final summary
         print("\n" + "=" * 80)
         print("VERIFICATION COMPLETE")
         print("=" * 80)
-        
+
         print("\n📋 FINAL REPORT:")
         print(f"  📁 Report saved to: {report_path}")
         print(f"  ⏱️ Timestamp: {report.timestamp}")
@@ -922,16 +921,16 @@ async def main():
         print(f"  🚦 Gates: {report.gates}")
         print(f"  🏃 Runner: {report.runner_gate}")
         print(f"  ⚠️ Issues: {len(report.issues)}")
-        
+
         if report.issues:
             print("\n⚠️ ISSUES FOUND:")
             for issue in report.issues:
                 print(f"  - {issue}")
-        
+
         print("\n✅ VERIFICATION COMPLETE - System is ACTIVE and COORDINATED")
-        
+
         return 0
-        
+
     except Exception as e:
         logger.error(f"Verification failed: {e}")
         print(f"\n❌ VERIFICATION FAILED: {e}")

@@ -1,5 +1,5 @@
-import pytest
 from app.observability.prometheus_metrics import get_cost_summary
+
 
 def test_get_cost_summary():
     summary = get_cost_summary(days=30)

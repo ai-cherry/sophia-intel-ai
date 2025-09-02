@@ -1,11 +1,10 @@
-from fastapi import APIRouter, Request, Response, HTTPException, WebSocket
-from fastapi.responses import HTMLResponse, StreamingResponse, JSONResponse
-from fastapi.templating import Jinja2Templates
-import httpx
 import asyncio
-from typing import Dict, Any, Optional
-import json
 from datetime import datetime
+
+import httpx
+from fastapi import APIRouter, HTTPException, Request, Response, WebSocket
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
 
 router = APIRouter(prefix="/hub", tags=["hub"])
 templates = Jinja2Templates(directory='app/templates')
@@ -18,7 +17,7 @@ SERVICE_MAP = {
     "mcp_review": "http://localhost:8003"
 }
 
-async def check_service_health(service_name: str, url: str, timeout: float = 2.0) -> Dict:
+async def check_service_health(service_name: str, url: str, timeout: float = 2.0) -> dict:
     """Check health of a single service"""
     try:
         async with httpx.AsyncClient(timeout=timeout) as client:
@@ -35,7 +34,7 @@ async def check_service_health(service_name: str, url: str, timeout: float = 2.0
             "latency": 0
         }
 
-async def get_service_status() -> Dict:
+async def get_service_status() -> dict:
     """Get status of all services"""
     services = {
         "api": {"port": 8005, "url": "http://localhost:8005"},
@@ -44,29 +43,29 @@ async def get_service_status() -> Dict:
         "mcp_memory": {"port": 8001, "url": "http://localhost:8001"},
         "mcp_review": {"port": 8003, "url": "http://localhost:8003"}
     }
-    
+
     # Check all services in parallel
     tasks = []
     for name, info in services.items():
         tasks.append(check_service_health(name, info["url"]))
-    
+
     results = await asyncio.gather(*tasks)
-    
+
     # Combine results
     status = {}
-    for (name, info), result in zip(services.items(), results):
+    for (name, info), result in zip(services.items(), results, strict=False):
         status[name] = {
             "port": info["port"],
             **result
         }
-    
+
     # Determine overall health
     healthy_count = sum(1 for s in status.values() if s.get("status") == "healthy")
     total_count = len(status)
-    
+
     overall = "healthy" if healthy_count == total_count else \
               "degraded" if healthy_count > 0 else "critical"
-    
+
     return {
         "services": status,
         "timestamp": datetime.now().isoformat(),
@@ -75,7 +74,7 @@ async def get_service_status() -> Dict:
         "total_count": total_count
     }
 
-async def get_current_config() -> Dict:
+async def get_current_config() -> dict:
     """Get current configuration"""
     return {
         "models": {
@@ -139,23 +138,23 @@ async def proxy_request(service: str, path: str, request: Request):
     """Generic reverse proxy for services"""
     if service not in SERVICE_MAP:
         raise HTTPException(status_code=404, detail=f"Service '{service}' not found")
-    
+
     base_url = SERVICE_MAP[service]
     target_url = f"{base_url}/{path}"
-    
+
     try:
         # Forward the request
         async with httpx.AsyncClient(timeout=30.0) as client:
             # Get request body
             body = await request.body()
-            
+
             # Forward headers (excluding hop-by-hop headers)
             headers = dict(request.headers)
             hop_by_hop = ["host", "connection", "keep-alive", "transfer-encoding", "upgrade"]
             headers = {k: v for k, v in headers.items() if k.lower() not in hop_by_hop}
             headers["X-Forwarded-For"] = "hub"
             headers["X-Forwarded-Host"] = "localhost:8005"
-            
+
             # Make the request
             response = await client.request(
                 method=request.method,
@@ -164,14 +163,14 @@ async def proxy_request(service: str, path: str, request: Request):
                 content=body if body else None,
                 follow_redirects=True
             )
-            
+
             # Return the response
             return Response(
                 content=response.content,
                 status_code=response.status_code,
                 headers=dict(response.headers)
             )
-            
+
     except httpx.ConnectError:
         raise HTTPException(status_code=503, detail=f"Service '{service}' is unavailable")
     except httpx.TimeoutException:
@@ -192,7 +191,7 @@ async def websocket_events(websocket: WebSocket):
     """WebSocket for real-time hub events"""
     await websocket.accept()
     connected_clients.add(websocket)
-    
+
     try:
         # Send initial status
         status = await get_service_status()
@@ -201,7 +200,7 @@ async def websocket_events(websocket: WebSocket):
             "data": status,
             "timestamp": datetime.now().isoformat()
         })
-        
+
         # Keep connection alive and send periodic updates
         while True:
             await asyncio.sleep(5)
@@ -211,7 +210,7 @@ async def websocket_events(websocket: WebSocket):
                 "data": status,
                 "timestamp": datetime.now().isoformat()
             })
-            
+
     except Exception as e:
         print(f"WebSocket error: {e}")
     finally:

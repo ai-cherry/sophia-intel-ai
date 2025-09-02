@@ -2,22 +2,22 @@
 Swarm Composer for combining multiple patterns into complex behaviors.
 """
 
-from typing import Dict, Any, List
-from dataclasses import dataclass
 import asyncio
 import logging
+from dataclasses import dataclass
+from typing import Any
 
-from .base import SwarmPattern
 from . import (
-    AdversarialDebatePattern,
-    QualityGatesPattern,
-    StrategyArchivePattern,
-    SafetyBoundariesPattern,
-    DynamicRolesPattern,
-    ConsensusPattern,
     AdaptiveParametersPattern,
-    KnowledgeTransferPattern
+    AdversarialDebatePattern,
+    ConsensusPattern,
+    DynamicRolesPattern,
+    KnowledgeTransferPattern,
+    QualityGatesPattern,
+    SafetyBoundariesPattern,
+    StrategyArchivePattern,
 )
+from .base import SwarmPattern
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class ComposerConfig:
     """Configuration for pattern composition."""
-    patterns: List[str]
+    patterns: list[str]
     execution_mode: str = "sequential"  # sequential, parallel, conditional
     fail_fast: bool = False
     merge_results: bool = True
@@ -35,12 +35,12 @@ class SwarmComposer:
     """
     Composes multiple swarm patterns into complex coordination strategies.
     """
-    
+
     def __init__(self, config: ComposerConfig):
         self.config = config
-        self.patterns: Dict[str, SwarmPattern] = {}
+        self.patterns: dict[str, SwarmPattern] = {}
         self._initialize_patterns()
-        
+
     def _initialize_patterns(self):
         """Initialize requested patterns."""
         pattern_classes = {
@@ -53,13 +53,13 @@ class SwarmComposer:
             "adaptive_parameters": AdaptiveParametersPattern,
             "knowledge_transfer": KnowledgeTransferPattern
         }
-        
+
         for pattern_name in self.config.patterns:
             if pattern_name in pattern_classes:
                 self.patterns[pattern_name] = pattern_classes[pattern_name]()
                 logger.info(f"Initialized pattern: {pattern_name}")
-                
-    async def execute(self, context: Dict[str, Any], agents: List[Any]) -> Dict[str, Any]:
+
+    async def execute(self, context: dict[str, Any], agents: list[Any]) -> dict[str, Any]:
         """
         Execute composed patterns.
         
@@ -76,42 +76,42 @@ class SwarmComposer:
             return await self._execute_conditional(context, agents)
         else:  # sequential
             return await self._execute_sequential(context, agents)
-            
-    async def _execute_sequential(self, context: Dict[str, Any], agents: List[Any]) -> Dict[str, Any]:
+
+    async def _execute_sequential(self, context: dict[str, Any], agents: list[Any]) -> dict[str, Any]:
         """Execute patterns sequentially."""
         results = {}
         current_context = context.copy()
-        
+
         for pattern_name, pattern in self.patterns.items():
             try:
                 result = await pattern.execute(current_context, agents)
                 results[pattern_name] = result
-                
+
                 if result.success and self.config.merge_results:
                     # Merge successful results into context for next pattern
                     if result.data:
                         current_context["prior_results"] = current_context.get("prior_results", {})
                         current_context["prior_results"][pattern_name] = result.data
-                        
+
                 elif not result.success and self.config.fail_fast:
                     logger.warning(f"Pattern {pattern_name} failed, stopping execution")
                     break
-                    
+
             except Exception as e:
                 logger.error(f"Pattern {pattern_name} raised exception: {e}")
                 if self.config.fail_fast:
                     raise
-                    
+
         return results
-        
-    async def _execute_parallel(self, context: Dict[str, Any], agents: List[Any]) -> Dict[str, Any]:
+
+    async def _execute_parallel(self, context: dict[str, Any], agents: list[Any]) -> dict[str, Any]:
         """Execute patterns in parallel."""
         tasks = []
-        
+
         for pattern_name, pattern in self.patterns.items():
             task = asyncio.create_task(pattern.execute(context.copy(), agents))
             tasks.append((pattern_name, task))
-            
+
         results = {}
         for pattern_name, task in tasks:
             try:
@@ -125,31 +125,31 @@ class SwarmComposer:
                         if not t.done():
                             t.cancel()
                     raise
-                    
+
         return results
-        
-    async def _execute_conditional(self, context: Dict[str, Any], agents: List[Any]) -> Dict[str, Any]:
+
+    async def _execute_conditional(self, context: dict[str, Any], agents: list[Any]) -> dict[str, Any]:
         """Execute patterns based on conditions."""
         results = {}
-        
+
         # Example conditional logic
         if "high_risk" in context:
             if "safety_boundaries" in self.patterns:
                 result = await self.patterns["safety_boundaries"].execute(context, agents)
                 results["safety_boundaries"] = result
-                
+
         if "multiple_solutions" in context:
             if "adversarial_debate" in self.patterns:
                 result = await self.patterns["adversarial_debate"].execute(context, agents)
                 results["adversarial_debate"] = result
-                
+
         # Always run quality gates if available
         if "quality_gates" in self.patterns:
             result = await self.patterns["quality_gates"].execute(context, agents)
             results["quality_gates"] = result
-            
+
         return results
-        
+
     async def cleanup(self):
         """Cleanup all patterns."""
         for pattern in self.patterns.values():

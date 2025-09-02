@@ -4,14 +4,18 @@ Routes to appropriate model based on chunk characteristics.
 """
 
 from __future__ import annotations
-import os
-import sqlite3
+
 import hashlib
 import json
+import os
+import sqlite3
 import time
-from typing import List, Tuple, Optional
+
 from openai import OpenAI
-from app.core.circuit_breaker import with_circuit_breaker, get_llm_circuit_breaker, get_weaviate_circuit_breaker, get_redis_circuit_breaker, get_webhook_circuit_breaker
+
+from app.core.circuit_breaker import (
+    with_circuit_breaker,
+)
 
 # Configuration from environment
 EMBED_BASE_URL = os.getenv("EMBED_BASE_URL", "https://api.portkey.ai/v1")
@@ -51,7 +55,7 @@ def _sha(data: str) -> str:
     """Generate SHA-1 hash of text."""
     return hashlib.sha1(data.encode("utf-8")).hexdigest()
 
-def _cache_get(conn, sha: str, model: str) -> Optional[List[float]]:
+def _cache_get(conn, sha: str, model: str) -> list[float] | None:
     """Retrieve cached embedding if exists."""
     cur = conn.execute(
         "SELECT vec FROM cache WHERE sha=? AND model=?",
@@ -60,7 +64,7 @@ def _cache_get(conn, sha: str, model: str) -> Optional[List[float]]:
     row = cur.fetchone()
     return json.loads(row[0]) if row else None
 
-def _cache_put(conn, sha: str, model: str, vec: List[float]) -> None:
+def _cache_put(conn, sha: str, model: str, vec: list[float]) -> None:
     """Store embedding in cache."""
     conn.execute(
         "INSERT OR REPLACE INTO cache(sha, model, vec, ts) VALUES(?, ?, ?, ?)",
@@ -69,7 +73,7 @@ def _cache_put(conn, sha: str, model: str, vec: List[float]) -> None:
     conn.commit()
 
 @with_circuit_breaker("external_api")
-def embed_batch(texts: List[str], model: str) -> List[List[float]]:
+def embed_batch(texts: list[str], model: str) -> list[list[float]]:
     """
     Call Portkey→Together through OpenAI SDK for batch embedding.
     
@@ -85,9 +89,9 @@ def embed_batch(texts: List[str], model: str) -> List[List[float]]:
 
 def choose_model_for_chunk(
     text: str,
-    lang: Optional[str] = None,
-    priority: Optional[str] = None
-) -> Tuple[str, int]:
+    lang: str | None = None,
+    priority: str | None = None
+) -> tuple[str, int]:
     """
     Choose appropriate embedding model based on chunk characteristics.
     
@@ -101,18 +105,18 @@ def choose_model_for_chunk(
     """
     # Estimate token count (rough: 1 token ≈ 4 chars)
     tok_est = max(1, len(text) // 4)
-    
+
     # Use Tier A for:
     # - High priority chunks
     # - Long chunks (>2k tokens)
     # - Complex languages requiring context
     if priority == "high" or tok_est > 2000 or lang in ["rust", "cpp", "java"]:
         return MODEL_A, DIM_A
-    
+
     # Default to Tier B for speed
     return MODEL_B, DIM_B
 
-def embed_with_cache(texts: List[str], model: str) -> List[List[float]]:
+def embed_with_cache(texts: list[str], model: str) -> list[list[float]]:
     """
     Embed texts with caching to avoid redundant API calls.
     
@@ -124,11 +128,11 @@ def embed_with_cache(texts: List[str], model: str) -> List[List[float]]:
         List of embedding vectors
     """
     conn = _ensure_cache()
-    out: List[List[float]] = []
+    out: list[list[float]] = []
     to_fetch_idx = []
     to_fetch_txt = []
     shas = []
-    
+
     # Check cache for each text
     for i, t in enumerate(texts):
         s = _sha(t)
@@ -140,7 +144,7 @@ def embed_with_cache(texts: List[str], model: str) -> List[List[float]]:
             out.append(None)  # Placeholder
         else:
             out.append(v)
-    
+
     # Fetch missing embeddings
     if to_fetch_txt:
         fresh = embed_batch(to_fetch_txt, model)
@@ -151,7 +155,7 @@ def embed_with_cache(texts: List[str], model: str) -> List[List[float]]:
                 fetch_idx += 1
                 out[i] = vec
                 _cache_put(conn, shas[i], model, vec)
-    
+
     conn.close()
     return out
 

@@ -4,11 +4,10 @@ Complete Portkey setup with OpenRouter and Together AI.
 This script will configure everything programmatically.
 """
 
-import os
 import asyncio
-import httpx
 import json
-from typing import Dict, Any, List
+
+import httpx
 from dotenv import load_dotenv, set_key
 
 # Load environment
@@ -16,23 +15,23 @@ load_dotenv('.env.local', override=True)
 
 class CompletePortkeySetup:
     """Complete setup for Portkey with all providers."""
-    
+
     def __init__(self):
         # API Keys
         self.portkey_key = "hPxFZGd8AN269n4bznDf2/Onbi8I"
         self.openrouter_key = "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"
         self.together_key = "tgp_v1_HE_uluFh-fELZDmEP9xKZXuSBT4a8EHd6s9CmSe5WWo"
-        
+
         self.base_url = "https://api.portkey.ai/v1"
-        
+
     async def test_direct_providers(self):
         """Test all providers directly first."""
         print("\n" + "="*60)
         print("🔍 TESTING DIRECT PROVIDER ACCESS")
         print("="*60)
-        
+
         results = {}
-        
+
         # Test OpenRouter
         print("\n📝 Testing OpenRouter...")
         try:
@@ -50,7 +49,7 @@ class CompletePortkeySetup:
                         "max_tokens": 10
                     }
                 )
-                
+
                 if response.status_code == 200:
                     result = response.json()
                     content = result.get("choices", [{}])[0].get("message", {}).get("content", "")
@@ -62,7 +61,7 @@ class CompletePortkeySetup:
         except Exception as e:
             print(f"  ❌ OpenRouter Error: {e}")
             results["openrouter"] = False
-            
+
         # Test Together AI
         print("\n📝 Testing Together AI...")
         try:
@@ -79,7 +78,7 @@ class CompletePortkeySetup:
                         "input": "Test embedding"
                     }
                 )
-                
+
                 if response.status_code == 200:
                     result = response.json()
                     embedding_dim = len(result.get("data", [{}])[0].get("embedding", []))
@@ -91,15 +90,15 @@ class CompletePortkeySetup:
         except Exception as e:
             print(f"  ❌ Together AI Error: {e}")
             results["together"] = False
-            
+
         return results
-        
+
     async def setup_portkey_configs(self):
         """Set up Portkey configurations for all use cases."""
         print("\n" + "="*60)
         print("🔧 CONFIGURING PORTKEY GATEWAY")
         print("="*60)
-        
+
         # Define configurations for different use cases
         configs = {
             "chat_models": {
@@ -120,20 +119,20 @@ class CompletePortkeySetup:
                 "model": "togethercomputer/m2-bert-80M-8k-retrieval"
             }
         }
-        
+
         # Test Portkey with different configurations
         print("\n📝 Testing Portkey Configurations...")
-        
+
         # Test chat completion through Portkey → OpenRouter
         print("\n1. Chat Models (OpenRouter):")
         await self.test_portkey_chat()
-        
+
         # Test embeddings through Portkey → Together
         print("\n2. Embeddings (Together AI):")
         await self.test_portkey_embeddings()
-        
+
         return configs
-        
+
     async def test_portkey_chat(self):
         """Test chat completions through Portkey."""
         try:
@@ -149,7 +148,7 @@ class CompletePortkeySetup:
                         }
                     }
                 }
-                
+
                 response = await client.post(
                     f"{self.base_url}/chat/completions",
                     headers={
@@ -163,7 +162,7 @@ class CompletePortkeySetup:
                         "max_tokens": 10
                     }
                 )
-                
+
                 if response.status_code == 200:
                     result = response.json()
                     content = result.get("choices", [{}])[0].get("message", {}).get("content", "")
@@ -180,7 +179,7 @@ class CompletePortkeySetup:
         except Exception as e:
             print(f"  ❌ Error: {e}")
             return False
-            
+
     async def test_portkey_embeddings(self):
         """Test embeddings through Portkey."""
         try:
@@ -190,7 +189,7 @@ class CompletePortkeySetup:
                     "provider": "together",
                     "api_key": self.together_key
                 }
-                
+
                 response = await client.post(
                     f"{self.base_url}/embeddings",
                     headers={
@@ -203,7 +202,7 @@ class CompletePortkeySetup:
                         "input": "Test embedding through Portkey"
                     }
                 )
-                
+
                 if response.status_code == 200:
                     result = response.json()
                     embedding_dim = len(result.get("data", [{}])[0].get("embedding", []))
@@ -220,53 +219,53 @@ class CompletePortkeySetup:
         except Exception as e:
             print(f"  ❌ Error: {e}")
             return False
-            
+
     async def update_env_file(self):
         """Update .env.local with all configurations."""
         print("\n" + "="*60)
         print("📝 UPDATING ENVIRONMENT CONFIGURATION")
         print("="*60)
-        
+
         env_path = ".env.local"
-        
+
         # Keys to update
         updates = {
             # Primary Keys
             "OPENROUTER_API_KEY": self.openrouter_key,
             "PORTKEY_API_KEY": self.portkey_key,
             "TOGETHER_API_KEY": self.together_key,
-            
+
             # Portkey Gateway Configuration
             "OPENAI_BASE_URL": "https://api.portkey.ai/v1",
             "PORTKEY_BASE_URL": "https://api.portkey.ai/v1",
-            
+
             # Embedding Configuration
             "EMBED_BASE_URL": "https://api.portkey.ai/v1",
             "EMBED_API_KEY": self.portkey_key,
             "EMBED_MODEL": "togethercomputer/m2-bert-80M-8k-retrieval",
             "EMBED_PROVIDER": "together",
-            
+
             # Model Routing (via OpenRouter)
             "PRIMARY_CHAT_PROVIDER": "openrouter",
             "PRIMARY_EMBED_PROVIDER": "together",
-            
+
             # Headers for OpenRouter
             "HTTP_REFERER": "http://localhost:3000",
             "X_TITLE": "Sophia Intel AI"
         }
-        
+
         for key, value in updates.items():
             set_key(env_path, key, value)
             print(f"  ✅ Updated: {key}")
-            
+
         print("\n✅ Environment configuration updated!")
-        
+
     def create_usage_examples(self):
         """Create example code for using the configured setup."""
         print("\n" + "="*60)
         print("💡 USAGE EXAMPLES")
         print("="*60)
-        
+
         examples = """
 # === CHAT COMPLETIONS (via Portkey → OpenRouter) ===
 
@@ -335,9 +334,9 @@ Via Together AI (Embeddings):
 - BAAI/bge-base-en-v1.5 (768 dim)
 - BAAI/bge-large-en-v1.5 (1024 dim)
 """
-        
+
         print(examples)
-        
+
         # Save examples to file
         with open("PORTKEY_USAGE_EXAMPLES.md", "w") as f:
             f.write("# Portkey Configuration - Usage Examples\n\n")
@@ -349,48 +348,48 @@ Via Together AI (Embeddings):
             f.write("```python\n")
             f.write(examples)
             f.write("```\n")
-            
+
         print("\n✅ Examples saved to PORTKEY_USAGE_EXAMPLES.md")
-        
+
     async def run_complete_setup(self):
         """Run the complete setup process."""
         print("\n" + "="*60)
         print("🚀 COMPLETE PORTKEY + PROVIDERS SETUP")
         print("="*60)
-        
+
         # Test direct provider access
         provider_results = await self.test_direct_providers()
-        
+
         # Set up Portkey configurations
         configs = await self.setup_portkey_configs()
-        
+
         # Update environment file
         await self.update_env_file()
-        
+
         # Create usage examples
         self.create_usage_examples()
-        
+
         # Final summary
         print("\n" + "="*60)
         print("✅ SETUP COMPLETE!")
         print("="*60)
-        
+
         print("\n📊 Provider Status:")
         print(f"  • OpenRouter: {'✅ Working' if provider_results.get('openrouter') else '❌ Failed'}")
         print(f"  • Together AI: {'✅ Working' if provider_results.get('together') else '❌ Failed'}")
-        print(f"  • Portkey Gateway: ✅ Configured")
-        
+        print("  • Portkey Gateway: ✅ Configured")
+
         print("\n🔑 API Keys Configured:")
         print(f"  • OPENROUTER_API_KEY: ...{self.openrouter_key[-10:]}")
         print(f"  • TOGETHER_API_KEY: ...{self.together_key[-10:]}")
         print(f"  • PORTKEY_API_KEY: ...{self.portkey_key[-10:]}")
-        
+
         print("\n📦 Available Resources:")
         print("  • 300+ chat models via OpenRouter")
         print("  • High-quality embeddings via Together AI")
         print("  • Unified gateway via Portkey")
         print("  • Caching, observability, and fallbacks")
-        
+
         print("\n📚 Next Steps:")
         print("  1. Review PORTKEY_USAGE_EXAMPLES.md for code examples")
         print("  2. Test with: python3 scripts/test_complete_setup.py")

@@ -2,24 +2,21 @@
 Pytest Configuration and Shared Fixtures for Sophia Intel AI
 """
 
-import os
-import sys
 import asyncio
+import sys
 import tempfile
+from collections.abc import AsyncGenerator
 from pathlib import Path
-from typing import Generator, AsyncGenerator, Dict, Any
-from unittest.mock import Mock, AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, Mock
 
 import pytest
 import pytest_asyncio
 from httpx import AsyncClient
+
 # SQLAlchemy may be incompatible with Python 3.13 on some versions.
 # Guard import so the whole test suite doesn't fail to import on unsupported envs.
-import sys
 PY313 = sys.version_info >= (3, 13)
 try:
-    from sqlalchemy import create_engine  # type: ignore
-    from sqlalchemy.orm import sessionmaker  # type: ignore
     _SQLA_AVAILABLE = True
 except Exception:
     _SQLA_AVAILABLE = False
@@ -29,9 +26,8 @@ from fakeredis import FakeRedis
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from app.api.unified_server import app
-from app.core.config import settings
-from app.memory.supermemory_mcp import SupermemoryStore
 from app.memory.embedding_pipeline import StandardizedEmbeddingPipeline
+from app.memory.supermemory_mcp import SupermemoryStore
 from app.swarms.unified_enhanced_orchestrator import UnifiedSwarmOrchestrator
 
 # ============================================
@@ -131,11 +127,11 @@ def mock_llm():
     mock = AsyncMock()
     mock.complete = AsyncMock(return_value="Test response")
     mock.stream = AsyncMock()
-    
+
     async def stream_generator():
         for chunk in ["Test", " response", " streaming"]:
             yield chunk
-    
+
     mock.stream.return_value = stream_generator()
     return mock
 
@@ -143,36 +139,36 @@ def mock_llm():
 def mock_openai_client():
     """Mock OpenAI client."""
     mock = MagicMock()
-    
+
     # Mock embeddings
     mock.embeddings.create = AsyncMock()
     mock.embeddings.create.return_value = MagicMock(
         data=[MagicMock(embedding=[0.1] * 1536) for _ in range(10)]
     )
-    
+
     # Mock completions
     mock.chat.completions.create = AsyncMock()
     mock.chat.completions.create.return_value = MagicMock(
         choices=[MagicMock(message=MagicMock(content="Test completion"))]
     )
-    
+
     return mock
 
 @pytest.fixture
 def mock_weaviate_client():
     """Mock Weaviate client."""
     mock = MagicMock()
-    
+
     # Mock schema
     mock.schema.get.return_value = {"classes": []}
     mock.schema.create_class.return_value = None
-    
+
     # Mock data operations
     mock.data_object.create.return_value = "uuid-123"
     mock.query.get.return_value.with_near_vector.return_value.with_limit.return_value.do.return_value = {
         "data": {"Get": {"Memory": []}}
     }
-    
+
     return mock
 
 # ============================================

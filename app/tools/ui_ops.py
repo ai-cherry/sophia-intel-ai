@@ -1,9 +1,11 @@
-from agno import Tool
 from pathlib import Path
+
+from agno import Tool
+
 
 class StartPlayground(Tool):
     """Tool for starting the Agno Playground."""
-    
+
     name = "start_playground"
     description = "Start the Agno Playground server"
     parameters = {
@@ -17,7 +19,7 @@ class StartPlayground(Tool):
         },
         "required": []
     }
-    
+
     async def run(self, port: int = 7777) -> str:
         """Start the Agno Playground."""
         try:
@@ -25,7 +27,7 @@ class StartPlayground(Tool):
             playground_path = Path("app/playground.py")
             if not playground_path.exists():
                 return "Playground module not found at app/playground.py"
-            
+
             return f"""
 To start the Agno Playground, run:
 
@@ -43,7 +45,7 @@ Note: This tool provides instructions. The actual server must be started in a te
 
 class StartAgentUI(Tool):
     """Tool for starting the Agno Agent UI."""
-    
+
     name = "start_agent_ui"
     description = "Instructions for starting the Agno Agent UI"
     parameters = {
@@ -57,7 +59,7 @@ class StartAgentUI(Tool):
         },
         "required": []
     }
-    
+
     async def run(self, playground_url: str = "http://localhost:7777") -> str:
         """Provide instructions for starting Agent UI."""
         return f"""

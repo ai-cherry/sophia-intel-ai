@@ -4,11 +4,12 @@ Full multi-model swarm with intelligent routing and fallbacks
 NO MOCKS - REAL API CALLS ONLY
 """
 
-import os
-from typing import Dict, List, Any, Optional
-from portkey_ai import Portkey
-import uuid
 import logging
+import os
+import uuid
+from typing import Any
+
+from portkey_ai import Portkey
 
 logger = logging.getLogger(__name__)
 
@@ -172,16 +173,16 @@ class PortkeyLoadBalancer:
     Real Portkey Gateway with load balancing across multiple models.
     NO MOCKS - REAL API CALLS ONLY.
     """
-    
+
     def __init__(self):
         """Initialize Portkey with real API keys and configuration."""
-        
+
         self.portkey_api_key = os.getenv("PORTKEY_API_KEY")
         self.openrouter_api_key = os.getenv("OPENROUTER_API_KEY")
-        
+
         if not self.portkey_api_key or not self.openrouter_api_key:
             raise ValueError("PORTKEY_API_KEY and OPENROUTER_API_KEY must be set")
-        
+
         # Initialize Portkey client with virtual key
         self.client = Portkey(
             api_key=self.portkey_api_key,
@@ -189,16 +190,16 @@ class PortkeyLoadBalancer:
             virtual_key="vkj-openrouter-cc4151",  # Portkey virtual key for OpenRouter
             config=PORTKEY_CONFIG
         )
-        
+
         logger.info("✅ Portkey Load Balancer initialized with REAL multi-model configuration")
-    
+
     async def execute_with_routing(
         self,
-        messages: List[Dict[str, str]],
+        messages: list[dict[str, str]],
         task_type: str = "general",
         stream: bool = False,
         **kwargs
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Execute request with intelligent task-based routing.
         
@@ -211,11 +212,11 @@ class PortkeyLoadBalancer:
         Returns:
             Real API response from load-balanced models
         """
-        
+
         # Get routing configuration for task type
         routing = TASK_ROUTING.get(task_type, {})
         primary_models = routing.get("primary", [])
-        
+
         # Add metadata for tracking
         metadata = {
             "request_id": str(uuid.uuid4()),
@@ -223,11 +224,11 @@ class PortkeyLoadBalancer:
             "routing": "load_balanced",
             "primary_models": primary_models
         }
-        
+
         try:
             # Make REAL API call through Portkey
             logger.info(f"🚀 Executing load-balanced request for {task_type}")
-            
+
             response = await self.client.chat.completions.create(
                 messages=messages,
                 model="auto",  # Let Portkey handle routing
@@ -235,9 +236,9 @@ class PortkeyLoadBalancer:
                 metadata=metadata,
                 **kwargs
             )
-            
-            logger.info(f"✅ Received REAL response from load-balanced models")
-            
+
+            logger.info("✅ Received REAL response from load-balanced models")
+
             if stream:
                 return self._handle_stream(response)
             else:
@@ -250,11 +251,11 @@ class PortkeyLoadBalancer:
                     "real_api_call": True,
                     "load_balanced": True
                 }
-                
+
         except Exception as e:
             logger.error(f"Load balancer error: {str(e)}")
             raise
-    
+
     async def _handle_stream(self, stream):
         """Handle streaming responses from load balancer."""
         async for chunk in stream:
@@ -264,24 +265,24 @@ class PortkeyLoadBalancer:
                     "model": chunk.model if hasattr(chunk, 'model') else "unknown",
                     "real_stream": True
                 }
-    
+
     def get_model_for_task(self, task_type: str) -> str:
         """Get the best model for a specific task type."""
         routing = TASK_ROUTING.get(task_type, {})
         primary = routing.get("primary", [])
-        
+
         if primary:
             return primary[0]
         else:
             # Default to Gemini Flash for general tasks
             return "google/gemini-2.5-flash"
-    
+
     async def execute_on_specific_model(
         self,
-        messages: List[Dict[str, str]],
+        messages: list[dict[str, str]],
         model: str,
         **kwargs
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Execute on a specific model (bypassing load balancer).
         
@@ -293,10 +294,10 @@ class PortkeyLoadBalancer:
         Returns:
             Real API response from specified model
         """
-        
+
         try:
             logger.info(f"🎯 Direct execution on {model}")
-            
+
             response = await self.client.chat.completions.create(
                 messages=messages,
                 model=model,
@@ -307,7 +308,7 @@ class PortkeyLoadBalancer:
                 },
                 **kwargs
             )
-            
+
             return {
                 "success": True,
                 "content": response.choices[0].message.content,
@@ -316,7 +317,7 @@ class PortkeyLoadBalancer:
                 "real_api_call": True,
                 "direct_execution": True
             }
-            
+
         except Exception as e:
             logger.error(f"Direct execution error on {model}: {str(e)}")
             raise

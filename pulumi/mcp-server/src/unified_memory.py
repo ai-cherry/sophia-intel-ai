@@ -4,18 +4,18 @@ Consolidates enhanced_memory.py + supermemory_mcp.py + enhanced_mcp_server.py
 Combines SQLite FTS5, Weaviate vector search, Redis caching, and MCP protocol support.
 """
 
-import os
-import json
 import asyncio
-import logging
 import hashlib
-import sqlite3
-from typing import List, Dict, Any, Optional, Union, AsyncContextManager
-from dataclasses import dataclass, asdict, field
-from datetime import datetime, timedelta
-from pathlib import Path
-from enum import Enum
+import json
+import logging
+import os
 from contextlib import asynccontextmanager
+from dataclasses import asdict, dataclass, field
+from datetime import datetime
+from enum import Enum
+from pathlib import Path
+from typing import Any, AsyncContextManager
+
 import aiosqlite
 
 # Vector database imports
@@ -59,14 +59,14 @@ class MemoryEntry:
     topic: str
     content: str
     source: str
-    tags: List[str] = field(default_factory=list)
+    tags: list[str] = field(default_factory=list)
     timestamp: datetime = field(default_factory=datetime.now)
     memory_type: MemoryType = MemoryType.SEMANTIC
-    embedding_vector: Optional[List[float]] = None
-    hash_id: Optional[str] = None
+    embedding_vector: list[float] | None = None
+    hash_id: str | None = None
     access_count: int = 0
-    last_accessed: Optional[datetime] = None
-    
+    last_accessed: datetime | None = None
+
     def __post_init__(self):
         """Generate hash ID for deduplication."""
         if not self.hash_id:
@@ -74,11 +74,11 @@ class MemoryEntry:
                 f"{self.topic}:{self.content}:{self.source}".encode()
             ).hexdigest()[:16]
             self.hash_id = content_hash
-            
+
         if not self.last_accessed:
             self.last_accessed = self.timestamp
-    
-    def to_dict(self) -> Dict[str, Any]:
+
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for storage."""
         return {
             "hash_id": self.hash_id,
@@ -98,40 +98,40 @@ class MemoryEntry:
 class SearchResult:
     """Enhanced search result with multiple score types."""
     entry: MemoryEntry
-    vector_score: Optional[float] = None
-    fts_score: Optional[float] = None
-    rerank_score: Optional[float] = None
-    combined_score: Optional[float] = None
+    vector_score: float | None = None
+    fts_score: float | None = None
+    rerank_score: float | None = None
+    combined_score: float | None = None
 
 
 @dataclass
 class UnifiedMemoryConfig:
     """Configuration for unified memory system."""
-    
+
     # SQLite configuration
     sqlite_path: str = "data/unified_memory.db"
     enable_fts: bool = True
-    
-    # Weaviate configuration  
+
+    # Weaviate configuration
     weaviate_url: str = os.getenv("WEAVIATE_URL", "http://localhost:8080")
-    weaviate_api_key: Optional[str] = os.getenv("WEAVIATE_API_KEY")
+    weaviate_api_key: str | None = os.getenv("WEAVIATE_API_KEY")
     weaviate_collection: str = "UnifiedMemoryEntries"
-    
+
     # Redis configuration
     redis_url: str = os.getenv("REDIS_URL", "redis://localhost:6379/1")
     cache_ttl: int = 3600  # 1 hour
-    
+
     # Connection pooling (from enhanced_mcp_server.py)
     connection_pool_size: int = 20
     connection_timeout: float = 30.0
     retry_attempts: int = 3
     retry_delay: float = 0.5
-    
+
     # Performance settings
     max_results: int = 50
     search_timeout: float = 5.0
     embedding_batch_size: int = 100
-    
+
     # MCP Protocol settings
     enable_mcp_protocol: bool = True
     mcp_port: int = 8081
@@ -147,34 +147,34 @@ class UnifiedMemoryStore:
     - MCP protocol support (from supermemory_mcp.py)
     - Memory patterns and deduplication (from supermemory_mcp.py)
     """
-    
-    def __init__(self, config: Optional[UnifiedMemoryConfig] = None):
+
+    def __init__(self, config: UnifiedMemoryConfig | None = None):
         self.config = config or UnifiedMemoryConfig()
-        
+
         # Connection management
-        self._connection_pool: Optional[asyncio.Queue] = None
+        self._connection_pool: asyncio.Queue | None = None
         self._pool_initialized = False
         self._metrics = {"requests": 0, "errors": 0, "cache_hits": 0, "cache_misses": 0}
-        
+
         # Clients
         self.weaviate_client = None
         self.redis_client = None
         self._initialized = False
-        
+
     async def initialize(self):
         """Initialize all storage backends with connection pooling."""
         if self._initialized:
             return
-            
+
         # Initialize connection pool
         await self._initialize_connection_pool()
-        
+
         # Initialize Weaviate if available
         if WEAVIATE_AVAILABLE:
             await self._init_weaviate()
         else:
             logger.warning("Weaviate not available, falling back to FTS only")
-        
+
         # Initialize Redis if available
         if REDIS_AVAILABLE:
             try:
@@ -183,19 +183,19 @@ class UnifiedMemoryStore:
                 logger.info("Redis cache initialized")
             except Exception as e:
                 logger.warning(f"Redis not available: {e}")
-        
+
         self._initialized = True
-        
+
     async def _initialize_connection_pool(self):
         """Initialize SQLite connection pool with retry logic."""
         if self._pool_initialized:
             return
-            
+
         self._connection_pool = asyncio.Queue(maxsize=self.config.connection_pool_size)
-        
+
         # Ensure database directory exists
         Path(self.config.sqlite_path).parent.mkdir(parents=True, exist_ok=True)
-        
+
         # Pre-populate pool with connections
         for i in range(self.config.connection_pool_size):
             retry_delay = self.config.retry_delay
@@ -206,11 +206,11 @@ class UnifiedMemoryStore:
                         timeout=self.config.connection_timeout
                     )
                     conn.row_factory = aiosqlite.Row
-                    
+
                     # Initialize schema on first connection
                     if i == 0:
                         await self._initialize_schema(conn)
-                    
+
                     await self._connection_pool.put(conn)
                     break
                 except Exception as e:
@@ -219,10 +219,10 @@ class UnifiedMemoryStore:
                         raise
                     await asyncio.sleep(retry_delay)
                     retry_delay *= 2
-        
+
         self._pool_initialized = True
         logger.info(f"Initialized SQLite connection pool with {self.config.connection_pool_size} connections")
-    
+
     async def _initialize_schema(self, conn: aiosqlite.Connection):
         """Initialize database schema with all features."""
         # Main memory table
@@ -242,7 +242,7 @@ class UnifiedMemoryStore:
                 embedding_vector TEXT  -- JSON array
             )
         """)
-        
+
         # FTS5 index for full-text search
         if self.config.enable_fts:
             await conn.execute("""
@@ -256,7 +256,7 @@ class UnifiedMemoryStore:
                     tokenize='porter unicode61'
                 )
             """)
-            
+
             # FTS triggers
             await conn.execute("""
                 CREATE TRIGGER IF NOT EXISTS memory_fts_insert AFTER INSERT ON memory_entries
@@ -265,7 +265,7 @@ class UnifiedMemoryStore:
                     VALUES (new.id, new.hash_id, new.topic, new.content, new.tags);
                 END
             """)
-            
+
             await conn.execute("""
                 CREATE TRIGGER IF NOT EXISTS memory_fts_delete AFTER DELETE ON memory_entries
                 BEGIN
@@ -273,22 +273,22 @@ class UnifiedMemoryStore:
                     VALUES('delete', old.id, old.hash_id, old.topic, old.content, old.tags);
                 END
             """)
-        
+
         # Performance indexes
         await conn.execute("CREATE INDEX IF NOT EXISTS idx_hash_id ON memory_entries(hash_id)")
         await conn.execute("CREATE INDEX IF NOT EXISTS idx_memory_type ON memory_entries(memory_type)")
         await conn.execute("CREATE INDEX IF NOT EXISTS idx_source ON memory_entries(source)")
         await conn.execute("CREATE INDEX IF NOT EXISTS idx_created_at ON memory_entries(created_at)")
         await conn.execute("CREATE INDEX IF NOT EXISTS idx_access_count ON memory_entries(access_count DESC)")
-        
+
         await conn.commit()
-    
+
     @asynccontextmanager
     async def get_connection(self) -> AsyncContextManager[aiosqlite.Connection]:
         """Get database connection from pool with timeout."""
         if not self._pool_initialized:
             await self._initialize_connection_pool()
-        
+
         try:
             # Get connection with timeout
             conn = await asyncio.wait_for(
@@ -300,7 +300,7 @@ class UnifiedMemoryStore:
             # Return connection to pool
             if 'conn' in locals():
                 await self._connection_pool.put(conn)
-    
+
     async def _init_weaviate(self):
         """Initialize Weaviate vector database."""
         try:
@@ -315,9 +315,9 @@ class UnifiedMemoryStore:
                 port = 8080
                 if ":" in self.config.weaviate_url:
                     port = int(self.config.weaviate_url.split(":")[-1])
-                    
+
                 self.weaviate_client = weaviate.connect_to_local(host=host, port=port)
-            
+
             # Create collection if it doesn't exist
             if not self.weaviate_client.collections.exists(self.config.weaviate_collection):
                 self.weaviate_client.collections.create(
@@ -338,16 +338,16 @@ class UnifiedMemoryStore:
                 logger.info(f"Created Weaviate collection: {self.config.weaviate_collection}")
             else:
                 logger.info(f"Using existing Weaviate collection: {self.config.weaviate_collection}")
-                
+
         except Exception as e:
             logger.error(f"Failed to initialize Weaviate: {e}")
             self.weaviate_client = None
-    
-    async def add_memory(self, entry: MemoryEntry, deduplicate: bool = True) -> Dict[str, Any]:
+
+    async def add_memory(self, entry: MemoryEntry, deduplicate: bool = True) -> dict[str, Any]:
         """Add memory entry with deduplication and multi-backend storage."""
         await self.initialize()
         start_time = asyncio.get_event_loop().time()
-        
+
         async with self.get_connection() as conn:
             # Check for duplicates if enabled
             if deduplicate:
@@ -356,7 +356,7 @@ class UnifiedMemoryStore:
                     (entry.hash_id,)
                 )
                 existing = await cursor.fetchone()
-                
+
                 if existing:
                     # Update access count
                     await conn.execute("""
@@ -366,7 +366,7 @@ class UnifiedMemoryStore:
                         WHERE hash_id = ?
                     """, (entry.hash_id,))
                     await conn.commit()
-                    
+
                     latency_ms = (asyncio.get_event_loop().time() - start_time) * 1000
                     return {
                         "status": "duplicate",
@@ -374,7 +374,7 @@ class UnifiedMemoryStore:
                         "latency_ms": latency_ms,
                         "previous_access_count": existing["access_count"]
                     }
-            
+
             # Insert new entry
             entry_dict = entry.to_dict()
             await conn.execute("""
@@ -392,7 +392,7 @@ class UnifiedMemoryStore:
                 0
             ))
             await conn.commit()
-        
+
         # Add to Weaviate if available
         if self.weaviate_client:
             try:
@@ -410,17 +410,17 @@ class UnifiedMemoryStore:
                 )
             except Exception as e:
                 logger.warning(f"Failed to add to Weaviate: {e}")
-        
+
         # Invalidate cache
         if self.redis_client:
             try:
                 await self._invalidate_search_cache(entry.topic)
             except Exception as e:
                 logger.warning(f"Cache invalidation failed: {e}")
-        
+
         latency_ms = (asyncio.get_event_loop().time() - start_time) * 1000
         self._metrics["requests"] += 1
-        
+
         logger.info(f"Added memory entry: {entry.hash_id} ({latency_ms:.0f}ms)")
         return {
             "status": "added",
@@ -435,17 +435,17 @@ class UnifiedMemoryStore:
         self,
         query: str,
         limit: int = 10,
-        memory_type: Optional[MemoryType] = None,
+        memory_type: MemoryType | None = None,
         use_vector: bool = True,
         use_fts: bool = True,
         rerank: bool = True
-    ) -> List[SearchResult]:
+    ) -> list[SearchResult]:
         """Enhanced memory search with multiple retrieval methods."""
         await self.initialize()
-        
+
         # Check cache first
         cache_key = f"search:{hashlib.md5(f'{query}:{limit}:{memory_type}:{use_vector}:{use_fts}:{rerank}'.encode()).hexdigest()}"
-        
+
         if self.redis_client:
             try:
                 cached = await self.redis_client.get(cache_key)
@@ -457,9 +457,9 @@ class UnifiedMemoryStore:
                     self._metrics["cache_misses"] += 1
             except Exception as e:
                 logger.warning(f"Cache retrieval failed: {e}")
-        
+
         results = []
-        
+
         # Vector search if available and requested
         if use_vector and self.weaviate_client:
             try:
@@ -467,7 +467,7 @@ class UnifiedMemoryStore:
                 results.extend(vector_results)
             except Exception as e:
                 logger.error(f"Vector search failed: {e}")
-        
+
         # FTS search if requested
         if use_fts and self.config.enable_fts:
             try:
@@ -475,20 +475,20 @@ class UnifiedMemoryStore:
                 results.extend(fts_results)
             except Exception as e:
                 logger.error(f"FTS search failed: {e}")
-        
+
         # Combine and deduplicate results
         results = self._combine_results(results, limit)
-        
+
         # Re-rank if requested
         if rerank and len(results) > 1:
             try:
                 results = await self._rerank_results(query, results)
             except Exception as e:
                 logger.warning(f"Re-ranking failed: {e}")
-        
+
         # Update access statistics
         await self._update_access_stats([r.entry.hash_id for r in results])
-        
+
         # Cache results
         if self.redis_client and results:
             try:
@@ -496,22 +496,22 @@ class UnifiedMemoryStore:
                 await self.redis_client.setex(cache_key, self.config.cache_ttl, cache_data)
             except Exception as e:
                 logger.warning(f"Cache storage failed: {e}")
-        
+
         return results[:limit]
 
-    async def _vector_search(self, query: str, limit: int, memory_type: Optional[MemoryType]) -> List[SearchResult]:
+    async def _vector_search(self, query: str, limit: int, memory_type: MemoryType | None) -> list[SearchResult]:
         """Vector similarity search implementation."""
         if not self.weaviate_client:
             return []
-            
+
         try:
             collection = self.weaviate_client.collections.get(self.config.weaviate_collection)
-            
+
             # Build where filter for memory type
             where_filter = None
             if memory_type:
                 where_filter = wvc.query.Filter.by_property("memory_type").equal(memory_type.value)
-            
+
             # Perform vector search
             response = collection.query.near_text(
                 query=query,
@@ -519,7 +519,7 @@ class UnifiedMemoryStore:
                 where=where_filter,
                 return_metadata=wvc.query.MetadataQuery(distance=True)
             )
-            
+
             results = []
             for obj in response.objects:
                 # Create memory entry from Weaviate object
@@ -531,30 +531,30 @@ class UnifiedMemoryStore:
                     memory_type=MemoryType(obj.properties.get("memory_type", MemoryType.SEMANTIC.value)),
                     hash_id=obj.properties.get("hash_id", "")
                 )
-                
+
                 # Calculate vector score (1 - distance for similarity)
                 vector_score = 1.0 - obj.metadata.distance if obj.metadata.distance else 0.0
-                
+
                 results.append(SearchResult(
                     entry=entry,
                     vector_score=vector_score
                 ))
-            
+
             return results
-            
+
         except Exception as e:
             logger.error(f"Vector search failed: {e}")
             return []
-        
-    async def _fts_search(self, query: str, limit: int, memory_type: Optional[MemoryType]) -> List[SearchResult]:
+
+    async def _fts_search(self, query: str, limit: int, memory_type: MemoryType | None) -> list[SearchResult]:
         """Full-text search implementation."""
         if not self.config.enable_fts:
             return []
-            
+
         try:
             async with self.get_connection() as conn:
                 # Build FTS query
-                fts_query = f"""
+                fts_query = """
                     SELECT me.*,
                            bm25(memory_fts) as fts_score,
                            snippet(memory_fts, 1, '<b>', '</b>', '...', 32) as snippet
@@ -562,20 +562,20 @@ class UnifiedMemoryStore:
                     JOIN memory_entries me ON memory_fts.rowid = me.id
                     WHERE memory_fts MATCH ?
                 """
-                
+
                 params = [query]
-                
+
                 # Add memory type filter if specified
                 if memory_type:
                     fts_query += " AND me.memory_type = ?"
                     params.append(memory_type.value)
-                
+
                 fts_query += " ORDER BY bm25(memory_fts) LIMIT ?"
                 params.append(limit)
-                
+
                 cursor = await conn.execute(fts_query, params)
                 rows = await cursor.fetchall()
-                
+
                 results = []
                 for row in rows:
                     # Create memory entry from row
@@ -587,69 +587,69 @@ class UnifiedMemoryStore:
                         memory_type=MemoryType(row["memory_type"]),
                         hash_id=row["hash_id"]
                     )
-                    
+
                     results.append(SearchResult(
                         entry=entry,
                         fts_score=float(row["fts_score"])
                     ))
-                
+
                 return results
-                
+
         except Exception as e:
             logger.error(f"FTS search failed: {e}")
             return []
-        
-    def _combine_results(self, results: List[SearchResult], limit: int) -> List[SearchResult]:
+
+    def _combine_results(self, results: list[SearchResult], limit: int) -> list[SearchResult]:
         """Combine and deduplicate search results."""
         if not results:
             return []
-        
+
         # Deduplicate by hash_id
         seen_hashes = set()
         unique_results = []
-        
+
         for result in results:
             hash_id = result.entry.hash_id
             if hash_id not in seen_hashes:
                 seen_hashes.add(hash_id)
                 unique_results.append(result)
-        
+
         # Combine scores using weighted average
         for result in unique_results:
             scores = []
             weights = []
-            
+
             if result.vector_score is not None:
                 scores.append(result.vector_score)
                 weights.append(0.7)  # Higher weight for vector similarity
-            
+
             if result.fts_score is not None:
                 # Normalize FTS score (BM25 can be negative)
                 normalized_fts = max(0, min(1, result.fts_score / 10))
                 scores.append(normalized_fts)
                 weights.append(0.3)
-            
+
             if scores:
-                result.combined_score = sum(s * w for s, w in zip(scores, weights)) / sum(weights)
+                result.combined_score = sum(s * w for s, w in zip(scores, weights, strict=False)) / sum(weights)
             else:
                 result.combined_score = 0.0
-        
+
         # Sort by combined score and return top results
         unique_results.sort(key=lambda r: r.combined_score or 0, reverse=True)
         return unique_results[:limit]
-        
-    async def _rerank_results(self, query: str, results: List[SearchResult]) -> List[SearchResult]:
+
+    async def _rerank_results(self, query: str, results: list[SearchResult]) -> list[SearchResult]:
         """Re-rank results using LLM with error handling."""
         if len(results) <= 1:
             return results
-            
+
         try:
             # Prepare content for re-ranking
             contexts = []
             for i, result in enumerate(results):
                 context = f"{i+1}. {result.entry.topic}: {result.entry.content[:200]}..."
                 contexts.append(context)
-            
+
             # Create re-ranking prompt
             rerank_prompt = f"""
             Given the query: "{query}"
@@ -660,16 +660,16 @@ class UnifiedMemoryStore:
             
             Return only the numbers in order of relevance (e.g., "3,1,4,2"):
             """
-            
+
             # Use real_executor for re-ranking if available
             if REAL_EXECUTOR_AVAILABLE and real_executor:
                 try:
                     response = await real_executor.execute(rerank_prompt, model="anthropic/claude-3-haiku-20240307")
-                    
+
                     # Parse ranking response
                     ranking_str = response.strip()
                     rankings = [int(x.strip()) - 1 for x in ranking_str.split(",")]  # Convert to 0-based
-                    
+
                     # Reorder results based on ranking
                     reranked = []
                     for rank_idx in rankings:
@@ -678,34 +678,34 @@ class UnifiedMemoryStore:
                             # Update rerank score based on position
                             result.rerank_score = 1.0 - (len(reranked) / len(results))
                             reranked.append(result)
-                    
+
                     # Add any missing results
                     for i, result in enumerate(results):
                         if result not in reranked:
                             result.rerank_score = 0.1  # Low score for unranked
                             reranked.append(result)
-                    
+
                     return reranked
-                    
+
                 except Exception as api_error:
                     logger.warning(f"LLM re-ranking failed, using score-based fallback: {api_error}")
             else:
                 logger.debug("Real executor not available, using score-based ranking")
-            
+
             # Fallback to score-based ranking
             for i, result in enumerate(results):
                 result.rerank_score = 1.0 - (i / len(results))
             return sorted(results, key=lambda r: r.combined_score or 0, reverse=True)
-                
+
         except Exception as e:
             logger.error(f"Re-ranking failed completely: {e}")
             return results
-        
-    async def _update_access_stats(self, hash_ids: List[str]):
+
+    async def _update_access_stats(self, hash_ids: list[str]):
         """Update access statistics."""
         if not hash_ids:
             return
-            
+
         try:
             async with self.get_connection() as conn:
                 # Update access count and last accessed time for all hash_ids
@@ -717,19 +717,19 @@ class UnifiedMemoryStore:
                     WHERE hash_id IN ({placeholders})
                 """, hash_ids)
                 await conn.commit()
-                
+
         except Exception as e:
             logger.error(f"Failed to update access stats: {e}")
-        
+
     async def _invalidate_search_cache(self, topic: str):
         """Invalidate search cache."""
         if not self.redis_client:
             return
-            
+
         try:
             # Find all cache keys related to this topic
             pattern = f"search:*{hashlib.md5(topic.encode()).hexdigest()[:8]}*"
-            
+
             # Use scan to find matching keys
             keys = []
             cursor = 0
@@ -738,16 +738,16 @@ class UnifiedMemoryStore:
                 keys.extend(batch_keys)
                 if cursor == 0:
                     break
-            
+
             # Delete matching keys
             if keys:
                 await self.redis_client.delete(*keys)
                 logger.debug(f"Invalidated {len(keys)} cache entries for topic: {topic}")
-                
+
         except Exception as e:
             logger.warning(f"Cache invalidation failed: {e}")
 
-    async def get_stats(self) -> Dict[str, Any]:
+    async def get_stats(self) -> dict[str, Any]:
         """Get comprehensive memory statistics."""
         stats = {
             "connections": {
@@ -761,34 +761,34 @@ class UnifiedMemoryStore:
                 "redis": self.redis_client is not None
             }
         }
-        
+
         # Get detailed stats from database
         async with self.get_connection() as conn:
             cursor = await conn.execute("SELECT COUNT(*) FROM memory_entries")
             total_entries = (await cursor.fetchone())[0]
-            
+
             cursor = await conn.execute("""
                 SELECT memory_type, COUNT(*) 
                 FROM memory_entries 
                 GROUP BY memory_type
             """)
             by_type = dict(await cursor.fetchall())
-            
+
             stats.update({
                 "total_entries": total_entries,
                 "by_type": by_type
             })
-        
+
         return stats
 
     async def close(self):
         """Gracefully close all connections."""
         if self.weaviate_client:
             self.weaviate_client.close()
-            
+
         if self.redis_client:
             await self.redis_client.close()
-            
+
         if self._connection_pool:
             # Close all pooled connections
             connections = []
@@ -798,10 +798,10 @@ class UnifiedMemoryStore:
                     connections.append(conn)
                 except asyncio.QueueEmpty:
                     break
-            
+
             for conn in connections:
                 await conn.close()
-                
+
         logger.info("Unified memory store closed")
 
 

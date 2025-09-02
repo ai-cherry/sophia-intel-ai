@@ -5,27 +5,22 @@ Part of 2025 Memory Stack Modernization
 """
 
 import asyncio
-import time
 import logging
-from typing import Dict, Any, List, Optional, Literal, Tuple
+import time
 from dataclasses import dataclass
 from enum import Enum
-import numpy as np
+from typing import Any
 
 from app.memory.advanced_embedding_router import (
     AdvancedEmbeddingRouter,
     ContentType,
-    EmbeddingResult
 )
+from app.memory.crdt_memory_sync import CRDTMemoryStore
 from app.memory.hybrid_vector_manager import (
+    CollectionConfig,
     HybridVectorManager,
     QueryType,
     VectorSearchResult,
-    CollectionConfig
-)
-from app.memory.crdt_memory_sync import (
-    CRDTMemoryStore,
-    MemoryOperation
 )
 
 logger = logging.getLogger(__name__)
@@ -42,11 +37,11 @@ class RetrievalLevel(Enum):
 class MemoryEntry:
     """Unified memory entry"""
     id: str
-    content: Dict[str, Any]
-    embeddings: List[float]
-    metadata: Dict[str, Any]
-    tags: List[str]
-    hierarchy: Dict[str, Any]  # Document/section/snippet info
+    content: dict[str, Any]
+    embeddings: list[float]
+    metadata: dict[str, Any]
+    tags: list[str]
+    hierarchy: dict[str, Any]  # Document/section/snippet info
     timestamp: float
     agent_id: str
 
@@ -54,12 +49,12 @@ class MemoryEntry:
 @dataclass
 class RetrievalResult:
     """Unified retrieval result"""
-    entries: List[MemoryEntry]
+    entries: list[MemoryEntry]
     query: str
     level: RetrievalLevel
     total_results: int
     latency_ms: float
-    sources: List[str]  # Which databases were used
+    sources: list[str]  # Which databases were used
 
 
 class UnifiedMemoryStore:
@@ -73,7 +68,7 @@ class UnifiedMemoryStore:
     - Ontology-driven tagging
     - Real-time performance monitoring
     """
-    
+
     def __init__(
         self,
         agent_id: str,
@@ -91,16 +86,16 @@ class UnifiedMemoryStore:
         self.agent_id = agent_id
         self.enable_sync = enable_sync
         self.cache_size = cache_size
-        
+
         # Initialize components
         self.embedding_router = AdvancedEmbeddingRouter()
         self.vector_manager = HybridVectorManager()
         self.crdt_store = CRDTMemoryStore(agent_id) if enable_sync else None
-        
+
         # Memory cache
-        self.cache: Dict[str, MemoryEntry] = {}
-        self.cache_order: List[str] = []
-        
+        self.cache: dict[str, MemoryEntry] = {}
+        self.cache_order: list[str] = []
+
         # Performance metrics
         self.metrics = {
             'total_memories': 0,
@@ -110,15 +105,15 @@ class UnifiedMemoryStore:
             'cache_hits': 0,
             'cache_misses': 0
         }
-        
+
         # Initialize collections
         self._initialized = False
-    
+
     async def initialize(self):
         """Initialize memory store and create collections"""
         if self._initialized:
             return
-        
+
         # Create vector collections
         config = CollectionConfig(
             name="sophia_unified_memory",
@@ -133,21 +128,21 @@ class UnifiedMemoryStore:
                 {"name": "timestamp", "type": "number"}
             ]
         )
-        
+
         await self.vector_manager.create_collection(config, target="both")
-        
+
         # Start CRDT sync if enabled
         if self.crdt_store:
             await self.crdt_store.start()
-        
+
         self._initialized = True
         logger.info(f"Initialized unified memory store for agent {self.agent_id}")
-    
+
     async def store(
         self,
-        content: Dict[str, Any],
-        metadata: Optional[Dict[str, Any]] = None,
-        tags: Optional[List[str]] = None,
+        content: dict[str, Any],
+        metadata: dict[str, Any] | None = None,
+        tags: list[str] | None = None,
         auto_tag: bool = True
     ) -> str:
         """
@@ -163,27 +158,27 @@ class UnifiedMemoryStore:
             Memory ID
         """
         start_time = time.perf_counter()
-        
+
         # Generate memory ID
         memory_id = f"{self.agent_id}_{time.time_ns()}"
-        
+
         # Extract text for embedding
         text = self._extract_text(content)
-        
+
         # Detect content type
         content_type = self._detect_content_type(content)
-        
+
         # Generate embeddings
         embedding_result = await self.embedding_router.get_embeddings(
             text, content_type
         )
         embeddings = embedding_result.embeddings[0]
-        
+
         # Auto-generate tags if enabled
         if auto_tag:
             auto_tags = await self._auto_generate_tags(content, text)
             tags = (tags or []) + auto_tags
-        
+
         # Create memory entry
         entry = MemoryEntry(
             id=memory_id,
@@ -195,7 +190,7 @@ class UnifiedMemoryStore:
             timestamp=time.time(),
             agent_id=self.agent_id
         )
-        
+
         # Store in vector databases
         await self.vector_manager.insert_vectors(
             collection="sophia_unified_memory",
@@ -210,7 +205,7 @@ class UnifiedMemoryStore:
             }],
             target="both"  # Store in both Weaviate and Milvus
         )
-        
+
         # Store in CRDT if sync enabled
         if self.crdt_store:
             await self.crdt_store.add_memory(
@@ -222,24 +217,24 @@ class UnifiedMemoryStore:
                     "embeddings": embeddings
                 }
             )
-        
+
         # Update cache
         self._update_cache(entry)
-        
+
         # Update metrics
         latency_ms = (time.perf_counter() - start_time) * 1000
         self._update_metrics('store', latency_ms)
-        
+
         logger.debug(f"Stored memory {memory_id} in {latency_ms:.2f}ms")
-        
+
         return memory_id
-    
+
     async def retrieve(
         self,
         query: str,
         level: RetrievalLevel = RetrievalLevel.DOCUMENT,
         limit: int = 10,
-        filters: Optional[Dict[str, Any]] = None,
+        filters: dict[str, Any] | None = None,
         use_cache: bool = True
     ) -> RetrievalResult:
         """
@@ -256,7 +251,7 @@ class UnifiedMemoryStore:
             Retrieval results
         """
         start_time = time.perf_counter()
-        
+
         # Check cache first
         if use_cache:
             cache_key = f"{query}:{level.value}:{limit}"
@@ -271,9 +266,9 @@ class UnifiedMemoryStore:
                     latency_ms=0.1,
                     sources=['cache']
                 )
-        
+
         self.metrics['cache_misses'] += 1
-        
+
         # Perform hierarchical retrieval
         if level == RetrievalLevel.DOCUMENT:
             results = await self._document_level_retrieval(query, filters, limit)
@@ -281,7 +276,7 @@ class UnifiedMemoryStore:
             results = await self._section_level_retrieval(query, filters, limit)
         else:  # SNIPPET
             results = await self._snippet_level_retrieval(query, filters, limit)
-        
+
         # Convert to memory entries
         entries = []
         for result in results:
@@ -296,7 +291,7 @@ class UnifiedMemoryStore:
                 agent_id=result.metadata.get('agent_id', '')
             )
             entries.append(entry)
-        
+
         # Create retrieval result
         retrieval_result = RetrievalResult(
             entries=entries,
@@ -306,18 +301,18 @@ class UnifiedMemoryStore:
             latency_ms=(time.perf_counter() - start_time) * 1000,
             sources=list(set(r.source for r in results))
         )
-        
+
         # Update metrics
         self._update_metrics('retrieve', retrieval_result.latency_ms)
-        
+
         return retrieval_result
-    
+
     async def _document_level_retrieval(
         self,
         query: str,
-        filters: Optional[Dict],
+        filters: dict | None,
         limit: int
-    ) -> List[VectorSearchResult]:
+    ) -> list[VectorSearchResult]:
         """Document-level retrieval (coarse-grained)"""
         # Use Weaviate for hybrid search
         results = await self.vector_manager.route_query(
@@ -328,11 +323,11 @@ class UnifiedMemoryStore:
             alpha=0.7,  # Balance vector and keyword
             limit=limit * 2  # Get more for filtering
         )
-        
+
         # Filter to document-level results
         document_results = []
         seen_docs = set()
-        
+
         for result in results:
             doc_id = result.metadata.get('document_id', result.id)
             if doc_id not in seen_docs:
@@ -340,30 +335,30 @@ class UnifiedMemoryStore:
                 seen_docs.add(doc_id)
                 if len(document_results) >= limit:
                     break
-        
+
         return document_results
-    
+
     async def _section_level_retrieval(
         self,
         query: str,
-        filters: Optional[Dict],
+        filters: dict | None,
         limit: int
-    ) -> List[VectorSearchResult]:
+    ) -> list[VectorSearchResult]:
         """Section-level retrieval (medium-grained)"""
         # First get documents
         doc_results = await self._document_level_retrieval(
             query, filters, limit * 2
         )
-        
+
         # Then search within documents for sections
         section_results = []
-        
+
         for doc in doc_results:
             # Generate query embedding
             query_embedding = await self.embedding_router.get_embeddings(
                 query, ContentType.SHORT_TEXT
             )
-            
+
             # Search for sections within document
             sections = await self.vector_manager.route_query(
                 QueryType.ANALYTICS,
@@ -372,34 +367,34 @@ class UnifiedMemoryStore:
                 filters=f"document_id == '{doc.id}'",
                 top_k=5
             )
-            
+
             section_results.extend(sections[:2])  # Take top 2 sections per doc
-            
+
             if len(section_results) >= limit:
                 break
-        
+
         return section_results[:limit]
-    
+
     async def _snippet_level_retrieval(
         self,
         query: str,
-        filters: Optional[Dict],
+        filters: dict | None,
         limit: int
-    ) -> List[VectorSearchResult]:
+    ) -> list[VectorSearchResult]:
         """Snippet-level retrieval (fine-grained)"""
         # Get sections first
         section_results = await self._section_level_retrieval(
             query, filters, limit * 2
         )
-        
+
         # Extract snippets from sections
         snippet_results = []
-        
+
         for section in section_results:
             # Extract relevant snippets using reranking
             content_text = str(section.content.get('text', ''))
             snippets = self._extract_snippets(content_text, query)
-            
+
             for snippet in snippets[:2]:  # Take top 2 snippets per section
                 # Create snippet result
                 snippet_result = VectorSearchResult(
@@ -412,19 +407,19 @@ class UnifiedMemoryStore:
                     latency_ms=0
                 )
                 snippet_results.append(snippet_result)
-                
+
                 if len(snippet_results) >= limit:
                     break
-            
+
             if len(snippet_results) >= limit:
                 break
-        
+
         return snippet_results[:limit]
-    
+
     async def update(
         self,
         memory_id: str,
-        updates: Dict[str, Any],
+        updates: dict[str, Any],
         regenerate_embeddings: bool = True
     ) -> bool:
         """
@@ -443,21 +438,21 @@ class UnifiedMemoryStore:
             success = await self.crdt_store.update_memory(memory_id, updates)
             if not success:
                 return False
-        
+
         # Regenerate embeddings if needed
         if regenerate_embeddings:
             text = self._extract_text(updates)
             embedding_result = await self.embedding_router.get_embeddings(text)
-            
+
             # Update in vector databases
             # Note: This would require database-specific update operations
             logger.info(f"Updated embeddings for memory {memory_id}")
-        
+
         # Invalidate cache
         self._invalidate_cache(memory_id)
-        
+
         return True
-    
+
     async def delete(self, memory_id: str) -> bool:
         """
         Delete memory
@@ -471,18 +466,18 @@ class UnifiedMemoryStore:
         # Delete from CRDT store
         if self.crdt_store:
             await self.crdt_store.delete_memory(memory_id)
-        
+
         # Delete from vector databases
         await self.vector_manager.weaviate_client.delete_object(
             "sophia_unified_memory", memory_id
         )
-        
+
         # Invalidate cache
         self._invalidate_cache(memory_id)
-        
+
         return True
-    
-    async def sync_with_peers(self, peer_stores: List['UnifiedMemoryStore']):
+
+    async def sync_with_peers(self, peer_stores: list['UnifiedMemoryStore']):
         """
         Synchronize with peer memory stores
         
@@ -492,15 +487,15 @@ class UnifiedMemoryStore:
         if not self.crdt_store:
             logger.warning("CRDT sync not enabled")
             return
-        
+
         for peer in peer_stores:
             if peer.crdt_store:
                 self.crdt_store.add_peer(peer.agent_id, peer.crdt_store)
                 peer.crdt_store.add_peer(self.agent_id, self.crdt_store)
-        
+
         logger.info(f"Connected to {len(peer_stores)} peer stores")
-    
-    def _extract_text(self, content: Dict[str, Any]) -> str:
+
+    def _extract_text(self, content: dict[str, Any]) -> str:
         """Extract text from content for embedding"""
         if 'text' in content:
             return content['text']
@@ -509,12 +504,12 @@ class UnifiedMemoryStore:
         else:
             # Convert dict to text representation
             return ' '.join(str(v) for v in content.values())
-    
-    def _detect_content_type(self, content: Dict[str, Any]) -> ContentType:
+
+    def _detect_content_type(self, content: dict[str, Any]) -> ContentType:
         """Detect content type from content"""
         if 'code' in content or 'language' in content:
             return ContentType.CODE
-        
+
         text = self._extract_text(content)
         if len(text.split()) > 2000:
             return ContentType.LONG_TEXT
@@ -522,8 +517,8 @@ class UnifiedMemoryStore:
             return ContentType.MEDIUM_TEXT
         else:
             return ContentType.SHORT_TEXT
-    
-    def _extract_hierarchy(self, content: Dict[str, Any]) -> Dict[str, Any]:
+
+    def _extract_hierarchy(self, content: dict[str, Any]) -> dict[str, Any]:
         """Extract hierarchical information"""
         return {
             'document_id': content.get('document_id', ''),
@@ -531,12 +526,12 @@ class UnifiedMemoryStore:
             'snippet_id': content.get('snippet_id', ''),
             'level': content.get('level', 'document')
         }
-    
-    def _extract_snippets(self, text: str, query: str, snippet_size: int = 200) -> List[str]:
+
+    def _extract_snippets(self, text: str, query: str, snippet_size: int = 200) -> list[str]:
         """Extract relevant snippets from text"""
         words = text.split()
         query_words = set(query.lower().split())
-        
+
         snippets = []
         for i in range(0, len(words), snippet_size // 2):
             snippet = ' '.join(words[i:i + snippet_size])
@@ -545,52 +540,52 @@ class UnifiedMemoryStore:
             overlap = len(query_words & snippet_words)
             if overlap > 0:
                 snippets.append((snippet, overlap))
-        
+
         # Sort by relevance
         snippets.sort(key=lambda x: x[1], reverse=True)
-        
+
         return [s[0] for s in snippets[:5]]
-    
-    async def _auto_generate_tags(self, content: Dict[str, Any], text: str) -> List[str]:
+
+    async def _auto_generate_tags(self, content: dict[str, Any], text: str) -> list[str]:
         """Auto-generate tags from content"""
         tags = []
-        
+
         # Extract entity types
         if 'type' in content:
             tags.append(f"type:{content['type']}")
-        
+
         # Extract language for code
         if 'language' in content:
             tags.append(f"lang:{content['language']}")
-        
+
         # Extract domain
         if 'domain' in content:
             tags.append(f"domain:{content['domain']}")
-        
+
         # Add agent tag
         tags.append(f"agent:{self.agent_id}")
-        
+
         # Add timestamp tag
         tags.append(f"time:{int(time.time() // 3600)}")  # Hourly buckets
-        
+
         return tags
-    
+
     def _update_cache(self, entry: MemoryEntry):
         """Update memory cache"""
         if len(self.cache) >= self.cache_size:
             # Remove oldest entry
             oldest = self.cache_order.pop(0)
             del self.cache[oldest]
-        
+
         self.cache[entry.id] = entry
         self.cache_order.append(entry.id)
-    
+
     def _invalidate_cache(self, memory_id: str):
         """Invalidate cache entry"""
         if memory_id in self.cache:
             del self.cache[memory_id]
             self.cache_order.remove(memory_id)
-    
+
     def _update_metrics(self, operation: str, latency_ms: float):
         """Update performance metrics"""
         if operation == 'store':
@@ -603,8 +598,8 @@ class UnifiedMemoryStore:
             n = self.metrics['total_retrievals']
             prev_avg = self.metrics['avg_retrieval_latency_ms']
             self.metrics['avg_retrieval_latency_ms'] = (prev_avg * (n - 1) + latency_ms) / n
-    
-    def get_metrics(self) -> Dict[str, Any]:
+
+    def get_metrics(self) -> dict[str, Any]:
         """Get comprehensive metrics"""
         metrics = {
             **self.metrics,
@@ -617,17 +612,17 @@ class UnifiedMemoryStore:
                 else 0
             )
         }
-        
+
         if self.crdt_store:
             metrics['crdt_metrics'] = self.crdt_store.get_state_snapshot()
-        
+
         return metrics
-    
+
     async def close(self):
         """Clean up resources"""
         if self.crdt_store:
             await self.crdt_store.stop()
-        
+
         logger.info(f"Closed unified memory store for agent {self.agent_id}")
 
 
@@ -637,7 +632,7 @@ if __name__ == "__main__":
         # Create memory store
         store = UnifiedMemoryStore("test-agent")
         await store.initialize()
-        
+
         # Store memory
         memory_id = await store.store(
             content={
@@ -649,7 +644,7 @@ if __name__ == "__main__":
             tags=["ml", "algorithms", "test"]
         )
         print(f"Stored memory: {memory_id}")
-        
+
         # Retrieve at different levels
         doc_results = await store.retrieve(
             "machine learning",
@@ -657,22 +652,22 @@ if __name__ == "__main__":
             limit=5
         )
         print(f"Document results: {doc_results.total_results}")
-        
+
         section_results = await store.retrieve(
             "algorithms",
             level=RetrievalLevel.SECTION,
             limit=5
         )
         print(f"Section results: {section_results.total_results}")
-        
+
         # Show metrics
         metrics = store.get_metrics()
-        print(f"\nMetrics:")
+        print("\nMetrics:")
         print(f"  Total memories: {metrics['total_memories']}")
         print(f"  Avg store latency: {metrics['avg_store_latency_ms']:.2f}ms")
         print(f"  Cache hit rate: {metrics['cache_hit_rate']:.2%}")
-        
+
         # Cleanup
         await store.close()
-    
+
     asyncio.run(test_unified_memory())

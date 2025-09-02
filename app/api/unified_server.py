@@ -1,8 +1,9 @@
-import os
-import logging
 import asyncio
+import logging
+import os
 from datetime import datetime
-from typing import List, Dict, Any, Optional
+from typing import Any
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
@@ -13,30 +14,31 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Initialize global services
+from app.api.openrouter_gateway import OpenRouterGateway
 from app.api.portkey_loadbalance_config import initialize_portkey_balancer
 from app.swarms.communication.message_bus import MessageBus
-from app.api.openrouter_gateway import OpenRouterGateway
 
 portkey_balancer = None
 message_bus_instance = MessageBus()
 openrouter_gateway = OpenRouterGateway()
 
-from app.api.embedding_endpoints import router as embedding_router
-from app.api.memory.memory_endpoints import router as memory_router
-from app.api.repository.repo_service import router as repo_router
+from app.api.auth import router as auth_router
 from app.api.cost_dashboard import router as cost_dashboard_router
-from app.api.hub.hub_controller import router as hub_router
+from app.api.embedding_endpoints import router as embedding_router
+
 # from app.api.openrouter_gateway import router as openrouter_router  # No router exported
 from app.api.graph_endpoints import router as graph_router
-from app.api.unified_gateway import router as unified_gateway_router
 from app.api.health import router as health_router
-from app.api.auth import router as auth_router
-from app.api.portkey_router_endpoints import router as portkey_router
-from app.api.resilient_websocket_endpoints import router as resilient_ws_router
+from app.api.hub.hub_controller import router as hub_router
 from app.api.infrastructure_router import router as infrastructure_router
-from app.ui.unified.chat_orchestrator import router as orchestrator_router
-from app.api.routers.teams import router as teams_router
+from app.api.memory.memory_endpoints import router as memory_router
+from app.api.portkey_router_endpoints import router as portkey_router
+from app.api.repository.repo_service import router as repo_router
+from app.api.resilient_websocket_endpoints import router as resilient_ws_router
 from app.api.routers.memory import router as memory_api_router
+from app.api.routers.teams import router as teams_router
+from app.api.unified_gateway import router as unified_gateway_router
+from app.ui.unified.chat_orchestrator import router as orchestrator_router
 
 app = FastAPI(
     title="Sophia Intel AI API",
@@ -92,7 +94,7 @@ class SwarmRequest(BaseModel):
 
 class MultiSwarmRequest(BaseModel):
     message: str
-    teams: List[str]
+    teams: list[str]
     strategy: str = "parallel"  # parallel, sequential, consensus
 
 # Task routing for swarm types
@@ -106,17 +108,17 @@ SWARM_TASK_MAPPING = {
 async def startup_event():
     """Initialize services on startup"""
     global portkey_balancer
-    
+
     try:
         # Initialize Portkey if not already done
         if not portkey_balancer:
             portkey_balancer = initialize_portkey_balancer()
             logger.info("✅ Portkey Load Balancer initialized")
-        
+
         # Initialize message bus
         await message_bus_instance.initialize()
         logger.info("✅ Message bus initialized")
-        
+
         logger.info(f"""
         🚀 UNIFIED SERVER READY - REAL AI MODELS ACTIVE
         ================================================
@@ -127,7 +129,7 @@ async def startup_event():
         - WebSocket: ws://localhost:{os.getenv('AGENT_API_PORT', '8003')}/ws/bus
         - Models: Grok-5, Qwen3-30B, DeepSeek, Gemini
         """)
-        
+
     except Exception as e:
         logger.error(f"Startup error: {e}")
         raise
@@ -167,16 +169,16 @@ async def run_team(request: SwarmRequest):
     try:
         # Get task type for routing
         task_type = SWARM_TASK_MAPPING.get(request.team_id, "general")
-        
+
         # Prepare messages
         messages = [
             {"role": "system", "content": f"You are part of the {request.team_id} swarm."},
             {"role": "user", "content": request.message}
         ]
-        
+
         # Track start time
         start_time = datetime.now()
-        
+
         # Stream or regular execution
         if request.stream:
             return await stream_swarm_response(
@@ -192,7 +194,7 @@ async def run_team(request: SwarmRequest):
                     max_tokens=request.max_tokens,
                     stream=False
                 )
-                
+
                 # Format response
                 if response and 'choices' in response and response['choices']:
                     response = {
@@ -215,7 +217,7 @@ async def run_team(request: SwarmRequest):
                     max_tokens=request.max_tokens,
                     stream=False
                 )
-            
+
             # Track metrics
             duration = (datetime.now() - start_time).total_seconds()
             record_cost(
@@ -228,12 +230,13 @@ async def run_team(request: SwarmRequest):
                 duration=duration,
                 cache_hit=False
             )
-            
+
             # Try to publish to message bus (skip if error)
             try:
-                from app.swarms.communication.message_bus import SwarmMessage, MessageType
                 import uuid
-                
+
+                from app.swarms.communication.message_bus import MessageType, SwarmMessage
+
                 message = SwarmMessage(
                     id=str(uuid.uuid4()),
                     sender_agent_id=request.team_id,
@@ -244,7 +247,7 @@ async def run_team(request: SwarmRequest):
                 await message_bus_instance.publish(message)
             except Exception as e:
                 logger.warning(f"Could not publish to message bus: {e}")
-            
+
             return JSONResponse({
                 "success": True,
                 "team": request.team_id,
@@ -257,14 +260,14 @@ async def run_team(request: SwarmRequest):
                     "portkey_routed": True
                 }
             })
-            
+
     except Exception as e:
         logger.error(f"Team execution error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 async def stream_swarm_response(messages, task_type, temperature, max_tokens):
     """Stream responses from swarm via Portkey"""
-    
+
     async def generate():
         try:
             # Start streaming from Portkey
@@ -275,7 +278,7 @@ async def stream_swarm_response(messages, task_type, temperature, max_tokens):
                 max_tokens=max_tokens,
                 stream=True
             )
-            
+
             # Stream tokens
             async for chunk in response:
                 if chunk.get("token"):
@@ -285,14 +288,14 @@ async def stream_swarm_response(messages, task_type, temperature, max_tokens):
                         "done": False
                     }
                     yield f"data: {json.dumps(data)}\n\n"
-            
+
             # Send completion
             yield f"data: {json.dumps({'done': True})}\n\n"
-            
+
         except Exception as e:
             logger.error(f"Stream error: {e}")
             yield f"data: {json.dumps({'error': str(e)})}\n\n"
-    
+
     return StreamingResponse(
         generate(),
         media_type="text/event-stream"
@@ -305,7 +308,7 @@ async def run_multiple_swarms(request: MultiSwarmRequest):
     """
     try:
         results = {}
-        
+
         if request.strategy == "parallel":
             # Run all swarms in parallel
             tasks = []
@@ -314,7 +317,7 @@ async def run_multiple_swarms(request: MultiSwarmRequest):
                     execute_single_swarm(request.message, team_id)
                 )
                 tasks.append((team_id, task))
-            
+
             # Gather results
             for team_id, task in tasks:
                 try:
@@ -322,28 +325,28 @@ async def run_multiple_swarms(request: MultiSwarmRequest):
                     results[team_id] = result
                 except Exception as e:
                     results[team_id] = {"error": str(e)}
-                    
+
         elif request.strategy == "sequential":
             # Run swarms one after another
             accumulated_context = request.message
-            
+
             for team_id in request.teams:
                 result = await execute_single_swarm(accumulated_context, team_id)
                 results[team_id] = result
                 # Add result to context for next swarm
                 accumulated_context += f"\n\nPrevious result from {team_id}:\n{result.get('content', '')}"
-                
+
         elif request.strategy == "consensus":
             # Get responses from all, then synthesize
             all_responses = []
-            
+
             for team_id in request.teams:
                 result = await execute_single_swarm(request.message, team_id)
                 all_responses.append({
                     "team": team_id,
                     "response": result.get("content", "")
                 })
-            
+
             # Synthesize consensus
             consensus_prompt = f"""
             Analyze these responses and provide a consensus:
@@ -351,11 +354,11 @@ async def run_multiple_swarms(request: MultiSwarmRequest):
             
             Provide a unified answer that incorporates the best insights.
             """
-            
+
             consensus = await execute_single_swarm(consensus_prompt, "strategic-swarm")
             results["consensus"] = consensus
             results["individual_responses"] = all_responses
-        
+
         return JSONResponse({
             "success": True,
             "strategy": request.strategy,
@@ -366,20 +369,20 @@ async def run_multiple_swarms(request: MultiSwarmRequest):
                 "portkey_routed": True
             }
         })
-        
+
     except Exception as e:
         logger.error(f"Multi-swarm error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-async def execute_single_swarm(message: str, team_id: str) -> Dict[str, Any]:
+async def execute_single_swarm(message: str, team_id: str) -> dict[str, Any]:
     """Execute a single swarm and return result"""
-    
+
     task_type = SWARM_TASK_MAPPING.get(team_id, "general")
     messages = [
         {"role": "system", "content": f"You are part of the {team_id} swarm."},
         {"role": "user", "content": message}
     ]
-    
+
     response = await portkey_balancer.execute_with_routing(
         messages=messages,
         task_type=task_type,
@@ -387,7 +390,7 @@ async def execute_single_swarm(message: str, team_id: str) -> Dict[str, Any]:
         max_tokens=4096,
         stream=False
     )
-    
+
     return {
         "content": response["content"],
         "model": response.get("model"),
@@ -398,7 +401,7 @@ async def execute_single_swarm(message: str, team_id: str) -> Dict[str, Any]:
 async def get_metrics():
     """Get Prometheus metrics"""
     from app.observability.prometheus_metrics import get_metrics, get_metrics_content_type
-    
+
     metrics_data = get_metrics()
     return Response(
         content=metrics_data,
@@ -451,22 +454,22 @@ async def system_health():
     }
 
 @app.post("/mcp/embeddings")
-async def generate_embeddings_endpoint(request: Dict[str, Any]):
+async def generate_embeddings_endpoint(request: dict[str, Any]):
     """Generate embeddings using Together AI directly"""
     text = request.get("text", "")
-    
+
     if not text:
         raise HTTPException(status_code=400, detail="Text is required")
-    
+
     try:
         # Use direct Together AI for embeddings
         response = await together_embeddings.generate_embeddings(
             texts=[text],
             model="togethercomputer/m2-bert-80M-8k-retrieval"
         )
-        
+
         return response
-        
+
     except Exception as e:
         logger.error(f"Embedding generation failed: {e}")
         # Return fallback embedding
@@ -490,7 +493,7 @@ async def list_models():
         ],
         "available": [
             "x-ai/grok-code-fast-1",
-            "google/gemini-2.5-flash", 
+            "google/gemini-2.5-flash",
             "google/gemini-2.5-pro",
             "deepseek/deepseek-chat",
             "deepseek/deepseek-v3",
@@ -528,13 +531,13 @@ async def swarm_config(data: dict):
 @app.post("/mcp/llm-assignment")
 async def llm_assignment(data: dict):
     # Validate input
-    
+
     if "agent" not in data or "model" not in data:
         return {"error": "Missing agent or model"}
-    
+
     # Update MCP server's assignment
     # (Implementation details would use existing MCP state management)
-    
+
     return {"status": "success", "message": f"Assigned {data['model']} to {data['agent']}"}
 
 @app.get("/health")
@@ -558,10 +561,10 @@ async def health_check():
 # Chat completions endpoint for OpenRouter
 class ChatCompletionRequest(BaseModel):
     model: str
-    messages: List[Dict[str, str]]
-    max_tokens: Optional[int] = 1000
-    temperature: Optional[float] = 0.7
-    stream: Optional[bool] = False
+    messages: list[dict[str, str]]
+    max_tokens: int | None = 1000
+    temperature: float | None = 0.7
+    stream: bool | None = False
 
 @app.post("/chat/completions")
 async def chat_completions(request: ChatCompletionRequest):
@@ -569,7 +572,7 @@ async def chat_completions(request: ChatCompletionRequest):
     try:
         # Use OpenRouter gateway with fallback
         from app.api.openrouter_gateway import OpenRouterGateway
-        
+
         gateway = OpenRouterGateway()
         response = await gateway.chat_completion(
             model=request.model,
@@ -577,20 +580,20 @@ async def chat_completions(request: ChatCompletionRequest):
             max_tokens=request.max_tokens,
             temperature=request.temperature
         )
-        
+
         # Track cost
         if hasattr(response, 'usage'):
             record_cost(request.model, response.usage)
-        
+
         return response
-        
+
     except Exception as e:
         logger.error(f"Chat completion error: {e}")
-        
+
         # Try fallback
         fallback_model = "google/gemini-2.5-flash"
         logger.info(f"Attempting fallback to {fallback_model}")
-        
+
         try:
             gateway = OpenRouterGateway()
             response = await gateway.chat_completion(
@@ -606,9 +609,8 @@ async def chat_completions(request: ChatCompletionRequest):
 @app.get("/metrics")
 async def get_metrics():
     """Export Prometheus metrics including cost tracking"""
-    from prometheus_client import generate_latest, Counter, Histogram, Gauge
-    from prometheus_client import REGISTRY
-    
+    from prometheus_client import REGISTRY, Gauge, generate_latest
+
     # Register cost metrics if not already registered
     try:
         model_cost_usd_today = Gauge(
@@ -617,7 +619,7 @@ async def get_metrics():
             ['model'],
             registry=REGISTRY
         )
-        
+
         # Update with current costs (mock data for now)
         model_costs = {
             "openai/gpt-5": 8.50,
@@ -626,22 +628,22 @@ async def get_metrics():
             "google/gemini-2.5-pro": 0.95,
             "google/gemini-2.5-flash": 0.45
         }
-        
+
         for model, cost in model_costs.items():
             model_cost_usd_today.labels(model=model).set(cost)
-            
+
     except Exception as e:
         logger.debug(f"Metrics already registered: {e}")
-    
+
     # Generate metrics
     metrics_output = generate_latest(REGISTRY)
     return Response(content=metrics_output, media_type="text/plain")
 
 if __name__ == "__main__":
     import uvicorn
-    
+
     port = int(os.getenv("AGENT_API_PORT", "8003"))
-    
+
     uvicorn.run(
         app,
         host="0.0.0.0",

@@ -4,26 +4,26 @@ Comprehensive environment and API key testing script.
 Tests all API keys, Portkey virtual keys, and tech stack versions.
 """
 
-import os
-import sys
-import subprocess
-import json
 import asyncio
-from pathlib import Path
-from typing import Dict, Any, List, Optional
+import json
+import subprocess
+import sys
 from datetime import datetime
+from pathlib import Path
+from typing import Any
+
 import httpx
-from packaging import version
 
 # Add parent to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # Import our environment loader
-from app.config.env_loader import get_env_config, validate_environment
+from app.config.env_loader import get_env_config
+
 
 class TechStackAnalyzer:
     """Analyze tech stack versions and compatibility."""
-    
+
     def __init__(self):
         self.config = get_env_config()
         self.results = {
@@ -33,11 +33,11 @@ class TechStackAnalyzer:
             "gaps": [],
             "recommendations": []
         }
-        
-    def check_python_packages(self) -> Dict[str, Any]:
+
+    def check_python_packages(self) -> dict[str, Any]:
         """Check installed Python package versions."""
         print("\n📦 Checking Python Package Versions...")
-        
+
         packages = {
             "agno": "1.8.1",  # Latest as of Aug 30, 2025
             "weaviate-client": "4.16.9",  # Latest
@@ -50,7 +50,7 @@ class TechStackAnalyzer:
             "sqlalchemy": None,
             "airbyte-cdk": None,
         }
-        
+
         installed = {}
         for pkg, latest in packages.items():
             try:
@@ -74,28 +74,28 @@ class TechStackAnalyzer:
                     installed[pkg] = {"current": None, "latest": latest, "status": "❌"}
             except:
                 installed[pkg] = {"current": None, "latest": latest, "status": "❌"}
-                
+
         self.results["versions"]["python_packages"] = installed
-        
+
         # Print results
         for pkg, info in installed.items():
             status = info["status"]
             current = info["current"] or "Not installed"
             latest = info["latest"] or "N/A"
-            
+
             if status == "✅":
                 print(f"  {status} {pkg}: {current}")
             elif status == "⚠️":
                 print(f"  {status} {pkg}: {current} (latest: {latest})")
             else:
                 print(f"  {status} {pkg}: Not installed")
-                
+
         return installed
-        
-    def check_system_tools(self) -> Dict[str, Any]:
+
+    def check_system_tools(self) -> dict[str, Any]:
         """Check system tool versions."""
         print("\n🛠️ Checking System Tool Versions...")
-        
+
         tools = {
             "pulumi": {
                 "command": ["pulumi", "version"],
@@ -118,7 +118,7 @@ class TechStackAnalyzer:
                 "latest": "17.5"
             }
         }
-        
+
         installed = {}
         for tool, info in tools.items():
             try:
@@ -142,14 +142,14 @@ class TechStackAnalyzer:
             except:
                 installed[tool] = {"current": None, "latest": info["latest"], "status": "❌"}
                 print(f"  ❌ {tool}: Not found")
-                
+
         self.results["versions"]["system_tools"] = installed
         return installed
-        
-    async def test_api_keys(self) -> Dict[str, Any]:
+
+    async def test_api_keys(self) -> dict[str, Any]:
         """Test all API keys and Portkey virtual keys."""
         print("\n🔑 Testing API Keys...")
-        
+
         key_tests = {
             "portkey": {
                 "key": self.config.portkey_api_key,
@@ -185,7 +185,7 @@ class TechStackAnalyzer:
                 "headers": {"Authorization": f"Bearer {self.config.together_api_key}"}
             }
         }
-        
+
         results = {}
         async with httpx.AsyncClient(timeout=10.0) as client:
             for provider, info in key_tests.items():
@@ -213,18 +213,18 @@ class TechStackAnalyzer:
                     except Exception as e:
                         results[provider] = {"status": "❌", "error": str(e)}
                         print(f"  ❌ {provider}: {e}")
-                        
+
         self.results["api_keys"] = results
         return results
-        
-    async def test_portkey_virtual_keys(self) -> Dict[str, Any]:
+
+    async def test_portkey_virtual_keys(self) -> dict[str, Any]:
         """Test Portkey virtual keys specifically."""
         print("\n🔐 Testing Portkey Virtual Keys...")
-        
+
         if not self.config.portkey_api_key or self.config.portkey_api_key.startswith("YOUR_"):
             print("  ❌ Portkey not configured")
             return {"status": "not_configured"}
-            
+
         # Test with Portkey gateway
         virtual_key_tests = [
             {
@@ -243,7 +243,7 @@ class TechStackAnalyzer:
                 "provider": "anthropic"
             }
         ]
-        
+
         results = {}
         async with httpx.AsyncClient(timeout=10.0) as client:
             for vk_test in virtual_key_tests:
@@ -261,7 +261,7 @@ class TechStackAnalyzer:
                             "max_tokens": 5
                         }
                     )
-                    
+
                     if response.status_code == 200:
                         results[vk_test["name"]] = {"status": "✅", "provider": vk_test["provider"]}
                         print(f"  ✅ {vk_test['name']}: Working")
@@ -274,14 +274,14 @@ class TechStackAnalyzer:
                 except Exception as e:
                     results[vk_test["name"]] = {"status": "❌", "error": str(e)}
                     print(f"  ❌ {vk_test['name']}: {e}")
-                    
+
         self.results["portkey_virtual_keys"] = results
         return results
-        
-    def check_weaviate(self) -> Dict[str, Any]:
+
+    def check_weaviate(self) -> dict[str, Any]:
         """Check Weaviate connection and version."""
         print("\n🔍 Checking Weaviate...")
-        
+
         try:
             import weaviate
             client = weaviate.Client(
@@ -289,34 +289,34 @@ class TechStackAnalyzer:
                 auth_client_secret=weaviate.AuthApiKey(api_key=self.config.weaviate_api_key)
                 if self.config.weaviate_api_key else None
             )
-            
+
             # Get server version
             meta = client.get_meta()
             server_version = meta.get("version", "Unknown")
-            
+
             result = {
                 "status": "✅",
                 "server_version": server_version,
                 "latest_version": "1.32.0",
                 "client_version": weaviate.__version__ if hasattr(weaviate, "__version__") else "Unknown"
             }
-            
+
             print(f"  ✅ Server: {server_version} (latest: 1.32.0)")
             print(f"  ✅ Client: {result['client_version']}")
-            
+
         except Exception as e:
             result = {"status": "❌", "error": str(e)}
             print(f"  ❌ Weaviate: {e}")
-            
+
         self.results["versions"]["weaviate"] = result
         return result
-        
-    def analyze_gaps(self) -> List[Dict[str, Any]]:
+
+    def analyze_gaps(self) -> list[dict[str, Any]]:
         """Analyze gaps and create recommendations."""
         print("\n📊 Gap Analysis...")
-        
+
         gaps = []
-        
+
         # Check Python packages
         for pkg, info in self.results["versions"].get("python_packages", {}).items():
             if info["status"] == "❌":
@@ -335,7 +335,7 @@ class TechStackAnalyzer:
                     "severity": "medium",
                     "action": f"pip install -U {pkg}=={info['latest']}"
                 })
-                
+
         # Check API keys
         for provider, info in self.results.get("api_keys", {}).items():
             if info["status"] == "❌":
@@ -345,7 +345,7 @@ class TechStackAnalyzer:
                     "severity": "high" if provider in ["portkey", "openai"] else "medium",
                     "action": f"Configure {provider.upper()}_API_KEY in .env"
                 })
-                
+
         # Check Weaviate
         weaviate_info = self.results["versions"].get("weaviate", {})
         if weaviate_info.get("status") == "❌":
@@ -367,22 +367,22 @@ class TechStackAnalyzer:
                     "severity": "medium",
                     "action": "Update Weaviate docker image to 1.32.0"
                 })
-                
+
         self.results["gaps"] = gaps
-        
+
         # Print gaps
         if gaps:
             print(f"\n  Found {len(gaps)} gaps:")
-            
+
             high_severity = [g for g in gaps if g.get("severity") == "high"]
             medium_severity = [g for g in gaps if g.get("severity") == "medium"]
-            
+
             if high_severity:
                 print(f"\n  🔴 High Severity ({len(high_severity)}):")
                 for gap in high_severity:
                     print(f"    • {gap['type']}: {gap.get('package') or gap.get('provider') or gap.get('service')}")
                     print(f"      Action: {gap['action']}")
-                    
+
             if medium_severity:
                 print(f"\n  🟡 Medium Severity ({len(medium_severity)}):")
                 for gap in medium_severity:
@@ -392,15 +392,15 @@ class TechStackAnalyzer:
                     print(f"      Action: {gap['action']}")
         else:
             print("  ✅ No critical gaps found!")
-            
+
         return gaps
-        
-    def generate_recommendations(self) -> List[str]:
+
+    def generate_recommendations(self) -> list[str]:
         """Generate upgrade recommendations."""
         print("\n💡 Recommendations...")
-        
+
         recommendations = []
-        
+
         # Based on latest versions (Aug 30, 2025)
         tech_updates = {
             "PostgreSQL": {
@@ -429,24 +429,24 @@ class TechStackAnalyzer:
                 "benefit": "Iceberg support, AI sync diagnosis"
             }
         }
-        
+
         for tech, info in tech_updates.items():
             if not info["current"] or (info["current"] and info["current"] < info["latest"]):
                 recommendations.append(
                     f"Upgrade {tech} to {info['latest']}: {info['benefit']}"
                 )
-                
+
         # Specific recommendations for our stack
         if not self.config.portkey_api_key or self.config.portkey_api_key.startswith("YOUR_"):
             recommendations.append(
                 "Configure Portkey for unified LLM gateway - reduces complexity and adds failover"
             )
-            
+
         if not self.results.get("api_keys", {}).get("openrouter", {}).get("status") == "✅":
             recommendations.append(
                 "Set up OpenRouter for access to 100+ models with single API"
             )
-            
+
         # Infrastructure recommendations
         recommendations.extend([
             "Consider Neon PostgreSQL for serverless database with autoscaling",
@@ -454,62 +454,62 @@ class TechStackAnalyzer:
             "Add Airbyte for data pipeline automation if needed",
             "Enable Weaviate's new RQ feature for 3x memory efficiency"
         ])
-        
+
         self.results["recommendations"] = recommendations
-        
+
         # Print recommendations
         for i, rec in enumerate(recommendations[:5], 1):  # Top 5
             print(f"  {i}. {rec}")
-            
+
         return recommendations
-        
+
     async def run_full_analysis(self):
         """Run complete environment analysis."""
         print("\n" + "="*60)
         print("🔬 COMPREHENSIVE ENVIRONMENT ANALYSIS")
         print("="*60)
-        
+
         # Check versions
         self.check_python_packages()
         self.check_system_tools()
         self.check_weaviate()
-        
+
         # Test API keys
         await self.test_api_keys()
         await self.test_portkey_virtual_keys()
-        
+
         # Analyze gaps
         self.analyze_gaps()
         self.generate_recommendations()
-        
+
         # Generate report
         self.generate_report()
-        
+
     def generate_report(self):
         """Generate comprehensive report."""
         print("\n" + "="*60)
         print("📋 ENVIRONMENT REPORT SUMMARY")
         print("="*60)
-        
+
         # Count statuses
         packages = self.results["versions"].get("python_packages", {})
         pkg_ok = len([p for p in packages.values() if p["status"] == "✅"])
         pkg_warn = len([p for p in packages.values() if p["status"] == "⚠️"])
         pkg_miss = len([p for p in packages.values() if p["status"] == "❌"])
-        
+
         keys = self.results.get("api_keys", {})
         keys_ok = len([k for k in keys.values() if k["status"] == "✅"])
         keys_miss = len([k for k in keys.values() if k["status"] == "❌"])
-        
-        print(f"\n📦 Python Packages:")
+
+        print("\n📦 Python Packages:")
         print(f"  ✅ Up to date: {pkg_ok}")
         print(f"  ⚠️  Outdated: {pkg_warn}")
         print(f"  ❌ Missing: {pkg_miss}")
-        
-        print(f"\n🔑 API Keys:")
+
+        print("\n🔑 API Keys:")
         print(f"  ✅ Valid: {keys_ok}")
         print(f"  ❌ Missing/Invalid: {keys_miss}")
-        
+
         gaps = self.results.get("gaps", [])
         if gaps:
             print(f"\n⚠️  Total Gaps: {len(gaps)}")
@@ -517,14 +517,14 @@ class TechStackAnalyzer:
             print(f"  🟡 Medium severity: {len([g for g in gaps if g.get('severity') == 'medium'])}")
         else:
             print("\n✅ No critical gaps!")
-            
+
         # Save detailed report
         report_path = Path("environment_analysis.json")
         with open(report_path, "w") as f:
             json.dump(self.results, f, indent=2)
-            
+
         print(f"\n📁 Detailed report saved to: {report_path}")
-        
+
         # Overall status
         if pkg_miss == 0 and keys_miss <= 2:
             print("\n🎉 Environment is mostly ready!")
@@ -537,7 +537,7 @@ async def main():
     """Main analysis runner."""
     analyzer = TechStackAnalyzer()
     await analyzer.run_full_analysis()
-    
+
     return 0 if len(analyzer.results.get("gaps", [])) == 0 else 1
 
 

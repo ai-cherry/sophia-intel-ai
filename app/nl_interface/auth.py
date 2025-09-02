@@ -3,16 +3,15 @@ Secure Authentication Layer for NL Interface
 Provides API key validation, rate limiting, and security features for production
 """
 
-import time
 import hashlib
 import logging
-from typing import Dict, Any, Optional, Tuple
+import time
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from functools import wraps
+from typing import Any
 
 from app.core.circuit_breaker import with_circuit_breaker
-
 
 logger = logging.getLogger(__name__)
 
@@ -23,14 +22,14 @@ class APIKey:
     key_hash: str
     user_id: str
     client_name: str
-    quotas: Dict[str, int]
-    usage: Dict[str, int]
+    quotas: dict[str, int]
+    usage: dict[str, int]
     created_at: datetime
     last_used: datetime
     is_active: bool = True
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "APIKey":
+    def from_dict(cls, data: dict[str, Any]) -> "APIKey":
         """Create API key from dictionary"""
         return cls(
             key_hash=data["key_hash"],
@@ -43,7 +42,7 @@ class APIKey:
             is_active=data["is_active"]
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for storage"""
         return {
             "key_hash": self.key_hash,
@@ -63,11 +62,11 @@ class SecureNLProcessor:
     Wraps existing QuickNLP but adds production security layers
     """
 
-    def __init__(self, base_processor, config: Optional[Dict[str, Any]] = None):
+    def __init__(self, base_processor, config: dict[str, Any] | None = None):
         self.base_processor = base_processor
         self.config = config or {}
-        self.api_keys: Dict[str, APIKey] = {}
-        self.requests_per_second: Dict[str, list] = {}
+        self.api_keys: dict[str, APIKey] = {}
+        self.requests_per_second: dict[str, list] = {}
         self.is_auth_enabled = self.config.get("enable_auth", True)
 
         # Security configuration
@@ -114,7 +113,7 @@ class SecureNLProcessor:
         """Hash API key for secure storage"""
         return hashlib.sha256(api_key.encode()).hexdigest()
 
-    def validate_api_key(self, api_key: str) -> Tuple[bool, str, Dict[str, Any]]:
+    def validate_api_key(self, api_key: str) -> tuple[bool, str, dict[str, Any]]:
         """
         Validate API key and return user information
         Returns: (is_valid, message, user_info)
@@ -129,7 +128,7 @@ class SecureNLProcessor:
         api_key_obj = self.api_keys.get(key_hash)
 
         if not api_key_obj:
-            logger.warning(f"Invalid API key attempt")
+            logger.warning("Invalid API key attempt")
             return False, "Invalid API key", {}
 
         if not api_key_obj.is_active:
@@ -155,7 +154,7 @@ class SecureNLProcessor:
 
         return True, "Valid API key", user_info
 
-    def _check_rate_limits(self, api_key: APIKey) -> Tuple[bool, str]:
+    def _check_rate_limits(self, api_key: APIKey) -> tuple[bool, str]:
         """Check rate limits for API key"""
         now = datetime.now()
 
@@ -197,7 +196,7 @@ class SecureNLProcessor:
         # (In production, you'd want a more sophisticated reset mechanism)
 
     @with_circuit_breaker("auth")
-    def process_secure(self, text: str, api_key: str, **kwargs) -> Dict[str, Any]:
+    def process_secure(self, text: str, api_key: str, **kwargs) -> dict[str, Any]:
         """
         Process NL command with security validation
         """
@@ -242,7 +241,7 @@ class SecureNLProcessor:
                 "processed_at": datetime.now().isoformat()
             }
 
-    def get_usage_statistics(self, user_id: Optional[str] = None) -> Dict[str, Any]:
+    def get_usage_statistics(self, user_id: str | None = None) -> dict[str, Any]:
         """Get usage statistics for all users or specific user"""
         stats = {
             "total_api_keys": len(self.api_keys),
@@ -266,7 +265,7 @@ class SecureNLProcessor:
         return stats
 
     def add_api_key(self, api_key: str, user_id: str, client_name: str,
-                   quotas: Optional[Dict[str, int]] = None) -> Dict[str, Any]:
+                   quotas: dict[str, int] | None = None) -> dict[str, Any]:
         """Add new API key"""
         key_hash = self._hash_api_key(api_key)
 
@@ -289,7 +288,7 @@ class SecureNLProcessor:
         logger.info(f"Added new API key for user: {user_id}")
         return {"success": True, "message": "API key added successfully"}
 
-    def disable_api_key(self, user_id: str) -> Dict[str, Any]:
+    def disable_api_key(self, user_id: str) -> dict[str, Any]:
         """Disable API key for user"""
         api_key = next((key for key in self.api_keys.values() if key.user_id == user_id), None)
         if not api_key:
@@ -300,7 +299,7 @@ class SecureNLProcessor:
         return {"success": True, "message": "API key disabled"}
 
 
-def create_secure_processor(base_processor, config: Optional[Dict[str, Any]] = None) -> SecureNLProcessor:
+def create_secure_processor(base_processor, config: dict[str, Any] | None = None) -> SecureNLProcessor:
     """Factory function to create secure processor"""
     config = config or {
         "enable_auth": True,
@@ -334,7 +333,7 @@ async def get_secure_processor():
 # Middleware function for rate limiting
 def rate_limiter(client_id: str, max_calls: int = 60, window_seconds: int = 60):
     """Decorator for rate limiting"""
-    calls: Dict[str, list] = {}
+    calls: dict[str, list] = {}
 
     def decorator(func):
         @wraps(func)

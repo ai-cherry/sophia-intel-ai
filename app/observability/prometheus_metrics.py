@@ -3,13 +3,22 @@ Prometheus Metrics Exporter for Sophia Intel AI
 Provides comprehensive metrics for cost tracking, caching, LLM performance, and system health.
 """
 
-from prometheus_client import Counter, Histogram, Gauge, CollectorRegistry, generate_latest
-from prometheus_client import CONTENT_TYPE_LATEST
-from typing import Dict
-import time
 import logging
+import time
 from functools import wraps
-from app.core.circuit_breaker import with_circuit_breaker, get_llm_circuit_breaker, get_weaviate_circuit_breaker, get_redis_circuit_breaker, get_webhook_circuit_breaker
+
+from prometheus_client import (
+    CONTENT_TYPE_LATEST,
+    CollectorRegistry,
+    Counter,
+    Gauge,
+    Histogram,
+    generate_latest,
+)
+
+from app.core.circuit_breaker import (
+    with_circuit_breaker,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -210,61 +219,61 @@ http_request_duration_seconds = Histogram(
 
 class MetricsTracker:
     """Helper class to track and update metrics."""
-    
+
     def __init__(self):
-        self.start_times: Dict[str, float] = {}
-        
-    def track_llm_request(self, provider: str, model: str, task_type: str, 
-                         cost: float, tokens_in: int, tokens_out: int, 
+        self.start_times: dict[str, float] = {}
+
+    def track_llm_request(self, provider: str, model: str, task_type: str,
+                         cost: float, tokens_in: int, tokens_out: int,
                          duration: float, cache_hit: bool = False):
         """Track metrics for an LLM request."""
         # Cost metrics
         llm_api_cost_total.labels(provider=provider, model=model, task_type=task_type).inc(cost)
         llm_cost_per_request.labels(provider=provider, model=model).observe(cost)
-        
+
         # Performance metrics
         llm_request_duration_seconds.labels(
             provider=provider, model=model, task_type=task_type
         ).observe(duration)
-        
+
         # Token metrics
         llm_tokens_total.labels(model=model, token_type='input').inc(tokens_in)
         llm_tokens_total.labels(model=model, token_type='output').inc(tokens_out)
-        
+
         # Cache metrics
         if cache_hit:
             llm_cache_hits_total.labels(cache_type='semantic', model=model).inc()
             llm_cache_cost_saved_total.inc(cost)
         else:
             llm_cache_misses_total.labels(cache_type='semantic', model=model).inc()
-    
+
     def track_http_request(self, method: str, endpoint: str, status: int, duration: float):
         """Track HTTP request metrics."""
         http_requests_total.labels(method=method, endpoint=endpoint, status=str(status)).inc()
         http_request_duration_seconds.labels(method=method, endpoint=endpoint).observe(duration)
-    
+
     def track_agent_execution(self, role: str, task_type: str, duration: float, success: bool):
         """Track agent execution metrics."""
         agent_execution_duration_seconds.labels(role=role, task_type=task_type).observe(duration)
         if role == 'consensus':
             consensus_swarm_success_rate.set(1.0 if success else 0.0)
-    
+
     def track_cache_performance(self, hits: int, misses: int):
         """Update cache hit rate gauge."""
         total = hits + misses
         if total > 0:
             cache_hit_rate.set((hits / total) * 100)
-    
+
     def track_gpu_metrics(self, utilization: float, queue_length: int, instance: str = "default"):
         """Track GPU utilization metrics."""
         lambda_gpu_utilization_percent.labels(gpu_instance=instance).set(utilization)
         lambda_gpu_queue_length.set(queue_length)
-    
+
     def track_database_health(self, weaviate_available: bool, redis_clients: int):
         """Track database health metrics."""
         weaviate_database_available.set(1.0 if weaviate_available else 0.0)
         redis_connected_clients.set(redis_clients)
-    
+
     def track_fallback(self, primary_model: str, fallback_model: str, reason: str):
         """Track model fallback events."""
         llm_fallback_triggers_total.labels(
@@ -294,7 +303,7 @@ def track_request_metrics(method: str = "GET", endpoint: str = "/"):
                 duration = time.time() - start_time
                 metrics_tracker.track_http_request(method, endpoint, status, duration)
             return result
-        
+
         @wraps(func)
         def sync_wrapper(*args, **kwargs):
             start_time = time.time()
@@ -308,7 +317,7 @@ def track_request_metrics(method: str = "GET", endpoint: str = "/"):
                 duration = time.time() - start_time
                 metrics_tracker.track_http_request(method, endpoint, status, duration)
             return result
-        
+
         if asyncio.iscoroutinefunction(func):
             return async_wrapper
         return sync_wrapper
@@ -324,46 +333,46 @@ def track_llm_metrics(provider: str, model: str, task_type: str = "general"):
             try:
                 result = await func(*args, **kwargs)
                 duration = time.time() - start_time
-                
+
                 # Extract metrics from result
                 cost = result.get('cost', 0.001)  # Default cost if not provided
                 tokens_in = result.get('input_tokens', 0)
                 tokens_out = result.get('output_tokens', 0)
                 cache_hit = result.get('cache_hit', False)
-                
+
                 metrics_tracker.track_llm_request(
-                    provider, model, task_type, cost, 
+                    provider, model, task_type, cost,
                     tokens_in, tokens_out, duration, cache_hit
                 )
-                
+
                 return result
             except Exception as e:
                 llm_cache_errors_total.labels(error_type=type(e).__name__).inc()
                 raise e
-        
+
         @wraps(func)
         def sync_wrapper(*args, **kwargs):
             start_time = time.time()
             try:
                 result = func(*args, **kwargs)
                 duration = time.time() - start_time
-                
+
                 # Extract metrics from result
                 cost = result.get('cost', 0.001)
                 tokens_in = result.get('input_tokens', 0)
                 tokens_out = result.get('output_tokens', 0)
                 cache_hit = result.get('cache_hit', False)
-                
+
                 metrics_tracker.track_llm_request(
                     provider, model, task_type, cost,
                     tokens_in, tokens_out, duration, cache_hit
                 )
-                
+
                 return result
             except Exception as e:
                 llm_cache_errors_total.labels(error_type=type(e).__name__).inc()
                 raise e
-        
+
         import asyncio
         if asyncio.iscoroutinefunction(func):
             return async_wrapper
@@ -391,29 +400,29 @@ async def update_system_metrics():
             hits = llm_cache_hits_total._value.sum()
             misses = llm_cache_misses_total._value.sum()
             metrics_tracker.track_cache_performance(int(hits), int(misses))
-            
+
             # Update GPU metrics (example values - replace with actual GPU monitoring)
             metrics_tracker.track_gpu_metrics(
                 utilization=75.5,  # Get from Lambda Labs API
                 queue_length=3,
                 instance="lambda-h100"
             )
-            
+
             # Update database health (example values - replace with actual health checks)
             metrics_tracker.track_database_health(
                 weaviate_available=True,  # Check Weaviate health
                 redis_clients=5  # Get from Redis INFO command
             )
-            
+
             # Update memory deduplication rate (example)
             memory_deduplication_rate.set(0.92)
-            
+
             # Update remaining tokens (example - replace with actual API limits)
             llm_tokens_remaining.labels(provider="openrouter").set(95000)
             llm_tokens_remaining.labels(provider="together").set(180000)
-            
+
             await asyncio.sleep(30)  # Update every 30 seconds
-            
+
         except Exception as e:
             logger.error(f"Error updating system metrics: {e}")
             await asyncio.sleep(60)
@@ -431,7 +440,7 @@ if __name__ == "__main__":
         duration=2.5,
         cache_hit=False
     )
-    
+
     # Example: Track HTTP request
     metrics_tracker.track_http_request(
         method="POST",
@@ -439,7 +448,7 @@ if __name__ == "__main__":
         status=200,
         duration=1.2
     )
-    
+
     # Print metrics
     print(get_metrics().decode('utf-8'))
 

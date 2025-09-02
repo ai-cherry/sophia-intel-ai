@@ -5,28 +5,35 @@ This module manages the execution of coding swarms, including debate rounds,
 validation, memory integration, and result aggregation.
 """
 
+import asyncio
 import logging
 import time
-import asyncio
-from typing import Dict, Any, Optional
+from typing import Any
 
 from agno.team import Team
-from app.swarms.coding.models import (
-    DebateResult,
-    CriticOutput,
-    JudgeOutput,
-    GateDecision,
-    SwarmConfiguration,
-    RiskLevel
+
+from app.core.circuit_breaker import (
+    with_circuit_breaker,
 )
-from app.utils.response_handler import ResponseHandler, ModelResponseValidator
 from app.memory.supermemory_mcp import SupermemoryMCP
 from app.memory.types import MemoryEntry, MemoryType
-from app.core.circuit_breaker import with_circuit_breaker, get_llm_circuit_breaker, get_weaviate_circuit_breaker, get_redis_circuit_breaker, get_webhook_circuit_breaker
+from app.swarms.coding.models import (
+    CriticOutput,
+    DebateResult,
+    GateDecision,
+    JudgeOutput,
+    RiskLevel,
+    SwarmConfiguration,
+)
+from app.utils.response_handler import ModelResponseValidator, ResponseHandler
 
 # Optional optimizer and circuit breaker integration
 try:
-    from app.swarms.performance_optimizer import SwarmOptimizer, performance_monitoring, CircuitBreakerOpenException
+    from app.swarms.performance_optimizer import (
+        CircuitBreakerOpenException,
+        SwarmOptimizer,
+        performance_monitoring,
+    )
 except Exception:
     SwarmOptimizer = None
     performance_monitoring = None
@@ -44,8 +51,8 @@ class SwarmOrchestrator:
     This class manages the multi-round debate process, handles validation,
     integrates with memory systems, and produces structured results.
     """
-    
-    def __init__(self, team: Team, config: SwarmConfiguration, memory: Optional[SupermemoryMCP] = None):
+
+    def __init__(self, team: Team, config: SwarmConfiguration, memory: SupermemoryMCP | None = None):
         """
         Initialize the orchestrator.
         
@@ -63,8 +70,8 @@ class SwarmOrchestrator:
             self.optimizer = SwarmOptimizer() if SwarmOptimizer else None
         except Exception:
             self.optimizer = None
-    
-    async def run_debate(self, task: str, context: Optional[Dict[str, Any]] = None) -> DebateResult:
+
+    async def run_debate(self, task: str, context: dict[str, Any] | None = None) -> DebateResult:
         """
         Run a complete debate cycle for the given task with circuit breaker protection.
 
@@ -167,7 +174,7 @@ class SwarmOrchestrator:
             self.logger.debug(f"Memory health check failed: {e}")
             return False
 
-    async def _run_fast_proposal_round(self, task: str, context: Optional[Dict[str, Any]],
+    async def _run_fast_proposal_round(self, task: str, context: dict[str, Any] | None,
                                       result: DebateResult) -> None:
         """Optimized proposal round for fast mode."""
         self.logger.info("Running fast proposal round")
@@ -207,7 +214,7 @@ class SwarmOrchestrator:
 
         except Exception as e:
             self.logger.debug(f"Performance tracking failed: {e}")
-    
+
     @with_circuit_breaker("database")
     async def _search_related_memories(self, task: str, result: DebateResult) -> None:
         """Search for related memories and add to result."""
@@ -230,18 +237,18 @@ class SwarmOrchestrator:
         except Exception as e:
             self.logger.warning(f"Memory search failed: {e}")
             result.warnings.append(f"Memory search failed: {str(e)}")
-    
-    async def _run_proposal_round(self, task: str, context: Optional[Dict[str, Any]], 
+
+    async def _run_proposal_round(self, task: str, context: dict[str, Any] | None,
                                   result: DebateResult) -> None:
         """Run the proposal generation round."""
         self.logger.info("Starting proposal round")
-        
+
         try:
             # Construct prompt with context
             prompt = f"[LEAD] Analyze and generate competing solutions for:\n{task}"
             if context:
                 prompt += f"\n\nContext:\n{context}"
-            
+
             # Execute team response
             if self.optimizer and performance_monitoring:
                 async with performance_monitoring(self.optimizer, "proposal_generation"):
@@ -254,11 +261,11 @@ class SwarmOrchestrator:
                     asyncio.to_thread(self.team.print_response, prompt, False),
                     timeout=self.config.timeout_seconds / 3
                 )
-            
+
             # Parse generator outputs (simplified for now)
             # In production, would parse actual generator responses
             self.logger.info("Proposals generated successfully")
-            
+
         except asyncio.TimeoutError:
             error_msg = "Proposal round timed out"
             self.logger.error(error_msg)
@@ -268,11 +275,11 @@ class SwarmOrchestrator:
             error_msg = f"Proposal round failed: {str(e)}"
             self.logger.error(error_msg)
             result.errors.append(error_msg)
-    
+
     async def _run_critic_round(self, result: DebateResult) -> None:
         """Run the critic review round."""
         self.logger.info("Starting critic round")
-        
+
         try:
             critic_prompt = """
             Critic: Review the proposals and return ONLY valid JSON following this schema:
@@ -284,7 +291,7 @@ class SwarmOrchestrator:
                 "confidence_score": 0.85
             }
             """
-            
+
             if self.optimizer and performance_monitoring:
                 async with performance_monitoring(self.optimizer, "critic_review"):
                     response = await asyncio.wait_for(
@@ -296,10 +303,10 @@ class SwarmOrchestrator:
                     asyncio.to_thread(self.team.run, critic_prompt),
                     timeout=self.config.timeout_seconds / 3
                 )
-            
+
             # Extract and validate JSON
             critic_json = ResponseHandler.extract_json(response.content or "")
-            
+
             if not critic_json:
                 # Retry with clearer prompt
                 retry_response = await asyncio.to_thread(
@@ -307,7 +314,7 @@ class SwarmOrchestrator:
                     "Critic: Return your review as valid JSON only, no markdown or explanation."
                 )
                 critic_json = ResponseHandler.extract_json(retry_response.content or "")
-            
+
             if critic_json:
                 # Validate and create CriticOutput
                 critic_json = ModelResponseValidator.validate_critic_response(critic_json)
@@ -317,7 +324,7 @@ class SwarmOrchestrator:
             else:
                 result.errors.append("Failed to parse critic response")
                 self.logger.error("Could not extract valid JSON from critic")
-                
+
         except asyncio.TimeoutError:
             error_msg = "Critic round timed out"
             self.logger.error(error_msg)
@@ -326,36 +333,36 @@ class SwarmOrchestrator:
             error_msg = f"Critic round failed: {str(e)}"
             self.logger.error(error_msg, exc_info=True)
             result.errors.append(error_msg)
-    
+
     async def _run_revision_round(self, result: DebateResult) -> None:
         """Run the revision round if critic requested changes."""
         if not result.critic or not result.critic.must_fix:
             return
-        
+
         self.logger.info("Starting revision round")
-        
+
         try:
             fixes = ", ".join(result.critic.must_fix)
             fix_prompt = f"Generators: Apply these required fixes:\n{fixes}"
-            
+
             await asyncio.wait_for(
                 asyncio.to_thread(self.team.print_response, fix_prompt, False),
                 timeout=self.config.timeout_seconds / 3
             )
-            
+
             self.logger.info("Revisions applied")
-            
+
         except asyncio.TimeoutError:
             result.warnings.append("Revision round timed out")
             self.logger.warning("Revision round timed out")
         except Exception as e:
             result.warnings.append(f"Revision round warning: {str(e)}")
             self.logger.warning(f"Revision round issue: {e}")
-    
+
     async def _run_judge_round(self, result: DebateResult) -> None:
         """Run the judge decision round."""
         self.logger.info("Starting judge round")
-        
+
         try:
             judge_prompt = """
             Judge: Make a final decision and return ONLY valid JSON:
@@ -367,15 +374,15 @@ class SwarmOrchestrator:
                 "risk_assessment": "low|medium|high"
             }
             """
-            
+
             response = await asyncio.wait_for(
                 asyncio.to_thread(self.team.run, judge_prompt),
                 timeout=self.config.timeout_seconds / 3
             )
-            
+
             # Extract and validate JSON
             judge_json = ResponseHandler.extract_json(response.content or "")
-            
+
             if not judge_json:
                 # Retry with clearer prompt
                 retry_response = await asyncio.to_thread(
@@ -383,7 +390,7 @@ class SwarmOrchestrator:
                     "Judge: Return your decision as valid JSON only, no markdown."
                 )
                 judge_json = ResponseHandler.extract_json(retry_response.content or "")
-            
+
             if judge_json:
                 # Validate and create JudgeOutput
                 judge_json = ModelResponseValidator.validate_judge_response(judge_json)
@@ -393,7 +400,7 @@ class SwarmOrchestrator:
             else:
                 result.errors.append("Failed to parse judge response")
                 self.logger.error("Could not extract valid JSON from judge")
-                
+
         except asyncio.TimeoutError:
             error_msg = "Judge round timed out"
             self.logger.error(error_msg)
@@ -402,23 +409,23 @@ class SwarmOrchestrator:
             error_msg = f"Judge round failed: {str(e)}"
             self.logger.error(error_msg, exc_info=True)
             result.errors.append(error_msg)
-    
+
     async def _compute_gate_decision(self, result: DebateResult) -> None:
         """Compute the runner gate decision based on critic and judge outputs."""
         if not result.critic or not result.judge:
             result.runner_approved = False
             return
-        
+
         try:
             # Determine risk level
             risk_level = RiskLevel.UNKNOWN
             if result.judge.risk_assessment:
                 risk_level = result.judge.risk_assessment
-            
+
             # Check accuracy (would integrate with actual evaluation in production)
             accuracy_score = self.config.accuracy_threshold
             reliability_passed = self.config.reliability_checks_enabled
-            
+
             # Build gate decision
             gate = GateDecision(
                 allowed=False,
@@ -427,7 +434,7 @@ class SwarmOrchestrator:
                 reliability_passed=reliability_passed,
                 risk_level=risk_level
             )
-            
+
             # Determine if execution is allowed
             if result.judge.decision in ["accept", "merge"]:
                 if result.critic.verdict != "reject":
@@ -448,21 +455,21 @@ class SwarmOrchestrator:
                     gate.reason = "Critic rejected proposals"
             else:
                 gate.reason = f"Judge decision: {result.judge.decision}"
-            
+
             result.gate_decision = gate
             result.runner_approved = gate.allowed
-            
+
             self.logger.info(f"Gate decision: {gate.reason} (allowed={gate.allowed})")
-            
+
         except Exception as e:
             self.logger.error(f"Gate decision computation failed: {e}")
             result.runner_approved = False
-    
+
     async def _store_results_in_memory(self, result: DebateResult) -> None:
         """Store debate results in memory service."""
         if not self.memory:
             return
-        
+
         try:
             # Store critic output
             if result.critic:
@@ -479,7 +486,7 @@ class SwarmOrchestrator:
                 )
                 critic_id = await self.memory.add_to_memory(critic_entry)
                 result.memory_entries_created.append(critic_id)
-            
+
             # Store judge output
             if result.judge:
                 judge_entry = MemoryEntry(
@@ -496,7 +503,7 @@ class SwarmOrchestrator:
                 )
                 judge_id = await self.memory.add_to_memory(judge_entry)
                 result.memory_entries_created.append(judge_id)
-            
+
             # Store overall result summary
             summary_entry = MemoryEntry(
                 topic=f"Swarm Result: {result.task[:50]}",
@@ -511,9 +518,9 @@ class SwarmOrchestrator:
             )
             summary_id = await self.memory.add_to_memory(summary_entry)
             result.memory_entries_created.append(summary_id)
-            
+
             self.logger.info(f"Stored {len(result.memory_entries_created)} memory entries")
-            
+
         except Exception as e:
             self.logger.warning(f"Failed to store results in memory: {e}")
             result.warnings.append(f"Memory storage failed: {str(e)}")

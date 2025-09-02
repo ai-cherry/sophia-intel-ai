@@ -1,6 +1,7 @@
-import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 from app.swarms.mcp.production_mcp_bridge import ProductionMCPBridge
+
 
 class TestMCPBridge:
     @patch('aiohttp.ClientSession.post')

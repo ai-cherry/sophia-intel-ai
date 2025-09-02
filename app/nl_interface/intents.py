@@ -2,7 +2,6 @@
 Intent definitions and patterns for Natural Language Interface
 """
 
-from typing import Dict, List
 from dataclasses import dataclass
 
 
@@ -11,9 +10,9 @@ class IntentPattern:
     """Definition of an intent pattern"""
     name: str
     description: str
-    patterns: List[str]
-    entities: List[str]
-    examples: List[str]
+    patterns: list[str]
+    entities: list[str]
+    examples: list[str]
     workflow_id: str
     response_template: str
 
@@ -40,7 +39,7 @@ INTENT_PATTERNS = {
         workflow_id="system-status-workflow",
         response_template="System Status:\n{status_details}"
     ),
-    
+
     "run_agent": IntentPattern(
         name="run_agent",
         description="Execute a specific agent",
@@ -60,7 +59,7 @@ INTENT_PATTERNS = {
         workflow_id="agent-execution-workflow",
         response_template="Starting agent '{agent_name}'...\n{execution_result}"
     ),
-    
+
     "scale_service": IntentPattern(
         name="scale_service",
         description="Scale a service to specific number of instances",
@@ -80,7 +79,7 @@ INTENT_PATTERNS = {
         workflow_id="service-scaling-workflow",
         response_template="Scaling {service} to {count} instance(s)...\n{scaling_result}"
     ),
-    
+
     "execute_workflow": IntentPattern(
         name="execute_workflow",
         description="Trigger a specific workflow",
@@ -99,7 +98,7 @@ INTENT_PATTERNS = {
         workflow_id="custom-workflow",
         response_template="Executing workflow '{workflow_name}'...\n{workflow_result}"
     ),
-    
+
     "query_data": IntentPattern(
         name="query_data",
         description="Query data from vector store or database",
@@ -119,7 +118,7 @@ INTENT_PATTERNS = {
         workflow_id="data-query-workflow",
         response_template="Query Results for '{query}':\n{query_results}"
     ),
-    
+
     "stop_service": IntentPattern(
         name="stop_service",
         description="Stop a running service",
@@ -139,7 +138,7 @@ INTENT_PATTERNS = {
         workflow_id="service-control-workflow",
         response_template="Stopping service '{service}'...\n{stop_result}"
     ),
-    
+
     "list_agents": IntentPattern(
         name="list_agents",
         description="List all available agents",
@@ -159,7 +158,7 @@ INTENT_PATTERNS = {
         workflow_id="agent-listing-workflow",
         response_template="Available Agents:\n{agents_list}"
     ),
-    
+
     "get_metrics": IntentPattern(
         name="get_metrics",
         description="Get performance metrics",
@@ -180,7 +179,7 @@ INTENT_PATTERNS = {
         workflow_id="metrics-collection-workflow",
         response_template="Metrics for {target}:\n{metrics_data}"
     ),
-    
+
     "help": IntentPattern(
         name="help",
         description="Show help and available commands",
@@ -208,15 +207,15 @@ def get_intent_pattern(intent_name: str) -> IntentPattern:
     return INTENT_PATTERNS.get(intent_name)
 
 
-def get_all_intents() -> Dict[str, IntentPattern]:
+def get_all_intents() -> dict[str, IntentPattern]:
     """Get all available intent patterns"""
     return INTENT_PATTERNS
 
 
-def get_intent_examples() -> Dict[str, List[str]]:
+def get_intent_examples() -> dict[str, list[str]]:
     """Get examples for all intents"""
     return {
-        name: pattern.examples 
+        name: pattern.examples
         for name, pattern in INTENT_PATTERNS.items()
     }
 
@@ -224,12 +223,12 @@ def get_intent_examples() -> Dict[str, List[str]]:
 def format_help_text() -> str:
     """Format help text with all available commands"""
     lines = ["Here are the available commands:\n"]
-    
+
     for name, pattern in INTENT_PATTERNS.items():
         lines.append(f"• {pattern.description}")
-        lines.append(f"  Examples:")
+        lines.append("  Examples:")
         for example in pattern.examples[:2]:  # Show max 2 examples
             lines.append(f"    - {example}")
         lines.append("")
-    
+
     return "\n".join(lines)

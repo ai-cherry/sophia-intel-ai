@@ -5,14 +5,14 @@ Aggregates health status from all system components and external services.
 
 import asyncio
 import logging
-import time
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any
-from dataclasses import dataclass, field, asdict
-from enum import Enum
-import aiohttp
-import json
 import os
+import time
+from dataclasses import dataclass, field
+from datetime import datetime
+from enum import Enum
+from typing import Any
+
+import aiohttp
 
 logger = logging.getLogger(__name__)
 
@@ -30,13 +30,13 @@ class ServiceHealth:
     """Health status for a single service."""
     name: str
     status: HealthStatus
-    url: Optional[str] = None
-    response_time_ms: Optional[float] = None
-    last_checked: Optional[datetime] = None
-    error_message: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    
-    def to_dict(self) -> Dict[str, Any]:
+    url: str | None = None
+    response_time_ms: float | None = None
+    last_checked: datetime | None = None
+    error_message: str | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
+
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
         return {
             "name": self.name,
@@ -53,7 +53,7 @@ class ServiceHealth:
 class AggregatedHealth:
     """Aggregated health status for all services."""
     overall_status: HealthStatus
-    services: List[ServiceHealth] = field(default_factory=list)
+    services: list[ServiceHealth] = field(default_factory=list)
     healthy_count: int = 0
     degraded_count: int = 0
     unhealthy_count: int = 0
@@ -61,8 +61,8 @@ class AggregatedHealth:
     total_services: int = 0
     check_timestamp: datetime = field(default_factory=datetime.now)
     response_time_ms: float = 0.0
-    
-    def to_dict(self) -> Dict[str, Any]:
+
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
         return {
             "overall_status": self.overall_status.value,
@@ -82,14 +82,14 @@ class HealthAggregator:
     Aggregates health checks from multiple services and components.
     Provides a unified view of system health.
     """
-    
+
     def __init__(self):
         self.timeout_seconds = 5.0
-        self._last_check: Optional[AggregatedHealth] = None
+        self._last_check: AggregatedHealth | None = None
         self._check_interval = 30  # seconds
         self._running = False
-        self._background_task: Optional[asyncio.Task] = None
-        
+        self._background_task: asyncio.Task | None = None
+
         # Define services to monitor
         self.services = [
             {
@@ -113,7 +113,7 @@ class HealthAggregator:
                 "timeout": 5.0
             }
         ]
-        
+
         # Add external service checks
         external_services = [
             {
@@ -136,23 +136,23 @@ class HealthAggregator:
                 }
             }
         ]
-        
+
         # Only add external services if API keys are available
         if os.getenv('OPENROUTER_API_KEY') and os.getenv('OPENROUTER_API_KEY') != 'dummy':
             self.services.extend(external_services)
-    
-    async def check_service_health(self, service: Dict[str, Any]) -> ServiceHealth:
+
+    async def check_service_health(self, service: dict[str, Any]) -> ServiceHealth:
         """Check health of a single service."""
         start_time = time.time()
-        
+
         try:
             timeout = aiohttp.ClientTimeout(total=service.get('timeout', self.timeout_seconds))
             headers = service.get('headers', {})
-            
+
             async with aiohttp.ClientSession(timeout=timeout) as session:
                 async with session.get(service['url'], headers=headers) as response:
                     response_time = (time.time() - start_time) * 1000
-                    
+
                     # Parse response if possible
                     metadata = {}
                     try:
@@ -168,7 +168,7 @@ class HealthAggregator:
                                     metadata['service_timestamp'] = response_data['timestamp']
                     except Exception:
                         pass  # Ignore JSON parsing errors
-                    
+
                     # Determine health status based on response code
                     if response.status == 200:
                         status = HealthStatus.HEALTHY
@@ -179,7 +179,7 @@ class HealthAggregator:
                     else:
                         status = HealthStatus.UNHEALTHY
                         error_message = f"HTTP {response.status}: {response.reason}"
-                    
+
                     return ServiceHealth(
                         name=service['name'],
                         status=status,
@@ -189,7 +189,7 @@ class HealthAggregator:
                         error_message=error_message,
                         metadata=metadata
                     )
-                    
+
         except asyncio.TimeoutError:
             return ServiceHealth(
                 name=service['name'],
@@ -217,14 +217,14 @@ class HealthAggregator:
                 last_checked=datetime.now(),
                 error_message=f"Unexpected error: {str(e)}"
             )
-    
-    def _check_system_resources(self) -> List[ServiceHealth]:
+
+    def _check_system_resources(self) -> list[ServiceHealth]:
         """Check system resource health."""
         resource_checks = []
-        
+
         try:
             import psutil
-            
+
             # CPU usage check
             cpu_percent = psutil.cpu_percent(interval=1)
             cpu_status = HealthStatus.HEALTHY
@@ -232,14 +232,14 @@ class HealthAggregator:
                 cpu_status = HealthStatus.UNHEALTHY
             elif cpu_percent > 70:
                 cpu_status = HealthStatus.DEGRADED
-            
+
             resource_checks.append(ServiceHealth(
                 name="System CPU",
                 status=cpu_status,
                 last_checked=datetime.now(),
                 metadata={"cpu_percent": cpu_percent}
             ))
-            
+
             # Memory usage check
             memory = psutil.virtual_memory()
             memory_status = HealthStatus.HEALTHY
@@ -247,7 +247,7 @@ class HealthAggregator:
                 memory_status = HealthStatus.UNHEALTHY
             elif memory.percent > 80:
                 memory_status = HealthStatus.DEGRADED
-            
+
             resource_checks.append(ServiceHealth(
                 name="System Memory",
                 status=memory_status,
@@ -258,7 +258,7 @@ class HealthAggregator:
                     "memory_total_gb": round(memory.total / (1024**3), 2)
                 }
             ))
-            
+
             # Disk usage check
             disk = psutil.disk_usage('/')
             disk_status = HealthStatus.HEALTHY
@@ -267,7 +267,7 @@ class HealthAggregator:
                 disk_status = HealthStatus.UNHEALTHY
             elif disk_percent > 85:
                 disk_status = HealthStatus.DEGRADED
-            
+
             resource_checks.append(ServiceHealth(
                 name="System Disk",
                 status=disk_status,
@@ -278,7 +278,7 @@ class HealthAggregator:
                     "disk_total_gb": round(disk.total / (1024**3), 2)
                 }
             ))
-            
+
         except ImportError:
             # psutil not available
             resource_checks.append(ServiceHealth(
@@ -294,17 +294,17 @@ class HealthAggregator:
                 last_checked=datetime.now(),
                 error_message=f"System check error: {str(e)}"
             ))
-        
+
         return resource_checks
-    
+
     async def aggregate_health(self) -> AggregatedHealth:
         """Perform health checks on all services and aggregate results."""
         start_time = time.time()
-        
+
         # Run service health checks concurrently
         tasks = [self.check_service_health(service) for service in self.services]
         service_results = await asyncio.gather(*tasks, return_exceptions=True)
-        
+
         # Filter out exceptions and convert to ServiceHealth objects
         services = []
         for result in service_results:
@@ -317,11 +317,11 @@ class HealthAggregator:
                     status=HealthStatus.UNKNOWN,
                     error_message=str(result)
                 ))
-        
+
         # Add system resource checks
         system_checks = self._check_system_resources()
         services.extend(system_checks)
-        
+
         # Calculate aggregated metrics
         status_counts = {
             HealthStatus.HEALTHY: 0,
@@ -329,10 +329,10 @@ class HealthAggregator:
             HealthStatus.UNHEALTHY: 0,
             HealthStatus.UNKNOWN: 0
         }
-        
+
         for service in services:
             status_counts[service.status] += 1
-        
+
         # Determine overall status
         if status_counts[HealthStatus.UNHEALTHY] > 0:
             overall_status = HealthStatus.UNHEALTHY
@@ -342,9 +342,9 @@ class HealthAggregator:
             overall_status = HealthStatus.UNKNOWN
         else:
             overall_status = HealthStatus.HEALTHY
-        
+
         total_time = (time.time() - start_time) * 1000
-        
+
         aggregated = AggregatedHealth(
             overall_status=overall_status,
             services=services,
@@ -356,27 +356,27 @@ class HealthAggregator:
             check_timestamp=datetime.now(),
             response_time_ms=total_time
         )
-        
+
         self._last_check = aggregated
-        
+
         # Log health status changes
         logger.info(
             f"Health check complete: {overall_status.value} "
             f"({status_counts[HealthStatus.HEALTHY]}H/{status_counts[HealthStatus.DEGRADED]}D/"
             f"{status_counts[HealthStatus.UNHEALTHY]}U/{status_counts[HealthStatus.UNKNOWN]}?)"
         )
-        
+
         return aggregated
-    
-    def get_last_health_check(self) -> Optional[AggregatedHealth]:
+
+    def get_last_health_check(self) -> AggregatedHealth | None:
         """Get the most recent health check results."""
         return self._last_check
-    
+
     async def start_background_monitoring(self, check_interval: int = 30):
         """Start background health monitoring."""
         self._check_interval = check_interval
         self._running = True
-        
+
         async def monitor_loop():
             while self._running:
                 try:
@@ -387,10 +387,10 @@ class HealthAggregator:
                 except Exception as e:
                     logger.error(f"Background health check error: {e}")
                     await asyncio.sleep(self._check_interval)
-        
+
         self._background_task = asyncio.create_task(monitor_loop())
         logger.info(f"Started background health monitoring (interval: {check_interval}s)")
-    
+
     def stop_background_monitoring(self):
         """Stop background health monitoring."""
         self._running = False
@@ -400,7 +400,7 @@ class HealthAggregator:
 
 
 # Global singleton instance
-_health_aggregator: Optional[HealthAggregator] = None
+_health_aggregator: HealthAggregator | None = None
 
 
 def get_health_aggregator() -> HealthAggregator:

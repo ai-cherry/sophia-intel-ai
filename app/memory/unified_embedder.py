@@ -3,19 +3,17 @@ Elite Unified Embedder - Consolidates 30+ Embedding Classes
 Single point of control for all embedding operations across Sophia Intel AI
 """
 
-import os
-import json
-import hashlib
 import asyncio
 import logging
-from typing import List, Dict, Any, Optional, Tuple, Union
-from dataclasses import dataclass, field
-from enum import Enum
-from datetime import datetime
 import math
+import os
+from dataclasses import dataclass, field
+from datetime import datetime
+from enum import Enum
+from typing import Any
 
-from app.core.circuit_breaker import with_circuit_breaker
 from app.api.unified_gateway import get_elite_unified_gateway
+from app.core.circuit_breaker import with_circuit_breaker
 
 logger = logging.getLogger(__name__)
 
@@ -92,12 +90,12 @@ class UnifiedEmbedderConfig:
     # Intelligent routing (from coordinator and dual-tier)
     token_threshold_speed: int = 512      # Use speed tier below
     token_threshold_quality: int = 2048    # Use quality tier above
-    priority_keywords: List[str] = field(default_factory=lambda: [
+    priority_keywords: list[str] = field(default_factory=lambda: [
         "critical", "security", "authentication", "payment",
         "privacy", "compliance", "legal", "architecture"
     ])
 
-    language_tier_mapping: Dict[str, EmbedderTier] = field(default_factory=lambda: {
+    language_tier_mapping: dict[str, EmbedderTier] = field(default_factory=lambda: {
         "python": EmbedderTier.SPECIALIZED,
         "rust": EmbedderTier.SPECIALIZED,
         "go": EmbedderTier.SPECIALIZED,
@@ -146,7 +144,7 @@ class EmbeddingCacheEntry:
     dimension: int
     access_count: int = 0
     created_at: str = field(default_factory=lambda: datetime.now().isoformat())
-    last_accessed: Optional[str] = None
+    last_accessed: str | None = None
     cost_estimation: float = 0.0
 
 # =============================================================================
@@ -169,10 +167,10 @@ class UnifiedEmbedderRouter:
         self,
         text: str,
         purpose: EmbeddingPurpose,
-        language: Optional[str] = None,
-        priority: Optional[str] = None,
-        strategy_override: Optional[EmbedderStrategy] = None
-    ) -> Tuple[EmbedderTier, str, str]:
+        language: str | None = None,
+        priority: str | None = None,
+        strategy_override: EmbedderStrategy | None = None
+    ) -> tuple[EmbedderTier, str, str]:
         """
         Select optimal tier, model, and provider for given inputs
 
@@ -238,10 +236,10 @@ class UnifiedEmbedderRouter:
 
     def batch_route(
         self,
-        texts: List[str],
-        metadata: Optional[List[Dict[str, Any]]] = None,
+        texts: list[str],
+        metadata: list[dict[str, Any]] | None = None,
         purpose: EmbeddingPurpose = EmbeddingPurpose.SEARCH
-    ) -> Dict[str, List[Tuple[int, str, str, str]]]:
+    ) -> dict[str, list[tuple[int, str, str, str]]]:
         """
         Route a batch of texts to appropriate tiers and models
 
@@ -293,7 +291,7 @@ class EliteUnifiedEmbedder:
     - Includes comprehensive monitoring and metrics
     """
 
-    def __init__(self, config: Optional[UnifiedEmbedderConfig] = None):
+    def __init__(self, config: UnifiedEmbedderConfig | None = None):
         self.config = config or UnifiedEmbedderConfig.from_env()
         self.router = UnifiedEmbedderRouter(self.config)
         self.gateway = get_elite_unified_gateway()
@@ -320,12 +318,12 @@ class EliteUnifiedEmbedder:
     @with_circuit_breaker("embeddings")
     async def embed_batch(
         self,
-        texts: List[str],
+        texts: list[str],
         strategy: EmbedderStrategy = EmbedderStrategy.AUTO,
         purpose: EmbeddingPurpose = EmbeddingPurpose.SEARCH,
-        metadata: Optional[List[Dict[str, Any]]] = None,
+        metadata: list[dict[str, Any]] | None = None,
         return_metadata: bool = False
-    ) -> Union[List[List[float]], List[Dict[str, Any]]]:
+    ) -> list[list[float]] | list[dict[str, Any]]:
         """
         Generate embeddings for batch of texts with intelligent routing
 
@@ -431,7 +429,7 @@ class EliteUnifiedEmbedder:
         if return_metadata:
             # Return detailed results with metadata
             detailed_results = []
-            for i, (text, embedding) in enumerate(zip(texts, results)):
+            for i, (text, embedding) in enumerate(zip(texts, results, strict=False)):
                 meta = metadata[i] if metadata and i < len(metadata) else {}
                 detailed_results.append({
                     "text": text,
@@ -455,10 +453,10 @@ class EliteUnifiedEmbedder:
         text: str,
         strategy: EmbedderStrategy = EmbedderStrategy.AUTO,
         purpose: EmbeddingPurpose = EmbeddingPurpose.SEARCH,
-        language: Optional[str] = None,
-        priority: Optional[str] = "medium",
+        language: str | None = None,
+        priority: str | None = "medium",
         return_metadata: bool = False
-    ) -> Union[List[float], Dict[str, Any]]:
+    ) -> list[float] | dict[str, Any]:
         """
         Generate embedding for single text
 
@@ -489,10 +487,10 @@ class EliteUnifiedEmbedder:
 
     async def embed_hybrid(
         self,
-        texts: List[str],
+        texts: list[str],
         purpose: EmbeddingPurpose = EmbeddingPurpose.SEARCH,
-        metadata: Optional[List[Dict[str, Any]]] = None
-    ) -> List[List[float]]:
+        metadata: list[dict[str, Any]] | None = None
+    ) -> list[list[float]]:
         """
         Generate hybrid embeddings (ensemble from multiple tiers)
         Combines speed and quality approaches for optimal results
@@ -508,7 +506,7 @@ class EliteUnifiedEmbedder:
 
         # Ensemble by normalizing and averaging
         hybrid_results = []
-        for speed_emb, quality_emb in zip(speed_results, quality_results):
+        for speed_emb, quality_emb in zip(speed_results, quality_results, strict=False):
             # Normalize and average
             speed_norm = self._normalize_embedding(speed_emb)
             quality_norm = self._normalize_embedding(quality_emb)
@@ -517,12 +515,12 @@ class EliteUnifiedEmbedder:
 
         return hybrid_results
 
-    def _normalize_embedding(self, embedding: List[float]) -> List[float]:
+    def _normalize_embedding(self, embedding: list[float]) -> list[float]:
         """L2 normalization"""
         norm = math.sqrt(sum(x * x for x in embedding))
         return [x / norm for x in embedding] if norm > 0 else embedding
 
-    def _average_embeddings(self, emb1: List[float], emb2: List[float]) -> List[float]:
+    def _average_embeddings(self, emb1: list[float], emb2: list[float]) -> list[float]:
         """Average two embeddings (assumes same dimension)"""
         if len(emb1) != len(emb2):
             # Pad shorter to length of longer
@@ -530,9 +528,9 @@ class EliteUnifiedEmbedder:
                 emb1.extend([0.0] * (len(emb2) - len(emb1)))
             else:
                 emb2.extend([0.0] * (len(emb1) - len(emb2)))
-        return [(a + b) / 2.0 for a, b in zip(emb1, emb2)]
+        return [(a + b) / 2.0 for a, b in zip(emb1, emb2, strict=False)]
 
-    def get_metrics_report(self) -> Dict[str, Any]:
+    def get_metrics_report(self) -> dict[str, Any]:
         """Get comprehensive metrics report"""
         total_requests = self.metrics["requests_total"]
         cache_hits = self.metrics["cache_hits"]
@@ -554,7 +552,7 @@ class EliteUnifiedEmbedder:
             }
         }
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """Comprehensive health check for all embedding tiers/providers"""
         health_results = {}
 
@@ -629,17 +627,17 @@ except Exception as e:
 # UTILITY FUNCTIONS - COMBINED FROM ALL SOURCES
 # =============================================================================
 
-def cosine_similarity(emb1: List[float], emb2: List[float]) -> float:
+def cosine_similarity(emb1: list[float], emb2: list[float]) -> float:
     """Cosine similarity from dual-tier approach"""
-    return sum(a * b for a, b in zip(emb1, emb2)) / (
+    return sum(a * b for a, b in zip(emb1, emb2, strict=False)) / (
         math.sqrt(sum(a * a for a in emb1)) * math.sqrt(sum(b * b for b in emb2))
     )
 
-def euclidean_distance(emb1: List[float], emb2: List[float]) -> float:
+def euclidean_distance(emb1: list[float], emb2: list[float]) -> float:
     """Euclidean distance from pipeline approach"""
-    return math.sqrt(sum((a - b) ** 2 for a, b in zip(emb1, emb2)))
+    return math.sqrt(sum((a - b) ** 2 for a, b in zip(emb1, emb2, strict=False)))
 
-def normalize_embedding(embedding: List[float]) -> List[float]:
+def normalize_embedding(embedding: list[float]) -> list[float]:
     """Normalize embedding to unit length - from multiple sources"""
     norm = math.sqrt(sum(x * x for x in embedding))
     return [x / norm for x in embedding] if norm > 0 else embedding

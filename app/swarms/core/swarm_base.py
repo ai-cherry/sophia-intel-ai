@@ -3,20 +3,16 @@ Unified Swarm Base Architecture - Foundation for all swarm types
 Consolidates 57 swarm classes into strategic patterns
 """
 
-import os
-import json
-import hashlib
 import asyncio
 import logging
 from abc import ABC, abstractmethod
-from typing import Dict, List, Any, Optional, Tuple, Union
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from app.swarms.communication.message_bus import MessageBus
+from typing import Any
 
-from app.core.circuit_breaker import with_circuit_breaker
-from app.models.requests import ExecutionResponse, SwarmResponse
+from app.models.requests import SwarmResponse
+from app.swarms.communication.message_bus import MessageBus
 
 logger = logging.getLogger(__name__)
 
@@ -69,9 +65,9 @@ class SwarmMetrics:
     successful_executions: int = 0
     failed_executions: int = 0
     avg_response_time: float = 0.0
-    agent_utilization: Dict[str, float] = field(default_factory=dict)
-    pattern_usage: Dict[str, int] = field(default_factory=dict)
-    capability_scores: Dict[str, float] = field(default_factory=dict)
+    agent_utilization: dict[str, float] = field(default_factory=dict)
+    pattern_usage: dict[str, int] = field(default_factory=dict)
+    capability_scores: dict[str, float] = field(default_factory=dict)
     created_at: datetime = field(default_factory=datetime.now)
     last_updated: datetime = field(default_factory=datetime.now)
 
@@ -79,8 +75,8 @@ class SwarmMetrics:
         self,
         success: bool,
         response_time: float,
-        agents_used: List[str],
-        patterns_used: List[str]
+        agents_used: list[str],
+        patterns_used: list[str]
     ):
         """Record execution metrics"""
         self.total_requests += 1
@@ -133,8 +129,8 @@ class SwarmConfig:
 
     # Agent configuration
     agent_count: int = 5
-    agent_types: List[str] = field(default_factory=lambda: ["planner", "critic", "generator", "runner"])
-    capabilities: List[SwarmCapability] = field(default_factory=list)
+    agent_types: list[str] = field(default_factory=lambda: ["planner", "critic", "generator", "runner"])
+    capabilities: list[SwarmCapability] = field(default_factory=list)
 
     # Execution parameters
     max_execution_time: float = 300.0  # 5 minutes
@@ -142,7 +138,7 @@ class SwarmConfig:
     quality_threshold: float = 0.8
 
     # Patterns to enable
-    enabled_patterns: List[str] = field(default_factory=lambda: [
+    enabled_patterns: list[str] = field(default_factory=lambda: [
         "quality_gates", "consensus", "strategy_archive", "debate"
     ])
 
@@ -155,12 +151,12 @@ class SwarmConfig:
     logging_level: str = "INFO"
 
     # Environment
-    session_id: Optional[str] = None
-    user_id: Optional[str] = None
+    session_id: str | None = None
+    user_id: str | None = None
     environment: str = "production"
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "SwarmConfig":
+    def from_dict(cls, data: dict[str, Any]) -> "SwarmConfig":
         """Create config from dictionary"""
         # Convert string enums back to proper enums
         if "swarm_type" in data and isinstance(data["swarm_type"], str):
@@ -173,7 +169,7 @@ class SwarmConfig:
 
         return cls(**data)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization"""
         data = {}
         for key, value in self.__dict__.items():
@@ -194,7 +190,7 @@ class SwarmBase(ABC):
     Consolidated from ImprovedAgentSwarm, OptimizedSwarm, and various specialized swarms
     """
 
-    def __init__(self, config: SwarmConfig, agents: Optional[List[Any]] = None, message_bus: Optional[MessageBus] = None):
+    def __init__(self, config: SwarmConfig, agents: list[Any] | None = None, message_bus: MessageBus | None = None):
         self.config = config
         self.agents = agents or []
         self.metrics = SwarmMetrics()
@@ -245,17 +241,17 @@ class SwarmBase(ABC):
         return True
 
     @abstractmethod
-    async def solve_problem(self, problem: Dict[str, Any]) -> SwarmResponse:
+    async def solve_problem(self, problem: dict[str, Any]) -> SwarmResponse:
         """Execute swarm problem-solving logic"""
         pass
 
     @abstractmethod
-    async def get_swarm_capabilities(self) -> List[SwarmCapability]:
+    async def get_swarm_capabilities(self) -> list[SwarmCapability]:
         """Get swarm's capabilities"""
         pass
 
     @abstractmethod
-    async def validate_problem(self, problem: Dict[str, Any]) -> Tuple[bool, str]:
+    async def validate_problem(self, problem: dict[str, Any]) -> tuple[bool, str]:
         """Validate if swarm can handle this problem"""
         pass
 
@@ -263,7 +259,7 @@ class SwarmBase(ABC):
     # COMMON METHODS - SHARED ACROSS ALL SWARMS
     # =============================================================================
 
-    async def prepare_context(self, problem: Dict[str, Any]) -> Dict[str, Any]:
+    async def prepare_context(self, problem: dict[str, Any]) -> dict[str, Any]:
         """Prepare execution context with memory and patterns"""
 
         context = {
@@ -290,7 +286,7 @@ class SwarmBase(ABC):
 
         return context
 
-    async def apply_patterns(self, problem: Dict[str, Any], context: Dict[str, Any]) -> Dict[str, Any]:
+    async def apply_patterns(self, problem: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
         """Apply enabled patterns to enhance problem solving"""
 
         enhanced_problem = dict(problem)  # Copy
@@ -314,7 +310,7 @@ class SwarmBase(ABC):
 
         return enhanced_problem, context
 
-    async def execute_agents(self, problem: Dict[str, Any], context: Dict[str, Any]) -> List[Dict[str, Any]]:
+    async def execute_agents(self, problem: dict[str, Any], context: dict[str, Any]) -> list[dict[str, Any]]:
         """Execute agents based on execution mode"""
 
         mode = self.config.execution_mode
@@ -335,7 +331,7 @@ class SwarmBase(ABC):
             # Default to parallel
             return await self._execute_parallel(problem, context)
 
-    async def _execute_parallel(self, problem: Dict[str, Any], context: Dict[str, Any]) -> List[Dict[str, Any]]:
+    async def _execute_parallel(self, problem: dict[str, Any], context: dict[str, Any]) -> list[dict[str, Any]]:
         """Execute all agents in parallel"""
         if not self.agents:
             return []
@@ -349,7 +345,7 @@ class SwarmBase(ABC):
         # Filter out exceptions and return valid results
         return [r for r in results if not isinstance(r, Exception)]
 
-    async def _execute_linear(self, problem: Dict[str, Any], context: Dict[str, Any]) -> List[Dict[str, Any]]:
+    async def _execute_linear(self, problem: dict[str, Any], context: dict[str, Any]) -> list[dict[str, Any]]:
         """Execute agents sequentially"""
         results = []
 
@@ -367,7 +363,7 @@ class SwarmBase(ABC):
 
         return results
 
-    async def _execute_hierarchical(self, problem: Dict[str, Any], context: Dict[str, Any]) -> List[Dict[str, Any]]:
+    async def _execute_hierarchical(self, problem: dict[str, Any], context: dict[str, Any]) -> list[dict[str, Any]]:
         """Execute in hierarchical pattern (coordinator + workers)"""
         if not self.agents:
             return []
@@ -396,8 +392,8 @@ class SwarmBase(ABC):
         # Fallback to parallel
         return await self._execute_parallel(problem, context)
 
-    async def _execute_parallel_impl(self, agents: List[Any], task_assignments: List[Dict[str, Any]],
-                                   context: Dict[str, Any]) -> List[Dict[str, Any]]:
+    async def _execute_parallel_impl(self, agents: list[Any], task_assignments: list[dict[str, Any]],
+                                   context: dict[str, Any]) -> list[dict[str, Any]]:
         """Helper for parallel execution with assignments"""
         # For simplicity, distribute equally
         chunk_size = len(agents) // len(task_assignments) if task_assignments else 1
@@ -426,13 +422,13 @@ class SwarmBase(ABC):
                 for r in chunk_results
                 if isinstance(r, dict)]
 
-    async def _execute_evolutionary(self, problem: Dict[str, Any], context: Dict[str, Any]) -> List[Dict[str, Any]]:
+    async def _execute_evolutionary(self, problem: dict[str, Any], context: dict[str, Any]) -> list[dict[str, Any]]:
         """Execute evolutionary algorithm-based solving"""
         # Placeholder - would implement generations of solutions
         logger.info("🧬 Executing evolutionary swarm logic")
         return await self._execute_parallel(problem, context)
 
-    async def _execute_debate(self, problem: Dict[str, Any], context: Dict[str, Any]) -> List[Dict[str, Any]]:
+    async def _execute_debate(self, problem: dict[str, Any], context: dict[str, Any]) -> list[dict[str, Any]]:
         """Execute adversarial debate pattern"""
         # Rely on debate pattern if enabled
         if "debate" in self.patterns:
@@ -446,7 +442,7 @@ class SwarmBase(ABC):
         # Fallback to parallel
         return await self._execute_parallel(problem, context)
 
-    async def _execute_consensus(self, problem: Dict[str, Any], context: Dict[str, Any]) -> List[Dict[str, Any]]:
+    async def _execute_consensus(self, problem: dict[str, Any], context: dict[str, Any]) -> list[dict[str, Any]]:
         """Execute consensus-based decision making"""
         # Rely on consensus pattern if enabled
         if "consensus" in self.patterns:
@@ -461,7 +457,7 @@ class SwarmBase(ABC):
         return await self._execute_parallel(problem, context)
 
     @abstractmethod
-    async def _execute_single_agent(self, agent: Any, problem: Dict[str, Any], context: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_single_agent(self, agent: Any, problem: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
         """Execute single agent - implementation specific"""
         pass
 
@@ -469,7 +465,7 @@ class SwarmBase(ABC):
     # QUALITY CONTROL & VALIDATION
     # =============================================================================
 
-    async def apply_quality_gates(self, results: List[Dict[str, Any]], problem: Dict[str, Any]) -> Tuple[bool, List[Dict[str, Any]]]:
+    async def apply_quality_gates(self, results: list[dict[str, Any]], problem: dict[str, Any]) -> tuple[bool, list[dict[str, Any]]]:
         """Apply quality gates to results (implementation in patterns)"""
 
         if "quality_gates" in self.patterns:
@@ -494,7 +490,7 @@ class SwarmBase(ABC):
         # No quality gates or error - return all results
         return True, results
 
-    async def reach_consensus(self, results: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def reach_consensus(self, results: list[dict[str, Any]]) -> dict[str, Any]:
         """Reach consensus from multiple agent results"""
 
         if not results:
@@ -561,7 +557,7 @@ class SwarmBase(ABC):
         self.is_initialized = False
         logger.info(f"🧹 Cleaned up swarm: {self.config.swarm_id}")
 
-    def get_swarm_status(self) -> Dict[str, Any]:
+    def get_swarm_status(self) -> dict[str, Any]:
         """Get current swarm status"""
 
         return {
@@ -581,7 +577,7 @@ class SwarmBase(ABC):
             "last_activity": self.metrics.last_updated.isoformat()
         }
 
-    def update_config(self, updates: Dict[str, Any]):
+    def update_config(self, updates: dict[str, Any]):
         """Update swarm configuration"""
         for key, value in updates.items():
             if hasattr(self.config, key):
@@ -653,9 +649,9 @@ class SwarmFactory:
     @staticmethod
     def create_swarm(
         swarm_type: SwarmType,
-        config: Optional[SwarmConfig] = None,
-        agents: Optional[List[Any]] = None,
-        message_bus: Optional[MessageBus] = None
+        config: SwarmConfig | None = None,
+        agents: list[Any] | None = None,
+        message_bus: MessageBus | None = None
     ) -> SwarmBase:
         """Create swarm instance based on type"""
         if isinstance(swarm_type, str):
@@ -673,13 +669,13 @@ class SwarmFactory:
         return SwarmBase(config, agents, message_bus) if agents else SwarmBase(config, None, message_bus)
 
     @staticmethod
-    def create_swarm_from_config(config_dict: Dict[str, Any]) -> SwarmBase:
+    def create_swarm_from_config(config_dict: dict[str, Any]) -> SwarmBase:
         """Create swarm from configuration dictionary"""
         config = SwarmConfig.from_dict(config_dict)
         return SwarmFactory.create_swarm(config.swarm_type, config)
 
     @staticmethod
-    def optimize_config_for_task(task: Dict[str, Any], base_type: SwarmType = SwarmType.STANDARD) -> SwarmConfig:
+    def optimize_config_for_task(task: dict[str, Any], base_type: SwarmType = SwarmType.STANDARD) -> SwarmConfig:
         """Automatically optimize swarm configuration for a specific task"""
         config = SwarmConfig(**DEFAULT_SWARM_CONFIGS[base_type].__dict__)
 
@@ -707,9 +703,9 @@ class SwarmFactory:
 # GLOBAL INSTANCE MANAGEMENT
 # =============================================================================
 
-_swarm_instances: Dict[str, SwarmBase] = {}
+_swarm_instances: dict[str, SwarmBase] = {}
 
-def get_swarm(swarm_id: str) -> Optional[SwarmBase]:
+def get_swarm(swarm_id: str) -> SwarmBase | None:
     """Get existing swarm instance"""
     return _swarm_instances.get(swarm_id)
 
@@ -717,7 +713,7 @@ def register_swarm(swarmy_id: str, swarm: SwarmBase):
     """Register swarm instance for reuse"""
     _swarm_instances[swarmy_id] = swarm
 
-def list_active_swarms() -> List[Dict[str, Any]]:
+def list_active_swarms() -> list[dict[str, Any]]:
     """List all active swarm instances"""
     return [
         {
@@ -743,7 +739,7 @@ async def cleanup_all_swarms():
 # EXECUTION UTILITIES
 # =============================================================================
 
-def validate_task_compatibility(task: Dict[str, Any], swarm: SwarmBase) -> Tuple[bool, str]:
+def validate_task_compatibility(task: dict[str, Any], swarm: SwarmBase) -> tuple[bool, str]:
     """Validate if a swarm can handle a specific task"""
     swarm_caps = [cap.value for cap in swarm.config.capabilities]
     task_requires = task.get("required_capabilities", [])
@@ -764,9 +760,9 @@ def validate_task_compatibility(task: Dict[str, Any], swarm: SwarmBase) -> Tuple
 
 async def execute_swarm_task(
     swarm_id: str,
-    task: Dict[str, Any],
+    task: dict[str, Any],
     **kwargs
-) -> Optional[SwarmResponse]:
+) -> SwarmResponse | None:
     """Execute a task on an existing swarm"""
     swarm = get_swarm(swarm_id)
     if not swarm:
@@ -796,17 +792,17 @@ async def execute_swarm_task(
 # SWARM PATTERN REGISTRY
 # =============================================================================
 
-_swarm_patterns: Dict[str, Any] = {}
+_swarm_patterns: dict[str, Any] = {}
 
 def register_swarm_pattern(name: str, pattern_class: Any):
     """Register a swarm pattern for use by swarms"""
     _swarm_patterns[name] = pattern_class
 
-def get_swarm_pattern(name: str) -> Optional[Any]:
+def get_swarm_pattern(name: str) -> Any | None:
     """Get registered swarm pattern"""
     return _swarm_patterns.get(name)
 
-def list_registered_patterns() -> List[str]:
+def list_registered_patterns() -> list[str]:
     """List all registered swarm patterns"""
     return list(_swarm_patterns.keys())
 

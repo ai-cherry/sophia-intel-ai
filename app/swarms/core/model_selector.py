@@ -1,5 +1,6 @@
 from app.config.env_loader import get_env_config
 
+
 class IntelligentModelSelector:
     def __init__(self):
         """Initialize with environment configuration for GPT-5 availability."""
@@ -33,8 +34,8 @@ class IntelligentModelSelector:
         is_multimodal = task_context.get("is_multimodal", False)
 
         # Prioritize GPT-5 for high-severity tasks
-        if (complexity == "extreme" or 
-            accuracy_required == "critical" or 
+        if (complexity == "extreme" or
+            accuracy_required == "critical" or
             is_multimodal) and self.gpt5_enabled:
             return "openai/gpt-5"
 

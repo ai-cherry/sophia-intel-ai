@@ -1,11 +1,11 @@
+import asyncio
 import os
 import subprocess
-import asyncio
-import time
-import random
 from enum import Enum
-from typing import Dict, List, Any, Optional
+from typing import Any
+
 from app.deployment.port_manager import PortManager
+
 
 class DeploymentEnvironment(Enum):
     """Auto-detected deployment environments"""
@@ -19,14 +19,14 @@ class DeploymentEnvironment(Enum):
 
 class DeploymentOrchestrator:
     """Universal deployment orchestrator for any environment"""
-    
+
     def __init__(self):
         self.port_manager = PortManager()
         self.environment = self.detect_environment()
         self.service_registry = {}
         self.deployed_services = {}
         self.health_checker = None
-    
+
     def detect_environment(self) -> DeploymentEnvironment:
         """Auto-detect deployment environment"""
         if os.environ.get('KUBERNETES_SERVICE_HOST'):
@@ -35,9 +35,7 @@ class DeploymentOrchestrator:
             return DeploymentEnvironment.AWS
         elif os.environ.get('GCP_PROJECT'):
             return DeploymentEnvironment.GCP
-        elif os.path.exists('/.dockerenv'):
-            return DeploymentEnvironment.DOCKER
-        elif 'CONTAINER' in os.environ.get('HOSTNAME', ''):
+        elif os.path.exists('/.dockerenv') or 'CONTAINER' in os.environ.get('HOSTNAME', ''):
             return DeploymentEnvironment.DOCKER
         else:
             return DeploymentEnvironment.LOCAL
@@ -63,7 +61,7 @@ class DeploymentOrchestrator:
         # Prepare the environment first
         if not await self.prepare_environment():
             raise RuntimeError("Failed to prepare environment for deployment")
-        
+
         # Order of deployment for dependency chain
         services = [
             {'name': 'redis', 'command': 'docker run -d --name redis redis', 'port': 'redis'},
@@ -73,27 +71,27 @@ class DeploymentOrchestrator:
             {'name': 'streamlit', 'command': 'streamlit run app/ui/streamlit_chat.py', 'port': 'streamlit'},
             {'name': 'monitoring', 'command': 'docker-compose -f docker-compose.monitoring.yml up -d', 'port': 'grafana'}
         ]
-        
+
         for service in services:
             port = self.port_manager.get_available_port(service['port'])
             logger.info(f"Deploying {service['name']} on port {port}")
             await self.deploy_service(service, port)
-        
+
         # Wait for all services to become healthy
         self.health_checker = await self._get_health_checker()
         if not await self.health_checker.wait_for_healthy(timeout=300):
             raise RuntimeError("Not all services became healthy within timeout period")
-        
+
         return True
 
-    async def deploy_service(self, service: Dict[str, Any], port: int):
+    async def deploy_service(self, service: dict[str, Any], port: int):
         """Deploy individual service with health checks"""
-        if not service['port'] in self.port_manager.PORT_ASSIGNMENTS:
+        if service['port'] not in self.port_manager.PORT_ASSIGNMENTS:
             raise ValueError(f"Invalid service: {service['port']}")
-        
+
         # Map service name to port assignment
         service_port = self.port_manager.get_service_port(service['port'])
-        
+
         # Store service info for later reference
         self.service_registry[service['name']] = {
             'service': service,
@@ -101,7 +99,7 @@ class DeploymentOrchestrator:
             'host': 'localhost',
             'is_running': False
         }
-        
+
         # Handle different environment deployments
         if self.environment == DeploymentEnvironment.LOCAL:
             await self._deploy_local(service, port)
@@ -114,7 +112,7 @@ class DeploymentOrchestrator:
         else:
             await self._deploy_local(service, port)
 
-    async def _deploy_local(self, service: Dict[str, Any], port: int):
+    async def _deploy_local(self, service: dict[str, Any], port: int):
         """Deploy service for local environment"""
         try:
             # Start process in background
@@ -123,20 +121,20 @@ class DeploymentOrchestrator:
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE
             )
-            
+
             # Store process handle
             self.service_registry[service['name']]['process'] = process
             self.service_registry[service['name']]['is_running'] = True
-            
+
             # Wait for service to start up
             await asyncio.sleep(2)
-            
+
             logger.info(f"Started {service['name']} locally (PID: {process.pid})")
         except Exception as e:
             logger.error(f"Local deployment failed for {service['name']}: {str(e)}")
             raise
 
-    async def _deploy_docker(self, service: Dict[str, Any], port: int):
+    async def _deploy_docker(self, service: dict[str, Any], port: int):
         """Deploy service using Docker"""
         try:
             # Create docker compose configuration with port mapping
@@ -149,21 +147,21 @@ services:
     ports:
       - "{port}:{service_port}"
 """
-            
+
             # Write to temporary file
             compose_path = f"/tmp/{service_name}-compose.yml"
             with open(compose_path, 'w') as f:
                 f.write(docker_compose)
-            
+
             docker_command = f"docker-compose -f {compose_path} up -d"
             subprocess.run(docker_command.split(), check=True)
-            
+
             logger.info(f"Deployed {service['name']} with Docker")
         except Exception as e:
             logger.error(f"Failed to deploy {service['name']} with Docker: {str(e)}")
             raise
 
-    async def _deploy_kubernetes(self, service: Dict[str, Any], port: int):
+    async def _deploy_kubernetes(self, service: dict[str, Any], port: int):
         """Deploy service to Kubernetes"""
         try:
             # Generate K8s YAML
@@ -192,21 +190,21 @@ spec:
             manifest_path = f"/tmp/{service['name']}.yaml"
             with open(manifest_path, 'w') as f:
                 f.write(k8s_manifest)
-            
+
             # Apply the manifest
             subprocess.run(["kubectl", "apply", "-f", manifest_path], check=True)
-            
+
             logger.info(f"Deployed {service['name']} to Kubernetes")
         except Exception as e:
             logger.error(f"Failed to deploy {service['name']} to Kubernetes: {str(e)}")
             raise
 
-    async def _deploy_cloud(self, service: Dict[str, Any], port: int):
+    async def _deploy_cloud(self, service: dict[str, Any], port: int):
         """Deploy service to cloud provider (AWS/GCP/Azure)"""
         try:
             provider = self.environment.value
             logger.info(f"Deploying {service['name']} to cloud provider: {provider}")
-            
+
             # Cloud-specific deployment setup
             if provider == "aws":
                 # AWS specific deployment
@@ -217,23 +215,23 @@ spec:
             elif provider == "azure":
                 # Azure specific deployment
                 self._deploy_azure(service, port)
-            
+
             logger.info(f"Successfully deployed {service['name']} to {provider}")
         except Exception as e:
             logger.error(f"Cloud deployment failed: {str(e)}")
             raise
-    
-    def _deploy_aws(self, service: Dict[str, Any], port: int):
+
+    def _deploy_aws(self, service: dict[str, Any], port: int):
         """AWS-specific deployment helper"""
         # This would use AWS SDK to deploy to ECS or Lambda
         pass
-    
-    def _deploy_gcp(self, service: Dict[str, Any], port: int):
+
+    def _deploy_gcp(self, service: dict[str, Any], port: int):
         """GCP-specific deployment helper"""
         # This would use GCP SDK to deploy to Cloud Run
         pass
-    
-    def _deploy_azure(self, service: Dict[str, Any], port: int):
+
+    def _deploy_azure(self, service: dict[str, Any], port: int):
         """Azure-specific deployment helper"""
         # This would use Azure SDK to deploy to App Services
         pass
@@ -252,17 +250,17 @@ spec:
         # Stop all services
         for service_name in list(self.service_registry.keys()):
             await self._stop_service(service_name)
-        
+
         # Remove temporary files
         self._cleanup_temp_files()
-        
+
         logger.info("All services cleaned up successfully")
 
     async def _stop_service(self, service_name: str):
         """Stop a running service"""
         if service_name not in self.service_registry:
             return
-        
+
         try:
             service = self.service_registry[service_name]
             if service['is_running']:
@@ -275,16 +273,16 @@ spec:
                             service['process'].kill()
                 elif self.environment == DeploymentEnvironment.DOCKER:
                     subprocess.run(
-                        ["docker", "stop", service_name], 
-                        stdout=subprocess.DEVNULL, 
+                        ["docker", "stop", service_name],
+                        stdout=subprocess.DEVNULL,
                         stderr=subprocess.DEVNULL
                     )
                     subprocess.run(
-                        ["docker", "rm", service_name], 
-                        stdout=subprocess.DEVNULL, 
+                        ["docker", "rm", service_name],
+                        stdout=subprocess.DEVNULL,
                         stderr=subprocess.DEVNULL
                     )
-                
+
                 self.service_registry[service_name]['is_running'] = False
                 logger.info(f"Stopped {service_name}")
         except Exception as e:
@@ -295,14 +293,14 @@ spec:
         try:
             # Remove docker-compose files
             subprocess.run(["rm", "-f", "/tmp/*.yml"], stderr=subprocess.DEVNULL)
-            
+
             # Additional cleanup specific to environment
             if self.environment == DeploymentEnvironment.KUBERNETES:
                 subprocess.run(["rm", "-f", "/tmp/*.yaml"], stderr=subprocess.DEVNULL)
         except Exception as e:
             logger.error(f"Failed to clean up temporary files: {str(e)}")
 
-    async def deploy_with_failover(self, service: Dict[str, Any], port: int):
+    async def deploy_with_failover(self, service: dict[str, Any], port: int):
         """
         Deploy service with automatic failover to backup option
         """
@@ -312,7 +310,7 @@ spec:
             return True
         except Exception as e:
             logger.warning(f"Primary deployment for {service['name']} failed: {str(e)}")
-            
+
             # Try backup deployment strategy
             try:
                 if self.environment == DeploymentEnvironment.DOCKER:
@@ -323,22 +321,22 @@ spec:
                     return await self.deploy_service(service, port + 1)
             except:
                 pass
-            
+
             return False
 
 # Example usage
 if __name__ == "__main__":
     async def demo():
         orchestrator = DeploymentOrchestrator()
-        
+
         # Deploy all services
         await orchestrator.deploy_all_services()
-        
+
         # Wait for a while to let services run
         print("All services deployed successfully! Waiting for services to start...")
         await asyncio.sleep(30)
-        
+
         # Cleanup
         await orchestrator.cleanup()
-    
+
     asyncio.run(demo())

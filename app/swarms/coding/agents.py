@@ -6,16 +6,26 @@ with appropriate models, tools, and instructions for software development tasks.
 """
 
 from textwrap import dedent
-from typing import List, Optional
+
 from agno.agent import Agent
 from agno.tools import Function as Tool
-from app.models.simple_router import agno_chat_model, ROLE_MODELS, ROLE_PARAMS
+
+from app.models.simple_router import ROLE_MODELS, ROLE_PARAMS, agno_chat_model
+from app.swarms.contracts import CRITIC_SCHEMA, GENERATOR_SCHEMA, JUDGE_SCHEMA, PLANNER_SCHEMA
 from app.tools.basic_tools import (
-    CodeSearch, ReadFile, WriteFile, ListDirectory,
-    GitStatus, GitDiff, GitCommit, GitAdd,
-    RunTests, RunTypeCheck, RunLint, FormatCode
+    CodeSearch,
+    FormatCode,
+    GitAdd,
+    GitCommit,
+    GitDiff,
+    GitStatus,
+    ListDirectory,
+    ReadFile,
+    RunLint,
+    RunTests,
+    RunTypeCheck,
+    WriteFile,
 )
-from app.swarms.contracts import PLANNER_SCHEMA, CRITIC_SCHEMA, JUDGE_SCHEMA, GENERATOR_SCHEMA
 
 # System prompts for role-specific behavior
 PLANNER_SYS = dedent(f"""
@@ -78,7 +88,7 @@ def make_planner(name: str = "Planner") -> Agent:
     """Create a planning agent with strategic capabilities."""
     m_id = ROLE_MODELS["planner"]
     params = ROLE_PARAMS.get("planner", {})
-    
+
     return Agent(
         name=name,
         role="Plan tasks with dependencies and success metrics",
@@ -93,7 +103,7 @@ def make_planner(name: str = "Planner") -> Agent:
 def make_generator(
     name: str,
     model_name: str,
-    tools: Optional[List[Tool]] = None,
+    tools: list[Tool] | None = None,
     role_note: str = "Implement spec with tests and minimal diff"
 ) -> Agent:
     """
@@ -110,7 +120,7 @@ def make_generator(
     """
     m_id = ROLE_MODELS.get(model_name, model_name)
     params = ROLE_PARAMS.get(model_name, {})
-    
+
     default_tools = [
         CodeSearch(),
         ReadFile(),
@@ -118,7 +128,7 @@ def make_generator(
         RunTests(),
         RunTypeCheck()
     ]
-    
+
     return Agent(
         name=name,
         role=role_note,
@@ -133,7 +143,7 @@ def make_critic(name: str = "Critic") -> Agent:
     """Create a review agent with structured critique capabilities."""
     m_id = ROLE_MODELS["critic"]
     params = ROLE_PARAMS.get("critic", {})
-    
+
     return Agent(
         name=name,
         role="Structured review across security/data/logic/perf/UX",
@@ -154,7 +164,7 @@ def make_judge(name: str = "Judge") -> Agent:
     """Create a decision agent with merge capabilities."""
     m_id = ROLE_MODELS["judge"]
     params = ROLE_PARAMS.get("judge", {})
-    
+
     return Agent(
         name=name,
         role="Select or merge proposals; instruct Runner",
@@ -173,7 +183,7 @@ def make_lead(name: str = "Lead-Engineer") -> Agent:
     """Create a coordination agent to orchestrate the team."""
     m_id = ROLE_MODELS.get("planner")  # Lead uses planner model
     params = ROLE_PARAMS.get("planner", {})
-    
+
     return Agent(
         name=name,
         role="Coordinate debate; enforce constraints; route tasks",
@@ -207,7 +217,7 @@ def make_runner(name: str = "Runner") -> Agent:
     """Create an execution agent with write permissions (gated by judge)."""
     m_id = ROLE_MODELS.get("fast")  # Runner uses fast model
     params = ROLE_PARAMS.get("fast", {})
-    
+
     return Agent(
         name=name,
         role="Execute approved changes with write permissions",

@@ -3,9 +3,10 @@ JSON Contract Schemas for Planner, Critic, and Judge.
 Strict validation with Pydantic V2 for type safety.
 """
 
-from typing import List, Dict, Any, Optional, Literal
-from pydantic import BaseModel, Field, field_validator, model_validator
 from enum import Enum
+from typing import Any, Literal
+
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 # ============================================
 # Planner Schemas
@@ -15,7 +16,7 @@ class Dependency(BaseModel):
     """Task dependency specification."""
     task_id: str = Field(..., description="ID of the dependent task")
     type: Literal["blocks", "informs", "optional"] = Field(
-        "blocks", 
+        "blocks",
         description="Dependency type"
     )
 
@@ -23,14 +24,14 @@ class Story(BaseModel):
     """User story in the plan."""
     id: str = Field(..., pattern=r"^S-\d{3}$", description="Story ID (e.g., S-001)")
     title: str = Field(..., min_length=5, max_length=200)
-    acceptance_criteria: List[str] = Field(
-        ..., 
+    acceptance_criteria: list[str] = Field(
+        ...,
         min_length=1,
         max_length=10,
         description="Clear pass/fail criteria"
     )
-    dependencies: List[Dependency] = Field(default_factory=list)
-    tags: List[str] = Field(
+    dependencies: list[Dependency] = Field(default_factory=list)
+    tags: list[str] = Field(
         default_factory=list,
         description="Tags: coding, debugging, qa, ux, infrastructure"
     )
@@ -41,11 +42,11 @@ class Epic(BaseModel):
     """Epic containing multiple stories."""
     name: str = Field(..., min_length=3, max_length=100)
     description: str = Field(..., max_length=500)
-    stories: List[Story] = Field(..., min_length=1)
-    
+    stories: list[Story] = Field(..., min_length=1)
+
     @field_validator("stories")
     @classmethod
-    def unique_story_ids(cls, v: List[Story]) -> List[Story]:
+    def unique_story_ids(cls, v: list[Story]) -> list[Story]:
         ids = [s.id for s in v]
         if len(ids) != len(set(ids)):
             raise ValueError("Duplicate story IDs found")
@@ -56,32 +57,32 @@ class Milestone(BaseModel):
     name: str = Field(..., min_length=3, max_length=100)
     description: str = Field(..., max_length=500)
     estimate_days: float = Field(1.0, ge=0.5, le=90)
-    epics: List[Epic] = Field(default_factory=list)
-    success_criteria: List[str] = Field(
-        ..., 
+    epics: list[Epic] = Field(default_factory=list)
+    success_criteria: list[str] = Field(
+        ...,
         min_length=1,
         description="Measurable success criteria"
     )
 
 class PlannerOutput(BaseModel):
     """Complete planner output with validation."""
-    milestones: List[Milestone] = Field(..., min_length=1)
-    global_risks: List[str] = Field(
+    milestones: list[Milestone] = Field(..., min_length=1)
+    global_risks: list[str] = Field(
         default_factory=list,
         max_length=10,
         description="Major risk factors"
     )
-    tool_hints: List[str] = Field(
+    tool_hints: list[str] = Field(
         default_factory=list,
         description="Suggested tools and libraries"
     )
-    success_metrics: List[str] = Field(
-        ..., 
+    success_metrics: list[str] = Field(
+        ...,
         min_length=1,
         description="Overall success criteria"
     )
     total_estimate_days: float = Field(..., ge=0.5)
-    
+
     @model_validator(mode="after")
     def calculate_total_estimate(self) -> "PlannerOutput":
         if not self.total_estimate_days:
@@ -103,16 +104,16 @@ class FindingCategory(str, Enum):
 
 class Findings(BaseModel):
     """Categorized findings from critic review."""
-    security: List[str] = Field(default_factory=list, max_length=10)
-    data_integrity: List[str] = Field(default_factory=list, max_length=10)
-    logic_correctness: List[str] = Field(default_factory=list, max_length=10)
-    performance: List[str] = Field(default_factory=list, max_length=10)
-    usability: List[str] = Field(default_factory=list, max_length=10)
-    maintainability: List[str] = Field(default_factory=list, max_length=10)
-    
+    security: list[str] = Field(default_factory=list, max_length=10)
+    data_integrity: list[str] = Field(default_factory=list, max_length=10)
+    logic_correctness: list[str] = Field(default_factory=list, max_length=10)
+    performance: list[str] = Field(default_factory=list, max_length=10)
+    usability: list[str] = Field(default_factory=list, max_length=10)
+    maintainability: list[str] = Field(default_factory=list, max_length=10)
+
     @field_validator("*")
     @classmethod
-    def validate_finding_length(cls, v: List[str]) -> List[str]:
+    def validate_finding_length(cls, v: list[str]) -> list[str]:
         for finding in v:
             if len(finding) < 10:
                 raise ValueError(f"Finding too short: {finding}")
@@ -123,19 +124,19 @@ class Findings(BaseModel):
 class CriticOutput(BaseModel):
     """Critic's structured review output with strict validation."""
     verdict: Literal["pass", "revise"] = Field(
-        ..., 
+        ...,
         description="Overall verdict"
     )
     findings: Findings = Field(
-        ..., 
+        ...,
         description="Categorized findings"
     )
-    must_fix: List[str] = Field(
+    must_fix: list[str] = Field(
         default_factory=list,
         max_length=10,
         description="Critical issues that must be fixed"
     )
-    nice_to_have: List[str] = Field(
+    nice_to_have: list[str] = Field(
         default_factory=list,
         max_length=10,
         description="Optional improvements"
@@ -151,13 +152,13 @@ class CriticOutput(BaseModel):
         le=1.0,
         description="Confidence in the review (0-1)"
     )
-    
+
     @model_validator(mode="after")
     def validate_verdict_consistency(self) -> "CriticOutput":
         # If there are must_fix items, verdict should be "revise"
         if self.must_fix and self.verdict == "pass":
             raise ValueError("Verdict cannot be 'pass' with must_fix items")
-        
+
         # If verdict is "revise", there should be findings or must_fix
         if self.verdict == "revise":
             has_findings = any([
@@ -170,7 +171,7 @@ class CriticOutput(BaseModel):
             ])
             if not has_findings and not self.must_fix:
                 raise ValueError("Verdict 'revise' requires findings or must_fix items")
-        
+
         return self
 
 # ============================================
@@ -189,29 +190,29 @@ class MergeStrategy(str, Enum):
 class JudgeOutput(BaseModel):
     """Judge's decision output with strict validation."""
     decision: Literal["accept", "merge", "reject"] = Field(
-        ..., 
+        ...,
         description="Final decision"
     )
-    selected: Optional[str] = Field(
+    selected: str | None = Field(
         None,
         pattern=r"^[A-C]$",
         description="Selected proposal (A/B/C) if applicable"
     )
-    merge_strategy: Optional[MergeStrategy] = Field(
+    merge_strategy: MergeStrategy | None = Field(
         None,
         description="How to merge proposals if decision is 'merge'"
     )
-    merged_spec: Dict[str, Any] = Field(
+    merged_spec: dict[str, Any] = Field(
         default_factory=dict,
         description="Merged specification if applicable"
     )
-    runner_instructions: List[str] = Field(
+    runner_instructions: list[str] = Field(
         default_factory=list,
         min_length=0,
         max_length=20,
         description="Step-by-step instructions for the runner"
     )
-    rationale: List[str] = Field(
+    rationale: list[str] = Field(
         ...,
         min_length=1,
         max_length=10,
@@ -223,13 +224,13 @@ class JudgeOutput(BaseModel):
         le=1.0,
         description="Confidence in the decision (0-1)"
     )
-    quality_score: Optional[float] = Field(
+    quality_score: float | None = Field(
         None,
         ge=0.0,
         le=10.0,
         description="Quality score of the proposal (0-10)"
     )
-    
+
     @model_validator(mode="after")
     def validate_decision_consistency(self) -> "JudgeOutput":
         # Accept/Merge requires runner_instructions
@@ -238,21 +239,21 @@ class JudgeOutput(BaseModel):
                 raise ValueError(f"Decision '{self.decision}' requires runner_instructions")
             if len(self.runner_instructions) < 3:
                 raise ValueError("Runner instructions should have at least 3 steps")
-        
+
         # Reject should not have runner_instructions
         if self.decision == "reject" and self.runner_instructions:
             raise ValueError("Decision 'reject' should not have runner_instructions")
-        
+
         # Merge requires merge_strategy
         if self.decision == "merge" and not self.merge_strategy:
             raise ValueError("Decision 'merge' requires merge_strategy")
-        
+
         # Selected proposal required for certain strategies
         if self.merge_strategy in [MergeStrategy.TAKE_A, MergeStrategy.TAKE_B, MergeStrategy.TAKE_C]:
             expected = self.merge_strategy.value[-1].upper()
             if self.selected != expected:
                 raise ValueError(f"Strategy {self.merge_strategy} requires selected='{expected}'")
-        
+
         return self
 
 # ============================================
@@ -262,18 +263,18 @@ class JudgeOutput(BaseModel):
 class GeneratorProposal(BaseModel):
     """Generator's implementation proposal."""
     approach: str = Field(..., min_length=20, max_length=500)
-    implementation_plan: List[str] = Field(
-        ..., 
+    implementation_plan: list[str] = Field(
+        ...,
         min_length=3,
         max_length=20,
         description="Step-by-step implementation plan"
     )
-    files_to_change: List[str] = Field(
+    files_to_change: list[str] = Field(
         default_factory=list,
         description="List of files that will be modified"
     )
-    test_plan: List[str] = Field(
-        ..., 
+    test_plan: list[str] = Field(
+        ...,
         min_length=1,
         description="Testing strategy"
     )
@@ -282,11 +283,11 @@ class GeneratorProposal(BaseModel):
         ...,
         description="Risk assessment"
     )
-    dependencies: List[str] = Field(
+    dependencies: list[str] = Field(
         default_factory=list,
         description="External dependencies required"
     )
-    rollback_plan: Optional[str] = Field(
+    rollback_plan: str | None = Field(
         None,
         max_length=500,
         description="How to rollback if needed"
@@ -296,28 +297,28 @@ class GeneratorProposal(BaseModel):
 # Validation Functions
 # ============================================
 
-def validate_planner_output(data: Dict[str, Any]) -> PlannerOutput:
+def validate_planner_output(data: dict[str, Any]) -> PlannerOutput:
     """Validate and parse planner output."""
     try:
         return PlannerOutput.model_validate(data)
     except Exception as e:
         raise ValueError(f"Invalid planner output: {e}")
 
-def validate_critic_output(data: Dict[str, Any]) -> CriticOutput:
+def validate_critic_output(data: dict[str, Any]) -> CriticOutput:
     """Validate and parse critic output."""
     try:
         return CriticOutput.model_validate(data)
     except Exception as e:
         raise ValueError(f"Invalid critic output: {e}")
 
-def validate_judge_output(data: Dict[str, Any]) -> JudgeOutput:
+def validate_judge_output(data: dict[str, Any]) -> JudgeOutput:
     """Validate and parse judge output."""
     try:
         return JudgeOutput.model_validate(data)
     except Exception as e:
         raise ValueError(f"Invalid judge output: {e}")
 
-def validate_generator_proposal(data: Dict[str, Any]) -> GeneratorProposal:
+def validate_generator_proposal(data: dict[str, Any]) -> GeneratorProposal:
     """Validate and parse generator proposal."""
     try:
         return GeneratorProposal.model_validate(data)
@@ -333,7 +334,7 @@ def runner_gate_decision(
     judge: JudgeOutput,
     accuracy_score: float = 0.0,
     reliability_passed: bool = False
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Determine if Runner is allowed to proceed.
     
@@ -348,12 +349,12 @@ def runner_gate_decision(
     """
     reasons = []
     allowed = True
-    
+
     # Check critic verdict
     if critic.verdict == "revise":
         reasons.append("Critic requires revision")
         allowed = False
-    
+
     # Check judge decision
     if judge.decision == "reject":
         reasons.append("Judge rejected the proposal")
@@ -361,29 +362,29 @@ def runner_gate_decision(
     elif judge.decision in ["accept", "merge"] and not judge.runner_instructions:
         reasons.append("Judge approved but no runner instructions provided")
         allowed = False
-    
+
     # Check quality gates
     if accuracy_score < 7.0:
         reasons.append(f"Accuracy score {accuracy_score:.1f} below threshold (7.0)")
         allowed = False
-    
+
     if not reliability_passed:
         reasons.append("Reliability evaluation failed")
         allowed = False
-    
+
     # Check confidence scores
     if critic.confidence_score < 0.7:
         reasons.append(f"Critic confidence {critic.confidence_score:.1f} too low")
         allowed = False
-    
+
     if judge.confidence_score < 0.8:
         reasons.append(f"Judge confidence {judge.confidence_score:.1f} too low")
         allowed = False
-    
+
     # If all checks pass
     if allowed:
         reasons.append("All quality gates passed")
-    
+
     return {
         "allowed": allowed,
         "status": "ALLOWED" if allowed else "BLOCKED",

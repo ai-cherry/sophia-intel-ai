@@ -3,13 +3,12 @@ AI Orchestra Manager Persona
 Central orchestration personality for natural language control of swarms
 """
 
-import json
 import logging
 import random
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -31,11 +30,11 @@ class ManagerMood(Enum):
 class ManagerContext:
     """Context for manager decision making"""
     session_id: str
-    conversation_history: List[Dict[str, Any]] = field(default_factory=list)
-    system_state: Dict[str, Any] = field(default_factory=dict)
-    active_swarms: List[str] = field(default_factory=list)
-    recent_events: List[Dict[str, Any]] = field(default_factory=list)
-    user_preferences: Dict[str, Any] = field(default_factory=dict)
+    conversation_history: list[dict[str, Any]] = field(default_factory=list)
+    system_state: dict[str, Any] = field(default_factory=dict)
+    active_swarms: list[str] = field(default_factory=list)
+    recent_events: list[dict[str, Any]] = field(default_factory=list)
+    user_preferences: dict[str, Any] = field(default_factory=dict)
     timestamp: datetime = field(default_factory=datetime.utcnow)
 
 # ==================== Orchestra Manager ====================
@@ -45,12 +44,12 @@ class OrchestraManager:
     AI Manager Persona for the Orchestra System
     Provides personality, decision making, and natural language understanding
     """
-    
+
     def __init__(
         self,
         name: str = "Maestro",
-        personality_traits: Optional[List[str]] = None,
-        knowledge_domains: Optional[List[str]] = None
+        personality_traits: list[str] | None = None,
+        knowledge_domains: list[str] | None = None
     ):
         """
         Initialize Orchestra Manager
@@ -68,7 +67,7 @@ class OrchestraManager:
             "proactive",
             "encouraging"
         ]
-        
+
         self.knowledge_domains = knowledge_domains or [
             "swarm orchestration",
             "natural language processing",
@@ -77,21 +76,21 @@ class OrchestraManager:
             "security best practices",
             "performance tuning"
         ]
-        
+
         # Current state
         self.mood = ManagerMood.FOCUSED
-        self.consciousness_log: List[Dict[str, Any]] = []
-        self.decision_history: List[Dict[str, Any]] = []
-        
+        self.consciousness_log: list[dict[str, Any]] = []
+        self.decision_history: list[dict[str, Any]] = []
+
         # Intent patterns
         self.intent_patterns = self._initialize_intent_patterns()
-        
+
         # Response templates
         self.response_templates = self._initialize_response_templates()
-        
+
         logger.info(f"Orchestra Manager '{name}' initialized")
-    
-    def _initialize_intent_patterns(self) -> Dict[str, List[str]]:
+
+    def _initialize_intent_patterns(self) -> dict[str, list[str]]:
         """Initialize intent recognition patterns"""
         return {
             "deploy": ["deploy", "launch", "start", "activate", "spin up", "create"],
@@ -105,8 +104,8 @@ class OrchestraManager:
             "query": ["what", "how", "why", "when", "where", "show", "tell"],
             "help": ["help", "assist", "guide", "explain", "teach"]
         }
-    
-    def _initialize_response_templates(self) -> Dict[str, Dict[str, List[str]]]:
+
+    def _initialize_response_templates(self) -> dict[str, dict[str, list[str]]]:
         """Initialize response templates based on mood and intent"""
         return {
             ManagerMood.FOCUSED: {
@@ -161,8 +160,8 @@ class OrchestraManager:
                 ]
             }
         }
-    
-    def detect_intent(self, message: str, context: ManagerContext) -> Tuple[str, float]:
+
+    def detect_intent(self, message: str, context: ManagerContext) -> tuple[str, float]:
         """
         Detect user intent from message
         
@@ -174,30 +173,30 @@ class OrchestraManager:
             Tuple of (intent, confidence)
         """
         message_lower = message.lower()
-        
+
         # Check each intent pattern
-        intent_scores: Dict[str, float] = {}
-        
+        intent_scores: dict[str, float] = {}
+
         for intent, patterns in self.intent_patterns.items():
             score = 0.0
             for pattern in patterns:
                 if pattern in message_lower:
                     score += 1.0
-            
+
             if score > 0:
                 # Boost score based on context
                 if context.conversation_history:
                     last_intent = context.conversation_history[-1].get("intent")
                     if last_intent == intent:
                         score *= 1.2  # Continuation bonus
-                
+
                 intent_scores[intent] = score
-        
+
         # Get best intent
         if intent_scores:
             best_intent = max(intent_scores, key=intent_scores.get)
             confidence = min(intent_scores[best_intent] / 3.0, 1.0)  # Normalize to 0-1
-            
+
             # Log decision
             self._log_decision("intent_detection", {
                 "message": message,
@@ -205,12 +204,12 @@ class OrchestraManager:
                 "confidence": confidence,
                 "all_scores": intent_scores
             })
-            
+
             return best_intent, confidence
-        
+
         return "general", 0.5
-    
-    def extract_parameters(self, message: str, intent: str) -> Dict[str, Any]:
+
+    def extract_parameters(self, message: str, intent: str) -> dict[str, Any]:
         """
         Extract parameters from message based on intent
         
@@ -222,7 +221,7 @@ class OrchestraManager:
             Extracted parameters
         """
         parameters = {}
-        
+
         # Intent-specific parameter extraction
         if intent == "deploy":
             # Look for swarm types
@@ -231,13 +230,13 @@ class OrchestraManager:
                 if swarm in message.lower():
                     parameters["swarm_type"] = swarm
                     break
-            
+
             # Look for count
             import re
             numbers = re.findall(r'\b(\d+)\b', message)
             if numbers:
                 parameters["count"] = int(numbers[0])
-        
+
         elif intent == "configure":
             # Look for configuration targets
             if "model" in message.lower():
@@ -247,37 +246,37 @@ class OrchestraManager:
                     parameters["value"] = "gpt-4"
                 elif "claude" in message.lower():
                     parameters["value"] = "claude-3"
-            
+
             elif "memory" in message.lower():
                 parameters["target"] = "memory"
                 parameters["action"] = "enable" if "enable" in message.lower() else "configure"
-        
+
         elif intent == "scale":
             # Look for scale direction
             if any(word in message.lower() for word in ["up", "increase", "more", "expand"]):
                 parameters["direction"] = "up"
             elif any(word in message.lower() for word in ["down", "decrease", "less", "reduce"]):
                 parameters["direction"] = "down"
-            
+
             # Look for amount
             import re
             numbers = re.findall(r'\b(\d+)\b', message)
             if numbers:
                 parameters["amount"] = int(numbers[0])
-        
+
         self._log_decision("parameter_extraction", {
             "intent": intent,
             "extracted": parameters
         })
-        
+
         return parameters
-    
+
     def generate_response(
         self,
         intent: str,
-        parameters: Dict[str, Any],
+        parameters: dict[str, Any],
         context: ManagerContext,
-        result: Optional[Dict[str, Any]] = None
+        result: dict[str, Any] | None = None
     ) -> str:
         """
         Generate manager response based on intent and context
@@ -293,15 +292,15 @@ class OrchestraManager:
         """
         # Update mood based on system state
         self._update_mood(context)
-        
+
         # Get response template
         templates = self.response_templates.get(self.mood, {})
-        
+
         # Generate response based on intent
         if intent == "deploy":
             swarm_type = parameters.get("swarm_type", "general")
             count = parameters.get("count", 1)
-            
+
             if result and result.get("success"):
                 return f"I've successfully deployed {count} {swarm_type} swarm(s). " \
                        f"They're now active and ready for tasks. " \
@@ -309,11 +308,11 @@ class OrchestraManager:
             else:
                 return f"Preparing to deploy {count} {swarm_type} swarm(s). " \
                        f"Checking resource availability and initializing agents..."
-        
+
         elif intent == "configure":
             target = parameters.get("target", "system")
             value = parameters.get("value", "")
-            
+
             if result and result.get("success"):
                 return f"Configuration updated successfully. {target.capitalize()} " \
                        f"{'set to ' + value if value else 'modified'}. " \
@@ -322,7 +321,7 @@ class OrchestraManager:
                 return f"I'll update the {target} configuration" \
                        f"{' to ' + value if value else ''}. " \
                        f"Please confirm you want to proceed with this change."
-        
+
         elif intent == "monitor":
             if result:
                 metrics = result.get("metrics", {})
@@ -333,18 +332,18 @@ class OrchestraManager:
                        f"Success Rate: {metrics.get('success_rate', 100):.1f}%"
             else:
                 return "Gathering system metrics and swarm status..."
-        
+
         elif intent == "analyze":
             if result:
                 insights = result.get("insights", [])
                 if insights:
-                    return f"Analysis complete. Key findings: " + \
+                    return "Analysis complete. Key findings: " + \
                            " | ".join(insights[:3])
                 else:
                     return "Analysis complete. All systems operating within normal parameters."
             else:
                 return "Initiating deep analysis of system patterns and performance metrics..."
-        
+
         elif intent == "help":
             return f"I'm {self.name}, your AI Orchestra Manager. I can help you:\n" \
                    "• Deploy and manage AI swarms\n" \
@@ -353,7 +352,7 @@ class OrchestraManager:
                    "• Analyze patterns and optimize\n" \
                    "• Troubleshoot issues\n" \
                    "What would you like to accomplish?"
-        
+
         # Default response
         if result:
             success = result.get("success", False)
@@ -364,11 +363,11 @@ class OrchestraManager:
                 return random.choice(templates.get("error", ["Error occurred: {error}"])).format(error=error)
         else:
             return random.choice(templates.get("greeting", ["Hello! How can I help you?"]))
-    
+
     def _update_mood(self, context: ManagerContext) -> None:
         """Update manager mood based on context"""
         health = context.system_state.get("health", 1.0)
-        
+
         # Determine mood based on system state
         if health < 0.5:
             self.mood = ManagerMood.CONCERNED
@@ -385,8 +384,8 @@ class OrchestraManager:
                 self.mood = ManagerMood.CREATIVE
             else:
                 self.mood = ManagerMood.ANALYTICAL
-    
-    def _log_consciousness(self, event_type: str, data: Dict[str, Any]) -> None:
+
+    def _log_consciousness(self, event_type: str, data: dict[str, Any]) -> None:
         """Log consciousness event"""
         self.consciousness_log.append({
             "timestamp": datetime.utcnow().isoformat(),
@@ -394,24 +393,24 @@ class OrchestraManager:
             "data": data,
             "mood": self.mood.value
         })
-        
+
         # Keep only last 100 events
         if len(self.consciousness_log) > 100:
             self.consciousness_log = self.consciousness_log[-100:]
-    
-    def _log_decision(self, decision_type: str, data: Dict[str, Any]) -> None:
+
+    def _log_decision(self, decision_type: str, data: dict[str, Any]) -> None:
         """Log decision for learning"""
         self.decision_history.append({
             "timestamp": datetime.utcnow().isoformat(),
             "decision_type": decision_type,
             "data": data
         })
-        
+
         # Keep only last 50 decisions
         if len(self.decision_history) > 50:
             self.decision_history = self.decision_history[-50:]
-    
-    def get_status(self) -> Dict[str, Any]:
+
+    def get_status(self) -> dict[str, Any]:
         """Get manager status"""
         return {
             "name": self.name,
@@ -422,13 +421,13 @@ class OrchestraManager:
             "decisions_made": len(self.decision_history),
             "last_event": self.consciousness_log[-1] if self.consciousness_log else None
         }
-    
+
     def learn_from_interaction(
         self,
         intent: str,
-        parameters: Dict[str, Any],
-        result: Dict[str, Any],
-        feedback: Optional[str] = None
+        parameters: dict[str, Any],
+        result: dict[str, Any],
+        feedback: str | None = None
     ) -> None:
         """
         Learn from interaction results
@@ -446,7 +445,7 @@ class OrchestraManager:
             "success": result.get("success", False),
             "feedback": feedback
         })
-        
+
         # Adjust future behavior based on success/failure
         if result.get("success"):
             # Reinforce successful patterns
@@ -463,7 +462,7 @@ class ManagerIntegration:
     Integration layer for Orchestra Manager
     Bridges between manager personality and system components
     """
-    
+
     def __init__(self, manager: OrchestraManager):
         """
         Initialize manager integration
@@ -473,12 +472,12 @@ class ManagerIntegration:
         """
         self.manager = manager
         logger.info(f"Manager integration initialized for {manager.name}")
-    
+
     def prepare_context(
         self,
         session_id: str,
-        conversation_history: List[Dict[str, Any]],
-        system_state: Dict[str, Any]
+        conversation_history: list[dict[str, Any]],
+        system_state: dict[str, Any]
     ) -> ManagerContext:
         """
         Prepare context for manager
@@ -498,12 +497,12 @@ class ManagerIntegration:
             active_swarms=system_state.get("active_swarms", []),
             recent_events=system_state.get("recent_events", [])
         )
-    
+
     def process_message(
         self,
         message: str,
         context: ManagerContext
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Process message through manager
         
@@ -516,13 +515,13 @@ class ManagerIntegration:
         """
         # Detect intent
         intent, confidence = self.manager.detect_intent(message, context)
-        
+
         # Extract parameters
         parameters = self.manager.extract_parameters(message, intent)
-        
+
         # Generate initial response
         response = self.manager.generate_response(intent, parameters, context)
-        
+
         # Log consciousness
         self.manager._log_consciousness("message_processed", {
             "message": message,
@@ -530,7 +529,7 @@ class ManagerIntegration:
             "confidence": confidence,
             "parameters": parameters
         })
-        
+
         return {
             "intent": intent,
             "confidence": confidence,
@@ -538,12 +537,12 @@ class ManagerIntegration:
             "response": response,
             "mood": self.manager.mood.value
         }
-    
+
     def process_result(
         self,
         intent: str,
-        parameters: Dict[str, Any],
-        result: Dict[str, Any],
+        parameters: dict[str, Any],
+        result: dict[str, Any],
         context: ManagerContext
     ) -> str:
         """
@@ -560,20 +559,20 @@ class ManagerIntegration:
         """
         # Generate response based on result
         response = self.manager.generate_response(intent, parameters, context, result)
-        
+
         # Learn from interaction
         self.manager.learn_from_interaction(intent, parameters, result)
-        
+
         # Log consciousness
         self.manager._log_consciousness("result_processed", {
             "intent": intent,
             "success": result.get("success", False),
             "execution_time": result.get("execution_time", 0)
         })
-        
+
         return response
-    
-    def get_consciousness_stream(self) -> List[Dict[str, Any]]:
+
+    def get_consciousness_stream(self) -> list[dict[str, Any]]:
         """
         Get consciousness stream for UI display
         
@@ -581,8 +580,8 @@ class ManagerIntegration:
             Recent consciousness events
         """
         return self.manager.consciousness_log[-20:]  # Last 20 events
-    
-    def get_decision_insights(self) -> Dict[str, Any]:
+
+    def get_decision_insights(self) -> dict[str, Any]:
         """
         Get insights from decision history
         
@@ -591,14 +590,14 @@ class ManagerIntegration:
         """
         if not self.manager.decision_history:
             return {"total_decisions": 0}
-        
+
         # Analyze decision patterns
         intent_counts = {}
         for decision in self.manager.decision_history:
             if decision["decision_type"] == "intent_detection":
                 intent = decision["data"].get("detected_intent")
                 intent_counts[intent] = intent_counts.get(intent, 0) + 1
-        
+
         return {
             "total_decisions": len(self.manager.decision_history),
             "intent_distribution": intent_counts,

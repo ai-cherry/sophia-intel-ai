@@ -4,11 +4,11 @@ Migration Script: Replace all blocking requests with async HTTPX
 Part of 2025 Architecture Migration
 """
 
+import asyncio
 import os
 import re
-import asyncio
 from pathlib import Path
-from typing import List, Tuple, Dict, Any
+from typing import Any
 
 # Patterns to identify blocking HTTP calls
 BLOCKING_PATTERNS = [
@@ -25,14 +25,14 @@ BLOCKING_PATTERNS = [
 ]
 
 # Files to migrate
-def find_python_files(root_dir: str) -> List[Path]:
+def find_python_files(root_dir: str) -> list[Path]:
     """Find all Python files that might use requests"""
     files = []
     for path in Path(root_dir).rglob("*.py"):
         # Skip migration scripts and tests
         if "migrate" in str(path) or "test_" in str(path):
             continue
-        
+
         # Check if file contains requests
         try:
             content = path.read_text()
@@ -40,15 +40,15 @@ def find_python_files(root_dir: str) -> List[Path]:
                 files.append(path)
         except Exception:
             pass
-    
+
     return files
 
 
-def analyze_file(file_path: Path) -> Dict[str, Any]:
+def analyze_file(file_path: Path) -> dict[str, Any]:
     """Analyze a file for blocking HTTP calls"""
     content = file_path.read_text()
     lines = content.split('\n')
-    
+
     findings = {
         "file": str(file_path),
         "has_requests": "import requests" in content or "from requests" in content,
@@ -56,7 +56,7 @@ def analyze_file(file_path: Path) -> Dict[str, Any]:
         "blocking_calls": [],
         "async_ready": "async def" in content
     }
-    
+
     # Find blocking calls
     for i, line in enumerate(lines, 1):
         for pattern, _ in BLOCKING_PATTERNS:
@@ -66,32 +66,32 @@ def analyze_file(file_path: Path) -> Dict[str, Any]:
                     "code": line.strip(),
                     "pattern": pattern
                 })
-    
+
     return findings
 
 
-def generate_migration_report(files: List[Path]) -> str:
+def generate_migration_report(files: list[Path]) -> str:
     """Generate migration report"""
     report = []
     report.append("=" * 60)
     report.append("ASYNC HTTPX MIGRATION REPORT")
     report.append("=" * 60)
     report.append("")
-    
+
     total_blocking_calls = 0
     files_to_migrate = []
-    
+
     for file_path in files:
         analysis = analyze_file(file_path)
         if analysis["blocking_calls"]:
             files_to_migrate.append(analysis)
             total_blocking_calls += len(analysis["blocking_calls"])
-    
+
     report.append(f"Files analyzed: {len(files)}")
     report.append(f"Files with blocking calls: {len(files_to_migrate)}")
     report.append(f"Total blocking calls found: {total_blocking_calls}")
     report.append("")
-    
+
     if files_to_migrate:
         report.append("FILES TO MIGRATE:")
         report.append("-" * 40)
@@ -100,21 +100,21 @@ def generate_migration_report(files: List[Path]) -> str:
             report.append(f"\n📁 {rel_path}")
             report.append(f"   Async ready: {'✅' if analysis['async_ready'] else '❌'}")
             report.append(f"   Blocking calls: {len(analysis['blocking_calls'])}")
-            
+
             for call in analysis["blocking_calls"][:3]:  # Show first 3
                 report.append(f"   Line {call['line']}: {call['code'][:60]}...")
-    
+
     return "\n".join(report)
 
 
 def create_async_wrapper(file_path: Path) -> str:
     """Create async wrapper for a file"""
     content = file_path.read_text()
-    
+
     # Add async HTTP client import
     if "import httpx" not in content:
         import_line = "from app.core.async_http_client import AsyncHTTPClient, async_get, async_post\n"
-        
+
         # Find where to insert import
         lines = content.split('\n')
         for i, line in enumerate(lines):
@@ -123,17 +123,17 @@ def create_async_wrapper(file_path: Path) -> str:
             else:
                 lines.insert(i, import_line)
                 break
-        
+
         content = '\n'.join(lines)
-    
+
     # Replace blocking patterns
     for pattern, replacement in BLOCKING_PATTERNS:
         content = re.sub(pattern, replacement, content)
-    
+
     # Make functions async if they contain await
     if "await " in content and "async def" not in content:
         content = re.sub(r'def (\w+)\(', r'async def \1(', content)
-    
+
     return content
 
 
@@ -151,22 +151,22 @@ def post_data(url, data):
     response = requests.post(url, json=data)
     return response.status_code
 '''
-    
+
     print("BEFORE MIGRATION:")
     print(sample_code)
     print("\n" + "=" * 40 + "\n")
-    
+
     # Simulate migration
     migrated = sample_code
     for pattern, replacement in BLOCKING_PATTERNS:
         migrated = re.sub(pattern, replacement, migrated)
-    
+
     # Make async
     migrated = re.sub(r'def (\w+)\(', r'async def \1(', migrated)
-    
+
     # Add imports
     migrated = "from app.core.async_http_client import AsyncHTTPClient, async_get, async_post\n" + migrated
-    
+
     print("AFTER MIGRATION:")
     print(migrated)
 
@@ -174,20 +174,20 @@ def post_data(url, data):
 def main():
     """Run migration analysis"""
     root_dir = "/Users/lynnmusil/sophia-intel-ai"
-    
+
     print("🔍 Scanning for files with blocking HTTP calls...")
     files = find_python_files(root_dir)
-    
+
     print(f"📊 Found {len(files)} files to analyze")
-    
+
     report = generate_migration_report(files)
     print(report)
-    
+
     # Save report
     report_path = Path(root_dir) / "migration_report_httpx.txt"
     report_path.write_text(report)
     print(f"\n📝 Report saved to: {report_path}")
-    
+
     # Optionally run test
     print("\n🧪 Running migration test...")
     asyncio.run(test_migration())

@@ -3,15 +3,19 @@ Enhanced Portkey Gateway Configuration with Observability.
 Implements best practices for routing, caching, and monitoring.
 """
 
-import os
+import hashlib
 import json
+import os
 import time
-from typing import Dict, Any, Optional, List
 from dataclasses import dataclass
 from enum import Enum
-from openai import OpenAI, AsyncOpenAI
-import hashlib
-from app.core.circuit_breaker import with_circuit_breaker, get_llm_circuit_breaker, get_weaviate_circuit_breaker, get_redis_circuit_breaker, get_webhook_circuit_breaker
+from typing import Any
+
+from openai import AsyncOpenAI, OpenAI
+
+from app.core.circuit_breaker import (
+    with_circuit_breaker,
+)
 
 # ============================================
 # Configuration Constants
@@ -32,39 +36,39 @@ class Role(Enum):
 @dataclass
 class PortkeyConfig:
     """Portkey configuration with best practices."""
-    
+
     # Base URLs
     base_url: str = "https://api.portkey.ai/v1"
-    
+
     # Virtual Keys (from environment)
     openrouter_vk: str = ""
     together_vk: str = ""
-    
+
     # Environment
     environment: Environment = Environment.DEV
-    
+
     # Retry configuration
     max_retries: int = 3
-    retry_status_codes: List[int] = None
-    
+    retry_status_codes: list[int] = None
+
     # Caching
     semantic_cache_enabled: bool = True
     cache_max_age_seconds: int = 3600
-    
+
     # Timeouts (ms)
     timeout_ms: int = 30000
     stream_timeout_ms: int = 600000
-    
+
     @with_circuit_breaker("external_api")
     def __post_init__(self):
         # Load VKs from environment
         self.openrouter_vk = os.getenv("VK_OPENROUTER", "")
         self.together_vk = os.getenv("VK_TOGETHER", "")
-        
+
         # Default retry codes
         if self.retry_status_codes is None:
             self.retry_status_codes = [429, 500, 502, 503, 504]
-        
+
         # Set environment from env var
         env_str = os.getenv("ENVIRONMENT", "dev").lower()
         self.environment = Environment(env_str) if env_str in ["dev", "staging", "prod"] else Environment.DEV
@@ -76,21 +80,21 @@ class PortkeyConfig:
 @dataclass
 class ObservabilityHeaders:
     """Metadata headers for tracking and monitoring."""
-    
-    user_id: Optional[str] = None
-    session_id: Optional[str] = None
-    environment: Optional[str] = None
-    feature: Optional[str] = None
-    cost_center: Optional[str] = None
-    role: Optional[Role] = None
-    swarm: Optional[str] = None
-    ticket_id: Optional[str] = None
-    
+
+    user_id: str | None = None
+    session_id: str | None = None
+    environment: str | None = None
+    feature: str | None = None
+    cost_center: str | None = None
+    role: Role | None = None
+    swarm: str | None = None
+    ticket_id: str | None = None
+
     @with_circuit_breaker("external_api")
-    def to_headers(self) -> Dict[str, str]:
+    def to_headers(self) -> dict[str, str]:
         """Convert to HTTP headers."""
         headers = {}
-        
+
         if self.user_id:
             headers["x-user-id"] = self.user_id
         if self.session_id:
@@ -101,7 +105,7 @@ class ObservabilityHeaders:
             headers["x-feature"] = self.feature
         if self.cost_center:
             headers["x-cost-center"] = self.cost_center
-            
+
         # Portkey-specific metadata
         metadata = {}
         if self.role:
@@ -110,10 +114,10 @@ class ObservabilityHeaders:
             metadata["swarm"] = self.swarm
         if self.ticket_id:
             metadata["ticket"] = self.ticket_id
-            
+
         if metadata:
             headers["x-portkey-metadata"] = json.dumps(metadata)
-            
+
         return headers
 
 # ============================================
@@ -122,12 +126,12 @@ class ObservabilityHeaders:
 
 class LoadBalanceStrategy:
     """Load balancing across multiple providers."""
-    
+
     @with_circuit_breaker("external_api")
-    def __init__(self, targets: List[Dict[str, Any]]):
+    def __init__(self, targets: list[dict[str, Any]]):
         self.targets = targets
-        
-    def to_config(self) -> Dict[str, Any]:
+
+    def to_config(self) -> dict[str, Any]:
         return {
             "mode": "loadbalance",
             "targets": self.targets
@@ -135,11 +139,11 @@ class LoadBalanceStrategy:
 
 class FallbackStrategy:
     """Fallback to alternative providers on failure."""
-    
-    def __init__(self, targets: List[Dict[str, Any]]):
+
+    def __init__(self, targets: list[dict[str, Any]]):
         self.targets = targets
-        
-    def to_config(self) -> Dict[str, Any]:
+
+    def to_config(self) -> dict[str, Any]:
         return {
             "strategy": "fallback",
             "targets": self.targets
@@ -147,12 +151,12 @@ class FallbackStrategy:
 
 class ABTestStrategy:
     """A/B testing between models."""
-    
-    def __init__(self, targets: List[Dict[str, Any]], metric: str = "task_success_rate"):
+
+    def __init__(self, targets: list[dict[str, Any]], metric: str = "task_success_rate"):
         self.targets = targets
         self.metric = metric
-        
-    def to_config(self) -> Dict[str, Any]:
+
+    def to_config(self) -> dict[str, Any]:
         return {
             "mode": "ab_test",
             "targets": self.targets,
@@ -165,11 +169,11 @@ class ABTestStrategy:
 
 class PortkeyGateway:
     """Enhanced Portkey gateway with observability and routing."""
-    
-    def __init__(self, config: Optional[PortkeyConfig] = None):
+
+    def __init__(self, config: PortkeyConfig | None = None):
         self.config = config or PortkeyConfig()
         self._setup_clients()
-        
+
     @with_circuit_breaker("external_api")
     def _setup_clients(self):
         """Initialize OpenAI clients with Portkey configuration."""
@@ -177,7 +181,7 @@ class PortkeyGateway:
         portkey_key = os.getenv("PORTKEY_API_KEY")
         if not portkey_key:
             raise ValueError("PORTKEY_API_KEY environment variable is required")
-        
+
         # Chat client (OpenRouter via Portkey)
         self.chat_client = OpenAI(
             base_url=self.config.base_url,
@@ -185,14 +189,14 @@ class PortkeyGateway:
             max_retries=self.config.max_retries,
             timeout=self.config.timeout_ms / 1000  # Convert to seconds
         )
-        
+
         self.async_chat_client = AsyncOpenAI(
             base_url=self.config.base_url,
             api_key=portkey_key,
             max_retries=self.config.max_retries,
             timeout=self.config.timeout_ms / 1000
         )
-        
+
         # Embedding client (also via Portkey)
         self.embed_client = OpenAI(
             base_url=self.config.base_url,
@@ -200,24 +204,24 @@ class PortkeyGateway:
             max_retries=self.config.max_retries,
             timeout=self.config.timeout_ms / 1000
         )
-        
+
         self.async_embed_client = AsyncOpenAI(
             base_url=self.config.base_url,
             api_key=portkey_key,
             max_retries=self.config.max_retries,
             timeout=self.config.timeout_ms / 1000
         )
-    
+
     @with_circuit_breaker("external_api")
     def chat(
         self,
-        messages: List[Dict[str, str]],
+        messages: list[dict[str, str]],
         model: str = "openai/gpt-5",
         temperature: float = 0.7,
-        role: Optional[Role] = None,
-        swarm: Optional[str] = None,
-        ticket_id: Optional[str] = None,
-        routing_strategy: Optional[Any] = None,
+        role: Role | None = None,
+        swarm: str | None = None,
+        ticket_id: str | None = None,
+        routing_strategy: Any | None = None,
         **kwargs
     ) -> str:
         """
@@ -244,7 +248,7 @@ class PortkeyGateway:
             ticket_id=ticket_id,
             session_id=self._generate_session_id()
         ).to_headers()
-        
+
         # Apply role-specific temperature
         if role == Role.CRITIC:
             temperature = min(temperature, 0.1)  # Very low for consistency
@@ -252,25 +256,25 @@ class PortkeyGateway:
             temperature = min(temperature, 0.2)  # Low for reliability
         elif role == Role.PLANNER:
             temperature = min(temperature, 0.3)  # Structured planning
-        
+
         # Add routing strategy if provided
         if routing_strategy:
             headers["x-portkey-config"] = json.dumps(routing_strategy.to_config())
-        
+
         # Add cache control for read-heavy operations
         if role in [Role.PLANNER, Role.CRITIC] and self.config.semantic_cache_enabled:
             headers["x-portkey-cache"] = json.dumps({
                 "mode": "semantic",
                 "max_age": self.config.cache_max_age_seconds
             })
-        
+
         # Add Portkey config for OpenRouter
         config = {
-            "provider": "openrouter", 
+            "provider": "openrouter",
             "api_key": os.getenv('OPENROUTER_API_KEY')
         }
         headers["x-portkey-config"] = json.dumps(config)
-        
+
         # Make the request
         response = self.chat_client.chat.completions.create(
             model=model,
@@ -279,19 +283,19 @@ class PortkeyGateway:
             extra_headers=headers,
             **kwargs
         )
-        
+
         return response.choices[0].message.content
-    
+
     @with_circuit_breaker("external_api")
     async def achat(
         self,
-        messages: List[Dict[str, str]],
+        messages: list[dict[str, str]],
         model: str = "openai/gpt-5",
         temperature: float = 0.7,
-        role: Optional[Role] = None,
-        swarm: Optional[str] = None,
-        ticket_id: Optional[str] = None,
-        routing_strategy: Optional[Any] = None,
+        role: Role | None = None,
+        swarm: str | None = None,
+        ticket_id: str | None = None,
+        routing_strategy: Any | None = None,
         stream: bool = False,
         **kwargs
     ):
@@ -304,7 +308,7 @@ class PortkeyGateway:
             ticket_id=ticket_id,
             session_id=self._generate_session_id()
         ).to_headers()
-        
+
         # Apply role-specific temperature
         if role == Role.CRITIC:
             temperature = min(temperature, 0.1)
@@ -312,19 +316,19 @@ class PortkeyGateway:
             temperature = min(temperature, 0.2)
         elif role == Role.PLANNER:
             temperature = min(temperature, 0.3)
-        
+
         # Streaming configuration
         if stream:
             headers["x-portkey-stream"] = "true"
             kwargs["stream"] = True
-        
+
         # Add Portkey config for OpenRouter
         config = {
-            "provider": "openrouter", 
+            "provider": "openrouter",
             "api_key": os.getenv('OPENROUTER_API_KEY')
         }
         headers["x-portkey-config"] = json.dumps(config)
-        
+
         response = await self.async_chat_client.chat.completions.create(
             model=model,
             messages=messages,
@@ -332,19 +336,19 @@ class PortkeyGateway:
             extra_headers=headers,
             **kwargs
         )
-        
+
         if stream:
             return response  # Return generator for streaming
         else:
             return response.choices[0].message.content
-    
+
     @with_circuit_breaker("external_api")
     def embed(
         self,
-        texts: List[str],
+        texts: list[str],
         model: str = "BAAI/bge-large-en-v1.5",
         **kwargs
-    ) -> List[List[float]]:
+    ) -> list[list[float]]:
         """
         Generate embeddings with caching.
         
@@ -361,53 +365,53 @@ class PortkeyGateway:
             feature="embedding",
             session_id=self._generate_session_id()
         ).to_headers()
-        
+
         # Enable caching for embeddings
         if self.config.semantic_cache_enabled:
             headers["x-portkey-cache"] = json.dumps({
                 "mode": "simple",
                 "max_age": self.config.cache_max_age_seconds * 2  # Longer for embeddings
             })
-        
+
         response = self.embed_client.embeddings.create(
             model=model,
             input=texts,
             extra_headers=headers,
             **kwargs
         )
-        
+
         return [d.embedding for d in response.data]
-    
+
     async def aembed(
         self,
-        texts: List[str],
+        texts: list[str],
         model: str = "BAAI/bge-large-en-v1.5",
         batch_size: int = 100,
         **kwargs
-    ) -> List[List[float]]:
+    ) -> list[list[float]]:
         """Async embeddings with batching."""
         all_embeddings = []
-        
+
         for i in range(0, len(texts), batch_size):
             batch = texts[i:i + batch_size]
-            
+
             headers = ObservabilityHeaders(
                 environment=self.config.environment.value,
                 feature="embedding",
                 session_id=self._generate_session_id()
             ).to_headers()
-            
+
             response = await self.async_embed_client.embeddings.create(
                 model=model,
                 input=batch,
                 extra_headers=headers,
                 **kwargs
             )
-            
+
             all_embeddings.extend([d.embedding for d in response.data])
-        
+
         return all_embeddings
-    
+
     def _generate_session_id(self) -> str:
         """Generate a unique session ID."""
         timestamp = str(time.time())
@@ -469,17 +473,17 @@ MODEL_RECOMMENDATIONS = {
 
 class Guardrails:
     """Guardrail configurations for content safety."""
-    
+
     PII_DETECTION = "pii-detection-guardrail"
     CONTENT_MODERATION = "content-moderation-guardrail"
     PROMPT_INJECTION = "prompt-injection-detection"
-    
+
     @staticmethod
-    def get_before_hooks() -> List[str]:
+    def get_before_hooks() -> list[str]:
         """Hooks to run before request."""
         return [Guardrails.PII_DETECTION, Guardrails.PROMPT_INJECTION]
-    
+
     @staticmethod
-    def get_after_hooks() -> List[str]:
+    def get_after_hooks() -> list[str]:
         """Hooks to run after request."""
         return [Guardrails.CONTENT_MODERATION]

@@ -8,34 +8,34 @@ Following ADR-006: Configuration Management Standardization
 - Encrypted secret management for all service configurations
 """
 
-import pulumi
-import requests
-import json
 import os
-from typing import Dict, Any, List, Optional
 from dataclasses import dataclass
-from pulumi import Output
+from typing import Any
+
+import requests
+
+import pulumi
 
 
 @dataclass
 class FlyAppSpec:
     """Specification for a Fly.io application"""
     name: str
-    dockerfile: Optional[str] = None
-    image: Optional[str] = None
+    dockerfile: str | None = None
+    image: str | None = None
     port: int = 8080
     memory_mb: int = 1024
     cpu_cores: float = 1.0
     min_instances: int = 1
     max_instances: int = 4
     volume_size_gb: int = 5
-    env_vars: Optional[Dict[str, str]] = None
+    env_vars: dict[str, str] | None = None
     health_check_path: str = "/health"
 
 
 class FlyResourceProvider(pulumi.dynamic.ResourceProvider):
     """Dynamic resource provider for Fly.io applications"""
-    
+
     def __init__(self, api_token: str):
         self.api_token = api_token
         self.headers = {
@@ -43,25 +43,25 @@ class FlyResourceProvider(pulumi.dynamic.ResourceProvider):
             "Content-Type": "application/json"
         }
         self.base_url = "https://api.machines.dev/v1"
-    
-    def create(self, props: Dict[str, Any]) -> pulumi.dynamic.CreateResult:
+
+    def create(self, props: dict[str, Any]) -> pulumi.dynamic.CreateResult:
         """Create a Fly.io application and configure it"""
         app_name = props["name"]
         app_spec = props["spec"]
-        
+
         try:
             # Create the Fly.io application
             app_data = {
                 "app_name": app_name,
                 "org_slug": "sophia-intel-ai"
             }
-            
+
             app_response = requests.post(
-                f"https://api.fly.io/v1/apps",
+                "https://api.fly.io/v1/apps",
                 headers=self.headers,
                 json=app_data
             )
-            
+
             if app_response.status_code == 201:
                 app_info = app_response.json()
                 print(f"✅ Created Fly.io app: {app_name}")
@@ -76,7 +76,7 @@ class FlyResourceProvider(pulumi.dynamic.ResourceProvider):
                     print(f"📱 Using existing Fly.io app: {app_name}")
                 else:
                     raise Exception(f"Failed to create or get app {app_name}: {app_response.text}")
-            
+
             # Create volume if needed
             if app_spec.get("volume_size_gb", 0) > 0:
                 volume_data = {
@@ -84,18 +84,18 @@ class FlyResourceProvider(pulumi.dynamic.ResourceProvider):
                     "size_gb": app_spec["volume_size_gb"],
                     "region": props.get("primary_region", "sjc")
                 }
-                
+
                 volume_response = requests.post(
                     f"https://api.fly.io/v1/apps/{app_name}/volumes",
                     headers=self.headers,
                     json=volume_data
                 )
-                
+
                 if volume_response.status_code in [200, 201]:
                     print(f"💾 Created volume for {app_name}: {app_spec['volume_size_gb']}GB")
                 else:
                     print(f"⚠️  Volume creation failed for {app_name}: {volume_response.text}")
-            
+
             # Configure machine settings
             machine_config = {
                 "config": {
@@ -131,7 +131,7 @@ class FlyResourceProvider(pulumi.dynamic.ResourceProvider):
                     }
                 }
             }
-            
+
             # Set up auto-scaling
             scale_config = {
                 "count": {
@@ -145,7 +145,7 @@ class FlyResourceProvider(pulumi.dynamic.ResourceProvider):
                     "min_machines_running": app_spec["min_instances"]
                 }
             }
-            
+
             return pulumi.dynamic.CreateResult(
                 id_=app_name,
                 outs={
@@ -156,11 +156,11 @@ class FlyResourceProvider(pulumi.dynamic.ResourceProvider):
                     "status": "created"
                 }
             )
-            
+
         except Exception as e:
             raise Exception(f"Failed to create Fly.io app {app_name}: {str(e)}")
-    
-    def delete(self, id_: str, props: Dict[str, Any]) -> None:
+
+    def delete(self, id_: str, props: dict[str, Any]) -> None:
         """Delete a Fly.io application"""
         try:
             response = requests.delete(
@@ -177,12 +177,12 @@ class FlyResourceProvider(pulumi.dynamic.ResourceProvider):
 
 class FlyApp(pulumi.dynamic.Resource):
     """Fly.io application resource"""
-    
-    def __init__(self, name: str, spec: FlyAppSpec, api_token: str, 
-                 primary_region: str = "sjc", opts: Optional[pulumi.ResourceOptions] = None):
-        
+
+    def __init__(self, name: str, spec: FlyAppSpec, api_token: str,
+                 primary_region: str = "sjc", opts: pulumi.ResourceOptions | None = None):
+
         provider = FlyResourceProvider(api_token)
-        
+
         super().__init__(
             provider,
             name,
@@ -208,17 +208,17 @@ class FlyApp(pulumi.dynamic.Resource):
 
 def main():
     """Main infrastructure provisioning function using ESC configuration"""
-    
+
     # Get environment from ESC
     environment = os.getenv("PULUMI_ESC_ENVIRONMENT", "dev")
-    
+
     # Use ESC environment variables (loaded automatically by Pulumi)
     primary_region = pulumi.Config().get("REGION") or "iad"  # Washington DC for better connectivity
     secondary_region = "sjc"  # San Jose as secondary
-    
+
     # Get API token from ESC
     fly_api_token = pulumi.Config().get_secret("FLY_API_TOKEN")
-    
+
     # Environment-specific configuration
     if environment == "prod":
         org_slug = "sophia-intel-ai"
@@ -235,12 +235,12 @@ def main():
         enable_autoscaling = False
         backup_enabled = False
         monitoring_level = "basic"
-    
+
     print(f"🚀 Provisioning Sophia Intel AI infrastructure in {environment} (ADR-006)")
     print(f"🌍 Primary region: {primary_region}, Secondary region: {secondary_region}")
-    print(f"🔧 Configuration: Pulumi ESC with hierarchical environments")
-    print(f"🔐 Security: Encrypted secrets and proper RBAC")
-    
+    print("🔧 Configuration: Pulumi ESC with hierarchical environments")
+    print("🔐 Security: Encrypted secrets and proper RBAC")
+
     # Service specifications based on requirements
     service_specs = {
         # 1. Weaviate Vector Database (Foundation Service) - ESC Enhanced
@@ -275,7 +275,7 @@ def main():
                 "HUGGINGFACE_API_TOKEN": pulumi.Config().get_secret("HUGGINGFACE_API_TOKEN") or ""
             }
         ),
-        
+
         # 2. MCP Memory Management Server
         "sophia-mcp": FlyAppSpec(
             name="sophia-mcp",
@@ -298,7 +298,7 @@ def main():
                 "ENABLE_MCP_PROTOCOL": "true"
             }
         ),
-        
+
         # 3. Vector Store with 3-tier embeddings
         "sophia-vector": FlyAppSpec(
             name="sophia-vector",
@@ -325,7 +325,7 @@ def main():
                 "ENABLE_EMBEDDING_CACHE": "true"
             }
         ),
-        
+
         # 4. Unified API - Main Orchestrator (Critical Service) - ESC Enhanced
         "sophia-api": FlyAppSpec(
             name="sophia-api",
@@ -343,17 +343,17 @@ def main():
                 "PYTHONPATH": "/app",
                 "PYTHONUNBUFFERED": "1",
                 "LOCAL_DEV_MODE": "false",
-                
+
                 # Service URLs (internal networking)
                 "WEAVIATE_URL": "http://sophia-weaviate.internal:8080",
                 "MCP_SERVER_URL": "http://sophia-mcp.internal:8004",
                 "VECTOR_STORE_URL": "http://sophia-vector.internal:8005",
-                
+
                 # Model configuration from ESC
                 "DEFAULT_FAST_MODELS": pulumi.Config().get("DEFAULT_FAST_MODELS") or "groq/llama-3.2-90b-text-preview,openai/gpt-4o-mini",
                 "DEFAULT_BALANCED_MODELS": pulumi.Config().get("DEFAULT_BALANCED_MODELS") or "openai/gpt-4o,anthropic/claude-3.5-sonnet",
                 "DEFAULT_HEAVY_MODELS": pulumi.Config().get("DEFAULT_HEAVY_MODELS") or "anthropic/claude-3.5-sonnet,qwen/qwen-2.5-coder-32b-instruct,openai/gpt-4o",
-                
+
                 # Gateway and API keys from ESC
                 "PORTKEY_API_KEY": pulumi.Config().get_secret("PORTKEY_API_KEY"),
                 "PORTKEY_BASE_URL": pulumi.Config().get("PORTKEY_BASE_URL") or "https://api.portkey.ai/v1",
@@ -361,33 +361,33 @@ def main():
                 "OPENAI_API_KEY": pulumi.Config().get_secret("OPENAI_API_KEY"),
                 "GROQ_API_KEY": pulumi.Config().get_secret("GROQ_API_KEY"),
                 "DEEPSEEK_API_KEY": pulumi.Config().get_secret("DEEPSEEK_API_KEY"),
-                
+
                 # Database connections from ESC
                 "REDIS_URL": pulumi.Config().get_secret("REDIS_URL"),
                 "POSTGRES_URL": pulumi.Config().get_secret("POSTGRES_URL") or "",
-                
+
                 # Performance and security settings
                 "USE_REAL_APIS": "true",
                 "ENABLE_API_VALIDATION": "true",
                 "FAIL_ON_MOCK_FALLBACK": "true",
                 "ENABLE_CONSENSUS_SWARMS": "true",
                 "ENABLE_MEMORY_DEDUPLICATION": "true",
-                
+
                 # Cost controls from ESC
                 "DAILY_BUDGET_USD": pulumi.Config().get("DAILY_BUDGET_USD") or "100",
                 "MAX_TOKENS_PER_REQUEST": pulumi.Config().get("MAX_TOKENS_PER_REQUEST") or "4096",
                 "API_RATE_LIMIT": pulumi.Config().get("API_RATE_LIMIT") or "100",
-                
+
                 # Security settings from ESC
                 "JWT_SECRET": pulumi.Config().get_secret("JWT_SECRET"),
                 "API_SECRET_KEY": pulumi.Config().get_secret("API_SECRET_KEY"),
-                
+
                 # Monitoring
                 "LOG_LEVEL": "INFO" if environment == "prod" else "DEBUG",
                 "ENABLE_PROFILING": "false" if environment == "prod" else "true"
             }
         ),
-        
+
         # 5. Agno Bridge - UI Compatibility Layer
         "sophia-bridge": FlyAppSpec(
             name="sophia-bridge",
@@ -414,7 +414,7 @@ def main():
                 "ENABLE_API_VALIDATION": "true"
             }
         ),
-        
+
         # 6. Agent UI - Next.js Frontend
         "sophia-ui": FlyAppSpec(
             name="sophia-ui",
@@ -442,30 +442,30 @@ def main():
             }
         )
     }
-    
+
     # Deploy all services
     deployed_services = {}
-    
+
     for service_name, spec in service_specs.items():
         print(f"🏗️  Deploying {service_name}...")
-        
+
         deployed_services[service_name] = FlyApp(
             f"fly-{service_name}",
             spec,
             fly_api_token,
             primary_region
         )
-    
+
     # Export service URLs and configuration
     pulumi.export("environment", environment)
     pulumi.export("primary_region", primary_region)
     pulumi.export("secondary_region", secondary_region)
-    
+
     # Export service URLs
     for service_name, service in deployed_services.items():
         pulumi.export(f"{service_name.replace('-', '_')}_url", service.public_url)
         pulumi.export(f"{service_name.replace('-', '_')}_internal_url", service.internal_url)
-    
+
     # Export infrastructure summary
     pulumi.export("infrastructure_summary", {
         "total_services": len(service_specs),
@@ -484,12 +484,12 @@ def main():
         "total_max_instances": sum(spec.max_instances for spec in service_specs.values()),
         "regions": [primary_region, secondary_region]
     })
-    
+
     # Export networking configuration
     pulumi.export("networking_config", {
         "internal_services": {
             "weaviate": "http://sophia-weaviate.internal:8080",
-            "mcp_server": "http://sophia-mcp.internal:8004", 
+            "mcp_server": "http://sophia-mcp.internal:8004",
             "vector_store": "http://sophia-vector.internal:8005",
             "unified_api": "http://sophia-api.internal:8003",
             "agno_bridge": "http://sophia-bridge.internal:7777",
@@ -498,13 +498,13 @@ def main():
         "public_endpoints": {
             "weaviate": "https://sophia-weaviate.fly.dev",
             "mcp_server": "https://sophia-mcp.fly.dev",
-            "vector_store": "https://sophia-vector.fly.dev", 
+            "vector_store": "https://sophia-vector.fly.dev",
             "unified_api": "https://sophia-api.fly.dev",
             "agno_bridge": "https://sophia-bridge.fly.dev",
             "agent_ui": "https://sophia-ui.fly.dev"
         }
     })
-    
+
     print("✅ Infrastructure deployment configuration complete!")
 
 

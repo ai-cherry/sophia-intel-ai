@@ -3,23 +3,19 @@ Dual-Tier Embedding System with Intelligent Routing.
 Optimizes for both quality (Tier-A) and speed (Tier-B).
 """
 
-import os
-import json
-import hashlib
-import sqlite3
 import asyncio
-from typing import List, Dict, Any, Optional, Tuple
+import hashlib
+import json
+import os
+import sqlite3
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any
+
 import tiktoken
 
-from app.memory.embedding_pipeline import StandardizedEmbeddingPipeline
 from app.core.circuit_breaker import (
     with_circuit_breaker,
-    get_llm_circuit_breaker,
-    get_weaviate_circuit_breaker,
-    get_redis_circuit_breaker,
-    get_webhook_circuit_breaker
 )
 from app.memory.embedding_pipeline import StandardizedEmbeddingPipeline
 
@@ -35,35 +31,35 @@ class EmbeddingTier(Enum):
 @dataclass
 class EmbeddingConfig:
     """Configuration for dual-tier embeddings."""
-    
+
     # Tier A: High-quality, long-context
     tier_a_model: str = "togethercomputer/m2-bert-80M-32k-retrieval"
     tier_a_dim: int = 768
     tier_a_max_tokens: int = 32768
     tier_a_batch_size: int = 10
-    
+
     # Tier B: Fast, standard
     tier_b_model: str = "BAAI/bge-large-en-v1.5"
     tier_b_dim: int = 1024
     tier_b_max_tokens: int = 512
     tier_b_batch_size: int = 100
-    
+
     # Routing thresholds
     token_threshold: int = 2048  # Use Tier-A above this
-    priority_keywords: List[str] = None
-    language_priorities: Dict[str, EmbeddingTier] = None
-    
+    priority_keywords: list[str] = None
+    language_priorities: dict[str, EmbeddingTier] = None
+
     # Cache settings
     cache_db_path: str = "tmp/embedding_cache.db"
     cache_ttl_days: int = 30
-    
+
     def __post_init__(self):
         if self.priority_keywords is None:
             self.priority_keywords = [
                 "critical", "security", "authentication", "payment",
                 "privacy", "compliance", "legal", "architecture"
             ]
-        
+
         if self.language_priorities is None:
             self.language_priorities = {
                 "python": EmbeddingTier.TIER_A,
@@ -82,15 +78,15 @@ class EmbeddingCache:
     """
     SQLite-based embedding cache with SHA hashing.
     """
-    
+
     def __init__(self, db_path: str):
         self.db_path = db_path
         self._ensure_db()
-    
+
     def _ensure_db(self):
         """Ensure cache database exists."""
         os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
-        
+
         with sqlite3.connect(self.db_path) as conn:
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS embedding_cache (
@@ -104,24 +100,24 @@ class EmbeddingCache:
                     PRIMARY KEY (text_hash, model)
                 )
             """)
-            
+
             conn.execute("""
                 CREATE INDEX IF NOT EXISTS idx_text_hash 
                 ON embedding_cache(text_hash)
             """)
-            
+
             conn.execute("""
                 CREATE INDEX IF NOT EXISTS idx_model 
                 ON embedding_cache(model)
             """)
-            
+
             conn.commit()
-    
+
     def get_cached(
         self,
         text: str,
         model: str
-    ) -> Optional[List[float]]:
+    ) -> list[float] | None:
         """
         Get cached embedding if exists.
         
@@ -133,13 +129,13 @@ class EmbeddingCache:
             Cached embedding vector or None
         """
         text_hash = hashlib.sha256(text.encode()).hexdigest()
-        
+
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.execute("""
                 SELECT embedding FROM embedding_cache
                 WHERE text_hash = ? AND model = ?
             """, (text_hash, model))
-            
+
             row = cursor.fetchone()
             if row:
                 # Update access stats
@@ -150,16 +146,16 @@ class EmbeddingCache:
                     WHERE text_hash = ? AND model = ?
                 """, (text_hash, model))
                 conn.commit()
-                
+
                 return json.loads(row[0])
-        
+
         return None
-    
+
     def cache_embedding(
         self,
         text: str,
         model: str,
-        embedding: List[float]
+        embedding: list[float]
     ):
         """
         Cache an embedding.
@@ -170,7 +166,7 @@ class EmbeddingCache:
             embedding: Embedding vector
         """
         text_hash = hashlib.sha256(text.encode()).hexdigest()
-        
+
         with sqlite3.connect(self.db_path) as conn:
             conn.execute("""
                 INSERT OR REPLACE INTO embedding_cache
@@ -183,21 +179,21 @@ class EmbeddingCache:
                 len(embedding)
             ))
             conn.commit()
-    
+
     @with_circuit_breaker("redis")
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get cache statistics."""
         with sqlite3.connect(self.db_path) as conn:
             total = conn.execute(
                 "SELECT COUNT(*) FROM embedding_cache"
             ).fetchone()[0]
-            
+
             by_model = conn.execute("""
                 SELECT model, COUNT(*), AVG(access_count)
                 FROM embedding_cache
                 GROUP BY model
             """).fetchall()
-            
+
             return {
                 "total_cached": total,
                 "by_model": [
@@ -218,17 +214,17 @@ class EmbeddingRouter:
     """
     Intelligent routing between embedding tiers.
     """
-    
+
     def __init__(self, config: EmbeddingConfig):
         self.config = config
         self.tokenizer = tiktoken.get_encoding("cl100k_base")
-    
+
     def select_tier(
         self,
         text: str,
-        language: Optional[str] = None,
-        priority: Optional[str] = None,
-        force_tier: Optional[EmbeddingTier] = None
+        language: str | None = None,
+        priority: str | None = None,
+        force_tier: EmbeddingTier | None = None
     ) -> EmbeddingTier:
         """
         Select appropriate embedding tier.
@@ -245,34 +241,34 @@ class EmbeddingRouter:
         # Force tier if specified
         if force_tier:
             return force_tier
-        
+
         # Check priority keywords
         text_lower = text.lower()
         for keyword in self.config.priority_keywords:
             if keyword in text_lower:
                 return EmbeddingTier.TIER_A
-        
+
         # Check language priority
         if language and language.lower() in self.config.language_priorities:
             return self.config.language_priorities[language.lower()]
-        
+
         # Check token count
         token_count = len(self.tokenizer.encode(text))
         if token_count > self.config.token_threshold:
             return EmbeddingTier.TIER_A
-        
+
         # High priority always gets Tier-A
         if priority == "high":
             return EmbeddingTier.TIER_A
-        
+
         # Default to Tier-B for speed
         return EmbeddingTier.TIER_B
-    
+
     def batch_route(
         self,
-        texts: List[str],
-        metadata: Optional[List[Dict[str, Any]]] = None
-    ) -> Dict[EmbeddingTier, List[int]]:
+        texts: list[str],
+        metadata: list[dict[str, Any]] | None = None
+    ) -> dict[EmbeddingTier, list[int]]:
         """
         Route batch of texts to appropriate tiers.
         
@@ -287,7 +283,7 @@ class EmbeddingRouter:
             EmbeddingTier.TIER_A: [],
             EmbeddingTier.TIER_B: []
         }
-        
+
         for i, text in enumerate(texts):
             meta = metadata[i] if metadata else {}
             tier = self.select_tier(
@@ -296,7 +292,7 @@ class EmbeddingRouter:
                 priority=meta.get("priority")
             )
             tier_indices[tier].append(i)
-        
+
         return tier_indices
 
 # ============================================
@@ -308,23 +304,23 @@ class DualTierEmbedder:
     Dual-tier embedding engine with caching and routing.
     Integrates with standardized embedding pipeline for OpenAI models.
     """
-    
-    def __init__(self, config: Optional[EmbeddingConfig] = None):
+
+    def __init__(self, config: EmbeddingConfig | None = None):
         self.config = config or EmbeddingConfig()
         self.router = EmbeddingRouter(self.config)
         self.cache = EmbeddingCache(self.config.cache_db_path)
         # Initialize standardized pipeline for OpenAI models
         self.standard_pipeline = StandardizedEmbeddingPipeline()
-    
+
     @with_circuit_breaker("redis")
     async def embed_single(
         self,
         text: str,
-        language: Optional[str] = None,
-        priority: Optional[str] = None,
-        force_tier: Optional[EmbeddingTier] = None,
+        language: str | None = None,
+        priority: str | None = None,
+        force_tier: EmbeddingTier | None = None,
         use_cache: bool = True
-    ) -> Tuple[List[float], EmbeddingTier]:
+    ) -> tuple[list[float], EmbeddingTier]:
         """
         Embed single text with tier selection.
         
@@ -340,36 +336,36 @@ class DualTierEmbedder:
         """
         # Select tier
         tier = self.router.select_tier(text, language, priority, force_tier)
-        
+
         # Get model based on tier
         if tier == EmbeddingTier.TIER_A:
             model = self.config.tier_a_model
         else:
             model = self.config.tier_b_model
-        
+
         # Check cache
         if use_cache:
             cached = self.cache.get_cached(text, model)
             if cached:
                 return cached, tier
-        
+
         # Generate embedding
         embeddings = await gateway.aembed([text], model=model)
         embedding = embeddings[0]
-        
+
         # Cache result
         if use_cache:
             self.cache.cache_embedding(text, model, embedding)
-        
+
         return embedding, tier
-    
+
     @with_circuit_breaker("redis")
     async def embed_batch(
         self,
-        texts: List[str],
-        metadata: Optional[List[Dict[str, Any]]] = None,
+        texts: list[str],
+        metadata: list[dict[str, Any]] | None = None,
         use_cache: bool = True
-    ) -> List[Tuple[List[float], EmbeddingTier]]:
+    ) -> list[tuple[list[float], EmbeddingTier]]:
         """
         Embed batch of texts with intelligent routing.
         
@@ -383,15 +379,15 @@ class DualTierEmbedder:
         """
         # Route texts to tiers
         tier_indices = self.router.batch_route(texts, metadata)
-        
+
         # Prepare results
         results = [None] * len(texts)
-        
+
         # Process Tier-A texts
         if tier_indices[EmbeddingTier.TIER_A]:
             tier_a_texts = []
             tier_a_positions = []
-            
+
             for idx in tier_indices[EmbeddingTier.TIER_A]:
                 # Check cache
                 if use_cache:
@@ -402,10 +398,10 @@ class DualTierEmbedder:
                     if cached:
                         results[idx] = (cached, EmbeddingTier.TIER_A)
                         continue
-                
+
                 tier_a_texts.append(texts[idx])
                 tier_a_positions.append(idx)
-            
+
             # Batch embed uncached texts
             if tier_a_texts:
                 embeddings = await gateway.aembed(
@@ -413,11 +409,11 @@ class DualTierEmbedder:
                     model=self.config.tier_a_model,
                     batch_size=self.config.tier_a_batch_size
                 )
-                
-                for i, (text, embedding) in enumerate(zip(tier_a_texts, embeddings)):
+
+                for i, (text, embedding) in enumerate(zip(tier_a_texts, embeddings, strict=False)):
                     idx = tier_a_positions[i]
                     results[idx] = (embedding, EmbeddingTier.TIER_A)
-                    
+
                     # Cache result
                     if use_cache:
                         self.cache.cache_embedding(
@@ -425,12 +421,12 @@ class DualTierEmbedder:
                             self.config.tier_a_model,
                             embedding
                         )
-        
+
         # Process Tier-B texts
         if tier_indices[EmbeddingTier.TIER_B]:
             tier_b_texts = []
             tier_b_positions = []
-            
+
             for idx in tier_indices[EmbeddingTier.TIER_B]:
                 # Check cache
                 if use_cache:
@@ -441,10 +437,10 @@ class DualTierEmbedder:
                     if cached:
                         results[idx] = (cached, EmbeddingTier.TIER_B)
                         continue
-                
+
                 tier_b_texts.append(texts[idx])
                 tier_b_positions.append(idx)
-            
+
             # Batch embed uncached texts
             if tier_b_texts:
                 embeddings = await gateway.aembed(
@@ -452,11 +448,11 @@ class DualTierEmbedder:
                     model=self.config.tier_b_model,
                     batch_size=self.config.tier_b_batch_size
                 )
-                
-                for i, (text, embedding) in enumerate(zip(tier_b_texts, embeddings)):
+
+                for i, (text, embedding) in enumerate(zip(tier_b_texts, embeddings, strict=False)):
                     idx = tier_b_positions[i]
                     results[idx] = (embedding, EmbeddingTier.TIER_B)
-                    
+
                     # Cache result
                     if use_cache:
                         self.cache.cache_embedding(
@@ -464,20 +460,20 @@ class DualTierEmbedder:
                             self.config.tier_b_model,
                             embedding
                         )
-        
+
         return results
-    
+
     def get_dimension(self, tier: EmbeddingTier) -> int:
         """Get embedding dimension for tier."""
         if tier == EmbeddingTier.TIER_A:
             return self.config.tier_a_dim
         else:
             return self.config.tier_b_dim
-    
-    def get_stats(self) -> Dict[str, Any]:
+
+    def get_stats(self) -> dict[str, Any]:
         """Get embedding statistics."""
         cache_stats = self.cache.get_stats()
-        
+
         return {
             "config": {
                 "tier_a_model": self.config.tier_a_model,
@@ -493,7 +489,7 @@ class DualTierEmbedder:
 # Embedding Utilities
 # ============================================
 
-def normalize_embedding(embedding: List[float]) -> List[float]:
+def normalize_embedding(embedding: list[float]) -> list[float]:
     """Normalize embedding vector to unit length."""
     import math
     norm = math.sqrt(sum(x * x for x in embedding))
@@ -502,24 +498,24 @@ def normalize_embedding(embedding: List[float]) -> List[float]:
     return embedding
 
 def cosine_similarity(
-    embedding1: List[float],
-    embedding2: List[float]
+    embedding1: list[float],
+    embedding2: list[float]
 ) -> float:
     """Calculate cosine similarity between embeddings."""
-    
+
     # Normalize vectors
     norm1 = normalize_embedding(embedding1)
     norm2 = normalize_embedding(embedding2)
-    
+
     # Dot product
-    dot_product = sum(a * b for a, b in zip(norm1, norm2))
-    
+    dot_product = sum(a * b for a, b in zip(norm1, norm2, strict=False))
+
     return dot_product
 
 def pad_or_truncate_embedding(
-    embedding: List[float],
+    embedding: list[float],
     target_dim: int
-) -> List[float]:
+) -> list[float]:
     """Pad or truncate embedding to target dimension."""
     if len(embedding) == target_dim:
         return embedding
@@ -537,7 +533,7 @@ def pad_or_truncate_embedding(
 async def main():
     """CLI for testing dual-tier embeddings."""
     import argparse
-    
+
     parser = argparse.ArgumentParser(description="Dual-tier embedding system")
     parser.add_argument("--text", help="Text to embed")
     parser.add_argument("--file", help="File to embed")
@@ -545,11 +541,11 @@ async def main():
     parser.add_argument("--priority", choices=["low", "medium", "high"])
     parser.add_argument("--tier", choices=["tier_a", "tier_b"])
     parser.add_argument("--stats", action="store_true", help="Show statistics")
-    
+
     args = parser.parse_args()
-    
+
     embedder = DualTierEmbedder()
-    
+
     if args.stats:
         stats = embedder.get_stats()
         print("\n📊 Embedding Statistics:")
@@ -558,20 +554,20 @@ async def main():
         print(f"  Cache: {stats['cache']['total_cached']} entries")
         for model_stat in stats['cache']['by_model']:
             print(f"    {model_stat['model']}: {model_stat['count']} entries")
-    
+
     elif args.text or args.file:
         # Get text
         if args.file:
-            with open(args.file, 'r') as f:
+            with open(args.file) as f:
                 text = f.read()
         else:
             text = args.text
-        
+
         # Select tier
         force_tier = None
         if args.tier:
             force_tier = EmbeddingTier(args.tier)
-        
+
         # Embed
         embedding, tier = await embedder.embed_single(
             text,
@@ -579,7 +575,7 @@ async def main():
             priority=args.priority,
             force_tier=force_tier
         )
-        
+
         print(f"\n✅ Embedded using {tier.value}:")
         print(f"  Dimension: {len(embedding)}")
         print(f"  First 5 values: {embedding[:5]}")

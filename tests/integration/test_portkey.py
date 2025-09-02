@@ -6,22 +6,24 @@ Tests both chat (via OpenRouter) and embeddings (via Together AI).
 
 import asyncio
 import sys
+
 from app.ports import (
-    chat, 
+    Models,
     async_chat,
-    embed_texts, 
     async_embed_texts,
+    chat,
     chat_with_tools,
+    embed_texts,
     test_connection,
-    Models
 )
+
 
 def test_sync_operations():
     """Test synchronous chat and embedding operations."""
     print("=" * 60)
     print("TESTING SYNCHRONOUS OPERATIONS")
     print("=" * 60)
-    
+
     # Test 1: Basic chat
     print("\n1. Testing basic chat (OpenRouter via Portkey)...")
     try:
@@ -33,7 +35,7 @@ def test_sync_operations():
     except Exception as e:
         print(f"   ❌ Chat failed: {e}")
         return False
-    
+
     # Test 2: Embeddings
     print("\n2. Testing embeddings (Together AI via Portkey)...")
     try:
@@ -44,7 +46,7 @@ def test_sync_operations():
     except Exception as e:
         print(f"   ❌ Embeddings failed: {e}")
         return False
-    
+
     # Test 3: Tool calling
     print("\n3. Testing tool calling...")
     try:
@@ -62,21 +64,21 @@ def test_sync_operations():
                 }
             }
         }]
-        
+
         response = chat_with_tools(
             [{"role": "user", "content": "What's the weather in San Francisco?"}],
             tools=tools,
             model=Models.GPT4O
         )
-        
+
         if response.choices[0].message.tool_calls:
             print(f"   ✅ Tool call detected: {response.choices[0].message.tool_calls[0].function.name}")
         else:
-            print(f"   ℹ️  No tool call (model responded directly)")
+            print("   ℹ️  No tool call (model responded directly)")
     except Exception as e:
         print(f"   ❌ Tool calling failed: {e}")
         return False
-    
+
     return True
 
 async def test_async_operations():
@@ -84,7 +86,7 @@ async def test_async_operations():
     print("\n" + "=" * 60)
     print("TESTING ASYNCHRONOUS OPERATIONS")
     print("=" * 60)
-    
+
     # Test 4: Async chat
     print("\n4. Testing async chat...")
     try:
@@ -96,7 +98,7 @@ async def test_async_operations():
     except Exception as e:
         print(f"   ❌ Async chat failed: {e}")
         return False
-    
+
     # Test 5: Async embeddings
     print("\n5. Testing async embeddings...")
     try:
@@ -105,7 +107,7 @@ async def test_async_operations():
     except Exception as e:
         print(f"   ❌ Async embeddings failed: {e}")
         return False
-    
+
     # Test 6: Parallel operations
     print("\n6. Testing parallel operations...")
     try:
@@ -114,14 +116,14 @@ async def test_async_operations():
             model=Models.GPT4O_MINI
         )
         embed_task = async_embed_texts(["parallel embedding"])
-        
+
         chat_result, embed_result = await asyncio.gather(chat_task, embed_task)
         print(f"   ✅ Parallel chat: {chat_result}")
         print(f"   ✅ Parallel embedding dimension: {len(embed_result[0])}")
     except Exception as e:
         print(f"   ❌ Parallel operations failed: {e}")
         return False
-    
+
     return True
 
 def test_model_variety():
@@ -129,13 +131,13 @@ def test_model_variety():
     print("\n" + "=" * 60)
     print("TESTING MODEL VARIETY")
     print("=" * 60)
-    
+
     models_to_test = [
         (Models.GPT4O_MINI, "OpenAI"),
         (Models.GEMINI_20_FLASH, "Google"),
         (Models.LLAMA_31_8B, "Meta"),
     ]
-    
+
     for model_id, provider in models_to_test:
         print(f"\n7. Testing {provider} model: {model_id}")
         try:
@@ -146,14 +148,14 @@ def test_model_variety():
             print(f"   ✅ {provider}: {response[:50]}")
         except Exception as e:
             print(f"   ⚠️  {provider} not available or failed: {e}")
-    
+
     return True
 
 async def main():
     """Run all tests."""
     print("\n🚀 PORTKEY INTEGRATION SMOKE TEST")
     print("=" * 60)
-    
+
     # Quick connection test first
     print("\nRunning quick connection test...")
     if not test_connection():
@@ -162,12 +164,12 @@ async def main():
         print("   - OPENAI_API_KEY should be your Portkey VK for OpenRouter")
         print("   - EMBED_API_KEY should be your Portkey VK for Together AI")
         sys.exit(1)
-    
+
     # Run comprehensive tests
     sync_ok = test_sync_operations()
     async_ok = await test_async_operations()
     variety_ok = test_model_variety()
-    
+
     # Summary
     print("\n" + "=" * 60)
     print("TEST SUMMARY")
@@ -175,7 +177,7 @@ async def main():
     print(f"Synchronous operations: {'✅ PASSED' if sync_ok else '❌ FAILED'}")
     print(f"Asynchronous operations: {'✅ PASSED' if async_ok else '❌ FAILED'}")
     print(f"Model variety: {'✅ PASSED' if variety_ok else '❌ FAILED'}")
-    
+
     if sync_ok and async_ok:
         print("\n🎉 All critical tests passed! Portkey integration is working.")
         print("\n📝 Next steps:")

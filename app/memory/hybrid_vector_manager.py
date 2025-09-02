@@ -4,13 +4,14 @@ Combines Weaviate 2.0 for real-time hybrid search with Milvus 3.0 for ultra-scal
 Part of 2025 Memory Stack Modernization
 """
 
-import os
-import time
 import asyncio
 import logging
-from typing import Dict, Any, List, Optional, Literal, Union
+import os
+import time
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any, Literal
+
 import numpy as np
 from dotenv import load_dotenv
 
@@ -32,10 +33,10 @@ class QueryType(Enum):
 class VectorSearchResult:
     """Unified search result from vector databases"""
     id: str
-    content: Dict[str, Any]
+    content: dict[str, Any]
     score: float
-    vector: Optional[List[float]]
-    metadata: Dict[str, Any]
+    vector: list[float] | None
+    metadata: dict[str, Any]
     source: str  # 'weaviate' or 'milvus'
     latency_ms: float
 
@@ -47,7 +48,7 @@ class CollectionConfig:
     dimension: int
     index_type: str
     metric_type: str
-    properties: List[Dict[str, Any]]
+    properties: list[dict[str, Any]]
 
 
 class HybridVectorManager:
@@ -59,7 +60,7 @@ class HybridVectorManager:
     - Automatic failover and load balancing
     - Unified API across both databases
     """
-    
+
     def __init__(self):
         """Initialize connections to both vector databases"""
         # Load credentials
@@ -67,7 +68,7 @@ class HybridVectorManager:
         self.milvus_token = os.getenv('MILVUS_CLUSTER_TOKEN')
         self.weaviate_url = os.getenv('WEAVIATE_URL', 'http://localhost:8080')
         self.weaviate_key = os.getenv('WEAVIATE_API_KEY')
-        
+
         # Performance metrics
         self.metrics = {
             'weaviate_queries': 0,
@@ -77,15 +78,15 @@ class HybridVectorManager:
             'cache_hits': 0,
             'cache_misses': 0
         }
-        
+
         # Initialize clients
         self._init_weaviate_client()
         self._init_milvus_client()
-        
+
         # Cache for frequently accessed vectors
         self.cache = {}
         self.cache_ttl = 300  # 5 minutes
-    
+
     def _init_weaviate_client(self):
         """Initialize Weaviate client"""
         try:
@@ -99,7 +100,7 @@ class HybridVectorManager:
         except Exception as e:
             logger.error(f"Failed to initialize Weaviate: {e}")
             self.weaviate_client = None
-    
+
     def _init_milvus_client(self):
         """Initialize Milvus client with Zilliz cloud"""
         try:
@@ -112,12 +113,12 @@ class HybridVectorManager:
         except Exception as e:
             logger.error(f"Failed to initialize Milvus: {e}")
             self.milvus_client = None
-    
+
     async def route_query(
         self,
-        query_type: Union[QueryType, str],
+        query_type: QueryType | str,
         **kwargs
-    ) -> List[VectorSearchResult]:
+    ) -> list[VectorSearchResult]:
         """
         Route query to appropriate vector database
         
@@ -130,7 +131,7 @@ class HybridVectorManager:
         """
         if isinstance(query_type, str):
             query_type = QueryType(query_type)
-        
+
         if query_type == QueryType.REALTIME:
             return await self._weaviate_hybrid_search(**kwargs)
         elif query_type == QueryType.ANALYTICS:
@@ -139,15 +140,15 @@ class HybridVectorManager:
             return await self._combined_search(**kwargs)
         else:
             raise ValueError(f"Unsupported query type: {query_type}")
-    
+
     async def _weaviate_hybrid_search(
         self,
         query: str,
         collection: str = "SophiaMemory",
-        filters: Optional[Dict] = None,
+        filters: dict | None = None,
         alpha: float = 0.7,
         limit: int = 50
-    ) -> List[VectorSearchResult]:
+    ) -> list[VectorSearchResult]:
         """
         Perform hybrid search on Weaviate (vector + keyword)
         
@@ -162,11 +163,11 @@ class HybridVectorManager:
             List of search results
         """
         start_time = time.perf_counter()
-        
+
         if not self.weaviate_client:
             logger.error("Weaviate client not initialized")
             return []
-        
+
         try:
             # Check cache first
             cache_key = f"weaviate:{query}:{collection}:{alpha}"
@@ -175,9 +176,9 @@ class HybridVectorManager:
                 if time.time() - cached_time < self.cache_ttl:
                     self.metrics['cache_hits'] += 1
                     return cached_result
-            
+
             self.metrics['cache_misses'] += 1
-            
+
             # Perform hybrid search
             results = await self.weaviate_client.search(
                 collection=collection,
@@ -185,7 +186,7 @@ class HybridVectorManager:
                 limit=limit,
                 where_filter=filters
             )
-            
+
             # Convert to unified format
             search_results = []
             for r in results:
@@ -198,27 +199,27 @@ class HybridVectorManager:
                     source='weaviate',
                     latency_ms=(time.perf_counter() - start_time) * 1000
                 ))
-            
+
             # Update cache
             self.cache[cache_key] = (search_results, time.time())
-            
+
             # Update metrics
             self._update_metrics('weaviate', time.perf_counter() - start_time)
-            
+
             return search_results
-            
+
         except Exception as e:
             logger.error(f"Weaviate search failed: {e}")
             return []
-    
+
     async def _milvus_scale_search(
         self,
-        vectors: List[List[float]],
+        vectors: list[list[float]],
         collection: str = "sophia_vectors",
-        filters: Optional[str] = None,
+        filters: str | None = None,
         top_k: int = 100,
         nprobe: int = 16
-    ) -> List[VectorSearchResult]:
+    ) -> list[VectorSearchResult]:
         """
         Perform ultra-scale vector search on Milvus
         
@@ -233,11 +234,11 @@ class HybridVectorManager:
             List of search results
         """
         start_time = time.perf_counter()
-        
+
         if not self.milvus_client:
             logger.error("Milvus client not initialized")
             return []
-        
+
         try:
             # Perform vector search
             results = await self.milvus_client.search(
@@ -247,7 +248,7 @@ class HybridVectorManager:
                 filters=filters,
                 nprobe=nprobe
             )
-            
+
             # Convert to unified format
             search_results = []
             for r in results:
@@ -260,22 +261,22 @@ class HybridVectorManager:
                     source='milvus',
                     latency_ms=(time.perf_counter() - start_time) * 1000
                 ))
-            
+
             # Update metrics
             self._update_metrics('milvus', time.perf_counter() - start_time)
-            
+
             return search_results
-            
+
         except Exception as e:
             logger.error(f"Milvus search failed: {e}")
             return []
-    
+
     async def _combined_search(
         self,
         query: str,
-        vectors: Optional[List[List[float]]] = None,
+        vectors: list[list[float]] | None = None,
         **kwargs
-    ) -> List[VectorSearchResult]:
+    ) -> list[VectorSearchResult]:
         """
         Perform search on both databases and merge results
         
@@ -289,40 +290,40 @@ class HybridVectorManager:
         """
         # Run searches in parallel
         tasks = []
-        
+
         # Weaviate search
         if query:
             tasks.append(self._weaviate_hybrid_search(query=query, **kwargs))
-        
+
         # Milvus search
         if vectors:
             tasks.append(self._milvus_scale_search(vectors=vectors, **kwargs))
-        
+
         if not tasks:
             return []
-        
+
         # Execute parallel searches
         results_lists = await asyncio.gather(*tasks, return_exceptions=True)
-        
+
         # Merge and deduplicate results
         all_results = []
         seen_ids = set()
-        
+
         for results in results_lists:
             if isinstance(results, Exception):
                 logger.error(f"Search failed: {results}")
                 continue
-            
+
             for result in results:
                 if result.id not in seen_ids:
                     all_results.append(result)
                     seen_ids.add(result.id)
-        
+
         # Sort by score
         all_results.sort(key=lambda x: x.score, reverse=True)
-        
+
         return all_results
-    
+
     async def create_collection(
         self,
         config: CollectionConfig,
@@ -339,7 +340,7 @@ class HybridVectorManager:
             Success status
         """
         success = True
-        
+
         if target in ["weaviate", "both"] and self.weaviate_client:
             try:
                 await self.weaviate_client.create_collection(
@@ -351,7 +352,7 @@ class HybridVectorManager:
             except Exception as e:
                 logger.error(f"Failed to create Weaviate collection: {e}")
                 success = False
-        
+
         if target in ["milvus", "both"] and self.milvus_client:
             try:
                 await self.milvus_client.create_collection(
@@ -364,16 +365,16 @@ class HybridVectorManager:
             except Exception as e:
                 logger.error(f"Failed to create Milvus collection: {e}")
                 success = False
-        
+
         return success
-    
+
     async def insert_vectors(
         self,
         collection: str,
-        vectors: List[List[float]],
-        metadata: List[Dict[str, Any]],
+        vectors: list[list[float]],
+        metadata: list[dict[str, Any]],
         target: Literal["weaviate", "milvus", "both"] = "both"
-    ) -> List[str]:
+    ) -> list[str]:
         """
         Insert vectors into target database(s)
         
@@ -387,12 +388,12 @@ class HybridVectorManager:
             List of inserted IDs
         """
         ids = []
-        
+
         if target in ["weaviate", "both"] and self.weaviate_client:
             try:
                 objects = [
                     {**meta, 'vector': vector}
-                    for vector, meta in zip(vectors, metadata)
+                    for vector, meta in zip(vectors, metadata, strict=False)
                 ]
                 weaviate_ids = await self.weaviate_client.batch_add(
                     collection, objects, vectors
@@ -401,7 +402,7 @@ class HybridVectorManager:
                 logger.info(f"Inserted {len(weaviate_ids)} vectors into Weaviate")
             except Exception as e:
                 logger.error(f"Failed to insert into Weaviate: {e}")
-        
+
         if target in ["milvus", "both"] and self.milvus_client:
             try:
                 milvus_ids = await self.milvus_client.insert(
@@ -413,13 +414,13 @@ class HybridVectorManager:
                 logger.info(f"Inserted {len(milvus_ids)} vectors into Milvus")
             except Exception as e:
                 logger.error(f"Failed to insert into Milvus: {e}")
-        
+
         return ids
-    
+
     def _update_metrics(self, database: str, latency_seconds: float):
         """Update performance metrics"""
         latency_ms = latency_seconds * 1000
-        
+
         if database == 'weaviate':
             self.metrics['weaviate_queries'] += 1
             n = self.metrics['weaviate_queries']
@@ -430,31 +431,31 @@ class HybridVectorManager:
             n = self.metrics['milvus_queries']
             prev_avg = self.metrics['milvus_latency_ms']
             self.metrics['milvus_latency_ms'] = (prev_avg * (n - 1) + latency_ms) / n
-    
-    def get_metrics(self) -> Dict[str, Any]:
+
+    def get_metrics(self) -> dict[str, Any]:
         """Get performance metrics"""
         return {
             **self.metrics,
             'cache_hit_rate': (
-                self.metrics['cache_hits'] / 
+                self.metrics['cache_hits'] /
                 (self.metrics['cache_hits'] + self.metrics['cache_misses'])
                 if (self.metrics['cache_hits'] + self.metrics['cache_misses']) > 0
                 else 0
             )
         }
-    
+
     async def optimize_indices(self):
         """Optimize indices in both databases"""
         tasks = []
-        
+
         if self.weaviate_client:
             # Weaviate auto-optimizes HNSW indices
             logger.info("Weaviate indices auto-optimized")
-        
+
         if self.milvus_client:
             tasks.append(self.milvus_client.compact())
             tasks.append(self.milvus_client.flush())
-        
+
         if tasks:
             await asyncio.gather(*tasks)
             logger.info("Optimized Milvus indices")
@@ -462,23 +463,23 @@ class HybridVectorManager:
 
 class MilvusMockClient:
     """Mock Milvus client for testing"""
-    
+
     def __init__(self, uri: str, token: str):
         self.uri = uri
         self.token = token
         logger.info(f"Mock Milvus client initialized for {uri}")
-    
+
     async def search(
         self,
         collection_name: str,
-        vectors: List[List[float]],
+        vectors: list[list[float]],
         top_k: int,
-        filters: Optional[str] = None,
+        filters: str | None = None,
         nprobe: int = 16
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Mock vector search"""
         await asyncio.sleep(0.002)  # Simulate 2ms latency
-        
+
         results = []
         for i in range(min(3, top_k)):
             results.append({
@@ -488,17 +489,17 @@ class MilvusMockClient:
                 'metadata': {'source': 'milvus', 'index': i}
             })
         return results
-    
+
     async def insert(
         self,
         collection_name: str,
-        vectors: List[List[float]],
-        metadata: List[Dict[str, Any]]
-    ) -> List[str]:
+        vectors: list[list[float]],
+        metadata: list[dict[str, Any]]
+    ) -> list[str]:
         """Mock vector insertion"""
         await asyncio.sleep(0.01)
         return [f"milvus_{i}" for i in range(len(vectors))]
-    
+
     async def create_collection(
         self,
         name: str,
@@ -509,11 +510,11 @@ class MilvusMockClient:
         """Mock collection creation"""
         await asyncio.sleep(0.01)
         return True
-    
+
     async def compact(self):
         """Mock compaction"""
         await asyncio.sleep(0.1)
-    
+
     async def flush(self):
         """Mock flush"""
         await asyncio.sleep(0.05)
@@ -523,7 +524,7 @@ class MilvusMockClient:
 if __name__ == "__main__":
     async def test_hybrid_vector_manager():
         manager = HybridVectorManager()
-        
+
         # Test Weaviate search (real-time)
         weaviate_results = await manager.route_query(
             QueryType.REALTIME,
@@ -533,7 +534,7 @@ if __name__ == "__main__":
             limit=10
         )
         print(f"Weaviate results: {len(weaviate_results)}")
-        
+
         # Test Milvus search (analytics)
         test_vector = np.random.randn(1024).tolist()
         milvus_results = await manager.route_query(
@@ -543,7 +544,7 @@ if __name__ == "__main__":
             top_k=10
         )
         print(f"Milvus results: {len(milvus_results)}")
-        
+
         # Test hybrid search
         hybrid_results = await manager.route_query(
             QueryType.HYBRID,
@@ -552,8 +553,8 @@ if __name__ == "__main__":
             limit=20
         )
         print(f"Hybrid results: {len(hybrid_results)}")
-        
+
         # Show metrics
         print(f"\nMetrics: {manager.get_metrics()}")
-    
+
     asyncio.run(test_hybrid_vector_manager())

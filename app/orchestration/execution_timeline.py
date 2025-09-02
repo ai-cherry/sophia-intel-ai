@@ -3,14 +3,12 @@ Execution Timeline for Swarm Orchestration
 Tracks agent actions, debate steps, quality gates, and patterns.
 """
 
-import json
-import asyncio
-from typing import Dict, List, Any, Optional, Set
-from dataclasses import dataclass, field, asdict
+import logging
+import uuid
+from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-import uuid
-import logging
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -41,17 +39,17 @@ class TimelineEvent:
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
     timestamp: datetime = field(default_factory=datetime.now)
     event_type: EventType = EventType.AGENT_MESSAGE
-    agent_id: Optional[str] = None
-    agent_role: Optional[str] = None
-    model: Optional[str] = None
-    content: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    cost: Optional[float] = None
-    tokens: Optional[int] = None
-    duration_ms: Optional[float] = None
-    parent_id: Optional[str] = None
-    
-    def to_dict(self) -> Dict[str, Any]:
+    agent_id: str | None = None
+    agent_role: str | None = None
+    model: str | None = None
+    content: str | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
+    cost: float | None = None
+    tokens: int | None = None
+    duration_ms: float | None = None
+    parent_id: str | None = None
+
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
         return {
             "id": self.id,
@@ -76,15 +74,15 @@ class ExecutionPattern:
     name: str = ""
     description: str = ""
     pattern_type: str = "sequence"  # sequence, debate, consensus, etc.
-    steps: List[str] = field(default_factory=list)
+    steps: list[str] = field(default_factory=list)
     success_rate: float = 0.0
     avg_duration_ms: float = 0.0
     avg_cost: float = 0.0
     usage_count: int = 0
-    last_used: Optional[datetime] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    
-    def to_dict(self) -> Dict[str, Any]:
+    last_used: datetime | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
+
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for persistence."""
         return {
             "id": self.id,
@@ -106,57 +104,57 @@ class ExecutionTimeline:
     Manages the execution timeline for swarm orchestration.
     Records events, detects patterns, and provides analysis.
     """
-    
-    def __init__(self, session_id: Optional[str] = None):
+
+    def __init__(self, session_id: str | None = None):
         """Initialize execution timeline."""
         self.session_id = session_id or str(uuid.uuid4())
-        self.events: List[TimelineEvent] = []
-        self.patterns: Dict[str, ExecutionPattern] = {}
-        self.active_agents: Set[str] = set()
+        self.events: list[TimelineEvent] = []
+        self.patterns: dict[str, ExecutionPattern] = {}
+        self.active_agents: set[str] = set()
         self.total_cost: float = 0.0
         self.total_tokens: int = 0
-        self.start_time: Optional[datetime] = None
-        self.end_time: Optional[datetime] = None
-        self._event_callbacks: List[callable] = []
-        self._pattern_callbacks: List[callable] = []
-        
+        self.start_time: datetime | None = None
+        self.end_time: datetime | None = None
+        self._event_callbacks: list[callable] = []
+        self._pattern_callbacks: list[callable] = []
+
     def add_event(self, event: TimelineEvent) -> None:
         """Add an event to the timeline."""
         self.events.append(event)
-        
+
         # Update metrics
         if event.cost:
             self.total_cost += event.cost
         if event.tokens:
             self.total_tokens += event.tokens
-            
+
         # Track active agents
         if event.event_type == EventType.AGENT_START and event.agent_id:
             self.active_agents.add(event.agent_id)
         elif event.event_type == EventType.AGENT_END and event.agent_id:
             self.active_agents.discard(event.agent_id)
-            
+
         # Track swarm timing
         if event.event_type == EventType.SWARM_START:
             self.start_time = event.timestamp
         elif event.event_type == EventType.SWARM_END:
             self.end_time = event.timestamp
-            
+
         # Notify callbacks
         for callback in self._event_callbacks:
             try:
                 callback(event)
             except Exception as e:
                 logger.error(f"Error in event callback: {e}")
-                
+
     async def add_event_async(self, event: TimelineEvent) -> None:
         """Add an event asynchronously."""
         self.add_event(event)
-        
+
         # Detect patterns asynchronously
         await self._detect_patterns_async(event)
-        
-    def record_swarm_start(self, swarm_type: str, task: str, metadata: Dict[str, Any] = None) -> str:
+
+    def record_swarm_start(self, swarm_type: str, task: str, metadata: dict[str, Any] = None) -> str:
         """Record the start of a swarm execution."""
         event = TimelineEvent(
             event_type=EventType.SWARM_START,
@@ -165,13 +163,13 @@ class ExecutionTimeline:
         )
         self.add_event(event)
         return event.id
-        
+
     def record_swarm_end(self, parent_id: str, result: str, success: bool) -> None:
         """Record the end of a swarm execution."""
         duration_ms = None
         if self.start_time and self.end_time:
             duration_ms = (self.end_time - self.start_time).total_seconds() * 1000
-            
+
         event = TimelineEvent(
             event_type=EventType.SWARM_END,
             parent_id=parent_id,
@@ -182,7 +180,7 @@ class ExecutionTimeline:
             tokens=self.total_tokens
         )
         self.add_event(event)
-        
+
     def record_agent_action(
         self,
         agent_id: str,
@@ -192,7 +190,7 @@ class ExecutionTimeline:
         content: str,
         cost: float = 0,
         tokens: int = 0,
-        metadata: Dict[str, Any] = None
+        metadata: dict[str, Any] = None
     ) -> None:
         """Record an agent action."""
         event = TimelineEvent(
@@ -206,7 +204,7 @@ class ExecutionTimeline:
             metadata=metadata or {}
         )
         self.add_event(event)
-        
+
     def record_debate_turn(
         self,
         debate_id: str,
@@ -215,7 +213,7 @@ class ExecutionTimeline:
         position: str,
         argument: str,
         model: str,
-        metadata: Dict[str, Any] = None
+        metadata: dict[str, Any] = None
     ) -> None:
         """Record a debate turn."""
         event = TimelineEvent(
@@ -228,13 +226,13 @@ class ExecutionTimeline:
             metadata=metadata or {}
         )
         self.add_event(event)
-        
+
     def record_gate_check(
         self,
         gate_name: str,
         gate_type: str,
         input_data: Any,
-        metadata: Dict[str, Any] = None
+        metadata: dict[str, Any] = None
     ) -> str:
         """Record a quality gate check."""
         event = TimelineEvent(
@@ -249,14 +247,14 @@ class ExecutionTimeline:
         )
         self.add_event(event)
         return event.id
-        
+
     def record_gate_result(
         self,
         gate_check_id: str,
         passed: bool,
         score: float,
         feedback: str,
-        metadata: Dict[str, Any] = None
+        metadata: dict[str, Any] = None
     ) -> None:
         """Record a quality gate result."""
         event = TimelineEvent(
@@ -270,31 +268,31 @@ class ExecutionTimeline:
             }
         )
         self.add_event(event)
-        
+
     def record_pattern(self, pattern: ExecutionPattern) -> None:
         """Record a detected execution pattern."""
         self.patterns[pattern.id] = pattern
-        
+
         event = TimelineEvent(
             event_type=EventType.PATTERN_DETECTED,
             content=f"Pattern detected: {pattern.name}",
             metadata=pattern.to_dict()
         )
         self.add_event(event)
-        
+
         # Notify pattern callbacks
         for callback in self._pattern_callbacks:
             try:
                 callback(pattern)
             except Exception as e:
                 logger.error(f"Error in pattern callback: {e}")
-                
+
     def record_memory_access(
         self,
         memory_type: str,
         query: str,
         results_count: int,
-        metadata: Dict[str, Any] = None
+        metadata: dict[str, Any] = None
     ) -> None:
         """Record memory access."""
         event = TimelineEvent(
@@ -307,13 +305,13 @@ class ExecutionTimeline:
             }
         )
         self.add_event(event)
-        
+
     def record_memory_store(
         self,
         memory_type: str,
         content: str,
-        tags: List[str],
-        metadata: Dict[str, Any] = None
+        tags: list[str],
+        metadata: dict[str, Any] = None
     ) -> None:
         """Record memory storage."""
         event = TimelineEvent(
@@ -327,7 +325,7 @@ class ExecutionTimeline:
             }
         )
         self.add_event(event)
-        
+
     def record_cost_update(self, cost: float, model: str, tokens: int) -> None:
         """Record a cost update."""
         event = TimelineEvent(
@@ -338,8 +336,8 @@ class ExecutionTimeline:
             tokens=tokens
         )
         self.add_event(event)
-        
-    def record_error(self, error: str, agent_id: Optional[str] = None, metadata: Dict[str, Any] = None) -> None:
+
+    def record_error(self, error: str, agent_id: str | None = None, metadata: dict[str, Any] = None) -> None:
         """Record an error."""
         event = TimelineEvent(
             event_type=EventType.ERROR,
@@ -348,8 +346,8 @@ class ExecutionTimeline:
             metadata=metadata or {}
         )
         self.add_event(event)
-        
-    def record_milestone(self, milestone: str, metadata: Dict[str, Any] = None) -> None:
+
+    def record_milestone(self, milestone: str, metadata: dict[str, Any] = None) -> None:
         """Record a significant milestone."""
         event = TimelineEvent(
             event_type=EventType.MILESTONE,
@@ -357,17 +355,17 @@ class ExecutionTimeline:
             metadata=metadata or {}
         )
         self.add_event(event)
-        
+
     async def _detect_patterns_async(self, event: TimelineEvent) -> None:
         """Detect patterns from the event stream."""
         # Simple pattern detection - can be enhanced
         if len(self.events) < 3:
             return
-            
+
         # Check for repeated sequences
         recent_events = self.events[-10:]
         event_sequence = [e.event_type.value for e in recent_events]
-        
+
         # Look for debate patterns
         if event_sequence.count(EventType.DEBATE_TURN.value) >= 3:
             pattern = ExecutionPattern(
@@ -379,13 +377,13 @@ class ExecutionTimeline:
                 last_used=datetime.now()
             )
             self.record_pattern(pattern)
-            
+
         # Look for gate patterns
         gate_events = [e for e in recent_events if e.event_type == EventType.GATE_RESULT]
         if len(gate_events) >= 2:
             passed_count = sum(1 for e in gate_events if e.metadata.get("passed"))
             success_rate = passed_count / len(gate_events)
-            
+
             pattern = ExecutionPattern(
                 name="Quality Gate Pattern",
                 description=f"Gates with {success_rate:.0%} success rate",
@@ -395,22 +393,22 @@ class ExecutionTimeline:
                 last_used=datetime.now()
             )
             self.record_pattern(pattern)
-            
+
     def on_event(self, callback: callable) -> None:
         """Register a callback for events."""
         self._event_callbacks.append(callback)
-        
+
     def on_pattern(self, callback: callable) -> None:
         """Register a callback for patterns."""
         self._pattern_callbacks.append(callback)
-        
-    def get_summary(self) -> Dict[str, Any]:
+
+    def get_summary(self) -> dict[str, Any]:
         """Get a summary of the execution."""
         duration_ms = None
         if self.start_time:
             end = self.end_time or datetime.now()
             duration_ms = (end - self.start_time).total_seconds() * 1000
-            
+
         agent_stats = {}
         for event in self.events:
             if event.agent_id and event.agent_role:
@@ -426,7 +424,7 @@ class ExecutionTimeline:
                     agent_stats[event.agent_id]["cost"] += event.cost
                 if event.tokens:
                     agent_stats[event.agent_id]["tokens"] += event.tokens
-                    
+
         return {
             "session_id": self.session_id,
             "total_events": len(self.events),
@@ -438,8 +436,8 @@ class ExecutionTimeline:
             "active_agents": list(self.active_agents),
             "error_count": sum(1 for e in self.events if e.event_type == EventType.ERROR)
         }
-        
-    def export_timeline(self) -> Dict[str, Any]:
+
+    def export_timeline(self) -> dict[str, Any]:
         """Export the full timeline for persistence or analysis."""
         return {
             "session_id": self.session_id,
@@ -449,13 +447,13 @@ class ExecutionTimeline:
             "patterns": {k: v.to_dict() for k, v in self.patterns.items()},
             "summary": self.get_summary()
         }
-        
-    def import_timeline(self, data: Dict[str, Any]) -> None:
+
+    def import_timeline(self, data: dict[str, Any]) -> None:
         """Import a timeline from exported data."""
         self.session_id = data.get("session_id", self.session_id)
         self.start_time = datetime.fromisoformat(data["start_time"]) if data.get("start_time") else None
         self.end_time = datetime.fromisoformat(data["end_time"]) if data.get("end_time") else None
-        
+
         # Import events
         self.events = []
         for event_data in data.get("events", []):
@@ -474,7 +472,7 @@ class ExecutionTimeline:
                 parent_id=event_data.get("parent_id")
             )
             self.events.append(event)
-            
+
         # Import patterns
         self.patterns = {}
         for pattern_id, pattern_data in data.get("patterns", {}).items():

@@ -1,12 +1,20 @@
 import os
+from typing import Any
+
 import weaviate
 import weaviate.classes as wvc
-from typing import List, Dict, Any
+
 from app import settings
-from app.memory.embed_router import (
-    choose_model_for_chunk, embed_with_cache, MODEL_A, MODEL_B, DIM_A, DIM_B
-)
 from app.core.circuit_breaker import with_circuit_breaker
+from app.memory.embed_router import (
+    DIM_A,
+    DIM_B,
+    MODEL_A,
+    MODEL_B,
+    choose_model_for_chunk,
+    embed_with_cache,
+)
+
 
 def _client():
     """Get Weaviate client instance (local/no-auth by default)."""
@@ -76,7 +84,7 @@ async def upsert_chunks_dual(ids, texts, payloads, lang=""):
     """
     # Split batches by chosen model
     A_idx, A_txt, B_idx, B_txt = [], [], [], []
-    
+
     for i, t in enumerate(texts):
         pr = payloads[i].get("priority")
         m, _ = choose_model_for_chunk(t, lang=lang, priority=pr)
@@ -86,13 +94,13 @@ async def upsert_chunks_dual(ids, texts, payloads, lang=""):
         else:
             B_idx.append(i)
             B_txt.append(t)
-    
+
     with _client() as client:
         # Process Tier A chunks
         if A_txt:
             collection_a = os.getenv("WEAVIATE_COLLECTION_A", "CodeChunk_A")
             ensure_schema(collection_a, DIM_A)
-            
+
             try:
                 # v4 client
                 colA = client.collections.get(collection_a)
@@ -109,12 +117,12 @@ async def upsert_chunks_dual(ids, texts, payloads, lang=""):
                     for k, i in enumerate(A_idx):
                         props = {**payloads[i], "content": texts[i]}
                         batch.add_data_object(props, collection_a, uuid=str(ids[i]), vector=vecsA[k])
-        
+
         # Process Tier B chunks
         if B_txt:
             collection_b = os.getenv("WEAVIATE_COLLECTION_B", "CodeChunk_B")
             ensure_schema(collection_b, DIM_B)
-            
+
             try:
                 # v4 client
                 colB = client.collections.get(collection_b)
@@ -145,22 +153,22 @@ async def hybrid_search_merge(query: str, k: int = 8, semantic_weight: float = 0
     Returns:
         Merged and ranked results
     """
-    
+
     # Generate query embeddings for both tiers
     qA = embed_with_cache([query], MODEL_A)[0]
     qB = embed_with_cache([query], MODEL_B)[0]
-    
+
     out = []
-    
+
     with _client() as client:
         # Search Collection A
         try:
             collection_a = os.getenv("WEAVIATE_COLLECTION_A", "CodeChunk_A")
-            
+
             try:
                 # v4 client
                 colA = client.collections.get(collection_a)
-                
+
                 # Vector search
                 resA = colA.query.near_vector(qA, limit=k)
                 for r in resA.objects:
@@ -170,7 +178,7 @@ async def hybrid_search_merge(query: str, k: int = 8, semantic_weight: float = 0
                         "bm25": 0.0,
                         "prop": r.properties
                     })
-                
+
                 # BM25 search
                 try:
                     bm = colA.query.bm25(query, limit=k)
@@ -183,7 +191,7 @@ async def hybrid_search_merge(query: str, k: int = 8, semantic_weight: float = 0
                         })
                 except:
                     pass  # BM25 might not be available
-                    
+
             except:
                 # v3 client fallback
                 result = (
@@ -204,15 +212,15 @@ async def hybrid_search_merge(query: str, k: int = 8, semantic_weight: float = 0
                         })
         except Exception as e:
             print(f"Error searching collection A: {e}")
-        
+
         # Search Collection B
         try:
             collection_b = os.getenv("WEAVIATE_COLLECTION_B", "CodeChunk_B")
-            
+
             try:
                 # v4 client
                 colB = client.collections.get(collection_b)
-                
+
                 # Vector search
                 resB = colB.query.near_vector(qB, limit=k)
                 for r in resB.objects:
@@ -222,7 +230,7 @@ async def hybrid_search_merge(query: str, k: int = 8, semantic_weight: float = 0
                         "bm25": 0.0,
                         "prop": r.properties
                     })
-                
+
                 # BM25 search
                 try:
                     bm = colB.query.bm25(query, limit=k)
@@ -235,7 +243,7 @@ async def hybrid_search_merge(query: str, k: int = 8, semantic_weight: float = 0
                         })
                 except:
                     pass
-                    
+
             except:
                 # v3 client fallback
                 result = (
@@ -256,12 +264,12 @@ async def hybrid_search_merge(query: str, k: int = 8, semantic_weight: float = 0
                         })
         except Exception as e:
             print(f"Error searching collection B: {e}")
-    
+
     # Normalize and combine scores
     def norm_sem(d):
         """Convert distance to similarity (0-1)."""
         return 1.0 / (1.0 + max(0.0, d))
-    
+
     # Deduplicate by chunk_id and merge scores
     seen = {}
     for o in out:
@@ -274,12 +282,12 @@ async def hybrid_search_merge(query: str, k: int = 8, semantic_weight: float = 0
                 existing["bm25"] = max(existing["bm25"], o["bm25"])
             else:
                 seen[chunk_id] = o
-    
+
     # Calculate final scores
     results = list(seen.values())
     for o in results:
         o["score"] = semantic_weight * norm_sem(o["sem"]) + (1.0 - semantic_weight) * o["bm25"]
-    
+
     # Sort by score and return top k
     results.sort(key=lambda x: x["score"], reverse=True)
     return results[:k]
@@ -296,10 +304,10 @@ def ensure_schema_legacy(client):
 
 @with_circuit_breaker("database")
 async def search_by_vector(
-    vector: List[float],
+    vector: list[float],
     class_name: str = None,
     limit: int = 5
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """Legacy: Search Weaviate using a vector."""
     # Use hybrid search instead
     results = await hybrid_search_merge("", k=limit)

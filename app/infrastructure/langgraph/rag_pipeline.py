@@ -3,22 +3,19 @@ LangGraph RAG Pipeline
 Retrieval-Augmented Generation infrastructure with vector store integration
 """
 
-import logging
 import asyncio
-from dataclasses import dataclass, field
-from typing import List, Dict, Any, Optional, AsyncGenerator, Tuple
-from enum import Enum
-import numpy as np
-from datetime import datetime
 import json
+import logging
+from dataclasses import dataclass, field
+from datetime import datetime
+from enum import Enum
+from typing import Any
 
 # LangChain imports
 from langchain.embeddings.base import Embeddings
+from langchain.schema import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.vectorstores import FAISS, Chroma
-from langchain.schema import Document
-from langchain.chains import RetrievalQA
-from langchain.memory import ConversationSummaryMemory
 
 # For embedding models
 from sentence_transformers import SentenceTransformer
@@ -36,37 +33,37 @@ class RAGConfig:
     chunk_overlap: int = 200
     top_k: int = 5
     similarity_threshold: float = 0.7
-    vector_store_path: Optional[str] = None
-    persist_directory: Optional[str] = "./rag_store"
+    vector_store_path: str | None = None
+    persist_directory: str | None = "./rag_store"
     collection_name: str = "default"
-    
+
 # ==================== Embedding Provider ====================
 
 class LocalEmbeddings(Embeddings):
     """Local embedding provider using sentence-transformers"""
-    
+
     def __init__(self, model_name: str = "all-MiniLM-L6-v2"):
         """Initialize with a sentence-transformer model"""
         self.model = SentenceTransformer(model_name)
         self.model_name = model_name
         logger.info(f"Initialized local embeddings with model: {model_name}")
-    
-    def embed_documents(self, texts: List[str]) -> List[List[float]]:
+
+    def embed_documents(self, texts: list[str]) -> list[list[float]]:
         """Embed a list of documents"""
         embeddings = self.model.encode(texts, show_progress_bar=False)
         return embeddings.tolist()
-    
-    def embed_query(self, text: str) -> List[float]:
+
+    def embed_query(self, text: str) -> list[float]:
         """Embed a query text"""
         embedding = self.model.encode([text], show_progress_bar=False)[0]
         return embedding.tolist()
-    
-    async def aembed_documents(self, texts: List[str]) -> List[List[float]]:
+
+    async def aembed_documents(self, texts: list[str]) -> list[list[float]]:
         """Async embed documents"""
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(None, self.embed_documents, texts)
-    
-    async def aembed_query(self, text: str) -> List[float]:
+
+    async def aembed_query(self, text: str) -> list[float]:
         """Async embed query"""
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(None, self.embed_query, text)
@@ -88,10 +85,10 @@ class KnowledgeNode:
     node_id: str
     node_type: KnowledgeNodeType
     content: str
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    embeddings: Optional[List[float]] = None
+    metadata: dict[str, Any] = field(default_factory=dict)
+    embeddings: list[float] | None = None
     timestamp: datetime = field(default_factory=datetime.utcnow)
-    
+
     def to_document(self) -> Document:
         """Convert to LangChain Document"""
         return Document(
@@ -111,8 +108,8 @@ class LangGraphRAGPipeline:
     Main RAG pipeline for contextual knowledge retrieval
     Provides vector store integration and retrieval mechanisms
     """
-    
-    def __init__(self, config: Optional[RAGConfig] = None):
+
+    def __init__(self, config: RAGConfig | None = None):
         """
         Initialize RAG pipeline
         
@@ -126,12 +123,12 @@ class LangGraphRAGPipeline:
             chunk_size=self.config.chunk_size,
             chunk_overlap=self.config.chunk_overlap
         )
-        self.knowledge_nodes: Dict[str, KnowledgeNode] = {}
-        self.query_cache: Dict[str, List[Document]] = {}
+        self.knowledge_nodes: dict[str, KnowledgeNode] = {}
+        self.query_cache: dict[str, list[Document]] = {}
         self.cache_ttl = 300  # 5 minutes
-        
+
         logger.info(f"Initialized RAG pipeline with {self.config.vector_store_type} vector store")
-    
+
     async def initialize(self):
         """Initialize vector store"""
         if self.config.vector_store_type == "faiss":
@@ -140,9 +137,9 @@ class LangGraphRAGPipeline:
             await self._init_chroma()
         else:
             raise ValueError(f"Unknown vector store type: {self.config.vector_store_type}")
-        
+
         logger.info("RAG pipeline initialized successfully")
-    
+
     async def _init_faiss(self):
         """Initialize FAISS vector store"""
         try:
@@ -174,7 +171,7 @@ class LangGraphRAGPipeline:
                 [dummy_doc],
                 self.embeddings
             )
-    
+
     async def _init_chroma(self):
         """Initialize Chroma vector store"""
         try:
@@ -187,14 +184,14 @@ class LangGraphRAGPipeline:
         except Exception as e:
             logger.error(f"Failed to initialize Chroma: {e}")
             raise
-    
+
     # ==================== Document Management ====================
-    
+
     async def add_documents(
         self,
-        documents: List[Document],
+        documents: list[Document],
         node_type: KnowledgeNodeType = KnowledgeNodeType.USER_DOCS
-    ) -> List[str]:
+    ) -> list[str]:
         """
         Add documents to the vector store
         
@@ -208,14 +205,14 @@ class LangGraphRAGPipeline:
         # Split documents into chunks
         all_chunks = []
         doc_ids = []
-        
+
         for doc in documents:
             chunks = self.text_splitter.split_documents([doc])
-            
+
             # Create knowledge nodes
             for i, chunk in enumerate(chunks):
                 node_id = f"{node_type.value}_{datetime.utcnow().timestamp()}_{i}"
-                
+
                 # Add node metadata
                 chunk.metadata.update({
                     "node_id": node_id,
@@ -223,7 +220,7 @@ class LangGraphRAGPipeline:
                     "chunk_index": i,
                     "total_chunks": len(chunks)
                 })
-                
+
                 # Create knowledge node
                 node = KnowledgeNode(
                     node_id=node_id,
@@ -231,27 +228,27 @@ class LangGraphRAGPipeline:
                     content=chunk.page_content,
                     metadata=chunk.metadata
                 )
-                
+
                 self.knowledge_nodes[node_id] = node
                 all_chunks.append(chunk)
                 doc_ids.append(node_id)
-        
+
         # Add to vector store
         if all_chunks:
             self.vector_store.add_documents(all_chunks)
             logger.info(f"Added {len(all_chunks)} chunks to vector store")
-        
+
         # Clear cache
         self.query_cache.clear()
-        
+
         return doc_ids
-    
+
     async def add_text(
         self,
         text: str,
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: dict[str, Any] | None = None,
         node_type: KnowledgeNodeType = KnowledgeNodeType.USER_DOCS
-    ) -> List[str]:
+    ) -> list[str]:
         """
         Add text to the vector store
         
@@ -268,15 +265,15 @@ class LangGraphRAGPipeline:
             metadata=metadata or {}
         )
         return await self.add_documents([doc], node_type)
-    
+
     # ==================== Retrieval ====================
-    
+
     async def retrieve(
         self,
         query: str,
-        k: Optional[int] = None,
-        filter_dict: Optional[Dict[str, Any]] = None
-    ) -> List[Document]:
+        k: int | None = None,
+        filter_dict: dict[str, Any] | None = None
+    ) -> list[Document]:
         """
         Retrieve relevant documents for a query
         
@@ -289,13 +286,13 @@ class LangGraphRAGPipeline:
             List of relevant documents
         """
         k = k or self.config.top_k
-        
+
         # Check cache
         cache_key = f"{query}_{k}_{json.dumps(filter_dict or {})}"
         if cache_key in self.query_cache:
             logger.debug(f"Cache hit for query: {query[:50]}...")
             return self.query_cache[cache_key]
-        
+
         # Perform similarity search
         if filter_dict:
             docs = self.vector_store.similarity_search_with_score(
@@ -308,7 +305,7 @@ class LangGraphRAGPipeline:
                 query,
                 k=k
             )
-        
+
         # Filter by similarity threshold
         filtered_docs = []
         for doc, score in docs:
@@ -319,24 +316,24 @@ class LangGraphRAGPipeline:
                 similarity = 1 / (1 + score)
             else:
                 similarity = score
-            
+
             if similarity >= self.config.similarity_threshold:
                 doc.metadata["similarity_score"] = similarity
                 filtered_docs.append(doc)
-        
+
         # Cache results
         self.query_cache[cache_key] = filtered_docs
-        
+
         logger.info(f"Retrieved {len(filtered_docs)} documents for query: {query[:50]}...")
-        
+
         return filtered_docs
-    
+
     async def retrieve_by_type(
         self,
         query: str,
         node_type: KnowledgeNodeType,
-        k: Optional[int] = None
-    ) -> List[Document]:
+        k: int | None = None
+    ) -> list[Document]:
         """
         Retrieve documents of a specific type
         
@@ -353,15 +350,15 @@ class LangGraphRAGPipeline:
             k=k,
             filter_dict={"node_type": node_type.value}
         )
-    
+
     # ==================== Context Building ====================
-    
+
     async def build_context(
         self,
         query: str,
-        conversation_history: Optional[List[Dict[str, str]]] = None,
-        include_types: Optional[List[KnowledgeNodeType]] = None
-    ) -> Dict[str, Any]:
+        conversation_history: list[dict[str, str]] | None = None,
+        include_types: list[KnowledgeNodeType] | None = None
+    ) -> dict[str, Any]:
         """
         Build comprehensive context for a query
         
@@ -379,7 +376,7 @@ class LangGraphRAGPipeline:
             "retrieved_knowledge": {},
             "conversation_summary": None
         }
-        
+
         # Determine which types to include
         if include_types is None:
             include_types = [
@@ -387,7 +384,7 @@ class LangGraphRAGPipeline:
                 KnowledgeNodeType.USER_DOCS,
                 KnowledgeNodeType.POLICIES
             ]
-        
+
         # Retrieve from each knowledge type
         for node_type in include_types:
             docs = await self.retrieve_by_type(query, node_type, k=3)
@@ -400,33 +397,33 @@ class LangGraphRAGPipeline:
                     }
                     for doc in docs
                 ]
-        
+
         # Add conversation context if available
         if conversation_history:
             # Summarize recent conversation
             recent_history = conversation_history[-5:]  # Last 5 exchanges
             summary = self._summarize_conversation(recent_history)
             context["conversation_summary"] = summary
-        
+
         return context
-    
-    def _summarize_conversation(self, history: List[Dict[str, str]]) -> str:
+
+    def _summarize_conversation(self, history: list[dict[str, str]]) -> str:
         """Summarize conversation history"""
         if not history:
             return ""
-        
+
         summary_parts = []
         for exchange in history:
             if "user" in exchange:
                 summary_parts.append(f"User: {exchange['user'][:100]}...")
             if "assistant" in exchange:
                 summary_parts.append(f"Assistant: {exchange['assistant'][:100]}...")
-        
+
         return " | ".join(summary_parts[-10:])  # Last 10 parts
-    
+
     # ==================== Analytics ====================
-    
-    def get_statistics(self) -> Dict[str, Any]:
+
+    def get_statistics(self) -> dict[str, Any]:
         """Get RAG pipeline statistics"""
         stats = {
             "total_documents": len(self.knowledge_nodes),
@@ -435,24 +432,24 @@ class LangGraphRAGPipeline:
             "vector_store_type": self.config.vector_store_type,
             "embedding_model": self.config.embedding_model
         }
-        
+
         # Count documents by type
         for node in self.knowledge_nodes.values():
             node_type = node.node_type.value
             stats["documents_by_type"][node_type] = stats["documents_by_type"].get(node_type, 0) + 1
-        
+
         return stats
-    
+
     # ==================== Persistence ====================
-    
-    async def save(self, path: Optional[str] = None):
+
+    async def save(self, path: str | None = None):
         """Save vector store to disk"""
         save_path = path or self.config.vector_store_path
-        
+
         if not save_path:
             logger.warning("No save path specified")
             return
-        
+
         if self.config.vector_store_type == "faiss":
             self.vector_store.save_local(save_path)
             logger.info(f"Saved FAISS store to {save_path}")
@@ -460,15 +457,15 @@ class LangGraphRAGPipeline:
             # Chroma auto-persists if persist_directory is set
             self.vector_store.persist()
             logger.info("Persisted Chroma store")
-    
+
     async def clear(self):
         """Clear all data from the pipeline"""
         self.knowledge_nodes.clear()
         self.query_cache.clear()
-        
+
         # Reinitialize vector store
         await self.initialize()
-        
+
         logger.info("Cleared RAG pipeline")
 
 # ==================== REST/gRPC Endpoint ====================
@@ -478,7 +475,7 @@ class RAGService:
     Service layer for RAG pipeline
     Provides REST/gRPC endpoints for agents to query
     """
-    
+
     def __init__(self, pipeline: LangGraphRAGPipeline):
         """
         Initialize RAG service
@@ -489,14 +486,14 @@ class RAGService:
         self.pipeline = pipeline
         self.request_count = 0
         self.last_request_time = None
-    
+
     async def query(
         self,
         text: str,
-        context_type: Optional[str] = None,
+        context_type: str | None = None,
         k: int = 5,
         include_metadata: bool = True
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Query endpoint for agents
         
@@ -511,15 +508,15 @@ class RAGService:
         """
         self.request_count += 1
         self.last_request_time = datetime.utcnow()
-        
+
         # Determine node type filter
         filter_dict = None
         if context_type:
             filter_dict = {"node_type": context_type}
-        
+
         # Retrieve documents
         docs = await self.pipeline.retrieve(text, k=k, filter_dict=filter_dict)
-        
+
         # Format response
         response = {
             "query": text,
@@ -527,26 +524,26 @@ class RAGService:
             "request_id": f"req_{self.request_count}",
             "timestamp": datetime.utcnow().isoformat()
         }
-        
+
         for doc in docs:
             result = {
                 "content": doc.page_content,
                 "score": doc.metadata.get("similarity_score", 0)
             }
-            
+
             if include_metadata:
                 result["metadata"] = doc.metadata
-            
+
             response["results"].append(result)
-        
+
         return response
-    
+
     async def index(
         self,
         content: str,
         content_type: str = "user_docs",
-        metadata: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        metadata: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """
         Index new content
         
@@ -567,23 +564,23 @@ class RAGService:
             "conversations": KnowledgeNodeType.CONVERSATIONS,
             "metrics": KnowledgeNodeType.METRICS
         }
-        
+
         node_type = node_type_map.get(content_type, KnowledgeNodeType.USER_DOCS)
-        
+
         # Add to pipeline
         doc_ids = await self.pipeline.add_text(content, metadata, node_type)
-        
+
         return {
             "status": "indexed",
             "document_ids": doc_ids,
             "content_type": content_type,
             "timestamp": datetime.utcnow().isoformat()
         }
-    
-    async def get_status(self) -> Dict[str, Any]:
+
+    async def get_status(self) -> dict[str, Any]:
         """Get service status"""
         stats = self.pipeline.get_statistics()
-        
+
         return {
             "status": "healthy",
             "request_count": self.request_count,
@@ -595,7 +592,7 @@ class RAGService:
 
 async def example_usage():
     """Example of using the RAG pipeline"""
-    
+
     # Initialize pipeline
     config = RAGConfig(
         vector_store_type="faiss",
@@ -603,10 +600,10 @@ async def example_usage():
         chunk_size=500,
         top_k=3
     )
-    
+
     pipeline = LangGraphRAGPipeline(config)
     await pipeline.initialize()
-    
+
     # Add some documents
     docs = [
         Document(
@@ -622,32 +619,32 @@ async def example_usage():
             metadata={"source": "manager.md", "section": "routing"}
         )
     ]
-    
+
     await pipeline.add_documents(docs, KnowledgeNodeType.CODEBASE)
-    
+
     # Query the pipeline
     results = await pipeline.retrieve("How does WebSocket chat work?")
-    
+
     for doc in results:
         print(f"Content: {doc.page_content[:100]}...")
         print(f"Similarity: {doc.metadata.get('similarity_score', 0):.2f}")
         print("---")
-    
+
     # Build context for a query
     context = await pipeline.build_context(
         "Explain the agent runtime system",
         include_types=[KnowledgeNodeType.CODEBASE, KnowledgeNodeType.USER_DOCS]
     )
-    
+
     print(f"Context built with {len(context['retrieved_knowledge'])} knowledge types")
-    
+
     # Create service
     service = RAGService(pipeline)
-    
+
     # Query through service
     response = await service.query("What is AGNO?", k=2)
     print(f"Service returned {len(response['results'])} results")
-    
+
     # Save pipeline
     await pipeline.save("./rag_store")
 

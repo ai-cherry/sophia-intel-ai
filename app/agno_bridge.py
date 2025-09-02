@@ -8,20 +8,24 @@ Following ADR-006: Configuration Management Standardization
 - Proper secret management and validation
 """
 
+import json
+import logging
 import os
+from collections.abc import AsyncGenerator
+from datetime import datetime
+from typing import Any
+
+import httpx
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-from typing import List, Dict, Any, Optional, AsyncGenerator
-import json
-import httpx
-import logging
-from datetime import datetime
 
 # Import enhanced configuration system following ADR-006
 from app.config.env_loader import get_env_config, validate_environment
-from app.core.circuit_breaker import with_circuit_breaker, get_llm_circuit_breaker, get_weaviate_circuit_breaker, get_redis_circuit_breaker, get_webhook_circuit_breaker
+from app.core.circuit_breaker import (
+    with_circuit_breaker,
+)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -54,7 +58,7 @@ if config:
         "http://localhost:3333",
         "http://localhost:7777"
     ]
-    
+
     # Add environment-specific origins
     if config.environment_name == "prod":
         cors_origins.extend([
@@ -114,38 +118,38 @@ class AgentInfo(BaseModel):
     agent_id: str
     name: str
     description: str
-    model: Dict[str, str]  # {provider, name, model}
+    model: dict[str, str]  # {provider, name, model}
     storage: bool = True
-    tools: Optional[List[str]] = None
+    tools: list[str] | None = None
 
 class TeamInfo(BaseModel):
     """Agno-compatible team model."""
     team_id: str
     name: str
     description: str
-    model: Dict[str, str]
+    model: dict[str, str]
     storage: bool = True
-    members: Optional[List[str]] = None
+    members: list[str] | None = None
 
 class WorkflowInfo(BaseModel):
     """Workflow information."""
     workflow_id: str
     name: str
     description: str
-    inputs: Optional[Dict[str, Any]] = None
+    inputs: dict[str, Any] | None = None
 
 class RunRequest(BaseModel):
     """Request to run agent/team."""
     message: str
-    session_id: Optional[str] = None
+    session_id: str | None = None
     stream: bool = True
-    additional_data: Optional[Dict[str, Any]] = None
+    additional_data: dict[str, Any] | None = None
 
 # ============================================
 # Helper Functions
 # ============================================
 
-def transform_team_to_agent(team: Dict) -> AgentInfo:
+def transform_team_to_agent(team: dict) -> AgentInfo:
     """Transform our team format to Agno agent format."""
     return AgentInfo(
         agent_id=team.get("id", "unknown"),
@@ -166,7 +170,7 @@ async def proxy_streaming_response(response: httpx.Response) -> AsyncGenerator:
         if line.startswith("data: "):
             try:
                 data = json.loads(line[6:])
-                
+
                 # Transform to Agno RunEvent format
                 if "phase" in data:
                     # Convert phase-based to RunEvent
@@ -212,21 +216,21 @@ async def health_check():
                 }
     except Exception as e:
         logger.error(f"Health check failed: {e}")
-    
+
     return {"status": "ok", "timestamp": datetime.utcnow().isoformat()}
 
-@app.get("/v1/playground/agents", response_model=List[AgentInfo])
-@app.get("/agents", response_model=List[AgentInfo])
+@app.get("/v1/playground/agents", response_model=list[AgentInfo])
+@app.get("/agents", response_model=list[AgentInfo])
 async def get_agents():
     """Get available agents (teams presented as agents)."""
     if USE_DIRECT_SWARMS:
         # Direct swarm integration - return real swarm types
         from app.swarms.unified_enhanced_orchestrator import UnifiedSwarmOrchestrator
-        
+
         try:
             orchestrator = UnifiedSwarmOrchestrator()
             agents = []
-            
+
             for name, info in orchestrator.swarm_registry.items():
                 agents.append(AgentInfo(
                     agent_id=name,
@@ -240,11 +244,11 @@ async def get_agents():
                     storage=True,
                     tools=info.get("mcp_servers", [])
                 ))
-            
+
             return agents
         except Exception as e:
             logger.error(f"Direct swarm integration failed: {e}")
-    
+
     # Fallback to unified server
     try:
         async with httpx.AsyncClient() as client:
@@ -256,7 +260,7 @@ async def get_agents():
                 return agents
     except Exception as e:
         logger.error(f"Failed to fetch teams: {e}")
-        
+
         # Return real swarm types as fallback
         return [
             AgentInfo(
@@ -277,7 +281,7 @@ async def get_agents():
             )
         ]
 
-@app.get("/v1/playground/teams", response_model=List[TeamInfo])
+@app.get("/v1/playground/teams", response_model=list[TeamInfo])
 async def get_teams():
     """Get available teams."""
     try:
@@ -305,8 +309,8 @@ async def get_teams():
         logger.error(f"Failed to fetch teams: {e}")
         return []
 
-@app.get("/v1/playground/workflows", response_model=List[WorkflowInfo])
-@app.get("/workflows", response_model=List[WorkflowInfo])
+@app.get("/v1/playground/workflows", response_model=list[WorkflowInfo])
+@app.get("/workflows", response_model=list[WorkflowInfo])
 async def get_workflows():
     """Get available workflows."""
     try:
@@ -332,10 +336,10 @@ async def get_workflows():
 @app.post("/run/team")
 async def run_agent(agent_id: str = None, request: RunRequest = None):
     """Run an agent/team with streaming response."""
-    
+
     # Map agent_id to team_id for our backend
     team_id = request.additional_data.get("team_id") if request.additional_data else agent_id
-    
+
     try:
         async with httpx.AsyncClient() as client:
             # Call our unified server's team run endpoint
@@ -344,7 +348,7 @@ async def run_agent(agent_id: str = None, request: RunRequest = None):
                 "message": request.message,
                 "stream": True
             }
-            
+
             async with client.stream(
                 "POST",
                 f"{UNIFIED_API_URL}/teams/run",
@@ -358,13 +362,13 @@ async def run_agent(agent_id: str = None, request: RunRequest = None):
                     )
                 else:
                     raise HTTPException(status_code=response.status_code, detail="Team run failed")
-    
+
     except httpx.RequestError as e:
         logger.error(f"Failed to run team: {e}")
         # FAIL FAST - No mock fallbacks allowed in production
         if os.getenv("FAIL_ON_MOCK_FALLBACK", "false").lower() == "true":
             raise HTTPException(status_code=503, detail=f"Team execution failed: {e}")
-            
+
         # Return error response instead of mock
         raise HTTPException(status_code=503, detail="Unified server unavailable for team execution")
 
@@ -384,7 +388,7 @@ async def run_workflow(request: RunRequest):
                 "message": request.message,
                 "stream": True
             }
-            
+
             async with client.stream(
                 "POST",
                 f"{UNIFIED_API_URL}/workflows/run",
@@ -401,7 +405,7 @@ async def run_workflow(request: RunRequest):
         # FAIL FAST - No mock fallbacks allowed
         if os.getenv("FAIL_ON_MOCK_FALLBACK", "false").lower() == "true":
             raise HTTPException(status_code=503, detail=f"Workflow execution failed: {e}")
-            
+
         raise HTTPException(status_code=503, detail="Workflow execution unavailable")
 
 # ============================================
@@ -429,7 +433,7 @@ async def delete_agent_session(agent_id: str, session_id: str):
 # ============================================
 
 @app.post("/memory/add")
-async def add_memory(request: Dict[str, Any]):
+async def add_memory(request: dict[str, Any]):
     """Add to agent memory."""
     try:
         async with httpx.AsyncClient() as client:
@@ -445,7 +449,7 @@ async def add_memory(request: Dict[str, Any]):
 
 @app.post("/memory/search")
 @with_circuit_breaker("database")
-async def search_memory(request: Dict[str, Any]):
+async def search_memory(request: dict[str, Any]):
     """Search agent memory."""
     try:
         async with httpx.AsyncClient() as client:

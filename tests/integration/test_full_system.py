@@ -5,9 +5,8 @@ Tests all components with ONLY approved models
 """
 
 import asyncio
+
 import httpx
-import json
-from typing import Dict, Any
 
 # APPROVED MODELS ONLY
 APPROVED_LLM_MODELS = [
@@ -34,7 +33,7 @@ class SystemTester:
     def __init__(self):
         self.results = []
         self.client = httpx.AsyncClient(timeout=30)
-    
+
     async def test_mcp_health(self):
         """Test MCP server health"""
         try:
@@ -46,7 +45,7 @@ class SystemTester:
         except Exception as e:
             self.results.append(("MCP Health Check", False, str(e)))
             return False
-    
+
     async def test_hub_api(self):
         """Test Hub API on port 8005"""
         try:
@@ -58,7 +57,7 @@ class SystemTester:
         except Exception as e:
             self.results.append(("Hub API Health", False, str(e)))
             return False
-    
+
     async def test_chat_completion(self):
         """Test chat completion with approved models"""
         for model in ["openai/gpt-5", "x-ai/grok-4", "google/gemini-2.5-flash"]:
@@ -75,7 +74,7 @@ class SystemTester:
                 self.results.append((f"Chat with {model}", success))
             except Exception as e:
                 self.results.append((f"Chat with {model}", False, str(e)))
-    
+
     async def test_model_validation(self):
         """Ensure ONLY approved models work"""
         # Test approved model
@@ -92,7 +91,7 @@ class SystemTester:
             self.results.append(("Approved Model Works", approved_works))
         except:
             self.results.append(("Approved Model Works", False))
-        
+
         # Test unapproved model (should fail or return error)
         try:
             response = await self.client.post(
@@ -108,50 +107,50 @@ class SystemTester:
             self.results.append(("Unapproved Model Blocked", unapproved_blocked))
         except:
             self.results.append(("Unapproved Model Blocked", True))
-    
+
     async def test_swarm_components(self):
         """Test swarm configuration"""
         try:
             from app.swarms.production_mcp_bridge import get_mcp_bridge
             bridge = get_mcp_bridge()
-            
+
             # Test bridge health
             is_healthy = await bridge.health_check()
             self.results.append(("MCP Bridge Health", is_healthy))
-            
+
             # Test swarm status
             status = await bridge.get_swarm_status()
             has_status = "error" not in status or "active_agents" in status
             self.results.append(("Swarm Status Check", has_status))
-            
+
             await bridge.close()
         except Exception as e:
             self.results.append(("Swarm Components", False, str(e)))
-    
+
     async def run_all_tests(self):
         """Run all system tests"""
         print("🔧 Running Comprehensive System Tests...\n")
-        
+
         await self.test_mcp_health()
         await self.test_hub_api()
         await self.test_chat_completion()
         await self.test_model_validation()
         await self.test_swarm_components()
-        
+
         await self.client.aclose()
-        
+
         # Display results
         print("\n📊 Test Results:")
         print("=" * 50)
-        
+
         passed = 0
         failed = 0
-        
+
         for result in self.results:
             name = result[0]
             success = result[1] if len(result) > 1 else False
             error = result[2] if len(result) > 2 else None
-            
+
             if success:
                 print(f"✅ {name}")
                 passed += 1
@@ -160,21 +159,21 @@ class SystemTester:
                 if error:
                     print(f"   Error: {error}")
                 failed += 1
-        
+
         print("=" * 50)
         print(f"\nTotal: {passed} passed, {failed} failed")
-        
+
         if failed == 0:
             print("\n🎉 All tests passed! System is fully operational.")
         else:
             print(f"\n⚠️  {failed} test(s) failed. Please check the logs.")
-        
+
         return failed == 0
 
 async def main():
     tester = SystemTester()
     success = await tester.run_all_tests()
-    
+
     if success:
         print("\n✨ AI Agent Swarm & MCP Integration is working perfectly!")
         print("\n📝 Configuration Summary:")
@@ -183,7 +182,7 @@ async def main():
         print("  • MCP Server: Port 8003")
         print("  • Hub API: Port 8005")
         print("  • All legacy models removed ✓")
-    
+
     return 0 if success else 1
 
 if __name__ == "__main__":

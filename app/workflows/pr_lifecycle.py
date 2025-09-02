@@ -2,25 +2,27 @@
 PR Lifecycle workflow with quality gates and evaluation.
 """
 
-from agno.workflow.v2.workflow import Workflow
-from agno.workflow.v2.step import Step, StepInput, StepOutput
-from agno.workflow.v2.router import Router
-from agno.workflow.v2.loop import Loop
 from textwrap import dedent
-from typing import Optional, List, Dict, Any
-from app.swarms.coding.team import make_coding_swarm, run_coding_debate
-from app.swarms.validator import as_json_or_error
-from app.swarms.approval import judge_allows_run
+from typing import Any
+
+from agno.run.team import TeamRunResponse
+from agno.workflow.v2.loop import Loop
+from agno.workflow.v2.router import Router
+from agno.workflow.v2.step import Step, StepInput, StepOutput
+from agno.workflow.v2.workflow import Workflow
+
 from app.eval.accuracy_eval import run_accuracy_eval
 from app.eval.reliability_eval import run_reliability_eval
-from agno.run.team import TeamRunResponse
+from app.swarms.approval import judge_allows_run
+from app.swarms.coding.team import make_coding_swarm, run_coding_debate
+from app.swarms.validator import as_json_or_error
 
 # Import enhanced validation if available
 try:
     from app.contracts.json_schemas import (
+        runner_gate_decision,
         validate_critic_output,
         validate_judge_output,
-        runner_gate_decision
     )
     JSON_VALIDATION_AVAILABLE = True
 except ImportError:
@@ -35,12 +37,12 @@ def preflight(step_input: StepInput) -> StepOutput:
     """
     msg = step_input.message.strip() if step_input.message else ""
     additional_data = step_input.additional_data or {}
-    
+
     # Extract context from additional data
     priority = additional_data.get("priority", "medium")
     repo = additional_data.get("repo", "current")
     branch = additional_data.get("branch", "main")
-    
+
     normalized = dedent(f"""
     <spec>{msg}</spec>
     <context>
@@ -56,7 +58,7 @@ def preflight(step_input: StepInput) -> StepOutput:
       - Type hints required
     </constraints>
     """)
-    
+
     return StepOutput(
         content=normalized,
         success=True,
@@ -68,10 +70,10 @@ def run_debate_step(step_input: StepInput) -> StepOutput:
     Run the coding debate with the team.
     """
     task = step_input.previous_step_content or step_input.message or ""
-    
+
     # Run the debate
     results = run_coding_debate(coding_team, task)
-    
+
     # Package results for next step
     return StepOutput(
         content=results.get("judge", {}),
@@ -84,20 +86,20 @@ def run_debate_step(step_input: StepInput) -> StepOutput:
         }
     )
 
-def quality_gate(outputs: List[StepOutput]) -> bool:
+def quality_gate(outputs: list[StepOutput]) -> bool:
     """
     Check if the last step passed quality criteria.
     """
     if not outputs:
         return False
-    
+
     last = outputs[-1]
     judge_json = last.content if isinstance(last.content, dict) else {}
-    
+
     # Validate judge decision
     if not judge_json:
         return False
-    
+
     jj = as_json_or_error(str(judge_json), ["decision", "runner_instructions"])
     return "_error" not in jj and jj.get("decision") in ("accept", "merge")
 
@@ -110,7 +112,7 @@ def _post_judge_quality(step_input: StepInput, team) -> StepOutput:
     additional_data = step_input.additional_data or {}
     judge_json = additional_data.get("judge", {})
     critic_json = additional_data.get("critic", {})
-    
+
     # Enhanced validation if available
     if JSON_VALIDATION_AVAILABLE:
         try:
@@ -118,12 +120,12 @@ def _post_judge_quality(step_input: StepInput, team) -> StepOutput:
             critic_obj = None
             if critic_json and not isinstance(critic_json, str):
                 critic_obj = validate_critic_output(critic_json)
-            
+
             # Validate judge output
             judge_obj = None
             if judge_json and not isinstance(judge_json, str):
                 judge_obj = validate_judge_output(judge_json)
-            
+
             # If both validated, use enhanced gate decision
             if critic_obj and judge_obj:
                 # Get accuracy score (run evaluation if team available)
@@ -142,7 +144,7 @@ def _post_judge_quality(step_input: StepInput, team) -> StepOutput:
                             accuracy_score = acc.avg_score
                     except:
                         pass
-                
+
                 # Get reliability status
                 reliability_passed = True  # Default
                 team_response = additional_data.get("team_response")
@@ -155,7 +157,7 @@ def _post_judge_quality(step_input: StepInput, team) -> StepOutput:
                         )
                     except:
                         reliability_passed = False
-                
+
                 # Make gate decision
                 gate = runner_gate_decision(
                     critic=critic_obj,
@@ -163,7 +165,7 @@ def _post_judge_quality(step_input: StepInput, team) -> StepOutput:
                     accuracy_score=accuracy_score,
                     reliability_passed=reliability_passed
                 )
-                
+
                 if gate["allowed"]:
                     return StepOutput(
                         content="QUALITY_GATE: PASS; Runner may proceed with implementation",
@@ -187,7 +189,7 @@ def _post_judge_quality(step_input: StepInput, team) -> StepOutput:
         except Exception:
             # Fall back to simple validation
             pass
-    
+
     # Fallback: Simple validation
     if not judge_json or isinstance(judge_json, str):
         return StepOutput(
@@ -195,7 +197,7 @@ def _post_judge_quality(step_input: StepInput, team) -> StepOutput:
             success=False,
             additional_data={"gate_status": "blocked", "reason": "invalid_json"}
         )
-    
+
     # Check judge approval
     if not judge_allows_run(judge_json):
         return StepOutput(
@@ -203,15 +205,15 @@ def _post_judge_quality(step_input: StepInput, team) -> StepOutput:
             success=False,
             additional_data={"gate_status": "blocked", "reason": "judge_rejected"}
         )
-    
+
     gate_results = {"accuracy": None, "reliability": None, "status": "pending"}
-    
+
     # Accuracy gate: Check if output meets acceptance criteria
     try:
         # Example: require 'tests' mentioned in runner instructions
         instructions_text = " ".join(judge_json.get("runner_instructions", []))
         expected_phrase = "test"
-        
+
         if team:  # Only run if team is available
             acc = run_accuracy_eval(
                 team=team,
@@ -221,13 +223,13 @@ def _post_judge_quality(step_input: StepInput, team) -> StepOutput:
                 iterations=1,
                 print_results=False
             )
-            
+
             if acc and hasattr(acc, 'avg_score'):
                 gate_results["accuracy"] = {
                     "passed": acc.avg_score >= 7.0,
                     "score": acc.avg_score
                 }
-                
+
                 if acc.avg_score < 7.0:
                     return StepOutput(
                         content=f"QUALITY_GATE: Accuracy score {acc.avg_score} < 7.0; Runner BLOCKED",
@@ -248,7 +250,7 @@ def _post_judge_quality(step_input: StepInput, team) -> StepOutput:
                 )
     except Exception as e:
         gate_results["accuracy"] = {"error": str(e)}
-    
+
     # Reliability gate: Check expected tool usage patterns
     try:
         # Note: This requires capturing TeamRunResponse from the debate
@@ -266,7 +268,7 @@ def _post_judge_quality(step_input: StepInput, team) -> StepOutput:
             gate_results["reliability"] = {"passed": True, "note": "No team response to verify"}
     except Exception as e:
         gate_results["reliability"] = {"error": str(e), "passed": True}
-    
+
     # All gates passed
     gate_results["status"] = "approved"
     return StepOutput(
@@ -306,25 +308,25 @@ coding_loop = Loop(
     max_iterations=2
 )
 
-def complexity_router(step_input: StepInput) -> List:
+def complexity_router(step_input: StepInput) -> list:
     """
     Route based on task complexity.
     Simple tasks go straight through, complex tasks enter the loop.
     """
     txt = (step_input.previous_step_content or step_input.message or "").lower()
-    
+
     # Indicators of complexity
     complex_indicators = [
         "refactor", "architecture", "schema", "migration",
         "performance", "optimization", "concurrent", "parallel"
     ]
-    
+
     # Check word count and complexity indicators
     is_complex = (
         len(txt.split()) > 40 or
         any(indicator in txt for indicator in complex_indicators)
     )
-    
+
     if is_complex:
         return [coding_loop]
     else:
@@ -347,9 +349,9 @@ workflow = Workflow(
 def run_pr_workflow(
     task: str,
     priority: str = "medium",
-    repo: Optional[str] = None,
+    repo: str | None = None,
     branch: str = "main"
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Convenience function to run the PR workflow.
     
@@ -363,7 +365,7 @@ def run_pr_workflow(
         Workflow execution results
     """
     from agno.workflow.v2.runner import WorkflowRunner
-    
+
     runner = WorkflowRunner(workflow)
     result = runner.run(
         message=task,
@@ -373,7 +375,7 @@ def run_pr_workflow(
             "branch": branch
         }
     )
-    
+
     return {
         "task": task,
         "result": result,

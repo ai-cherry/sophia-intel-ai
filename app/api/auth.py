@@ -1,15 +1,16 @@
+from datetime import datetime, timedelta
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
-from datetime import datetime, timedelta
-from typing import Optional
+
 from app.security.input_validator import validate_api_key
-from app.security.enhanced_middleware import APIError
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 # Configuration from environment
 import os
+
 from dotenv import load_dotenv
 
 load_dotenv('.env.local')
@@ -20,7 +21,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", "
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
+def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
@@ -54,7 +55,7 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
             detail="Invalid API key",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     access_token = create_access_token(
         data={"sub": form_data.username},
         expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)

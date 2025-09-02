@@ -1,5 +1,5 @@
-import pytest
 from fastapi.testclient import TestClient
+
 from app.api.embedding_endpoints import router
 
 client = TestClient(router)

@@ -148,11 +148,19 @@ class SwarmMemoryClient:
             await self.initialize()
         
         # Prepare memory entry
+        tags_list = (tags or []) + [self.swarm_type, "swarm_memory"]
+        
+        # Add metadata tags
+        if metadata:
+            for key in ['task_id', 'agent_role', 'repo_path', 'file_path']:
+                if key in metadata:
+                    tags_list.append(metadata[key])
+        
         entry_data = {
             "topic": topic,
             "content": content,
             "source": f"swarm_{self.swarm_type}_{self.swarm_id}",
-            "tags": (tags or []) + [self.swarm_type, "swarm_memory"],
+            "tags": tags_list,
             "memory_type": memory_type.value
         }
         

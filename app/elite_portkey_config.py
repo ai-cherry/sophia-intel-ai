@@ -26,38 +26,17 @@ PORTKEY_VIRTUAL_KEYS = {
 class EliteModels:
     """The absolute fucking elite models only."""
     
-    # Tier S - The Gods
-    CLAUDE_SONNET_4 = "anthropic/claude-sonnet-4"  # 555B tokens, 7% improvement
-    GEMINI_25_FLASH = "google/gemini-2.5-flash"    # 282B tokens, 8% improvement
-    GEMINI_25_PRO = "google/gemini-2.5-pro"        # 162B tokens, 17% improvement
-    
-    # Tier A - The Titans
-    GROK_CODE_FAST_1 = "x-ai/grok-code-fast-1"    # 182B tokens, new powerhouse
-    DEEPSEEK_V31 = "deepseek/deepseek-v3.1"       # 179B tokens, 417% improvement
-    DEEPSEEK_V3_0324 = "deepseek/deepseek-v3-0324" # 161B tokens, 3% improvement
-    
-    # Tier A+ - The Specialists
-    QWEN3_CODER_480B = "qwen/qwen3-coder-480b-a35b"  # 126B tokens, 10% improvement
-    DEEPSEEK_R1_0528 = "deepseek/r1-0528-free"      # 81.7B tokens, 28% improvement
-    
-    # Tier Ultra - The Overlords
-    GROK_4 = "x-ai/grok-4"                         # 80.2B tokens, 83% improvement
-    GPT_5 = "openai/gpt-5"                         # 72.3B tokens, 50% improvement
-    GPT_41 = "openai/gpt-4.1"                      # Enhanced GPT-4
-    
-    # Tier Flash - The Speed Demons
-    GEMINI_25_FLASH_LITE = "google/gemini-2.5-flash-lite"  # 71B tokens, 24% improvement
-    DEEPSEEK_V3_0324_FREE = "deepseek/deepseek-v3-0324-free"  # 61.1B tokens, 50% improvement
-    
-    # Tier Specialists
-    MISTRAL_NEMO = "mistral/mistral-nemo"          # 55.5B tokens, 23% improvement
-    QWEN3_30B = "qwen/qwen3-30b-a3b"              # Specialized for efficiency
-    GPT_4O_MINI = "openai/gpt-4o-mini"            # Mini but mighty
-    GPT_OSS_120B = "openai/gpt-oss-120b"          # Open source variant
-    
-    # Tier Meta - The Thinkers
-    QWEN3_30B_THINKING = "qwen/qwen3-30b-a3b-thinking-2507"  # Deep reasoning
-    HERMES_4_405B = "nousresearch/hermes-4-405b"            # Ultra-large scale
+    # ONLY APPROVED MODELS - NO EXCEPTIONS
+    GPT_5 = "openai/gpt-5"                         # Premium tier
+    GROK_4 = "x-ai/grok-4"                         # Premium tier
+    CLAUDE_SONNET_4 = "anthropic/claude-sonnet-4"  # Premium tier
+    GROK_CODE_FAST_1 = "x-ai/grok-code-fast-1"    # Code specialist
+    GEMINI_25_FLASH = "google/gemini-2.5-flash"    # Fast responses
+    GEMINI_25_PRO = "google/gemini-2.5-pro"        # Balanced power
+    DEEPSEEK_V3_0324 = "deepseek/deepseek-chat-v3-0324"  # DeepSeek variant
+    DEEPSEEK_V31 = "deepseek/deepseek-chat-v3.1"         # DeepSeek variant
+    QWEN3_30B = "qwen/qwen3-30b-a3b"              # Reasoning specialist
+    GLM_45_AIR = "z-ai/glm-4.5-air"               # Lightweight
 
 # ============================================
 # Role-Optimized Model Selection
@@ -69,39 +48,39 @@ class EliteAgentConfig:
     
     # Model selection for different roles - ONLY YOUR PREFERRED MODELS
     MODELS = {
-        'planner': 'qwen/qwen3-30b-a3b-thinking-2507',  # Strategic planning - YOUR FAVORITE
-        'generator': 'x-ai/grok-5',  # Code generation - YOUR FAVORITE
-        'critic': 'x-ai/grok-5',  # Code review - YOUR FAVORITE (NO CLAUDE!)
-        'judge': 'qwen/qwen3-30b-a3b-thinking-2507',  # Decision making - YOUR FAVORITE
-        'lead': 'x-ai/grok-5',  # Team coordination - YOUR FAVORITE
-        'runner': 'groq/llama-3.2-90b-text-preview',  # Fast execution - REAL MODEL
+        'planner': 'qwen/qwen3-30b-a3b',  # Strategic planning
+        'generator': 'x-ai/grok-4',  # Code generation
+        'critic': 'x-ai/grok-4',  # Code review
+        'judge': 'qwen/qwen3-30b-a3b',  # Decision making
+        'lead': 'x-ai/grok-4',  # Team coordination
+        'runner': 'google/gemini-2.5-flash',  # Fast execution
         
         # Specialized roles for GENESIS-level swarms
-        'architect': 'qwen/qwen3-30b-a3b-thinking-2507',  # System architecture - YOUR FAVORITE
-        'security': 'x-ai/grok-5',   # Security analysis - YOUR FAVORITE
-        'performance': 'openai/gpt-4o',   # Performance optimization - REAL MODEL
-        'testing': 'groq/llama-3.2-90b-text-preview',      # Fast test generation - REAL MODEL
-        'debugger': 'openai/gpt-4o',   # Deep debugging - REAL MODEL
-        'refactorer': 'openai/gpt-4o', # Code refactoring - REAL MODEL
+        'architect': 'qwen/qwen3-30b-a3b',  # System architecture
+        'security': 'x-ai/grok-4',   # Security analysis
+        'performance': 'openai/gpt-5',   # Performance optimization
+        'testing': 'google/gemini-2.5-flash',      # Fast test generation
+        'debugger': 'x-ai/grok-code-fast-1',   # Deep debugging
+        'refactorer': 'x-ai/grok-code-fast-1', # Code refactoring
         
         # Meta-agents for self-modification
-        'spawner': 'x-ai/grok-5',                  # Agent spawning - YOUR FAVORITE
-        'evolutionist': 'qwen/qwen3-30b-a3b-thinking-2507',   # Swarm evolution - YOUR FAVORITE
-        'consciousness': 'x-ai/grok-5',           # Consciousness simulation - YOUR FAVORITE
+        'spawner': 'x-ai/grok-4',                  # Agent spawning
+        'evolutionist': 'qwen/qwen3-30b-a3b',   # Swarm evolution
+        'consciousness': 'x-ai/grok-4',           # Consciousness simulation
         
         # Ultra-specialized agents
-        'quantum': 'openai/gpt-4o',  # Quantum computing - REAL MODEL
-        'blockchain': 'openai/gpt-4o',     # Blockchain specialist - REAL MODEL
-        'ml_engineer': 'openai/gpt-4o',        # ML/AI specialist - REAL MODEL
-        'devops': 'openai/gpt-4o',             # DevOps automation - REAL MODEL
-        'frontend': 'openai/gpt-4o',           # Frontend specialist - REAL MODEL
-        'backend': 'openai/gpt-4o',           # Backend specialist - REAL MODEL
-        'database': 'qwen/qwen3-30b-a3b-thinking-2507',        # Database architect - YOUR FAVORITE
+        'quantum': 'openai/gpt-5',  # Quantum computing
+        'blockchain': 'openai/gpt-5',     # Blockchain specialist
+        'ml_engineer': 'openai/gpt-5',        # ML/AI specialist
+        'devops': 'x-ai/grok-code-fast-1',             # DevOps automation
+        'frontend': 'google/gemini-2.5-pro',           # Frontend specialist
+        'backend': 'x-ai/grok-code-fast-1',           # Backend specialist
+        'database': 'qwen/qwen3-30b-a3b',        # Database architect
         
         # Speed variants for different workloads
-        'fast_coder': 'groq/llama-3.2-90b-text-preview',         # Rapid prototyping - REAL MODEL
-        'heavy_coder': 'x-ai/grok-5',   # Complex algorithms - YOUR FAVORITE
-        'balanced_coder': 'openai/gpt-4o',    # Balanced approach - REAL MODEL
+        'fast_coder': 'google/gemini-2.5-flash',         # Rapid prototyping
+        'heavy_coder': 'x-ai/grok-4',   # Complex algorithms
+        'balanced_coder': 'google/gemini-2.5-pro',    # Balanced approach
     }
     
     # Temperature optimization per role

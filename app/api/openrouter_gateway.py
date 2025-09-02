@@ -87,11 +87,25 @@ AVAILABLE_MODELS = {
         "capabilities": ["chat", "code", "multimodal"],
         "priority": "standard"
     },
+    "deepseek/deepseek-chat-v3-0324": {
+        "context": 64000,
+        "input_cost": 0.2,
+        "output_cost": 1.5,
+        "capabilities": ["chat", "memory"],
+        "priority": "economy"
+    },
     "deepseek/deepseek-chat-v3.1": {
         "context": 64000,
         "input_cost": 0.2,
         "output_cost": 1.5,
         "capabilities": ["chat", "memory"],
+        "priority": "economy"
+    },
+    "qwen/qwen3-30b-a3b": {
+        "context": 32000,
+        "input_cost": 0.15,
+        "output_cost": 1.0,
+        "capabilities": ["chat", "reasoning"],
         "priority": "economy"
     },
     "z-ai/glm-4.5-air": {

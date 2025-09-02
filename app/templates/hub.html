@@ -6,8 +6,10 @@
     <meta name="theme-color" content="#7c3aed">
     <title>Sophia Intel AI - Unified Hub</title>
     <link rel="stylesheet" href="/static/css/hub.css">
+    <link rel="stylesheet" href="/static/css/chat.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="preload" href="/static/js/hub-controller.js" as="script">
+    <link rel="preload" href="/static/js/chat-interface.js" as="script">
 </head>
 <body>
     <!-- Header Section -->
@@ -216,17 +218,13 @@
         <section id="chat-panel" class="tab-panel" role="tabpanel" aria-labelledby="chat-tab">
             <header class="panel-header">
                 <h2>💬 AI Chat Interface</h2>
+                <div class="panel-actions">
+                    <button onclick="if(window.chatInterface) window.chatInterface.clear()" class="action-button secondary">Clear Chat</button>
+                    <a href="http://localhost:8501" target="_blank" class="action-button">Open Streamlit Chat →</a>
+                </div>
             </header>
-            <div class="iframe-container">
-                <div class="iframe-loading" id="chat-loading">
-                    <div class="spinner"></div>
-                    <p>Loading Streamlit Chat...</p>
-                </div>
-                <iframe id="chat-iframe" data-src="http://localhost:8501" title="Streamlit Chat Interface" frameborder="0" style="display: none;"></iframe>
-                <div class="iframe-error" id="chat-error" style="display: none;">
-                    <p>⚠️ Unable to embed Streamlit (X-Frame-Options restriction)</p>
-                    <a href="http://localhost:8501" target="_blank" class="action-button">Open Chat in New Tab →</a>
-                </div>
+            <div id="native-chat-container" style="padding: 20px; height: calc(100% - 80px);">
+                <!-- Chat interface will be initialized here -->
             </div>
         </section>
 
@@ -354,6 +352,21 @@
     <div id="notification-container" class="notification-container" role="alert" aria-live="polite"></div>
 
     <!-- Scripts -->
+    <script src="/static/js/chat-interface.js"></script>
     <script src="/static/js/hub-controller.js" type="module"></script>
+    <script>
+        // Initialize chat interface when chat tab is activated
+        document.addEventListener('DOMContentLoaded', function() {
+            const chatTab = document.getElementById('chat-tab');
+            let chatInitialized = false;
+            
+            chatTab.addEventListener('click', function() {
+                if (!chatInitialized) {
+                    window.chatInterface = new ChatInterface('native-chat-container');
+                    chatInitialized = true;
+                }
+            });
+        });
+    </script>
 </body>
 </html>

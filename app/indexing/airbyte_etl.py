@@ -1,7 +1,13 @@
 import os
+import tempfile
+import shutil
+import logging
 from typing import List, Dict, Any
 from airbyte_cdk import AirbyteSource, ConfiguredAirbyteStream
 from app.indexing.chunker import chunk_text
+from app.indexing.indexer import index_file
+from app.models.metadata import MemoryMetadata
+from datetime import datetime
 
 def run_airbyte_etl():
     """Run Airbyte ETL pipeline to process data from Neon staging to Weaviate"""
@@ -13,31 +19,61 @@ def run_airbyte_etl():
         "username": os.getenv("NEON_DB_USER", "postgres"),
         "password": os.getenv("NEON_DB_PASSWORD", "password"),
         "database": os.getenv("NEON_DB_NAME", "staging"),
-        "schema": "public"
+        "schema": "public",
+        "output_directory": tempfile.mkdtemp()  # Temporary directory for extraction
     }
     
-    # Run sync
-    source.sync(config)
-    
-    # Process each stream
-    for stream in source.streams:
-        for record in stream.records:
-            process_record(record)
+    try:
+        # Run sync
+        source.sync(config)
+        
+        # Process each file in the output directory
+        output_dir = config["output_directory"]
+        for filename in os.listdir(output_dir):
+            file_path = os.path.join(output_dir, filename)
+            if os.path.isfile(file_path):
+                process_file(file_path)
+    except Exception as e:
+        logging.error(f"Airbyte ETL failed: {str(e)}")
+        raise
+    finally:
+        # Cleanup temporary directory
+        shutil.rmtree(config["output_directory"], ignore_errors=True)
 
-def process_record(record: Dict[str, Any]):
-    """Process a single record into Weaviate-compatible format"""
-    # Extract text content
-    text = record.get("content", "")
-    if not text:
-        return
-    
-    # Chunk text
-    chunks = chunk_text(text)
-    
-    # Convert to SqlEntity nodes (placeholder)
-    for chunk in chunks:
-        # This would be replaced with actual Weaviate upsert
-        print(f"Processing chunk: {chunk[:100]}...")
+def process_file(file_path: str):
+    """Process a single file through chunker and indexer with metadata"""
+    try:
+        with open(file_path, 'r') as f:
+            content = f.read()
+        if not content:
+            return
+            
+        # Chunk the content
+        chunks = chunk_text(content)
+        
+        # Process each chunk
+        for i, chunk in enumerate(chunks):
+            # Create metadata for this chunk
+            metadata = MemoryMetadata(
+                type="text",
+                source=file_path,
+                timestamp=datetime.now(),
+                tags=["etl", "processed"]
+            )
+            
+            # Create temporary file for indexing
+            temp_file = f"{file_path}.chunk_{i}"
+            with open(temp_file, 'w') as f_chunk:
+                f_chunk.write(chunk)
+            
+            # Index the chunk
+            index_file(temp_file, metadata=metadata)
+            
+            # Cleanup temporary file
+            os.remove(temp_file)
+    except Exception as e:
+        logging.error(f"Failed to process file {file_path}: {str(e)}")
+        raise
 
 if __name__ == "__main__":
     run_airbyte_etl()

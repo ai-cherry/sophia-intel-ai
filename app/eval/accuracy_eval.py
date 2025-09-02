@@ -8,7 +8,7 @@ def run_accuracy_eval(
     team: Team,
     prompt: str,
     expected: str,
-    model_id: str = "openai/gpt-4o-mini",
+    model_id: str = "z-ai/glm-4.5-air",
     iterations: int = 1,
     print_results: bool = True,
 ) -> AccuracyResult:

@@ -212,7 +212,7 @@ class PortkeyGateway:
     def chat(
         self,
         messages: List[Dict[str, str]],
-        model: str = "openai/gpt-4o",
+        model: str = "openai/gpt-5",
         temperature: float = 0.7,
         role: Optional[Role] = None,
         swarm: Optional[str] = None,
@@ -286,7 +286,7 @@ class PortkeyGateway:
     async def achat(
         self,
         messages: List[Dict[str, str]],
-        model: str = "openai/gpt-4o",
+        model: str = "openai/gpt-5",
         temperature: float = 0.7,
         role: Optional[Role] = None,
         swarm: Optional[str] = None,
@@ -441,24 +441,24 @@ except:
 
 MODEL_RECOMMENDATIONS = {
     Role.PLANNER: {
-        "default": "openai/gpt-4o",
-        "alternatives": ["anthropic/claude-3.5-sonnet", "google/gemini-pro"],
+        "default": "qwen/qwen3-30b-a3b",
+        "alternatives": ["openai/gpt-5", "x-ai/grok-4"],
         "temperature": 0.3
     },
     Role.CRITIC: {
-        "default": "anthropic/claude-3.5-sonnet",
-        "alternatives": ["openai/gpt-4o", "google/gemini-pro"],
+        "default": "x-ai/grok-4",
+        "alternatives": ["openai/gpt-5", "anthropic/claude-sonnet-4"],
         "temperature": 0.1
     },
     Role.JUDGE: {
-        "default": "openai/gpt-4o",
-        "alternatives": ["anthropic/claude-3.5-sonnet", "google/gemini-pro"],
+        "default": "openai/gpt-5",
+        "alternatives": ["x-ai/grok-4", "qwen/qwen3-30b-a3b"],
         "temperature": 0.2
     },
     Role.GENERATOR: {
-        "fast": ["openai/gpt-4o-mini", "google/gemini-flash"],
-        "heavy": ["openai/gpt-4o", "anthropic/claude-3.5-sonnet"],
-        "balanced": ["openai/gpt-4o", "google/gemini-pro"],
+        "fast": ["google/gemini-2.5-flash", "z-ai/glm-4.5-air"],
+        "heavy": ["openai/gpt-5", "x-ai/grok-4"],
+        "balanced": ["google/gemini-2.5-pro", "anthropic/claude-sonnet-4"],
         "temperature": 0.7
     }
 }

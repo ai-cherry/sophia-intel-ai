@@ -337,9 +337,9 @@ class RealLLMExecutor:
         """Get fallback model chain based on pool and role."""
         # Define fallback chains for different pools
         fallback_chains = {
-            "fast": ["groq/llama-3.2-90b-text-preview", "openai/gpt-4o-mini", "anthropic/claude-3-haiku"],
-            "balanced": ["openai/gpt-4o", "anthropic/claude-3-5-sonnet", "google/gemini-pro"],
-            "heavy": ["openai/gpt-4", "anthropic/claude-3-opus", "google/gemini-ultra"],
+            "fast": ["google/gemini-2.5-flash", "z-ai/glm-4.5-air", "deepseek/deepseek-chat-v3-0324"],
+            "balanced": ["google/gemini-2.5-pro", "qwen/qwen3-30b-a3b", "anthropic/claude-sonnet-4"],
+            "heavy": ["openai/gpt-5", "x-ai/grok-4", "anthropic/claude-sonnet-4"],
         }
         
         # Get primary model for the role

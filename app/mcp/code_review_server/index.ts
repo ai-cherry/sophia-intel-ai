@@ -5,6 +5,13 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { spawn } from 'child_process';
+import { Histogram } from 'prom-client';
+
+const mcp_bridge_call_duration_seconds = new Histogram({
+  name: 'mcp_bridge_call_duration_seconds',
+  help: 'Duration of MCP bridge calls in seconds',
+  buckets: [0.1, 0.5, 1, 2, 5],
+});
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -35,6 +42,7 @@ app.get('/health', (req, res) => {
 
 // Code review endpoint
 app.post('/mcp/code-review', async (req, res) => {
+const start = Date.now();
   try {
     const { code } = req.body;
     if (!code) {
@@ -64,6 +72,10 @@ app.post('/mcp/code-review', async (req, res) => {
     };
 
     res.json({ suggestions, metrics });
+    const duration = Date.now() - start;
+    mcp_bridge_call_duration_seconds.observe(duration);
+    const duration = Date.now() - start;
+    mcp_bridge_call_duration_seconds.observe(duration);
   } catch (error) {
     res.status(500).json({ error: 'Internal server error' });
   }

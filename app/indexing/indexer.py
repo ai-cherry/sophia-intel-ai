@@ -8,6 +8,7 @@ from typing import List, Dict, Any, Optional
 from app.embedding.embedding_service import TogetherEmbeddingService
 from app.weaviate.weaviate_client import WeaviateClient
 from app.indexing.chunker import chunk_text
+from app.indexing.incremental_indexer import incremental_index
 
 logger = logging.getLogger(__name__)
 

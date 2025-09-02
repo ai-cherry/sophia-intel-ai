@@ -79,7 +79,7 @@ class SimpleAgentOrchestrator:
     No complex graphs - just sequential execution with state management
     """
     
-    def __init__(
+    async def __init__(
         self,
         redis_url: str = "redis://localhost:6379",
         ollama_url: str = "http://localhost:11434",

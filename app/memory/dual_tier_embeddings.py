@@ -13,8 +13,26 @@ from dataclasses import dataclass
 from enum import Enum
 import tiktoken
 
-from app.memory.embedding_pipeline import (
-from app.core.circuit_breaker import with_circuit_breaker, get_llm_circuit_breaker, get_weaviate_circuit_breaker, get_redis_circuit_breaker, get_webhook_circuit_breaker
+from app.memory.embedding_pipeline import StandardizedEmbeddingPipeline
+from app.core.circuit_breaker import (
+    with_circuit_breaker,
+    get_llm_circuit_breaker,
+    get_weaviate_circuit_breaker,
+    get_redis_circuit_breaker,
+    get_webhook_circuit_breaker
+)
+    with_circuit_breaker,
+    get_llm_circuit_breaker,
+    get_weaviate_circuit_breaker,
+    get_redis_circuit_breaker,
+    get_webhook_circuit_breaker
+)
+    with_circuit_breaker,
+    get_llm_circuit_breaker,
+    get_weaviate_circuit_breaker,
+    get_redis_circuit_breaker,
+    get_webhook_circuit_breaker
+)
     StandardizedEmbeddingPipeline
 )
 

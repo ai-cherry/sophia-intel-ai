@@ -32,12 +32,12 @@ class SwarmMessage(BaseModel):
     receiver_agent_id: Optional[str] = None
     message_type: MessageType
     content: Dict[str, Any]
-    thread_id: str = field(default_factory=lambda: f"thd:{uuid4().hex}")
-    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    thread_id: str = Field(default_factory=lambda: f"thd:{uuid4().hex}")
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     priority: int = 5  # 1-10, default medium priority
-    trace_id: str = field(default_factory=lambda: f"trc:{uuid4().hex}")
-    span_id: str = field(default_factory=lambda: f"span:{uuid4().hex}")
-    headers: Dict[str, str] = field(default_factory=dict)
+    trace_id: str = Field(default_factory=lambda: f"trc:{uuid4().hex}")
+    span_id: str = Field(default_factory=lambda: f"span:{uuid4().hex}")
+    headers: Dict[str, str] = Field(default_factory=dict)
 
 class MessageBus:
     """

@@ -4,12 +4,15 @@ Replaces all mock/template responses with actual LLM calls.
 """
 
 import logging
+import time
 from typing import Dict, List, Any, Optional, AsyncGenerator
 from datetime import datetime
 
 from app.api.advanced_gateway_2025 import AdvancedAIGateway2025, TaskType # Corrected import
 from app.elite_portkey_config import EliteAgentConfig # For model configs
 from app.swarms.coding.models import PoolType # Assuming this is still needed
+from app.llm.response_models import LLMResponse, ResponseStatus, TokenStats
+
 # Unified embedding coordinator (preferred path)
 try:
     from app.memory.embedding_coordinator import get_embedding_coordinator
@@ -58,10 +61,13 @@ class RealLLMExecutor:
         model_pool: str = "balanced",
         stream: bool = False,
         role: Optional[Role] = None,
-        context: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        context: Optional[Dict[str, Any]] = None,
+        task_type: Optional[TaskType] = None,
+        trace_id: Optional[str] = None,
+        session_id: Optional[str] = None
+    ) -> LLMResponse:
         """
-        Execute real LLM call with proper model selection.
+        Execute real LLM call with fallback chain and proper model selection.
         
         Args:
             prompt: The prompt to send to the LLM
@@ -69,36 +75,92 @@ class RealLLMExecutor:
             stream: Whether to stream the response
             role: Agent role for temperature/model selection
             context: Additional context for the request
+            task_type: Type of task for model selection
+            trace_id: Trace ID for request correlation
+            session_id: Session ID for context
             
         Returns:
-            Dictionary with real LLM response and metadata
+            LLMResponse with real LLM response and metadata
         """
-        try:
-            # Select model based on pool
-            model = self._select_model(model_pool, role)
-            
-            # Build messages
-            messages = self._build_messages(prompt, context)
-            
-            # Get temperature for role
-            temperature = self._get_temperature_for_role(role)
-            
-            logger.info(f"Executing LLM call: model={model}, pool={model_pool}, role={role}")
-            
-            if stream:
-                return await self._execute_streaming(messages, model, temperature, role)
-            else:
-                return await self._execute_non_streaming(messages, model, temperature, role)
+        # Determine task type from role if not provided
+        if not task_type:
+            task_type = self._get_task_type_from_role(role)
+        
+        # Build messages
+        messages = self._build_messages(prompt, context)
+        
+        # Get temperature for role
+        temperature = self._get_temperature_for_role(role)
+        
+        # Define fallback chain based on model pool
+        fallback_models = self._get_fallback_chain(model_pool, role)
+        
+        attempts = []
+        last_error = None
+        
+        # Try each model in the fallback chain
+        for model in fallback_models:
+            try:
+                logger.info(f"Attempting LLM call: model={model}, pool={model_pool}, role={role}")
                 
-        except Exception as e:
-            logger.error(f"LLM execution failed: {e}", exc_info=True)
-            return {
-                "content": f"Error: {str(e)}",
-                "success": False,
-                "error": str(e),
-                "model": model_pool,
-                "timestamp": datetime.now().isoformat()
-            }
+                if stream:
+                    # For now, streaming returns dict - TODO: update streaming to return LLMResponse
+                    result = await self._execute_streaming(messages, model, temperature, role)
+                    return LLMResponse(
+                        content=result.get("content", ""),
+                        success=result.get("success", False),
+                        status=ResponseStatus.SUCCESS if result.get("success") else ResponseStatus.ERROR,
+                        model=model,
+                        trace_id=trace_id,
+                        session_id=session_id
+                    )
+                else:
+                    response = await self._execute_non_streaming(
+                        messages, model, temperature, role, task_type
+                    )
+                    
+                    if response.success:
+                        response.trace_id = trace_id
+                        response.session_id = session_id
+                        response.attempts = attempts
+                        response.final_model = model
+                        return response
+                    else:
+                        attempts.append({
+                            "model": model,
+                            "error": response.error,
+                            "timestamp": response.timestamp.isoformat()
+                        })
+                        last_error = response.error
+                        
+            except Exception as e:
+                logger.warning(f"Model {model} failed: {e}")
+                attempts.append({
+                    "model": model,
+                    "error": str(e),
+                    "timestamp": datetime.now().isoformat()
+                })
+                last_error = str(e)
+                continue
+        
+        # All models failed - check cache as last resort
+        cached_response = await self._check_cache(prompt, model_pool)
+        if cached_response:
+            cached_response.status = ResponseStatus.CACHED
+            cached_response.attempts = attempts
+            return cached_response
+        
+        # Return error response
+        return LLMResponse(
+            content="",
+            success=False,
+            status=ResponseStatus.ERROR,
+            error=last_error or "All models in fallback chain failed",
+            error_code="FALLBACK_CHAIN_EXHAUSTED",
+            attempts=attempts,
+            trace_id=trace_id,
+            session_id=session_id
+        )
     
     @with_circuit_breaker("external_api")
     async def _execute_streaming(
@@ -158,36 +220,56 @@ class RealLLMExecutor:
         messages: List[Dict[str, str]],
         model_name: str, # Changed from 'model' to 'model_name'
         temperature: float,
-        role: Optional[Role]
-    ) -> Dict[str, Any]:
-        """Execute non-streaming LLM call."""
+        role: Optional[Role],
+        task_type: TaskType = TaskType.GENERAL
+    ) -> LLMResponse:
+        """Execute non-streaming LLM call and return standardized response."""
+        start_time = time.time()
+        
         try:
             # Use gateway.chat_completion with the new args
             response = await self.gateway.chat_completion(
                 messages=messages,
-                task_type=TaskType.GENERAL, # Default to GENERAL, can be refined based on role/context
+                task_type=task_type,
                 stream=False,
-                model_name=model_name, # Pass model_name
+                model_name=model_name,
                 temperature=temperature,
-                # Additional Portkey config can be passed via kwargs too
             )
             
             content = response.get("choices", [{}])[0].get("message", {}).get("content", "")
             
-            return {
-                "content": content,
-                "success": True,
-                "model": response.get("model_name"),
-                "timestamp": datetime.now().isoformat(),
-                "token_count": response.get("metrics", {}).get("total_tokens", 0), # Get from Portkey response
-                "input_tokens": response.get("metrics", {}).get("prompt_tokens", 0),
-                "output_tokens": response.get("metrics", {}).get("completion_tokens", 0),
-                "role": role.value if role else None
-            }
+            # Extract token stats if available
+            metrics = response.get("metrics", {})
+            token_stats = TokenStats(
+                prompt_tokens=metrics.get("prompt_tokens", 0),
+                completion_tokens=metrics.get("completion_tokens", 0),
+                total_tokens=metrics.get("total_tokens", 0)
+            )
+            
+            latency_ms = (time.time() - start_time) * 1000
+            
+            return LLMResponse(
+                content=content,
+                success=True,
+                status=ResponseStatus.SUCCESS,
+                model=response.get("model_name", model_name),
+                provider="portkey",
+                task_type=task_type.value if task_type else None,
+                latency_ms=latency_ms,
+                token_stats=token_stats,
+                estimated_cost=token_stats.cost_estimate,
+                metadata={
+                    "role": role.value if role else None,
+                    "temperature": temperature
+                }
+            )
             
         except Exception as e:
             logger.error(f"Non-streaming execution failed: {e}")
-            raise
+            return LLMResponse.from_error(
+                error=str(e),
+                error_code="LLM_EXECUTION_ERROR"
+            )
     
     def _select_model(self, pool: str, role: Optional[Role]) -> str:
         """Select appropriate model based on pool and role from EliteAgentConfig."""
@@ -231,6 +313,56 @@ class RealLLMExecutor:
         """Get appropriate temperature for role from EliteAgentConfig."""
         role_key = role.value if role else "generator"
         return EliteAgentConfig.TEMPERATURES.get(role_key, 0.7)
+    
+    def _get_task_type_from_role(self, role: Optional[Role]) -> TaskType:
+        """Determine task type from role."""
+        if not role:
+            return TaskType.GENERAL
+        
+        role_task_mapping = {
+            Role.PLANNER: TaskType.PLANNING,
+            Role.GENERATOR: TaskType.CODE_GENERATION,
+            Role.CRITIC: TaskType.CODE_REVIEW,
+            Role.DEBUGGER: TaskType.DEBUGGING,
+            Role.REFACTORER: TaskType.REFACTORING,
+            Role.TESTING: TaskType.TESTING,
+            Role.SECURITY: TaskType.SECURITY_ANALYSIS,
+            Role.PERFORMANCE: TaskType.OPTIMIZATION,
+            Role.ARCHITECT: TaskType.ARCHITECTURE,
+        }
+        
+        return role_task_mapping.get(role, TaskType.GENERAL)
+    
+    def _get_fallback_chain(self, model_pool: str, role: Optional[Role]) -> List[str]:
+        """Get fallback model chain based on pool and role."""
+        # Define fallback chains for different pools
+        fallback_chains = {
+            "fast": ["groq/llama-3.2-90b-text-preview", "openai/gpt-4o-mini", "anthropic/claude-3-haiku"],
+            "balanced": ["openai/gpt-4o", "anthropic/claude-3-5-sonnet", "google/gemini-pro"],
+            "heavy": ["openai/gpt-4", "anthropic/claude-3-opus", "google/gemini-ultra"],
+        }
+        
+        # Get primary model for the role
+        primary_model = self._select_model(model_pool, role)
+        
+        # Get fallback chain for the pool
+        chain = fallback_chains.get(model_pool, fallback_chains["balanced"])
+        
+        # Put primary model first if not already in chain
+        if primary_model not in chain:
+            chain = [primary_model] + chain
+        else:
+            # Move primary model to front
+            chain.remove(primary_model)
+            chain = [primary_model] + chain
+        
+        return chain[:3]  # Limit to 3 attempts
+    
+    async def _check_cache(self, prompt: str, model_pool: str) -> Optional[LLMResponse]:
+        """Check cache for previous response to similar prompt."""
+        # TODO: Implement semantic cache lookup
+        # For now, return None (no cache hit)
+        return None
 
     async def generate_code_streaming(
         self,

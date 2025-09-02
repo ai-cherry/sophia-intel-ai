@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: sophia-jaeger
+    ports:
+      - "16686:16686"
+      - "14268:14268"
+      - "14250:14250"
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+      - COLLECTOR_ZIPKIN_ENABLED=true
+    networks:
+      - sophia-network
+
+  tempo:
+    image: grafana/tempo:latest
+    container_name: sophia-tempo
+    ports:
+      - "3200:3200"
+    volumes:
+      - ./tempo-data:/tempo
+    environment:
+      - CONFIG_PATH=/etc/tempo/tempo.yaml
+    networks:
+      - sophia-network
+
+networks:
+  sophia-network:
+    name: sophia-observability-network
+    driver: bridge

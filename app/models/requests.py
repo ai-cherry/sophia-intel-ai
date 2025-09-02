@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import List, Dict, Any, Optional
 
 class EmbeddingRequest(BaseModel):
     text: str
@@ -21,3 +22,10 @@ class MemoryUpdateRequest(BaseModel):
 
 class MemoryDeleteRequest(BaseModel):
     memory_id: str
+
+class ChatRequest(BaseModel):
+    model: str
+    messages: List[Dict[str, str]]
+    temperature: Optional[float] = 0.7
+    max_tokens: Optional[int] = 1000
+    stream: Optional[bool] = False

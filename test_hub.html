@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Hub Debug Test</title>
+</head>
+<body>
+    <h1>Testing Hub JavaScript</h1>
+    <div id="result"></div>
+    
+    <script>
+        console.log('Starting hub test...');
+        
+        // Test if we can access the hub
+        fetch('http://localhost:8005/hub/status')
+            .then(response => response.json())
+            .then(data => {
+                console.log('Hub status:', data);
+                document.getElementById('result').innerHTML = `
+                    <h2>Hub Status Retrieved:</h2>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                    <p>Overall Health: ${data.overall_health}</p>
+                    <p>Services: ${data.healthy_count}/${data.total_count} healthy</p>
+                `;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('result').innerHTML = `<p style="color: red;">Error: ${error}</p>`;
+            });
+            
+        // Test JavaScript loading
+        const script = document.createElement('script');
+        script.src = 'http://localhost:8005/static/js/hub-controller.js';
+        script.onload = () => {
+            console.log('Hub controller loaded!');
+            setTimeout(() => {
+                if (window.HubController) {
+                    document.getElementById('result').innerHTML += '<p style="color: green;">✅ HubController class loaded!</p>';
+                } else {
+                    document.getElementById('result').innerHTML += '<p style="color: red;">❌ HubController class NOT found!</p>';
+                }
+            }, 1000);
+        };
+        script.onerror = () => {
+            console.error('Failed to load hub controller');
+            document.getElementById('result').innerHTML += '<p style="color: red;">❌ Failed to load JavaScript!</p>';
+        };
+        document.head.appendChild(script);
+    </script>
+</body>
+</html>

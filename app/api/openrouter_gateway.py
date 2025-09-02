@@ -4,29 +4,45 @@ import os
 import logging
 from typing import List, Dict, Any, Optional
 import time
-from prometheus_client import Counter, Histogram
+from prometheus_client import Counter, Histogram, CollectorRegistry, REGISTRY
 
-# Initialize Prometheus metrics
-model_tokens_total = Counter(
-    'model_tokens_total',
-    'Total tokens processed per model',
-    ['model', 'type']
-)
-model_latency_seconds = Histogram(
-    'model_latency_seconds',
-    'Model request latency',
-    ['model']
-)
-model_cost_usd_total = Counter(
-    'model_cost_usd_total',
-    'Total cost in USD per model',
-    ['model', 'type']
-)
-model_cost_usd_today = Counter(
-    'model_cost_usd_today',
-    'Cost so far today per model',
-    ['model']
-)
+# Initialize Prometheus metrics with duplicate handling
+try:
+    model_tokens_total = Counter(
+        'model_tokens_total',
+        'Total tokens processed per model',
+        ['model', 'type']
+    )
+except ValueError:
+    # Metric already exists, get it from registry
+    model_tokens_total = REGISTRY._names_to_collectors['model_tokens_total']
+
+try:
+    model_latency_seconds = Histogram(
+        'model_latency_seconds',
+        'Model request latency',
+        ['model']
+    )
+except ValueError:
+    model_latency_seconds = REGISTRY._names_to_collectors['model_latency_seconds']
+
+try:
+    model_cost_usd_total = Counter(
+        'model_cost_usd_total',
+        'Total cost in USD per model',
+        ['model', 'type']
+    )
+except ValueError:
+    model_cost_usd_total = REGISTRY._names_to_collectors['model_cost_usd_total']
+
+try:
+    model_cost_usd_today = Counter(
+        'model_cost_usd_today',
+        'Cost so far today per model',
+        ['model']
+    )
+except ValueError:
+    model_cost_usd_today = REGISTRY._names_to_collectors['model_cost_usd_today']
 
 AVAILABLE_MODELS = {
     "openai/gpt-5": {

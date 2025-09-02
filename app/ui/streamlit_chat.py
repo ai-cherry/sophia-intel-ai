@@ -164,9 +164,10 @@ if st.sidebar.checkbox("Show debug info"):
 st.sidebar.markdown("---")
 st.sidebar.subheader("Model Availability")
 st.sidebar.write("Models active in this environment:")
-st.sidebar.code(", ".join([
+available_models = [
     m for m in SWARM_MODEL_ASSIGNMENTS["coding_swarm"].values() 
     if not m.startswith("z-")  # Show premium models first
-] + ["google/gemini-2.5-flash"]))
-if "openai/gpt-5" in swarms:
+] + ["google/gemini-2.5-flash"]
+st.sidebar.code(", ".join(available_models))
+if "openai/gpt-5" in available_models:
     st.sidebar.warning("GPT-5 enabled - premium model available")

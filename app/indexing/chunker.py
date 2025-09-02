@@ -5,14 +5,39 @@ from typing import List
 
 def chunk_text(text: str, max_chunk_size: int = 1000, max_chunks: int = 1000) -> List[str]:
     """
-    Simple, stable text chunker.
-    - Splits by double newlines first to keep paragraphs together.
-    - Concatenates lines until the chunk reaches max_chunk_size.
-    - Falls back to hard splitting if a single line exceeds the limit.
-    - Caps total chunks to max_chunks to avoid runaway memory.
-
-    Note: This is intentionally naive and deterministic; upgrade to a semantic
-    splitter later if needed.
+    Simple, stable text chunker that splits text into manageable chunks.
+    
+    This function intelligently splits text while trying to preserve paragraph
+    boundaries when possible. It splits by double newlines first to keep
+    paragraphs together, then concatenates lines until reaching the chunk size
+    limit. For paragraphs exceeding the limit, it falls back to hard splitting.
+    
+    Args:
+        text: The input text to be chunked. Can be any text content including
+              code, documentation, or natural language text.
+        max_chunk_size: Maximum number of characters per chunk. Defaults to 1000.
+                       Chunks may slightly exceed this if needed to avoid breaking
+                       words mid-character during hard splits.
+        max_chunks: Maximum number of chunks to return. Defaults to 1000.
+                   This cap prevents runaway memory usage for extremely large texts.
+    
+    Returns:
+        A list of text chunks, each approximately max_chunk_size characters or less.
+        Returns an empty list if the input text is empty or None.
+    
+    Example:
+        >>> text = "This is paragraph one.\\n\\nThis is paragraph two.\\n\\nThis is paragraph three."
+        >>> chunks = chunk_text(text, max_chunk_size=30)
+        >>> print(chunks[0])
+        'This is paragraph one.\\n\\n'
+        >>> print(chunks[1])
+        'This is paragraph two.\\n\\n'
+    
+    Note:
+        This is intentionally a naive and deterministic implementation.
+        For more sophisticated text splitting (e.g., semantic splitting,
+        sentence boundary detection), consider upgrading to a specialized
+        NLP-based text splitter in the future.
     """
     if not text:
         return []

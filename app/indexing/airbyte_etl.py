@@ -1,9 +1,17 @@
+"""
+ETL pipeline module for processing data from Neon staging database to Weaviate.
+
+This module provides functionality to:
+- Extract data from PostgreSQL using Airbyte
+- Process and chunk the extracted data
+- Index processed chunks into Weaviate with appropriate metadata
+"""
 import os
 import tempfile
 import shutil
 import logging
 from typing import List, Dict, Any
-from airbyte_cdk import AirbyteSource, ConfiguredAirbyteStream
+from airbyte_cdk import AirbyteSource
 from app.indexing.chunker import chunk_text
 from app.indexing.indexer import index_file
 from app.models.metadata import MemoryMetadata
@@ -13,15 +21,20 @@ def run_airbyte_etl():
     """Run Airbyte ETL pipeline to process data from Neon staging to Weaviate"""
     # Configure Airbyte source (example for PostgreSQL)
     source = AirbyteSource("airbyte-source-postgres")
-    config = {
-        "host": os.getenv("NEON_DB_HOST", "localhost"),
-        "port": os.getenv("NEON_DB_PORT", "5432"),
-        "username": os.getenv("NEON_DB_USER", "postgres"),
-        "password": os.getenv("NEON_DB_PASSWORD", "password"),
-        "database": os.getenv("NEON_DB_NAME", "staging"),
-        "schema": "public",
-        "output_directory": tempfile.mkdtemp()  # Temporary directory for extraction
-    }
+    
+    # Require all database configuration from environment variables
+    try:
+        config = {
+            "host": os.environ["NEON_DB_HOST"],
+            "port": os.environ["NEON_DB_PORT"],
+            "username": os.environ["NEON_DB_USER"],
+            "password": os.environ["NEON_DB_PASSWORD"],
+            "database": os.environ["NEON_DB_NAME"],
+            "schema": "public",
+            "output_directory": tempfile.mkdtemp()  # Temporary directory for extraction
+        }
+    except KeyError as exc:
+        raise RuntimeError(f"Missing DB configuration: {exc}") from exc
     
     try:
         # Run sync

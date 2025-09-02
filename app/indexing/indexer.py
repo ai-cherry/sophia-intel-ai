@@ -1,14 +1,10 @@
-import os
-import re
-import json
-import asyncio
 import logging
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 from app.embedding.embedding_service import TogetherEmbeddingService
 from app.weaviate.weaviate_client import WeaviateClient
 from app.indexing.chunker import chunk_text
-from app.indexing.incremental_indexer import incremental_index
+from app.models.metadata import MemoryMetadata
 
 logger = logging.getLogger(__name__)
 
@@ -115,9 +111,11 @@ class RepositoryIndexer:
         Search across indexed repository content
         """
         # Generate query embedding
-        query_embedding = await self.embedding_service.generate_embeddings(
-            texts=[query],
-            model="togethercomputer/m2-bert-80M-8k-retrieval"
+        query_embedding = (
+            await self.embedding_service.generate_embeddings(
+                texts=[query],
+                model="togethercomputer/m2-bert-80M-8k-retrieval"
+            )
         )[0]
         
         # Search in Weaviate
@@ -138,3 +136,63 @@ class RepositoryIndexer:
             })
         
         return formatted_results
+
+
+async def index_file(file_path: str, metadata: Optional[MemoryMetadata] = None) -> None:
+    """
+    Helper function to index a single file.
+    
+    Args:
+        file_path: Path to the file to index
+        metadata: Optional metadata to associate with the indexed file
+    """
+    # Initialize services (you may want to cache these)
+    from app.embedding.embedding_service import TogetherEmbeddingService
+    from app.weaviate.weaviate_client import WeaviateClient
+    
+    embedding_service = TogetherEmbeddingService()
+    weaviate_client = WeaviateClient()
+    indexer = RepositoryIndexer(embedding_service, weaviate_client)
+    
+    # Read file content
+    file_path_obj = Path(file_path)
+    if not file_path_obj.exists():
+        logger.error(f"File does not exist: {file_path}")
+        return
+    
+    try:
+        content = file_path_obj.read_text(encoding='utf-8', errors='replace')
+        
+        # Chunk the content
+        chunks = chunk_text(content)
+        
+        # Generate embeddings
+        embeddings = await embedding_service.generate_embeddings(
+            texts=chunks,
+            model="togethercomputer/m2-bert-80M-8k-retrieval"
+        )
+        
+        # Store in Weaviate with metadata
+        for i, (chunk, embedding) in enumerate(zip(chunks, embeddings)):
+            chunk_metadata = {
+                "file_path": str(file_path),
+                "file_type": file_path_obj.suffix,
+                "chunk_index": i,
+                "total_chunks": len(chunks),
+            }
+            
+            # Merge with provided metadata if available
+            if metadata:
+                chunk_metadata.update(metadata.dict())
+            
+            await weaviate_client.store_embedding(
+                embedding=embedding,
+                text=chunk,
+                metadata=chunk_metadata
+            )
+        
+        logger.info(f"Successfully indexed {file_path} with {len(chunks)} chunks")
+        
+    except Exception as e:
+        logger.error(f"Error indexing file {file_path}: {str(e)}")
+        raise

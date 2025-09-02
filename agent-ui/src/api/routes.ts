@@ -39,5 +39,15 @@ export const APIRoutes = {
     PlaygroundApiUrl: string,
     teamId: string,
     sessionId: string
-  ) => `${PlaygroundApiUrl}/teams/${teamId}/sessions/${sessionId}`
+  ) => `${PlaygroundApiUrl}/teams/${teamId}/sessions/${sessionId}`,
+  
+  // Cost tracking routes
+  GetCostSummary: (PlaygroundApiUrl: string) =>
+    `${PlaygroundApiUrl}/costs/summary`,
+  GetDailyCosts: (PlaygroundApiUrl: string) =>
+    `${PlaygroundApiUrl}/costs/daily`,
+  GetTopModels: (PlaygroundApiUrl: string) =>
+    `${PlaygroundApiUrl}/costs/models`,
+  RecordCostEvent: (PlaygroundApiUrl: string) =>
+    `${PlaygroundApiUrl}/costs/record`
 }

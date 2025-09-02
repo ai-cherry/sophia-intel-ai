@@ -9,9 +9,11 @@ Following ADR-006: Configuration Management Standardization
 - Proper secret management and validation
 """
 
-from fastapi import FastAPI, HTTPException, Request, Form, Depends
+from fastapi import FastAPI, HTTPException, Request, Form, Depends, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, JSONResponse
+from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
+from starlette.responses import Response
 from pydantic import BaseModel, Field
 from typing import List, Dict, Any, Optional, AsyncGenerator, Union
 import asyncio
@@ -48,6 +50,10 @@ except ImportError:
 # Import enhanced memory and timeline
 from app.orchestration.execution_timeline import ExecutionTimeline, TimelineEvent, EventType
 from app.memory.enhanced_memory import EnhancedMemorySystem, SharedContext
+
+# Import cost tracking and health aggregation
+from app.observability.cost_tracker import get_cost_tracker, CostEventType
+from app.observability.health_aggregator import get_health_aggregator
 
 # Import our enhanced systems
 from app.api.health import router as health_router
@@ -107,6 +113,67 @@ except ImportError:
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+
+# ============================================
+# Trace Middleware for Request Tracking
+# ============================================
+
+class TraceMiddleware(BaseHTTPMiddleware):
+    """
+    Middleware to add trace IDs to all requests and responses.
+    Captures request/response metadata for observability.
+    """
+    
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
+        # Generate or extract trace ID
+        trace_id = request.headers.get("X-Trace-ID") or str(uuid.uuid4())
+        request.state.trace_id = trace_id
+        
+        # Record request start
+        start_time = time.time()
+        
+        # Get client info for logging
+        client_ip = get_remote_address(request)
+        user_agent = request.headers.get("User-Agent", "unknown")
+        
+        # Log request start
+        logger.info(
+            f"[{trace_id}] {request.method} {request.url.path} - "
+            f"Client: {client_ip} - UA: {user_agent[:100]}..."
+        )
+        
+        try:
+            # Process request
+            response = await call_next(request)
+            
+            # Calculate duration
+            duration_ms = (time.time() - start_time) * 1000
+            
+            # Add trace ID to response headers
+            response.headers["X-Trace-ID"] = trace_id
+            
+            # Log successful response
+            logger.info(
+                f"[{trace_id}] {request.method} {request.url.path} - "
+                f"Status: {response.status_code} - Duration: {duration_ms:.2f}ms"
+            )
+            
+            return response
+            
+        except Exception as e:
+            # Calculate duration for error case
+            duration_ms = (time.time() - start_time) * 1000
+            
+            # Log error
+            logger.error(
+                f"[{trace_id}] {request.method} {request.url.path} - "
+                f"Error: {str(e)} - Duration: {duration_ms:.2f}ms"
+            )
+            
+            # Re-raise the exception
+            raise
+
 
 # Load configuration using enhanced EnvLoader with Pulumi ESC support
 try:
@@ -348,9 +415,22 @@ async def lifespan(app: FastAPI):
     if server_config.MCP_SUPERMEMORY_ENABLED:
         print("🧠 MCP Supermemory server registered")
     
+    # Initialize cost tracker
+    cost_tracker = get_cost_tracker()
+    await cost_tracker.start_background_save(interval_seconds=60)
+    print("💰 Cost tracker initialized with background saving")
+    
+    # Initialize health aggregator
+    health_aggregator = get_health_aggregator()
+    await health_aggregator.start_background_monitoring(check_interval=30)
+    print("🏥 Health aggregator initialized with background monitoring")
+    
     yield
     
     # Shutdown
+    cost_tracker.stop_background_save()
+    cost_tracker.save_now()  # Final save on shutdown
+    health_aggregator.stop_background_monitoring()
     await state.cleanup()
 
 # ============================================
@@ -389,6 +469,9 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 # Include routers
 app.include_router(swarms_router.router, prefix="/api", tags=["swarms"])
 app.include_router(health_router, prefix="", tags=["health"])
+
+# Add trace middleware (first, so it captures all requests)
+app.add_middleware(TraceMiddleware)
 
 # CORS middleware
 app.add_middleware(
@@ -811,6 +894,463 @@ async def hybrid_search(request: SearchRequest):
         ],
         "graph_context": graph_context
     }
+
+# ============================================
+# Embedding Operations
+# ============================================
+
+@app.post("/embeddings")
+@limiter.limit("100/minute")
+async def create_embeddings(
+    request: EmbeddingRequest,
+    req: Request
+):
+    """Generate embeddings for text(s) using Together AI via Portkey."""
+    if not EMBEDDINGS_AVAILABLE:
+        raise HTTPException(status_code=503, detail="Embedding service not available")
+    
+    try:
+        # Get trace ID from request
+        trace_id = getattr(request.state, 'trace_id', str(uuid.uuid4()))
+        
+        # Get embedding service
+        service = get_embedding_service()
+        
+        # Handle single text or list
+        texts = [request.texts] if isinstance(request.texts, str) else request.texts
+        
+        # Parse model if provided
+        model = None
+        if request.model:
+            try:
+                model = EmbeddingModel(request.model)
+            except ValueError:
+                # Try to find by partial match
+                for em in EmbeddingModel:
+                    if request.model.lower() in em.value.lower():
+                        model = em
+                        break
+                if not model:
+                    raise HTTPException(status_code=400, detail=f"Invalid model: {request.model}")
+        
+        # Generate embeddings
+        start_time = time.time()
+        result = await service.embed_async(texts, model=model, use_cache=request.use_cache)
+        duration_ms = (time.time() - start_time) * 1000
+        
+        # Track cost if available
+        if hasattr(state, 'timeline') and state.timeline:
+            state.timeline.record_cost_update(
+                cost=result.estimated_cost if hasattr(result, 'estimated_cost') else 0,
+                model=result.model,
+                tokens=result.tokens_used
+            )
+        
+        return {
+            "embeddings": result.embeddings,
+            "model": result.model,
+            "dimensions": result.dimensions,
+            "tokens_used": result.tokens_used,
+            "cached": result.cached,
+            "latency_ms": duration_ms,
+            "trace_id": trace_id,
+            "metadata": result.metadata
+        }
+        
+    except Exception as e:
+        logger.error(f"Embedding generation failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/embeddings/search")
+@limiter.limit("50/minute")
+async def search_with_embeddings(
+    request: EmbeddingSearchRequest,
+    req: Request
+):
+    """Perform semantic search using embeddings."""
+    if not EMBEDDINGS_AVAILABLE:
+        raise HTTPException(status_code=503, detail="Embedding service not available")
+    
+    try:
+        trace_id = getattr(request.state, 'trace_id', str(uuid.uuid4()))
+        service = get_embedding_service()
+        
+        # Parse model if provided
+        model = None
+        if request.model:
+            try:
+                model = EmbeddingModel(request.model)
+            except ValueError:
+                raise HTTPException(status_code=400, detail=f"Invalid model: {request.model}")
+        
+        # Perform search
+        start_time = time.time()
+        results = await asyncio.to_thread(
+            service.search,
+            request.query,
+            request.documents,
+            request.top_k,
+            model
+        )
+        duration_ms = (time.time() - start_time) * 1000
+        
+        # Filter by threshold if provided
+        if request.threshold:
+            results = [(idx, score, doc) for idx, score, doc in results if score >= request.threshold]
+        
+        return {
+            "query": request.query,
+            "results": [
+                {
+                    "index": idx,
+                    "document": doc,
+                    "score": score,
+                    "preview": doc[:200] + "..." if len(doc) > 200 else doc
+                }
+                for idx, score, doc in results
+            ],
+            "latency_ms": duration_ms,
+            "trace_id": trace_id
+        }
+        
+    except Exception as e:
+        logger.error(f"Embedding search failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/embeddings/models")
+async def list_embedding_models():
+    """List available embedding models and their specifications."""
+    if not EMBEDDINGS_AVAILABLE:
+        # Return config-based info even if service unavailable
+        config = get_env_config()
+        return {
+            "primary_model": config.embedding_primary_model,
+            "fallback_models": config.embedding_fallback_models.split(","),
+            "available_models": [],
+            "cache_enabled": config.embedding_cache_enabled,
+            "cache_ttl": config.embedding_cache_ttl,
+            "similarity_threshold": config.embedding_similarity_threshold,
+            "service_available": False
+        }
+    
+    models = []
+    
+    for model in EmbeddingModel:
+        # Extract model info from enum
+        parts = model.value.split("/")
+        provider = parts[0] if len(parts) > 1 else "unknown"
+        model_name = parts[1] if len(parts) > 1 else model.value
+        
+        # Determine context length from model name
+        context_length = 512  # default
+        if "32k" in model.value.lower():
+            context_length = 32768
+        elif "8k" in model.value.lower():
+            context_length = 8192
+        elif "2k" in model.value.lower():
+            context_length = 2048
+        elif "multilingual" in model.value.lower():
+            context_length = 514
+        
+        models.append({
+            "id": model.value,
+            "name": model_name,
+            "provider": provider,
+            "context_length": context_length,
+            "recommended_for": _get_model_recommendation(model)
+        })
+    
+    # Get current config
+    config = get_env_config()
+    
+    return {
+        "primary_model": config.embedding_primary_model,
+        "fallback_models": config.embedding_fallback_models.split(","),
+        "available_models": models,
+        "cache_enabled": config.embedding_cache_enabled,
+        "cache_ttl": config.embedding_cache_ttl,
+        "similarity_threshold": config.embedding_similarity_threshold,
+        "service_available": True
+    }
+
+def _get_model_recommendation(model: EmbeddingModel) -> str:
+    """Get recommendation for when to use a model."""
+    if "32k" in model.value.lower():
+        return "Long documents (up to 32K tokens)"
+    elif "8k" in model.value.lower():
+        return "Medium documents (up to 8K tokens)"
+    elif "2k" in model.value.lower():
+        return "Short documents (up to 2K tokens)"
+    elif "multilingual" in model.value.lower():
+        return "Multi-language support (100+ languages)"
+    elif "large" in model.value.lower():
+        return "High accuracy, slower speed"
+    elif "base" in model.value.lower():
+        return "Balanced accuracy and speed"
+    elif "modernbert" in model.value.lower():
+        return "Modern architecture, good performance"
+    else:
+        return "General purpose"
+
+
+# ============================================
+# Cost Tracking API
+# ============================================
+
+@app.get("/costs/summary")
+@limiter.limit("10/minute")
+async def get_cost_summary(
+    request: Request,
+    days: int = 30,
+    session_id: Optional[str] = None
+):
+    """Get cost summary for a time period."""
+    try:
+        # Get trace ID from request
+        trace_id = getattr(request.state, 'trace_id', str(uuid.uuid4()))
+        
+        # Get cost tracker and calculate summary
+        cost_tracker = get_cost_tracker()
+        
+        from datetime import datetime, timedelta
+        end_time = datetime.now()
+        start_time = end_time - timedelta(days=days)
+        
+        summary = cost_tracker.get_summary(
+            start_time=start_time,
+            end_time=end_time,
+            session_id=session_id
+        )
+        
+        logger.info(f"[{trace_id}] Cost summary requested: {days} days, session: {session_id}")
+        
+        return {
+            "summary": summary.to_dict(),
+            "trace_id": trace_id
+        }
+        
+    except Exception as e:
+        logger.error(f"[{trace_id}] Cost summary error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get cost summary: {str(e)}")
+
+
+@app.get("/costs/daily")
+@limiter.limit("10/minute")
+async def get_daily_costs(
+    request: Request,
+    days: int = 30
+):
+    """Get daily cost breakdown."""
+    try:
+        # Get trace ID from request
+        trace_id = getattr(request.state, 'trace_id', str(uuid.uuid4()))
+        
+        # Get cost tracker and daily costs
+        cost_tracker = get_cost_tracker()
+        daily_costs = cost_tracker.get_daily_costs(days=days)
+        
+        logger.info(f"[{trace_id}] Daily costs requested: {days} days")
+        
+        return {
+            "daily_costs": daily_costs,
+            "days": days,
+            "trace_id": trace_id
+        }
+        
+    except Exception as e:
+        logger.error(f"[{trace_id}] Daily costs error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get daily costs: {str(e)}")
+
+
+@app.get("/costs/models")
+@limiter.limit("10/minute")
+async def get_top_models(
+    request: Request,
+    limit: int = 10
+):
+    """Get top models by cost."""
+    try:
+        # Get trace ID from request
+        trace_id = getattr(request.state, 'trace_id', str(uuid.uuid4()))
+        
+        # Get cost tracker and top models
+        cost_tracker = get_cost_tracker()
+        top_models = cost_tracker.get_top_models(limit=limit)
+        
+        logger.info(f"[{trace_id}] Top models requested: limit {limit}")
+        
+        return {
+            "top_models": top_models,
+            "limit": limit,
+            "trace_id": trace_id
+        }
+        
+    except Exception as e:
+        logger.error(f"[{trace_id}] Top models error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get top models: {str(e)}")
+
+
+@app.post("/costs/record")
+@limiter.limit("100/minute")
+async def record_cost_event(
+    request: Request,
+    event_data: Dict[str, Any]
+):
+    """Record a cost event manually (for external integrations)."""
+    try:
+        # Get trace ID from request
+        trace_id = getattr(request.state, 'trace_id', str(uuid.uuid4()))
+        
+        # Get cost tracker
+        cost_tracker = get_cost_tracker()
+        
+        # Extract required fields
+        event_type = event_data.get("event_type", "llm_completion")
+        model = event_data.get("model", "unknown")
+        provider = event_data.get("provider", "unknown")
+        
+        if event_type == "llm_completion":
+            event = cost_tracker.record_llm_completion(
+                model=model,
+                prompt_tokens=event_data.get("prompt_tokens", 0),
+                completion_tokens=event_data.get("completion_tokens", 0),
+                trace_id=trace_id,
+                session_id=event_data.get("session_id"),
+                provider=provider,
+                endpoint=event_data.get("endpoint"),
+                metadata=event_data.get("metadata", {})
+            )
+        elif event_type == "embedding":
+            event = cost_tracker.record_embedding(
+                model=model,
+                tokens=event_data.get("tokens", 0),
+                trace_id=trace_id,
+                session_id=event_data.get("session_id"),
+                provider=provider,
+                endpoint=event_data.get("endpoint"),
+                metadata=event_data.get("metadata", {})
+            )
+        else:
+            raise HTTPException(status_code=400, detail=f"Unsupported event type: {event_type}")
+        
+        logger.info(f"[{trace_id}] Cost event recorded: {event_type} - {model}")
+        
+        return {
+            "event_id": event.id,
+            "cost_usd": event.cost_usd,
+            "total_tokens": event.total_tokens,
+            "trace_id": trace_id
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"[{trace_id}] Record cost event error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to record cost event: {str(e)}")
+
+
+# ============================================
+# Health Aggregation API
+# ============================================
+
+@app.get("/health/aggregate")
+@limiter.limit("10/minute")
+async def get_aggregated_health(request: Request):
+    """Get aggregated health status from all services."""
+    try:
+        # Get trace ID from request
+        trace_id = getattr(request.state, 'trace_id', str(uuid.uuid4()))
+        
+        # Get health aggregator and run checks
+        health_aggregator = get_health_aggregator()
+        aggregated_health = await health_aggregator.aggregate_health()
+        
+        logger.info(f"[{trace_id}] Aggregated health check: {aggregated_health.overall_status.value}")
+        
+        return {
+            "health": aggregated_health.to_dict(),
+            "trace_id": trace_id
+        }
+        
+    except Exception as e:
+        logger.error(f"[{trace_id}] Health aggregation error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get aggregated health: {str(e)}")
+
+
+@app.get("/health/status")
+@limiter.limit("30/minute")
+async def get_health_status(request: Request):
+    """Get cached health status (fast endpoint)."""
+    try:
+        # Get trace ID from request
+        trace_id = getattr(request.state, 'trace_id', str(uuid.uuid4()))
+        
+        # Get health aggregator and cached results
+        health_aggregator = get_health_aggregator()
+        cached_health = health_aggregator.get_last_health_check()
+        
+        if cached_health:
+            logger.debug(f"[{trace_id}] Cached health status: {cached_health.overall_status.value}")
+            
+            return {
+                "health": cached_health.to_dict(),
+                "cached": True,
+                "trace_id": trace_id
+            }
+        else:
+            # No cached data, run fresh check
+            aggregated_health = await health_aggregator.aggregate_health()
+            
+            logger.info(f"[{trace_id}] Fresh health status: {aggregated_health.overall_status.value}")
+            
+            return {
+                "health": aggregated_health.to_dict(),
+                "cached": False,
+                "trace_id": trace_id
+            }
+        
+    except Exception as e:
+        logger.error(f"[{trace_id}] Health status error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get health status: {str(e)}")
+
+
+@app.get("/health/services")
+@limiter.limit("10/minute")
+async def get_services_health(request: Request):
+    """Get health status for individual services."""
+    try:
+        # Get trace ID from request
+        trace_id = getattr(request.state, 'trace_id', str(uuid.uuid4()))
+        
+        # Get health aggregator and run checks
+        health_aggregator = get_health_aggregator()
+        aggregated_health = await health_aggregator.aggregate_health()
+        
+        # Extract just the services data
+        services_health = {
+            "services": [s.to_dict() for s in aggregated_health.services],
+            "summary": {
+                "total": aggregated_health.total_services,
+                "healthy": aggregated_health.healthy_count,
+                "degraded": aggregated_health.degraded_count,
+                "unhealthy": aggregated_health.unhealthy_count,
+                "unknown": aggregated_health.unknown_count
+            },
+            "check_timestamp": aggregated_health.check_timestamp.isoformat(),
+            "response_time_ms": aggregated_health.response_time_ms
+        }
+        
+        logger.info(f"[{trace_id}] Services health check completed")
+        
+        return {
+            **services_health,
+            "trace_id": trace_id
+        }
+        
+    except Exception as e:
+        logger.error(f"[{trace_id}] Services health error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get services health: {str(e)}")
+
 
 # ============================================
 # Team & Workflow Execution

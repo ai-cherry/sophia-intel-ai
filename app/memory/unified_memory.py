@@ -1,11 +1,15 @@
-from typing import Dict, Any, List, Optional
 import asyncio
 import aioredis
 from datetime import datetime
 import logging
+from typing import Dict, Any, List, Optional
 from uuid import uuid4
+import re
 
 logger = logging.getLogger(__name__)
+
+# Singleton memory store instance
+_memory_store = None
 
 class UnifiedMemoryStore:
     """Redis-backed unified memory storage with proper async implementation"""
@@ -147,4 +151,35 @@ class UnifiedMemoryStore:
         if self.redis:
             self.redis.close()
             await self.redis.wait_closed()
-            logger.info("(redis closed successfully")
+            logger.info("Redis connection closed")
+
+# Module-level async wrappers for API compatibility
+def get_memory_store():
+    """Return a singleton UnifiedMemoryStore instance"""
+    global _memory_store
+    if _memory_store is None:
+        # Initialize with default config
+        _memory_store = UnifiedMemoryStore({
+            "redis_url": "redis://localhost:6379",
+            "min_pool_size": 5,
+            "max_pool_size": 20
+        })
+        # Async initialize
+        asyncio.create_task(_memory_store.initialize())
+    return _memory_store
+
+async def store_memory(content: str, metadata: Dict[str, Any]):
+    store = await get_memory_store()
+    return await store.store_memory(content, metadata)
+
+async def search_memory(query: str, filters: Dict[str, Any] = None, top_k: int = 10):
+    store = await get_memory_store()
+    return await store.search_memory(query, filters)
+
+async def update_memory(memory_id: str, content: str, metadata: Dict[str, Any]):
+    store = await get_memory_store()
+    return await store.update_memory(memory_id, content, metadata)
+
+async def delete_memory(memory_id: str):
+    store = await get_memory_store()
+    return await store.delete_memory(memory_id)

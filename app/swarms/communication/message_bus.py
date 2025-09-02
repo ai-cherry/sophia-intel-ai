@@ -4,13 +4,16 @@ import asyncio
 import json
 import logging
 import time
-from pydantic import BaseModel
+from typing import Any
+from pydantic import BaseModel, Field
 from opentelemetry import trace
 from opentelemetry.trace import SpanKind
 from uuid import uuid4
 from datetime import datetime, timezone
 
 logger = logging.getLogger(__name__)
+
+import enum
 
 class MessageType(str, enum.Enum):
     """Standardized message types for swarm communication"""
@@ -24,7 +27,7 @@ class MessageType(str, enum.Enum):
 
 class SwarmMessage(BaseModel):
     """Structured message for agent communication"""
-    id: str = field(default_factory=lambda: f"msg:{uuid4().hex}")
+    id: str = Field(default_factory=lambda: f"msg:{uuid4().hex}")
     sender_agent_id: str
     receiver_agent_id: Optional[str] = None
     message_type: MessageType

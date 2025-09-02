@@ -12,8 +12,8 @@ Transform the current mock UI into a living, breathing command center that shows
 ## 📍 CURRENT SITUATION
 
 ### What Exists:
-- Basic swarm UI at localhost:3000/swarm-ui.html
-- Mock responses and fake activity
+- Modern React dashboard at localhost:3000/dashboard
+- Real-time WebSocket connections
 - Static metrics that don't update
 
 ### What Needs to be REAL:
@@ -26,7 +26,7 @@ Transform the current mock UI into a living, breathing command center that shows
 
 ## 🛠️ YOUR IMPLEMENTATION TASKS
 
-### 1. Enhance `agent-ui/public/swarm-ui.html`
+### 1. Enhance Modern React Dashboard Components
 
 Add WebSocket connection for REAL updates:
 
@@ -77,7 +77,7 @@ class SwarmWebSocket {
 Add Three.js network visualization:
 
 ```html
-<!-- Add to swarm-ui.html -->
+<!-- Add to React dashboard component -->
 <div id="swarm-3d-viz" style="width: 100%; height: 400px;"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -450,7 +450,7 @@ class SystemStatus {
 
 ## 🚀 INTEGRATION STEPS
 
-1. **Update swarm-ui.html** with all these enhancements
+1. **Update React dashboard components** with all these enhancements
 2. **Add Chart.js** for metrics visualization
 3. **Add Three.js** for 3D swarm network
 4. **Connect WebSocket** to real backend

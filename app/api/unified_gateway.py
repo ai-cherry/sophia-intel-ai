@@ -128,14 +128,17 @@ async def websocket_swarm_endpoint(websocket: WebSocket):
         pass
 
 # Initialize bus for websockets (to be run on startup)
-@router.on_event("startup")
-async def startup_event():
-    bus = MessageBus()
-    await bus.initialize()
-    app.state.bus = bus
+# Note: These handlers should be registered at the app level, not router level
+# The app object is not available here, so we'll comment these out
+# and handle initialization in the main app file if needed
 
-# Cleanup bus on shutdown
-@router.on_event("shutdown")
-async def shutdown_event():
-    if hasattr(app.state, "bus") and app.state.bus:
-        await app.state.bus.close()  # Make sure this exists in your app
+# @router.on_event("startup")
+# async def startup_event():
+#     bus = MessageBus()
+#     await bus.initialize()
+#     app.state.bus = bus
+
+# @router.on_event("shutdown")
+# async def shutdown_event():
+#     if hasattr(app.state, "bus") and app.state.bus:
+#         await app.state.bus.close()

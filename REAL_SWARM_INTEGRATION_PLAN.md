@@ -10,7 +10,7 @@
 ### What We Have (REAL):
 - ✅ MCP Server running on port 8003
 - ✅ Working API endpoints with CORS
-- ✅ Badass UI at localhost:3000/swarm-ui.html
+- ✅ Modern React Dashboard at localhost:3000/dashboard
 - ✅ Streaming infrastructure (SSE)
 - ✅ Message routing system
 - ✅ Port 8000 available for real Python backend
@@ -147,7 +147,7 @@ Make it REAL. No mocks. Actual AI responses.
 The backend is getting real AI integration. You need to upgrade the UI to show REAL swarm activity.
 
 CONTEXT:
-- Current UI at localhost:3000/swarm-ui.html
+- Modern React Dashboard at localhost:3000/dashboard
 - Backend will have WebSocket at ws://localhost:8000/ws/swarm
 - Need to visualize actual AI coordination
 
@@ -165,7 +165,7 @@ YOUR TASKS:
    - Task queue visualization
    - Real performance metrics
 
-5. Make the existing swarm-ui.html connect to:
+5. Make the React dashboard connect to:
    - WebSocket for live updates
    - Show actual agent states
    - Display real coordination

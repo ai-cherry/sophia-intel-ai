@@ -33,6 +33,10 @@ from app.api.health import router as health_router
 from app.api.auth import router as auth_router
 from app.api.portkey_router_endpoints import router as portkey_router
 from app.api.resilient_websocket_endpoints import router as resilient_ws_router
+from app.api.infrastructure_router import router as infrastructure_router
+from app.ui.unified.chat_orchestrator import router as orchestrator_router
+from app.api.routers.teams import router as teams_router
+from app.api.routers.memory import router as memory_api_router
 
 app = FastAPI(
     title="Sophia Intel AI API",
@@ -52,6 +56,12 @@ app.include_router(graph_router, prefix="/graph")
 app.include_router(auth_router, prefix="/auth")
 app.include_router(portkey_router, prefix="/api/portkey-routing")
 app.include_router(resilient_ws_router, prefix="/api/ws")
+app.include_router(infrastructure_router, prefix="/api/infrastructure")
+
+# New unified orchestrator routers
+app.include_router(orchestrator_router, prefix="/orchestrator")
+app.include_router(teams_router, prefix="/api/teams")
+app.include_router(memory_api_router, prefix="/api/memory-v2")
 
 # Add middleware
 app.add_middleware(

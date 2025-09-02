@@ -13,7 +13,7 @@ Transform our mock swarm system into a REAL AI-powered backend that generates ac
 
 ### What's Working:
 - MCP server on port 8003 (but with mock responses)
-- UI at localhost:3000/swarm-ui.html 
+- UI at localhost:3000/dashboard 
 - Streaming infrastructure
 - API endpoints structure
 

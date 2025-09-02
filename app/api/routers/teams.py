@@ -312,3 +312,112 @@ async def run_team_compat(
 ) -> TeamExecutionResponse:
     """Agno-compatible alias for team execution."""
     return await run_team(request, background_tasks, orchestrator, state)
+
+# ============================================
+# Dynamic Configuration Endpoints
+# ============================================
+
+class TeamConfigUpdate(BaseModel):
+    """Model for team configuration updates."""
+    model: Optional[str] = Field(None, description="LLM model to use")
+    persona: Optional[str] = Field(None, description="Team persona/personality")
+    instructions: Optional[str] = Field(None, description="Custom instructions")
+    temperature: Optional[float] = Field(None, ge=0.0, le=2.0, description="Model temperature")
+    max_tokens: Optional[int] = Field(None, ge=1, le=100000, description="Max tokens")
+    members: Optional[List[str]] = Field(None, description="Team member roles")
+    
+@router.patch("/{team_id}/config", response_model=TeamInfo, summary="Update team configuration")
+async def update_team_config(
+    team_id: str,
+    config: TeamConfigUpdate,
+    orchestrator = Depends(get_orchestrator),
+    state = Depends(get_state)
+) -> TeamInfo:
+    """
+    Update configuration for a specific team.
+    
+    Args:
+        team_id: Team identifier
+        config: Configuration updates
+        
+    Returns:
+        TeamInfo: Updated team details
+        
+    Raises:
+        HTTPException: If update fails
+    """
+    try:
+        # Verify team exists
+        team = await get_team(team_id, state)
+        
+        # Apply configuration updates
+        updates = {}
+        if config.model:
+            updates["model"] = config.model
+        if config.persona:
+            updates["persona"] = config.persona
+        if config.instructions:
+            updates["instructions"] = config.instructions
+        if config.temperature is not None:
+            updates["temperature"] = config.temperature
+        if config.max_tokens:
+            updates["max_tokens"] = config.max_tokens
+        if config.members:
+            updates["members"] = config.members
+            
+        # Update via orchestrator
+        await orchestrator.update_team_config(team_id, updates)
+        
+        # Return updated team info
+        updated_team = await get_team(team_id, state)
+        return updated_team
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to update team config: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to update configuration: {str(e)}"
+        )
+
+@router.get("/{team_id}/config", summary="Get team configuration")
+async def get_team_config(
+    team_id: str,
+    orchestrator = Depends(get_orchestrator),
+    state = Depends(get_state)
+) -> Dict[str, Any]:
+    """
+    Get current configuration for a team.
+    
+    Args:
+        team_id: Team identifier
+        
+    Returns:
+        Dict: Team configuration
+        
+    Raises:
+        HTTPException: If retrieval fails
+    """
+    try:
+        # Verify team exists
+        team = await get_team(team_id, state)
+        
+        # Get configuration from orchestrator
+        config = await orchestrator.get_team_config(team_id)
+        
+        return {
+            "team_id": team_id,
+            "name": team.name,
+            "configuration": config,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get team config: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to retrieve configuration: {str(e)}"
+        )

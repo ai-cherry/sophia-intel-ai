@@ -64,7 +64,7 @@ npm exec ts-node --esm app/mcp/code_review_server/index.ts
 - Embeddings: POST http://localhost:8005/mcp/embeddings
 - WebSocket: ws://localhost:8005/ws/bus
 - UI: http://localhost:3000
-- Swarm UI: http://localhost:3000/swarm-ui.html
+- Dashboard: http://localhost:3000/dashboard
 
 ### NEVER USE THESE PORTS:
 - 3000 - Next.js UI

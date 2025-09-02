@@ -9,23 +9,45 @@ Following ADR-006: Configuration Management Standardization
 - Proper secret management and validation
 """
 
-from fastapi import FastAPI, HTTPException, Request, Form
+from fastapi import FastAPI, HTTPException, Request, Form, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, JSONResponse
 from pydantic import BaseModel, Field
-from typing import List, Dict, Any, Optional, AsyncGenerator
+from typing import List, Dict, Any, Optional, AsyncGenerator, Union
 import asyncio
 import json
 import os
+import time
+import uuid
 from datetime import datetime
 from contextlib import asynccontextmanager
 import logging
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 # Import enhanced configuration system following ADR-006
 from app.config.env_loader import get_env_config, print_env_status, get_service_manifest, check_service_health
 
 # Import OpenTelemetry configuration
 from app.observability.otel_config import configure_opentelemetry, trace_llm_call
+
+# Import embedding service
+try:
+    from app.embeddings.together_embeddings import (
+        TogetherEmbeddingService, 
+        EmbeddingConfig,
+        EmbeddingModel,
+        get_embedding_service
+    )
+    EMBEDDINGS_AVAILABLE = True
+except ImportError:
+    EMBEDDINGS_AVAILABLE = False
+    logger.warning("Embedding service not available")
+
+# Import enhanced memory and timeline
+from app.orchestration.execution_timeline import ExecutionTimeline, TimelineEvent, EventType
+from app.memory.enhanced_memory import EnhancedMemorySystem, SharedContext
 
 # Import our enhanced systems
 from app.api.health import router as health_router
@@ -332,6 +354,24 @@ async def lifespan(app: FastAPI):
     await state.cleanup()
 
 # ============================================
+# Rate Limiting Setup
+# ============================================
+def get_api_key(request: Request) -> str:
+    """Extract API key from request for rate limiting."""
+    # Try Authorization header first
+    auth_header = request.headers.get("Authorization", "")
+    if auth_header.startswith("Bearer "):
+        return auth_header[7:]
+    # Try X-API-Key header
+    api_key = request.headers.get("X-API-Key", "")
+    if api_key:
+        return api_key
+    # Fall back to IP address
+    return get_remote_address(request)
+
+limiter = Limiter(key_func=get_api_key)
+
+# ============================================
 # FastAPI App
 # ============================================
 
@@ -341,6 +381,10 @@ app = FastAPI(
     version="2.0.0",
     lifespan=lifespan
 )
+
+# Add rate limit error handler
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Include routers
 app.include_router(swarms_router.router, prefix="/api", tags=["swarms"])
@@ -403,6 +447,27 @@ class SearchRequest(BaseModel):
     use_bm25: bool = True
     use_reranker: bool = True
     include_graph: bool = False
+
+class EmbeddingRequest(BaseModel):
+    """Single or batch embedding request."""
+    texts: Union[str, List[str]]
+    model: Optional[str] = None  # Use default if not specified
+    use_cache: bool = True
+
+class BatchEmbeddingRequest(BaseModel):
+    """Batch embedding request with job tracking."""
+    texts: List[str]
+    model: Optional[str] = None
+    use_cache: bool = True
+    webhook_url: Optional[str] = None  # For async completion notification
+
+class EmbeddingSearchRequest(BaseModel):
+    """Semantic search using embeddings."""
+    query: str
+    documents: List[str]
+    top_k: int = 5
+    model: Optional[str] = None
+    threshold: Optional[float] = None  # Minimum similarity score
 
 def _extract_solution(payload: dict) -> str:
     try:

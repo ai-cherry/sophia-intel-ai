@@ -1,18 +1,19 @@
 {
-  "timestamp": "2025-09-01T17:07:08.808270",
-  "test_duration_seconds": 1.1828129291534424,
-  "overall_success_rate": 77.77777777777779,
-  "health_grade": "B (Fair)",
+  "timestamp": "2025-09-01T17:38:50.175158",
+  "test_duration_seconds": 1.2231109142303467,
+  "overall_success_rate": 89.47368421052632,
+  "health_grade": "A (Good)",
   "component_scores": {
-    "infrastructure": 4,
+    "infrastructure": 5,
     "api_endpoints": 6,
     "swarm_execution": 3,
     "performance": 1,
-    "mcp_integration": 0
+    "mcp_integration": 2
   },
   "detailed_results": {
     "infrastructure": {
       "api server": true,
+      "agent ui": true,
       "weaviate": true,
       "redis": true,
       "postgresql": true,
@@ -21,7 +22,7 @@
     "api_endpoints": {
       "/healthz": {
         "status": 200,
-        "response_time_ms": 2.1,
+        "response_time_ms": 1.58,
         "content_type": "application/json",
         "data_keys": [
           "status",
@@ -31,7 +32,7 @@
       },
       "/api/metrics": {
         "status": 200,
-        "response_time_ms": 102.96,
+        "response_time_ms": 104.47,
         "content_type": "application/json",
         "data_keys": [
           "status",
@@ -41,32 +42,32 @@
       },
       "/agents": {
         "status": 200,
-        "response_time_ms": 0.96,
+        "response_time_ms": 0.45,
         "content_type": "application/json",
         "data_keys": 4
       },
       "/workflows": {
         "status": 200,
-        "response_time_ms": 0.3,
+        "response_time_ms": 0.35,
         "content_type": "application/json",
         "data_keys": 2
       },
       "/teams": {
         "status": 200,
-        "response_time_ms": 0.23,
+        "response_time_ms": 0.27,
         "content_type": "application/json",
         "data_keys": 4
       },
       "/docs": {
         "status": 200,
-        "response_time_ms": 0.22,
+        "response_time_ms": 0.24,
         "content_type": "text/html"
       }
     },
     "swarm_execution": {
       "strategic": {
         "status": 200,
-        "response_time_ms": 1.6,
+        "response_time_ms": 1.29,
         "response_length": 316
       },
       "technical": {
@@ -84,90 +85,92 @@
       "concurrent_requests": 20,
       "successful_requests": 20,
       "success_rate": 100.0,
-      "avg_response_time_ms": 3.18,
-      "max_response_time_ms": 3.75,
-      "requests_per_second": 5201.59,
-      "total_test_time_ms": 3.84
+      "avg_response_time_ms": 3.96,
+      "max_response_time_ms": 5.45,
+      "requests_per_second": 3603.66,
+      "total_test_time_ms": 5.55
     },
     "mcp_integration": {
       "mcp_server_health": {
-        "error": "Cannot connect to host localhost:8004 ssl:default [Multiple exceptions: [Errno 61] Connect call failed ('::1', 8004, 0, 0), [Errno 61] Connect call failed ('127.0.0.1', 8004)]"
+        "status": 200,
+        "available": true
       },
       "mcp_tools_list": {
-        "error": "Cannot connect to host localhost:8004 ssl:default [Multiple exceptions: [Errno 61] Connect call failed ('127.0.0.1', 8004), [Errno 61] Connect call failed ('::1', 8004, 0, 0)]"
+        "status": 200,
+        "available": true
       },
       "api_integration": true
     },
     "deployment_health": {
       "system": {
-        "cpu_percent": 20.5,
+        "cpu_percent": 20.8,
         "memory_total_gb": 48.0,
-        "memory_used_gb": 15.77,
-        "memory_percent": 76.3,
+        "memory_used_gb": 16.24,
+        "memory_percent": 71.4,
         "disk_total_gb": 926.35,
         "disk_used_gb": 13.73,
         "disk_percent": 1.482460218414743
       },
       "processes": [
         {
+          "cpu_percent": null,
           "name": "com.docker.vmnet",
           "pid": 547,
-          "cpu_percent": null,
           "memory_percent": null
         },
         {
+          "cpu_percent": 0.0,
           "name": "Python",
           "pid": 13293,
-          "cpu_percent": 0.0,
-          "memory_percent": 0.013128916422526041
+          "memory_percent": 0.01316070556640625
         },
         {
+          "cpu_percent": 0.0,
           "name": "Python",
           "pid": 20162,
-          "cpu_percent": 0.0,
           "memory_percent": 0.012143452962239582
         },
         {
+          "cpu_percent": 0.0,
           "name": "Python",
           "pid": 27408,
-          "cpu_percent": 0.0,
-          "memory_percent": 0.013669331868489584
+          "memory_percent": 0.013701121012369791
         },
         {
+          "cpu_percent": 0.0,
           "name": "Python",
           "pid": 30995,
-          "cpu_percent": 0.0,
           "memory_percent": 0.012111663818359375
         },
         {
+          "cpu_percent": 0.0,
           "name": "Python",
           "pid": 38850,
-          "cpu_percent": 0.0,
-          "memory_percent": 0.033601125081380204
+          "memory_percent": 0.03350575764973958
         },
         {
+          "cpu_percent": 0.0,
           "name": "Python",
           "pid": 43154,
-          "cpu_percent": 0.0,
-          "memory_percent": 0.012461344401041666
+          "memory_percent": 0.012493133544921875
         },
         {
-          "name": "Python",
-          "pid": 44290,
           "cpu_percent": 0.0,
-          "memory_percent": 0.10251998901367188
-        },
-        {
           "name": "docker-compose",
           "pid": 48435,
-          "cpu_percent": 0.0,
-          "memory_percent": 0.06736119588216147
+          "memory_percent": 0.06812413533528647
         },
         {
+          "cpu_percent": 0.0,
           "name": "docker-buildx",
           "pid": 48445,
+          "memory_percent": 0.167083740234375
+        },
+        {
           "cpu_percent": 0.0,
-          "memory_percent": 0.16393661499023438
+          "name": "Python",
+          "pid": 63127,
+          "memory_percent": 0.04673004150390625
         }
       ]
     }

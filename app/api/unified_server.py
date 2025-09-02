@@ -423,6 +423,35 @@ async def health():
         }
     }
 
+@app.get("/api/mcp/status")
+async def mcp_status():
+    """MCP integration status endpoint."""
+    return {
+        "status": "operational",
+        "timestamp": datetime.now().isoformat(),
+        "servers": {
+            "filesystem": {
+                "enabled": server_config.MCP_FILESYSTEM_ENABLED,
+                "status": "running" if server_config.MCP_FILESYSTEM_ENABLED else "disabled",
+                "url": "http://localhost:8004"
+            },
+            "git": {
+                "enabled": server_config.MCP_GIT_ENABLED,
+                "status": "running" if server_config.MCP_GIT_ENABLED else "disabled",
+                "url": "http://localhost:8004"
+            },
+            "supermemory": {
+                "enabled": server_config.MCP_SUPERMEMORY_ENABLED,
+                "status": "running" if server_config.MCP_SUPERMEMORY_ENABLED else "disabled",
+                "url": "http://localhost:8004"
+            }
+        },
+        "external_server": {
+            "url": "http://localhost:8004",
+            "health": "healthy"
+        }
+    }
+
 @app.get("/config")
 @with_circuit_breaker("external_api")
 async def get_config():

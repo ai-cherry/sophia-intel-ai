@@ -333,7 +333,7 @@ main() {
     
     log "HEADER" "🔧 PRE-DEPLOYMENT CHECKS"
     check_dependencies
-    validate_apis
+    validate_configuration
     
     log "HEADER" "🧹 CLEANUP"
     cleanup_previous

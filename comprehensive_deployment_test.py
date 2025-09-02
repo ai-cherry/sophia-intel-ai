@@ -66,6 +66,7 @@ class ComprehensiveDeploymentTest:
         # Test port availability
         ports_to_check = [
             (8003, "API Server"),
+            (3000, "Agent UI"),
             (8080, "Weaviate"),
             (6379, "Redis"),
             (5432, "PostgreSQL")
@@ -76,6 +77,9 @@ class ComprehensiveDeploymentTest:
                 async with aiohttp.ClientSession() as session:
                     if port == 8003:
                         async with session.get(f"http://localhost:{port}/healthz", timeout=5) as resp:
+                            success = resp.status == 200
+                    elif port == 3000:
+                        async with session.get(f"http://localhost:{port}", timeout=5) as resp:
                             success = resp.status == 200
                     elif port == 8080:
                         async with session.get(f"http://localhost:{port}/v1/.well-known/ready", timeout=5) as resp:

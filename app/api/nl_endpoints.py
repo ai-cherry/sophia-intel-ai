@@ -88,24 +88,36 @@ class NLProcessRequest(BaseModel):
     text: str = Field(..., description="Natural language command text")
     context: Optional[Dict[str, Any]] = Field(default={}, description="Optional context for processing")
     session_id: Optional[str] = Field(default=None, description="Session ID for tracking")
+    api_key: Optional[str] = Field(default=None, description="API key for authentication")
 
 
 class StandardResponse(BaseModel):
-    """Standardized response format for all endpoints"""
+    """Standardized response format for all endpoints - ENHANCED FOR PRODUCTION"""
     success: bool
+    message: str = Field(..., description="Human-readable response message")
+    response: str = Field("", description="Detailed response text")
     intent: Optional[str] = None
-    response: str
-    data: Optional[Dict[str, Any]] = None
+    data: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Structured data payload")
+    metadata: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Additional metadata")
     workflow_id: Optional[str] = None
     session_id: Optional[str] = None
+    user_id: Optional[str] = None
     timestamp: str = Field(default_factory=lambda: datetime.now().isoformat())
     execution_time_ms: Optional[float] = None
+    rate_limited: bool = Field(False, description="Whether this request was rate limited")
     error: Optional[str] = None
 
+    def __init__(self, **data):
+        super().__init__(**data)
+        # Ensure message is set if not provided
+        if not self.message and self.response:
+            self.message = self.response[:100] + "..." if len(self.response) > 100 else self.response
+
 class NLProcessResponse(StandardResponse):
-    """Response model for NL processing"""
+    """Enhanced response model for NL processing"""
     entities: Optional[Dict[str, Any]] = None
     confidence: Optional[float] = None
+    security: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Security validation info")
 
 
 class WorkflowTriggerRequest(BaseModel):
@@ -151,8 +163,14 @@ async def process_natural_language(
     start_time = time.time()
     session_id = request.session_id or str(uuid.uuid4())
     
-    # Log incoming request
-    logger.info(f"Processing NL request - Session: {session_id[:8]}, Text: '{request.text}'")
+    # Enhanced logging with comprehensive metadata
+    client_ip = req.client.host if req.client else "unknown"
+    user_agent = req.headers.get("user-agent", "unknown")
+
+    logger.info(f"🔄 NL REQUEST - Session: {session_id[:8]}, IP: {client_ip}")
+    logger.info(f"📝 Input: '{request.text[:100]}{'...' if len(request.text) > 100 else ''}'")
+    logger.debug(f"🌐 User-Agent: {user_agent}")
+    logger.debug(f"📋 Context size: {len(request.context)} | API Key: {bool(request.api_key)}")
     
     # Use SmartCommandDispatcher if available
     if smart_dispatcher:

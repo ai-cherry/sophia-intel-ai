@@ -1,34 +1,36 @@
-from fastapi import FastAPI
+import os
+import logging
+import asyncio
+from datetime import datetime
+from typing import List, Dict, Any, Optional
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
+
+# Setup logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Initialize global services
+from app.api.portkey_loadbalance_config import initialize_portkey_balancer
+from app.swarms.communication.message_bus import MessageBus
+from app.api.openrouter_gateway import OpenRouterGateway
+
+portkey_balancer = None
+message_bus_instance = MessageBus()
+openrouter_gateway = OpenRouterGateway()
+
 from app.api.embedding_endpoints import router as embedding_router
 from app.api.memory.memory_endpoints import router as memory_router
 from app.api.repository.repo_service import router as repo_router
 from app.api.cost_dashboard import router as cost_dashboard_router
 from app.api.hub.hub_controller import router as hub_router
-from app.api.openrouter_gateway import router as openrouter_router
+# from app.api.openrouter_gateway import router as openrouter_router  # No router exported
 from app.api.graph_endpoints import router as graph_router
 from app.api.unified_gateway import router as unified_gateway_router
 from app.api.health import router as health_router
-from app.api.metrics import router as metrics_router
-from app.api.models import router as models_router
-from app.api.chat import router as chat_router
-from app.api.swarm import router as swarm_router
-from app.api.websocket import router as websocket_router
-from app.api.mcp import router as mcp_router
-from app.api.sse import router as sse_router
 from app.api.auth import router as auth_router
-from app.api.admin import router as admin_router
-from app.api.debug import router as debug_router
-from app.api.monitoring import router as monitoring_router
-from app.api.analytics import router as analytics_router
-from app.api.security import router as security_router
-from app.api.config import router as config_router
-from app.api.status import router as status_router
-from app.api.observability import router as observability_router
-from app.api.tracing import router as tracing_router
-from app.api.indexing import router as indexing_router
-from app.api.quality import router as quality_router
-from app.api.error import router as error_router
 from app.api.portkey_router_endpoints import router as portkey_router
 from app.api.resilient_websocket_endpoints import router as resilient_ws_router
 
@@ -44,34 +46,12 @@ app.include_router(memory_router, prefix="/api/memory")
 app.include_router(repo_router, prefix="/api/repo")
 app.include_router(cost_dashboard_router, prefix="/costs")
 app.include_router(hub_router, prefix="/hub")
-app.include_router(openrouter_router, prefix="/openrouter")
 app.include_router(unified_gateway_router, prefix="/api")
-app.include_router(unified_server_router, prefix="/api")
 app.include_router(health_router, prefix="/health")
-app.include_router(metrics_router, prefix="/metrics")
-app.include_router(models_router, prefix="/models")
-app.include_router(chat_router, prefix="/chat")
-app.include_router(swarm_router, prefix="/swarm")
-app.include_router(websocket_router, prefix="/ws")
-app.include_router(mcp_router, prefix="/mcp")
-app.include_router(sse_router, prefix="/sse")
-app.include_router(auth_router, prefix="/auth")
-app.include_router(admin_router, prefix="/admin")
-app.include_router(debug_router, prefix="/debug")
-app.include_router(monitoring_router, prefix="/monitoring")
-app.include_router(analytics_router, prefix="/analytics")
-app.include_router(security_router, prefix="/security")
-app.include_router(config_router, prefix="/config")
-app.include_router(status_router, prefix="/status")
-app.include_router(observability_router, prefix="/observability")
-app.include_router(tracing_router, prefix="/tracing")
-app.include_router(indexing_router, prefix="/indexing")
-app.include_router(quality_router, prefix="/quality")
-app.include_router(error_router, prefix="/error")
-app.include_router(metrics_router, prefix="/metrics")
 app.include_router(graph_router, prefix="/graph")
-app.include_router(portkey_router, prefix="/api")
-app.include_router(resilient_ws_router, prefix="/api")
+app.include_router(auth_router, prefix="/auth")
+app.include_router(portkey_router, prefix="/api/portkey-routing")
+app.include_router(resilient_ws_router, prefix="/api/ws")
 
 # Add middleware
 app.add_middleware(
@@ -84,8 +64,13 @@ app.add_middleware(
 
 # Add health check endpoint
 @app.get("/health")
-app.include_router(auth_router, prefix="/auth")
 async def health_check():
+    """Health check endpoint"""
+    return {
+        "status": "healthy",
+        "timestamp": datetime.now().isoformat(),
+        "version": "5.1.0"
+    }
 
 # Request models
 class SwarmRequest(BaseModel):

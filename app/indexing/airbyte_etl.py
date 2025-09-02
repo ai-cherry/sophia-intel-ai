@@ -55,9 +55,9 @@ def process_file(file_path: str):
         for i, chunk in enumerate(chunks):
             # Create metadata for this chunk
             metadata = MemoryMetadata(
-                type="text",
+                type="doc",
                 source=file_path,
-                timestamp=datetime.now(),
+                timestamp=datetime.utcnow(),
                 tags=["etl", "processed"]
             )
             

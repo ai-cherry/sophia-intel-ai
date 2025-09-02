@@ -1,0 +1,1 @@
+"""Weaviate vector database integration"""

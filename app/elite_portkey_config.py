@@ -17,9 +17,10 @@ from app.core.circuit_breaker import (
 # ============================================
 
 PORTKEY_VIRTUAL_KEYS = {
+    "OPENAI": "openai-vk-190a60",              # OpenAI models (GPT-4o, etc.)
     "XAI": "xai-vk-e65d0f",                    # X.AI/Grok models
     "OPENROUTER": "vkj-openrouter-cc4151",     # OpenRouter gateway for all models
-    "TOGETHER": "together-ai-670469",           # Together AI for embeddings/fast inference
+    "TOGETHER": "together-ai-670469",          # Together AI for embeddings/fast inference
 }
 
 # ============================================

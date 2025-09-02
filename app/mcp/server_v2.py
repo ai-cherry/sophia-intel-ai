@@ -3,6 +3,7 @@ Enhanced MCP Server v2
 Production-ready MCP server with full observability and security
 """
 
+import os
 import time
 import uuid
 from typing import Dict, List, Optional, Any
@@ -110,7 +111,14 @@ class EnhancedMCPServer:
         
         # Initialize components
         self.security = MCPSecurityFramework()
-        self.memory_store = UnifiedMemoryStore()
+        
+        # Memory store config
+        memory_config = {
+            'redis_url': os.getenv('REDIS_URL', 'redis://localhost:6379'),
+            'min_pool_size': 5,
+            'max_pool_size': 20
+        }
+        self.memory_store = UnifiedMemoryStore(memory_config)
         self.cost_monitor = None
         self.sessions = {}
         
@@ -560,4 +568,6 @@ app = mcp_server.app
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8004)
+    # Use port 8001 for MCP memory server (8000 has conflicts)
+    port = int(os.getenv("MCP_PORT", "8001"))
+    uvicorn.run(app, host="0.0.0.0", port=port)

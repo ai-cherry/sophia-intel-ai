@@ -69,25 +69,25 @@ class EliteAgentConfig:
     
     # Model selection for different roles - ONLY YOUR PREFERRED MODELS
     MODELS = {
-        'planner': 'anthropic/claude-3.5-sonnet',  # Strategic planning - REAL MODEL
-        'generator': 'openai/gpt-4o',  # Code generation - REAL MODEL
-        'critic': 'anthropic/claude-3.5-sonnet',  # Code review - REAL MODEL
-        'judge': 'openai/gpt-4o',  # Decision making - REAL MODEL
-        'lead': 'anthropic/claude-3.5-sonnet',  # Team coordination - REAL MODEL
+        'planner': 'qwen/qwen3-30b-a3b-thinking-2507',  # Strategic planning - YOUR FAVORITE
+        'generator': 'x-ai/grok-5',  # Code generation - YOUR FAVORITE
+        'critic': 'x-ai/grok-5',  # Code review - YOUR FAVORITE (NO CLAUDE!)
+        'judge': 'qwen/qwen3-30b-a3b-thinking-2507',  # Decision making - YOUR FAVORITE
+        'lead': 'x-ai/grok-5',  # Team coordination - YOUR FAVORITE
         'runner': 'groq/llama-3.2-90b-text-preview',  # Fast execution - REAL MODEL
         
         # Specialized roles for GENESIS-level swarms
-        'architect': 'anthropic/claude-3.5-sonnet',  # System architecture - REAL MODEL
-        'security': 'anthropic/claude-3.5-sonnet',   # Security analysis - REAL MODEL
+        'architect': 'qwen/qwen3-30b-a3b-thinking-2507',  # System architecture - YOUR FAVORITE
+        'security': 'x-ai/grok-5',   # Security analysis - YOUR FAVORITE
         'performance': 'openai/gpt-4o',   # Performance optimization - REAL MODEL
         'testing': 'groq/llama-3.2-90b-text-preview',      # Fast test generation - REAL MODEL
         'debugger': 'openai/gpt-4o',   # Deep debugging - REAL MODEL
         'refactorer': 'openai/gpt-4o', # Code refactoring - REAL MODEL
         
         # Meta-agents for self-modification
-        'spawner': 'anthropic/claude-3.5-sonnet',                  # Agent spawning - REAL MODEL
-        'evolutionist': 'openai/gpt-4o',   # Swarm evolution - REAL MODEL
-        'consciousness': 'anthropic/claude-3.5-sonnet',           # Consciousness simulation - REAL MODEL
+        'spawner': 'x-ai/grok-5',                  # Agent spawning - YOUR FAVORITE
+        'evolutionist': 'qwen/qwen3-30b-a3b-thinking-2507',   # Swarm evolution - YOUR FAVORITE
+        'consciousness': 'x-ai/grok-5',           # Consciousness simulation - YOUR FAVORITE
         
         # Ultra-specialized agents
         'quantum': 'openai/gpt-4o',  # Quantum computing - REAL MODEL
@@ -96,11 +96,11 @@ class EliteAgentConfig:
         'devops': 'openai/gpt-4o',             # DevOps automation - REAL MODEL
         'frontend': 'openai/gpt-4o',           # Frontend specialist - REAL MODEL
         'backend': 'openai/gpt-4o',           # Backend specialist - REAL MODEL
-        'database': 'anthropic/claude-3.5-sonnet',        # Database architect - REAL MODEL
+        'database': 'qwen/qwen3-30b-a3b-thinking-2507',        # Database architect - YOUR FAVORITE
         
         # Speed variants for different workloads
         'fast_coder': 'groq/llama-3.2-90b-text-preview',         # Rapid prototyping - REAL MODEL
-        'heavy_coder': 'anthropic/claude-3.5-sonnet',   # Complex algorithms - REAL MODEL
+        'heavy_coder': 'x-ai/grok-5',   # Complex algorithms - YOUR FAVORITE
         'balanced_coder': 'openai/gpt-4o',    # Balanced approach - REAL MODEL
     }
     

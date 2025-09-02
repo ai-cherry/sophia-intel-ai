@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>🔥 AI SWARM COMMAND CENTER</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Courier New', monospace; 
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a0033 100%);
+            color: #0ff; 
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .header {
+            background: rgba(0,255,255,0.1);
+            border-bottom: 2px solid #0ff;
+            padding: 20px;
+            text-align: center;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 20px #0ff; }
+            50% { box-shadow: 0 0 40px #0ff, 0 0 60px #00f; }
+        }
+        
+        .main-grid {
+            display: grid;
+            grid-template-columns: 300px 1fr 350px;
+            height: calc(100vh - 80px);
+            gap: 20px;
+            padding: 20px;
+        }
+        
+        .panel {
+            background: rgba(0,0,0,0.8);
+            border: 1px solid #0ff;
+            border-radius: 10px;
+            padding: 15px;
+            overflow-y: auto;
+            position: relative;
+        }
+        
+        .panel::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            background: linear-gradient(45deg, #0ff, #f0f, #0ff);
+            border-radius: 10px;
+            opacity: 0.3;
+            z-index: -1;
+            animation: rotate 3s linear infinite;
+        }
+        
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .swarm-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .swarm-card {
+            background: rgba(0,255,255,0.1);
+            border: 1px solid #0ff;
+            padding: 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .swarm-card:hover {
+            background: rgba(0,255,255,0.3);
+            transform: translateX(10px);
+            box-shadow: 0 0 30px #0ff;
+        }
+        
+        .swarm-card.active {
+            background: rgba(255,0,255,0.3);
+            border-color: #f0f;
+        }
+        
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .message {
+            padding: 15px;
+            border-radius: 10px;
+            animation: slideIn 0.5s;
+            max-width: 80%;
+        }
+        
+        @keyframes slideIn {
+            from { 
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .message.user {
+            background: rgba(0,255,0,0.2);
+            border: 1px solid #0f0;
+            align-self: flex-end;
+        }
+        
+        .message.ai {
+            background: rgba(255,0,255,0.2);
+            border: 1px solid #f0f;
+            align-self: flex-start;
+        }
+        
+        .input-area {
+            display: flex;
+            gap: 10px;
+            padding: 20px;
+            background: rgba(0,0,0,0.5);
+            border-top: 1px solid #0ff;
+        }
+        
+        input, button {
+            background: rgba(0,0,0,0.8);
+            border: 1px solid #0ff;
+            color: #0ff;
+            padding: 15px;
+            font-size: 16px;
+            font-family: inherit;
+            border-radius: 5px;
+        }
+        
+        input {
+            flex: 1;
+        }
+        
+        button {
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+        
+        button:hover {
+            background: rgba(0,255,255,0.3);
+            box-shadow: 0 0 20px #0ff;
+            transform: scale(1.05);
+        }
+        
+        .stats-grid {
+            display: grid;
+            gap: 15px;
+        }
+        
+        .stat-card {
+            background: rgba(0,255,255,0.1);
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #0ff;
+        }
+        
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #f0f;
+            text-shadow: 0 0 10px #f0f;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+            animation: blink 1s infinite;
+        }
+        
+        .status-indicator.online {
+            background: #0f0;
+            box-shadow: 0 0 10px #0f0;
+        }
+        
+        .status-indicator.offline {
+            background: #f00;
+            box-shadow: 0 0 10px #f00;
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        
+        h1, h2, h3 {
+            text-shadow: 0 0 20px currentColor;
+        }
+        
+        .loading {
+            display: inline-block;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚀 6-WAY AI SWARM COORDINATION SYSTEM 🚀</h1>
+        <p>Claude × Roo × Cline × Strategic × Coding × Debate</p>
+    </div>
+    
+    <div class="main-grid">
+        <!-- Left Panel: Swarm Selection -->
+        <div class="panel">
+            <h2>⚡ ACTIVE SWARMS</h2>
+            <div class="swarm-list" id="swarmList">
+                <div class="swarm-card active" data-team="strategic-swarm">
+                    <h3>🎯 Strategic Planning</h3>
+                    <p><span class="status-indicator online"></span>3 Agents Online</p>
+                    <small>Cloud deployment optimization</small>
+                </div>
+                <div class="swarm-card" data-team="coding-swarm">
+                    <h3>💻 Coding Swarm</h3>
+                    <p><span class="status-indicator online"></span>5 Agents Online</p>
+                    <small>Code implementation & refactoring</small>
+                </div>
+                <div class="swarm-card" data-team="debate-swarm">
+                    <h3>🤔 Debate Swarm</h3>
+                    <p><span class="status-indicator online"></span>4 Agents Online</p>
+                    <small>Multi-perspective analysis</small>
+                </div>
+            </div>
+            
+            <h2 style="margin-top: 30px;">🔌 CONNECTIONS</h2>
+            <div class="stat-card">
+                <div>MCP Server: <span class="status-indicator online"></span>Connected</div>
+                <div>API: http://localhost:8005</div>
+                <div>Latency: <span class="stat-value" style="font-size: 16px;">2ms</span></div>
+            </div>
+        </div>
+        
+        <!-- Center: Chat Interface -->
+        <div class="panel chat-container">
+            <div class="messages" id="messages">
+                <div class="message ai">
+                    <strong>🤖 System:</strong> Welcome to the AI Swarm Command Center! Select a swarm and send your command.
+                </div>
+            </div>
+            <div class="input-area">
+                <input type="text" id="messageInput" placeholder="Enter your command..." />
+                <button onclick="sendMessage()">⚡ EXECUTE</button>
+                <button onclick="sendStream()">📡 STREAM</button>
+            </div>
+        </div>
+        
+        <!-- Right Panel: Stats & Monitoring -->
+        <div class="panel">
+            <h2>📊 SYSTEM METRICS</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div>Active Agents</div>
+                    <div class="stat-value">12</div>
+                </div>
+                <div class="stat-card">
+                    <div>Messages/sec</div>
+                    <div class="stat-value" id="msgRate">0</div>
+                </div>
+                <div class="stat-card">
+                    <div>Tasks Completed</div>
+                    <div class="stat-value" id="taskCount">0</div>
+                </div>
+                <div class="stat-card">
+                    <div>Coordination Score</div>
+                    <div class="stat-value">98%</div>
+                </div>
+            </div>
+            
+            <h2 style="margin-top: 30px;">🔥 LIVE ACTIVITY</h2>
+            <div id="activity" style="font-size: 12px; opacity: 0.8;">
+                <!-- Activity feed will go here -->
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let selectedTeam = 'strategic-swarm';
+        let taskCount = 0;
+        let messageRate = 0;
+        
+        // Swarm selection
+        document.querySelectorAll('.swarm-card').forEach(card => {
+            card.addEventListener('click', function() {
+                document.querySelectorAll('.swarm-card').forEach(c => c.classList.remove('active'));
+                this.classList.add('active');
+                selectedTeam = this.dataset.team;
+                addMessage('ai', `Switched to ${this.querySelector('h3').textContent}`);
+            });
+        });
+        
+        function addMessage(type, content) {
+            const messagesDiv = document.getElementById('messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            messageDiv.innerHTML = type === 'user' ? 
+                `<strong>👤 You:</strong> ${content}` : 
+                `<strong>🤖 ${selectedTeam}:</strong> ${content}`;
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            
+            // Update metrics
+            messageRate++;
+            document.getElementById('msgRate').textContent = messageRate;
+            setTimeout(() => {
+                messageRate = Math.max(0, messageRate - 1);
+                document.getElementById('msgRate').textContent = messageRate;
+            }, 1000);
+        }
+        
+        function addActivity(text) {
+            const activity = document.getElementById('activity');
+            const line = document.createElement('div');
+            line.textContent = `[${new Date().toLocaleTimeString()}] ${text}`;
+            activity.insertBefore(line, activity.firstChild);
+            if (activity.children.length > 10) {
+                activity.removeChild(activity.lastChild);
+            }
+        }
+        
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value;
+            if (!message) return;
+            
+            addMessage('user', message);
+            input.value = '';
+            
+            addActivity(`Sending to ${selectedTeam}...`);
+            
+            try {
+                const response = await fetch('http://localhost:8005/teams/run', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message: message,
+                        team_id: selectedTeam,
+                        stream: false
+                    })
+                });
+                
+                const data = await response.json();
+                data.responses.forEach(resp => addMessage('ai', resp));
+                
+                taskCount++;
+                document.getElementById('taskCount').textContent = taskCount;
+                addActivity(`Task completed by ${selectedTeam}`);
+                
+            } catch (error) {
+                addMessage('ai', `Error: ${error.message}`);
+                addActivity(`Error: ${error.message}`);
+            }
+        }
+        
+        async function sendStream() {
+            const input = document.getElementById('messageInput');
+            const message = input.value;
+            if (!message) return;
+            
+            addMessage('user', message);
+            input.value = '';
+            
+            addActivity(`Streaming from ${selectedTeam}...`);
+            
+            try {
+                const response = await fetch('http://localhost:8005/teams/run', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message: message,
+                        team_id: selectedTeam,
+                        stream: true
+                    })
+                });
+                
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+                
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop();
+                    
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            try {
+                                const data = JSON.parse(line.slice(6));
+                                addMessage('ai', data.content);
+                                if (data.done) {
+                                    taskCount++;
+                                    document.getElementById('taskCount').textContent = taskCount;
+                                    addActivity(`Stream completed from ${selectedTeam}`);
+                                }
+                            } catch (e) {}
+                        }
+                    }
+                }
+            } catch (error) {
+                addMessage('ai', `Error: ${error.message}`);
+                addActivity(`Error: ${error.message}`);
+            }
+        }
+        
+        // Enter key to send
+        document.getElementById('messageInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') sendMessage();
+        });
+        
+        // Connect to REAL WebSocket from Phase 5.1
+        const ws = new WebSocket('ws://localhost:8005/ws/bus?agent_id=ui-observer&thread_id=main');
+        
+        ws.onopen = () => {
+            addActivity('🔌 Connected to Phase 5.1 Message Bus!');
+            console.log('WebSocket connected to message bus');
+        };
+        
+        ws.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                console.log('Message from bus:', data);
+                
+                // Show real agent messages
+                if (data.message) {
+                    addActivity(`📨 ${data.message.sender_agent_id}: ${data.message.content.substring(0, 100)}`);
+                    
+                    // Add to chat if it's for current swarm
+                    if (data.message.sender_agent_id.includes(selectedTeam)) {
+                        addMessage('ai', data.message.content);
+                    }
+                }
+            } catch (e) {
+                console.error('WebSocket parse error:', e);
+            }
+        };
+        
+        ws.onerror = (error) => {
+            addActivity('❌ WebSocket error - check if Phase 5.1 server is running');
+            console.error('WebSocket error:', error);
+        };
+        
+        ws.onclose = () => {
+            addActivity('🔌 WebSocket disconnected - will retry...');
+            setTimeout(() => location.reload(), 5000);
+        };
+    </script>
+</body>
+</html>

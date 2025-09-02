@@ -45,6 +45,14 @@
         "deepseek-coder-6.7b",
         "deepseek-reasoner"
       ]
+    },
+    "together-ai": {
+      "provider": "together",
+      "key_env": "TOGETHER_API_KEY",
+      "models": [
+        "text-embedding-3-small",
+        "text-embedding-3-large"
+      ]
     }
   },
   "routing_rules": [

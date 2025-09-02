@@ -1,10 +1,11 @@
-from typing import Dict, List, Optional, AsyncIterator, Tuple
+from typing import Dict, List, Optional, AsyncIterator, Tuple, Any
 import aioredis
 import asyncio
 import json
 import logging
 import time
-from typing import Any
+import msgpack
+import enum
 from pydantic import BaseModel, Field
 from opentelemetry import trace
 from opentelemetry.trace import SpanKind
@@ -12,8 +13,6 @@ from uuid import uuid4
 from datetime import datetime, timezone
 
 logger = logging.getLogger(__name__)
-
-import enum
 
 class MessageType(str, enum.Enum):
     """Standardized message types for swarm communication"""
@@ -43,31 +42,42 @@ class MessageBus:
     """
     Redis-backed, observable message bus for agent communication.
     Implements persistence, replay, and observability as required.
+    Enhanced with connection pooling and performance optimizations.
     """
     
-    def __init__(self, redis_url: str = None, redis_pool: aioredis.Redis = None):
+    def __init__(
+        self,
+        redis_pool: aioredis.Redis = None,
+        redis_url: str = None
+    ):
+        self.redis = redis_pool
         self.redis_url = redis_url or "redis://localhost:6379"
-        self.redis = None
-        self.redis_pool = redis_pool
         self._initialized = False
         self._setup_metrics()
-        
+        self.connection_closed = False
+    
     async def initialize(self):
-        """Initialize Redis connection"""
+        """Initialize Redis connection pool"""
         if self._initialized:
             return
         
-        if self.redis_pool:
-            self.redis = self.redis_pool
-        else:
-            self.redis = await aioredis.create_redis_pool(
-                self.redis_url,
-                minsize=5,
-                maxsize=20
-            )
-        
+        if not self.redis:
+            try:
+                self.redis = await aioredis.create_redis_pool(
+                    self.redis_url,
+                    minsize=5,
+                    maxsize=20
+                )
+                logger.info("✅ Successfully connected to Redis with connection pool")
+            except Exception as e:
+                logger.error(f"Failed to initialize Redis connection pool: {str(e)}")
+                raise
+    
         # Create global namespace
-        await self.redis.execute(b'STRUCT', b'CREATE', b'bus', b'type', b'string', b'data')
+        try:
+            await self.redis.execute(b'STRUCT', b'CREATE', b'bus', b'type', b'string', b'data')
+        except Exception as e:
+            logger.warning(f"Failed to create Redis struct: {e}")
         
         # Setup Redis streams
         self.streams = {
@@ -77,53 +87,65 @@ class MessageBus:
         }
         
         # Ensure initial stream existence
-        await self.redis.xinfo_stream(self.streams['global'])
-        await self.redis.xinfo_stream(self.streams['threads'])
+        for stream in self.streams.values():
+            try:
+                await self.redis.xinfo_stream(stream)
+            except Exception as e:
+                logger.warning(f"Stream {stream} may not exist: {e}")
+                # Create stream by adding a dummy entry
+                try:
+                    await self.redis.xadd(stream, {'init': 'true'})
+                except Exception as create_error:
+                    logger.warning(f"Could not create stream {stream}: {create_error}")
         
         self._initialized = True
-        logger.info("✅ Message bus initialized successfully with Redis")
+        logger.info("📊 Message bus fully initialized with connection pooling")
     
-    async def _get_redis(self):
+    async def _get_redis(self) -> aioredis.Redis:
+        """Get Redis connection, ensuring initialization"""
         if not self._initialized:
             await self.initialize()
+        if self.connection_closed:
+            logger.error("Redis connection closed during operation.")
+            raise RuntimeError("Redis connection closed")
         return self.redis
     
     async def publish(self, message: SwarmMessage):
         """Publish a message to the bus with persistence and observability"""
         redis = await self._get_redis()
+        start_time = time.time()
         spans = await self.record_publish_span(message)
         
+        # Use msgpack for efficient serialization
         try:
+            # Build payload for Redis stream
+            payload = {
+                'message': msgpack.dumps(message.dict()),
+                'priority': str(message.priority),
+                'type': message.message_type.value
+            }
+            
             # Add to global stream
             global_id = await redis.xadd(
                 self.streams['global'],
-                {
-                    'message': json.dumps(message.dict()),
-                    'priority': str(message.priority),
-                    'type': message.message_type.value
-                }
+                payload,
+                id='*'
             )
             
             # Add to thread stream
             thread_id = message.thread_id
             await redis.xadd(
                 f"{self.streams['threads']}:{thread_id}",
-                {
-                    'message': json.dumps(message.dict()),
-                    'priority': str(message.priority),
-                    'type': message.message_type.value
-                }
+                payload,
+                id='*'
             )
             
             # Add to receiver inbox if specified
             if message.receiver_agent_id:
                 await redis.xadd(
                     f"{self.streams['inbox']}:{message.receiver_agent_id}",
-                    {
-                        'message': json.dumps(message.dict()),
-                        'priority': str(message.priority),
-                        'type': message.message_type.value
-                    }
+                    payload,
+                    id='*'
                 )
             
             # Record metrics
@@ -131,13 +153,14 @@ class MessageBus:
                 'message_type': message.message_type.value,
                 'priority': message.priority,
                 'thread_id': message.thread_id,
-                'sender': message.sender_agent_id
+                'sender': message.sender_agent_id,
+                'receiver': message.receiver_agent_id
             }
             self._record_metrics('bus_messages_total', metrics, 1)
-            self._record_metrics('bus_publish_latency_ms', metrics, time.time() - spans['start'])
+            self._record_metrics('bus_publish_latency_ms', metrics, time.time() - start_time)
             
-            logger.debug(f"📨 Published message {message.id} to {message.receiver_agent_id if message.receiver_agent_id else 'broadcast'}")
-            return global_id
+            logger.debug(f"📨 Published message {message.id} to {message.receiver_agent_id or 'broadcast'}")
+            return str(global_id)
             
         except Exception as e:
             logger.error(f"Message publish failed: {str(e)}")
@@ -153,24 +176,26 @@ class MessageBus:
         redis = await self._get_redis()
         stream = f"{self.streams['inbox']}:{agent_id}"
         
-        # Set up consumer group if not exists
+        # Ensure consumer group exists
         try:
-            await redis.xgroup_create(  # Ensure group exists
+            await redis.xgroup_create(
                 stream,
                 f"agent_{agent_id}",
                 id='0-0',
                 mkstream=True
             )
-        except:
-            pass  # Group likely already exists
+        except aioredis.error.ResponseError as e:
+            if "BUSYGROUP" not in str(e):
+                logger.warning(f"Failed to create group {stream}: {e}")
         
         # Start consuming
         last_id = "0-0"
         while True:
+            # Provide 5s blocking timeout to prevent starvation
             messages = await redis.xread(
                 streams={stream: last_id},
                 count=1,
-                block=5000  # 5 seconds timeout
+                block=5000
             )
             
             if not messages:
@@ -180,7 +205,7 @@ class MessageBus:
             for message_id, message_data in message_list:
                 try:
                     # Parse the message
-                    msg_data = json.loads(message_data[b'message'].decode())
+                    msg_data = msgpack.loads(message_data[b'message'])
                     message = SwarmMessage(**msg_data)
                     
                     # Check filters
@@ -207,27 +232,30 @@ class MessageBus:
         stream = f"{self.streams['threads']}:{thread_id}"
         
         try:
+            # Get messages in reverse order (newest first), then reverse for chronological
             messages = await redis.xrevrange(stream, count=limit)
         except:
             return []
         
-        messages = [msg for msg in reversed(messages) if msg[1]]
-        messages_sorted = sorted(messages, key=lambda x: x[0])
+        # Sort messages chronologically
+        sorted_messages = sorted(messages, key=lambda x: int(x[0].split('-')[0]))
         
         return [
-            SwarmMessage(**json.loads(msg[1][b'message'].decode()))
-            for msg in messages_sorted
+            SwarmMessage(**msgpack.loads(msg[1][b'message']))
+            for _, msg in sorted_messages
         ]
     
     def _setup_metrics(self):
         """Initialize Prometheus metrics tracking"""
-        # In a real implementation, this would connect to Prometheus
-        self.metrics = {'bus_messages_total': {}, 'bus_publish_latency_ms': {}}
-        
+        self.metrics = {
+            'bus_messages_total': {},
+            'bus_publish_latency_ms': {},
+            'bus_errors_total': {}
+        }
+    
     def _record_metrics(self, metric_name: str, labels: Dict[str, str], value: float):
         """Record metrics for observability"""
-        # In a real implementation, this would call a metrics library
-        # For now, we log as a placeholder
+        # In production, this would interface with a metrics library
         logger.debug(f"METRIC: {metric_name} | {labels} | {value}")
     
     async def record_publish_span(self, message: SwarmMessage) -> Dict:
@@ -254,13 +282,18 @@ class MessageBus:
     
     async def close(self):
         """Clean up Redis connection"""
-        if self.redis:
-            self.redis.close()
-            await self.redis.wait_closed()
-            self._initialized = False
-            logger.info("🔌 Message bus connection closed")
+        if self.redis and not self.connection_closed:
+            try:
+                self.redis.close()
+                await self.redis.wait_closed()
+            except Exception as e:
+                logger.error(f"Error closing Redis connection: {e}")
+            finally:
+                self.connection_closed = True
+                self._initialized = False
+                logger.info("🔌 Message bus connection closed successfully")
 
-# Example usage
+# Example usage for testing
 if __name__ == "__main__":
     async def demo():
         bus = MessageBus()
@@ -279,7 +312,7 @@ if __name__ == "__main__":
         # Subscribe and get messages
         async for msg in bus.subscribe("agent_2", [MessageType.QUERY]):
             print(f"Received: {msg.content}")
-            break
             await bus.close()
+            break
     
     asyncio.run(demo())

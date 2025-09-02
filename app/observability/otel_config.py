@@ -21,6 +21,8 @@ import logging
 from typing import Dict, Any, Optional, List
 from app.core.connections import http_get, http_post, get_connection_manager
 from app.core.circuit_breaker import with_circuit_breaker, get_llm_circuit_breaker, get_weaviate_circuit_breaker, get_redis_circuit_breaker, get_webhook_circuit_breaker
+import socket
+from app.config.env_loader import get_env_config
 
 logger = logging.getLogger(__name__)
 
@@ -40,11 +42,14 @@ def configure_opentelemetry(app: Any, enable_console_exporter: bool = False, ote
     logger.info(f"Configuring OpenTelemetry for service: {SERVICE_NAME_VALUE} (version: {SERVICE_VERSION_VALUE})")
     
     # 1. Resource configuration
+    env_config = get_env_config()
+    deployment_env = env_config.environment_name
+    hostname = socket.gethostname()
     resource = Resource.create({
         SERVICE_NAME: SERVICE_NAME_VALUE,
         ResourceAttributes.SERVICE_VERSION: SERVICE_VERSION_VALUE,
-        ResourceAttributes.DEPLOYMENT_ENVIRONMENT: "development", # TODO: Get from env_loader
-        ResourceAttributes.HOST_NAME: "localhost", # TODO: Get actual hostname
+        ResourceAttributes.DEPLOYMENT_ENVIRONMENT: deployment_env,
+        ResourceAttributes.HOST_NAME: hostname,
         "ai.orchestrator.version": SERVICE_VERSION_VALUE,
         "ai.framework": "agno" # Example AI framework attribution
     })

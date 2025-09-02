@@ -25,8 +25,8 @@ PORTKEY_CONFIG = {
         "targets": [
             {
                 "provider": "openrouter",
-                "model": "x-ai/grok-code-fast-1",
-                "weight": 0.15,
+                "model": "openai/gpt-5",  # Primary for most important things
+                "weight": 0.3,
                 "override_params": {
                     "temperature": 0.7,
                     "max_tokens": 4096
@@ -34,8 +34,8 @@ PORTKEY_CONFIG = {
             },
             {
                 "provider": "openrouter",
-                "model": "google/gemini-2.5-flash",
-                "weight": 0.2,
+                "model": "x-ai/grok-4",  # Counter-reasoning
+                "weight": 0.15,
                 "override_params": {
                     "temperature": 0.5,
                     "max_tokens": 8192
@@ -43,7 +43,7 @@ PORTKEY_CONFIG = {
             },
             {
                 "provider": "openrouter",
-                "model": "google/gemini-2.5-pro",
+                "model": "x-ai/grok-code-fast-1",  # Fast coding
                 "weight": 0.1,
                 "override_params": {
                     "temperature": 0.6,
@@ -52,26 +52,26 @@ PORTKEY_CONFIG = {
             },
             {
                 "provider": "openrouter",
-                "model": "deepseek/deepseek-chat",  # Updated to available model
-                "weight": 0.15,
-                "override_params": {
-                    "temperature": 0.4,
-                    "max_tokens": 8192
-                }
-            },
-            {
-                "provider": "openrouter",
-                "model": "deepseek/deepseek-v3",
-                "weight": 0.15,
-                "override_params": {
-                    "temperature": 0.4,
-                    "max_tokens": 8192
-                }
-            },
-            {
-                "provider": "openrouter",
-                "model": "qwen/qwen-2.5-72b-instruct",  # Updated to available model
+                "model": "deepseek/deepseek-chat-v3-0324",  # From your list
                 "weight": 0.1,
+                "override_params": {
+                    "temperature": 0.4,
+                    "max_tokens": 8192
+                }
+            },
+            {
+                "provider": "openrouter",
+                "model": "nousresearch/hermes-4-405b",  # From your list
+                "weight": 0.05,
+                "override_params": {
+                    "temperature": 0.4,
+                    "max_tokens": 8192
+                }
+            },
+            {
+                "provider": "openrouter",
+                "model": "qwen/qwen3-30b-a3b-thinking-2507",  # Thinking model
+                "weight": 0.2,
                 "override_params": {
                     "temperature": 0.5,
                     "max_tokens": 4096
@@ -139,12 +139,12 @@ TASK_ROUTING = {
             "qwen/qwen-2.5-coder-32b-instruct",
             "x-ai/grok-code-fast-1"
         ],
-        "fallback": ["gpt-4o-mini"]
+        "fallback": ["openai/gpt-5-mini"]
     },
     "research_analysis": {
         "primary": [
-            "google/gemini-2.5-pro",
-            "qwen/qwen-2.5-72b-instruct"
+            "x-ai/grok-5",  # Your favorite
+            "qwen/qwen3-30b-a3b-thinking-2507"  # Your favorite
         ],
         "fallback": [
             "google/gemini-2.5-flash",
@@ -163,7 +163,7 @@ TASK_ROUTING = {
             "google/gemini-2.5-flash",
             "google/gemini-2.0-flash-exp:free"
         ],
-        "fallback": ["gpt-4o-mini"]
+        "fallback": ["openai/gpt-5-mini"]
     }
 }
 
@@ -182,11 +182,11 @@ class PortkeyLoadBalancer:
         if not self.portkey_api_key or not self.openrouter_api_key:
             raise ValueError("PORTKEY_API_KEY and OPENROUTER_API_KEY must be set")
         
-        # Initialize Portkey client
+        # Initialize Portkey client with virtual key
         self.client = Portkey(
             api_key=self.portkey_api_key,
             provider="openrouter",
-            virtual_key=self.openrouter_api_key,
+            virtual_key="vkj-openrouter-cc4151",  # Portkey virtual key for OpenRouter
             config=PORTKEY_CONFIG
         )
         

@@ -21,20 +21,7 @@ from app.core.circuit_breaker import (
     get_redis_circuit_breaker,
     get_webhook_circuit_breaker
 )
-    with_circuit_breaker,
-    get_llm_circuit_breaker,
-    get_weaviate_circuit_breaker,
-    get_redis_circuit_breaker,
-    get_webhook_circuit_breaker
-)
-    with_circuit_breaker,
-    get_llm_circuit_breaker,
-    get_weaviate_circuit_breaker,
-    get_redis_circuit_breaker,
-    get_webhook_circuit_breaker
-)
-    StandardizedEmbeddingPipeline
-)
+from app.memory.embedding_pipeline import StandardizedEmbeddingPipeline
 
 # ============================================
 # Configuration

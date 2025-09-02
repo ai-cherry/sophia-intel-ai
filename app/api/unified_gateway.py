@@ -1,11 +1,33 @@
 from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
-from app.models.requests import EmbeddingRequest, MemoryStoreRequest, MemorySearchRequest, MemoryUpdateRequest, MemoryDeleteRequest
+from app.models.requests import EmbeddingRequest, MemoryStoreRequest, MemorySearchRequest, MemoryUpdateRequest, MemoryDeleteRequest, ChatRequest
 from app.observability.prometheus_metrics import record_cost
 from app.memory.unified_memory import UnifiedMemoryStore
 from bleach import clean
 from app.swarms.communication.message_bus import MessageBus, MessageType, SwarmMessage
+from app.api.openrouter_gateway import OpenRouterGateway
 
 router = APIRouter()
+openrouter_gateway = OpenRouterGateway()
+
+@router.post("/chat")
+async def chat_endpoint(request: ChatRequest):
+    """Unified chat endpoint with OpenRouter model routing"""
+    if "openrouter" in request.model or any(m in request.model for m in ["openai/gpt-5", "x-ai/", "anthropic/"]):
+        response = await openrouter_gateway.chat_completion(
+            model=request.model,
+            messages=request.messages,
+            max_tokens=request.max_tokens,
+            temperature=request.temperature,
+            top_p=request.top_p,
+            presence_penalty=request.presence_penalty,
+            frequency_penalty=request.frequency_penalty,
+            stop=request.stop
+        )
+        return {"choices": [{"message": {"content": response.choices[0].message.content}}]}
+    
+    # Fallback to default OpenAI client (for non-OpenRouter models)
+    # [Add default OpenAI client handling here]
+    raise HTTPException(status_code=404, detail="OpenRouter model not found")
 
 @router.post("/embeddings")
 async def embeddings(request: EmbeddingRequest):

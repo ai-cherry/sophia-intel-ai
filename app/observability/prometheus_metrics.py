@@ -169,6 +169,28 @@ redis_connected_clients = Gauge(
     registry=registry
 )
 
+# Security Metrics
+request_blocked_total = Counter(
+    'request_blocked_total',
+    'Total number of blocked requests',
+    ['reason', 'source'],
+    registry=registry
+)
+
+jwt_invalid_total = Counter(
+    'jwt_invalid_total',
+    'Total number of invalid JWT attempts',
+    ['error_type'],
+    registry=registry
+)
+
+rate_limit_exceeded_total = Counter(
+    'rate_limit_exceeded_total',
+    'Total number of rate limit exceeded events',
+    ['endpoint', 'client'],
+    registry=registry
+)
+
 # HTTP Metrics
 http_requests_total = Counter(
     'http_requests_total',

@@ -1,168 +1,33 @@
-# Alerting Rules for Sophia Intel AI Production Deployment
-
 groups:
-  - name: sophia_service_health
-    rules:
-      - alert: ServiceDown
-        expr: up == 0
-        for: 1m
-        labels:
-          severity: critical
-          service: '{{ $labels.job }}'
-        annotations:
-          summary: "Service {{ $labels.job }} is down"
-          description: "Service {{ $labels.job }} has been down for more than 1 minute"
+- name: model_cost_alerts
+  rules:
+  - alert: HighGPT5Cost
+    expr: model_cost_usd_today{model="openai/gpt-5"} > 80 * (env("MAX_DAILY_COST", 100.0) / 100)
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High GPT-5 cost usage"
+      description: "Model cost for openai/gpt-5 is {{ $value }} USD today, exceeding 80% of the daily budget."
 
-      - alert: HighErrorRate
-        expr: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) > 0.05
-        for: 2m
-        labels:
-          severity: warning
-        annotations:
-          summary: "High error rate detected"
-          description: "Error rate is {{ $value | humanizePercentage }} for {{ $labels.job }}"
+- name: model_latency_alerts
+  rules:
+  - alert: ModelLatencyHigh
+    expr: model_latency_seconds{quantile="0.95"} > 2000
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High model latency"
+      description: "95th percentile latency for models is {{ $value }} ms, exceeding SLA threshold."
 
-  - name: sophia_performance
-    rules:
-      - alert: HighLatency
-        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 0.5
-        for: 2m
-        labels:
-          severity: warning
-        annotations:
-          summary: "High API latency"
-          description: "95th percentile latency is {{ $value }}s for {{ $labels.job }}"
-
-      - alert: HighMemoryUsage
-        expr: (container_memory_usage_bytes / container_spec_memory_limit_bytes) * 100 > 85
-        for: 3m
-        labels:
-          severity: warning
-        annotations:
-          summary: "High memory usage"
-          description: "Memory usage is {{ $value | humanizePercentage }} for {{ $labels.job }}"
-
-      - alert: HighCPUUsage  
-        expr: rate(cpu_usage_seconds_total[5m]) * 100 > 80
-        for: 5m
-        labels:
-          severity: warning
-        annotations:
-          summary: "High CPU usage"
-          description: "CPU usage is {{ $value | humanizePercentage }} for {{ $labels.job }}"
-
-  - name: sophia_ai_services
-    rules:
-      - alert: WeaviateConnectionFail
-        expr: weaviate_database_available != 1
-        for: 1m
-        labels:
-          severity: critical
-        annotations:
-          summary: "Weaviate database unavailable"
-          description: "Weaviate vector database is not responding"
-
-      - alert: ConsensusSwarmFailure
-        expr: consensus_swarm_success_rate < 0.9
-        for: 3m
-        labels:
-          severity: warning
-        annotations:
-          summary: "Consensus swarm degraded"
-          description: "Consensus success rate dropped to {{ $value | humanizePercentage }}"
-
-      - alert: MemoryDeduplicationLow
-        expr: memory_deduplication_rate < 0.85
-        for: 5m
-        labels:
-          severity: warning
-        annotations:
-          summary: "Memory deduplication efficiency low"
-          description: "Deduplication rate is {{ $value | humanizePercentage }}"
-
-      - alert: GPUTaskQueueHigh
-        expr: lambda_gpu_queue_length > 10
-        for: 2m
-        labels:
-          severity: warning
-        annotations:
-          summary: "GPU task queue backing up"
-          description: "{{ $value }} tasks waiting for GPU processing"
-
-  - name: sophia_external_services
-    rules:
-      - alert: RedisConnectionFail
-        expr: redis_connected_clients < 1
-        for: 2m
-        labels:
-          severity: critical
-        annotations:
-          summary: "Redis connection lost"
-          description: "Redis Cloud connection unavailable"
-
-      - alert: NeonPostgreSQLSlow
-        expr: postgresql_query_duration_seconds > 1.0
-        for: 3m
-        labels:
-          severity: warning
-        annotations:
-          summary: "PostgreSQL queries slow"
-          description: "Average query time is {{ $value }}s"
-
-  - name: sophia_cost_monitoring
-    rules:
-      - alert: HighAPICostRate
-        expr: rate(llm_api_cost_total[1h]) > 500
-        for: 5m
-        labels:
-          severity: critical
-        annotations:
-          summary: "High API cost rate detected"
-          description: "API costs exceeding $500/hour threshold: ${{ $value }}/hour"
-
-      - alert: CacheHitRateLow
-        expr: llm_cache_hits_total / (llm_cache_hits_total + llm_cache_misses_total) < 0.5
-        for: 10m
-        labels:
-          severity: warning
-        annotations:
-          summary: "Low cache hit rate"
-          description: "Cache hit rate dropped below 50%: {{ $value | humanizePercentage }}"
-
-      - alert: SemanticCacheFailure
-        expr: increase(llm_cache_errors_total[5m]) > 5
-        for: 5m
-        labels:
-          severity: warning
-        annotations:
-          summary: "Semantic cache errors increasing"
-          description: "{{ $value }} cache errors in the last 5 minutes"
-
-  - name: sophia_ai_performance
-    rules:
-      - alert: LLMResponseTimeHigh
-        expr: histogram_quantile(0.95, rate(llm_request_duration_seconds_bucket[5m])) > 30
-        for: 5m
-        labels:
-          severity: warning
-        annotations:
-          summary: "High LLM response times"
-          description: "95th percentile LLM response time is {{ $value }}s"
-
-      - alert: TokenLimitApproaching
-        expr: llm_tokens_remaining < 1000
-        for: 2m
-        labels:
-          severity: warning
-        annotations:
-          summary: "Token limit approaching"
-          description: "Only {{ $value }} tokens remaining before rate limit"
-
-      - alert: ModelFallbackTriggered
-        expr: increase(llm_fallback_triggers_total[5m]) > 3
-        for: 5m
-        labels:
-          severity: warning
-        annotations:
-          summary: "Model fallback triggered frequently"
-          description: "{{ $value }} model fallbacks in the last 5 minutes"
+- name: model_availability_alerts
+  rules:
+  - alert: ModelUnavailable
+    expr: model_tokens_total{model=~".*"} == 0
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Model unavailable"
+      description: "No tokens processed for models in the last 5 minutes."

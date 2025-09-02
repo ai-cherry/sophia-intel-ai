@@ -1,254 +1,212 @@
-"""
-OpenRouter Gateway - REAL AI EXECUTION, NO MOCKS
-Direct integration with OpenRouter for all model access
-"""
-
-import os
-import json
+from openai import AsyncOpenAI
 import httpx
+import os
 import logging
-from typing import Dict, List, Any, Optional
-from enum import Enum
+from typing import List, Dict, Any, Optional
+import time
+from prometheus_client import Counter, Histogram
 
-logger = logging.getLogger(__name__)
+# Initialize Prometheus metrics
+model_tokens_total = Counter(
+    'model_tokens_total',
+    'Total tokens processed per model',
+    ['model', 'type']
+)
+model_latency_seconds = Histogram(
+    'model_latency_seconds',
+    'Model request latency',
+    ['model']
+)
+model_cost_usd_total = Counter(
+    'model_cost_usd_total',
+    'Total cost in USD per model',
+    ['model', 'type']
+)
+model_cost_usd_today = Counter(
+    'model_cost_usd_today',
+    'Cost so far today per model',
+    ['model']
+)
 
-class ModelProvider(Enum):
-    """Real model providers via OpenRouter"""
-    OPENAI = "openai"
-    ANTHROPIC = "anthropic"
-    GOOGLE = "google"
-    DEEPSEEK = "deepseek"
-    XAI = "x-ai"
-    GROQ = "groq"
-    QWEN = "qwen"
-    PERPLEXITY = "perplexity"
-
-class RealModelGateway:
-    """Gateway for REAL AI model execution via OpenRouter"""
-    
-    # REAL MODELS - NO FAKES
-    MODELS = {
-        # Top tier models - GPT-5 as requested (fallback to best available)
-        'orchestrator': 'openai/gpt-5',  # GPT-5 as main orchestrator (will fallback if not available)
-        'planner': 'google/gemini-2.5-pro',  # Gemini 2.5 Pro for planning
-        'generator': 'deepseek/deepseek-chat',  # DeepSeek for code generation
-        'critic': 'anthropic/claude-3-5-sonnet-20241022',  # Claude for review
-        'judge': 'x-ai/grok-2-latest',  # Grok for decisions
-        
-        # Fast execution models
-        'runner': 'groq/llama-3.3-70b-versatile',  # Groq for speed
-        'fast': 'google/gemini-2.0-flash-exp:free',  # Gemini Flash for quick tasks
-        
-        # Specialized models
-        'coder': 'deepseek/deepseek-chat',  # DeepSeek for code
-        'search': 'perplexity/sonar-online',  # Perplexity for web search
-        'creative': 'x-ai/grok-2-latest',  # Grok for creative tasks
-        
-        # Fallback models
-        'balanced': 'openai/gpt-4o-mini',  # Cheaper GPT-4
-        'free': 'google/gemini-2.0-flash-exp:free',  # Free tier
+AVAILABLE_MODELS = {
+    "openai/gpt-5": {
+        "context": 400000,
+        "input_cost": 1.25,
+        "output_cost": 10.0,
+        "capabilities": ["chat", "code", "reasoning", "multimodal"],
+        "priority": "premium"
+    },
+    "x-ai/grok-4": {
+        "context": 128000,
+        "input_cost": 0.8,
+        "output_cost": 6.0,
+        "capabilities": ["chat", "code", "analysis"],
+        "priority": "premium"
+    },
+    "anthropic/claude-sonnet-4": {
+        "context": 200000,
+        "input_cost": 0.5,
+        "output_cost": 4.0,
+        "capabilities": ["chat", "code", "writing"],
+        "priority": "standard"
+    },
+    "x-ai/grok-code-fast-1": {
+        "context": 32000,
+        "input_cost": 0.3,
+        "output_cost": 2.0,
+        "capabilities": ["code"],
+        "priority": "specialized"
+    },
+    "google/gemini-2.5-flash": {
+        "context": 100000,
+        "input_cost": 0.1,
+        "output_cost": 0.5,
+        "capabilities": ["chat", "fast"],
+        "priority": "economy"
+    },
+    "google/gemini-2.5-pro": {
+        "context": 200000,
+        "input_cost": 0.6,
+        "output_cost": 4.5,
+        "capabilities": ["chat", "code", "multimodal"],
+        "priority": "standard"
+    },
+    "deepseek/deepseek-chat-v3.1": {
+        "context": 64000,
+        "input_cost": 0.2,
+        "output_cost": 1.5,
+        "capabilities": ["chat", "memory"],
+        "priority": "economy"
+    },
+    "z-ai/glm-4.5-air": {
+        "context": 32000,
+        "input_cost": 0.05,
+        "output_cost": 0.3,
+        "capabilities": ["chat", "lightweight"],
+        "priority": "economy"
     }
-    
+}
+
+class OpenRouterGateway:
     def __init__(self):
-        self.api_key = os.getenv("OPENROUTER_API_KEY")
-        self.base_url = "https://openrouter.ai/api/v1"
-        
-        if not self.api_key:
-            raise ValueError("OPENROUTER_API_KEY not set - cannot make REAL API calls")
-        
-        logger.info(f"✅ OpenRouter Gateway initialized with REAL models")
-        
-    async def chat_completion(
-        self,
-        messages: List[Dict[str, str]],
-        model: Optional[str] = None,
-        role: Optional[str] = None,
-        temperature: float = 0.7,
-        max_tokens: int = 2048,
-        stream: bool = False,
-        **kwargs
-    ) -> Dict[str, Any]:
-        """
-        Make REAL API call to OpenRouter
-        
-        Args:
-            messages: Chat messages
-            model: Direct model name or None to use role-based selection
-            role: Role name to auto-select model
-            temperature: Model temperature
-            max_tokens: Max tokens to generate
-            stream: Whether to stream response
-            **kwargs: Additional parameters
-        """
-        
-        # Select model based on role or use provided model
-        if not model:
-            if role and role in self.MODELS:
-                model = self.MODELS[role]
-            else:
-                model = self.MODELS['balanced']  # Default to balanced
-        
-        # Ensure model format is correct for OpenRouter
-        if not model.startswith(('openai/', 'anthropic/', 'google/', 'deepseek/', 'x-ai/', 'groq/', 'qwen/', 'perplexity/')):
-            # Try to map common names
-            if 'gpt' in model.lower():
-                model = f"openai/{model}"
-            elif 'claude' in model.lower():
-                model = f"anthropic/{model}"
-            elif 'gemini' in model.lower():
-                model = f"google/{model}"
-        
-        headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "HTTP-Referer": os.getenv("HTTP_REFERER", "http://localhost:3000"),
-            "X-Title": os.getenv("X_TITLE", "Sophia-Intel-AI"),
-            "Content-Type": "application/json"
-        }
-        
-        payload = {
-            "model": model,
-            "messages": messages,
-            "max_tokens": max_tokens,
-            "temperature": temperature,
-            "stream": stream
-        }
-        
-        # Add any additional kwargs
-        payload.update(kwargs)
-        
+        self.client = AsyncOpenAI(
+            base_url="https://openrouter.ai/api/v1",
+            api_key=os.getenv("OPENROUTER_API_KEY"),
+            http_client=httpx.AsyncClient(
+                timeout=60.0,
+                limits=httpx.Limits(max_keepalive_connections=10)
+            )
+        )
+
+    async def chat_completion(self, model: str, messages: List[Dict], **kwargs):
+        """Unified chat completion for OpenRouter models with GPT-5 optimizations"""
+        # GPT-5 specific text transformation when enabled
+        if model == "openai/gpt-5" and kwargs.get("think_hard"):
+            messages[0]["content"] = f"Think step-by-step about this: {messages[0]['content']}"
+
+        start_time = time.time()
         try:
-            async with httpx.AsyncClient(timeout=60.0) as client:
-                logger.info(f"🚀 Making REAL API call to {model}")
-                
-                response = await client.post(
-                    f"{self.base_url}/chat/completions",
-                    headers=headers,
-                    json=payload
-                )
-                
-                if response.status_code == 200:
-                    result = response.json()
-                    logger.info(f"✅ REAL response received from {model}")
-                    
-                    # Add metadata about the real call
-                    if 'choices' in result and result['choices']:
-                        result['_metadata'] = {
-                            'real_api_call': True,
-                            'model_used': model,
-                            'provider': model.split('/')[0],
-                            'no_mocks': True
-                        }
-                    
-                    return result
-                else:
-                    error_msg = f"OpenRouter API error: {response.status_code} - {response.text}"
-                    logger.error(error_msg)
-                    
-                    # Try to parse error for better handling
-                    try:
-                        error_data = response.json()
-                        if 'error' in error_data:
-                            error_msg = error_data['error'].get('message', error_msg)
-                    except:
-                        pass
-                    
-                    raise httpx.HTTPStatusError(
-                        error_msg,
-                        request=response.request,
-                        response=response
-                    )
-                    
-        except httpx.TimeoutException:
-            logger.error(f"Timeout calling {model}")
-            raise
+            completion = await self.client.chat.completions.create(
+                model=model,
+                messages=messages,
+                extra_headers={
+                    "HTTP-Referer": "https://sophia-intel-ai.com",
+                    "X-Title": "Sophia Intel AI"
+                },
+                **kwargs
+            )
+            latency = time.time() - start_time
+            model_latency_seconds.labels(model=model).observe(latency)
+            self._track_cost(model, completion.usage)
+            return completion
         except Exception as e:
-            logger.error(f"Error calling {model}: {str(e)}")
-            raise
-    
-    async def generate_embeddings(
-        self,
-        texts: List[str],
-        model: str = "openai/text-embedding-3-small"
-    ) -> Dict[str, Any]:
-        """Generate REAL embeddings via OpenRouter"""
-        
-        headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json"
-        }
-        
-        payload = {
-            "model": model,
-            "input": texts
-        }
-        
-        try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                response = await client.post(
-                    f"{self.base_url}/embeddings",
-                    headers=headers,
-                    json=payload
-                )
-                
-                if response.status_code == 200:
-                    return response.json()
-                else:
-                    raise httpx.HTTPStatusError(
-                        f"Embedding error: {response.status_code} - {response.text}",
-                        request=response.request,
-                        response=response
-                    )
-        except Exception as e:
-            logger.error(f"Embedding generation failed: {str(e)}")
+            # Fallback chain on failure
+            fallback_model = self._get_fallback(model)
+            if fallback_model:
+                # Avoid infinite recursion in fallbacks
+                new_kwargs = kwargs.copy()
+                new_kwargs["think_hard"] = False
+                return await self.chat_completion(fallback_model, messages, **new_kwargs)
             raise
 
-# Global instance for REAL API calls
-real_gateway = RealModelGateway()
+    def _track_cost(self, model: str, usage):
+        """Track model usage costs for Prometheus metrics"""
+        if model not in AVAILABLE_MODELS:
+            return
+        model_info = AVAILABLE_MODELS[model]
+        input_cost = (usage.prompt_tokens / 1_000_000) * model_info["input_cost"]
+        output_cost = (usage.completion_tokens / 1_000_000) * model_info["output_cost"]
+        
+        # Update Prometheus counters
+        model_tokens_total.labels(model=model, type="input").inc(usage.prompt_tokens)
+        model_tokens_total.labels(model=model, type="output").inc(usage.completion_tokens)
+        model_cost_usd_total.labels(model=model, type="input").inc(input_cost)
+        model_cost_usd_total.labels(model=model, type="output").inc(output_cost)
+        model_cost_usd_today.labels(model=model).inc(input_cost + output_cost)
 
-async def execute_real_llm_call(
-    prompt: str,
-    role: str = "generator",
-    temperature: float = 0.7,
-    max_tokens: int = 2048,
-    **kwargs
-) -> Dict[str, Any]:
-    """
-    Convenience function for REAL LLM calls
-    
-    Args:
-        prompt: The prompt to send
-        role: Role to determine model selection
-        temperature: Model temperature
-        max_tokens: Max tokens to generate
-        **kwargs: Additional parameters
-    
-    Returns:
-        REAL API response with content
-    """
-    
-    messages = [{"role": "user", "content": prompt}]
-    
-    response = await real_gateway.chat_completion(
-        messages=messages,
-        role=role,
-        temperature=temperature,
-        max_tokens=max_tokens,
-        **kwargs
-    )
-    
-    # Extract content from response
-    if response and 'choices' in response and response['choices']:
-        content = response['choices'][0]['message']['content']
-        return {
-            'content': content,
-            'success': True,
-            'model': response.get('model'),
-            'usage': response.get('usage'),
-            'metadata': response.get('_metadata')
+    def _get_fallback(self, model: str) -> Optional[str]:
+        """Generate fallback chain for unavailable models"""
+        fallback_chain = {
+            "openai/gpt-5": [
+                "anthropic/claude-sonnet-4", 
+                "google/gemini-2.5-pro", 
+                "z-ai/glm-4.5-air"
+            ],
+            "x-ai/grok-4": [
+                "anthropic/claude-sonnet-4", 
+                "google/gemini-2.5-pro", 
+                "z-ai/glm-4.5-air"
+            ],
+            "anthropic/claude-sonnet-4": [
+                "google/gemini-2.5-pro", 
+                "z-ai/glm-4.5-air"
+            ],
+            "x-ai/grok-code-fast-1": [
+                "google/gemini-2.5-flash", 
+                "z-ai/glm-4.5-air"
+            ],
+            "google/gemini-2.5-flash": [
+                "google/gemini-2.5-pro", 
+                "z-ai/glm-4.5-air"
+            ],
+            "google/gemini-2.5-pro": [
+                "google/gemini-2.5-flash", 
+                "z-ai/glm-4.5-air"
+            ],
+            "deepseek/deepseek-chat-v3.1": [
+                "z-ai/glm-4.5-air"
+            ],
+            "z-ai/glm-4.5-air": None
         }
-    else:
-        return {
-            'content': 'No response generated',
-            'success': False,
-            'error': 'Empty response from API'
-        }
+        return fallback_chain.get(model, [None])[0] if fallback_chain.get(model) else None
+
+# Test only for local development
+if __name__ == "__main__":
+    import asyncio
+    import logging
+    logging.basicConfig(level=logging.INFO)
+    
+    async def test_gateway():
+        gateway = OpenRouterGateway()
+        print("Testing GPT-5 with think_hard")
+        response = await gateway.chat_completion(
+            "openai/gpt-5",
+            [{"role": "user", "content": "What is the capital of France?"}],
+            max_tokens=10,
+            temperature=0.1,
+            think_hard=True
+        )
+        print(f"GPT-5 Response: {response.choices[0].message.content}")
+        
+        print("\nTesting fallback chain (invalid model)")
+        try:
+            response = await gateway.chat_completion(
+                "invalid-model",
+                [{"role": "user", "content": "Hello"}],
+                max_tokens=10
+            )
+            print(f"Fallback Response: {response.choices[0].message.content}")
+        except Exception as e:
+            print(f"Fallback failed: {str(e)}")
+    
+    asyncio.run(test_gateway())

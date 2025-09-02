@@ -1,6 +1,6 @@
 {
-  "timestamp": "2025-09-01T17:38:50.175158",
-  "test_duration_seconds": 1.2231109142303467,
+  "timestamp": "2025-09-01T17:44:20.400597",
+  "test_duration_seconds": 1.191762924194336,
   "overall_success_rate": 89.47368421052632,
   "health_grade": "A (Good)",
   "component_scores": {
@@ -22,7 +22,7 @@
     "api_endpoints": {
       "/healthz": {
         "status": 200,
-        "response_time_ms": 1.58,
+        "response_time_ms": 1.52,
         "content_type": "application/json",
         "data_keys": [
           "status",
@@ -32,7 +32,7 @@
       },
       "/api/metrics": {
         "status": 200,
-        "response_time_ms": 104.47,
+        "response_time_ms": 101.8,
         "content_type": "application/json",
         "data_keys": [
           "status",
@@ -42,42 +42,42 @@
       },
       "/agents": {
         "status": 200,
-        "response_time_ms": 0.45,
+        "response_time_ms": 0.44,
         "content_type": "application/json",
         "data_keys": 4
       },
       "/workflows": {
         "status": 200,
-        "response_time_ms": 0.35,
+        "response_time_ms": 0.32,
         "content_type": "application/json",
         "data_keys": 2
       },
       "/teams": {
         "status": 200,
-        "response_time_ms": 0.27,
+        "response_time_ms": 0.3,
         "content_type": "application/json",
         "data_keys": 4
       },
       "/docs": {
         "status": 200,
-        "response_time_ms": 0.24,
+        "response_time_ms": 0.22,
         "content_type": "text/html"
       }
     },
     "swarm_execution": {
       "strategic": {
         "status": 200,
-        "response_time_ms": 1.29,
+        "response_time_ms": 1.13,
         "response_length": 316
       },
       "technical": {
         "status": 200,
-        "response_time_ms": 0.3,
+        "response_time_ms": 0.25,
         "response_length": 317
       },
       "creative": {
         "status": 200,
-        "response_time_ms": 0.32,
+        "response_time_ms": 0.26,
         "response_length": 311
       }
     },
@@ -85,10 +85,10 @@
       "concurrent_requests": 20,
       "successful_requests": 20,
       "success_rate": 100.0,
-      "avg_response_time_ms": 3.96,
-      "max_response_time_ms": 5.45,
-      "requests_per_second": 3603.66,
-      "total_test_time_ms": 5.55
+      "avg_response_time_ms": 3.18,
+      "max_response_time_ms": 3.71,
+      "requests_per_second": 5216.15,
+      "total_test_time_ms": 3.83
     },
     "mcp_integration": {
       "mcp_server_health": {
@@ -103,74 +103,74 @@
     },
     "deployment_health": {
       "system": {
-        "cpu_percent": 20.8,
+        "cpu_percent": 16.6,
         "memory_total_gb": 48.0,
-        "memory_used_gb": 16.24,
-        "memory_percent": 71.4,
+        "memory_used_gb": 17.35,
+        "memory_percent": 72.0,
         "disk_total_gb": 926.35,
         "disk_used_gb": 13.73,
         "disk_percent": 1.482460218414743
       },
       "processes": [
         {
-          "cpu_percent": null,
-          "name": "com.docker.vmnet",
           "pid": 547,
-          "memory_percent": null
+          "name": "com.docker.vmnet",
+          "memory_percent": null,
+          "cpu_percent": null
         },
         {
-          "cpu_percent": 0.0,
-          "name": "Python",
           "pid": 13293,
-          "memory_percent": 0.01316070556640625
+          "name": "Python",
+          "memory_percent": 0.01316070556640625,
+          "cpu_percent": 0.0
         },
         {
-          "cpu_percent": 0.0,
-          "name": "Python",
           "pid": 20162,
-          "memory_percent": 0.012143452962239582
+          "name": "Python",
+          "memory_percent": 0.012143452962239582,
+          "cpu_percent": 0.0
         },
         {
-          "cpu_percent": 0.0,
-          "name": "Python",
           "pid": 27408,
-          "memory_percent": 0.013701121012369791
+          "name": "Python",
+          "memory_percent": 0.015195210774739584,
+          "cpu_percent": 0.0
         },
         {
-          "cpu_percent": 0.0,
-          "name": "Python",
           "pid": 30995,
-          "memory_percent": 0.012111663818359375
+          "name": "Python",
+          "memory_percent": 0.012111663818359375,
+          "cpu_percent": 0.0
         },
         {
-          "cpu_percent": 0.0,
-          "name": "Python",
           "pid": 38850,
-          "memory_percent": 0.03350575764973958
+          "name": "Python",
+          "memory_percent": 0.033537546793619796,
+          "cpu_percent": 0.0
         },
         {
-          "cpu_percent": 0.0,
-          "name": "Python",
           "pid": 43154,
-          "memory_percent": 0.012493133544921875
-        },
-        {
-          "cpu_percent": 0.0,
-          "name": "docker-compose",
-          "pid": 48435,
-          "memory_percent": 0.06812413533528647
-        },
-        {
-          "cpu_percent": 0.0,
-          "name": "docker-buildx",
-          "pid": 48445,
-          "memory_percent": 0.167083740234375
-        },
-        {
-          "cpu_percent": 0.0,
           "name": "Python",
+          "memory_percent": 0.012493133544921875,
+          "cpu_percent": 0.0
+        },
+        {
+          "pid": 48435,
+          "name": "docker-compose",
+          "memory_percent": 0.06812413533528647,
+          "cpu_percent": 0.0
+        },
+        {
+          "pid": 48445,
+          "name": "docker-buildx",
+          "memory_percent": 0.16867319742838544,
+          "cpu_percent": 0.0
+        },
+        {
           "pid": 63127,
-          "memory_percent": 0.04673004150390625
+          "name": "Python",
+          "memory_percent": 0.04698435465494792,
+          "cpu_percent": 0.0
         }
       ]
     }

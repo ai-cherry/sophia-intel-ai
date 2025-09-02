@@ -18,7 +18,7 @@ from websockets.exceptions import (
     ConnectionClosedError
 )
 
-from app.core.circuit_breaker import CircuitBreakerError, with_circuit_breaker
+from app.core.circuit_breaker import with_circuit_breaker
 from app.core.websocket_manager import WebSocketManager
 
 logger = logging.getLogger(__name__)

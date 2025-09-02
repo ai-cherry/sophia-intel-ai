@@ -1,6 +1,5 @@
-from app.security.enhanced_middleware import setup_error_handling
-from app.observability.tracing import init_tracing
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from app.api.embedding_endpoints import router as embedding_router
 from app.api.memory.memory_endpoints import router as memory_router
 from app.api.repository.repo_service import router as repo_router
@@ -8,9 +7,7 @@ from app.api.cost_dashboard import router as cost_dashboard_router
 from app.api.hub.hub_controller import router as hub_router
 from app.api.openrouter_gateway import router as openrouter_router
 from app.api.graph_endpoints import router as graph_router
-setup_error_handling(app)
 from app.api.unified_gateway import router as unified_gateway_router
-from app.api.unified_server import router as unified_server_router
 from app.api.health import router as health_router
 from app.api.metrics import router as metrics_router
 from app.api.models import router as models_router
@@ -32,8 +29,6 @@ from app.api.tracing import router as tracing_router
 from app.api.indexing import router as indexing_router
 from app.api.quality import router as quality_router
 from app.api.error import router as error_router
-from app.api.metrics import router as metrics_router
-from app.api.cost_dashboard import router as cost_dashboard_router
 from app.api.portkey_router_endpoints import router as portkey_router
 from app.api.resilient_websocket_endpoints import router as resilient_ws_router
 

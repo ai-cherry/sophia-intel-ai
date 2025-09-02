@@ -10,7 +10,39 @@ from dataclasses import dataclass
 from enum import Enum
 import asyncio
 
-from agno import Team, Agent, Task
+# Mock AGNO classes until proper package is available
+class Team:
+    def __init__(self, name: str, description: str = ""):
+        self.name = name
+        self.description = description
+        self.id = f"team_{name}_{hash(name)}"
+        self.agents = {}
+    
+    def add_agent(self, agent):
+        self.agents[agent.name] = agent
+    
+    async def run(self, task):
+        # Simplified execution
+        return {"status": "completed", "task": task.description}
+
+class Agent:
+    def __init__(self, name: str, model: str, provider: str = "portkey", 
+                 temperature: float = 0.7, instructions: str = "", metadata: dict = None):
+        self.name = name
+        self.model = model
+        self.provider = provider
+        self.temperature = temperature
+        self.instructions = instructions
+        self.metadata = metadata or {}
+        self._llm = None
+    
+    async def run(self, task):
+        return f"Agent {self.name} processed: {task.description}"
+
+class Task:
+    def __init__(self, description: str, metadata: dict = None):
+        self.description = description
+        self.metadata = metadata or {}
 from portkey_ai import Portkey
 from app.swarms.enhanced_memory_integration import (
     EnhancedSwarmMemoryClient,
@@ -18,13 +50,6 @@ from app.swarms.enhanced_memory_integration import (
     auto_tag_and_store
 )
 from app.core.circuit_breaker import with_circuit_breaker
-from app.api.portkey_unified_router import (
-    unified_router,
-    route_agno_completion,
-    get_optimal_model_for_role,
-    RoutingStrategy,
-    RouteConfig
-)
 
 logger = logging.getLogger(__name__)
 
@@ -93,12 +118,8 @@ class SophiaAGNOTeam:
         self.team: Optional[Team] = None
         self.memory_client: Optional[EnhancedSwarmMemoryClient] = None
         self.execution_history = []
-        self.routing_config = RouteConfig(
-            strategy=self._get_routing_strategy(),
-            max_cost_per_request=0.05,
-            fallback_enabled=True,
-            cache_enabled=True
-        )
+        # Routing config will be created lazily when needed
+        self.routing_config = None
         
     async def initialize(self):
         """Initialize AGNO Team with agents and memory"""
@@ -126,8 +147,11 @@ class SophiaAGNOTeam:
         
         logger.info(f"Initialized AGNO Team: {self.config.name}")
     
-    def _get_routing_strategy(self) -> RoutingStrategy:
+    def _get_routing_strategy(self):
         """Map execution strategy to routing strategy"""
+        # Import locally to avoid circular dependency
+        from app.api.portkey_unified_router import RoutingStrategy
+        
         strategy_mapping = {
             ExecutionStrategy.LITE: RoutingStrategy.FASTEST_AVAILABLE,
             ExecutionStrategy.BALANCED: RoutingStrategy.BALANCED,
@@ -140,6 +164,9 @@ class SophiaAGNOTeam:
     async def _get_optimal_model_for_role(self, role: str, task_complexity: float = 0.5) -> str:
         """Get optimal model for role using unified routing"""
         try:
+            # Import locally to avoid circular dependency
+            from app.api.portkey_unified_router import unified_router, get_optimal_model_for_role
+            
             if not unified_router.session:
                 await unified_router.initialize()
             

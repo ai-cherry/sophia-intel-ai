@@ -17,7 +17,15 @@ import logging
 
 from app.core.circuit_breaker import with_circuit_breaker
 from app.elite_portkey_config import ElitePortkeyGateway, EliteAgentConfig, EliteOptimizations
-from app.swarms.agno_teams import ExecutionStrategy
+
+# Import ExecutionStrategy locally to avoid circular import
+class ExecutionStrategy(Enum):
+    """Swarm execution strategies"""
+    LITE = "lite"
+    BALANCED = "balanced"
+    QUALITY = "quality"
+    DEBATE = "debate"
+    CONSENSUS = "consensus"
 
 logger = logging.getLogger(__name__)
 
@@ -255,7 +263,7 @@ class PortkeyUnifiedRouter:
         # Get candidate models for role
         primary_model = self.agent_config.MODELS.get(agent_role)
         if not primary_model:
-            raise HTTPException(status_code=400, f"Unknown agent role: {agent_role}")
+            raise HTTPException(status_code=400, detail=f"Unknown agent role: {agent_role}")
         
         # Get fallback models based on execution strategy
         candidate_models = self._get_candidate_models(agent_role, execution_strategy)

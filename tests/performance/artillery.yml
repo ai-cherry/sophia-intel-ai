@@ -1,0 +1,28 @@
+config:
+  target: "http://localhost:8000"
+  phases:
+    - duration: 60
+      arrivalRate: 10
+
+scenarios:
+  - flow:
+      - post:
+          url: "/embeddings"
+          json:
+            text: "test performance"
+            model: "text-embedding-ada-002"
+          headers:
+            Content-Type: "application/json"
+      - post:
+          url: "/mcp/memory/store"
+          json:
+            content: "test memory"
+            metadata: {"source": "performance_test"}
+          headers:
+            Content-Type: "application/json"
+      - post:
+          url: "/mcp/memory/search"
+          json:
+            query: "test"
+          headers:
+            Content-Type: "application/json"

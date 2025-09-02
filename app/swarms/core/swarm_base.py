@@ -13,10 +13,10 @@ from typing import Dict, List, Any, Optional, Tuple, Union
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
+from app.swarms.communication.message_bus import MessageBus
 
 from app.core.circuit_breaker import with_circuit_breaker
 from app.models.requests import ExecutionResponse, SwarmResponse
-
 
 logger = logging.getLogger(__name__)
 
@@ -194,7 +194,7 @@ class SwarmBase(ABC):
     Consolidated from ImprovedAgentSwarm, OptimizedSwarm, and various specialized swarms
     """
 
-    def __init__(self, config: SwarmConfig, agents: Optional[List[Any]] = None):
+    def __init__(self, config: SwarmConfig, agents: Optional[List[Any]] = None, message_bus: Optional[MessageBus] = None):
         self.config = config
         self.agents = agents or []
         self.metrics = SwarmMetrics()
@@ -203,6 +203,7 @@ class SwarmBase(ABC):
         # Core components
         self.patterns = {}
         self.memory_client = None
+        self.message_bus = message_bus or MessageBus()
         self.orchestrator = None
 
         # Internal state
@@ -210,10 +211,38 @@ class SwarmBase(ABC):
 
         logger.info(f"🐝 Initialized {config.swarm_type.value} swarm: {config.swarm_id}")
 
-    @abstractmethod
     async def initialize(self) -> bool:
         """Initialize swarm components and agents"""
-        pass
+        if self.is_initialized:
+            return True
+
+        # Initialize message bus
+        await self.message_bus.initialize()
+
+        # Initialize memory client if enabled
+        if self.config.memory_enabled:
+            # In real implementation, this would initialize memory client
+            self.memory_client = None
+
+        # Initialize patterns
+        enabled_patterns = self.config.enabled_patterns
+        self.patterns = {}
+        for pattern_name in enabled_patterns:
+            if pattern_name in _swarm_patterns:
+                try:
+                    pattern = _swarm_patterns[pattern_name]()
+                    self.patterns[pattern_name] = pattern
+                    logger.info(f"Intialized pattern: {pattern_name}")
+                except Exception as e:
+                    logger.warning(f"Failed to initialize pattern {pattern_name}: {str(e)}")
+
+        # Initialize agents
+        for agent in self.agents:
+            if hasattr(agent, 'initialize'):
+                await agent.initialize()
+
+        self.is_initialized = True
+        return True
 
     @abstractmethod
     async def solve_problem(self, problem: Dict[str, Any]) -> SwarmResponse:
@@ -522,6 +551,13 @@ class SwarmBase(ABC):
             except Exception as e:
                 logger.warning(f"Memory client cleanup failed: {e}")
 
+        # Cleanup message bus
+        if hasattr(self.message_bus, 'close'):
+            try:
+                await self.message_bus.close()
+            except Exception as e:
+                logger.warning(f"Message bus cleanup failed: {e}")
+
         self.is_initialized = False
         logger.info(f"🧹 Cleaned up swarm: {self.config.swarm_id}")
 
@@ -618,7 +654,8 @@ class SwarmFactory:
     def create_swarm(
         swarm_type: SwarmType,
         config: Optional[SwarmConfig] = None,
-        agents: Optional[List[Any]] = None
+        agents: Optional[List[Any]] = None,
+        message_bus: Optional[MessageBus] = None
     ) -> SwarmBase:
         """Create swarm instance based on type"""
         if isinstance(swarm_type, str):
@@ -633,7 +670,7 @@ class SwarmFactory:
 
         # Would instantiate specific swarm classes here
         # For now, return base class (placeholder)
-        return SwarmBase(config, agents) if agents else SwarmBase(config)
+        return SwarmBase(config, agents, message_bus) if agents else SwarmBase(config, None, message_bus)
 
     @staticmethod
     def create_swarm_from_config(config_dict: Dict[str, Any]) -> SwarmBase:

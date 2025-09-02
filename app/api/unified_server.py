@@ -33,13 +33,8 @@ from app.api.health import router as health_router
 # Import unified chat and WebSocket systems
 
 # Import consolidated memory and vector systems
-try:
-    from pulumi.mcp_server.src.unified_memory import UnifiedMemorySystem
-    from pulumi.vector_store.src.modern_embeddings import ModernEmbeddingSystem
-except ImportError:
-    # Fallback to app-level imports
-    UnifiedMemorySystem = None
-    ModernEmbeddingSystem = None
+from pulumi.mcp_server.src.unified_memory import UnifiedMemorySystem, MemoryEntry, MemoryType
+from pulumi.vector_store.src.modern_embeddings import ModernEmbeddingSystem
 
 # Import API routers
 from app.api.routers import swarms as swarms_router
@@ -48,35 +43,9 @@ from app.api.routers import swarms as swarms_router
 from app.swarms.unified_enhanced_orchestrator import UnifiedSwarmOrchestrator
 from app.core.circuit_breaker import with_circuit_breaker, get_llm_circuit_breaker, get_weaviate_circuit_breaker, get_redis_circuit_breaker, get_webhook_circuit_breaker
 
-# Import memory classes with try/catch for production deployment
-try:
-    from pulumi.mcp_server.src.unified_memory import MemoryEntry, MemoryType
-except ImportError:
-    # Create stub classes for deployment if pulumi modules not available
-    class MemoryType:
-        SEMANTIC = "semantic"
-        EPISODIC = "episodic"
-        PROCEDURAL = "procedural"
-    
-    class MemoryEntry:
-        def __init__(self, topic, content, source, tags=None, memory_type=None):
-            self.topic = topic
-            self.content = content
-            self.source = source
-            self.tags = tags or []
-            self.memory_type = memory_type or MemoryType.SEMANTIC
-
-# Import streaming functions with error handling
-try:
-    from app.api.real_streaming import stream_real_ai_execution
-    from app.api.real_swarm_execution import stream_real_swarm_execution
-except ImportError:
-    # Create fallback streaming functions for deployment
-    async def stream_real_ai_execution(request):
-        yield '{"status": "fallback", "message": "Real streaming not available"}'
-    
-    async def stream_real_swarm_execution(request, state):
-        yield 'data: {"status": "fallback", "message": "Real swarm execution not available"}\n\n'
+# Import streaming functions with hard failures if unavailable
+from app.api.real_streaming import stream_real_ai_execution
+from app.api.real_swarm_execution import stream_real_swarm_execution
 
 # ============================================
 # Enhanced Configuration following ADR-006
@@ -222,19 +191,7 @@ class ServerConfig:
             print_env_status(detailed=True)
 
 # Create singleton configuration instance
-try:
-    server_config = ServerConfig()
-except Exception as e:
-    logger.error(f"❌ Failed to initialize ServerConfig: {e}")
-    # Create fallback minimal config for startup
-    class FallbackConfig:
-        HOST = "0.0.0.0"
-        PORT = 8003
-        ALLOWED_ORIGINS = ["*"]  # Permissive for startup
-        LOCAL_DEV_MODE = True
-        def print_config(self):
-            print("⚠️  Using fallback configuration")
-    server_config = FallbackConfig()
+server_config = ServerConfig()
 
 # ============================================
 # Global State
@@ -772,18 +729,7 @@ async def run_team(request: RunRequest):
             
             return JSONResponse(result)
         except Exception as e:
-            # Fallback response if executor fails
-            result = {
-                "team_id": request.team_id,
-                "message": request.message,
-                "response": f"Hello! I'm ready to help. (Note: Real swarm execution encountered an issue: {str(e)})",
-                "critic": "",
-                "judge": "",
-                "gates": {"status": "fallback"},
-                "tool_calls": [],
-                "created_at": datetime.now().isoformat()
-            }
-            return JSONResponse(result)
+            raise HTTPException(status_code=500, detail=f"Swarm execution failed: {e}")
     
     # Default to streaming response
     return StreamingResponse(

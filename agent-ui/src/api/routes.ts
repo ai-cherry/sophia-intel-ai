@@ -1,4 +1,6 @@
 export const APIRoutes = {
+  GetConfig: (PlaygroundApiUrl: string) =>
+    `${PlaygroundApiUrl}/config`,
   GetPlaygroundAgents: (PlaygroundApiUrl: string) =>
     `${PlaygroundApiUrl}/agents`,
   AgentRun: (PlaygroundApiUrl: string) =>

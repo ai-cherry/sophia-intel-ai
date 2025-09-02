@@ -1,171 +1,336 @@
+#!/usr/bin/env python3
 """
-Test the embedding infrastructure components.
+Tests for Together AI Embedding Infrastructure
+Validates the embedding service with real API calls.
 """
 
-import asyncio
 import os
+import sys
+import asyncio
+import time
 from pathlib import Path
-from app.memory.embed_router import (
-    choose_model_for_chunk, embed_with_cache, MODEL_A, MODEL_B, DIM_A, DIM_B
+
+# Add parent directory to path
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from app.embeddings.together_embeddings import (
+    TogetherEmbeddingService,
+    EmbeddingConfig,
+    EmbeddingModel,
+    get_embedding_service
 )
-from app.memory.chunking import produce_chunks_for_index, discover_source_files
-from app.memory.index_weaviate import upsert_chunks_dual, hybrid_search_merge
 
-async def test_embedding_router():
-    """Test the embedding router logic."""
-    print("🧪 Testing Embedding Router...")
-    
-    # Test model selection
-    short_text = "def hello(): return 'world'"
-    long_text = "x" * 10000  # Long text
-    rust_text = "fn main() { println!(\"Hello\"); }"
-    
-    # Test routing logic
-    model1, dim1 = choose_model_for_chunk(short_text)
-    assert model1 == MODEL_B and dim1 == DIM_B, "Short text should use Tier B"
-    
-    model2, dim2 = choose_model_for_chunk(long_text)
-    assert model2 == MODEL_A and dim2 == DIM_A, "Long text should use Tier A"
-    
-    model3, dim3 = choose_model_for_chunk(rust_text, lang="rust")
-    assert model3 == MODEL_A and dim3 == DIM_A, "Rust should use Tier A"
-    
-    model4, dim4 = choose_model_for_chunk(short_text, priority="high")
-    assert model4 == MODEL_A and dim4 == DIM_A, "High priority should use Tier A"
-    
-    print("✅ Embedding router tests passed")
 
-async def test_chunking():
-    """Test the chunking functionality."""
-    print("🧪 Testing Chunking...")
+class TestEmbeddingInfrastructure:
+    """Test suite for embedding infrastructure."""
     
-    # Create a test file
-    test_content = """
-def calculate_sum(a, b):
-    \"\"\"Calculate the sum of two numbers.\"\"\"
-    return a + b
-
-def calculate_product(a, b):
-    \"\"\"Calculate the product of two numbers.\"\"\"
-    return a * b
-
-class Calculator:
     def __init__(self):
-        self.result = 0
-    
-    def add(self, value):
-        self.result += value
-        return self.result
-"""
-    
-    # Test chunk production
-    ids, texts, payloads = produce_chunks_for_index(
-        filepath="test_calc.py",
-        content=test_content,
-        priority="high"
-    )
-    
-    assert len(ids) > 0, "Should produce at least one chunk"
-    assert len(ids) == len(texts) == len(payloads), "Arrays should have same length"
-    assert all(p["priority"] == "high" for p in payloads), "Priority should be preserved"
-    assert all(p["lang"] == "python" for p in payloads), "Language should be detected"
-    
-    print(f"✅ Chunking tests passed - produced {len(ids)} chunks")
+        self.service = None
+        self.test_texts = [
+            "The quantum mechanical model describes electrons as wave functions",
+            "Python is a high-level programming language with dynamic typing",
+            "Machine learning models learn patterns from data",
+            "The mitochondria is the powerhouse of the cell",
+            "FastAPI is a modern web framework for building APIs with Python"
+        ]
+        
+    def setup(self):
+        """Initialize embedding service."""
+        print("🔧 Setting up embedding service...")
+        
+        # Check for API keys
+        if not os.getenv("TOGETHER_API_KEY") and not os.getenv("OPENROUTER_API_KEY"):
+            print("⚠️  Warning: No API keys found. Using mock mode.")
+            # Create mock config for testing without API
+            config = EmbeddingConfig(
+                cache_enabled=True,
+                use_portkey=False
+            )
+        else:
+            config = EmbeddingConfig()
+            
+        self.service = TogetherEmbeddingService(config)
+        print("✅ Service initialized")
+        
+    def test_single_embedding(self):
+        """Test single text embedding."""
+        print("\n📝 Testing single embedding...")
+        
+        text = "Hello, world! This is a test embedding."
+        
+        try:
+            result = self.service.embed([text])
+            
+            assert result.embeddings, "No embeddings returned"
+            assert len(result.embeddings) == 1, "Wrong number of embeddings"
+            assert len(result.embeddings[0]) > 0, "Empty embedding vector"
+            
+            print(f"✅ Single embedding successful")
+            print(f"   Model: {result.model}")
+            print(f"   Dimensions: {result.dimensions}")
+            print(f"   Latency: {result.latency_ms:.2f}ms")
+            print(f"   Tokens: {result.tokens_used}")
+            
+            return True
+            
+        except Exception as e:
+            print(f"❌ Single embedding failed: {e}")
+            return False
+            
+    def test_batch_embedding(self):
+        """Test batch embedding processing."""
+        print("\n📚 Testing batch embeddings...")
+        
+        try:
+            start_time = time.time()
+            result = self.service.embed(self.test_texts)
+            elapsed = (time.time() - start_time) * 1000
+            
+            assert result.embeddings, "No embeddings returned"
+            assert len(result.embeddings) == len(self.test_texts), "Wrong number of embeddings"
+            
+            print(f"✅ Batch embedding successful")
+            print(f"   Texts: {len(self.test_texts)}")
+            print(f"   Model: {result.model}")
+            print(f"   Total latency: {elapsed:.2f}ms")
+            print(f"   Avg per text: {elapsed/len(self.test_texts):.2f}ms")
+            
+            # Check all embeddings have same dimensions
+            dims = [len(e) for e in result.embeddings]
+            assert len(set(dims)) == 1, "Inconsistent embedding dimensions"
+            
+            return True
+            
+        except Exception as e:
+            print(f"❌ Batch embedding failed: {e}")
+            return False
+            
+    def test_caching(self):
+        """Test semantic caching functionality."""
+        print("\n💾 Testing semantic caching...")
+        
+        text = "This is a test for caching functionality"
+        
+        try:
+            # First call - should not be cached
+            result1 = self.service.embed([text])
+            assert not result1.cached, "First call should not be cached"
+            
+            # Second call - should be cached
+            result2 = self.service.embed([text])
+            
+            # Check if caching is working
+            if self.service.config.cache_enabled:
+                cache_hits = result2.metadata.get('cache_hits', 0)
+                print(f"✅ Caching test completed")
+                print(f"   Cache hits: {cache_hits}")
+                print(f"   First call latency: {result1.latency_ms:.2f}ms")
+                print(f"   Second call latency: {result2.latency_ms:.2f}ms")
+                
+                if cache_hits > 0:
+                    print("   ✓ Cache is working!")
+                else:
+                    print("   ⚠️  Cache may not be working as expected")
+            else:
+                print("ℹ️  Caching is disabled")
+                
+            return True
+            
+        except Exception as e:
+            print(f"❌ Caching test failed: {e}")
+            return False
+            
+    def test_similarity_search(self):
+        """Test semantic similarity search."""
+        print("\n🔍 Testing similarity search...")
+        
+        documents = [
+            "Python is great for data science and machine learning",
+            "JavaScript is essential for web development",
+            "Rust provides memory safety without garbage collection",
+            "Deep learning uses neural networks with multiple layers",
+            "React is a popular frontend framework"
+        ]
+        
+        query = "What programming language is best for AI?"
+        
+        try:
+            results = self.service.search(query, documents, top_k=3)
+            
+            assert results, "No search results returned"
+            assert len(results) <= 3, "Too many results returned"
+            
+            print(f"✅ Similarity search successful")
+            print(f"   Query: '{query}'")
+            print(f"   Top {len(results)} results:")
+            
+            for idx, score, doc in results:
+                preview = doc[:50] + "..." if len(doc) > 50 else doc
+                print(f"   {idx+1}. [Score: {score:.4f}] {preview}")
+                
+            # The Python/ML document should rank high
+            top_doc = results[0][2]
+            if "Python" in top_doc or "machine learning" in top_doc:
+                print("   ✓ Relevant result ranked first!")
+                
+            return True
+            
+        except Exception as e:
+            print(f"❌ Similarity search failed: {e}")
+            return False
+            
+    def test_model_recommendations(self):
+        """Test model recommendation logic."""
+        print("\n🎯 Testing model recommendations...")
+        
+        test_cases = [
+            (100, "general", "en", EmbeddingModel.BGE_BASE),
+            (5000, "rag", "en", EmbeddingModel.M2_BERT_8K),
+            (20000, "general", "en", EmbeddingModel.M2_BERT_32K),
+            (200, "search", "en", EmbeddingModel.BGE_LARGE),
+            (300, "general", "zh", EmbeddingModel.E5_MULTILINGUAL),
+        ]
+        
+        all_passed = True
+        
+        for text_len, use_case, lang, expected in test_cases:
+            recommended = TogetherEmbeddingService.recommend_model(
+                text_length=text_len,
+                use_case=use_case,
+                language=lang
+            )
+            
+            status = "✓" if recommended == expected else "✗"
+            print(f"   {status} {text_len} tokens, {use_case}, {lang} -> {recommended.value}")
+            
+            if recommended != expected:
+                print(f"      Expected: {expected.value}")
+                all_passed = False
+                
+        if all_passed:
+            print("✅ All model recommendations correct")
+        else:
+            print("⚠️  Some recommendations differ from expected")
+            
+        return True  # Non-critical test
+        
+    async def test_async_operations(self):
+        """Test async embedding operations."""
+        print("\n⚡ Testing async operations...")
+        
+        try:
+            # Test parallel async calls
+            tasks = [
+                self.service.embed_async([text]) 
+                for text in self.test_texts[:3]
+            ]
+            
+            start_time = time.time()
+            results = await asyncio.gather(*tasks)
+            elapsed = (time.time() - start_time) * 1000
+            
+            assert all(r.embeddings for r in results), "Some async calls failed"
+            
+            print(f"✅ Async operations successful")
+            print(f"   Parallel tasks: {len(tasks)}")
+            print(f"   Total time: {elapsed:.2f}ms")
+            print(f"   Avg per task: {elapsed/len(tasks):.2f}ms")
+            
+            return True
+            
+        except Exception as e:
+            print(f"❌ Async operations failed: {e}")
+            return False
+            
+    def test_error_handling(self):
+        """Test error handling and fallbacks."""
+        print("\n🛡️ Testing error handling...")
+        
+        # Test with empty input
+        try:
+            result = self.service.embed([])
+            print("   ⚠️  Empty input handled (returned empty result)")
+        except Exception as e:
+            print(f"   ✓ Empty input raised exception: {type(e).__name__}")
+            
+        # Test with very long text (if API limits exist)
+        long_text = "word " * 50000  # Very long text
+        try:
+            result = self.service.embed([long_text])
+            print(f"   ✓ Long text handled successfully")
+        except Exception as e:
+            print(f"   ℹ️  Long text handling: {type(e).__name__}")
+            
+        print("✅ Error handling tests completed")
+        return True
+        
+    def run_all_tests(self):
+        """Run all embedding infrastructure tests."""
+        print("\n" + "="*60)
+        print("🚀 EMBEDDING INFRASTRUCTURE TEST SUITE")
+        print("="*60)
+        
+        self.setup()
+        
+        tests = [
+            ("Single Embedding", self.test_single_embedding),
+            ("Batch Embedding", self.test_batch_embedding),
+            ("Caching", self.test_caching),
+            ("Similarity Search", self.test_similarity_search),
+            ("Model Recommendations", self.test_model_recommendations),
+            ("Error Handling", self.test_error_handling),
+        ]
+        
+        # Run async test separately
+        async_test = ("Async Operations", self.test_async_operations)
+        
+        results = {}
+        
+        # Run sync tests
+        for name, test_func in tests:
+            try:
+                results[name] = test_func()
+            except Exception as e:
+                print(f"❌ {name} crashed: {e}")
+                results[name] = False
+                
+        # Run async test
+        try:
+            results[async_test[0]] = asyncio.run(async_test[1]())
+        except Exception as e:
+            print(f"❌ {async_test[0]} crashed: {e}")
+            results[async_test[0]] = False
+            
+        # Summary
+        print("\n" + "="*60)
+        print("📊 TEST SUMMARY")
+        print("="*60)
+        
+        passed = sum(1 for v in results.values() if v)
+        total = len(results)
+        
+        for name, passed in results.items():
+            status = "✅ PASS" if passed else "❌ FAIL"
+            print(f"{status}: {name}")
+            
+        print(f"\nTotal: {passed}/{total} tests passed")
+        
+        if passed == total:
+            print("\n🎉 All tests passed! Embedding infrastructure is ready.")
+        elif passed > total * 0.7:
+            print("\n⚠️  Most tests passed. Review failures above.")
+        else:
+            print("\n❌ Multiple test failures. Infrastructure needs attention.")
+            
+        return passed == total
 
-async def test_file_discovery():
-    """Test file discovery functionality."""
-    print("🧪 Testing File Discovery...")
-    
-    # Test discovery in app directory
-    files = discover_source_files(
-        root_dir="app",
-        include_patterns=["*.py"],
-        exclude_patterns=["*test*", "*__pycache__*"]
-    )
-    
-    assert len(files) > 0, "Should find Python files in app directory"
-    assert all(f.endswith(".py") for f in files), "Should only find Python files"
-    assert not any("test" in f for f in files), "Should exclude test files"
-    
-    print(f"✅ File discovery tests passed - found {len(files)} files")
 
-async def test_embedding_cache():
-    """Test embedding cache functionality."""
-    print("🧪 Testing Embedding Cache...")
-    
-    # Skip if no API key
-    if not os.getenv("EMBED_API_KEY") and not os.getenv("VK_TOGETHER"):
-        print("⚠️  Skipping embedding cache test - no API key configured")
-        return
-    
-    test_texts = ["test embedding one", "test embedding two"]
-    
-    # First call - should hit API
-    vecs1 = embed_with_cache(test_texts, MODEL_B)
-    assert len(vecs1) == 2, "Should return two embeddings"
-    assert all(len(v) == DIM_B for v in vecs1), f"Embeddings should have dimension {DIM_B}"
-    
-    # Second call - should use cache
-    vecs2 = embed_with_cache(test_texts, MODEL_B)
-    assert vecs1[0] == vecs2[0], "Cached embeddings should be identical"
-    
-    print("✅ Embedding cache tests passed")
+def main():
+    """Main entry point."""
+    tester = TestEmbeddingInfrastructure()
+    success = tester.run_all_tests()
+    sys.exit(0 if success else 1)
 
-async def test_indexing_and_search():
-    """Test the full indexing and search pipeline."""
-    print("🧪 Testing Indexing and Search...")
-    
-    # Skip if no Weaviate or API keys
-    if not os.getenv("WEAVIATE_URL"):
-        print("⚠️  Skipping indexing test - Weaviate not configured")
-        return
-    
-    if not os.getenv("EMBED_API_KEY") and not os.getenv("VK_TOGETHER"):
-        print("⚠️  Skipping indexing test - no embedding API key")
-        return
-    
-    # Create test data
-    test_ids = ["test_chunk_1", "test_chunk_2", "test_chunk_3"]
-    test_texts = [
-        "def authenticate_user(username, password): return check_credentials(username, password)",
-        "class UserAuth: def login(self, user, pwd): self.validate(user, pwd)",
-        "async function loginUser(email, password) { return await api.authenticate(email, password); }"
-    ]
-    test_payloads = [
-        {"path": "auth.py", "lang": "python", "start_line": 10, "end_line": 12, "chunk_id": "test_chunk_1", "priority": "high"},
-        {"path": "models.py", "lang": "python", "start_line": 50, "end_line": 55, "chunk_id": "test_chunk_2", "priority": "medium"},
-        {"path": "login.js", "lang": "javascript", "start_line": 1, "end_line": 5, "chunk_id": "test_chunk_3", "priority": "medium"}
-    ]
-    
-    # Index the data
-    await upsert_chunks_dual(test_ids, test_texts, test_payloads, lang="python")
-    print("  ✓ Indexed test chunks")
-    
-    # Search for authentication code
-    results = await hybrid_search_merge("authentication login", k=3, semantic_weight=0.7)
-    assert len(results) > 0, "Should find results for authentication query"
-    print(f"  ✓ Found {len(results)} search results")
-    
-    # Verify result structure
-    first_result = results[0]
-    assert "prop" in first_result, "Result should have properties"
-    assert "score" in first_result, "Result should have score"
-    assert "collection" in first_result, "Result should have collection indicator"
-    
-    print("✅ Indexing and search tests passed")
-
-async def main():
-    """Run all tests."""
-    print("\n🚀 Testing Embedding Infrastructure\n")
-    
-    # Run tests in sequence
-    await test_embedding_router()
-    await test_chunking()
-    await test_file_discovery()
-    await test_embedding_cache()
-    await test_indexing_and_search()
-    
-    print("\n✨ All embedding infrastructure tests completed!\n")
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()

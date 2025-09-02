@@ -11,7 +11,7 @@ import subprocess
 import json
 import hashlib
 from pathlib import Path
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional, List, Tuple
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
@@ -191,9 +191,26 @@ class EnvConfig:
     # =============================================================================
     # MODEL CONFIGURATION
     # =============================================================================
+    # Orchestrator model (restricted to GPT-5)
+    orchestrator_model: str = "openai/gpt-5"
+    
+    # Agent swarm allowed models
+    agent_swarm_models: str = "x-ai/grok-code-fast-1,google/gemini-2.5-flash,google/gemini-2.5-pro,deepseek/deepseek-chat-v3-0324,deepseek/deepseek-chat-v3.1,qwen/qwen3-30b-a3b,qwen/qwen3-coder,openai/gpt-5,deepseek/deepseek-r1-0528:free,openai/gpt-4o-mini,z-ai/glm-4.5"
+    
+    # Legacy model tiers (deprecated)
     default_fast_models: str = "groq/llama-3.2-90b-text-preview,openai/gpt-4o-mini"
     default_balanced_models: str = "openai/gpt-4o,anthropic/claude-3.5-sonnet"
     default_heavy_models: str = "anthropic/claude-3.5-sonnet,qwen/qwen-2.5-coder-32b-instruct,openai/gpt-4o"
+    
+    # Embedding models (Together AI via Portkey)
+    embedding_primary_model: str = "togethercomputer/m2-bert-80M-8k-retrieval"
+    embedding_fallback_models: str = "BAAI/bge-large-en-v1.5,BAAI/bge-base-en-v1.5"
+    embedding_cache_enabled: bool = True
+    embedding_cache_ttl: int = 3600
+    embedding_similarity_threshold: float = 0.95
+    embedding_batch_size: int = 32
+    
+    # Legacy embedding tiers (deprecated)
     embed_model_tier_s: str = "voyage-3-large"
     embed_model_tier_a: str = "cohere/embed-multilingual-v3.0"
     embed_model_tier_b: str = "BAAI/bge-base-en-v1.5"
@@ -608,9 +625,21 @@ class EnhancedEnvLoader:
         self.config.api_rate_window = int(os.getenv("API_RATE_WINDOW", str(self.config.api_rate_window)))
         
         # Model Configuration
+        self.config.orchestrator_model = os.getenv("ORCHESTRATOR_MODEL", self.config.orchestrator_model)
+        self.config.agent_swarm_models = os.getenv("AGENT_SWARM_MODELS", self.config.agent_swarm_models)
         self.config.default_fast_models = os.getenv("DEFAULT_FAST_MODELS", self.config.default_fast_models)
         self.config.default_balanced_models = os.getenv("DEFAULT_BALANCED_MODELS", self.config.default_balanced_models)
         self.config.default_heavy_models = os.getenv("DEFAULT_HEAVY_MODELS", self.config.default_heavy_models)
+        
+        # Embedding Configuration
+        self.config.embedding_primary_model = os.getenv("EMBEDDING_PRIMARY_MODEL", self.config.embedding_primary_model)
+        self.config.embedding_fallback_models = os.getenv("EMBEDDING_FALLBACK_MODELS", self.config.embedding_fallback_models)
+        self.config.embedding_cache_enabled = os.getenv("EMBEDDING_CACHE_ENABLED", "true").lower() == "true"
+        self.config.embedding_cache_ttl = int(os.getenv("EMBEDDING_CACHE_TTL", str(self.config.embedding_cache_ttl)))
+        self.config.embedding_similarity_threshold = float(os.getenv("EMBEDDING_SIMILARITY_THRESHOLD", str(self.config.embedding_similarity_threshold)))
+        self.config.embedding_batch_size = int(os.getenv("EMBEDDING_BATCH_SIZE", str(self.config.embedding_batch_size)))
+        
+        # Legacy embedding tiers
         self.config.embed_model_tier_s = os.getenv("EMBED_MODEL_TIER_S", self.config.embed_model_tier_s)
         self.config.embed_model_tier_a = os.getenv("EMBED_MODEL_TIER_A", self.config.embed_model_tier_a)
         self.config.embed_model_tier_b = os.getenv("EMBED_MODEL_TIER_B", self.config.embed_model_tier_b)
@@ -977,6 +1006,150 @@ def refresh_env_config() -> bool:
     if _env_loader:
         return _env_loader.refresh_configuration()
     return False
+
+def get_service_manifest() -> Dict[str, Any]:
+    """
+    Generate a service manifest with all configuration needed by clients.
+    
+    Returns:
+        JSON-serializable manifest with service URLs, models, and settings
+    """
+    config = get_env_config()
+    
+    # Parse model lists
+    agent_models = [m.strip() for m in config.agent_swarm_models.split(',')]
+    embedding_fallbacks = [m.strip() for m in config.embedding_fallback_models.split(',')]
+    
+    manifest = {
+        "environment": {
+            "name": config.environment_name,
+            "type": config.environment_type,
+            "domain": config.domain,
+            "region": config.region,
+            "loaded_from": config.loaded_from,
+            "loaded_at": config.loaded_at.isoformat(),
+            "config_hash": config.config_hash
+        },
+        "services": {
+            "unified_api": {
+                "url": config.unified_api_url,
+                "health": f"{config.unified_api_url}/healthz",
+                "docs": f"{config.unified_api_url}/docs"
+            },
+            "frontend": {
+                "url": config.frontend_url
+            },
+            "mcp_server": {
+                "url": config.mcp_server_url
+            },
+            "vector_store": {
+                "url": config.vector_store_url
+            },
+            "weaviate": {
+                "url": config.weaviate_url
+            },
+            "redis": {
+                "host": config.redis_host,
+                "port": config.redis_port
+            }
+        },
+        "models": {
+            "orchestrator": {
+                "model": config.orchestrator_model,
+                "description": "Primary orchestrator model (GPT-5)"
+            },
+            "agent_swarm": {
+                "allowed_models": agent_models,
+                "description": "Models available for agent swarm selection"
+            },
+            "embeddings": {
+                "primary": config.embedding_primary_model,
+                "fallbacks": embedding_fallbacks,
+                "cache": {
+                    "enabled": config.embedding_cache_enabled,
+                    "ttl_seconds": config.embedding_cache_ttl,
+                    "similarity_threshold": config.embedding_similarity_threshold
+                },
+                "batch_size": config.embedding_batch_size
+            }
+        },
+        "features": {
+            "streaming": config.enable_streaming,
+            "memory": config.enable_memory,
+            "teams": config.enable_teams,
+            "workflows": config.enable_workflows,
+            "apps": config.enable_apps,
+            "evaluation_gates": config.enable_evaluation_gates,
+            "safety_checks": config.enable_safety_checks
+        },
+        "limits": {
+            "daily_budget_usd": config.daily_budget_usd,
+            "max_tokens_per_request": config.max_tokens_per_request,
+            "max_requests_per_minute": config.max_requests_per_minute,
+            "api_rate_limit": config.api_rate_limit,
+            "api_rate_window": config.api_rate_window
+        },
+        "ports": {
+            "api": 8003,
+            "frontend": 3000,
+            "mcp": 8004,
+            "vector_store": 8005
+        },
+        "timestamp": datetime.now().isoformat(),
+        "version": "2.0.0"
+    }
+    
+    return manifest
+
+async def check_service_health() -> Dict[str, Any]:
+    """
+    Check health status of all configured services.
+    
+    Returns:
+        Health status for each service
+    """
+    import aiohttp
+    import asyncio
+    
+    config = get_env_config()
+    health_status = {}
+    
+    services_to_check = [
+        ("unified_api", f"{config.unified_api_url}/healthz"),
+        ("weaviate", f"{config.weaviate_url}/v1/.well-known/ready"),
+    ]
+    
+    async def check_service(name: str, url: str) -> Tuple[str, Dict[str, Any]]:
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, timeout=5) as response:
+                    if response.status == 200:
+                        return name, {"status": "healthy", "latency_ms": 0}
+                    else:
+                        return name, {"status": "unhealthy", "error": f"HTTP {response.status}"}
+        except asyncio.TimeoutError:
+            return name, {"status": "timeout", "error": "Request timed out"}
+        except Exception as e:
+            return name, {"status": "error", "error": str(e)}
+    
+    # Check services in parallel
+    tasks = [check_service(name, url) for name, url in services_to_check]
+    results = await asyncio.gather(*tasks)
+    
+    for name, status in results:
+        health_status[name] = status
+    
+    # Check Redis separately (different protocol)
+    try:
+        import redis
+        r = redis.Redis(host=config.redis_host, port=config.redis_port, 
+                       password=config.redis_password, socket_timeout=5)
+        r.ping()
+        health_status["redis"] = {"status": "healthy"}
+    except Exception as e:
+        health_status["redis"] = {"status": "error", "error": str(e)}
+    
+    return health_status
 
 
 if __name__ == "__main__":

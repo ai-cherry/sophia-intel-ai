@@ -22,7 +22,7 @@ from contextlib import asynccontextmanager
 import logging
 
 # Import enhanced configuration system following ADR-006
-from app.config.env_loader import get_env_config, print_env_status
+from app.config.env_loader import get_env_config, print_env_status, get_service_manifest, check_service_health
 
 # Import OpenTelemetry configuration
 from app.observability.otel_config import configure_opentelemetry, trace_llm_call
@@ -515,56 +515,40 @@ async def mcp_status():
     }
 
 @app.get("/config")
-@with_circuit_breaker("external_api")
 async def get_config():
-    """Get runtime configuration (dev mode only)."""
-    # Only allow in development mode
-    if not os.getenv("LOCAL_DEV_MODE", "false").lower() == "true":
-        raise HTTPException(status_code=403, detail="Config endpoint only available in dev mode")
-    
-    return {
-        "environment": "development" if os.getenv("LOCAL_DEV_MODE") else "production",
-        "server": {
-            "api_port": os.getenv("AGENT_API_PORT", "8003"),
-            "ui_port": os.getenv("AGENT_UI_PORT", "3000"),
-            "allowed_origins": os.getenv("ALLOWED_ORIGINS", "http://localhost:3000").split(","),
-            "rate_limit": os.getenv("RATE_LIMIT_PER_MINUTE", "60")
-        },
-        "features": {
-            "mcp_servers": {
-                "filesystem": os.getenv("ENABLE_MCP_FILESYSTEM", "true").lower() == "true",
-                "git": os.getenv("ENABLE_MCP_GIT", "true").lower() == "true",
-                "supermemory": os.getenv("ENABLE_MCP_SUPERMEMORY", "true").lower() == "true"
+    """Get service manifest with configuration and health status."""
+    try:
+        # Get the comprehensive service manifest
+        manifest = get_service_manifest()
+        
+        # Add real-time health status if in dev mode
+        if os.getenv("LOCAL_DEV_MODE", "false").lower() == "true":
+            try:
+                health_status = await check_service_health()
+                manifest["health"] = health_status
+            except Exception as e:
+                logger.warning(f"Could not fetch health status: {e}")
+                manifest["health"] = {"error": str(e)}
+        
+        return manifest
+        
+    except Exception as e:
+        logger.error(f"Error generating config manifest: {e}")
+        # Return fallback configuration
+        return {
+            "error": "Failed to generate full manifest",
+            "fallback": True,
+            "environment": os.getenv("ENVIRONMENT", "dev"),
+            "services": {
+                "unified_api": {
+                    "url": f"http://localhost:{os.getenv('AGENT_API_PORT', '8003')}"
+                },
+                "frontend": {
+                    "url": f"http://localhost:{os.getenv('AGENT_UI_PORT', '3000')}"
+                }
             },
-            "evaluation_gates": ["security", "accuracy", "consistency", "safety"],
-            "swarm_patterns": ["adversarial_debate", "quality_gates", "consensus", "dynamic_roles"],
-            "model_pools": ["premium", "balanced", "free"]
-        },
-        "models": {
-            "provider": "openrouter",
-            "available_count": 499,
-            "latest_models": [
-                "openai/gpt-5",
-                "anthropic/claude-4",
-                "google/gemini-2.5-pro",
-                "deepseek/deepseek-r1",
-                "x-ai/grok-code-fast-1"
-            ],
-            "fallback_chain": ["primary", "secondary", "free"],
-            "default_pool": os.getenv("DEFAULT_MODEL_POOL", "balanced")
-        },
-        "database": {
-            "memory_backend": "supermemory" if not os.getenv("DATABASE_URL") else "postgresql",
-            "vector_store": "in-memory" if not os.getenv("FAISS_INDEX_PATH") else "faiss",
-            "cache": "none" if not os.getenv("REDIS_URL") else "redis"
-        },
-        "security": {
-            "authentication": "none" if not os.getenv("JWT_SECRET") else "jwt",
-            "rate_limiting": os.getenv("ENABLE_RATE_LIMIT", "false").lower() == "true",
-            "cors_enabled": True,
-            "audit_logging": os.getenv("ENABLE_AUDIT_LOG", "false").lower() == "true"
+            "timestamp": datetime.now().isoformat()
         }
-    }
 
 @app.get("/teams", response_model=List[TeamInfo])
 async def get_teams():

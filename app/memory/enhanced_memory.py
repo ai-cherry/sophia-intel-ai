@@ -1,663 +1,483 @@
 """
-Enhanced Memory System with Weaviate Vector Database
-Combines SQLite for metadata with Weaviate for semantic search.
+Enhanced Memory System with Pattern Storage
+Stores and retrieves execution patterns, shared context, and swarm knowledge.
 """
 
-import os
 import json
-import logging
-from typing import List, Optional
-from dataclasses import dataclass, asdict
-from datetime import datetime
-from pathlib import Path
-import sqlite3
+import asyncio
+from typing import Dict, List, Any, Optional, Tuple
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from collections import defaultdict
 import hashlib
-
-# Vector database imports
-try:
-    import weaviate
-    import weaviate.classes as wvc
-    WEAVIATE_AVAILABLE = True
-except ImportError:
-    WEAVIATE_AVAILABLE = False
-
-from app.memory.types import MemoryEntry, MemoryType
-from app.llm.real_executor import real_executor
-from app.core.connections import redis_get, redis_set, get_connection_manager
+import logging
 
 logger = logging.getLogger(__name__)
 
 
-class EnhancedMemoryConfig:
-    """Configuration for enhanced memory system."""
+@dataclass
+class SharedContext:
+    """Shared context across swarm agents."""
+    session_id: str
+    task: str
+    objective: str
+    constraints: List[str] = field(default_factory=list)
+    preferences: Dict[str, Any] = field(default_factory=dict)
+    memory_refs: List[str] = field(default_factory=list)
+    discovered_facts: Dict[str, Any] = field(default_factory=dict)
+    cost_budget: float = 100.0
+    cost_spent: float = 0.0
+    token_budget: int = 100000
+    tokens_used: int = 0
+    created_at: datetime = field(default_factory=datetime.now)
+    updated_at: datetime = field(default_factory=datetime.now)
+    metadata: Dict[str, Any] = field(default_factory=dict)
     
-    # SQLite for metadata
-    SQLITE_PATH = "tmp/enhanced_memory.db"
-    
-    # Weaviate configuration  
-    WEAVIATE_URL = os.getenv("WEAVIATE_URL", "http://localhost:8080")
-    WEAVIATE_API_KEY = os.getenv("WEAVIATE_API_KEY")
-    
-    # Redis for caching
-    REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/1")
-    CACHE_TTL = 3600  # 1 hour
-    
-    # Performance settings
-    MAX_RESULTS = 50
-    EMBEDDING_BATCH_SIZE = 100
-    SEARCH_TIMEOUT = 5.0
+    def add_fact(self, key: str, value: Any) -> None:
+        """Add a discovered fact to shared context."""
+        self.discovered_facts[key] = value
+        self.updated_at = datetime.now()
+        
+    def update_cost(self, cost: float, tokens: int) -> bool:
+        """Update cost and check budget."""
+        self.cost_spent += cost
+        self.tokens_used += tokens
+        self.updated_at = datetime.now()
+        
+        # Check if within budget
+        return self.cost_spent <= self.cost_budget and self.tokens_used <= self.token_budget
+        
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary for persistence."""
+        return {
+            "session_id": self.session_id,
+            "task": self.task,
+            "objective": self.objective,
+            "constraints": self.constraints,
+            "preferences": self.preferences,
+            "memory_refs": self.memory_refs,
+            "discovered_facts": self.discovered_facts,
+            "cost_budget": self.cost_budget,
+            "cost_spent": self.cost_spent,
+            "token_budget": self.token_budget,
+            "tokens_used": self.tokens_used,
+            "created_at": self.created_at.isoformat(),
+            "updated_at": self.updated_at.isoformat(),
+            "metadata": self.metadata
+        }
 
 
 @dataclass
-class SearchResult:
-    """Enhanced search result with multiple score types."""
-    entry: MemoryEntry
-    vector_score: Optional[float] = None
-    fts_score: Optional[float] = None
-    rerank_score: Optional[float] = None
-    combined_score: Optional[float] = None
+class PatternInstance:
+    """An instance of a pattern execution."""
+    pattern_id: str
+    session_id: str
+    success: bool
+    duration_ms: float
+    cost: float
+    tokens: int
+    input_hash: str
+    output_summary: str
+    timestamp: datetime = field(default_factory=datetime.now)
+    metadata: Dict[str, Any] = field(default_factory=dict)
 
 
-class EnhancedMemoryStore:
-    """Enhanced memory store with vector search and caching."""
+class EnhancedMemorySystem:
+    """
+    Enhanced memory system for swarm orchestration.
+    Manages patterns, shared context, and persistent knowledge.
+    """
     
-    def __init__(self, config: Optional[EnhancedMemoryConfig] = None):
-        self.config = config or EnhancedMemoryConfig()
-        self.sqlite_conn = None
-        self.weaviate_client = None
-        self.redis_client = None
-        self._initialized = False
+    def __init__(self, cache_ttl: int = 3600):
+        """Initialize enhanced memory system."""
+        # Pattern storage
+        self.patterns: Dict[str, Dict[str, Any]] = {}
+        self.pattern_instances: List[PatternInstance] = []
+        self.pattern_index: Dict[str, List[str]] = defaultdict(list)  # task_type -> pattern_ids
         
-    async def initialize(self):
-        """Initialize all storage backends."""
-        if self._initialized:
+        # Shared context storage
+        self.active_contexts: Dict[str, SharedContext] = {}
+        self.context_history: List[SharedContext] = []
+        
+        # Knowledge base
+        self.knowledge_base: Dict[str, Any] = {}
+        self.fact_cache: Dict[str, Tuple[Any, datetime]] = {}
+        self.cache_ttl = cache_ttl
+        
+        # Metrics
+        self.access_count: Dict[str, int] = defaultdict(int)
+        self.success_rates: Dict[str, float] = defaultdict(float)
+        
+    async def store_pattern(
+        self,
+        pattern_id: str,
+        name: str,
+        pattern_type: str,
+        steps: List[Dict[str, Any]],
+        metadata: Dict[str, Any] = None
+    ) -> None:
+        """Store a reusable execution pattern."""
+        pattern = {
+            "id": pattern_id,
+            "name": name,
+            "type": pattern_type,
+            "steps": steps,
+            "metadata": metadata or {},
+            "created_at": datetime.now().isoformat(),
+            "usage_count": 0,
+            "success_count": 0,
+            "total_cost": 0.0,
+            "avg_duration_ms": 0.0
+        }
+        
+        self.patterns[pattern_id] = pattern
+        
+        # Index by type
+        if pattern_type:
+            self.pattern_index[pattern_type].append(pattern_id)
+            
+        logger.info(f"Stored pattern: {name} ({pattern_type})")
+        
+    async def record_pattern_usage(
+        self,
+        pattern_id: str,
+        session_id: str,
+        success: bool,
+        duration_ms: float,
+        cost: float,
+        tokens: int,
+        input_data: Any,
+        output_data: Any
+    ) -> None:
+        """Record usage of a pattern."""
+        if pattern_id not in self.patterns:
+            logger.warning(f"Pattern {pattern_id} not found")
             return
             
-        # Initialize SQLite
-        await self._init_sqlite()
+        # Create instance record
+        instance = PatternInstance(
+            pattern_id=pattern_id,
+            session_id=session_id,
+            success=success,
+            duration_ms=duration_ms,
+            cost=cost,
+            tokens=tokens,
+            input_hash=self._hash_data(input_data),
+            output_summary=str(output_data)[:200]
+        )
+        self.pattern_instances.append(instance)
         
-        # Initialize Weaviate if available
-        if WEAVIATE_AVAILABLE:
-            await self._init_weaviate()
-        else:
-            logger.warning("Weaviate not available, falling back to FTS only")
+        # Update pattern metrics
+        pattern = self.patterns[pattern_id]
+        pattern["usage_count"] += 1
+        if success:
+            pattern["success_count"] += 1
+        pattern["total_cost"] += cost
         
-        # Initialize Redis if available
-        try:
-            import redis.asyncio as aioredis
-            self.redis_client = await get_connection_manager().get_redis()
-            await self.redis_client.ping()
-            logger.info("Redis cache initialized")
-        except Exception as e:
-            logger.warning(f"Redis not available: {e}")
+        # Update average duration
+        prev_avg = pattern["avg_duration_ms"]
+        pattern["avg_duration_ms"] = (
+            (prev_avg * (pattern["usage_count"] - 1) + duration_ms) / pattern["usage_count"]
+        )
+        
+        # Update success rate
+        self.success_rates[pattern_id] = pattern["success_count"] / pattern["usage_count"]
+        
+        logger.info(f"Recorded pattern usage: {pattern_id} (success={success})")
+        
+    async def get_best_pattern(
+        self,
+        task_type: str,
+        constraints: Dict[str, Any] = None
+    ) -> Optional[Dict[str, Any]]:
+        """Get the best pattern for a task type."""
+        pattern_ids = self.pattern_index.get(task_type, [])
+        if not pattern_ids:
+            return None
             
-        self._initialized = True
+        # Score patterns based on success rate and usage
+        best_pattern = None
+        best_score = -1
         
-    async def _init_sqlite(self):
-        """Initialize SQLite with FTS5."""
-        Path(self.config.SQLITE_PATH).parent.mkdir(parents=True, exist_ok=True)
-        
-        self.sqlite_conn = sqlite3.connect(self.config.SQLITE_PATH)
-        self.sqlite_conn.row_factory = sqlite3.Row
-        
-        cursor = self.sqlite_conn.cursor()
-        
-        # Create main table
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS memory_entries (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                hash_id TEXT UNIQUE NOT NULL,
-                topic TEXT NOT NULL,
-                content TEXT NOT NULL,
-                source TEXT NOT NULL,
-                tags TEXT,  -- JSON array
-                memory_type TEXT NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                access_count INTEGER DEFAULT 0,
-                last_accessed TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        """)
-        
-        # Create FTS5 index with better tokenization
-        cursor.execute("""
-            CREATE VIRTUAL TABLE IF NOT EXISTS memory_fts USING fts5(
-                topic, content, tags,
-                content='memory_entries',
-                content_rowid='id',
-                tokenize='porter unicode61'
-            )
-        """)
-        
-        # Create triggers for FTS sync
-        cursor.execute("""
-            CREATE TRIGGER IF NOT EXISTS memory_fts_insert AFTER INSERT ON memory_entries
-            BEGIN
-                INSERT INTO memory_fts(rowid, topic, content, tags) 
-                VALUES (new.id, new.topic, new.content, new.tags);
-            END
-        """)
-        
-        cursor.execute("""
-            CREATE TRIGGER IF NOT EXISTS memory_fts_delete AFTER DELETE ON memory_entries
-            BEGIN
-                INSERT INTO memory_fts(memory_fts, rowid, topic, content, tags) 
-                VALUES('delete', old.id, old.topic, old.content, old.tags);
-            END
-        """)
-        
-        # Create indexes for performance
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_hash_id ON memory_entries(hash_id)")
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_memory_type ON memory_entries(memory_type)")
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_source ON memory_entries(source)")
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_created_at ON memory_entries(created_at)")
-        
-        self.sqlite_conn.commit()
-        logger.info("SQLite memory store initialized with FTS5")
-        
-    async def _init_weaviate(self):
-        """Initialize Weaviate vector database."""
-        try:
-            if self.config.WEAVIATE_API_KEY:
-                auth = weaviate.auth.AuthApiKey(self.config.WEAVIATE_API_KEY)
-                self.weaviate_client = weaviate.connect_to_wcs(
-                    cluster_url=self.config.WEAVIATE_URL,
-                    auth_credentials=auth
-                )
-            else:
-                self.weaviate_client = weaviate.connect_to_local(
-                    host=self.config.WEAVIATE_URL.replace("http://", "").replace("https://", "").split(":")[0],
-                    port=int(self.config.WEAVIATE_URL.split(":")[-1]) if ":" in self.config.WEAVIATE_URL else 8080
-                )
-            
-            # Check if collection exists, create if not
-            collection_name = "MemoryEntries"
-            
-            if not self.weaviate_client.collections.exists(collection_name):
-                memory_collection = self.weaviate_client.collections.create(
-                    name=collection_name,
-                    vectorizer_config=wvc.config.Configure.Vectorizer.text2vec_transformers(
-                        model="sentence-transformers/all-MiniLM-L6-v2"
-                    ),
-                    properties=[
-                        wvc.config.Property(
-                            name="hash_id",
-                            data_type=wvc.config.DataType.TEXT,
-                            skip_vectorization=True
-                        ),
-                        wvc.config.Property(
-                            name="topic", 
-                            data_type=wvc.config.DataType.TEXT
-                        ),
-                        wvc.config.Property(
-                            name="content",
-                            data_type=wvc.config.DataType.TEXT
-                        ),
-                        wvc.config.Property(
-                            name="source",
-                            data_type=wvc.config.DataType.TEXT,
-                            skip_vectorization=True
-                        ),
-                        wvc.config.Property(
-                            name="memory_type",
-                            data_type=wvc.config.DataType.TEXT,
-                            skip_vectorization=True
-                        ),
-                        wvc.config.Property(
-                            name="tags",
-                            data_type=wvc.config.DataType.TEXT_ARRAY,
-                            skip_vectorization=True
-                        ),
-                        wvc.config.Property(
-                            name="created_at",
-                            data_type=wvc.config.DataType.DATE,
-                            skip_vectorization=True
-                        )
-                    ]
-                )
-                logger.info(f"Created Weaviate collection: {collection_name}")
-            else:
-                logger.info(f"Using existing Weaviate collection: {collection_name}")
+        for pattern_id in pattern_ids:
+            pattern = self.patterns.get(pattern_id)
+            if not pattern:
+                continue
                 
-        except Exception as e:
-            logger.error(f"Failed to initialize Weaviate: {e}")
-            self.weaviate_client = None
-    
-    async def add_memory(self, entry: MemoryEntry) -> str:
-        """Add memory entry to all storage backends."""
-        await self.initialize()
+            # Check constraints
+            if constraints:
+                if constraints.get("max_cost") and pattern["avg_duration_ms"] > constraints["max_cost"]:
+                    continue
+                if constraints.get("min_success_rate") and self.success_rates[pattern_id] < constraints["min_success_rate"]:
+                    continue
+                    
+            # Calculate score (weighted by success rate and usage)
+            success_rate = self.success_rates.get(pattern_id, 0)
+            usage_normalized = min(pattern["usage_count"] / 100, 1.0)  # Normalize to 0-1
+            score = (success_rate * 0.7) + (usage_normalized * 0.3)
+            
+            if score > best_score:
+                best_score = score
+                best_pattern = pattern
+                
+        return best_pattern
         
-        try:
-            cursor = self.sqlite_conn.cursor()
+    async def create_shared_context(
+        self,
+        session_id: str,
+        task: str,
+        objective: str,
+        constraints: List[str] = None,
+        preferences: Dict[str, Any] = None,
+        cost_budget: float = 100.0,
+        token_budget: int = 100000
+    ) -> SharedContext:
+        """Create a new shared context for a swarm session."""
+        context = SharedContext(
+            session_id=session_id,
+            task=task,
+            objective=objective,
+            constraints=constraints or [],
+            preferences=preferences or {},
+            cost_budget=cost_budget,
+            token_budget=token_budget
+        )
+        
+        self.active_contexts[session_id] = context
+        logger.info(f"Created shared context for session: {session_id}")
+        
+        return context
+        
+    async def get_shared_context(self, session_id: str) -> Optional[SharedContext]:
+        """Get shared context for a session."""
+        return self.active_contexts.get(session_id)
+        
+    async def update_shared_context(
+        self,
+        session_id: str,
+        updates: Dict[str, Any]
+    ) -> bool:
+        """Update shared context with new information."""
+        context = self.active_contexts.get(session_id)
+        if not context:
+            logger.warning(f"Context not found for session: {session_id}")
+            return False
             
-            # Check for duplicates
-            cursor.execute("SELECT id FROM memory_entries WHERE hash_id = ?", (entry.hash_id,))
-            if cursor.fetchone():
-                logger.info(f"Memory entry {entry.hash_id} already exists, skipping")
-                return entry.hash_id
+        # Update fields
+        for key, value in updates.items():
+            if key == "discovered_facts":
+                context.discovered_facts.update(value)
+            elif key == "memory_refs":
+                context.memory_refs.extend(value)
+            elif key == "cost":
+                context.cost_spent += value.get("amount", 0)
+                context.tokens_used += value.get("tokens", 0)
+            elif hasattr(context, key):
+                setattr(context, key, value)
+                
+        context.updated_at = datetime.now()
+        return True
+        
+    async def finalize_context(self, session_id: str) -> None:
+        """Move context from active to history."""
+        context = self.active_contexts.pop(session_id, None)
+        if context:
+            self.context_history.append(context)
+            logger.info(f"Finalized context for session: {session_id}")
             
-            # Insert to SQLite
-            cursor.execute("""
-                INSERT INTO memory_entries 
-                (hash_id, topic, content, source, tags, memory_type)
-                VALUES (?, ?, ?, ?, ?, ?)
-            """, (
-                entry.hash_id,
-                entry.topic,
-                entry.content,
-                entry.source,
-                json.dumps(entry.tags),
-                entry.memory_type.value
-            ))
+    async def store_knowledge(
+        self,
+        key: str,
+        value: Any,
+        category: str = "general",
+        tags: List[str] = None
+    ) -> None:
+        """Store knowledge in the persistent knowledge base."""
+        knowledge_entry = {
+            "value": value,
+            "category": category,
+            "tags": tags or [],
+            "created_at": datetime.now().isoformat(),
+            "access_count": 0
+        }
+        
+        self.knowledge_base[key] = knowledge_entry
+        
+        # Update cache
+        self.fact_cache[key] = (value, datetime.now())
+        
+        logger.info(f"Stored knowledge: {key} ({category})")
+        
+    async def get_knowledge(
+        self,
+        key: str,
+        use_cache: bool = True
+    ) -> Optional[Any]:
+        """Retrieve knowledge from the knowledge base."""
+        # Check cache first
+        if use_cache and key in self.fact_cache:
+            value, timestamp = self.fact_cache[key]
+            if (datetime.now() - timestamp).total_seconds() < self.cache_ttl:
+                self.access_count[key] += 1
+                return value
+                
+        # Get from knowledge base
+        entry = self.knowledge_base.get(key)
+        if entry:
+            value = entry["value"]
+            entry["access_count"] += 1
+            self.access_count[key] += 1
             
-            self.sqlite_conn.commit()
+            # Update cache
+            self.fact_cache[key] = (value, datetime.now())
             
-            # Add to Weaviate if available
-            if self.weaviate_client:
-                try:
-                    collection = self.weaviate_client.collections.get("MemoryEntries")
-                    collection.data.insert(
-                        properties={
-                            "hash_id": entry.hash_id,
-                            "topic": entry.topic,
-                            "content": entry.content,
-                            "source": entry.source,
-                            "memory_type": entry.memory_type.value,
-                            "tags": entry.tags,
-                            "created_at": entry.timestamp.isoformat()
-                        }
-                    )
-                except Exception as e:
-                    logger.warning(f"Failed to add to Weaviate: {e}")
+            return value
             
-            # Invalidate cache for this topic/content
-            if self.redis_client:
-                try:
-                    await self._invalidate_search_cache(entry.topic)
-                except Exception as e:
-                    logger.warning(f"Cache invalidation failed: {e}")
-            
-            logger.info(f"Added memory entry: {entry.hash_id}")
-            return entry.hash_id
-            
-        except Exception as e:
-            logger.error(f"Failed to add memory entry: {e}")
-            raise
-    
-    async def search_memory(
+        return None
+        
+    async def search_knowledge(
         self,
         query: str,
-        limit: int = 10,
-        memory_type: Optional[MemoryType] = None,
-        use_vector: bool = True,
-        use_fts: bool = True,
-        rerank: bool = True
-    ) -> List[SearchResult]:
-        """Enhanced memory search with multiple retrieval methods."""
-        await self.initialize()
-        
-        # Check cache first
-        cache_key = f"search:{hashlib.md5(f'{query}:{limit}:{memory_type}:{use_vector}:{use_fts}:{rerank}'.encode()).hexdigest()}"
-        
-        if self.redis_client:
-            try:
-                cached = await redis_get(cache_key)
-                if cached:
-                    logger.info("Search results from cache")
-                    return [SearchResult(**json.loads(item)) for item in json.loads(cached)]
-            except Exception as e:
-                logger.warning(f"Cache retrieval failed: {e}")
-        
+        category: Optional[str] = None,
+        tags: Optional[List[str]] = None,
+        limit: int = 10
+    ) -> List[Tuple[str, Any]]:
+        """Search the knowledge base."""
         results = []
         
-        # Vector search if available
-        if use_vector and self.weaviate_client:
-            try:
-                vector_results = await self._vector_search(query, limit, memory_type)
-                results.extend(vector_results)
-                logger.info(f"Vector search returned {len(vector_results)} results")
-            except Exception as e:
-                logger.error(f"Vector search failed: {e}")
-        
-        # FTS search
-        if use_fts:
-            try:
-                fts_results = await self._fts_search(query, limit, memory_type)
-                results.extend(fts_results)
-                logger.info(f"FTS search returned {len(fts_results)} results")
-            except Exception as e:
-                logger.error(f"FTS search failed: {e}")
-        
-        # Combine and deduplicate results
-        results = self._combine_results(results, limit)
-        
-        # Re-rank if requested
-        if rerank and len(results) > 1:
-            try:
-                results = await self._rerank_results(query, results)
-                logger.info("Results re-ranked")
-            except Exception as e:
-                logger.warning(f"Re-ranking failed: {e}")
-        
-        # Update access statistics
-        await self._update_access_stats([r.entry.hash_id for r in results])
-        
-        # Cache results
-        if self.redis_client and results:
-            try:
-                cache_data = json.dumps([asdict(r) for r in results])
-                await self.redis_client.setex(cache_key, self.config.CACHE_TTL, cache_data)
-            except Exception as e:
-                logger.warning(f"Cache storage failed: {e}")
+        for key, entry in self.knowledge_base.items():
+            # Filter by category
+            if category and entry["category"] != category:
+                continue
+                
+            # Filter by tags
+            if tags and not any(tag in entry["tags"] for tag in tags):
+                continue
+                
+            # Simple text matching
+            if query.lower() in key.lower() or query.lower() in str(entry["value"]).lower():
+                results.append((key, entry["value"]))
+                
+        # Sort by access count and limit
+        results.sort(key=lambda x: self.access_count.get(x[0], 0), reverse=True)
         
         return results[:limit]
-    
-    async def _vector_search(
+        
+    async def get_related_patterns(
         self,
-        query: str,
-        limit: int,
-        memory_type: Optional[MemoryType]
-    ) -> List[SearchResult]:
-        """Perform vector similarity search."""
-        if not self.weaviate_client:
+        pattern_id: str,
+        limit: int = 5
+    ) -> List[Dict[str, Any]]:
+        """Get patterns related to a given pattern."""
+        pattern = self.patterns.get(pattern_id)
+        if not pattern:
             return []
             
-        try:
-            collection = self.weaviate_client.collections.get("MemoryEntries")
-            
-            # Build where clause
-            where_filter = None
-            if memory_type:
-                where_filter = wvc.query.Filter.by_property("memory_type").equal(memory_type.value)
-            
-            # Perform search
-            response = collection.query.near_text(
-                query=query,
-                limit=limit * 2,  # Get more for deduplication
-                where=where_filter,
-                return_metadata=wvc.query.MetadataQuery(distance=True)
+        pattern_type = pattern.get("type")
+        related = []
+        
+        # Find patterns of the same type
+        for pid in self.pattern_index.get(pattern_type, []):
+            if pid != pattern_id:
+                related_pattern = self.patterns.get(pid)
+                if related_pattern:
+                    related.append(related_pattern)
+                    
+        # Sort by success rate and limit
+        related.sort(key=lambda p: self.success_rates.get(p["id"], 0), reverse=True)
+        
+        return related[:limit]
+        
+    def _hash_data(self, data: Any) -> str:
+        """Create a hash of input data."""
+        data_str = json.dumps(data, sort_keys=True, default=str)
+        return hashlib.md5(data_str.encode()).hexdigest()
+        
+    async def get_statistics(self) -> Dict[str, Any]:
+        """Get memory system statistics."""
+        return {
+            "patterns": {
+                "total": len(self.patterns),
+                "by_type": {
+                    ptype: len(pids) 
+                    for ptype, pids in self.pattern_index.items()
+                },
+                "total_usage": sum(p["usage_count"] for p in self.patterns.values()),
+                "avg_success_rate": sum(self.success_rates.values()) / len(self.success_rates) if self.success_rates else 0
+            },
+            "contexts": {
+                "active": len(self.active_contexts),
+                "historical": len(self.context_history),
+                "total_cost": sum(c.cost_spent for c in self.active_contexts.values()),
+                "total_tokens": sum(c.tokens_used for c in self.active_contexts.values())
+            },
+            "knowledge": {
+                "entries": len(self.knowledge_base),
+                "cached": len(self.fact_cache),
+                "most_accessed": sorted(
+                    self.access_count.items(),
+                    key=lambda x: x[1],
+                    reverse=True
+                )[:5]
+            }
+        }
+        
+    async def export_memory(self) -> Dict[str, Any]:
+        """Export entire memory state for persistence."""
+        return {
+            "patterns": self.patterns,
+            "pattern_instances": [
+                {
+                    "pattern_id": pi.pattern_id,
+                    "session_id": pi.session_id,
+                    "success": pi.success,
+                    "duration_ms": pi.duration_ms,
+                    "cost": pi.cost,
+                    "tokens": pi.tokens,
+                    "timestamp": pi.timestamp.isoformat()
+                }
+                for pi in self.pattern_instances
+            ],
+            "pattern_index": dict(self.pattern_index),
+            "contexts": {
+                "active": {
+                    sid: ctx.to_dict()
+                    for sid, ctx in self.active_contexts.items()
+                },
+                "history": [ctx.to_dict() for ctx in self.context_history]
+            },
+            "knowledge_base": self.knowledge_base,
+            "statistics": await self.get_statistics()
+        }
+        
+    async def import_memory(self, data: Dict[str, Any]) -> None:
+        """Import memory state from exported data."""
+        # Import patterns
+        self.patterns = data.get("patterns", {})
+        self.pattern_index = defaultdict(list, data.get("pattern_index", {}))
+        
+        # Import pattern instances
+        self.pattern_instances = []
+        for pi_data in data.get("pattern_instances", []):
+            instance = PatternInstance(
+                pattern_id=pi_data["pattern_id"],
+                session_id=pi_data["session_id"],
+                success=pi_data["success"],
+                duration_ms=pi_data["duration_ms"],
+                cost=pi_data["cost"],
+                tokens=pi_data["tokens"],
+                input_hash="",
+                output_summary="",
+                timestamp=datetime.fromisoformat(pi_data["timestamp"])
             )
+            self.pattern_instances.append(instance)
             
-            results = []
-            for obj in response.objects:
-                # Convert to MemoryEntry
-                entry = MemoryEntry(
-                    topic=obj.properties["topic"],
-                    content=obj.properties["content"],
-                    source=obj.properties["source"],
-                    tags=obj.properties["tags"] or [],
-                    memory_type=MemoryType(obj.properties["memory_type"]),
-                    hash_id=obj.properties["hash_id"],
-                    timestamp=datetime.fromisoformat(obj.properties["created_at"])
-                )
-                
-                # Calculate score (Weaviate returns distance, convert to similarity)
-                vector_score = 1.0 - obj.metadata.distance
-                
-                results.append(SearchResult(
-                    entry=entry,
-                    vector_score=vector_score
-                ))
-                
-            return results
-            
-        except Exception as e:
-            logger.error(f"Vector search error: {e}")
-            return []
-    
-    async def _fts_search(
-        self,
-        query: str,
-        limit: int,
-        memory_type: Optional[MemoryType]
-    ) -> List[SearchResult]:
-        """Perform FTS search with improved error handling."""
-        try:
-            cursor = self.sqlite_conn.cursor()
-            
-            # Escape query for FTS5
-            escaped_query = self._escape_fts_query(query)
-            
-            # Build SQL with optional memory_type filter
-            base_query = """
-                SELECT m.*, fts.rank
-                FROM memory_fts fts
-                JOIN memory_entries m ON fts.rowid = m.id
-                WHERE memory_fts MATCH ?
-            """
-            
-            params = [escaped_query]
-            
-            if memory_type:
-                base_query += " AND m.memory_type = ?"
-                params.append(memory_type.value)
-            
-            base_query += " ORDER BY fts.rank LIMIT ?"
-            params.append(limit * 2)
-            
-            cursor.execute(base_query, params)
-            rows = cursor.fetchall()
-            
-            results = []
-            for row in rows:
-                entry = MemoryEntry(
-                    topic=row["topic"],
-                    content=row["content"],
-                    source=row["source"],
-                    tags=json.loads(row["tags"]) if row["tags"] else [],
-                    memory_type=MemoryType(row["memory_type"]),
-                    hash_id=row["hash_id"],
-                    timestamp=datetime.fromisoformat(row["created_at"])
-                )
-                
-                # FTS5 rank is negative (lower is better), convert to positive score
-                fts_score = abs(row["rank"]) if row["rank"] else 0.0
-                
-                results.append(SearchResult(
-                    entry=entry,
-                    fts_score=fts_score
-                ))
-                
-            return results
-            
-        except Exception as e:
-            logger.error(f"FTS search error: {e}")
-            # Fallback to LIKE search
-            return await self._like_search(query, limit, memory_type)
-    
-    def _escape_fts_query(self, query: str) -> str:
-        """Escape query for FTS5 to prevent syntax errors."""
-        # Remove or escape special FTS5 characters
-        special_chars = ['"', "'", "(", ")", "*", ":", "-", "+"]
-        escaped = query
+        # Import knowledge base
+        self.knowledge_base = data.get("knowledge_base", {})
         
-        for char in special_chars:
-            escaped = escaped.replace(char, f" {char} ")
-        
-        # Clean up multiple spaces
-        escaped = " ".join(escaped.split())
-        
-        # If query looks safe, use phrase search for exact matches
-        if escaped.isalnum() or " " not in escaped:
-            return f'"{escaped}"'
-        else:
-            return escaped
-    
-    async def _like_search(
-        self,
-        query: str,
-        limit: int,
-        memory_type: Optional[MemoryType]
-    ) -> List[SearchResult]:
-        """Fallback LIKE search when FTS fails."""
-        try:
-            cursor = self.sqlite_conn.cursor()
-            
-            base_query = """
-                SELECT * FROM memory_entries
-                WHERE (topic LIKE ? OR content LIKE ?)
-            """
-            
-            params = [f"%{query}%", f"%{query}%"]
-            
-            if memory_type:
-                base_query += " AND memory_type = ?"
-                params.append(memory_type.value)
+        # Recalculate success rates
+        for pattern_id, pattern in self.patterns.items():
+            if pattern["usage_count"] > 0:
+                self.success_rates[pattern_id] = pattern["success_count"] / pattern["usage_count"]
                 
-            base_query += " ORDER BY created_at DESC LIMIT ?"
-            params.append(limit)
-            
-            cursor.execute(base_query, params)
-            rows = cursor.fetchall()
-            
-            results = []
-            for row in rows:
-                entry = MemoryEntry(
-                    topic=row["topic"],
-                    content=row["content"],
-                    source=row["source"],
-                    tags=json.loads(row["tags"]) if row["tags"] else [],
-                    memory_type=MemoryType(row["memory_type"]),
-                    hash_id=row["hash_id"],
-                    timestamp=datetime.fromisoformat(row["created_at"])
-                )
-                
-                results.append(SearchResult(entry=entry, fts_score=0.5))
-                
-            logger.info(f"LIKE search fallback returned {len(results)} results")
-            return results
-            
-        except Exception as e:
-            logger.error(f"LIKE search fallback failed: {e}")
-            return []
-    
-    def _combine_results(self, results: List[SearchResult], limit: int) -> List[SearchResult]:
-        """Combine and deduplicate search results."""
-        # Deduplicate by hash_id
-        seen = set()
-        unique_results = []
-        
-        for result in results:
-            if result.entry.hash_id not in seen:
-                seen.add(result.entry.hash_id)
-                unique_results.append(result)
-        
-        # Calculate combined scores
-        for result in unique_results:
-            scores = []
-            if result.vector_score is not None:
-                scores.append(result.vector_score)
-            if result.fts_score is not None:
-                scores.append(result.fts_score)
-            if result.rerank_score is not None:
-                scores.append(result.rerank_score)
-                
-            result.combined_score = sum(scores) / len(scores) if scores else 0.0
-        
-        # Sort by combined score
-        unique_results.sort(key=lambda x: x.combined_score or 0.0, reverse=True)
-        
-        return unique_results[:limit]
-    
-    async def _rerank_results(self, query: str, results: List[SearchResult]) -> List[SearchResult]:
-        """Re-rank results using LLM for relevance."""
-        try:
-            # Build re-ranking prompt
-            entries_text = "\n".join([
-                f"{i}. {r.entry.topic}: {r.entry.content[:200]}..."
-                for i, r in enumerate(results)
-            ])
-            
-            rerank_prompt = f"""
-            Query: {query}
-            
-            Rank these memory entries from most relevant (1) to least relevant:
-            {entries_text}
-            
-            Return only the ranking as numbers: 1,2,3,4,5...
-            """
-            
-            # Get LLM ranking
-            response = await real_executor.execute(
-                prompt=rerank_prompt,
-                model_pool="fast",
-                stream=False
-            )
-            
-            if response["success"]:
-                # Parse ranking
-                ranking_str = response["content"].strip()
-                try:
-                    rankings = [int(x.strip()) - 1 for x in ranking_str.split(",")]
-                    
-                    # Apply re-ranking scores
-                    for i, orig_idx in enumerate(rankings):
-                        if 0 <= orig_idx < len(results):
-                            results[orig_idx].rerank_score = (len(rankings) - i) / len(rankings)
-                    
-                    logger.info("Results successfully re-ranked")
-                    
-                except (ValueError, IndexError) as e:
-                    logger.warning(f"Failed to parse ranking: {e}")
-            
-        except Exception as e:
-            logger.warning(f"Re-ranking failed: {e}")
-            
-        return results
-    
-    async def _update_access_stats(self, hash_ids: List[str]):
-        """Update access statistics for retrieved entries."""
-        if not hash_ids:
-            return
-            
-        try:
-            cursor = self.sqlite_conn.cursor()
-            placeholders = ",".join(["?"] * len(hash_ids))
-            
-            cursor.execute(f"""
-                UPDATE memory_entries 
-                SET access_count = access_count + 1,
-                    last_accessed = CURRENT_TIMESTAMP
-                WHERE hash_id IN ({placeholders})
-            """, hash_ids)
-            
-            self.sqlite_conn.commit()
-            
-        except Exception as e:
-            logger.warning(f"Failed to update access stats: {e}")
-    
-    async def _invalidate_search_cache(self, topic: str):
-        """Invalidate search cache for a topic."""
-        if not self.redis_client:
-            return
-            
-        try:
-            # Get all search cache keys and delete matching ones
-            pattern = f"search:*{topic.lower()}*"
-            keys = await self.redis_client.keys(pattern)
-            if keys:
-                await self.redis_client.delete(*keys)
-                
-        except Exception as e:
-            logger.warning(f"Cache invalidation failed: {e}")
-    
-    async def close(self):
-        """Close all connections."""
-        if self.sqlite_conn:
-            self.sqlite_conn.close()
-            
-        if self.weaviate_client:
-            self.weaviate_client.close()
-            
-        if self.redis_client:
-            await self.redis_client.close()
-
-
-# Global instance
-enhanced_memory = EnhancedMemoryStore()
-
-
-async def get_enhanced_memory_instance() -> EnhancedMemoryStore:
-    """Get the global enhanced memory instance."""
-    await enhanced_memory.initialize()
-    return enhanced_memory
+        logger.info(f"Imported memory with {len(self.patterns)} patterns and {len(self.knowledge_base)} knowledge entries")

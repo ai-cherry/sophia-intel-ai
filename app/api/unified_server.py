@@ -34,6 +34,8 @@ from app.api.quality import router as quality_router
 from app.api.error import router as error_router
 from app.api.metrics import router as metrics_router
 from app.api.cost_dashboard import router as cost_dashboard_router
+from app.api.portkey_router_endpoints import router as portkey_router
+from app.api.resilient_websocket_endpoints import router as resilient_ws_router
 
 app = FastAPI(
     title="Sophia Intel AI API",
@@ -72,7 +74,9 @@ app.include_router(indexing_router, prefix="/indexing")
 app.include_router(quality_router, prefix="/quality")
 app.include_router(error_router, prefix="/error")
 app.include_router(metrics_router, prefix="/metrics")
-    app.include_router(graph_router, prefix="/graph")
+app.include_router(graph_router, prefix="/graph")
+app.include_router(portkey_router, prefix="/api")
+app.include_router(resilient_ws_router, prefix="/api")
 
 # Add middleware
 app.add_middleware(

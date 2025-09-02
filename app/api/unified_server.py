@@ -7,6 +7,7 @@ from app.api.repository.repo_service import router as repo_router
 from app.api.cost_dashboard import router as cost_dashboard_router
 from app.api.hub.hub_controller import router as hub_router
 from app.api.openrouter_gateway import router as openrouter_router
+from app.api.graph_endpoints import router as graph_router
 setup_error_handling(app)
 from app.api.unified_gateway import router as unified_gateway_router
 from app.api.unified_server import router as unified_server_router
@@ -71,6 +72,7 @@ app.include_router(indexing_router, prefix="/indexing")
 app.include_router(quality_router, prefix="/quality")
 app.include_router(error_router, prefix="/error")
 app.include_router(metrics_router, prefix="/metrics")
+    app.include_router(graph_router, prefix="/graph")
 
 # Add middleware
 app.add_middleware(

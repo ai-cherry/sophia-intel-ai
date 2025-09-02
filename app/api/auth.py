@@ -8,10 +8,15 @@ from app.security.enhanced_middleware import APIError
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
-# Configuration
-SECRET_KEY = "your-secret-key"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+# Configuration from environment
+import os
+from dotenv import load_dotenv
+
+load_dotenv('.env.local')
+
+SECRET_KEY = os.getenv("JWT_SECRET_KEY", os.urandom(32).hex())
+ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 

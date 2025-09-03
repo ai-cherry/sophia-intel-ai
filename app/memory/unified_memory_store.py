@@ -11,9 +11,10 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
-from app.memory.advanced_embedding_router import (
-    AdvancedEmbeddingRouter,
-    ContentType,
+from app.embeddings.agno_embedding_service import (
+    AgnoEmbeddingService,
+    AgnoEmbeddingRequest,
+    EmbeddingModel,
 )
 from app.memory.crdt_memory_sync import CRDTMemoryStore
 from app.memory.hybrid_vector_manager import (
@@ -88,7 +89,7 @@ class UnifiedMemoryStore:
         self.cache_size = cache_size
 
         # Initialize components
-        self.embedding_router = AdvancedEmbeddingRouter()
+        self.embedding_service = AgnoEmbeddingService()
         self.vector_manager = HybridVectorManager()
         self.crdt_store = CRDTMemoryStore(agent_id) if enable_sync else None
 
@@ -165,14 +166,16 @@ class UnifiedMemoryStore:
         # Extract text for embedding
         text = self._extract_text(content)
 
-        # Detect content type
-        content_type = self._detect_content_type(content)
+        # Detect use case for embedding
+        use_case = self._detect_use_case(content)
 
-        # Generate embeddings
-        embedding_result = await self.embedding_router.get_embeddings(
-            text, content_type
+        # Generate embeddings using Agno service
+        request = AgnoEmbeddingRequest(
+            texts=[text],
+            use_case=use_case
         )
-        embeddings = embedding_result.embeddings[0]
+        embedding_response = await self.embedding_service.embed(request)
+        embeddings = embedding_response.embeddings[0]
 
         # Auto-generate tags if enabled
         if auto_tag:
@@ -354,15 +357,17 @@ class UnifiedMemoryStore:
         section_results = []
 
         for doc in doc_results:
-            # Generate query embedding
-            query_embedding = await self.embedding_router.get_embeddings(
-                query, ContentType.SHORT_TEXT
+            # Generate query embedding using Agno service
+            query_request = AgnoEmbeddingRequest(
+                texts=[query],
+                use_case="search"
             )
+            query_response = await self.embedding_service.embed(query_request)
 
             # Search for sections within document
             sections = await self.vector_manager.route_query(
                 QueryType.ANALYTICS,
-                vectors=[query_embedding.embeddings[0]],
+                vectors=[query_response.embeddings[0]],
                 collection="sophia_unified_memory",
                 filters=f"document_id == '{doc.id}'",
                 top_k=5
@@ -442,7 +447,11 @@ class UnifiedMemoryStore:
         # Regenerate embeddings if needed
         if regenerate_embeddings:
             text = self._extract_text(updates)
-            embedding_result = await self.embedding_router.get_embeddings(text)
+            request = AgnoEmbeddingRequest(
+                texts=[text],
+                use_case="general"
+            )
+            embedding_response = await self.embedding_service.embed(request)
 
             # Update in vector databases
             # Note: This would require database-specific update operations
@@ -505,18 +514,19 @@ class UnifiedMemoryStore:
             # Convert dict to text representation
             return ' '.join(str(v) for v in content.values())
 
-    def _detect_content_type(self, content: dict[str, Any]) -> ContentType:
-        """Detect content type from content"""
+    def _detect_use_case(self, content: dict[str, Any]) -> str:
+        """Detect use case for embedding generation"""
         if 'code' in content or 'language' in content:
-            return ContentType.CODE
-
-        text = self._extract_text(content)
-        if len(text.split()) > 2000:
-            return ContentType.LONG_TEXT
-        elif len(text.split()) > 128:
-            return ContentType.MEDIUM_TEXT
-        else:
-            return ContentType.SHORT_TEXT
+            return "code"
+        
+        if 'type' in content:
+            if content['type'] in ['documentation', 'reference', 'knowledge']:
+                return "rag"
+            elif content['type'] in ['search', 'query']:
+                return "search"
+        
+        # Default to general use case
+        return "general"
 
     def _extract_hierarchy(self, content: dict[str, Any]) -> dict[str, Any]:
         """Extract hierarchical information"""
@@ -603,7 +613,7 @@ class UnifiedMemoryStore:
         """Get comprehensive metrics"""
         metrics = {
             **self.metrics,
-            'embedding_metrics': self.embedding_router.get_metrics(),
+            'embedding_metrics': self.embedding_service.get_metrics(),
             'vector_metrics': self.vector_manager.get_metrics(),
             'cache_hit_rate': (
                 self.metrics['cache_hits'] /

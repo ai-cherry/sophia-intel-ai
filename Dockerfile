@@ -75,5 +75,5 @@ LABEL org.opencontainers.image.created="${BUILD_DATE}" \
       org.opencontainers.image.title="Sophia Intel AI" \
       org.opencontainers.image.description="Unified Agent API with MCP, embeddings, and evaluation gates"
 
-# Run the unified server
-CMD ["python", "-m", "app.api.unified_server"]
+# Run the SuperOrchestrator or unified server based on environment
+CMD ["sh", "-c", "if [ \"$RUN_MODE\" = \"orchestrator\" ]; then python -m app.core.super_orchestrator; else python -m app.api.unified_server; fi"]

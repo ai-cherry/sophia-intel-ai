@@ -1,0 +1,45 @@
+{
+  "timestamp": "2025-09-02T21:30:00.594234",
+  "mode": "DRY_RUN",
+  "statistics": {
+    "files_deleted": 27,
+    "files_modified": 0,
+    "files_created": 0
+  },
+  "deleted_files": [
+    "app/agents/simple_orchestrator.py",
+    "app/agents/orchestra_manager.py",
+    "app/deployment/orchestrator.py",
+    "app/swarms/coding/swarm_orchestrator.py",
+    "app/swarms/unified_enhanced_orchestrator.py",
+    "app/api/orchestra_manager.py",
+    "app/ui/unified/chat_orchestrator.py",
+    "app/tools/integrated_manager.py",
+    "app/memory/hybrid_vector_manager.py",
+    "app/config/port_manager.py",
+    "app/agents/orchestra_manager.py",
+    "app/deployment/port_manager.py",
+    "app/api/orchestra_manager.py",
+    "Dockerfile.minimal",
+    "Dockerfile.unified-api.production",
+    "Dockerfile.api",
+    "Dockerfile.unified-api",
+    "Dockerfile.production",
+    "Dockerfile.agno-bridge.production",
+    "Dockerfile.agno-bridge",
+    "docker-compose.minimal.yml",
+    "docker-compose.weaviate.yml",
+    "docker-compose.observability.yml",
+    "docker-compose.local.yml",
+    "docker-compose.monitoring.yml",
+    "docker-compose.production.yml",
+    "docker-compose.yml"
+  ],
+  "modified_files": [],
+  "created_files": [],
+  "components_remaining": {
+    "orchestrators": 1,
+    "managers": 3,
+    "docker_files": 1
+  }
+}

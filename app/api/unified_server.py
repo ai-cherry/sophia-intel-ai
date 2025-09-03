@@ -35,7 +35,7 @@ from app.api.memory.memory_endpoints import router as memory_router
 from app.api.portkey_router_endpoints import router as portkey_router
 from app.api.repository.repo_service import router as repo_router
 from app.api.resilient_websocket_endpoints import router as resilient_ws_router
-from app.api.routers.memory import router as memory_api_router
+# from app.api.routers.memory import router as memory_api_router  # Module has import issues
 from app.api.routers.teams import router as teams_router
 from app.api.unified_gateway import router as unified_gateway_router
 from app.ui.unified.chat_orchestrator import router as orchestrator_router
@@ -63,7 +63,7 @@ app.include_router(infrastructure_router, prefix="/api/infrastructure")
 # New unified orchestrator routers
 app.include_router(orchestrator_router, prefix="/orchestrator")
 app.include_router(teams_router, prefix="/api/teams")
-app.include_router(memory_api_router, prefix="/api/memory-v2")
+# app.include_router(memory_api_router, prefix="/api/memory-v2")  # Module has import issues
 
 # Add middleware
 app.add_middleware(

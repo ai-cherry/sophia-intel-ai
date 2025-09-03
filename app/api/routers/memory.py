@@ -13,7 +13,7 @@ from app.infrastructure.langgraph.knowledge_nodes import Document
 from app.infrastructure.langgraph.rag_pipeline import KnowledgeNodeType, LangGraphRAGPipeline
 
 # Import memory systems
-from app.memory.enhanced_memory_integration import EnhancedMemoryIntegration
+# from app.memory.enhanced_memory_integration import EnhancedMemoryIntegration  # Module not yet implemented
 from app.memory.memory_integration import MemoryIntegration
 
 logger = logging.getLogger(__name__)
@@ -52,7 +52,8 @@ class MemoryManager:
     """Manages memory operations with RAG integration"""
 
     def __init__(self):
-        self.enhanced_memory = EnhancedMemoryIntegration()
+        # self.enhanced_memory = EnhancedMemoryIntegration()  # Module not yet implemented
+        self.enhanced_memory = None
         self.basic_memory = MemoryIntegration()
         self.rag_pipeline = LangGraphRAGPipeline()
         self.entries: dict[str, MemoryEntry] = {}

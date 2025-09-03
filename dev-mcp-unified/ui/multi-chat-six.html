@@ -30,7 +30,7 @@
       <input id="broadcast" placeholder="Ask all six models…" />
       <button onclick="sendAll()">Send to All</button>
     </div>
-    <span class="small">Server: http://127.0.0.1:3333 (OpenRouter proxy)</span>
+    <span class="small">Server: http://127.0.0.1:3333 (OpenRouter proxy) • <span id="rate">rate: -</span></span>
   </header>
   <div class="grid" id="grid"></div>
 
@@ -49,8 +49,15 @@
     function pane(model){
       const el = document.createElement('div');
       el.className = 'pane';
+      // model selector
+      const options = MODELS.map(m => `<option value="${m.model}" ${m.model===model.model? 'selected':''}>${m.name}</option>`).join('');
       el.innerHTML = `
-        <header><h3>${model.name}</h3><span class="small">${model.model}</span></header>
+        <header>
+          <h3>${model.name}</h3>
+          <span class="small">Model: 
+            <select id="sel-${model.id}" onchange="onModelChange('${model.id}')">${options}</select>
+          </span>
+        </header>
         <div class="log" id="log-${model.id}"></div>
         <div class="input">
           <textarea id="ta-${model.id}" placeholder="Message ${model.name}…"></textarea>
@@ -69,6 +76,14 @@
       log.scrollTop = log.scrollHeight;
     }
 
+    function onModelChange(modelId){
+      const pane = MODELS.find(x => x.id === modelId);
+      const sel = document.getElementById('sel-' + modelId);
+      if (pane && sel) {
+        pane.model = sel.value;
+      }
+    }
+
     async function send(modelId){
       const m = MODELS.find(x => x.id === modelId);
       const ta = document.getElementById('ta-' + modelId);
@@ -76,19 +91,73 @@
       if(!q) return;
       addMsg(modelId, 'user', q);
       ta.value = '';
+      // Create an assistant placeholder to stream into
+      const log = document.getElementById('log-' + modelId);
+      const holder = document.createElement('div');
+      holder.className = 'msg assistant';
+      holder.textContent = '';
+      log.appendChild(holder);
+      log.scrollTop = log.scrollHeight;
+
+      // Try streaming first; fallback to non-stream fetch on failure
       try{
-        const r = await fetch(`${SERVER_URL}/proxy/openrouter`, {
+        const resp = await fetch(`${SERVER_URL}/proxy/openrouter/stream`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            model: m.model,
-            messages: [{ role: 'user', content: q }]
-          })
+          body: JSON.stringify({ model: m.model, messages: [{ role:'user', content:q }] })
         });
-        const data = await r.json();
-        addMsg(modelId, 'assistant', data.text || JSON.stringify(data));
-      }catch(e){
-        addMsg(modelId, 'assistant', 'Error: ' + e);
+        if (!resp.body || !resp.ok) throw new Error('stream not available');
+        const reader = resp.body.getReader();
+        const decoder = new TextDecoder('utf-8');
+        let buffer = '';
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const parts = buffer.split('\n');
+          buffer = parts.pop() || '';
+          for (const line of parts) {
+            if (!line.startsWith('data:')) continue;
+            const payload = line.slice(5).trim();
+            if (payload === '[DONE]') continue;
+            try {
+              const json = JSON.parse(payload);
+              const delta = json?.choices?.[0]?.delta?.content;
+              if (delta) {
+                holder.textContent += delta;
+                log.scrollTop = log.scrollHeight;
+              }
+              if (json?.meta?.rate) {
+                const r = json.meta.rate;
+                document.getElementById('rate').textContent = `rate: ${r['x-ratelimit-remaining-requests']||'-'}/${r['x-ratelimit-remaining-tokens']||'-'}`;
+              }
+            } catch (_) {
+              // not JSON; append raw
+              if (payload) {
+                holder.textContent += payload + '\n';
+              }
+            }
+          }
+        }
+        return;
+      } catch (e) {
+        // fallback non-stream
+        try{
+          const r = await fetch(`${SERVER_URL}/proxy/openrouter`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ model: m.model, messages: [{ role:'user', content:q }] })
+          });
+          const data = await r.json();
+          holder.textContent = data.text || JSON.stringify(data);
+          if (data.rate) {
+            const rate = data.rate;
+            document.getElementById('rate').textContent = `rate: ${rate['x-ratelimit-remaining-requests']||'-'}/${rate['x-ratelimit-remaining-tokens']||'-'}`;
+          }
+          log.scrollTop = log.scrollHeight;
+        }catch(err){
+          holder.textContent = 'Error: ' + err;
+        }
       }
     }
 
@@ -107,4 +176,3 @@
   </script>
 </body>
 </html>
-

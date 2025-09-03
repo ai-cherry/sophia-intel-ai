@@ -23,8 +23,37 @@
     <iframe id="frame-artemis" src="./multi-chat-six.html"></iframe>
     <div id="frame-sophia" class="placeholder" style="display:none">
       <h2>Business Dashboard (Sophia)</h2>
-      <p>Signals (UserGems/HubSpot), ICP/personas, lead lists, Gong summaries, and campaign previews will appear here.</p>
-      <p>This tab will connect to the unified API business endpoints as we wire real connectors.</p>
+      <div style="margin:12px 0;">
+        <button onclick="loadGong()">Load recent Gong calls (7d)</button>
+        <span id="gong-status" style="margin-left:10px;color:#9ca3af;"></span>
+      </div>
+      <div id="gong-list" style="margin-top:10px;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;"></div>
+      <script>
+        async function loadGong(){
+          const st = document.getElementById('gong-status');
+          const list = document.getElementById('gong-list');
+          st.textContent = 'loading…';
+          try{
+            const r = await fetch('http://127.0.0.1:3333/business/gong/recent?days=7');
+            const data = await r.json();
+            st.textContent = data.error ? ('error: ' + data.error) : `loaded ${data.count}`;
+            list.innerHTML = '';
+            (data.calls||[]).forEach(c => {
+              const card = document.createElement('div');
+              card.style.border='1px solid #23262d';
+              card.style.borderRadius='8px';
+              card.style.padding='10px';
+              card.style.background='#12151b';
+              card.innerHTML = `<div style="color:#93c5fd;font-weight:600">${(c.topic||'Call')}</div>
+                <div class="small">${c.date||''}</div>
+                <div class="small">Duration: ${c.durationSec||'-'}s</div>`;
+              list.appendChild(card);
+            });
+          }catch(e){
+            st.textContent = 'error: ' + e;
+          }
+        }
+      </script>
     </div>
   </div>
   <script>
@@ -37,4 +66,3 @@
   </script>
 </body>
 </html>
-

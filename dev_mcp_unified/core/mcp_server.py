@@ -30,6 +30,7 @@ from dev_mcp_unified.storage.vector_store import InMemoryVectorStore, ChromaVect
 from dev_mcp_unified.indexing.indexer import index_path
 import httpx
 from starlette.responses import StreamingResponse
+from datetime import datetime, timedelta
 
 
 app = FastAPI(title="MCP Unified Server", version="1.0.0")
@@ -256,13 +257,15 @@ async def proxy_openrouter(req: ORChatRequest):
             data = resp.json()
         except Exception:
             return {"error": f"openrouter bad response {resp.status_code}", "text": resp.text[:400]}
+    # capture rate limit headers if present
+    rate = {k.lower(): v for k, v in resp.headers.items() if k.lower().startswith("x-ratelimit")}
     # normalize to minimal shape used by UI
     content = None
     try:
         content = data.get("choices", [{}])[0].get("message", {}).get("content")
     except Exception:
         pass
-    return {"raw": data, "text": content}
+    return {"raw": data, "text": content, "rate": rate}
 
 
 @app.post("/proxy/openrouter/stream")
@@ -283,11 +286,17 @@ async def proxy_openrouter_stream(req: ORChatRequest):
         payload = {"model": req.model, "messages": req.messages, "stream": True}
         async with httpx.AsyncClient(timeout=None) as client:
             async with client.stream("POST", "https://openrouter.ai/api/v1/chat/completions", json=payload, headers=headers) as r:
+                # forward chunks
                 async for line in r.aiter_lines():
                     if not line:
                         continue
-                    # Forward as SSE data lines
                     yield (f"data: {line}\n\n").encode()
+                # at end, send rate meta if present
+                rate = {k.lower(): v for k, v in r.headers.items() if k.lower().startswith("x-ratelimit")}
+                if rate:
+                    import json as _json
+                    meta = _json.dumps({"meta": {"rate": rate}})
+                    yield (f"data: {meta}\n\n").encode()
     return StreamingResponse(gen(), media_type="text/event-stream")
 
 
@@ -299,6 +308,45 @@ def index_stats():
     except Exception as e:
         return {"error": str(e)}
     return {"count": None, "store": "memory"}
+
+
+# --- Business: Gong integration (basic recent calls) ---
+def _gong_auth_header() -> dict:
+    ak = os.getenv("GONG_ACCESS_KEY")
+    cs = os.getenv("GONG_CLIENT_SECRET")
+    if not ak or not cs:
+        return {}
+    import base64
+    token = base64.b64encode(f"{ak}:{cs}".encode()).decode()
+    return {"Authorization": f"Basic {token}"}
+
+
+@app.get("/business/gong/recent")
+async def gong_recent(days: int = 7):
+    base = os.getenv("GONG_BASE_URL", "https://api.gong.io")
+    headers = _gong_auth_header()
+    if not headers:
+        return {"error": "missing GONG_ACCESS_KEY/GONG_CLIENT_SECRET"}
+    start = (datetime.utcnow() - timedelta(days=max(1, days))).strftime("%Y-%m-%d")
+    url = f"{base}/v2/calls?fromDate={start}"
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            r = await client.get(url, headers=headers)
+            data = r.json()
+            # Normalize minimal shape
+            calls = data.get("calls") or data.get("items") or data
+            out = []
+            for c in (calls if isinstance(calls, list) else []):
+                out.append({
+                    "callId": c.get("id") or c.get("callId"),
+                    "date": c.get("startTime") or c.get("date"),
+                    "topic": c.get("title") or c.get("topic"),
+                    "durationSec": c.get("durationSeconds") or c.get("duration"),
+                    "participants": c.get("participants"),
+                })
+            return {"fromDate": start, "count": len(out), "calls": out[:50]}
+    except Exception as e:
+        return {"error": str(e)}
 
 
 @app.post("/tools/symbols")

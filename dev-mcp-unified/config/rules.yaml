@@ -1,0 +1,22 @@
+rules:
+  # Architecture and design → Claude (reasoning)
+  - match: { task: explain_architecture }
+    action: { provider: claude, context_strategy: full_file_with_dependencies, max_tokens: 6000 }
+
+  # Algorithmic optimization → Qwen
+  - match: { task: optimize_algorithm }
+    action: { provider: qwen, context_strategy: ast_tree_with_symbols, temperature: 0.2 }
+
+  # Boilerplate / generation → OpenAI
+  - match: { task: generate_boilerplate }
+    action: { provider: openai, context_strategy: snippet_with_completions }
+
+  # Security analysis → DeepSeek
+  - match: { task: find_security_issues }
+    action: { provider: deepseek, context_strategy: pattern_matching_context }
+
+defaults:
+  provider: claude
+  context_strategy: snippet_with_completions
+  max_tokens: 2000
+

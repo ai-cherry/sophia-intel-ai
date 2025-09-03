@@ -120,7 +120,7 @@ async def startup_event():
         - Portkey Gateway: ACTIVE
         - OpenRouter: CONNECTED
         - Message Bus: OPERATIONAL
-        - Hub: http://localhost:{os.getenv('AGENT_API_PORT', '8005')}/hub
+        - Hub: http://localhost:{os.getenv('AGENT_API_PORT', '8003')}/hub
         - WebSocket: ws://localhost:{os.getenv('AGENT_API_PORT', '8003')}/ws/bus
         - Models: Grok-5, Qwen3-30B, DeepSeek, Gemini
         """)
@@ -539,7 +539,7 @@ async def health_check():
     return {
         "status": "healthy",
         "service": "Unified API Server",
-        "port": int(os.getenv("AGENT_API_PORT", "8005")),
+        "port": int(os.getenv("AGENT_API_PORT", "8003")),
         "timestamp": datetime.now().isoformat(),
         "version": "5.1.0",
         "components": {
@@ -552,6 +552,11 @@ async def health_check():
             "message_bus": "active" if message_bus_instance else "inactive"
         }
     }
+
+# Kubernetes/Fly standard liveness endpoint
+@app.get("/healthz")
+async def healthz() -> JSONResponse:
+    return JSONResponse({"status": "ok"})
 
 # Chat completions endpoint for OpenRouter
 class ChatCompletionRequest(BaseModel):

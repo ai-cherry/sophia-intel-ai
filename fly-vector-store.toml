@@ -31,7 +31,6 @@ kill_timeout = "5s"
 
 [experimental]
   auto_rollback = true
-  enable_consul = true
 
 [services]
   protocol = "tcp"

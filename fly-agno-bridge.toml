@@ -5,7 +5,7 @@ kill_signal = "SIGINT"
 kill_timeout = "5s"
 
 [build]
-  dockerfile = "Dockerfile.agno-bridge.production"
+  dockerfile = "Dockerfile"
 
 [env]
   PORT = "7777"
@@ -20,7 +20,8 @@ kill_timeout = "5s"
   
   # Bridge-specific configuration
   ENABLE_CORS = "true"
-  CORS_ORIGINS = "*"  # Will be restricted in production
+  # Restrict default CORS origins for production; override via Fly secrets if needed
+  CORS_ORIGINS = "https://sophia-ui.fly.dev,https://sophia-ui-staging.fly.dev"
   DEBUG = "false"
   
   # Feature flags
@@ -29,7 +30,6 @@ kill_timeout = "5s"
 
 [experimental]
   auto_rollback = true
-  enable_consul = true
 
 [services]
   protocol = "tcp"

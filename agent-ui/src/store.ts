@@ -103,7 +103,7 @@ export const usePlaygroundStore = create<PlaygroundStore>()(
       hasStorage: false,
       setHasStorage: (hasStorage) => set(() => ({ hasStorage })),
       chatInputRef: { current: null },
-      selectedEndpoint: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8005',
+      selectedEndpoint: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8003',
       setSelectedEndpoint: (selectedEndpoint) =>
         set(() => ({ selectedEndpoint })),
       agents: [],
@@ -136,12 +136,12 @@ export const usePlaygroundStore = create<PlaygroundStore>()(
         selectedEndpoint: state.selectedEndpoint
       }),
       migrate: (persistedState: any, version: number) => {
-        // Migrate from old ports to 8005
+        // Migrate from old ports to unified API on 8003
         if (version < 2 && persistedState.selectedEndpoint) {
           if (persistedState.selectedEndpoint.includes(':8000') || 
               persistedState.selectedEndpoint.includes(':7777') ||
-              persistedState.selectedEndpoint.includes(':8003')) {
-            persistedState.selectedEndpoint = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8005';
+              persistedState.selectedEndpoint.includes(':8005')) {
+            persistedState.selectedEndpoint = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8003';
           }
         }
         return persistedState;

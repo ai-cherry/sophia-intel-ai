@@ -45,7 +45,7 @@ USER agno
 ENV PATH=/home/agno/.local/bin:$PATH
 
 # Environment variables (defaults)
-ENV AGENT_API_PORT=8000 \
+ENV AGENT_API_PORT=8003 \
     PLAYGROUND_URL=http://localhost:7777 \
     MCP_FILESYSTEM=true \
     MCP_GIT=true \
@@ -57,10 +57,10 @@ ENV AGENT_API_PORT=8000 \
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:${AGENT_API_PORT}/health || exit 1
+    CMD curl -f http://localhost:${AGENT_API_PORT}/healthz || exit 1
 
 # Expose port
-EXPOSE 8000
+EXPOSE 8003
 
 # Labels
 ARG BUILD_DATE

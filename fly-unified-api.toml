@@ -5,10 +5,11 @@ kill_signal = "SIGINT"
 kill_timeout = "5s"
 
 [build]
-  dockerfile = "Dockerfile.unified-api.production"
+  dockerfile = "Dockerfile"
 
 [env]
   PORT = "8003"
+  AGENT_API_PORT = "8003"
   PYTHONPATH = "/app"
   PYTHONUNBUFFERED = "1"
   LOCAL_DEV_MODE = "false"
@@ -48,7 +49,6 @@ kill_timeout = "5s"
 
 [experimental]
   auto_rollback = true
-  enable_consul = true
 
 [services]
   protocol = "tcp"

@@ -31,20 +31,20 @@
       "required": true
     },
     "8003": {
-      "name": "MCP Code Review",
-      "type": "mcp",
+      "name": "Unified API Server",
+      "type": "api",
       "protocol": "http",
       "required": true
     },
     "8004": {
-      "name": "Vector Store",
-      "type": "storage",
+      "name": "MCP Server",
+      "type": "mcp",
       "protocol": "http",
-      "required": false
+      "required": true
     },
     "8005": {
-      "name": "Unified API Server",
-      "type": "api",
+      "name": "Vector Store",
+      "type": "storage",
       "protocol": "http",
       "required": true
     },
@@ -83,8 +83,9 @@
     "3000": "/",
     "8001": "/health",
     "8002": "/",
-    "8003": "/health",
-    "8005": "/",
+    "8003": "/healthz",
+    "8004": "/health",
+    "8005": "/health",
     "8501": "/"
   },
   "websocket_endpoints": {
@@ -165,20 +166,26 @@
       "info": {
         "status": "\u2705 Active",
         "code": 200,
-        "service": "MCP Code Review",
+        "service": "Unified API Server",
+        "health": "healthy",
+        "info": {
+          "status": "healthy",
+          "service": "Unified API Server"
+        }
+      }
+    },
+    "8004": {
+      "status": "active",
+      "active": true,
+      "info": {
+        "status": "\u2705 Active",
+        "code": 200,
+        "service": "MCP Server",
         "health": "healthy",
         "info": {
           "status": "healthy",
           "service": "MCP Server"
         }
-      }
-    },
-    "8004": {
-      "status": "error",
-      "active": false,
-      "info": {
-        "status": "\u26a0\ufe0f Error 404",
-        "service": "Vector Store"
       }
     },
     "8005": {

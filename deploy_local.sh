@@ -124,7 +124,10 @@ fi
 echo -e "\n${BLUE}4. Starting API Server with MCP Integration...${NC}"
 if ! check_port 8003; then
     echo "  Starting Unified API Server..."
-    cd /Users/lynnmusil/sophia-intel-ai
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    REPO_ROOT="$SCRIPT_DIR"
+    mkdir -p "$REPO_ROOT/logs"
+    cd "$REPO_ROOT"
     
     # Export environment variables
     export LOCAL_DEV_MODE=true
@@ -134,7 +137,7 @@ if ! check_port 8003; then
     export MCP_SUPERMEMORY=true
     
     # Start API server in background
-    nohup python3 -m app.api.unified_server > logs/api_server.log 2>&1 &
+    nohup python3 -m app.api.unified_server > "$REPO_ROOT/logs/api_server.log" 2>&1 &
     API_PID=$!
     echo "  API Server PID: $API_PID"
     
@@ -156,7 +159,7 @@ fi
 echo -e "\n${BLUE}5. Starting UI Dashboard...${NC}"
 if ! check_port 3001 && ! check_port 3000; then
     echo "  Starting Next.js UI..."
-    cd /Users/lynnmusil/sophia-intel-ai/ui
+    cd "$REPO_ROOT/agent-ui"
     
     # Install dependencies if needed
     if [ ! -d "node_modules" ]; then
@@ -165,7 +168,7 @@ if ! check_port 3001 && ! check_port 3000; then
     fi
     
     # Start UI in background
-    nohup npm run dev > ../logs/ui.log 2>&1 &
+    nohup npm run dev > "$REPO_ROOT/logs/ui.log" 2>&1 &
     UI_PID=$!
     echo "  UI Dashboard PID: $UI_PID"
     
@@ -194,7 +197,7 @@ fi
 # Health check
 echo -e "\n${BLUE}7. Running System Health Check...${NC}"
 sleep 2
-python3 /Users/lynnmusil/sophia-intel-ai/scripts/health_check_final.py 2>/dev/null | grep -E "(✅|❌|OPERATIONAL)" || echo -e "${YELLOW}  ⚠ Health check script not found${NC}"
+python3 "$REPO_ROOT/scripts/health_check_final.py" 2>/dev/null | grep -E "(✅|❌|OPERATIONAL)" || echo -e "${YELLOW}  ⚠ Health check script not found${NC}"
 
 # Display access information
 echo ""

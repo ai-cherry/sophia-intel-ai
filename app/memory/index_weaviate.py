@@ -6,9 +6,8 @@ import weaviate.classes as wvc
 
 from app import settings
 from app.core.circuit_breaker import with_circuit_breaker
-from app.memory.embed_router import (
 from app.core.ai_logger import logger
-
+from app.memory.embed_router import (
     DIM_A,
     DIM_B,
     MODEL_A,

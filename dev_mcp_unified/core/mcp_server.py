@@ -642,7 +642,7 @@ class PreviewRequest(BaseModel):
     title: str | None = None
 
 
-@app.post("/business/message/preview")
+@app.post("/api/business/message/preview") 
 async def business_message_preview(req: PreviewRequest):
     # very basic template; real version will blend snippets + persona pain points
     persona_line = f"As a {req.persona}, " if req.persona else ""

@@ -1,0 +1,43 @@
+{
+  "overall_status": "failed",
+  "total_duration_seconds": 2.647842,
+  "phase_summaries": {
+    "Connection Tests": {
+      "status": "failed",
+      "passed": 1,
+      "total": 6,
+      "success_rate": 0.16666666666666666
+    },
+    "Data Flow Tests": {
+      "status": "passed",
+      "passed": 3,
+      "total": 3,
+      "data_quality_score": 1.0
+    },
+    "Workflow Tests": {
+      "status": "failed",
+      "passed": 0,
+      "total": 2
+    },
+    "Performance Benchmarks": {
+      "status": "passed",
+      "total_requests": 18,
+      "success_rate": 1.0
+    },
+    "Error Handling Tests": {
+      "status": "passed"
+    },
+    "Health Monitoring": {
+      "status": "passed"
+    }
+  },
+  "key_metrics": {
+    "phases_passed": 4,
+    "total_phases": 6,
+    "overall_success_rate": 0.6666666666666666
+  },
+  "critical_issues": [],
+  "recommendations": [
+    "Connection reliability issues detected. Check network connectivity and API credentials."
+  ]
+}

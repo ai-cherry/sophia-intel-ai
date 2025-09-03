@@ -8,8 +8,6 @@ import radon.complexity as radon_cc
 import radon.metrics as radon_mi
 
 from app.observability.prometheus_metrics import (
-from app.core.ai_logger import logger
-
     code_complexity_metrics,
     code_quality_metrics,
     code_smells_detected,

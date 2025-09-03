@@ -1,0 +1,464 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Code Manager • Sophia Intel AI</title>
+  <style>
+    body{margin:0;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:#0f1115;color:#e5e7eb}
+    header{padding:12px;border-bottom:1px solid #23262d;display:flex;justify-content:space-between;align-items:center}
+    .auth-status{display:flex;gap:10px;align-items:center}
+    .auth-status.authenticated{color:#10b981}
+    .auth-status.unauthenticated{color:#ef4444}
+    button{padding:6px 12px;border-radius:6px;border:1px solid #374151;background:#1f2937;color:#e5e7eb;cursor:pointer}
+    button:hover{background:#374151}
+    button.primary{background:#3b82f6;border-color:#3b82f6}
+    button.danger{background:#ef4444;border-color:#ef4444}
+    input,textarea{background:#1a1f2b;border:1px solid #23262d;border-radius:6px;padding:8px;color:#e5e7eb}
+    .container{display:flex;height:calc(100vh - 60px)}
+    .sidebar{width:300px;border-right:1px solid #23262d;overflow:auto;padding:12px}
+    .main{flex:1;display:flex;flex-direction:column}
+    .tabs{display:flex;gap:8px;padding:10px;border-bottom:1px solid #23262d}
+    .tab{padding:8px 12px;border-radius:6px;cursor:pointer;background:#1a1f2b}
+    .tab.active{background:#3b82f6;color:white}
+    .content{flex:1;padding:20px;overflow:auto}
+    .file-item{padding:8px;margin:4px 0;border-radius:6px;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+    .file-item:hover{background:#1a1f2b}
+    .file-item.modified{border-left:3px solid #f59e0b}
+    .file-item.added{border-left:3px solid #10b981}
+    .file-item.deleted{border-left:3px solid #ef4444}
+    .status-badge{padding:2px 6px;border-radius:4px;font-size:11px;font-weight:bold}
+    .status-badge.M{background:#f59e0b;color:black}
+    .status-badge.A{background:#10b981;color:white}
+    .status-badge.D{background:#ef4444;color:white}
+    .status-badge.U{background:#6b7280;color:white}
+    pre{background:#1a1f2b;padding:12px;border-radius:6px;overflow-x:auto;font-size:13px;line-height:1.5}
+    .diff-line{font-family:monospace;white-space:pre}
+    .diff-add{background:rgba(16,185,129,0.2);color:#10b981}
+    .diff-remove{background:rgba(239,68,68,0.2);color:#ef4444}
+    .diff-header{color:#60a5fa;font-weight:bold}
+    .preview-header{display:flex;justify-content:space-between;align-items:center;padding:10px;background:#1a1f2b;border-radius:6px;margin-bottom:10px}
+    .audit-item{padding:10px;margin:8px 0;background:#1a1f2b;border-radius:6px;border-left:3px solid #3b82f6}
+    .timestamp{color:#9ca3af;font-size:12px}
+    .chat-pane{display:flex;flex-direction:column;height:100%}
+    .chat-messages{flex:1;overflow-y:auto;padding:10px}
+    .chat-input{padding:10px;border-top:1px solid #23262d;display:flex;gap:10px}
+    .chat-input textarea{flex:1;resize:none;height:60px}
+    .message{margin:10px 0;padding:10px;border-radius:6px}
+    .message.user{background:#1a1f2b;margin-left:20%}
+    .message.assistant{background:#1f2937;margin-right:20%}
+    .code-block{background:#0f1115;padding:10px;border-radius:6px;margin:10px 0;position:relative}
+    .code-block button{position:absolute;top:10px;right:10px;font-size:11px}
+    .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);justify-content:center;align-items:center}
+    .modal.show{display:flex}
+    .modal-content{background:#1a1f2b;padding:20px;border-radius:8px;max-width:600px;width:90%;max-height:80vh;overflow:auto}
+    .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}
+    .loading{opacity:0.6;pointer-events:none}
+    .spinner{border:2px solid #374151;border-top:2px solid #3b82f6;border-radius:50%;width:20px;height:20px;animation:spin 1s linear infinite;display:inline-block}
+    @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+  </style>
+</head>
+<body>
+  <header>
+    <strong>Code Manager • Sophia Intel AI</strong>
+    <div class="auth-status" id="auth-status">
+      <span id="auth-text">Not authenticated</span>
+      <button onclick="toggleAuth()" id="auth-btn">Login</button>
+      <button onclick="location.reload()">Refresh</button>
+    </div>
+  </header>
+  
+  <div class="container">
+    <div class="sidebar">
+      <h3>Repository Files</h3>
+      <div>
+        <button onclick="loadGitStatus()" style="width:100%;margin-bottom:10px">
+          <span id="refresh-icon">↻</span> Refresh Status
+        </button>
+      </div>
+      <div id="file-list">Loading...</div>
+    </div>
+    
+    <div class="main">
+      <div class="tabs">
+        <div class="tab active" onclick="showTab('preview')">Preview</div>
+        <div class="tab" onclick="showTab('chat')">AI Assistant</div>
+        <div class="tab" onclick="showTab('audit')">Audit Log</div>
+      </div>
+      
+      <div class="content" id="content">
+        <div id="preview-tab">
+          <div id="preview-content">
+            <p>Select a file from the sidebar to preview changes</p>
+          </div>
+        </div>
+        
+        <div id="chat-tab" style="display:none" class="chat-pane">
+          <div class="chat-messages" id="chat-messages"></div>
+          <div class="chat-input">
+            <textarea id="chat-input" placeholder="Ask about code or request changes..."></textarea>
+            <button onclick="sendMessage()" class="primary">Send</button>
+          </div>
+        </div>
+        
+        <div id="audit-tab" style="display:none">
+          <h3>Recent Changes</h3>
+          <button onclick="loadAuditLog()">Refresh</button>
+          <div id="audit-list"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Login Modal -->
+  <div id="login-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Authentication Required</h3>
+        <button onclick="closeModal()">×</button>
+      </div>
+      <p>Enter password to enable write access:</p>
+      <input type="password" id="password-input" placeholder="Password" style="width:100%;margin:10px 0">
+      <button onclick="login()" class="primary">Login</button>
+    </div>
+  </div>
+  
+  <script>
+    const SERVER_URL = 'http://127.0.0.1:3333';
+    let authToken = localStorage.getItem('mcp_token');
+    let currentFile = null;
+    let gitFiles = [];
+    
+    // Initialize
+    async function init() {
+      updateAuthStatus();
+      await loadGitStatus();
+      setInterval(loadGitStatus, 30000); // Auto-refresh every 30s
+    }
+    
+    // Authentication
+    function updateAuthStatus() {
+      const status = document.getElementById('auth-status');
+      const text = document.getElementById('auth-text');
+      const btn = document.getElementById('auth-btn');
+      
+      if (authToken) {
+        status.className = 'auth-status authenticated';
+        text.textContent = 'Authenticated (Write Access)';
+        btn.textContent = 'Logout';
+      } else {
+        status.className = 'auth-status unauthenticated';
+        text.textContent = 'Read-Only Mode';
+        btn.textContent = 'Login';
+      }
+    }
+    
+    function toggleAuth() {
+      if (authToken) {
+        localStorage.removeItem('mcp_token');
+        authToken = null;
+        updateAuthStatus();
+      } else {
+        document.getElementById('login-modal').classList.add('show');
+        document.getElementById('password-input').focus();
+      }
+    }
+    
+    async function login() {
+      const password = document.getElementById('password-input').value;
+      if (!password) return;
+      
+      try {
+        const resp = await fetch(`${SERVER_URL}/auth/login`, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({password})
+        });
+        
+        if (resp.ok) {
+          const data = await resp.json();
+          authToken = data.token;
+          localStorage.setItem('mcp_token', authToken);
+          updateAuthStatus();
+          closeModal();
+          alert('Login successful! You now have write access.');
+        } else {
+          alert('Invalid password');
+        }
+      } catch (e) {
+        alert('Login failed: ' + e.message);
+      }
+    }
+    
+    function closeModal() {
+      document.getElementById('login-modal').classList.remove('show');
+    }
+    
+    // Git status
+    async function loadGitStatus() {
+      const icon = document.getElementById('refresh-icon');
+      icon.style.animation = 'spin 1s linear infinite';
+      
+      try {
+        const resp = await fetch(`${SERVER_URL}/git/status`);
+        const data = await resp.json();
+        
+        gitFiles = data.files || [];
+        renderFileList();
+      } catch (e) {
+        console.error('Failed to load git status:', e);
+      }
+      
+      icon.style.animation = '';
+    }
+    
+    function renderFileList() {
+      const list = document.getElementById('file-list');
+      
+      if (gitFiles.length === 0) {
+        list.innerHTML = '<p style="color:#9ca3af">No changes in repository</p>';
+        return;
+      }
+      
+      const html = gitFiles.map(file => {
+        const statusClass = file.status === 'M' ? 'modified' : 
+                          file.status === 'A' ? 'added' : 
+                          file.status === 'D' ? 'deleted' : '';
+        
+        return `
+          <div class="file-item ${statusClass}" onclick="selectFile('${file.path}')">
+            <span>${file.path}</span>
+            <span class="status-badge ${file.status}">${file.status}</span>
+          </div>
+        `;
+      }).join('');
+      
+      list.innerHTML = html;
+    }
+    
+    // File operations
+    async function selectFile(path) {
+      currentFile = path;
+      await loadFilePreview(path);
+    }
+    
+    async function loadFilePreview(path) {
+      const preview = document.getElementById('preview-content');
+      preview.innerHTML = '<div class="spinner"></div> Loading...';
+      
+      try {
+        // Get file content
+        const resp = await fetch(`${SERVER_URL}/files/read`, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({file_path: path})
+        });
+        
+        const data = await resp.json();
+        
+        if (data.error) {
+          preview.innerHTML = `<p style="color:#ef4444">Error: ${data.error}</p>`;
+          return;
+        }
+        
+        // Get diff
+        const diffResp = await fetch(`${SERVER_URL}/git/diff/${path}`);
+        const diffData = await diffResp.json();
+        
+        // Render preview
+        preview.innerHTML = `
+          <div class="preview-header">
+            <div>
+              <strong>${path}</strong>
+              <span class="timestamp">Modified: ${new Date(data.modified).toLocaleString()}</span>
+            </div>
+            <div>
+              ${authToken ? `
+                <button onclick="editFile('${path}')" class="primary">Edit</button>
+                <button onclick="revertFile('${path}')" class="danger">Revert</button>
+              ` : ''}
+            </div>
+          </div>
+          
+          ${diffData.diff ? `
+            <h4>Changes:</h4>
+            <pre>${formatDiff(diffData.diff)}</pre>
+          ` : ''}
+          
+          <h4>Current Content:</h4>
+          <pre>${escapeHtml(data.content)}</pre>
+        `;
+      } catch (e) {
+        preview.innerHTML = `<p style="color:#ef4444">Failed to load file: ${e.message}</p>`;
+      }
+    }
+    
+    function formatDiff(diff) {
+      return diff.split('\n').map(line => {
+        if (line.startsWith('+')) {
+          return `<span class="diff-line diff-add">${escapeHtml(line)}</span>`;
+        } else if (line.startsWith('-')) {
+          return `<span class="diff-line diff-remove">${escapeHtml(line)}</span>`;
+        } else if (line.startsWith('@@')) {
+          return `<span class="diff-line diff-header">${escapeHtml(line)}</span>`;
+        }
+        return escapeHtml(line);
+      }).join('\n');
+    }
+    
+    // Chat functionality
+    async function sendMessage() {
+      const input = document.getElementById('chat-input');
+      const message = input.value.trim();
+      if (!message) return;
+      
+      addMessage('user', message);
+      input.value = '';
+      
+      // Send to AI with context
+      try {
+        const resp = await fetch(`${SERVER_URL}/proxy/openrouter`, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            model: 'meta-llama/llama-3.2-3b-instruct',
+            messages: [
+              {role: 'system', content: 'You are a coding assistant for the sophia-intel-ai repository. Provide code suggestions and explanations.'},
+              {role: 'user', content: message}
+            ]
+          })
+        });
+        
+        const data = await resp.json();
+        const response = data.text || 'No response';
+        
+        addMessage('assistant', response);
+        
+        // Check if response contains code
+        if (response.includes('```')) {
+          addCodeActions(response);
+        }
+      } catch (e) {
+        addMessage('assistant', 'Error: ' + e.message);
+      }
+    }
+    
+    function addMessage(role, content) {
+      const messages = document.getElementById('chat-messages');
+      const div = document.createElement('div');
+      div.className = `message ${role}`;
+      div.innerHTML = formatMessage(content);
+      messages.appendChild(div);
+      messages.scrollTop = messages.scrollHeight;
+    }
+    
+    function formatMessage(content) {
+      // Format code blocks
+      return content.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
+        return `<div class="code-block" data-code="${escapeHtml(code)}">
+          <pre>${escapeHtml(code)}</pre>
+          ${authToken ? '<button onclick="applyCode(this)">Apply to Repository</button>' : ''}
+        </div>`;
+      });
+    }
+    
+    async function applyCode(btn) {
+      const codeBlock = btn.parentElement;
+      const code = codeBlock.dataset.code;
+      
+      const path = prompt('Enter file path to save to:', currentFile || 'new_file.py');
+      if (!path) return;
+      
+      try {
+        const resp = await fetch(`${SERVER_URL}/files/write`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`
+          },
+          body: JSON.stringify({
+            file_path: path,
+            content: code,
+            create_backup: true
+          })
+        });
+        
+        const data = await resp.json();
+        if (data.success) {
+          alert(`File saved: ${data.path}`);
+          await loadGitStatus();
+        } else {
+          alert(`Error: ${data.error}`);
+        }
+      } catch (e) {
+        alert('Failed to save file: ' + e.message);
+      }
+    }
+    
+    // Audit log
+    async function loadAuditLog() {
+      try {
+        const resp = await fetch(`${SERVER_URL}/audit/recent`);
+        const data = await resp.json();
+        
+        const list = document.getElementById('audit-list');
+        
+        if (!data.changes || data.changes.length === 0) {
+          list.innerHTML = '<p style="color:#9ca3af">No recent changes</p>';
+          return;
+        }
+        
+        list.innerHTML = data.changes.map(change => `
+          <div class="audit-item">
+            <div style="display:flex;justify-content:space-between">
+              <strong>${change.operation.toUpperCase()}: ${change.file_path}</strong>
+              <span class="timestamp">${new Date(change.timestamp).toLocaleString()}</span>
+            </div>
+            <div style="margin-top:5px;color:#9ca3af">
+              ${change.details}
+              ${change.backup_path ? `<br>Backup: ${change.backup_path}` : ''}
+            </div>
+          </div>
+        `).join('');
+      } catch (e) {
+        console.error('Failed to load audit log:', e);
+      }
+    }
+    
+    // Tab management
+    function showTab(tab) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('[id$="-tab"]').forEach(t => t.style.display = 'none');
+      
+      event.target.classList.add('active');
+      document.getElementById(`${tab}-tab`).style.display = tab === 'chat' ? 'flex' : 'block';
+      
+      if (tab === 'audit') {
+        loadAuditLog();
+      }
+    }
+    
+    // Utilities
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+    
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && e.ctrlKey) {
+        const input = document.getElementById('chat-input');
+        if (document.activeElement === input) {
+          sendMessage();
+        } else if (document.getElementById('login-modal').classList.contains('show')) {
+          login();
+        }
+      }
+    });
+    
+    // Initialize on load
+    init();
+  </script>
+</body>
+</html>

@@ -462,6 +462,12 @@ class BIIntegrationTester:
                             f"{self.base_url}{step}",
                             json={"type": "lead_qualification"}
                         )
+                    elif "optimize" in step:
+                        # POST request for project optimization
+                        response = await self.client.post(
+                            f"{self.base_url}{step}",
+                            json={}
+                        )
                     else:
                         # GET request
                         response = await self.client.get(f"{self.base_url}{step}")

@@ -1,0 +1,430 @@
+{
+  "start_time": "2025-09-03T11:01:41.026940",
+  "end_time": "2025-09-03T11:01:45.247373",
+  "connection_tests": {
+    "timestamp": "2025-09-03T11:01:41.030233",
+    "summary": {
+      "total_tests": 6,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 5,
+      "errors": 0,
+      "success_rate": 0.16666666666666666
+    },
+    "results": [
+      {
+        "name": "gong_recent_calls",
+        "status": "skipped",
+        "reason": "Missing environment variables: ['GONG_ACCESS_KEY', 'GONG_CLIENT_SECRET']",
+        "response_time_ms": 0
+      },
+      {
+        "name": "business_dashboard",
+        "status": "passed",
+        "response_time_ms": 3.1042098999023438,
+        "response_size_bytes": 641,
+        "attempt": 1
+      },
+      {
+        "name": "crm_contacts",
+        "status": "skipped",
+        "reason": "Missing environment variables: ['HUBSPOT_API_KEY']",
+        "response_time_ms": 0
+      },
+      {
+        "name": "crm_pipeline",
+        "status": "skipped",
+        "reason": "Missing environment variables: ['SALESFORCE_API_KEY', 'SALESFORCE_INSTANCE_URL']",
+        "response_time_ms": 0
+      },
+      {
+        "name": "calls_recent",
+        "status": "skipped",
+        "reason": "Missing environment variables: ['GONG_ACCESS_KEY', 'GONG_CLIENT_SECRET']",
+        "response_time_ms": 0
+      },
+      {
+        "name": "projects_overview",
+        "status": "skipped",
+        "reason": "Missing environment variables: ['ASANA_ACCESS_TOKEN', 'LINEAR_API_KEY']",
+        "response_time_ms": 0
+      }
+    ],
+    "health_status": {
+      "business": {
+        "platform": "business",
+        "status": "healthy",
+        "response_time_ms": 3.1042098999023438,
+        "last_successful_call": "2025-09-03 11:01:41.030193",
+        "error_message": null,
+        "data_quality_score": 1.0
+      }
+    }
+  },
+  "data_flow_tests": {
+    "timestamp": "2025-09-03T11:01:42.266222",
+    "summary": {
+      "total_tests": 3,
+      "passed": 3,
+      "failed": 0,
+      "errors": 0,
+      "average_data_quality_score": 1.0,
+      "average_response_time_ms": 414.9649937947591
+    },
+    "results": [
+      {
+        "name": "gong_call_data_structure",
+        "status": "passed",
+        "response_time_ms": 1235.6550693511963,
+        "performance_threshold_ms": 5000,
+        "performance_ok": true,
+        "data_quality_score": 1.0,
+        "missing_fields": [],
+        "validation_errors": [],
+        "response_size_bytes": 6484
+      },
+      {
+        "name": "business_dashboard_completeness",
+        "status": "passed",
+        "response_time_ms": 4.542827606201172,
+        "performance_threshold_ms": 5000,
+        "performance_ok": true,
+        "data_quality_score": 1.0,
+        "missing_fields": [],
+        "validation_errors": [],
+        "response_size_bytes": 641
+      },
+      {
+        "name": "crm_pipeline_data_quality",
+        "status": "passed",
+        "response_time_ms": 4.697084426879883,
+        "performance_threshold_ms": 5000,
+        "performance_ok": true,
+        "data_quality_score": 1.0,
+        "missing_fields": [],
+        "validation_errors": [],
+        "response_size_bytes": 475
+      }
+    ]
+  },
+  "workflow_tests": {
+    "timestamp": "2025-09-03T11:01:42.276241",
+    "summary": {
+      "total_workflows": 2,
+      "passed": 0,
+      "failed": 2
+    },
+    "workflows": [
+      {
+        "name": "lead_qualification_workflow",
+        "status": "failed",
+        "execution_time_ms": 6.299734115600586,
+        "success_rate": 0.75,
+        "errors": [
+          "Step /api/business/message/preview: HTTP 404"
+        ],
+        "steps": [
+          {
+            "step": "/api/business/crm/contacts",
+            "status_code": 200,
+            "success": true
+          },
+          {
+            "step": "/api/business/calls/recent",
+            "status_code": 200,
+            "success": true
+          },
+          {
+            "step": "/api/business/message/preview",
+            "status_code": 404,
+            "success": false
+          },
+          {
+            "step": "/api/business/workflows/trigger",
+            "status_code": 200,
+            "success": true
+          }
+        ]
+      },
+      {
+        "name": "project_optimization_workflow",
+        "status": "failed",
+        "execution_time_ms": 3.5572052001953125,
+        "success_rate": 0.6666666666666666,
+        "errors": [
+          "Step /api/business/projects/proj_001/optimize: HTTP 405"
+        ],
+        "steps": [
+          {
+            "step": "/api/business/projects/overview",
+            "status_code": 200,
+            "success": true
+          },
+          {
+            "step": "/api/factory/personas",
+            "status_code": 200,
+            "success": true
+          },
+          {
+            "step": "/api/business/projects/proj_001/optimize",
+            "status_code": 405,
+            "success": false
+          }
+        ]
+      }
+    ]
+  },
+  "performance_benchmarks": {
+    "timestamp": "2025-09-03T11:01:45.236307",
+    "test_summary": {
+      "total_benchmarks": 3,
+      "total_requests": 18,
+      "total_duration_seconds": 2.959375,
+      "overall_success_rate": 1.0
+    },
+    "benchmark_results": {
+      "quick_health_check": {
+        "config": {
+          "endpoint": "/healthz",
+          "method": "GET",
+          "concurrent_users": 1,
+          "total_requests": 3
+        },
+        "performance": {
+          "duration_seconds": 0.02135,
+          "total_requests": 3,
+          "successful_requests": 3,
+          "failed_requests": 0,
+          "success_rate": 1.0,
+          "error_rate": 0.0,
+          "throughput_rps": 140.5152224824356,
+          "avg_response_time_ms": 6.584326426188151,
+          "median_response_time_ms": 6.294012069702148,
+          "p95_response_time_ms": 7.864952087402344,
+          "p99_response_time_ms": 7.864952087402344,
+          "min_response_time_ms": 5.594015121459961,
+          "max_response_time_ms": 7.864952087402344
+        }
+      },
+      "quick_dashboard_test": {
+        "config": {
+          "endpoint": "/api/business/dashboard",
+          "method": "GET",
+          "concurrent_users": 2,
+          "total_requests": 10
+        },
+        "performance": {
+          "duration_seconds": 0.044483,
+          "total_requests": 10,
+          "successful_requests": 10,
+          "failed_requests": 0,
+          "success_rate": 1.0,
+          "error_rate": 0.0,
+          "throughput_rps": 224.80498167839397,
+          "avg_response_time_ms": 7.879805564880371,
+          "median_response_time_ms": 7.910370826721191,
+          "p95_response_time_ms": 9.842157363891602,
+          "p99_response_time_ms": 9.842157363891602,
+          "min_response_time_ms": 4.213809967041016,
+          "max_response_time_ms": 9.842157363891602
+        }
+      },
+      "quick_gong_test": {
+        "config": {
+          "endpoint": "/business/gong/recent?days=1",
+          "method": "GET",
+          "concurrent_users": 1,
+          "total_requests": 5
+        },
+        "performance": {
+          "duration_seconds": 2.893542,
+          "total_requests": 5,
+          "successful_requests": 5,
+          "failed_requests": 0,
+          "success_rate": 1.0,
+          "error_rate": 0.0,
+          "throughput_rps": 1.7279859770481991,
+          "avg_response_time_ms": 578.2820224761963,
+          "median_response_time_ms": 519.9370384216309,
+          "p95_response_time_ms": 774.1858959197998,
+          "p99_response_time_ms": 774.1858959197998,
+          "min_response_time_ms": 442.2030448913574,
+          "max_response_time_ms": 774.1858959197998
+        }
+      }
+    },
+    "sla_compliance": {
+      "quick_health_check": {
+        "overall_compliant": true,
+        "checks": {
+          "max_response_time": true,
+          "p95_response_time": true,
+          "p99_response_time": true,
+          "success_rate": true,
+          "error_rate": true,
+          "throughput": true
+        },
+        "violations": [],
+        "summary": {
+          "max_response_time_ms": 7.864952087402344,
+          "p95_response_time_ms": 7.864952087402344,
+          "p99_response_time_ms": 7.864952087402344,
+          "success_rate": 1.0,
+          "error_rate": 0.0,
+          "throughput_rps": 140.5152224824356,
+          "thresholds": {
+            "max_response_time_ms": 5000,
+            "max_p95_response_time_ms": 8000,
+            "max_p99_response_time_ms": 15000,
+            "min_success_rate": 0.95,
+            "max_error_rate": 0.05,
+            "min_throughput_rps": 1.0
+          }
+        }
+      },
+      "quick_dashboard_test": {
+        "overall_compliant": true,
+        "checks": {
+          "max_response_time": true,
+          "p95_response_time": true,
+          "p99_response_time": true,
+          "success_rate": true,
+          "error_rate": true,
+          "throughput": true
+        },
+        "violations": [],
+        "summary": {
+          "max_response_time_ms": 9.842157363891602,
+          "p95_response_time_ms": 9.842157363891602,
+          "p99_response_time_ms": 9.842157363891602,
+          "success_rate": 1.0,
+          "error_rate": 0.0,
+          "throughput_rps": 224.80498167839397,
+          "thresholds": {
+            "max_response_time_ms": 5000,
+            "max_p95_response_time_ms": 8000,
+            "max_p99_response_time_ms": 15000,
+            "min_success_rate": 0.95,
+            "max_error_rate": 0.05,
+            "min_throughput_rps": 1.0
+          }
+        }
+      },
+      "quick_gong_test": {
+        "overall_compliant": true,
+        "checks": {
+          "max_response_time": true,
+          "p95_response_time": true,
+          "p99_response_time": true,
+          "success_rate": true,
+          "error_rate": true,
+          "throughput": true
+        },
+        "violations": [],
+        "summary": {
+          "max_response_time_ms": 774.1858959197998,
+          "p95_response_time_ms": 774.1858959197998,
+          "p99_response_time_ms": 774.1858959197998,
+          "success_rate": 1.0,
+          "error_rate": 0.0,
+          "throughput_rps": 1.7279859770481991,
+          "thresholds": {
+            "max_response_time_ms": 5000,
+            "max_p95_response_time_ms": 8000,
+            "max_p99_response_time_ms": 15000,
+            "min_success_rate": 0.95,
+            "max_error_rate": 0.05,
+            "min_throughput_rps": 1.0
+          }
+        }
+      }
+    },
+    "system_resources": {
+      "sample_count": 3,
+      "duration_seconds": 2.006319761276245,
+      "cpu": {
+        "avg_percent": 8.8,
+        "max_percent": 12.9,
+        "min_percent": 6.0
+      },
+      "memory": {
+        "avg_percent": 63.266666666666666,
+        "max_percent": 63.3,
+        "min_percent": 63.2,
+        "avg_used_mb": 21815.671875,
+        "max_used_mb": 21824.203125
+      }
+    },
+    "recommendations": []
+  },
+  "error_handling_tests": {
+    "error": "No module named 'dev_mcp_unified'"
+  },
+  "health_monitoring": {
+    "timestamp": "2025-09-03T11:01:45.247313",
+    "health_endpoint_status": 200,
+    "health_endpoint_working": true,
+    "integration_health": {
+      "timestamp": "2025-09-03T11:01:45.237286",
+      "overall_status": "healthy",
+      "platforms": {
+        "business": {
+          "platform": "business",
+          "status": "healthy",
+          "response_time_ms": 3.1042098999023438,
+          "last_successful_call": "2025-09-03 11:01:41.030193",
+          "error_message": null,
+          "data_quality_score": 1.0
+        }
+      },
+      "alerts": []
+    },
+    "monitoring_functional": true
+  },
+  "summary": {
+    "overall_status": "failed",
+    "total_duration_seconds": 4.220433,
+    "phase_summaries": {
+      "Connection Tests": {
+        "status": "failed",
+        "passed": 1,
+        "total": 6,
+        "success_rate": 0.16666666666666666
+      },
+      "Data Flow Tests": {
+        "status": "passed",
+        "passed": 3,
+        "total": 3,
+        "data_quality_score": 1.0
+      },
+      "Workflow Tests": {
+        "status": "failed",
+        "passed": 0,
+        "total": 2
+      },
+      "Performance Benchmarks": {
+        "status": "passed",
+        "total_requests": 18,
+        "success_rate": 1.0
+      },
+      "Error Handling Tests": {
+        "status": "error",
+        "error": "No module named 'dev_mcp_unified'"
+      },
+      "Health Monitoring": {
+        "status": "passed"
+      }
+    },
+    "key_metrics": {
+      "phases_passed": 3,
+      "total_phases": 6,
+      "overall_success_rate": 0.5
+    },
+    "critical_issues": [
+      "Error Handling Tests: No module named 'dev_mcp_unified'"
+    ],
+    "recommendations": [
+      "Connection reliability issues detected. Check network connectivity and API credentials."
+    ]
+  }
+}

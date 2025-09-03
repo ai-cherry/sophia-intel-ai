@@ -20,8 +20,6 @@ from app.nl_interface.memory_connector import NLInteraction, NLMemoryConnector
 from app.nl_interface.quicknlp import CachedQuickNLP, CommandIntent, ParsedCommand
 from app.swarms.improved_swarm import ImprovedAgentSwarm
 from app.swarms.performance_optimizer import (
-from app.core.ai_logger import logger
-
     CircuitBreaker,
     GracefulDegradationManager,
     SwarmOptimizer,

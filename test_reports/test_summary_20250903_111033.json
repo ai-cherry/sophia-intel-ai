@@ -1,0 +1,48 @@
+{
+  "overall_status": "failed",
+  "total_duration_seconds": 2.096159,
+  "phase_summaries": {
+    "Connection Tests": {
+      "status": "failed",
+      "passed": 0,
+      "total": 6,
+      "success_rate": 0.0
+    },
+    "Data Flow Tests": {
+      "status": "failed",
+      "passed": 0,
+      "total": 3,
+      "data_quality_score": 0.0
+    },
+    "Workflow Tests": {
+      "status": "failed",
+      "passed": 0,
+      "total": 2
+    },
+    "Performance Benchmarks": {
+      "status": "failed",
+      "total_requests": 18,
+      "success_rate": 0.0
+    },
+    "Error Handling Tests": {
+      "status": "passed"
+    },
+    "Health Monitoring": {
+      "status": "error",
+      "error": "All connection attempts failed"
+    }
+  },
+  "key_metrics": {
+    "phases_passed": 1,
+    "total_phases": 6,
+    "overall_success_rate": 0.16666666666666666
+  },
+  "critical_issues": [
+    "Health Monitoring: All connection attempts failed"
+  ],
+  "recommendations": [
+    "Connection reliability issues detected. Check network connectivity and API credentials.",
+    "Data quality issues detected. Implement data validation and cleansing processes.",
+    "Low success rates in: quick_health_check, quick_dashboard_test, quick_gong_test. Investigate error handling, increase timeout values, or improve retry logic."
+  ]
+}

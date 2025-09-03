@@ -24,7 +24,8 @@ graph TB
     end
     
     subgraph "Service Layer"
-        OM[Orchestra Manager]
+        UO[Unified Orchestrator]
+        AT[AGNO Teams]
         CD[Command Dispatcher]
         MS[Memory System]
         SI[Swarm Intelligence]
@@ -54,7 +55,8 @@ graph TB
     CO --> SM
     CO --> CP
     CO --> CB
-    CB --> OM
+    CB --> UO
+    CB --> AT
     CB --> CD
     CB --> MS
     CB --> SI
@@ -63,7 +65,7 @@ graph TB
     CO --> METRICS
     SM --> CACHE
     MS --> VDB
-    OM --> DB
+    UO --> DB
 ```
 
 ## Request Flow Sequence
@@ -75,7 +77,7 @@ sequenceDiagram
     participant DI as DI Container
     participant CO as Chat Orchestrator
     participant CB as Circuit Breaker
-    participant OM as Orchestra Manager
+    participant UO as Unified Orchestrator
     participant CD as Command Dispatcher
     participant MS as Memory System
     
@@ -92,8 +94,8 @@ sequenceDiagram
         CO->>CO: Use Fallback Strategy
     else Circuit Closed
         CO->>CB: Execute with Circuit Breaker
-        CB->>OM: Process Message
-        OM-->>CB: Manager Result
+        CB->>UO: Process Message
+        UO-->>CB: Orchestrator Result
         CB-->>CO: Success Response
         
         CO->>CB: Execute Command

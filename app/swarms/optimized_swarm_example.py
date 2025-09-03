@@ -10,8 +10,6 @@ from dataclasses import dataclass, field
 from typing import Any, Optional
 
 from app.swarms.performance_optimizer import (
-from app.core.ai_logger import logger
-
     CircuitBreakerOpenException,
     GracefulDegradationManager,
     SwarmOptimizer,

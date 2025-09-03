@@ -1,10 +1,9 @@
+from __future__ import annotations
 """
 Embedding router with caching for dual-tier embeddings.
 Routes to appropriate model based on chunk characteristics.
 """
 from typing import Optional, Union
-
-from __future__ import annotations
 
 import hashlib
 import json

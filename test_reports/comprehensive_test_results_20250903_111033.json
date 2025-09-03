@@ -1,0 +1,480 @@
+{
+  "start_time": "2025-09-03T11:10:31.537744",
+  "end_time": "2025-09-03T11:10:33.633903",
+  "connection_tests": {
+    "timestamp": "2025-09-03T11:10:33.545132",
+    "summary": {
+      "total_tests": 6,
+      "passed": 0,
+      "failed": 1,
+      "skipped": 5,
+      "errors": 0,
+      "success_rate": 0.0
+    },
+    "results": [
+      {
+        "name": "gong_recent_calls",
+        "status": "skipped",
+        "reason": "Missing environment variables: ['GONG_ACCESS_KEY', 'GONG_CLIENT_SECRET']",
+        "response_time_ms": 0
+      },
+      {
+        "name": "business_dashboard",
+        "status": "failed",
+        "error": "All connection attempts failed",
+        "attempts": 3,
+        "response_time_ms": 2007.2009563446045
+      },
+      {
+        "name": "crm_contacts",
+        "status": "skipped",
+        "reason": "Missing environment variables: ['HUBSPOT_API_KEY']",
+        "response_time_ms": 0
+      },
+      {
+        "name": "crm_pipeline",
+        "status": "skipped",
+        "reason": "Missing environment variables: ['SALESFORCE_API_KEY', 'SALESFORCE_INSTANCE_URL']",
+        "response_time_ms": 0
+      },
+      {
+        "name": "calls_recent",
+        "status": "skipped",
+        "reason": "Missing environment variables: ['GONG_ACCESS_KEY', 'GONG_CLIENT_SECRET']",
+        "response_time_ms": 0
+      },
+      {
+        "name": "projects_overview",
+        "status": "skipped",
+        "reason": "Missing environment variables: ['ASANA_ACCESS_TOKEN', 'LINEAR_API_KEY']",
+        "response_time_ms": 0
+      }
+    ],
+    "health_status": {
+      "business": {
+        "platform": "business",
+        "status": "down",
+        "response_time_ms": 2007.1918964385986,
+        "last_successful_call": null,
+        "error_message": "All connection attempts failed",
+        "data_quality_score": 0.0
+      }
+    }
+  },
+  "data_flow_tests": {
+    "timestamp": "2025-09-03T11:10:33.546356",
+    "summary": {
+      "total_tests": 3,
+      "passed": 0,
+      "failed": 0,
+      "errors": 3,
+      "average_data_quality_score": 0.0,
+      "average_response_time_ms": 0.7648468017578125
+    },
+    "results": [
+      {
+        "name": "gong_call_data_structure",
+        "status": "error",
+        "error": "All connection attempts failed",
+        "response_time_ms": 0.8502006530761719
+      },
+      {
+        "name": "business_dashboard_completeness",
+        "status": "error",
+        "error": "All connection attempts failed",
+        "response_time_ms": 0.7371902465820312
+      },
+      {
+        "name": "crm_pipeline_data_quality",
+        "status": "error",
+        "error": "All connection attempts failed",
+        "response_time_ms": 0.7071495056152344
+      }
+    ]
+  },
+  "workflow_tests": {
+    "timestamp": "2025-09-03T11:10:33.549694",
+    "summary": {
+      "total_workflows": 2,
+      "passed": 0,
+      "failed": 2
+    },
+    "workflows": [
+      {
+        "name": "lead_qualification_workflow",
+        "status": "failed",
+        "execution_time_ms": 1.8832683563232422,
+        "success_rate": 0.0,
+        "errors": [
+          "Step /api/business/crm/contacts: All connection attempts failed",
+          "Step /api/business/calls/recent: All connection attempts failed",
+          "Step /api/business/message/preview: All connection attempts failed",
+          "Step /api/business/workflows/trigger: All connection attempts failed"
+        ],
+        "steps": [
+          {
+            "step": "/api/business/crm/contacts",
+            "status_code": null,
+            "success": false,
+            "error": "All connection attempts failed"
+          },
+          {
+            "step": "/api/business/calls/recent",
+            "status_code": null,
+            "success": false,
+            "error": "All connection attempts failed"
+          },
+          {
+            "step": "/api/business/message/preview",
+            "status_code": null,
+            "success": false,
+            "error": "All connection attempts failed"
+          },
+          {
+            "step": "/api/business/workflows/trigger",
+            "status_code": null,
+            "success": false,
+            "error": "All connection attempts failed"
+          }
+        ]
+      },
+      {
+        "name": "project_optimization_workflow",
+        "status": "failed",
+        "execution_time_ms": 1.3701915740966797,
+        "success_rate": 0.0,
+        "errors": [
+          "Step /api/business/projects/overview: All connection attempts failed",
+          "Step /api/factory/personas: All connection attempts failed",
+          "Step /api/business/projects/proj_001/optimize: All connection attempts failed"
+        ],
+        "steps": [
+          {
+            "step": "/api/business/projects/overview",
+            "status_code": null,
+            "success": false,
+            "error": "All connection attempts failed"
+          },
+          {
+            "step": "/api/factory/personas",
+            "status_code": null,
+            "success": false,
+            "error": "All connection attempts failed"
+          },
+          {
+            "step": "/api/business/projects/proj_001/optimize",
+            "status_code": null,
+            "success": false,
+            "error": "All connection attempts failed"
+          }
+        ]
+      }
+    ]
+  },
+  "performance_benchmarks": {
+    "timestamp": "2025-09-03T11:10:33.628551",
+    "test_summary": {
+      "total_benchmarks": 3,
+      "total_requests": 18,
+      "total_duration_seconds": 0.078324,
+      "overall_success_rate": 0.0
+    },
+    "benchmark_results": {
+      "quick_health_check": {
+        "config": {
+          "endpoint": "/healthz",
+          "method": "GET",
+          "concurrent_users": 1,
+          "total_requests": 3
+        },
+        "performance": {
+          "duration_seconds": 0.020188,
+          "total_requests": 3,
+          "successful_requests": 0,
+          "failed_requests": 3,
+          "success_rate": 0.0,
+          "error_rate": 1.0,
+          "throughput_rps": 148.6031305726174,
+          "avg_response_time_ms": 0.0,
+          "median_response_time_ms": 0.0,
+          "p95_response_time_ms": 0.0,
+          "p99_response_time_ms": 0.0,
+          "min_response_time_ms": 0.0,
+          "max_response_time_ms": 0.0
+        }
+      },
+      "quick_dashboard_test": {
+        "config": {
+          "endpoint": "/api/business/dashboard",
+          "method": "GET",
+          "concurrent_users": 2,
+          "total_requests": 10
+        },
+        "performance": {
+          "duration_seconds": 0.037839,
+          "total_requests": 10,
+          "successful_requests": 0,
+          "failed_requests": 10,
+          "success_rate": 0.0,
+          "error_rate": 1.0,
+          "throughput_rps": 264.27759718808636,
+          "avg_response_time_ms": 0.0,
+          "median_response_time_ms": 0.0,
+          "p95_response_time_ms": 0.0,
+          "p99_response_time_ms": 0.0,
+          "min_response_time_ms": 0.0,
+          "max_response_time_ms": 0.0
+        }
+      },
+      "quick_gong_test": {
+        "config": {
+          "endpoint": "/business/gong/recent?days=1",
+          "method": "GET",
+          "concurrent_users": 1,
+          "total_requests": 5
+        },
+        "performance": {
+          "duration_seconds": 0.020297,
+          "total_requests": 5,
+          "successful_requests": 0,
+          "failed_requests": 5,
+          "success_rate": 0.0,
+          "error_rate": 1.0,
+          "throughput_rps": 246.34182391486428,
+          "avg_response_time_ms": 0.0,
+          "median_response_time_ms": 0.0,
+          "p95_response_time_ms": 0.0,
+          "p99_response_time_ms": 0.0,
+          "min_response_time_ms": 0.0,
+          "max_response_time_ms": 0.0
+        }
+      }
+    },
+    "sla_compliance": {
+      "quick_health_check": {
+        "overall_compliant": false,
+        "checks": {
+          "max_response_time": true,
+          "p95_response_time": true,
+          "p99_response_time": true,
+          "success_rate": false,
+          "error_rate": false,
+          "throughput": true
+        },
+        "violations": [
+          "success_rate",
+          "error_rate"
+        ],
+        "summary": {
+          "max_response_time_ms": 0.0,
+          "p95_response_time_ms": 0.0,
+          "p99_response_time_ms": 0.0,
+          "success_rate": 0.0,
+          "error_rate": 1.0,
+          "throughput_rps": 148.6031305726174,
+          "thresholds": {
+            "max_response_time_ms": 5000,
+            "max_p95_response_time_ms": 8000,
+            "max_p99_response_time_ms": 15000,
+            "min_success_rate": 0.95,
+            "max_error_rate": 0.05,
+            "min_throughput_rps": 1.0
+          }
+        }
+      },
+      "quick_dashboard_test": {
+        "overall_compliant": false,
+        "checks": {
+          "max_response_time": true,
+          "p95_response_time": true,
+          "p99_response_time": true,
+          "success_rate": false,
+          "error_rate": false,
+          "throughput": true
+        },
+        "violations": [
+          "success_rate",
+          "error_rate"
+        ],
+        "summary": {
+          "max_response_time_ms": 0.0,
+          "p95_response_time_ms": 0.0,
+          "p99_response_time_ms": 0.0,
+          "success_rate": 0.0,
+          "error_rate": 1.0,
+          "throughput_rps": 264.27759718808636,
+          "thresholds": {
+            "max_response_time_ms": 5000,
+            "max_p95_response_time_ms": 8000,
+            "max_p99_response_time_ms": 15000,
+            "min_success_rate": 0.95,
+            "max_error_rate": 0.05,
+            "min_throughput_rps": 1.0
+          }
+        }
+      },
+      "quick_gong_test": {
+        "overall_compliant": false,
+        "checks": {
+          "max_response_time": true,
+          "p95_response_time": true,
+          "p99_response_time": true,
+          "success_rate": false,
+          "error_rate": false,
+          "throughput": true
+        },
+        "violations": [
+          "success_rate",
+          "error_rate"
+        ],
+        "summary": {
+          "max_response_time_ms": 0.0,
+          "p95_response_time_ms": 0.0,
+          "p99_response_time_ms": 0.0,
+          "success_rate": 0.0,
+          "error_rate": 1.0,
+          "throughput_rps": 246.34182391486428,
+          "thresholds": {
+            "max_response_time_ms": 5000,
+            "max_p95_response_time_ms": 8000,
+            "max_p99_response_time_ms": 15000,
+            "min_success_rate": 0.95,
+            "max_error_rate": 0.05,
+            "min_throughput_rps": 1.0
+          }
+        }
+      }
+    },
+    "system_resources": {
+      "sample_count": 1,
+      "duration_seconds": 0.0,
+      "cpu": {
+        "avg_percent": 0.0,
+        "max_percent": 0.0,
+        "min_percent": 0.0
+      },
+      "memory": {
+        "avg_percent": 63.3,
+        "max_percent": 63.3,
+        "min_percent": 63.3,
+        "avg_used_mb": 21953.15625,
+        "max_used_mb": 21953.15625
+      }
+    },
+    "recommendations": [
+      "Low success rates in: quick_health_check, quick_dashboard_test, quick_gong_test. Investigate error handling, increase timeout values, or improve retry logic."
+    ]
+  },
+  "error_handling_tests": {
+    "timestamp": "2025-09-03T11:10:33.630496",
+    "total_tests": 4,
+    "passed_tests": 4,
+    "failed_tests": 0,
+    "success_rate": 1.0,
+    "scenarios": [
+      {
+        "test": "circuit_breaker_activation",
+        "passed": true,
+        "details": "Circuit breaker state: open"
+      },
+      {
+        "test": "error_classification_auth",
+        "passed": true,
+        "details": "Classified as: authentication"
+      },
+      {
+        "test": "cache_functionality",
+        "passed": true,
+        "details": "Cache working: True"
+      },
+      {
+        "test": "health_reporting",
+        "passed": true,
+        "details": "Health report generated successfully"
+      }
+    ],
+    "health_report": {
+      "timestamp": "2025-09-03T11:10:33.630486",
+      "overall_status": "unknown",
+      "platform_status": {},
+      "error_summary": {
+        "time_window_hours": 24,
+        "total_errors": 0,
+        "by_platform": {},
+        "by_type": {},
+        "platform_status": {},
+        "circuit_breaker_status": {
+          "test_platform": {
+            "state": "open",
+            "failure_count": 6,
+            "last_failure": 1756923033.6303942
+          }
+        }
+      },
+      "cache_stats": {
+        "total_entries": 1,
+        "cache_keys": [
+          "test_key"
+        ]
+      },
+      "circuit_breakers": {
+        "test_platform": {
+          "state": "open",
+          "failure_count": 6,
+          "can_execute": false
+        }
+      }
+    }
+  },
+  "health_monitoring": {
+    "error": "All connection attempts failed"
+  },
+  "summary": {
+    "overall_status": "failed",
+    "total_duration_seconds": 2.096159,
+    "phase_summaries": {
+      "Connection Tests": {
+        "status": "failed",
+        "passed": 0,
+        "total": 6,
+        "success_rate": 0.0
+      },
+      "Data Flow Tests": {
+        "status": "failed",
+        "passed": 0,
+        "total": 3,
+        "data_quality_score": 0.0
+      },
+      "Workflow Tests": {
+        "status": "failed",
+        "passed": 0,
+        "total": 2
+      },
+      "Performance Benchmarks": {
+        "status": "failed",
+        "total_requests": 18,
+        "success_rate": 0.0
+      },
+      "Error Handling Tests": {
+        "status": "passed"
+      },
+      "Health Monitoring": {
+        "status": "error",
+        "error": "All connection attempts failed"
+      }
+    },
+    "key_metrics": {
+      "phases_passed": 1,
+      "total_phases": 6,
+      "overall_success_rate": 0.16666666666666666
+    },
+    "critical_issues": [
+      "Health Monitoring: All connection attempts failed"
+    ],
+    "recommendations": [
+      "Connection reliability issues detected. Check network connectivity and API credentials.",
+      "Data quality issues detected. Implement data validation and cleansing processes.",
+      "Low success rates in: quick_health_check, quick_dashboard_test, quick_gong_test. Investigate error handling, increase timeout values, or improve retry logic."
+    ]
+  }
+}

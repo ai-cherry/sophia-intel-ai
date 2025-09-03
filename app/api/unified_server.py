@@ -5,10 +5,14 @@ import os
 from datetime import datetime
 from typing import Any, Optional
 
+from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, JSONResponse, Response
 from pydantic import BaseModel
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -41,6 +45,7 @@ from app.api.resilient_websocket_endpoints import router as resilient_ws_router
 from app.api.routers.teams import router as teams_router
 from app.api.super_orchestrator_router import router as super_orchestrator_router
 from app.api.unified_gateway import router as unified_gateway_router
+from app.factory import router as factory_router
 # from app.ui.unified.chat_orchestrator import router as orchestrator_router  # Module deleted
 
 app = FastAPI(
@@ -67,6 +72,7 @@ app.include_router(infrastructure_router, prefix="/api/infrastructure")
 # app.include_router(orchestrator_router, prefix="/orchestrator")  # Module deleted
 app.include_router(super_orchestrator_router, prefix="/api/super")
 app.include_router(teams_router, prefix="/api/teams")
+app.include_router(factory_router)  # Agent Factory endpoints
 # app.include_router(memory_api_router, prefix="/api/memory-v2")  # Module has import issues
 
 # Add middleware

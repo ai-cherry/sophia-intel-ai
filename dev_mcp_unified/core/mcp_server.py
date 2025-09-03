@@ -2,14 +2,30 @@ from __future__ import annotations
 import asyncio
 import os
 import uuid
+import shutil
+import hashlib
+import sqlite3
+import time
+import subprocess
+import re
+import secrets
 from dataclasses import asdict
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List
+from pathlib import Path
+from datetime import datetime, timedelta
+from contextlib import contextmanager
+from functools import lru_cache
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Header, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 import json
+import jwt
+from dotenv import load_dotenv
+
+# Load environment variables from .env.local
+load_dotenv('.env.local')
 
 from dev_mcp_unified.core.context_engine import ContextEngine
 from dev_mcp_unified.core.job_queue import Job, JobQueue
@@ -89,6 +105,11 @@ def healthz():
     except Exception:
         count = None
     return {"status": "ok", "watch": bool(os.getenv("MCP_WATCH")), "index": os.getenv("MCP_INDEX_PATH"), "vectors": count}
+
+
+@app.get("/")
+def root():
+    return {"status": "ok", "app": "mcp-unified", "docs": "/docs"}
 
 
 @app.post("/query")
@@ -235,13 +256,76 @@ class ORChatRequest(BaseModel):
 
 @app.post("/proxy/openrouter")
 async def proxy_openrouter(req: ORChatRequest):
-    """Server-side proxy to OpenRouter chat/completions to avoid exposing keys in the browser."""
+    """Server-side proxy to OpenRouter chat/completions with repository context."""
     or_key = os.getenv("OPENROUTER_API_KEY")
     if not or_key:
         return {"error": "missing OPENROUTER_API_KEY"}
+    
+    # Enhance messages with repository context via vector search and context engine
+    messages = req.messages.copy()
+    if messages and len(messages) > 0:
+        last_msg = messages[-1].get("content", "")
+        
+        # Use vector search if available
+        try:
+            from app.indexing.vector_store import VectorStore
+            store = VectorStore()
+            # Get embeddings for the query
+            results = store.search(last_msg, k=10)
+            if results:
+                context_msg = "\n[Repository Context from Vector Search]\n"
+                for r in results:
+                    context_msg += f"- {r['file']}: {r['snippet'][:200]}...\n"
+                messages.insert(0, {"role": "system", "content": context_msg})
+        except Exception:
+            pass
+        
+        # Use context engine for structured context
+        try:
+            ctx_engine = ContextEngine(repo_root="/Users/lynnmusil/sophia-intel-ai")
+            # Determine task type from message
+            task = "code_analysis" if "swarm" in last_msg.lower() else "general"
+            action = ctx_engine.select_action(task)
+            
+            # Build context bundle
+            strategy = action.get("context_strategy", "snippet_with_completions")
+            bundle = ctx_engine.build_context(strategy)
+            
+            if bundle.files:
+                context_msg = f"\n[Repository Structure - Strategy: {strategy}]\n"
+                for file_path, content in bundle.files.items():
+                    context_msg += f"\nFile: {file_path}\n{content[:500]}...\n"
+                messages.insert(0, {"role": "system", "content": context_msg})
+        except Exception:
+            pass
+        
+        # Fallback to semantic search
+        code_keywords = ["code", "repository", "function", "class", "swarm", "implement", "file", "module", "agent", "orchestr"]
+        if any(kw in last_msg.lower() for kw in code_keywords):
+            # Extract key terms for search
+            import re
+            terms = re.findall(r'[A-Z][a-z]+(?:[A-Z][a-z]+)*|[a-z]+', last_msg)
+            important_terms = [t for t in terms if len(t) > 3 and t.lower() not in ["what", "where", "which", "how", "when", "that", "this", "with", "exists"]]
+            
+            all_results = []
+            for term in important_terms[:3]:
+                results = semantic_search(term, root="/Users/lynnmusil/sophia-intel-ai")
+                all_results.extend(results[:5])
+            
+            if all_results:
+                context_msg = "\n[Repository Context - Files in /Users/lynnmusil/sophia-intel-ai]\n"
+                seen = set()
+                for r in all_results[:15]:
+                    if r['file'] not in seen:
+                        seen.add(r['file'])
+                        context_msg += f"- {r['file']}\n"
+                context_msg += "\nYou are analyzing the sophia-intel-ai repository. Answer based on the actual files listed above.\n"
+                messages.insert(0, {"role": "system", "content": context_msg})
+                print(f"Added context with {len(seen)} files")
+    
     payload = {
         "model": req.model,
-        "messages": req.messages,
+        "messages": messages,
     }
     if req.temperature is not None:
         payload["temperature"] = req.temperature
@@ -262,15 +346,30 @@ async def proxy_openrouter(req: ORChatRequest):
     # normalize to minimal shape used by UI
     content = None
     try:
-        content = data.get("choices", [{}])[0].get("message", {}).get("content")
+        msg = data.get("choices", [{}])[0].get("message", {})
+        content = msg.get("content")
+        if not content:
+            # Some providers place output in 'reasoning' or 'reasoning_details'
+            content = msg.get("reasoning")
+            if not content:
+                details = msg.get("reasoning_details")
+                if isinstance(details, list) and details:
+                    # concatenate any reasoning.text fragments
+                    parts = []
+                    for d in details:
+                        t = d.get("text") or d.get("content")
+                        if t:
+                            parts.append(t)
+                    if parts:
+                        content = "".join(parts)
     except Exception:
-        pass
-    return {"raw": data, "text": content, "rate": rate}
+        content = None
+    return {"raw": data, "text": content or "", "rate": rate}
 
 
 @app.post("/proxy/openrouter/stream")
 async def proxy_openrouter_stream(req: ORChatRequest):
-    """SSE stream from OpenRouter to the browser."""
+    """SSE stream from OpenRouter to the browser with repository context."""
     or_key = os.getenv("OPENROUTER_API_KEY")
     if not or_key:
         async def bad():
@@ -283,14 +382,84 @@ async def proxy_openrouter_stream(req: ORChatRequest):
             "Authorization": f"Bearer {or_key}",
             "Content-Type": "application/json",
         }
-        payload = {"model": req.model, "messages": req.messages, "stream": True}
+        
+        # Enhance messages with repository context via vector search and context engine
+        messages = req.messages.copy()
+        if messages and len(messages) > 0:
+            last_msg = messages[-1].get("content", "")
+            
+            # Use vector search if available
+            try:
+                from app.indexing.vector_store import VectorStore
+                store = VectorStore()
+                # Get embeddings for the query
+                results = store.search(last_msg, k=10)
+                if results:
+                    context_msg = "\n[Repository Context from Vector Search]\n"
+                    for r in results:
+                        context_msg += f"- {r['file']}: {r['snippet'][:200]}...\n"
+                    messages.insert(0, {"role": "system", "content": context_msg})
+            except Exception:
+                pass
+            
+            # Use context engine for structured context
+            try:
+                ctx_engine = ContextEngine(repo_root="/Users/lynnmusil/sophia-intel-ai")
+                # Determine task type from message
+                task = "code_analysis" if "swarm" in last_msg.lower() else "general"
+                action = ctx_engine.select_action(task)
+                
+                # Build context bundle
+                strategy = action.get("context_strategy", "snippet_with_completions")
+                bundle = ctx_engine.build_context(strategy)
+                
+                if bundle.files:
+                    context_msg = f"\n[Repository Structure - Strategy: {strategy}]\n"
+                    for file_path, content in bundle.files.items():
+                        context_msg += f"\nFile: {file_path}\n{content[:500]}...\n"
+                    messages.insert(0, {"role": "system", "content": context_msg})
+            except Exception:
+                pass
+            
+            # Fallback to semantic search
+            code_keywords = ["code", "repository", "function", "class", "swarm", "implement", "file", "module", "agent", "orchestr"]
+            if any(kw in last_msg.lower() for kw in code_keywords):
+                # Extract key terms for search
+                import re
+                terms = re.findall(r'[A-Z][a-z]+(?:[A-Z][a-z]+)*|[a-z]+', last_msg)
+                important_terms = [t for t in terms if len(t) > 3 and t.lower() not in ["what", "where", "which", "how", "when", "that", "this", "with", "exists"]]
+                
+                all_results = []
+                for term in important_terms[:3]:
+                    results = semantic_search(term, root="/Users/lynnmusil/sophia-intel-ai")
+                    all_results.extend(results[:5])
+                
+                if all_results:
+                    context_msg = "\n[Repository Context - Files in /Users/lynnmusil/sophia-intel-ai]\n"
+                    seen = set()
+                    for r in all_results[:15]:
+                        if r['file'] not in seen:
+                            seen.add(r['file'])
+                            context_msg += f"- {r['file']}\n"
+                    context_msg += "\nYou are analyzing the sophia-intel-ai repository. Answer based on the actual files listed above.\n"
+                    messages.insert(0, {"role": "system", "content": context_msg})
+                    print(f"Added context with {len(seen)} files")
+        
+        payload = {"model": req.model, "messages": messages, "stream": True}
         async with httpx.AsyncClient(timeout=None) as client:
             async with client.stream("POST", "https://openrouter.ai/api/v1/chat/completions", json=payload, headers=headers) as r:
                 # forward chunks
                 async for line in r.aiter_lines():
                     if not line:
                         continue
-                    yield (f"data: {line}\n\n").encode()
+                    # Skip SSE comments (lines starting with ':')
+                    if line.startswith(':'):
+                        continue
+                    # Already has "data:" prefix from OpenRouter
+                    if line.startswith('data:'):
+                        yield (f"{line}\n\n").encode()
+                    else:
+                        yield (f"data: {line}\n\n").encode()
                 # at end, send rate meta if present
                 rate = {k.lower(): v for k, v in r.headers.items() if k.lower().startswith("x-ratelimit")}
                 if rate:
@@ -298,6 +467,74 @@ async def proxy_openrouter_stream(req: ORChatRequest):
                     meta = _json.dumps({"meta": {"rate": rate}})
                     yield (f"data: {meta}\n\n").encode()
     return StreamingResponse(gen(), media_type="text/event-stream")
+
+
+@app.get("/proxy/openrouter/models")
+async def proxy_openrouter_models():
+    """List available models from OpenRouter with enhanced metadata."""
+    or_key = os.getenv("OPENROUTER_API_KEY")
+    if not or_key:
+        return {"error": "missing OPENROUTER_API_KEY", "models": []}
+    headers = {
+        "Authorization": f"Bearer {or_key}",
+        "Content-Type": "application/json",
+    }
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            r = await client.get("https://openrouter.ai/api/v1/models", headers=headers)
+            data = r.json()
+            # Normalize to enhanced set with categorization
+            items = data.get("data") or data.get("models") or []
+            models = []
+            
+            # Categorization helpers
+            capability_patterns = {
+                "code": ["code", "coder", "codestral", "starcoder"],
+                "vision": ["vision", "4v", "multimodal", "gemini-pro-vision"],
+                "reasoning": ["o1", "reasoning", "think", "r1"],
+                "fast": ["fast", "turbo", "flash", "haiku", "mini"],
+                "long_context": ["32k", "64k", "128k", "200k", "turbo-128k"],
+            }
+            
+            for it in items:
+                mid = it.get("id") or it.get("name")
+                if not mid:
+                    continue
+                    
+                # Detect capabilities
+                mid_lower = mid.lower()
+                capabilities = []
+                for cap, patterns in capability_patterns.items():
+                    if any(p in mid_lower for p in patterns):
+                        capabilities.append(cap)
+                if not capabilities:
+                    capabilities.append("chat")
+                
+                # Parse pricing
+                pricing = {}
+                if it.get("pricing"):
+                    pricing = {
+                        "prompt": float(it["pricing"].get("prompt", 0)) * 1000000,
+                        "completion": float(it["pricing"].get("completion", 0)) * 1000000
+                    }
+                
+                models.append({
+                    "id": mid,
+                    "name": it.get("name") or mid,
+                    "context": it.get("context_length") or it.get("context_length_tokens"),
+                    "provider": (it.get("owned_by") or '').split('/')[0] if it.get("owned_by") else mid.split('/')[0] if '/' in mid else None,
+                    "capabilities": capabilities,
+                    "is_free": ":free" in mid.lower() or pricing.get("prompt", 1) == 0,
+                    "pricing": pricing,
+                    "max_tokens": it.get("top_provider", {}).get("max_completion_tokens")
+                })
+            
+            # Sort by provider and name
+            models.sort(key=lambda x: (x.get("provider", ""), x.get("name", "")))
+            
+            return {"count": len(models), "models": models}
+    except Exception as e:
+        return {"error": str(e), "models": []}
 
 
 @app.get("/index/stats")
@@ -349,6 +586,82 @@ async def gong_recent(days: int = 7):
         return {"error": str(e)}
 
 
+@app.get("/routes")
+def list_routes():
+    try:
+        routes = []
+        for r in app.routes:
+            routes.append({"path": getattr(r, 'path', None), "name": getattr(r, 'name', None)})
+        return {"count": len(routes), "routes": routes}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+# ---- Sophia Business: signals, leads, message preview, analytics (stubs) ----
+@app.get("/business/signals")
+async def business_signals():
+    # stubbed signals; replace with UserGems/HubSpot wiring next
+    now = datetime.utcnow().isoformat()
+    items = [
+        {"id": "sig-001", "source": "usergems", "person": "Alex Lee", "title": "VP Sales", "company": "Acme Corp", "signalType": "PastChampion", "signalStrength": 0.92, "updatedAt": now},
+        {"id": "sig-002", "source": "usergems", "person": "Sam Patel", "title": "Dir Ops", "company": "Northwind", "signalType": "NewRole", "signalStrength": 0.78, "updatedAt": now},
+        {"id": "sig-003", "source": "news",     "person": "Jamie Chen", "title": "CFO", "company": "Globex",    "signalType": "FundingRound", "signalStrength": 0.66, "updatedAt": now},
+    ]
+    return {"count": len(items), "items": items}
+
+
+@app.get("/business/leads")
+async def business_leads():
+    # prioritize based on signal strength and persona match (stub logic)
+    signals = (await business_signals())["items"]
+    prioritized = []
+    rank = 1
+    for s in sorted(signals, key=lambda x: x["signalStrength"], reverse=True):
+        prioritized.append({
+            "leadId": f"lead-{rank:03d}",
+            "person": s["person"],
+            "title": s["title"],
+            "company": s["company"],
+            "signalType": s["signalType"],
+            "signalStrength": s["signalStrength"],
+            "owner": "unassigned",
+            "personaMatch": s["title"].lower().find("sales") >= 0,
+            "nextAction": "preview_message",
+            "updatedAt": s["updatedAt"],
+        })
+        rank += 1
+    return {"count": len(prioritized), "items": prioritized}
+
+
+class PreviewRequest(BaseModel):
+    leadId: str
+    signalType: str | None = None
+    persona: str | None = None
+    company: str | None = None
+    person: str | None = None
+    title: str | None = None
+
+
+@app.post("/business/message/preview")
+async def business_message_preview(req: PreviewRequest):
+    # very basic template; real version will blend snippets + persona pain points
+    persona_line = f"As a {req.persona}, " if req.persona else ""
+    opening = f"Hi {req.person or 'there'},\n\n"
+    reason = f"Congrats on the new role at {req.company}. " if (req.signalType == 'PastChampion' or req.signalType == 'NewRole') else "Following recent updates, "
+    body = f"{persona_line}we thought this would matter to you: reduced delinquencies, faster collections, and fully automated resident comms across the lifecycle.\n"
+    cta = "\nWould you be open to a 15‑minute chat this week?\n\n— PayReady Team"
+    return {"leadId": req.leadId, "draft": opening + reason + body + cta}
+
+
+@app.get("/business/analytics")
+async def business_analytics():
+    sigs = (await business_signals())["items"]
+    by_type = {}
+    for s in sigs:
+        by_type[s["signalType"]] = by_type.get(s["signalType"], 0) + 1
+    return {"signalsByType": by_type, "totalSignals": len(sigs)}
+
+
 @app.post("/tools/symbols")
 def tool_symbols(body: Dict[str, Any]):
     return symbol_lookup(body.get("file"))
@@ -362,3 +675,803 @@ def tool_tests(body: Dict[str, Any]):
 @app.post("/tools/docs")
 def tool_docs(body: Dict[str, Any]):
     return extract_docs(body.get("file"))
+
+
+# =============================================================================
+# CODE MANAGEMENT FEATURES
+# =============================================================================
+
+# Security configuration from .env.local
+SECRET_KEY = os.getenv("JWT_SECRET", secrets.token_urlsafe(32))
+MCP_PASSWORD = os.getenv("MCP_PASSWORD", "sophia-dev")
+REPO_ROOT = Path("/Users/lynnmusil/sophia-intel-ai").resolve()
+BACKUP_DIR = REPO_ROOT / ".mcp_backups"
+BACKUP_DIR.mkdir(exist_ok=True)
+
+# Configuration constants
+MAX_FILE_SIZE_MB = int(os.getenv("MAX_FILE_SIZE_MB", "10"))
+MAX_FILE_SIZE = MAX_FILE_SIZE_MB * 1024 * 1024
+TOKEN_EXPIRATION_HOURS = int(os.getenv("TOKEN_EXPIRATION_HOURS", "24"))
+
+# Rate limiting configuration
+RATE_LIMIT_REQUESTS = int(os.getenv("RATE_LIMIT_REQUESTS", "60"))
+RATE_LIMIT_WINDOW = int(os.getenv("RATE_LIMIT_WINDOW", "60"))  # seconds
+rate_limit_cache: Dict[str, List[float]] = {}
+
+# Database connection management
+@contextmanager
+def get_db_connection():
+    """Context manager for database connections."""
+    conn = sqlite3.connect(str(REPO_ROOT / "mcp_audit.db"))
+    try:
+        yield conn
+    finally:
+        conn.close()
+
+# Initialize audit database
+def init_audit_db():
+    """Initialize audit database for tracking changes."""
+    with get_db_connection() as conn:
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS changes (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                timestamp TEXT,
+                operation TEXT,
+                file_path TEXT,
+                user TEXT,
+                details TEXT,
+                backup_path TEXT
+            )
+        """)
+        conn.commit()
+
+init_audit_db()
+
+def log_change(operation: str, file_path: str, details: str = "", backup_path: str = "", user: str = "mcp-server"):
+    """Log file changes for audit trail."""
+    with get_db_connection() as conn:
+        # Validate operation parameter to prevent injection
+        allowed_operations = ["read", "write", "edit", "create", "delete", "backup"]
+        if operation not in allowed_operations:
+            operation = "unknown"
+        
+        conn.execute(
+            "INSERT INTO changes (timestamp, operation, file_path, user, details, backup_path) VALUES (?, ?, ?, ?, ?, ?)",
+            (datetime.now().isoformat(), operation, file_path, user, details, backup_path)
+        )
+        conn.commit()
+
+# Authentication
+class AuthRequest(BaseModel):
+    password: str
+
+# Simple rate limiting
+def check_rate_limit(key: str) -> bool:
+    """Check if request is within rate limit."""
+    now = time.time()
+    if key not in rate_limit_cache:
+        rate_limit_cache[key] = []
+    
+    # Clean old entries
+    rate_limit_cache[key] = [t for t in rate_limit_cache[key] if now - t < RATE_LIMIT_WINDOW]
+    
+    if len(rate_limit_cache[key]) >= RATE_LIMIT_REQUESTS:
+        return False
+    
+    rate_limit_cache[key].append(now)
+    return True
+
+@app.post("/auth/login")
+async def login(req: AuthRequest, request: Request):
+    """Simple password auth for local development with rate limiting."""
+    # Rate limiting
+    client_ip = request.client.host if request.client else "unknown"
+    if not check_rate_limit(f"login_{client_ip}"):
+        raise HTTPException(status_code=429, detail="Too many login attempts")
+    
+    if req.password != MCP_PASSWORD:
+        # Log failed attempt
+        log_change("auth", "login_attempt", f"Failed login from {client_ip}")
+        raise HTTPException(status_code=401, detail="Invalid password")
+    
+    # Create JWT token
+    token = jwt.encode(
+        {"exp": datetime.utcnow() + timedelta(hours=TOKEN_EXPIRATION_HOURS), "user": "artemis"},
+        SECRET_KEY,
+        algorithm="HS256"
+    )
+    
+    log_change("auth", "login_success", f"Successful login from {client_ip}")
+    return {"token": token, "expires_in": TOKEN_EXPIRATION_HOURS * 3600}
+
+def verify_token(authorization: Optional[str] = Header(None)):
+    """Verify JWT token."""
+    if not authorization:
+        return None  # Allow read-only access without auth
+    
+    try:
+        token = authorization.replace("Bearer ", "")
+        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+        return payload.get("user")
+    except:
+        return None
+
+# File operations
+class FileReadRequest(BaseModel):
+    file_path: str
+
+class FilePreviewRequest(BaseModel):
+    file_path: str
+    changes: str
+    
+class FileWriteRequest(BaseModel):
+    file_path: str
+    content: str
+    create_backup: bool = True
+
+class FileEditRequest(BaseModel):
+    file_path: str
+    old_content: str
+    new_content: str
+
+def is_safe_path(file_path: str) -> bool:
+    """Check if path is safe to access with enhanced protection."""
+    try:
+        # Resolve to absolute path, following symlinks
+        target_path = (REPO_ROOT / file_path).resolve(strict=False)
+        
+        # Must be within repository
+        if not str(target_path).startswith(str(REPO_ROOT)):
+            return False
+        
+        # Check against sensitive patterns
+        sensitive_patterns = [
+            "*.key", "*.pem", "*.env", ".env*", "**/secrets/*", "**/credentials/*",
+            ".git/config", ".git/credentials", "**/node_modules/*", "**/__pycache__/*",
+            "*.pyc", "*.pyo", "*.pyd", "*.so", "*.dylib", "*.dll", "*.exe"
+        ]
+        
+        from fnmatch import fnmatch
+        target_str = str(target_path)
+        for pattern in sensitive_patterns:
+            if fnmatch(target_str, pattern) or fnmatch(target_path.name, pattern):
+                return False
+        
+        # Additional check for hidden files (except .gitignore, etc)
+        if target_path.name.startswith('.') and target_path.name not in ['.gitignore', '.prettierrc', '.eslintrc']:
+            return False
+        
+        return True
+    except Exception:
+        return False
+
+@app.post("/files/read")
+async def read_file(req: FileReadRequest):
+    """Read file contents (no auth required)."""
+    if not is_safe_path(req.file_path):
+        return {"error": "Access denied to this file"}
+    
+    target_path = REPO_ROOT / req.file_path
+    
+    if not target_path.exists():
+        return {"error": "File not found"}
+    
+    try:
+        content = target_path.read_text()
+        return {
+            "path": req.file_path,
+            "content": content,
+            "size": len(content),
+            "modified": datetime.fromtimestamp(target_path.stat().st_mtime).isoformat()
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.post("/files/preview")
+async def preview_changes(req: FilePreviewRequest):
+    """Preview what changes would be made to a file."""
+    if not is_safe_path(req.file_path):
+        return {"error": "Access denied to this file"}
+    
+    target_path = REPO_ROOT / req.file_path
+    
+    if not target_path.exists():
+        # New file preview
+        return {
+            "path": req.file_path,
+            "exists": False,
+            "preview": req.changes,
+            "operation": "create",
+            "lines_added": len(req.changes.splitlines()),
+            "lines_removed": 0
+        }
+    
+    # Existing file - show diff
+    current_content = target_path.read_text()
+    
+    # Simple diff calculation
+    current_lines = current_content.splitlines()
+    new_lines = req.changes.splitlines()
+    
+    # Find differences
+    import difflib
+    diff = list(difflib.unified_diff(
+        current_lines, new_lines,
+        fromfile=req.file_path,
+        tofile=req.file_path,
+        lineterm=""
+    ))
+    
+    return {
+        "path": req.file_path,
+        "exists": True,
+        "current_size": len(current_content),
+        "new_size": len(req.changes),
+        "diff": "\n".join(diff),
+        "operation": "modify",
+        "lines_added": sum(1 for line in diff if line.startswith("+")),
+        "lines_removed": sum(1 for line in diff if line.startswith("-"))
+    }
+
+@app.post("/files/write")
+async def write_file(req: FileWriteRequest, request: Request, user: Optional[str] = Depends(verify_token)):
+    """Write or create a file (requires auth) with size validation."""
+    if not user:
+        raise HTTPException(status_code=401, detail="Authentication required")
+    
+    # Rate limiting
+    client_ip = request.client.host if request.client else "unknown"
+    if not check_rate_limit(f"write_{client_ip}"):
+        raise HTTPException(status_code=429, detail="Too many write requests")
+    
+    # Validate file size
+    content_size = len(req.content.encode('utf-8'))
+    if content_size > MAX_FILE_SIZE:
+        raise HTTPException(status_code=413, detail=f"File too large. Max size: {MAX_FILE_SIZE_MB}MB")
+    
+    if not is_safe_path(req.file_path):
+        log_change("write", req.file_path, "Access denied", user=user)
+        raise HTTPException(status_code=403, detail="Access denied to this file")
+    
+    target_path = REPO_ROOT / req.file_path
+    backup_path = ""
+    
+    # Create backup if file exists
+    if req.create_backup and target_path.exists():
+        timestamp = int(time.time())
+        backup_name = f"{target_path.name}.backup.{timestamp}"
+        backup_path_obj = BACKUP_DIR / backup_name
+        shutil.copy2(target_path, backup_path_obj)
+        backup_path = str(backup_path_obj.relative_to(REPO_ROOT))
+    
+    # Ensure parent directory exists
+    target_path.parent.mkdir(parents=True, exist_ok=True)
+    
+    # Write file
+    try:
+        target_path.write_text(req.content)
+        
+        # Log the change
+        log_change(
+            "create" if not target_path.exists() else "write",
+            req.file_path,
+            f"Size: {content_size} bytes",
+            backup_path,
+            user=user
+        )
+        
+        return {
+            "success": True,
+            "path": req.file_path,
+            "size": content_size,
+            "backup": backup_path if backup_path else None
+        }
+    except PermissionError:
+        raise HTTPException(status_code=403, detail="Permission denied")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Write failed: {str(e)}")
+
+@app.post("/files/edit")
+async def edit_file(req: FileEditRequest, request: Request, user: Optional[str] = Depends(verify_token)):
+    """Edit existing file with conflict detection (requires auth)."""
+    if not user:
+        raise HTTPException(status_code=401, detail="Authentication required")
+    
+    # Rate limiting
+    client_ip = request.client.host if request.client else "unknown"
+    if not check_rate_limit(f"edit_{client_ip}"):
+        raise HTTPException(status_code=429, detail="Too many edit requests")
+    
+    # Validate content size
+    new_size = len(req.new_content.encode('utf-8'))
+    if new_size > MAX_FILE_SIZE:
+        raise HTTPException(status_code=413, detail=f"Content too large. Max size: {MAX_FILE_SIZE_MB}MB")
+    
+    if not is_safe_path(req.file_path):
+        log_change("edit", req.file_path, "Access denied", user=user)
+        raise HTTPException(status_code=403, detail="Access denied to this file")
+    
+    target_path = REPO_ROOT / req.file_path
+    
+    if not target_path.exists():
+        raise HTTPException(status_code=404, detail="File not found")
+    
+    try:
+        current_content = target_path.read_text()
+    except PermissionError:
+        raise HTTPException(status_code=403, detail="Cannot read file - permission denied")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to read file: {str(e)}")
+    
+    # Check for conflicts
+    if req.old_content not in current_content:
+        log_change("edit", req.file_path, "Conflict detected", user=user)
+        raise HTTPException(status_code=409, detail="Content mismatch - file may have changed")
+    
+    # Create backup
+    timestamp = int(time.time())
+    backup_name = f"{target_path.name}.backup.{timestamp}"
+    backup_path = BACKUP_DIR / backup_name
+    try:
+        shutil.copy2(target_path, backup_path)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to create backup: {str(e)}")
+    
+    # Apply edit
+    new_content = current_content.replace(req.old_content, req.new_content, 1)
+    
+    try:
+        target_path.write_text(new_content)
+        
+        # Log the change
+        log_change(
+            "edit",
+            req.file_path,
+            f"Replaced {len(req.old_content)} chars with {len(req.new_content)} chars",
+            str(backup_path.relative_to(REPO_ROOT)),
+            user=user
+        )
+        
+        return {
+            "success": True,
+            "path": req.file_path,
+            "backup": str(backup_path.relative_to(REPO_ROOT))
+        }
+    except PermissionError:
+        raise HTTPException(status_code=403, detail="Cannot write file - permission denied")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to write file: {str(e)}")
+
+@app.get("/audit/recent")
+async def get_audit_log(limit: int = 50):
+    """Get recent changes (no auth required for viewing)."""
+    if limit > 100:  # Prevent excessive queries
+        limit = 100
+    
+    with get_db_connection() as conn:
+        cursor = conn.execute(
+            "SELECT * FROM changes ORDER BY timestamp DESC LIMIT ?",
+            (limit,)
+        )
+        rows = cursor.fetchall()
+    
+    return {"changes": [
+        {
+            "id": row[0],
+            "timestamp": row[1],
+            "operation": row[2],
+            "file_path": row[3],
+            "user": row[4],
+            "details": row[5],
+            "backup_path": row[6] if len(row) > 6 else None
+        }
+        for row in rows
+    ]}
+
+# Git operations (simplified, read-only for now)
+@app.get("/git/status")
+async def git_status():
+    """Get repository status (no auth required)."""
+    try:
+        result = subprocess.run(
+            ["git", "status", "--porcelain"],
+            cwd=str(REPO_ROOT),
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+        
+        files = []
+        for line in result.stdout.strip().split('\n'):
+            if line:
+                status, path = line[:2], line[3:]
+                files.append({"status": status.strip(), "path": path})
+        
+        # Get branch info
+        branch_result = subprocess.run(
+            ["git", "branch", "--show-current"],
+            cwd=str(REPO_ROOT),
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+        
+        return {
+            "branch": branch_result.stdout.strip(),
+            "files": files,
+            "total_changes": len(files)
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.get("/git/diff/{file_path:path}")
+async def git_diff(file_path: str):
+    """Get diff for a specific file."""
+    try:
+        result = subprocess.run(
+            ["git", "diff", file_path],
+            cwd=str(REPO_ROOT),
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+        
+        return {
+            "path": file_path,
+            "diff": result.stdout
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
+
+# ==============================================================================
+# AGENT FACTORY ENDPOINTS
+# ==============================================================================
+
+class AgentDefinition(BaseModel):
+    name: str
+    role: str
+    model: str
+    temperature: float = 0.7
+    instructions: str
+    capabilities: List[str] = []
+
+class SwarmBlueprint(BaseModel):
+    name: str
+    description: str = ""
+    swarm_type: str = "STANDARD"
+    execution_mode: str = "hierarchical"
+    agents: List[AgentDefinition]
+    pattern: str = "hierarchical"
+    memory_enabled: bool = True
+    namespace: str = "artemis"
+
+# Global factory storage
+factory_swarms = {}
+factory_templates = {
+    "coding": {
+        "id": "coding",
+        "name": "Coding Swarm",
+        "description": "Code generation, review, and optimization",
+        "type": "CODING",
+        "category": "development",
+        "pattern": "hierarchical",
+        "recommended_for": ["code_generation", "code_review", "debugging"],
+        "agents": [
+            {
+                "name": "Code Planner",
+                "role": "planner", 
+                "model": "qwen/qwen3-30b-a3b",
+                "temperature": 0.3,
+                "instructions": "Analyze requirements and create implementation plan. Focus on architecture and design patterns.",
+                "capabilities": ["planning", "architecture"]
+            },
+            {
+                "name": "Code Generator",
+                "role": "generator",
+                "model": "x-ai/grok-code-fast-1", 
+                "temperature": 0.7,
+                "instructions": "Generate clean, efficient code based on the plan. Follow best practices and include error handling.",
+                "capabilities": ["code_generation", "best_practices"]
+            },
+            {
+                "name": "Code Reviewer",
+                "role": "critic",
+                "model": "openai/gpt-5-chat",
+                "temperature": 0.2,
+                "instructions": "Review generated code for bugs, security issues, and improvements. Be thorough but constructive.",
+                "capabilities": ["code_review", "security_analysis"]
+            },
+            {
+                "name": "Code Quality Reviewer",
+                "role": "quality_reviewer",
+                "model": "anthropic/claude-sonnet-4",
+                "temperature": 0.1,
+                "instructions": "Perform comprehensive code quality analysis focusing on: security vulnerabilities, performance optimization, code style compliance (PEP 8, ESLint), maintainability, design patterns, and best practices. Provide specific, actionable recommendations with code examples.",
+                "capabilities": ["quality_analysis", "security_scanning", "performance_review", "style_compliance", "maintainability_assessment"]
+            }
+        ]
+    },
+    "debate": {
+        "id": "debate",
+        "name": "Debate Swarm",
+        "description": "Adversarial analysis and decision making",
+        "type": "DEBATE",
+        "category": "analysis",
+        "pattern": "debate",
+        "recommended_for": ["decision_making", "analysis", "risk_assessment"],
+        "agents": [
+            {
+                "name": "Advocate",
+                "role": "generator",
+                "model": "anthropic/claude-sonnet-4",
+                "temperature": 0.8,
+                "instructions": "Argue strongly in favor of the proposed solution. Present compelling evidence.",
+                "capabilities": ["argumentation", "evidence_gathering"]
+            },
+            {
+                "name": "Critic",
+                "role": "critic",
+                "model": "openai/gpt-5-chat",
+                "temperature": 0.8,
+                "instructions": "Challenge the proposal with counter-arguments. Identify weaknesses and risks.",
+                "capabilities": ["critical_analysis", "risk_identification"]
+            },
+            {
+                "name": "Judge",
+                "role": "judge",
+                "model": "x-ai/grok-4",
+                "temperature": 0.3,
+                "instructions": "Evaluate both sides objectively and provide balanced conclusion.",
+                "capabilities": ["evaluation", "synthesis"]
+            }
+        ]
+    },
+    "consensus": {
+        "id": "consensus", 
+        "name": "Consensus Building Swarm",
+        "description": "Multi-perspective analysis and consensus building",
+        "type": "CONSENSUS",
+        "category": "collaboration",
+        "pattern": "consensus",
+        "recommended_for": ["complex_decisions", "multi_stakeholder", "strategic_planning"],
+        "agents": [
+            {
+                "name": "Technical Analyst",
+                "role": "generator",
+                "model": "deepseek/deepseek-chat",
+                "temperature": 0.5,
+                "instructions": "Provide analysis from technical perspective. Focus on feasibility and implementation.",
+                "capabilities": ["technical_analysis", "feasibility_assessment"]
+            },
+            {
+                "name": "Business Analyst",
+                "role": "generator",
+                "model": "qwen/qwen3-30b-a3b",
+                "temperature": 0.5,
+                "instructions": "Provide analysis from business perspective. Focus on value and ROI.",
+                "capabilities": ["business_analysis", "roi_calculation"]
+            },
+            {
+                "name": "Synthesizer",
+                "role": "judge",
+                "model": "openai/gpt-5-chat",
+                "temperature": 0.3,
+                "instructions": "Synthesize all perspectives into unified recommendation. Balance competing concerns.",
+                "capabilities": ["synthesis", "consensus_building"]
+            }
+        ]
+    }
+}
+
+@app.get("/api/factory/templates")
+async def factory_get_templates():
+    """Get all available swarm templates"""
+    return list(factory_templates.values())
+
+@app.get("/api/factory/patterns")
+async def factory_get_patterns():
+    """Get all available execution patterns"""
+    return [
+        {
+            "name": "hierarchical",
+            "description": "Manager coordinates agent execution in hierarchy",
+            "compatible_swarms": ["coding", "consensus", "standard"]
+        },
+        {
+            "name": "debate",
+            "description": "Agents argue opposing viewpoints to reach conclusion",
+            "compatible_swarms": ["debate", "analysis"]
+        },
+        {
+            "name": "consensus",
+            "description": "All agents contribute to collaborative decision",
+            "compatible_swarms": ["consensus", "collaboration"]
+        },
+        {
+            "name": "sequential",
+            "description": "Agents execute one after another in sequence",
+            "compatible_swarms": ["coding", "standard"]
+        },
+        {
+            "name": "parallel",
+            "description": "All agents execute simultaneously",
+            "compatible_swarms": ["analysis", "research"]
+        },
+        {
+            "name": "evolutionary",
+            "description": "Agents evolve solutions through iterations",
+            "compatible_swarms": ["optimization", "creative"]
+        }
+    ]
+
+@app.post("/api/factory/create")
+async def factory_create_swarm(blueprint: SwarmBlueprint):
+    """Create a new swarm from blueprint"""
+    # Generate unique swarm ID
+    import uuid
+    swarm_id = str(uuid.uuid4())
+    
+    # Validate blueprint
+    if not blueprint.name:
+        return {"error": "Swarm name is required"}
+    
+    if len(blueprint.agents) < 1:
+        return {"error": "At least one agent is required"}
+    
+    # Store blueprint
+    factory_swarms[swarm_id] = {
+        "id": swarm_id,
+        "blueprint": blueprint.dict(),
+        "created_at": datetime.now().isoformat(),
+        "status": "active",
+        "executions": 0
+    }
+    
+    return {
+        "swarm_id": swarm_id,
+        "status": "created",
+        "name": blueprint.name,
+        "agents": len(blueprint.agents),
+        "pattern": blueprint.pattern,
+        "endpoints": {
+            "execute": f"/api/factory/swarms/{swarm_id}/execute",
+            "status": f"/api/factory/swarms/{swarm_id}/status",
+            "info": f"/api/factory/swarms/{swarm_id}"
+        }
+    }
+
+@app.post("/api/factory/swarms/{swarm_id}/execute")
+async def factory_execute_swarm(swarm_id: str, request: dict):
+    """Execute a factory-created swarm"""
+    if swarm_id not in factory_swarms:
+        return {"error": f"Swarm {swarm_id} not found"}
+    
+    task = request.get("task", "")
+    if not task:
+        return {"error": "Task is required"}
+    
+    swarm_data = factory_swarms[swarm_id]
+    blueprint = swarm_data["blueprint"]
+    
+    # Simulate swarm execution
+    start_time = time.time()
+    
+    # For now, simulate by calling OpenRouter with context
+    try:
+        # Use the first agent's model as primary
+        primary_agent = blueprint["agents"][0]
+        model = primary_agent["model"]
+        
+        # Build enhanced prompt with swarm context
+        enhanced_prompt = f"""
+You are part of a {blueprint['name']} with the following agents:
+
+"""
+        for agent in blueprint["agents"]:
+            enhanced_prompt += f"- {agent['name']} ({agent['role']}): {agent['instructions']}\n"
+        
+        enhanced_prompt += f"\nExecuting in {blueprint['pattern']} pattern.\n\nTask: {task}\n\nProvide a comprehensive response coordinating all agent perspectives."
+        
+        # Call OpenRouter
+        or_request = {
+            "model": model,
+            "messages": [{"role": "user", "content": enhanced_prompt}],
+            "temperature": primary_agent.get("temperature", 0.7),
+            "max_tokens": 2000
+        }
+        
+        # Reuse existing OpenRouter proxy logic
+        or_key = os.getenv("OPENROUTER_API_KEY")
+        if or_key:
+            async with httpx.AsyncClient() as client:
+                resp = await client.post(
+                    "https://openrouter.ai/api/v1/chat/completions",
+                    json=or_request,
+                    headers={
+                        "Authorization": f"Bearer {or_key}",
+                        "Content-Type": "application/json"
+                    },
+                    timeout=30.0
+                )
+                
+                if resp.status_code == 200:
+                    data = resp.json()
+                    result = data.get("choices", [{}])[0].get("message", {}).get("content", "No response")
+                    token_usage = data.get("usage", {})
+                    
+                    execution_time = time.time() - start_time
+                    
+                    # Update execution count
+                    factory_swarms[swarm_id]["executions"] += 1
+                    
+                    return {
+                        "swarm_id": swarm_id,
+                        "task": task,
+                        "result": {
+                            "response": result,
+                            "agents_participated": [agent["name"] for agent in blueprint["agents"]],
+                            "pattern_used": blueprint["pattern"]
+                        },
+                        "execution_time": execution_time,
+                        "token_usage": token_usage,
+                        "success": True,
+                        "timestamp": datetime.now().isoformat()
+                    }
+                else:
+                    return {
+                        "swarm_id": swarm_id, 
+                        "task": task,
+                        "result": {"error": f"OpenRouter API error: {resp.status_code}"},
+                        "success": False,
+                        "timestamp": datetime.now().isoformat()
+                    }
+        else:
+            return {
+                "swarm_id": swarm_id,
+                "task": task, 
+                "result": {"error": "OpenRouter API key not configured"},
+                "success": False,
+                "timestamp": datetime.now().isoformat()
+            }
+            
+    except Exception as e:
+        return {
+            "swarm_id": swarm_id,
+            "task": task,
+            "result": {"error": str(e)},
+            "success": False,
+            "timestamp": datetime.now().isoformat()
+        }
+
+@app.get("/api/factory/swarms/{swarm_id}")
+async def factory_get_swarm_info(swarm_id: str):
+    """Get information about a specific swarm"""
+    if swarm_id not in factory_swarms:
+        return {"error": f"Swarm {swarm_id} not found"}
+    
+    return factory_swarms[swarm_id]
+
+@app.get("/api/factory/swarms")
+async def factory_list_swarms():
+    """List all created swarms"""
+    return list(factory_swarms.values())
+
+@app.delete("/api/factory/swarms/{swarm_id}")
+async def factory_delete_swarm(swarm_id: str):
+    """Delete a created swarm"""
+    if swarm_id not in factory_swarms:
+        return {"error": f"Swarm {swarm_id} not found"}
+    
+    del factory_swarms[swarm_id]
+    return {"success": True, "swarm_id": swarm_id}
+
+@app.get("/api/factory/health")
+async def factory_health_check():
+    """Health check for factory service"""
+    return {
+        "status": "healthy",
+        "active_swarms": len(factory_swarms),
+        "templates_available": len(factory_templates),
+        "timestamp": datetime.now().isoformat()
+    }

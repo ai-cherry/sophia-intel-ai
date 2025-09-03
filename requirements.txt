@@ -1,64 +1,49 @@
-# Primary dependencies
-fastapi==0.110.0
-uvicorn==0.30.0
-python-multipart==0.0.7
-pydantic==2.8.2
-python-jose[cryptography]==3.3.0
-passlib[bcrypt]==1.7.4
-python-jose==3.3.0
-bcrypt==4.1.2
-pydantic-settings==2.3.0
-python-multipart==0.0.7
-python-jose==3.3.0
-
 # AI and LLM
-openai==1.40.0
-httpx==0.27.0
-aiosignal==1.3.1
-async-timeout==4.0.3
-pydantic==2.8.2
-numpy==1.26.4
-pandas==2.2.2
-python-dotenv==1.0.1
 aiofiles==24.1.0
+aiosignal==1.3.1
 anyio==4.4.0
-python-multipart==0.0.7
+async-timeout==4.0.3
+openai==1.40.0
 typer==0.12.5
-pydantic-settings==2.3.0
 
-# Monitoring
-prometheus-client==0.18.0
+# Database
+alembic==1.13.0
+asyncpg==0.29.0
+psycopg2-binary==2.9.10
+sqlalchemy==2.0.29
+
+# Monitoring and Observability
 opentelemetry-api==1.28.0
 opentelemetry-exporter-otlp==1.28.0
 opentelemetry-instrumentation-fastapi==0.49b0
 opentelemetry-instrumentation-httpx==0.49b0
 opentelemetry-instrumentation-redis==0.49b0
+prometheus-client==0.18.0
 
 # Security
-python-jose[cryptography]==3.3.0
-passlib[bcrypt]==1.7.4
-pydantic==2.8.2
 bcrypt==4.1.2
+bleach==6.1.0
 cryptography==42.0.5
-
-# Database
-asyncpg==0.29.0
-sqlalchemy==2.0.29
-alembic==1.13.0
-psycopg2-binary==2.9.10
+passlib[bcrypt]==1.7.4
+python-jose[cryptography]==3.3.0
 
 # Testing
+coverage==7.6.2
 pytest==8.3.3
 pytest-asyncio==0.24.0
 pytest-mock==3.14.0
-httpx==0.27.0
-coverage==7.6.2
-httpx==0.27.0
 
-# Others
-bleach==6.1.0
+# Web Framework
+fastapi==0.110.0
+httpx==0.27.0
+pydantic==2.8.2
+pydantic-settings==2.3.0
+python-dotenv==1.0.1
+python-multipart==0.0.7
+uvicorn==0.30.0
+
+# Utilities
+numpy==1.26.4
 pandas==2.2.2
 rich==13.7.1
 tqdm==4.66.4
-python-dotenv==1.0.1
-uvicorn==0.30.0

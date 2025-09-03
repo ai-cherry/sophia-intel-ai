@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { 
-  Card, 
-  CardContent, 
-  CardHeader, 
+import {
+  Card,
+  CardContent,
+  CardHeader,
   CardTitle,
-  CardDescription 
+  CardDescription
 } from '@/components/ui/card';
+import { wsBaseUrl } from '@/config/environment';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -137,7 +138,7 @@ const UnifiedSuperDashboard: React.FC = () => {
   }, []);
 
   const connectWebSocket = () => {
-    ws.current = new WebSocket('ws://localhost:8000/ws/orchestrator');
+    ws.current = new WebSocket(wsBaseUrl);
     
     ws.current.onopen = () => {
       setConnected(true);

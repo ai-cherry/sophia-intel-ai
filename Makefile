@@ -62,8 +62,8 @@ install: setup ## Alias for setup
 dev: ## Start development servers
 	@echo "$(BLUE)🚀 Starting development servers...$(RESET)"
 	@echo "$(YELLOW)⏳ Starting API server on port $(API_PORT)...$(RESET)"
-	@OPENROUTER_API_KEY=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 \
-	 PORTKEY_API_KEY=nYraiE8dOR9A1gDwaRNpSSXRkXBc \
+	@OPENROUTER_API_KEY=$${OPENROUTER_API_KEY} \
+	 PORTKEY_API_KEY=$${PORTKEY_API_KEY} \
 	 LOCAL_DEV_MODE=true \
 	 AGENT_API_PORT=$(API_PORT) \
 	 $(PYTHON) -m app.api.unified_server &
@@ -83,8 +83,8 @@ start: dev ## Alias for dev
 .PHONY: api
 api: ## Start only the API server
 	@echo "$(BLUE)🚀 Starting API server on port $(API_PORT)...$(RESET)"
-	@OPENROUTER_API_KEY=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 \
-	 PORTKEY_API_KEY=nYraiE8dOR9A1gDwaRNpSSXRkXBc \
+	@OPENROUTER_API_KEY=$${OPENROUTER_API_KEY} \
+	 PORTKEY_API_KEY=$${PORTKEY_API_KEY} \
 	 LOCAL_DEV_MODE=true \
 	 AGENT_API_PORT=$(API_PORT) \
 	 $(PYTHON) -m app.api.unified_server
@@ -110,7 +110,7 @@ test: ## Run all tests
 .PHONY: test-api
 test-api: ## Test API endpoints
 	@echo "$(BLUE)🧪 Testing API endpoints...$(RESET)"
-	@curl -s http://localhost:$(API_PORT)/healthz | jq . || echo "$(RED)❌ API not responding$(RESET)"
+	@curl -s http://localhost:$(API_PORT)/health | jq . || echo "$(RED)❌ API not responding$(RESET)"
 	@curl -s http://localhost:$(API_PORT)/config | jq . || echo "$(RED)❌ Config endpoint not responding$(RESET)"
 	@curl -s http://localhost:$(API_PORT)/costs/summary | jq . || echo "$(RED)❌ Cost API not responding$(RESET)"
 
@@ -131,7 +131,7 @@ format: ## Format code only
 .PHONY: status
 status: ## Check service status
 	@echo "$(BLUE)🔍 Checking service status...$(RESET)"
-	@curl -s http://localhost:$(API_PORT)/healthz > /dev/null && echo "$(GREEN)✅ API Server (port $(API_PORT))$(RESET)" || echo "$(RED)❌ API Server (port $(API_PORT))$(RESET)"
+	@curl -s http://localhost:$(API_PORT)/health > /dev/null && echo "$(GREEN)✅ API Server (port $(API_PORT))$(RESET)" || echo "$(RED)❌ API Server (port $(API_PORT))$(RESET)"
 	@curl -s http://localhost:$(FRONTEND_PORT) > /dev/null && echo "$(GREEN)✅ Frontend (port $(FRONTEND_PORT))$(RESET)" || echo "$(RED)❌ Frontend (port $(FRONTEND_PORT))$(RESET)"
 
 .PHONY: logs
@@ -231,7 +231,7 @@ profile: ## Profile API performance
 .PHONY: load-test
 load-test: ## Run load tests against API
 	@echo "$(BLUE)🚀 Running load tests...$(RESET)"
-	@which ab > /dev/null && ab -n 100 -c 10 http://localhost:$(API_PORT)/healthz || echo "$(YELLOW)⚠️  Apache Bench (ab) not installed$(RESET)"
+	@which ab > /dev/null && ab -n 100 -c 10 http://localhost:$(API_PORT)/health || echo "$(YELLOW)⚠️  Apache Bench (ab) not installed$(RESET)"
 
 .PHONY: init
 init: check setup ## Initialize new development environment
@@ -260,8 +260,8 @@ monitor: ## Monitor service logs in real-time
 debug: ## Start API in debug mode
 	@echo "$(BLUE)🐛 Starting API in debug mode...$(RESET)"
 	@DEBUG=true \
-	 OPENROUTER_API_KEY=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 \
-	 PORTKEY_API_KEY=nYraiE8dOR9A1gDwaRNpSSXRkXBc \
+	 OPENROUTER_API_KEY=$${OPENROUTER_API_KEY} \
+	 PORTKEY_API_KEY=$${PORTKEY_API_KEY} \
 	 LOCAL_DEV_MODE=true \
 	 AGENT_API_PORT=$(API_PORT) \
 	 $(PYTHON) -m pdb -m app.api.unified_server
@@ -287,7 +287,7 @@ info: ## Show project information
 	@echo "  MCP Server:  http://localhost:$(MCP_PORT)"
 	@echo ""
 	@echo "$(CYAN)Key Endpoints:$(RESET)"
-	@echo "  Health:      http://localhost:$(API_PORT)/healthz"
+	@echo "  Health:      http://localhost:$(API_PORT)/health"
 	@echo "  API Docs:    http://localhost:$(API_PORT)/docs"
 	@echo "  Config:      http://localhost:$(API_PORT)/config"
 	@echo "  Cost API:    http://localhost:$(API_PORT)/costs/summary"

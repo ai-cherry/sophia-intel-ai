@@ -78,15 +78,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Add health check endpoint
-@app.get("/health")
-async def health_check():
-    """Health check endpoint"""
-    return {
-        "status": "healthy",
-        "timestamp": datetime.now().isoformat(),
-        "version": "5.1.0"
-    }
 
 # Request models
 class SwarmRequest(BaseModel):
@@ -401,16 +392,6 @@ async def execute_single_swarm(message: str, team_id: str) -> dict[str, Any]:
         "team": team_id
     }
 
-@app.get("/metrics")
-async def get_metrics():
-    """Get Prometheus metrics"""
-    from app.observability.prometheus_metrics import get_metrics, get_metrics_content_type
-
-    metrics_data = get_metrics()
-    return Response(
-        content=metrics_data,
-        media_type=get_metrics_content_type()
-    )
 
 @app.get("/mcp/system-health")
 async def system_health():
@@ -554,19 +535,21 @@ async def llm_assignment(data: dict):
 
 @app.get("/health")
 async def health_check():
-    """Health check endpoint"""
+    """Comprehensive health check endpoint with component status"""
     return {
         "status": "healthy",
         "service": "Unified API Server",
         "port": int(os.getenv("AGENT_API_PORT", "8005")),
         "timestamp": datetime.now().isoformat(),
+        "version": "5.1.0",
         "components": {
             "swarms": "active",
             "embeddings": "active",
             "teams": "active",
             "websocket": "active",
             "openrouter": "active",
-            "portkey": "active"
+            "portkey": "active",
+            "message_bus": "active" if message_bus_instance else "inactive"
         }
     }
 

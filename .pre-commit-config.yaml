@@ -153,6 +153,24 @@ repos:
   # Custom hooks
   - repo: local
     hooks:
+      - id: check-duplicates
+        name: Check for duplicate code and components
+        entry: python scripts/check_duplicates.py
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [commit]
+        verbose: true
+      
+      - id: check-architecture
+        name: Check architecture compliance
+        entry: python scripts/check_architecture.py
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [commit]
+        verbose: true
+      
       - id: no-print-statements
         name: No print statements
         entry: '\bprint\('

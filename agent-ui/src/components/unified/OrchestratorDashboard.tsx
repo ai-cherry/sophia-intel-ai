@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -394,3 +393,338 @@ export const OrchestratorDashboard: React.FC = () => {
             <TrendingUp className="w-4 h-4 text-green-400" />
             <span className="text-sm text-white/70">Request Rate</span>
           </div>
+          <p className="text-2xl font-bold">{metrics.requestRate.toFixed(1)}/s</p>
+        </div>
+
+        <div className="bg-white/5 backdrop-blur-md rounded-lg p-4 border border-white/10">
+          <div className="flex items-center gap-2 mb-2">
+            <AlertCircle className="w-4 h-4 text-red-400" />
+            <span className="text-sm text-white/70">Error Rate</span>
+          </div>
+          <p className="text-2xl font-bold">{(metrics.errorRate * 100).toFixed(2)}%</p>
+        </div>
+
+        <div className="bg-white/5 backdrop-blur-md rounded-lg p-4 border border-white/10">
+          <div className="flex items-center gap-2 mb-2">
+            <Clock className="w-4 h-4 text-blue-400" />
+            <span className="text-sm text-white/70">P95 Response</span>
+          </div>
+          <p className="text-2xl font-bold">{metrics.p95ResponseTime.toFixed(0)}ms</p>
+        </div>
+
+        <div className="bg-white/5 backdrop-blur-md rounded-lg p-4 border border-white/10">
+          <div className="flex items-center gap-2 mb-2">
+            <Users className="w-4 h-4 text-purple-400" />
+            <span className="text-sm text-white/70">Active Connections</span>
+          </div>
+          <p className="text-2xl font-bold">{metrics.activeConnections}</p>
+        </div>
+
+        <div className="bg-white/5 backdrop-blur-md rounded-lg p-4 border border-white/10">
+          <div className="flex items-center gap-2 mb-2">
+            <Zap className="w-4 h-4 text-yellow-400" />
+            <span className="text-sm text-white/70">Throughput</span>
+          </div>
+          <p className="text-2xl font-bold">{metrics.throughput.toFixed(0)}/min</p>
+        </div>
+
+        <div className="bg-white/5 backdrop-blur-md rounded-lg p-4 border border-white/10">
+          <div className="flex items-center gap-2 mb-2">
+            <Database className="w-4 h-4 text-cyan-400" />
+            <span className="text-sm text-white/70">Session Tokens</span>
+          </div>
+          <p className="text-2xl font-bold">{sessionInfo?.tokenCount || 0}</p>
+        </div>
+      </div>
+    );
+  };
+
+  const renderSettings = () => {
+    return (
+      <div className="space-y-4">
+        {/* API Configuration */}
+        <div className="bg-white/5 backdrop-blur-md rounded-lg p-4 border border-white/10">
+          <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+            <Settings className="w-5 h-5" />
+            API Configuration
+          </h3>
+
+          <div className="space-y-3">
+            {/* API Version */}
+            <div className="flex items-center justify-between">
+              <label className="text-sm text-white/70">API Version</label>
+              <select 
+                value={apiVersion}
+                onChange={(e) => setApiVersion(e.target.value as 'v1' | 'v2')}
+                className="bg-white/10 border border-white/20 rounded px-3 py-1 text-sm"
+              >
+                <option value="v1">V1 (Legacy)</option>
+                <option value="v2">V2 (Enhanced)</option>
+              </select>
+            </div>
+
+            {/* Optimization Mode */}
+            <div className="flex items-center justify-between">
+              <label className="text-sm text-white/70">Optimization Mode</label>
+              <select 
+                value={optimizationMode}
+                onChange={(e) => setOptimizationMode(e.target.value as any)}
+                className="bg-white/10 border border-white/20 rounded px-3 py-1 text-sm"
+                disabled={apiVersion === 'v1'}
+              >
+                <option value="lite">Lite (Fast)</option>
+                <option value="balanced">Balanced</option>
+                <option value="quality">Quality (Slow)</option>
+              </select>
+            </div>
+
+            {/* Swarm Type */}
+            <div className="flex items-center justify-between">
+              <label className="text-sm text-white/70">Swarm Type</label>
+              <select 
+                value={swarmType || ''}
+                onChange={(e) => setSwarmType(e.target.value || null)}
+                className="bg-white/10 border border-white/20 rounded px-3 py-1 text-sm"
+                disabled={apiVersion === 'v1'}
+              >
+                <option value="">None</option>
+                <option value="coding-team">Coding Team</option>
+                <option value="research-team">Research Team</option>
+                <option value="creative-team">Creative Team</option>
+                <option value="coding-debate">Coding Debate</option>
+              </select>
+            </div>
+
+            {/* Memory */}
+            <div className="flex items-center justify-between">
+              <label className="text-sm text-white/70">Use Memory</label>
+              <button
+                onClick={() => setUseMemory(!useMemory)}
+                className={`p-1 rounded ${useMemory ? 'text-green-400' : 'text-gray-400'}`}
+                disabled={apiVersion === 'v1'}
+              >
+                {useMemory ? <ToggleRight className="w-6 h-6" /> : <ToggleLeft className="w-6 h-6" />}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Feature Flags */}
+        <div className="bg-white/5 backdrop-blur-md rounded-lg p-4 border border-white/10">
+          <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+            <GitBranch className="w-5 h-5" />
+            Feature Flags
+          </h3>
+
+          <div className="space-y-2">
+            {featureFlags.map(flag => (
+              <div key={flag.name} className="flex items-center justify-between text-sm">
+                <span className="text-white/70">{flag.name}</span>
+                <div className="flex items-center gap-2">
+                  <span className={`w-2 h-2 rounded-full ${flag.enabled ? 'bg-green-400' : 'bg-red-400'}`} />
+                  <span className="text-xs text-white/50">{flag.strategy} ({flag.percentage}%)</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Session Info */}
+        {sessionInfo && (
+          <div className="bg-white/5 backdrop-blur-md rounded-lg p-4 border border-white/10">
+            <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+              <Layers className="w-5 h-5" />
+              Session Information
+            </h3>
+
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-white/70">Session ID</span>
+                <span className="text-xs font-mono">{sessionInfo.id}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-white/70">Messages</span>
+                <span>{sessionInfo.messageCount}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-white/70">Tokens Used</span>
+                <span>{sessionInfo.tokenCount}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-white/70">Duration</span>
+                <span>{Math.round((Date.now() - new Date(sessionInfo.startTime).getTime()) / 60000)} min</span>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderChat = () => {
+    return (
+      <div className="flex flex-col h-full">
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          {messages.length === 0 && (
+            <div className="text-center text-white/50 py-8">
+              <Bot className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <p>Start a conversation with the Enhanced AI Orchestra</p>
+              <p className="text-sm mt-2">Now with circuit breakers, graceful degradation, and advanced monitoring</p>
+            </div>
+          )}
+          
+          {messages.map((message) => (
+            <div
+              key={message.id}
+              className={`flex gap-3 ${message.role === 'user' ? 'flex-row-reverse' : ''}`}
+            >
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                message.role === 'user' 
+                  ? 'bg-blue-500' 
+                  : 'bg-gradient-to-r from-[#00e0ff] to-[#ff00c3]'
+              }`}>
+                {message.role === 'user' ? (
+                  <User className="w-5 h-5 text-white" />
+                ) : (
+                  <Bot className="w-5 h-5 text-white" />
+                )}
+              </div>
+              <div className={`max-w-[70%] ${message.role === 'user' ? 'text-right' : ''}`}>
+                <div className={`inline-block p-3 rounded-lg ${
+                  message.role === 'user'
+                    ? 'bg-blue-500/20 text-white'
+                    : 'bg-white/10 text-white'
+                }`}>
+                  <p className="whitespace-pre-wrap">{message.content}</p>
+                </div>
+                <div className="flex items-center gap-2 mt-1">
+                  <p className="text-xs text-white/50">
+                    {message.timestamp.toLocaleTimeString()}
+                  </p>
+                  {message.executionTime && (
+                    <span className="text-xs text-white/30">• {message.executionTime.toFixed(2)}s</span>
+                  )}
+                  {message.tokens && (
+                    <span className="text-xs text-white/30">• {message.tokens} tokens</span>
+                  )}
+                  {message.correlationId && (
+                    <span className="text-xs text-white/20 font-mono">• {message.correlationId.substring(0, 8)}</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+          
+          {isTyping && (
+            <div className="flex gap-3">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-r from-[#00e0ff] to-[#ff00c3] flex items-center justify-center">
+                <Bot className="w-5 h-5 text-white" />
+              </div>
+              <div className="bg-white/10 p-3 rounded-lg">
+                <div className="flex gap-1">
+                  <span className="w-2 h-2 bg-white/50 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></span>
+                  <span className="w-2 h-2 bg-white/50 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></span>
+                  <span className="w-2 h-2 bg-white/50 rounded-full animate-bounce" style={{animationDelay: '300ms'}}></span>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Input */}
+        <div className="border-t border-white/10 bg-white/5 backdrop-blur-md p-4">
+          <div className="flex gap-3">
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder={`Ask the Orchestra (${optimizationMode} mode, API ${apiVersion})...`}
+              className="flex-1 bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white placeholder-white/50 focus:outline-none focus:border-[#00e0ff] transition-colors"
+              disabled={!isConnected}
+            />
+            <button
+              onClick={sendMessage}
+              disabled={!isConnected || !input.trim()}
+              className="px-4 py-2 bg-gradient-to-r from-[#00e0ff] to-[#ff00c3] text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Send className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="flex flex-col h-full bg-gray-900 text-white">
+      {/* Header */}
+      <div className="bg-white/5 backdrop-blur-md border-b border-white/10 p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#00e0ff] to-[#ff00c3] flex items-center justify-center">
+              <Bot className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h3 className="font-semibold">AI Orchestra Dashboard</h3>
+              <p className="text-sm text-white/70">
+                {isConnected ? (
+                  <span className="text-green-400">● Connected</span>
+                ) : (
+                  <span className="text-red-400">● Disconnected</span>
+                )}
+                {systemHealth && (
+                  <span className="ml-2 text-xs">
+                    • {systemHealth.components.degradationLevel.level}
+                  </span>
+                )}
+              </p>
+            </div>
+          </div>
+
+          {/* Tab Navigation */}
+          <div className="flex gap-2">
+            {(['chat', 'health', 'metrics', 'settings'] as const).map(tab => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`px-3 py-1 rounded text-sm transition-colors ${
+                  activeTab === tab 
+                    ? 'bg-white/20 text-white' 
+                    : 'bg-white/5 text-white/70 hover:bg-white/10'
+                }`}
+              >
+                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto">
+        {activeTab === 'chat' && renderChat()}
+        {activeTab === 'health' && (
+          <div className="p-4">
+            {renderHealthStatus()}
+          </div>
+        )}
+        {activeTab === 'metrics' && (
+          <div className="p-4">
+            {renderMetrics()}
+          </div>
+        )}
+        {activeTab === 'settings' && (
+          <div className="p-4">
+            {renderSettings()}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default OrchestratorDashboard;

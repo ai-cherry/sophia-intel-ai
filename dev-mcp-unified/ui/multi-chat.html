@@ -1,0 +1,105 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MCP Multi‑LLM Chat</title>
+  <style>
+    body{margin:0;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:#0f1115;color:#e5e7eb}
+    header{padding:16px 20px;border-bottom:1px solid #23262d;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+    .send-all{flex:1;display:flex;gap:8px}
+    .send-all input{flex:1;padding:10px 12px;border-radius:8px;border:1px solid #23262d;background:#12151b;color:#e5e7eb}
+    .send-all button{padding:10px 14px;border-radius:8px;border:1px solid #3b82f6;background:#2563eb;color:white;cursor:pointer}
+    .grid{display:grid;gap:12px;padding:12px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+    .pane{border:1px solid #23262d;border-radius:10px;background:#12151b;display:flex;flex-direction:column;min-height:360px}
+    .pane header{border-bottom:1px solid #23262d;display:flex;justify-content:space-between}
+    .pane header h3{margin:0;font-size:14px;color:#93c5fd}
+    .log{flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
+    .msg{padding:10px 12px;border-radius:8px;background:#0f1115;border:1px solid #23262d;white-space:pre-wrap}
+    .msg.user{background:#111827;border-color:#374151}
+    .input{display:flex;gap:8px;padding:12px;border-top:1px solid #23262d}
+    .input textarea{flex:1;border-radius:8px;border:1px solid #23262d;background:#0f1115;color:#e5e7eb;padding:10px;height:60px}
+    .input button{padding:10px 12px;border-radius:8px;border:1px solid #4b5563;background:#374151;color:#e5e7eb;cursor:pointer}
+    .small{font-size:12px;color:#9ca3af}
+  </style>
+</head>
+<body>
+  <header>
+    <strong>MCP Multi‑LLM Chat</strong>
+    <div class="send-all">
+      <input id="broadcast" placeholder="Ask all models…" />
+      <button onclick="sendAll()">Send to All</button>
+    </div>
+    <span class="small">Server: http://127.0.0.1:3333</span>
+  </header>
+
+  <div class="grid" id="grid"></div>
+
+  <script>
+    const SERVER = 'http://127.0.0.1:3333';
+    const MODELS = [
+      { id: 'claude', name: 'Claude' },
+      { id: 'openai', name: 'OpenAI' },
+      { id: 'qwen', name: 'Qwen' },
+      { id: 'deepseek', name: 'DeepSeek' },
+      { id: 'openrouter', name: 'OpenRouter' },
+    ];
+
+    function pane(model){
+      const el = document.createElement('div');
+      el.className = 'pane';
+      el.innerHTML = `
+        <header><h3>${model.name}</h3><span class="small">${model.id}</span></header>
+        <div class="log" id="log-${model.id}"></div>
+        <div class="input">
+          <textarea id="ta-${model.id}" placeholder="Message ${model.name}…"></textarea>
+          <button onclick="send('${model.id}')">Send</button>
+        </div>
+      `;
+      return el;
+    }
+
+    function addMsg(model, role, text){
+      const log = document.getElementById('log-' + model);
+      const div = document.createElement('div');
+      div.className = 'msg ' + (role === 'user' ? 'user' : 'assistant');
+      div.textContent = text;
+      log.appendChild(div);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    async function send(model){
+      const ta = document.getElementById('ta-' + model);
+      const q = ta.value.trim();
+      if(!q) return;
+      addMsg(model, 'user', q);
+      ta.value = '';
+      try{
+        const res = await fetch(SERVER + '/query', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ task: 'general', question: q, llm: model })
+        });
+        const data = await res.json();
+        addMsg(model, 'assistant', data.text || JSON.stringify(data));
+      }catch(e){
+        addMsg(model, 'assistant', 'Error: ' + e);
+      }
+    }
+
+    async function sendAll(){
+      const v = document.getElementById('broadcast').value.trim();
+      if(!v) return;
+      MODELS.forEach(m => {
+        const ta = document.getElementById('ta-' + m.id);
+        ta.value = v;
+        send(m.id);
+      });
+    }
+
+    const grid = document.getElementById('grid');
+    MODELS.forEach(m => grid.appendChild(pane(m)));
+  </script>
+</body>
+</html>
+

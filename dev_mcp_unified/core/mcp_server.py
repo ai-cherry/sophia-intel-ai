@@ -29,6 +29,7 @@ from dev_mcp_unified.embeddings.openai_provider import OpenAIEmbedding
 from dev_mcp_unified.storage.vector_store import InMemoryVectorStore, ChromaVectorStore
 from dev_mcp_unified.indexing.indexer import index_path
 import httpx
+from starlette.responses import StreamingResponse
 
 
 app = FastAPI(title="MCP Unified Server", version="1.0.0")
@@ -55,11 +56,21 @@ async def on_start():
     await queue.start()
     # Initialize embeddings + vector store (Chroma if available; else in-memory)
     global _embedder, _vstore
-    # Provider selection: OpenAI if key, else local deterministic
+    # Provider selection: OpenAI default, then Ollama, then deterministic
     if os.getenv("OPENAI_API_KEY"):
         _embedder = OpenAIEmbedding(api_key=os.getenv("OPENAI_API_KEY"))
     else:
-        _embedder = LocalDeterministicEmbedding(dims=256)
+        # Try local Ollama as a fallback
+        try:
+            import asyncio
+            async def _probe():
+                async with httpx.AsyncClient(timeout=2.0) as c:
+                    await c.get("http://127.0.0.1:11434/api/tags")
+            asyncio.get_event_loop().run_until_complete(_probe())
+            from dev_mcp_unified.embeddings.ollama_provider import OllamaEmbedding
+            _embedder = OllamaEmbedding(model=os.getenv("OLLAMA_EMBED_MODEL", "nomic-embed-text"))
+        except Exception:
+            _embedder = LocalDeterministicEmbedding(dims=256)
 
     # Vector store: prefer Chroma (open-source) if installed
     try:
@@ -70,7 +81,13 @@ async def on_start():
 
 @app.get("/healthz")
 def healthz():
-    return {"status": "ok", "watch": bool(os.getenv("MCP_WATCH")), "index": os.getenv("MCP_INDEX_PATH")}
+    count = None
+    try:
+        if hasattr(_vstore, "_col"):
+            count = _vstore._col.count()
+    except Exception:
+        count = None
+    return {"status": "ok", "watch": bool(os.getenv("MCP_WATCH")), "index": os.getenv("MCP_INDEX_PATH"), "vectors": count}
 
 
 @app.post("/query")
@@ -246,6 +263,42 @@ async def proxy_openrouter(req: ORChatRequest):
     except Exception:
         pass
     return {"raw": data, "text": content}
+
+
+@app.post("/proxy/openrouter/stream")
+async def proxy_openrouter_stream(req: ORChatRequest):
+    """SSE stream from OpenRouter to the browser."""
+    or_key = os.getenv("OPENROUTER_API_KEY")
+    if not or_key:
+        async def bad():
+            yield b"event: error\n"
+            yield b"data: missing OPENROUTER_API_KEY\n\n"
+        return StreamingResponse(bad(), media_type="text/event-stream")
+
+    async def gen():
+        headers = {
+            "Authorization": f"Bearer {or_key}",
+            "Content-Type": "application/json",
+        }
+        payload = {"model": req.model, "messages": req.messages, "stream": True}
+        async with httpx.AsyncClient(timeout=None) as client:
+            async with client.stream("POST", "https://openrouter.ai/api/v1/chat/completions", json=payload, headers=headers) as r:
+                async for line in r.aiter_lines():
+                    if not line:
+                        continue
+                    # Forward as SSE data lines
+                    yield (f"data: {line}\n\n").encode()
+    return StreamingResponse(gen(), media_type="text/event-stream")
+
+
+@app.get("/index/stats")
+def index_stats():
+    try:
+        if hasattr(_vstore, "_col"):
+            return {"count": _vstore._col.count(), "store": "chroma"}
+    except Exception as e:
+        return {"error": str(e)}
+    return {"count": None, "store": "memory"}
 
 
 @app.post("/tools/symbols")

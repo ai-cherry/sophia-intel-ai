@@ -40,7 +40,7 @@ from app.api.resilient_websocket_endpoints import router as resilient_ws_router
 from app.api.routers.teams import router as teams_router
 from app.api.super_orchestrator_router import router as super_orchestrator_router
 from app.api.unified_gateway import router as unified_gateway_router
-from app.ui.unified.chat_orchestrator import router as orchestrator_router
+# from app.ui.unified.chat_orchestrator import router as orchestrator_router  # Module deleted
 
 app = FastAPI(
     title="Sophia Intel AI API",
@@ -63,7 +63,7 @@ app.include_router(resilient_ws_router, prefix="/api/ws")
 app.include_router(infrastructure_router, prefix="/api/infrastructure")
 
 # New unified orchestrator routers
-app.include_router(orchestrator_router, prefix="/orchestrator")
+# app.include_router(orchestrator_router, prefix="/orchestrator")  # Module deleted
 app.include_router(super_orchestrator_router, prefix="/api/super")
 app.include_router(teams_router, prefix="/api/teams")
 # app.include_router(memory_api_router, prefix="/api/memory-v2")  # Module has import issues

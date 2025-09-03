@@ -12,14 +12,14 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Progress } from '@/components/ui/progress';
-import { Separator } from '@/components/ui/separator';
+import { Progress } from './ui/progress';
+import { Separator } from './ui/separator';
 import {
   Activity, Brain, Terminal, Zap, Users, Server, AlertCircle,
   CheckCircle, XCircle, Loader2, Send, Bot, Network, Cpu, Eye,
   DollarSign, TrendingUp, Database, Shield, Settings, BarChart3,
   Clock, Layers, GitBranch, Package, Globe, Gauge, Search,
-  Command, Star, RefreshCw, Power, Trash2, Copy, Download
+  Command, Star, RefreshCw, Power, Trash2, Copy, Download, Circle
 } from 'lucide-react';
 
 // ==================== UNIFIED TYPE SYSTEM ====================
@@ -124,7 +124,7 @@ const UnifiedSuperDashboard: React.FC = () => {
   const [loading, setLoading] = useState(false);
   
   const ws = useRef<WebSocket | null>(null);
-  const reconnectTimeout = useRef<NodeJS.Timeout>();
+  const reconnectTimeout = useRef<NodeJS.Timeout | null>(null);
 
   // ==================== WEBSOCKET CONNECTION ====================
   
@@ -321,7 +321,7 @@ const UnifiedSuperDashboard: React.FC = () => {
   // ==================== UI COMPONENTS ====================
 
   const getStatusIcon = (status: string) => {
-    const icons: Record<string, JSX.Element> = {
+    const icons: Record<string, React.ReactElement> = {
       active: <Activity className="w-4 h-4 text-green-500" />,
       processing: <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />,
       idle: <CheckCircle className="w-4 h-4 text-gray-500" />,
@@ -333,7 +333,7 @@ const UnifiedSuperDashboard: React.FC = () => {
   };
 
   const getSystemIcon = (type: string) => {
-    const icons: Record<string, JSX.Element> = {
+    const icons: Record<string, React.ReactElement> = {
       agent: <Bot className="w-4 h-4" />,
       swarm: <Users className="w-4 h-4" />,
       micro_swarm: <Users className="w-4 h-4 text-purple-500" />,
@@ -366,7 +366,7 @@ const UnifiedSuperDashboard: React.FC = () => {
             
             <div className="flex items-center space-x-4">
               {/* Connection Status */}
-              <Badge variant={connected ? 'success' : 'destructive'}>
+              <Badge variant={connected ? 'default' : 'destructive'} className={connected ? 'bg-green-500 text-white' : ''}>
                 {connected ? 'Connected' : 'Disconnected'}
               </Badge>
               
@@ -445,7 +445,7 @@ const UnifiedSuperDashboard: React.FC = () => {
                 {quickActions.map((action, idx) => (
                   <Button
                     key={idx}
-                    variant={action.variant || 'outline'}
+                    variant={(action.variant || 'outline') as any}
                     size="sm"
                     onClick={action.action}
                     disabled={!connected}
@@ -698,7 +698,7 @@ const UnifiedSuperDashboard: React.FC = () => {
                     <div className="flex justify-between text-sm">
                       <span>Status:</span>
                       <Badge>
-                        {systems.find(s => s.type === 'micro_swarm' && s.metadata?.swarm_type === swarmType)?.status || 'Not Spawned'}
+                        {systems.find(s => s.type === 'MICRO_SWARM' && s.metadata?.swarm_type === swarmType)?.status || 'Not Spawned'}
                       </Badge>
                     </div>
                     <Button 
@@ -794,7 +794,7 @@ const UnifiedSuperDashboard: React.FC = () => {
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-base">{model.name}</CardTitle>
-                      <Badge variant={model.status === 'available' ? 'success' : 'destructive'}>
+                      <Badge variant={model.status === 'available' ? 'default' : 'destructive'} className={model.status === 'available' ? 'bg-green-500 text-white' : ''}>
                         {model.status}
                       </Badge>
                     </div>
@@ -886,7 +886,7 @@ const UnifiedSuperDashboard: React.FC = () => {
                           <Server className="w-4 h-4" />
                           <span className="font-medium">{server.name}</span>
                         </div>
-                        <Badge variant={server.status === 'online' ? 'success' : 'destructive'}>
+                        <Badge variant={server.status === 'online' ? 'default' : 'destructive'} className={server.status === 'online' ? 'bg-green-500 text-white' : ''}>
                           {server.status}
                         </Badge>
                       </div>
@@ -1053,7 +1053,7 @@ const UnifiedSuperDashboard: React.FC = () => {
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500">Status:</span>
-                <Badge variant={selectedSystem.status === 'active' ? 'success' : 'default'}>
+                <Badge variant="default" className={selectedSystem.status === 'active' ? 'bg-green-500 text-white' : ''}>
                   {selectedSystem.status}
                 </Badge>
               </div>

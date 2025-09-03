@@ -78,7 +78,7 @@ const SuperOrchestratorDashboard: React.FC = () => {
   }, []);
 
   const connectWebSocket = () => {
-    ws.current = new WebSocket('ws://localhost:8000/ws/orchestrator');
+    ws.current = new WebSocket('ws://localhost:8006/ws/orchestrator');
     
     ws.current.onopen = () => {
       setConnected(true);

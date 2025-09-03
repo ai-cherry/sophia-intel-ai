@@ -126,12 +126,14 @@ class UniversalRegistry:
             return 100.0
 
         active = len(self.status_index.get(SystemStatus.ACTIVE, []))
+        processing = len(self.status_index.get(SystemStatus.PROCESSING, []))
         idle = len(self.status_index.get(SystemStatus.IDLE, []))
         error = len(self.status_index.get(SystemStatus.ERROR, []))
         offline = len(self.status_index.get(SystemStatus.OFFLINE, []))
 
         total = len(self.systems)
-        healthy = active + idle
+        # Processing systems are healthy - they're actively working!
+        healthy = active + processing + idle
 
         score = (healthy / total) * 100
         score -= (error * 10)  # Penalty for errors

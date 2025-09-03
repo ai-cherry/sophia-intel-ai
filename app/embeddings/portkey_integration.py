@@ -41,7 +41,7 @@ class PortkeyVirtualKeyManager:
         keys = {}
         
         # Together AI virtual key
-        if together_key := os.getenv("TOGETHER_VIRTUAL_KEY"):
+        if together_key := os.getenv("TOGETHER_VK"):
             keys["together"] = VirtualKeyConfig(
                 provider="together",
                 key_alias=together_key,
@@ -51,7 +51,7 @@ class PortkeyVirtualKeyManager:
             )
         
         # OpenAI virtual key
-        if openai_key := os.getenv("OPENAI_VIRTUAL_KEY"):
+        if openai_key := os.getenv("OPENAI_VK"):
             keys["openai"] = VirtualKeyConfig(
                 provider="openai",
                 key_alias=openai_key,
@@ -60,24 +60,24 @@ class PortkeyVirtualKeyManager:
                 metadata={"models": ["text-embedding-*", "gpt-*"]}
             )
         
-        # Cohere virtual key
-        if cohere_key := os.getenv("COHERE_VIRTUAL_KEY"):
-            keys["cohere"] = VirtualKeyConfig(
-                provider="cohere",
-                key_alias=cohere_key,
+        # XAI (Grok) virtual key
+        if xai_key := os.getenv("XAI_VK"):
+            keys["xai"] = VirtualKeyConfig(
+                provider="xai",
+                key_alias=xai_key,
                 rate_limit=1000,
                 monthly_quota=50.0,
-                metadata={"models": ["embed-*"]}
+                metadata={"models": ["grok-*"]}
             )
         
-        # Voyage virtual key
-        if voyage_key := os.getenv("VOYAGE_VIRTUAL_KEY"):
-            keys["voyage"] = VirtualKeyConfig(
-                provider="voyage",
-                key_alias=voyage_key,
+        # OpenRouter virtual key
+        if openrouter_key := os.getenv("OPENROUTER_VK"):
+            keys["openrouter"] = VirtualKeyConfig(
+                provider="openrouter",
+                key_alias=openrouter_key,
                 rate_limit=100,
                 monthly_quota=200.0,
-                metadata={"models": ["voyage-*"]}
+                metadata={"models": ["*"]}
             )
         
         return keys

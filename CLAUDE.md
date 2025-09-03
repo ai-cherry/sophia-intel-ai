@@ -211,3 +211,4 @@ Make decisions based on best practices.
 Only ask if you need API keys or encounter critical blockers.
 Begin now.
 ```
+- i would like claude to add 1-3 ideas or observations related to the task it finishes that I may benefit from

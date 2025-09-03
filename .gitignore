@@ -99,3 +99,6 @@ verification_report.json
 
 .cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md
+dev-mcp-unified/.env.local
+dev-mcp-unified/.env.mcp.local
+dev-mcp-unified/*.secret

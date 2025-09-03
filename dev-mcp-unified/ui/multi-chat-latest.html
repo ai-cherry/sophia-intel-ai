@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP Multi-LLM Hub - Latest Models</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+            background: #000000;
+            color: #e5e7eb;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid rgba(99, 102, 241, 0.2);
+            box-shadow: 0 2px 20px rgba(0,0,0,0.8);
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .title-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .header h1 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, #667eea, #764ba2, #f093fb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .stats {
+            display: flex;
+            gap: 1.5rem;
+            font-size: 0.85rem;
+        }
+        
+        .stat {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.25rem 0.75rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+        }
+        
+        .preset-selector {
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: #e5e7eb;
+            cursor: pointer;
+        }
+        
+        .preset-selector:hover {
+            background: rgba(99, 102, 241, 0.2);
+        }
+        
+        .chat-grid {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 1px;
+            background: #1a1a1a;
+            overflow: auto;
+        }
+        
+        .chat-pane {
+            background: #0a0a0a;
+            border: 1px solid #1a1a1a;
+            display: flex;
+            flex-direction: column;
+            min-height: 450px;
+        }
+        
+        .pane-header {
+            padding: 0.75rem;
+            background: linear-gradient(135deg, rgba(30, 30, 30, 0.9), rgba(20, 20, 20, 0.9));
+            border-bottom: 1px solid #262626;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .model-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .provider-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .provider-badge.claude { 
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+        }
+        .provider-badge.openai { 
+            background: linear-gradient(135deg, #10b981, #059669);
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+        }
+        .provider-badge.deepseek { 
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+        }
+        .provider-badge.openrouter { 
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+        }
+        .provider-badge.qwen { 
+            background: linear-gradient(135deg, #ec4899, #db2777);
+            box-shadow: 0 2px 8px rgba(236, 72, 153, 0.3);
+        }
+        
+        .model-selector {
+            padding: 0.35rem 0.75rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            color: #e5e7eb;
+            font-size: 0.85rem;
+            cursor: pointer;
+            min-width: 180px;
+        }
+        
+        .model-selector:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .pane-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .usage-info {
+            font-size: 0.7rem;
+            color: #6b7280;
+            padding: 0.25rem 0.5rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 4px;
+        }
+        
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            max-height: calc(100vh - 280px);
+        }
+        
+        .message {
+            padding: 0.75rem 1rem;
+            border-radius: 12px;
+            max-width: 85%;
+            line-height: 1.5;
+            animation: messageSlide 0.3s ease;
+        }
+        
+        @keyframes messageSlide {
+            from { 
+                opacity: 0; 
+                transform: translateY(10px);
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0);
+            }
+        }
+        
+        .user-message {
+            background: linear-gradient(135deg, #1e3a8a, #1e40af);
+            align-self: flex-end;
+            margin-left: auto;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+        
+        .assistant-message {
+            background: rgba(30, 30, 30, 0.8);
+            align-self: flex-start;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .assistant-message.streaming::after {
+            content: '▊';
+            animation: blink 1s infinite;
+            color: #6b7280;
+            margin-left: 2px;
+        }
+        
+        @keyframes blink {
+            0%, 49% { opacity: 1; }
+            50%, 100% { opacity: 0; }
+        }
+        
+        .input-area {
+            padding: 0.75rem;
+            background: rgba(20, 20, 20, 0.9);
+            border-top: 1px solid #262626;
+        }
+        
+        .input-wrapper {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .input-wrapper textarea {
+            flex: 1;
+            padding: 0.65rem;
+            background: #000;
+            border: 1px solid #333;
+            border-radius: 8px;
+            color: #e5e7eb;
+            font-family: inherit;
+            font-size: 0.9rem;
+            resize: none;
+            min-height: 42px;
+            max-height: 120px;
+        }
+        
+        .input-wrapper textarea:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+        }
+        
+        .send-btn {
+            padding: 0.65rem 1.25rem;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .send-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+        }
+        
+        .send-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        
+        .controls {
+            padding: 1rem 1.5rem;
+            background: linear-gradient(to top, #0a0a0a, #141414);
+            border-top: 1px solid #262626;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        
+        .global-input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            background: #000;
+            border: 1px solid #333;
+            border-radius: 8px;
+            color: #e5e7eb;
+            font-size: 0.95rem;
+        }
+        
+        .global-input:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+        }
+        
+        .control-btn {
+            padding: 0.75rem 1.25rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #e5e7eb;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-1px);
+        }
+        
+        .control-btn.primary {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border: none;
+            color: white;
+        }
+        
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #0a0a0a;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #444;
+        }
+        
+        .model-label {
+            font-size: 0.75rem;
+            color: #9ca3af;
+            margin-left: 0.5rem;
+        }
+        
+        .checkbox {
+            width: 18px;
+            height: 18px;
+            accent-color: #6366f1;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <div class="title-section">
+                <h1>🚀 MCP Multi-LLM Hub</h1>
+                <select class="preset-selector" id="preset-selector" onchange="applyPreset()">
+                    <option value="best_overall">Best Overall (Latest)</option>
+                    <option value="fast_responses">Fast Responses</option>
+                    <option value="reasoning">Deep Reasoning</option>
+                    <option value="coding">Coding Focus</option>
+                </select>
+            </div>
+            <div class="stats">
+                <div class="stat">
+                    <span>Models: <span id="active-models">5</span></span>
+                </div>
+                <div class="stat">
+                    <span>Tokens: <span id="total-tokens">0</span></span>
+                </div>
+                <div class="stat">
+                    <span>Cost: $<span id="total-cost">0.0000</span></span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="chat-grid" id="chat-grid"></div>
+    
+    <div class="controls">
+        <input type="text" class="global-input" id="global-input" placeholder="Ask all models..." autofocus>
+        <button class="control-btn primary" onclick="sendToSelected()">Send to Selected</button>
+        <button class="control-btn" onclick="sendToAll()">Send to All</button>
+        <button class="control-btn" onclick="clearAll()">Clear All</button>
+    </div>
+
+    <script>
+        const SERVER_URL = 'http://localhost:3333';
+        let totalTokens = 0;
+        let totalCost = 0;
+        
+        // Latest model configurations
+        const providers = {
+            claude: {
+                name: 'Claude',
+                color: 'claude',
+                models: [
+                    { id: 'claude-3-5-sonnet-20241022', name: 'Claude 3.5 Sonnet (Latest)', default: true },
+                    { id: 'claude-3-5-haiku-20241022', name: 'Claude 3.5 Haiku (Fast)' },
+                    { id: 'claude-3-opus-20240229', name: 'Claude 3 Opus' }
+                ],
+                costPerToken: 0.000003
+            },
+            openai: {
+                name: 'OpenAI',
+                color: 'openai',
+                models: [
+                    { id: 'gpt-4o', name: 'GPT-4o (Latest)', default: true },
+                    { id: 'gpt-4o-mini', name: 'GPT-4o Mini' },
+                    { id: 'o1-preview', name: 'o1 Preview (Reasoning)' },
+                    { id: 'o1-mini', name: 'o1 Mini' }
+                ],
+                costPerToken: 0.000005
+            },
+            deepseek: {
+                name: 'DeepSeek',
+                color: 'deepseek',
+                models: [
+                    { id: 'deepseek-coder-v3', name: 'DeepSeek Coder V3', default: true },
+                    { id: 'deepseek-chat', name: 'DeepSeek Chat' }
+                ],
+                costPerToken: 0.0000002
+            },
+            qwen: {
+                name: 'Qwen',
+                color: 'qwen',
+                models: [
+                    { id: 'qwen2.5-coder-32b-instruct', name: 'Qwen 2.5 Coder 32B', default: true },
+                    { id: 'qwen-max', name: 'Qwen Max' },
+                    { id: 'qwen-plus', name: 'Qwen Plus' }
+                ],
+                costPerToken: 0.0000003
+            },
+            openrouter: {
+                name: 'OpenRouter',
+                color: 'openrouter',
+                models: [
+                    { id: 'auto', name: 'Auto-Route (Smart)', default: true },
+                    { id: 'anthropic/claude-3-5-sonnet-20241022', name: 'Claude 3.5 via OR' },
+                    { id: 'openai/gpt-4o', name: 'GPT-4o via OR' },
+                    { id: 'google/gemini-2.0-flash-exp:free', name: 'Gemini 2.0 Flash (Free)' },
+                    { id: 'meta-llama/llama-3.1-405b-instruct', name: 'Llama 3.1 405B' },
+                    { id: 'x-ai/grok-2-1212', name: 'Grok 2' }
+                ],
+                costPerToken: 0.000002
+            }
+        };
+        
+        const presets = {
+            best_overall: {
+                claude: 'claude-3-5-sonnet-20241022',
+                openai: 'gpt-4o',
+                deepseek: 'deepseek-coder-v3',
+                qwen: 'qwen2.5-coder-32b-instruct',
+                openrouter: 'auto'
+            },
+            fast_responses: {
+                claude: 'claude-3-5-haiku-20241022',
+                openai: 'gpt-4o-mini',
+                deepseek: 'deepseek-chat',
+                qwen: 'qwen-plus',
+                openrouter: 'google/gemini-2.0-flash-exp:free'
+            },
+            reasoning: {
+                claude: 'claude-3-opus-20240229',
+                openai: 'o1-preview',
+                deepseek: 'deepseek-coder-v3',
+                qwen: 'qwen-max',
+                openrouter: 'anthropic/claude-3-5-sonnet-20241022'
+            },
+            coding: {
+                claude: 'claude-3-5-sonnet-20241022',
+                openai: 'gpt-4o',
+                deepseek: 'deepseek-coder-v3',
+                qwen: 'qwen2.5-coder-32b-instruct',
+                openrouter: 'deepseek/deepseek-coder-v3'
+            }
+        };
+        
+        function initializePanes() {
+            const grid = document.getElementById('chat-grid');
+            
+            Object.entries(providers).forEach(([providerId, provider]) => {
+                const pane = document.createElement('div');
+                pane.className = 'chat-pane';
+                
+                // Create model options HTML
+                const modelOptions = provider.models
+                    .map(m => `<option value="${m.id}" ${m.default ? 'selected' : ''}>${m.name}</option>`)
+                    .join('');
+                
+                pane.innerHTML = `
+                    <div class="pane-header">
+                        <div class="model-info">
+                            <span class="provider-badge ${provider.color}">${provider.name}</span>
+                            <select class="model-selector" id="model-${providerId}">
+                                ${modelOptions}
+                            </select>
+                        </div>
+                        <div class="pane-controls">
+                            <span class="usage-info" id="usage-${providerId}">0 tokens</span>
+                            <input type="checkbox" class="checkbox" id="select-${providerId}" checked>
+                        </div>
+                    </div>
+                    <div class="messages" id="messages-${providerId}"></div>
+                    <div class="input-area">
+                        <div class="input-wrapper">
+                            <textarea 
+                                id="input-${providerId}" 
+                                placeholder="Message ${provider.name}..."
+                                onkeydown="handleKeyPress(event, '${providerId}')"
+                            ></textarea>
+                            <button class="send-btn" onclick="sendMessage('${providerId}')">Send</button>
+                        </div>
+                    </div>
+                `;
+                
+                grid.appendChild(pane);
+            });
+        }
+        
+        function applyPreset() {
+            const presetId = document.getElementById('preset-selector').value;
+            const preset = presets[presetId];
+            
+            Object.entries(preset).forEach(([providerId, modelId]) => {
+                const selector = document.getElementById(`model-${providerId}`);
+                if (selector) {
+                    selector.value = modelId;
+                }
+            });
+        }
+        
+        function handleKeyPress(event, providerId) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage(providerId);
+            }
+        }
+        
+        async function sendMessage(providerId, message = null) {
+            const input = document.getElementById(`input-${providerId}`);
+            const text = message || input.value.trim();
+            if (!text) return;
+            
+            const modelSelector = document.getElementById(`model-${providerId}`);
+            const selectedModel = modelSelector.value;
+            
+            const messagesDiv = document.getElementById(`messages-${providerId}`);
+            
+            // Add user message
+            const userMsg = document.createElement('div');
+            userMsg.className = 'message user-message';
+            userMsg.textContent = text;
+            messagesDiv.appendChild(userMsg);
+            
+            if (!message) input.value = '';
+            
+            // Add assistant placeholder
+            const assistantMsg = document.createElement('div');
+            assistantMsg.className = 'message assistant-message streaming';
+            assistantMsg.textContent = '';
+            messagesDiv.appendChild(assistantMsg);
+            
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            
+            try {
+                // Call the API with model selection
+                const response = await fetch(`${SERVER_URL}/query`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        task: 'general',
+                        question: text,
+                        llm: providerId,
+                        model: selectedModel === 'auto' ? null : selectedModel
+                    })
+                });
+                
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const data = await response.json();
+                assistantMsg.classList.remove('streaming');
+                assistantMsg.textContent = data.text || 'No response';
+                
+                // Update usage
+                updateUsage(providerId, data.usage);
+                
+            } catch (error) {
+                assistantMsg.classList.remove('streaming');
+                assistantMsg.textContent = `Error: ${error.message}`;
+                assistantMsg.style.color = '#ef4444';
+            }
+            
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+        
+        function updateUsage(providerId, usage) {
+            const provider = providers[providerId];
+            const tokens = usage?.total_tokens || 100;
+            totalTokens += tokens;
+            
+            const cost = tokens * provider.costPerToken;
+            totalCost += cost;
+            
+            document.getElementById(`usage-${providerId}`).textContent = `${tokens} tokens`;
+            document.getElementById('total-tokens').textContent = totalTokens.toLocaleString();
+            document.getElementById('total-cost').textContent = totalCost.toFixed(4);
+        }
+        
+        function sendToSelected() {
+            const input = document.getElementById('global-input');
+            const message = input.value.trim();
+            if (!message) return;
+            
+            Object.keys(providers).forEach(providerId => {
+                const checkbox = document.getElementById(`select-${providerId}`);
+                if (checkbox.checked) {
+                    sendMessage(providerId, message);
+                }
+            });
+            
+            input.value = '';
+        }
+        
+        function sendToAll() {
+            const input = document.getElementById('global-input');
+            const message = input.value.trim();
+            if (!message) return;
+            
+            Object.keys(providers).forEach(providerId => {
+                sendMessage(providerId, message);
+            });
+            
+            input.value = '';
+        }
+        
+        function clearAll() {
+            Object.keys(providers).forEach(providerId => {
+                document.getElementById(`messages-${providerId}`).innerHTML = '';
+                document.getElementById(`usage-${providerId}`).textContent = '0 tokens';
+            });
+            totalTokens = 0;
+            totalCost = 0;
+            document.getElementById('total-tokens').textContent = '0';
+            document.getElementById('total-cost').textContent = '0.0000';
+        }
+        
+        // Keyboard shortcuts
+        document.addEventListener('DOMContentLoaded', () => {
+            initializePanes();
+            
+            document.getElementById('global-input').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    if (e.ctrlKey) {
+                        sendToAll();
+                    } else {
+                        sendToSelected();
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

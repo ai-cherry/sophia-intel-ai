@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Collaboration Command Center</title>
+    <link rel="stylesheet" href="./artemis-styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            overflow-x: hidden;
+        }
+
+        .command-center {
+            display: grid;
+            grid-template-rows: 80px 1fr;
+            height: 100vh;
+            gap: 0;
+        }
+
+        .unified-header {
+            background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
+            border-bottom: 2px solid var(--border-light);
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            z-index: 100;
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-accent);
+        }
+
+        .platform-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--text-muted);
+            background: rgba(59, 130, 246, 0.1);
+            padding: 6px 12px;
+            border-radius: 20px;
+            border: 1px solid var(--accent-blue);
+        }
+
+        .connection-pulse {
+            width: 8px;
+            height: 8px;
+            background: var(--accent-green);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.1); }
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .quick-btn {
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+        }
+
+        .quick-btn:hover {
+            background: var(--accent-blue-hover);
+            transform: translateY(-1px);
+        }
+
+        .quick-btn.secondary {
+            background: transparent;
+            border: 2px solid var(--accent-blue);
+            color: var(--accent-blue);
+        }
+
+        .global-stats {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            font-size: 12px;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .stat-value {
+            font-weight: 600;
+            font-size: 16px;
+            color: var(--text-accent);
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+        }
+
+        .dashboard-grid {
+            padding: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            grid-auto-rows: minmax(200px, auto);
+            gap: 20px;
+            overflow-y: auto;
+            height: calc(100vh - 80px);
+        }
+
+        /* Widget Base Styles */
+        .widget {
+            background: linear-gradient(145deg, var(--bg-secondary), var(--bg-tertiary));
+            border: 2px solid var(--border-light);
+            border-radius: 12px;
+            padding: 0;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .widget:hover {
+            border-color: var(--accent-blue);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+        }
+
+        .widget-header {
+            background: var(--bg-quaternary);
+            padding: 12px 16px;
+            border-bottom: 2px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .widget-title {
+            font-weight: 600;
+            color: var(--text-accent);
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .widget-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .widget-btn {
+            background: transparent;
+            border: 1px solid var(--border-light);
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 12px;
+            cursor: pointer;
+            color: var(--text-muted);
+            transition: all 0.2s;
+        }
+
+        .widget-btn:hover {
+            background: var(--accent-blue);
+            color: white;
+            border-color: var(--accent-blue);
+        }
+
+        .widget-content {
+            padding: 16px;
+            height: calc(100% - 48px);
+            overflow-y: auto;
+        }
+
+        /* Size Variants */
+        .widget.small {
+            grid-row: span 1;
+        }
+
+        .widget.medium {
+            grid-row: span 2;
+        }
+
+        .widget.large {
+            grid-row: span 3;
+        }
+
+        .widget.xlarge {
+            grid-column: span 2;
+            grid-row: span 2;
+        }
+
+        /* Agent Quick Cards */
+        .agent-quick-card {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .agent-quick-card:hover {
+            background: var(--bg-secondary);
+            border-color: var(--accent-blue);
+        }
+
+        .agent-quick-card.active {
+            border-color: var(--accent-green);
+            background: linear-gradient(135deg, var(--bg-primary), rgba(34, 197, 94, 0.05));
+        }
+
+        .agent-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .agent-name {
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--text-accent);
+        }
+
+        .agent-status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--text-muted);
+        }
+
+        .agent-status-dot.idle { background: var(--text-muted); }
+        .agent-status-dot.thinking { background: var(--accent-yellow); animation: pulse 1s infinite; }
+        .agent-status-dot.working { background: var(--accent-blue); animation: pulse 1s infinite; }
+        .agent-status-dot.completed { background: var(--accent-green); }
+
+        .agent-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        /* Chat Stream */
+        .chat-stream {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+
+        .chat-message {
+            background: var(--bg-primary);
+            padding: 8px 10px;
+            border-radius: 8px;
+            border-left: 3px solid var(--accent-blue);
+            font-size: 12px;
+            line-height: 1.4;
+            animation: slideInMessage 0.3s ease-out;
+        }
+
+        .chat-message.system {
+            border-left-color: var(--accent-yellow);
+        }
+
+        .chat-message.error {
+            border-left-color: var(--accent-red);
+        }
+
+        .message-sender {
+            font-weight: 600;
+            margin-bottom: 2px;
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        /* Business Intelligence Preview */
+        .business-metric {
+            background: var(--bg-primary);
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-light);
+            margin-bottom: 8px;
+        }
+
+        .metric-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .metric-name {
+            font-weight: 500;
+            font-size: 12px;
+            color: var(--text-accent);
+        }
+
+        .metric-change {
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .metric-change.positive {
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--accent-green);
+        }
+
+        .metric-change.negative {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--accent-red);
+        }
+
+        .metric-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* Template Library */
+        .template-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+
+        .template-card {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-light);
+            border-radius: 6px;
+            padding: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .template-card:hover {
+            border-color: var(--accent-blue);
+            background: var(--bg-secondary);
+        }
+
+        .template-name {
+            font-weight: 600;
+            font-size: 12px;
+            margin-bottom: 4px;
+            color: var(--text-accent);
+        }
+
+        .template-description {
+            font-size: 10px;
+            color: var(--text-muted);
+            line-height: 1.3;
+        }
+
+        .template-agents {
+            font-size: 10px;
+            color: var(--accent-blue);
+            margin-top: 4px;
+        }
+
+        /* Progressive Disclosure */
+        .complexity-toggle {
+            display: flex;
+            background: var(--bg-primary);
+            border-radius: 6px;
+            padding: 2px;
+            margin-bottom: 12px;
+        }
+
+        .complexity-btn {
+            flex: 1;
+            padding: 6px 8px;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .complexity-btn.active {
+            background: var(--accent-blue);
+            color: white;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+                padding: 12px;
+                gap: 12px;
+            }
+            
+            .unified-header {
+                flex-direction: column;
+                gap: 12px;
+                padding: 16px;
+                height: auto;
+            }
+            
+            .quick-actions {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .command-center {
+                grid-template-rows: auto 1fr;
+            }
+        }
+
+        @media (min-width: 1600px) {
+            .dashboard-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        @keyframes slideInMessage {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="command-center">
+        <header class="unified-header">
+            <div class="header-brand">
+                🧠 AI Collaboration Command Center
+                <div class="platform-indicator">
+                    <div class="connection-pulse"></div>
+                    <span>Live Platform</span>
+                </div>
+            </div>
+            
+            <div class="quick-actions">
+                <button class="quick-btn" onclick="deployTemplate()">
+                    🚀 Quick Deploy
+                </button>
+                <button class="quick-btn secondary" onclick="createAgent()">
+                    + New Agent
+                </button>
+                <button class="quick-btn secondary" onclick="openBusinessTab()">
+                    📊 Business Intel
+                </button>
+            </div>
+            
+            <div class="global-stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="active-agents">3</div>
+                    <div class="stat-label">Active Agents</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="daily-cost">$0.47</div>
+                    <div class="stat-label">Today's Cost</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="success-rate">94%</div>
+                    <div class="stat-label">Success Rate</div>
+                </div>
+            </div>
+        </header>
+
+        <main class="dashboard-grid">
+            <!-- Agent Quick Deploy Widget -->
+            <div class="widget medium" id="quick-deploy-widget">
+                <div class="widget-header">
+                    <div class="widget-title">🏗️ Quick Deploy</div>
+                    <div class="widget-actions">
+                        <button class="widget-btn" onclick="refreshTemplates()">⟳</button>
+                        <button class="widget-btn" onclick="customizeTemplates()">⚙️</button>
+                    </div>
+                </div>
+                <div class="widget-content">
+                    <div class="complexity-toggle">
+                        <button class="complexity-btn active">Templates</button>
+                        <button class="complexity-btn">Custom</button>
+                        <button class="complexity-btn">Advanced</button>
+                    </div>
+                    <div class="template-grid" id="template-library">
+                        <!-- Templates will be populated here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active Agents Monitor -->
+            <div class="widget medium" id="agents-monitor-widget">
+                <div class="widget-header">
+                    <div class="widget-title">🤖 Active Agents</div>
+                    <div class="widget-actions">
+                        <button class="widget-btn" onclick="pauseAllAgents()">⏸️</button>
+                        <button class="widget-btn" onclick="viewAllAgents()">👁️</button>
+                    </div>
+                </div>
+                <div class="widget-content">
+                    <div id="active-agents-list">
+                        <!-- Active agents will be populated here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Execution Chat Stream -->
+            <div class="widget large" id="chat-stream-widget">
+                <div class="widget-header">
+                    <div class="widget-title">💬 Live Execution Stream</div>
+                    <div class="widget-actions">
+                        <button class="widget-btn" onclick="clearStream()">Clear</button>
+                        <button class="widget-btn" onclick="exportStream()">Export</button>
+                    </div>
+                </div>
+                <div class="widget-content">
+                    <div class="chat-stream" id="execution-stream">
+                        <!-- Live execution messages will appear here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Multi-Model Chat -->
+            <div class="widget xlarge" id="multi-chat-widget">
+                <div class="widget-header">
+                    <div class="widget-title">🎯 Multi-Model Collaboration</div>
+                    <div class="widget-actions">
+                        <button class="widget-btn" onclick="addModel()">+ Model</button>
+                        <button class="widget-btn" onclick="compareResponses()">Compare</button>
+                    </div>
+                </div>
+                <div class="widget-content">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; height: 100%;">
+                        <div id="model-chat-1" class="model-chat-pane">
+                            <!-- Chat interface for model 1 -->
+                        </div>
+                        <div id="model-chat-2" class="model-chat-pane">
+                            <!-- Chat interface for model 2 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Business Intelligence Preview -->
+            <div class="widget medium" id="business-intel-widget">
+                <div class="widget-header">
+                    <div class="widget-title">📈 Business Intelligence</div>
+                    <div class="widget-actions">
+                        <button class="widget-btn" onclick="syncCRM()">🔄 CRM</button>
+                        <button class="widget-btn" onclick="analyzeCalls()">📞 Calls</button>
+                    </div>
+                </div>
+                <div class="widget-content">
+                    <div id="business-metrics">
+                        <!-- Business metrics and AI insights will appear here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Status & Controls -->
+            <div class="widget small" id="system-status-widget">
+                <div class="widget-header">
+                    <div class="widget-title">⚡ System Status</div>
+                    <div class="widget-actions">
+                        <button class="widget-btn" onclick="runDiagnostics()">Test</button>
+                    </div>
+                </div>
+                <div class="widget-content">
+                    <div class="status-grid">
+                        <div class="status-item">
+                            <span class="status-label">MCP Server</span>
+                            <span class="status-value connected">●</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">OpenRouter</span>
+                            <span class="status-value connected">●</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Models</span>
+                            <span class="status-value">322</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Response Time</span>
+                            <span class="status-value">1.2s</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const SERVER_URL = 'http://127.0.0.1:3333';
+        let unifiedState = {
+            agents: [],
+            templates: [],
+            personas: [],
+            executions: [],
+            businessMetrics: [],
+            connections: {
+                mcp: true,
+                openrouter: true,
+                websocket: false
+            }
+        };
+
+        // Initialize the unified command center
+        async function initializeCommandCenter() {
+            console.log('🧠 Initializing AI Collaboration Command Center');
+            
+            // Load initial data
+            await Promise.all([
+                loadTemplates(),
+                loadPersonas(),
+                loadActiveAgents(),
+                initializeBusinessIntel(),
+                connectRealTimeUpdates()
+            ]);
+            
+            // Render initial widgets
+            renderTemplateLibrary();
+            renderActiveAgents();
+            renderBusinessMetrics();
+            startExecutionStream();
+            
+            console.log('✅ Command Center initialized successfully');
+        }
+
+        async function loadTemplates() {
+            try {
+                const response = await fetch(`${SERVER_URL}/api/factory/templates`);
+                unifiedState.templates = await response.json();
+            } catch (error) {
+                console.error('Failed to load templates:', error);
+            }
+        }
+
+        async function loadPersonas() {
+            try {
+                const response = await fetch(`${SERVER_URL}/api/factory/personas`);
+                const data = await response.json();
+                unifiedState.personas = data.personas || [];
+            } catch (error) {
+                console.error('Failed to load personas:', error);
+            }
+        }
+
+        async function loadActiveAgents() {
+            try {
+                const response = await fetch(`${SERVER_URL}/api/factory/swarms`);
+                const swarms = await response.json();
+                
+                unifiedState.agents = [];
+                swarms.forEach(swarm => {
+                    swarm.agents?.forEach(agent => {
+                        unifiedState.agents.push({
+                            id: agent.name.toLowerCase().replace(/\s+/g, '_'),
+                            name: agent.name,
+                            role: agent.role,
+                            status: 'idle',
+                            swarmId: swarm.id,
+                            tokensUsed: Math.floor(Math.random() * 5000),
+                            costAccrued: (Math.random() * 0.5).toFixed(3)
+                        });
+                    });
+                });
+            } catch (error) {
+                console.error('Failed to load agents:', error);
+            }
+        }
+
+        function renderTemplateLibrary() {
+            const container = document.getElementById('template-library');
+            container.innerHTML = '';
+            
+            unifiedState.templates.forEach(template => {
+                const card = document.createElement('div');
+                card.className = 'template-card';
+                card.onclick = () => deployTemplateQuick(template.id);
+                
+                card.innerHTML = `
+                    <div class="template-name">${template.name}</div>
+                    <div class="template-description">${template.description}</div>
+                    <div class="template-agents">${template.agents?.length || 0} agents • ${template.pattern}</div>
+                `;
+                
+                container.appendChild(card);
+            });
+        }
+
+        function renderActiveAgents() {
+            const container = document.getElementById('active-agents-list');
+            container.innerHTML = '';
+            
+            unifiedState.agents.forEach(agent => {
+                const card = document.createElement('div');
+                card.className = `agent-quick-card ${agent.status}`;
+                card.onclick = () => focusAgent(agent.id);
+                
+                card.innerHTML = `
+                    <div class="agent-card-header">
+                        <div class="agent-name">${agent.name}</div>
+                        <div class="agent-status-dot ${agent.status}"></div>
+                    </div>
+                    <div class="agent-meta">
+                        <span>${agent.role}</span>
+                        <span>$${agent.costAccrued}</span>
+                    </div>
+                `;
+                
+                container.appendChild(card);
+            });
+            
+            // Update global stats
+            document.getElementById('active-agents').textContent = unifiedState.agents.length;
+            const totalCost = unifiedState.agents.reduce((sum, agent) => sum + parseFloat(agent.costAccrued), 0);
+            document.getElementById('daily-cost').textContent = `$${totalCost.toFixed(2)}`;
+        }
+
+        function initializeBusinessIntel() {
+            // Initialize business intelligence preview
+            unifiedState.businessMetrics = [
+                { name: 'Lead Velocity', value: '23', change: '+12%', trend: 'positive' },
+                { name: 'Call Analysis', value: '8', change: 'pending', trend: 'neutral' },
+                { name: 'Pipeline Value', value: '$124K', change: '+8%', trend: 'positive' },
+                { name: 'AI Insights', value: '15', change: '+5', trend: 'positive' }
+            ];
+        }
+
+        function renderBusinessMetrics() {
+            const container = document.getElementById('business-metrics');
+            container.innerHTML = '';
+            
+            unifiedState.businessMetrics.forEach(metric => {
+                const metricDiv = document.createElement('div');
+                metricDiv.className = 'business-metric';
+                
+                metricDiv.innerHTML = `
+                    <div class="metric-header">
+                        <div class="metric-name">${metric.name}</div>
+                        <div class="metric-change ${metric.trend}">${metric.change}</div>
+                    </div>
+                    <div class="metric-value">${metric.value}</div>
+                `;
+                
+                container.appendChild(metricDiv);
+            });
+        }
+
+        function startExecutionStream() {
+            const stream = document.getElementById('execution-stream');
+            
+            // Add initial system message
+            addStreamMessage('System', '🚀 AI Collaboration Command Center is online', 'system');
+            addStreamMessage('System', `Loaded ${unifiedState.templates.length} templates, ${unifiedState.personas.length} personas`, 'system');
+            
+            // Simulate live activity
+            setInterval(() => {
+                simulateAgentActivity();
+            }, 5000);
+        }
+
+        function simulateAgentActivity() {
+            if (unifiedState.agents.length === 0) return;
+            
+            const randomAgent = unifiedState.agents[Math.floor(Math.random() * unifiedState.agents.length)];
+            const activities = [
+                'Analyzing code structure for security vulnerabilities...',
+                'Generating optimized API implementation...',
+                'Reviewing database schema for performance issues...',
+                'Creating comprehensive test suite...',
+                'Documenting API endpoints and usage examples...'
+            ];
+            
+            const activity = activities[Math.floor(Math.random() * activities.length)];
+            addStreamMessage(randomAgent.name, activity, 'agent');
+            
+            // Update agent status
+            randomAgent.status = 'working';
+            setTimeout(() => {
+                randomAgent.status = 'idle';
+                renderActiveAgents();
+            }, 3000);
+            
+            renderActiveAgents();
+        }
+
+        function addStreamMessage(sender, text, type = 'agent') {
+            const stream = document.getElementById('execution-stream');
+            const message = document.createElement('div');
+            message.className = `chat-message ${type}`;
+            
+            message.innerHTML = `
+                <div class="message-sender">${sender}</div>
+                <div>${text}</div>
+            `;
+            
+            stream.appendChild(message);
+            stream.scrollTop = stream.scrollHeight;
+            
+            // Keep only last 20 messages
+            const messages = stream.querySelectorAll('.chat-message');
+            if (messages.length > 20) {
+                messages[0].remove();
+            }
+        }
+
+        function connectRealTimeUpdates() {
+            // Initialize WebSocket connection for real-time updates
+            // This would connect to your MCP server's WebSocket endpoint
+            console.log('🔌 Connecting to real-time updates...');
+            
+            // Simulate connection success
+            setTimeout(() => {
+                unifiedState.connections.websocket = true;
+                addStreamMessage('System', '🔌 Real-time updates connected', 'system');
+            }, 1000);
+        }
+
+        // Widget interaction functions
+        async function deployTemplate() {
+            addStreamMessage('System', '🚀 Quick deploy initiated...', 'system');
+            // Implementation for quick template deployment
+        }
+
+        async function deployTemplateQuick(templateId) {
+            const template = unifiedState.templates.find(t => t.id === templateId);
+            if (template) {
+                addStreamMessage('System', `🚀 Deploying ${template.name}...`, 'system');
+                // Implementation for specific template deployment
+            }
+        }
+
+        function createAgent() {
+            addStreamMessage('System', '🤖 Opening agent creation wizard...', 'system');
+            // Implementation for new agent creation
+        }
+
+        function openBusinessTab() {
+            addStreamMessage('System', '📊 Loading business intelligence dashboard...', 'system');
+            // Implementation for business intelligence tab
+        }
+
+        function focusAgent(agentId) {
+            const agent = unifiedState.agents.find(a => a.id === agentId);
+            if (agent) {
+                addStreamMessage('System', `👁️ Focusing on ${agent.name}...`, 'system');
+                // Implementation for agent focus/monitoring
+            }
+        }
+
+        function pauseAllAgents() {
+            addStreamMessage('System', '⏸️ Pausing all active agents...', 'system');
+            unifiedState.agents.forEach(agent => {
+                if (agent.status === 'working') {
+                    agent.status = 'idle';
+                }
+            });
+            renderActiveAgents();
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', initializeCommandCenter);
+    </script>
+</body>
+</html>

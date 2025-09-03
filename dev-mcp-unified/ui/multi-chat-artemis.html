@@ -745,10 +745,12 @@
     // Agent Factory functionality
     let agents = [];
     let availableModels = [];
+    let availablePersonas = [];
     
     async function initializeFactory() {
       await loadTemplates();
       await loadFactoryModels();
+      await loadPersonas();
     }
     
     async function loadTemplates() {
@@ -777,6 +779,18 @@
         name: m.name,
         pricing: { prompt: 0.002 } // Default pricing
       }));
+    }
+
+    async function loadPersonas() {
+      try {
+        const response = await fetch(`${SERVER_URL}/api/factory/personas`);
+        const data = await response.json();
+        availablePersonas = data.personas || [];
+        console.log(`Loaded ${availablePersonas.length} personas`);
+      } catch (error) {
+        console.error('Failed to load personas:', error);
+        availablePersonas = [];
+      }
     }
     
     function loadTemplate(templateType) {
@@ -885,6 +899,12 @@
               <option value="judge" ${role === 'judge' ? 'selected' : ''}>Judge</option>
               <option value="runner" ${role === 'runner' ? 'selected' : ''}>Runner</option>
             </select>
+            <select onchange="updateAgent('${agentId}', 'persona_id', this.value)"
+                    style="flex: 1; background: var(--bg-primary); border: 2px solid var(--border-light); border-radius: 6px; padding: 8px; color: var(--text-primary);" 
+                    id="persona_${agentId}">
+              <option value="">Select Persona...</option>
+              ${getPersonaOptions(role)}
+            </select>
             <select onchange="updateAgent('${agentId}', 'model', this.value)"
                     style="flex: 1; background: var(--bg-primary); border: 2px solid var(--border-light); border-radius: 6px; padding: 8px; color: var(--text-primary);">
               ${modelOptions}
@@ -910,12 +930,31 @@
       builder.appendChild(agentCard);
     }
     
+    function getPersonaOptions(role) {
+      return availablePersonas
+        .filter(persona => !role || persona.suitable_roles.includes(role))
+        .map(persona => `<option value="${persona.id}">${persona.name}</option>`)
+        .join('');
+    }
+
     function updateAgent(agentId, field, value) {
       const agent = agents.find(a => a.id === agentId);
       if (agent) {
         agent[field] = field === 'temperature' ? parseFloat(value) : value;
         if (field === 'temperature') {
           document.getElementById(`temp_${agentId}`).textContent = value;
+        }
+        if (field === 'persona_id' && value) {
+          const persona = availablePersonas.find(p => p.id === value);
+          if (persona) {
+            agent.persona = persona;
+            // Auto-populate instructions based on persona
+            const instructionsTextarea = document.querySelector(`#card_${agentId} textarea`);
+            if (instructionsTextarea && !instructionsTextarea.value.trim()) {
+              instructionsTextarea.value = `You are ${persona.name}. ${persona.description}\n\nExpertise: ${persona.expertise.primary_domains.join(', ')}\nPersonality: ${persona.personality.traits.join(', ')}\nCommunication Style: ${persona.communication.style}`;
+              agent.instructions = instructionsTextarea.value;
+            }
+          }
         }
         updateCostEstimate();
       }

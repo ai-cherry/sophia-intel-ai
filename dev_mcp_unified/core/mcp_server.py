@@ -1128,6 +1128,41 @@ async def git_diff(file_path: str):
 # AGENT FACTORY ENDPOINTS
 # ==============================================================================
 
+class ExpertiseProfile(BaseModel):
+    primary_domains: List[str] = []
+    programming_languages: List[Dict[str, str]] = []  # [{"lang": "python", "level": "expert"}]
+    frameworks_libraries: List[str] = []
+    methodologies: List[str] = []
+    specializations: List[str] = []
+
+class PersonalityTraits(BaseModel):
+    traits: List[str] = []  # ["methodical", "creative", "security_focused"]
+    work_style: str = "collaborative"  # "collaborative", "independent", "methodical"
+    decision_making: str = "analytical"  # "analytical", "intuitive", "consensus_driven"
+    risk_tolerance: str = "moderate"  # "conservative", "moderate", "aggressive"
+
+class CommunicationStyle(BaseModel):
+    style: str = "detailed"  # "concise", "detailed", "conversational", "formal"
+    format_preference: List[str] = ["structured"]  # ["structured", "narrative", "bullet_points"]
+    explanation_depth: str = "detailed"  # "high_level", "detailed", "implementation_focused"
+    feedback_approach: str = "constructive"  # "constructive", "direct", "encouraging"
+
+class BehavioralPatterns(BaseModel):
+    code_review_focus: List[str] = ["security", "maintainability"]
+    testing_methodology: List[str] = ["unit_first"]
+    documentation_style: str = "thorough"  # "minimal", "thorough", "inline_focused"
+    refactoring_tendency: str = "moderate"  # "conservative", "moderate", "aggressive"
+
+class AgentPersona(BaseModel):
+    id: str
+    name: str
+    description: str
+    suitable_roles: List[str] = []
+    expertise: ExpertiseProfile
+    personality: PersonalityTraits
+    communication: CommunicationStyle
+    behavior: BehavioralPatterns
+
 class AgentDefinition(BaseModel):
     name: str
     role: str
@@ -1135,6 +1170,8 @@ class AgentDefinition(BaseModel):
     temperature: float = 0.7
     instructions: str
     capabilities: List[str] = []
+    persona_id: Optional[str] = None
+    persona: Optional[AgentPersona] = None
 
 class SwarmBlueprint(BaseModel):
     name: str
@@ -1145,6 +1182,111 @@ class SwarmBlueprint(BaseModel):
     pattern: str = "hierarchical"
     memory_enabled: bool = True
     namespace: str = "artemis"
+
+# Enhanced persona library
+persona_library = {
+    "backend_specialist": AgentPersona(
+        id="backend_specialist",
+        name="Backend Systems Specialist", 
+        description="Expert in scalable backend architecture and API design",
+        suitable_roles=["planner", "generator", "critic"],
+        expertise=ExpertiseProfile(
+            primary_domains=["backend_development", "system_architecture", "database_design"],
+            programming_languages=[
+                {"lang": "python", "level": "expert"},
+                {"lang": "go", "level": "advanced"}, 
+                {"lang": "rust", "level": "intermediate"}
+            ],
+            frameworks_libraries=["fastapi", "django", "postgresql", "redis", "kafka"],
+            methodologies=["microservices", "api_first", "event_driven", "ddd"]
+        ),
+        personality=PersonalityTraits(
+            traits=["methodical", "security_focused", "performance_oriented"],
+            work_style="systematic",
+            decision_making="analytical",
+            risk_tolerance="conservative"
+        ),
+        communication=CommunicationStyle(
+            style="detailed",
+            format_preference=["structured", "diagram_focused"],
+            explanation_depth="architectural",
+            feedback_approach="analytical"
+        ),
+        behavior=BehavioralPatterns(
+            code_review_focus=["security", "performance", "scalability"],
+            testing_methodology=["integration_focused", "load_testing"],
+            documentation_style="thorough",
+            refactoring_tendency="conservative"
+        )
+    ),
+    "frontend_creative": AgentPersona(
+        id="frontend_creative",
+        name="Creative Frontend Developer",
+        description="User-focused frontend developer with strong UX sensibilities", 
+        suitable_roles=["generator", "critic"],
+        expertise=ExpertiseProfile(
+            primary_domains=["frontend_development", "user_experience", "design_systems"],
+            programming_languages=[
+                {"lang": "typescript", "level": "expert"},
+                {"lang": "javascript", "level": "expert"}
+            ],
+            frameworks_libraries=["react", "vue", "nextjs", "tailwindcss", "framer"],
+            methodologies=["component_driven", "accessibility_first", "mobile_first"]
+        ),
+        personality=PersonalityTraits(
+            traits=["creative", "user_focused", "detail_oriented", "iterative"],
+            work_style="collaborative", 
+            decision_making="user_centered",
+            risk_tolerance="moderate"
+        ),
+        communication=CommunicationStyle(
+            style="conversational",
+            format_preference=["visual", "prototype_driven"],
+            explanation_depth="implementation_focused",
+            feedback_approach="encouraging"
+        ),
+        behavior=BehavioralPatterns(
+            code_review_focus=["usability", "accessibility", "performance"],
+            testing_methodology=["e2e_comprehensive", "visual_testing"],
+            documentation_style="inline_focused",
+            refactoring_tendency="moderate"
+        )
+    ),
+    "security_auditor": AgentPersona(
+        id="security_auditor",
+        name="Security & Code Quality Auditor",
+        description="Security-first developer focused on vulnerability detection and code quality",
+        suitable_roles=["critic", "quality_reviewer"],
+        expertise=ExpertiseProfile(
+            primary_domains=["security", "code_quality", "vulnerability_assessment"],
+            programming_languages=[
+                {"lang": "python", "level": "expert"},
+                {"lang": "typescript", "level": "advanced"},
+                {"lang": "go", "level": "advanced"}
+            ],
+            frameworks_libraries=["owasp", "security_scanners", "static_analysis"],
+            methodologies=["security_by_design", "threat_modeling", "secure_coding"]
+        ),
+        personality=PersonalityTraits(
+            traits=["thorough", "security_focused", "quality_oriented", "systematic"],
+            work_style="methodical",
+            decision_making="risk_based",
+            risk_tolerance="very_conservative"
+        ),
+        communication=CommunicationStyle(
+            style="detailed",
+            format_preference=["structured", "evidence_based"],
+            explanation_depth="detailed",
+            feedback_approach="direct"
+        ),
+        behavior=BehavioralPatterns(
+            code_review_focus=["security", "quality", "maintainability", "performance"],
+            testing_methodology=["security_testing", "unit_first"],
+            documentation_style="thorough",
+            refactoring_tendency="conservative"
+        )
+    )
+}
 
 # Global factory storage
 factory_swarms = {}
@@ -1264,6 +1406,365 @@ factory_templates = {
     }
 }
 
+# ===== PERSONA API ENDPOINTS =====
+@app.get("/api/factory/personas")
+async def get_all_personas():
+    """Get all available agent personas"""
+    return {
+        "personas": [persona.dict() for persona in persona_library.values()],
+        "count": len(persona_library)
+    }
+
+@app.get("/api/factory/personas/{persona_id}")
+async def get_persona(persona_id: str):
+    """Get specific persona details"""
+    if persona_id not in persona_library:
+        raise HTTPException(status_code=404, detail="Persona not found")
+    return persona_library[persona_id].dict()
+
+@app.post("/api/factory/personas")
+async def create_custom_persona(persona: AgentPersona):
+    """Create new custom agent persona"""
+    if persona.id in persona_library:
+        raise HTTPException(status_code=409, detail="Persona ID already exists")
+    persona_library[persona.id] = persona
+    return {"status": "created", "persona_id": persona.id}
+
+# ===== BUSINESS INTELLIGENCE ENDPOINTS (SOPHIA TAB) =====
+
+# CRM Integration (HubSpot)
+@app.get("/api/business/crm/contacts")
+async def get_crm_contacts(limit: int = 50):
+    """Get recent CRM contacts with AI insights"""
+    # Placeholder for HubSpot integration
+    return {
+        "contacts": [
+            {
+                "id": "contact_001",
+                "name": "John Smith",
+                "company": "TechCorp Inc",
+                "status": "qualified_lead",
+                "last_activity": "2025-09-03T09:30:00Z",
+                "ai_insights": {
+                    "engagement_score": 8.5,
+                    "likelihood_to_close": 0.75,
+                    "recommended_action": "Schedule demo meeting",
+                    "suggested_agents": ["backend_specialist", "frontend_creative"]
+                }
+            },
+            {
+                "id": "contact_002",
+                "name": "Sarah Johnson",
+                "company": "StartupXYZ",
+                "status": "demo_scheduled",
+                "last_activity": "2025-09-02T15:45:00Z",
+                "ai_insights": {
+                    "engagement_score": 9.2,
+                    "likelihood_to_close": 0.85,
+                    "recommended_action": "Prepare technical presentation",
+                    "suggested_agents": ["security_auditor"]
+                }
+            }
+        ],
+        "count": 2,
+        "ai_summary": {
+            "total_qualified_leads": 15,
+            "conversion_trend": "+12%",
+            "recommended_focus": "technical_demos"
+        }
+    }
+
+@app.get("/api/business/crm/pipeline")
+async def get_crm_pipeline():
+    """Get CRM pipeline status with AI recommendations"""
+    return {
+        "pipeline": [
+            {
+                "stage": "Qualified Lead",
+                "count": 23,
+                "value": 125000,
+                "ai_recommendation": "Deploy lead nurturing agents"
+            },
+            {
+                "stage": "Demo Scheduled",
+                "count": 8,
+                "value": 89000,
+                "ai_recommendation": "Create technical presentation materials"
+            },
+            {
+                "stage": "Proposal Sent",
+                "count": 5,
+                "value": 67000,
+                "ai_recommendation": "Follow-up with personalized content"
+            }
+        ],
+        "ai_insights": {
+            "bottleneck_stage": "Proposal Sent",
+            "recommended_action": "Deploy proposal optimization agent",
+            "success_probability": 0.72
+        }
+    }
+
+# Call Analysis Integration (Gong)
+@app.get("/api/business/calls/recent")
+async def get_recent_calls(days: int = 7):
+    """Get recent call analysis with AI insights"""
+    return {
+        "calls": [
+            {
+                "id": "call_001",
+                "date": "2025-09-03T14:30:00Z",
+                "duration": 3600,
+                "participants": ["John Smith", "Sales Rep"],
+                "type": "discovery",
+                "ai_analysis": {
+                    "sentiment": "positive",
+                    "engagement_score": 8.7,
+                    "key_topics": ["technical_requirements", "budget", "timeline"],
+                    "concerns_raised": ["security", "scalability"],
+                    "next_steps": ["Technical demo", "Security review"],
+                    "suggested_followup": "Deploy security audit agent for compliance review"
+                }
+            },
+            {
+                "id": "call_002", 
+                "date": "2025-09-02T11:00:00Z",
+                "duration": 2700,
+                "participants": ["Sarah Johnson", "CTO", "Sales Rep"],
+                "type": "demo",
+                "ai_analysis": {
+                    "sentiment": "very_positive",
+                    "engagement_score": 9.4,
+                    "key_topics": ["architecture", "integration", "roadmap"],
+                    "concerns_raised": [],
+                    "next_steps": ["Proposal preparation", "Technical deep-dive"],
+                    "suggested_followup": "Create custom proposal using backend specialist agent"
+                }
+            }
+        ],
+        "ai_summary": {
+            "total_calls": 12,
+            "average_sentiment": "positive",
+            "success_indicators": ["High engagement", "Technical interest", "Budget confirmed"],
+            "recommended_actions": [
+                "Deploy technical demo agent for next meetings",
+                "Create security compliance documentation",
+                "Generate custom proposals for qualified leads"
+            ]
+        }
+    }
+
+@app.post("/api/business/calls/{call_id}/analyze")
+async def analyze_call_with_ai(call_id: str):
+    """Trigger AI analysis for specific call"""
+    return {
+        "call_id": call_id,
+        "analysis_status": "completed",
+        "agents_deployed": ["backend_specialist"],
+        "insights_generated": {
+            "action_items": [
+                "Follow up on security requirements",
+                "Prepare technical architecture diagram",
+                "Schedule stakeholder alignment call"
+            ],
+            "risks_identified": ["Budget constraints", "Timeline pressure"],
+            "opportunities": ["Upsell potential", "Expansion opportunity"]
+        }
+    }
+
+# Project Management Integration (Asana, Linear, Notion)
+@app.get("/api/business/projects/overview")
+async def get_project_overview():
+    """Get project management overview with AI insights"""
+    return {
+        "projects": [
+            {
+                "id": "proj_001",
+                "name": "Customer Portal Redesign",
+                "platform": "asana",
+                "status": "in_progress",
+                "completion": 0.65,
+                "team_size": 4,
+                "deadline": "2025-09-15T00:00:00Z",
+                "ai_insights": {
+                    "on_track": True,
+                    "risk_level": "low",
+                    "suggested_optimization": "Deploy frontend creative agent for UI review",
+                    "blockers": []
+                }
+            },
+            {
+                "id": "proj_002",
+                "name": "API Security Audit",
+                "platform": "linear",
+                "status": "review",
+                "completion": 0.90,
+                "team_size": 2,
+                "deadline": "2025-09-08T00:00:00Z",
+                "ai_insights": {
+                    "on_track": True,
+                    "risk_level": "medium",
+                    "suggested_optimization": "Deploy security auditor agent for final review",
+                    "blockers": ["Pending stakeholder approval"]
+                }
+            },
+            {
+                "id": "proj_003",
+                "name": "Documentation Updates",
+                "platform": "notion",
+                "status": "not_started",
+                "completion": 0.0,
+                "team_size": 1,
+                "deadline": "2025-09-20T00:00:00Z",
+                "ai_insights": {
+                    "on_track": False,
+                    "risk_level": "high",
+                    "suggested_optimization": "Deploy backend specialist agent for automated documentation",
+                    "blockers": ["Resource allocation"]
+                }
+            }
+        ],
+        "ai_summary": {
+            "total_projects": 3,
+            "on_track": 2,
+            "at_risk": 1,
+            "recommended_agent_deployments": [
+                "Deploy documentation agent for automated updates",
+                "Use security auditor for compliance review"
+            ]
+        }
+    }
+
+@app.post("/api/business/projects/{project_id}/optimize")
+async def optimize_project_with_ai(project_id: str):
+    """Deploy AI agents to optimize specific project"""
+    return {
+        "project_id": project_id,
+        "optimization_started": True,
+        "agents_deployed": ["backend_specialist", "security_auditor"],
+        "expected_completion_time": "2 hours",
+        "estimated_improvement": {
+            "time_saved": "4 hours",
+            "quality_increase": "15%",
+            "risk_reduction": "medium"
+        }
+    }
+
+# Business Intelligence Dashboard
+@app.get("/api/business/dashboard")
+async def get_business_dashboard():
+    """Get unified business intelligence dashboard data"""
+    return {
+        "overview": {
+            "leads_this_week": 23,
+            "deals_in_pipeline": 156000,
+            "active_projects": 12,
+            "ai_optimizations": 8
+        },
+        "ai_insights": {
+            "revenue_forecast": 189000,
+            "conversion_probability": 0.78,
+            "bottlenecks": ["proposal_approval", "technical_demo"],
+            "opportunities": ["upsell_existing", "referral_program"]
+        },
+        "recommended_actions": [
+            {
+                "action": "Deploy lead qualification agents",
+                "impact": "high",
+                "effort": "low",
+                "estimated_value": 25000
+            },
+            {
+                "action": "Automate proposal generation",
+                "impact": "medium", 
+                "effort": "medium",
+                "estimated_value": 15000
+            }
+        ],
+        "agent_performance": {
+            "total_deployments": 45,
+            "success_rate": 0.92,
+            "average_task_time": "2.3 hours",
+            "business_value_generated": 78000
+        }
+    }
+
+# Workflow Automation
+@app.post("/api/business/workflows/trigger")
+async def trigger_business_workflow(workflow: Dict[str, Any]):
+    """Trigger automated business workflow with AI agents"""
+    workflow_type = workflow.get("type")
+    
+    if workflow_type == "lead_qualification":
+        return {
+            "workflow_id": "wf_001",
+            "type": "lead_qualification",
+            "agents_deployed": ["backend_specialist", "frontend_creative"],
+            "status": "running",
+            "expected_completion": "30 minutes",
+            "steps": [
+                "Analyze lead requirements",
+                "Generate custom proposal",
+                "Create technical demo materials"
+            ]
+        }
+    
+    elif workflow_type == "project_optimization":
+        return {
+            "workflow_id": "wf_002", 
+            "type": "project_optimization",
+            "agents_deployed": ["security_auditor"],
+            "status": "running",
+            "expected_completion": "2 hours",
+            "steps": [
+                "Audit project security",
+                "Generate compliance report",
+                "Recommend optimizations"
+            ]
+        }
+    
+    else:
+        return {
+            "error": "Unknown workflow type",
+            "supported_types": ["lead_qualification", "project_optimization", "call_analysis"]
+        }
+
+# ===== REPOSITORY INTEGRATION ENDPOINTS =====
+@app.post("/api/factory/agents/{agent_id}/deploy")
+async def deploy_agent_to_repository(agent_id: str, config: Dict[str, Any]):
+    """Deploy agent to work on repository with file/git access"""
+    # Implementation for repository deployment
+    return {
+        "status": "deployed",
+        "agent_id": agent_id,
+        "repository_access": True,
+        "monitoring_url": f"/api/factory/agents/{agent_id}/monitor"
+    }
+
+@app.get("/api/factory/agents/{agent_id}/monitor")
+async def monitor_agent_execution(agent_id: str):
+    """Get real-time agent execution status and actions"""
+    # Implementation for live monitoring
+    return {
+        "agent_id": agent_id,
+        "status": "working",
+        "current_action": "Analyzing code structure...",
+        "files_accessed": ["src/auth.py", "tests/test_auth.py"],
+        "pending_changes": [],
+        "requires_approval": False
+    }
+
+@app.post("/api/factory/agents/{agent_id}/approve")
+async def approve_agent_action(agent_id: str, action: Dict[str, Any]):
+    """Approve or reject agent file operations"""
+    # Implementation for approval workflow
+    return {
+        "action_id": action.get("id"),
+        "status": "approved",
+        "timestamp": datetime.utcnow().isoformat()
+    }
+
+# ===== ENHANCED FACTORY ENDPOINTS =====
 @app.get("/api/factory/templates")
 async def factory_get_templates():
     """Get all available swarm templates"""

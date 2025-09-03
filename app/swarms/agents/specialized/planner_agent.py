@@ -5,10 +5,11 @@ Optimized for breaking down complex problems into structured, executable steps.
 Focuses on resource allocation, dependencies, and timeline management.
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from ..base_agent import BaseAgent, AgentRole
 from app.tools.basic_tools import PlanningToolkit
+
+from ..base_agent import AgentRole, BaseAgent
 
 
 class PlannerAgent(BaseAgent):
@@ -21,7 +22,7 @@ class PlannerAgent(BaseAgent):
     - Resource allocation optimization
     - Risk assessment and mitigation planning
     """
-    
+
     def __init__(
         self,
         agent_id: str = "planner-001",
@@ -36,7 +37,7 @@ class PlannerAgent(BaseAgent):
             PlanningToolkit.estimate_resources,
             PlanningToolkit.assess_risks
         ]
-        
+
         # Initialize with planner-specific configuration
         super().__init__(
             agent_id=agent_id,
@@ -50,8 +51,8 @@ class PlannerAgent(BaseAgent):
             },
             **kwargs
         )
-    
-    async def create_project_plan(self, project_description: Dict[str, Any]) -> Dict[str, Any]:
+
+    async def create_project_plan(self, project_description: dict[str, Any]) -> dict[str, Any]:
         """
         Create a comprehensive project plan with timeline and milestones.
         
@@ -61,7 +62,7 @@ class PlannerAgent(BaseAgent):
         Returns:
             Structured project plan with tasks, timeline, and dependencies
         """
-        
+
         planning_problem = {
             "query": f"""Create a detailed project plan for: {project_description.get('title', 'Untitled Project')}
             
@@ -79,9 +80,9 @@ class PlannerAgent(BaseAgent):
             "context": "project_planning",
             "priority": "high"
         }
-        
+
         result = await self.execute(planning_problem)
-        
+
         return {
             "project_plan": result["result"],
             "reasoning_trace": result.get("reasoning_trace", []),
@@ -92,8 +93,8 @@ class PlannerAgent(BaseAgent):
                 "context_used": result.get("context_used", 0)
             }
         }
-    
-    async def analyze_task_dependencies(self, tasks: List[Dict[str, Any]]) -> Dict[str, Any]:
+
+    async def analyze_task_dependencies(self, tasks: list[dict[str, Any]]) -> dict[str, Any]:
         """
         Analyze dependencies between tasks and optimize execution order.
         
@@ -103,7 +104,7 @@ class PlannerAgent(BaseAgent):
         Returns:
             Dependency analysis with optimized execution sequence
         """
-        
+
         dependency_problem = {
             "query": f"""Analyze dependencies between these {len(tasks)} tasks and create an optimal execution sequence:
             
@@ -119,9 +120,9 @@ class PlannerAgent(BaseAgent):
             """,
             "context": "dependency_analysis"
         }
-        
+
         result = await self.execute(dependency_problem)
-        
+
         return {
             "dependency_analysis": result["result"],
             "critical_path": "Extracted from analysis",  # Would be parsed from result

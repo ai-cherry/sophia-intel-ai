@@ -17,6 +17,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from rag.basic_rag import BasicRAGPipeline, RAGConfig
 
+from app.core.ai_logger import logger
+
 
 # Color codes for terminal output
 class Colors:
@@ -32,30 +34,30 @@ class Colors:
 
 def print_header(message: str):
     """Print a formatted header"""
-    print(f"\n{Colors.CYAN}{'='*60}{Colors.END}")
-    print(f"{Colors.CYAN}{Colors.BOLD}{message}{Colors.END}")
-    print(f"{Colors.CYAN}{'='*60}{Colors.END}")
+    logger.info(f"\n{Colors.CYAN}{'='*60}{Colors.END}")
+    logger.info(f"{Colors.CYAN}{Colors.BOLD}{message}{Colors.END}")
+    logger.info(f"{Colors.CYAN}{'='*60}{Colors.END}")
 
 
 def print_section(message: str):
     """Print a section header"""
-    print(f"\n{Colors.BLUE}{message}{Colors.END}")
-    print(f"{Colors.BLUE}{'-'*40}{Colors.END}")
+    logger.info(f"\n{Colors.BLUE}{message}{Colors.END}")
+    logger.info(f"{Colors.BLUE}{'-'*40}{Colors.END}")
 
 
 def print_success(message: str):
     """Print success message"""
-    print(f"{Colors.GREEN}✅ {message}{Colors.END}")
+    logger.info(f"{Colors.GREEN}✅ {message}{Colors.END}")
 
 
 def print_error(message: str):
     """Print error message"""
-    print(f"{Colors.RED}❌ {message}{Colors.END}")
+    logger.info(f"{Colors.RED}❌ {message}{Colors.END}")
 
 
 def print_info(message: str):
     """Print info message"""
-    print(f"{Colors.YELLOW}ℹ️  {message}{Colors.END}")
+    logger.info(f"{Colors.YELLOW}ℹ️  {message}{Colors.END}")
 
 
 def test_connection(rag: BasicRAGPipeline) -> bool:
@@ -145,7 +147,7 @@ def test_queries(rag: BasicRAGPipeline) -> dict[str, Any]:
     total_time = 0
 
     for i, query in enumerate(test_queries, 1):
-        print(f"\n{Colors.PURPLE}Query {i}: {query}{Colors.END}")
+        logger.info(f"\n{Colors.PURPLE}Query {i}: {query}{Colors.END}")
 
         start_time = time.time()
         try:
@@ -154,14 +156,14 @@ def test_queries(rag: BasicRAGPipeline) -> dict[str, Any]:
             total_time += elapsed_time
 
             if response["status"] == "success":
-                print(f"{Colors.GREEN}Answer:{Colors.END} {response['answer'][:200]}...")
+                logger.info(f"{Colors.GREEN}Answer:{Colors.END} {response['answer'][:200]}...")
 
                 if "sources" in response and response["sources"]:
-                    print(f"{Colors.CYAN}Sources:{Colors.END}")
+                    logger.info(f"{Colors.CYAN}Sources:{Colors.END}")
                     for source in response["sources"][:2]:  # Show first 2 sources
-                        print(f"  • {source['source']}: {source['content'][:100]}...")
+                        logger.info(f"  • {source['source']}: {source['content'][:100]}...")
 
-                print(f"{Colors.YELLOW}Response time: {elapsed_time:.2f}s{Colors.END}")
+                logger.info(f"{Colors.YELLOW}Response time: {elapsed_time:.2f}s{Colors.END}")
 
                 results.append({
                     "query": query,
@@ -242,7 +244,7 @@ def test_file_ingestion(rag: BasicRAGPipeline) -> bool:
             response = rag.query("What features are being tested in the test document?")
             if response["status"] == "success":
                 print_success("Query on ingested file content successful")
-                print(f"Answer: {response['answer'][:200]}...")
+                logger.info(f"Answer: {response['answer'][:200]}...")
             return True
         else:
             print_error(f"File ingestion failed: {result.get('error')}")
@@ -307,7 +309,7 @@ def main():
     args = parser.parse_args()
 
     print_header("🧪 SOPHIA INTEL AI - RAG PIPELINE TEST")
-    print(f"Started at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    logger.info(f"Started at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
     # Configure RAG
     config = RAGConfig(
@@ -317,9 +319,9 @@ def main():
     )
 
     print_info("Configuration:")
-    print(f"  • Ollama URL: {config.ollama_base_url}")
-    print(f"  • Weaviate URL: {config.weaviate_url}")
-    print(f"  • LLM Model: {config.llm_model}")
+    logger.info(f"  • Ollama URL: {config.ollama_base_url}")
+    logger.info(f"  • Weaviate URL: {config.weaviate_url}")
+    logger.info(f"  • LLM Model: {config.llm_model}")
 
     try:
         # Initialize RAG pipeline
@@ -379,12 +381,12 @@ def main():
         for test_name, result in test_results["tests"].items():
             if isinstance(result, str):
                 status = "✅" if result == "passed" else "❌"
-                print(f"{status} {test_name}: {result}")
+                logger.info(f"{status} {test_name}: {result}")
             elif isinstance(result, dict) and "successful_queries" in result:
                 success_rate = result["successful_queries"] / result["total_queries"] * 100
-                print(f"📊 Queries: {result['successful_queries']}/{result['total_queries']} ({success_rate:.0f}%)")
-                print(f"   • Avg response time: {result['average_response_time']:.2f}s")
-                print(f"   • Avg sources retrieved: {result['average_sources_retrieved']:.1f}")
+                logger.info(f"📊 Queries: {result['successful_queries']}/{result['total_queries']} ({success_rate:.0f}%)")
+                logger.info(f"   • Avg response time: {result['average_response_time']:.2f}s")
+                logger.info(f"   • Avg sources retrieved: {result['average_sources_retrieved']:.1f}")
 
         # Save results to file
         results_file = f"rag_test_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
@@ -395,7 +397,7 @@ def main():
         # Final stats
         stats = rag.get_stats()
         print_section("Final Statistics")
-        print(f"Total documents in collection: {stats['document_count']}")
+        logger.info(f"Total documents in collection: {stats['document_count']}")
 
         print_header("✨ RAG PIPELINE TEST COMPLETED")
 

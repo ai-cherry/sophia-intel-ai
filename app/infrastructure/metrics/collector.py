@@ -425,7 +425,15 @@ class MetricsMiddleware:
 
 # ==================== Export ====================
 
+# Alias for backward compatibility
+MetricsCollector = SystemMetricsCollector
+
 __all__ = [
+    # Classes
+    'MetricsCollector',
+    'SystemMetricsCollector',
+    'MetricsAggregator',
+    'MetricsMiddleware',
     # Metrics
     'request_count',
     'request_duration',

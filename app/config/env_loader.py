@@ -18,9 +18,8 @@ from typing import Any
 
 from dotenv import load_dotenv
 
-from app.core.circuit_breaker import (
-    with_circuit_breaker,
-)
+from app.core.ai_logger import logger as ai_logger
+from app.core.circuit_breaker import with_circuit_breaker
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -884,65 +883,65 @@ class EnhancedEnvLoader:
         """Print comprehensive configuration status."""
         validation = self.validate_configuration()
 
-        print("\n" + "="*80)
-        print("🔧 SOPHIA INTEL AI - ENVIRONMENT CONFIGURATION STATUS")
-        print("="*80)
+        logger.info("\n" + "="*80)
+        logger.info("🔧 SOPHIA INTEL AI - ENVIRONMENT CONFIGURATION STATUS")
+        logger.info("="*80)
 
         # Environment info
-        print(f"\n📋 Environment: {self.config.environment_name} ({self.config.environment_type})")
-        print(f"📂 Loaded from: {self.config.loaded_from}")
-        print(f"⏰ Loaded at: {self.config.loaded_at.strftime('%Y-%m-%d %H:%M:%S')}")
-        print(f"🆔 Config hash: {self.config.config_hash}")
+        logger.info(f"\n📋 Environment: {self.config.environment_name} ({self.config.environment_type})")
+        logger.info(f"📂 Loaded from: {self.config.loaded_from}")
+        logger.info(f"⏰ Loaded at: {self.config.loaded_at.strftime('%Y-%m-%d %H:%M:%S')}")
+        logger.info(f"🆔 Config hash: {self.config.config_hash}")
 
         # Overall status
         status_icon = "🟢" if validation["overall_status"] == "healthy" else "🟡" if validation["overall_status"] == "degraded" else "🔴"
-        print(f"\n{status_icon} Overall Status: {validation['overall_status'].upper()}")
-        print(f"🚀 Production Ready: {'YES' if validation['ready_for_production'] else 'NO'}")
+        logger.info(f"\n{status_icon} Overall Status: {validation['overall_status'].upper()}")
+        logger.info(f"🚀 Production Ready: {'YES' if validation['ready_for_production'] else 'NO'}")
 
         # Component status
-        print("\n📊 Component Status:")
+        logger.info("\n📊 Component Status:")
         for component, status in validation["component_status"].items():
             status_icon = "🟢" if status["status"] == "healthy" else "🟡" if status["status"] == "degraded" else "🔴"
-            print(f"  {status_icon} {component.replace('_', ' ').title()}: {status['status']}")
+            logger.info(f"  {status_icon} {component.replace('_', ' ').title()}: {status['status']}")
 
         # Issues and warnings
         if validation["critical_issues"]:
-            print(f"\n❌ Critical Issues ({len(validation['critical_issues'])}):")
+            logger.info(f"\n❌ Critical Issues ({len(validation['critical_issues'])}):")
             for issue in validation["critical_issues"]:
-                print(f"  • {issue}")
+                logger.info(f"  • {issue}")
 
         if validation["warnings"]:
-            print(f"\n⚠️  Warnings ({len(validation['warnings'])}):")
+            logger.info(f"\n⚠️  Warnings ({len(validation['warnings'])}):")
             for warning in validation["warnings"]:
-                print(f"  • {warning}")
+                logger.info(f"  • {warning}")
 
         if validation["recommendations"]:
-            print(f"\n💡 Recommendations ({len(validation['recommendations'])}):")
+            logger.info(f"\n💡 Recommendations ({len(validation['recommendations'])}):")
             for rec in validation["recommendations"]:
-                print(f"  • {rec}")
+                logger.info(f"  • {rec}")
 
         if detailed:
             self._print_detailed_config()
 
-        print("="*80)
+        logger.info("="*80)
 
     def _print_detailed_config(self) -> None:
         """Print detailed configuration for debugging."""
-        print("\n🔍 Detailed Configuration:")
-        print("  • Service URLs:")
-        print(f"    - API: {self.config.unified_api_url}")
-        print(f"    - Bridge: {self.config.agno_bridge_url}")
-        print(f"    - Frontend: {self.config.frontend_url}")
-        print("  • Databases:")
-        print(f"    - Weaviate: {self.config.weaviate_url}")
-        print(f"    - Redis: {self.config.redis_host}:{self.config.redis_port}")
-        print("  • Models:")
-        print(f"    - Fast: {self.config.default_fast_models}")
-        print(f"    - Balanced: {self.config.default_balanced_models}")
-        print("  • Limits:")
-        print(f"    - Budget: ${self.config.daily_budget_usd}/day")
-        print(f"    - Tokens: {self.config.max_tokens_per_request}")
-        print(f"    - Rate: {self.config.api_rate_limit}/min")
+        logger.info("\n🔍 Detailed Configuration:")
+        logger.info("  • Service URLs:")
+        logger.info(f"    - API: {self.config.unified_api_url}")
+        logger.info(f"    - Bridge: {self.config.agno_bridge_url}")
+        logger.info(f"    - Frontend: {self.config.frontend_url}")
+        logger.info("  • Databases:")
+        logger.info(f"    - Weaviate: {self.config.weaviate_url}")
+        logger.info(f"    - Redis: {self.config.redis_host}:{self.config.redis_port}")
+        logger.info("  • Models:")
+        logger.info(f"    - Fast: {self.config.default_fast_models}")
+        logger.info(f"    - Balanced: {self.config.default_balanced_models}")
+        logger.info("  • Limits:")
+        logger.info(f"    - Budget: ${self.config.daily_budget_usd}/day")
+        logger.info(f"    - Tokens: {self.config.max_tokens_per_request}")
+        logger.info(f"    - Rate: {self.config.api_rate_limit}/min")
 
 
 # =============================================================================
@@ -1173,23 +1172,23 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    print("🚀 Sophia Intel AI - Environment Configuration Loader")
-    print("Following ADR-006: Configuration Management Standardization")
+    logger.info("🚀 Sophia Intel AI - Environment Configuration Loader")
+    logger.info("Following ADR-006: Configuration Management Standardization")
 
     try:
         if args.validate:
             validation = validate_environment(args.environment)
-            print(f"\nValidation Status: {validation['overall_status']}")
-            print(f"Production Ready: {validation['ready_for_production']}")
+            logger.info(f"\nValidation Status: {validation['overall_status']}")
+            logger.info(f"Production Ready: {validation['ready_for_production']}")
         else:
             config = get_env_config(args.environment, args.refresh)
             print_env_status(args.detailed, args.environment)
 
-            print("\n✅ Configuration loaded successfully!")
-            print(f"Environment: {config.environment_name}")
-            print(f"Loaded from: {config.loaded_from}")
+            logger.info("\n✅ Configuration loaded successfully!")
+            logger.info(f"Environment: {config.environment_name}")
+            logger.info(f"Loaded from: {config.loaded_from}")
 
     except Exception as e:
         logger.error(f"Failed to load configuration: {e}")
-        print(f"\n❌ Configuration loading failed: {e}")
+        logger.info(f"\n❌ Configuration loading failed: {e}")
         exit(1)

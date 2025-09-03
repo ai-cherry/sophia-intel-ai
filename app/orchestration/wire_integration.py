@@ -7,6 +7,7 @@ import asyncio
 import logging
 from typing import Any
 
+from app.core.ai_logger import logger
 from app.orchestration.mode_normalizer import get_mode_normalizer
 from app.orchestration.unified_facade import (
     OptimizationMode,
@@ -14,6 +15,7 @@ from app.orchestration.unified_facade import (
     SwarmType,
     UnifiedOrchestratorFacade,
 )
+
 # from app.swarms.patterns.performance_monitoring import performance_monitoring  # Module not yet implemented
 from app.swarms.swarm_optimizer import SwarmOptimizer
 
@@ -203,18 +205,18 @@ class IntegratedSwarmSystem:
 
         test_modes = ["fast", "lite", "speed", "balanced", "quality", "thorough"]
 
-        print("\n=== Mode Normalization Demo ===")
+        logger.info("\n=== Mode Normalization Demo ===")
         for mode in test_modes:
             normalized = self.normalizer.normalize_mode(mode)
             config = self.normalizer.get_config(normalized)
-            print(f"{mode:12} -> {normalized.value:8} (timeout: {config.timeout}s, agents: {config.max_agents})")
+            logger.info(f"{mode:12} -> {normalized.value:8} (timeout: {config.timeout}s, agents: {config.max_agents})")
 
         # Test fast mode detection in coding swarm
-        print("\n=== Fast Mode Detection ===")
+        logger.info("\n=== Fast Mode Detection ===")
         for mode in ["lite", "fast", "speed", "balanced", "quality"]:
             self.facade.coding_swarm.config["optimization"] = mode
             is_fast = self.facade.coding_swarm._is_fast_mode()
-            print(f"{mode:8} -> fast_mode: {is_fast}")
+            logger.info(f"{mode:8} -> fast_mode: {is_fast}")
 
     async def get_system_status(self) -> dict[str, Any]:
         """Get comprehensive system status"""
@@ -253,28 +255,28 @@ async def main():
     await system.demonstrate_mode_normalization()
 
     # Example: Execute a coding task with automatic mode selection
-    print("\n=== Example: Coding Task ===")
+    logger.info("\n=== Example: Coding Task ===")
     result = await system.execute_with_mode_selection(
         task="Implement a binary search algorithm in Python",
         urgency="normal"
     )
-    print(f"Result: {result}")
+    logger.info(f"Result: {result}")
 
     # Example: Execute with MCP coordination
-    print("\n=== Example: MCP Coordinated Task ===")
+    logger.info("\n=== Example: MCP Coordinated Task ===")
     result = await system.execute_mcp_coordinated(
         task="Analyze and refactor the authentication module",
         assistants=["roo", "cline"],
         mode="quality"
     )
-    print(f"Result: {result}")
+    logger.info(f"Result: {result}")
 
     # Get system status
-    print("\n=== System Status ===")
+    logger.info("\n=== System Status ===")
     status = await system.get_system_status()
-    print(f"Health: {status['optimizer_health']:.2f}")
-    print(f"Mode Costs: {status['mode_costs']}")
-    print(f"Circuit Breakers: {status['circuit_breakers']}")
+    logger.info(f"Health: {status['optimizer_health']:.2f}")
+    logger.info(f"Mode Costs: {status['mode_costs']}")
+    logger.info(f"Circuit Breakers: {status['circuit_breakers']}")
 
 
 if __name__ == "__main__":

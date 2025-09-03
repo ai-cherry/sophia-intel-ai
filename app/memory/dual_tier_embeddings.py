@@ -14,9 +14,8 @@ from typing import Any
 
 import tiktoken
 
-from app.core.circuit_breaker import (
-    with_circuit_breaker,
-)
+from app.core.ai_logger import logger
+from app.core.circuit_breaker import with_circuit_breaker
 from app.memory.embedding_pipeline import StandardizedEmbeddingPipeline
 
 # ============================================
@@ -548,12 +547,12 @@ async def main():
 
     if args.stats:
         stats = embedder.get_stats()
-        print("\n📊 Embedding Statistics:")
-        print(f"  Tier-A: {stats['config']['tier_a_model']} ({stats['config']['tier_a_dim']}D)")
-        print(f"  Tier-B: {stats['config']['tier_b_model']} ({stats['config']['tier_b_dim']}D)")
-        print(f"  Cache: {stats['cache']['total_cached']} entries")
+        logger.info("\n📊 Embedding Statistics:")
+        logger.info(f"  Tier-A: {stats['config']['tier_a_model']} ({stats['config']['tier_a_dim']}D)")
+        logger.info(f"  Tier-B: {stats['config']['tier_b_model']} ({stats['config']['tier_b_dim']}D)")
+        logger.info(f"  Cache: {stats['cache']['total_cached']} entries")
         for model_stat in stats['cache']['by_model']:
-            print(f"    {model_stat['model']}: {model_stat['count']} entries")
+            logger.info(f"    {model_stat['model']}: {model_stat['count']} entries")
 
     elif args.text or args.file:
         # Get text
@@ -576,10 +575,10 @@ async def main():
             force_tier=force_tier
         )
 
-        print(f"\n✅ Embedded using {tier.value}:")
-        print(f"  Dimension: {len(embedding)}")
-        print(f"  First 5 values: {embedding[:5]}")
-        print(f"  Norm: {sum(x*x for x in embedding)**0.5:.4f}")
+        logger.info(f"\n✅ Embedded using {tier.value}:")
+        logger.info(f"  Dimension: {len(embedding)}")
+        logger.info(f"  First 5 values: {embedding[:5]}")
+        logger.info(f"  Norm: {sum(x*x for x in embedding)**0.5:.4f}")
 
 if __name__ == "__main__":
     asyncio.run(main())

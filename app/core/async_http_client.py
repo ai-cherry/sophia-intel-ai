@@ -15,6 +15,8 @@ from typing import Any
 
 import httpx
 
+from app.core.ai_logger import logger
+
 # Setup logging
 logger = logging.getLogger(__name__)
 
@@ -402,7 +404,7 @@ if __name__ == "__main__":
         responses = await client.batch_request(batch_requests, max_concurrent=2)
 
         # Check metrics and circuit breaker status
-        print(client.get_metrics())
+        logger.info(client.get_metrics())
 
         await client.close()
 

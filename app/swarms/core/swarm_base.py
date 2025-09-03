@@ -11,6 +11,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any
 
+from app.core.ai_logger import logger
 from app.models.requests import SwarmResponse
 from app.swarms.communication.message_bus import MessageBus
 
@@ -809,7 +810,7 @@ def list_registered_patterns() -> list[str]:
 
 if __name__ == "__main__":
     # Example usage
-    print("🐝 Unified Swarm Architecture initialized")
-    print(f"Available swarm types: {[t.value for t in SwarmType]}")
-    print(f"Default configurations: {len(DEFAULT_SWARM_CONFIGS)}")
-    print(f"Registered patterns: {list_registered_patterns()}")
+    logger.info("🐝 Unified Swarm Architecture initialized")
+    logger.info(f"Available swarm types: {[t.value for t in SwarmType]}")
+    logger.info(f"Default configurations: {len(DEFAULT_SWARM_CONFIGS)}")
+    logger.info(f"Registered patterns: {list_registered_patterns()}")

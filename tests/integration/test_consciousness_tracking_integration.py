@@ -17,6 +17,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from app.swarms import UnifiedSwarmOrchestrator
 from app.swarms.consciousness_tracking import (
     ConsciousnessMeasurement,
     ConsciousnessTracker,
@@ -27,7 +28,6 @@ from app.swarms.consciousness_tracking import (
 from app.swarms.evolution.experimental_evolution_engine import ExperimentalEvolutionEngine
 from app.swarms.memory_enhanced_swarm import MemoryEnhancedGenesisSwarm
 from app.swarms.memory_integration import SwarmMemoryClient
-from app.swarms.unified_enhanced_orchestrator import UnifiedSwarmOrchestrator
 
 
 @pytest.fixture

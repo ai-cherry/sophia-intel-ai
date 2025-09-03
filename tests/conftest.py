@@ -28,7 +28,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from app.api.unified_server import app
 from app.memory.embedding_pipeline import StandardizedEmbeddingPipeline
 from app.memory.supermemory_mcp import SupermemoryStore
-from app.swarms.unified_enhanced_orchestrator import UnifiedSwarmOrchestrator
+from app.swarms import UnifiedSwarmOrchestrator
 
 # ============================================
 # Test Configuration

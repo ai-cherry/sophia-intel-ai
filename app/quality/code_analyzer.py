@@ -8,6 +8,8 @@ import radon.complexity as radon_cc
 import radon.metrics as radon_mi
 
 from app.observability.prometheus_metrics import (
+from app.core.ai_logger import logger
+
     code_complexity_metrics,
     code_quality_metrics,
     code_smells_detected,
@@ -225,15 +227,15 @@ if __name__ == "__main__":
 
     # Analyze a specific file
     file_analysis = analyzer.analyze_complexity("app/api/unified_gateway.py")
-    print("File Complexity Analysis:", file_analysis)
+    logger.info("File Complexity Analysis:", file_analysis)
 
     # Analyze code smells
     smells = analyzer.find_code_smells("app/api/unified_gateway.py")
-    print("Code Smells Found:", smells)
+    logger.info("Code Smells Found:", smells)
 
     # Generate improvement suggestions
-    print("Improvement Suggestions:", analyzer.suggest_improvements(file_analysis))
+    logger.info("Improvement Suggestions:", analyzer.suggest_improvements(file_analysis))
 
     # Identify complex files
     complex_files = analyzer.identify_complex_files(threshold=8)
-    print("Complex Files:", complex_files)
+    logger.info("Complex Files:", complex_files)

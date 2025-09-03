@@ -17,9 +17,7 @@ from opentelemetry.trace import Status, StatusCode
 from prometheus_client import Counter, Gauge, Histogram, generate_latest
 from pydantic import BaseModel, Field
 
-from app.core.circuit_breaker import (
-    with_circuit_breaker,
-)
+from app.core.circuit_breaker import with_circuit_breaker
 from app.core.cost_monitor import CostRequest, get_cost_monitor
 from app.memory.unified_memory import UnifiedMemoryStore
 from app.security.mcp_security import (

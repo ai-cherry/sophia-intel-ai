@@ -23,9 +23,7 @@ from opentelemetry.semconv.ai import SpanAttributes as AiSpanAttributes
 from opentelemetry.semconv.resource import ResourceAttributes
 
 from app.config.env_loader import get_env_config
-from app.core.circuit_breaker import (
-    with_circuit_breaker,
-)
+from app.core.circuit_breaker import with_circuit_breaker
 from app.core.connections import http_get
 
 logger = logging.getLogger(__name__)

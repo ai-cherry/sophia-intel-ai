@@ -8,9 +8,7 @@ import logging
 from datetime import datetime
 from typing import Any
 
-from app.core.circuit_breaker import (
-    with_circuit_breaker,
-)
+from app.core.circuit_breaker import with_circuit_breaker
 from app.memory.supermemory_mcp import MemoryType
 
 from .consciousness_tracking import ConsciousnessTracker

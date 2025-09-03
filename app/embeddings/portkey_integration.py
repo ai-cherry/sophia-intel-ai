@@ -3,13 +3,14 @@ Portkey Integration for Sophia Intel AI
 Unified gateway for all LLM and embedding providers
 """
 
-import json
 import logging
 import os
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field
+
+from app.core.ai_logger import logger
 
 logger = logging.getLogger(__name__)
 
@@ -23,8 +24,8 @@ class VirtualKeyConfig:
     provider: str
     key_alias: str
     is_active: bool = True
-    rate_limit: Optional[int] = None
-    monthly_quota: Optional[float] = None
+    rate_limit: int | None = None
+    monthly_quota: float | None = None
     metadata: dict[str, Any] = None
 
 class PortkeyVirtualKeyManager:
@@ -32,14 +33,14 @@ class PortkeyVirtualKeyManager:
     Manages virtual keys for secure API access
     Virtual keys mask actual API keys for security
     """
-    
+
     def __init__(self):
         self.virtual_keys = self._load_virtual_keys()
-    
+
     def _load_virtual_keys(self) -> dict[str, VirtualKeyConfig]:
         """Load virtual key configurations from environment"""
         keys = {}
-        
+
         # Together AI virtual key
         if together_key := os.getenv("TOGETHER_VK"):
             keys["together"] = VirtualKeyConfig(
@@ -49,7 +50,7 @@ class PortkeyVirtualKeyManager:
                 monthly_quota=100.0,  # dollars
                 metadata={"models": ["BAAI/*", "togethercomputer/*", "intfloat/*"]}
             )
-        
+
         # OpenAI virtual key
         if openai_key := os.getenv("OPENAI_VK"):
             keys["openai"] = VirtualKeyConfig(
@@ -59,7 +60,7 @@ class PortkeyVirtualKeyManager:
                 monthly_quota=500.0,
                 metadata={"models": ["text-embedding-*", "gpt-*"]}
             )
-        
+
         # XAI (Grok) virtual key
         if xai_key := os.getenv("XAI_VK"):
             keys["xai"] = VirtualKeyConfig(
@@ -69,7 +70,7 @@ class PortkeyVirtualKeyManager:
                 monthly_quota=50.0,
                 metadata={"models": ["grok-*"]}
             )
-        
+
         # OpenRouter virtual key
         if openrouter_key := os.getenv("OPENROUTER_VK"):
             keys["openrouter"] = VirtualKeyConfig(
@@ -79,16 +80,16 @@ class PortkeyVirtualKeyManager:
                 monthly_quota=200.0,
                 metadata={"models": ["*"]}
             )
-        
+
         return keys
-    
-    def get_virtual_key(self, provider: str) -> Optional[str]:
+
+    def get_virtual_key(self, provider: str) -> str | None:
         """Get virtual key for provider"""
         if config := self.virtual_keys.get(provider):
             if config.is_active:
                 return config.key_alias
         return None
-    
+
     def get_active_providers(self) -> list[str]:
         """Get list of active providers"""
         return [
@@ -105,7 +106,7 @@ class PortkeyConfigBuilder:
     Builds Portkey configurations for different use cases
     Following best practices from Agno documentation
     """
-    
+
     @staticmethod
     def build_embedding_config(
         provider: str,
@@ -129,19 +130,19 @@ class PortkeyConfigBuilder:
             "provider": provider,
             "virtual_key": virtual_key,
         }
-        
+
         if cache_enabled:
             config["cache"] = {
                 "mode": "semantic",
                 "max_age": 3600,
             }
-        
+
         if retry_enabled:
             config["retry"] = {
                 "attempts": 3,
                 "on_status_codes": [429, 500, 502, 503],
             }
-        
+
         # Provider-specific optimizations
         if provider == "together":
             config["metadata"] = {
@@ -150,15 +151,15 @@ class PortkeyConfigBuilder:
             }
         elif provider == "openai":
             config["forward_headers"] = ["x-request-id"]
-        
+
         return config
-    
+
     @staticmethod
     def build_llm_config(
         provider: str,
         virtual_key: str,
         mode: str = "single",
-        fallback_providers: Optional[list[str]] = None
+        fallback_providers: list[str] | None = None
     ) -> dict[str, Any]:
         """
         Build Portkey configuration for LLM calls
@@ -185,7 +186,7 @@ class PortkeyConfigBuilder:
                 "max_age": 300,
             }
         }
-        
+
         if mode == "fallback" and fallback_providers:
             config["fallbacks"] = [
                 {"provider": p, "virtual_key": f"vk-{p}"}
@@ -196,7 +197,7 @@ class PortkeyConfigBuilder:
                 "strategy": "round_robin",
                 "providers": [provider] + (fallback_providers or [])
             }
-        
+
         return config
 
 # ============================================
@@ -230,20 +231,20 @@ class PortkeyGateway:
     Unified gateway client for all AI providers
     Implements Agno best practices for production use
     """
-    
-    def __init__(self, api_key: Optional[str] = None):
+
+    def __init__(self, api_key: str | None = None):
         self.api_key = api_key or os.getenv("PORTKEY_API_KEY")
         self.base_url = "https://api.portkey.ai/v1"
         self.key_manager = PortkeyVirtualKeyManager()
         self.config_builder = PortkeyConfigBuilder()
         self._client = None
         self._initialize_client()
-    
+
     def _initialize_client(self):
         """Initialize OpenAI-compatible client for Portkey"""
         try:
             from openai import AsyncOpenAI
-            
+
             self._client = AsyncOpenAI(
                 api_key=self.api_key,
                 base_url=self.base_url,
@@ -255,7 +256,7 @@ class PortkeyGateway:
         except ImportError:
             logger.warning("OpenAI client not available")
             self._client = None
-    
+
     async def create_embeddings(
         self,
         texts: list[str],
@@ -279,14 +280,14 @@ class PortkeyGateway:
         virtual_key = self.key_manager.get_virtual_key(provider)
         if not virtual_key:
             raise ValueError(f"No virtual key for provider: {provider}")
-        
+
         # Build configuration
         portkey_config = self.config_builder.build_embedding_config(
             provider=provider,
             virtual_key=virtual_key,
             cache_enabled=use_cache
         )
-        
+
         # Create request
         request = PortkeyRequest(
             model=model,
@@ -298,21 +299,21 @@ class PortkeyGateway:
                 "batch_size": len(texts)
             }
         )
-        
+
         # Execute request
         if self._client:
             try:
                 import time
                 start_time = time.perf_counter()
-                
+
                 response = await self._client.embeddings.create(
                     model=request.model,
                     input=request.input,
                     extra_body={"portkey_config": request.portkey_config}
                 )
-                
+
                 latency_ms = (time.perf_counter() - start_time) * 1000
-                
+
                 return PortkeyResponse(
                     data=[{"embedding": item.embedding} for item in response.data],
                     model=request.model,
@@ -321,7 +322,7 @@ class PortkeyGateway:
                     provider_used=provider,
                     metadata=request.metadata
                 )
-                
+
             except Exception as e:
                 logger.error(f"Embedding request failed: {e}")
                 raise
@@ -333,7 +334,7 @@ class PortkeyGateway:
                 np.random.seed(hash(text) % 2**32)
                 embedding = np.random.randn(768).tolist()
                 mock_embeddings.append({"embedding": embedding})
-            
+
             return PortkeyResponse(
                 data=mock_embeddings,
                 model=model,
@@ -342,7 +343,7 @@ class PortkeyGateway:
                 provider_used=provider,
                 metadata=request.metadata
             )
-    
+
     async def create_completion(
         self,
         prompt: str,
@@ -350,7 +351,7 @@ class PortkeyGateway:
         provider: str = "openrouter",
         max_tokens: int = 1000,
         temperature: float = 0.7,
-        fallback_providers: Optional[list[str]] = None
+        fallback_providers: list[str] | None = None
     ) -> PortkeyResponse:
         """
         Create LLM completion through Portkey gateway
@@ -370,7 +371,7 @@ class PortkeyGateway:
         virtual_key = self.key_manager.get_virtual_key(provider)
         if not virtual_key:
             raise ValueError(f"No virtual key for provider: {provider}")
-        
+
         # Build configuration
         mode = "fallback" if fallback_providers else "single"
         portkey_config = self.config_builder.build_llm_config(
@@ -379,7 +380,7 @@ class PortkeyGateway:
             mode=mode,
             fallback_providers=fallback_providers
         )
-        
+
         # Create request
         request = PortkeyRequest(
             model=model,
@@ -394,13 +395,13 @@ class PortkeyGateway:
                 "type": "completion"
             }
         )
-        
+
         # Execute request
         if self._client:
             try:
                 import time
                 start_time = time.perf_counter()
-                
+
                 response = await self._client.chat.completions.create(
                     model=request.model,
                     messages=[{"role": "user", "content": request.input}],
@@ -408,9 +409,9 @@ class PortkeyGateway:
                     temperature=request.options["temperature"],
                     extra_body={"portkey_config": request.portkey_config}
                 )
-                
+
                 latency_ms = (time.perf_counter() - start_time) * 1000
-                
+
                 return PortkeyResponse(
                     data=[{"text": response.choices[0].message.content}],
                     model=request.model,
@@ -423,7 +424,7 @@ class PortkeyGateway:
                     provider_used=provider,
                     metadata=request.metadata
                 )
-                
+
             except Exception as e:
                 logger.error(f"Completion request failed: {e}")
                 raise
@@ -437,11 +438,11 @@ class PortkeyGateway:
                 provider_used=provider,
                 metadata=request.metadata
             )
-    
+
     def get_provider_status(self) -> dict[str, Any]:
         """Get status of all configured providers"""
         status = {}
-        
+
         for provider in self.key_manager.get_active_providers():
             config = self.key_manager.virtual_keys[provider]
             status[provider] = {
@@ -450,7 +451,7 @@ class PortkeyGateway:
                 "monthly_quota": config.monthly_quota,
                 "supported_models": config.metadata.get("models", [])
             }
-        
+
         return status
 
 # ============================================
@@ -459,20 +460,20 @@ class PortkeyGateway:
 
 async def example_usage():
     """Example of using Portkey gateway"""
-    
+
     # Initialize gateway
     gateway = PortkeyGateway()
-    
+
     # Create embeddings via Together AI
     embedding_response = await gateway.create_embeddings(
         texts=["Hello world", "Test embedding"],
         model="BAAI/bge-large-en-v1.5",
         provider="together"
     )
-    
-    print(f"Embeddings created: {len(embedding_response.data)} vectors")
-    print(f"Latency: {embedding_response.latency_ms:.2f}ms")
-    
+
+    logger.info(f"Embeddings created: {len(embedding_response.data)} vectors")
+    logger.info(f"Latency: {embedding_response.latency_ms:.2f}ms")
+
     # Create completion with fallback
     completion_response = await gateway.create_completion(
         prompt="Explain what AI agents are",
@@ -480,12 +481,12 @@ async def example_usage():
         provider="openai",
         fallback_providers=["anthropic", "openrouter"]
     )
-    
-    print(f"Completion: {completion_response.data[0]['text'][:100]}...")
-    
+
+    logger.info(f"Completion: {completion_response.data[0]['text'][:100]}...")
+
     # Check provider status
     status = gateway.get_provider_status()
-    print(f"Active providers: {list(status.keys())}")
+    logger.info(f"Active providers: {list(status.keys())}")
 
 if __name__ == "__main__":
     import asyncio

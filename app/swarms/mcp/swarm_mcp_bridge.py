@@ -14,6 +14,7 @@ from typing import Any
 import websockets
 from websockets.exceptions import ConnectionClosed
 
+from app.core.ai_logger import logger
 from app.observability.prometheus_metrics import (
     swarm_active_participants,
     swarm_coordination_latency_ms,
@@ -459,11 +460,12 @@ async def demonstrate_6_way_coordination():
     await bridge.initialize()
 
     # Import and register swarms
-    from app.swarms.coding.swarm_orchestrator import CodingSwarmOrchestrator
     from app.swarms.debate.multi_agent_debate import MultiAgentDebateSystem
+    from app.swarms.improved_swarm import ImprovedAgentSwarm
     from app.swarms.memory_enhanced_swarm import MemoryEnhancedSwarm
 
-    coding_swarm = CodingSwarmOrchestrator()
+    # Use existing swarm implementations
+    coding_swarm = ImprovedAgentSwarm()  # Can handle coding tasks
     debate_swarm = MultiAgentDebateSystem()
     memory_swarm = MemoryEnhancedSwarm()
 
@@ -494,10 +496,10 @@ async def demonstrate_6_way_coordination():
     # Execute 6-way coordination
     result = await bridge.coordinate_task(task)
 
-    print("6-Way Coordination Result:")
-    print(f"Participants: {result.get('participants')}")
-    print(f"Duration: {result.get('duration_ms')}ms")
-    print(f"Success: {not result.get('errors')}")
+    logger.info("6-Way Coordination Result:")
+    logger.info(f"Participants: {result.get('participants')}")
+    logger.info(f"Duration: {result.get('duration_ms')}ms")
+    logger.info(f"Success: {not result.get('errors')}")
 
     return result
 

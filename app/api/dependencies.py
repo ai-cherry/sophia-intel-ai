@@ -16,9 +16,7 @@ from fastapi import Depends, HTTPException
 
 # Import enhanced configuration system following ADR-006
 from app.config.env_loader import get_env_config, validate_environment
-from app.core.circuit_breaker import (
-    with_circuit_breaker,
-)
+from app.core.circuit_breaker import with_circuit_breaker
 from app.core.connections import get_connection_manager
 
 logger = logging.getLogger(__name__)

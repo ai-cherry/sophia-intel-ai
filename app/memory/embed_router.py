@@ -13,9 +13,8 @@ import time
 
 from openai import OpenAI
 
-from app.core.circuit_breaker import (
-    with_circuit_breaker,
-)
+from app.core.ai_logger import logger
+from app.core.circuit_breaker import with_circuit_breaker
 
 # Configuration from environment
 EMBED_BASE_URL = os.getenv("EMBED_BASE_URL", "https://api.portkey.ai/v1")
@@ -163,4 +162,4 @@ def clear_cache() -> None:
     """Clear the embedding cache."""
     if os.path.exists(_CACHE_PATH):
         os.remove(_CACHE_PATH)
-    print(f"Cleared embedding cache at {_CACHE_PATH}")
+    logger.info(f"Cleared embedding cache at {_CACHE_PATH}")

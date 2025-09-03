@@ -31,6 +31,21 @@ class VersionedResponse(BaseModel):
     request_id: str | None = Field(default=None, description="Request ID from original request")
     timestamp: datetime = Field(default_factory=datetime.utcnow, description="Response timestamp")
 
+class APIResponse(BaseModel):
+    """Generic API response model"""
+    success: bool = Field(description="Whether the request was successful")
+    data: Any = Field(default=None, description="Response data")
+    error: str | None = Field(default=None, description="Error message if any")
+    timestamp: datetime = Field(default_factory=datetime.utcnow, description="Response timestamp")
+
+def create_api_response(success: bool, data: Any = None, error: str | None = None) -> APIResponse:
+    """Helper function to create API responses"""
+    return APIResponse(success=success, data=data, error=error)
+
+def create_error_response(error: str, data: Any = None) -> APIResponse:
+    """Helper function to create error responses"""
+    return APIResponse(success=False, data=data, error=error)
+
 # ==================== V1 API Models ====================
 
 class ChatRequestV1(VersionedRequest):

@@ -13,6 +13,8 @@ from typing import Any
 
 import requests
 
+from app.core.ai_logger import logger
+
 
 @dataclass
 class ServiceSpec:
@@ -56,10 +58,10 @@ class FlyInfrastructureProvisioner:
         )
 
         if response.status_code in [200, 201]:
-            print(f"✅ Created Fly.io app: {app_name}")
+            logger.info(f"✅ Created Fly.io app: {app_name}")
             return response.json()
         elif response.status_code == 422 and "already exists" in response.text.lower():
-            print(f"📱 App {app_name} already exists, continuing...")
+            logger.info(f"📱 App {app_name} already exists, continuing...")
             # Get existing app info
             get_response = requests.get(
                 f"{self.base_url}/apps/{app_name}",
@@ -68,10 +70,10 @@ class FlyInfrastructureProvisioner:
             if get_response.status_code == 200:
                 return get_response.json()
             else:
-                print(f"Warning: Could not get existing app info: {get_response.text}")
+                logger.info(f"Warning: Could not get existing app info: {get_response.text}")
                 return {"name": app_name, "status": "exists"}
         else:
-            print(f"⚠️  Failed to create app {app_name}: {response.status_code} - {response.text}")
+            logger.info(f"⚠️  Failed to create app {app_name}: {response.status_code} - {response.text}")
             return {"name": app_name, "status": "error", "error": response.text}
 
     def create_volume(self, app_name: str, volume_name: str, size_gb: int, region: str = "sjc") -> dict[str, Any]:
@@ -89,19 +91,19 @@ class FlyInfrastructureProvisioner:
         )
 
         if response.status_code in [200, 201]:
-            print(f"💾 Created {size_gb}GB volume '{volume_name}' for {app_name}")
+            logger.info(f"💾 Created {size_gb}GB volume '{volume_name}' for {app_name}")
             return response.json()
         elif "already exists" in response.text.lower():
-            print(f"💾 Volume '{volume_name}' already exists for {app_name}")
+            logger.info(f"💾 Volume '{volume_name}' already exists for {app_name}")
             return {"name": volume_name, "size_gb": size_gb, "region": region, "status": "exists"}
         else:
-            print(f"⚠️  Volume creation warning for {app_name}: {response.text}")
+            logger.info(f"⚠️  Volume creation warning for {app_name}: {response.text}")
             return {"name": volume_name, "size_gb": size_gb, "region": region, "status": "warning"}
 
     def deploy_service(self, spec: ServiceSpec, primary_region: str = "sjc") -> dict[str, Any]:
         """Deploy a service with app and volume"""
 
-        print(f"\n🚀 Deploying {spec.name}...")
+        logger.info(f"\n🚀 Deploying {spec.name}...")
 
         # 1. Create the application
         app_info = self.create_app(spec.name)
@@ -120,9 +122,9 @@ class FlyInfrastructureProvisioner:
         try:
             with open(toml_filename, 'w') as f:
                 f.write(toml_config)
-            print(f"📄 Generated {toml_filename}")
+            logger.info(f"📄 Generated {toml_filename}")
         except Exception as e:
-            print(f"⚠️  Could not write {toml_filename}: {str(e)}")
+            logger.info(f"⚠️  Could not write {toml_filename}: {str(e)}")
 
         return {
             "app_name": spec.name,
@@ -243,13 +245,13 @@ def main():
     # Get API token from environment
     fly_api_token = os.environ.get("FLY_API_TOKEN")
     if not fly_api_token:
-        print("❌ FLY_API_TOKEN environment variable is required")
+        logger.info("❌ FLY_API_TOKEN environment variable is required")
         sys.exit(1)
 
     provisioner = FlyInfrastructureProvisioner(fly_api_token)
 
-    print("🚀 Starting Sophia Intel AI Infrastructure Provisioning")
-    print("=" * 60)
+    logger.info("🚀 Starting Sophia Intel AI Infrastructure Provisioning")
+    logger.info("=" * 60)
 
     # Define service specifications based on requirements
     services = [
@@ -427,48 +429,48 @@ def main():
             deployed_services[service_spec.name] = result
             total_storage += service_spec.volume_size_gb
             total_max_instances += service_spec.max_instances
-            print(f"✅ Successfully configured {service_spec.name}")
+            logger.info(f"✅ Successfully configured {service_spec.name}")
         except Exception as e:
-            print(f"❌ Failed to configure {service_spec.name}: {str(e)}")
+            logger.info(f"❌ Failed to configure {service_spec.name}: {str(e)}")
             deployed_services[service_spec.name] = {"error": str(e)}
 
     # Generate summary report
-    print("\n" + "=" * 60)
-    print("📊 SOPHIA INTEL AI INFRASTRUCTURE DEPLOYMENT SUMMARY")
-    print("=" * 60)
+    logger.info("\n" + "=" * 60)
+    logger.info("📊 SOPHIA INTEL AI INFRASTRUCTURE DEPLOYMENT SUMMARY")
+    logger.info("=" * 60)
 
     successful_deployments = len([s for s in deployed_services.values() if 'error' not in s])
-    print(f"🏗️  Total Services Configured: {successful_deployments}/{len(services)}")
-    print(f"💾 Total Storage Provisioned: {total_storage}GB")
-    print(f"⚖️  Total Maximum Instances: {total_max_instances}")
-    print("🌍 Primary Region: sjc (San Jose)")
-    print("🌍 Secondary Region: iad (Washington DC)")
+    logger.info(f"🏗️  Total Services Configured: {successful_deployments}/{len(services)}")
+    logger.info(f"💾 Total Storage Provisioned: {total_storage}GB")
+    logger.info(f"⚖️  Total Maximum Instances: {total_max_instances}")
+    logger.info("🌍 Primary Region: sjc (San Jose)")
+    logger.info("🌍 Secondary Region: iad (Washington DC)")
 
-    print("\n📱 SERVICE ENDPOINTS:")
+    logger.info("\n📱 SERVICE ENDPOINTS:")
     for service_name, result in deployed_services.items():
         if 'error' not in result:
-            print(f"  • {service_name}:")
-            print(f"    - Public:   {result['public_url']}")
-            print(f"    - Internal: {result['internal_url']}")
+            logger.info(f"  • {service_name}:")
+            logger.info(f"    - Public:   {result['public_url']}")
+            logger.info(f"    - Internal: {result['internal_url']}")
         else:
-            print(f"  • {service_name}: ❌ CONFIGURATION FAILED - {result['error']}")
+            logger.info(f"  • {service_name}: ❌ CONFIGURATION FAILED - {result['error']}")
 
-    print("\n🔗 INTERNAL NETWORKING:")
-    print("  Services communicate via Fly.io internal networking (.internal domains)")
-    print("  Health checks configured for all services")
-    print("  TLS/HTTPS enabled for all public endpoints")
+    logger.info("\n🔗 INTERNAL NETWORKING:")
+    logger.info("  Services communicate via Fly.io internal networking (.internal domains)")
+    logger.info("  Health checks configured for all services")
+    logger.info("  TLS/HTTPS enabled for all public endpoints")
 
-    print("\n⚖️  AUTO-SCALING CONFIGURATION:")
+    logger.info("\n⚖️  AUTO-SCALING CONFIGURATION:")
     for service_spec in services:
-        print(f"  • {service_spec.name}: {service_spec.min_instances}-{service_spec.max_instances} instances")
-        print(f"    Memory: {service_spec.memory_mb}MB, CPU: {service_spec.cpu_cores} cores, Storage: {service_spec.volume_size_gb}GB")
+        logger.info(f"  • {service_spec.name}: {service_spec.min_instances}-{service_spec.max_instances} instances")
+        logger.info(f"    Memory: {service_spec.memory_mb}MB, CPU: {service_spec.cpu_cores} cores, Storage: {service_spec.volume_size_gb}GB")
 
-    print("\n🎯 NEXT STEPS:")
-    print("  1. Deploy each service using: fly deploy --config fly-<service-name>.toml")
-    print("  2. Configure secrets via: fly secrets set KEY=VALUE --app <service-name>")
-    print("  3. Test internal service communication")
-    print("  4. Validate health check endpoints")
-    print("  5. Monitor auto-scaling behavior")
+    logger.info("\n🎯 NEXT STEPS:")
+    logger.info("  1. Deploy each service using: fly deploy --config fly-<service-name>.toml")
+    logger.info("  2. Configure secrets via: fly secrets set KEY=VALUE --app <service-name>")
+    logger.info("  3. Test internal service communication")
+    logger.info("  4. Validate health check endpoints")
+    logger.info("  5. Monitor auto-scaling behavior")
 
     # Save deployment results to file
     deployment_summary = {
@@ -499,8 +501,8 @@ def main():
     with open("fly-deployment-results.json", "w") as f:
         json.dump(deployment_summary, indent=2, fp=f)
 
-    print("\n💾 Deployment results saved to: fly-deployment-results.json")
-    print("✅ Infrastructure provisioning complete!")
+    logger.info("\n💾 Deployment results saved to: fly-deployment-results.json")
+    logger.info("✅ Infrastructure provisioning complete!")
 
     return successful_deployments == len(services)
 

@@ -17,6 +17,8 @@ from aiobreaker import CircuitBreaker
 from fastapi import Depends, FastAPI, HTTPException, WebSocket
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
+from app.core.ai_logger import logger
+
 # Security configuration
 JWT_SECRET = "your-secret-key-change-in-production"
 JWT_ALGORITHM = "HS256"
@@ -418,7 +420,7 @@ async def secure_code_generation(params: dict[str, Any]) -> str:
     # Simulate secure processing
     await asyncio.sleep(0.1)
 
-    return f"# Secure {language} code\n# Generated from: {prompt[:50]}...\n\nprint('Hello, secure world!')"
+    return f"# Secure {language} code\n# Generated from: {prompt[:50]}...\n\nlogger.info('Hello, secure world!')"
 
 
 async def secure_memory_search(params: dict[str, Any]) -> list[dict]:
@@ -453,8 +455,8 @@ if __name__ == "__main__":
     import uvicorn
 
     server = create_secure_mcp_server()
-    print("🔒 Starting Secure MCP Server with OAuth Resource Indicators...")
-    print("📊 Health endpoint: http://localhost:8006/health")
-    print("🔑 Token endpoint: http://localhost:8006/auth/token")
+    logger.info("🔒 Starting Secure MCP Server with OAuth Resource Indicators...")
+    logger.info("📊 Health endpoint: http://localhost:8006/health")
+    logger.info("🔑 Token endpoint: http://localhost:8006/auth/token")
 
     uvicorn.run(server.app, host="0.0.0.0", port=8006)

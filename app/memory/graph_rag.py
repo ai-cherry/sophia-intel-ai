@@ -16,6 +16,8 @@ from typing import Any
 
 import networkx as nx
 
+from app.core.ai_logger import logger
+
 # ============================================
 # Entity Types
 # ============================================
@@ -760,7 +762,7 @@ async def main():
         else:
             files = list(path.rglob("*.py")) + list(path.rglob("*.js"))
 
-        print(f"📊 Indexing {len(files)} files...")
+        logger.info(f"📊 Indexing {len(files)} files...")
 
         for filepath in files:
             content = filepath.read_text()
@@ -781,23 +783,23 @@ async def main():
             kg.add_entities(entities)
             kg.add_relations(relations)
 
-        print(f"✅ Indexed {kg.graph.number_of_nodes()} entities")
+        logger.info(f"✅ Indexed {kg.graph.number_of_nodes()} entities")
 
     elif args.find:
         entities = kg.find_entities(name_pattern=args.find)
-        print(f"\n🔍 Found {len(entities)} entities:")
+        logger.info(f"\n🔍 Found {len(entities)} entities:")
         for entity in entities[:10]:
-            print(f"  {entity.type.value}: {entity.name} ({entity.id})")
+            logger.info(f"  {entity.type.value}: {entity.name} ({entity.id})")
 
     elif args.stats:
         stats = kg.get_stats()
-        print("\n📊 Knowledge Graph Statistics:")
-        print(f"  Total entities: {stats['total_entities']}")
-        print(f"  Total relations: {stats['total_relations']}")
-        print(f"  Entity types: {stats['entity_types']}")
-        print(f"  Relation types: {stats['relation_types']}")
-        print(f"  Connected components: {stats['connected_components']}")
-        print(f"  Average degree: {stats['average_degree']:.2f}")
+        logger.info("\n📊 Knowledge Graph Statistics:")
+        logger.info(f"  Total entities: {stats['total_entities']}")
+        logger.info(f"  Total relations: {stats['total_relations']}")
+        logger.info(f"  Entity types: {stats['entity_types']}")
+        logger.info(f"  Relation types: {stats['relation_types']}")
+        logger.info(f"  Connected components: {stats['connected_components']}")
+        logger.info(f"  Average degree: {stats['average_degree']:.2f}")
 
 if __name__ == "__main__":
     import asyncio

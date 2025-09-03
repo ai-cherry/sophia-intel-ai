@@ -13,7 +13,6 @@ from typing import Any
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Query, Request
 from pydantic import BaseModel, Field
 
-from app.agents.simple_orchestrator import AgentRole, SimpleAgentOrchestrator
 from app.nl_interface.intents import format_help_text, get_intent_pattern
 
 # Import our NL components
@@ -24,9 +23,7 @@ try:
     from app.nl_interface.command_dispatcher import SmartCommandDispatcher
 except Exception:
     SmartCommandDispatcher = None
-from app.core.circuit_breaker import (
-    with_circuit_breaker,
-)
+from app.core.circuit_breaker import with_circuit_breaker
 from app.core.connections import get_connection_manager, http_get, http_post
 from app.nl_interface.memory_connector import NLInteraction, NLMemoryConnector
 

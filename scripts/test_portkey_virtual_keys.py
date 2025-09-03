@@ -19,7 +19,7 @@ async def test_virtual_key(name: str, env_var: str, test_model: str, test_prompt
     vk_id = os.getenv(env_var)
 
     if not vk_id or vk_id.startswith("vk_xxx"):
-        print(f"  ⚠️  {name}: Not configured (set {env_var} in .env.local)")
+        logger.info(f"  ⚠️  {name}: Not configured (set {env_var} in .env.local)")
         return False
 
     try:
@@ -37,30 +37,30 @@ async def test_virtual_key(name: str, env_var: str, test_model: str, test_prompt
         )
 
         content = response.choices[0].message.content
-        print(f"  ✅ {name}: Working!")
-        print(f"     Model: {test_model}")
-        print(f"     Response: {content[:50]}")
+        logger.info(f"  ✅ {name}: Working!")
+        logger.info(f"     Model: {test_model}")
+        logger.info(f"     Response: {content[:50]}")
         return True
 
     except Exception as e:
-        print(f"  ❌ {name}: Failed")
-        print(f"     Error: {str(e)[:100]}")
+        logger.info(f"  ❌ {name}: Failed")
+        logger.info(f"     Error: {str(e)[:100]}")
         return False
 
 async def main():
     """Test all virtual keys."""
 
-    print("\n" + "="*60)
-    print("🔑 PORTKEY VIRTUAL KEYS TEST")
-    print("="*60)
+    logger.info("\n" + "="*60)
+    logger.info("🔑 PORTKEY VIRTUAL KEYS TEST")
+    logger.info("="*60)
 
     # Check if Portkey API key is set
     portkey_key = os.getenv("PORTKEY_API_KEY")
     if not portkey_key:
-        print("❌ PORTKEY_API_KEY not found in .env.local")
+        logger.info("❌ PORTKEY_API_KEY not found in .env.local")
         return
 
-    print(f"✅ Portkey API Key: {portkey_key[:10]}...")
+    logger.info(f"✅ Portkey API Key: {portkey_key[:10]}...")
 
     # Virtual keys to test
     tests = [
@@ -86,7 +86,7 @@ async def main():
             "name": "Qwen Coder",
             "env_var": "PORTKEY_VK_QWEN",
             "model": "qwen/qwen-2.5-coder-32b-instruct",
-            "prompt": "Write 'print(1+1)' in Python"
+            "prompt": "Write 'logger.info(1+1)' in Python"
         },
         {
             "name": "DeepSeek Coder",
@@ -108,8 +108,8 @@ async def main():
         }
     ]
 
-    print("\nTesting Virtual Keys:")
-    print("-" * 40)
+    logger.info("\nTesting Virtual Keys:")
+    logger.info("-" * 40)
 
     results = []
     for test in tests:
@@ -122,44 +122,46 @@ async def main():
         results.append((test["name"], result))
 
     # Summary
-    print("\n" + "="*60)
-    print("📊 SUMMARY")
-    print("="*60)
+    logger.info("\n" + "="*60)
+    logger.info("📊 SUMMARY")
+    logger.info("="*60)
 
     working = sum(1 for _, success in results if success)
     total = len(results)
 
-    print(f"\n✅ Working: {working}/{total}")
+    logger.info(f"\n✅ Working: {working}/{total}")
 
     if working == total:
-        print("\n🎉 All virtual keys are working!")
-        print("\nYour Portkey setup is complete. You can now:")
-        print("  • Use any of the 300+ OpenRouter models")
-        print("  • Get caching and observability from Portkey")
-        print("  • Switch models easily by changing virtual keys")
+        logger.info("\n🎉 All virtual keys are working!")
+        logger.info("\nYour Portkey setup is complete. You can now:")
+        logger.info("  • Use any of the 300+ OpenRouter models")
+        logger.info("  • Get caching and observability from Portkey")
+        logger.info("  • Switch models easily by changing virtual keys")
     elif working == 0:
-        print("\n⚠️  No virtual keys configured yet")
-        print("\nNext steps:")
-        print("  1. Go to https://app.portkey.ai")
-        print("  2. Create the 7 virtual keys as described in PORTKEY_EXACT_SETUP.md")
-        print("  3. Add the virtual key IDs to .env.local")
-        print("  4. Run this test again")
+        logger.info("\n⚠️  No virtual keys configured yet")
+        logger.info("\nNext steps:")
+        logger.info("  1. Go to https://app.portkey.ai")
+        logger.info("  2. Create the 7 virtual keys as described in PORTKEY_EXACT_SETUP.md")
+        logger.info("  3. Add the virtual key IDs to .env.local")
+        logger.info("  4. Run this test again")
     else:
-        print(f"\n⚠️  {total - working} virtual keys need configuration")
-        print("\nCheck which ones failed above and:")
-        print("  1. Create them in Portkey dashboard")
-        print("  2. Add their IDs to .env.local")
+        logger.info(f"\n⚠️  {total - working} virtual keys need configuration")
+        logger.info("\nCheck which ones failed above and:")
+        logger.info("  1. Create them in Portkey dashboard")
+        logger.info("  2. Add their IDs to .env.local")
 
     # Show example usage
     if working > 0:
-        print("\n" + "="*60)
-        print("💡 EXAMPLE USAGE")
-        print("="*60)
+        logger.info("\n" + "="*60)
+        logger.info("💡 EXAMPLE USAGE")
+        logger.info("="*60)
 
         print("""
 # In your code, use it like this:
 
 from openai import OpenAI
+from app.core.ai_logger import logger
+
 
 # For GPT models
 client = OpenAI(

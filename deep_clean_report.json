@@ -1,0 +1,318 @@
+{
+  "timestamp": "2025-09-02T21:44:06.968067",
+  "mode": "DRY_RUN",
+  "deleted_items": [
+    "backup_before_clean_slate",
+    "docs/archive",
+    "agent-ui/.next/cache/webpack/client-development/index.pack.gz.old",
+    "agent-ui/.next/cache/webpack/server-development/index.pack.gz.old",
+    "backup_before_clean_slate/agent-ui/.next/cache/webpack/client-development/index.pack.gz.old",
+    "backup_before_clean_slate/agent-ui/.next/cache/webpack/server-development/index.pack.gz.old"
+  ],
+  "findings": [
+    {
+      "file": "app/swarms/agno_teams.py",
+      "issue": "Contains orchestrator class (not SuperOrchestrator)",
+      "recommendation": "Consider removing or refactoring to use SuperOrchestrator"
+    },
+    {
+      "file": "app/orchestration/unified_facade.py",
+      "issue": "Contains orchestrator class (not SuperOrchestrator)",
+      "recommendation": "Consider removing or refactoring to use SuperOrchestrator"
+    },
+    {
+      "file": "app/core/connections.py",
+      "class": "ConnectionManager",
+      "issue": "Manager class not in allowed list",
+      "recommendation": "Consider if ConnectionManager should be embedded in SuperOrchestrator"
+    },
+    {
+      "file": "app/memory/incremental_indexer.py",
+      "class": "IndexStateManager",
+      "issue": "Manager class not in allowed list",
+      "recommendation": "Consider if IndexStateManager should be embedded in SuperOrchestrator"
+    },
+    {
+      "file": "app/observability/metrics_collector.py",
+      "class": "AlertManager",
+      "issue": "Manager class not in allowed list",
+      "recommendation": "Consider if AlertManager should be embedded in SuperOrchestrator"
+    },
+    {
+      "file": "app/api/contracts.py",
+      "class": "Manager",
+      "issue": "Manager class not in allowed list",
+      "recommendation": "Consider if Manager should be embedded in SuperOrchestrator"
+    },
+    {
+      "file": "app/swarms/improved_swarm.py",
+      "class": "AdaptiveParameterManager",
+      "issue": "Manager class not in allowed list",
+      "recommendation": "Consider if AdaptiveParameterManager should be embedded in SuperOrchestrator"
+    },
+    {
+      "file": "app/infrastructure/dependency_injection.py",
+      "class": "Manager",
+      "issue": "Manager class not in allowed list",
+      "recommendation": "Consider if Manager should be embedded in SuperOrchestrator"
+    },
+    {
+      "file": "app/infrastructure/dependency_injection.py",
+      "class": "SessionStateManager",
+      "issue": "Manager class not in allowed list",
+      "recommendation": "Consider if SessionStateManager should be embedded in SuperOrchestrator"
+    },
+    {
+      "file": "app/infrastructure/pulumi_esc_secrets.py",
+      "class": "AdvancedSecretsManager",
+      "issue": "Manager class not in allowed list",
+      "recommendation": "Consider if AdvancedSecretsManager should be embedded in SuperOrchestrator"
+    },
+    {
+      "file": "app/infrastructure/resilience/graceful_degradation.py",
+      "class": "AdaptiveTimeoutManager",
+      "issue": "Manager class not in allowed list",
+      "recommendation": "Consider if AdaptiveTimeoutManager should be embedded in SuperOrchestrator"
+    },
+    {
+      "file": "app/api/routers/memory.py",
+      "class": "MemoryManager",
+      "issue": "Manager class not in allowed list",
+      "recommendation": "Consider if MemoryManager should be embedded in SuperOrchestrator"
+    },
+    {
+      "category": "Documentation",
+      "files_needing_update": [
+        {
+          "file": "ARCHITECTURE_CONFLICT_RESOLUTION_PLAN.md",
+          "reference": "simple_orchestrator",
+          "recommendation": "Update to reference SuperOrchestrator"
+        },
+        {
+          "file": "ARCHITECTURE_CONFLICT_RESOLUTION_PLAN.md",
+          "reference": "swarm_orchestrator",
+          "recommendation": "Update to reference SuperOrchestrator"
+        },
+        {
+          "file": "REMAINING_PHASES_PLAN.md",
+          "reference": "orchestra_manager",
+          "recommendation": "Update to reference SuperOrchestrator"
+        },
+        {
+          "file": "IMPLEMENTATION_SUMMARY.md",
+          "reference": "orchestra_manager",
+          "recommendation": "Update to reference SuperOrchestrator"
+        },
+        {
+          "file": "OPERATION_CLEAN_SLATE.md",
+          "reference": "simple_orchestrator",
+          "recommendation": "Update to reference SuperOrchestrator"
+        },
+        {
+          "file": "OPERATION_CLEAN_SLATE.md",
+          "reference": "orchestra_manager",
+          "recommendation": "Update to reference SuperOrchestrator"
+        },
+        {
+          "file": "OPERATION_CLEAN_SLATE.md",
+          "reference": "swarm_orchestrator",
+          "recommendation": "Update to reference SuperOrchestrator"
+        },
+        {
+          "file": "PHASE_3_4_SWARM_INTEGRATION.md",
+          "reference": "swarm_orchestrator",
+          "recommendation": "Update to reference SuperOrchestrator"
+        },
+        {
+          "file": "CLINE_SWARM_ENHANCEMENT_PROMPT.md",
+          "reference": "swarm_orchestrator",
+          "recommendation": "Update to reference SuperOrchestrator"
+        },
+        {
+          "file": "README.md",
+          "reference": "unified_enhanced_orchestrator",
+          "recommendation": "Update to reference SuperOrchestrator"
+        },
+        {
+          "file": "README.md",
+          "reference": "integrated_manager",
+          "recommendation": "Update to reference SuperOrchestrator"
+        },
+        {
+          "file": "DEPENDENCY_AUDIT_REPORT.md",
+          "reference": "simple_orchestrator",
+          "recommendation": "Update to reference SuperOrchestrator"
+        },
+        {
+          "file": "DEPENDENCY_AUDIT_REPORT.md",
+          "reference": "orchestra_manager",
+          "recommendation": "Update to reference SuperOrchestrator"
+        },
+        {
+          "file": "DEPENDENCY_AUDIT_REPORT.md",
+          "reference": "swarm_orchestrator",
+          "recommendation": "Update to reference SuperOrchestrator"
+        },
+        {
+          "file": "DEPENDENCY_AUDIT_REPORT.md",
+          "reference": "unified_enhanced_orchestrator",
+          "recommendation": "Update to reference SuperOrchestrator"
+        },
+        {
+          "file": "REMEDIATION_STRATEGY.md",
+          "reference": "orchestra_manager",
+          "recommendation": "Update to reference SuperOrchestrator"
+        },
+        {
+          "file": "PRODUCTION_READY.md",
+          "reference": "simple_orchestrator",
+          "recommendation": "Update to reference SuperOrchestrator"
+        },
+        {
+          "file": "FINAL_IMPLEMENTATION_REPORT.md",
+          "reference": "orchestra_manager",
+          "recommendation": "Update to reference SuperOrchestrator"
+        },
+        {
+          "file": "CLEAN_SLATE_READY.md",
+          "reference": "simple_orchestrator",
+          "recommendation": "Update to reference SuperOrchestrator"
+        },
+        {
+          "file": "CLEAN_SLATE_READY.md",
+          "reference": "orchestra_manager",
+          "recommendation": "Update to reference SuperOrchestrator"
+        },
+        {
+          "file": "CLEAN_SLATE_READY.md",
+          "reference": "swarm_orchestrator",
+          "recommendation": "Update to reference SuperOrchestrator"
+        },
+        {
+          "file": "CLEAN_SLATE_READY.md",
+          "reference": "unified_enhanced_orchestrator",
+          "recommendation": "Update to reference SuperOrchestrator"
+        },
+        {
+          "file": "CLEAN_SLATE_READY.md",
+          "reference": "integrated_manager",
+          "recommendation": "Update to reference SuperOrchestrator"
+        },
+        {
+          "file": "CLEAN_SLATE_READY.md",
+          "reference": "hybrid_vector_manager",
+          "recommendation": "Update to reference SuperOrchestrator"
+        },
+        {
+          "file": "AI_ORCHESTRA_MASTER_PLAN.md",
+          "reference": "unified_enhanced_orchestrator",
+          "recommendation": "Update to reference SuperOrchestrator"
+        },
+        {
+          "file": "ARCHITECTURAL_HEALTH_REPORT.md",
+          "reference": "simple_orchestrator",
+          "recommendation": "Update to reference SuperOrchestrator"
+        },
+        {
+          "file": "INTEGRATION_COMPATIBILITY_REPORT.md",
+          "reference": "simple_orchestrator",
+          "recommendation": "Update to reference SuperOrchestrator"
+        },
+        {
+          "file": "INTEGRATION_COMPATIBILITY_REPORT.md",
+          "reference": "orchestra_manager",
+          "recommendation": "Update to reference SuperOrchestrator"
+        },
+        {
+          "file": "SWARM_INTEGRATION_ENHANCEMENTS.md",
+          "reference": "swarm_orchestrator",
+          "recommendation": "Update to reference SuperOrchestrator"
+        },
+        {
+          "file": "CLEAN_SLATE_SUCCESS.md",
+          "reference": "simple_orchestrator",
+          "recommendation": "Update to reference SuperOrchestrator"
+        },
+        {
+          "file": "CLEAN_SLATE_SUCCESS.md",
+          "reference": "orchestra_manager",
+          "recommendation": "Update to reference SuperOrchestrator"
+        },
+        {
+          "file": "CLEAN_SLATE_SUCCESS.md",
+          "reference": "swarm_orchestrator",
+          "recommendation": "Update to reference SuperOrchestrator"
+        },
+        {
+          "file": "CLEAN_SLATE_SUCCESS.md",
+          "reference": "unified_enhanced_orchestrator",
+          "recommendation": "Update to reference SuperOrchestrator"
+        },
+        {
+          "file": "CLEAN_SLATE_SUCCESS.md",
+          "reference": "integrated_manager",
+          "recommendation": "Update to reference SuperOrchestrator"
+        },
+        {
+          "file": "CLEAN_SLATE_SUCCESS.md",
+          "reference": "hybrid_vector_manager",
+          "recommendation": "Update to reference SuperOrchestrator"
+        },
+        {
+          "file": "docs/architecture/component-interactions.md",
+          "reference": "orchestra_manager",
+          "recommendation": "Update to reference SuperOrchestrator"
+        },
+        {
+          "file": "docs/api/NL_INTERFACE_README.md",
+          "reference": "simple_orchestrator",
+          "recommendation": "Update to reference SuperOrchestrator"
+        },
+        {
+          "file": "docs/api/README.md",
+          "reference": "orchestra_manager",
+          "recommendation": "Update to reference SuperOrchestrator"
+        },
+        {
+          "file": "docs/guides/development/PHASE_2_IMPLEMENTATION_PLAN.md",
+          "reference": "simple_orchestrator",
+          "recommendation": "Update to reference SuperOrchestrator"
+        },
+        {
+          "file": "docs/guides/deployment/PRODUCTION_READY.md",
+          "reference": "simple_orchestrator",
+          "recommendation": "Update to reference SuperOrchestrator"
+        },
+        {
+          "file": "docs/architecture/decisions/ADR-002.md",
+          "reference": "unified_enhanced_orchestrator",
+          "recommendation": "Update to reference SuperOrchestrator"
+        },
+        {
+          "file": "docs/architecture/decisions/ADR-003.md",
+          "reference": "unified_enhanced_orchestrator",
+          "recommendation": "Update to reference SuperOrchestrator"
+        },
+        {
+          "file": "docs/architecture/decisions/README.md",
+          "reference": "unified_enhanced_orchestrator",
+          "recommendation": "Update to reference SuperOrchestrator"
+        },
+        {
+          "file": "docs/archive/completed-work/SWARM_REFACTORING_SUMMARY.md",
+          "reference": "swarm_orchestrator",
+          "recommendation": "Update to reference SuperOrchestrator"
+        },
+        {
+          "file": "docs/archive/historical-plans/deployment-versions/DEPLOYMENT_SUMMARY.md",
+          "reference": "unified_enhanced_orchestrator",
+          "recommendation": "Update to reference SuperOrchestrator"
+        }
+      ]
+    }
+  ],
+  "statistics": {
+    "items_deleted": 6,
+    "issues_found": 13
+  }
+}

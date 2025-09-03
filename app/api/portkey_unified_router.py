@@ -81,7 +81,7 @@ class PortkeyUnifiedRouter:
     # Portkey Virtual Keys (Updated 2025-09-02)
     VIRTUAL_KEYS = {
         "OPENAI": "openai-vk-190a60",
-        "XAI": "xai-vk-e65d0f", 
+        "XAI": "xai-vk-e65d0f",
         "OPENROUTER": "vkj-openrouter-cc4151",
         "TOGETHER": "together-ai-670469"
     }

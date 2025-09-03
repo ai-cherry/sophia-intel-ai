@@ -26,9 +26,9 @@ def chunk_text(text: str, max_chunk_size: int = 1000, max_chunks: int = 1000) ->
     Example:
         >>> text = "This is paragraph one.\\n\\nThis is paragraph two.\\n\\nThis is paragraph three."
         >>> chunks = chunk_text(text, max_chunk_size=30)
-        >>> print(chunks[0])
+        >>> logger.info(chunks[0])
         'This is paragraph one.\\n\\n'
-        >>> print(chunks[1])
+        >>> logger.info(chunks[1])
         'This is paragraph two.\\n\\n'
     
     Note:

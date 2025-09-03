@@ -14,7 +14,6 @@ sys.path.append(str(Path(__file__).parent.parent.parent))
 
 import requests
 
-from app.agents.simple_orchestrator import AgentRole, SimpleAgentOrchestrator
 from app.nl_interface.intents import format_help_text, get_all_intents
 from app.nl_interface.quicknlp import CommandIntent, QuickNLP
 

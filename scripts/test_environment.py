@@ -19,6 +19,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # Import our environment loader
 from app.config.env_loader import get_env_config
+from app.core.ai_logger import logger
 
 
 class TechStackAnalyzer:
@@ -36,7 +37,7 @@ class TechStackAnalyzer:
 
     def check_python_packages(self) -> dict[str, Any]:
         """Check installed Python package versions."""
-        print("\n📦 Checking Python Package Versions...")
+        logger.info("\n📦 Checking Python Package Versions...")
 
         packages = {
             "agno": "1.8.1",  # Latest as of Aug 30, 2025
@@ -84,17 +85,17 @@ class TechStackAnalyzer:
             latest = info["latest"] or "N/A"
 
             if status == "✅":
-                print(f"  {status} {pkg}: {current}")
+                logger.info(f"  {status} {pkg}: {current}")
             elif status == "⚠️":
-                print(f"  {status} {pkg}: {current} (latest: {latest})")
+                logger.info(f"  {status} {pkg}: {current} (latest: {latest})")
             else:
-                print(f"  {status} {pkg}: Not installed")
+                logger.info(f"  {status} {pkg}: Not installed")
 
         return installed
 
     def check_system_tools(self) -> dict[str, Any]:
         """Check system tool versions."""
-        print("\n🛠️ Checking System Tool Versions...")
+        logger.info("\n🛠️ Checking System Tool Versions...")
 
         tools = {
             "pulumi": {
@@ -135,20 +136,20 @@ class TechStackAnalyzer:
                         "latest": info["latest"],
                         "status": "✅"
                     }
-                    print(f"  ✅ {tool}: {version_str}")
+                    logger.info(f"  ✅ {tool}: {version_str}")
                 else:
                     installed[tool] = {"current": None, "latest": info["latest"], "status": "❌"}
-                    print(f"  ❌ {tool}: Not installed")
+                    logger.info(f"  ❌ {tool}: Not installed")
             except:
                 installed[tool] = {"current": None, "latest": info["latest"], "status": "❌"}
-                print(f"  ❌ {tool}: Not found")
+                logger.info(f"  ❌ {tool}: Not found")
 
         self.results["versions"]["system_tools"] = installed
         return installed
 
     async def test_api_keys(self) -> dict[str, Any]:
         """Test all API keys and Portkey virtual keys."""
-        print("\n🔑 Testing API Keys...")
+        logger.info("\n🔑 Testing API Keys...")
 
         key_tests = {
             "portkey": {
@@ -191,7 +192,7 @@ class TechStackAnalyzer:
             for provider, info in key_tests.items():
                 if not info["key"] or info["key"].startswith("YOUR_"):
                     results[provider] = {"status": "❌", "error": "Not configured"}
-                    print(f"  ❌ {provider}: Not configured")
+                    logger.info(f"  ❌ {provider}: Not configured")
                 else:
                     try:
                         response = await client.get(
@@ -200,29 +201,29 @@ class TechStackAnalyzer:
                         )
                         if response.status_code in [200, 201]:
                             results[provider] = {"status": "✅", "valid": True}
-                            print(f"  ✅ {provider}: Valid")
+                            logger.info(f"  ✅ {provider}: Valid")
                         elif response.status_code == 401:
                             results[provider] = {"status": "❌", "error": "Invalid key"}
-                            print(f"  ❌ {provider}: Invalid key")
+                            logger.info(f"  ❌ {provider}: Invalid key")
                         else:
                             results[provider] = {
                                 "status": "⚠️",
                                 "error": f"Status {response.status_code}"
                             }
-                            print(f"  ⚠️ {provider}: Status {response.status_code}")
+                            logger.info(f"  ⚠️ {provider}: Status {response.status_code}")
                     except Exception as e:
                         results[provider] = {"status": "❌", "error": str(e)}
-                        print(f"  ❌ {provider}: {e}")
+                        logger.info(f"  ❌ {provider}: {e}")
 
         self.results["api_keys"] = results
         return results
 
     async def test_portkey_virtual_keys(self) -> dict[str, Any]:
         """Test Portkey virtual keys specifically."""
-        print("\n🔐 Testing Portkey Virtual Keys...")
+        logger.info("\n🔐 Testing Portkey Virtual Keys...")
 
         if not self.config.portkey_api_key or self.config.portkey_api_key.startswith("YOUR_"):
-            print("  ❌ Portkey not configured")
+            logger.info("  ❌ Portkey not configured")
             return {"status": "not_configured"}
 
         # Test with Portkey gateway
@@ -264,23 +265,23 @@ class TechStackAnalyzer:
 
                     if response.status_code == 200:
                         results[vk_test["name"]] = {"status": "✅", "provider": vk_test["provider"]}
-                        print(f"  ✅ {vk_test['name']}: Working")
+                        logger.info(f"  ✅ {vk_test['name']}: Working")
                     else:
                         results[vk_test["name"]] = {
                             "status": "❌",
                             "error": f"Status {response.status_code}"
                         }
-                        print(f"  ❌ {vk_test['name']}: Failed ({response.status_code})")
+                        logger.info(f"  ❌ {vk_test['name']}: Failed ({response.status_code})")
                 except Exception as e:
                     results[vk_test["name"]] = {"status": "❌", "error": str(e)}
-                    print(f"  ❌ {vk_test['name']}: {e}")
+                    logger.info(f"  ❌ {vk_test['name']}: {e}")
 
         self.results["portkey_virtual_keys"] = results
         return results
 
     def check_weaviate(self) -> dict[str, Any]:
         """Check Weaviate connection and version."""
-        print("\n🔍 Checking Weaviate...")
+        logger.info("\n🔍 Checking Weaviate...")
 
         try:
             import weaviate
@@ -301,19 +302,19 @@ class TechStackAnalyzer:
                 "client_version": weaviate.__version__ if hasattr(weaviate, "__version__") else "Unknown"
             }
 
-            print(f"  ✅ Server: {server_version} (latest: 1.32.0)")
-            print(f"  ✅ Client: {result['client_version']}")
+            logger.info(f"  ✅ Server: {server_version} (latest: 1.32.0)")
+            logger.info(f"  ✅ Client: {result['client_version']}")
 
         except Exception as e:
             result = {"status": "❌", "error": str(e)}
-            print(f"  ❌ Weaviate: {e}")
+            logger.info(f"  ❌ Weaviate: {e}")
 
         self.results["versions"]["weaviate"] = result
         return result
 
     def analyze_gaps(self) -> list[dict[str, Any]]:
         """Analyze gaps and create recommendations."""
-        print("\n📊 Gap Analysis...")
+        logger.info("\n📊 Gap Analysis...")
 
         gaps = []
 
@@ -372,32 +373,32 @@ class TechStackAnalyzer:
 
         # Print gaps
         if gaps:
-            print(f"\n  Found {len(gaps)} gaps:")
+            logger.info(f"\n  Found {len(gaps)} gaps:")
 
             high_severity = [g for g in gaps if g.get("severity") == "high"]
             medium_severity = [g for g in gaps if g.get("severity") == "medium"]
 
             if high_severity:
-                print(f"\n  🔴 High Severity ({len(high_severity)}):")
+                logger.info(f"\n  🔴 High Severity ({len(high_severity)}):")
                 for gap in high_severity:
-                    print(f"    • {gap['type']}: {gap.get('package') or gap.get('provider') or gap.get('service')}")
-                    print(f"      Action: {gap['action']}")
+                    logger.info(f"    • {gap['type']}: {gap.get('package') or gap.get('provider') or gap.get('service')}")
+                    logger.info(f"      Action: {gap['action']}")
 
             if medium_severity:
-                print(f"\n  🟡 Medium Severity ({len(medium_severity)}):")
+                logger.info(f"\n  🟡 Medium Severity ({len(medium_severity)}):")
                 for gap in medium_severity:
-                    print(f"    • {gap['type']}: {gap.get('package') or gap.get('provider') or gap.get('service')}")
+                    logger.info(f"    • {gap['type']}: {gap.get('package') or gap.get('provider') or gap.get('service')}")
                     if gap.get("current"):
-                        print(f"      Current: {gap['current']} → Latest: {gap.get('latest')}")
-                    print(f"      Action: {gap['action']}")
+                        logger.info(f"      Current: {gap['current']} → Latest: {gap.get('latest')}")
+                    logger.info(f"      Action: {gap['action']}")
         else:
-            print("  ✅ No critical gaps found!")
+            logger.info("  ✅ No critical gaps found!")
 
         return gaps
 
     def generate_recommendations(self) -> list[str]:
         """Generate upgrade recommendations."""
-        print("\n💡 Recommendations...")
+        logger.info("\n💡 Recommendations...")
 
         recommendations = []
 
@@ -459,15 +460,15 @@ class TechStackAnalyzer:
 
         # Print recommendations
         for i, rec in enumerate(recommendations[:5], 1):  # Top 5
-            print(f"  {i}. {rec}")
+            logger.info(f"  {i}. {rec}")
 
         return recommendations
 
     async def run_full_analysis(self):
         """Run complete environment analysis."""
-        print("\n" + "="*60)
-        print("🔬 COMPREHENSIVE ENVIRONMENT ANALYSIS")
-        print("="*60)
+        logger.info("\n" + "="*60)
+        logger.info("🔬 COMPREHENSIVE ENVIRONMENT ANALYSIS")
+        logger.info("="*60)
 
         # Check versions
         self.check_python_packages()
@@ -487,9 +488,9 @@ class TechStackAnalyzer:
 
     def generate_report(self):
         """Generate comprehensive report."""
-        print("\n" + "="*60)
-        print("📋 ENVIRONMENT REPORT SUMMARY")
-        print("="*60)
+        logger.info("\n" + "="*60)
+        logger.info("📋 ENVIRONMENT REPORT SUMMARY")
+        logger.info("="*60)
 
         # Count statuses
         packages = self.results["versions"].get("python_packages", {})
@@ -501,36 +502,36 @@ class TechStackAnalyzer:
         keys_ok = len([k for k in keys.values() if k["status"] == "✅"])
         keys_miss = len([k for k in keys.values() if k["status"] == "❌"])
 
-        print("\n📦 Python Packages:")
-        print(f"  ✅ Up to date: {pkg_ok}")
-        print(f"  ⚠️  Outdated: {pkg_warn}")
-        print(f"  ❌ Missing: {pkg_miss}")
+        logger.info("\n📦 Python Packages:")
+        logger.info(f"  ✅ Up to date: {pkg_ok}")
+        logger.info(f"  ⚠️  Outdated: {pkg_warn}")
+        logger.info(f"  ❌ Missing: {pkg_miss}")
 
-        print("\n🔑 API Keys:")
-        print(f"  ✅ Valid: {keys_ok}")
-        print(f"  ❌ Missing/Invalid: {keys_miss}")
+        logger.info("\n🔑 API Keys:")
+        logger.info(f"  ✅ Valid: {keys_ok}")
+        logger.info(f"  ❌ Missing/Invalid: {keys_miss}")
 
         gaps = self.results.get("gaps", [])
         if gaps:
-            print(f"\n⚠️  Total Gaps: {len(gaps)}")
-            print(f"  🔴 High severity: {len([g for g in gaps if g.get('severity') == 'high'])}")
-            print(f"  🟡 Medium severity: {len([g for g in gaps if g.get('severity') == 'medium'])}")
+            logger.info(f"\n⚠️  Total Gaps: {len(gaps)}")
+            logger.info(f"  🔴 High severity: {len([g for g in gaps if g.get('severity') == 'high'])}")
+            logger.info(f"  🟡 Medium severity: {len([g for g in gaps if g.get('severity') == 'medium'])}")
         else:
-            print("\n✅ No critical gaps!")
+            logger.info("\n✅ No critical gaps!")
 
         # Save detailed report
         report_path = Path("environment_analysis.json")
         with open(report_path, "w") as f:
             json.dump(self.results, f, indent=2)
 
-        print(f"\n📁 Detailed report saved to: {report_path}")
+        logger.info(f"\n📁 Detailed report saved to: {report_path}")
 
         # Overall status
         if pkg_miss == 0 and keys_miss <= 2:
-            print("\n🎉 Environment is mostly ready!")
+            logger.info("\n🎉 Environment is mostly ready!")
         else:
-            print("\n⚠️  Environment needs configuration")
-            print("Run the recommended actions above to complete setup")
+            logger.info("\n⚠️  Environment needs configuration")
+            logger.info("Run the recommended actions above to complete setup")
 
 
 async def main():

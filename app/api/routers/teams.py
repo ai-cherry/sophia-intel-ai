@@ -328,7 +328,7 @@ class TeamCreateRequest(BaseModel):
     model_pool: str = Field(default="balanced", description="Model pool (balanced, premium, basic)")
     active: bool = Field(default=True, description="Whether team is active")
     configuration: dict[str, Any] | None = Field(default=None, description="Team configuration")
-    
+
     @validator('id')
     def validate_id(cls, v: str) -> str:
         """Validate team ID format."""
@@ -809,14 +809,14 @@ async def bulk_activate_teams(
         Dict: Bulk operation results
     """
     results = {"success": [], "failed": []}
-    
+
     for team_id in team_ids:
         try:
             await activate_team(team_id, orchestrator, state)
             results["success"].append(team_id)
         except Exception as e:
             results["failed"].append({"team_id": team_id, "error": str(e)})
-    
+
     return {
         "status": "completed",
         "total": len(team_ids),
@@ -839,14 +839,14 @@ async def teams_health(
     try:
         # Basic health checks
         orchestrator_healthy = orchestrator is not None
-        
+
         # Check if we can list teams
         mock_state = type('MockState', (), {})()
         teams_response = await list_teams(state=mock_state)
         teams_healthy = len(teams_response.teams) >= 0
-        
+
         overall_healthy = orchestrator_healthy and teams_healthy
-        
+
         return {
             "status": "healthy" if overall_healthy else "unhealthy",
             "checks": {
@@ -855,7 +855,7 @@ async def teams_health(
             },
             "timestamp": datetime.utcnow().isoformat()
         }
-        
+
     except Exception as e:
         logger.error(f"Health check failed: {e}")
         return {

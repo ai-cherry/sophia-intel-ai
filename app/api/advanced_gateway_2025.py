@@ -14,9 +14,7 @@ from typing import Any
 import httpx
 from dotenv import load_dotenv
 
-from app.core.circuit_breaker import (
-    with_circuit_breaker,
-)
+from app.core.circuit_breaker import with_circuit_breaker
 
 # Load environment variables
 load_dotenv('.env.local')

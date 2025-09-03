@@ -14,6 +14,8 @@ from opentelemetry import trace
 from opentelemetry.trace import SpanKind
 from pydantic import BaseModel, Field
 
+from app.core.ai_logger import logger
+
 logger = logging.getLogger(__name__)
 
 class MessageType(str, enum.Enum):
@@ -313,7 +315,7 @@ if __name__ == "__main__":
 
         # Subscribe and get messages
         async for msg in bus.subscribe("agent_2", [MessageType.QUERY]):
-            print(f"Received: {msg.content}")
+            logger.info(f"Received: {msg.content}")
             await bus.close()
             break
 

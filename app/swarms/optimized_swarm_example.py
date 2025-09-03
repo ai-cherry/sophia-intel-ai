@@ -10,6 +10,8 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from app.swarms.performance_optimizer import (
+from app.core.ai_logger import logger
+
     CircuitBreakerOpenException,
     GracefulDegradationManager,
     SwarmOptimizer,
@@ -441,16 +443,16 @@ async def demonstrate_optimized_swarm():
     results = []
 
     for task in test_tasks:
-        print(f"\n{'='*60}")
-        print(f"Task: {task['description']}")
-        print(f"Complexity: {task.get('complexity', 'unknown')}")
-        print(f"Urgency: {task['urgency']}")
-        print('='*60)
+        logger.info(f"\n{'='*60}")
+        logger.info(f"Task: {task['description']}")
+        logger.info(f"Complexity: {task.get('complexity', 'unknown')}")
+        logger.info(f"Urgency: {task['urgency']}")
+        logger.info('='*60)
 
         # Select swarm based on task characteristics (in practice would be automated)
         swarm = quality_swarm if task.get('type') == 'complex' else lite_swarm
 
-        print(f"Selected Swarm: {swarm.config.name} ({swarm.config.optimization_mode} mode)")
+        logger.info(f"Selected Swarm: {swarm.config.name} ({swarm.config.optimization_mode} mode)")
 
         try:
             # Benchmark the execution
@@ -461,46 +463,46 @@ async def demonstrate_optimized_swarm():
             result = benchmark.final_result
             results.append(result)
 
-            print("✅ Execution successful")
-            print(f"Solution: {result.get('solution', {}).get('solution', 'N/A')[:100]}...")
-            print(f"Patterns used: {result.get('patterns_used', [])}")
-            print(f"Execution time: {result.get('execution_time_sec', 0):.3f}s")
-            print(f"System health: {result.get('system_health_score', 0):.2f}")
+            logger.info("✅ Execution successful")
+            logger.info(f"Solution: {result.get('solution', {}).get('solution', 'N/A')[:100]}...")
+            logger.info(f"Patterns used: {result.get('patterns_used', [])}")
+            logger.info(f"Execution time: {result.get('execution_time_sec', 0):.3f}s")
+            logger.info(f"System health: {result.get('system_health_score', 0):.2f}")
 
         except Exception as e:
-            print(f"❌ Execution failed: {e}")
+            logger.info(f"❌ Execution failed: {e}")
 
     # Generate final performance report
-    print(f"\n{'='*60}")
-    print("FINAL PERFORMANCE REPORT")
-    print('='*60)
+    logger.info(f"\n{'='*60}")
+    logger.info("FINAL PERFORMANCE REPORT")
+    logger.info('='*60)
 
     lite_report = lite_swarm.get_performance_report()
     quality_report = quality_swarm.get_performance_report()
 
-    print("\nLite Swarm Performance:")
-    print(f"  Total executions: {lite_report['total_executions']}")
-    print(f"  Success rate: {lite_report.get('success_rate', 0):.3f}")
-    print(f"  Avg exec time: {lite_report.get('average_execution_time', 0):.2f}s")
+    logger.info("\nLite Swarm Performance:")
+    logger.info(f"  Total executions: {lite_report['total_executions']}")
+    logger.info(f"  Success rate: {lite_report.get('success_rate', 0):.3f}")
+    logger.info(f"  Avg exec time: {lite_report.get('average_execution_time', 0):.2f}s")
 
-    print("\nQuality Swarm Performance:")
-    print(f"  Total executions: {quality_report['total_executions']}")
-    print(f"  Success rate: {quality_report.get('success_rate', 0):.3f}")
-    print(f"  Avg exec time: {quality_report.get('average_execution_time', 0):.2f}s")
+    logger.info("\nQuality Swarm Performance:")
+    logger.info(f"  Total executions: {quality_report['total_executions']}")
+    logger.info(f"  Success rate: {quality_report.get('success_rate', 0):.3f}")
+    logger.info(f"  Avg exec time: {quality_report.get('average_execution_time', 0):.2f}s")
 
     # Optimizer recommendations
     recommendations = optimizer.get_optimization_recommendations()
-    print("\nOptimizer Recommendations:")
-    print(f"  System health: {recommendations['system_health']:.2f}")
-    print(f"  Performance alerts: {len(recommendations['performance_alerts'])}")
-    print(f"  Optimization suggestions: {len(recommendations['optimization_suggestions'])}")
+    logger.info("\nOptimizer Recommendations:")
+    logger.info(f"  System health: {recommendations['system_health']:.2f}")
+    logger.info(f"  Performance alerts: {len(recommendations['performance_alerts'])}")
+    logger.info(f"  Optimization suggestions: {len(recommendations['optimization_suggestions'])}")
 
 
 async def compare_swarm_modes():
     """Compare different swarm modes on the same task."""
-    print(f"\n{'='*80}")
-    print("SWARM MODE COMPARISON")
-    print('='*80)
+    logger.info(f"\n{'='*80}")
+    logger.info("SWARM MODE COMPARISON")
+    logger.info('='*80)
 
     # Complex task for comparison
     complex_task = {
@@ -523,8 +525,8 @@ async def compare_swarm_modes():
 
         swarm = OptimizedSwarm(config, optimizer)
 
-        print(f"\n{mode.upper()} MODE:")
-        print("-" * 30)
+        logger.info(f"\n{mode.upper()} MODE:")
+        logger.info("-" * 30)
 
         benchmark = await optimizer.benchmark_swarm_execution(
             swarm.solve_problem, complex_task, complex_task
@@ -532,11 +534,11 @@ async def compare_swarm_modes():
 
         if benchmark.final_result:
             result = benchmark.final_result
-            print(f"   Execution time: {result.get('execution_time_sec', 0):.2f}s")
-            print(f"   Patterns used: {len(result.get('patterns_used', []))}")
-            print(f"   System health: {result.get('system_health_score', 0):.3f}")
+            logger.info(f"   Execution time: {result.get('execution_time_sec', 0):.2f}s")
+            logger.info(f"   Patterns used: {len(result.get('patterns_used', []))}")
+            logger.info(f"   System health: {result.get('system_health_score', 0):.3f}")
         else:
-            print("   ❌ Failed to execute")
+            logger.info("   ❌ Failed to execute")
 
 
 def get_patterns_for_mode(mode: str) -> list[str]:
@@ -550,13 +552,13 @@ def get_patterns_for_mode(mode: str) -> list[str]:
 
 
 if __name__ == "__main__":
-    print("🚀 Optimized Swarm Demonstration")
-    print("=" * 60)
+    logger.info("🚀 Optimized Swarm Demonstration")
+    logger.info("=" * 60)
 
     # Run demonstrations
     asyncio.run(demonstrate_optimized_swarm())
     asyncio.run(compare_swarm_modes())
 
-    print(f"\n{'='*60}")
-    print("✅ Demonstration complete!")
-    print("=" * 60)
+    logger.info(f"\n{'='*60}")
+    logger.info("✅ Demonstration complete!")
+    logger.info("=" * 60)

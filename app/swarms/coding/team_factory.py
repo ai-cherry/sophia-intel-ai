@@ -10,9 +10,7 @@ import logging
 from agno.agent import Agent
 from agno.team import Team
 
-from app.core.circuit_breaker import (
-    with_circuit_breaker,
-)
+from app.core.circuit_breaker import with_circuit_breaker
 from app.models.simple_router import agno_chat_model
 from app.swarms.coding.agents import make_critic, make_generator, make_judge, make_lead, make_runner
 from app.swarms.coding.models import PoolType, SwarmConfiguration

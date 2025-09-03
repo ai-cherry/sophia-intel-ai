@@ -5,12 +5,13 @@ Optimized for writing clean, efficient, well-documented code.
 Focuses on best practices for security, performance, and maintainability.
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from ..base_agent import BaseAgent, AgentRole
 from app.tools.code_search import CodeSearchTool
 from app.tools.git_ops import GitOperationsTool
 from app.tools.test_ops import TestingTool
+
+from ..base_agent import AgentRole, BaseAgent
 
 
 class CoderAgent(BaseAgent):
@@ -23,11 +24,11 @@ class CoderAgent(BaseAgent):
     - Performance optimization
     - Automated testing integration
     """
-    
+
     def __init__(
         self,
-        agent_id: str = "coder-001", 
-        programming_languages: List[str] = None,
+        agent_id: str = "coder-001",
+        programming_languages: list[str] = None,
         enable_reasoning: bool = True,
         max_reasoning_steps: int = 12,
         **kwargs
@@ -35,14 +36,14 @@ class CoderAgent(BaseAgent):
         self.programming_languages = programming_languages or [
             "python", "javascript", "typescript", "rust", "go"
         ]
-        
+
         # Custom tools for coding
         coding_tools = [
             CodeSearchTool(),
             GitOperationsTool(),
             TestingTool()
         ]
-        
+
         # Initialize with coder-specific configuration
         super().__init__(
             agent_id=agent_id,
@@ -56,8 +57,8 @@ class CoderAgent(BaseAgent):
             },
             **kwargs
         )
-    
-    async def generate_code(self, specification: Dict[str, Any]) -> Dict[str, Any]:
+
+    async def generate_code(self, specification: dict[str, Any]) -> dict[str, Any]:
         """
         Generate code based on functional specification.
         
@@ -67,7 +68,7 @@ class CoderAgent(BaseAgent):
         Returns:
             Generated code with documentation and tests
         """
-        
+
         coding_problem = {
             "query": f"""Generate {specification.get('language', 'python')} code for the following specification:
             
@@ -88,9 +89,9 @@ class CoderAgent(BaseAgent):
             "context": "code_generation",
             "priority": "high"
         }
-        
+
         result = await self.execute(coding_problem)
-        
+
         return {
             "generated_code": result["result"],
             "language": specification.get("language", "python"),
@@ -103,8 +104,8 @@ class CoderAgent(BaseAgent):
                 "complexity": "TBD"  # Would be analyzed
             }
         }
-    
-    async def review_code(self, code: str, language: str = "python") -> Dict[str, Any]:
+
+    async def review_code(self, code: str, language: str = "python") -> dict[str, Any]:
         """
         Perform comprehensive code review with suggestions.
         
@@ -115,7 +116,7 @@ class CoderAgent(BaseAgent):
         Returns:
             Code review with suggestions and quality assessment
         """
-        
+
         review_problem = {
             "query": f"""Perform a comprehensive code review of this {language} code:
             
@@ -135,9 +136,9 @@ class CoderAgent(BaseAgent):
             """,
             "context": "code_review"
         }
-        
+
         result = await self.execute(review_problem)
-        
+
         return {
             "review_results": result["result"],
             "overall_quality": "TBD",  # Would be scored
@@ -146,8 +147,8 @@ class CoderAgent(BaseAgent):
             "reviewer_id": self.agent_id,
             "success": result["success"]
         }
-    
-    async def optimize_performance(self, code: str, language: str = "python") -> Dict[str, Any]:
+
+    async def optimize_performance(self, code: str, language: str = "python") -> dict[str, Any]:
         """
         Analyze and optimize code for performance.
         
@@ -158,7 +159,7 @@ class CoderAgent(BaseAgent):
         Returns:
             Optimized code with performance improvements
         """
-        
+
         optimization_problem = {
             "query": f"""Analyze and optimize this {language} code for performance:
             
@@ -177,9 +178,9 @@ class CoderAgent(BaseAgent):
             """,
             "context": "performance_optimization"
         }
-        
+
         result = await self.execute(optimization_problem)
-        
+
         return {
             "optimized_code": result["result"],
             "performance_gains": "TBD",  # Would be estimated

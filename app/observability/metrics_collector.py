@@ -11,6 +11,8 @@ from typing import Any
 
 import psutil
 
+from app.core.ai_logger import logger
+
 logger = logging.getLogger(__name__)
 
 @dataclass
@@ -502,11 +504,11 @@ async def main():
 
         # Get dashboard data
         dashboard = observability.get_dashboard_data()
-        print(json.dumps(dashboard, indent=2, default=str))
+        logger.info(json.dumps(dashboard, indent=2, default=str))
 
         # Export metrics
-        print("\nPrometheus format:")
-        print(observability.export_metrics("prometheus"))
+        logger.info("\nPrometheus format:")
+        logger.info(observability.export_metrics("prometheus"))
 
     finally:
         await observability.stop()

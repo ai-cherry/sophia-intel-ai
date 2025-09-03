@@ -5,11 +5,12 @@ Enables controlled feature deployment and A/B testing
 
 import hashlib
 import json
-from typing import Dict, Any, Optional, List, Set
-from enum import Enum
-from datetime import datetime, timedelta
-import redis
 import logging
+from datetime import datetime
+from enum import Enum
+from typing import Any
+
+import redis
 
 logger = logging.getLogger(__name__)
 
@@ -34,17 +35,17 @@ class FeatureStatus(Enum):
 
 class FeatureFlag:
     """Individual feature flag configuration"""
-    
+
     def __init__(
         self,
         name: str,
         status: FeatureStatus = FeatureStatus.DISABLED,
         strategy: RolloutStrategy = RolloutStrategy.PERCENTAGE,
         percentage: float = 0.0,
-        allowlist: List[str] = None,
-        denylist: List[str] = None,
-        conditions: Dict[str, Any] = None,
-        metadata: Dict[str, Any] = None
+        allowlist: list[str] = None,
+        denylist: list[str] = None,
+        conditions: dict[str, Any] = None,
+        metadata: dict[str, Any] = None
     ):
         self.name = name
         self.status = status
@@ -56,8 +57,8 @@ class FeatureFlag:
         self.metadata = metadata or {}
         self.created_at = datetime.utcnow()
         self.updated_at = datetime.utcnow()
-    
-    def to_dict(self) -> Dict[str, Any]:
+
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization"""
         return {
             "name": self.name,
@@ -71,9 +72,9 @@ class FeatureFlag:
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat()
         }
-    
+
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'FeatureFlag':
+    def from_dict(cls, data: dict[str, Any]) -> 'FeatureFlag':
         """Create from dictionary"""
         return cls(
             name=data["name"],
@@ -92,13 +93,13 @@ class FeatureFlagManager:
     """
     Manages feature flags for gradual rollout
     """
-    
+
     def __init__(self, redis_client: redis.Redis = None):
         self.redis_client = redis_client
-        self.flags: Dict[str, FeatureFlag] = {}
+        self.flags: dict[str, FeatureFlag] = {}
         self.cache_ttl = 300  # 5 minutes cache
         self._initialize_default_flags()
-    
+
     def _initialize_default_flags(self):
         """Initialize default feature flags"""
         self.flags = {
@@ -110,7 +111,7 @@ class FeatureFlagManager:
                 percentage=100.0,
                 metadata={"description": "Version 2 API endpoints"}
             ),
-            
+
             # WebSocket Features
             "websocket_streaming": FeatureFlag(
                 name="websocket_streaming",
@@ -127,7 +128,7 @@ class FeatureFlagManager:
                     }
                 }
             ),
-            
+
             # Swarm Intelligence
             "swarm_intelligence": FeatureFlag(
                 name="swarm_intelligence",
@@ -137,7 +138,7 @@ class FeatureFlagManager:
                 percentage=50.0,
                 metadata={"description": "Multi-agent swarm processing"}
             ),
-            
+
             # Memory System
             "advanced_memory": FeatureFlag(
                 name="advanced_memory",
@@ -149,7 +150,7 @@ class FeatureFlagManager:
                     "rings": ["internal", "alpha", "beta", "production"]
                 }
             ),
-            
+
             # Circuit Breakers
             "circuit_breakers": FeatureFlag(
                 name="circuit_breakers",
@@ -158,7 +159,7 @@ class FeatureFlagManager:
                 percentage=100.0,
                 metadata={"description": "Circuit breaker protection"}
             ),
-            
+
             # Graceful Degradation
             "graceful_degradation": FeatureFlag(
                 name="graceful_degradation",
@@ -167,7 +168,7 @@ class FeatureFlagManager:
                 percentage=100.0,
                 metadata={"description": "Automatic service degradation"}
             ),
-            
+
             # Metrics Collection
             "enhanced_metrics": FeatureFlag(
                 name="enhanced_metrics",
@@ -177,7 +178,7 @@ class FeatureFlagManager:
                 conditions={"regions": ["us-east-1", "eu-west-1"]},
                 metadata={"description": "Enhanced metrics collection"}
             ),
-            
+
             # AI Optimization
             "ai_optimization": FeatureFlag(
                 name="ai_optimization",
@@ -188,12 +189,12 @@ class FeatureFlagManager:
                 metadata={"description": "AI-powered query optimization"}
             )
         }
-    
+
     def is_enabled(
         self,
         flag_name: str,
-        user_id: Optional[str] = None,
-        context: Optional[Dict[str, Any]] = None
+        user_id: str | None = None,
+        context: dict[str, Any] | None = None
     ) -> bool:
         """
         Check if a feature flag is enabled for a user
@@ -203,23 +204,23 @@ class FeatureFlagManager:
         if not flag:
             logger.warning(f"Feature flag not found: {flag_name}")
             return False
-        
+
         # Check global status
         if flag.status == FeatureStatus.DISABLED:
             return False
-        
+
         if flag.status == FeatureStatus.ENABLED:
             return True
-        
+
         # Handle conditional flags
         return self._evaluate_conditions(flag, user_id, context)
-    
-    def _get_flag(self, flag_name: str) -> Optional[FeatureFlag]:
+
+    def _get_flag(self, flag_name: str) -> FeatureFlag | None:
         """Get flag from cache or storage"""
         # Try local cache first
         if flag_name in self.flags:
             return self.flags[flag_name]
-        
+
         # Try Redis cache
         if self.redis_client:
             try:
@@ -229,154 +230,154 @@ class FeatureFlagManager:
                     return FeatureFlag.from_dict(flag_data)
             except Exception as e:
                 logger.error(f"Error loading flag from Redis: {e}")
-        
+
         return None
-    
+
     def _evaluate_conditions(
         self,
         flag: FeatureFlag,
-        user_id: Optional[str],
-        context: Optional[Dict[str, Any]]
+        user_id: str | None,
+        context: dict[str, Any] | None
     ) -> bool:
         """Evaluate conditional feature flag"""
         context = context or {}
-        
+
         # Apply strategy
         if flag.strategy == RolloutStrategy.PERCENTAGE:
             return self._evaluate_percentage(flag, user_id)
-        
+
         elif flag.strategy == RolloutStrategy.ALLOWLIST:
             return self._evaluate_allowlist(flag, user_id, context)
-        
+
         elif flag.strategy == RolloutStrategy.DENYLIST:
             return self._evaluate_denylist(flag, user_id, context)
-        
+
         elif flag.strategy == RolloutStrategy.GRADUAL:
             return self._evaluate_gradual(flag)
-        
+
         elif flag.strategy == RolloutStrategy.CANARY:
             return self._evaluate_canary(flag, context)
-        
+
         elif flag.strategy == RolloutStrategy.RING:
             return self._evaluate_ring(flag, context)
-        
+
         return False
-    
+
     def _evaluate_percentage(
         self,
         flag: FeatureFlag,
-        user_id: Optional[str]
+        user_id: str | None
     ) -> bool:
         """Evaluate percentage-based rollout"""
         if not user_id:
             # Anonymous users get random assignment
             import random
             return random.random() * 100 < flag.percentage
-        
+
         # Consistent hashing for logged-in users
         hash_input = f"{flag.name}:{user_id}"
         hash_value = int(hashlib.md5(hash_input.encode()).hexdigest(), 16)
         user_bucket = (hash_value % 100) + 1
-        
+
         return user_bucket <= flag.percentage
-    
+
     def _evaluate_allowlist(
         self,
         flag: FeatureFlag,
-        user_id: Optional[str],
-        context: Dict[str, Any]
+        user_id: str | None,
+        context: dict[str, Any]
     ) -> bool:
         """Evaluate allowlist-based rollout"""
         if not user_id:
             return False
-        
+
         # Check direct user allowlist
         if user_id in flag.allowlist:
             return True
-        
+
         # Check group allowlist
         user_groups = context.get("groups", [])
         for group in user_groups:
             if group in flag.allowlist:
                 return True
-        
+
         # Fall back to percentage if configured
         if flag.percentage > 0:
             return self._evaluate_percentage(flag, user_id)
-        
+
         return False
-    
+
     def _evaluate_denylist(
         self,
         flag: FeatureFlag,
-        user_id: Optional[str],
-        context: Dict[str, Any]
+        user_id: str | None,
+        context: dict[str, Any]
     ) -> bool:
         """Evaluate denylist-based rollout"""
         if user_id and user_id in flag.denylist:
             return False
-        
+
         # Check group denylist
         user_groups = context.get("groups", [])
         for group in user_groups:
             if group in flag.denylist:
                 return False
-        
+
         # Not in denylist, use percentage
         return self._evaluate_percentage(flag, user_id)
-    
+
     def _evaluate_gradual(self, flag: FeatureFlag) -> bool:
         """Evaluate time-based gradual rollout"""
         schedule = flag.metadata.get("rollout_schedule", {})
         current_date = datetime.utcnow().date()
-        
+
         # Find applicable percentage based on date
         applicable_percentage = 0.0
         for date_str, percentage in sorted(schedule.items()):
             rollout_date = datetime.fromisoformat(date_str).date()
             if current_date >= rollout_date:
                 applicable_percentage = percentage
-        
+
         # Update flag percentage
         flag.percentage = applicable_percentage
-        
+
         # Use random for gradual rollout
         import random
         return random.random() * 100 < applicable_percentage
-    
+
     def _evaluate_canary(
         self,
         flag: FeatureFlag,
-        context: Dict[str, Any]
+        context: dict[str, Any]
     ) -> bool:
         """Evaluate canary deployment"""
         # Check if current region/server is in canary
         current_region = context.get("region")
         current_server = context.get("server_id")
-        
+
         canary_regions = flag.conditions.get("regions", [])
         canary_servers = flag.conditions.get("servers", [])
-        
+
         if current_region in canary_regions:
             return True
-        
+
         if current_server in canary_servers:
             return True
-        
+
         return False
-    
+
     def _evaluate_ring(
         self,
         flag: FeatureFlag,
-        context: Dict[str, Any]
+        context: dict[str, Any]
     ) -> bool:
         """Evaluate ring-based deployment"""
         rings = flag.metadata.get("rings", [])
         user_ring = context.get("deployment_ring", "production")
-        
+
         if not rings:
             return False
-        
+
         # Find ring index
         try:
             ring_index = rings.index(user_ring)
@@ -385,17 +386,17 @@ class FeatureFlagManager:
             return ring_percentage <= flag.percentage
         except ValueError:
             return False
-    
+
     def update_flag(
         self,
         flag_name: str,
-        updates: Dict[str, Any]
+        updates: dict[str, Any]
     ) -> bool:
         """Update feature flag configuration"""
         flag = self._get_flag(flag_name)
         if not flag:
             return False
-        
+
         # Update fields
         if "status" in updates:
             flag.status = FeatureStatus(updates["status"])
@@ -407,20 +408,20 @@ class FeatureFlagManager:
             flag.denylist = updates["denylist"]
         if "conditions" in updates:
             flag.conditions.update(updates["conditions"])
-        
+
         flag.updated_at = datetime.utcnow()
-        
+
         # Save to storage
         self._save_flag(flag)
-        
+
         logger.info(f"Updated feature flag: {flag_name}")
         return True
-    
+
     def _save_flag(self, flag: FeatureFlag):
         """Save flag to storage"""
         # Update local cache
         self.flags[flag.name] = flag
-        
+
         # Save to Redis if available
         if self.redis_client:
             try:
@@ -431,15 +432,15 @@ class FeatureFlagManager:
                 )
             except Exception as e:
                 logger.error(f"Error saving flag to Redis: {e}")
-    
-    def get_all_flags(self, user_id: Optional[str] = None) -> Dict[str, bool]:
+
+    def get_all_flags(self, user_id: str | None = None) -> dict[str, bool]:
         """Get status of all flags for a user"""
         result = {}
         for flag_name in self.flags:
             result[flag_name] = self.is_enabled(flag_name, user_id)
         return result
-    
-    def get_flag_metadata(self, flag_name: str) -> Optional[Dict[str, Any]]:
+
+    def get_flag_metadata(self, flag_name: str) -> dict[str, Any] | None:
         """Get flag metadata for monitoring"""
         flag = self._get_flag(flag_name)
         if flag:
@@ -456,18 +457,18 @@ def feature_flag(flag_name: str, fallback=None):
         def wrapper(*args, **kwargs):
             # Get manager instance (would be injected in real app)
             manager = FeatureFlagManager()
-            
+
             # Extract user context from kwargs or args
             user_id = kwargs.get("user_id")
             context = kwargs.get("context", {})
-            
+
             if manager.is_enabled(flag_name, user_id, context):
                 return func(*args, **kwargs)
             elif fallback:
                 return fallback(*args, **kwargs)
             else:
                 raise FeatureNotEnabledError(f"Feature '{flag_name}' is not enabled")
-        
+
         return wrapper
     return decorator
 

@@ -13,6 +13,8 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
+from app.core.ai_logger import logger
+
 logger = logging.getLogger(__name__)
 
 
@@ -553,13 +555,13 @@ if __name__ == "__main__":
         mem1 = await agent1.get_memory("mem-1")
         mem2 = await agent2.get_memory("mem-1")
 
-        print(f"Agent 1 memory: {mem1}")
-        print(f"Agent 2 memory: {mem2}")
-        print(f"Converged: {mem1 == mem2}")
+        logger.info(f"Agent 1 memory: {mem1}")
+        logger.info(f"Agent 2 memory: {mem2}")
+        logger.info(f"Converged: {mem1 == mem2}")
 
         # Show metrics
-        print(f"\nAgent 1 snapshot: {agent1.get_state_snapshot()}")
-        print(f"Agent 2 snapshot: {agent2.get_state_snapshot()}")
+        logger.info(f"\nAgent 1 snapshot: {agent1.get_state_snapshot()}")
+        logger.info(f"Agent 2 snapshot: {agent2.get_state_snapshot()}")
 
         # Cleanup
         await agent1.stop()

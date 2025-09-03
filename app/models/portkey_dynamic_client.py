@@ -13,9 +13,7 @@ from typing import Any
 from openai import AsyncOpenAI
 from portkey_ai import PORTKEY_GATEWAY_URL, Portkey
 
-from app.core.circuit_breaker import (
-    with_circuit_breaker,
-)
+from app.core.circuit_breaker import with_circuit_breaker
 
 from .openrouter_latest import ModelTier, OpenRouterLatest, TaskType
 

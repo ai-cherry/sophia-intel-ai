@@ -10,6 +10,8 @@ import json
 import re
 from pathlib import Path
 
+from app.core.ai_logger import logger
+
 
 class CircuitBreakerApplicator:
     """Apply circuit breakers to external service calls"""
@@ -55,7 +57,7 @@ class CircuitBreakerApplicator:
 
     def scan_directory(self, directory: Path) -> None:
         """Scan directory for functions needing circuit breakers"""
-        print(f"🔍 Scanning {directory} for external service calls...")
+        logger.info(f"🔍 Scanning {directory} for external service calls...")
 
         for py_file in directory.rglob("*.py"):
             # Skip test files and the circuit breaker module itself
@@ -88,7 +90,7 @@ class CircuitBreakerApplicator:
 
     def apply_to_file(self, file_path: Path, breaker_types: set[str]) -> bool:
         """Apply circuit breakers to a file"""
-        print(f"  📝 Applying circuit breakers to {file_path.name}...")
+        logger.info(f"  📝 Applying circuit breakers to {file_path.name}...")
 
         try:
             with open(file_path) as f:
@@ -138,16 +140,16 @@ class CircuitBreakerApplicator:
                     with open(file_path, 'w') as f:
                         f.write(content)
 
-                    print(f"    ✅ Protected {len(functions_to_protect)} functions")
+                    logger.info(f"    ✅ Protected {len(functions_to_protect)} functions")
                 else:
-                    print(f"    🔍 Would protect {len(functions_to_protect)} functions")
+                    logger.info(f"    🔍 Would protect {len(functions_to_protect)} functions")
 
                 self.report["files_updated"] += 1
                 return True
 
         except Exception as e:
             self.report["errors"].append(f"{file_path}: {str(e)}")
-            print(f"    ❌ Error: {e}")
+            logger.info(f"    ❌ Error: {e}")
             return False
 
         return False
@@ -215,46 +217,46 @@ class CircuitBreakerApplicator:
 
     def generate_report(self) -> None:
         """Generate application report"""
-        print("\n" + "=" * 50)
-        print("📊 CIRCUIT BREAKER APPLICATION REPORT")
-        print("=" * 50)
+        logger.info("\n" + "=" * 50)
+        logger.info("📊 CIRCUIT BREAKER APPLICATION REPORT")
+        logger.info("=" * 50)
 
-        print(f"Files analyzed: {self.report['files_analyzed']}")
-        print(f"Files needing protection: {len(self.files_to_update)}")
-        print(f"Files updated: {self.report['files_updated']}")
-        print(f"Functions protected: {len(self.report['functions_protected'])}")
+        logger.info(f"Files analyzed: {self.report['files_analyzed']}")
+        logger.info(f"Files needing protection: {len(self.files_to_update)}")
+        logger.info(f"Files updated: {self.report['files_updated']}")
+        logger.info(f"Functions protected: {len(self.report['functions_protected'])}")
 
         if self.report['circuit_breakers_added']:
-            print("\nCircuit breakers by type:")
+            logger.info("\nCircuit breakers by type:")
             for breaker_type, count in self.report['circuit_breakers_added'].items():
-                print(f"  - {breaker_type}: {count}")
+                logger.info(f"  - {breaker_type}: {count}")
 
         if self.report['errors']:
-            print(f"\n⚠️  Errors encountered: {len(self.report['errors'])}")
+            logger.info(f"\n⚠️  Errors encountered: {len(self.report['errors'])}")
             for error in self.report['errors'][:5]:
-                print(f"  - {error}")
+                logger.info(f"  - {error}")
 
         # Save detailed report
         report_path = Path("circuit_breaker_application_report.json")
         with open(report_path, 'w') as f:
             json.dump(self.report, f, indent=2, default=str)
 
-        print(f"\n📄 Detailed report saved to: {report_path}")
+        logger.info(f"\n📄 Detailed report saved to: {report_path}")
 
     def run(self, directory: Path) -> None:
         """Run the circuit breaker application process"""
-        print("🛡️ Circuit Breaker Application Tool")
-        print("=" * 50)
+        logger.info("🛡️ Circuit Breaker Application Tool")
+        logger.info("=" * 50)
 
         if self.dry_run:
-            print("🔍 Running in DRY RUN mode (no changes will be made)")
+            logger.info("🔍 Running in DRY RUN mode (no changes will be made)")
         else:
-            print("⚠️  Running in LIVE mode (files will be modified)")
+            logger.info("⚠️  Running in LIVE mode (files will be modified)")
 
         # Scan for files needing circuit breakers
         self.scan_directory(directory)
 
-        print(f"\n📋 Found {len(self.files_to_update)} files needing circuit breakers")
+        logger.info(f"\n📋 Found {len(self.files_to_update)} files needing circuit breakers")
 
         # Apply to each file
         for file_path, breaker_types in self.files_to_update:

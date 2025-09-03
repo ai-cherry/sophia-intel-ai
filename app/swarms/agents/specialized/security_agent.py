@@ -5,9 +5,9 @@ Optimized for identifying vulnerabilities, implementing protective measures,
 and ensuring systems meet security best practices and compliance requirements.
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from ..base_agent import BaseAgent, AgentRole
+from ..base_agent import AgentRole, BaseAgent
 
 
 class SecurityAgent(BaseAgent):
@@ -20,11 +20,11 @@ class SecurityAgent(BaseAgent):
     - Compliance framework analysis
     - Threat modeling and risk assessment
     """
-    
+
     def __init__(
         self,
         agent_id: str = "security-001",
-        security_frameworks: List[str] = None,
+        security_frameworks: list[str] = None,
         enable_reasoning: bool = True,
         max_reasoning_steps: int = 15,
         **kwargs
@@ -32,7 +32,7 @@ class SecurityAgent(BaseAgent):
         self.security_frameworks = security_frameworks or [
             "OWASP", "NIST", "ISO_27001", "SOC2", "GDPR", "HIPAA"
         ]
-        
+
         # Custom tools for security analysis (would be implemented)
         security_tools = [
             # VulnerabilityScanner(),
@@ -40,7 +40,7 @@ class SecurityAgent(BaseAgent):
             # ThreatModeler(),
             # SecurityAuditor()
         ]
-        
+
         # Initialize with security-specific configuration
         super().__init__(
             agent_id=agent_id,
@@ -54,8 +54,8 @@ class SecurityAgent(BaseAgent):
             },
             **kwargs
         )
-    
-    async def analyze_vulnerability(self, system_info: Dict[str, Any]) -> Dict[str, Any]:
+
+    async def analyze_vulnerability(self, system_info: dict[str, Any]) -> dict[str, Any]:
         """
         Perform comprehensive vulnerability analysis of a system.
         
@@ -65,7 +65,7 @@ class SecurityAgent(BaseAgent):
         Returns:
             Detailed vulnerability assessment with risk ratings
         """
-        
+
         security_problem = {
             "query": f"""Perform a comprehensive security vulnerability analysis for:
             
@@ -89,9 +89,9 @@ class SecurityAgent(BaseAgent):
             "context": "security_analysis",
             "priority": "critical"
         }
-        
+
         result = await self.execute(security_problem)
-        
+
         return {
             "vulnerability_analysis": result["result"],
             "system_name": system_info.get("name"),
@@ -106,8 +106,8 @@ class SecurityAgent(BaseAgent):
                 "confidence": "high" if result["success"] else "needs_review"
             }
         }
-    
-    async def check_compliance(self, system_info: Dict[str, Any], framework: str) -> Dict[str, Any]:
+
+    async def check_compliance(self, system_info: dict[str, Any], framework: str) -> dict[str, Any]:
         """
         Check system compliance against specific security framework.
         
@@ -118,7 +118,7 @@ class SecurityAgent(BaseAgent):
         Returns:
             Compliance assessment with gap analysis
         """
-        
+
         compliance_problem = {
             "query": f"""Assess compliance with {framework} for the following system:
             
@@ -140,9 +140,9 @@ class SecurityAgent(BaseAgent):
             """,
             "context": "compliance_analysis"
         }
-        
+
         result = await self.execute(compliance_problem)
-        
+
         return {
             "compliance_analysis": result["result"],
             "framework": framework,
@@ -153,8 +153,8 @@ class SecurityAgent(BaseAgent):
             "compliance_analyst_id": self.agent_id,
             "success": result["success"]
         }
-    
-    async def create_threat_model(self, application_design: Dict[str, Any]) -> Dict[str, Any]:
+
+    async def create_threat_model(self, application_design: dict[str, Any]) -> dict[str, Any]:
         """
         Create comprehensive threat model for an application.
         
@@ -164,7 +164,7 @@ class SecurityAgent(BaseAgent):
         Returns:
             Detailed threat model with attack vectors and mitigations
         """
-        
+
         threat_modeling_problem = {
             "query": f"""Create a comprehensive threat model for this application:
             
@@ -187,9 +187,9 @@ class SecurityAgent(BaseAgent):
             """,
             "context": "threat_modeling"
         }
-        
+
         result = await self.execute(threat_modeling_problem)
-        
+
         return {
             "threat_model": result["result"],
             "application_name": application_design.get("name"),

@@ -13,6 +13,8 @@ from typing import Any
 
 import uvloop
 
+from app.core.ai_logger import logger
+
 # Install uvloop for maximum async performance
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
@@ -131,7 +133,7 @@ class AgnoTeamPool:
 
         acquisition_time = (time.perf_counter() - start) * 1_000_000
         if acquisition_time > 2:
-            print(f"⚠️ Agent acquisition took {acquisition_time:.2f}μs (target: <2μs)")
+            logger.info(f"⚠️ Agent acquisition took {acquisition_time:.2f}μs (target: <2μs)")
 
         try:
             yield agent
@@ -164,7 +166,7 @@ class UltraFastAgnoTeam:
     async def initialize(self):
         """Initialize team with pre-allocated agent pool"""
         await self.agent_pool.initialize()
-        print(f"✅ {self.name} initialized with {self.agent_pool.pool_size} pre-allocated agents")
+        logger.info(f"✅ {self.name} initialized with {self.agent_pool.pool_size} pre-allocated agents")
 
     async def spawn_agent(
         self,
@@ -209,7 +211,7 @@ class UltraFastAgnoTeam:
         ) / 1024
 
         if instantiation_time > 2:
-            print(f"⚠️ Agent {name} instantiation: {instantiation_time:.2f}μs (target: <2μs)")
+            logger.info(f"⚠️ Agent {name} instantiation: {instantiation_time:.2f}μs (target: <2μs)")
 
         return agent
 
@@ -338,7 +340,7 @@ async def benchmark_agent_instantiation(count: int = 10000):
     Benchmark agent instantiation performance
     Target: <2μs per agent, <3.75KB memory
     """
-    print(f"\n🚀 Benchmarking {count} agent instantiations...")
+    logger.info(f"\n🚀 Benchmarking {count} agent instantiations...")
 
     team = UltraFastAgnoTeam("benchmark_team", max_agents=count)
     await team.initialize()
@@ -375,29 +377,29 @@ async def benchmark_agent_instantiation(count: int = 10000):
 
     # Report
     report = team.get_performance_report()
-    print("\n📊 Performance Report:")
-    print(f"  Total agents created: {report['total_agents_created']}")
-    print(f"  Average instantiation: {report['avg_instantiation_us']:.2f}μs")
-    print(f"  Peak concurrent agents: {report['peak_concurrent_agents']}")
-    print(f"  Total memory: {report['total_memory_kb']:.2f}KB")
-    print(f"  Memory per agent: {report['total_memory_kb'] * 1024 / report['total_agents_created']:.2f} bytes")
-    print(f"  Total time: {total_time:.3f}s")
-    print(f"  Throughput: {count / total_time:.0f} agents/second")
+    logger.info("\n📊 Performance Report:")
+    logger.info(f"  Total agents created: {report['total_agents_created']}")
+    logger.info(f"  Average instantiation: {report['avg_instantiation_us']:.2f}μs")
+    logger.info(f"  Peak concurrent agents: {report['peak_concurrent_agents']}")
+    logger.info(f"  Total memory: {report['total_memory_kb']:.2f}KB")
+    logger.info(f"  Memory per agent: {report['total_memory_kb'] * 1024 / report['total_agents_created']:.2f} bytes")
+    logger.info(f"  Total time: {total_time:.3f}s")
+    logger.info(f"  Throughput: {count / total_time:.0f} agents/second")
 
     # Validate targets
     success = True
     if report['avg_instantiation_us'] > 2:
-        print(f"  ❌ Instantiation target missed: {report['avg_instantiation_us']:.2f}μs > 2μs")
+        logger.info(f"  ❌ Instantiation target missed: {report['avg_instantiation_us']:.2f}μs > 2μs")
         success = False
     else:
-        print(f"  ✅ Instantiation target met: {report['avg_instantiation_us']:.2f}μs < 2μs")
+        logger.info(f"  ✅ Instantiation target met: {report['avg_instantiation_us']:.2f}μs < 2μs")
 
     avg_memory = report['total_memory_kb'] * 1024 / report['total_agents_created']
     if avg_memory > 3750:
-        print(f"  ❌ Memory target missed: {avg_memory:.0f} bytes > 3.75KB")
+        logger.info(f"  ❌ Memory target missed: {avg_memory:.0f} bytes > 3.75KB")
         success = False
     else:
-        print(f"  ✅ Memory target met: {avg_memory:.0f} bytes < 3.75KB")
+        logger.info(f"  ✅ Memory target met: {avg_memory:.0f} bytes < 3.75KB")
 
     return success
 
@@ -425,7 +427,7 @@ if __name__ == "__main__":
             ["coding_team"]
         )
 
-        print(f"\n✅ Chain execution completed in {result['latency_ms']:.2f}ms")
+        logger.info(f"\n✅ Chain execution completed in {result['latency_ms']:.2f}ms")
 
         # Run benchmark
         await benchmark_agent_instantiation(1000)

@@ -3,6 +3,7 @@ import logging
 from dataclasses import dataclass
 from typing import Any
 
+from app.core.ai_logger import logger
 from app.core.circuit_breaker import CircuitBreaker
 from app.observability.prometheus_metrics import (
     swarm_failure_rate,
@@ -291,7 +292,7 @@ if __name__ == "__main__":
             primary_swarm="coding_swarm"
         )
 
-        print(f"Execution result: {result}")
+        logger.info(f"Execution result: {result}")
 
         # Run health checks in background
         asyncio.create_task(manager.run_health_check_cycle())

@@ -6,6 +6,8 @@ import httpx
 from openai import AsyncOpenAI
 from prometheus_client import REGISTRY, Counter, Histogram
 
+from app.core.ai_logger import logger
+
 # Initialize Prometheus metrics with duplicate handling
 try:
     model_tokens_total = Counter(
@@ -218,7 +220,7 @@ if __name__ == "__main__":
 
     async def test_gateway():
         gateway = OpenRouterGateway()
-        print("Testing GPT-5 with think_hard")
+        logger.info("Testing GPT-5 with think_hard")
         response = await gateway.chat_completion(
             "openai/gpt-5",
             [{"role": "user", "content": "What is the capital of France?"}],
@@ -226,17 +228,17 @@ if __name__ == "__main__":
             temperature=0.1,
             think_hard=True
         )
-        print(f"GPT-5 Response: {response.choices[0].message.content}")
+        logger.info(f"GPT-5 Response: {response.choices[0].message.content}")
 
-        print("\nTesting fallback chain (invalid model)")
+        logger.info("\nTesting fallback chain (invalid model)")
         try:
             response = await gateway.chat_completion(
                 "invalid-model",
                 [{"role": "user", "content": "Hello"}],
                 max_tokens=10
             )
-            print(f"Fallback Response: {response.choices[0].message.content}")
+            logger.info(f"Fallback Response: {response.choices[0].message.content}")
         except Exception as e:
-            print(f"Fallback failed: {str(e)}")
+            logger.info(f"Fallback failed: {str(e)}")
 
     asyncio.run(test_gateway())

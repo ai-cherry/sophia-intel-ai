@@ -11,6 +11,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from app.core.ai_logger import logger
+
 logger = logging.getLogger(__name__)
 
 # ============================================
@@ -995,18 +997,18 @@ if __name__ == "__main__":
         # Solve with improvements
         result = await swarm.solve_with_improvements(test_problem)
 
-        print("Solution Result:")
-        print(json.dumps(result, indent=2, default=str))
+        logger.info("Solution Result:")
+        logger.info(json.dumps(result, indent=2, default=str))
 
-        print("\nPerformance Metrics:")
-        print(json.dumps(swarm.get_performance_metrics(), indent=2))
+        logger.info("\nPerformance Metrics:")
+        logger.info(json.dumps(swarm.get_performance_metrics(), indent=2))
 
         # Create UI integration
         ui = MCPUIIntegration(swarm)
         control_panel = ui.create_swarm_control_panel()
 
-        print("\nUI Control Panel:")
-        print(json.dumps(control_panel, indent=2, default=str))
+        logger.info("\nUI Control Panel:")
+        logger.info(json.dumps(control_panel, indent=2, default=str))
 
     # Run test
     asyncio.run(test_improved_swarm())

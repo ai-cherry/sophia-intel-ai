@@ -142,6 +142,8 @@ async def test_migration():
     sample_code = '''
 import requests
 import json
+from app.core.ai_logger import logger
+
 
 def fetch_data(url):
     response = requests.get(url, timeout=10)
@@ -152,9 +154,9 @@ def post_data(url, data):
     return response.status_code
 '''
 
-    print("BEFORE MIGRATION:")
-    print(sample_code)
-    print("\n" + "=" * 40 + "\n")
+    logger.info("BEFORE MIGRATION:")
+    logger.info(sample_code)
+    logger.info("\n" + "=" * 40 + "\n")
 
     # Simulate migration
     migrated = sample_code
@@ -167,29 +169,29 @@ def post_data(url, data):
     # Add imports
     migrated = "from app.core.async_http_client import AsyncHTTPClient, async_get, async_post\n" + migrated
 
-    print("AFTER MIGRATION:")
-    print(migrated)
+    logger.info("AFTER MIGRATION:")
+    logger.info(migrated)
 
 
 def main():
     """Run migration analysis"""
     root_dir = "/Users/lynnmusil/sophia-intel-ai"
 
-    print("🔍 Scanning for files with blocking HTTP calls...")
+    logger.info("🔍 Scanning for files with blocking HTTP calls...")
     files = find_python_files(root_dir)
 
-    print(f"📊 Found {len(files)} files to analyze")
+    logger.info(f"📊 Found {len(files)} files to analyze")
 
     report = generate_migration_report(files)
-    print(report)
+    logger.info(report)
 
     # Save report
     report_path = Path(root_dir) / "migration_report_httpx.txt"
     report_path.write_text(report)
-    print(f"\n📝 Report saved to: {report_path}")
+    logger.info(f"\n📝 Report saved to: {report_path}")
 
     # Optionally run test
-    print("\n🧪 Running migration test...")
+    logger.info("\n🧪 Running migration test...")
     asyncio.run(test_migration())
 
 

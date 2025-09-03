@@ -400,12 +400,11 @@ def register_services(container: DIContainer):
     """Register all services with the DI container"""
 
     # Import here to avoid circular dependencies
-    from app.agents.orchestra_manager import OrchestraManager
+    from app.embeddings.agno_embedding_service import AgnoEmbeddingService
+    from app.embeddings.portkey_integration import PortkeyGateway
     from app.nl_interface.command_dispatcher import SmartCommandDispatcher
     from app.orchestration.unified_facade import UnifiedOrchestratorFacade
     from app.ui.unified.chat_orchestrator import ChatOrchestrator
-    from app.embeddings.agno_embedding_service import AgnoEmbeddingService
-    from app.embeddings.portkey_integration import PortkeyGateway
 
     # Get config
     config = container.config
@@ -426,12 +425,12 @@ def register_services(container: DIContainer):
         PortkeyGateway,
         lambda: PortkeyGateway()
     )
-    
+
     container.register_singleton(
         AgnoEmbeddingService,
         lambda: AgnoEmbeddingService()
     )
-    
+
     # Register core services
     container.register_singleton(
         SmartCommandDispatcher,
@@ -448,16 +447,12 @@ def register_services(container: DIContainer):
         lambda: UnifiedOrchestratorFacade()
     )
 
-    container.register_singleton(
-        OrchestraManager,
-        lambda: OrchestraManager(name="Maestro")
-    )
+    # OrchestraManager removed - functionality integrated into SuperOrchestrator
 
     # Register ChatOrchestrator with dependencies
     async def create_chat_orchestrator():
         dispatcher = await container.resolve(SmartCommandDispatcher)
         facade = await container.resolve(UnifiedOrchestratorFacade)
-        manager = await container.resolve(OrchestraManager)
         pool = await container.resolve(WebSocketConnectionPool)
         sessions = await container.resolve(SessionStateManager)
 

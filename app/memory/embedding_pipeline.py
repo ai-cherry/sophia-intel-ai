@@ -22,9 +22,7 @@ except ImportError:
     OPENAI_AVAILABLE = False
     AsyncOpenAI = None
 
-from app.core.circuit_breaker import (
-    with_circuit_breaker,
-)
+from app.core.circuit_breaker import with_circuit_breaker
 from app.core.config import settings
 
 # Optional observability imports

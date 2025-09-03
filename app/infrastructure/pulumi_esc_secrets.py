@@ -13,6 +13,8 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
 import os
+from app.core.ai_logger import logger
+
 
 logger = logging.getLogger(__name__)
 
@@ -532,27 +534,27 @@ if __name__ == "__main__":
         
         # Setup secrets
         results = await manager.setup_rotated_secrets(service_configs)
-        print(f"Setup results: {results}")
+        logger.info(f"Setup results: {results}")
         
         # Check health
         health = await manager.validate_secret_health()
-        print(f"\nSecret health:")
+        logger.info(f"\nSecret health:")
         for service, status in health.items():
-            print(f"  {service}: {status.status} (age: {status.age_hours:.1f}h)")
+            logger.info(f"  {service}: {status.status} (age: {status.age_hours:.1f}h)")
         
         # Trigger emergency rotation
         emergency_result = await manager.trigger_emergency_rotation(
             'lambda-labs',
             'Potential compromise detected'
         )
-        print(f"\nEmergency rotation: {emergency_result}")
+        logger.info(f"\nEmergency rotation: {emergency_result}")
         
         # Get metrics
         metrics = manager.get_metrics()
-        print(f"\nMetrics:")
-        print(f"  Total rotations: {metrics['total_rotations']}")
-        print(f"  Emergency rotations: {metrics['emergency_rotations']}")
-        print(f"  Avg rotation time: {metrics['avg_rotation_time_ms']:.2f}ms")
-        print(f"  Success rate: {metrics['success_rate']:.1%}")
+        logger.info(f"\nMetrics:")
+        logger.info(f"  Total rotations: {metrics['total_rotations']}")
+        logger.info(f"  Emergency rotations: {metrics['emergency_rotations']}")
+        logger.info(f"  Avg rotation time: {metrics['avg_rotation_time_ms']:.2f}ms")
+        logger.info(f"  Success rate: {metrics['success_rate']:.1%}")
     
     asyncio.run(test_secrets_manager())

@@ -4,26 +4,23 @@ Provides REST and WebSocket interfaces for embedding generation
 """
 
 import logging
-from typing import Any, Optional
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
 from app.api.contracts import (
     APIResponse,
-    ErrorResponse,
     create_api_response,
     create_error_response,
 )
 from app.embeddings.agno_embedding_service import (
+    AgnoEmbeddingRequest,
     AgnoEmbeddingService,
     EmbeddingModel,
-    AgnoEmbeddingRequest,
-    EmbeddingResponse,
 )
 from app.embeddings.portkey_integration import PortkeyGateway
 from app.infrastructure.dependency_injection import get_container
-from app.infrastructure.logging.structured_logger import StructuredLogger
 from app.infrastructure.metrics.collector import MetricsCollector
 
 logger = logging.getLogger(__name__)
@@ -36,16 +33,16 @@ router = APIRouter(prefix="/embeddings", tags=["embeddings"])
 class CreateEmbeddingRequest(BaseModel):
     """Request to create embeddings"""
     text: str | list[str]
-    model: Optional[str] = Field(None, description="Model to use (auto-selected if not provided)")
+    model: str | None = Field(None, description="Model to use (auto-selected if not provided)")
     use_case: str = Field("general", description="Use case: rag, search, clustering, etc.")
     language: str = Field("en", description="Language code")
-    dimensions: Optional[int] = Field(None, description="Target dimensions")
+    dimensions: int | None = Field(None, description="Target dimensions")
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 class BatchEmbeddingRequest(BaseModel):
     """Request for batch embedding processing"""
     texts: list[str]
-    model: Optional[str] = None
+    model: str | None = None
     use_case: str = "general"
     batch_size: int = Field(100, ge=1, le=1000)
     metadata: dict[str, Any] = Field(default_factory=dict)
@@ -55,12 +52,12 @@ class SearchRequest(BaseModel):
     query: str
     documents: list[str]
     top_k: int = Field(10, ge=1, le=100)
-    model: Optional[str] = None
+    model: str | None = None
 
 class ModelRecommendationRequest(BaseModel):
     """Request for model recommendations"""
     use_case: str
-    max_tokens: Optional[int] = None
+    max_tokens: int | None = None
     language: str = "en"
     high_quality: bool = False
     low_cost: bool = False
@@ -86,7 +83,7 @@ class SearchResult(BaseModel):
 class SearchAPIResponse(BaseModel):
     """Response from search API"""
     results: list[SearchResult]
-    query_embedding: Optional[list[float]] = None
+    query_embedding: list[float] | None = None
     model: str
     latency_ms: float
 
@@ -135,7 +132,7 @@ async def create_embedding(
     try:
         # Convert single text to list
         texts = [request.text] if isinstance(request.text, str) else request.text
-        
+
         # Create embedding request
         embedding_request = AgnoEmbeddingRequest(
             texts=texts,
@@ -145,17 +142,17 @@ async def create_embedding(
             max_length=request.dimensions,
             metadata=request.metadata
         )
-        
+
         # Generate embeddings
         response = await service.embed(embedding_request)
-        
+
         # Track metrics
         await metrics.record_metric(
             name="embeddings_created",
             value=len(texts),
             tags={"model": response.model_used, "use_case": request.use_case}
         )
-        
+
         # Create API response
         api_response = EmbeddingAPIResponse(
             embeddings=response.embeddings,
@@ -168,12 +165,12 @@ async def create_embedding(
             cached=response.cached,
             metadata=response.metadata
         )
-        
+
         return create_api_response(
             data=api_response.model_dump(),
             message=f"Created {len(response.embeddings)} embeddings"
         )
-        
+
     except Exception as e:
         logger.error(f"Failed to create embeddings: {e}")
         raise HTTPException(
@@ -200,10 +197,10 @@ async def create_batch_embeddings(
         all_embeddings = []
         total_cost = 0.0
         total_tokens = 0
-        
+
         for i in range(0, len(request.texts), request.batch_size):
             batch = request.texts[i:i + request.batch_size]
-            
+
             # Create embedding request for batch
             embedding_request = AgnoEmbeddingRequest(
                 texts=batch,
@@ -211,21 +208,21 @@ async def create_batch_embeddings(
                 use_case=request.use_case,
                 metadata={**request.metadata, "batch_index": i // request.batch_size}
             )
-            
+
             # Generate embeddings
             response = await service.embed(embedding_request)
-            
+
             all_embeddings.extend(response.embeddings)
             total_cost += response.cost_estimate
             total_tokens += response.tokens_processed
-        
+
         # Track metrics
         await metrics.record_metric(
             name="batch_embeddings_created",
             value=len(request.texts),
             tags={"batch_size": request.batch_size}
         )
-        
+
         # Create response
         api_response = EmbeddingAPIResponse(
             embeddings=all_embeddings,
@@ -237,12 +234,12 @@ async def create_batch_embeddings(
             latency_ms=response.latency_ms,
             metadata=request.metadata
         )
-        
+
         return create_api_response(
             data=api_response.model_dump(),
             message=f"Created {len(all_embeddings)} embeddings in batches"
         )
-        
+
     except Exception as e:
         logger.error(f"Failed to create batch embeddings: {e}")
         raise HTTPException(
@@ -262,7 +259,7 @@ async def semantic_search(
     """
     try:
         import numpy as np
-        
+
         # Generate query embedding
         query_request = AgnoEmbeddingRequest(
             texts=[request.query],
@@ -271,7 +268,7 @@ async def semantic_search(
         )
         query_response = await service.embed(query_request)
         query_embedding = np.array(query_response.embeddings[0])
-        
+
         # Generate document embeddings
         doc_request = AgnoEmbeddingRequest(
             texts=request.documents,
@@ -280,15 +277,15 @@ async def semantic_search(
         )
         doc_response = await service.embed(doc_request)
         doc_embeddings = np.array(doc_response.embeddings)
-        
+
         # Calculate similarities
         similarities = np.dot(doc_embeddings, query_embedding) / (
             np.linalg.norm(doc_embeddings, axis=1) * np.linalg.norm(query_embedding)
         )
-        
+
         # Get top-k results
         top_indices = np.argsort(similarities)[-request.top_k:][::-1]
-        
+
         results = [
             SearchResult(
                 index=int(idx),
@@ -297,7 +294,7 @@ async def semantic_search(
             )
             for idx in top_indices
         ]
-        
+
         # Create response
         api_response = SearchAPIResponse(
             results=results,
@@ -305,12 +302,12 @@ async def semantic_search(
             model=query_response.model_used,
             latency_ms=query_response.latency_ms + doc_response.latency_ms
         )
-        
+
         return create_api_response(
             data=api_response.model_dump(),
             message=f"Found {len(results)} relevant documents"
         )
-        
+
     except Exception as e:
         logger.error(f"Search failed: {e}")
         raise HTTPException(
@@ -328,7 +325,7 @@ async def list_models(
     Returns models with specifications and capabilities
     """
     from app.embeddings.agno_embedding_service import MODEL_REGISTRY
-    
+
     models = []
     for model, spec in MODEL_REGISTRY.items():
         models.append({
@@ -342,7 +339,7 @@ async def list_models(
             "cost_per_1k_tokens": spec.cost_per_1k_tokens,
             "multilingual": spec.multilingual
         })
-    
+
     return create_api_response(
         data={"models": models},
         message=f"Found {len(models)} available models"
@@ -365,12 +362,12 @@ async def recommend_model(
             "high_quality": request.high_quality,
             "low_cost": request.low_cost
         }
-        
+
         recommendations = service.get_model_recommendations(
             use_case=request.use_case,
             requirements=requirements
         )
-        
+
         results = []
         for model, spec in recommendations:
             results.append({
@@ -383,12 +380,12 @@ async def recommend_model(
                 "cost_per_1k_tokens": spec.cost_per_1k_tokens,
                 "reason": f"Best for {request.use_case} with {spec.strengths[0]}"
             })
-        
+
         return create_api_response(
             data={"recommendations": results},
             message=f"Found {len(results)} recommended models"
         )
-        
+
     except Exception as e:
         logger.error(f"Failed to get recommendations: {e}")
         raise HTTPException(
@@ -408,13 +405,13 @@ async def get_embedding_stats(
     """
     # Get provider status
     provider_status = gateway.get_provider_status()
-    
+
     # Get cache stats (if available)
     cache_stats = {
         "size": len(service._embedding_cache),
         "providers": list(provider_status.keys())
     }
-    
+
     return create_api_response(
         data={
             "cache": cache_stats,
@@ -429,6 +426,7 @@ async def get_embedding_stats(
 
 from fastapi import WebSocket, WebSocketDisconnect
 
+
 @router.websocket("/stream")
 async def embedding_stream(
     websocket: WebSocket,
@@ -440,28 +438,28 @@ async def embedding_stream(
     Useful for real-time applications and continuous processing
     """
     await websocket.accept()
-    
+
     try:
         while True:
             # Receive request
             data = await websocket.receive_json()
-            
+
             # Process embedding request
             request = AgnoEmbeddingRequest(
                 texts=data.get("texts", []),
                 use_case=data.get("use_case", "general"),
                 language=data.get("language", "en")
             )
-            
+
             response = await service.embed(request)
-            
+
             # Send response
             await websocket.send_json({
                 "embeddings": response.embeddings,
                 "model": response.model_used,
                 "latency_ms": response.latency_ms
             })
-            
+
     except WebSocketDisconnect:
         logger.info("WebSocket disconnected")
     except Exception as e:
@@ -483,7 +481,7 @@ async def health_check(
     Returns status, model availability, provider health, and performance metrics
     """
     from app.embeddings.agno_embedding_service import MODEL_REGISTRY
-    
+
     try:
         # Initialize health data
         health_data = {
@@ -492,7 +490,7 @@ async def health_check(
             "checks": {},
             "errors": []
         }
-        
+
         # 1. Check model registry
         try:
             available_models = list(MODEL_REGISTRY.keys())
@@ -507,12 +505,12 @@ async def health_check(
                 "error": str(e)
             }
             health_data["errors"].append(f"Model registry check failed: {e}")
-        
+
         # 2. Check provider status via Portkey
         try:
             provider_status = gateway.get_provider_status()
             active_providers = gateway.virtual_key_manager.get_active_providers()
-            
+
             health_data["checks"]["providers"] = {
                 "status": "healthy" if len(active_providers) > 0 else "unhealthy",
                 "active_count": len(active_providers),
@@ -524,7 +522,7 @@ async def health_check(
                 "error": str(e)
             }
             health_data["errors"].append(f"Provider check failed: {e}")
-        
+
         # 3. Test embedding generation
         try:
             test_request = AgnoEmbeddingRequest(
@@ -532,7 +530,7 @@ async def health_check(
                 use_case="general"
             )
             test_response = await service.embed(test_request)
-            
+
             health_data["checks"]["embedding_generation"] = {
                 "status": "healthy",
                 "test_latency_ms": test_response.latency_ms,
@@ -544,12 +542,12 @@ async def health_check(
                 "error": str(e)
             }
             health_data["errors"].append(f"Embedding generation failed: {e}")
-        
+
         # 4. Check cache status
         try:
             cache_size = len(service._embedding_cache) if hasattr(service, '_embedding_cache') else 0
             service_metrics = service.get_metrics()
-            
+
             health_data["checks"]["cache"] = {
                 "status": "healthy",
                 "size": cache_size,
@@ -561,7 +559,7 @@ async def health_check(
                 "status": "degraded",
                 "error": str(e)
             }
-        
+
         # 5. Get performance metrics
         try:
             service_metrics = service.get_metrics()
@@ -575,22 +573,22 @@ async def health_check(
             health_data["performance_metrics"] = {
                 "error": str(e)
             }
-        
+
         # Calculate health score (0-100)
         health_score = 100
         critical_checks = ["model_registry", "providers", "embedding_generation"]
-        
+
         for check_name in critical_checks:
             if check_name in health_data["checks"]:
                 if health_data["checks"][check_name]["status"] == "unhealthy":
                     health_score -= 30
                 elif health_data["checks"][check_name]["status"] == "degraded":
                     health_score -= 15
-        
+
         # Deduct for performance issues
         if health_data.get("performance_metrics", {}).get("avg_latency_ms", 0) > 200:
             health_score -= 10
-        
+
         # Determine overall status
         if health_score >= 80:
             health_data["status"] = "healthy"
@@ -598,20 +596,20 @@ async def health_check(
             health_data["status"] = "degraded"
         else:
             health_data["status"] = "unhealthy"
-        
+
         health_data["health_score"] = max(0, health_score)
-        
+
         # Add version info
         health_data["version"] = "2.0.0"  # Agno AgentOS embedding version
         health_data["implementation"] = "agno"
-        
+
         # Record health check metric
         await metrics.record_metric(
             name="health_check",
             value=1,
             tags={"status": health_data["status"], "score": str(health_data["health_score"])}
         )
-        
+
         # Return appropriate response based on status
         if health_data["status"] == "unhealthy":
             return create_error_response(
@@ -619,12 +617,12 @@ async def health_check(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                 details=health_data
             )
-        
+
         return create_api_response(
             data=health_data,
             message=f"Embedding service is {health_data['status']} (score: {health_data['health_score']})"
         )
-        
+
     except Exception as e:
         logger.error(f"Health check failed: {e}")
         return create_error_response(

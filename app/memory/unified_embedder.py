@@ -13,6 +13,7 @@ from enum import Enum
 from typing import Any
 
 from app.api.unified_gateway import get_elite_unified_gateway
+from app.core.ai_logger import logger
 from app.core.circuit_breaker import with_circuit_breaker
 
 logger = logging.getLogger(__name__)
@@ -649,7 +650,7 @@ def normalize_embedding(embedding: list[float]) -> list[float]:
 
 async def test_elite_unified_embedder():
     """Comprehensive test of the unified embedder system"""
-    print("🧪 Testing Elite Unified Embedder...")
+    logger.info("🧪 Testing Elite Unified Embedder...")
 
     embedder = get_elite_unified_embedder()
 
@@ -670,24 +671,24 @@ async def test_elite_unified_embedder():
 
     try:
         # Test single embedding
-        print("\n🔹 Testing single embedding...")
+        logger.info("\n🔹 Testing single embedding...")
         single_result = await embedder.embed_single(
             test_texts[0],
             return_metadata=True
         )
-        print(f"✅ Single embedding: {len(single_result['embedding'])} dimensions")
+        logger.info(f"✅ Single embedding: {len(single_result['embedding'])} dimensions")
 
         # Test batch embedding - auto strategy
-        print("\n🔹 Testing batch embedding (AUTO strategy)...")
+        logger.info("\n🔹 Testing batch embedding (AUTO strategy)...")
         batch_results = await embedder.embed_batch(
             test_texts,
             strategy=EmbedderStrategy.AUTO,
             return_metadata=True
         )
-        print(f"✅ Batch embeddings: {len(batch_results)} results")
+        logger.info(f"✅ Batch embeddings: {len(batch_results)} results")
 
         # Test specific strategies
-        print("\n🔹 Testing different strategies...")
+        logger.info("\n🔹 Testing different strategies...")
         strategies = [EmbedderStrategy.PERFORMANCE, EmbedderStrategy.ACCURACY, EmbedderStrategy.HYBRID]
 
         for strategy in strategies:
@@ -698,44 +699,44 @@ async def test_elite_unified_embedder():
                     metadata=metadata
                 )
                 dimensions = [len(emb) for emb in results if emb]
-                print(f"✅ {strategy.value}: Dimensions {min(dimensions)}-{max(dimensions)}")
+                logger.info(f"✅ {strategy.value}: Dimensions {min(dimensions)}-{max(dimensions)}")
             except Exception as e:
-                print(f"⚠️  {strategy.value}: Failed - {e}")
+                logger.info(f"⚠️  {strategy.value}: Failed - {e}")
 
         # Test hybrid embeddings
-        print("\n🔹 Testing hybrid ensemble...")
+        logger.info("\n🔹 Testing hybrid ensemble...")
         hybrid_results = await embedder.embed_hybrid(test_texts[:2])
-        print(f"✅ Hybrid results: {len(hybrid_results)} embeddings")
+        logger.info(f"✅ Hybrid results: {len(hybrid_results)} embeddings")
 
         # Test similarity functions
-        print("\n🔹 Testing similarity functions...")
+        logger.info("\n🔹 Testing similarity functions...")
         emb1 = results[0] if results else []
         emb2 = results[1] if len(results) > 1 else results[0]
 
         if emb1 and emb2:
             cos_sim = cosine_similarity(emb1, emb2)
             eucl_dist = euclidean_distance(emb1, emb2)
-            print(".4f")
+            logger.info(".4f")
 
         # Health check
-        print("\n🔹 Testing health check...")
+        logger.info("\n🔹 Testing health check...")
         health_status = await embedder.health_check()
-        print(f"✅ Health status: {health_status['overall_status']} ({health_status['healthy_tiers']}/{health_status['total_tiers']} tiers healthy)")
+        logger.info(f"✅ Health status: {health_status['overall_status']} ({health_status['healthy_tiers']}/{health_status['total_tiers']} tiers healthy)")
 
         # Metrics report
-        print("\n🔹 Metrics report...")
+        logger.info("\n🔹 Metrics report...")
         metrics = embedder.get_metrics_report()
         response_time = metrics['overall']['avg_response_time_seconds']
-        print(".1f")
+        logger.info(".1f")
         cache_rate = metrics['overall']['cache_hit_rate']
-        print(".1f")
-        print("🧪 Elite Unified Embedder test completed successfully!")
+        logger.info(".1f")
+        logger.info("🧪 Elite Unified Embedder test completed successfully!")
     except Exception as e:
-        print(f"❌ Test failed: {e}")
+        logger.info(f"❌ Test failed: {e}")
         raise
 
 
 if __name__ == "__main__":
-    print("🏆 ELITE UNIFIED EMBEDDER - The Future of Embeddings!")
-    print("="*60)
+    logger.info("🏆 ELITE UNIFIED EMBEDDER - The Future of Embeddings!")
+    logger.info("="*60)
     asyncio.run(test_elite_unified_embedder())

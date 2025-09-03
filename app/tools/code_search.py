@@ -4,9 +4,7 @@ Enhanced code search with hybrid retrieval and citations.
 
 from agno import Tool
 
-from app.core.circuit_breaker import (
-    with_circuit_breaker,
-)
+from app.core.circuit_breaker import with_circuit_breaker
 from app.memory.index_weaviate import hybrid_search_merge
 
 

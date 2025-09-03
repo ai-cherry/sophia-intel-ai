@@ -14,6 +14,8 @@ from typing import Any
 import numpy as np
 from dotenv import load_dotenv
 
+from app.core.ai_logger import logger
+
 # Load environment variables
 load_dotenv('.env.milvus')
 
@@ -416,9 +418,9 @@ if __name__ == "__main__":
             "This is a test of the advanced embedding system",
             ContentType.SHORT_TEXT
         )
-        print(f"Generated {len(result.embeddings[0])} dimensional embedding")
-        print(f"Model used: {result.model_used}")
-        print(f"Latency: {result.latency_ms:.2f}ms")
+        logger.info(f"Generated {len(result.embeddings[0])} dimensional embedding")
+        logger.info(f"Model used: {result.model_used}")
+        logger.info(f"Latency: {result.latency_ms:.2f}ms")
 
         # Test batch embeddings
         texts = [
@@ -427,15 +429,15 @@ if __name__ == "__main__":
             "Third document about embeddings"
         ]
         batch_result = await router.get_embeddings_batch(texts)
-        print(f"\nGenerated {len(batch_result.embeddings)} embeddings")
-        print(f"Total cost: ${batch_result.cost_estimate:.6f}")
+        logger.info(f"\nGenerated {len(batch_result.embeddings)} embeddings")
+        logger.info(f"Total cost: ${batch_result.cost_estimate:.6f}")
 
         # Test reranking
         query = "machine learning algorithms"
         reranked = await router.rerank_documents(query, texts, top_k=2)
-        print(f"\nReranked documents: {reranked}")
+        logger.info(f"\nReranked documents: {reranked}")
 
         # Show metrics
-        print(f"\nMetrics: {router.get_metrics()}")
+        logger.info(f"\nMetrics: {router.get_metrics()}")
 
     asyncio.run(test_embedding_router())

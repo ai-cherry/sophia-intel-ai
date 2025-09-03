@@ -14,10 +14,10 @@ import aiohttp
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from app.swarms import UnifiedSwarmOrchestrator
 from app.swarms.coding.agents import create_coding_agent_pool, create_genesis_swarm
 from app.swarms.coding.team import CodingTeam
 from app.swarms.improved_swarm import ImprovedAgentSwarm
-from app.swarms.unified_enhanced_orchestrator import UnifiedSwarmOrchestrator
 
 
 class SwarmTester:

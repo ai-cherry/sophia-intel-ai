@@ -8,9 +8,8 @@ import os
 from dataclasses import dataclass
 from typing import Any
 
-from app.core.circuit_breaker import (
-    with_circuit_breaker,
-)
+from app.core.ai_logger import logger
+from app.core.circuit_breaker import with_circuit_breaker
 
 # ============================================
 # PORTKEY VIRTUAL KEYS - REAL CONNECTIONS
@@ -473,7 +472,7 @@ async def demo_elite_models():
         messages=[{"role": "user", "content": "Write a Python hello world"}],
         task_complexity=0.1
     )
-    print(f"Fast response: {fast_response}")
+    logger.info(f"Fast response: {fast_response}")
 
     # Complex task with heavy model
     complex_response = await gateway.elite_completion(
@@ -481,23 +480,23 @@ async def demo_elite_models():
         messages=[{"role": "user", "content": "Design a distributed microservices architecture"}],
         task_complexity=0.9
     )
-    print(f"Complex response: {complex_response}")
+    logger.info(f"Complex response: {complex_response}")
 
     # Spawn the GENESIS swarm for ultimate overkill
     genesis_swarm = await gateway.spawn_elite_swarm('genesis')
-    print(f"GENESIS Swarm spawned: {genesis_swarm['total_agents']} agents ready")
+    logger.info(f"GENESIS Swarm spawned: {genesis_swarm['total_agents']} agents ready")
 
     return gateway
 
 if __name__ == "__main__":
     import asyncio
 
-    print("🚀 ELITE MODELS ONLY - NO FUCKING COMPROMISES 🚀")
-    print("=" * 60)
-    print("Models configured:")
+    logger.info("🚀 ELITE MODELS ONLY - NO FUCKING COMPROMISES 🚀")
+    logger.info("=" * 60)
+    logger.info("Models configured:")
     for role, model in EliteAgentConfig.MODELS.items():
-        print(f"  {role:20} -> {model}")
-    print("=" * 60)
+        logger.info(f"  {role:20} -> {model}")
+    logger.info("=" * 60)
 
     # Run demo
     asyncio.run(demo_elite_models())

@@ -14,6 +14,8 @@ from typing import Any
 
 import aiofiles
 
+from app.core.ai_logger import logger
+
 logger = logging.getLogger(__name__)
 
 class LiveFileSystemTools:
@@ -355,18 +357,18 @@ async def execute_tool(tool_name: str, **kwargs) -> dict[str, Any]:
 if __name__ == "__main__":
     # Test the tools
     async def test():
-        print("Testing live tools...")
+        logger.info("Testing live tools...")
 
         # Test file read
         content = await file_tools.read_file("README.md")
-        print(f"✅ Read README.md: {len(content)} bytes")
+        logger.info(f"✅ Read README.md: {len(content)} bytes")
 
         # Test git status
         status = await git_tools.git_status()
-        print(f"✅ Git status: {status}")
+        logger.info(f"✅ Git status: {status}")
 
         # Test code search
         matches = await search_tools.search_code("async def", file_type="py")
-        print(f"✅ Found {len(matches)} async functions")
+        logger.info(f"✅ Found {len(matches)} async functions")
 
     asyncio.run(test())

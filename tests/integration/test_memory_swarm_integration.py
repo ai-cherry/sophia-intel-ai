@@ -26,10 +26,10 @@ logger = logging.getLogger(__name__)
 
 # Import the memory integration components
 from app.memory.supermemory_mcp import MemoryEntry, MemoryType
+from app.swarms import UnifiedSwarmOrchestrator
 from app.swarms.memory_enhanced_swarm import MemoryEnhancedCodingTeam
 from app.swarms.memory_integration import SwarmMemoryClient, SwarmMemoryEventType
 from app.swarms.patterns.memory_integration import MemoryIntegrationConfig, MemoryIntegrationPattern
-from app.swarms.unified_enhanced_orchestrator import UnifiedSwarmOrchestrator
 
 
 class TestSwarmMemoryIntegration:

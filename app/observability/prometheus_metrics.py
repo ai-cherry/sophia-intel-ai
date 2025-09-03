@@ -16,9 +16,8 @@ from prometheus_client import (
     generate_latest,
 )
 
-from app.core.circuit_breaker import (
-    with_circuit_breaker,
-)
+from app.core.ai_logger import logger
+from app.core.circuit_breaker import with_circuit_breaker
 
 logger = logging.getLogger(__name__)
 
@@ -450,7 +449,7 @@ if __name__ == "__main__":
     )
 
     # Print metrics
-    print(get_metrics().decode('utf-8'))
+    logger.info(get_metrics().decode('utf-8'))
 
 def record_cost(provider: str, model: str, task_type: str = "general", cost: float = 0.0, tokens_in: int = 0, tokens_out: int = 0, duration: float = 0.0, cache_hit: bool = False):
     metrics_tracker.track_llm_request(provider, model, task_type, cost, tokens_in, tokens_out, duration, cache_hit)

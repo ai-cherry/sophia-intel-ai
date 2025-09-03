@@ -13,9 +13,7 @@ from typing import Any
 
 from openai import AsyncOpenAI, OpenAI
 
-from app.core.circuit_breaker import (
-    with_circuit_breaker,
-)
+from app.core.circuit_breaker import with_circuit_breaker
 
 # ============================================
 # Configuration Constants

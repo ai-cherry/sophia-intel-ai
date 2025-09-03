@@ -14,6 +14,8 @@ import sys
 
 from together_embeddings import EmbeddingModel, TogetherEmbeddingService
 
+from app.core.ai_logger import logger
+
 
 def load_texts_from_file(filepath: str) -> list[str]:
     """Load texts from file, one per line."""
@@ -53,8 +55,8 @@ def cmd_embed(args):
         }
         model = model_map.get(args.model)
         if not model:
-            print(f"Unknown model: {args.model}")
-            print(f"Available models: {', '.join(model_map.keys())}")
+            logger.info(f"Unknown model: {args.model}")
+            logger.info(f"Available models: {', '.join(model_map.keys())}")
             return 1
 
     # Generate embedding
@@ -71,17 +73,17 @@ def cmd_embed(args):
                 "latency_ms": result.latency_ms
             }
         )
-        print(f"Saved embedding to {args.output}")
+        logger.info(f"Saved embedding to {args.output}")
     else:
-        print(f"Model: {result.model}")
-        print(f"Dimensions: {result.dimensions}")
-        print(f"Tokens used: {result.tokens_used}")
-        print(f"Latency: {result.latency_ms:.2f}ms")
-        print(f"Cached: {result.cached}")
+        logger.info(f"Model: {result.model}")
+        logger.info(f"Dimensions: {result.dimensions}")
+        logger.info(f"Tokens used: {result.tokens_used}")
+        logger.info(f"Latency: {result.latency_ms:.2f}ms")
+        logger.info(f"Cached: {result.cached}")
 
         if args.verbose:
-            print("\nEmbedding vector (first 10 dims):")
-            print(result.embeddings[0][:10])
+            logger.info("\nEmbedding vector (first 10 dims):")
+            logger.info(result.embeddings[0][:10])
 
     return 0
 
@@ -94,7 +96,7 @@ def cmd_batch(args):
     else:
         texts = load_texts_from_file(args.input)
 
-    print(f"Loaded {len(texts)} texts")
+    logger.info(f"Loaded {len(texts)} texts")
 
     # Parse model
     model = None
@@ -126,13 +128,13 @@ def cmd_batch(args):
         }
     )
 
-    print(f"Generated {len(result.embeddings)} embeddings")
-    print(f"Model: {result.model}")
-    print(f"Dimensions: {result.dimensions}")
-    print(f"Cache hits: {result.metadata.get('cache_hits', 0)}")
-    print(f"Cache misses: {result.metadata.get('cache_misses', 0)}")
-    print(f"Latency: {result.latency_ms:.2f}ms")
-    print(f"Saved to {output_file}")
+    logger.info(f"Generated {len(result.embeddings)} embeddings")
+    logger.info(f"Model: {result.model}")
+    logger.info(f"Dimensions: {result.dimensions}")
+    logger.info(f"Cache hits: {result.metadata.get('cache_hits', 0)}")
+    logger.info(f"Cache misses: {result.metadata.get('cache_misses', 0)}")
+    logger.info(f"Latency: {result.latency_ms:.2f}ms")
+    logger.info(f"Saved to {output_file}")
 
     return 0
 
@@ -143,14 +145,14 @@ def cmd_search(args):
     if args.documents:
         documents = load_texts_from_file(args.documents)
     else:
-        print("Reading documents from stdin (one per line, end with Ctrl+D):")
+        logger.info("Reading documents from stdin (one per line, end with Ctrl+D):")
         documents = [line.strip() for line in sys.stdin if line.strip()]
 
     if not documents:
-        print("No documents provided")
+        logger.info("No documents provided")
         return 1
 
-    print(f"Searching {len(documents)} documents")
+    logger.info(f"Searching {len(documents)} documents")
 
     # Parse model
     model = None
@@ -171,13 +173,13 @@ def cmd_search(args):
     )
 
     # Display results
-    print(f"\nTop {args.top_k} results for query: '{args.query}'\n")
+    logger.info(f"\nTop {args.top_k} results for query: '{args.query}'\n")
     for i, (idx, score, doc) in enumerate(results, 1):
         # Truncate long documents for display
         display_doc = doc[:100] + "..." if len(doc) > 100 else doc
-        print(f"{i}. [Score: {score:.4f}] (Doc #{idx})")
-        print(f"   {display_doc}")
-        print()
+        logger.info(f"{i}. [Score: {score:.4f}] (Doc #{idx})")
+        logger.info(f"   {display_doc}")
+        logger.info()
 
     # Save results if requested
     if args.output:
@@ -186,7 +188,7 @@ def cmd_search(args):
                 {"index": idx, "score": score, "document": doc}
                 for idx, score, doc in results
             ], f, indent=2)
-        print(f"Results saved to {args.output}")
+        logger.info(f"Results saved to {args.output}")
 
     return 0
 
@@ -214,22 +216,22 @@ def cmd_similarity(args):
         result.embeddings[1]
     )
 
-    print(f"Model: {result.model}")
-    print(f"Text 1: {args.text1[:50]}...")
-    print(f"Text 2: {args.text2[:50]}...")
-    print(f"\nCosine Similarity: {similarity:.4f}")
+    logger.info(f"Model: {result.model}")
+    logger.info(f"Text 1: {args.text1[:50]}...")
+    logger.info(f"Text 2: {args.text2[:50]}...")
+    logger.info(f"\nCosine Similarity: {similarity:.4f}")
 
     # Interpretation
     if similarity > 0.9:
-        print("Interpretation: Very similar (likely duplicates or paraphrases)")
+        logger.info("Interpretation: Very similar (likely duplicates or paraphrases)")
     elif similarity > 0.7:
-        print("Interpretation: Similar (related content)")
+        logger.info("Interpretation: Similar (related content)")
     elif similarity > 0.5:
-        print("Interpretation: Somewhat similar (same topic)")
+        logger.info("Interpretation: Somewhat similar (same topic)")
     elif similarity > 0.3:
-        print("Interpretation: Weakly related")
+        logger.info("Interpretation: Weakly related")
     else:
-        print("Interpretation: Unrelated")
+        logger.info("Interpretation: Unrelated")
 
     return 0
 
@@ -245,10 +247,10 @@ def cmd_recommend(args):
         language=args.language
     )
 
-    print(f"Text length: ~{int(token_count)} tokens")
-    print(f"Use case: {args.use_case}")
-    print(f"Language: {args.language}")
-    print(f"\nRecommended model: {recommended.value}")
+    logger.info(f"Text length: ~{int(token_count)} tokens")
+    logger.info(f"Use case: {args.use_case}")
+    logger.info(f"Language: {args.language}")
+    logger.info(f"\nRecommended model: {recommended.value}")
 
     # Model details
     model_info = {
@@ -261,7 +263,7 @@ def cmd_recommend(args):
     }
 
     if recommended in model_info:
-        print(f"Details: {model_info[recommended]}")
+        logger.info(f"Details: {model_info[recommended]}")
 
     return 0
 
@@ -328,7 +330,7 @@ def main():
     try:
         return commands[args.command](args)
     except Exception as e:
-        print(f"Error: {e}", file=sys.stderr)
+        logger.info(f"Error: {e}", file=sys.stderr)
         return 1
 
 

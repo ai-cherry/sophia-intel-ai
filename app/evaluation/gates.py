@@ -11,6 +11,7 @@ from enum import Enum
 from typing import Any
 
 from app.contracts.json_schemas import CriticOutput, GeneratorProposal, JudgeOutput, PlannerOutput
+from app.core.ai_logger import logger
 
 # ============================================
 # Gate Types
@@ -690,7 +691,7 @@ def main():
     manager = EvaluationGateManager()
 
     if args.test_accuracy:
-        print("\n📊 Testing Accuracy Gate:")
+        logger.info("\n📊 Testing Accuracy Gate:")
         # Mock data for testing
         from app.contracts.json_schemas import GeneratorProposal
         proposal = GeneratorProposal(
@@ -707,14 +708,14 @@ def main():
             None
         )
 
-        print(f"  Status: {result.status.value}")
-        print(f"  Score: {result.score:.1f}/{result.max_score}")
-        print(f"  Passed: {result.passed}")
+        logger.info(f"  Status: {result.status.value}")
+        logger.info(f"  Score: {result.score:.1f}/{result.max_score}")
+        logger.info(f"  Passed: {result.passed}")
         if result.failures:
-            print(f"  Failures: {result.failures}")
+            logger.info(f"  Failures: {result.failures}")
 
     if args.test_reliability:
-        print("\n🔧 Testing Reliability Gate:")
+        logger.info("\n🔧 Testing Reliability Gate:")
         manager.reliability_eval.set_expectations(
             expected=["code_search", "fs.read"],
             prohibited=["rm", "sudo"]
@@ -724,12 +725,12 @@ def main():
 
         result = manager.reliability_eval.evaluate()
 
-        print(f"  Status: {result.status.value}")
-        print(f"  Score: {result.score:.1f}/{result.max_score}")
-        print(f"  Passed: {result.passed}")
+        logger.info(f"  Status: {result.status.value}")
+        logger.info(f"  Score: {result.score:.1f}/{result.max_score}")
+        logger.info(f"  Passed: {result.passed}")
 
     if args.test_safety or args.code:
-        print("\n🔒 Testing Safety Gate:")
+        logger.info("\n🔒 Testing Safety Gate:")
 
         if args.code:
             with open(args.code) as f:
@@ -745,11 +746,11 @@ def get_user(user_id):
 
         result = manager.safety_eval.evaluate_code_safety(code)
 
-        print(f"  Status: {result.status.value}")
-        print(f"  Score: {result.score:.1f}/{result.max_score}")
-        print(f"  Passed: {result.passed}")
+        logger.info(f"  Status: {result.status.value}")
+        logger.info(f"  Score: {result.score:.1f}/{result.max_score}")
+        logger.info(f"  Passed: {result.passed}")
         if result.failures:
-            print(f"  Issues: {result.failures}")
+            logger.info(f"  Issues: {result.failures}")
 
 if __name__ == "__main__":
     main()

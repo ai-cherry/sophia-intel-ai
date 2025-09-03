@@ -14,9 +14,8 @@ from typing import Any
 
 import redis.asyncio as redis
 
-from app.core.circuit_breaker import (
-    with_circuit_breaker,
-)
+from app.core.ai_logger import logger
+from app.core.circuit_breaker import with_circuit_breaker
 
 logger = logging.getLogger(__name__)
 
@@ -415,13 +414,13 @@ async def example_usage():
     )
 
     metrics = await monitor.track_request(request)
-    print(f"Request cost: ${metrics.cost:.4f}")
-    print(f"Hourly spend: ${metrics.hourly_spend:.2f}")
-    print(f"Daily spend: ${metrics.daily_spend:.2f}")
+    logger.info(f"Request cost: ${metrics.cost:.4f}")
+    logger.info(f"Hourly spend: ${metrics.hourly_spend:.2f}")
+    logger.info(f"Daily spend: ${metrics.daily_spend:.2f}")
 
     # Get cost report
     report = await monitor.get_cost_report('daily')
-    print(f"Total daily spend: ${report['current_metrics']['daily']:.2f}")
+    logger.info(f"Total daily spend: ${report['current_metrics']['daily']:.2f}")
 
 if __name__ == "__main__":
     asyncio.run(example_usage())

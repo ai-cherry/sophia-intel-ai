@@ -20,6 +20,8 @@ from langchain.vectorstores import FAISS, Chroma
 # For embedding models
 from sentence_transformers import SentenceTransformer
 
+from app.core.ai_logger import logger
+
 logger = logging.getLogger(__name__)
 
 # ==================== Configuration ====================
@@ -626,9 +628,9 @@ async def example_usage():
     results = await pipeline.retrieve("How does WebSocket chat work?")
 
     for doc in results:
-        print(f"Content: {doc.page_content[:100]}...")
-        print(f"Similarity: {doc.metadata.get('similarity_score', 0):.2f}")
-        print("---")
+        logger.info(f"Content: {doc.page_content[:100]}...")
+        logger.info(f"Similarity: {doc.metadata.get('similarity_score', 0):.2f}")
+        logger.info("---")
 
     # Build context for a query
     context = await pipeline.build_context(
@@ -636,14 +638,14 @@ async def example_usage():
         include_types=[KnowledgeNodeType.CODEBASE, KnowledgeNodeType.USER_DOCS]
     )
 
-    print(f"Context built with {len(context['retrieved_knowledge'])} knowledge types")
+    logger.info(f"Context built with {len(context['retrieved_knowledge'])} knowledge types")
 
     # Create service
     service = RAGService(pipeline)
 
     # Query through service
     response = await service.query("What is AGNO?", k=2)
-    print(f"Service returned {len(response['results'])} results")
+    logger.info(f"Service returned {len(response['results'])} results")
 
     # Save pipeline
     await pipeline.save("./rag_store")

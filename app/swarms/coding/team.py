@@ -13,7 +13,9 @@ from typing import Any
 from agno.team import Team
 
 from app.memory.supermemory_mcp import SupermemoryMCP
-from app.swarms import SwarmOrchestrator
+
+# SwarmOrchestrator removed - use SuperOrchestrator if needed
+# from app.core.super_orchestrator import get_orchestrator
 from app.swarms.coding.models import DebateResult, PoolType, SwarmConfiguration, SwarmRequest
 from app.swarms.coding.team_factory import TeamFactory
 

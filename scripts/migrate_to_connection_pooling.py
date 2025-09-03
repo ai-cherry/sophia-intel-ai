@@ -9,6 +9,8 @@ import json
 import re
 from pathlib import Path
 
+from app.core.ai_logger import logger
+
 
 class ConnectionPoolingMigrator:
     """Migrate synchronous calls to use connection pooling"""
@@ -27,7 +29,7 @@ class ConnectionPoolingMigrator:
 
     def scan_directory(self, directory: Path) -> None:
         """Scan directory for files needing migration"""
-        print(f"🔍 Scanning {directory} for synchronous calls...")
+        logger.info(f"🔍 Scanning {directory} for synchronous calls...")
 
         for py_file in directory.rglob("*.py"):
             # Skip test files and migrations
@@ -64,7 +66,7 @@ class ConnectionPoolingMigrator:
 
     def migrate_file(self, file_path: Path, changes: list[str]) -> bool:
         """Migrate a single file to use ConnectionManager"""
-        print(f"  📝 Migrating {file_path.name}...")
+        logger.info(f"  📝 Migrating {file_path.name}...")
 
         try:
             with open(file_path) as f:
@@ -74,7 +76,7 @@ class ConnectionPoolingMigrator:
 
             # Check if already uses ConnectionManager
             if "from app.core.connections import" in content:
-                print("    ⏭️  Already uses ConnectionManager")
+                logger.info("    ⏭️  Already uses ConnectionManager")
                 self.migration_report["skipped_files"].append(str(file_path))
                 return False
 
@@ -113,16 +115,16 @@ class ConnectionPoolingMigrator:
                     with open(file_path, 'w') as f:
                         f.write(content)
 
-                    print(f"    ✅ Updated {file_path.name}")
+                    logger.info(f"    ✅ Updated {file_path.name}")
                 else:
-                    print(f"    🔍 Would update {file_path.name}")
+                    logger.info(f"    🔍 Would update {file_path.name}")
 
                 self.migration_report["files_updated"] += 1
                 return True
 
         except Exception as e:
             self.migration_report["errors"].append(f"{file_path}: {str(e)}")
-            print(f"    ❌ Error: {e}")
+            logger.info(f"    ❌ Error: {e}")
             return False
 
         return False
@@ -231,45 +233,45 @@ class ConnectionPoolingMigrator:
 
     def generate_report(self) -> None:
         """Generate migration report"""
-        print("\n" + "=" * 50)
-        print("📊 MIGRATION REPORT")
-        print("=" * 50)
+        logger.info("\n" + "=" * 50)
+        logger.info("📊 MIGRATION REPORT")
+        logger.info("=" * 50)
 
-        print(f"Files analyzed: {self.migration_report['files_analyzed']}")
-        print(f"Files to update: {len(self.files_to_update)}")
-        print(f"Files updated: {self.migration_report['files_updated']}")
-        print(f"HTTP calls migrated: {self.migration_report['http_calls_migrated']}")
-        print(f"Redis calls migrated: {self.migration_report['redis_calls_migrated']}")
+        logger.info(f"Files analyzed: {self.migration_report['files_analyzed']}")
+        logger.info(f"Files to update: {len(self.files_to_update)}")
+        logger.info(f"Files updated: {self.migration_report['files_updated']}")
+        logger.info(f"HTTP calls migrated: {self.migration_report['http_calls_migrated']}")
+        logger.info(f"Redis calls migrated: {self.migration_report['redis_calls_migrated']}")
 
         if self.migration_report['skipped_files']:
-            print(f"\nSkipped files (already migrated): {len(self.migration_report['skipped_files'])}")
+            logger.info(f"\nSkipped files (already migrated): {len(self.migration_report['skipped_files'])}")
 
         if self.migration_report['errors']:
-            print(f"\n⚠️  Errors encountered: {len(self.migration_report['errors'])}")
+            logger.info(f"\n⚠️  Errors encountered: {len(self.migration_report['errors'])}")
             for error in self.migration_report['errors'][:5]:
-                print(f"  - {error}")
+                logger.info(f"  - {error}")
 
         # Save detailed report
         report_path = Path("connection_pooling_migration_report.json")
         with open(report_path, 'w') as f:
             json.dump(self.migration_report, f, indent=2, default=str)
 
-        print(f"\n📄 Detailed report saved to: {report_path}")
+        logger.info(f"\n📄 Detailed report saved to: {report_path}")
 
     def run(self, directory: Path) -> None:
         """Run the migration process"""
-        print("🚀 Connection Pooling Migration Tool")
-        print("=" * 50)
+        logger.info("🚀 Connection Pooling Migration Tool")
+        logger.info("=" * 50)
 
         if self.dry_run:
-            print("🔍 Running in DRY RUN mode (no changes will be made)")
+            logger.info("🔍 Running in DRY RUN mode (no changes will be made)")
         else:
-            print("⚠️  Running in LIVE mode (files will be modified)")
+            logger.info("⚠️  Running in LIVE mode (files will be modified)")
 
         # Scan for files needing migration
         self.scan_directory(directory)
 
-        print(f"\n📋 Found {len(self.files_to_update)} files needing migration")
+        logger.info(f"\n📋 Found {len(self.files_to_update)} files needing migration")
 
         # Migrate each file
         for file_path, changes in self.files_to_update:

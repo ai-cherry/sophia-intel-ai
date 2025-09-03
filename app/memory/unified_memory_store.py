@@ -11,10 +11,10 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
+from app.core.ai_logger import logger
 from app.embeddings.agno_embedding_service import (
-    AgnoEmbeddingService,
     AgnoEmbeddingRequest,
-    EmbeddingModel,
+    AgnoEmbeddingService,
 )
 from app.memory.crdt_memory_sync import CRDTMemoryStore
 from app.memory.hybrid_vector_manager import (
@@ -518,13 +518,13 @@ class UnifiedMemoryStore:
         """Detect use case for embedding generation"""
         if 'code' in content or 'language' in content:
             return "code"
-        
+
         if 'type' in content:
             if content['type'] in ['documentation', 'reference', 'knowledge']:
                 return "rag"
             elif content['type'] in ['search', 'query']:
                 return "search"
-        
+
         # Default to general use case
         return "general"
 
@@ -653,7 +653,7 @@ if __name__ == "__main__":
             metadata={"source": "test", "importance": "high"},
             tags=["ml", "algorithms", "test"]
         )
-        print(f"Stored memory: {memory_id}")
+        logger.info(f"Stored memory: {memory_id}")
 
         # Retrieve at different levels
         doc_results = await store.retrieve(
@@ -661,21 +661,21 @@ if __name__ == "__main__":
             level=RetrievalLevel.DOCUMENT,
             limit=5
         )
-        print(f"Document results: {doc_results.total_results}")
+        logger.info(f"Document results: {doc_results.total_results}")
 
         section_results = await store.retrieve(
             "algorithms",
             level=RetrievalLevel.SECTION,
             limit=5
         )
-        print(f"Section results: {section_results.total_results}")
+        logger.info(f"Section results: {section_results.total_results}")
 
         # Show metrics
         metrics = store.get_metrics()
-        print("\nMetrics:")
-        print(f"  Total memories: {metrics['total_memories']}")
-        print(f"  Avg store latency: {metrics['avg_store_latency_ms']:.2f}ms")
-        print(f"  Cache hit rate: {metrics['cache_hit_rate']:.2%}")
+        logger.info("\nMetrics:")
+        logger.info(f"  Total memories: {metrics['total_memories']}")
+        logger.info(f"  Avg store latency: {metrics['avg_store_latency_ms']:.2f}ms")
+        logger.info(f"  Cache hit rate: {metrics['cache_hit_rate']:.2%}")
 
         # Cleanup
         await store.close()

@@ -10,6 +10,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from app.core.ai_logger import logger
+
 
 # Base Tool class
 class Tool:
@@ -672,17 +674,17 @@ async def main():
     # Test read file
     reader = EnhancedReadFile()
     content = await reader.run("README.md")
-    print(f"Read {len(content)} characters")
+    logger.info(f"Read {len(content)} characters")
 
     # Test code search
     searcher = EnhancedCodeSearch()
     results = await searcher.run("async def", file_type="py")
-    print(f"Found {len(results)} matches")
+    logger.info(f"Found {len(results)} matches")
 
     # Test git status
     git = EnhancedGitOps()
     status = await git.run("status")
-    print(f"Git status: {status}")
+    logger.info(f"Git status: {status}")
 
 if __name__ == "__main__":
     asyncio.run(main())

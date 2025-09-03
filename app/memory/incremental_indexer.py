@@ -13,6 +13,7 @@ from datetime import datetime
 import aiofiles
 from tqdm.asyncio import tqdm
 
+from app.core.ai_logger import logger
 from app.memory.chunking import discover_source_files, produce_chunks_for_index
 from app.memory.index_weaviate import upsert_chunks_dual
 
@@ -424,7 +425,7 @@ class IncrementalIndexer:
         if not files:
             return {"message": "No files found matching criteria"}
 
-        print(f"📂 Found {len(files)} files to index")
+        logger.info(f"📂 Found {len(files)} files to index")
 
         # Index files
         stats = await self.index_files(files, priority, force)
@@ -460,10 +461,10 @@ async def main():
 
     if args.stats:
         stats = indexer.state_manager.get_stats()
-        print("\n📊 Index Statistics:")
-        print(f"  Files indexed: {stats['files_indexed']}")
-        print(f"  Chunks indexed: {stats['chunks_indexed']}")
-        print(f"  Total size: {stats['total_size_mb']:.2f} MB")
+        logger.info("\n📊 Index Statistics:")
+        logger.info(f"  Files indexed: {stats['files_indexed']}")
+        logger.info(f"  Chunks indexed: {stats['chunks_indexed']}")
+        logger.info(f"  Total size: {stats['total_size_mb']:.2f} MB")
     else:
         stats = await indexer.index_directory(
             root_dir=args.root,
@@ -471,15 +472,15 @@ async def main():
             force=args.force
         )
 
-        print("\n✅ Indexing Complete:")
-        print(f"  Indexed: {stats['summary']['indexed']} files")
-        print(f"  Updated: {stats['summary']['updated']} files")
-        print(f"  Skipped: {stats['summary']['skipped']} files (unchanged)")
-        print(f"  Chunks created: {stats['chunks_created']}")
-        print(f"  Chunks reused: {stats['chunks_reused']}")
+        logger.info("\n✅ Indexing Complete:")
+        logger.info(f"  Indexed: {stats['summary']['indexed']} files")
+        logger.info(f"  Updated: {stats['summary']['updated']} files")
+        logger.info(f"  Skipped: {stats['summary']['skipped']} files (unchanged)")
+        logger.info(f"  Chunks created: {stats['chunks_created']}")
+        logger.info(f"  Chunks reused: {stats['chunks_reused']}")
 
         if stats['errors']:
-            print(f"\n⚠️  {len(stats['errors'])} errors occurred")
+            logger.info(f"\n⚠️  {len(stats['errors'])} errors occurred")
 
 if __name__ == "__main__":
     asyncio.run(main())

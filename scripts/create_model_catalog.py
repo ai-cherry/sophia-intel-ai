@@ -13,6 +13,8 @@ from typing import Any
 import httpx
 from dotenv import load_dotenv
 
+from app.core.ai_logger import logger
+
 # Load environment
 load_dotenv('.env.local', override=True)
 
@@ -36,7 +38,7 @@ class ModelCatalogCreator:
 
     async def fetch_openrouter_models(self) -> list[dict[str, Any]]:
         """Fetch all available models from OpenRouter."""
-        print("📥 Fetching OpenRouter model catalog...")
+        logger.info("📥 Fetching OpenRouter model catalog...")
 
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
@@ -50,19 +52,19 @@ class ModelCatalogCreator:
                 if response.status_code == 200:
                     data = response.json()
                     models = data.get("data", [])
-                    print(f"✅ Found {len(models)} models in OpenRouter")
+                    logger.info(f"✅ Found {len(models)} models in OpenRouter")
                     return models
                 else:
-                    print(f"❌ Failed to fetch models: {response.status_code}")
+                    logger.info(f"❌ Failed to fetch models: {response.status_code}")
                     return []
 
         except Exception as e:
-            print(f"❌ Error fetching models: {e}")
+            logger.info(f"❌ Error fetching models: {e}")
             return []
 
     async def fetch_together_models(self) -> list[dict[str, Any]]:
         """Fetch all available models from Together AI."""
-        print("📥 Fetching Together AI model catalog...")
+        logger.info("📥 Fetching Together AI model catalog...")
 
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
@@ -76,14 +78,14 @@ class ModelCatalogCreator:
                 if response.status_code == 200:
                     models = response.json()
                     embedding_models = [m for m in models if m.get("type") == "embedding"]
-                    print(f"✅ Found {len(embedding_models)} embedding models in Together AI")
+                    logger.info(f"✅ Found {len(embedding_models)} embedding models in Together AI")
                     return embedding_models
                 else:
-                    print(f"❌ Failed to fetch models: {response.status_code}")
+                    logger.info(f"❌ Failed to fetch models: {response.status_code}")
                     return []
 
         except Exception as e:
-            print(f"❌ Error fetching models: {e}")
+            logger.info(f"❌ Error fetching models: {e}")
             return []
 
     async def test_model_availability(self, model_id: str, provider: str = "openrouter") -> bool:
@@ -188,7 +190,7 @@ class ModelCatalogCreator:
 
     def create_markdown_catalog(self, filename: str = "MODEL_CATALOG.md"):
         """Create a markdown file with the model catalog."""
-        print(f"\n📝 Creating {filename}...")
+        logger.info(f"\n📝 Creating {filename}...")
 
         with open(filename, "w") as f:
             f.write("# 🤖 Complete Model Catalog\n\n")
@@ -296,13 +298,13 @@ class ModelCatalogCreator:
             f.write("- **Default**: `togethercomputer/m2-bert-80M-8k-retrieval` - Good balance\n")
             f.write("- **Quality**: `BAAI/bge-large-en-v1.5` - High quality\n\n")
 
-        print(f"✅ Created {filename}")
+        logger.info(f"✅ Created {filename}")
 
     async def create_catalog(self):
         """Create the complete model catalog."""
-        print("\n" + "="*60)
-        print("🚀 CREATING MODEL CATALOG")
-        print("="*60)
+        logger.info("\n" + "="*60)
+        logger.info("🚀 CREATING MODEL CATALOG")
+        logger.info("="*60)
 
         # Fetch models from OpenRouter
         openrouter_models = await self.fetch_openrouter_models()
@@ -311,7 +313,7 @@ class ModelCatalogCreator:
         categorized = self.categorize_models(openrouter_models)
 
         # Test a few key models
-        print("\n🧪 Testing key models for availability...")
+        logger.info("\n🧪 Testing key models for availability...")
         key_models = [
             "openai/gpt-4o",
             "openai/gpt-4o-mini",
@@ -324,7 +326,7 @@ class ModelCatalogCreator:
         for model_id in key_models:
             available = await self.test_model_availability(model_id)
             status = "✅" if available else "❌"
-            print(f"  {status} {model_id}")
+            logger.info(f"  {status} {model_id}")
 
             # Mark availability in the catalog
             for provider, models in categorized.items():
@@ -341,11 +343,11 @@ class ModelCatalogCreator:
         together_models = await self.fetch_together_models()
 
         if together_models:
-            print("\n🧪 Testing embedding models...")
+            logger.info("\n🧪 Testing embedding models...")
             test_embedding = "togethercomputer/m2-bert-80M-8k-retrieval"
             available = await self.test_model_availability(test_embedding, "together")
             status = "✅" if available else "❌"
-            print(f"  {status} {test_embedding}")
+            logger.info(f"  {status} {test_embedding}")
 
             # Store embedding models
             for model in together_models:
@@ -365,22 +367,22 @@ class ModelCatalogCreator:
             # Convert set to list for JSON serialization
             self.catalog["metadata"]["providers"] = list(self.catalog["metadata"]["providers"])
             json.dump(self.catalog, f, indent=2)
-            print("✅ Created model_catalog.json")
+            logger.info("✅ Created model_catalog.json")
 
-        print("\n" + "="*60)
-        print("✅ MODEL CATALOG COMPLETE!")
-        print("="*60)
-        print("\nFiles created:")
-        print("  • MODEL_CATALOG.md - Human-readable catalog")
-        print("  • model_catalog.json - Machine-readable catalog")
-        print(f"\nTotal models available: {self.catalog['metadata']['total_models']}")
-        print("\nKey models tested and working:")
-        print("  • GPT-4o and GPT-4o Mini")
-        print("  • Claude 3.5 Sonnet")
-        print("  • Qwen 2.5 Coder")
-        print("  • Llama 3.2")
-        print("  • GLM-4.5 (Z-AI)")
-        print("  • M2-BERT Embeddings")
+        logger.info("\n" + "="*60)
+        logger.info("✅ MODEL CATALOG COMPLETE!")
+        logger.info("="*60)
+        logger.info("\nFiles created:")
+        logger.info("  • MODEL_CATALOG.md - Human-readable catalog")
+        logger.info("  • model_catalog.json - Machine-readable catalog")
+        logger.info(f"\nTotal models available: {self.catalog['metadata']['total_models']}")
+        logger.info("\nKey models tested and working:")
+        logger.info("  • GPT-4o and GPT-4o Mini")
+        logger.info("  • Claude 3.5 Sonnet")
+        logger.info("  • Qwen 2.5 Coder")
+        logger.info("  • Llama 3.2")
+        logger.info("  • GLM-4.5 (Z-AI)")
+        logger.info("  • M2-BERT Embeddings")
 
 
 async def main():

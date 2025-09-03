@@ -8,6 +8,7 @@ from typing import Any
 
 import aioredis
 
+from app.core.ai_logger import logger
 from app.core.circuit_breaker import with_circuit_breaker
 from app.core.retry import exponential, retry
 from app.observability.prometheus_metrics import (
@@ -361,9 +362,9 @@ if __name__ == "__main__":
         # Coordinate task
         try:
             result = await bridge.coordinate_task(task)
-            print(f"Coordination result: {result}")
+            logger.info(f"Coordination result: {result}")
         except Exception as e:
-            print(f"Coordination failed: {str(e)}")
+            logger.info(f"Coordination failed: {str(e)}")
 
         # Cleanup
         await bridge.redis_client.close()

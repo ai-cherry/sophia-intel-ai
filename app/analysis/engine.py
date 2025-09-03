@@ -2,7 +2,7 @@ import asyncio
 import logging
 from typing import Any
 
-from app.agents.simple_orchestrator import SimpleAgentOrchestrator
+from app.core.ai_logger import logger
 from app.llm.real_executor import RealExecutor
 from app.memory.unified_memory import search_memory, store_memory
 from app.swarms.communication.message_bus import MessageBus, MessageType, SwarmMessage
@@ -150,8 +150,8 @@ if __name__ == "__main__":
             file_path="example.py"
         )
 
-        print(f"Code reviewed and stored as {result['analysis_id']}")
-        print("Dashboard:", await engine.get_code_review_dashboard())
+        logger.info(f"Code reviewed and stored as {result['analysis_id']}")
+        logger.info("Dashboard:", await engine.get_code_review_dashboard())
 
         # Clean up
         await message_bus.close()

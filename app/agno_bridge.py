@@ -23,9 +23,8 @@ from pydantic import BaseModel
 
 # Import enhanced configuration system following ADR-006
 from app.config.env_loader import get_env_config, validate_environment
-from app.core.circuit_breaker import (
-    with_circuit_breaker,
-)
+from app.core.ai_logger import logger
+from app.core.circuit_breaker import with_circuit_breaker
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -225,7 +224,7 @@ async def get_agents():
     """Get available agents (teams presented as agents)."""
     if USE_DIRECT_SWARMS:
         # Direct swarm integration - return real swarm types
-        from app.swarms.unified_enhanced_orchestrator import UnifiedSwarmOrchestrator
+        from app.core.super_orchestrator import get_orchestrator
 
         try:
             orchestrator = UnifiedSwarmOrchestrator()
@@ -465,21 +464,21 @@ async def search_memory(request: dict[str, Any]):
 
 if __name__ == "__main__":
     import uvicorn
-    print("=" * 60)
-    print("🌉 Agno Bridge Server v2.0.0")
-    print("=" * 60)
-    print("✅ Bridging Agno UI to Sophia Intel AI")
-    print(f"📡 Proxying to unified server at {UNIFIED_API_URL}")
-    print("🚀 Starting on http://localhost:7777")
-    print("=" * 60)
-    print("\nEndpoints:")
-    print("  • GET  /v1/playground/agents     - List agents")
-    print("  • POST /v1/playground/agents/{id}/runs - Run agent")
-    print("  • GET  /v1/playground/teams      - List teams")
-    print("  • POST /v1/playground/teams/{id}/runs - Run team")
-    print("  • GET  /workflows                - List workflows")
-    print("  • POST /run/workflow             - Run workflow")
-    print("  • POST /memory/add               - Add memory")
-    print("  • POST /memory/search            - Search memory")
-    print("=" * 60)
+    logger.info("=" * 60)
+    logger.info("🌉 Agno Bridge Server v2.0.0")
+    logger.info("=" * 60)
+    logger.info("✅ Bridging Agno UI to Sophia Intel AI")
+    logger.info(f"📡 Proxying to unified server at {UNIFIED_API_URL}")
+    logger.info("🚀 Starting on http://localhost:7777")
+    logger.info("=" * 60)
+    logger.info("\nEndpoints:")
+    logger.info("  • GET  /v1/playground/agents     - List agents")
+    logger.info("  • POST /v1/playground/agents/{id}/runs - Run agent")
+    logger.info("  • GET  /v1/playground/teams      - List teams")
+    logger.info("  • POST /v1/playground/teams/{id}/runs - Run team")
+    logger.info("  • GET  /workflows                - List workflows")
+    logger.info("  • POST /run/workflow             - Run workflow")
+    logger.info("  • POST /memory/add               - Add memory")
+    logger.info("  • POST /memory/search            - Search memory")
+    logger.info("=" * 60)
     uvicorn.run(app, host="0.0.0.0", port=7777, log_level="info")

@@ -15,9 +15,7 @@ from typing import Any
 import aiohttp
 
 from app.config.env_loader import get_env_config
-from app.core.circuit_breaker import (
-    with_circuit_breaker,
-)
+from app.core.circuit_breaker import with_circuit_breaker
 from app.memory.supermemory_mcp import MemoryEntry, MemoryType
 
 logger = logging.getLogger(__name__)

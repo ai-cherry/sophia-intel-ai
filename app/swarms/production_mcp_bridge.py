@@ -11,6 +11,8 @@ from typing import Any
 
 import httpx
 
+from app.core.ai_logger import logger
+
 logger = logging.getLogger(__name__)
 
 class ReviewType(Enum):
@@ -146,7 +148,7 @@ async def test_bridge():
 
     # Test health check
     is_healthy = await bridge.health_check()
-    print(f"MCP Server Health: {'✅ Healthy' if is_healthy else '❌ Unhealthy'}")
+    logger.info(f"MCP Server Health: {'✅ Healthy' if is_healthy else '❌ Unhealthy'}")
 
     if is_healthy:
         # Test code review
@@ -158,11 +160,11 @@ def calculate_fibonacci(n):
 """
 
         review_result = await bridge.code_review(test_code, "python")
-        print(f"Code Review Result: {review_result}")
+        logger.info(f"Code Review Result: {review_result}")
 
         # Test swarm status
         status = await bridge.get_swarm_status()
-        print(f"Swarm Status: {status}")
+        logger.info(f"Swarm Status: {status}")
 
     await bridge.close()
 

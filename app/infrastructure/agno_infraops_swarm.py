@@ -12,6 +12,8 @@ from datetime import datetime
 from enum import Enum
 from typing import Any
 
+from app.core.ai_logger import logger
+
 logger = logging.getLogger(__name__)
 
 
@@ -445,9 +447,9 @@ if __name__ == "__main__":
         }
 
         result = await swarm.execute_infrastructure_task(deployment_task)
-        print(f"Deployment result: {result['status']}")
+        logger.info(f"Deployment result: {result['status']}")
         if result['consensus']:
-            print(f"Consensus decision: {result['consensus']['decision']}")
+            logger.info(f"Consensus decision: {result['consensus']['decision']}")
 
         # Test security scan
         security_task = {
@@ -461,18 +463,18 @@ if __name__ == "__main__":
         }
 
         security_result = await swarm.execute_infrastructure_task(security_task)
-        print(f"Security scan result: {security_result['status']}")
+        logger.info(f"Security scan result: {security_result['status']}")
 
         # Get swarm status
         status = swarm.get_swarm_status()
-        print("\nSwarm status:")
-        print(f"  Total tasks: {status['swarm_metrics']['total_tasks']}")
-        print(f"  Avg latency: {status['swarm_metrics']['avg_swarm_latency_ms']:.2f}ms")
+        logger.info("\nSwarm status:")
+        logger.info(f"  Total tasks: {status['swarm_metrics']['total_tasks']}")
+        logger.info(f"  Avg latency: {status['swarm_metrics']['avg_swarm_latency_ms']:.2f}ms")
 
         # Health check
         health = await swarm.health_check()
-        print("\nHealth check:")
-        print(f"  Healthy agents: {health['healthy_agents']}/{health['total_agents']}")
-        print(f"  Health: {health['health_percentage']:.1f}%")
+        logger.info("\nHealth check:")
+        logger.info(f"  Healthy agents: {health['healthy_agents']}/{health['total_agents']}")
+        logger.info(f"  Health: {health['health_percentage']:.1f}%")
 
     asyncio.run(test_infraops_swarm())

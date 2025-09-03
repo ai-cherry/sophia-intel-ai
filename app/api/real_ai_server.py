@@ -14,6 +14,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
+from app.core.ai_logger import logger
+
 # FastAPI app
 app = FastAPI(title="Real AI Swarm Server")
 
@@ -197,13 +199,13 @@ async def root():
 
 if __name__ == "__main__":
     import uvicorn
-    print("=" * 60)
-    print("🚀 REAL AI SWARM SERVER")
-    print("=" * 60)
-    print("✅ Connected to OpenRouter")
-    print("✅ Strategic Swarm: Claude-3-Haiku")
-    print("✅ Coding Swarm: GPT-4-Turbo")
-    print("✅ Debate Swarm: Gemini-Pro")
-    print("=" * 60)
-    print("Starting server on http://localhost:8000")
+    logger.info("=" * 60)
+    logger.info("🚀 REAL AI SWARM SERVER")
+    logger.info("=" * 60)
+    logger.info("✅ Connected to OpenRouter")
+    logger.info("✅ Strategic Swarm: Claude-3-Haiku")
+    logger.info("✅ Coding Swarm: GPT-4-Turbo")
+    logger.info("✅ Debate Swarm: Gemini-Pro")
+    logger.info("=" * 60)
+    logger.info("Starting server on http://localhost:8000")
     uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)

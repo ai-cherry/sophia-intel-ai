@@ -16,12 +16,13 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from unittest.mock import MagicMock
 
+from app.core.ai_logger import logger
+from app.swarms import UnifiedSwarmOrchestrator
 from app.swarms.consciousness_tracking import (
     ConsciousnessTracker,
     ConsciousnessType,
     EmergenceEventType,
 )
-from app.swarms.unified_enhanced_orchestrator import UnifiedSwarmOrchestrator
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -373,36 +374,36 @@ async def main():
     validator = ConsciousnessTrackingValidator()
     results = await validator.run_validation()
 
-    print("\n" + "="*80)
-    print("🧠 CONSCIOUSNESS TRACKING SYSTEM VALIDATION RESULTS")
-    print("="*80)
+    logger.info("\n" + "="*80)
+    logger.info("🧠 CONSCIOUSNESS TRACKING SYSTEM VALIDATION RESULTS")
+    logger.info("="*80)
 
     # Print detailed results
     for category, category_results in results.items():
         if category in ["overall_status", "summary", "error"]:
             continue
 
-        print(f"\n📊 {category.replace('_', ' ').title()}:")
+        logger.info(f"\n📊 {category.replace('_', ' ').title()}:")
         if isinstance(category_results, dict):
             for test, result in category_results.items():
                 status = "✅ PASS" if result else "❌ FAIL"
-                print(f"   {test.replace('_', ' ').title()}: {status}")
+                logger.info(f"   {test.replace('_', ' ').title()}: {status}")
 
     # Print summary
     if "summary" in results:
         summary = results["summary"]
-        print("\n📈 OVERALL SUMMARY:")
-        print(f"   Total Tests: {summary['total_tests']}")
-        print(f"   Passed Tests: {summary['passed_tests']}")
-        print(f"   Pass Rate: {summary['pass_percentage']:.1f}%")
-        print(f"   Status: {summary['status'].upper()}")
+        logger.info("\n📈 OVERALL SUMMARY:")
+        logger.info(f"   Total Tests: {summary['total_tests']}")
+        logger.info(f"   Passed Tests: {summary['passed_tests']}")
+        logger.info(f"   Pass Rate: {summary['pass_percentage']:.1f}%")
+        logger.info(f"   Status: {summary['status'].upper()}")
 
     if "error" in results:
-        print(f"\n❌ ERROR: {results['error']}")
+        logger.info(f"\n❌ ERROR: {results['error']}")
 
-    print("\n" + "="*80)
-    print("🧠 CONSCIOUSNESS TRACKING VALIDATION COMPLETE")
-    print("="*80)
+    logger.info("\n" + "="*80)
+    logger.info("🧠 CONSCIOUSNESS TRACKING VALIDATION COMPLETE")
+    logger.info("="*80)
 
     return results
 

@@ -7,6 +7,8 @@ import weaviate.classes as wvc
 from app import settings
 from app.core.circuit_breaker import with_circuit_breaker
 from app.memory.embed_router import (
+from app.core.ai_logger import logger
+
     DIM_A,
     DIM_B,
     MODEL_A,
@@ -211,7 +213,7 @@ async def hybrid_search_merge(query: str, k: int = 8, semantic_weight: float = 0
                             "prop": r
                         })
         except Exception as e:
-            print(f"Error searching collection A: {e}")
+            logger.info(f"Error searching collection A: {e}")
 
         # Search Collection B
         try:
@@ -263,7 +265,7 @@ async def hybrid_search_merge(query: str, k: int = 8, semantic_weight: float = 0
                             "prop": r
                         })
         except Exception as e:
-            print(f"Error searching collection B: {e}")
+            logger.info(f"Error searching collection B: {e}")
 
     # Normalize and combine scores
     def norm_sem(d):

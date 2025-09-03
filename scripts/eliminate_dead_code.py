@@ -11,6 +11,8 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+from app.core.ai_logger import logger
+
 # Files identified as completely orphaned (never imported)
 ORPHANED_FILES = [
     "app/playground.py",
@@ -57,35 +59,35 @@ class DeadCodeEliminator:
 
     def run(self):
         """Execute the dead code elimination process."""
-        print("🧹 Sophia Intel AI - Dead Code Elimination")
-        print("=" * 50)
+        logger.info("🧹 Sophia Intel AI - Dead Code Elimination")
+        logger.info("=" * 50)
 
         if self.dry_run:
-            print("🔍 Running in DRY RUN mode (no changes will be made)")
+            logger.info("🔍 Running in DRY RUN mode (no changes will be made)")
         else:
-            print("⚠️  Running in LIVE mode (files will be modified)")
+            logger.info("⚠️  Running in LIVE mode (files will be modified)")
             self._create_backup_directory()
 
         # Step 1: Remove orphaned files
-        print("\n📂 Step 1: Removing orphaned files...")
+        logger.info("\n📂 Step 1: Removing orphaned files...")
         self._remove_orphaned_files()
 
         # Step 2: Remove duplicate files
-        print("\n📂 Step 2: Removing duplicate implementations...")
+        logger.info("\n📂 Step 2: Removing duplicate implementations...")
         self._remove_duplicate_files()
 
         # Step 3: Clean unused imports
-        print("\n🔧 Step 3: Cleaning unused imports...")
+        logger.info("\n🔧 Step 3: Cleaning unused imports...")
         self._clean_unused_imports()
 
         # Step 4: Generate report
-        print("\n📊 Step 4: Generating report...")
+        logger.info("\n📊 Step 4: Generating report...")
         self._generate_report()
 
     def _create_backup_directory(self):
         """Create backup directory for removed files."""
         self.backup_dir.mkdir(parents=True, exist_ok=True)
-        print(f"📁 Created backup directory: {self.backup_dir}")
+        logger.info(f"📁 Created backup directory: {self.backup_dir}")
 
     def _remove_orphaned_files(self):
         """Remove files that are never imported."""
@@ -102,7 +104,7 @@ class DeadCodeEliminator:
         file_path = Path(filepath)
 
         if not file_path.exists():
-            print(f"  ⏭️  Skipping {filepath} (doesn't exist)")
+            logger.info(f"  ⏭️  Skipping {filepath} (doesn't exist)")
             return
 
         try:
@@ -126,11 +128,11 @@ class DeadCodeEliminator:
                 "size": file_size
             })
 
-            print(f"  ✅ Removed {filepath} ({line_count} lines, {reason})")
+            logger.info(f"  ✅ Removed {filepath} ({line_count} lines, {reason})")
 
         except Exception as e:
             self.errors.append(f"Failed to remove {filepath}: {e}")
-            print(f"  ❌ Error removing {filepath}: {e}")
+            logger.info(f"  ❌ Error removing {filepath}: {e}")
 
     def _clean_unused_imports(self):
         """Clean unused imports using autoflake."""
@@ -143,7 +145,7 @@ class DeadCodeEliminator:
             )
 
             if result.returncode != 0:
-                print("  ⚠️  autoflake not installed. Install with: pip install autoflake")
+                logger.info("  ⚠️  autoflake not installed. Install with: pip install autoflake")
                 return
 
             # Clean high-priority files first
@@ -153,7 +155,7 @@ class DeadCodeEliminator:
 
             # Then clean all Python files
             if not self.dry_run:
-                print("  🔄 Cleaning all Python files...")
+                logger.info("  🔄 Cleaning all Python files...")
                 cmd = [
                     "autoflake",
                     "--remove-all-unused-imports",
@@ -165,18 +167,18 @@ class DeadCodeEliminator:
 
                 result = subprocess.run(cmd, capture_output=True, text=True)
                 if result.returncode == 0:
-                    print("  ✅ Successfully cleaned all unused imports")
+                    logger.info("  ✅ Successfully cleaned all unused imports")
                 else:
-                    print(f"  ⚠️  Warning: {result.stderr}")
+                    logger.info(f"  ⚠️  Warning: {result.stderr}")
 
         except Exception as e:
             self.errors.append(f"Import cleaning failed: {e}")
-            print(f"  ❌ Error cleaning imports: {e}")
+            logger.info(f"  ❌ Error cleaning imports: {e}")
 
     def _clean_file_imports(self, filepath: str):
         """Clean imports in a single file."""
         if self.dry_run:
-            print(f"  🔍 Would clean imports in {filepath}")
+            logger.info(f"  🔍 Would clean imports in {filepath}")
         else:
             cmd = [
                 "autoflake",
@@ -189,9 +191,9 @@ class DeadCodeEliminator:
             result = subprocess.run(cmd, capture_output=True, text=True)
             if result.returncode == 0:
                 self.cleaned_imports.append(filepath)
-                print(f"  ✅ Cleaned imports in {filepath}")
+                logger.info(f"  ✅ Cleaned imports in {filepath}")
             else:
-                print(f"  ⚠️  Failed to clean {filepath}")
+                logger.info(f"  ⚠️  Failed to clean {filepath}")
 
     def _generate_report(self):
         """Generate elimination report."""
@@ -215,23 +217,23 @@ class DeadCodeEliminator:
             json.dump(report, f, indent=2)
 
         # Print summary
-        print("\n" + "=" * 50)
-        print("📊 ELIMINATION SUMMARY")
-        print("=" * 50)
-        print(f"Files removed: {report['summary']['files_removed']}")
-        print(f"Lines removed: {report['summary']['total_lines_removed']:,}")
-        print(f"Bytes removed: {report['summary']['total_bytes_removed']:,}")
-        print(f"Files with imports cleaned: {report['summary']['imports_cleaned']}")
+        logger.info("\n" + "=" * 50)
+        logger.info("📊 ELIMINATION SUMMARY")
+        logger.info("=" * 50)
+        logger.info(f"Files removed: {report['summary']['files_removed']}")
+        logger.info(f"Lines removed: {report['summary']['total_lines_removed']:,}")
+        logger.info(f"Bytes removed: {report['summary']['total_bytes_removed']:,}")
+        logger.info(f"Files with imports cleaned: {report['summary']['imports_cleaned']}")
 
         if self.errors:
-            print(f"\n⚠️  Errors encountered: {len(self.errors)}")
+            logger.info(f"\n⚠️  Errors encountered: {len(self.errors)}")
             for error in self.errors[:5]:
-                print(f"  - {error}")
+                logger.info(f"  - {error}")
 
-        print(f"\n📄 Full report saved to: {report_path}")
+        logger.info(f"\n📄 Full report saved to: {report_path}")
 
         if not self.dry_run and self.removed_files:
-            print(f"📁 Backed up files to: {self.backup_dir}")
+            logger.info(f"📁 Backed up files to: {self.backup_dir}")
 
 
 def main():
@@ -261,10 +263,10 @@ def main():
 
     # Safety check
     if args.live and not args.force:
-        print("⚠️  WARNING: This will permanently modify files!")
+        logger.info("⚠️  WARNING: This will permanently modify files!")
         response = input("Are you sure you want to continue? (yes/no): ")
         if response.lower() != "yes":
-            print("Aborted.")
+            logger.info("Aborted.")
             sys.exit(0)
 
     eliminator = DeadCodeEliminator(dry_run=not args.live)

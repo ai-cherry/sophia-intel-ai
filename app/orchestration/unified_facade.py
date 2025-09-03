@@ -11,13 +11,11 @@ from datetime import datetime
 from enum import Enum
 from typing import Any
 
-from app.core.circuit_breaker import (
-    with_circuit_breaker,
-)
+from app.core.circuit_breaker import with_circuit_breaker
 from app.memory.unified_memory_store import UnifiedMemoryStore
 from app.security.mcp_security import MCPSecurityFramework
-from app.swarms.coding.swarm_orchestrator import SwarmOrchestrator
 from app.swarms.improved_swarm import ImprovedAgentSwarm
+
 # from app.swarms.patterns.performance_monitoring import performance_monitoring  # Module not yet implemented
 from app.swarms.simple_agent_orchestrator import SimpleAgentOrchestrator
 from app.swarms.swarm_optimizer import SwarmOptimizer

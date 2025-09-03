@@ -4,25 +4,23 @@ Tests all embedding operations including document processing, similarity search,
 """
 
 import asyncio
-import json
 import os
 import time
-from typing import Any
 
 import numpy as np
 import pytest
 from httpx import AsyncClient
 
 from app.embeddings.agno_embedding_service import (
-    AgnoEmbeddingService,
-    AgnoEmbeddingRequest,
-    EmbeddingModel,
     MODEL_REGISTRY,
+    AgnoEmbeddingRequest,
+    AgnoEmbeddingService,
+    EmbeddingModel,
 )
 from app.embeddings.portkey_integration import (
+    PortkeyConfigBuilder,
     PortkeyGateway,
     PortkeyVirtualKeyManager,
-    PortkeyConfigBuilder,
 )
 from app.infrastructure.dependency_injection import get_container
 
@@ -95,7 +93,7 @@ async def test_service_registration(di_container):
     # Resolve services from container
     embedding_service = await di_container.resolve(AgnoEmbeddingService)
     portkey_gateway = await di_container.resolve(PortkeyGateway)
-    
+
     assert embedding_service is not None
     assert portkey_gateway is not None
     assert isinstance(embedding_service, AgnoEmbeddingService)
@@ -106,7 +104,7 @@ async def test_singleton_lifecycle(di_container):
     """Test that services are singletons"""
     service1 = await di_container.resolve(AgnoEmbeddingService)
     service2 = await di_container.resolve(AgnoEmbeddingService)
-    
+
     assert service1 is service2  # Same instance
 
 # ============================================
@@ -119,7 +117,7 @@ def test_environment_configuration():
     os.environ["EMBEDDING_IMPL"] = "agno"
     os.environ["EMBEDDING_CACHE_ENABLED"] = "true"
     os.environ["EMBEDDING_BATCH_SIZE"] = "50"
-    
+
     # Verify they can be read
     assert os.getenv("EMBEDDING_IMPL") == "agno"
     assert os.getenv("EMBEDDING_CACHE_ENABLED") == "true"
@@ -128,13 +126,13 @@ def test_environment_configuration():
 def test_virtual_key_management():
     """Test virtual key configuration"""
     manager = PortkeyVirtualKeyManager()
-    
+
     # Test with mock environment variables
     os.environ["TOGETHER_VIRTUAL_KEY"] = "test_together_key"
     os.environ["OPENAI_VIRTUAL_KEY"] = "test_openai_key"
-    
+
     manager = PortkeyVirtualKeyManager()  # Reinitialize with env vars
-    
+
     # Check active providers
     providers = manager.get_active_providers()
     assert len(providers) > 0
@@ -147,7 +145,7 @@ def test_portkey_config_builder():
         cache_enabled=True,
         retry_enabled=True
     )
-    
+
     assert config["provider"] == "together"
     assert config["virtual_key"] == "test_key"
     assert "cache" in config
@@ -164,9 +162,9 @@ async def test_single_embedding(embedding_service, test_documents):
         texts=[test_documents[0]],
         use_case="general"
     )
-    
+
     response = await embedding_service.embed(request)
-    
+
     assert response is not None
     assert len(response.embeddings) == 1
     assert len(response.embeddings[0]) > 0
@@ -181,11 +179,11 @@ async def test_batch_embeddings(embedding_service, test_documents):
         texts=test_documents,
         use_case="search"
     )
-    
+
     start_time = time.perf_counter()
     response = await embedding_service.embed(request)
     latency_ms = (time.perf_counter() - start_time) * 1000
-    
+
     assert len(response.embeddings) == len(test_documents)
     assert all(len(emb) > 0 for emb in response.embeddings)
     assert latency_ms < 1000  # Should complete within 1 second
@@ -197,9 +195,9 @@ async def test_code_embeddings(embedding_service, test_code_samples):
         texts=test_code_samples,
         use_case="code"
     )
-    
+
     response = await embedding_service.embed(request)
-    
+
     # Should select appropriate model for code
     assert response.model_used in [
         EmbeddingModel.GTE_MODERNBERT_BASE.value,
@@ -216,14 +214,14 @@ async def test_multilingual_embeddings(embedding_service):
         "你好世界",
         "こんにちは世界"
     ]
-    
+
     request = AgnoEmbeddingRequest(
         texts=multilingual_texts,
         language="multi"
     )
-    
+
     response = await embedding_service.embed(request)
-    
+
     # Should select multilingual model
     assert response.model_used == EmbeddingModel.E5_LARGE_INSTRUCT.value
 
@@ -231,14 +229,14 @@ async def test_multilingual_embeddings(embedding_service):
 async def test_long_document_embeddings(embedding_service):
     """Test long document embeddings"""
     long_text = "This is a very long document. " * 5000  # ~35K tokens
-    
+
     request = AgnoEmbeddingRequest(
         texts=[long_text],
         use_case="general"
     )
-    
+
     response = await embedding_service.embed(request)
-    
+
     # Should select long-context model
     assert response.model_used == EmbeddingModel.M2_BERT_32K.value
 
@@ -256,7 +254,7 @@ def test_model_registry():
         EmbeddingModel.M2_BERT_8K,
         EmbeddingModel.M2_BERT_32K,
     ]
-    
+
     for model in required_models:
         assert model in MODEL_REGISTRY
         spec = MODEL_REGISTRY[model]
@@ -275,7 +273,7 @@ async def test_model_recommendations(embedding_service):
             "language": "en"
         }
     )
-    
+
     assert len(recommendations) > 0
     # BGE Large should be recommended for high-quality English RAG
     model_names = [model.value for model, _ in recommendations]
@@ -294,7 +292,7 @@ async def test_similarity_search(embedding_service, test_documents):
         use_case="search"
     )
     doc_response = await embedding_service.embed(doc_request)
-    
+
     # Generate query embedding
     query = "What programming languages are used for AI?"
     query_request = AgnoEmbeddingRequest(
@@ -302,18 +300,18 @@ async def test_similarity_search(embedding_service, test_documents):
         use_case="search"
     )
     query_response = await embedding_service.embed(query_request)
-    
+
     # Calculate similarities
     query_embedding = np.array(query_response.embeddings[0])
     doc_embeddings = np.array(doc_response.embeddings)
-    
+
     similarities = np.dot(doc_embeddings, query_embedding) / (
         np.linalg.norm(doc_embeddings, axis=1) * np.linalg.norm(query_embedding)
     )
-    
+
     # Get top result
     top_idx = np.argmax(similarities)
-    
+
     # Should match the Python document
     assert "Python" in test_documents[top_idx]
 
@@ -326,17 +324,17 @@ async def test_embedding_cache(embedding_service):
     """Test embedding cache functionality"""
     text = "Test caching functionality"
     request = AgnoEmbeddingRequest(texts=[text])
-    
+
     # First call - should generate
     start1 = time.perf_counter()
     response1 = await embedding_service.embed(request)
     latency1 = (time.perf_counter() - start1) * 1000
-    
+
     # Second call - should use cache
     start2 = time.perf_counter()
     response2 = await embedding_service.embed(request)
     latency2 = (time.perf_counter() - start2) * 1000
-    
+
     # Cache should be faster
     assert latency2 < latency1 / 2
     # Embeddings should be identical
@@ -350,7 +348,7 @@ async def test_embedding_cache(embedding_service):
 async def test_error_handling_empty_text(embedding_service):
     """Test error handling for empty text"""
     request = AgnoEmbeddingRequest(texts=[""])
-    
+
     # Should handle gracefully
     response = await embedding_service.embed(request)
     assert response is not None
@@ -362,7 +360,7 @@ async def test_error_handling_invalid_model(embedding_service):
         texts=["test"],
         model="invalid_model"  # This should fail validation
     )
-    
+
     with pytest.raises(ValueError):
         await embedding_service.embed(request)
 
@@ -374,22 +372,22 @@ async def test_error_handling_invalid_model(embedding_service):
 async def test_performance_single_embedding(embedding_service, performance_baseline):
     """Test single embedding performance"""
     request = AgnoEmbeddingRequest(texts=["Performance test"])
-    
+
     start = time.perf_counter()
     await embedding_service.embed(request)
     latency_ms = (time.perf_counter() - start) * 1000
-    
+
     assert latency_ms < performance_baseline["single_embedding_latency_ms"] * 2
 
 @pytest.mark.asyncio
 async def test_performance_batch_embedding(embedding_service, test_documents, performance_baseline):
     """Test batch embedding performance"""
     request = AgnoEmbeddingRequest(texts=test_documents * 20)  # 100 documents
-    
+
     start = time.perf_counter()
     await embedding_service.embed(request)
     latency_ms = (time.perf_counter() - start) * 1000
-    
+
     assert latency_ms < performance_baseline["batch_embedding_latency_ms"] * 2
 
 @pytest.mark.asyncio
@@ -399,14 +397,14 @@ async def test_concurrent_requests(embedding_service, test_documents):
         AgnoEmbeddingRequest(texts=[doc])
         for doc in test_documents
     ]
-    
+
     # Execute concurrently
     start = time.perf_counter()
     responses = await asyncio.gather(*[
         embedding_service.embed(req) for req in requests
     ])
     latency_ms = (time.perf_counter() - start) * 1000
-    
+
     assert len(responses) == len(requests)
     assert all(r is not None for r in responses)
     # Should be faster than sequential
@@ -427,7 +425,7 @@ async def test_api_create_embedding():
                 "use_case": "general"
             }
         )
-        
+
         if response.status_code == 200:
             data = response.json()
             assert "embeddings" in data["data"]
@@ -445,7 +443,7 @@ async def test_api_batch_embeddings():
                 "batch_size": 10
             }
         )
-        
+
         if response.status_code == 200:
             data = response.json()
             assert len(data["data"]["embeddings"]) == 3
@@ -455,7 +453,7 @@ async def test_api_health_check():
     """Test embedding service health check"""
     async with AsyncClient(base_url="http://localhost:8000") as client:
         response = await client.get("/embeddings/health")
-        
+
         if response.status_code == 200:
             data = response.json()
             assert data["data"]["status"] == "healthy"
@@ -473,7 +471,7 @@ async def test_agent_embedding_integration(embedding_service):
         context="Agent memory context for testing",
         memory_type="semantic"
     )
-    
+
     assert response is not None
     assert response.metadata["agent_id"] == "test_agent_123"
     assert response.metadata["memory_type"] == "semantic"
@@ -486,7 +484,7 @@ async def test_swarm_embedding_integration(embedding_service, test_documents):
         documents=test_documents,
         task_type="retrieval"
     )
-    
+
     assert response is not None
     assert len(response.embeddings) == len(test_documents)
     assert response.metadata["swarm_id"] == "test_swarm_456"
@@ -504,15 +502,15 @@ async def test_end_to_end_rag_workflow(embedding_service, test_documents):
         use_case="rag"
     )
     index_response = await embedding_service.embed(index_request)
-    
+
     # 2. Store embeddings (simulated)
     document_store = {}
-    for i, (doc, emb) in enumerate(zip(test_documents, index_response.embeddings)):
+    for i, (doc, emb) in enumerate(zip(test_documents, index_response.embeddings, strict=False)):
         document_store[i] = {
             "text": doc,
             "embedding": emb
         }
-    
+
     # 3. Query
     query = "How does AI impact software development?"
     query_request = AgnoEmbeddingRequest(
@@ -521,7 +519,7 @@ async def test_end_to_end_rag_workflow(embedding_service, test_documents):
     )
     query_response = await embedding_service.embed(query_request)
     query_embedding = np.array(query_response.embeddings[0])
-    
+
     # 4. Retrieve
     similarities = []
     for doc_id, doc_data in document_store.items():
@@ -530,11 +528,11 @@ async def test_end_to_end_rag_workflow(embedding_service, test_documents):
             np.linalg.norm(query_embedding) * np.linalg.norm(doc_embedding)
         )
         similarities.append((doc_id, similarity))
-    
+
     # 5. Get top results
     similarities.sort(key=lambda x: x[1], reverse=True)
     top_doc_id = similarities[0][0]
-    
+
     # Verify retrieval quality
     retrieved_doc = document_store[top_doc_id]["text"]
     assert "artificial intelligence" in retrieved_doc.lower() or "software" in retrieved_doc.lower()
@@ -549,7 +547,7 @@ async def test_metrics_collection(embedding_service, test_documents):
     # Generate some embeddings
     request = AgnoEmbeddingRequest(texts=test_documents)
     await embedding_service.embed(request)
-    
+
     # Check if metrics are being collected
     # This depends on your metrics implementation
     # Example assertion:

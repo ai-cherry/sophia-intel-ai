@@ -9,9 +9,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
-from app.core.circuit_breaker import (
-    with_circuit_breaker,
-)
+from app.core.circuit_breaker import with_circuit_breaker
 from app.memory.supermemory_mcp import MemoryType
 
 from ..memory_integration import SwarmMemoryClient, SwarmMemoryEventType

@@ -26,14 +26,14 @@ class CompletePortkeySetup:
 
     async def test_direct_providers(self):
         """Test all providers directly first."""
-        print("\n" + "="*60)
-        print("🔍 TESTING DIRECT PROVIDER ACCESS")
-        print("="*60)
+        logger.info("\n" + "="*60)
+        logger.info("🔍 TESTING DIRECT PROVIDER ACCESS")
+        logger.info("="*60)
 
         results = {}
 
         # Test OpenRouter
-        print("\n📝 Testing OpenRouter...")
+        logger.info("\n📝 Testing OpenRouter...")
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.post(
@@ -53,17 +53,17 @@ class CompletePortkeySetup:
                 if response.status_code == 200:
                     result = response.json()
                     content = result.get("choices", [{}])[0].get("message", {}).get("content", "")
-                    print(f"  ✅ OpenRouter: Working - {content}")
+                    logger.info(f"  ✅ OpenRouter: Working - {content}")
                     results["openrouter"] = True
                 else:
-                    print(f"  ❌ OpenRouter: Failed ({response.status_code})")
+                    logger.info(f"  ❌ OpenRouter: Failed ({response.status_code})")
                     results["openrouter"] = False
         except Exception as e:
-            print(f"  ❌ OpenRouter Error: {e}")
+            logger.info(f"  ❌ OpenRouter Error: {e}")
             results["openrouter"] = False
 
         # Test Together AI
-        print("\n📝 Testing Together AI...")
+        logger.info("\n📝 Testing Together AI...")
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
                 # Test embeddings endpoint
@@ -82,22 +82,22 @@ class CompletePortkeySetup:
                 if response.status_code == 200:
                     result = response.json()
                     embedding_dim = len(result.get("data", [{}])[0].get("embedding", []))
-                    print(f"  ✅ Together AI: Working - Embedding dimension: {embedding_dim}")
+                    logger.info(f"  ✅ Together AI: Working - Embedding dimension: {embedding_dim}")
                     results["together"] = True
                 else:
-                    print(f"  ❌ Together AI: Failed ({response.status_code})")
+                    logger.info(f"  ❌ Together AI: Failed ({response.status_code})")
                     results["together"] = False
         except Exception as e:
-            print(f"  ❌ Together AI Error: {e}")
+            logger.info(f"  ❌ Together AI Error: {e}")
             results["together"] = False
 
         return results
 
     async def setup_portkey_configs(self):
         """Set up Portkey configurations for all use cases."""
-        print("\n" + "="*60)
-        print("🔧 CONFIGURING PORTKEY GATEWAY")
-        print("="*60)
+        logger.info("\n" + "="*60)
+        logger.info("🔧 CONFIGURING PORTKEY GATEWAY")
+        logger.info("="*60)
 
         # Define configurations for different use cases
         configs = {
@@ -121,14 +121,14 @@ class CompletePortkeySetup:
         }
 
         # Test Portkey with different configurations
-        print("\n📝 Testing Portkey Configurations...")
+        logger.info("\n📝 Testing Portkey Configurations...")
 
         # Test chat completion through Portkey → OpenRouter
-        print("\n1. Chat Models (OpenRouter):")
+        logger.info("\n1. Chat Models (OpenRouter):")
         await self.test_portkey_chat()
 
         # Test embeddings through Portkey → Together
-        print("\n2. Embeddings (Together AI):")
+        logger.info("\n2. Embeddings (Together AI):")
         await self.test_portkey_embeddings()
 
         return configs
@@ -166,18 +166,18 @@ class CompletePortkeySetup:
                 if response.status_code == 200:
                     result = response.json()
                     content = result.get("choices", [{}])[0].get("message", {}).get("content", "")
-                    print(f"  ✅ Chat via Portkey: {content}")
+                    logger.info(f"  ✅ Chat via Portkey: {content}")
                     return True
                 else:
-                    print(f"  ❌ Failed: Status {response.status_code}")
+                    logger.info(f"  ❌ Failed: Status {response.status_code}")
                     try:
                         error = response.json()
-                        print(f"     Error: {error}")
+                        logger.info(f"     Error: {error}")
                     except:
                         pass
                     return False
         except Exception as e:
-            print(f"  ❌ Error: {e}")
+            logger.info(f"  ❌ Error: {e}")
             return False
 
     async def test_portkey_embeddings(self):
@@ -206,25 +206,25 @@ class CompletePortkeySetup:
                 if response.status_code == 200:
                     result = response.json()
                     embedding_dim = len(result.get("data", [{}])[0].get("embedding", []))
-                    print(f"  ✅ Embeddings via Portkey: Dimension {embedding_dim}")
+                    logger.info(f"  ✅ Embeddings via Portkey: Dimension {embedding_dim}")
                     return True
                 else:
-                    print(f"  ❌ Failed: Status {response.status_code}")
+                    logger.info(f"  ❌ Failed: Status {response.status_code}")
                     try:
                         error = response.json()
-                        print(f"     Error: {error}")
+                        logger.info(f"     Error: {error}")
                     except:
                         pass
                     return False
         except Exception as e:
-            print(f"  ❌ Error: {e}")
+            logger.info(f"  ❌ Error: {e}")
             return False
 
     async def update_env_file(self):
         """Update .env.local with all configurations."""
-        print("\n" + "="*60)
-        print("📝 UPDATING ENVIRONMENT CONFIGURATION")
-        print("="*60)
+        logger.info("\n" + "="*60)
+        logger.info("📝 UPDATING ENVIRONMENT CONFIGURATION")
+        logger.info("="*60)
 
         env_path = ".env.local"
 
@@ -256,21 +256,23 @@ class CompletePortkeySetup:
 
         for key, value in updates.items():
             set_key(env_path, key, value)
-            print(f"  ✅ Updated: {key}")
+            logger.info(f"  ✅ Updated: {key}")
 
-        print("\n✅ Environment configuration updated!")
+        logger.info("\n✅ Environment configuration updated!")
 
     def create_usage_examples(self):
         """Create example code for using the configured setup."""
-        print("\n" + "="*60)
-        print("💡 USAGE EXAMPLES")
-        print("="*60)
+        logger.info("\n" + "="*60)
+        logger.info("💡 USAGE EXAMPLES")
+        logger.info("="*60)
 
         examples = """
 # === CHAT COMPLETIONS (via Portkey → OpenRouter) ===
 
 from openai import OpenAI
 import json
+from app.core.ai_logger import logger
+
 
 # Method 1: Using Portkey config header
 client = httpx.AsyncClient()
@@ -335,7 +337,7 @@ Via Together AI (Embeddings):
 - BAAI/bge-large-en-v1.5 (1024 dim)
 """
 
-        print(examples)
+        logger.info(examples)
 
         # Save examples to file
         with open("PORTKEY_USAGE_EXAMPLES.md", "w") as f:
@@ -349,13 +351,13 @@ Via Together AI (Embeddings):
             f.write(examples)
             f.write("```\n")
 
-        print("\n✅ Examples saved to PORTKEY_USAGE_EXAMPLES.md")
+        logger.info("\n✅ Examples saved to PORTKEY_USAGE_EXAMPLES.md")
 
     async def run_complete_setup(self):
         """Run the complete setup process."""
-        print("\n" + "="*60)
-        print("🚀 COMPLETE PORTKEY + PROVIDERS SETUP")
-        print("="*60)
+        logger.info("\n" + "="*60)
+        logger.info("🚀 COMPLETE PORTKEY + PROVIDERS SETUP")
+        logger.info("="*60)
 
         # Test direct provider access
         provider_results = await self.test_direct_providers()
@@ -370,30 +372,30 @@ Via Together AI (Embeddings):
         self.create_usage_examples()
 
         # Final summary
-        print("\n" + "="*60)
-        print("✅ SETUP COMPLETE!")
-        print("="*60)
+        logger.info("\n" + "="*60)
+        logger.info("✅ SETUP COMPLETE!")
+        logger.info("="*60)
 
-        print("\n📊 Provider Status:")
-        print(f"  • OpenRouter: {'✅ Working' if provider_results.get('openrouter') else '❌ Failed'}")
-        print(f"  • Together AI: {'✅ Working' if provider_results.get('together') else '❌ Failed'}")
-        print("  • Portkey Gateway: ✅ Configured")
+        logger.info("\n📊 Provider Status:")
+        logger.info(f"  • OpenRouter: {'✅ Working' if provider_results.get('openrouter') else '❌ Failed'}")
+        logger.info(f"  • Together AI: {'✅ Working' if provider_results.get('together') else '❌ Failed'}")
+        logger.info("  • Portkey Gateway: ✅ Configured")
 
-        print("\n🔑 API Keys Configured:")
-        print(f"  • OPENROUTER_API_KEY: ...{self.openrouter_key[-10:]}")
-        print(f"  • TOGETHER_API_KEY: ...{self.together_key[-10:]}")
-        print(f"  • PORTKEY_API_KEY: ...{self.portkey_key[-10:]}")
+        logger.info("\n🔑 API Keys Configured:")
+        logger.info(f"  • OPENROUTER_API_KEY: ...{self.openrouter_key[-10:]}")
+        logger.info(f"  • TOGETHER_API_KEY: ...{self.together_key[-10:]}")
+        logger.info(f"  • PORTKEY_API_KEY: ...{self.portkey_key[-10:]}")
 
-        print("\n📦 Available Resources:")
-        print("  • 300+ chat models via OpenRouter")
-        print("  • High-quality embeddings via Together AI")
-        print("  • Unified gateway via Portkey")
-        print("  • Caching, observability, and fallbacks")
+        logger.info("\n📦 Available Resources:")
+        logger.info("  • 300+ chat models via OpenRouter")
+        logger.info("  • High-quality embeddings via Together AI")
+        logger.info("  • Unified gateway via Portkey")
+        logger.info("  • Caching, observability, and fallbacks")
 
-        print("\n📚 Next Steps:")
-        print("  1. Review PORTKEY_USAGE_EXAMPLES.md for code examples")
-        print("  2. Test with: python3 scripts/test_complete_setup.py")
-        print("  3. Start building with unified API access!")
+        logger.info("\n📚 Next Steps:")
+        logger.info("  1. Review PORTKEY_USAGE_EXAMPLES.md for code examples")
+        logger.info("  2. Test with: python3 scripts/test_complete_setup.py")
+        logger.info("  3. Start building with unified API access!")
 
 
 async def main():

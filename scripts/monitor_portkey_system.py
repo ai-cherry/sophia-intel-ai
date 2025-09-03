@@ -278,9 +278,9 @@ class PortkeySystemMonitor:
             ))
 
             # Display status tables
-            console.print(self.create_status_table())
-            console.print()
-            console.print(self.create_models_table())
+            console.logger.info(self.create_status_table())
+            console.logger.info()
+            console.logger.info(self.create_models_table())
 
             # Display summary
             all_good = (
@@ -318,7 +318,7 @@ class PortkeySystemMonitor:
                 ))
 
             # Wait for next check
-            console.print(f"\nNext check in {interval} seconds... (Press Ctrl+C to exit)")
+            console.logger.info(f"\nNext check in {interval} seconds... (Press Ctrl+C to exit)")
             await asyncio.sleep(interval)
 
     async def quick_test(self):
@@ -356,13 +356,13 @@ class PortkeySystemMonitor:
                 progress.advance(task)
 
         # Display results
-        console.print()
-        console.print(self.create_status_table())
-        console.print()
-        console.print(self.create_models_table())
+        console.logger.info()
+        console.logger.info(self.create_status_table())
+        console.logger.info()
+        console.logger.info(self.create_models_table())
 
         # Get pricing info
-        console.print("\n[bold cyan]Fetching pricing information...[/bold cyan]")
+        console.logger.info("\n[bold cyan]Fetching pricing information...[/bold cyan]")
         pricing = await self.get_model_pricing()
 
         if pricing:
@@ -395,8 +395,8 @@ class PortkeySystemMonitor:
                 context = f"{info['context']:,}" if info.get('context') else "N/A"
                 pricing_table.add_row(model_name, input_price, output_price, context)
 
-            console.print()
-            console.print(pricing_table)
+            console.logger.info()
+            console.logger.info(pricing_table)
 
         # Summary
         all_good = (
@@ -404,7 +404,7 @@ class PortkeySystemMonitor:
             all("✅" in v for v in self.status["models"].values())
         )
 
-        console.print()
+        console.logger.info()
         if all_good:
             console.print(Panel.fit(
                 "[bold green]✅ All Systems Operational![/bold green]\n\n"
@@ -447,12 +447,12 @@ async def main():
         # Quick test mode
         await monitor.quick_test()
 
-        console.print("\n[dim]Tip: Run with --monitor for continuous monitoring[/dim]")
-        console.print("[dim]Example: python3 scripts/monitor_portkey_system.py --monitor --interval 60[/dim]")
+        console.logger.info("\n[dim]Tip: Run with --monitor for continuous monitoring[/dim]")
+        console.logger.info("[dim]Example: python3 scripts/monitor_portkey_system.py --monitor --interval 60[/dim]")
 
 
 if __name__ == "__main__":
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        console.print("\n[yellow]Monitoring stopped by user[/yellow]")
+        console.logger.info("\n[yellow]Monitoring stopped by user[/yellow]")

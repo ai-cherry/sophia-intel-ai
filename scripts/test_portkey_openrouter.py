@@ -9,6 +9,8 @@ import os
 import httpx
 from dotenv import load_dotenv
 
+from app.core.ai_logger import logger
+
 # Load environment
 load_dotenv('.env.local', override=True)
 
@@ -19,12 +21,12 @@ async def test_portkey_with_openrouter():
     openrouter_key = os.getenv("OPENROUTER_API_KEY")
 
     if not portkey_key or not openrouter_key:
-        print("❌ Missing API keys")
+        logger.info("❌ Missing API keys")
         return False
 
-    print("\n" + "="*60)
-    print("🔐 Testing Portkey → OpenRouter Integration")
-    print("="*60)
+    logger.info("\n" + "="*60)
+    logger.info("🔐 Testing Portkey → OpenRouter Integration")
+    logger.info("="*60)
 
     # Test different models through Portkey → OpenRouter
     test_cases = [
@@ -52,8 +54,8 @@ async def test_portkey_with_openrouter():
 
     async with httpx.AsyncClient(timeout=30.0) as client:
         for test in test_cases:
-            print(f"\n📝 Testing: {test['name']}")
-            print(f"   Model: {test['model']}")
+            logger.info(f"\n📝 Testing: {test['name']}")
+            logger.info(f"   Model: {test['model']}")
 
             try:
                 # Method 1: Using Portkey headers with OpenRouter provider
@@ -78,23 +80,23 @@ async def test_portkey_with_openrouter():
                 if response.status_code == 200:
                     result = response.json()
                     content = result.get("choices", [{}])[0].get("message", {}).get("content", "")
-                    print(f"   ✅ Success! Response: {content[:50]}")
+                    logger.info(f"   ✅ Success! Response: {content[:50]}")
                 else:
-                    print(f"   ❌ Failed: Status {response.status_code}")
+                    logger.info(f"   ❌ Failed: Status {response.status_code}")
                     if response.status_code == 401:
-                        print("      → Need to configure virtual key in Portkey dashboard")
+                        logger.info("      → Need to configure virtual key in Portkey dashboard")
                     try:
                         error = response.json()
-                        print(f"      → Error: {error.get('error', {}).get('message', 'Unknown')}")
+                        logger.info(f"      → Error: {error.get('error', {}).get('message', 'Unknown')}")
                     except:
                         pass
 
             except Exception as e:
-                print(f"   ❌ Error: {str(e)[:100]}")
+                logger.info(f"   ❌ Error: {str(e)[:100]}")
 
-    print("\n" + "="*60)
-    print("📊 Configuration Instructions")
-    print("="*60)
+    logger.info("\n" + "="*60)
+    logger.info("📊 Configuration Instructions")
+    logger.info("="*60)
 
     print("""
 To make this work, in Portkey dashboard:
@@ -127,10 +129,10 @@ async def test_direct_openrouter():
     openrouter_key = os.getenv("OPENROUTER_API_KEY")
 
     if not openrouter_key:
-        print("❌ OpenRouter key not found")
+        logger.info("❌ OpenRouter key not found")
         return False
 
-    print("\n🔍 Testing Direct OpenRouter Connection...")
+    logger.info("\n🔍 Testing Direct OpenRouter Connection...")
 
     async with httpx.AsyncClient(timeout=30.0) as client:
         response = await client.post(
@@ -151,10 +153,10 @@ async def test_direct_openrouter():
         if response.status_code == 200:
             result = response.json()
             content = result.get("choices", [{}])[0].get("message", {}).get("content", "")
-            print(f"✅ OpenRouter Direct: Working! Response: {content}")
+            logger.info(f"✅ OpenRouter Direct: Working! Response: {content}")
             return True
         else:
-            print(f"❌ OpenRouter Direct: Failed ({response.status_code})")
+            logger.info(f"❌ OpenRouter Direct: Failed ({response.status_code})")
             return False
 
 async def main():
@@ -164,15 +166,15 @@ async def main():
     openrouter_ok = await test_direct_openrouter()
 
     if openrouter_ok:
-        print("\n✅ OpenRouter is working directly")
-        print("Now testing Portkey integration...")
+        logger.info("\n✅ OpenRouter is working directly")
+        logger.info("Now testing Portkey integration...")
 
     # Test Portkey with OpenRouter
     await test_portkey_with_openrouter()
 
-    print("\n" + "="*60)
-    print("✨ Summary")
-    print("="*60)
+    logger.info("\n" + "="*60)
+    logger.info("✨ Summary")
+    logger.info("="*60)
     print("""
 Your setup:
 ✅ OpenRouter API key is valid and working

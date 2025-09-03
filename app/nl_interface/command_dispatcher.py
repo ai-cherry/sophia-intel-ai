@@ -13,14 +13,15 @@ from datetime import datetime
 from enum import Enum
 from typing import Any
 
-from app.agents.simple_orchestrator import AgentRole, OptimizedAgentOrchestrator
-from app.core.circuit_breaker import (
-    with_circuit_breaker,
-)
+from enum import Enum
+# TODO: Define AgentRole locally or use SuperOrchestrator
+from app.core.circuit_breaker import with_circuit_breaker
 from app.nl_interface.memory_connector import NLInteraction, NLMemoryConnector
 from app.nl_interface.quicknlp import CachedQuickNLP, CommandIntent, ParsedCommand
 from app.swarms.improved_swarm import ImprovedAgentSwarm
 from app.swarms.performance_optimizer import (
+from app.core.ai_logger import logger
+
     CircuitBreaker,
     GracefulDegradationManager,
     SwarmOptimizer,
@@ -867,9 +868,9 @@ async def example_usage():
     session_id = "test-session-001"
 
     for command, complexity in test_commands:
-        print(f"\n{'='*60}")
-        print(f"Processing: {command} (expected complexity: {complexity})")
-        print(f"{'='*60}")
+        logger.info(f"\n{'='*60}")
+        logger.info(f"Processing: {command} (expected complexity: {complexity})")
+        logger.info(f"{'='*60}")
 
         result = await dispatcher.process_command(
             text=command,
@@ -877,31 +878,31 @@ async def example_usage():
             user_context={"urgency": "normal"}
         )
 
-        print(f"Success: {result.success}")
-        print(f"Mode: {result.execution_mode.value}")
-        print(f"Execution Time: {result.execution_time:.2f}s")
-        print(f"Quality Score: {result.quality_score:.2f}")
-        print(f"Patterns Used: {', '.join(result.patterns_used)}")
+        logger.info(f"Success: {result.success}")
+        logger.info(f"Mode: {result.execution_mode.value}")
+        logger.info(f"Execution Time: {result.execution_time:.2f}s")
+        logger.info(f"Quality Score: {result.quality_score:.2f}")
+        logger.info(f"Patterns Used: {', '.join(result.patterns_used)}")
 
         if result.error:
-            print(f"Error: {result.error}")
+            logger.info(f"Error: {result.error}")
         else:
-            print(f"Response Preview: {str(result.response)[:200]}...")
+            logger.info(f"Response Preview: {str(result.response)[:200]}...")
 
     # Get session optimization
     optimization = await dispatcher.optimize_for_session(session_id)
-    print(f"\n{'='*60}")
-    print("Session Optimization:")
-    print(json.dumps(optimization, indent=2))
+    logger.info(f"\n{'='*60}")
+    logger.info("Session Optimization:")
+    logger.info(json.dumps(optimization, indent=2))
 
     # Get performance metrics
     metrics = dispatcher._get_performance_metrics()
-    print(f"\n{'='*60}")
-    print("Performance Metrics:")
-    print(f"Total Commands: {metrics['dispatcher_stats']['total_commands']}")
-    print(f"Success Rate: {metrics['overall_quality_score']:.2%}")
-    print(f"Avg Execution Time: {metrics['dispatcher_stats']['avg_execution_time']:.2f}s")
-    print(f"System Health: {metrics['system_health']:.2%}")
+    logger.info(f"\n{'='*60}")
+    logger.info("Performance Metrics:")
+    logger.info(f"Total Commands: {metrics['dispatcher_stats']['total_commands']}")
+    logger.info(f"Success Rate: {metrics['overall_quality_score']:.2%}")
+    logger.info(f"Avg Execution Time: {metrics['dispatcher_stats']['avg_execution_time']:.2f}s")
+    logger.info(f"System Health: {metrics['system_health']:.2%}")
 
     # Shutdown
     await dispatcher.shutdown()

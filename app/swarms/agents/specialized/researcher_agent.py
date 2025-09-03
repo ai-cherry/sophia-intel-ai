@@ -5,9 +5,9 @@ Optimized for gathering accurate information from multiple sources,
 synthesizing findings, and presenting clear, well-referenced conclusions.
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from ..base_agent import BaseAgent, AgentRole
+from ..base_agent import AgentRole, BaseAgent
 
 
 class ResearchAgent(BaseAgent):
@@ -20,11 +20,11 @@ class ResearchAgent(BaseAgent):
     - Citation and reference management
     - Synthesis of complex topics
     """
-    
+
     def __init__(
         self,
         agent_id: str = "researcher-001",
-        research_domains: List[str] = None,
+        research_domains: list[str] = None,
         enable_reasoning: bool = True,
         max_reasoning_steps: int = 20,  # Researchers need thorough analysis
         **kwargs
@@ -32,15 +32,15 @@ class ResearchAgent(BaseAgent):
         self.research_domains = research_domains or [
             "technology", "science", "business", "academic", "market_research"
         ]
-        
+
         # Custom tools for research (would be implemented)
         research_tools = [
             # SearchTool(),
-            # CitationTool(), 
+            # CitationTool(),
             # FactCheckTool(),
             # SynthesisTool()
         ]
-        
+
         # Initialize with researcher-specific configuration
         super().__init__(
             agent_id=agent_id,
@@ -54,8 +54,8 @@ class ResearchAgent(BaseAgent):
             },
             **kwargs
         )
-    
-    async def conduct_research(self, research_query: Dict[str, Any]) -> Dict[str, Any]:
+
+    async def conduct_research(self, research_query: dict[str, Any]) -> dict[str, Any]:
         """
         Conduct comprehensive research on a given topic.
         
@@ -65,7 +65,7 @@ class ResearchAgent(BaseAgent):
         Returns:
             Structured research findings with sources and analysis
         """
-        
+
         research_problem = {
             "query": f"""Conduct comprehensive research on: {research_query.get('topic', 'Unspecified topic')}
             
@@ -86,9 +86,9 @@ class ResearchAgent(BaseAgent):
             "context": "research_analysis",
             "priority": "high"
         }
-        
+
         result = await self.execute(research_problem)
-        
+
         return {
             "research_findings": result["result"],
             "topic": research_query.get("topic"),
@@ -102,8 +102,8 @@ class ResearchAgent(BaseAgent):
                 "context_utilized": result.get("context_used", 0)
             }
         }
-    
-    async def fact_check(self, claims: List[str]) -> Dict[str, Any]:
+
+    async def fact_check(self, claims: list[str]) -> dict[str, Any]:
         """
         Verify the accuracy of factual claims.
         
@@ -113,7 +113,7 @@ class ResearchAgent(BaseAgent):
         Returns:
             Fact-check results with evidence and confidence scores
         """
-        
+
         fact_check_problem = {
             "query": f"""Fact-check the following {len(claims)} claims:
             
@@ -131,9 +131,9 @@ class ResearchAgent(BaseAgent):
             """,
             "context": "fact_checking"
         }
-        
+
         result = await self.execute(fact_check_problem)
-        
+
         return {
             "fact_check_results": result["result"],
             "claims_analyzed": len(claims),
@@ -142,8 +142,8 @@ class ResearchAgent(BaseAgent):
             "fact_checker_id": self.agent_id,
             "success": result["success"]
         }
-    
-    async def synthesize_information(self, sources: List[Dict[str, Any]]) -> Dict[str, Any]:
+
+    async def synthesize_information(self, sources: list[dict[str, Any]]) -> dict[str, Any]:
         """
         Synthesize information from multiple sources into coherent analysis.
         
@@ -153,12 +153,12 @@ class ResearchAgent(BaseAgent):
         Returns:
             Synthesized analysis with integrated findings
         """
-        
+
         sources_text = "\n\n".join([
             f"Source {i+1} ({source.get('type', 'unknown')}): {source.get('content', 'No content')}"
             for i, source in enumerate(sources)
         ])
-        
+
         synthesis_problem = {
             "query": f"""Synthesize the following {len(sources)} sources into a coherent analysis:
             
@@ -176,9 +176,9 @@ class ResearchAgent(BaseAgent):
             """,
             "context": "information_synthesis"
         }
-        
+
         result = await self.execute(synthesis_problem)
-        
+
         return {
             "synthesis_results": result["result"],
             "sources_count": len(sources),

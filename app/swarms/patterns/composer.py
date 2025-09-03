@@ -7,9 +7,9 @@ import logging
 from dataclasses import dataclass
 from typing import Any
 
-from .base import SwarmPattern
 from .adaptive_parameters import AdaptiveParametersPattern
 from .adversarial_debate import AdversarialDebatePattern
+from .base import SwarmPattern
 from .consensus import ConsensusPattern
 from .dynamic_roles import DynamicRolesPattern
 from .knowledge_transfer import KnowledgeTransferPattern

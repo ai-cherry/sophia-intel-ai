@@ -19,9 +19,7 @@ import jwt
 import redis.asyncio as redis
 from cryptography.fernet import Fernet
 
-from app.core.circuit_breaker import (
-    with_circuit_breaker,
-)
+from app.core.circuit_breaker import with_circuit_breaker
 
 logger = logging.getLogger(__name__)
 

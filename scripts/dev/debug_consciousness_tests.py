@@ -31,7 +31,7 @@ async def validate_consciousness_assumptions():
         mock_memory_client.log_swarm_event = MagicMock(return_value=None)
 
         with unittest.mock.patch('app.swarms.unified_enhanced_orchestrator.SwarmMemoryClient', return_value=mock_memory_client):
-            from app.swarms.unified_enhanced_orchestrator import UnifiedSwarmOrchestrator
+            from app.swarms import UnifiedSwarmOrchestrator
 
             orchestrator = UnifiedSwarmOrchestrator()
             print(f"   ✅ Orchestrator created: {type(orchestrator)}")

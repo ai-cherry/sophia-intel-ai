@@ -17,9 +17,8 @@ from typing import Any
 import numpy as np
 import tiktoken
 
-from app.core.circuit_breaker import (
-    with_circuit_breaker,
-)
+from app.core.ai_logger import logger
+from app.core.circuit_breaker import with_circuit_breaker
 from app.portkey_config import gateway
 
 # ============================================
@@ -229,7 +228,7 @@ class ModernBERTEmbedder:
 
         except Exception as e:
             # Fallback to simpler model on error
-            print(f"Error with {model}: {e}, falling back to tier B")
+            logger.info(f"Error with {model}: {e}, falling back to tier B")
 
             if tier != EmbeddingTier.TIER_B:
                 return await self._generate_embedding(

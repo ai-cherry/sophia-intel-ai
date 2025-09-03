@@ -12,6 +12,8 @@ import sys
 import os
 from typing import Dict, Any, List
 from datetime import datetime
+from app.core.ai_logger import logger
+
 
 # Add app directory to path for imports
 sys.path.append(os.path(dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -22,8 +24,8 @@ try:
     from app.agents.simple_orchestrator import OptimizedAgentOrchestrator
     from app.core.connections import get_connection_manager
 except ImportError as e:
-    print(f"❌ Import error: {e}")
-    print("🔧 Run this script from the project root directory")
+    logger.info(f"❌ Import error: {e}")
+    logger.info("🔧 Run this script from the project root directory")
     sys.exit(1)
 
 # Colors for output
@@ -65,15 +67,15 @@ class ProductionTestSuite:
         timestamp = datetime.now().strftime("%H:%M:%S")
         
         if level == "pass":
-            print(f"{Colors.GREEN}✅ {timestamp} {message}{Colors.END}")
+            logger.info(f"{Colors.GREEN}✅ {timestamp} {message}{Colors.END}")
         elif level == "fail":
-            print(f"{Colors.RED}❌ {timestamp} {message}{Colors.END}")
+            logger.info(f"{Colors.RED}❌ {timestamp} {message}{Colors.END}")
         elif level == "warn":
-            print(f"{Colors.YELLOW}⚠️  {timestamp} {message}{Colors.END}")
+            logger.info(f"{Colors.YELLOW}⚠️  {timestamp} {message}{Colors.END}")
         elif level == "info":
-            print(f"{Colors.BLUE}ℹ️  {timestamp} {message}{Colors.END}")
+            logger.info(f"{Colors.BLUE}ℹ️  {timestamp} {message}{Colors.END}")
         else:
-            print(f"{Colors.BOLD}{timestamp} {message}{Colors.END}")
+            logger.info(f"{Colors.BOLD}{timestamp} {message}{Colors.END}")
 
     def test_result(self, name: str, passed: bool, message: str = "", details: Any = None):
         """Record test result"""
@@ -380,7 +382,7 @@ class ProductionTestSuite:
     async def run_all_tests(self):
         """Run complete test suite"""
         self.log("🚀 Starting Production Readiness Test Suite", "info")
-        print("=" * 60)
+        logger.info("=" * 60)
         
         # Test 1: Basic API health
         api_healthy = await self.test_api_health()
@@ -414,44 +416,44 @@ class ProductionTestSuite:
         # Calculate overall score
         self.results["end_time"] = datetime.now()
         
-        print("\n" + "=" * 60)
+        logger.info("\n" + "=" * 60)
         self.log("📊 PRODUCTION READINESS RESULTS", "info")
-        print("=" * 60)
+        logger.info("=" * 60)
         
         tests_run = self.results["tests_run"]
         tests_passed = self.results["tests_passed"]
         tests_failed = self.results["tests_failed"]
         
-        print(f"Total Tests Run: {tests_run}")
-        print(f"Tests Passed: {Colors.GREEN}{tests_passed}{Colors.END}")
-        print(f"Tests Failed: {Colors.RED}{tests_failed}{Colors.END}")
+        logger.info(f"Total Tests Run: {tests_run}")
+        logger.info(f"Tests Passed: {Colors.GREEN}{tests_passed}{Colors.END}")
+        logger.info(f"Tests Failed: {Colors.RED}{tests_failed}{Colors.END}")
         
         if tests_run > 0:
             success_rate = (tests_passed / tests_run) * 100
-            print(f"Success Rate: {Colors.GREEN if success_rate >= 80 else Colors.YELLOW}{success_rate:.1f}%{Colors.END}")
+            logger.info(f"Success Rate: {Colors.GREEN if success_rate >= 80 else Colors.YELLOW}{success_rate:.1f}%{Colors.END}")
             
             if success_rate >= 90:
-                print(f"{Colors.GREEN}🎉 PRODUCED READY: 9.5/10 - Ready for deployment!{Colors.END}")
+                logger.info(f"{Colors.GREEN}🎉 PRODUCED READY: 9.5/10 - Ready for deployment!{Colors.END}")
                 overall_status = "PRODUCTION READY"
             elif success_rate >= 70:
-                print(f"{Colors.YELLOW}⚠️  MOSTLY READY: {success_rate:.1f}% - Minor issues to fix{Colors.END}")
+                logger.info(f"{Colors.YELLOW}⚠️  MOSTLY READY: {success_rate:.1f}% - Minor issues to fix{Colors.END}")
                 overall_status = "MOSTLY READY"
             else:
-                print(f"{Colors.RED}❌ NOT READY: {success_rate:.1f}% - Significant issues need attention{Colors.END}")
+                logger.info(f"{Colors.RED}❌ NOT READY: {success_rate:.1f}% - Significant issues need attention{Colors.END}")
                 overall_status = "NOT READY"
         else:
             overall_status = "NO TESTS RUN"
         
         # Duration
         duration = self.results["end_time"] - self.results["start_time"]
-        print(f"Test Duration: {duration.total_seconds():.1f}s")
+        logger.info(f"Test Duration: {duration.total_seconds():.1f}s")
         
         # Save results
         self.save_test_results()
         
-        print("\n" + "=" * 60)
+        logger.info("\n" + "=" * 60)
         self.log(f"🏁 TEST SUITE COMPLETED - {overall_status}", "info")
-        print("=" * 60)
+        logger.info("=" * 60)
         
         # Return exit code based on success
         if tests_run > 0:
@@ -478,10 +480,10 @@ class ProductionTestSuite:
         failed_tests = [t for t in self.results["details"] if not t["passed"]]
         
         if failed_tests:
-            print("\n" + Colors.RED + "❌ FAILED TESTS SUMMARY:" + Colors.END)
+            logger.info("\n" + Colors.RED + "❌ FAILED TESTS SUMMARY:" + Colors.END)
             for i, test in enumerate(failed_tests, 1):
-                print(f"  {i}. {Colors.BOLD}{test['name']}{Colors.END}")
-                print(f"     {test['message']}")
+                logger.info(f"  {i}. {Colors.BOLD}{test['name']}{Colors.END}")
+                logger.info(f"     {test['message']}")
 
 
 async def main():
@@ -503,12 +505,12 @@ async def main():
 
 
 if __name__ == "__main__":
-    print("🧪 Sophia Intel AI - Production Readiness Test Suite")
-    print("Testing all improvements from 9/10 → 10/10")
-    print("=" * 60)
+    logger.info("🧪 Sophia Intel AI - Production Readiness Test Suite")
+    logger.info("Testing all improvements from 9/10 → 10/10")
+    logger.info("=" * 60)
     
     # Run the test suite
     exit_code = asyncio.run(main())
     
-    print(f"Exiting with code: {exit_code}")
+    logger.info(f"Exiting with code: {exit_code}")
     sys.exit(exit_code)

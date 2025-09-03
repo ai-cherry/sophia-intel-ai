@@ -19,6 +19,7 @@ from dotenv import load_dotenv
 load_dotenv('.env.local', override=True)
 
 # Import our modules
+from app.core.ai_logger import logger
 from app.models.openrouter_latest import ModelTier, OpenRouterLatest, TaskType
 from app.models.portkey_dynamic_client import DynamicPortkeyClient
 from app.portkey_config import MODEL_RECOMMENDATIONS, PortkeyGateway, Role
@@ -64,9 +65,9 @@ class ModelTestSuite:
 
     async def test_openrouter_latest(self):
         """Test OpenRouterLatest client with latest models."""
-        print("\n" + "="*60)
-        print("🧪 Testing OpenRouterLatest Client")
-        print("="*60)
+        logger.info("\n" + "="*60)
+        logger.info("🧪 Testing OpenRouterLatest Client")
+        logger.info("="*60)
 
         client = OpenRouterLatest(
             api_key=self.openrouter_key,
@@ -74,17 +75,17 @@ class ModelTestSuite:
         )
 
         # Test model cache refresh
-        print("\n1. Testing model cache refresh...")
+        logger.info("\n1. Testing model cache refresh...")
         try:
             models = await client.refresh_model_cache()
-            print(f"✅ Fetched {len(models)} models")
+            logger.info(f"✅ Fetched {len(models)} models")
             self._record_test("OpenRouter cache refresh", True, f"{len(models)} models")
         except Exception as e:
-            print(f"❌ Failed: {e}")
+            logger.info(f"❌ Failed: {e}")
             self._record_test("OpenRouter cache refresh", False, str(e))
 
         # Test best model selection
-        print("\n2. Testing model selection...")
+        logger.info("\n2. Testing model selection...")
         test_cases = [
             (TaskType.REASONING, ModelTier.BALANCED),
             (TaskType.CODING, ModelTier.PREMIUM),
@@ -95,14 +96,14 @@ class ModelTestSuite:
         for task, tier in test_cases:
             try:
                 model = await client.get_best_model(task, tier)
-                print(f"✅ {task.value}/{tier.value}: {model}")
+                logger.info(f"✅ {task.value}/{tier.value}: {model}")
                 self._record_test(f"Model selection {task.value}/{tier.value}", True, model)
             except Exception as e:
-                print(f"❌ {task.value}/{tier.value}: {e}")
+                logger.info(f"❌ {task.value}/{tier.value}: {e}")
                 self._record_test(f"Model selection {task.value}/{tier.value}", False, str(e))
 
         # Test actual completion
-        print("\n3. Testing completions with fallback...")
+        logger.info("\n3. Testing completions with fallback...")
         test_prompts = [
             ("What is 2+2?", "openai/gpt-5-nano"),
             ("Write hello world in Python", "x-ai/grok-code-fast-1"),
@@ -118,17 +119,17 @@ class ModelTestSuite:
                     temperature=0.7
                 )
                 model_used = response.get("_model_used", model)
-                print(f"✅ {model}: Response received (used: {model_used})")
+                logger.info(f"✅ {model}: Response received (used: {model_used})")
                 self._record_test(f"Completion {model}", True, model_used)
             except Exception as e:
-                print(f"❌ {model}: {e}")
+                logger.info(f"❌ {model}: {e}")
                 self._record_test(f"Completion {model}", False, str(e))
 
     async def test_dynamic_portkey_client(self):
         """Test DynamicPortkeyClient with automatic model management."""
-        print("\n" + "="*60)
-        print("🧪 Testing Dynamic Portkey Client")
-        print("="*60)
+        logger.info("\n" + "="*60)
+        logger.info("🧪 Testing Dynamic Portkey Client")
+        logger.info("="*60)
 
         client = DynamicPortkeyClient(
             portkey_api_key=self.portkey_key,
@@ -136,17 +137,17 @@ class ModelTestSuite:
         )
 
         # Test model refresh
-        print("\n1. Testing model refresh...")
+        logger.info("\n1. Testing model refresh...")
         try:
             await client.refresh_models()
-            print(f"✅ Models refreshed: {len(client.model_cache)} available")
+            logger.info(f"✅ Models refreshed: {len(client.model_cache)} available")
             self._record_test("Portkey model refresh", True, f"{len(client.model_cache)} models")
         except Exception as e:
-            print(f"❌ Failed: {e}")
+            logger.info(f"❌ Failed: {e}")
             self._record_test("Portkey model refresh", False, str(e))
 
         # Test task-based selection
-        print("\n2. Testing task-based model selection...")
+        logger.info("\n2. Testing task-based model selection...")
         tasks = ["reasoning", "coding", "general"]
         budgets = ["premium", "balanced", "free"]
 
@@ -154,14 +155,14 @@ class ModelTestSuite:
             for budget in budgets:
                 try:
                     model = await client.get_model_for_task(task, budget)
-                    print(f"✅ {task}/{budget}: {model}")
+                    logger.info(f"✅ {task}/{budget}: {model}")
                     self._record_test(f"Task selection {task}/{budget}", True, model)
                 except Exception as e:
-                    print(f"❌ {task}/{budget}: {e}")
+                    logger.info(f"❌ {task}/{budget}: {e}")
                     self._record_test(f"Task selection {task}/{budget}", False, str(e))
 
         # Test semantic model names
-        print("\n3. Testing semantic model names...")
+        logger.info("\n3. Testing semantic model names...")
         semantic_names = ["latest-gpt", "latest-claude", "best-reasoning", "best-coding", "free-tier"]
 
         for name in semantic_names:
@@ -172,53 +173,53 @@ class ModelTestSuite:
                     max_tokens=5,
                     temperature=0.1
                 )
-                print(f"✅ {name}: Working")
+                logger.info(f"✅ {name}: Working")
                 self._record_test(f"Semantic name {name}", True, "OK")
             except Exception as e:
-                print(f"❌ {name}: {e}")
+                logger.info(f"❌ {name}: {e}")
                 self._record_test(f"Semantic name {name}", False, str(e))
 
     async def test_router_models(self):
         """Test router.py model configurations."""
-        print("\n" + "="*60)
-        print("🧪 Testing Router Model Configurations")
-        print("="*60)
+        logger.info("\n" + "="*60)
+        logger.info("🧪 Testing Router Model Configurations")
+        logger.info("="*60)
 
-        print("\n1. Checking role model mappings...")
+        logger.info("\n1. Checking role model mappings...")
         for role, model_id in ROLE_MODELS.items():
             # Just verify the model ID is in the correct format
             if "/" in model_id:
-                print(f"✅ {role}: {model_id}")
+                logger.info(f"✅ {role}: {model_id}")
                 self._record_test(f"Router {role}", True, model_id)
             else:
-                print(f"❌ {role}: Invalid model ID format")
+                logger.info(f"❌ {role}: Invalid model ID format")
                 self._record_test(f"Router {role}", False, "Invalid format")
 
     async def test_portkey_gateway(self):
         """Test PortkeyGateway with role-based routing."""
-        print("\n" + "="*60)
-        print("🧪 Testing Portkey Gateway")
-        print("="*60)
+        logger.info("\n" + "="*60)
+        logger.info("🧪 Testing Portkey Gateway")
+        logger.info("="*60)
 
         gateway = PortkeyGateway()
 
-        print("\n1. Testing role-based recommendations...")
+        logger.info("\n1. Testing role-based recommendations...")
         for role in [Role.PLANNER, Role.CRITIC, Role.JUDGE, Role.GENERATOR]:
             recommendations = MODEL_RECOMMENDATIONS.get(role, {})
             default_model = recommendations.get("default")
 
             if default_model:
-                print(f"✅ {role.value}: {default_model}")
+                logger.info(f"✅ {role.value}: {default_model}")
                 self._record_test(f"Gateway {role.value}", True, default_model)
             else:
-                print(f"⚠️ {role.value}: No default model")
+                logger.info(f"⚠️ {role.value}: No default model")
                 self._record_test(f"Gateway {role.value}", False, "No default")
 
     async def test_free_models(self):
         """Test free tier models specifically."""
-        print("\n" + "="*60)
-        print("🧪 Testing Free Tier Models")
-        print("="*60)
+        logger.info("\n" + "="*60)
+        logger.info("🧪 Testing Free Tier Models")
+        logger.info("="*60)
 
         free_models = [
             "deepseek/deepseek-chat-v3.1:free",
@@ -237,13 +238,13 @@ class ModelTestSuite:
                 # Check model health
                 is_healthy = await client.check_model_health(model)
                 if is_healthy:
-                    print(f"✅ {model}: Available")
+                    logger.info(f"✅ {model}: Available")
                     self._record_test(f"Free model {model}", True, "Available")
                 else:
-                    print(f"⚠️ {model}: Not available")
+                    logger.info(f"⚠️ {model}: Not available")
                     self._record_test(f"Free model {model}", False, "Not available")
             except Exception as e:
-                print(f"❌ {model}: {e}")
+                logger.info(f"❌ {model}: {e}")
                 self._record_test(f"Free model {model}", False, str(e))
 
     def _record_test(self, name: str, success: bool, details: str = ""):
@@ -263,37 +264,37 @@ class ModelTestSuite:
 
     def print_summary(self):
         """Print test summary."""
-        print("\n" + "="*60)
-        print("📊 TEST SUMMARY")
-        print("="*60)
+        logger.info("\n" + "="*60)
+        logger.info("📊 TEST SUMMARY")
+        logger.info("="*60)
 
         summary = self.results["summary"]
-        print(f"\nTotal Tests: {summary['total']}")
-        print(f"✅ Passed: {summary['passed']}")
-        print(f"❌ Failed: {summary['failed']}")
+        logger.info(f"\nTotal Tests: {summary['total']}")
+        logger.info(f"✅ Passed: {summary['passed']}")
+        logger.info(f"❌ Failed: {summary['failed']}")
 
         if summary['total'] > 0:
             pass_rate = (summary['passed'] / summary['total']) * 100
-            print(f"Pass Rate: {pass_rate:.1f}%")
+            logger.info(f"Pass Rate: {pass_rate:.1f}%")
 
         # List failed tests
         failed_tests = [t for t in self.results["tests"] if not t["success"]]
         if failed_tests:
-            print("\n❌ Failed Tests:")
+            logger.info("\n❌ Failed Tests:")
             for test in failed_tests:
-                print(f"  - {test['name']}: {test['details']}")
+                logger.info(f"  - {test['name']}: {test['details']}")
 
         # Save results to file
         results_file = "test_results_latest_models.json"
         with open(results_file, "w") as f:
             json.dump(self.results, f, indent=2)
-        print(f"\n📄 Detailed results saved to {results_file}")
+        logger.info(f"\n📄 Detailed results saved to {results_file}")
 
     async def run_all_tests(self):
         """Run all test suites."""
-        print("\n" + "="*60)
-        print("🚀 TESTING LATEST OPENROUTER MODELS (August 2025)")
-        print("="*60)
+        logger.info("\n" + "="*60)
+        logger.info("🚀 TESTING LATEST OPENROUTER MODELS (August 2025)")
+        logger.info("="*60)
 
         # Run each test suite
         test_suites = [
@@ -308,7 +309,7 @@ class ModelTestSuite:
             try:
                 await test_func()
             except Exception as e:
-                print(f"\n❌ {name} suite failed: {e}")
+                logger.info(f"\n❌ {name} suite failed: {e}")
                 self._record_test(f"{name} suite", False, str(e))
 
         # Print summary
@@ -321,7 +322,7 @@ class ModelTestSuite:
 async def main():
     """Main test function."""
     # Check environment
-    print("🔍 Checking environment...")
+    logger.info("🔍 Checking environment...")
 
     required_vars = ["PORTKEY_API_KEY", "OPENROUTER_API_KEY"]
     missing = []
@@ -331,11 +332,11 @@ async def main():
             missing.append(var)
 
     if missing:
-        print(f"❌ Missing environment variables: {', '.join(missing)}")
-        print("Please check your .env.local file")
+        logger.info(f"❌ Missing environment variables: {', '.join(missing)}")
+        logger.info("Please check your .env.local file")
         return 1
 
-    print("✅ Environment configured")
+    logger.info("✅ Environment configured")
 
     # Run tests
     test_suite = ModelTestSuite()

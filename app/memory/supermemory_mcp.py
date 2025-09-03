@@ -13,9 +13,8 @@ from datetime import datetime
 from enum import Enum
 from typing import Any
 
-from app.core.circuit_breaker import (
-    with_circuit_breaker,
-)
+from app.core.ai_logger import logger
+from app.core.circuit_breaker import with_circuit_breaker
 
 # ============================================
 # Configuration
@@ -327,7 +326,7 @@ class SupermemoryStore:
 
         # Check latency target
         if latency_ms > LATENCY_TARGET_MS:
-            print(f"⚠️ Supermemory search exceeded target: {latency_ms:.0f}ms > {LATENCY_TARGET_MS}ms")
+            logger.info(f"⚠️ Supermemory search exceeded target: {latency_ms:.0f}ms > {LATENCY_TARGET_MS}ms")
 
         return entries
 
@@ -575,23 +574,23 @@ async def main():
             tags=["cli"]
         )
         result = await store.add_to_memory(entry)
-        print(f"✅ Memory added: {result}")
+        logger.info(f"✅ Memory added: {result}")
 
     elif args.search:
         entries = await store.search_memory(args.search)
-        print(f"\n📚 Found {len(entries)} memories:")
+        logger.info(f"\n📚 Found {len(entries)} memories:")
         for entry in entries:
-            print(f"\n  Topic: {entry.topic}")
-            print(f"  Content: {entry.content[:100]}...")
-            print(f"  Source: {entry.source}")
-            print(f"  Tags: {', '.join(entry.tags)}")
+            logger.info(f"\n  Topic: {entry.topic}")
+            logger.info(f"  Content: {entry.content[:100]}...")
+            logger.info(f"  Source: {entry.source}")
+            logger.info(f"  Tags: {', '.join(entry.tags)}")
 
     elif args.stats:
         stats = await store.get_stats()
-        print("\n📊 Supermemory Statistics:")
-        print(f"  Total entries: {stats['total_entries']}")
-        print(f"  By type: {stats['by_type']}")
-        print(f"  Most accessed: {stats['most_accessed']}")
+        logger.info("\n📊 Supermemory Statistics:")
+        logger.info(f"  Total entries: {stats['total_entries']}")
+        logger.info(f"  By type: {stats['by_type']}")
+        logger.info(f"  Most accessed: {stats['most_accessed']}")
 
 if __name__ == "__main__":
     asyncio.run(main())

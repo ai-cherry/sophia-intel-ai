@@ -24,9 +24,9 @@ class CompleteSetupTester:
 
     async def test_chat_models(self):
         """Test various chat models through Portkey → OpenRouter."""
-        print("\n" + "="*60)
-        print("🤖 TESTING CHAT MODELS (Portkey → OpenRouter)")
-        print("="*60)
+        logger.info("\n" + "="*60)
+        logger.info("🤖 TESTING CHAT MODELS (Portkey → OpenRouter)")
+        logger.info("="*60)
 
         # Models to test
         models = [
@@ -43,7 +43,7 @@ class CompleteSetupTester:
             {
                 "name": "Qwen 2.5 Coder",
                 "model": "qwen/qwen-2.5-coder-32b-instruct",
-                "prompt": "Write print('Hello') in Python"
+                "prompt": "Write logger.info('Hello') in Python"
             },
             {
                 "name": "DeepSeek Coder",
@@ -64,8 +64,8 @@ class CompleteSetupTester:
 
         async with httpx.AsyncClient(timeout=30.0) as client:
             for test in models:
-                print(f"\n📝 Testing {test['name']}...")
-                print(f"   Model: {test['model']}")
+                logger.info(f"\n📝 Testing {test['name']}...")
+                logger.info(f"   Model: {test['model']}")
 
                 # Portkey config for OpenRouter
                 config = {
@@ -98,20 +98,20 @@ class CompleteSetupTester:
                     if response.status_code == 200:
                         result = response.json()
                         content = result.get("choices", [{}])[0].get("message", {}).get("content", "")
-                        print(f"   ✅ Success: {content[:50]}")
+                        logger.info(f"   ✅ Success: {content[:50]}")
                     else:
-                        print(f"   ❌ Failed: Status {response.status_code}")
+                        logger.info(f"   ❌ Failed: Status {response.status_code}")
                         if response.status_code == 404:
-                            print("      Model might not be available")
+                            logger.info("      Model might not be available")
 
                 except Exception as e:
-                    print(f"   ❌ Error: {str(e)[:100]}")
+                    logger.info(f"   ❌ Error: {str(e)[:100]}")
 
     async def test_embeddings(self):
         """Test embeddings through Portkey → Together AI."""
-        print("\n" + "="*60)
-        print("🔢 TESTING EMBEDDINGS (Portkey → Together AI)")
-        print("="*60)
+        logger.info("\n" + "="*60)
+        logger.info("🔢 TESTING EMBEDDINGS (Portkey → Together AI)")
+        logger.info("="*60)
 
         # Fix: Use "together-ai" instead of "together"
         config = {
@@ -137,26 +137,26 @@ class CompleteSetupTester:
                 if response.status_code == 200:
                     result = response.json()
                     embedding_dim = len(result.get("data", [{}])[0].get("embedding", []))
-                    print(f"✅ Embeddings working! Dimension: {embedding_dim}")
+                    logger.info(f"✅ Embeddings working! Dimension: {embedding_dim}")
                 else:
-                    print(f"❌ Failed: Status {response.status_code}")
+                    logger.info(f"❌ Failed: Status {response.status_code}")
                     try:
                         error = response.json()
-                        print(f"   Error: {error}")
+                        logger.info(f"   Error: {error}")
                     except:
                         pass
 
         except Exception as e:
-            print(f"❌ Error: {e}")
+            logger.info(f"❌ Error: {e}")
 
     async def test_direct_access(self):
         """Test direct access to providers (bypass Portkey)."""
-        print("\n" + "="*60)
-        print("🔍 TESTING DIRECT PROVIDER ACCESS")
-        print("="*60)
+        logger.info("\n" + "="*60)
+        logger.info("🔍 TESTING DIRECT PROVIDER ACCESS")
+        logger.info("="*60)
 
         # Test OpenRouter directly
-        print("\n1. OpenRouter Direct:")
+        logger.info("\n1. OpenRouter Direct:")
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.post(
@@ -176,14 +176,14 @@ class CompleteSetupTester:
                 if response.status_code == 200:
                     result = response.json()
                     content = result.get("choices", [{}])[0].get("message", {}).get("content", "")
-                    print(f"  ✅ OpenRouter: {content}")
+                    logger.info(f"  ✅ OpenRouter: {content}")
                 else:
-                    print(f"  ❌ OpenRouter: Failed ({response.status_code})")
+                    logger.info(f"  ❌ OpenRouter: Failed ({response.status_code})")
         except Exception as e:
-            print(f"  ❌ OpenRouter Error: {e}")
+            logger.info(f"  ❌ OpenRouter Error: {e}")
 
         # Test Together AI directly
-        print("\n2. Together AI Direct:")
+        logger.info("\n2. Together AI Direct:")
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
                 # Try chat endpoint
@@ -203,45 +203,45 @@ class CompleteSetupTester:
                 if response.status_code == 200:
                     result = response.json()
                     content = result.get("choices", [{}])[0].get("message", {}).get("content", "")
-                    print(f"  ✅ Together AI: {content}")
+                    logger.info(f"  ✅ Together AI: {content}")
                 else:
-                    print(f"  ❌ Together AI: Failed ({response.status_code})")
+                    logger.info(f"  ❌ Together AI: Failed ({response.status_code})")
         except Exception as e:
-            print(f"  ❌ Together AI Error: {e}")
+            logger.info(f"  ❌ Together AI Error: {e}")
 
     def print_configuration_summary(self):
         """Print current configuration summary."""
-        print("\n" + "="*60)
-        print("📊 CONFIGURATION SUMMARY")
-        print("="*60)
+        logger.info("\n" + "="*60)
+        logger.info("📊 CONFIGURATION SUMMARY")
+        logger.info("="*60)
 
-        print("\n🔑 API Keys:")
-        print(f"  • PORTKEY_API_KEY: ...{self.portkey_key[-10:] if self.portkey_key else 'Not set'}")
-        print(f"  • OPENROUTER_API_KEY: ...{self.openrouter_key[-10:] if self.openrouter_key else 'Not set'}")
-        print(f"  • TOGETHER_API_KEY: ...{self.together_key[-10:] if self.together_key else 'Not set'}")
+        logger.info("\n🔑 API Keys:")
+        logger.info(f"  • PORTKEY_API_KEY: ...{self.portkey_key[-10:] if self.portkey_key else 'Not set'}")
+        logger.info(f"  • OPENROUTER_API_KEY: ...{self.openrouter_key[-10:] if self.openrouter_key else 'Not set'}")
+        logger.info(f"  • TOGETHER_API_KEY: ...{self.together_key[-10:] if self.together_key else 'Not set'}")
 
-        print("\n📦 Available Resources:")
-        print("  • Chat Models: 300+ via OpenRouter")
-        print("    - GPT-4o, GPT-4o-mini")
-        print("    - Claude 3.5 Sonnet, Opus, Haiku")
-        print("    - Qwen 2.5 Coder (32B)")
-        print("    - DeepSeek Coder v2")
-        print("    - Llama 3.1/3.2 models")
-        print("    - GLM-4.5 (Z-AI)")
-        print("    - And 290+ more models")
-        print("\n  • Embeddings: Via Together AI")
-        print("    - togethercomputer/m2-bert-80M-8k-retrieval")
-        print("    - BAAI/bge models")
-        print("\n  • Gateway: Portkey")
-        print("    - Caching & fallbacks")
-        print("    - Observability")
-        print("    - Cost tracking")
+        logger.info("\n📦 Available Resources:")
+        logger.info("  • Chat Models: 300+ via OpenRouter")
+        logger.info("    - GPT-4o, GPT-4o-mini")
+        logger.info("    - Claude 3.5 Sonnet, Opus, Haiku")
+        logger.info("    - Qwen 2.5 Coder (32B)")
+        logger.info("    - DeepSeek Coder v2")
+        logger.info("    - Llama 3.1/3.2 models")
+        logger.info("    - GLM-4.5 (Z-AI)")
+        logger.info("    - And 290+ more models")
+        logger.info("\n  • Embeddings: Via Together AI")
+        logger.info("    - togethercomputer/m2-bert-80M-8k-retrieval")
+        logger.info("    - BAAI/bge models")
+        logger.info("\n  • Gateway: Portkey")
+        logger.info("    - Caching & fallbacks")
+        logger.info("    - Observability")
+        logger.info("    - Cost tracking")
 
     async def run_all_tests(self):
         """Run all tests."""
-        print("\n" + "="*60)
-        print("🚀 COMPLETE SYSTEM TEST")
-        print("="*60)
+        logger.info("\n" + "="*60)
+        logger.info("🚀 COMPLETE SYSTEM TEST")
+        logger.info("="*60)
 
         # Test direct access first
         await self.test_direct_access()
@@ -255,14 +255,16 @@ class CompleteSetupTester:
         # Print configuration summary
         self.print_configuration_summary()
 
-        print("\n" + "="*60)
-        print("✅ TESTING COMPLETE!")
-        print("="*60)
+        logger.info("\n" + "="*60)
+        logger.info("✅ TESTING COMPLETE!")
+        logger.info("="*60)
 
-        print("\n💡 Quick Start Examples:")
+        logger.info("\n💡 Quick Start Examples:")
         print("""
 # Chat completion (any OpenRouter model):
 from openai import OpenAI
+from app.core.ai_logger import logger
+
 client = OpenAI(
     api_key=os.getenv("PORTKEY_API_KEY"),
     base_url="https://api.portkey.ai/v1",

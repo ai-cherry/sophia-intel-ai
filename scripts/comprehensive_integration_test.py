@@ -14,6 +14,8 @@ from datetime import datetime
 import httpx
 from dotenv import load_dotenv
 
+from app.core.ai_logger import logger
+
 # Load environment variables
 load_dotenv('.env.local')
 
@@ -33,7 +35,7 @@ class ComprehensiveIntegrationTest:
         }
         color = colors.get(level, colors["INFO"])
         timestamp = datetime.now().strftime("%H:%M:%S")
-        print(f"{color}[{timestamp}] {level}: {message}{colors['RESET']}")
+        logger.info(f"{color}[{timestamp}] {level}: {message}{colors['RESET']}")
 
     async def test_mcp_server_integration(self):
         """Test MCP servers for memory and tools."""

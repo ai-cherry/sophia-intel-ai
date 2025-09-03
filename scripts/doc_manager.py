@@ -14,6 +14,8 @@ from pathlib import Path
 
 import yaml
 
+from app.core.ai_logger import logger
+
 
 class DocType(Enum):
     GUIDE = "guide"
@@ -67,7 +69,7 @@ class DocumentManager:
 
     def validate_all(self) -> tuple[int, int]:
         """Validate all documentation files"""
-        print("🔍 Validating documentation...")
+        logger.info("🔍 Validating documentation...")
 
         valid = 0
         invalid = 0
@@ -118,7 +120,7 @@ class DocumentManager:
                     if metadata['ai_context'] not in ['high', 'medium', 'low']:
                         self.warnings.append(f"{filepath}: Invalid ai_context '{metadata['ai_context']}'")
 
-                    print(f"✅ {filepath.relative_to(self.root)}")
+                    logger.info(f"✅ {filepath.relative_to(self.root)}")
                     return True
 
                 except yaml.YAMLError as e:
@@ -142,14 +144,14 @@ class DocumentManager:
 
     def add_metadata(self, filepath: Path, auto_detect: bool = True):
         """Add metadata to a documentation file"""
-        print(f"📝 Adding metadata to {filepath}...")
+        logger.info(f"📝 Adding metadata to {filepath}...")
 
         with open(filepath) as f:
             content = f.read()
 
         # Check if metadata already exists
         if content.startswith("---"):
-            print("⚠️  File already has metadata")
+            logger.info("⚠️  File already has metadata")
             return
 
         # Auto-detect metadata if requested
@@ -164,7 +166,7 @@ class DocumentManager:
         with open(filepath, 'w') as f:
             f.write(new_content)
 
-        print(f"✅ Metadata added to {filepath}")
+        logger.info(f"✅ Metadata added to {filepath}")
 
     def detect_metadata(self, filepath: Path, content: str) -> DocMetadata:
         """Auto-detect metadata from file content and path"""
@@ -218,7 +220,7 @@ class DocumentManager:
 
     def update_index(self):
         """Update the documentation index"""
-        print("📚 Updating documentation index...")
+        logger.info("📚 Updating documentation index...")
 
         index_path = self.docs_dir / "INDEX.md"
 
@@ -296,12 +298,12 @@ _Auto-generated on {}_
         with open(index_path, 'w') as f:
             f.write(content)
 
-        print(f"✅ Index updated at {index_path}")
+        logger.info(f"✅ Index updated at {index_path}")
 
     def check_health(self):
         """Check overall documentation health"""
-        print("\n📊 Documentation Health Check")
-        print("=" * 50)
+        logger.info("\n📊 Documentation Health Check")
+        logger.info("=" * 50)
 
         # Count files
         total_files = len(list(self.root.glob("**/*.md")))
@@ -314,35 +316,35 @@ _Auto-generated on {}_
         metadata_coverage = (valid / total_files * 100) if total_files > 0 else 0
 
         # Report
-        print("\n📈 Metrics:")
-        print(f"  Total documentation files: {total_files}")
-        print(f"  Root-level files: {root_files} (target: < 10)")
-        print(f"  Files with valid metadata: {valid}")
-        print(f"  Files missing/invalid metadata: {invalid}")
-        print(f"  Metadata coverage: {metadata_coverage:.1f}%")
+        logger.info("\n📈 Metrics:")
+        logger.info(f"  Total documentation files: {total_files}")
+        logger.info(f"  Root-level files: {root_files} (target: < 10)")
+        logger.info(f"  Files with valid metadata: {valid}")
+        logger.info(f"  Files missing/invalid metadata: {invalid}")
+        logger.info(f"  Metadata coverage: {metadata_coverage:.1f}%")
 
         if self.errors:
-            print(f"\n❌ Errors ({len(self.errors)}):")
+            logger.info(f"\n❌ Errors ({len(self.errors)}):")
             for error in self.errors[:5]:
-                print(f"  - {error}")
+                logger.info(f"  - {error}")
 
         if self.warnings:
-            print(f"\n⚠️  Warnings ({len(self.warnings)}):")
+            logger.info(f"\n⚠️  Warnings ({len(self.warnings)}):")
             for warning in self.warnings[:5]:
-                print(f"  - {warning}")
+                logger.info(f"  - {warning}")
 
         # Overall health score
         score = metadata_coverage * 0.5 + (10 - min(root_files, 10)) * 5
-        print(f"\n🏆 Overall Health Score: {score:.1f}/100")
+        logger.info(f"\n🏆 Overall Health Score: {score:.1f}/100")
 
         if score >= 90:
-            print("✅ Documentation is in excellent shape!")
+            logger.info("✅ Documentation is in excellent shape!")
         elif score >= 70:
-            print("👍 Documentation is good, minor improvements needed")
+            logger.info("👍 Documentation is good, minor improvements needed")
         elif score >= 50:
-            print("⚠️  Documentation needs attention")
+            logger.info("⚠️  Documentation needs attention")
         else:
-            print("🚨 Documentation needs significant work")
+            logger.info("🚨 Documentation needs significant work")
 
 def main():
     parser = argparse.ArgumentParser(description='Documentation Manager for AI Swarm Optimization')
@@ -376,7 +378,7 @@ def main():
             sys.exit(0 if valid else 1)
         else:
             valid, invalid = manager.validate_all()
-            print(f"\n✅ Valid: {valid}, ❌ Invalid: {invalid}")
+            logger.info(f"\n✅ Valid: {valid}, ❌ Invalid: {invalid}")
             sys.exit(0 if invalid == 0 else 1)
 
     elif args.command == 'add-metadata':

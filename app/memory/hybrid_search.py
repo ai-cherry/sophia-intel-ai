@@ -9,6 +9,7 @@ from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from typing import Any
 
+from app.core.ai_logger import logger
 from app.memory.dual_tier_embeddings import DualTierEmbedder, cosine_similarity
 
 # ============================================
@@ -604,7 +605,7 @@ async def main():
         ]
 
         await engine.index_with_embeddings(test_docs)
-        print(f"✅ Indexed {len(test_docs)} documents")
+        logger.info(f"✅ Indexed {len(test_docs)} documents")
 
     elif args.search:
         use_semantic = not args.bm25_only
@@ -618,17 +619,17 @@ async def main():
             use_reranker=use_reranker
         )
 
-        print(f"\n🔍 Search results for: '{args.search}'")
-        print(f"   Method: {'Hybrid' if use_semantic and use_bm25 else 'Semantic' if use_semantic else 'BM25'}")
-        print(f"   Re-ranking: {'Enabled' if use_reranker else 'Disabled'}\n")
+        logger.info(f"\n🔍 Search results for: '{args.search}'")
+        logger.info(f"   Method: {'Hybrid' if use_semantic and use_bm25 else 'Semantic' if use_semantic else 'BM25'}")
+        logger.info(f"   Re-ranking: {'Enabled' if use_reranker else 'Disabled'}\n")
 
         for i, result in enumerate(results[:5]):
-            print(f"[{i+1}] Score: {result.final_score:.3f}")
-            print(f"    Semantic: {result.semantic_score:.3f}, BM25: {result.bm25_score:.3f}, Rerank: {result.rerank_score:.3f}")
-            print(f"    Content: {result.result.content[:100]}...")
+            logger.info(f"[{i+1}] Score: {result.final_score:.3f}")
+            logger.info(f"    Semantic: {result.semantic_score:.3f}, BM25: {result.bm25_score:.3f}, Rerank: {result.rerank_score:.3f}")
+            logger.info(f"    Content: {result.result.content[:100]}...")
             if result.result.citation:
-                print(f"    Citation: {result.result.citation}")
-            print()
+                logger.info(f"    Citation: {result.result.citation}")
+            logger.info()
 
 if __name__ == "__main__":
     import asyncio

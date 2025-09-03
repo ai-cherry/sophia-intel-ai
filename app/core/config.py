@@ -8,9 +8,8 @@ from pathlib import Path
 from pydantic import Field, SecretStr, validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from app.core.circuit_breaker import (
-    with_circuit_breaker,
-)
+from app.core.ai_logger import logger
+from app.core.circuit_breaker import with_circuit_breaker
 
 
 class AppSettings(BaseSettings):
@@ -232,35 +231,35 @@ class AppSettings(BaseSettings):
 
     def print_config(self):
         """Print current configuration (hiding secrets)."""
-        print("\n" + "="*60)
-        print("SOPHIA INTEL AI - CONFIGURATION")
-        print("="*60)
+        logger.info("\n" + "="*60)
+        logger.info("SOPHIA INTEL AI - CONFIGURATION")
+        logger.info("="*60)
 
-        print(f"\n🔧 Environment: {self.environment}")
-        print(f"📍 API Server: {self.api_host}:{self.api_port}")
-        print(f"🎨 UI Port: {self.ui_port}")
+        logger.info(f"\n🔧 Environment: {self.environment}")
+        logger.info(f"📍 API Server: {self.api_host}:{self.api_port}")
+        logger.info(f"🎨 UI Port: {self.ui_port}")
 
         if self.local_dev_mode:
-            print("\n⚠️  LOCAL DEVELOPMENT MODE ACTIVE")
-            print("   All write operations enabled!")
+            logger.info("\n⚠️  LOCAL DEVELOPMENT MODE ACTIVE")
+            logger.info("   All write operations enabled!")
 
-        print("\n📦 Storage:")
-        print(f"  • Weaviate: {self.weaviate_url}")
-        print(f"  • Redis: {self.redis_url}")
-        print(f"  • Supermemory: {self.supermemory_db}")
+        logger.info("\n📦 Storage:")
+        logger.info(f"  • Weaviate: {self.weaviate_url}")
+        logger.info(f"  • Redis: {self.redis_url}")
+        logger.info(f"  • Supermemory: {self.supermemory_db}")
 
-        print("\n✅ Active Features:")
+        logger.info("\n✅ Active Features:")
         for feature, enabled in self.get_active_features().items():
             status = "✓" if enabled else "✗"
-            print(f"  {status} {feature}")
+            logger.info(f"  {status} {feature}")
 
-        print("\n🔑 API Keys:")
+        logger.info("\n🔑 API Keys:")
         validations = self.validate_required_keys()
         for service, valid in validations.items():
             status = "✓" if valid else "✗"
-            print(f"  {status} {service}")
+            logger.info(f"  {status} {service}")
 
-        print("="*60 + "\n")
+        logger.info("="*60 + "\n")
 
 # Singleton instance
 settings = AppSettings()

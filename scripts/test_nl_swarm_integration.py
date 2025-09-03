@@ -13,6 +13,7 @@ from pathlib import Path
 # Add parent directory to path
 sys.path.append(str(Path(__file__).parent.parent))
 
+from app.core.ai_logger import logger
 from app.nl_interface.command_dispatcher import ExecutionMode, SmartCommandDispatcher
 from app.nl_interface.memory_connector import NLInteraction, NLMemoryConnector
 from app.nl_interface.quicknlp import CachedQuickNLP, CommandIntent
@@ -42,16 +43,16 @@ class QualityControlTester:
 
     def print_header(self, text: str):
         """Print formatted header"""
-        print(f"\n{Colors.HEADER}{Colors.BOLD}{'='*60}{Colors.ENDC}")
-        print(f"{Colors.HEADER}{Colors.BOLD}{text}{Colors.ENDC}")
-        print(f"{Colors.HEADER}{Colors.BOLD}{'='*60}{Colors.ENDC}")
+        logger.info(f"\n{Colors.HEADER}{Colors.BOLD}{'='*60}{Colors.ENDC}")
+        logger.info(f"{Colors.HEADER}{Colors.BOLD}{text}{Colors.ENDC}")
+        logger.info(f"{Colors.HEADER}{Colors.BOLD}{'='*60}{Colors.ENDC}")
 
     def print_test(self, test_name: str, passed: bool, details: str = ""):
         """Print test result"""
         status = f"{Colors.OKGREEN}✓ PASSED{Colors.ENDC}" if passed else f"{Colors.FAIL}✗ FAILED{Colors.ENDC}"
-        print(f"  {test_name}: {status}")
+        logger.info(f"  {test_name}: {status}")
         if details:
-            print(f"    {Colors.OKCYAN}{details}{Colors.ENDC}")
+            logger.info(f"    {Colors.OKCYAN}{details}{Colors.ENDC}")
 
         if passed:
             self.passed_tests += 1
@@ -416,17 +417,17 @@ class QualityControlTester:
         total = self.passed_tests + self.failed_tests
         pass_rate = (self.passed_tests / total * 100) if total > 0 else 0
 
-        print(f"\n{Colors.BOLD}Results:{Colors.ENDC}")
-        print(f"  {Colors.OKGREEN}Passed: {self.passed_tests}{Colors.ENDC}")
-        print(f"  {Colors.FAIL}Failed: {self.failed_tests}{Colors.ENDC}")
-        print(f"  {Colors.BOLD}Pass Rate: {pass_rate:.1f}%{Colors.ENDC}")
+        logger.info(f"\n{Colors.BOLD}Results:{Colors.ENDC}")
+        logger.info(f"  {Colors.OKGREEN}Passed: {self.passed_tests}{Colors.ENDC}")
+        logger.info(f"  {Colors.FAIL}Failed: {self.failed_tests}{Colors.ENDC}")
+        logger.info(f"  {Colors.BOLD}Pass Rate: {pass_rate:.1f}%{Colors.ENDC}")
 
         if pass_rate >= 80:
-            print(f"\n{Colors.OKGREEN}{Colors.BOLD}✓ QUALITY CONTROL PASSED{Colors.ENDC}")
-            print(f"{Colors.OKGREEN}The NL-Swarm integration meets production quality standards!{Colors.ENDC}")
+            logger.info(f"\n{Colors.OKGREEN}{Colors.BOLD}✓ QUALITY CONTROL PASSED{Colors.ENDC}")
+            logger.info(f"{Colors.OKGREEN}The NL-Swarm integration meets production quality standards!{Colors.ENDC}")
         else:
-            print(f"\n{Colors.WARNING}{Colors.BOLD}⚠ QUALITY CONTROL NEEDS ATTENTION{Colors.ENDC}")
-            print(f"{Colors.WARNING}Some tests failed. Review the results above.{Colors.ENDC}")
+            logger.info(f"\n{Colors.WARNING}{Colors.BOLD}⚠ QUALITY CONTROL NEEDS ATTENTION{Colors.ENDC}")
+            logger.info(f"{Colors.WARNING}Some tests failed. Review the results above.{Colors.ENDC}")
 
         # Write detailed report
         report_path = Path("test_results_nl_swarm.json")
@@ -439,15 +440,15 @@ class QualityControlTester:
                 "results": self.test_results
             }, f, indent=2)
 
-        print(f"\n{Colors.OKCYAN}Detailed report saved to: {report_path}{Colors.ENDC}")
+        logger.info(f"\n{Colors.OKCYAN}Detailed report saved to: {report_path}{Colors.ENDC}")
 
     async def run_all_tests(self):
         """Run all quality control tests"""
-        print(f"{Colors.HEADER}{Colors.BOLD}")
-        print("╔══════════════════════════════════════════════════════════╗")
-        print("║     NL-SWARM INTEGRATION QUALITY CONTROL TEST SUITE     ║")
-        print("╚══════════════════════════════════════════════════════════╝")
-        print(f"{Colors.ENDC}")
+        logger.info(f"{Colors.HEADER}{Colors.BOLD}")
+        logger.info("╔══════════════════════════════════════════════════════════╗")
+        logger.info("║     NL-SWARM INTEGRATION QUALITY CONTROL TEST SUITE     ║")
+        logger.info("╚══════════════════════════════════════════════════════════╝")
+        logger.info(f"{Colors.ENDC}")
 
         # Run test suites
         await self.test_config_loading()

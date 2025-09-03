@@ -13,6 +13,8 @@ from datetime import datetime
 import httpx
 from dotenv import load_dotenv
 
+from app.core.ai_logger import logger
+
 # Load environment variables
 load_dotenv('.env.local')
 
@@ -34,7 +36,7 @@ class APIValidator:
             "RESET": "\033[0m"       # Reset
         }
         color = colors.get(level, colors["INFO"])
-        print(f"{color}[{timestamp}] {level}: {message}{colors['RESET']}")
+        logger.info(f"{color}[{timestamp}] {level}: {message}{colors['RESET']}")
 
     async def test_openai_api(self):
         """Test OpenAI API connection."""

@@ -6,6 +6,8 @@ from fastapi import APIRouter, HTTPException, Request, Response, WebSocket
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
+from app.core.ai_logger import logger
+
 router = APIRouter(prefix="/hub", tags=["hub"])
 templates = Jinja2Templates(directory='app/templates')
 
@@ -212,6 +214,6 @@ async def websocket_events(websocket: WebSocket):
             })
 
     except Exception as e:
-        print(f"WebSocket error: {e}")
+        logger.info(f"WebSocket error: {e}")
     finally:
         connected_clients.remove(websocket)

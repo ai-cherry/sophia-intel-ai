@@ -13,6 +13,8 @@ from typing import Any
 
 import requests
 
+from app.core.ai_logger import logger
+
 
 class ProductionDeploymentManager:
     """Manages production deployment and monitoring"""
@@ -38,25 +40,25 @@ class ProductionDeploymentManager:
         try:
             result = subprocess.run(["fly", "version"], capture_output=True, text=True)
             if result.returncode == 0:
-                print(f"✅ Fly CLI already installed: {result.stdout.strip()}")
+                logger.info(f"✅ Fly CLI already installed: {result.stdout.strip()}")
                 return True
         except FileNotFoundError:
             pass
 
-        print("📥 Installing Fly CLI...")
+        logger.info("📥 Installing Fly CLI...")
         try:
             # Install Fly CLI for macOS
             install_cmd = ["curl", "-L", "https://fly.io/install.sh", "|", "sh"]
             result = subprocess.run(" ".join(install_cmd), shell=True, capture_output=True, text=True)
 
             if result.returncode == 0:
-                print("✅ Fly CLI installed successfully")
+                logger.info("✅ Fly CLI installed successfully")
                 return True
             else:
-                print(f"❌ Failed to install Fly CLI: {result.stderr}")
+                logger.info(f"❌ Failed to install Fly CLI: {result.stderr}")
                 return False
         except Exception as e:
-            print(f"❌ Fly CLI installation error: {e}")
+            logger.info(f"❌ Fly CLI installation error: {e}")
             return False
 
     def authenticate_fly(self) -> bool:
@@ -70,13 +72,13 @@ class ProductionDeploymentManager:
             )
 
             if result.returncode == 0:
-                print("✅ Fly.io authentication successful")
+                logger.info("✅ Fly.io authentication successful")
                 return True
             else:
-                print(f"❌ Fly.io authentication failed: {result.stderr}")
+                logger.info(f"❌ Fly.io authentication failed: {result.stderr}")
                 return False
         except Exception as e:
-            print(f"❌ Authentication error: {e}")
+            logger.info(f"❌ Authentication error: {e}")
             return False
 
     def create_fly_app(self, app_name: str) -> bool:
@@ -87,7 +89,7 @@ class ProductionDeploymentManager:
             check_result = subprocess.run(check_cmd, capture_output=True, text=True)
 
             if check_result.returncode == 0:
-                print(f"📱 App {app_name} already exists")
+                logger.info(f"📱 App {app_name} already exists")
                 return True
 
             # Create new app
@@ -95,14 +97,14 @@ class ProductionDeploymentManager:
             create_result = subprocess.run(create_cmd, capture_output=True, text=True)
 
             if create_result.returncode == 0:
-                print(f"✅ Created Fly.io app: {app_name}")
+                logger.info(f"✅ Created Fly.io app: {app_name}")
                 return True
             else:
-                print(f"⚠️  App creation warning for {app_name}: {create_result.stderr}")
+                logger.info(f"⚠️  App creation warning for {app_name}: {create_result.stderr}")
                 return True  # Continue anyway, might be name conflict
 
         except Exception as e:
-            print(f"❌ App creation error for {app_name}: {e}")
+            logger.info(f"❌ App creation error for {app_name}: {e}")
             return False
 
     def deploy_service(self, service: dict[str, Any]) -> dict[str, Any]:
@@ -111,7 +113,7 @@ class ProductionDeploymentManager:
         app_name = service["name"]
         config_file = service["config"]
 
-        print(f"\n🚀 Deploying {app_name}...")
+        logger.info(f"\n🚀 Deploying {app_name}...")
 
         # 1. Create app if needed
         if not self.create_fly_app(app_name):
@@ -130,7 +132,7 @@ class ProductionDeploymentManager:
             deploy_result = subprocess.run(deploy_cmd, capture_output=True, text=True, timeout=600)
 
             if deploy_result.returncode == 0:
-                print(f"✅ Deployment initiated for {app_name}")
+                logger.info(f"✅ Deployment initiated for {app_name}")
 
                 # 3. Monitor deployment status
                 deployment_status = self.monitor_deployment(app_name)
@@ -141,7 +143,7 @@ class ProductionDeploymentManager:
                     "health_status": deployment_status
                 }
             else:
-                print(f"⚠️  Deployment issue for {app_name}: {deploy_result.stderr}")
+                logger.info(f"⚠️  Deployment issue for {app_name}: {deploy_result.stderr}")
                 return {
                     "status": "warning",
                     "app_name": app_name,
@@ -149,20 +151,20 @@ class ProductionDeploymentManager:
                 }
 
         except subprocess.TimeoutExpired:
-            print(f"⏱️  Deployment timeout for {app_name} (continuing in background)")
+            logger.info(f"⏱️  Deployment timeout for {app_name} (continuing in background)")
             return {
                 "status": "deploying",
                 "app_name": app_name,
                 "note": "Background deployment in progress"
             }
         except Exception as e:
-            print(f"❌ Deployment error for {app_name}: {e}")
+            logger.info(f"❌ Deployment error for {app_name}: {e}")
             return {"status": "failed", "error": str(e)}
 
     def monitor_deployment(self, app_name: str, max_wait: int = 300) -> dict[str, Any]:
         """Monitor deployment health and status"""
 
-        print(f"⏳ Monitoring deployment health for {app_name}...")
+        logger.info(f"⏳ Monitoring deployment health for {app_name}...")
         start_time = time.time()
 
         while time.time() - start_time < max_wait:
@@ -179,21 +181,21 @@ class ProductionDeploymentManager:
                     if allocations:
                         running_count = sum(1 for alloc in allocations if alloc.get("Status") == "running")
                         if running_count > 0:
-                            print(f"✅ {app_name} is running ({running_count} instances)")
+                            logger.info(f"✅ {app_name} is running ({running_count} instances)")
                             return {
                                 "status": "healthy",
                                 "running_instances": running_count,
                                 "total_allocations": len(allocations)
                             }
 
-                print(f"⏳ Waiting for {app_name} to start... ({int(time.time() - start_time)}s)")
+                logger.info(f"⏳ Waiting for {app_name} to start... ({int(time.time() - start_time)}s)")
                 time.sleep(30)
 
             except Exception as e:
-                print(f"⚠️  Monitoring error for {app_name}: {e}")
+                logger.info(f"⚠️  Monitoring error for {app_name}: {e}")
                 time.sleep(30)
 
-        print(f"⏱️  Health check timeout for {app_name}")
+        logger.info(f"⏱️  Health check timeout for {app_name}")
         return {"status": "timeout", "waited_seconds": max_wait}
 
     def test_service_endpoint(self, app_name: str, health_path: str = "/health") -> dict[str, Any]:
@@ -249,14 +251,14 @@ class ProductionDeploymentManager:
         service_secrets = secrets_map.get(app_name, {})
 
         if not service_secrets:
-            print(f"ℹ️  No secrets configured for {app_name}")
+            logger.info(f"ℹ️  No secrets configured for {app_name}")
             return True
 
         # Filter out empty secrets
         filtered_secrets = {k: v for k, v in service_secrets.items() if v}
 
         if not filtered_secrets:
-            print(f"⚠️  No non-empty secrets found for {app_name}")
+            logger.info(f"⚠️  No non-empty secrets found for {app_name}")
             return True
 
         try:
@@ -267,20 +269,20 @@ class ProductionDeploymentManager:
             result = subprocess.run(secrets_cmd, capture_output=True, text=True)
 
             if result.returncode == 0:
-                print(f"🔐 Set {len(filtered_secrets)} secrets for {app_name}")
+                logger.info(f"🔐 Set {len(filtered_secrets)} secrets for {app_name}")
                 return True
             else:
-                print(f"⚠️  Secrets warning for {app_name}: {result.stderr}")
+                logger.info(f"⚠️  Secrets warning for {app_name}: {result.stderr}")
                 return False
         except Exception as e:
-            print(f"❌ Secrets error for {app_name}: {e}")
+            logger.info(f"❌ Secrets error for {app_name}: {e}")
             return False
 
     def deploy_all_services(self) -> dict[str, Any]:
         """Deploy all services in dependency order with monitoring"""
 
-        print("🚀 Starting Production Deployment of Sophia Intel AI")
-        print("=" * 70)
+        logger.info("🚀 Starting Production Deployment of Sophia Intel AI")
+        logger.info("=" * 70)
 
         deployment_results = {}
 
@@ -301,7 +303,7 @@ class ProductionDeploymentManager:
 
             # Wait between deployments to avoid overwhelming the system
             if service != sorted_services[-1]:  # Don't wait after last service
-                print("⏸️  Waiting 30 seconds before next deployment...")
+                logger.info("⏸️  Waiting 30 seconds before next deployment...")
                 time.sleep(30)
 
         return deployment_results
@@ -309,8 +311,8 @@ class ProductionDeploymentManager:
     def monitor_all_services(self, deployment_results: dict[str, Any]) -> dict[str, Any]:
         """Monitor all deployed services"""
 
-        print("\n📊 MONITORING DEPLOYED SERVICES")
-        print("=" * 50)
+        logger.info("\n📊 MONITORING DEPLOYED SERVICES")
+        logger.info("=" * 50)
 
         monitoring_results = {}
 
@@ -326,16 +328,16 @@ class ProductionDeploymentManager:
 
         for app_name, health_path in health_endpoints.items():
             if deployment_results.get(app_name, {}).get("status") in ["deployed", "deploying"]:
-                print(f"🔍 Testing {app_name} health endpoint...")
+                logger.info(f"🔍 Testing {app_name} health endpoint...")
                 health_result = self.test_service_endpoint(app_name, health_path)
                 monitoring_results[app_name] = health_result
 
                 if health_result.get("healthy"):
-                    print(f"✅ {app_name} is healthy ({health_result['response_time_ms']:.0f}ms)")
+                    logger.info(f"✅ {app_name} is healthy ({health_result['response_time_ms']:.0f}ms)")
                 else:
-                    print(f"⚠️  {app_name} health check failed: {health_result.get('error', 'Unknown')}")
+                    logger.info(f"⚠️  {app_name} health check failed: {health_result.get('error', 'Unknown')}")
             else:
-                print(f"⏭️  Skipping {app_name} - not deployed successfully")
+                logger.info(f"⏭️  Skipping {app_name} - not deployed successfully")
                 monitoring_results[app_name] = {"status": "not_deployed"}
 
         return monitoring_results
@@ -407,8 +409,8 @@ Check metrics: `fly metrics --app <service-name>`
 def main():
     """Main deployment and monitoring function"""
 
-    print("🚀 SOPHIA INTEL AI - PRODUCTION DEPLOYMENT & MONITORING")
-    print("=" * 70)
+    logger.info("🚀 SOPHIA INTEL AI - PRODUCTION DEPLOYMENT & MONITORING")
+    logger.info("=" * 70)
 
     try:
         # Initialize deployment manager
@@ -416,21 +418,21 @@ def main():
 
         # Install and authenticate Fly CLI
         if not manager.install_fly_cli():
-            print("❌ Fly CLI installation failed")
+            logger.info("❌ Fly CLI installation failed")
             return False
 
         if not manager.authenticate_fly():
-            print("❌ Fly.io authentication failed")
+            logger.info("❌ Fly.io authentication failed")
             return False
 
-        print("✅ Deployment environment ready")
-        print("\n🎯 Starting deployment of all 6 services...")
+        logger.info("✅ Deployment environment ready")
+        logger.info("\n🎯 Starting deployment of all 6 services...")
 
         # Deploy all services
         deployment_results = manager.deploy_all_services()
 
         # Wait for services to stabilize
-        print("\n⏳ Waiting 2 minutes for services to stabilize...")
+        logger.info("\n⏳ Waiting 2 minutes for services to stabilize...")
         time.sleep(120)
 
         # Monitor all services
@@ -443,7 +445,7 @@ def main():
         with open("PRODUCTION_DEPLOYMENT_REPORT.md", "w") as f:
             f.write(report)
 
-        print("\n💾 Deployment report saved: PRODUCTION_DEPLOYMENT_REPORT.md")
+        logger.info("\n💾 Deployment report saved: PRODUCTION_DEPLOYMENT_REPORT.md")
 
         # Save JSON results for automation
         with open("production-deployment-results.json", "w") as f:
@@ -458,21 +460,21 @@ def main():
         successful = len([r for r in deployment_results.values() if r.get("status") == "deployed"])
         healthy = len([r for r in monitoring_results.values() if r.get("healthy")])
 
-        print("\n" + "=" * 70)
-        print("📊 FINAL DEPLOYMENT STATUS")
-        print("=" * 70)
-        print(f"✅ Services Deployed: {successful}/{len(manager.services)}")
-        print(f"🟢 Services Healthy: {healthy}/{len(manager.services)}")
+        logger.info("\n" + "=" * 70)
+        logger.info("📊 FINAL DEPLOYMENT STATUS")
+        logger.info("=" * 70)
+        logger.info(f"✅ Services Deployed: {successful}/{len(manager.services)}")
+        logger.info(f"🟢 Services Healthy: {healthy}/{len(manager.services)}")
 
         if successful == len(manager.services) and healthy == len(manager.services):
-            print("🎉 DEPLOYMENT SUCCESS: All services deployed and healthy!")
+            logger.info("🎉 DEPLOYMENT SUCCESS: All services deployed and healthy!")
             return True
         else:
-            print("⚠️  PARTIAL DEPLOYMENT: Some services need attention")
+            logger.info("⚠️  PARTIAL DEPLOYMENT: Some services need attention")
             return False
 
     except Exception as e:
-        print(f"❌ Deployment failed: {e}")
+        logger.info(f"❌ Deployment failed: {e}")
         return False
 
 

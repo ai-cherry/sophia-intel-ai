@@ -12,9 +12,7 @@ from typing import Any
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Query
 from fastapi.responses import StreamingResponse
 
-from app.core.circuit_breaker import (
-    with_circuit_breaker,
-)
+from app.core.circuit_breaker import with_circuit_breaker
 from app.swarms import SwarmOrchestrator
 from app.swarms.coding.models import DebateResult, PoolType, SwarmConfiguration, SwarmRequest
 from app.swarms.coding.team import execute_swarm_request

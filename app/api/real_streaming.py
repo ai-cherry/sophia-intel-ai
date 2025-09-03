@@ -10,9 +10,7 @@ from collections.abc import AsyncGenerator
 from datetime import datetime
 from typing import Any
 
-from app.core.circuit_breaker import (
-    with_circuit_breaker,
-)
+from app.core.circuit_breaker import with_circuit_breaker
 from app.llm.real_executor import Role, real_executor
 from app.memory.enhanced_memory import get_enhanced_memory_instance
 from app.swarms.coding.models import SwarmRequest

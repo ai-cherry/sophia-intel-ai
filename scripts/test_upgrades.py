@@ -10,6 +10,8 @@ from datetime import datetime
 
 import aiohttp
 
+from app.core.ai_logger import logger
+
 # ANSI colors for output
 GREEN = '\033[92m'
 RED = '\033[91m'
@@ -27,7 +29,7 @@ class UpgradeTestSuite:
 
     async def test_health_check(self) -> bool:
         """Test API health and all systems."""
-        print(f"{BLUE}Testing API health...{RESET}")
+        logger.info(f"{BLUE}Testing API health...{RESET}")
 
         async with aiohttp.ClientSession() as session:
             async with session.get(f"{self.base_url}/healthz") as response:
@@ -36,20 +38,20 @@ class UpgradeTestSuite:
                     all_systems_ok = all(data.get("systems", {}).values())
 
                     if all_systems_ok:
-                        print(f"{GREEN}✅ All systems operational{RESET}")
+                        logger.info(f"{GREEN}✅ All systems operational{RESET}")
                         for system, status in data["systems"].items():
-                            print(f"  - {system}: {'✓' if status else '✗'}")
+                            logger.info(f"  - {system}: {'✓' if status else '✗'}")
                         return True
                     else:
-                        print(f"{RED}❌ Some systems offline{RESET}")
+                        logger.info(f"{RED}❌ Some systems offline{RESET}")
                         return False
                 else:
-                    print(f"{RED}❌ Health check failed: {response.status}{RESET}")
+                    logger.info(f"{RED}❌ Health check failed: {response.status}{RESET}")
                     return False
 
     async def test_modernbert_embeddings(self) -> bool:
         """Test ModernBERT embedding integration."""
-        print(f"\n{BLUE}Testing ModernBERT embeddings...{RESET}")
+        logger.info(f"\n{BLUE}Testing ModernBERT embeddings...{RESET}")
 
         test_texts = [
             "Short text for Tier-B routing",
@@ -72,9 +74,9 @@ class UpgradeTestSuite:
                 ) as response:
                     if response.status == 200:
                         data = await response.json()
-                        print(f"  ✅ Test {i}: Embedded and stored (hash: {data.get('hash_id', 'N/A')[:8]}...)")
+                        logger.info(f"  ✅ Test {i}: Embedded and stored (hash: {data.get('hash_id', 'N/A')[:8]}...)")
                     else:
-                        print(f"  ❌ Test {i}: Failed to embed")
+                        logger.info(f"  ❌ Test {i}: Failed to embed")
                         return False
 
             # Test embedding search
@@ -85,15 +87,15 @@ class UpgradeTestSuite:
             ) as response:
                 if response.status == 200:
                     data = await response.json()
-                    print(f"  ✅ Embedding search returned {data.get('count', 0)} results")
+                    logger.info(f"  ✅ Embedding search returned {data.get('count', 0)} results")
                     return True
                 else:
-                    print("  ❌ Embedding search failed")
+                    logger.info("  ❌ Embedding search failed")
                     return False
 
     async def test_real_orchestrator(self) -> bool:
         """Test real orchestrator execution (no mocks)."""
-        print(f"\n{BLUE}Testing real orchestrator...{RESET}")
+        logger.info(f"\n{BLUE}Testing real orchestrator...{RESET}")
 
         test_cases = [
             {
@@ -120,7 +122,7 @@ class UpgradeTestSuite:
 
         async with aiohttp.ClientSession() as session:
             for test in test_cases:
-                print(f"  Testing {test['team_id']}...")
+                logger.info(f"  Testing {test['team_id']}...")
 
                 async with session.post(
                     f"{self.base_url}/teams/run",
@@ -134,25 +136,25 @@ class UpgradeTestSuite:
 
                         # Check for real execution markers
                         if "real_execution" in full_response and "mock" not in full_response.lower():
-                            print("    ✅ Real execution confirmed")
+                            logger.info("    ✅ Real execution confirmed")
 
                             # Verify expected swarm was used
                             if test["expected"] in full_response:
-                                print(f"    ✅ Correct swarm used: {test['expected']}")
+                                logger.info(f"    ✅ Correct swarm used: {test['expected']}")
                             else:
-                                print("    ⚠️  Different swarm used than expected")
+                                logger.info("    ⚠️  Different swarm used than expected")
                         else:
-                            print("    ❌ Mock responses detected!")
+                            logger.info("    ❌ Mock responses detected!")
                             return False
                     else:
-                        print(f"    ❌ Request failed: {response.status}")
+                        logger.info(f"    ❌ Request failed: {response.status}")
                         return False
 
         return True
 
     async def test_hybrid_search(self) -> bool:
         """Test hybrid BM25 + vector search."""
-        print(f"\n{BLUE}Testing hybrid search...{RESET}")
+        logger.info(f"\n{BLUE}Testing hybrid search...{RESET}")
 
         # Add test data
         test_data = [
@@ -177,20 +179,20 @@ class UpgradeTestSuite:
                     results = data.get("results", [])
 
                     if results:
-                        print(f"  ✅ Hybrid search found {len(results)} results")
+                        logger.info(f"  ✅ Hybrid search found {len(results)} results")
                         for r in results[:3]:
-                            print(f"    - Score: {r.get('score', 0):.3f}")
+                            logger.info(f"    - Score: {r.get('score', 0):.3f}")
                         return True
                     else:
-                        print("  ⚠️  No results found (may be normal for empty index)")
+                        logger.info("  ⚠️  No results found (may be normal for empty index)")
                         return True
                 else:
-                    print(f"  ❌ Search failed: {response.status}")
+                    logger.info(f"  ❌ Search failed: {response.status}")
                     return False
 
     async def test_streaming_performance(self) -> bool:
         """Test streaming response performance."""
-        print(f"\n{BLUE}Testing streaming performance...{RESET}")
+        logger.info(f"\n{BLUE}Testing streaming performance...{RESET}")
 
         async with aiohttp.ClientSession() as session:
             start = time.time()
@@ -215,17 +217,17 @@ class UpgradeTestSuite:
 
             total_time = time.time() - start
 
-            print("  ✅ Streaming metrics:")
-            print(f"    - First chunk: {first_chunk_time*1000:.1f}ms")
-            print(f"    - Total time: {total_time:.2f}s")
-            print(f"    - Chunks received: {chunks_received}")
+            logger.info("  ✅ Streaming metrics:")
+            logger.info(f"    - First chunk: {first_chunk_time*1000:.1f}ms")
+            logger.info(f"    - Total time: {total_time:.2f}s")
+            logger.info(f"    - Chunks received: {chunks_received}")
 
             # Performance threshold
             return first_chunk_time < 0.5  # First chunk within 500ms
 
     async def test_mcp_integration(self) -> bool:
         """Test MCP server integration."""
-        print(f"\n{BLUE}Testing MCP integration...{RESET}")
+        logger.info(f"\n{BLUE}Testing MCP integration...{RESET}")
 
         async with aiohttp.ClientSession() as session:
             # Test memory MCP
@@ -240,9 +242,9 @@ class UpgradeTestSuite:
                 json=test_payload
             ) as response:
                 if response.status == 200:
-                    print("  ✅ MCP Supermemory: Working")
+                    logger.info("  ✅ MCP Supermemory: Working")
                 else:
-                    print("  ❌ MCP Supermemory: Failed")
+                    logger.info("  ❌ MCP Supermemory: Failed")
                     return False
 
             # Verify MCP servers in health check
@@ -251,19 +253,19 @@ class UpgradeTestSuite:
                 systems = data.get("systems", {})
 
                 if systems.get("supermemory"):
-                    print("  ✅ MCP Filesystem: Registered")
-                    print("  ✅ MCP Git: Registered")
-                    print("  ✅ MCP Supermemory: Active")
+                    logger.info("  ✅ MCP Filesystem: Registered")
+                    logger.info("  ✅ MCP Git: Registered")
+                    logger.info("  ✅ MCP Supermemory: Active")
                     return True
                 else:
-                    print("  ❌ MCP servers not fully operational")
+                    logger.info("  ❌ MCP servers not fully operational")
                     return False
 
     async def run_all_tests(self):
         """Run complete test suite."""
-        print(f"\n{YELLOW}{'='*60}{RESET}")
-        print(f"{YELLOW}Sophia Intel AI - Q3 2025 Upgrade Test Suite{RESET}")
-        print(f"{YELLOW}{'='*60}{RESET}\n")
+        logger.info(f"\n{YELLOW}{'='*60}{RESET}")
+        logger.info(f"{YELLOW}Sophia Intel AI - Q3 2025 Upgrade Test Suite{RESET}")
+        logger.info(f"{YELLOW}{'='*60}{RESET}\n")
 
         tests = [
             ("Health Check", self.test_health_check),
@@ -288,29 +290,29 @@ class UpgradeTestSuite:
                     failed += 1
 
             except Exception as e:
-                print(f"{RED}  ❌ Exception in {test_name}: {e}{RESET}")
+                logger.info(f"{RED}  ❌ Exception in {test_name}: {e}{RESET}")
                 self.results.append((test_name, False))
                 failed += 1
 
         # Summary
-        print(f"\n{YELLOW}{'='*60}{RESET}")
-        print(f"{YELLOW}Test Results Summary{RESET}")
-        print(f"{YELLOW}{'='*60}{RESET}\n")
+        logger.info(f"\n{YELLOW}{'='*60}{RESET}")
+        logger.info(f"{YELLOW}Test Results Summary{RESET}")
+        logger.info(f"{YELLOW}{'='*60}{RESET}\n")
 
         for test_name, result in self.results:
             status = f"{GREEN}✅ PASS{RESET}" if result else f"{RED}❌ FAIL{RESET}"
-            print(f"{test_name:.<40} {status}")
+            logger.info(f"{test_name:.<40} {status}")
 
-        print(f"\n{YELLOW}Overall: {passed}/{len(tests)} tests passed{RESET}")
+        logger.info(f"\n{YELLOW}Overall: {passed}/{len(tests)} tests passed{RESET}")
 
         duration = (datetime.now() - self.start_time).total_seconds()
-        print(f"{YELLOW}Duration: {duration:.1f}s{RESET}\n")
+        logger.info(f"{YELLOW}Duration: {duration:.1f}s{RESET}\n")
 
         if failed == 0:
-            print(f"{GREEN}🎉 ALL TESTS PASSED! System ready for production.{RESET}")
+            logger.info(f"{GREEN}🎉 ALL TESTS PASSED! System ready for production.{RESET}")
             return True
         else:
-            print(f"{RED}⚠️  {failed} tests failed. Please review and fix.{RESET}")
+            logger.info(f"{RED}⚠️  {failed} tests failed. Please review and fix.{RESET}")
             return False
 
 async def main():

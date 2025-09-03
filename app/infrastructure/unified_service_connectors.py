@@ -14,6 +14,7 @@ from typing import Any
 
 import httpx
 
+from app.core.ai_logger import logger
 from app.infrastructure.pulumi_esc_secrets import AdvancedSecretsManager
 
 logger = logging.getLogger(__name__)
@@ -573,20 +574,20 @@ if __name__ == "__main__":
         connector = UnifiedServiceConnector({'test': True})
 
         # Monitor all services
-        print("Monitoring all services...")
+        logger.info("Monitoring all services...")
         statuses = await connector.monitor_all_services()
         for status in statuses:
-            print(f"  {status.name}: {status.health.value} ({status.latency_ms:.2f}ms)")
+            logger.info(f"  {status.name}: {status.health.value} ({status.latency_ms:.2f}ms)")
 
         # Test Lambda Labs
         lambda_client = await connector.lambda_labs_connector()
         instances = await lambda_client.list_instances()
-        print(f"\nLambda Labs instances: {len(instances)}")
+        logger.info(f"\nLambda Labs instances: {len(instances)}")
 
         # Test Weaviate
         weaviate_client = await connector.weaviate_admin_connector()
         cluster_status = await weaviate_client.get_cluster_status()
-        print(f"Weaviate cluster nodes: {len(cluster_status.get('nodes', []))}")
+        logger.info(f"Weaviate cluster nodes: {len(cluster_status.get('nodes', []))}")
 
         # Test GitHub
         github_client = await connector.github_client_connector()
@@ -595,7 +596,7 @@ if __name__ == "__main__":
             'ci.yml',
             'main'
         )
-        print(f"GitHub workflow triggered: {workflow_triggered}")
+        logger.info(f"GitHub workflow triggered: {workflow_triggered}")
 
         await connector.close()
 

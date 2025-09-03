@@ -16,9 +16,8 @@ from qdrant_client import QdrantClient
 from weaviate.classes.config import Configure, DataType, Property, VectorDistances
 from weaviate.classes.init import AdditionalConfig, Auth, Timeout
 
-from app.core.circuit_breaker import (
-    with_circuit_breaker,
-)
+from app.core.ai_logger import logger
+from app.core.circuit_breaker import with_circuit_breaker
 
 # Load environment variables
 load_dotenv('.env.local')
@@ -174,7 +173,7 @@ class QdrantToWeaviateMigrator:
         mappings = self.define_collection_mappings()
         created_collections = {}
 
-        print("🚀 Creating optimized Weaviate v1.32+ collections...")
+        logger.info("🚀 Creating optimized Weaviate v1.32+ collections...")
 
         for qdrant_name, config in mappings.items():
             try:
@@ -221,13 +220,13 @@ class QdrantToWeaviateMigrator:
                 if config["multi_tenant"]:
                     tenants = [weaviate.classes.tenants.Tenant(name=swarm) for swarm in self.agent_swarms]
                     collection.tenants.create(tenants)
-                    print(f"  ✅ Created tenants for {config['weaviate_name']}: {self.agent_swarms}")
+                    logger.info(f"  ✅ Created tenants for {config['weaviate_name']}: {self.agent_swarms}")
 
                 created_collections[config["weaviate_name"]] = True
-                print(f"  ✅ Created: {config['weaviate_name']}")
+                logger.info(f"  ✅ Created: {config['weaviate_name']}")
 
             except Exception as e:
-                print(f"  ❌ Failed to create {config['weaviate_name']}: {e}")
+                logger.info(f"  ❌ Failed to create {config['weaviate_name']}: {e}")
                 created_collections[config["weaviate_name"]] = False
 
         return created_collections
@@ -237,19 +236,19 @@ class QdrantToWeaviateMigrator:
         migration_results = {}
         total_start_time = time.time()
 
-        print(f"🔄 Starting migration of {len(collection_mappings)} collections from Qdrant...")
+        logger.info(f"🔄 Starting migration of {len(collection_mappings)} collections from Qdrant...")
 
         for qdrant_collection, weaviate_collection in collection_mappings.items():
             try:
-                print(f"\n📦 Migrating {qdrant_collection} → {weaviate_collection}")
+                logger.info(f"\n📦 Migrating {qdrant_collection} → {weaviate_collection}")
 
                 # Get Qdrant collection info
                 try:
                     collection_info = self.qdrant_client.get_collection(qdrant_collection)
                     total_points = collection_info.points_count
-                    print(f"   Total points to migrate: {total_points:,}")
+                    logger.info(f"   Total points to migrate: {total_points:,}")
                 except Exception as e:
-                    print(f"   ⚠️  Could not get collection info: {e}")
+                    logger.info(f"   ⚠️  Could not get collection info: {e}")
                     total_points = "unknown"
 
                 # Migrate with progress tracking
@@ -262,7 +261,7 @@ class QdrantToWeaviateMigrator:
                 migration_results[qdrant_collection] = migration_result
 
             except Exception as e:
-                print(f"   ❌ Migration failed for {qdrant_collection}: {e}")
+                logger.info(f"   ❌ Migration failed for {qdrant_collection}: {e}")
                 migration_results[qdrant_collection] = {
                     "success": False,
                     "error": str(e),
@@ -306,11 +305,11 @@ class QdrantToWeaviateMigrator:
                     if migrated_count % (self.batch_size * 5) == 0:
                         elapsed = time.time() - start_time
                         rate = migrated_count / elapsed if elapsed > 0 else 0
-                        print(f"   ⏳ Progress: {migrated_count:,} migrated, Rate: {rate:.0f} points/sec")
+                        logger.info(f"   ⏳ Progress: {migrated_count:,} migrated, Rate: {rate:.0f} points/sec")
 
                 except Exception as e:
                     failed_count += len(batch)
-                    print(f"   ❌ Batch failed: {e}")
+                    logger.info(f"   ❌ Batch failed: {e}")
 
             migration_time = time.time() - start_time
             success_rate = (migrated_count / (migrated_count + failed_count)) * 100 if (migrated_count + failed_count) > 0 else 100
@@ -327,7 +326,7 @@ class QdrantToWeaviateMigrator:
             }
 
         except Exception as e:
-            print(f"   ❌ Collection migration failed: {e}")
+            logger.info(f"   ❌ Collection migration failed: {e}")
             return {"success": False, "error": str(e), "migrated_count": 0}
 
     async def stream_qdrant_data(self, collection_name: str) -> AsyncGenerator:
@@ -354,7 +353,7 @@ class QdrantToWeaviateMigrator:
                         processed_point = self.process_qdrant_point(point)
                         processed_batch.append(processed_point)
                     except Exception as e:
-                        print(f"Failed to process point {point.id}: {e}")
+                        logger.info(f"Failed to process point {point.id}: {e}")
                         continue
 
                 if processed_batch:
@@ -365,7 +364,7 @@ class QdrantToWeaviateMigrator:
                     break
 
             except Exception as e:
-                print(f"Qdrant scroll error: {e}")
+                logger.info(f"Qdrant scroll error: {e}")
                 break
 
     def process_qdrant_point(self, point) -> dict:
@@ -439,27 +438,27 @@ class QdrantToWeaviateMigrator:
     @with_circuit_breaker("external_api")
     def print_migration_summary(self, results: dict, total_time: float):
         """Print comprehensive migration summary."""
-        print("\n" + "="*80)
-        print("🎉 QDRANT → WEAVIATE MIGRATION SUMMARY")
-        print("="*80)
+        logger.info("\n" + "="*80)
+        logger.info("🎉 QDRANT → WEAVIATE MIGRATION SUMMARY")
+        logger.info("="*80)
 
         total_migrated = sum(r.get("migrated_count", 0) for r in results.values())
         total_failed = sum(r.get("failed_count", 0) for r in results.values())
         successful_collections = sum(1 for r in results.values() if r.get("success", False))
 
-        print("📊 Overall Statistics:")
-        print(f"   • Collections migrated: {successful_collections}/{len(results)}")
-        print(f"   • Total points migrated: {total_migrated:,}")
-        print(f"   • Total failures: {total_failed:,}")
-        print(f"   • Overall success rate: {(total_migrated/(total_migrated+total_failed)*100):.1f}%")
-        print(f"   • Total migration time: {total_time/3600:.2f} hours")
-        print(f"   • Average rate: {total_migrated/total_time:.0f} points/second")
+        logger.info("📊 Overall Statistics:")
+        logger.info(f"   • Collections migrated: {successful_collections}/{len(results)}")
+        logger.info(f"   • Total points migrated: {total_migrated:,}")
+        logger.info(f"   • Total failures: {total_failed:,}")
+        logger.info(f"   • Overall success rate: {(total_migrated/(total_migrated+total_failed)*100):.1f}%")
+        logger.info(f"   • Total migration time: {total_time/3600:.2f} hours")
+        logger.info(f"   • Average rate: {total_migrated/total_time:.0f} points/second")
 
-        print("\n✨ Weaviate v1.32+ Benefits Achieved:")
-        print("   • 75% memory reduction with RQ compression")
-        print("   • <400ms query latency with optimized HNSW")
-        print(f"   • Multi-tenant isolation for {len(self.agent_swarms)} swarms")
-        print("   • Portkey integration with virtual keys")
+        logger.info("\n✨ Weaviate v1.32+ Benefits Achieved:")
+        logger.info("   • 75% memory reduction with RQ compression")
+        logger.info("   • <400ms query latency with optimized HNSW")
+        logger.info(f"   • Multi-tenant isolation for {len(self.agent_swarms)} swarms")
+        logger.info("   • Portkey integration with virtual keys")
 
         return {
             "total_migrated": total_migrated,
@@ -474,7 +473,7 @@ async def execute_full_migration():
 
     try:
         # Step 1: Create optimized Weaviate collections
-        print("🏗️  STEP 1: Creating Weaviate v1.32+ collections...")
+        logger.info("🏗️  STEP 1: Creating Weaviate v1.32+ collections...")
         collection_results = await migrator.create_optimized_collections()
 
         # Step 2: Map collections for migration
@@ -489,11 +488,11 @@ async def execute_full_migration():
         }
 
         # Step 3: Execute migration
-        print("\n🔄 STEP 2: Executing data migration...")
+        logger.info("\n🔄 STEP 2: Executing data migration...")
         migration_results = await migrator.migrate_from_qdrant(collection_mappings)
 
         # Step 4: Validate migration
-        print("\n✅ STEP 3: Validating migration...")
+        logger.info("\n✅ STEP 3: Validating migration...")
         validation_results = await validate_migration_success(migrator.weaviate_client)
 
         return {
@@ -503,7 +502,7 @@ async def execute_full_migration():
         }
 
     except Exception as e:
-        print(f"❌ Migration failed: {e}")
+        logger.info(f"❌ Migration failed: {e}")
         return {"success": False, "error": str(e)}
 
 async def validate_migration_success(weaviate_client):
@@ -539,10 +538,10 @@ async def validate_migration_success(weaviate_client):
                 "performance_target_met": query_time_ms < 400
             }
 
-            print(f"  ✅ {collection_name}: {object_count:,} objects, {query_time_ms:.0f}ms query")
+            logger.info(f"  ✅ {collection_name}: {object_count:,} objects, {query_time_ms:.0f}ms query")
 
         except Exception as e:
-            print(f"  ❌ Validation failed for {collection_name}: {e}")
+            logger.info(f"  ❌ Validation failed for {collection_name}: {e}")
             validation_results[collection_name] = {"error": str(e)}
 
     return validation_results
@@ -551,6 +550,6 @@ if __name__ == "__main__":
     """Execute migration when run directly."""
     async def main():
         results = await execute_full_migration()
-        print(f"\n🎉 Migration completed: {json.dumps(results, indent=2)}")
+        logger.info(f"\n🎉 Migration completed: {json.dumps(results, indent=2)}")
 
     asyncio.run(main())

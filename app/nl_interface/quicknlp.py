@@ -14,9 +14,8 @@ from enum import Enum
 from functools import cached_property, lru_cache
 from typing import Any
 
-from app.core.circuit_breaker import (
-    with_circuit_breaker,
-)
+from app.core.ai_logger import logger
+from app.core.circuit_breaker import with_circuit_breaker
 from app.core.connections import http_post
 
 logger = logging.getLogger(__name__)
@@ -629,13 +628,13 @@ if __name__ == "__main__":
     cached_nlp.warm_cache(test_texts[:5])
 
     # Benchmark
-    print("Running benchmark...")
+    logger.info("Running benchmark...")
     results = cached_nlp.benchmark(test_texts)
 
-    print("\nBenchmark Results:")
-    print(f"Cold cache time: {results['cold_cache_time']:.3f}s")
-    print(f"Warm cache time: {results['warm_cache_time']:.3f}s")
-    print(f"Performance improvement: {results['improvement']:.1f}%")
-    print(f"Average per request (cold): {results['avg_cold_ms']:.2f}ms")
-    print(f"Average per request (warm): {results['avg_warm_ms']:.2f}ms")
-    print(f"Cache stats: {results['cache_stats']}")
+    logger.info("\nBenchmark Results:")
+    logger.info(f"Cold cache time: {results['cold_cache_time']:.3f}s")
+    logger.info(f"Warm cache time: {results['warm_cache_time']:.3f}s")
+    logger.info(f"Performance improvement: {results['improvement']:.1f}%")
+    logger.info(f"Average per request (cold): {results['avg_cold_ms']:.2f}ms")
+    logger.info(f"Average per request (warm): {results['avg_warm_ms']:.2f}ms")
+    logger.info(f"Cache stats: {results['cache_stats']}")

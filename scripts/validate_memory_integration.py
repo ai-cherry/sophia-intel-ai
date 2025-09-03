@@ -17,9 +17,10 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 logging.basicConfig(level=logging.INFO, format='%(levelname)s:%(name)s:%(message)s')
 logger = logging.getLogger(__name__)
 
+from app.core.ai_logger import logger
+from app.swarms import UnifiedSwarmOrchestrator
 from app.swarms.memory_enhanced_swarm import MemoryEnhancedCodingTeam
 from app.swarms.memory_integration import SwarmMemoryClient
-from app.swarms.unified_enhanced_orchestrator import UnifiedSwarmOrchestrator
 
 
 async def validate_adr_005_implementation():
@@ -27,10 +28,10 @@ async def validate_adr_005_implementation():
     Comprehensive validation of ADR-005: Memory System Integration Architecture
     """
 
-    print("🎯 ADR-005 Memory System Integration - Validation Report")
-    print("=" * 80)
-    print(f"Validation Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    print("=" * 80)
+    logger.info("🎯 ADR-005 Memory System Integration - Validation Report")
+    logger.info("=" * 80)
+    logger.info(f"Validation Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    logger.info("=" * 80)
 
     validation_results = {
         "overall_status": "unknown",
@@ -41,11 +42,11 @@ async def validate_adr_005_implementation():
     }
 
     # Phase 1: Core Component Validation
-    print("\n📋 PHASE 1: Core Component Validation")
-    print("-" * 50)
+    logger.info("\n📋 PHASE 1: Core Component Validation")
+    logger.info("-" * 50)
 
     # Test 1: SwarmMemoryClient
-    print("\n🧠 Testing SwarmMemoryClient...")
+    logger.info("\n🧠 Testing SwarmMemoryClient...")
     try:
         client = SwarmMemoryClient("validation_swarm", "validation_instance")
 
@@ -57,17 +58,17 @@ async def validate_adr_005_implementation():
             "config_loaded": hasattr(client, 'config'),
             "status": "functional"
         }
-        print("✅ SwarmMemoryClient: FUNCTIONAL")
+        logger.info("✅ SwarmMemoryClient: FUNCTIONAL")
 
     except Exception as e:
         validation_results["components"]["swarm_memory_client"] = {
             "status": "failed",
             "error": str(e)
         }
-        print(f"❌ SwarmMemoryClient: FAILED - {e}")
+        logger.info(f"❌ SwarmMemoryClient: FAILED - {e}")
 
     # Test 2: Memory-Enhanced Swarms
-    print("\n🤖 Testing Memory-Enhanced Swarms...")
+    logger.info("\n🤖 Testing Memory-Enhanced Swarms...")
     try:
         # Test each swarm type
         swarm_types = {
@@ -85,22 +86,22 @@ async def validate_adr_005_implementation():
                     "memory_methods_present": hasattr(swarm, 'solve_with_memory_integration'),
                     "status": "functional"
                 }
-                print(f"✅ {swarm_name}: FUNCTIONAL")
+                logger.info(f"✅ {swarm_name}: FUNCTIONAL")
 
             except Exception as e:
                 swarm_results[swarm_name] = {
                     "status": "failed",
                     "error": str(e)
                 }
-                print(f"❌ {swarm_name}: FAILED - {e}")
+                logger.info(f"❌ {swarm_name}: FAILED - {e}")
 
         validation_results["components"]["memory_enhanced_swarms"] = swarm_results
 
     except Exception as e:
-        print(f"❌ Memory-Enhanced Swarms: FAILED - {e}")
+        logger.info(f"❌ Memory-Enhanced Swarms: FAILED - {e}")
 
     # Test 3: Unified Orchestrator
-    print("\n🎯 Testing Unified Orchestrator...")
+    logger.info("\n🎯 Testing Unified Orchestrator...")
     try:
         orchestrator = UnifiedSwarmOrchestrator()
 
@@ -119,21 +120,21 @@ async def validate_adr_005_implementation():
             "status": "functional" if memory_enabled_swarms > 0 else "degraded"
         }
 
-        print(f"✅ Unified Orchestrator: {memory_enabled_swarms}/{len(orchestrator.swarm_registry)} swarms memory-enabled")
+        logger.info(f"✅ Unified Orchestrator: {memory_enabled_swarms}/{len(orchestrator.swarm_registry)} swarms memory-enabled")
 
     except Exception as e:
         validation_results["components"]["unified_orchestrator"] = {
             "status": "failed",
             "error": str(e)
         }
-        print(f"❌ Unified Orchestrator: FAILED - {e}")
+        logger.info(f"❌ Unified Orchestrator: FAILED - {e}")
 
     # Phase 2: Integration Point Validation
-    print("\n🔗 PHASE 2: Integration Point Validation")
-    print("-" * 50)
+    logger.info("\n🔗 PHASE 2: Integration Point Validation")
+    logger.info("-" * 50)
 
     # Test 4: Memory Pattern Integration
-    print("\n📋 Testing Memory Pattern Integration...")
+    logger.info("\n📋 Testing Memory Pattern Integration...")
     try:
         from app.swarms.patterns.memory_integration import (
             MemoryIntegrationConfig,
@@ -155,17 +156,17 @@ async def validate_adr_005_implementation():
         }
 
         await pattern.cleanup()
-        print("✅ Memory Pattern Integration: FUNCTIONAL")
+        logger.info("✅ Memory Pattern Integration: FUNCTIONAL")
 
     except Exception as e:
         validation_results["components"]["memory_pattern"] = {
             "status": "failed",
             "error": str(e)
         }
-        print(f"❌ Memory Pattern Integration: FAILED - {e}")
+        logger.info(f"❌ Memory Pattern Integration: FAILED - {e}")
 
     # Test 5: Memory Operations
-    print("\n💾 Testing Memory Operations...")
+    logger.info("\n💾 Testing Memory Operations...")
     try:
         # Test memory entry creation and deduplication
         from app.memory.supermemory_mcp import MemoryEntry, MemoryType
@@ -194,23 +195,23 @@ async def validate_adr_005_implementation():
             "status": "functional" if deduplication_working else "degraded"
         }
 
-        print("✅ Memory Operations: FUNCTIONAL")
-        print(f"   - Deduplication: {'✅' if deduplication_working else '❌'}")
-        print(f"   - Hash ID: {entry1.hash_id}")
+        logger.info("✅ Memory Operations: FUNCTIONAL")
+        logger.info(f"   - Deduplication: {'✅' if deduplication_working else '❌'}")
+        logger.info(f"   - Hash ID: {entry1.hash_id}")
 
     except Exception as e:
         validation_results["components"]["memory_operations"] = {
             "status": "failed",
             "error": str(e)
         }
-        print(f"❌ Memory Operations: FAILED - {e}")
+        logger.info(f"❌ Memory Operations: FAILED - {e}")
 
     # Phase 3: End-to-End Workflow Validation
-    print("\n🔄 PHASE 3: End-to-End Workflow Validation")
-    print("-" * 50)
+    logger.info("\n🔄 PHASE 3: End-to-End Workflow Validation")
+    logger.info("-" * 50)
 
     # Test 6: Complete Memory Integration Workflow
-    print("\n🚀 Testing Complete Workflow...")
+    logger.info("\n🚀 Testing Complete Workflow...")
     try:
         orchestrator = UnifiedSwarmOrchestrator()
 
@@ -249,7 +250,7 @@ async def validate_adr_005_implementation():
                     "status": "success"
                 })
 
-                print(f"✅ Task {i+1}: {selected_swarm} (memory: {swarm_info.get('memory_enabled', False)})")
+                logger.info(f"✅ Task {i+1}: {selected_swarm} (memory: {swarm_info.get('memory_enabled', False)})")
 
             except Exception as e:
                 workflow_results.append({
@@ -257,7 +258,7 @@ async def validate_adr_005_implementation():
                     "status": "failed",
                     "error": str(e)
                 })
-                print(f"❌ Task {i+1}: FAILED - {e}")
+                logger.info(f"❌ Task {i+1}: FAILED - {e}")
 
         validation_results["workflow"] = {
             "tasks_tested": len(test_tasks),
@@ -272,14 +273,14 @@ async def validate_adr_005_implementation():
             "status": "failed",
             "error": str(e)
         }
-        print(f"❌ Complete Workflow: FAILED - {e}")
+        logger.info(f"❌ Complete Workflow: FAILED - {e}")
 
     # Phase 4: Performance Analysis
-    print("\n📊 PHASE 4: Performance Analysis")
-    print("-" * 50)
+    logger.info("\n📊 PHASE 4: Performance Analysis")
+    logger.info("-" * 50)
 
     # Test 7: Memory System Performance
-    print("\n⚡ Testing Memory System Performance...")
+    logger.info("\n⚡ Testing Memory System Performance...")
     try:
         # Test memory client performance
         start_time = datetime.now()
@@ -314,20 +315,20 @@ async def validate_adr_005_implementation():
             "status": "optimal" if avg_op_time < 50 else "acceptable" if avg_op_time < 100 else "degraded"
         }
 
-        print(f"✅ Memory Performance: {avg_op_time:.1f}ms avg operation time")
-        print(f"   - Operations/sec: {1000/avg_op_time:.1f}")
-        print(f"   - Target met: {'✅' if avg_op_time < 100 else '❌'}")
+        logger.info(f"✅ Memory Performance: {avg_op_time:.1f}ms avg operation time")
+        logger.info(f"   - Operations/sec: {1000/avg_op_time:.1f}")
+        logger.info(f"   - Target met: {'✅' if avg_op_time < 100 else '❌'}")
 
     except Exception as e:
         validation_results["performance"] = {
             "status": "failed",
             "error": str(e)
         }
-        print(f"❌ Memory Performance: FAILED - {e}")
+        logger.info(f"❌ Memory Performance: FAILED - {e}")
 
     # Phase 5: Integration Completeness Assessment
-    print("\n🎯 PHASE 5: Integration Completeness Assessment")
-    print("-" * 50)
+    logger.info("\n🎯 PHASE 5: Integration Completeness Assessment")
+    logger.info("-" * 50)
 
     # Assess overall integration status
     component_statuses = [
@@ -379,19 +380,19 @@ async def validate_adr_005_implementation():
     validation_results["recommendations"] = recommendations
 
     # Print Results Summary
-    print(f"\n{status_icon} OVERALL STATUS: {validation_results['overall_status'].upper()}")
-    print(f"📊 Integration Coverage: {functional_components}/{total_components} components functional")
+    logger.info(f"\n{status_icon} OVERALL STATUS: {validation_results['overall_status'].upper()}")
+    logger.info(f"📊 Integration Coverage: {functional_components}/{total_components} components functional")
 
     if validation_results["integration_gaps"]:
-        print(f"⚠️  Integration Gaps: {', '.join(validation_results['integration_gaps'])}")
+        logger.info(f"⚠️  Integration Gaps: {', '.join(validation_results['integration_gaps'])}")
 
-    print("\n💡 Recommendations:")
+    logger.info("\n💡 Recommendations:")
     for rec in recommendations:
-        print(f"   • {rec}")
+        logger.info(f"   • {rec}")
 
     # Phase 6: ADR-005 Compliance Check
-    print("\n📝 PHASE 6: ADR-005 Compliance Check")
-    print("-" * 50)
+    logger.info("\n📝 PHASE 6: ADR-005 Compliance Check")
+    logger.info("-" * 50)
 
     adr_compliance = {
         "hybrid_architecture": True,  # SQLite FTS5 + Weaviate + Redis implemented
@@ -408,11 +409,11 @@ async def validate_adr_005_implementation():
 
     compliance_score = sum(adr_compliance.values()) / len(adr_compliance) * 100
 
-    print(f"📋 ADR-005 Compliance: {compliance_score:.0f}%")
+    logger.info(f"📋 ADR-005 Compliance: {compliance_score:.0f}%")
 
     for requirement, compliant in adr_compliance.items():
         status = "✅" if compliant else "❌"
-        print(f"   {status} {requirement.replace('_', ' ').title()}")
+        logger.info(f"   {status} {requirement.replace('_', ' ').title()}")
 
     validation_results["adr_compliance"] = {
         "score": compliance_score,
@@ -421,8 +422,8 @@ async def validate_adr_005_implementation():
     }
 
     # Phase 7: Performance Impact Analysis
-    print("\n⚡ PHASE 7: Performance Impact Analysis")
-    print("-" * 50)
+    logger.info("\n⚡ PHASE 7: Performance Impact Analysis")
+    logger.info("-" * 50)
 
     performance_analysis = {
         "memory_overhead": "Minimal (lazy loading, caching)",
@@ -432,27 +433,27 @@ async def validate_adr_005_implementation():
         "scaling_characteristics": "Linear scaling with connection pooling"
     }
 
-    print("📈 Performance Impact:")
+    logger.info("📈 Performance Impact:")
     for metric, value in performance_analysis.items():
-        print(f"   • {metric.replace('_', ' ').title()}: {value}")
+        logger.info(f"   • {metric.replace('_', ' ').title()}: {value}")
 
     validation_results["performance_analysis"] = performance_analysis
 
     # Final Assessment
-    print("\n🎉 FINAL ASSESSMENT")
-    print("=" * 80)
+    logger.info("\n🎉 FINAL ASSESSMENT")
+    logger.info("=" * 80)
 
     if validation_results["overall_status"] == "fully_integrated":
-        print("🎯 SUCCESS: ADR-005 Memory System Integration COMPLETE")
-        print("✅ All swarm orchestrators successfully connected to memory systems")
-        print("✅ Persistent knowledge storage and retrieval operational")
-        print("✅ Inter-swarm communication through memory functional")
-        print("✅ Memory-based learning and adaptation enabled")
-        print("✅ No integration conflicts with existing swarm functionality")
-        print("✅ Real-time memory operations performing efficiently")
+        logger.info("🎯 SUCCESS: ADR-005 Memory System Integration COMPLETE")
+        logger.info("✅ All swarm orchestrators successfully connected to memory systems")
+        logger.info("✅ Persistent knowledge storage and retrieval operational")
+        logger.info("✅ Inter-swarm communication through memory functional")
+        logger.info("✅ Memory-based learning and adaptation enabled")
+        logger.info("✅ No integration conflicts with existing swarm functionality")
+        logger.info("✅ Real-time memory operations performing efficiently")
     else:
-        print(f"⚠️  PARTIAL SUCCESS: Integration {validation_results['overall_status']}")
-        print("Some components may need additional attention")
+        logger.info(f"⚠️  PARTIAL SUCCESS: Integration {validation_results['overall_status']}")
+        logger.info("Some components may need additional attention")
 
     # Save validation report
     report_path = Path("tmp/adr_005_validation_report.json")
@@ -461,7 +462,7 @@ async def validate_adr_005_implementation():
     with open(report_path, 'w') as f:
         json.dump(validation_results, f, indent=2, default=str)
 
-    print(f"\n📄 Validation report saved: {report_path}")
+    logger.info(f"\n📄 Validation report saved: {report_path}")
 
     return validation_results
 
@@ -469,25 +470,25 @@ async def validate_adr_005_implementation():
 async def demonstrate_memory_integration():
     """Demonstrate key memory integration features."""
 
-    print("\n🚀 MEMORY INTEGRATION DEMONSTRATION")
-    print("=" * 80)
+    logger.info("\n🚀 MEMORY INTEGRATION DEMONSTRATION")
+    logger.info("=" * 80)
 
     try:
         # Create orchestrator and initialize memory
-        print("\n1️⃣ Creating Memory-Enhanced Orchestrator...")
+        logger.info("\n1️⃣ Creating Memory-Enhanced Orchestrator...")
         orchestrator = UnifiedSwarmOrchestrator()
 
-        print(f"   ✅ Created orchestrator with {len(orchestrator.swarm_registry)} swarms")
+        logger.info(f"   ✅ Created orchestrator with {len(orchestrator.swarm_registry)} swarms")
 
         # Check memory-enabled swarms
         memory_swarms = [
             name for name, info in orchestrator.swarm_registry.items()
             if info.get("memory_enabled", False)
         ]
-        print(f"   ✅ Memory-enabled swarms: {memory_swarms}")
+        logger.info(f"   ✅ Memory-enabled swarms: {memory_swarms}")
 
         # Demonstrate swarm selection
-        print("\n2️⃣ Demonstrating Memory-Enhanced Swarm Selection...")
+        logger.info("\n2️⃣ Demonstrating Memory-Enhanced Swarm Selection...")
 
         demo_tasks = [
             {"type": "code", "description": "Fix bug", "complexity": 0.2, "urgency": "critical"},
@@ -498,14 +499,14 @@ async def demonstrate_memory_integration():
         for task in demo_tasks:
             selected = await orchestrator.select_optimal_swarm(task)
             swarm_info = orchestrator.swarm_registry[selected]
-            print(f"   ✅ Task (complexity {task['complexity']}): {selected} - Memory: {swarm_info.get('memory_enabled', False)}")
+            logger.info(f"   ✅ Task (complexity {task['complexity']}): {selected} - Memory: {swarm_info.get('memory_enabled', False)}")
 
         # Demonstrate memory features
-        print("\n3️⃣ Demonstrating Memory Features...")
+        logger.info("\n3️⃣ Demonstrating Memory Features...")
 
         # Create memory client for demonstration
         demo_client = SwarmMemoryClient("demo_swarm", "demo_instance")
-        print("   ✅ Memory client created")
+        logger.info("   ✅ Memory client created")
 
         # Demonstrate memory entry
         from app.memory.supermemory_mcp import MemoryEntry, MemoryType
@@ -516,19 +517,19 @@ async def demonstrate_memory_integration():
             tags=["demo", "pattern", "success"],
             memory_type=MemoryType.PROCEDURAL
         )
-        print(f"   ✅ Demo memory entry: {demo_entry.hash_id}")
+        logger.info(f"   ✅ Demo memory entry: {demo_entry.hash_id}")
 
         # Demonstrate swarm types
-        print("\n4️⃣ Available Memory-Enhanced Swarm Types:")
+        logger.info("\n4️⃣ Available Memory-Enhanced Swarm Types:")
         for name, info in orchestrator.swarm_registry.items():
             memory_status = "🧠" if info.get("memory_enabled") else "💤"
             advanced_memory = "🌟" if info.get("advanced_memory") else ""
-            print(f"   {memory_status} {name}: {info['description']} {advanced_memory}")
+            logger.info(f"   {memory_status} {name}: {info['description']} {advanced_memory}")
 
-        print("\n✅ Memory Integration Demonstration Complete!")
+        logger.info("\n✅ Memory Integration Demonstration Complete!")
 
     except Exception as e:
-        print(f"❌ Demonstration failed: {e}")
+        logger.info(f"❌ Demonstration failed: {e}")
 
 
 if __name__ == "__main__":
@@ -540,10 +541,10 @@ if __name__ == "__main__":
         await demonstrate_memory_integration()
 
         # Final summary
-        print("\n🎯 VALIDATION SUMMARY")
-        print("=" * 80)
-        print(f"Overall Status: {validation_results['overall_status'].upper()}")
-        print(f"ADR-005 Compliance: {validation_results.get('adr_compliance', {}).get('score', 0):.0f}%")
+        logger.info("\n🎯 VALIDATION SUMMARY")
+        logger.info("=" * 80)
+        logger.info(f"Overall Status: {validation_results['overall_status'].upper()}")
+        logger.info(f"ADR-005 Compliance: {validation_results.get('adr_compliance', {}).get('score', 0):.0f}%")
 
         components = validation_results.get("components", {})
         functional_count = len([
@@ -555,12 +556,12 @@ if __name__ == "__main__":
             if isinstance(data, dict) and "status" in data
         ])
 
-        print(f"Functional Components: {functional_count}/{total_count}")
+        logger.info(f"Functional Components: {functional_count}/{total_count}")
 
         if validation_results["overall_status"] == "fully_integrated":
-            print("\n🎉 ADR-005 MEMORY SYSTEM INTEGRATION: SUCCESSFULLY IMPLEMENTED")
+            logger.info("\n🎉 ADR-005 MEMORY SYSTEM INTEGRATION: SUCCESSFULLY IMPLEMENTED")
         else:
-            print(f"\n⚠️  ADR-005 IMPLEMENTATION: {validation_results['overall_status'].upper()}")
+            logger.info(f"\n⚠️  ADR-005 IMPLEMENTATION: {validation_results['overall_status'].upper()}")
 
         return validation_results
 

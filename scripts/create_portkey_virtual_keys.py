@@ -11,6 +11,8 @@ from typing import Any
 import httpx
 from dotenv import load_dotenv
 
+from app.core.ai_logger import logger
+
 # Load environment
 load_dotenv('.env.local', override=True)
 
@@ -32,7 +34,7 @@ class PortkeyVirtualKeyCreator:
     async def create_virtual_key(self, name: str, description: str, default_model: str = None) -> dict[str, Any]:
         """Create a single virtual key in Portkey."""
 
-        print(f"\n📝 Creating virtual key: {name}")
+        logger.info(f"\n📝 Creating virtual key: {name}")
 
         # Virtual key configuration
         config = {
@@ -67,28 +69,28 @@ class PortkeyVirtualKeyCreator:
                 if response.status_code in [200, 201]:
                     result = response.json()
                     vk_id = result.get("id") or result.get("virtual_key_id")
-                    print(f"   ✅ Created: {vk_id}")
+                    logger.info(f"   ✅ Created: {vk_id}")
                     self.created_keys[name] = vk_id
                     return {"success": True, "id": vk_id}
                 else:
-                    print(f"   ❌ Failed: Status {response.status_code}")
+                    logger.info(f"   ❌ Failed: Status {response.status_code}")
                     try:
                         error = response.json()
-                        print(f"      Error: {error}")
+                        logger.info(f"      Error: {error}")
                     except:
-                        print(f"      Response: {response.text[:200]}")
+                        logger.info(f"      Response: {response.text[:200]}")
                     return {"success": False, "error": f"Status {response.status_code}"}
 
         except Exception as e:
-            print(f"   ❌ Error: {str(e)}")
+            logger.info(f"   ❌ Error: {str(e)}")
             return {"success": False, "error": str(e)}
 
     async def create_all_virtual_keys(self):
         """Create all 7 virtual keys."""
 
-        print("\n" + "="*60)
-        print("🚀 CREATING PORTKEY VIRTUAL KEYS")
-        print("="*60)
+        logger.info("\n" + "="*60)
+        logger.info("🚀 CREATING PORTKEY VIRTUAL KEYS")
+        logger.info("="*60)
 
         # Define all virtual keys to create
         virtual_keys = [
@@ -140,32 +142,32 @@ class PortkeyVirtualKeyCreator:
             results.append((vk["name"], result))
 
         # Summary
-        print("\n" + "="*60)
-        print("📊 SUMMARY")
-        print("="*60)
+        logger.info("\n" + "="*60)
+        logger.info("📊 SUMMARY")
+        logger.info("="*60)
 
         successful = sum(1 for _, r in results if r.get("success"))
         total = len(results)
 
-        print(f"\n✅ Successfully created: {successful}/{total}")
+        logger.info(f"\n✅ Successfully created: {successful}/{total}")
 
         if successful == total:
-            print("\n🎉 All virtual keys created successfully!")
+            logger.info("\n🎉 All virtual keys created successfully!")
 
             # Update .env.local with the virtual key IDs
             await self.update_env_file()
 
         elif successful == 0:
-            print("\n❌ No virtual keys were created")
-            print("\nPossible issues:")
-            print("  • Portkey API might not support programmatic virtual key creation")
-            print("  • API key might not have admin permissions")
-            print("  • You may need to create them manually in the dashboard")
+            logger.info("\n❌ No virtual keys were created")
+            logger.info("\nPossible issues:")
+            logger.info("  • Portkey API might not support programmatic virtual key creation")
+            logger.info("  • API key might not have admin permissions")
+            logger.info("  • You may need to create them manually in the dashboard")
 
             await self.provide_manual_instructions()
         else:
-            print(f"\n⚠️  {total - successful} virtual keys failed to create")
-            print("Check the errors above and try again")
+            logger.info(f"\n⚠️  {total - successful} virtual keys failed to create")
+            logger.info("Check the errors above and try again")
 
     async def update_env_file(self):
         """Update .env.local with the created virtual key IDs."""
@@ -173,7 +175,7 @@ class PortkeyVirtualKeyCreator:
         if not self.created_keys:
             return
 
-        print("\n📝 Updating .env.local with virtual key IDs...")
+        logger.info("\n📝 Updating .env.local with virtual key IDs...")
 
         # Read existing .env.local
         env_path = ".env.local"
@@ -215,14 +217,14 @@ class PortkeyVirtualKeyCreator:
         with open(env_path, 'w') as f:
             f.writelines(lines)
 
-        print("✅ .env.local updated with virtual key IDs")
+        logger.info("✅ .env.local updated with virtual key IDs")
 
     async def provide_manual_instructions(self):
         """Provide manual instructions if API creation fails."""
 
-        print("\n" + "="*60)
-        print("📋 MANUAL SETUP INSTRUCTIONS")
-        print("="*60)
+        logger.info("\n" + "="*60)
+        logger.info("📋 MANUAL SETUP INSTRUCTIONS")
+        logger.info("="*60)
 
         print("""
 Since programmatic creation didn't work, here's how to create them manually:
@@ -257,12 +259,12 @@ PORTKEY_VK_GROQ=<id>
     async def test_virtual_keys(self):
         """Test if virtual keys are working."""
 
-        print("\n" + "="*60)
-        print("🧪 TESTING VIRTUAL KEYS")
-        print("="*60)
+        logger.info("\n" + "="*60)
+        logger.info("🧪 TESTING VIRTUAL KEYS")
+        logger.info("="*60)
 
         if not self.created_keys:
-            print("No keys to test (none were created)")
+            logger.info("No keys to test (none were created)")
             return
 
         # Test one of the created keys
@@ -284,19 +286,19 @@ PORTKEY_VK_GROQ=<id>
                 )
 
                 if response.status_code == 200:
-                    print("✅ Virtual keys are working!")
+                    logger.info("✅ Virtual keys are working!")
                 else:
-                    print(f"❌ Test failed: Status {response.status_code}")
+                    logger.info(f"❌ Test failed: Status {response.status_code}")
 
         except Exception as e:
-            print(f"❌ Test error: {e}")
+            logger.info(f"❌ Test error: {e}")
 
 
 async def main():
     """Main function to create all virtual keys."""
 
-    print("🔐 Portkey Virtual Key Automation")
-    print("This will attempt to create all virtual keys programmatically.")
+    logger.info("🔐 Portkey Virtual Key Automation")
+    logger.info("This will attempt to create all virtual keys programmatically.")
 
     try:
         creator = PortkeyVirtualKeyCreator()
@@ -306,10 +308,10 @@ async def main():
             await creator.test_virtual_keys()
 
     except ValueError as e:
-        print(f"\n❌ Configuration Error: {e}")
-        print("Make sure PORTKEY_API_KEY and OPENROUTER_API_KEY are set in .env.local")
+        logger.info(f"\n❌ Configuration Error: {e}")
+        logger.info("Make sure PORTKEY_API_KEY and OPENROUTER_API_KEY are set in .env.local")
     except Exception as e:
-        print(f"\n❌ Unexpected Error: {e}")
+        logger.info(f"\n❌ Unexpected Error: {e}")
 
 
 if __name__ == "__main__":

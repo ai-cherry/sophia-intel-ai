@@ -12,6 +12,8 @@ from typing import Any
 
 import aiohttp
 
+from app.core.ai_logger import logger
+
 logger = logging.getLogger(__name__)
 
 
@@ -509,19 +511,19 @@ async def example_usage():
 
         # Retrieve session history
         history = await memory.retrieve_session_history("test-session-123")
-        print(f"Session history: {history}")
+        logger.info(f"Session history: {history}")
 
         # Get context summary
         summary = await memory.get_context_summary("test-session-123")
-        print(f"Context summary: {summary}")
+        logger.info(f"Context summary: {summary}")
 
         # Search interactions
         results = await memory.search_interactions("system")
-        print(f"Search results: {results}")
+        logger.info(f"Search results: {results}")
 
         # Export session
         export_data = await memory.export_session("test-session-123", format="txt")
-        print(f"Exported data:\n{export_data}")
+        logger.info(f"Exported data:\n{export_data}")
 
 
 if __name__ == "__main__":

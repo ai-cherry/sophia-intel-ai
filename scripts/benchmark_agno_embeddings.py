@@ -20,6 +20,8 @@ import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.embeddings.agno_embedding_service import (
+from app.core.ai_logger import logger
+
     AgnoEmbeddingService,
     AgnoEmbeddingRequest,
     EmbeddingModel,
@@ -125,11 +127,11 @@ class EmbeddingBenchmark:
         
     async def run_all_benchmarks(self):
         """Run complete benchmark suite"""
-        print("=" * 80)
-        print("AGNO AGENTOS EMBEDDING INFRASTRUCTURE PERFORMANCE BENCHMARK")
-        print("=" * 80)
-        print(f"Start Time: {datetime.now().isoformat()}")
-        print()
+        logger.info("=" * 80)
+        logger.info("AGNO AGENTOS EMBEDDING INFRASTRUCTURE PERFORMANCE BENCHMARK")
+        logger.info("=" * 80)
+        logger.info(f"Start Time: {datetime.now().isoformat()}")
+        logger.info()
         
         # Run individual benchmarks
         await self.benchmark_single_embedding()
@@ -145,8 +147,8 @@ class EmbeddingBenchmark:
         
     async def benchmark_single_embedding(self):
         """Benchmark single embedding generation"""
-        print("1. SINGLE EMBEDDING BENCHMARK")
-        print("-" * 40)
+        logger.info("1. SINGLE EMBEDDING BENCHMARK")
+        logger.info("-" * 40)
         
         latencies = []
         
@@ -177,15 +179,15 @@ class EmbeddingBenchmark:
         passed = avg_latency < PERFORMANCE_TARGETS["single_embedding_latency_ms"]
         status = "✓ PASSED" if passed else "✗ FAILED"
         
-        print(f"Average Latency: {avg_latency:.2f}ms (Target: <{PERFORMANCE_TARGETS['single_embedding_latency_ms']}ms) {status}")
-        print(f"P95 Latency: {p95_latency:.2f}ms")
-        print(f"P99 Latency: {p99_latency:.2f}ms")
-        print()
+        logger.info(f"Average Latency: {avg_latency:.2f}ms (Target: <{PERFORMANCE_TARGETS['single_embedding_latency_ms']}ms) {status}")
+        logger.info(f"P95 Latency: {p95_latency:.2f}ms")
+        logger.info(f"P99 Latency: {p99_latency:.2f}ms")
+        logger.info()
         
     async def benchmark_batch_embedding(self):
         """Benchmark batch embedding generation"""
-        print("2. BATCH EMBEDDING BENCHMARK")
-        print("-" * 40)
+        logger.info("2. BATCH EMBEDDING BENCHMARK")
+        logger.info("-" * 40)
         
         batch_sizes = [10, 50, 100]
         
@@ -205,22 +207,22 @@ class EmbeddingBenchmark:
                 "embeddings_generated": len(response.embeddings)
             }
             
-            print(f"Batch Size {batch_size}:")
-            print(f"  Latency: {latency_ms:.2f}ms")
-            print(f"  Throughput: {throughput:.2f} embeddings/second")
+            logger.info(f"Batch Size {batch_size}:")
+            logger.info(f"  Latency: {latency_ms:.2f}ms")
+            logger.info(f"  Throughput: {throughput:.2f} embeddings/second")
         
         # Check 100-batch against target
         batch_100_latency = self.metrics["batch_100"]["latency_ms"]
         passed = batch_100_latency < PERFORMANCE_TARGETS["batch_embedding_latency_ms"]
         status = "✓ PASSED" if passed else "✗ FAILED"
         
-        print(f"\nBatch-100 Performance: {batch_100_latency:.2f}ms (Target: <{PERFORMANCE_TARGETS['batch_embedding_latency_ms']}ms) {status}")
-        print()
+        logger.info(f"\nBatch-100 Performance: {batch_100_latency:.2f}ms (Target: <{PERFORMANCE_TARGETS['batch_embedding_latency_ms']}ms) {status}")
+        logger.info()
         
     async def benchmark_cache_performance(self):
         """Benchmark cache hit rate and performance"""
-        print("3. CACHE PERFORMANCE BENCHMARK")
-        print("-" * 40)
+        logger.info("3. CACHE PERFORMANCE BENCHMARK")
+        logger.info("-" * 40)
         
         # Generate embeddings for same texts multiple times
         test_texts = TEST_DATASETS["short_texts"][:10]
@@ -261,16 +263,16 @@ class EmbeddingBenchmark:
         passed = cache_hit_rate >= PERFORMANCE_TARGETS["cache_hit_rate"]
         status = "✓ PASSED" if passed else "✗ FAILED"
         
-        print(f"Cache Miss Latency: {avg_cache_miss:.2f}ms")
-        print(f"Cache Hit Latency: {avg_cache_hit:.2f}ms")
-        print(f"Cache Speedup: {cache_speedup:.1f}x")
-        print(f"Cache Hit Rate: {cache_hit_rate:.2%} (Target: >{PERFORMANCE_TARGETS['cache_hit_rate']:.0%}) {status}")
-        print()
+        logger.info(f"Cache Miss Latency: {avg_cache_miss:.2f}ms")
+        logger.info(f"Cache Hit Latency: {avg_cache_hit:.2f}ms")
+        logger.info(f"Cache Speedup: {cache_speedup:.1f}x")
+        logger.info(f"Cache Hit Rate: {cache_hit_rate:.2%} (Target: >{PERFORMANCE_TARGETS['cache_hit_rate']:.0%}) {status}")
+        logger.info()
         
     async def benchmark_model_selection(self):
         """Benchmark model selection for different use cases"""
-        print("4. MODEL SELECTION BENCHMARK")
-        print("-" * 40)
+        logger.info("4. MODEL SELECTION BENCHMARK")
+        logger.info("-" * 40)
         
         use_cases = ["rag", "search", "code", "general"]
         
@@ -295,14 +297,14 @@ class EmbeddingBenchmark:
                 "latency_ms": response.latency_ms
             }
             
-            print(f"{use_case.upper()}: {response.model_used} ({response.provider})")
+            logger.info(f"{use_case.upper()}: {response.model_used} ({response.provider})")
         
-        print()
+        logger.info()
         
     async def benchmark_concurrent_requests(self):
         """Benchmark concurrent request handling"""
-        print("5. CONCURRENT REQUESTS BENCHMARK")
-        print("-" * 40)
+        logger.info("5. CONCURRENT REQUESTS BENCHMARK")
+        logger.info("-" * 40)
         
         concurrent_levels = [5, 10, 20]
         
@@ -328,17 +330,17 @@ class EmbeddingBenchmark:
                 "avg_latency_ms": avg_latency
             }
             
-            print(f"Concurrent Level {level}:")
-            print(f"  Total Time: {total_time:.2f}s")
-            print(f"  Throughput: {throughput:.2f} req/s")
-            print(f"  Avg Latency: {avg_latency:.2f}ms")
+            logger.info(f"Concurrent Level {level}:")
+            logger.info(f"  Total Time: {total_time:.2f}s")
+            logger.info(f"  Throughput: {throughput:.2f} req/s")
+            logger.info(f"  Avg Latency: {avg_latency:.2f}ms")
         
-        print()
+        logger.info()
         
     async def benchmark_cost_efficiency(self):
         """Benchmark cost efficiency and optimization"""
-        print("6. COST EFFICIENCY BENCHMARK")
-        print("-" * 40)
+        logger.info("6. COST EFFICIENCY BENCHMARK")
+        logger.info("-" * 40)
         
         # Generate embeddings and track costs
         total_cost_without_cache = 0
@@ -375,15 +377,15 @@ class EmbeddingBenchmark:
         passed = cost_reduction >= PERFORMANCE_TARGETS["cost_reduction"]
         status = "✓ PASSED" if passed else "✗ FAILED"
         
-        print(f"Cost without cache: ${total_cost_without_cache:.4f}")
-        print(f"Cost with cache: ${total_cost_with_cache:.4f}")
-        print(f"Cost Reduction: {cost_reduction:.1%} (Target: >{PERFORMANCE_TARGETS['cost_reduction']:.0%}) {status}")
-        print()
+        logger.info(f"Cost without cache: ${total_cost_without_cache:.4f}")
+        logger.info(f"Cost with cache: ${total_cost_with_cache:.4f}")
+        logger.info(f"Cost Reduction: {cost_reduction:.1%} (Target: >{PERFORMANCE_TARGETS['cost_reduction']:.0%}) {status}")
+        logger.info()
         
     async def benchmark_different_content_types(self):
         """Benchmark performance across different content types"""
-        print("7. CONTENT TYPE BENCHMARK")
-        print("-" * 40)
+        logger.info("7. CONTENT TYPE BENCHMARK")
+        logger.info("-" * 40)
         
         content_types = {
             "short": TEST_DATASETS["short_texts"][:10],
@@ -408,18 +410,18 @@ class EmbeddingBenchmark:
                 "tokens_processed": response.tokens_processed
             }
             
-            print(f"{content_type.upper()}:")
-            print(f"  Model: {response.model_used}")
-            print(f"  Total: {latency_ms:.2f}ms for {len(texts)} texts")
-            print(f"  Average: {latency_ms/len(texts):.2f}ms per text")
+            logger.info(f"{content_type.upper()}:")
+            logger.info(f"  Model: {response.model_used}")
+            logger.info(f"  Total: {latency_ms:.2f}ms for {len(texts)} texts")
+            logger.info(f"  Average: {latency_ms/len(texts):.2f}ms per text")
         
-        print()
+        logger.info()
         
     def generate_report(self):
         """Generate comprehensive benchmark report"""
-        print("=" * 80)
-        print("BENCHMARK SUMMARY REPORT")
-        print("=" * 80)
+        logger.info("=" * 80)
+        logger.info("BENCHMARK SUMMARY REPORT")
+        logger.info("=" * 80)
         
         # Overall performance assessment
         passed_tests = 0
@@ -450,45 +452,45 @@ class EmbeddingBenchmark:
         if self.metrics["concurrent_20"]["throughput_per_second"] >= PERFORMANCE_TARGETS["throughput_per_second"]:
             passed_tests += 1
         
-        print(f"Performance Score: {passed_tests}/{total_tests} targets met ({passed_tests/total_tests:.0%})")
-        print()
+        logger.info(f"Performance Score: {passed_tests}/{total_tests} targets met ({passed_tests/total_tests:.0%})")
+        logger.info()
         
-        print("KEY METRICS:")
-        print("-" * 40)
-        print(f"• Single Embedding Latency: {self.metrics['single_embedding']['avg_latency_ms']:.2f}ms")
-        print(f"• Batch-100 Latency: {self.metrics['batch_100']['latency_ms']:.2f}ms")
-        print(f"• Cache Hit Rate: {self.metrics['cache']['cache_hit_rate']:.2%}")
-        print(f"• Cost Reduction: {self.metrics['cost']['cost_reduction']:.1%}")
-        print(f"• Peak Throughput: {self.metrics['concurrent_20']['throughput_per_second']:.2f} req/s")
-        print()
+        logger.info("KEY METRICS:")
+        logger.info("-" * 40)
+        logger.info(f"• Single Embedding Latency: {self.metrics['single_embedding']['avg_latency_ms']:.2f}ms")
+        logger.info(f"• Batch-100 Latency: {self.metrics['batch_100']['latency_ms']:.2f}ms")
+        logger.info(f"• Cache Hit Rate: {self.metrics['cache']['cache_hit_rate']:.2%}")
+        logger.info(f"• Cost Reduction: {self.metrics['cost']['cost_reduction']:.1%}")
+        logger.info(f"• Peak Throughput: {self.metrics['concurrent_20']['throughput_per_second']:.2f} req/s")
+        logger.info()
         
-        print("RECOMMENDATIONS:")
-        print("-" * 40)
+        logger.info("RECOMMENDATIONS:")
+        logger.info("-" * 40)
         
         if self.metrics["single_embedding"]["avg_latency_ms"] > PERFORMANCE_TARGETS["single_embedding_latency_ms"]:
-            print("⚠️ Single embedding latency exceeds target. Consider:")
-            print("   - Optimizing model selection logic")
-            print("   - Using smaller models for simple queries")
-            print("   - Implementing request batching")
+            logger.info("⚠️ Single embedding latency exceeds target. Consider:")
+            logger.info("   - Optimizing model selection logic")
+            logger.info("   - Using smaller models for simple queries")
+            logger.info("   - Implementing request batching")
         
         if self.metrics["cache"]["cache_hit_rate"] < PERFORMANCE_TARGETS["cache_hit_rate"]:
-            print("⚠️ Cache hit rate below target. Consider:")
-            print("   - Increasing cache size")
-            print("   - Implementing better cache key generation")
-            print("   - Using LRU cache with longer TTL")
+            logger.info("⚠️ Cache hit rate below target. Consider:")
+            logger.info("   - Increasing cache size")
+            logger.info("   - Implementing better cache key generation")
+            logger.info("   - Using LRU cache with longer TTL")
         
         if self.metrics["cost"]["cost_reduction"] < PERFORMANCE_TARGETS["cost_reduction"]:
-            print("⚠️ Cost reduction below target. Consider:")
-            print("   - More aggressive caching")
-            print("   - Using cheaper models when appropriate")
-            print("   - Implementing request deduplication")
+            logger.info("⚠️ Cost reduction below target. Consider:")
+            logger.info("   - More aggressive caching")
+            logger.info("   - Using cheaper models when appropriate")
+            logger.info("   - Implementing request deduplication")
         
         # Save detailed report to file
         self.save_report()
         
-        print()
-        print(f"✅ Detailed report saved to: benchmark_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json")
-        print("=" * 80)
+        logger.info()
+        logger.info(f"✅ Detailed report saved to: benchmark_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json")
+        logger.info("=" * 80)
         
     def save_report(self):
         """Save detailed benchmark results to file"""

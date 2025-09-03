@@ -748,12 +748,12 @@ def create_pattern_files():
 
     for pattern_name, content in PATTERN_TEMPLATES.items():
         file_path = patterns_dir / f"{pattern_name}.py"
-        print(f"Creating {file_path}")
+        logger.info(f"Creating {file_path}")
 
         with open(file_path, "w") as f:
             f.write(content)
 
-    print(f"✅ Created {len(PATTERN_TEMPLATES)} pattern modules")
+    logger.info(f"✅ Created {len(PATTERN_TEMPLATES)} pattern modules")
 
 
 def create_config_files():
@@ -762,7 +762,7 @@ def create_config_files():
         full_path = BASE_DIR / file_path
         full_path.parent.mkdir(parents=True, exist_ok=True)
 
-        print(f"Creating {full_path}")
+        logger.info(f"Creating {full_path}")
 
         if file_path.endswith(".json"):
             with open(full_path, "w") as f:
@@ -771,7 +771,7 @@ def create_config_files():
             with open(full_path, "w") as f:
                 f.write(content)
 
-    print(f"✅ Created {len(CONFIG_FILES)} configuration files")
+    logger.info(f"✅ Created {len(CONFIG_FILES)} configuration files")
 
 
 def create_composer():
@@ -789,6 +789,8 @@ import logging
 
 from .base import SwarmPattern, PatternConfig, PatternResult
 from . import (
+from app.core.ai_logger import logger
+
     AdversarialDebatePattern,
     QualityGatesPattern,
     StrategyArchivePattern,
@@ -936,17 +938,17 @@ class SwarmComposer:
             await pattern.cleanup()
 '''
 
-    print(f"Creating {composer_path}")
+    logger.info(f"Creating {composer_path}")
     with open(composer_path, "w") as f:
         f.write(composer_content)
 
-    print("✅ Created swarm composer")
+    logger.info("✅ Created swarm composer")
 
 
 def main():
     """Run the complete refactoring."""
-    print("🚀 Starting SophIA-Intel-AI Refactoring")
-    print("="*60)
+    logger.info("🚀 Starting SophIA-Intel-AI Refactoring")
+    logger.info("="*60)
 
     # Create pattern modules
     create_pattern_files()
@@ -957,13 +959,13 @@ def main():
     # Create composer
     create_composer()
 
-    print("\n" + "="*60)
-    print("✅ Refactoring structure created successfully!")
-    print("\nNext steps:")
-    print("1. Update imports in unified_enhanced_orchestrator.py")
-    print("2. Run tests to verify functionality")
-    print("3. Update API endpoints to use new configuration")
-    print("4. Set up CI/CD pipeline")
+    logger.info("\n" + "="*60)
+    logger.info("✅ Refactoring structure created successfully!")
+    logger.info("\nNext steps:")
+    logger.info("1. Update imports in unified_enhanced_orchestrator.py")
+    logger.info("2. Run tests to verify functionality")
+    logger.info("3. Update API endpoints to use new configuration")
+    logger.info("4. Set up CI/CD pipeline")
 
 
 if __name__ == "__main__":

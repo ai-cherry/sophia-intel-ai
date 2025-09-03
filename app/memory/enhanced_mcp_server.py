@@ -11,6 +11,8 @@ from typing import Any, AsyncContextManager
 import aiosqlite
 from fastapi import HTTPException
 
+from app.core.ai_logger import logger
+
 
 @dataclass
 class MemoryEntry:
@@ -243,7 +245,7 @@ async def main():
         # Initialize and test
         await server.initialize_pool()
         health = await server.health_check()
-        print(f"Server health: {health}")
+        logger.info(f"Server health: {health}")
 
         # Example memory operation
         entry = MemoryEntry(
@@ -254,11 +256,11 @@ async def main():
         )
 
         result = await server.add_to_memory_enhanced(entry)
-        print(f"Memory operation: {result}")
+        logger.info(f"Memory operation: {result}")
 
         # Get metrics
         metrics = await server.get_metrics()
-        print(f"Server metrics: {metrics}")
+        logger.info(f"Server metrics: {metrics}")
 
     finally:
         await server.close()

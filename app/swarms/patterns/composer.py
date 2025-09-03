@@ -7,17 +7,15 @@ import logging
 from dataclasses import dataclass
 from typing import Any
 
-from . import (
-    AdaptiveParametersPattern,
-    AdversarialDebatePattern,
-    ConsensusPattern,
-    DynamicRolesPattern,
-    KnowledgeTransferPattern,
-    QualityGatesPattern,
-    SafetyBoundariesPattern,
-    StrategyArchivePattern,
-)
 from .base import SwarmPattern
+from .adaptive_parameters import AdaptiveParametersPattern
+from .adversarial_debate import AdversarialDebatePattern
+from .consensus import ConsensusPattern
+from .dynamic_roles import DynamicRolesPattern
+from .knowledge_transfer import KnowledgeTransferPattern
+from .quality_gates import QualityGatesPattern
+from .safety_boundaries import SafetyBoundariesPattern
+from .strategy_archive import StrategyArchivePattern
 
 logger = logging.getLogger(__name__)
 

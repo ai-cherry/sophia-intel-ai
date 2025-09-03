@@ -14,7 +14,7 @@ from app.orchestration.unified_facade import (
     SwarmType,
     UnifiedOrchestratorFacade,
 )
-from app.swarms.patterns.performance_monitoring import performance_monitoring
+# from app.swarms.patterns.performance_monitoring import performance_monitoring  # Module not yet implemented
 from app.swarms.swarm_optimizer import SwarmOptimizer
 
 logger = logging.getLogger(__name__)

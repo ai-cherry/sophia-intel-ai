@@ -10,7 +10,7 @@ from dataclasses import asdict, dataclass
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional, Union
 
 from celery import Celery, Task
 from celery.result import AsyncResult
@@ -73,9 +73,9 @@ class IndexingTask:
     total_files: int = 0
     indexed_files: int = 0
     failed_files: int = 0
-    start_time: datetime | None = None
-    end_time: datetime | None = None
-    error_message: str | None = None
+    start_time: Optional[datetime] = None
+    end_time: Optional[datetime] = None
+    error_message: Optional[str] = None
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
@@ -378,7 +378,7 @@ def is_file_indexed(file_path: str) -> bool:
     # This would query the database to see if this file hash exists
     return False  # Simplified for now
 
-def read_file_content(file_path: str) -> str | None:
+def read_file_content(file_path: str) -> Optional[str]:
     """Read file content safely."""
     try:
         path = Path(file_path)

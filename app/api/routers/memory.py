@@ -4,7 +4,7 @@ Memory API Router - Provides memory operations across vector stores
 import logging
 import uuid
 from datetime import datetime
-from typing import Any
+from typing import Any, Optional, Union
 
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
@@ -24,9 +24,9 @@ class MemorySearchRequest(BaseModel):
     """Request model for memory search"""
     query: str = Field(..., description="Search query")
     top_k: int = Field(default=10, ge=1, le=100, description="Number of results")
-    filters: dict[str, Any] | None = Field(default=None, description="Filter criteria")
+    filters: Optional[dict[str, Any]] = Field(default=None, description="Filter criteria")
     similarity_threshold: float = Field(default=0.7, ge=0.0, le=1.0, description="Similarity threshold")
-    knowledge_types: list[str] | None = Field(default=None, description="Knowledge node types to search")
+    knowledge_types: Optional[list[str]] = Field(default=None, description="Knowledge node types to search")
     use_rag: bool = Field(default=True, description="Use RAG pipeline for enhanced search")
 
 class MemoryWriteRequest(BaseModel):
@@ -35,7 +35,7 @@ class MemoryWriteRequest(BaseModel):
     metadata: dict[str, Any] = Field(default={}, description="Associated metadata")
     category: str = Field(default="general", description="Memory category")
     tags: list[str] = Field(default=[], description="Tags for organization")
-    ttl: int | None = Field(default=None, description="Time-to-live in seconds")
+    ttl: Optional[int] = Field(default=None, description="Time-to-live in seconds")
 
 class MemoryEntry(BaseModel):
     """Model for a memory entry"""
@@ -45,8 +45,8 @@ class MemoryEntry(BaseModel):
     category: str
     tags: list[str]
     created_at: datetime
-    updated_at: datetime | None = None
-    similarity_score: float | None = None
+    updated_at: Optional[datetime] = None
+    similarity_score: Optional[float] = None
 
 class MemoryManager:
     """Manages memory operations with RAG integration"""
@@ -215,7 +215,7 @@ class MemoryManager:
             logger.error(f"Memory deletion failed: {e}")
             raise
 
-    async def get(self, memory_id: str) -> MemoryEntry | None:
+    async def get(self, memory_id: str) -> Optional[MemoryEntry]:
         """Get a specific memory entry"""
         # Check local storage first
         if memory_id in self.entries:
@@ -569,8 +569,8 @@ async def consolidate_memories(
 @router.post("/context-search")
 async def context_aware_search(
     query: str,
-    context: str | None = None,
-    conversation_history: list[str] | None = None,
+    context: Optional[str] = None,
+    conversation_history: Optional[list[str]] = None,
     top_k: int = Query(default=10, ge=1, le=50)
 ):
     """
@@ -645,7 +645,7 @@ async def context_aware_search(
 
 @router.get("/knowledge-graph")
 async def get_knowledge_graph(
-    center_id: str | None = None,
+    center_id: Optional[str] = None,
     max_depth: int = Query(default=2, ge=1, le=4),
     min_similarity: float = Query(default=0.6, ge=0.1, le=1.0)
 ):

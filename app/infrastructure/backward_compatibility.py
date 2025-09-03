@@ -7,7 +7,7 @@ import logging
 from collections.abc import Callable
 from datetime import datetime
 from functools import wraps
-from typing import Any
+from typing import Any, Optional, Union
 
 from app.api.contracts import ChatRequestV1, ChatRequestV2, ChatResponseV1, ChatResponseV2
 
@@ -294,7 +294,7 @@ def backward_compatible(version: str = "v2"):
         return wrapper
     return decorator
 
-def deprecated(message: str, sunset_date: str | None = None):
+def deprecated(message: str, sunset_date: Optional[str] = None):
     """
     Mark an endpoint or function as deprecated
     """
@@ -323,7 +323,7 @@ class ClientVersionDetector:
     """
 
     @staticmethod
-    def detect_from_headers(headers: dict[str, str]) -> str | None:
+    def detect_from_headers(headers: dict[str, str]) -> Optional[str]:
         """Detect version from HTTP headers"""
         # Check API-Version header
         if "API-Version" in headers:
@@ -339,7 +339,7 @@ class ClientVersionDetector:
         return None
 
     @staticmethod
-    def detect_from_path(path: str) -> str | None:
+    def detect_from_path(path: str) -> Optional[str]:
         """Detect version from URL path"""
         if "/v1/" in path:
             return "v1"
@@ -348,7 +348,7 @@ class ClientVersionDetector:
         return None
 
     @staticmethod
-    def detect_from_query(query_params: dict[str, str]) -> str | None:
+    def detect_from_query(query_params: dict[str, str]) -> Optional[str]:
         """Detect version from query parameters"""
         return query_params.get("api_version")
 

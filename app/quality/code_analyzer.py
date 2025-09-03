@@ -1,7 +1,7 @@
 import ast
 import logging
 import os
-from typing import Any
+from typing import Any, Union
 
 import numpy as np
 import radon.complexity as radon_cc
@@ -126,7 +126,7 @@ class CodeQualityAnalyzer:
                     })
 
                 # Magic number smell
-                if re.search(r'\b\d+\b', line) and not re.search(r'\b((2|3|4|5)\d)\b', line):
+                if re.search(r'\b\d+\b', line) and not re.search(r'\b((2|3|Union[4, 5])\d)\b', line):
                     smells.append({
                         "smell_type": "MagicNumber",
                         "line_number": i + 1,

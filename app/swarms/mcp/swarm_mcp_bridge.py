@@ -9,7 +9,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, Optional, Union
 
 import websockets
 from websockets.exceptions import ConnectionClosed
@@ -45,7 +45,7 @@ class MCPMessage:
     content: Any            # Message payload
     metadata: dict[str, Any] = field(default_factory=dict)
     timestamp: str = field(default_factory=lambda: datetime.now().isoformat())
-    correlation_id: str | None = None
+    correlation_id: Optional[str] = None
 
     def to_json(self) -> str:
         """Convert message to JSON for transmission"""
@@ -73,7 +73,7 @@ class SwarmMCPBridge:
         self.ws_url = "ws://localhost:8000/ws/mcp"
         self.active_swarms: dict[str, SwarmBase] = {}
         self.message_bus = MessageBus()
-        self.websocket: websockets.WebSocketClientProtocol | None = None
+        self.websocket: websockets.Optional[WebSocketClientProtocol] = None
         self.participants: set[str] = set()
         self.coordination_tasks: dict[str, asyncio.Task] = {}
         self._running = False

@@ -2,6 +2,7 @@
 Structured Logging with Correlation IDs
 Provides JSON-formatted logging with distributed tracing support
 """
+from typing import Optional
 
 import json
 import logging
@@ -97,9 +98,9 @@ class StructuredLogger:
 
     def with_context(
         self,
-        correlation_id: str | None = None,
-        request_id: str | None = None,
-        session_id: str | None = None
+        correlation_id: Optional[str] = None,
+        request_id: Optional[str] = None,
+        session_id: Optional[str] = None
     ):
         """
         Set logging context

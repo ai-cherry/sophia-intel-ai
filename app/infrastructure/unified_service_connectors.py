@@ -10,7 +10,7 @@ import time
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, Optional
 
 import httpx
 
@@ -36,7 +36,7 @@ class ServiceStatus:
     latency_ms: float
     last_check: str
     details: dict[str, Any]
-    error: str | None = None
+    error: Optional[str] = None
 
 
 class BaseServiceClient:
@@ -276,7 +276,7 @@ class NeonAdminClient(BaseServiceClient):
             logger.error(f"Failed to get Neon project info: {e}")
             return {}
 
-    async def create_branch(self, branch_name: str, parent_id: str | None = None) -> dict[str, Any]:
+    async def create_branch(self, branch_name: str, parent_id: Optional[str] = None) -> dict[str, Any]:
         """Create database branch"""
         start = time.perf_counter()
 
@@ -329,7 +329,7 @@ class GitHubClient(BaseServiceClient):
         repo: str,
         workflow_id: str,
         ref: str = "main",
-        inputs: dict | None = None
+        inputs: Optional[dict] = None
     ) -> bool:
         """Trigger GitHub Actions workflow"""
         start = time.perf_counter()

@@ -4,7 +4,7 @@ Provides HTTP and WebSocket endpoints for MCP communication
 """
 
 import logging
-from typing import Any
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, WebSocket
 from pydantic import BaseModel
@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 class MCPMessageRequest(BaseModel):
     server: str
     method: str
-    params: dict[str, Any] | None = None
+    params: Optional[dict[str, Any]] = None
     expect_response: bool = True
     timeout: float = 30.0
 
@@ -40,7 +40,7 @@ class ReconnectionConfigModel(BaseModel):
 class MCPServerConfig(BaseModel):
     name: str
     url: str
-    reconnect_config: ReconnectionConfigModel | None = None
+    reconnect_config: Optional[ReconnectionConfigModel] = None
 
 
 async def get_ws_manager():

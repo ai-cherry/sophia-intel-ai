@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from typing import Any
+from typing import Any, Optional, Union
 
 import neo4j
 
@@ -27,7 +27,7 @@ class WorkingMemory:
         })
         return await store_memory(content, metadata)
 
-    async def get(self, key: str) -> dict | None:
+    async def get(self, key: str) -> Optional[dict]:
         """Get from working memory (by key namespace)"""
         namespace = f"wm:{self.session_id}:{key}"
         results = await search_memory("", {"namespace": namespace})

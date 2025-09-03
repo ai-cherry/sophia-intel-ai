@@ -9,7 +9,7 @@ import logging.config
 import traceback
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 from app.core.config import settings
 
@@ -264,7 +264,7 @@ class LoggerFactory:
     _configured = False
 
     @classmethod
-    def configure(cls, config: dict[str, Any] | None = None) -> None:
+    def configure(cls, config: Optional[dict[str, Any]] = None) -> None:
         """Configure logging system."""
         if cls._configured:
             return

@@ -7,7 +7,7 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any
+from typing import Any, Optional, Union
 
 import httpx
 
@@ -149,7 +149,7 @@ class OpenRouterLatest:
 
         # Model cache
         self.model_cache: dict[str, ModelInfo] = {}
-        self.cache_timestamp: datetime | None = None
+        self.cache_timestamp: Optional[datetime] = None
         self.cache_ttl = timedelta(hours=6)
 
         # Health monitoring
@@ -230,7 +230,7 @@ class OpenRouterLatest:
                             tier: ModelTier = ModelTier.BALANCED,
                             require_vision: bool = False,
                             require_functions: bool = False,
-                            max_cost_per_1m: float | None = None) -> str:
+                            max_cost_per_1m: Optional[float] = None) -> str:
         """
         Get the best available model for the task and requirements.
         
@@ -329,7 +329,7 @@ class OpenRouterLatest:
 
     async def create_completion_with_fallback(self,
                                              messages: list[dict[str, str]],
-                                             model: str | None = None,
+                                             model: Optional[str] = None,
                                              task: TaskType = TaskType.GENERAL,
                                              tier: ModelTier = ModelTier.BALANCED,
                                              **kwargs) -> dict[str, Any]:
@@ -383,13 +383,13 @@ class OpenRouterLatest:
         # All models failed
         raise Exception(f"All models failed. Last error: {last_error}")
 
-    def get_model_info(self, model_id: str) -> ModelInfo | None:
+    def get_model_info(self, model_id: str) -> Optional[ModelInfo]:
         """Get cached information about a specific model."""
         return self.model_cache.get(model_id)
 
     def get_available_models(self,
-                           tier: ModelTier | None = None,
-                           max_cost: float | None = None,
+                           tier: Optional[ModelTier] = None,
+                           max_cost: Optional[float] = None,
                            require_vision: bool = False) -> list[str]:
         """Get list of available models matching criteria."""
         models = []

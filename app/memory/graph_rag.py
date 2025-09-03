@@ -12,7 +12,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional, Union
 
 import networkx as nx
 
@@ -61,7 +61,7 @@ class Entity:
     type: EntityType
     name: str
     properties: dict[str, Any]
-    embeddings: list[float] | None = None
+    embeddings: Optional[list[float]] = None
 
     def __hash__(self):
         return hash(self.id)
@@ -440,7 +440,7 @@ class KnowledgeGraph:
                 ))
             conn.commit()
 
-    def get_entity(self, entity_id: str) -> Entity | None:
+    def get_entity(self, entity_id: str) -> Optional[Entity]:
         """Get entity by ID."""
         if entity_id in self.graph:
             return self.graph.nodes[entity_id].get('entity')
@@ -448,8 +448,8 @@ class KnowledgeGraph:
 
     def find_entities(
         self,
-        entity_type: EntityType | None = None,
-        name_pattern: str | None = None
+        entity_type: Optional[EntityType] = None,
+        name_pattern: Optional[str] = None
     ) -> list[Entity]:
         """Find entities matching criteria."""
         results = []
@@ -474,7 +474,7 @@ class KnowledgeGraph:
     def get_neighbors(
         self,
         entity_id: str,
-        relation_type: RelationType | None = None,
+        relation_type: Optional[RelationType] = None,
         direction: str = "both"
     ) -> list[tuple[Entity, RelationType]]:
         """
@@ -525,7 +525,7 @@ class KnowledgeGraph:
         self,
         start_entity_id: str,
         max_hops: int = 3,
-        relation_types: list[RelationType] | None = None
+        relation_types: Optional[list[RelationType]] = None
     ) -> dict[str, Any]:
         """
         Perform multi-hop traversal from starting entity.

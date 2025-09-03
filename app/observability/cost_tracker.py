@@ -11,7 +11,7 @@ from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +29,7 @@ class CostEvent:
     """A single cost event record."""
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
     timestamp: datetime = field(default_factory=datetime.now)
-    trace_id: str | None = None
+    trace_id: Optional[str] = None
     event_type: CostEventType = CostEventType.LLM_COMPLETION
 
     # Model and provider info
@@ -43,13 +43,13 @@ class CostEvent:
 
     # Cost information
     cost_usd: float = 0.0
-    cost_per_1k_prompt: float | None = None
-    cost_per_1k_completion: float | None = None
+    cost_per_1k_prompt: Optional[float] = None
+    cost_per_1k_completion: Optional[float] = None
 
     # Context information
-    session_id: str | None = None
-    user_id: str | None = None
-    endpoint: str | None = None
+    session_id: Optional[str] = None
+    user_id: Optional[str] = None
+    endpoint: Optional[str] = None
     request_size_bytes: int = 0
     response_size_bytes: int = 0
 
@@ -251,11 +251,11 @@ class CostTracker:
         model: str,
         prompt_tokens: int,
         completion_tokens: int,
-        trace_id: str | None = None,
-        session_id: str | None = None,
+        trace_id: Optional[str] = None,
+        session_id: Optional[str] = None,
         provider: str = "openrouter",
-        endpoint: str | None = None,
-        metadata: dict[str, Any] | None = None
+        endpoint: Optional[str] = None,
+        metadata: Optional[dict[str, Any]] = None
     ) -> CostEvent:
         """Record an LLM completion cost event."""
         # Calculate cost
@@ -287,11 +287,11 @@ class CostTracker:
         self,
         model: str,
         tokens: int,
-        trace_id: str | None = None,
-        session_id: str | None = None,
+        trace_id: Optional[str] = None,
+        session_id: Optional[str] = None,
         provider: str = "together-ai",
-        endpoint: str | None = None,
-        metadata: dict[str, Any] | None = None
+        endpoint: Optional[str] = None,
+        metadata: Optional[dict[str, Any]] = None
     ) -> CostEvent:
         """Record an embedding cost event."""
         # Calculate cost (embeddings only have input tokens)
@@ -321,9 +321,9 @@ class CostTracker:
 
     def get_summary(
         self,
-        start_time: datetime | None = None,
-        end_time: datetime | None = None,
-        session_id: str | None = None
+        start_time: Optional[datetime] = None,
+        end_time: Optional[datetime] = None,
+        session_id: Optional[str] = None
     ) -> CostSummary:
         """Get cost summary for a time period."""
         if start_time is None:
@@ -462,7 +462,7 @@ class CostTracker:
 
 
 # Global singleton instance
-_cost_tracker: CostTracker | None = None
+_cost_tracker: Optional[CostTracker] = None
 
 
 def get_cost_tracker() -> CostTracker:

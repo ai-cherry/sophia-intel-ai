@@ -6,7 +6,7 @@ Handles JSON extraction, validation, and fallback strategies.
 import json
 import logging
 import re
-from typing import Any
+from typing import Any, Optional, Union
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +15,7 @@ class ResponseHandler:
     """Robust handler for model responses with multiple extraction strategies."""
 
     @staticmethod
-    def extract_json(text: str) -> dict[str, Any] | None:
+    def extract_json(text: str) -> Optional[dict[str, Any]]:
         """
         Extract JSON from various text formats.
         
@@ -55,7 +55,7 @@ class ResponseHandler:
         return ResponseHandler._build_fallback_structure(text)
 
     @staticmethod
-    def _extract_from_markdown(text: str) -> dict[str, Any] | None:
+    def _extract_from_markdown(text: str) -> Optional[dict[str, Any]]:
         """Extract JSON from markdown code blocks."""
         patterns = [
             r'```json\s*(.*?)\s*```',
@@ -74,7 +74,7 @@ class ResponseHandler:
         return None
 
     @staticmethod
-    def _extract_with_regex(text: str) -> dict[str, Any] | None:
+    def _extract_with_regex(text: str) -> Optional[dict[str, Any]]:
         """Extract JSON-like structures using regex."""
         # Look for object-like structures
         json_pattern = r'\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}'
@@ -92,7 +92,7 @@ class ResponseHandler:
         return None
 
     @staticmethod
-    def _clean_and_parse(text: str) -> dict[str, Any] | None:
+    def _clean_and_parse(text: str) -> Optional[dict[str, Any]]:
         """Clean common JSON issues and retry parsing."""
         # Remove common prefixes/suffixes
         cleaners = [
@@ -171,9 +171,9 @@ class ResponseHandler:
 
     @staticmethod
     def ensure_structure(
-        response: str | dict,
+        response: Union[str, dict],
         template: dict[str, Any],
-        required_fields: list[str] | None = None
+        required_fields: Optional[list[str]] = None
     ) -> dict[str, Any]:
         """
         Ensure response matches expected structure.
@@ -332,7 +332,7 @@ class RetryHandler:
         original_prompt: str,
         expected_structure: dict[str, Any],
         max_retries: int = 3
-    ) -> dict[str, Any] | None:
+    ) -> Optional[dict[str, Any]]:
         """
         Retry model call with increasingly specific prompts.
         

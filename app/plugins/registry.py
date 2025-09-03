@@ -9,7 +9,7 @@ import inspect
 import logging
 from pathlib import Path
 from threading import Lock
-from typing import Any
+from typing import Any, Optional, Union
 
 from app.plugins.base import (
     IPluginValidator,
@@ -213,7 +213,7 @@ class PluginRegistry:
     async def initialize_plugin(
         self,
         name: str,
-        config: dict[str, Any] | None = None
+        config: Optional[dict[str, Any]] = None
     ) -> bool:
         """Initialize a plugin.
         
@@ -254,7 +254,7 @@ class PluginRegistry:
 
     async def initialize_all(
         self,
-        config: dict[str, dict[str, Any]] | None = None
+        config: Optional[dict[str, dict[str, Any]]] = None
     ) -> int:
         """Initialize all registered plugins.
         
@@ -273,7 +273,7 @@ class PluginRegistry:
 
         return initialized
 
-    def get_plugin(self, name: str) -> Plugin | None:
+    def get_plugin(self, name: str) -> Optional[Plugin]:
         """Get a plugin by name.
         
         Args:
@@ -431,7 +431,7 @@ registry = PluginRegistry()
 # ============================================
 
 async def discover_and_initialize_plugins(
-    config: dict[str, dict[str, Any]] | None = None
+    config: Optional[dict[str, dict[str, Any]]] = None
 ) -> dict[str, Any]:
     """Discover and initialize all plugins.
     
@@ -450,7 +450,7 @@ async def discover_and_initialize_plugins(
         "plugins": registry.list_plugins()
     }
 
-def get_plugin(name: str) -> Plugin | None:
+def get_plugin(name: str) -> Optional[Plugin]:
     """Get a plugin by name.
     
     Args:

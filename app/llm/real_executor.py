@@ -7,7 +7,7 @@ import logging
 import time
 from collections.abc import AsyncGenerator
 from datetime import datetime
-from typing import Any
+from typing import Any, Optional, Union
 
 from app.api.advanced_gateway_2025 import AdvancedAIGateway2025, TaskType  # Corrected import
 from app.elite_portkey_config import EliteAgentConfig  # For model configs
@@ -62,11 +62,11 @@ class RealLLMExecutor:
         prompt: str,
         model_pool: str = "balanced",
         stream: bool = False,
-        role: Role | None = None,
-        context: dict[str, Any] | None = None,
-        task_type: TaskType | None = None,
-        trace_id: str | None = None,
-        session_id: str | None = None
+        role: Optional[Role] = None,
+        context: Optional[dict[str, Any]] = None,
+        task_type: Optional[TaskType] = None,
+        trace_id: Optional[str] = None,
+        session_id: Optional[str] = None
     ) -> LLMResponse:
         """
         Execute real LLM call with fallback chain and proper model selection.
@@ -170,7 +170,7 @@ class RealLLMExecutor:
         messages: list[dict[str, str]],
         model_name: str, # Changed from 'model' to 'model_name'
         temperature: float,
-        role: Role | None
+        role: Optional[Role]
     ) -> AsyncGenerator[dict[str, Any], None]: # Changed return type to AsyncGenerator
         """Execute streaming LLM call using Portkey gateway."""
         try:
@@ -222,7 +222,7 @@ class RealLLMExecutor:
         messages: list[dict[str, str]],
         model_name: str, # Changed from 'model' to 'model_name'
         temperature: float,
-        role: Role | None,
+        role: Optional[Role],
         task_type: TaskType = TaskType.GENERAL
     ) -> LLMResponse:
         """Execute non-streaming LLM call and return standardized response."""
@@ -273,7 +273,7 @@ class RealLLMExecutor:
                 error_code="LLM_EXECUTION_ERROR"
             )
 
-    def _select_model(self, pool: str, role: Role | None) -> str:
+    def _select_model(self, pool: str, role: Optional[Role]) -> str:
         """Select appropriate model based on pool and role from EliteAgentConfig."""
         role_key = role.value if role else "generator"
 
@@ -287,7 +287,7 @@ class RealLLMExecutor:
         default_model = EliteAgentConfig.MODELS["generator"]
         return default_model
 
-    def _build_messages(self, prompt: str, context: dict[str, Any] | None = None) -> list[dict[str, str]]:
+    def _build_messages(self, prompt: str, context: Optional[dict[str, Any]] = None) -> list[dict[str, str]]:
         """Build messages array for the LLM."""
         messages = []
 
@@ -311,12 +311,12 @@ class RealLLMExecutor:
 
         return messages
 
-    def _get_temperature_for_role(self, role: Role | None) -> float:
+    def _get_temperature_for_role(self, role: Optional[Role]) -> float:
         """Get appropriate temperature for role from EliteAgentConfig."""
         role_key = role.value if role else "generator"
         return EliteAgentConfig.TEMPERATURES.get(role_key, 0.7)
 
-    def _get_task_type_from_role(self, role: Role | None) -> TaskType:
+    def _get_task_type_from_role(self, role: Optional[Role]) -> TaskType:
         """Determine task type from role."""
         if not role:
             return TaskType.GENERAL
@@ -335,7 +335,7 @@ class RealLLMExecutor:
 
         return role_task_mapping.get(role, TaskType.GENERAL)
 
-    def _get_fallback_chain(self, model_pool: str, role: Role | None) -> list[str]:
+    def _get_fallback_chain(self, model_pool: str, role: Optional[Role]) -> list[str]:
         """Get fallback model chain based on pool and role."""
         # Define fallback chains for different pools
         fallback_chains = {
@@ -360,7 +360,7 @@ class RealLLMExecutor:
 
         return chain[:3]  # Limit to 3 attempts
 
-    async def _check_cache(self, prompt: str, model_pool: str) -> LLMResponse | None:
+    async def _check_cache(self, prompt: str, model_pool: str) -> Optional[LLMResponse]:
         """Check cache for previous response to similar prompt."""
         # TODO: Implement semantic cache lookup
         # For now, return None (no cache hit)
@@ -371,7 +371,7 @@ class RealLLMExecutor:
         task: str,
         role: Role = Role.GENERATOR,
         pool: str = "balanced",
-        context: dict[str, Any] | None = None
+        context: Optional[dict[str, Any]] = None
     ) -> AsyncGenerator[dict[str, Any], None]:
         """
         Generate code with streaming response.
@@ -406,7 +406,7 @@ class RealLLMExecutor:
                 "error": str(e)
             }
 
-    def _build_coding_prompt(self, task: str, role: Role, context: dict[str, Any] | None) -> str:
+    def _build_coding_prompt(self, task: str, role: Role, context: Optional[dict[str, Any]]) -> str:
         """Build role-specific coding prompt."""
         base_prompts = {
             Role.PLANNER: f"""You are a technical planner. Analyze this coding task and create a structured plan:

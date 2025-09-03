@@ -6,7 +6,7 @@ Unified gateway for all LLM and embedding providers
 import logging
 import os
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Optional, Union
 
 from pydantic import BaseModel, Field
 
@@ -24,8 +24,8 @@ class VirtualKeyConfig:
     provider: str
     key_alias: str
     is_active: bool = True
-    rate_limit: int | None = None
-    monthly_quota: float | None = None
+    rate_limit: Optional[int] = None
+    monthly_quota: Optional[float] = None
     metadata: dict[str, Any] = None
 
 class PortkeyVirtualKeyManager:
@@ -83,7 +83,7 @@ class PortkeyVirtualKeyManager:
 
         return keys
 
-    def get_virtual_key(self, provider: str) -> str | None:
+    def get_virtual_key(self, provider: str) -> Optional[str]:
         """Get virtual key for provider"""
         if config := self.virtual_keys.get(provider):
             if config.is_active:
@@ -159,7 +159,7 @@ class PortkeyConfigBuilder:
         provider: str,
         virtual_key: str,
         mode: str = "single",
-        fallback_providers: list[str] | None = None
+        fallback_providers: Optional[list[str]] = None
     ) -> dict[str, Any]:
         """
         Build Portkey configuration for LLM calls
@@ -207,7 +207,7 @@ class PortkeyConfigBuilder:
 class PortkeyRequest(BaseModel):
     """Standardized Portkey request format"""
     model: str
-    input: list[str] | str
+    input: Union[list[str], str]
     portkey_config: dict[str, Any]
     metadata: dict[str, Any] = Field(default_factory=dict)
     options: dict[str, Any] = Field(default_factory=dict)
@@ -232,7 +232,7 @@ class PortkeyGateway:
     Implements Agno best practices for production use
     """
 
-    def __init__(self, api_key: str | None = None):
+    def __init__(self, api_key: Optional[str] = None):
         self.api_key = api_key or os.getenv("PORTKEY_API_KEY")
         self.base_url = "https://api.portkey.ai/v1"
         self.key_manager = PortkeyVirtualKeyManager()
@@ -351,7 +351,7 @@ class PortkeyGateway:
         provider: str = "openrouter",
         max_tokens: int = 1000,
         temperature: float = 0.7,
-        fallback_providers: list[str] | None = None
+        fallback_providers: Optional[list[str]] = None
     ) -> PortkeyResponse:
         """
         Create LLM completion through Portkey gateway

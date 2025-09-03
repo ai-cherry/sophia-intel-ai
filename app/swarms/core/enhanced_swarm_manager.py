@@ -1,7 +1,7 @@
 import asyncio
 import logging
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Optional, Union
 
 from app.core.ai_logger import logger
 from app.core.circuit_breaker import CircuitBreaker
@@ -158,14 +158,14 @@ class EnhancedSwarmManager:
 
         return result
 
-    def _find_available_swarm(self, excluded_swarm: str) -> str | None:
+    def _find_available_swarm(self, excluded_swarm: str) -> Optional[str]:
         """Find a swarm that's healthy and not the excluded one"""
         for name, health in self.health_status.items():
             if health and name != excluded_swarm:
                 return name
         return None
 
-    async def get_swarm_metrics(self, swarm_name: str | None = None) -> dict[str, Any]:
+    async def get_swarm_metrics(self, swarm_name: Optional[str] = None) -> dict[str, Any]:
         """Collect comprehensive swarm metrics for monitoring"""
         results = {}
 

@@ -8,7 +8,7 @@ import json
 import logging
 from dataclasses import asdict, dataclass
 from datetime import datetime
-from typing import Any
+from typing import Any, Optional, Union
 
 import aiohttp
 
@@ -27,9 +27,9 @@ class NLInteraction:
     entities: dict[str, Any]
     confidence: float
     response: str
-    workflow_id: str | None = None
-    execution_result: dict[str, Any] | None = None
-    metadata: dict[str, Any] | None = None
+    workflow_id: Optional[str] = None
+    execution_result: Optional[dict[str, Any]] = None
+    metadata: Optional[dict[str, Any]] = None
 
 
 class NLMemoryConnector:
@@ -405,7 +405,7 @@ class NLMemoryConnector:
         self,
         session_id: str,
         format: str = "json"
-    ) -> str | None:
+    ) -> Optional[str]:
         """
         Export session history in specified format
         

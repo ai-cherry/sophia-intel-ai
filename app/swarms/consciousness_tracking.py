@@ -86,7 +86,7 @@ class EmergenceEvent:
     context: dict[str, Any]
     significance_score: float = 0.0
     validation_score: float = 0.0
-    pattern_data: dict[str, Any] | None = None
+    pattern_data: Optional[dict[str, Any]] = None
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for storage."""
@@ -195,7 +195,7 @@ class ConsciousnessTracker:
     - Development tracking over time
     """
 
-    def __init__(self, swarm_type: str, swarm_id: str, memory_client: SwarmMemoryClient | None = None):
+    def __init__(self, swarm_type: str, swarm_id: str, memory_client: Optional[SwarmMemoryClient] = None):
         """
         Initialize consciousness tracker.
         
@@ -263,7 +263,7 @@ class ConsciousnessTracker:
     # Core Consciousness Measurement
     # ============================================
 
-    async def measure_consciousness(self, context: dict[str, Any] | None = None) -> dict[ConsciousnessType, ConsciousnessMeasurement]:
+    async def measure_consciousness(self, context: Optional[dict[str, Any]] = None) -> dict[ConsciousnessType, ConsciousnessMeasurement]:
         """
         Perform comprehensive 5-dimensional consciousness measurement.
         

@@ -12,7 +12,7 @@ import os
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any
+from typing import Any, Optional
 
 import numpy as np
 from pydantic import BaseModel, Field
@@ -92,11 +92,11 @@ class PortkeyConfig(BaseModel):
 class AgnoEmbeddingRequest:
     """Request for embedding generation (renamed to avoid conflicts)"""
     texts: list[str]
-    model: EmbeddingModel | None = None
+    model: Optional[EmbeddingModel] = None
     use_case: str = "general"  # rag, search, clustering, classification
     language: str = "en"
-    max_length: int | None = None
-    instruct_prefix: str | None = None  # For instruct models
+    max_length: Optional[int] = None
+    instruct_prefix: Optional[str] = None  # For instruct models
     metadata: dict[str, Any] = field(default_factory=dict)
 
 @dataclass
@@ -186,7 +186,7 @@ class AgnoEmbeddingService:
     Integrates with Portkey gateway for Together AI and other providers
     """
 
-    def __init__(self, portkey_config: PortkeyConfig | None = None):
+    def __init__(self, portkey_config: Optional[PortkeyConfig] = None):
         """Initialize embedding service with Portkey configuration"""
         self.portkey_config = portkey_config or self._load_config_from_env()
         self._embedding_cache = {}
@@ -300,7 +300,7 @@ class AgnoEmbeddingService:
         texts: list[str],
         model: EmbeddingModel,
         model_spec: ModelSpec,
-        instruct_prefix: str | None = None
+        instruct_prefix: Optional[str] = None
     ) -> list[list[float]]:
         """Generate embeddings using Portkey gateway"""
 
@@ -545,7 +545,7 @@ class AgnoEmbeddingAgent:
     Provides embeddings as a tool for agents and swarms
     """
 
-    def __init__(self, service: AgnoEmbeddingService | None = None):
+    def __init__(self, service: Optional[AgnoEmbeddingService] = None):
         self.service = service or AgnoEmbeddingService()
         self.name = "embedding_agent"
         self.description = "Generates embeddings for text using optimal models"

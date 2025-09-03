@@ -16,7 +16,7 @@ import logging
 import math
 import os
 from datetime import datetime
-from typing import Any
+from typing import Any, Optional, Union
 
 from app.core.circuit_breaker import with_circuit_breaker
 
@@ -64,7 +64,7 @@ class UnifiedEmbeddingCoordinator:
         self.strategies = ["performance", "accuracy", "hybrid", "auto"]
 
     def _batch_by_model(
-        self, texts: list[str], langs: list[str | None] | None = None, priorities: list[str | None] | None = None
+        self, texts: list[str], langs: list[Optional[str]] | None = None, priorities: list[Optional[str]] | None = None
     ) -> dict[str, list[tuple[int, str]]]:
         """
         Partition texts into batches by the selected model using choose_model_for_chunk.
@@ -99,9 +99,9 @@ class UnifiedEmbeddingCoordinator:
     def generate_embeddings(
         self,
         texts: list[str],
-        strategy: str | None = None,
-        langs: list[str | None] | None = None,
-        priorities: list[str | None] | None = None,
+        strategy: Optional[str] = None,
+        langs: list[Optional[str]] | None = None,
+        priorities: list[Optional[str]] | None = None,
     ) -> dict[str, Any]:
         """
         Generate embeddings with a selected strategy.
@@ -176,7 +176,7 @@ class UnifiedEmbeddingCoordinator:
         # Default: auto (per-text model selection)
         batches = self._batch_by_model(texts, langs=langs, priorities=priorities)
         # Prepare output buffer
-        outputs: list[list[float] | None] = [None] * len(texts)
+        outputs: Optional[list[list[float]]] = [None] * len(texts)
 
         for model, pairs in batches.items():
             idxs = [i for i, _t in pairs]
@@ -204,7 +204,7 @@ class UnifiedEmbeddingCoordinator:
 
 
 # Singleton accessor
-_coordinator_singleton: UnifiedEmbeddingCoordinator | None = None
+_coordinator_singleton: Optional[UnifiedEmbeddingCoordinator] = None
 
 
 def get_embedding_coordinator() -> UnifiedEmbeddingCoordinator:

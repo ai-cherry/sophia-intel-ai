@@ -13,7 +13,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Any, Generic, TypeVar
+from typing import Any, Generic, Optional, TypeVar, Union
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +50,7 @@ class CallMetrics:
     timestamp: datetime
     duration: float
     success: bool
-    exception: Exception | None = None
+    exception: Optional[Exception] = None
 
 
 class CircuitBreaker(Generic[T]):
@@ -58,13 +58,13 @@ class CircuitBreaker(Generic[T]):
     Advanced circuit breaker with sliding window and multiple failure conditions
     """
 
-    def __init__(self, name: str, config: CircuitBreakerConfig | None = None):
+    def __init__(self, name: str, config: Optional[CircuitBreakerConfig] = None):
         self.name = name
         self.config = config or CircuitBreakerConfig()
         self.state = CircuitState.CLOSED
         self.failure_count = 0
         self.success_count = 0
-        self.last_failure_time: float | None = None
+        self.last_failure_time: Optional[float] = None
         self.last_state_change: datetime = datetime.now()
 
         # Sliding window for metrics
@@ -77,10 +77,14 @@ class CircuitBreaker(Generic[T]):
         self.consecutive_failures = 0
         self.consecutive_successes = 0
 
-        self._lock = asyncio.Lock()
+        self._lock = None  # Will be created when needed
 
     async def call(self, func: Callable[..., T], *args, **kwargs) -> T:
         """Execute function with circuit breaker protection"""
+        # Lazy initialization of lock
+        if self._lock is None:
+            self._lock = asyncio.Lock()
+        
         async with self._lock:
             # Check if circuit should be opened
             if self.state == CircuitState.OPEN:
@@ -117,6 +121,10 @@ class CircuitBreaker(Generic[T]):
 
     async def _on_success(self, duration: float):
         """Handle successful call"""
+        # Lazy initialization of lock
+        if self._lock is None:
+            self._lock = asyncio.Lock()
+        
         async with self._lock:
             self.total_calls += 1
             self.total_successes += 1
@@ -145,6 +153,10 @@ class CircuitBreaker(Generic[T]):
 
     async def _on_failure(self, exception: Exception, duration: float):
         """Handle failed call"""
+        # Lazy initialization of lock
+        if self._lock is None:
+            self._lock = asyncio.Lock()
+        
         async with self._lock:
             self.total_calls += 1
             self.total_failures += 1
@@ -227,11 +239,19 @@ class CircuitBreaker(Generic[T]):
 
     async def open(self):
         """Manually open the circuit"""
+        # Lazy initialization of lock
+        if self._lock is None:
+            self._lock = asyncio.Lock()
+        
         async with self._lock:
             self._open_circuit("manual open")
 
     async def close(self):
         """Manually close the circuit"""
+        # Lazy initialization of lock
+        if self._lock is None:
+            self._lock = asyncio.Lock()
+        
         async with self._lock:
             self.state = CircuitState.CLOSED
             self.failure_count = 0
@@ -242,6 +262,10 @@ class CircuitBreaker(Generic[T]):
 
     async def reset(self):
         """Reset all statistics"""
+        # Lazy initialization of lock
+        if self._lock is None:
+            self._lock = asyncio.Lock()
+        
         async with self._lock:
             self.state = CircuitState.CLOSED
             self.failure_count = 0
@@ -295,7 +319,7 @@ class CircuitBreakerManager:
     def get_or_create(
         self,
         name: str,
-        config: CircuitBreakerConfig | None = None
+        config: Optional[CircuitBreakerConfig] = None
     ) -> CircuitBreaker:
         """Get existing or create new circuit breaker"""
         if name not in self._breakers:
@@ -305,7 +329,7 @@ class CircuitBreakerManager:
             )
         return self._breakers[name]
 
-    def get(self, name: str) -> CircuitBreaker | None:
+    def get(self, name: str) -> Optional[CircuitBreaker]:
         """Get circuit breaker by name"""
         return self._breakers.get(name)
 
@@ -335,7 +359,7 @@ _circuit_manager = CircuitBreakerManager()
 
 def get_circuit_breaker(
     name: str,
-    config: CircuitBreakerConfig | None = None
+    config: Optional[CircuitBreakerConfig] = None
 ) -> CircuitBreaker:
     """Get or create a circuit breaker"""
     return _circuit_manager.get_or_create(name, config)
@@ -344,7 +368,7 @@ def get_circuit_breaker(
 # Decorator for adding circuit breaker to functions
 def with_circuit_breaker(
     name: str,
-    config: CircuitBreakerConfig | None = None
+    config: Optional[CircuitBreakerConfig] = None
 ):
     """Decorator to add circuit breaker protection to a function"""
     def decorator(func):

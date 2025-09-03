@@ -2,6 +2,7 @@
 Embedding router with caching for dual-tier embeddings.
 Routes to appropriate model based on chunk characteristics.
 """
+from typing import Optional, Union
 
 from __future__ import annotations
 
@@ -54,7 +55,7 @@ def _sha(data: str) -> str:
     """Generate SHA-1 hash of text."""
     return hashlib.sha1(data.encode("utf-8")).hexdigest()
 
-def _cache_get(conn, sha: str, model: str) -> list[float] | None:
+def _cache_get(conn, sha: str, model: str) -> Optional[list[float]]:
     """Retrieve cached embedding if exists."""
     cur = conn.execute(
         "SELECT vec FROM cache WHERE sha=? AND model=?",
@@ -88,8 +89,8 @@ def embed_batch(texts: list[str], model: str) -> list[list[float]]:
 
 def choose_model_for_chunk(
     text: str,
-    lang: str | None = None,
-    priority: str | None = None
+    lang: Optional[str] = None,
+    priority: Optional[str] = None
 ) -> tuple[str, int]:
     """
     Choose appropriate embedding model based on chunk characteristics.

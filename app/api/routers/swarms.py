@@ -7,7 +7,7 @@ allowing clients to configure and execute swarms with full control over settings
 
 import json
 import logging
-from typing import Any
+from typing import Any, Optional
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Query
 from fastapi.responses import StreamingResponse
@@ -218,8 +218,8 @@ async def validate_configuration(config: SwarmConfiguration) -> dict[str, Any]:
 @with_circuit_breaker("database")
 async def get_swarm_history(
     limit: int = Query(10, ge=1, le=100),
-    session_id: str | None = None,
-    team_id: str | None = None
+    session_id: Optional[str] = None,
+    team_id: Optional[str] = None
 ) -> list[dict[str, Any]]:
     """
     Get history of swarm executions from memory.

@@ -11,7 +11,7 @@ import os
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any
+from typing import Any, Optional, Union
 
 import aiohttp
 from fastapi import HTTPException
@@ -103,7 +103,7 @@ class PortkeyUnifiedRouter:
         self.portkey_clients: dict[str, Any] = {}
 
         # Initialize session
-        self.session: aiohttp.ClientSession | None = None
+        self.session: aiohttp.Optional[ClientSession] = None
 
     async def initialize(self):
         """Initialize routing system"""
@@ -235,7 +235,7 @@ class PortkeyUnifiedRouter:
         agent_role: str,
         task_complexity: float,
         execution_strategy: ExecutionStrategy,
-        route_config: RouteConfig | None = None
+        route_config: Optional[RouteConfig] = None
     ) -> dict[str, Any]:
         """
         Select optimal model based on role, complexity, and strategy
@@ -371,7 +371,7 @@ class PortkeyUnifiedRouter:
         agent_role: str,
         task_complexity: float = 0.5,
         execution_strategy: ExecutionStrategy = ExecutionStrategy.BALANCED,
-        route_config: RouteConfig | None = None,
+        route_config: Optional[RouteConfig] = None,
         **kwargs
     ) -> dict[str, Any]:
         """

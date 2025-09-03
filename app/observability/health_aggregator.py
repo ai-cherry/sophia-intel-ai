@@ -10,7 +10,7 @@ import time
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, Optional
 
 import aiohttp
 
@@ -30,10 +30,10 @@ class ServiceHealth:
     """Health status for a single service."""
     name: str
     status: HealthStatus
-    url: str | None = None
-    response_time_ms: float | None = None
-    last_checked: datetime | None = None
-    error_message: str | None = None
+    url: Optional[str] = None
+    response_time_ms: Optional[float] = None
+    last_checked: Optional[datetime] = None
+    error_message: Optional[str] = None
     metadata: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -85,10 +85,10 @@ class HealthAggregator:
 
     def __init__(self):
         self.timeout_seconds = 5.0
-        self._last_check: AggregatedHealth | None = None
+        self._last_check: Optional[AggregatedHealth] = None
         self._check_interval = 30  # seconds
         self._running = False
-        self._background_task: asyncio.Task | None = None
+        self._background_task: Optional[asyncio.Task] = None
 
         # Define services to monitor
         self.services = [
@@ -368,7 +368,7 @@ class HealthAggregator:
 
         return aggregated
 
-    def get_last_health_check(self) -> AggregatedHealth | None:
+    def get_last_health_check(self) -> Optional[AggregatedHealth]:
         """Get the most recent health check results."""
         return self._last_check
 
@@ -400,7 +400,7 @@ class HealthAggregator:
 
 
 # Global singleton instance
-_health_aggregator: HealthAggregator | None = None
+_health_aggregator: Optional[HealthAggregator] = None
 
 
 def get_health_aggregator() -> HealthAggregator:

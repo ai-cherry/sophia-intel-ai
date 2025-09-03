@@ -4,7 +4,7 @@ Safety Boundaries Pattern for risk assessment and mitigation.
 
 import logging
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Optional
 
 from .base import PatternConfig, PatternResult, SwarmPattern
 
@@ -27,7 +27,7 @@ class SafetyBoundariesPattern(SwarmPattern):
     Implements safety checks and risk mitigation strategies.
     """
 
-    def __init__(self, config: SafetyConfig | None = None):
+    def __init__(self, config: Optional[SafetyConfig] = None):
         super().__init__(config or SafetyConfig())
         self.risk_assessments = []
 

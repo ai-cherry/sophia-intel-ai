@@ -6,7 +6,7 @@ Part of 2025 Architecture - Ultra-Performance Vector Storage
 import hashlib
 import logging
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +18,7 @@ class VectorSearchResult:
     content: str
     metadata: dict[str, Any]
     score: float
-    vector: list[float] | None = None
+    vector: Optional[list[float]] = None
 
 
 class WeaviateClient:
@@ -27,7 +27,7 @@ class WeaviateClient:
     Part of 2025 ultra-performance architecture
     """
 
-    def __init__(self, url: str = "http://localhost:8080", api_key: str | None = None):
+    def __init__(self, url: str = "http://localhost:8080", api_key: Optional[str] = None):
         self.url = url
         self.api_key = api_key
         self.is_connected = False
@@ -65,7 +65,7 @@ class WeaviateClient:
         self,
         collection: str,
         data: dict[str, Any],
-        vector: list[float] | None = None
+        vector: Optional[list[float]] = None
     ) -> str:
         """Add object to collection with optional vector"""
         try:
@@ -82,7 +82,7 @@ class WeaviateClient:
         collection: str,
         query: str,
         limit: int = 10,
-        where_filter: dict[str, Any] | None = None
+        where_filter: Optional[dict[str, Any]] = None
     ) -> list[VectorSearchResult]:
         """Hybrid search combining vector and keyword search"""
         try:
@@ -150,7 +150,7 @@ class WeaviateClient:
         self,
         collection: str,
         objects: list[dict[str, Any]],
-        vectors: list[list[float]] | None = None
+        vectors: Optional[list[list[float]]] = None
     ) -> list[str]:
         """Batch add multiple objects"""
         try:
@@ -185,12 +185,12 @@ class WeaviateClient:
 
 
 # Global instance for singleton pattern
-_weaviate_client: WeaviateClient | None = None
+_weaviate_client: Optional[WeaviateClient] = None
 
 
 async def get_weaviate_client(
     url: str = "http://localhost:8080",
-    api_key: str | None = None
+    api_key: Optional[str] = None
 ) -> WeaviateClient:
     """Get or create Weaviate client singleton"""
     global _weaviate_client

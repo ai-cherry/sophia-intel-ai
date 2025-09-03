@@ -11,7 +11,7 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any
+from typing import Any, Optional
 
 import httpx
 
@@ -49,7 +49,7 @@ class CircuitBreaker:
     state: CircuitState = CircuitState.CLOSED
     failure_count: int = 0
     success_count: int = 0
-    last_failure_time: float | None = None
+    last_failure_time: Optional[float] = None
 
     def __post_init__(self):
         self._lock = asyncio.Lock()
@@ -119,7 +119,7 @@ class AsyncHTTPClient:
 
     def __init__(
         self,
-        base_url: str | None = None,
+        base_url: Optional[str] = None,
         timeout: float = 30.0,
         max_connections: int = 100,
         max_keepalive_connections: int = 20,
@@ -172,8 +172,8 @@ class AsyncHTTPClient:
     async def get(
         self,
         url: str,
-        params: dict[str, Any] | None = None,
-        headers: dict[str, str] | None = None,
+        params: Optional[dict[str, Any]] = None,
+        headers: Optional[dict[str, str]] = None,
         service_name: str = "default",
         **kwargs
     ) -> httpx.Response:
@@ -208,9 +208,9 @@ class AsyncHTTPClient:
     async def post(
         self,
         url: str,
-        json: dict[str, Any] | None = None,
-        data: Any | None = None,
-        headers: dict[str, str] | None = None,
+        json: Optional[dict[str, Any]] = None,
+        data: Optional[Any] = None,
+        headers: Optional[dict[str, str]] = None,
         service_name: str = "default",
         **kwargs
     ) -> httpx.Response:
@@ -326,7 +326,7 @@ class APIClientPool:
     async def get_client(
         self,
         service: str,
-        base_url: str | None = None,
+        base_url: Optional[str] = None,
         **kwargs
     ) -> AsyncIterator[AsyncHTTPClient]:
         """Get or create client for service"""
@@ -355,7 +355,7 @@ _client_pool = APIClientPool()
 
 async def get_http_client(
     service: str = "default",
-    base_url: str | None = None
+    base_url: Optional[str] = None
 ) -> AsyncHTTPClient:
     """Get HTTP client for service"""
     async with _client_pool.get_client(service, base_url) as client:

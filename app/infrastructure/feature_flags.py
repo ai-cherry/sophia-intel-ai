@@ -8,7 +8,7 @@ import json
 import logging
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, Optional, Union
 
 import redis
 
@@ -193,8 +193,8 @@ class FeatureFlagManager:
     def is_enabled(
         self,
         flag_name: str,
-        user_id: str | None = None,
-        context: dict[str, Any] | None = None
+        user_id: Optional[str] = None,
+        context: Optional[dict[str, Any]] = None
     ) -> bool:
         """
         Check if a feature flag is enabled for a user
@@ -215,7 +215,7 @@ class FeatureFlagManager:
         # Handle conditional flags
         return self._evaluate_conditions(flag, user_id, context)
 
-    def _get_flag(self, flag_name: str) -> FeatureFlag | None:
+    def _get_flag(self, flag_name: str) -> Optional[FeatureFlag]:
         """Get flag from cache or storage"""
         # Try local cache first
         if flag_name in self.flags:
@@ -236,8 +236,8 @@ class FeatureFlagManager:
     def _evaluate_conditions(
         self,
         flag: FeatureFlag,
-        user_id: str | None,
-        context: dict[str, Any] | None
+        user_id: Optional[str],
+        context: Optional[dict[str, Any]]
     ) -> bool:
         """Evaluate conditional feature flag"""
         context = context or {}
@@ -266,7 +266,7 @@ class FeatureFlagManager:
     def _evaluate_percentage(
         self,
         flag: FeatureFlag,
-        user_id: str | None
+        user_id: Optional[str]
     ) -> bool:
         """Evaluate percentage-based rollout"""
         if not user_id:
@@ -284,7 +284,7 @@ class FeatureFlagManager:
     def _evaluate_allowlist(
         self,
         flag: FeatureFlag,
-        user_id: str | None,
+        user_id: Optional[str],
         context: dict[str, Any]
     ) -> bool:
         """Evaluate allowlist-based rollout"""
@@ -310,7 +310,7 @@ class FeatureFlagManager:
     def _evaluate_denylist(
         self,
         flag: FeatureFlag,
-        user_id: str | None,
+        user_id: Optional[str],
         context: dict[str, Any]
     ) -> bool:
         """Evaluate denylist-based rollout"""
@@ -433,14 +433,14 @@ class FeatureFlagManager:
             except Exception as e:
                 logger.error(f"Error saving flag to Redis: {e}")
 
-    def get_all_flags(self, user_id: str | None = None) -> dict[str, bool]:
+    def get_all_flags(self, user_id: Optional[str] = None) -> dict[str, bool]:
         """Get status of all flags for a user"""
         result = {}
         for flag_name in self.flags:
             result[flag_name] = self.is_enabled(flag_name, user_id)
         return result
 
-    def get_flag_metadata(self, flag_name: str) -> dict[str, Any] | None:
+    def get_flag_metadata(self, flag_name: str) -> Optional[dict[str, Any]]:
         """Get flag metadata for monitoring"""
         flag = self._get_flag(flag_name)
         if flag:

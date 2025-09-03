@@ -6,7 +6,7 @@ Handles all team-related endpoints with proper typing and documentation.
 import logging
 from collections.abc import AsyncGenerator
 from datetime import datetime
-from typing import Any
+from typing import Any, Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from fastapi.responses import StreamingResponse
@@ -37,8 +37,8 @@ class TeamRunRequest(BaseModel):
     message: str = Field(..., min_length=1, max_length=10000, description="Task message")
     stream: bool = Field(default=True, description="Enable streaming response")
     use_memory: bool = Field(default=True, description="Use memory context")
-    context: dict[str, Any] | None = Field(default=None, description="Additional context")
-    timeout: int | None = Field(default=300, ge=1, le=3600, description="Timeout in seconds")
+    context: Optional[dict[str, Any]] = Field(default=None, description="Additional context")
+    timeout: Optional[int] = Field(default=300, ge=1, le=3600, description="Timeout in seconds")
 
     @validator('team_id')
     def validate_team_id(cls, v: str) -> str:
@@ -52,8 +52,8 @@ class TeamExecutionResponse(BaseModel):
     task_id: str = Field(..., description="Execution task ID")
     team_id: str = Field(..., description="Team that executed")
     status: str = Field(..., description="Execution status")
-    result: dict[str, Any] | None = Field(default=None, description="Execution result")
-    duration_ms: int | None = Field(default=None, description="Execution time in ms")
+    result: Optional[dict[str, Any]] = Field(default=None, description="Execution result")
+    duration_ms: Optional[int] = Field(default=None, description="Execution time in ms")
     timestamp: datetime = Field(default_factory=datetime.utcnow)
 
 # ============================================
@@ -327,7 +327,7 @@ class TeamCreateRequest(BaseModel):
     members: list[str] = Field(..., min_items=1, description="Team member roles")
     model_pool: str = Field(default="balanced", description="Model pool (balanced, premium, basic)")
     active: bool = Field(default=True, description="Whether team is active")
-    configuration: dict[str, Any] | None = Field(default=None, description="Team configuration")
+    configuration: Optional[dict[str, Any]] = Field(default=None, description="Team configuration")
 
     @validator('id')
     def validate_id(cls, v: str) -> str:
@@ -338,20 +338,20 @@ class TeamCreateRequest(BaseModel):
 
 class TeamUpdateRequest(BaseModel):
     """Request model for updating team metadata."""
-    name: str | None = Field(None, min_length=1, max_length=200, description="Team display name")
-    description: str | None = Field(None, min_length=1, max_length=1000, description="Team description")
-    members: list[str] | None = Field(None, min_items=1, description="Team member roles")
-    model_pool: str | None = Field(None, description="Model pool (balanced, premium, basic)")
-    active: bool | None = Field(None, description="Whether team is active")
+    name: Optional[str] = Field(None, min_length=1, max_length=200, description="Team display name")
+    description: Optional[str] = Field(None, min_length=1, max_length=1000, description="Team description")
+    members: Optional[list[str]] = Field(None, min_items=1, description="Team member roles")
+    model_pool: Optional[str] = Field(None, description="Model pool (balanced, premium, basic)")
+    active: Optional[bool] = Field(None, description="Whether team is active")
 
 class TeamConfigUpdate(BaseModel):
     """Model for team configuration updates."""
-    model: str | None = Field(None, description="LLM model to use")
-    persona: str | None = Field(None, description="Team persona/personality")
-    instructions: str | None = Field(None, description="Custom instructions")
-    temperature: float | None = Field(None, ge=0.0, le=2.0, description="Model temperature")
-    max_tokens: int | None = Field(None, ge=1, le=100000, description="Max tokens")
-    members: list[str] | None = Field(None, description="Team member roles")
+    model: Optional[str] = Field(None, description="LLM model to use")
+    persona: Optional[str] = Field(None, description="Team persona/personality")
+    instructions: Optional[str] = Field(None, description="Custom instructions")
+    temperature: Optional[float] = Field(None, ge=0.0, le=2.0, description="Model temperature")
+    max_tokens: Optional[int] = Field(None, ge=1, le=100000, description="Max tokens")
+    members: Optional[list[str]] = Field(None, description="Team member roles")
 
 @router.patch("/{team_id}/config", response_model=TeamInfo, summary="Update team configuration")
 async def update_team_config(

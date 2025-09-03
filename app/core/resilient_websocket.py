@@ -10,7 +10,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, Optional, Union
 
 import websockets
 from websockets.exceptions import (
@@ -56,7 +56,7 @@ class ConnectionMetrics:
     messages_sent: int = 0
     messages_received: int = 0
     connection_duration: float = 0.0
-    last_error: str | None = None
+    last_error: Optional[str] = None
     error_count: int = 0
     circuit_breaker_trips: int = 0
 
@@ -81,8 +81,8 @@ class ResilientWebSocketClient:
     def __init__(
         self,
         url: str,
-        reconnect_config: ReconnectionConfig | None = None,
-        message_handlers: dict[str, Callable] | None = None
+        reconnect_config: Optional[ReconnectionConfig] = None,
+        message_handlers: Optional[dict[str, Callable]] = None
     ):
         self.url = url
         self.reconnect_config = reconnect_config or ReconnectionConfig()
@@ -90,13 +90,13 @@ class ResilientWebSocketClient:
 
         # Connection state
         self.state = ConnectionState.DISCONNECTED
-        self.websocket: websockets.WebSocketClientProtocol | None = None
-        self.connection_task: asyncio.Task | None = None
+        self.websocket: websockets.Optional[WebSocketClientProtocol] = None
+        self.connection_task: asyncio.Optional[Task] = None
 
         # Reconnection state
         self.reconnect_attempts = 0
-        self.last_connection_time: datetime | None = None
-        self.connection_start_time: datetime | None = None
+        self.last_connection_time: Optional[datetime] = None
+        self.connection_start_time: Optional[datetime] = None
 
         # Message handling
         self.pending_messages: dict[str, MCPMessage] = {}
@@ -107,14 +107,14 @@ class ResilientWebSocketClient:
         self.metrics = ConnectionMetrics()
 
         # Event callbacks
-        self.on_connected: Callable | None = None
-        self.on_disconnected: Callable | None = None
-        self.on_message: Callable | None = None
-        self.on_error: Callable | None = None
+        self.on_connected: Optional[Callable] = None
+        self.on_disconnected: Optional[Callable] = None
+        self.on_message: Optional[Callable] = None
+        self.on_error: Optional[Callable] = None
 
         # Circuit breaker state
         self.circuit_breaker_open = False
-        self.circuit_breaker_open_time: datetime | None = None
+        self.circuit_breaker_open_time: Optional[datetime] = None
 
     async def connect(self, timeout: float = 10.0) -> bool:
         """
@@ -240,10 +240,10 @@ class ResilientWebSocketClient:
         self,
         method: str,
         params: dict[str, Any] = None,
-        message_id: str | None = None,
+        message_id: Optional[str] = None,
         expect_response: bool = True,
         timeout: float = 30.0
-    ) -> dict[str, Any] | None:
+    ) -> Optional[dict[str, Any]]:
         """
         Send MCP message with automatic retry and response handling
         
@@ -599,7 +599,7 @@ class MCPWebSocketManager(WebSocketManager):
         method: str,
         params: dict[str, Any] = None,
         expect_response: bool = True
-    ) -> dict[str, Any] | None:
+    ) -> Optional[dict[str, Any]]:
         """Send message to specific MCP server"""
         client = self.mcp_clients.get(server)
         if not client:

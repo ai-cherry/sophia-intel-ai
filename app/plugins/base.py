@@ -6,7 +6,7 @@ Base classes and interfaces for dynamic plugin loading.
 import logging
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Any
+from typing import Any, Optional, Union
 
 from pydantic import BaseModel, Field
 
@@ -35,7 +35,7 @@ class Plugin(ABC):
     """Base class for all plugins."""
 
     def __init__(self):
-        self.metadata: PluginMetadata | None = None
+        self.metadata: Optional[PluginMetadata] = None
         self._initialized = False
         self._config: dict[str, Any] = {}
 
@@ -142,7 +142,7 @@ class MemoryPlugin(Plugin):
         self,
         key: str,
         value: Any,
-        metadata: dict[str, Any] | None = None
+        metadata: Optional[dict[str, Any]] = None
     ) -> bool:
         """Store data in memory.
         
@@ -159,7 +159,7 @@ class MemoryPlugin(Plugin):
     async def retrieve(
         self,
         key: str
-    ) -> Any | None:
+    ) -> Optional[Any]:
         """Retrieve data from memory.
         
         Args:

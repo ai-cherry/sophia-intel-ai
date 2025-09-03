@@ -7,7 +7,7 @@ import json
 import logging
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -112,7 +112,7 @@ class ModeNormalizer:
         )
     }
 
-    def __init__(self, config_path: str | None = None):
+    def __init__(self, config_path: Optional[str] = None):
         self.config_path = config_path or "app/swarms/swarm_optimization_config.json"
         self.custom_configs = self._load_custom_configs()
 

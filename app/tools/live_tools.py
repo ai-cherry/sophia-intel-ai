@@ -10,7 +10,7 @@ import logging
 import os
 import subprocess
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 import aiofiles
 
@@ -119,7 +119,7 @@ class LiveGitTools:
             "raw": result.stdout
         }
 
-    async def git_diff(self, file: str | None = None) -> str:
+    async def git_diff(self, file: Optional[str] = None) -> str:
         """Get git diff."""
         cmd = ["git", "diff"]
         if file:
@@ -160,7 +160,7 @@ class LiveGitTools:
         else:
             return {"status": "error", "message": result.stderr}
 
-    async def git_branch(self, name: str | None = None, checkout: bool = False) -> dict[str, Any]:
+    async def git_branch(self, name: Optional[str] = None, checkout: bool = False) -> dict[str, Any]:
         """Create or list git branches."""
         if name:
             cmd = ["git", "checkout", "-b" if checkout else "", name]

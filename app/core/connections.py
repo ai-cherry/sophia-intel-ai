@@ -8,7 +8,7 @@ import asyncio
 import logging
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any, Optional, Union
 
 import aiohttp
 import redis.asyncio as aioredis
@@ -48,11 +48,11 @@ class ConnectionManager:
             cls._instance = super().__new__(cls)
         return cls._instance
 
-    def __init__(self, config: ConnectionConfig | None = None):
+    def __init__(self, config: Optional[ConnectionConfig] = None):
         if not hasattr(self, '_initialized'):
             self.config = config or ConnectionConfig()
-            self._http_session: aiohttp.ClientSession | None = None
-            self._redis_pool: aioredis.Redis | None = None
+            self._http_session: aiohttp.Optional[ClientSession] = None
+            self._redis_pool: aioredis.Optional[Redis] = None
             self._initialized = False
             self._metrics = {
                 "http_requests": 0,
@@ -167,12 +167,12 @@ class ConnectionManager:
         self._metrics["redis_operations"] += 1
         return self._redis_pool
 
-    async def redis_get(self, key: str) -> str | None:
+    async def redis_get(self, key: str) -> Optional[str]:
         """Get value from Redis"""
         redis = await self.get_redis()
         return await redis.get(key)
 
-    async def redis_set(self, key: str, value: str, ex: int | None = None) -> bool:
+    async def redis_set(self, key: str, value: str, ex: Optional[int] = None) -> bool:
         """Set value in Redis with optional expiration"""
         redis = await self.get_redis()
         return await redis.set(key, value, ex=ex)
@@ -231,7 +231,7 @@ class ConnectionManager:
 
 
 # Global instance
-_connection_manager: ConnectionManager | None = None
+_connection_manager: Optional[ConnectionManager] = None
 
 
 async def get_connection_manager() -> ConnectionManager:
@@ -257,13 +257,13 @@ async def http_post(url: str, **kwargs) -> dict[str, Any]:
     return await manager.http_post(url, **kwargs)
 
 
-async def redis_get(key: str) -> str | None:
+async def redis_get(key: str) -> Optional[str]:
     """Convenience function for Redis GET"""
     manager = await get_connection_manager()
     return await manager.redis_get(key)
 
 
-async def redis_set(key: str, value: str, ex: int | None = None) -> bool:
+async def redis_set(key: str, value: str, ex: Optional[int] = None) -> bool:
     """Convenience function for Redis SET"""
     manager = await get_connection_manager()
     return await manager.redis_set(key, value, ex=ex)

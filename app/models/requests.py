@@ -1,5 +1,6 @@
 
 from pydantic import BaseModel
+from typing import Optional
 
 
 class EmbeddingRequest(BaseModel):
@@ -27,6 +28,6 @@ class MemoryDeleteRequest(BaseModel):
 class ChatRequest(BaseModel):
     model: str
     messages: list[dict[str, str]]
-    temperature: float | None = 0.7
-    max_tokens: int | None = 1000
-    stream: bool | None = False
+    temperature: Optional[float] = 0.7
+    max_tokens: Optional[int] = 1000
+    stream: Optional[bool] = False

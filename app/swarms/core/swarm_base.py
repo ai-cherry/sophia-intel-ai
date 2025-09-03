@@ -9,7 +9,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, Optional, Union
 
 from app.core.ai_logger import logger
 from app.models.requests import SwarmResponse
@@ -152,8 +152,8 @@ class SwarmConfig:
     logging_level: str = "INFO"
 
     # Environment
-    session_id: str | None = None
-    user_id: str | None = None
+    session_id: Optional[str] = None
+    user_id: Optional[str] = None
     environment: str = "production"
 
     @classmethod
@@ -191,7 +191,7 @@ class SwarmBase(ABC):
     Consolidated from ImprovedAgentSwarm, OptimizedSwarm, and various specialized swarms
     """
 
-    def __init__(self, config: SwarmConfig, agents: list[Any] | None = None, message_bus: MessageBus | None = None):
+    def __init__(self, config: SwarmConfig, agents: Optional[list[Any]] = None, message_bus: Optional[MessageBus] = None):
         self.config = config
         self.agents = agents or []
         self.metrics = SwarmMetrics()
@@ -650,9 +650,9 @@ class SwarmFactory:
     @staticmethod
     def create_swarm(
         swarm_type: SwarmType,
-        config: SwarmConfig | None = None,
-        agents: list[Any] | None = None,
-        message_bus: MessageBus | None = None
+        config: Optional[SwarmConfig] = None,
+        agents: Optional[list[Any]] = None,
+        message_bus: Optional[MessageBus] = None
     ) -> SwarmBase:
         """Create swarm instance based on type"""
         if isinstance(swarm_type, str):
@@ -706,7 +706,7 @@ class SwarmFactory:
 
 _swarm_instances: dict[str, SwarmBase] = {}
 
-def get_swarm(swarm_id: str) -> SwarmBase | None:
+def get_swarm(swarm_id: str) -> Optional[SwarmBase]:
     """Get existing swarm instance"""
     return _swarm_instances.get(swarm_id)
 
@@ -763,7 +763,7 @@ async def execute_swarm_task(
     swarm_id: str,
     task: dict[str, Any],
     **kwargs
-) -> SwarmResponse | None:
+) -> Optional[SwarmResponse]:
     """Execute a task on an existing swarm"""
     swarm = get_swarm(swarm_id)
     if not swarm:
@@ -799,7 +799,7 @@ def register_swarm_pattern(name: str, pattern_class: Any):
     """Register a swarm pattern for use by swarms"""
     _swarm_patterns[name] = pattern_class
 
-def get_swarm_pattern(name: str) -> Any | None:
+def get_swarm_pattern(name: str) -> Optional[Any]:
     """Get registered swarm pattern"""
     return _swarm_patterns.get(name)
 

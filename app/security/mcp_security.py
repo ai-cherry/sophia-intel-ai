@@ -13,7 +13,7 @@ import time
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any
+from typing import Any, Optional, Union
 
 import jwt
 import redis.asyncio as redis
@@ -80,7 +80,7 @@ class MCPSecurityFramework:
 
         # Redis for session management
         self.redis_url = redis_url
-        self.redis: redis.Redis | None = None
+        self.redis: redis.Optional[Redis] = None
 
         # Rate limiting configuration
         self.rate_limits = {
@@ -134,7 +134,7 @@ class MCPSecurityFramework:
     async def generate_assistant_token(
         self,
         assistant_id: str,
-        metadata: dict[str, Any] | None = None
+        metadata: Optional[dict[str, Any]] = None
     ) -> dict[str, str]:
         """
         Generate time-limited, signed token for assistant
@@ -203,7 +203,7 @@ class MCPSecurityFramework:
         }
 
     @with_circuit_breaker("redis")
-    async def verify_token(self, token: str) -> dict | None:
+    async def verify_token(self, token: str) -> Optional[dict]:
         """Verify and decrypt assistant token"""
         if not self.redis:
             await self.initialize()
@@ -381,7 +381,7 @@ class MCPSecurityFramework:
         await self._audit_log("session_revoked", {"session_id": session_id})
 
     @with_circuit_breaker("redis")
-    async def get_active_sessions(self, assistant_id: str | None = None) -> list[dict]:
+    async def get_active_sessions(self, assistant_id: Optional[str] = None) -> list[dict]:
         """Get list of active sessions"""
         if not self.redis:
             await self.initialize()

@@ -4,7 +4,7 @@ Dynamic Roles Pattern for adaptive agent specialization.
 
 import logging
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Optional
 
 from .base import PatternConfig, PatternResult, SwarmPattern
 
@@ -29,7 +29,7 @@ class DynamicRolesPattern(SwarmPattern):
     Dynamically assigns and rotates agent roles based on performance.
     """
 
-    def __init__(self, config: DynamicRolesConfig | None = None):
+    def __init__(self, config: Optional[DynamicRolesConfig] = None):
         super().__init__(config or DynamicRolesConfig())
         self.role_assignments = {}
         self.performance_history = {}

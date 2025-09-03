@@ -10,7 +10,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, Optional
 
 from app.core.ai_logger import logger
 
@@ -352,7 +352,7 @@ class InfraOpsSwarm:
     def _aggregate_results(
         self,
         agent_results: list[dict[str, Any]],
-        consensus_result: dict[str, Any] | None
+        consensus_result: Optional[dict[str, Any]]
     ) -> dict[str, Any]:
         """Aggregate results from all agents"""
         # Collect all actions and recommendations

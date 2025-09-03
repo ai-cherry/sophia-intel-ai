@@ -7,7 +7,7 @@ import os
 import time
 import uuid
 from datetime import datetime
-from typing import Any
+from typing import Any, Optional
 
 import structlog
 from fastapi import Depends, FastAPI, HTTPException, Request
@@ -61,14 +61,14 @@ class MCPInitRequest(BaseModel):
     """Initialize MCP session"""
     assistant_id: str
     capabilities: list[str] = Field(default_factory=list)
-    metadata: dict[str, Any] | None = None
+    metadata: Optional[dict[str, Any]] = None
 
 class MemoryStoreRequest(BaseModel):
     """Store memory request"""
     content: str
     tags: list[str] = Field(default_factory=list)
     importance: float = Field(default=0.5, ge=0, le=1)
-    metadata: dict[str, Any] | None = None
+    metadata: Optional[dict[str, Any]] = None
 
 class MemorySearchRequest(BaseModel):
     """Search memory request"""
@@ -76,15 +76,15 @@ class MemorySearchRequest(BaseModel):
     limit: int = Field(default=10, ge=1, le=100)
     filter_by_assistant: bool = False
     similarity_threshold: float = Field(default=0.7, ge=0, le=1)
-    tags: list[str] | None = None
+    tags: Optional[list[str]] = None
 
 class MemoryUpdateRequest(BaseModel):
     """Update memory request"""
     memory_id: str
-    content: str | None = None
-    tags: list[str] | None = None
-    importance: float | None = None
-    metadata: dict[str, Any] | None = None
+    content: Optional[str] = None
+    tags: Optional[list[str]] = None
+    importance: Optional[float] = None
+    metadata: Optional[dict[str, Any]] = None
 
 class MemoryDeleteRequest(BaseModel):
     """Delete memory request"""
@@ -526,7 +526,7 @@ class EnhancedMCPServer:
         action: str,
         memory_id: str,
         assistant_id: str,
-        content: str | None
+        content: Optional[str]
     ):
         """Broadcast memory updates to connected assistants"""
         # This will be implemented with the real-time sync system

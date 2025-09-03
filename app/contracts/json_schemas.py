@@ -193,12 +193,12 @@ class JudgeOutput(BaseModel):
         ...,
         description="Final decision"
     )
-    selected: str | None = Field(
+    selected: Optional[str] = Field(
         None,
         pattern=r"^[A-C]$",
         description="Selected proposal (A/B/C) if applicable"
     )
-    merge_strategy: MergeStrategy | None = Field(
+    merge_strategy: Optional[MergeStrategy] = Field(
         None,
         description="How to merge proposals if decision is 'merge'"
     )
@@ -224,7 +224,7 @@ class JudgeOutput(BaseModel):
         le=1.0,
         description="Confidence in the decision (0-1)"
     )
-    quality_score: float | None = Field(
+    quality_score: Optional[float] = Field(
         None,
         ge=0.0,
         le=10.0,
@@ -287,7 +287,7 @@ class GeneratorProposal(BaseModel):
         default_factory=list,
         description="External dependencies required"
     )
-    rollback_plan: str | None = Field(
+    rollback_plan: Optional[str] = Field(
         None,
         max_length=500,
         description="How to rollback if needed"

@@ -4,7 +4,7 @@ Provides REST and WebSocket interfaces for embedding generation
 """
 
 import logging
-from typing import Any
+from typing import Any, Optional, Union
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
@@ -32,17 +32,17 @@ router = APIRouter(prefix="/embeddings", tags=["embeddings"])
 
 class CreateEmbeddingRequest(BaseModel):
     """Request to create embeddings"""
-    text: str | list[str]
-    model: str | None = Field(None, description="Model to use (auto-selected if not provided)")
+    text: Union[str, list[str]]
+    model: Optional[str] = Field(None, description="Model to use (auto-selected if not provided)")
     use_case: str = Field("general", description="Use case: rag, search, clustering, etc.")
     language: str = Field("en", description="Language code")
-    dimensions: int | None = Field(None, description="Target dimensions")
+    dimensions: Optional[int] = Field(None, description="Target dimensions")
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 class BatchEmbeddingRequest(BaseModel):
     """Request for batch embedding processing"""
     texts: list[str]
-    model: str | None = None
+    model: Optional[str] = None
     use_case: str = "general"
     batch_size: int = Field(100, ge=1, le=1000)
     metadata: dict[str, Any] = Field(default_factory=dict)
@@ -52,12 +52,12 @@ class SearchRequest(BaseModel):
     query: str
     documents: list[str]
     top_k: int = Field(10, ge=1, le=100)
-    model: str | None = None
+    model: Optional[str] = None
 
 class ModelRecommendationRequest(BaseModel):
     """Request for model recommendations"""
     use_case: str
-    max_tokens: int | None = None
+    max_tokens: Optional[int] = None
     language: str = "en"
     high_quality: bool = False
     low_cost: bool = False
@@ -83,7 +83,7 @@ class SearchResult(BaseModel):
 class SearchAPIResponse(BaseModel):
     """Response from search API"""
     results: list[SearchResult]
-    query_embedding: list[float] | None = None
+    query_embedding: Optional[list[float]] = None
     model: str
     latency_ms: float
 

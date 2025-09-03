@@ -6,7 +6,7 @@ Loads and enforces rules from the .ai directory structure
 import logging
 import re
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional, Union
 
 import yaml
 
@@ -187,7 +187,7 @@ class RuleLoader:
         rules = self.get_agent_rules(agent_name)
         return rules.get("capabilities", [])
 
-    def match_agent_to_task(self, task: str) -> str | None:
+    def match_agent_to_task(self, task: str) -> Optional[str]:
         """Find the best agent for a given task"""
         best_agent = None
         best_score = 0

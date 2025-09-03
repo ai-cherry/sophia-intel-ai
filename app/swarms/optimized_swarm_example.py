@@ -7,7 +7,7 @@ import asyncio
 import logging
 import time
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Optional
 
 from app.swarms.performance_optimizer import (
 from app.core.ai_logger import logger
@@ -53,7 +53,7 @@ class OptimizedSwarm:
     - Dynamic configuration
     """
 
-    def __init__(self, config: OptimizedSwarmConfig, optimizer: SwarmOptimizer | None = None):
+    def __init__(self, config: OptimizedSwarmConfig, optimizer: Optional[SwarmOptimizer] = None):
         self.config = config
         self.optimizer = optimizer or SwarmOptimizer()
 
@@ -242,7 +242,7 @@ class OptimizedSwarm:
         }
 
     async def _execute_quality_gates(self, problem: dict[str, Any],
-                                   memory_result: dict | None = None) -> dict[str, Any]:
+                                   memory_result: Optional[dict] = None) -> dict[str, Any]:
         """Execute quality gates pattern."""
         await asyncio.sleep(0.3)  # Quality assessment time
 

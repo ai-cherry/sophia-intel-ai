@@ -1,4 +1,5 @@
 import json
+from typing import Optional
 
 import httpx
 import redis.asyncio as redis
@@ -21,7 +22,7 @@ class UnifiedMemoryAdapter:
         self,
         session_id: str,
         messages: list[dict],
-        metadata: dict | None = None
+        metadata: Optional[dict] = None
     ) -> dict:
         try:
             # Validate session_id format

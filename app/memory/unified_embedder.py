@@ -10,7 +10,7 @@ import os
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, Union
 
 from app.api.unified_gateway import get_elite_unified_gateway
 from app.core.ai_logger import logger
@@ -145,7 +145,7 @@ class EmbeddingCacheEntry:
     dimension: int
     access_count: int = 0
     created_at: str = field(default_factory=lambda: datetime.now().isoformat())
-    last_accessed: str | None = None
+    last_accessed: Optional[str] = None
     cost_estimation: float = 0.0
 
 # =============================================================================
@@ -168,9 +168,9 @@ class UnifiedEmbedderRouter:
         self,
         text: str,
         purpose: EmbeddingPurpose,
-        language: str | None = None,
-        priority: str | None = None,
-        strategy_override: EmbedderStrategy | None = None
+        language: Optional[str] = None,
+        priority: Optional[str] = None,
+        strategy_override: Optional[EmbedderStrategy] = None
     ) -> tuple[EmbedderTier, str, str]:
         """
         Select optimal tier, model, and provider for given inputs
@@ -238,7 +238,7 @@ class UnifiedEmbedderRouter:
     def batch_route(
         self,
         texts: list[str],
-        metadata: list[dict[str, Any]] | None = None,
+        metadata: Optional[list[dict[str, Any]]] = None,
         purpose: EmbeddingPurpose = EmbeddingPurpose.SEARCH
     ) -> dict[str, list[tuple[int, str, str, str]]]:
         """
@@ -292,7 +292,7 @@ class EliteUnifiedEmbedder:
     - Includes comprehensive monitoring and metrics
     """
 
-    def __init__(self, config: UnifiedEmbedderConfig | None = None):
+    def __init__(self, config: Optional[UnifiedEmbedderConfig] = None):
         self.config = config or UnifiedEmbedderConfig.from_env()
         self.router = UnifiedEmbedderRouter(self.config)
         self.gateway = get_elite_unified_gateway()
@@ -322,7 +322,7 @@ class EliteUnifiedEmbedder:
         texts: list[str],
         strategy: EmbedderStrategy = EmbedderStrategy.AUTO,
         purpose: EmbeddingPurpose = EmbeddingPurpose.SEARCH,
-        metadata: list[dict[str, Any]] | None = None,
+        metadata: Optional[list[dict[str, Any]]] = None,
         return_metadata: bool = False
     ) -> list[list[float]] | list[dict[str, Any]]:
         """
@@ -454,10 +454,10 @@ class EliteUnifiedEmbedder:
         text: str,
         strategy: EmbedderStrategy = EmbedderStrategy.AUTO,
         purpose: EmbeddingPurpose = EmbeddingPurpose.SEARCH,
-        language: str | None = None,
-        priority: str | None = "medium",
+        language: Optional[str] = None,
+        priority: Optional[str] = "medium",
         return_metadata: bool = False
-    ) -> list[float] | dict[str, Any]:
+    ) -> Union[list[float], dict][str, Any]:
         """
         Generate embedding for single text
 
@@ -490,7 +490,7 @@ class EliteUnifiedEmbedder:
         self,
         texts: list[str],
         purpose: EmbeddingPurpose = EmbeddingPurpose.SEARCH,
-        metadata: list[dict[str, Any]] | None = None
+        metadata: Optional[list[dict[str, Any]]] = None
     ) -> list[list[float]]:
         """
         Generate hybrid embeddings (ensemble from multiple tiers)

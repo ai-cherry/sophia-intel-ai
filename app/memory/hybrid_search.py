@@ -181,7 +181,7 @@ class SearchResult:
     score: float
     source: str = ""
     metadata: dict[str, Any] = field(default_factory=dict)
-    citation: str | None = None
+    citation: Optional[str] = None
 
     def __lt__(self, other):
         return self.score > other.score  # Higher score is better
@@ -262,8 +262,8 @@ class HybridSearchEngine:
 
     def __init__(
         self,
-        config: HybridSearchConfig | None = None,
-        embedder: DualTierEmbedder | None = None
+        config: Optional[HybridSearchConfig] = None,
+        embedder: Optional[DualTierEmbedder] = None
     ):
         self.config = config or HybridSearchConfig()
         self.embedder = embedder or DualTierEmbedder()
@@ -350,11 +350,11 @@ class HybridSearchEngine:
     async def search(
         self,
         query: str,
-        top_k: int | None = None,
+        top_k: Optional[int] = None,
         use_semantic: bool = True,
         use_bm25: bool = True,
-        use_reranker: bool | None = None,
-        metadata_filter: dict[str, Any] | None = None
+        use_reranker: Optional[bool] = None,
+        metadata_filter: Optional[dict[str, Any]] = None
     ) -> list[HybridSearchResult]:
         """
         Perform hybrid search.
@@ -531,7 +531,7 @@ class HybridSearchEngine:
 
 def merge_search_results(
     results_lists: list[list[SearchResult]],
-    weights: list[float] | None = None
+    weights: Optional[list[float]] = None
 ) -> list[SearchResult]:
     """
     Merge multiple search result lists.

@@ -5,6 +5,8 @@ This module provides factory functions for creating specialized agents
 with appropriate models, tools, and instructions for software development tasks.
 """
 
+from typing import Optional
+
 from textwrap import dedent
 
 from agno.agent import Agent
@@ -103,7 +105,7 @@ def make_planner(name: str = "Planner") -> Agent:
 def make_generator(
     name: str,
     model_name: str,
-    tools: list[Tool] | None = None,
+    tools: Optional[list[Tool]] = None,
     role_note: str = "Implement spec with tests and minimal diff"
 ) -> Agent:
     """

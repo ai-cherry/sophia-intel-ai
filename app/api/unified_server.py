@@ -1,12 +1,13 @@
 import asyncio
+import json
 import logging
 import os
 from datetime import datetime
-from typing import Any
+from typing import Any, Optional
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, JSONResponse, Response
 from pydantic import BaseModel
 
 # Setup logging
@@ -190,7 +191,7 @@ async def run_team(request: SwarmRequest):
         else:
             # Try direct OpenRouter first, fallback to Portkey if needed
             try:
-                response = await real_gateway.chat_completion(
+                response = await openrouter_gateway.chat_completion(
                     messages=messages,
                     role=request.team_id.replace('-swarm', ''),
                     temperature=request.temperature,
@@ -221,18 +222,18 @@ async def run_team(request: SwarmRequest):
                     stream=False
                 )
 
-            # Track metrics
+            # Track real metrics using Prometheus
             duration = (datetime.now() - start_time).total_seconds()
-            record_cost(
-                provider="openrouter",
-                model=response.get("model", "unknown"),
-                task_type=task_type,
-                cost=0.001,  # Estimate
-                tokens_in=100,  # Estimate
-                tokens_out=200,  # Estimate
-                duration=duration,
-                cache_hit=False
-            )
+            try:
+                from app.observability.prometheus_metrics import track_llm_request
+                track_llm_request(
+                    provider="openrouter",
+                    model=response.get("model", "unknown"),
+                    duration=duration,
+                    tokens=response.get('usage', {}).get('total_tokens', 0)
+                )
+            except ImportError:
+                logger.info(f"Request completed in {duration}s using model: {response.get('model', 'unknown')}")
 
             # Try to publish to message bus (skip if error)
             try:
@@ -465,26 +466,34 @@ async def generate_embeddings_endpoint(request: dict[str, Any]):
         raise HTTPException(status_code=400, detail="Text is required")
 
     try:
-        # Use direct Together AI for embeddings
+        # Use real Together AI embeddings
+        from app.embeddings.together_embeddings import TogetherEmbeddings
+        together_embeddings = TogetherEmbeddings()
         response = await together_embeddings.generate_embeddings(
             texts=[text],
             model="togethercomputer/m2-bert-80M-8k-retrieval"
         )
-
         return response
-
-    except Exception as e:
-        logger.error(f"Embedding generation failed: {e}")
-        # Return fallback embedding
-        import hashlib
-        hash_val = hashlib.sha256(text.encode()).hexdigest()
-        embedding = [float(int(hash_val[i:i+2], 16)) / 255.0 for i in range(0, 64, 2)][:768]
-        return {
-            "embeddings": embedding,
-            "model": "hash-fallback",
-            "cached": False,
-            "error": str(e)
-        }
+    except ImportError:
+        # Use real OpenAI embeddings as alternative
+        try:
+            import openai
+            openai.api_key = os.getenv("OPENAI_API_KEY")
+            response = await openai.Embedding.acreate(
+                model="text-embedding-ada-002",
+                input=text
+            )
+            return {
+                "embeddings": response['data'][0]['embedding'],
+                "model": "text-embedding-ada-002",
+                "cached": False
+            }
+        except Exception as e:
+            logger.error(f"Real embedding generation failed: {e}")
+            raise HTTPException(
+                status_code=503,
+                detail=f"Embedding service unavailable: {str(e)}"
+            )
 
 @app.get("/models")
 async def list_models():
@@ -565,9 +574,9 @@ async def health_check():
 class ChatCompletionRequest(BaseModel):
     model: str
     messages: list[dict[str, str]]
-    max_tokens: int | None = 1000
-    temperature: float | None = 0.7
-    stream: bool | None = False
+    max_tokens: Optional[int] = 1000
+    temperature: Optional[float] = 0.7
+    stream: Optional[bool] = False
 
 @app.post("/chat/completions")
 async def chat_completions(request: ChatCompletionRequest):
@@ -584,9 +593,18 @@ async def chat_completions(request: ChatCompletionRequest):
             temperature=request.temperature
         )
 
-        # Track cost
+        # Track real usage metrics
         if hasattr(response, 'usage'):
-            record_cost(request.model, response.usage)
+            try:
+                from app.observability.prometheus_metrics import track_llm_request
+                track_llm_request(
+                    provider="openrouter",
+                    model=request.model,
+                    duration=0,
+                    tokens=response.usage.get('total_tokens', 0)
+                )
+            except ImportError:
+                logger.info(f"Model usage: {response.usage}")
 
         return response
 

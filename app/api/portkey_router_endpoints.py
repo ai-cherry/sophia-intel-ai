@@ -4,7 +4,7 @@ Provides HTTP API for routing and analytics
 """
 
 from datetime import datetime
-from typing import Any
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
@@ -20,8 +20,8 @@ class RouteSelectionRequest(BaseModel):
     agent_role: str
     task_complexity: float = 0.5
     execution_strategy: str = "balanced"
-    routing_strategy: str | None = "balanced"
-    max_cost_per_request: float | None = 0.05
+    routing_strategy: Optional[str] = "balanced"
+    max_cost_per_request: Optional[float] = 0.05
     fallback_enabled: bool = True
     cache_enabled: bool = True
 
@@ -31,9 +31,9 @@ class CompletionRequest(BaseModel):
     agent_role: str
     task_complexity: float = 0.5
     execution_strategy: str = "balanced"
-    routing_config: dict[str, Any] | None = None
-    temperature: float | None = None
-    max_tokens: int | None = None
+    routing_config: Optional[dict[str, Any]] = None
+    temperature: Optional[float] = None
+    max_tokens: Optional[int] = None
 
 
 class RouteSelectionResponse(BaseModel):

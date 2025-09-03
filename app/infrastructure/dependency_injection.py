@@ -8,7 +8,7 @@ import logging
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Protocol, TypeVar
+from typing import Any, Optional, Protocol, TypeVar, Union
 
 logger = logging.getLogger(__name__)
 
@@ -85,7 +85,7 @@ class DIContainer:
     Manages service lifecycle and dependency resolution
     """
 
-    def __init__(self, config: ServiceConfig | None = None):
+    def __init__(self, config: Optional[ServiceConfig] = None):
         self.config = config or ServiceConfig()
         self._services: dict[type, Any] = {}
         self._factories: dict[type, Callable] = {}
@@ -121,7 +121,7 @@ class DIContainer:
         """Register a scoped service"""
         self.register(service_type, factory, "scoped")
 
-    async def resolve(self, service_type: type[T], scope: str | None = None) -> T:
+    async def resolve(self, service_type: type[T], scope: Optional[str] = None) -> T:
         """
         Resolve a service instance
         
@@ -316,7 +316,7 @@ class SessionStateManager:
         self.ttl_seconds = config.session_memory_ttl_seconds
         self.sessions: dict[str, dict[str, Any]] = {}
         self._lock = asyncio.Lock()
-        self._cleanup_task: asyncio.Task | None = None
+        self._cleanup_task: Optional[asyncio.Task] = None
 
         # Start cleanup task
         self._cleanup_task = asyncio.create_task(self._cleanup_loop())
@@ -481,7 +481,7 @@ def register_services(container: DIContainer):
 # ==================== Global Container Instance ====================
 
 # Create global container (will be replaced by proper initialization)
-_global_container: DIContainer | None = None
+_global_container: Optional[DIContainer] = None
 
 def get_container() -> DIContainer:
     """Get the global DI container"""
@@ -492,7 +492,7 @@ def get_container() -> DIContainer:
         register_services(_global_container)
     return _global_container
 
-async def initialize_container(config: ServiceConfig | None = None) -> DIContainer:
+async def initialize_container(config: Optional[ServiceConfig] = None) -> DIContainer:
     """Initialize the global DI container"""
     global _global_container
     if _global_container:

@@ -11,7 +11,7 @@ import logging
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any
+from typing import Any, Optional, Union
 
 from app.core.ai_logger import logger
 
@@ -72,7 +72,7 @@ class MemoryOperation:
     agent_id: str
     timestamp: float
     vector_clock: dict[str, int]
-    checksum: str | None = None
+    checksum: Optional[str] = None
 
     def __post_init__(self):
         """Generate checksum if not provided"""
@@ -188,7 +188,7 @@ class CRDTMemoryStore:
         self.peers: dict[str, CRDTMemoryStore] = {}
 
         # Sync control
-        self._sync_task: asyncio.Task | None = None
+        self._sync_task: asyncio.Optional[Task] = None
         self._running = False
 
         # Metrics
@@ -347,7 +347,7 @@ class CRDTMemoryStore:
 
         return True
 
-    async def get_memory(self, memory_id: str) -> dict[str, Any] | None:
+    async def get_memory(self, memory_id: str) -> Optional[dict[str, Any]]:
         """
         Get memory content
         

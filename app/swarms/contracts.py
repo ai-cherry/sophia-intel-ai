@@ -13,14 +13,14 @@ PLANNER_SCHEMA = """Return a JSON:
   "success_metrics":["coverage≥90%","lighthouse≥90","p50≤200ms"] }"""
 
 CRITIC_SCHEMA = """Return a JSON:
-{ "verdict":"pass|revise",
+{ "verdict":"Union[pass, revise]",
   "findings":{"security":["..."],"data_integrity":["..."],"logic_correctness":["..."],"performance":["..."],"usability":["..."],"maintainability":["..."]},
   "must_fix":["S-###: minimal delta"], "nice_to_have":["..."], "minimal_patch_notes":"..." }"""
 
 JUDGE_SCHEMA = """Return a JSON:
-{ "decision":"accept|merge|reject", "selected":"A|B|C", "merged_spec":{},
+{ "decision":"accept|Union[merge, reject]", "selected":"A|Union[B, C]", "merged_spec":{},
   "rationale":["..."], "runner_instructions":["concrete steps, one per line"] }"""
 
 GENERATOR_SCHEMA = """Return a JSON:
 { "approach":"","implementation_plan":["..."],"files_to_change":["..."],
-  "test_plan":["..."],"estimated_loc":0,"risk_level":"low|medium|high" }"""
+  "test_plan":["..."],"estimated_loc":0,"risk_level":"low|Union[medium, high]" }"""

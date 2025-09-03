@@ -10,7 +10,7 @@ import time
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import Any
+from typing import Any, Optional, Union
 
 import redis.asyncio as redis
 
@@ -89,8 +89,8 @@ class RealTimeCostMonitor:
 
     def __init__(self, redis_url: str = "redis://localhost:6379"):
         self.redis_url = redis_url
-        self.redis: redis.Redis | None = None
-        self.alert_system: AlertSystem | None = None
+        self.redis: redis.Optional[Redis] = None
+        self.alert_system: Optional[AlertSystem] = None
         self.initialized = False
 
         # Cost rates per token (as of 2025)
@@ -377,7 +377,7 @@ class RealTimeCostMonitor:
         logger.info(f"Cleaned up cost data older than {days_to_keep} days")
 
 # Global singleton instance
-_cost_monitor: RealTimeCostMonitor | None = None
+_cost_monitor: Optional[RealTimeCostMonitor] = None
 
 async def get_cost_monitor() -> RealTimeCostMonitor:
     """Get the global cost monitor instance."""

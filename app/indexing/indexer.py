@@ -106,7 +106,7 @@ class RepositoryIndexer:
         self,
         query: str,
         top_k: int = 5,
-        repo_path: str | None = None
+        repo_path: Optional[str] = None
     ) -> list[dict[str, Any]]:
         """
         Search across indexed repository content
@@ -139,7 +139,7 @@ class RepositoryIndexer:
         return formatted_results
 
 
-async def index_file(file_path: str, metadata: MemoryMetadata | None = None) -> None:
+async def index_file(file_path: str, metadata: Optional[MemoryMetadata] = None) -> None:
     """
     Helper function to index a single file.
     

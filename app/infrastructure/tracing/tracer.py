@@ -7,7 +7,7 @@ import os
 from collections.abc import Callable
 from contextlib import contextmanager
 from functools import wraps
-from typing import Any
+from typing import Any, Optional, Union
 
 from opentelemetry import trace
 from opentelemetry.exporter.jaeger.thrift import JaegerExporter
@@ -22,7 +22,7 @@ from opentelemetry.trace import Status, StatusCode
 from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
 
 # Global tracer instance
-_tracer: trace.Tracer | None = None
+_tracer: trace.Optional[Tracer] = None
 
 def initialize_tracing(
     service_name: str = "ai-orchestra",
@@ -92,7 +92,7 @@ def get_tracer() -> trace.Tracer:
 @contextmanager
 def create_span(
     name: str,
-    attributes: dict[str, Any] | None = None,
+    attributes: Optional[dict[str, Any]] = None,
     kind: trace.SpanKind = trace.SpanKind.INTERNAL
 ):
     """
@@ -296,7 +296,7 @@ class WebSocketTracer:
     def end_connection_span(
         self,
         connection_key: str,
-        status: Status | None = None
+        status: Optional[Status] = None
     ):
         """End connection span"""
         if connection_key in self.active_spans:

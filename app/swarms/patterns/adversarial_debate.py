@@ -8,7 +8,7 @@ import random
 import time
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any
+from typing import Any, Optional
 
 from .base import PatternConfig, PatternResult, SwarmPattern
 
@@ -46,7 +46,7 @@ class AdversarialDebatePattern(SwarmPattern):
     with a judge evaluating arguments to select the best approach.
     """
 
-    def __init__(self, config: DebateConfig | None = None):
+    def __init__(self, config: Optional[DebateConfig] = None):
         """Initialize adversarial debate pattern."""
         super().__init__(config or DebateConfig())
         self.debate_history: list[DebateResult] = []

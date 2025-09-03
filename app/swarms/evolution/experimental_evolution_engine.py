@@ -23,7 +23,7 @@ from copy import deepcopy
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any
+from typing import Any, Optional, Union
 
 from app.swarms.consciousness_tracking import ConsciousnessTracker
 from app.swarms.memory_integration import SwarmMemoryClient, SwarmMemoryEventType
@@ -356,9 +356,9 @@ class ExperimentalEvolutionEngine:
     Use with caution in production environments!
     """
 
-    def __init__(self, config: ExperimentalEvolutionConfig | None = None,
-                 memory_client: SwarmMemoryClient | None = None,
-                 consciousness_tracker: ConsciousnessTracker | None = None):
+    def __init__(self, config: Optional[ExperimentalEvolutionConfig] = None,
+                 memory_client: Optional[SwarmMemoryClient] = None,
+                 consciousness_tracker: Optional[ConsciousnessTracker] = None):
         """Initialize the experimental evolution engine with consciousness integration."""
         self.config = config or ExperimentalEvolutionConfig()
         self.memory_client = memory_client
@@ -485,7 +485,7 @@ class ExperimentalEvolutionEngine:
 
         return True
 
-    async def experimental_evolve_population(self, swarm_type: str, performance_data: dict[str, Any]) -> SwarmChromosome | None:
+    async def experimental_evolve_population(self, swarm_type: str, performance_data: dict[str, Any]) -> Optional[SwarmChromosome]:
         """
         Perform experimental evolution for a swarm population.
         
@@ -588,7 +588,7 @@ class ExperimentalEvolutionEngine:
 
         return True
 
-    async def _observe_experimental_performance(self, swarm_type: str, performance_data: dict[str, Any]) -> SwarmChromosome | None:
+    async def _observe_experimental_performance(self, swarm_type: str, performance_data: dict[str, Any]) -> Optional[SwarmChromosome]:
         """Observe and record experimental performance without evolving."""
         population = self.populations.get(swarm_type, [])
         if population:
@@ -713,7 +713,7 @@ class ExperimentalEvolutionEngine:
 
         return evaluation
 
-    def get_experimental_status(self, swarm_type: str | None = None) -> dict[str, Any]:
+    def get_experimental_status(self, swarm_type: Optional[str] = None) -> dict[str, Any]:
         """Get current experimental evolution status and statistics."""
         if swarm_type:
             population = self.populations.get(swarm_type, [])
@@ -792,7 +792,7 @@ class ExperimentalEvolutionEngine:
 
         return False
 
-    async def _perform_experimental_rollback(self, swarm_type: str) -> SwarmChromosome | None:
+    async def _perform_experimental_rollback(self, swarm_type: str) -> Optional[SwarmChromosome]:
         """Perform experimental rollback to previous generation."""
         snapshots = self.rollback_snapshots.get(swarm_type, [])
         if not snapshots:
@@ -1176,7 +1176,7 @@ class ExperimentalEvolutionEngine:
         except Exception as e:
             logger.warning(f"🧪 Failed to store experimental evolution results in memory: {e}")
 
-    def get_best_experimental_chromosome(self, swarm_type: str) -> SwarmChromosome | None:
+    def get_best_experimental_chromosome(self, swarm_type: str) -> Optional[SwarmChromosome]:
         """Get the current best experimental chromosome for a swarm type."""
         population = self.populations.get(swarm_type)
         if not population:
@@ -1184,7 +1184,7 @@ class ExperimentalEvolutionEngine:
 
         return max(population, key=lambda c: c.fitness_score)
 
-    async def export_experimental_evolution_data(self, swarm_type: str | None = None) -> dict[str, Any]:
+    async def export_experimental_evolution_data(self, swarm_type: Optional[str] = None) -> dict[str, Any]:
         """Export experimental evolution data for analysis."""
         data = {
             'export_timestamp': datetime.now().isoformat(),
@@ -1255,7 +1255,7 @@ class ExperimentalEvolutionEngine:
     # ============================================
 
     async def evolve_with_consciousness_guidance(self, swarm_type: str, performance_data: dict[str, Any],
-                                               consciousness_data: dict[str, Any] | None = None) -> SwarmChromosome | None:
+                                               consciousness_data: Optional[dict[str, Any]] = None) -> Optional[SwarmChromosome]:
         """
         Evolve population using consciousness metrics as additional fitness criteria.
         Integrates consciousness measurements into genetic algorithm selection and mutation.
@@ -1312,7 +1312,7 @@ class ExperimentalEvolutionEngine:
 
     async def _evaluate_consciousness_enhanced_fitness(self, swarm_type: str, population: list[SwarmChromosome],
                                                      performance_data: dict[str, Any],
-                                                     consciousness_data: dict[str, Any] | None) -> list[ExperimentalFitnessEvaluation]:
+                                                     consciousness_data: Optional[dict[str, Any]]) -> list[ExperimentalFitnessEvaluation]:
         """Evaluate fitness with consciousness metrics integration."""
         evaluations = []
 
@@ -1404,7 +1404,7 @@ class ExperimentalEvolutionEngine:
         return survivors, elites
 
     async def _consciousness_guided_mutation(self, chromosomes: list[SwarmChromosome],
-                                           consciousness_data: dict[str, Any] | None):
+                                           consciousness_data: Optional[dict[str, Any]]):
         """Apply mutations guided by consciousness insights."""
         if not consciousness_data:
             # Fall back to standard mutation
@@ -1478,7 +1478,7 @@ class ExperimentalEvolutionEngine:
 
     async def _store_consciousness_evolution_results(self, swarm_type: str,
                                                    evaluations: list[ExperimentalFitnessEvaluation],
-                                                   consciousness_data: dict[str, Any] | None):
+                                                   consciousness_data: Optional[dict[str, Any]]):
         """Store evolution results with consciousness correlation data."""
         if not self.memory_client:
             return
@@ -1544,7 +1544,7 @@ def create_experimental_evolution_engine(
     mode: ExperimentalMode = ExperimentalMode.DISABLED,
     enable_experimental: bool = False,
     acknowledge_experimental: bool = False,
-    memory_client: SwarmMemoryClient | None = None,
+    memory_client: Optional[SwarmMemoryClient] = None,
     **kwargs
 ) -> ExperimentalEvolutionEngine:
     """

@@ -7,7 +7,7 @@ import json
 import logging
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any
+from typing import Any, Optional, Union
 
 from app.core.circuit_breaker import with_circuit_breaker
 from app.memory.supermemory_mcp import MemoryType
@@ -53,9 +53,9 @@ class MemoryIntegrationPattern(SwarmPattern):
     to swarm orchestrators following ADR-005 architecture.
     """
 
-    def __init__(self, config: MemoryIntegrationConfig | None = None):
+    def __init__(self, config: Optional[MemoryIntegrationConfig] = None):
         super().__init__(config or MemoryIntegrationConfig())
-        self.memory_client: SwarmMemoryClient | None = None
+        self.memory_client: Optional[SwarmMemoryClient] = None
         self.swarm_context: dict[str, Any] = {}
         self.memory_operations_log: list[dict] = []
 
@@ -329,7 +329,7 @@ class MemoryIntegrationPattern(SwarmPattern):
                     context=learning.get("context", {})
                 )
 
-    def _log_memory_operation(self, operation: str, status: str, error: str | None = None):
+    def _log_memory_operation(self, operation: str, status: str, error: Optional[str] = None):
         """Log memory operation for tracking."""
         self.memory_operations_log.append({
             "operation": operation,
@@ -651,7 +651,7 @@ class MemoryEnhancedStrategyArchive:
         roles: list[str],
         interaction_sequence: str,
         quality_score: float,
-        additional_context: dict[str, Any] | None = None
+        additional_context: Optional[dict[str, Any]] = None
     ):
         """Archive successful pattern in unified memory system."""
         if quality_score < 0.8:
@@ -676,7 +676,7 @@ class MemoryEnhancedStrategyArchive:
 
         logger.info(f"Archived successful strategy for {problem_type} (score: {quality_score:.2f})")
 
-    async def retrieve_best_pattern(self, problem_type: str) -> dict[str, Any] | None:
+    async def retrieve_best_pattern(self, problem_type: str) -> Optional[dict[str, Any]]:
         """Retrieve best pattern for problem type from memory."""
         patterns = await self.memory_client.retrieve_patterns(
             pattern_name=f"strategy_{problem_type}",

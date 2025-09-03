@@ -6,7 +6,7 @@ Provides consistent response structure across all LLM interactions.
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, Optional
 
 
 class ResponseStatus(Enum):
@@ -50,28 +50,28 @@ class LLMResponse:
     # Model information
     model: str = "unknown"
     provider: str = "unknown"
-    task_type: str | None = None
+    task_type: Optional[str] = None
 
     # Timing information
     timestamp: datetime = field(default_factory=datetime.now)
     latency_ms: float = 0.0
 
     # Token and cost tracking
-    token_stats: TokenStats | None = None
+    token_stats: Optional[TokenStats] = None
     estimated_cost: float = 0.0
 
     # Error handling
-    error: str | None = None
-    error_code: str | None = None
+    error: Optional[str] = None
+    error_code: Optional[str] = None
 
     # Metadata
     metadata: dict[str, Any] = field(default_factory=dict)
-    trace_id: str | None = None
-    session_id: str | None = None
+    trace_id: Optional[str] = None
+    session_id: Optional[str] = None
 
     # Fallback chain information
     attempts: list[dict[str, Any]] = field(default_factory=list)
-    final_model: str | None = None
+    final_model: Optional[str] = None
 
     def to_dict(self) -> dict[str, Any]:
         """Convert response to dictionary for JSON serialization."""
@@ -101,7 +101,7 @@ class LLMResponse:
         }
 
     @classmethod
-    def from_error(cls, error: str, error_code: str | None = None) -> "LLMResponse":
+    def from_error(cls, error: str, error_code: Optional[str] = None) -> "LLMResponse":
         """Create an error response."""
         return cls(
             content="",

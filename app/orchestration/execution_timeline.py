@@ -8,7 +8,7 @@ import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -39,15 +39,15 @@ class TimelineEvent:
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
     timestamp: datetime = field(default_factory=datetime.now)
     event_type: EventType = EventType.AGENT_MESSAGE
-    agent_id: str | None = None
-    agent_role: str | None = None
-    model: str | None = None
-    content: str | None = None
+    agent_id: Optional[str] = None
+    agent_role: Optional[str] = None
+    model: Optional[str] = None
+    content: Optional[str] = None
     metadata: dict[str, Any] = field(default_factory=dict)
-    cost: float | None = None
-    tokens: int | None = None
-    duration_ms: float | None = None
-    parent_id: str | None = None
+    cost: Optional[float] = None
+    tokens: Optional[int] = None
+    duration_ms: Optional[float] = None
+    parent_id: Optional[str] = None
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
@@ -79,7 +79,7 @@ class ExecutionPattern:
     avg_duration_ms: float = 0.0
     avg_cost: float = 0.0
     usage_count: int = 0
-    last_used: datetime | None = None
+    last_used: Optional[datetime] = None
     metadata: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -105,7 +105,7 @@ class ExecutionTimeline:
     Records events, detects patterns, and provides analysis.
     """
 
-    def __init__(self, session_id: str | None = None):
+    def __init__(self, session_id: Optional[str] = None):
         """Initialize execution timeline."""
         self.session_id = session_id or str(uuid.uuid4())
         self.events: list[TimelineEvent] = []
@@ -113,8 +113,8 @@ class ExecutionTimeline:
         self.active_agents: set[str] = set()
         self.total_cost: float = 0.0
         self.total_tokens: int = 0
-        self.start_time: datetime | None = None
-        self.end_time: datetime | None = None
+        self.start_time: Optional[datetime] = None
+        self.end_time: Optional[datetime] = None
         self._event_callbacks: list[callable] = []
         self._pattern_callbacks: list[callable] = []
 
@@ -337,7 +337,7 @@ class ExecutionTimeline:
         )
         self.add_event(event)
 
-    def record_error(self, error: str, agent_id: str | None = None, metadata: dict[str, Any] = None) -> None:
+    def record_error(self, error: str, agent_id: Optional[str] = None, metadata: dict[str, Any] = None) -> None:
         """Record an error."""
         event = TimelineEvent(
             event_type=EventType.ERROR,

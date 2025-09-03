@@ -9,7 +9,7 @@ import logging
 import time
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any
+from typing import Any, Optional
 
 from app.core.ai_logger import logger
 from app.embeddings.agno_embedding_service import (
@@ -142,8 +142,8 @@ class UnifiedMemoryStore:
     async def store(
         self,
         content: dict[str, Any],
-        metadata: dict[str, Any] | None = None,
-        tags: list[str] | None = None,
+        metadata: Optional[dict[str, Any]] = None,
+        tags: Optional[list[str]] = None,
         auto_tag: bool = True
     ) -> str:
         """
@@ -237,7 +237,7 @@ class UnifiedMemoryStore:
         query: str,
         level: RetrievalLevel = RetrievalLevel.DOCUMENT,
         limit: int = 10,
-        filters: dict[str, Any] | None = None,
+        filters: Optional[dict[str, Any]] = None,
         use_cache: bool = True
     ) -> RetrievalResult:
         """
@@ -313,7 +313,7 @@ class UnifiedMemoryStore:
     async def _document_level_retrieval(
         self,
         query: str,
-        filters: dict | None,
+        filters: Optional[dict],
         limit: int
     ) -> list[VectorSearchResult]:
         """Document-level retrieval (coarse-grained)"""
@@ -344,7 +344,7 @@ class UnifiedMemoryStore:
     async def _section_level_retrieval(
         self,
         query: str,
-        filters: dict | None,
+        filters: Optional[dict],
         limit: int
     ) -> list[VectorSearchResult]:
         """Section-level retrieval (medium-grained)"""
@@ -383,7 +383,7 @@ class UnifiedMemoryStore:
     async def _snippet_level_retrieval(
         self,
         query: str,
-        filters: dict | None,
+        filters: Optional[dict],
         limit: int
     ) -> list[VectorSearchResult]:
         """Snippet-level retrieval (fine-grained)"""

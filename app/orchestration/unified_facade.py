@@ -9,7 +9,7 @@ from collections.abc import AsyncGenerator
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, Optional
 
 from app.core.circuit_breaker import with_circuit_breaker
 from app.memory.unified_memory_store import UnifiedMemoryStore
@@ -44,8 +44,8 @@ class SwarmRequest:
     urgency: str = "normal"
     use_memory: bool = True
     stream: bool = True
-    user_id: str | None = None
-    session_id: str | None = None
+    user_id: Optional[str] = None
+    session_id: Optional[str] = None
     metadata: dict[str, Any] = None
     mcp_assistants: list[str] = None  # ["claude", "roo", "cline"]
 

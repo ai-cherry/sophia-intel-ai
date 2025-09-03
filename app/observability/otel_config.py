@@ -5,7 +5,7 @@ Sets up AI-specific tracing, metrics, and logging for observability.
 
 import logging
 import socket
-from typing import Any
+from typing import Any, Optional
 
 from opentelemetry import trace
 from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
@@ -113,11 +113,11 @@ def trace_llm_call(
     response: str,
     input_tokens: int,
     output_tokens: int,
-    temperature: float | None = None,
-    latency_ms: int | None = None,
-    tool_calls: list[dict[str, Any]] | None = None,
-    user_id: str | None = None,
-    session_id: str | None = None
+    temperature: Optional[float] = None,
+    latency_ms: Optional[int] = None,
+    tool_calls: Optional[list[dict[str, Any]]] = None,
+    user_id: Optional[str] = None,
+    session_id: Optional[str] = None
 ) -> None:
     """
     Creates a custom span for an LLM API call with AI-specific attributes.

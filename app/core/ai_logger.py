@@ -11,7 +11,7 @@ import uuid
 from collections import deque
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, Optional, Union
 
 # Removed langchain dependency - use portkey instead
 from pydantic import BaseModel
@@ -34,7 +34,7 @@ class LogEntry(BaseModel):
     source: str
     line_number: int = None
     function_name: str = None
-    ai_analysis: dict | None = None
+    ai_analysis: Optional[dict] = None
 
 
 class PatternAnalyzer:
@@ -364,7 +364,7 @@ class AILogger:
         response = await self.llm.ainvoke(prompt)
         return json.loads(response.content)
 
-    def get_logs(self, level: LogLevel | None = None, limit: int = 100) -> list[LogEntry]:
+    def get_logs(self, level: Optional[LogLevel] = None, limit: int = 100) -> list[LogEntry]:
         """Get recent logs, optionally filtered by level"""
 
         logs = list(self.recent_logs)

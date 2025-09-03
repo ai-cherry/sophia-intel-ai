@@ -138,7 +138,7 @@ class CentralizedModelControl:
         """Check if model is in approved list"""
         return model in self.APPROVED_MODELS
 
-    def get_model_info(self, model: str) -> dict | None:
+    def get_model_info(self, model: str) -> Optional[dict]:
         """Get information about a model"""
         if not self.validate_model(model):
             raise ValueError(f"Model {model} is NOT APPROVED! Use only: {list(self.APPROVED_MODELS.keys())}")

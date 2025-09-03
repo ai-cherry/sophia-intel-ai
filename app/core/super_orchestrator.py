@@ -8,7 +8,7 @@ import json
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, Optional
 
 from fastapi import WebSocket
 
@@ -104,7 +104,7 @@ class EmbeddedTaskManager:
         await self.queue.put((priority.value, task))
         return task_id
 
-    async def get_next_task(self) -> dict | None:
+    async def get_next_task(self) -> Optional[dict]:
         try:
             priority, task = await asyncio.wait_for(self.queue.get(), timeout=1.0)
             self.active_tasks[task["id"]] = task
@@ -125,7 +125,7 @@ class EmbeddedTaskManager:
 class AISystemMonitor:
     """AI-powered system monitoring"""
 
-    def __init__(self, llm: Any | None = None):
+    def __init__(self, llm: Optional[Any] = None):
         self.llm = llm
         self.metrics_history = []
         self.insights = []

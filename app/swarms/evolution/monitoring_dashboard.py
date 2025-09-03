@@ -14,7 +14,7 @@ import statistics
 from collections import defaultdict
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
-from typing import Any
+from typing import Any, Optional, Union
 
 from app.swarms.memory_integration import SwarmMemoryClient
 
@@ -34,7 +34,7 @@ class EvolutionAlert:
     message: str
     timestamp: datetime
     resolved: bool = False
-    resolution_timestamp: datetime | None = None
+    resolution_timestamp: Optional[datetime] = None
     experimental_context: dict[str, Any] = None
 
     def to_dict(self) -> dict[str, Any]:
@@ -101,7 +101,7 @@ class ExperimentalEvolutionMonitor:
     - Dashboard data aggregation
     """
 
-    def __init__(self, memory_client: SwarmMemoryClient | None = None):
+    def __init__(self, memory_client: Optional[SwarmMemoryClient] = None):
         """Initialize evolution monitor."""
         self.memory_client = memory_client
 
@@ -696,7 +696,7 @@ class ExperimentalEvolutionMonitor:
 
 
 # Global monitor instance
-_global_monitor: ExperimentalEvolutionMonitor | None = None
+_global_monitor: Optional[ExperimentalEvolutionMonitor] = None
 
 def get_global_monitor() -> ExperimentalEvolutionMonitor:
     """Get the global evolution monitor instance."""

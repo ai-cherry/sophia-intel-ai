@@ -2,7 +2,7 @@
 Structured I/O models for workflow steps using Pydantic.
 """
 
-from typing import Any
+from typing import Any, Union
 
 from pydantic import BaseModel, Field
 
@@ -46,7 +46,7 @@ class ReviewFindings(BaseModel):
 
 class CriticReview(BaseModel):
     """Critic's structured review output."""
-    verdict: str = Field(..., pattern="^(pass|revise)$", description="Pass or revise")
+    verdict: str = Field(..., pattern="^(Union[pass, revise])$", description="Pass or revise")
     findings: ReviewFindings = Field(..., description="Categorized findings")
     must_fix: list[str] = Field(default_factory=list, description="Critical fixes required")
     nice_to_have: list[str] = Field(default_factory=list, description="Optional improvements")
@@ -54,8 +54,8 @@ class CriticReview(BaseModel):
 
 class MergeDecision(BaseModel):
     """Judge's merge decision."""
-    decision: str = Field(..., pattern="^(accept|merge|reject)$", description="Decision")
-    selected: str | None = Field(None, description="Selected proposal (A/B/C)")
+    decision: str = Field(..., pattern="^(accept|Union[merge, reject])$", description="Decision")
+    selected: Optional[str] = Field(None, description="Selected proposal (A/B/C)")
     merged_spec: dict[str, Any] = Field(default_factory=dict, description="Merged specification")
     runner_instructions: list[str] = Field(default_factory=list, description="Instructions for runner")
     rationale: list[str] = Field(default_factory=list, description="Decision rationale")
@@ -67,16 +67,16 @@ class GeneratorProposal(BaseModel):
     files_to_change: list[str] = Field(default_factory=list, description="Files to modify")
     test_plan: list[str] = Field(default_factory=list, description="Testing strategy")
     estimated_loc: int = Field(default=0, description="Estimated lines of code")
-    risk_level: str = Field(..., pattern="^(low|medium|high)$", description="Risk assessment")
+    risk_level: str = Field(..., pattern="^(low|Union[medium, high])$", description="Risk assessment")
 
 class TaskContext(BaseModel):
     """Context for a task in the workflow."""
     task_id: str = Field(..., description="Unique task identifier")
     description: str = Field(..., description="Task description")
-    priority: str = Field(default="medium", pattern="^(low|medium|high|critical)$")
-    repo: str | None = Field(None, description="Repository name")
-    branch: str | None = Field(None, description="Target branch")
-    user: str | None = Field(None, description="Requesting user")
+    priority: str = Field(default="medium", pattern="^(low|medium|Union[high, critical])$")
+    repo: Optional[str] = Field(None, description="Repository name")
+    branch: Optional[str] = Field(None, description="Target branch")
+    user: Optional[str] = Field(None, description="Requesting user")
     labels: list[str] = Field(default_factory=list, description="Task labels")
     acceptance_criteria: list[str] = Field(default_factory=list, description="Acceptance criteria")
 
@@ -84,6 +84,6 @@ class QualityGateResult(BaseModel):
     """Result from a quality gate check."""
     gate_name: str = Field(..., description="Name of the quality gate")
     passed: bool = Field(..., description="Whether the gate passed")
-    score: float | None = Field(None, description="Numeric score if applicable")
+    score: Optional[float] = Field(None, description="Numeric score if applicable")
     details: str = Field(default="", description="Details about the result")
     recommendations: list[str] = Field(default_factory=list, description="Improvement recommendations")

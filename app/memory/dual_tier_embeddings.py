@@ -10,7 +10,7 @@ import os
 import sqlite3
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any
+from typing import Any, Optional, Union
 
 import tiktoken
 
@@ -116,7 +116,7 @@ class EmbeddingCache:
         self,
         text: str,
         model: str
-    ) -> list[float] | None:
+    ) -> Optional[list[float]]:
         """
         Get cached embedding if exists.
         
@@ -221,9 +221,9 @@ class EmbeddingRouter:
     def select_tier(
         self,
         text: str,
-        language: str | None = None,
-        priority: str | None = None,
-        force_tier: EmbeddingTier | None = None
+        language: Optional[str] = None,
+        priority: Optional[str] = None,
+        force_tier: Optional[EmbeddingTier] = None
     ) -> EmbeddingTier:
         """
         Select appropriate embedding tier.
@@ -266,7 +266,7 @@ class EmbeddingRouter:
     def batch_route(
         self,
         texts: list[str],
-        metadata: list[dict[str, Any]] | None = None
+        metadata: Optional[list[dict[str, Any]]] = None
     ) -> dict[EmbeddingTier, list[int]]:
         """
         Route batch of texts to appropriate tiers.
@@ -304,7 +304,7 @@ class DualTierEmbedder:
     Integrates with standardized embedding pipeline for OpenAI models.
     """
 
-    def __init__(self, config: EmbeddingConfig | None = None):
+    def __init__(self, config: Optional[EmbeddingConfig] = None):
         self.config = config or EmbeddingConfig()
         self.router = EmbeddingRouter(self.config)
         self.cache = EmbeddingCache(self.config.cache_db_path)
@@ -315,9 +315,9 @@ class DualTierEmbedder:
     async def embed_single(
         self,
         text: str,
-        language: str | None = None,
-        priority: str | None = None,
-        force_tier: EmbeddingTier | None = None,
+        language: Optional[str] = None,
+        priority: Optional[str] = None,
+        force_tier: Optional[EmbeddingTier] = None,
         use_cache: bool = True
     ) -> tuple[list[float], EmbeddingTier]:
         """
@@ -362,7 +362,7 @@ class DualTierEmbedder:
     async def embed_batch(
         self,
         texts: list[str],
-        metadata: list[dict[str, Any]] | None = None,
+        metadata: Optional[list[dict[str, Any]]] = None,
         use_cache: bool = True
     ) -> list[tuple[list[float], EmbeddingTier]]:
         """

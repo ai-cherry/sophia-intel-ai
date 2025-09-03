@@ -11,7 +11,7 @@ import sqlite3
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, Optional
 
 from app.core.ai_logger import logger
 from app.core.circuit_breaker import with_circuit_breaker
@@ -39,8 +39,8 @@ class MemoryEntry:
     tags: list[str] = field(default_factory=list)
     timestamp: datetime = field(default_factory=datetime.now)
     memory_type: MemoryType = MemoryType.SEMANTIC
-    embedding_vector: list[float] | None = None
-    hash_id: str | None = None
+    embedding_vector: Optional[list[float]] = None
+    hash_id: Optional[str] = None
 
     def __post_init__(self):
         """Generate hash ID for deduplication."""
@@ -222,9 +222,9 @@ class SupermemoryStore:
     async def search_memory(
         self,
         query: str,
-        memory_types: list[MemoryType] | None = None,
-        tags: list[str] | None = None,
-        source_pattern: str | None = None,
+        memory_types: Optional[list[MemoryType]] = None,
+        tags: Optional[list[str]] = None,
+        source_pattern: Optional[str] = None,
         limit: int = MAX_RESULTS,
         use_fts: bool = True
     ) -> list[MemoryEntry]:
@@ -373,7 +373,7 @@ class MemoryPatterns:
         decision: str,
         rationale: list[str],
         source: str,
-        alternatives: list[str] | None = None
+        alternatives: Optional[list[str]] = None
     ) -> MemoryEntry:
         """Create memory entry for architectural decisions."""
         content = f"Decision: {decision}\n"
@@ -414,7 +414,7 @@ class MemoryPatterns:
         issue: str,
         solution: str,
         source: str,
-        prevention: str | None = None
+        prevention: Optional[str] = None
     ) -> MemoryEntry:
         """Create memory entry for edge cases."""
         content = f"Issue: {issue}\n"

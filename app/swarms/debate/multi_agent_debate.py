@@ -14,7 +14,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any
+from typing import Any, Optional
 from uuid import uuid4
 
 from opentelemetry import trace
@@ -86,8 +86,8 @@ class DebateRound:
     participants: list[str] = field(default_factory=list)
     statements: list[dict[str, Any]] = field(default_factory=list)
     votes: list[AgentVote] = field(default_factory=list)
-    duration_seconds: float | None = None
-    outcome: str | None = None
+    duration_seconds: Optional[float] = None
+    outcome: Optional[str] = None
 
 
 class MultiAgentDebateSystem:
@@ -160,7 +160,7 @@ class MultiAgentDebateSystem:
     async def initiate_debate(
         self,
         proposal: DebateProposal,
-        required_expertise: list[str] | None = None,
+        required_expertise: Optional[list[str]] = None,
         timeout_minutes: int = 30
     ) -> str:
         """Initiate a new multi-agent debate"""

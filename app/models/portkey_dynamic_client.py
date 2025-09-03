@@ -8,7 +8,7 @@ import logging
 import os
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional, Union
 
 from openai import AsyncOpenAI
 from portkey_ai import PORTKEY_GATEWAY_URL, Portkey
@@ -35,7 +35,7 @@ class DynamicPortkeyClient:
     def __init__(self,
                  portkey_api_key: str,
                  openrouter_api_key: str,
-                 config_path: str | None = None):
+                 config_path: Optional[str] = None):
         """
         Initialize dynamic Portkey client.
         
@@ -110,8 +110,8 @@ class DynamicPortkeyClient:
 
     @with_circuit_breaker("external_api")
     async def get_model_for_task(self,
-                                 task: str | TaskType = TaskType.GENERAL,
-                                 budget: str | ModelTier = ModelTier.BALANCED) -> str:
+                                 task: Union[str, TaskType] = TaskType.GENERAL,
+                                 budget: Union[str, ModelTier] = ModelTier.BALANCED) -> str:
         """
         Get the best available model for a specific task.
         
@@ -144,9 +144,9 @@ class DynamicPortkeyClient:
     @with_circuit_breaker("external_api")
     async def create_completion(self,
                               messages: list[dict[str, str]],
-                              model: str | None = None,
-                              task: str | TaskType = TaskType.GENERAL,
-                              budget: str | ModelTier = ModelTier.BALANCED,
+                              model: Optional[str] = None,
+                              task: Union[str, TaskType] = TaskType.GENERAL,
+                              budget: Union[str, ModelTier] = ModelTier.BALANCED,
                               **kwargs) -> dict[str, Any]:
         """
         Create chat completion with dynamic model selection.
@@ -225,7 +225,7 @@ class DynamicPortkeyClient:
 
     async def stream_completion(self,
                               messages: list[dict[str, str]],
-                              model: str | None = None,
+                              model: Optional[str] = None,
                               **kwargs):
         """
         Stream chat completion with dynamic model selection.
@@ -340,8 +340,8 @@ class DynamicPortkeyClient:
 
     @with_circuit_breaker("external_api")
     async def get_available_models(self,
-                                  tier: str | ModelTier | None = None,
-                                  max_cost: float | None = None) -> list[str]:
+                                  tier: Union[str, Optional][ModelTier] = None,
+                                  max_cost: Optional[float] = None) -> list[str]:
         """
         Get list of available models matching criteria.
         
@@ -363,7 +363,7 @@ class DynamicPortkeyClient:
 
     async def benchmark_models(self,
                               prompt: str,
-                              models: list[str] | None = None) -> dict[str, Any]:
+                              models: Optional[list[str]] = None) -> dict[str, Any]:
         """
         Benchmark response time and quality across models.
         

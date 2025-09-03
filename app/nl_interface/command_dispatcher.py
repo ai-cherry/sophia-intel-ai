@@ -66,7 +66,7 @@ class ExecutionResult:
     execution_time: float
     patterns_used: list[str]
     quality_score: float
-    error: str | None = None
+    error: Optional[str] = None
     metadata: dict[str, Any] = field(default_factory=dict)
 
 
@@ -181,7 +181,7 @@ class SmartCommandDispatcher:
         self,
         text: str,
         session_id: str,
-        user_context: dict[str, Any] | None = None
+        user_context: Optional[dict[str, Any]] = None
     ) -> ExecutionResult:
         """
         Process a natural language command with intelligent routing

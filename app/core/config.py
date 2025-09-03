@@ -2,6 +2,7 @@
 Unified Configuration System for Sophia Intel AI
 Single source of truth for all configuration values.
 """
+from typing import Optional
 
 from pathlib import Path
 
@@ -45,14 +46,14 @@ class AppSettings(BaseSettings):
 
     # Weaviate Vector Database
     weaviate_url: str = Field(default="http://localhost:8080", env="WEAVIATE_URL")
-    weaviate_api_key: SecretStr | None = Field(default=None, env="WEAVIATE_API_KEY")
+    weaviate_api_key: Optional[SecretStr] = Field(default=None, env="WEAVIATE_API_KEY")
 
     # Redis Cache
     redis_url: str = Field(default="redis://localhost:6379", env="REDIS_URL")
     redis_ttl: int = Field(default=3600, env="REDIS_TTL")
 
     # PostgreSQL (for GraphRAG)
-    postgres_url: str | None = Field(default=None, env="POSTGRES_URL")
+    postgres_url: Optional[str] = Field(default=None, env="POSTGRES_URL")
 
     # SQLite (for Supermemory)
     supermemory_db: str = Field(default="tmp/supermemory.db", env="SUPERMEMORY_DB")
@@ -62,22 +63,22 @@ class AppSettings(BaseSettings):
     # ============================================
 
     # OpenRouter/OpenAI
-    openai_api_key: SecretStr | None = Field(default=None, env="OPENAI_API_KEY")
+    openai_api_key: Optional[SecretStr] = Field(default=None, env="OPENAI_API_KEY")
     openai_base_url: str = Field(default="https://openrouter.ai/api/v1", env="OPENAI_BASE_URL")
-    openrouter_api_key: SecretStr | None = Field(default=None, env="OPENROUTER_API_KEY")
+    openrouter_api_key: Optional[SecretStr] = Field(default=None, env="OPENROUTER_API_KEY")
 
     # Portkey
-    portkey_api_key: SecretStr | None = Field(default=None, env="PORTKEY_API_KEY")
+    portkey_api_key: Optional[SecretStr] = Field(default=None, env="PORTKEY_API_KEY")
     portkey_base_url: str = Field(default="https://api.portkey.ai/v1", env="PORTKEY_BASE_URL")
 
     # Together AI
-    together_api_key: SecretStr | None = Field(default=None, env="TOGETHER_API_KEY")
+    together_api_key: Optional[SecretStr] = Field(default=None, env="TOGETHER_API_KEY")
 
     # Anthropic
-    anthropic_api_key: SecretStr | None = Field(default=None, env="ANTHROPIC_API_KEY")
+    anthropic_api_key: Optional[SecretStr] = Field(default=None, env="ANTHROPIC_API_KEY")
 
     # Agno
-    agno_api_key: SecretStr | None = Field(default=None, env="AGNO_API_KEY")
+    agno_api_key: Optional[SecretStr] = Field(default=None, env="AGNO_API_KEY")
 
     # ============================================
     # Model Configuration
@@ -160,7 +161,7 @@ class AppSettings(BaseSettings):
     metrics_port: int = Field(default=9090, env="METRICS_PORT")
 
     tracing_enabled: bool = Field(default=False, env="TRACING_ENABLED")
-    jaeger_endpoint: str | None = Field(default=None, env="JAEGER_ENDPOINT")
+    jaeger_endpoint: Optional[str] = Field(default=None, env="JAEGER_ENDPOINT")
 
     # ============================================
     # Paths

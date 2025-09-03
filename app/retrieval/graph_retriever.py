@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Optional
 
 from app.embeddings.together_embeddings import (
     EmbeddingModel,
@@ -21,7 +21,7 @@ class GraphSearchRequest:
     hops: int = 0  # placeholder for future multi-hop support
     filters: dict[str, Any] = field(default_factory=dict)
     start_nodes: list[str] = field(default_factory=list)
-    model: str | None = None  # EmbeddingModel value
+    model: Optional[str] = None  # EmbeddingModel value
 
 
 @dataclass
@@ -41,7 +41,7 @@ class GraphSearchResult:
     top_k: int
     hops: int
     used_model: str
-    notes: str | None = None
+    notes: Optional[str] = None
 
 
 class GraphRetriever:
@@ -57,8 +57,8 @@ class GraphRetriever:
 
     def __init__(
         self,
-        weaviate_client: WeaviateClient | None = None,
-        embedding_service: TogetherEmbeddingService | None = None,
+        weaviate_client: Optional[WeaviateClient] = None,
+        embedding_service: Optional[TogetherEmbeddingService] = None,
     ):
         self.weaviate = weaviate_client or WeaviateClient()
         self.embedder = embedding_service or get_embedding_service()

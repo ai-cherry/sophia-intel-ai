@@ -7,7 +7,7 @@ import json
 import logging
 import re
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional, Union
 
 from langchain.schema import Document
 
@@ -65,7 +65,7 @@ class CodebaseNode(KnowledgeSource):
         self,
         pipeline: LangGraphRAGPipeline,
         root_path: str = ".",
-        file_patterns: list[str] | None = None
+        file_patterns: Optional[list[str]] = None
     ):
         """
         Initialize codebase node
@@ -139,7 +139,7 @@ class CodebaseNode(KnowledgeSource):
                 metadata["functions"] = functions
 
             # Find imports
-            imports = re.findall(r'^(?:from|import)\s+([.\w]+)', content, re.MULTILINE)
+            imports = re.findall(r'^(?:Union[from, import])\s+([.\w]+)', content, re.MULTILINE)
             if imports:
                 metadata["imports"] = imports[:10]  # Limit to first 10
 
@@ -192,7 +192,7 @@ class SystemLogsNode(KnowledgeSource):
     def __init__(
         self,
         pipeline: LangGraphRAGPipeline,
-        log_paths: list[str] | None = None,
+        log_paths: Optional[list[str]] = None,
         max_lines: int = 1000
     ):
         """
@@ -376,7 +376,7 @@ class PolicyNode(KnowledgeSource):
     def __init__(
         self,
         pipeline: LangGraphRAGPipeline,
-        policy_files: list[str] | None = None
+        policy_files: Optional[list[str]] = None
     ):
         """
         Initialize policy node

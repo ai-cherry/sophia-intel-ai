@@ -9,7 +9,7 @@ Integrates Portkey virtual keys for intelligent model routing:
 
 import logging
 import os
-from typing import Any
+from typing import Any, Union
 
 import httpx
 from portkey_ai import Portkey
@@ -271,7 +271,7 @@ class PortkeyRouterModel:
         messages: list[dict[str, str]],
         stream: bool = False,
         **kwargs
-    ) -> str | dict[str, Any]:
+    ) -> Union[str, dict][str, Any]:
         """
         Main model calling interface with intelligent fallback routing.
         
@@ -345,7 +345,7 @@ class PortkeyRouterModel:
                             span.set_attribute("status", "all_failed")
                             raise AllModelsFailedException(error_msg)
 
-    def _track_usage(self, model: str, response: dict | Any):
+    def _track_usage(self, model: str, response: Union[dict, Any]):
         """Track model usage statistics"""
 
         try:

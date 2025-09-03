@@ -13,7 +13,7 @@ from datetime import datetime, timedelta
 from functools import wraps
 
 import httpx
-from circuitbreaker import circuit
+from pybreaker import CircuitBreaker
 from fastapi import HTTPException, Request, status
 from fastapi.responses import JSONResponse
 from slowapi import Limiter, _rate_limit_exceeded_handler
@@ -215,22 +215,25 @@ class CircuitBreakerMiddleware:
         """Configure circuit breakers for known services."""
 
         # Weaviate circuit breaker
-        @circuit(failure_threshold=5, recovery_timeout=60, expected_exception=Exception)
-        def weaviate_breaker():
-            pass
-        self.breakers['weaviate'] = weaviate_breaker
+        self.breakers['weaviate'] = CircuitBreaker(
+            fail_max=5,
+            reset_timeout=60,
+            name='weaviate'
+        )
 
         # OpenAI/OpenRouter circuit breaker
-        @circuit(failure_threshold=3, recovery_timeout=30, expected_exception=Exception)
-        def openai_breaker():
-            pass
-        self.breakers['openai'] = openai_breaker
+        self.breakers['openai'] = CircuitBreaker(
+            fail_max=3,
+            reset_timeout=30,
+            name='openai'
+        )
 
         # Redis circuit breaker
-        @circuit(failure_threshold=10, recovery_timeout=20, expected_exception=Exception)
-        def redis_breaker():
-            pass
-        self.breakers['redis'] = redis_breaker
+        self.breakers['redis'] = CircuitBreaker(
+            fail_max=10,
+            reset_timeout=20,
+            name='redis'
+        )
 
     async def __call__(self, request: Request, call_next):
         # Check circuit breakers for relevant endpoints
@@ -239,7 +242,7 @@ class CircuitBreakerMiddleware:
         # Check if any breakers are open
         open_breakers = []
         for name, breaker in self.breakers.items():
-            if breaker.current_state == 'open':
+            if breaker.state == 'open':
                 open_breakers.append(name)
 
         if open_breakers and endpoint.startswith('/teams/run'):

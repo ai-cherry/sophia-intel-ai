@@ -148,8 +148,8 @@ class AdvancedEmbeddingRouter:
     async def get_embeddings(
         self,
         text: str,
-        content_type: ContentType | None = None,
-        dimensions: int | None = 1024
+        content_type: Optional[ContentType] = None,
+        dimensions: Optional[int] = 1024
     ) -> EmbeddingResult:
         """
         Generate embeddings for single text with intelligent routing
@@ -204,8 +204,8 @@ class AdvancedEmbeddingRouter:
     async def get_embeddings_batch(
         self,
         texts: list[str],
-        content_type: ContentType | None = None,
-        dimensions: int | None = 1024,
+        content_type: Optional[ContentType] = None,
+        dimensions: Optional[int] = 1024,
         batch_size: int = 100
     ) -> EmbeddingResult:
         """

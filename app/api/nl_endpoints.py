@@ -8,7 +8,7 @@ import logging
 import time
 import uuid
 from datetime import datetime
-from typing import Any
+from typing import Any, Union
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Query, Request
 from pydantic import BaseModel, Field
@@ -86,9 +86,9 @@ async def initialize_components():
 class NLProcessRequest(BaseModel):
     """Request model for NL processing"""
     text: str = Field(..., description="Natural language command text")
-    context: dict[str, Any] | None = Field(default={}, description="Optional context for processing")
-    session_id: str | None = Field(default=None, description="Session ID for tracking")
-    api_key: str | None = Field(default=None, description="API key for authentication")
+    context: Optional[dict[str, Any]] = Field(default={}, description="Optional context for processing")
+    session_id: Optional[str] = Field(default=None, description="Session ID for tracking")
+    api_key: Optional[str] = Field(default=None, description="API key for authentication")
 
 
 class StandardResponse(BaseModel):
@@ -96,16 +96,16 @@ class StandardResponse(BaseModel):
     success: bool
     message: str = Field(..., description="Human-readable response message")
     response: str = Field("", description="Detailed response text")
-    intent: str | None = None
-    data: dict[str, Any] | None = Field(default_factory=dict, description="Structured data payload")
-    metadata: dict[str, Any] | None = Field(default_factory=dict, description="Additional metadata")
-    workflow_id: str | None = None
-    session_id: str | None = None
-    user_id: str | None = None
+    intent: Optional[str] = None
+    data: Optional[dict[str, Any]] = Field(default_factory=dict, description="Structured data payload")
+    metadata: Optional[dict[str, Any]] = Field(default_factory=dict, description="Additional metadata")
+    workflow_id: Optional[str] = None
+    session_id: Optional[str] = None
+    user_id: Optional[str] = None
     timestamp: str = Field(default_factory=lambda: datetime.now().isoformat())
-    execution_time_ms: float | None = None
+    execution_time_ms: Optional[float] = None
     rate_limited: bool = Field(False, description="Whether this request was rate limited")
-    error: str | None = None
+    error: Optional[str] = None
 
     def __init__(self, **data):
         super().__init__(**data)
@@ -115,9 +115,9 @@ class StandardResponse(BaseModel):
 
 class NLProcessResponse(StandardResponse):
     """Enhanced response model for NL processing"""
-    entities: dict[str, Any] | None = None
-    confidence: float | None = None
-    security: dict[str, Any] | None = Field(default_factory=dict, description="Security validation info")
+    entities: Optional[dict[str, Any]] = None
+    confidence: Optional[float] = None
+    security: Optional[dict[str, Any]] = Field(default_factory=dict, description="Security validation info")
 
 
 class WorkflowTriggerRequest(BaseModel):
@@ -133,9 +133,9 @@ class WorkflowStatusResponse(BaseModel):
     execution_id: str
     status: str
     started_at: str
-    completed_at: str | None
-    result: dict[str, Any] | None
-    error: str | None
+    completed_at: Optional[str]
+    result: Optional[dict[str, Any]]
+    error: Optional[str]
 
 
 class IntentInfo(BaseModel):
@@ -400,7 +400,7 @@ async def get_workflow_status(execution_id: str) -> WorkflowStatusResponse:
 async def execute_agent(
     agent_name: str = Query(..., description="Name of agent to execute"),
     task: str = Query(..., description="Task for the agent"),
-    session_id: str | None = Query(None, description="Session ID"),
+    session_id: Optional[str] = Query(None, description="Session ID"),
     background_tasks: BackgroundTasks = None
 ) -> dict[str, Any]:
     """
@@ -575,9 +575,9 @@ async def workflow_callback(
     status: str,
     execution_id: str,
     timestamp: str,
-    result: dict[str, Any] | None = None,
-    error: str | None = None,
-    session_id: str | None = None
+    result: Optional[dict[str, Any]] = None,
+    error: Optional[str] = None,
+    session_id: Optional[str] = None
 ) -> StandardResponse:
     """
     Handle workflow completion callbacks from n8n

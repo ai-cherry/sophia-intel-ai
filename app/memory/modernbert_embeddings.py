@@ -12,7 +12,7 @@ import sqlite3
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional, Union
 
 import numpy as np
 import tiktoken
@@ -118,7 +118,7 @@ class ModernEmbeddingCache:
 class ModernBERTEmbedder:
     """State-of-the-art embedder with 2025 models."""
 
-    def __init__(self, config: ModernEmbeddingConfig | None = None):
+    def __init__(self, config: Optional[ModernEmbeddingConfig] = None):
         self.config = config or ModernEmbeddingConfig()
         self.cache = ModernEmbeddingCache(self.config.cache_db_path)
         self.tokenizer = tiktoken.get_encoding("cl100k_base")
@@ -256,7 +256,7 @@ class ModernBERTEmbedder:
 
         return vec_dequantized.tolist()
 
-    def _get_cached_embedding(self, text_hash: str, model: str) -> list[float] | None:
+    def _get_cached_embedding(self, text_hash: str, model: str) -> Optional[list[float]]:
         """Retrieve cached embedding if available."""
         with sqlite3.connect(self.cache.db_path) as conn:
             cursor = conn.execute("""

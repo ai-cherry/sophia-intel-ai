@@ -8,7 +8,7 @@ import logging
 import time
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -141,7 +141,7 @@ class SwarmBenchmarkData:
     total_execution_time: float = 0.0
     memory_usage_mb: float = 0.0
     quality_score: float = 0.0
-    final_result: dict | None = None
+    final_result: Optional[dict] = None
 
 
 class GracefulDegradationManager:

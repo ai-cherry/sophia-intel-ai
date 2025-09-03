@@ -8,7 +8,7 @@ import re
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, Union
 
 from app.contracts.json_schemas import CriticOutput, GeneratorProposal, JudgeOutput, PlannerOutput
 from app.core.ai_logger import logger
@@ -171,7 +171,7 @@ class AccuracyEval:
         self,
         proposal: GeneratorProposal,
         acceptance_criteria: list[str],
-        critic_output: CriticOutput | None = None
+        critic_output: Optional[CriticOutput] = None
     ) -> EvaluationResult:
         """
         Evaluate implementation accuracy.
@@ -363,7 +363,7 @@ class ReliabilityEval:
 
     def evaluate(
         self,
-        judge_output: JudgeOutput | None = None
+        judge_output: Optional[JudgeOutput] = None
     ) -> EvaluationResult:
         """
         Evaluate reliability based on tool calls.
@@ -537,7 +537,7 @@ class SafetyEval:
         # Check for proper input validation
         if language == "python":
             # Check for raw input without validation
-            if "input(" in code and not re.search(r"validate|check|verify", code, re.IGNORECASE):
+            if "input(" in code and not re.search(r"validate|Union[check, verify]", code, re.IGNORECASE):
                 warnings.append("User input without apparent validation")
                 score -= 1.0
 
@@ -589,11 +589,11 @@ class EvaluationGateManager:
 
     def evaluate_all(
         self,
-        critic_output: CriticOutput | None = None,
-        judge_output: JudgeOutput | None = None,
-        code: str | None = None,
-        requirements: list[str] | None = None,
-        acceptance_criteria: list[str] | None = None
+        critic_output: Optional[CriticOutput] = None,
+        judge_output: Optional[JudgeOutput] = None,
+        code: Optional[str] = None,
+        requirements: Optional[list[str]] = None,
+        acceptance_criteria: Optional[list[str]] = None
     ) -> dict[str, Any]:
         """
         Run all applicable evaluation gates.

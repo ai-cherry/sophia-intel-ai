@@ -1,6 +1,7 @@
 import logging
 import os
 import time
+from typing import Optional
 
 import httpx
 from openai import AsyncOpenAI
@@ -176,7 +177,7 @@ class OpenRouterGateway:
         model_cost_usd_total.labels(model=model, type="output").inc(output_cost)
         model_cost_usd_today.labels(model=model).inc(input_cost + output_cost)
 
-    def _get_fallback(self, model: str) -> str | None:
+    def _get_fallback(self, model: str) -> Optional[str]:
         """Generate fallback chain for unavailable models"""
         fallback_chain = {
             "openai/gpt-5": [

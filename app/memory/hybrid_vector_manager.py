@@ -5,7 +5,7 @@ This was referenced but missing. Creating minimal implementation for compatibili
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any
+from typing import Any, Optional
 
 
 class QueryType(Enum):
@@ -30,7 +30,7 @@ class VectorSearchResult:
     id: str
     score: float
     metadata: dict[str, Any]
-    content: str | None = None
+    content: Optional[str] = None
 
 
 class HybridVectorManager:
@@ -39,11 +39,11 @@ class HybridVectorManager:
     Stub implementation - will be properly implemented later.
     """
 
-    def __init__(self, config: CollectionConfig | None = None):
+    def __init__(self, config: Optional[CollectionConfig] = None):
         self.config = config or CollectionConfig()
         self.collections = {}
 
-    async def create_collection(self, name: str, config: CollectionConfig | None = None):
+    async def create_collection(self, name: str, config: Optional[CollectionConfig] = None):
         """Create a new collection"""
         self.collections[name] = config or self.config
         return True
@@ -65,7 +65,7 @@ class HybridVectorManager:
         id: str,
         vector: list[float],
         metadata: dict[str, Any],
-        content: str | None = None
+        content: Optional[str] = None
     ) -> bool:
         """Insert vector into collection"""
         # Stub implementation

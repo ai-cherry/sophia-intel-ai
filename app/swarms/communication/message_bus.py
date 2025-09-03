@@ -5,10 +5,10 @@ import logging
 import time
 from collections.abc import AsyncIterator
 from datetime import datetime, timezone
-from typing import Any
+from typing import Any, Optional, Union
 from uuid import uuid4
 
-import aioredis
+import redis.asyncio as aioredis
 import msgpack
 from opentelemetry import trace
 from opentelemetry.trace import SpanKind
@@ -32,7 +32,7 @@ class SwarmMessage(BaseModel):
     """Structured message for agent communication"""
     id: str = Field(default_factory=lambda: f"msg:{uuid4().hex}")
     sender_agent_id: str
-    receiver_agent_id: str | None = None
+    receiver_agent_id: Optional[str] = None
     message_type: MessageType
     content: dict[str, Any]
     thread_id: str = Field(default_factory=lambda: f"thd:{uuid4().hex}")
@@ -174,7 +174,7 @@ class MessageBus:
     async def subscribe(
         self,
         agent_id: str,
-        message_types: list[MessageType] | None = None
+        message_types: Optional[list[MessageType]] = None
     ) -> AsyncIterator[SwarmMessage]:
         """Subscribes to messages for an agent with optional filters"""
         redis = await self._get_redis()

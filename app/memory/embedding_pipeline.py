@@ -114,7 +114,7 @@ class EmbeddingRequest(BaseModel):
     texts: list[str]
     model: EmbeddingModel = EmbeddingModel.EMBEDDING_3_SMALL
     purpose: EmbeddingPurpose = EmbeddingPurpose.SEARCH
-    dimensions: int | None = None
+    dimensions: Optional[int] = None
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 # ============================================
@@ -214,7 +214,7 @@ class StandardizedEmbeddingPipeline:
         self,
         texts: list[str],
         model: EmbeddingModel,
-        dimensions: int | None = None
+        dimensions: Optional[int] = None
     ) -> list[list[float]]:
         """Generate embeddings for a batch of texts.
         

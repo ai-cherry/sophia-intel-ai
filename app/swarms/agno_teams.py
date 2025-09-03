@@ -8,7 +8,7 @@ import logging
 import os
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any
+from typing import Any, Optional
 
 
 # Mock AGNO classes until proper package is available
@@ -116,8 +116,8 @@ class SophiaAGNOTeam:
 
     def __init__(self, config: AGNOTeamConfig):
         self.config = config
-        self.team: Team | None = None
-        self.memory_client: EnhancedSwarmMemoryClient | None = None
+        self.team: Optional[Team] = None
+        self.memory_client: Optional[EnhancedSwarmMemoryClient] = None
         self.execution_history = []
         # Routing config will be created lazily when needed
         self.routing_config = None
@@ -246,7 +246,7 @@ class SophiaAGNOTeam:
         self,
         task_description: str,
         context: dict[str, Any],
-        model_overrides: dict[str, str] | None = None
+        model_overrides: Optional[dict[str, str]] = None
     ) -> dict[str, Any]:
         """
         Execute task with AGNO Team

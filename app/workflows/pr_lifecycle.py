@@ -3,7 +3,7 @@ PR Lifecycle workflow with quality gates and evaluation.
 """
 
 from textwrap import dedent
-from typing import Any
+from typing import Any, Optional
 
 from agno.run.team import TeamRunResponse
 from agno.workflow.v2.loop import Loop
@@ -349,7 +349,7 @@ workflow = Workflow(
 def run_pr_workflow(
     task: str,
     priority: str = "medium",
-    repo: str | None = None,
+    repo: Optional[str] = None,
     branch: str = "main"
 ) -> dict[str, Any]:
     """

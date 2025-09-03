@@ -6,7 +6,7 @@ This is what happens when you demand only the absolute peak AI models.
 import json
 import os
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Optional
 
 from app.core.ai_logger import logger
 from app.core.circuit_breaker import with_circuit_breaker
@@ -368,7 +368,7 @@ class ElitePortkeyGateway:
         role: str,
         messages: list[dict[str, str]],
         task_complexity: float = 0.5,
-        swarm_mode: str | None = None,
+        swarm_mode: Optional[str] = None,
         **kwargs
     ) -> str:
         """

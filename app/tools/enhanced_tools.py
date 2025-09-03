@@ -8,7 +8,7 @@ import subprocess
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional, Union
 
 from app.core.ai_logger import logger
 
@@ -226,7 +226,7 @@ class EnhancedCodeSearch(Tool):
         self,
         query: str,
         path: str = ".",
-        file_type: str | None = None,
+        file_type: Optional[str] = None,
         context_lines: int = 2
     ) -> list[dict[str, Any]]:
         """Search code with enhanced features."""
@@ -567,7 +567,7 @@ class EnhancedTestRunner(Tool):
         else:
             raise ValueError(f"No test framework detected in {path}")
 
-    def _detect_framework(self, path: Path) -> str | None:
+    def _detect_framework(self, path: Path) -> Optional[str]:
         """Detect test framework."""
         # Check for pytest
         if (path / "pytest.ini").exists() or (path / "pyproject.toml").exists():
@@ -583,7 +583,7 @@ class EnhancedTestRunner(Tool):
     async def _run_pytest(
         self,
         path: Path,
-        pattern: str | None,
+        pattern: Optional[str],
         verbose: bool
     ) -> dict[str, Any]:
         """Run pytest tests."""
@@ -627,7 +627,7 @@ class EnhancedTestRunner(Tool):
     async def _run_unittest(
         self,
         path: Path,
-        pattern: str | None,
+        pattern: Optional[str],
         verbose: bool
     ) -> dict[str, Any]:
         """Run unittest tests."""

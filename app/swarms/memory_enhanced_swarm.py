@@ -6,7 +6,7 @@ Extends ImprovedAgentSwarm with full memory integration following ADR-005.
 import json
 import logging
 from datetime import datetime
-from typing import Any
+from typing import Any, Optional, Union
 
 from app.core.circuit_breaker import with_circuit_breaker
 from app.memory.supermemory_mcp import MemoryType
@@ -43,10 +43,10 @@ class MemoryEnhancedImprovedSwarm(ImprovedAgentSwarm, SwarmMemoryMixin):
 
         # Memory integration components
         self.memory_pattern = MemoryIntegrationPattern()
-        self.memory_enhanced_archive: MemoryEnhancedStrategyArchive | None = None
+        self.memory_enhanced_archive: Optional[MemoryEnhancedStrategyArchive] = None
 
         # Consciousness tracking integration
-        self.consciousness_tracker: ConsciousnessTracker | None = None
+        self.consciousness_tracker: Optional[ConsciousnessTracker] = None
 
         # Memory-enhanced execution tracking
         self.memory_execution_log = []
@@ -872,7 +872,7 @@ class MemoryEnhancedImprovedSwarm(ImprovedAgentSwarm, SwarmMemoryMixin):
         except Exception as e:
             logger.error(f"Failed to cleanup full system: {e}")
 
-    async def _measure_post_execution_consciousness(self, problem: dict, result: dict) -> dict[str, Any] | None:
+    async def _measure_post_execution_consciousness(self, problem: dict, result: dict) -> Optional[dict[str, Any]]:
         """Measure consciousness after task execution."""
         if not self.consciousness_tracker:
             return None

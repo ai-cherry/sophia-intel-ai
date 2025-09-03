@@ -79,14 +79,14 @@ class PortkeyConfig:
 class ObservabilityHeaders:
     """Metadata headers for tracking and monitoring."""
 
-    user_id: str | None = None
-    session_id: str | None = None
-    environment: str | None = None
-    feature: str | None = None
-    cost_center: str | None = None
-    role: Role | None = None
-    swarm: str | None = None
-    ticket_id: str | None = None
+    user_id: Optional[str] = None
+    session_id: Optional[str] = None
+    environment: Optional[str] = None
+    feature: Optional[str] = None
+    cost_center: Optional[str] = None
+    role: Optional[Role] = None
+    swarm: Optional[str] = None
+    ticket_id: Optional[str] = None
 
     @with_circuit_breaker("external_api")
     def to_headers(self) -> dict[str, str]:
@@ -168,7 +168,7 @@ class ABTestStrategy:
 class PortkeyGateway:
     """Enhanced Portkey gateway with observability and routing."""
 
-    def __init__(self, config: PortkeyConfig | None = None):
+    def __init__(self, config: Optional[PortkeyConfig] = None):
         self.config = config or PortkeyConfig()
         self._setup_clients()
 
@@ -216,10 +216,10 @@ class PortkeyGateway:
         messages: list[dict[str, str]],
         model: str = "openai/gpt-5",
         temperature: float = 0.7,
-        role: Role | None = None,
-        swarm: str | None = None,
-        ticket_id: str | None = None,
-        routing_strategy: Any | None = None,
+        role: Optional[Role] = None,
+        swarm: Optional[str] = None,
+        ticket_id: Optional[str] = None,
+        routing_strategy: Optional[Any] = None,
         **kwargs
     ) -> str:
         """
@@ -290,10 +290,10 @@ class PortkeyGateway:
         messages: list[dict[str, str]],
         model: str = "openai/gpt-5",
         temperature: float = 0.7,
-        role: Role | None = None,
-        swarm: str | None = None,
-        ticket_id: str | None = None,
-        routing_strategy: Any | None = None,
+        role: Optional[Role] = None,
+        swarm: Optional[str] = None,
+        ticket_id: Optional[str] = None,
+        routing_strategy: Optional[Any] = None,
         stream: bool = False,
         **kwargs
     ):

@@ -9,7 +9,7 @@ import logging
 import os
 import re
 from datetime import datetime
-from typing import Any
+from typing import Any, Optional, Union
 
 import aiohttp
 
@@ -121,7 +121,7 @@ class EnhancedSwarmMemoryClient:
         self.swarm_id = swarm_id
         self.config = get_env_config()
         self.mcp_server_url = self.config.mcp_server_url
-        self.session: aiohttp.ClientSession | None = None
+        self.session: aiohttp.Optional[ClientSession] = None
         self.tag_extractor = AutoTagExtractor()
         self.context_stack = []  # Track execution context
 
@@ -129,7 +129,7 @@ class EnhancedSwarmMemoryClient:
         """Push execution context for auto-tagging"""
         self.context_stack.append(context)
 
-    def pop_context(self) -> dict[str, Any] | None:
+    def pop_context(self) -> Optional[dict[str, Any]]:
         """Pop execution context"""
         return self.context_stack.pop() if self.context_stack else None
 
@@ -145,8 +145,8 @@ class EnhancedSwarmMemoryClient:
         topic: str,
         content: str,
         memory_type: MemoryType = MemoryType.EPISODIC,
-        tags: list[str] | None = None,
-        metadata: dict[str, Any] | None = None,
+        tags: Optional[list[str]] = None,
+        metadata: Optional[dict[str, Any]] = None,
         auto_tag: bool = True,
         context_aware: bool = True
     ) -> dict[str, Any]:
@@ -294,9 +294,9 @@ class EnhancedSwarmMemoryClient:
     async def search_memories(
         self,
         query: str,
-        tags: list[str] | None = None,
+        tags: Optional[list[str]] = None,
         limit: int = 10,
-        memory_type: MemoryType | None = None
+        memory_type: Optional[MemoryType] = None
     ) -> list[dict[str, Any]]:
         """Search memories with tag filtering"""
         search_params = {
@@ -336,7 +336,7 @@ def create_swarm_context(
     task_id: str,
     agent_role: str,
     repo_path: str,
-    file_path: str | None = None,
+    file_path: Optional[str] = None,
     **kwargs
 ) -> dict[str, Any]:
     """Create standard swarm execution context"""

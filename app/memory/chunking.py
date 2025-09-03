@@ -1,6 +1,6 @@
 import hashlib
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 
 def chunk_code(
@@ -152,8 +152,8 @@ def _detect_language(filepath: str) -> str:
 
 def produce_chunks_for_index(
     filepath: str,
-    content: str | None = None,
-    priority: str | None = None
+    content: Optional[str] = None,
+    priority: Optional[str] = None
 ) -> tuple[list[str], list[str], list[dict]]:
     """
     Produce chunks ready for indexing with IDs, texts, and payloads.
@@ -197,8 +197,8 @@ def produce_chunks_for_index(
 
 def discover_source_files(
     root_dir: str = ".",
-    include_patterns: list[str] | None = None,
-    exclude_patterns: list[str] | None = None
+    include_patterns: Optional[list[str]] = None,
+    exclude_patterns: Optional[list[str]] = None
 ) -> list[str]:
     """
     Discover source files for indexing.

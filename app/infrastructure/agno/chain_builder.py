@@ -9,7 +9,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Optional, Union
 
 import yaml
 
@@ -28,7 +28,7 @@ class ChainNode:
     config: dict[str, Any] = field(default_factory=dict)
     inputs: list[str] = field(default_factory=list)  # Input node IDs
     outputs: list[str] = field(default_factory=list)  # Output node IDs
-    condition: str | None = None  # Conditional execution expression
+    condition: Optional[str] = None  # Conditional execution expression
     retry_policy: dict[str, Any] = field(default_factory=lambda: {"max_retries": 3, "delay": 1.0})
 
 @dataclass
@@ -39,7 +39,7 @@ class ChainConfig:
     description: str
     nodes: list[ChainNode]
     metadata: dict[str, Any] = field(default_factory=dict)
-    timeout: float | None = None
+    timeout: Optional[float] = None
     parallel_execution: bool = False
 
 # ==================== Chain Execution Context ====================
@@ -72,7 +72,7 @@ class ChainEvent:
     event_type: ChainEventType
     chain_id: str
     execution_id: str
-    node_id: str | None = None
+    node_id: Optional[str] = None
     data: dict[str, Any] = field(default_factory=dict)
 
 # ==================== Chain Builder ====================
@@ -116,7 +116,7 @@ class AGNOChainBuilder:
         self.agent_registry[agent_type] = agent_class
         logger.info(f"Registered agent type: {agent_type} -> {agent_class.__name__}")
 
-    def load_chain_from_yaml(self, yaml_path: str | Path) -> ChainConfig:
+    def load_chain_from_yaml(self, yaml_path: Union[str, Path]) -> ChainConfig:
         """
         Load chain configuration from YAML file
         
@@ -270,7 +270,7 @@ class ChainExecutor:
         self.config = config
         self.agent_registry = agent_registry
         self.agents: dict[str, AGNOAgent] = {}
-        self.status: AgentStatus | None = None
+        self.status: Optional[AgentStatus] = None
         self.execution_count = 0
         self.event_handlers: list[Callable[[ChainEvent], None]] = []
 
@@ -310,7 +310,7 @@ class ChainExecutor:
 
     async def execute(
         self,
-        initial_data: dict[str, Any] | None = None
+        initial_data: Optional[dict[str, Any]] = None
     ) -> ChainContext:
         """
         Execute the chain

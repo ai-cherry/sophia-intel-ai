@@ -4,7 +4,7 @@ Consensus Pattern with sophisticated tie-breaking mechanisms.
 
 import logging
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Optional
 
 from .base import PatternConfig, PatternResult, SwarmPattern
 
@@ -29,7 +29,7 @@ class ConsensusPattern(SwarmPattern):
     Implements sophisticated consensus mechanisms with tie-breaking.
     """
 
-    def __init__(self, config: ConsensusConfig | None = None):
+    def __init__(self, config: Optional[ConsensusConfig] = None):
         super().__init__(config or ConsensusConfig())
         self.voting_history = []
 

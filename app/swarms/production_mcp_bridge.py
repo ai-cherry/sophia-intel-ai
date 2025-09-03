@@ -7,7 +7,7 @@ import asyncio
 import logging
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any
+from typing import Any, Optional
 
 import httpx
 
@@ -35,7 +35,7 @@ class MCPConfig:
 class ProductionMCPBridge:
     """Bridge between AI Swarm and MCP Server"""
 
-    def __init__(self, config: MCPConfig | None = None):
+    def __init__(self, config: Optional[MCPConfig] = None):
         self.config = config or MCPConfig()
         self.client = httpx.AsyncClient(
             timeout=self.config.timeout,
@@ -133,9 +133,9 @@ class ProductionMCPBridge:
         await self.client.aclose()
 
 # Singleton instance for global use
-_bridge_instance: ProductionMCPBridge | None = None
+_bridge_instance: Optional[ProductionMCPBridge] = None
 
-def get_mcp_bridge(config: MCPConfig | None = None) -> ProductionMCPBridge:
+def get_mcp_bridge(config: Optional[MCPConfig] = None) -> ProductionMCPBridge:
     """Get or create MCP bridge instance"""
     global _bridge_instance
     if _bridge_instance is None:

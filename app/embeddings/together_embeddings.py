@@ -11,7 +11,7 @@ import os
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any
+from typing import Any, Optional
 
 import numpy as np
 from openai import OpenAI
@@ -42,7 +42,7 @@ class EmbeddingConfig:
     # API Keys
     portkey_api_key: str = field(default_factory=lambda: os.getenv("PORTKEY_API_KEY", ""))
     together_api_key: str = field(default_factory=lambda: os.getenv("TOGETHER_API_KEY", ""))
-    virtual_key: str | None = field(default_factory=lambda: os.getenv("PORTKEY_TOGETHER_VK", "together-ai-670469"))
+    virtual_key: Optional[str] = field(default_factory=lambda: os.getenv("PORTKEY_TOGETHER_VK", "together-ai-670469"))
 
     # Model selection
     primary_model: EmbeddingModel = EmbeddingModel.M2_BERT_8K
@@ -85,7 +85,7 @@ class TogetherEmbeddingService:
     Features semantic caching, automatic fallbacks, and batch processing.
     """
 
-    def __init__(self, config: EmbeddingConfig | None = None):
+    def __init__(self, config: Optional[EmbeddingConfig] = None):
         self.config = config or EmbeddingConfig()
         self._cache: dict[str, tuple[list[float], datetime]] = {}
         self._setup_clients()
@@ -191,7 +191,7 @@ class TogetherEmbeddingService:
     async def embed_async(
         self,
         texts: list[str],
-        model: EmbeddingModel | None = None,
+        model: Optional[EmbeddingModel] = None,
         use_cache: bool = True
     ) -> EmbeddingResult:
         """
@@ -298,7 +298,7 @@ class TogetherEmbeddingService:
     def embed(
         self,
         texts: list[str],
-        model: EmbeddingModel | None = None,
+        model: Optional[EmbeddingModel] = None,
         use_cache: bool = True
     ) -> EmbeddingResult:
         """
@@ -317,7 +317,7 @@ class TogetherEmbeddingService:
         query: str,
         documents: list[str],
         top_k: int = 5,
-        model: EmbeddingModel | None = None
+        model: Optional[EmbeddingModel] = None
     ) -> list[tuple[int, float, str]]:
         """
         Search documents using semantic similarity.
@@ -383,10 +383,10 @@ class TogetherEmbeddingService:
 
 
 # Global singleton instance
-_embedding_service: TogetherEmbeddingService | None = None
+_embedding_service: Optional[TogetherEmbeddingService] = None
 
 
-def get_embedding_service(config: EmbeddingConfig | None = None) -> TogetherEmbeddingService:
+def get_embedding_service(config: Optional[EmbeddingConfig] = None) -> TogetherEmbeddingService:
     """Get or create global embedding service instance."""
     global _embedding_service
     if _embedding_service is None:

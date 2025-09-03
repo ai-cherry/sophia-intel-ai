@@ -9,7 +9,7 @@ import logging
 import random
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional, Union
 
 from app.core.ai_logger import logger
 
@@ -253,7 +253,7 @@ class StrategyArchive:
         self.save_archive()
         logger.info(f"Archived successful pattern for {problem_type}")
 
-    def retrieve_best_pattern(self, problem_type: str) -> dict | None:
+    def retrieve_best_pattern(self, problem_type: str) -> Optional[dict]:
         """Retrieve the best pattern for a problem type."""
         if problem_type not in self.patterns["problem_types"]:
             return None
@@ -575,7 +575,7 @@ class KnowledgeTransferSystem:
         self.transfer_history = []
 
     async def attempt_transfer(self, source_domain: str, target_domain: str,
-                              pattern: dict) -> dict | None:
+                              pattern: dict) -> Optional[dict]:
         """Attempt to transfer knowledge between domains."""
 
         # Calculate similarity between domains

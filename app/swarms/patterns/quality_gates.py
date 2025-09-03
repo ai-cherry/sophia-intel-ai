@@ -7,7 +7,7 @@ import logging
 import time
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any
+from typing import Any, Optional
 
 from .base import PatternConfig, PatternResult, SwarmPattern
 
@@ -47,7 +47,7 @@ class QualityGatesPattern(SwarmPattern):
     applies different strategies when quality is insufficient.
     """
 
-    def __init__(self, config: QualityGateConfig | None = None):
+    def __init__(self, config: Optional[QualityGateConfig] = None):
         """Initialize quality gates pattern."""
         super().__init__(config or QualityGateConfig())
         self.quality_history: list[QualityAssessment] = []

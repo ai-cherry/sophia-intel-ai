@@ -15,7 +15,7 @@ import time
 from abc import ABC
 from collections.abc import Callable
 from datetime import datetime
-from typing import Any
+from typing import Any, Optional, Union
 from uuid import uuid4
 
 from app.core.ai_logger import logger
@@ -44,7 +44,7 @@ class AgentRole:
 class ReActStep:
     """Individual step in ReAct reasoning loop"""
 
-    def __init__(self, step_type: str, content: str, tool_call: dict | None = None, observation: str | None = None):
+    def __init__(self, step_type: str, content: str, tool_call: Optional[dict] = None, observation: Optional[str] = None):
         self.step_type = step_type  # "thought", "action", "observation"
         self.content = content
         self.tool_call = tool_call
@@ -69,14 +69,14 @@ class BaseAgent(ABC):
         self,
         agent_id: str,
         role: str = AgentRole.PLANNER,
-        model_config: dict | None = None,
+        model_config: Optional[dict] = None,
         enable_reasoning: bool = True,
         enable_memory: bool = True,
         enable_knowledge: bool = True,
         max_reasoning_steps: int = 10,
-        tools: list | None = None,
-        guardrails: list[Callable] | None = None,
-        system_prompt: str | None = None
+        tools: Optional[list] = None,
+        guardrails: Optional[list[Callable]] = None,
+        system_prompt: Optional[str] = None
     ):
         """
         Initialize enhanced agent with advanced capabilities.
@@ -391,7 +391,7 @@ Core Principles:
 
         return messages
 
-    def _parse_tool_call(self, content: str) -> dict[str, Any] | None:
+    def _parse_tool_call(self, content: str) -> Optional[dict[str, Any]]:
         """Parse tool call from reasoning content"""
 
         # Simple parsing - can be enhanced

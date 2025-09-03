@@ -9,7 +9,7 @@ import logging
 import os
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any
+from typing import Any, Optional
 
 import httpx
 from dotenv import load_dotenv
@@ -418,7 +418,7 @@ class AdvancedAIGateway2025:
         }
 
     @with_circuit_breaker("external_api")
-    async def invalidate_cache(self, pattern: str | None = None, model: str | None = None) -> dict[str, Any]:
+    async def invalidate_cache(self, pattern: Optional[str] = None, model: Optional[str] = None) -> dict[str, Any]:
         """Invalidate cache entries based on pattern or model."""
         try:
             # Prepare invalidation request

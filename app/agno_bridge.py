@@ -13,7 +13,7 @@ import logging
 import os
 from collections.abc import AsyncGenerator
 from datetime import datetime
-from typing import Any
+from typing import Any, Optional
 
 import httpx
 from fastapi import FastAPI, HTTPException
@@ -119,7 +119,7 @@ class AgentInfo(BaseModel):
     description: str
     model: dict[str, str]  # {provider, name, model}
     storage: bool = True
-    tools: list[str] | None = None
+    tools: Optional[list[str]] = None
 
 class TeamInfo(BaseModel):
     """Agno-compatible team model."""
@@ -128,21 +128,21 @@ class TeamInfo(BaseModel):
     description: str
     model: dict[str, str]
     storage: bool = True
-    members: list[str] | None = None
+    members: Optional[list[str]] = None
 
 class WorkflowInfo(BaseModel):
     """Workflow information."""
     workflow_id: str
     name: str
     description: str
-    inputs: dict[str, Any] | None = None
+    inputs: Optional[dict[str, Any]] = None
 
 class RunRequest(BaseModel):
     """Request to run agent/team."""
     message: str
-    session_id: str | None = None
+    session_id: Optional[str] = None
     stream: bool = True
-    additional_data: dict[str, Any] | None = None
+    additional_data: Optional[dict[str, Any]] = None
 
 # ============================================
 # Helper Functions

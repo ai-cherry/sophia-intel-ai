@@ -60,8 +60,8 @@ class ExperimentalSwarmEvolutionAdapter:
     - Backward compatibility with existing swarms
     """
 
-    def __init__(self, swarm_type: str, config: SwarmEvolutionConfig | None = None,
-                 memory_client: SwarmMemoryClient | None = None):
+    def __init__(self, swarm_type: str, config: Optional[SwarmEvolutionConfig] = None,
+                 memory_client: Optional[SwarmMemoryClient] = None):
         """
         Initialize evolution adapter for a swarm type.
         
@@ -75,7 +75,7 @@ class ExperimentalSwarmEvolutionAdapter:
         self.memory_client = memory_client
 
         # Evolution engine (created lazily if needed)
-        self.evolution_engine: ExperimentalEvolutionEngine | None = None
+        self.evolution_engine: Optional[ExperimentalEvolutionEngine] = None
         self.evolution_initialized = False
 
         # Performance tracking
@@ -84,8 +84,8 @@ class ExperimentalSwarmEvolutionAdapter:
         self.last_evolution_execution = 0
 
         # Current best configuration
-        self.current_best_chromosome: SwarmChromosome | None = None
-        self.baseline_performance: float | None = None
+        self.current_best_chromosome: Optional[SwarmChromosome] = None
+        self.baseline_performance: Optional[float] = None
 
         # Safety monitoring
         self.safety_violations: list[dict[str, Any]] = []
@@ -507,7 +507,7 @@ def create_evolution_adapter(
     enable_evolution: bool = False,
     experimental_mode: ExperimentalMode = ExperimentalMode.DISABLED,
     acknowledge_experimental: bool = False,
-    memory_client: SwarmMemoryClient | None = None,
+    memory_client: Optional[SwarmMemoryClient] = None,
     **kwargs
 ) -> ExperimentalSwarmEvolutionAdapter:
     """

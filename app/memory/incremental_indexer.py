@@ -2,6 +2,7 @@
 Incremental Indexing System with SHA-based Change Detection.
 Optimizes embedding generation by skipping unchanged content.
 """
+from typing import Optional, Union
 
 import asyncio
 import hashlib
@@ -85,7 +86,7 @@ class IndexStateManager:
 
             conn.commit()
 
-    def get_file_state(self, path: str) -> FileState | None:
+    def get_file_state(self, path: str) -> Optional[FileState]:
         """Get the last indexed state of a file."""
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.execute(
@@ -206,7 +207,7 @@ class IncrementalIndexer:
 
     def __init__(
         self,
-        state_manager: IndexStateManager | None = None,
+        state_manager: Optional[IndexStateManager] = None,
         batch_size: int = BATCH_SIZE
     ):
         self.state_manager = state_manager or IndexStateManager()
@@ -223,7 +224,7 @@ class IncrementalIndexer:
     async def index_file(
         self,
         filepath: str,
-        priority: str | None = None,
+        priority: Optional[str] = None,
         force: bool = False
     ) -> dict[str, any]:
         """
@@ -347,7 +348,7 @@ class IncrementalIndexer:
     async def index_files(
         self,
         filepaths: list[str],
-        priority: str | None = None,
+        priority: Optional[str] = None,
         force: bool = False,
         progress: bool = True
     ) -> dict[str, any]:
@@ -401,9 +402,9 @@ class IncrementalIndexer:
     async def index_directory(
         self,
         root_dir: str = ".",
-        include_patterns: list[str] | None = None,
-        exclude_patterns: list[str] | None = None,
-        priority: str | None = None,
+        include_patterns: Optional[list[str]] = None,
+        exclude_patterns: Optional[list[str]] = None,
+        priority: Optional[str] = None,
         force: bool = False
     ) -> dict[str, any]:
         """

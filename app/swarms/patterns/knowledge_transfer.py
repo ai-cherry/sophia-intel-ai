@@ -4,7 +4,7 @@ Knowledge Transfer Pattern for cross-swarm learning.
 
 import logging
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Optional
 
 from .base import PatternConfig, PatternResult, SwarmPattern
 
@@ -25,7 +25,7 @@ class KnowledgeTransferPattern(SwarmPattern):
     Enables knowledge sharing and transfer between swarms.
     """
 
-    def __init__(self, config: KnowledgeTransferConfig | None = None):
+    def __init__(self, config: Optional[KnowledgeTransferConfig] = None):
         super().__init__(config or KnowledgeTransferConfig())
         self.knowledge_base = {}
         self.transfer_history = []

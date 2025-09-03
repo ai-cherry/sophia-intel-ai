@@ -5,7 +5,7 @@ Provides abstraction layer for storage operations.
 
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Any, Generic, TypeVar
+from typing import Any, Generic, Optional, TypeVar, Union
 
 from pydantic import BaseModel
 
@@ -29,21 +29,21 @@ class IRepository(ABC, Generic[T, ID]):
         """Create a new entity."""
 
     @abstractmethod
-    async def get(self, id: ID) -> T | None:
+    async def get(self, id: ID) -> Optional[T]:
         """Get entity by ID."""
 
     @abstractmethod
     async def get_many(
         self,
-        filters: dict[str, Any] | None = None,
+        filters: Optional[dict[str, Any]] = None,
         limit: int = 100,
         offset: int = 0,
-        order_by: str | None = None
+        order_by: Optional[str] = None
     ) -> list[T]:
         """Get multiple entities with filters."""
 
     @abstractmethod
-    async def update(self, id: ID, entity: T) -> T | None:
+    async def update(self, id: ID, entity: T) -> Optional[T]:
         """Update an entity."""
 
     @abstractmethod
@@ -55,7 +55,7 @@ class IRepository(ABC, Generic[T, ID]):
         """Check if entity exists."""
 
     @abstractmethod
-    async def count(self, filters: dict[str, Any] | None = None) -> int:
+    async def count(self, filters: Optional[dict[str, Any]] = None) -> int:
         """Count entities with filters."""
 
 # ============================================
@@ -141,7 +141,7 @@ class BaseRepository(IRepository[T, ID]):
         self._cache.pop(id, None)
         self._cache_timestamps.pop(id, None)
 
-    async def get_cached(self, id: ID) -> T | None:
+    async def get_cached(self, id: ID) -> Optional[T]:
         """Get entity from cache if available."""
         if id in self._cache and self._is_cache_valid(id):
             logger.debug(f"Cache hit for {self.model_class.__name__}:{id}")
@@ -309,7 +309,7 @@ class QueryBuilder:
     def build_insert(
         self,
         data: dict[str, Any],
-        returning: str | None = None
+        returning: Optional[str] = None
     ) -> tuple[str, list[Any]]:
         """Build INSERT query."""
         fields = list(data.keys())

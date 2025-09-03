@@ -1,5 +1,6 @@
 import json
 import logging
+from typing import Optional
 
 from fastapi import APIRouter, HTTPException, WebSocket
 from opentelemetry import trace
@@ -23,7 +24,7 @@ async def get_message_bus() -> MessageBus:
 async def websocket_bus_endpoint(
     websocket: WebSocket,
     agent_id: str,
-    thread_id: str | None = None
+    thread_id: Optional[str] = None
 ):
     """
     WebSocket endpoint streaming messages from message bus.

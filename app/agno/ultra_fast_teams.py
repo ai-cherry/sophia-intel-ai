@@ -9,7 +9,7 @@ import time
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from enum import Enum
-from typing import Any
+from typing import Any, Optional, Union
 
 import uvloop
 
@@ -41,9 +41,9 @@ class UltraFastAgent:
         name: str,
         model: str,
         _capabilities: int = 0,
-        tools: list[str] | None = None,
-        _id: int | None = None,
-        _created: float | None = None
+        tools: Optional[list[str]] = None,
+        _id: Optional[int] = None,
+        _created: Optional[float] = None
     ):
         self.name = name
         self.model = model

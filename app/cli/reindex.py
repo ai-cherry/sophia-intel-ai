@@ -2,6 +2,7 @@
 Enhanced CLI tool for incremental reindexing with change detection.
 Usage: python -m app.cli.reindex [options]
 """
+from typing import Optional
 
 import asyncio
 import os
@@ -61,7 +62,7 @@ def reindex(
     exclude: tuple,
     clear_cache: bool,
     batch_size: int,
-    priority: str | None,
+    priority: Optional[str],
     force: bool,
     stats: bool
 ):

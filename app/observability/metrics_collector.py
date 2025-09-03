@@ -7,7 +7,7 @@ from collections import defaultdict, deque
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import Any
+from typing import Any, Optional, Union
 
 import psutil
 
@@ -27,10 +27,10 @@ class ToolExecutionTrace:
     """Detailed trace of tool execution."""
     tool_name: str
     start_time: datetime
-    end_time: datetime | None = None
-    duration_ms: float | None = None
+    end_time: Optional[datetime] = None
+    duration_ms: Optional[float] = None
     success: bool = False
-    error: str | None = None
+    error: Optional[str] = None
     input_size: int = 0
     output_size: int = 0
     memory_before: int = 0
@@ -75,7 +75,7 @@ class MetricsCollector:
         new_value = (current or 0) + value
         self.record(name, new_value, labels)
 
-    def get_latest(self, name: str) -> float | None:
+    def get_latest(self, name: str) -> Optional[float]:
         """Get the latest value for a metric."""
         if name in self.metrics and self.metrics[name]:
             return self.metrics[name][-1].value

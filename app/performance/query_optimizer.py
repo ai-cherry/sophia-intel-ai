@@ -1,6 +1,6 @@
 import logging
 import time
-from typing import Any
+from typing import Any, Optional, Union
 
 import asyncpg
 
@@ -123,7 +123,7 @@ class DatabaseOptimizer:
 
         return recommendations
 
-    def _generate_query_suggestion(self, slow_query: dict[str, Any]) -> dict[str, str] | None:
+    def _generate_query_suggestion(self, slow_query: dict[str, Any]) -> Optional[dict[str, str]]:
         """Generate a specific optimization suggestion for a slow query"""
         query = slow_query["query"].lower()
         duration = slow_query["duration"]

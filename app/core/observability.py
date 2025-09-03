@@ -22,7 +22,7 @@ import time
 from collections.abc import Callable
 from datetime import datetime
 from functools import wraps
-from typing import Any
+from typing import Any, Optional
 
 from fastapi import Request, Response
 from fastapi.responses import PlainTextResponse
@@ -160,7 +160,7 @@ component_health = Gauge(
 # Tracing Setup
 # ============================================
 
-def setup_tracing(jaeger_endpoint: str | None = None):
+def setup_tracing(jaeger_endpoint: Optional[str] = None):
     """Initialize OpenTelemetry tracing with Jaeger."""
     if not jaeger_endpoint or JaegerExporter is None:
         logger.info("Tracing disabled (no Jaeger endpoint or exporter unavailable)")

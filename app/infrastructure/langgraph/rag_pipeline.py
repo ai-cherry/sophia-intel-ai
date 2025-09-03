@@ -9,7 +9,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, Union
 
 # LangChain imports
 from langchain.embeddings.base import Embeddings
@@ -35,8 +35,8 @@ class RAGConfig:
     chunk_overlap: int = 200
     top_k: int = 5
     similarity_threshold: float = 0.7
-    vector_store_path: str | None = None
-    persist_directory: str | None = "./rag_store"
+    vector_store_path: Optional[str] = None
+    persist_directory: Optional[str] = "./rag_store"
     collection_name: str = "default"
 
 # ==================== Embedding Provider ====================
@@ -88,7 +88,7 @@ class KnowledgeNode:
     node_type: KnowledgeNodeType
     content: str
     metadata: dict[str, Any] = field(default_factory=dict)
-    embeddings: list[float] | None = None
+    embeddings: Optional[list[float]] = None
     timestamp: datetime = field(default_factory=datetime.utcnow)
 
     def to_document(self) -> Document:
@@ -111,7 +111,7 @@ class LangGraphRAGPipeline:
     Provides vector store integration and retrieval mechanisms
     """
 
-    def __init__(self, config: RAGConfig | None = None):
+    def __init__(self, config: Optional[RAGConfig] = None):
         """
         Initialize RAG pipeline
         
@@ -248,7 +248,7 @@ class LangGraphRAGPipeline:
     async def add_text(
         self,
         text: str,
-        metadata: dict[str, Any] | None = None,
+        metadata: Optional[dict[str, Any]] = None,
         node_type: KnowledgeNodeType = KnowledgeNodeType.USER_DOCS
     ) -> list[str]:
         """
@@ -273,8 +273,8 @@ class LangGraphRAGPipeline:
     async def retrieve(
         self,
         query: str,
-        k: int | None = None,
-        filter_dict: dict[str, Any] | None = None
+        k: Optional[int] = None,
+        filter_dict: Optional[dict[str, Any]] = None
     ) -> list[Document]:
         """
         Retrieve relevant documents for a query
@@ -334,7 +334,7 @@ class LangGraphRAGPipeline:
         self,
         query: str,
         node_type: KnowledgeNodeType,
-        k: int | None = None
+        k: Optional[int] = None
     ) -> list[Document]:
         """
         Retrieve documents of a specific type
@@ -358,8 +358,8 @@ class LangGraphRAGPipeline:
     async def build_context(
         self,
         query: str,
-        conversation_history: list[dict[str, str]] | None = None,
-        include_types: list[KnowledgeNodeType] | None = None
+        conversation_history: Optional[list[dict[str, str]]] = None,
+        include_types: Optional[list[KnowledgeNodeType]] = None
     ) -> dict[str, Any]:
         """
         Build comprehensive context for a query
@@ -444,7 +444,7 @@ class LangGraphRAGPipeline:
 
     # ==================== Persistence ====================
 
-    async def save(self, path: str | None = None):
+    async def save(self, path: Optional[str] = None):
         """Save vector store to disk"""
         save_path = path or self.config.vector_store_path
 
@@ -492,7 +492,7 @@ class RAGService:
     async def query(
         self,
         text: str,
-        context_type: str | None = None,
+        context_type: Optional[str] = None,
         k: int = 5,
         include_metadata: bool = True
     ) -> dict[str, Any]:
@@ -544,7 +544,7 @@ class RAGService:
         self,
         content: str,
         content_type: str = "user_docs",
-        metadata: dict[str, Any] | None = None
+        metadata: Optional[dict[str, Any]] = None
     ) -> dict[str, Any]:
         """
         Index new content

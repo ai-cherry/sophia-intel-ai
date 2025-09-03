@@ -3,6 +3,7 @@
 REAL AI Server - Direct OpenRouter Integration
 This makes our swarms actually intelligent!
 """
+from typing import Optional
 
 import json
 from collections.abc import AsyncGenerator
@@ -36,7 +37,7 @@ class SwarmRequest(BaseModel):
     message: str
     team_id: str
     stream: bool = True
-    session_id: str | None = None
+    session_id: Optional[str] = None
 
 async def call_openrouter(model: str, messages: list, stream: bool = True) -> AsyncGenerator:
     """Direct OpenRouter API call for REAL AI responses"""

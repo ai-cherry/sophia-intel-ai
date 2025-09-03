@@ -9,7 +9,7 @@ import time
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from functools import wraps
-from typing import Any
+from typing import Any, Optional
 
 from app.core.circuit_breaker import with_circuit_breaker
 
@@ -62,7 +62,7 @@ class SecureNLProcessor:
     Wraps existing QuickNLP but adds production security layers
     """
 
-    def __init__(self, base_processor, config: dict[str, Any] | None = None):
+    def __init__(self, base_processor, config: Optional[dict[str, Any]] = None):
         self.base_processor = base_processor
         self.config = config or {}
         self.api_keys: dict[str, APIKey] = {}
@@ -241,7 +241,7 @@ class SecureNLProcessor:
                 "processed_at": datetime.now().isoformat()
             }
 
-    def get_usage_statistics(self, user_id: str | None = None) -> dict[str, Any]:
+    def get_usage_statistics(self, user_id: Optional[str] = None) -> dict[str, Any]:
         """Get usage statistics for all users or specific user"""
         stats = {
             "total_api_keys": len(self.api_keys),
@@ -265,7 +265,7 @@ class SecureNLProcessor:
         return stats
 
     def add_api_key(self, api_key: str, user_id: str, client_name: str,
-                   quotas: dict[str, int] | None = None) -> dict[str, Any]:
+                   quotas: Optional[dict[str, int]] = None) -> dict[str, Any]:
         """Add new API key"""
         key_hash = self._hash_api_key(api_key)
 
@@ -299,7 +299,7 @@ class SecureNLProcessor:
         return {"success": True, "message": "API key disabled"}
 
 
-def create_secure_processor(base_processor, config: dict[str, Any] | None = None) -> SecureNLProcessor:
+def create_secure_processor(base_processor, config: Optional[dict[str, Any]] = None) -> SecureNLProcessor:
     """Factory function to create secure processor"""
     config = config or {
         "enable_auth": True,

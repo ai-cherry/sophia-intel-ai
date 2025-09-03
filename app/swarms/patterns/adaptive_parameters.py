@@ -4,7 +4,7 @@ Adaptive Parameters Pattern for self-tuning system behavior.
 
 import logging
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Optional
 
 from .base import PatternConfig, PatternResult, SwarmPattern
 
@@ -27,7 +27,7 @@ class AdaptiveParametersPattern(SwarmPattern):
     Automatically adjusts system parameters based on performance.
     """
 
-    def __init__(self, config: AdaptiveConfig | None = None):
+    def __init__(self, config: Optional[AdaptiveConfig] = None):
         super().__init__(config or AdaptiveConfig())
         self.current_parameters = {}
         self.performance_buffer = []

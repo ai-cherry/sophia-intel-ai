@@ -8,7 +8,7 @@ delegating to specialized modules for team construction and orchestration.
 import asyncio
 import logging
 import warnings
-from typing import Any
+from typing import Any, Optional, Dict
 
 from agno.team import Team
 
@@ -18,12 +18,13 @@ from app.memory.supermemory_mcp import SupermemoryMCP
 # from app.core.super_orchestrator import get_orchestrator
 from app.swarms.coding.models import DebateResult, PoolType, SwarmConfiguration, SwarmRequest
 from app.swarms.coding.team_factory import TeamFactory
+from app.swarms.coding.orchestrator import SwarmOrchestrator
 
 logger = logging.getLogger(__name__)
 
 
 def make_coding_swarm(
-    concurrent_models: list[str] | None = None,
+    concurrent_models: Optional[list] = None,
     include_default_pair: bool = True,
     include_runner: bool = False,
     pool: str = "balanced"
@@ -62,9 +63,9 @@ def make_coding_swarm(
 async def run_coding_debate(
     team: Team,
     task: str,
-    config: SwarmConfiguration | None = None,
-    memory: SupermemoryMCP | None = None,
-    context: dict[str, Any] | None = None
+    config: Optional[SwarmConfiguration] = None,
+    memory: Optional[SupermemoryMCP] = None,
+    context: Optional[Dict[str, Any]] = None
 ) -> DebateResult:
     """
     Run a complete debate cycle for the given task.
@@ -99,10 +100,10 @@ async def run_coding_debate(
 def run_coding_debate_sync(
     team: Team,
     task: str,
-    config: SwarmConfiguration | None = None,
-    memory: SupermemoryMCP | None = None,
-    context: dict[str, Any] | None = None
-) -> dict[str, Any]:
+    config: Optional[SwarmConfiguration] = None,
+    memory: Optional[SupermemoryMCP] = None,
+    context: Optional[Dict] = None
+) -> Dict[str, Any]:
     """
     Synchronous wrapper for run_coding_debate.
     

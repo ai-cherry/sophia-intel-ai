@@ -2,6 +2,7 @@
 Memory system type definitions.
 Shared types for memory entries and operations.
 """
+from typing import Optional
 
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -24,8 +25,8 @@ class MemoryEntry:
     tags: list[str] = field(default_factory=list)
     timestamp: datetime = field(default_factory=datetime.now)
     memory_type: MemoryType = MemoryType.SEMANTIC
-    embedding_vector: list[float] | None = None
-    hash_id: str | None = None
+    embedding_vector: Optional[list[float]] = None
+    hash_id: Optional[str] = None
 
     def __post_init__(self):
         """Generate hash ID for deduplication."""

@@ -14,7 +14,7 @@ import subprocess
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional, Union
 
 from dotenv import load_dotenv
 
@@ -240,7 +240,7 @@ class PulumiESCClient:
         except:
             return False
 
-    def open_environment(self, environment: str, force_refresh: bool = False) -> dict | None:
+    def open_environment(self, environment: str, force_refresh: bool = False) -> Optional[dict]:
         """
         Open a Pulumi ESC environment with caching.
         
@@ -329,7 +329,7 @@ class EnhancedEnvLoader:
     and comprehensive validation following ADR-006.
     """
 
-    def __init__(self, env_file: str | None = None, environment: str | None = None):
+    def __init__(self, env_file: Optional[str] = None, environment: Optional[str] = None):
         """
         Initialize enhanced environment loader.
         
@@ -949,9 +949,9 @@ class EnhancedEnvLoader:
 # =============================================================================
 
 # Global singleton instance
-_env_loader: EnhancedEnvLoader | None = None
+_env_loader: Optional[EnhancedEnvLoader] = None
 
-def get_env_config(environment: str | None = None, force_refresh: bool = False) -> EnvConfig:
+def get_env_config(environment: Optional[str] = None, force_refresh: bool = False) -> EnvConfig:
     """
     Get the global environment configuration with caching.
     
@@ -970,7 +970,7 @@ def get_env_config(environment: str | None = None, force_refresh: bool = False) 
 
     return _env_loader.get_config()
 
-def validate_environment(environment: str | None = None) -> dict[str, Any]:
+def validate_environment(environment: Optional[str] = None) -> dict[str, Any]:
     """
     Validate environment configuration with detailed diagnostics.
     
@@ -985,7 +985,7 @@ def validate_environment(environment: str | None = None) -> dict[str, Any]:
     loader.config = config
     return loader.validate_configuration()
 
-def print_env_status(detailed: bool = False, environment: str | None = None) -> None:
+def print_env_status(detailed: bool = False, environment: Optional[str] = None) -> None:
     """
     Print environment configuration status.
     

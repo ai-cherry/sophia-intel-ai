@@ -9,7 +9,7 @@ import logging
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any
+from typing import Any, Optional, Union
 
 logger = logging.getLogger(__name__)
 
@@ -188,7 +188,7 @@ class EnhancedMemorySystem:
         self,
         task_type: str,
         constraints: dict[str, Any] = None
-    ) -> dict[str, Any] | None:
+    ) -> Optional[dict[str, Any]]:
         """Get the best pattern for a task type."""
         pattern_ids = self.pattern_index.get(task_type, [])
         if not pattern_ids:
@@ -247,7 +247,7 @@ class EnhancedMemorySystem:
 
         return context
 
-    async def get_shared_context(self, session_id: str) -> SharedContext | None:
+    async def get_shared_context(self, session_id: str) -> Optional[SharedContext]:
         """Get shared context for a session."""
         return self.active_contexts.get(session_id)
 
@@ -311,7 +311,7 @@ class EnhancedMemorySystem:
         self,
         key: str,
         use_cache: bool = True
-    ) -> Any | None:
+    ) -> Optional[Any]:
         """Retrieve knowledge from the knowledge base."""
         # Check cache first
         if use_cache and key in self.fact_cache:
@@ -337,8 +337,8 @@ class EnhancedMemorySystem:
     async def search_knowledge(
         self,
         query: str,
-        category: str | None = None,
-        tags: list[str] | None = None,
+        category: Optional[str] = None,
+        tags: Optional[list[str]] = None,
         limit: int = 10
     ) -> list[tuple[str, Any]]:
         """Search the knowledge base."""

@@ -12,7 +12,7 @@ import time
 from dataclasses import dataclass
 from enum import Enum
 from functools import cached_property, lru_cache
-from typing import Any
+from typing import Any, Optional, Union
 
 from app.core.ai_logger import logger
 from app.core.circuit_breaker import with_circuit_breaker
@@ -42,7 +42,7 @@ class ParsedCommand:
     entities: dict[str, Any]
     raw_text: str
     confidence: float
-    workflow_trigger: str | None = None
+    workflow_trigger: Optional[str] = None
 
 
 class QuickNLP:
@@ -60,41 +60,41 @@ class QuickNLP:
         """Initialize regex patterns for intent detection"""
         return {
             CommandIntent.SYSTEM_STATUS: [
-                re.compile(r"(show|get|display|check).*system.*status", re.IGNORECASE),
+                re.compile(r"(show|get|Union[display, check]).*system.*status", re.IGNORECASE),
                 re.compile(r"system\s+status", re.IGNORECASE),
-                re.compile(r"status\s+of\s+(system|services?)", re.IGNORECASE),
+                re.compile(r"status\s+of\s+(Union[system, services]?)", re.IGNORECASE),
                 re.compile(r"how.*system.*doing", re.IGNORECASE),
             ],
             CommandIntent.RUN_AGENT: [
-                re.compile(r"(run|start|execute|launch)\s+agent\s+(\w+)", re.IGNORECASE),
-                re.compile(r"agent\s+(\w+)\s+(run|start|execute)", re.IGNORECASE),
+                re.compile(r"(run|start|Union[execute, launch])\s+agent\s+(\w+)", re.IGNORECASE),
+                re.compile(r"agent\s+(\w+)\s+(run|Union[start, execute])", re.IGNORECASE),
                 re.compile(r"activate\s+(\w+)\s+agent", re.IGNORECASE),
             ],
             CommandIntent.SCALE_SERVICE: [
                 re.compile(r"scale\s+(service\s+)?(\w+)\s+to\s+(\d+)", re.IGNORECASE),
-                re.compile(r"(increase|decrease)\s+(\w+)\s+(instances?|replicas?)", re.IGNORECASE),
+                re.compile(r"(Union[increase, decrease])\s+(\w+)\s+(instances?|replicas?)", re.IGNORECASE),
                 re.compile(r"set\s+(\w+)\s+(instances?|replicas?)\s+to\s+(\d+)", re.IGNORECASE),
             ],
             CommandIntent.EXECUTE_WORKFLOW: [
-                re.compile(r"(run|execute|trigger)\s+workflow\s+(\w+)", re.IGNORECASE),
-                re.compile(r"workflow\s+(\w+)\s+(run|execute|trigger)", re.IGNORECASE),
+                re.compile(r"(run|Union[execute, trigger])\s+workflow\s+(\w+)", re.IGNORECASE),
+                re.compile(r"workflow\s+(\w+)\s+(run|Union[execute, trigger])", re.IGNORECASE),
                 re.compile(r"start\s+(\w+)\s+workflow", re.IGNORECASE),
             ],
             CommandIntent.QUERY_DATA: [
-                re.compile(r"(query|search|find|get)\s+.*data", re.IGNORECASE),
+                re.compile(r"(query|search|Union[find, get])\s+.*data", re.IGNORECASE),
                 re.compile(r"search\s+for\s+(.*)", re.IGNORECASE),
                 re.compile(r"find\s+(documents?|records?|items?)", re.IGNORECASE),
             ],
             CommandIntent.STOP_SERVICE: [
-                re.compile(r"(stop|halt|shutdown)\s+(service\s+)?(\w+)", re.IGNORECASE),
-                re.compile(r"(service\s+)?(\w+)\s+(stop|halt|shutdown)", re.IGNORECASE),
+                re.compile(r"(stop|Union[halt, shutdown])\s+(service\s+)?(\w+)", re.IGNORECASE),
+                re.compile(r"(service\s+)?(\w+)\s+(stop|Union[halt, shutdown])", re.IGNORECASE),
             ],
             CommandIntent.LIST_AGENTS: [
-                re.compile(r"(list|show|display)\s+(all\s+)?agents?", re.IGNORECASE),
-                re.compile(r"what\s+agents?\s+(are\s+)?(available|running)", re.IGNORECASE),
+                re.compile(r"(list|Union[show, display])\s+(all\s+)?agents?", re.IGNORECASE),
+                re.compile(r"what\s+agents?\s+(are\s+)?(Union[available, running])", re.IGNORECASE),
             ],
             CommandIntent.GET_METRICS: [
-                re.compile(r"(show|get|display)\s+metrics?", re.IGNORECASE),
+                re.compile(r"(show|Union[get, display])\s+metrics?", re.IGNORECASE),
                 re.compile(r"metrics?\s+for\s+(\w+)", re.IGNORECASE),
                 re.compile(r"performance\s+(metrics?|stats?)", re.IGNORECASE),
             ],
@@ -204,7 +204,7 @@ class QuickNLP:
     def _extract_query_params(self, text: str, match: re.Match) -> dict[str, Any]:
         """Extract query parameters"""
         # Simple extraction of query terms
-        query_terms = re.sub(r"(query|search|find|get|for|data)", "", text, flags=re.IGNORECASE)
+        query_terms = re.sub(r"(query|search|find|get|Union[for, data])", "", text, flags=re.IGNORECASE)
         query_terms = query_terms.strip()
 
         return {"query": query_terms}
@@ -259,7 +259,7 @@ class QuickNLP:
         return CommandIntent.UNKNOWN, {}, 0.0
 
     @with_circuit_breaker("webhook")
-    def _get_workflow_trigger(self, intent: CommandIntent) -> str | None:
+    def _get_workflow_trigger(self, intent: CommandIntent) -> Optional[str]:
         """
         Map intent to n8n workflow trigger
         """
@@ -431,7 +431,7 @@ class CachedQuickNLP(QuickNLP):
         self,
         text: str,
         pattern_str: str
-    ) -> re.Match | None:
+    ) -> re.Optional[Match]:
         """Cached pattern matching"""
         pattern = re.compile(pattern_str, re.IGNORECASE)
         return pattern.search(text)

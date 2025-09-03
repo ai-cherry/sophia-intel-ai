@@ -10,7 +10,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, Optional, Union
 
 import aiohttp
 
@@ -86,7 +86,7 @@ class SwarmMemoryClient:
         self.swarm_id = swarm_id
         self.config = get_env_config()
         self.mcp_server_url = self.config.mcp_server_url
-        self.session: aiohttp.ClientSession | None = None
+        self.session: aiohttp.Optional[ClientSession] = None
         self.memory_cache = {}
         self.event_buffer = []
 
@@ -129,8 +129,8 @@ class SwarmMemoryClient:
         topic: str,
         content: str,
         memory_type: MemoryType = MemoryType.SEMANTIC,
-        tags: list[str] | None = None,
-        metadata: dict[str, Any] | None = None
+        tags: Optional[list[str]] = None,
+        metadata: Optional[dict[str, Any]] = None
     ) -> dict[str, Any]:
         """
         Store memory entry in unified memory system.
@@ -193,8 +193,8 @@ class SwarmMemoryClient:
         self,
         query: str,
         limit: int = 10,
-        memory_type: MemoryType | None = None,
-        tags: list[str] | None = None,
+        memory_type: Optional[MemoryType] = None,
+        tags: Optional[list[str]] = None,
         include_other_swarms: bool = True
     ) -> list[dict[str, Any]]:
         """
@@ -256,7 +256,7 @@ class SwarmMemoryClient:
         self,
         event_type: SwarmMemoryEventType,
         data: dict[str, Any],
-        metadata: dict[str, Any] | None = None
+        metadata: Optional[dict[str, Any]] = None
     ):
         """
         Log swarm event to memory system.
@@ -293,7 +293,7 @@ class SwarmMemoryClient:
     @with_circuit_breaker("database")
     async def get_swarm_history(
         self,
-        event_types: list[SwarmMemoryEventType] | None = None,
+        event_types: Optional[list[SwarmMemoryEventType]] = None,
         limit: int = 50
     ) -> list[dict[str, Any]]:
         """
@@ -341,7 +341,7 @@ class SwarmMemoryClient:
         pattern_name: str,
         pattern_data: dict[str, Any],
         success_score: float,
-        context: dict[str, Any] | None = None
+        context: Optional[dict[str, Any]] = None
     ):
         """
         Store successful pattern in memory system.
@@ -372,7 +372,7 @@ class SwarmMemoryClient:
     @with_circuit_breaker("database")
     async def retrieve_patterns(
         self,
-        pattern_name: str | None = None,
+        pattern_name: Optional[str] = None,
         min_success_score: float = 0.7,
         limit: int = 10
     ) -> list[dict[str, Any]]:
@@ -460,7 +460,7 @@ class SwarmMemoryClient:
     @with_circuit_breaker("database")
     async def get_messages_for_swarm(
         self,
-        priority_filter: str | None = None,
+        priority_filter: Optional[str] = None,
         limit: int = 20
     ) -> list[dict[str, Any]]:
         """
@@ -518,7 +518,7 @@ class SwarmMemoryClient:
         learning_type: str,
         content: str,
         confidence: float,
-        context: dict[str, Any] | None = None
+        context: Optional[dict[str, Any]] = None
     ):
         """
         Store learning or insight gained by swarm.
@@ -551,7 +551,7 @@ class SwarmMemoryClient:
     @with_circuit_breaker("database")
     async def retrieve_learnings(
         self,
-        learning_type: str | None = None,
+        learning_type: Optional[str] = None,
         min_confidence: float = 0.7,
         include_other_swarms: bool = True,
         limit: int = 20
@@ -641,7 +641,7 @@ class SwarmMemoryClient:
     async def store_performance_metrics(
         self,
         metrics: dict[str, Any],
-        execution_context: dict[str, Any] | None = None
+        execution_context: Optional[dict[str, Any]] = None
     ):
         """
         Store swarm performance metrics.
@@ -669,7 +669,7 @@ class SwarmMemoryClient:
     @with_circuit_breaker("database")
     async def get_performance_trends(
         self,
-        metric_name: str | None = None,
+        metric_name: Optional[str] = None,
         days: int = 7
     ) -> list[dict[str, Any]]:
         """
@@ -781,10 +781,10 @@ class SwarmMemoryMixin:
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.memory_client: SwarmMemoryClient | None = None
+        self.memory_client: Optional[SwarmMemoryClient] = None
         self._memory_initialized = False
 
-    async def initialize_memory(self, swarm_type: str, swarm_id: str | None = None):
+    async def initialize_memory(self, swarm_type: str, swarm_id: Optional[str] = None):
         """Initialize memory client for swarm."""
         if not swarm_id:
             swarm_id = f"{swarm_type}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"

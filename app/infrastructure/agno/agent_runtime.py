@@ -14,7 +14,7 @@ from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, Optional, Union
 
 import psutil
 
@@ -95,8 +95,8 @@ class AGNOAgent(ABC):
         self,
         agent_id: str,
         agent_type: str = "generic",
-        config: dict[str, Any] | None = None,
-        event_bus: MessageBus | None = None,
+        config: Optional[dict[str, Any]] = None,
+        event_bus: Optional[MessageBus] = None,
         max_errors: int = 3,
         recovery_delay: float = 5.0
     ):
@@ -121,20 +121,20 @@ class AGNOAgent(ABC):
         # State management
         self.status = AgentStatus.INITIALIZING
         self.error_count = 0
-        self.last_error: Exception | None = None
-        self.start_time: datetime | None = None
-        self.stop_time: datetime | None = None
+        self.last_error: Optional[Exception] = None
+        self.start_time: Optional[datetime] = None
+        self.stop_time: Optional[datetime] = None
 
         # Resource monitoring
-        self.process: psutil.Process | None = None
+        self.process: psutil.Optional[Process] = None
         self.resources = ResourceMetrics()
         self.resource_history: list[ResourceMetrics] = []
         self.max_resource_history = 100
 
         # Lifecycle hooks
         self._running = False
-        self._task: asyncio.Task | None = None
-        self._monitor_task: asyncio.Task | None = None
+        self._task: asyncio.Optional[Task] = None
+        self._monitor_task: asyncio.Optional[Task] = None
         self._event_handlers: dict[str, list[Callable]] = {}
 
         # Performance metrics

@@ -1,7 +1,7 @@
 # Sophia Intel AI - 2025 Ultra-Performance Stack
 
 # Core Frameworks
-agno>=2.0.0  # Ultra-fast agent framework with <2μs instantiation
+agno==1.8.1  # Ultra-fast agent framework with <2μs instantiation (pinned to latest stable)
 weaviate-client>=4.16.4  # Advanced vector database with auto-vectorization
 httpx[http2]>=0.27.0  # Async HTTP client with HTTP/2 support
 aiobreaker>=1.0.0  # Async circuit breakers for resilience
@@ -17,7 +17,7 @@ orjson>=3.9.10  # Fastest JSON serialization
 # MCP & Security
 mcp>=0.1.0  # Model Context Protocol
 authlib>=1.3.0  # OAuth 2.0 with Resource Indicators
-python-jose[cryptography]>=3.3.0  # JWT handling
+PyJWT>=2.8.0  # JWT handling without ecdsa dependency (cryptography-backed)
 passlib[bcrypt]>=1.7.4  # Password hashing
 
 # Observability

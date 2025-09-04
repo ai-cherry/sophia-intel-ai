@@ -1,7 +1,7 @@
 # Vector Store Service Dependencies
-fastapi[all]==0.104.1
-uvicorn[standard]==0.24.0
-pydantic==2.5.0
+fastapi[all]==0.116.1
+uvicorn[standard]==0.30.0
+pydantic==2.8.2
 python-dotenv==1.0.0
 
 # Vector databases
@@ -9,11 +9,11 @@ python-dotenv==1.0.0
 weaviate-client==4.9.3
 
 # Machine learning
-sentence-transformers==2.2.2
-transformers==4.36.0
-torch==2.1.0
-numpy==1.24.3
+sentence-transformers==4.1.0
+transformers==4.55.4
+torch==2.8.0
+numpy==2.0.2
 
 # Utilities
-httpx==0.25.2
-python-multipart==0.0.6
+httpx==0.27.0
+python-multipart==0.0.20

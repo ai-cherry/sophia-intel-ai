@@ -1,0 +1,1261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Factory - AI Team Hub</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-blue: #2563eb;
+            --primary-purple: #7c3aed;
+            --primary-green: #10b981;
+            --primary-orange: #f59e0b;
+            --dark-bg: #0f172a;
+            --card-bg: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border-color: #334155;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        /* Navigation Tabs */
+        .nav-container {
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-tabs {
+            display: flex;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .nav-tab {
+            padding: 20px 30px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            position: relative;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .nav-tab:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .nav-tab.active {
+            color: var(--primary-blue);
+            border-bottom-color: var(--primary-blue);
+        }
+
+        .nav-tab .badge {
+            position: absolute;
+            top: 12px;
+            right: 10px;
+            background: var(--primary-green);
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        /* Header */
+        .header {
+            padding: 30px 20px;
+            text-align: center;
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(124, 58, 237, 0.1));
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 1.1em;
+        }
+
+        /* Tab Content */
+        .tab-content {
+            display: none;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px 20px;
+            animation: fadeIn 0.3s;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* AI Team Members Section (Personas) */
+        .team-section {
+            margin-bottom: 40px;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .section-header h2 {
+            font-size: 1.8em;
+            margin-right: 20px;
+        }
+
+        .section-header .status {
+            padding: 6px 12px;
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+
+        /* Persona Cards - Special Design */
+        .persona-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .persona-card {
+            background: linear-gradient(135deg, var(--card-bg), rgba(37, 99, 235, 0.1));
+            border-radius: 20px;
+            padding: 25px;
+            border: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .persona-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            border-color: var(--primary-blue);
+        }
+
+        .persona-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle, rgba(37, 99, 235, 0.2), transparent);
+            border-radius: 50%;
+            transform: translate(30px, -30px);
+        }
+
+        .persona-header {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .persona-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin-right: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            position: relative;
+            box-shadow: 0 0 20px rgba(37, 99, 235, 0.5);
+        }
+
+        .persona-avatar.sales {
+            background: linear-gradient(135deg, #3b82f6, #60a5fa);
+        }
+
+        .persona-avatar.health {
+            background: linear-gradient(135deg, #10b981, #34d399);
+        }
+
+        .persona-status-dot {
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            width: 16px;
+            height: 16px;
+            background: var(--success);
+            border: 3px solid var(--card-bg);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .persona-info {
+            flex: 1;
+        }
+
+        .persona-name {
+            font-size: 1.4em;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: var(--text-primary);
+        }
+
+        .persona-title {
+            color: var(--primary-blue);
+            font-size: 0.95em;
+            margin-bottom: 5px;
+        }
+
+        .persona-tagline {
+            color: var(--text-secondary);
+            font-style: italic;
+            font-size: 0.9em;
+        }
+
+        .persona-metrics {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+        }
+
+        .metric-item {
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 1.4em;
+            font-weight: 600;
+            color: var(--primary-blue);
+        }
+
+        .metric-label {
+            font-size: 0.85em;
+            color: var(--text-secondary);
+            margin-top: 5px;
+        }
+
+        .persona-skills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 15px 0;
+        }
+
+        .skill-tag {
+            padding: 6px 12px;
+            background: rgba(37, 99, 235, 0.2);
+            color: #60a5fa;
+            border-radius: 15px;
+            font-size: 0.85em;
+            font-weight: 500;
+        }
+
+        .persona-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.95em;
+        }
+
+        .btn-primary {
+            background: var(--primary-blue);
+            color: white;
+            flex: 1;
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(37, 99, 235, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        /* Learning Progress */
+        .learning-progress {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-blue), var(--primary-purple));
+            border-radius: 4px;
+            transition: width 0.5s;
+        }
+
+        /* Regular Agent Inventory */
+        .agent-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .agent-card {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .agent-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--primary-purple);
+            box-shadow: 0 10px 30px rgba(124, 58, 237, 0.2);
+        }
+
+        .agent-card .agent-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .agent-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--primary-purple), #a78bfa);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 24px;
+        }
+
+        .agent-card h3 {
+            font-size: 1.1em;
+            margin-bottom: 5px;
+        }
+
+        .agent-type {
+            color: var(--text-secondary);
+            font-size: 0.85em;
+        }
+
+        .agent-capabilities {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 10px;
+        }
+
+        .capability-tag {
+            padding: 4px 8px;
+            background: rgba(124, 58, 237, 0.2);
+            color: #a78bfa;
+            border-radius: 6px;
+            font-size: 0.75em;
+        }
+
+        /* Swarm Builder */
+        .swarm-builder {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 30px;
+            border: 1px solid var(--border-color);
+        }
+
+        .builder-header {
+            margin-bottom: 30px;
+        }
+
+        .builder-header h3 {
+            font-size: 1.4em;
+            margin-bottom: 10px;
+        }
+
+        .selected-agents {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            min-height: 60px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .selected-agent-chip {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            background: var(--primary-blue);
+            color: white;
+            border-radius: 20px;
+            font-size: 0.9em;
+        }
+
+        .selected-agent-chip .remove {
+            margin-left: 8px;
+            cursor: pointer;
+            font-size: 1.2em;
+            opacity: 0.8;
+        }
+
+        .selected-agent-chip .remove:hover {
+            opacity: 1;
+        }
+
+        /* Chat Interface for Personas */
+        .chat-interface {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 400px;
+            height: 600px;
+            background: var(--card-bg);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            display: none;
+            flex-direction: column;
+            z-index: 1000;
+            border: 1px solid var(--border-color);
+        }
+
+        .chat-interface.active {
+            display: flex;
+        }
+
+        .chat-header {
+            display: flex;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(124, 58, 237, 0.1));
+            border-radius: 20px 20px 0 0;
+        }
+
+        .chat-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            margin-right: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .chat-persona-info {
+            flex: 1;
+        }
+
+        .chat-persona-name {
+            font-weight: 600;
+            margin-bottom: 3px;
+        }
+
+        .chat-persona-status {
+            font-size: 0.85em;
+            color: var(--success);
+        }
+
+        .chat-close {
+            cursor: pointer;
+            font-size: 24px;
+            color: var(--text-secondary);
+            transition: color 0.3s;
+        }
+
+        .chat-close:hover {
+            color: var(--text-primary);
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+
+        .message.user {
+            align-self: flex-end;
+        }
+
+        .message-bubble {
+            padding: 12px 16px;
+            border-radius: 15px;
+            font-size: 0.95em;
+            line-height: 1.4;
+        }
+
+        .message.user .message-bubble {
+            background: var(--primary-blue);
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+
+        .message.agent .message-bubble {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+            border-bottom-left-radius: 5px;
+        }
+
+        .message-time {
+            font-size: 0.75em;
+            color: var(--text-secondary);
+            margin-top: 5px;
+            text-align: right;
+        }
+
+        .message.agent .message-time {
+            text-align: left;
+        }
+
+        .chat-input-container {
+            padding: 20px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 0.95em;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .chat-send {
+            padding: 12px 20px;
+            background: var(--primary-blue);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .chat-send:hover {
+            background: #1d4ed8;
+        }
+
+        /* Stats Dashboard */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+        }
+
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: 600;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, var(--primary-blue), var(--primary-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+        }
+
+        .stat-change {
+            margin-top: 10px;
+            font-size: 0.85em;
+            color: var(--success);
+        }
+
+        .stat-change.negative {
+            color: var(--danger);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <div class="nav-container">
+        <div class="nav-tabs">
+            <div class="nav-tab active" onclick="switchTab('team-members')">
+                🌟 AI Team Members
+                <span class="badge">2</span>
+            </div>
+            <div class="nav-tab" onclick="switchTab('agent-inventory')">
+                📦 Agent Inventory
+            </div>
+            <div class="nav-tab" onclick="switchTab('swarm-builder')">
+                🔧 Swarm Builder
+            </div>
+            <div class="nav-tab" onclick="switchTab('analytics')">
+                📊 Analytics
+            </div>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <div class="header">
+        <h1>🏭 Agent Factory</h1>
+        <p>Your AI Team Hub - Build, Deploy, and Manage Intelligent Agents</p>
+    </div>
+
+    <!-- AI Team Members Tab (Persistent Personas) -->
+    <div id="team-members" class="tab-content active">
+        <div class="team-section">
+            <div class="section-header">
+                <h2>Your AI Teammates</h2>
+                <span class="status">🟢 All Systems Operational</span>
+            </div>
+            
+            <div class="persona-grid">
+                <!-- Marcus - Sales Coach -->
+                <div class="persona-card">
+                    <div class="persona-header">
+                        <div class="persona-avatar sales">
+                            💪
+                            <div class="persona-status-dot"></div>
+                        </div>
+                        <div class="persona-info">
+                            <div class="persona-name">Marcus "The Catalyst" Rodriguez</div>
+                            <div class="persona-title">Senior Sales Coach & Mentor</div>
+                            <div class="persona-tagline">"Every 'no' is one step closer to your breakthrough 'yes'!"</div>
+                        </div>
+                    </div>
+                    
+                    <div class="persona-metrics">
+                        <div class="metric-item">
+                            <div class="metric-value">847</div>
+                            <div class="metric-label">Coaching Sessions</div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-value">94%</div>
+                            <div class="metric-label">Success Rate</div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-value">$12M</div>
+                            <div class="metric-label">Deals Influenced</div>
+                        </div>
+                    </div>
+                    
+                    <div class="persona-skills">
+                        <span class="skill-tag">Deal Coaching</span>
+                        <span class="skill-tag">Objection Handling</span>
+                        <span class="skill-tag">Pipeline Strategy</span>
+                        <span class="skill-tag">Motivation</span>
+                        <span class="skill-tag">Skill Development</span>
+                    </div>
+                    
+                    <div class="learning-progress">
+                        <div class="progress-header">
+                            <span>Learning Progress</span>
+                            <span>Level 12</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 78%;"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="persona-actions">
+                        <button class="btn btn-primary" onclick="openChat('marcus')">
+                            💬 Start Coaching Session
+                        </button>
+                        <button class="btn btn-secondary" onclick="viewPersonaDetails('marcus')">
+                            📈 View Stats
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Sarah - Client Health -->
+                <div class="persona-card">
+                    <div class="persona-header">
+                        <div class="persona-avatar health">
+                            🛡️
+                            <div class="persona-status-dot"></div>
+                        </div>
+                        <div class="persona-info">
+                            <div class="persona-name">Dr. Sarah "The Guardian" Chen</div>
+                            <div class="persona-title">Client Success Specialist</div>
+                            <div class="persona-tagline">"Proactive care is the best care - let's prevent problems before they start"</div>
+                        </div>
+                    </div>
+                    
+                    <div class="persona-metrics">
+                        <div class="metric-item">
+                            <div class="metric-value">312</div>
+                            <div class="metric-label">Clients Monitored</div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-value">67%</div>
+                            <div class="metric-label">Churn Reduction</div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-value">92</div>
+                            <div class="metric-label">Health Score Avg</div>
+                        </div>
+                    </div>
+                    
+                    <div class="persona-skills">
+                        <span class="skill-tag">Health Monitoring</span>
+                        <span class="skill-tag">Risk Detection</span>
+                        <span class="skill-tag">Success Planning</span>
+                        <span class="skill-tag">Intervention</span>
+                        <span class="skill-tag">Analytics</span>
+                    </div>
+                    
+                    <div class="learning-progress">
+                        <div class="progress-header">
+                            <span>Learning Progress</span>
+                            <span>Level 10</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 65%;"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="persona-actions">
+                        <button class="btn btn-primary" onclick="openChat('sarah')">
+                            💬 Discuss Client Health
+                        </button>
+                        <button class="btn btn-secondary" onclick="viewPersonaDetails('sarah')">
+                            📊 View Dashboard
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value">2</div>
+                <div class="stat-label">Active AI Team Members</div>
+                <div class="stat-change">+0 this month</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">1,159</div>
+                <div class="stat-label">Total Interactions</div>
+                <div class="stat-change">+23% this week</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">93%</div>
+                <div class="stat-label">Average Success Rate</div>
+                <div class="stat-change">+2.1% improvement</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">$12.3M</div>
+                <div class="stat-label">Business Impact</div>
+                <div class="stat-change">+$2.1M this quarter</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Agent Inventory Tab -->
+    <div id="agent-inventory" class="tab-content">
+        <div class="section-header">
+            <h2>Available Agent Templates</h2>
+        </div>
+        
+        <div class="agent-grid">
+            <!-- Architect Agent -->
+            <div class="agent-card" onclick="selectAgent('architect')">
+                <div class="agent-header">
+                    <div class="agent-icon">🏗️</div>
+                    <div>
+                        <h3>System Architect</h3>
+                        <div class="agent-type">Technical Design</div>
+                    </div>
+                </div>
+                <div class="agent-capabilities">
+                    <span class="capability-tag">System Design</span>
+                    <span class="capability-tag">Architecture</span>
+                    <span class="capability-tag">Planning</span>
+                </div>
+            </div>
+
+            <!-- Developer Agent -->
+            <div class="agent-card" onclick="selectAgent('developer')">
+                <div class="agent-header">
+                    <div class="agent-icon">💻</div>
+                    <div>
+                        <h3>Software Developer</h3>
+                        <div class="agent-type">Implementation</div>
+                    </div>
+                </div>
+                <div class="agent-capabilities">
+                    <span class="capability-tag">Coding</span>
+                    <span class="capability-tag">Testing</span>
+                    <span class="capability-tag">Debugging</span>
+                </div>
+            </div>
+
+            <!-- QA Agent -->
+            <div class="agent-card" onclick="selectAgent('qa')">
+                <div class="agent-header">
+                    <div class="agent-icon">🔍</div>
+                    <div>
+                        <h3>QA Engineer</h3>
+                        <div class="agent-type">Quality Assurance</div>
+                    </div>
+                </div>
+                <div class="agent-capabilities">
+                    <span class="capability-tag">Testing</span>
+                    <span class="capability-tag">Validation</span>
+                    <span class="capability-tag">Quality</span>
+                </div>
+            </div>
+
+            <!-- Security Agent -->
+            <div class="agent-card" onclick="selectAgent('security')">
+                <div class="agent-header">
+                    <div class="agent-icon">🔐</div>
+                    <div>
+                        <h3>Security Expert</h3>
+                        <div class="agent-type">Security Analysis</div>
+                    </div>
+                </div>
+                <div class="agent-capabilities">
+                    <span class="capability-tag">Security</span>
+                    <span class="capability-tag">Audit</span>
+                    <span class="capability-tag">Compliance</span>
+                </div>
+            </div>
+
+            <!-- DevOps Agent -->
+            <div class="agent-card" onclick="selectAgent('devops')">
+                <div class="agent-header">
+                    <div class="agent-icon">⚙️</div>
+                    <div>
+                        <h3>DevOps Engineer</h3>
+                        <div class="agent-type">Operations</div>
+                    </div>
+                </div>
+                <div class="agent-capabilities">
+                    <span class="capability-tag">CI/CD</span>
+                    <span class="capability-tag">Deployment</span>
+                    <span class="capability-tag">Monitoring</span>
+                </div>
+            </div>
+
+            <!-- Data Scientist Agent -->
+            <div class="agent-card" onclick="selectAgent('data_scientist')">
+                <div class="agent-header">
+                    <div class="agent-icon">📊</div>
+                    <div>
+                        <h3>Data Scientist</h3>
+                        <div class="agent-type">Analytics</div>
+                    </div>
+                </div>
+                <div class="agent-capabilities">
+                    <span class="capability-tag">ML/AI</span>
+                    <span class="capability-tag">Analytics</span>
+                    <span class="capability-tag">Modeling</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Swarm Builder Tab -->
+    <div id="swarm-builder" class="tab-content">
+        <div class="swarm-builder">
+            <div class="builder-header">
+                <h3>Build Your Custom Swarm</h3>
+                <p style="color: var(--text-secondary); margin-top: 10px;">
+                    Select agents from inventory to create a coordinated team
+                </p>
+            </div>
+            
+            <div class="selected-agents" id="selected-agents">
+                <div style="color: var(--text-secondary); margin: auto;">
+                    No agents selected. Choose from the Agent Inventory tab.
+                </div>
+            </div>
+            
+            <div style="margin-top: 20px;">
+                <h4 style="margin-bottom: 15px;">Quick Templates</h4>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                    <button class="btn btn-secondary" onclick="loadTemplate('software_dev')">
+                        💻 Software Development Team
+                    </button>
+                    <button class="btn btn-secondary" onclick="loadTemplate('data_science')">
+                        📊 Data Science Team
+                    </button>
+                    <button class="btn btn-secondary" onclick="loadTemplate('security_audit')">
+                        🔐 Security Audit Team
+                    </button>
+                    <button class="btn btn-secondary" onclick="loadTemplate('full_stack')">
+                        🚀 Full Stack Team
+                    </button>
+                </div>
+            </div>
+            
+            <div style="margin-top: 30px; display: flex; gap: 15px;">
+                <button class="btn btn-primary" style="flex: 1;" onclick="deploySwarm()">
+                    🚀 Deploy Swarm
+                </button>
+                <button class="btn btn-secondary" onclick="clearSelection()">
+                    Clear Selection
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Analytics Tab -->
+    <div id="analytics" class="tab-content">
+        <div class="section-header">
+            <h2>Performance Analytics</h2>
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value">14</div>
+                <div class="stat-label">Total Agents Available</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">6</div>
+                <div class="stat-label">Active Swarms</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">98.2%</div>
+                <div class="stat-label">System Uptime</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">2.3s</div>
+                <div class="stat-label">Avg Response Time</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat Interface (Hidden by default) -->
+    <div id="chat-interface" class="chat-interface">
+        <div class="chat-header">
+            <div class="chat-avatar sales" id="chat-avatar">💪</div>
+            <div class="chat-persona-info">
+                <div class="chat-persona-name" id="chat-persona-name">Marcus Rodriguez</div>
+                <div class="chat-persona-status">🟢 Online - Ready to help</div>
+            </div>
+            <div class="chat-close" onclick="closeChat()">✕</div>
+        </div>
+        
+        <div class="chat-messages" id="chat-messages">
+            <!-- Messages will appear here -->
+        </div>
+        
+        <div class="chat-input-container">
+            <input type="text" class="chat-input" id="chat-input" placeholder="Type your message..." onkeypress="handleKeyPress(event)">
+            <button class="chat-send" onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        // State management
+        let selectedAgents = [];
+        let currentChat = null;
+        let chatMessages = {
+            marcus: [
+                { type: 'agent', text: "Hey champion! Marcus here. What sales challenge can I help you tackle today? Remember, every obstacle is an opportunity in disguise! 💪", time: new Date() }
+            ],
+            sarah: [
+                { type: 'agent', text: "Hello! Dr. Sarah Chen here. I'm reviewing your client portfolio right now. Which account would you like to discuss, or shall I share my overall health assessment? 🛡️", time: new Date() }
+            ]
+        };
+
+        // Tab switching
+        function switchTab(tabId) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Remove active class from all nav tabs
+            document.querySelectorAll('.nav-tab').forEach(navTab => {
+                navTab.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabId).classList.add('active');
+            
+            // Add active class to clicked nav tab
+            event.target.classList.add('active');
+        }
+
+        // Agent selection
+        function selectAgent(agentType) {
+            if (!selectedAgents.includes(agentType)) {
+                selectedAgents.push(agentType);
+                updateSelectedAgentsDisplay();
+            }
+        }
+
+        function updateSelectedAgentsDisplay() {
+            const container = document.getElementById('selected-agents');
+            
+            if (selectedAgents.length === 0) {
+                container.innerHTML = '<div style="color: var(--text-secondary); margin: auto;">No agents selected. Choose from the Agent Inventory tab.</div>';
+                return;
+            }
+            
+            container.innerHTML = selectedAgents.map(agent => `
+                <div class="selected-agent-chip">
+                    ${getAgentEmoji(agent)} ${getAgentName(agent)}
+                    <span class="remove" onclick="removeAgent('${agent}')">×</span>
+                </div>
+            `).join('');
+        }
+
+        function removeAgent(agentType) {
+            selectedAgents = selectedAgents.filter(a => a !== agentType);
+            updateSelectedAgentsDisplay();
+        }
+
+        function getAgentEmoji(agentType) {
+            const emojis = {
+                architect: '🏗️',
+                developer: '💻',
+                qa: '🔍',
+                security: '🔐',
+                devops: '⚙️',
+                data_scientist: '📊'
+            };
+            return emojis[agentType] || '🤖';
+        }
+
+        function getAgentName(agentType) {
+            const names = {
+                architect: 'System Architect',
+                developer: 'Developer',
+                qa: 'QA Engineer',
+                security: 'Security Expert',
+                devops: 'DevOps Engineer',
+                data_scientist: 'Data Scientist'
+            };
+            return names[agentType] || agentType;
+        }
+
+        // Template loading
+        function loadTemplate(templateType) {
+            const templates = {
+                software_dev: ['architect', 'developer', 'qa', 'devops'],
+                data_science: ['data_scientist', 'developer', 'devops'],
+                security_audit: ['security', 'qa', 'architect'],
+                full_stack: ['architect', 'developer', 'qa', 'security', 'devops', 'data_scientist']
+            };
+            
+            selectedAgents = templates[templateType] || [];
+            updateSelectedAgentsDisplay();
+            switchTab('swarm-builder');
+        }
+
+        function clearSelection() {
+            selectedAgents = [];
+            updateSelectedAgentsDisplay();
+        }
+
+        function deploySwarm() {
+            if (selectedAgents.length === 0) {
+                alert('Please select at least one agent for your swarm.');
+                return;
+            }
+            
+            alert(`Deploying swarm with ${selectedAgents.length} agents: ${selectedAgents.map(a => getAgentName(a)).join(', ')}`);
+        }
+
+        // Chat functionality
+        function openChat(persona) {
+            currentChat = persona;
+            const chatInterface = document.getElementById('chat-interface');
+            const chatAvatar = document.getElementById('chat-avatar');
+            const chatName = document.getElementById('chat-persona-name');
+            const messagesContainer = document.getElementById('chat-messages');
+            
+            if (persona === 'marcus') {
+                chatAvatar.innerHTML = '💪';
+                chatAvatar.className = 'chat-avatar sales';
+                chatName.textContent = 'Marcus Rodriguez';
+            } else {
+                chatAvatar.innerHTML = '🛡️';
+                chatAvatar.className = 'chat-avatar health';
+                chatName.textContent = 'Dr. Sarah Chen';
+            }
+            
+            // Load chat history
+            messagesContainer.innerHTML = '';
+            chatMessages[persona].forEach(msg => {
+                addMessageToChat(msg.text, msg.type);
+            });
+            
+            chatInterface.classList.add('active');
+            document.getElementById('chat-input').focus();
+        }
+
+        function closeChat() {
+            document.getElementById('chat-interface').classList.remove('active');
+            currentChat = null;
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const message = input.value.trim();
+            
+            if (!message || !currentChat) return;
+            
+            // Add user message
+            addMessageToChat(message, 'user');
+            chatMessages[currentChat].push({ type: 'user', text: message, time: new Date() });
+            
+            // Clear input
+            input.value = '';
+            
+            // Simulate response
+            setTimeout(() => {
+                const response = getPersonaResponse(currentChat, message);
+                addMessageToChat(response, 'agent');
+                chatMessages[currentChat].push({ type: 'agent', text: response, time: new Date() });
+            }, 1000);
+        }
+
+        function addMessageToChat(text, type) {
+            const messagesContainer = document.getElementById('chat-messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            
+            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            messageDiv.innerHTML = `
+                <div class="message-bubble">${text}</div>
+                <div class="message-time">${time}</div>
+            `;
+            
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function getPersonaResponse(persona, userMessage) {
+            const lowerMessage = userMessage.toLowerCase();
+            
+            if (persona === 'marcus') {
+                if (lowerMessage.includes('deal') || lowerMessage.includes('opportunity')) {
+                    return "Great question about deals! Let me analyze that opportunity for you. What's the deal size and current stage? Remember, every deal has a path to success - we just need to find it! 🎯";
+                } else if (lowerMessage.includes('help') || lowerMessage.includes('stuck')) {
+                    return "I hear you're facing a challenge - that's where breakthroughs happen! Tell me more about what's blocking you, and let's turn this obstacle into your next victory. You've got this! 💪";
+                } else {
+                    return "Absolutely! That's the spirit of a champion! Let's dive deeper into that. What specific outcome are you looking to achieve? Remember, success is a series of small wins that compound over time!";
+                }
+            } else {
+                if (lowerMessage.includes('client') || lowerMessage.includes('customer')) {
+                    return "I'm analyzing that client's health metrics now. Their engagement score is trending positively, but I notice some support ticket patterns we should address proactively. Would you like me to create an intervention plan? 📊";
+                } else if (lowerMessage.includes('risk') || lowerMessage.includes('churn')) {
+                    return "Good instinct to check on that! I've identified 3 accounts showing early warning signs. The key is addressing these signals before they become problems. Let me share my Guardian Method intervention strategy for each...";
+                } else {
+                    return "That's an insightful observation! Based on my analysis of similar patterns across our client base, I recommend a proactive approach. Would you like me to share the specific health metrics and success indicators I'm tracking?";
+                }
+            }
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        function viewPersonaDetails(persona) {
+            alert(`Opening detailed analytics for ${persona === 'marcus' ? 'Marcus Rodriguez' : 'Dr. Sarah Chen'}...`);
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            updateSelectedAgentsDisplay();
+        });
+    </script>
+</body>
+</html>

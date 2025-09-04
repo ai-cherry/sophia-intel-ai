@@ -31,3 +31,11 @@ class ChatRequest(BaseModel):
     temperature: Optional[float] = 0.7
     max_tokens: Optional[int] = 1000
     stream: Optional[bool] = False
+
+class SwarmResponse(BaseModel):
+    content: str
+    status: str = "success"
+    swarm_type: Optional[str] = None
+    execution_time: Optional[float] = None
+    agent_count: Optional[int] = None
+    metadata: dict = {}

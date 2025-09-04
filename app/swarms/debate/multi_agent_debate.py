@@ -25,8 +25,8 @@ from ...observability.prometheus_metrics import (
     observe_consensus_reached,
     observe_debate_round,
 )
-from ..communication.message_bus import MessageBus, MessageType, SwarmMessage
-from ..memory.unified_memory import UnifiedMemoryStore
+from app.swarms.communication.message_bus import MessageBus, MessageType, SwarmMessage
+from app.memory.unified_memory import UnifiedMemoryStore
 
 logger = logging.getLogger(__name__)
 tracer = trace.get_tracer(__name__)
@@ -80,9 +80,9 @@ class AgentVote:
 @dataclass
 class DebateRound:
     """A single round of debate"""
-    round_id: str = field(default_factory=lambda: f"round_{uuid4().hex[:8]}")
     phase: DebatePhase
     proposal: DebateProposal
+    round_id: str = field(default_factory=lambda: f"round_{uuid4().hex[:8]}")
     participants: list[str] = field(default_factory=list)
     statements: list[dict[str, Any]] = field(default_factory=list)
     votes: list[AgentVote] = field(default_factory=list)

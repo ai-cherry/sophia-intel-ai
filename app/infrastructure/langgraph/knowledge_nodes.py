@@ -1,20 +1,25 @@
 """
-LangGraph Knowledge Nodes
-Specialized retrieval nodes for different knowledge domains
+DEPRECATED: LangGraph Knowledge Nodes - REPLACED BY AGNO
+This module has been deprecated in favor of AGNO-based implementations.
+Use app.infrastructure.agno.knowledge_nodes instead.
 """
 
-import json
-import logging
-import re
-from pathlib import Path
-from typing import Any, Optional, Union
+# DEPRECATED - DO NOT USE
+# This file has been replaced by AGNO-based implementations
+# All imports commented out to prevent conflicts with AGNO framework
 
-from langchain.schema import Document
+# import json
+# import logging
+# import re
+# from pathlib import Path
+# from typing import Any, Optional, Union
 
-from app.infrastructure.langgraph.rag_pipeline import (
-    KnowledgeNodeType,
-    LangGraphRAGPipeline,
-)
+# from langchain.schema import Document
+
+# from app.infrastructure.langgraph.rag_pipeline import (
+#     KnowledgeNodeType,
+#     LangGraphRAGPipeline,
+# )
 
 logger = logging.getLogger(__name__)
 

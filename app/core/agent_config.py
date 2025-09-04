@@ -38,7 +38,7 @@ class AgentRoleConfig(BaseModel):
     """Role-specific agent configuration"""
     role_name: str
     system_prompt_template: Optional[str] = None
-    model_config: ModelConfig = Field(default_factory=ModelConfig)
+    model_settings: ModelConfig = Field(default_factory=ModelConfig)
     max_reasoning_steps: int = Field(10, ge=1, le=50)
     enable_reasoning: bool = True
     enable_memory: bool = True
@@ -46,8 +46,8 @@ class AgentRoleConfig(BaseModel):
     tools: list[str] = Field(default_factory=list)
     guardrails: list[str] = Field(default_factory=list)
     
-    @validator('model_config', pre=True)
-    def merge_model_config(cls, v):
+    @validator('model_settings', pre=True)
+    def merge_model_settings(cls, v):
         if isinstance(v, dict):
             return ModelConfig(**v)
         return v
@@ -261,7 +261,7 @@ class ConfigManager:
         
         if role:
             role_config = self.get_role_config(role)
-            return role_config.model_config
+            return role_config.model_settings
         
         return self._config.default_model
     

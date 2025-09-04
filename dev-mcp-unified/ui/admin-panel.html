@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sophia Intelligence AI - Admin Panel</title>
+    <style>
+        :root {
+            --primary-color: #0066cc;
+            --secondary-color: #f0f8ff;
+            --accent-color: #ff6b35;
+            --background-color: #fafafa;
+            --card-background: white;
+            --text-color: #333;
+            --border-color: #ddd;
+            --success-color: #28a745;
+            --error-color: #dc3545;
+            --warning-color: #ffc107;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .admin-header {
+            background: linear-gradient(135deg, var(--primary-color), #004499);
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .admin-header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .admin-nav {
+            display: flex;
+            gap: 2rem;
+            margin-top: 1rem;
+        }
+
+        .admin-nav button {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .admin-nav button:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .admin-nav button.active {
+            background: var(--accent-color);
+        }
+
+        .admin-content {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .admin-card {
+            background: var(--card-background);
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+
+        .admin-card-header {
+            background: var(--secondary-color);
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .admin-card-header h2 {
+            font-size: 1.2rem;
+            color: var(--primary-color);
+        }
+
+        .admin-card-body {
+            padding: 1.5rem;
+        }
+
+        .user-list {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .user-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: var(--secondary-color);
+            border-radius: 8px;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .user-email {
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .user-role {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .role-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .role-owner { background: #e3f2fd; color: #1565c0; }
+        .role-admin { background: #f3e5f5; color: #7b1fa2; }
+        .role-member { background: #e8f5e8; color: #2e7d32; }
+        .role-viewer { background: #fff3e0; color: #ef6c00; }
+
+        .user-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #004499;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+
+        .btn-danger {
+            background: var(--error-color);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(0,102,204,0.2);
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+        }
+
+        .modal-header {
+            margin-bottom: 1rem;
+        }
+
+        .modal-header h3 {
+            color: var(--primary-color);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 1.5rem;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .hidden { display: none !important; }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--card-background);
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            display: block;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-header">
+        <h1>🛡️ Sophia Intelligence AI - Admin Panel</h1>
+        <div class="admin-nav">
+            <button onclick="showSection('users')" class="active">Users</button>
+            <button onclick="showSection('permissions')">Permissions</button>
+            <button onclick="showSection('system')">System Health</button>
+        </div>
+    </div>
+
+    <div class="admin-content">
+        <!-- Stats Dashboard -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-number" id="total-users">-</span>
+                <div class="stat-label">Total Users</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number" id="active-sessions">-</span>
+                <div class="stat-label">Active Sessions</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number" id="system-health">-</span>
+                <div class="stat-label">System Health</div>
+            </div>
+        </div>
+
+        <!-- Users Section -->
+        <div id="users-section" class="admin-section">
+            <div class="admin-card">
+                <div class="admin-card-header">
+                    <h2>User Management</h2>
+                </div>
+                <div class="admin-card-body">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <div id="alert-container"></div>
+                        <button class="btn btn-primary" onclick="showCreateUserModal()">
+                            + Invite User
+                        </button>
+                    </div>
+                    
+                    <div id="users-loading" class="loading"></div>
+                    <div id="user-list" class="user-list"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Permissions Section -->
+        <div id="permissions-section" class="admin-section hidden">
+            <div class="admin-card">
+                <div class="admin-card-header">
+                    <h2>Permission Matrix</h2>
+                </div>
+                <div class="admin-card-body">
+                    <p>Permission management features coming soon...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Health Section -->
+        <div id="system-section" class="admin-section hidden">
+            <div class="admin-card">
+                <div class="admin-card-header">
+                    <h2>System Health Monitoring</h2>
+                </div>
+                <div class="admin-card-body">
+                    <div id="health-status">Loading system health...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create User Modal -->
+    <div id="create-user-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Invite New User</h3>
+            </div>
+            <form id="create-user-form">
+                <div class="form-group">
+                    <label for="user-email">Email Address</label>
+                    <input type="email" id="user-email" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="user-role">Role</label>
+                    <select id="user-role" class="form-control" required>
+                        <option value="viewer">Viewer (Read-only access)</option>
+                        <option value="member">Member (Standard access)</option>
+                        <option value="admin">Admin (Management access)</option>
+                        <option value="owner">Owner (Full access)</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="hideCreateUserModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <span id="create-btn-text">Send Invitation</span>
+                        <span id="create-btn-loading" class="loading hidden"></span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // API Configuration
+        const API_BASE = '/api/admin';
+        let currentUser = null;
+
+        // Initialize admin panel
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadCurrentUser();
+            await loadStats();
+            await loadUsers();
+        });
+
+        // Navigation
+        function showSection(sectionName) {
+            document.querySelectorAll('.admin-section').forEach(section => {
+                section.classList.add('hidden');
+            });
+            document.getElementById(`${sectionName}-section`).classList.remove('hidden');
+            
+            document.querySelectorAll('.admin-nav button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            if (sectionName === 'system') {
+                loadSystemHealth();
+            }
+        }
+
+        // Load current user info
+        async function loadCurrentUser() {
+            try {
+                const response = await fetch(`${API_BASE}/me`);
+                if (response.ok) {
+                    currentUser = await response.json();
+                } else {
+                    showAlert('Authentication required', 'error');
+                }
+            } catch (error) {
+                console.error('Failed to load current user:', error);
+                showAlert('Failed to load user information', 'error');
+            }
+        }
+
+        // Load dashboard stats
+        async function loadStats() {
+            try {
+                const usersResponse = await fetch(`${API_BASE}/users`);
+                if (usersResponse.ok) {
+                    const users = await usersResponse.json();
+                    document.getElementById('total-users').textContent = users.length;
+                }
+
+                document.getElementById('active-sessions').textContent = '1';
+                document.getElementById('system-health').textContent = '✅';
+            } catch (error) {
+                console.error('Failed to load stats:', error);
+            }
+        }
+
+        // Load users list
+        async function loadUsers() {
+            const loadingEl = document.getElementById('users-loading');
+            const listEl = document.getElementById('user-list');
+            
+            loadingEl.classList.remove('hidden');
+            
+            try {
+                const response = await fetch(`${API_BASE}/users`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const users = await response.json();
+                listEl.innerHTML = '';
+                
+                users.forEach(user => {
+                    const userEl = createUserElement(user);
+                    listEl.appendChild(userEl);
+                });
+                
+            } catch (error) {
+                console.error('Failed to load users:', error);
+                showAlert(`Failed to load users: ${error.message}`, 'error');
+            } finally {
+                loadingEl.classList.add('hidden');
+            }
+        }
+
+        // Create user element
+        function createUserElement(user) {
+            const div = document.createElement('div');
+            div.className = 'user-item';
+            div.innerHTML = `
+                <div class="user-info">
+                    <div class="user-email">${user.email}</div>
+                    <div class="user-role">
+                        <span class="role-badge role-${user.role}">${user.role}</span>
+                        <span style="margin-left: 1rem; color: #666; font-size: 0.8rem;">
+                            Created: ${new Date(user.created_at).toLocaleDateString()}
+                        </span>
+                    </div>
+                </div>
+                <div class="user-actions">
+                    <button class="btn btn-secondary" onclick="editUser('${user.user_id}')">Edit</button>
+                    ${user.role !== 'owner' ? `<button class="btn btn-danger" onclick="deactivateUser('${user.user_id}')">Deactivate</button>` : ''}
+                </div>
+            `;
+            return div;
+        }
+
+        // Show create user modal
+        function showCreateUserModal() {
+            document.getElementById('create-user-modal').style.display = 'block';
+        }
+
+        // Hide create user modal
+        function hideCreateUserModal() {
+            document.getElementById('create-user-modal').style.display = 'none';
+            document.getElementById('create-user-form').reset();
+        }
+
+        // Handle create user form submission
+        document.getElementById('create-user-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('create-btn-text');
+            const loadingBtn = document.getElementById('create-btn-loading');
+            
+            submitBtn.classList.add('hidden');
+            loadingBtn.classList.remove('hidden');
+            
+            try {
+                const formData = {
+                    email: document.getElementById('user-email').value,
+                    role: document.getElementById('user-role').value
+                };
+                
+                const response = await fetch(`${API_BASE}/users`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                if (response.ok) {
+                    showAlert('User invited successfully!', 'success');
+                    hideCreateUserModal();
+                    await loadUsers();
+                    await loadStats();
+                } else {
+                    const error = await response.json();
+                    showAlert(error.detail || 'Failed to create user', 'error');
+                }
+                
+            } catch (error) {
+                console.error('Failed to create user:', error);
+                showAlert('Failed to create user', 'error');
+            } finally {
+                submitBtn.classList.remove('hidden');
+                loadingBtn.classList.add('hidden');
+            }
+        });
+
+        // Edit user
+        function editUser(userId) {
+            // TODO: Implement user editing
+            showAlert('User editing coming soon...', 'success');
+        }
+
+        // Deactivate user
+        async function deactivateUser(userId) {
+            if (!confirm('Are you sure you want to deactivate this user?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/users/${userId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    showAlert('User deactivated successfully', 'success');
+                    await loadUsers();
+                    await loadStats();
+                } else {
+                    showAlert('Failed to deactivate user', 'error');
+                }
+            } catch (error) {
+                console.error('Failed to deactivate user:', error);
+                showAlert('Failed to deactivate user', 'error');
+            }
+        }
+
+        // Load system health
+        async function loadSystemHealth() {
+            const healthEl = document.getElementById('health-status');
+            healthEl.innerHTML = 'Loading system health...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/system/health`);
+                
+                if (response.ok) {
+                    const health = await response.json();
+                    healthEl.innerHTML = `
+                        <div style="display: grid; gap: 1rem;">
+                            <div>Overall Status: <strong style="color: var(--success-color);">${health.status}</strong></div>
+                            <div>Last Check: ${new Date(health.timestamp).toLocaleString()}</div>
+                            <div>
+                                <h4>Services:</h4>
+                                <ul>
+                                    ${Object.entries(health.services).map(([service, status]) => 
+                                        `<li>${service}: <span style="color: ${status === 'healthy' ? 'var(--success-color)' : 'var(--error-color)'};">${status}</span></li>`
+                                    ).join('')}
+                                </ul>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    healthEl.innerHTML = '<div style="color: var(--error-color);">Failed to load system health</div>';
+                }
+            } catch (error) {
+                console.error('Failed to load system health:', error);
+                healthEl.innerHTML = '<div style="color: var(--error-color);">Error loading system health</div>';
+            }
+        }
+
+        // Show alert
+        function showAlert(message, type) {
+            const alertContainer = document.getElementById('alert-container');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+            
+            alertContainer.innerHTML = '';
+            alertContainer.appendChild(alert);
+            
+            setTimeout(() => {
+                alert.remove();
+            }, 5000);
+        }
+
+        // Handle modal clicks
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal')) {
+                e.target.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

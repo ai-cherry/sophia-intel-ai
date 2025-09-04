@@ -1,0 +1,39 @@
+{
+  "deployment_info": {
+    "start_time": "2025-09-03T16:08:56.057125",
+    "target_paths": [
+      "docs/"
+    ],
+    "run_mode": "dry_run",
+    "config": {
+      "max_concurrent_workers": 3,
+      "batch_size": 5,
+      "discovery_max_depth": 2,
+      "classification_confidence_threshold": 0.7,
+      "cleanup_dry_run": true,
+      "enable_neural_networks": true,
+      "enable_quantum_states": true,
+      "auto_cleanup_threshold_days": 30,
+      "min_ai_score_for_keep": 40.0
+    }
+  },
+  "phases": {
+    "validation": {
+      "passed": false,
+      "checks": [
+        "\u2705 Path accessible: docs/",
+        "\u2705 Module available: aiofiles",
+        "\u2705 Module available: pathlib",
+        "\u2705 Module available: asyncio",
+        "\u2705 Write permissions confirmed"
+      ],
+      "warnings": [],
+      "blocking_issues": [
+        "Missing required module: swarm"
+      ]
+    }
+  },
+  "overall_success": false,
+  "recommendations": [],
+  "next_steps": []
+}

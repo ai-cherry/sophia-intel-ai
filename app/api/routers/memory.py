@@ -9,8 +9,10 @@ from typing import Any, Optional, Union
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 
-from app.infrastructure.langgraph.knowledge_nodes import Document
-from app.infrastructure.langgraph.rag_pipeline import KnowledgeNodeType, LangGraphRAGPipeline
+# DEPRECATED: LangChain imports replaced by AGNO
+# from app.infrastructure.langgraph.knowledge_nodes import Document
+# from app.infrastructure.langgraph.rag_pipeline import KnowledgeNodeType, LangGraphRAGPipeline
+# TODO: Replace with AGNO-based memory infrastructure
 
 # Import memory systems
 # from app.memory.enhanced_memory_integration import EnhancedMemoryIntegration  # Module not yet implemented

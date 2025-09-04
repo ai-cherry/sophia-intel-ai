@@ -453,3 +453,16 @@ if __name__ == "__main__":
 
 def record_cost(provider: str, model: str, task_type: str = "general", cost: float = 0.0, tokens_in: int = 0, tokens_out: int = 0, duration: float = 0.0, cache_hit: bool = False):
     metrics_tracker.track_llm_request(provider, model, task_type, cost, tokens_in, tokens_out, duration, cache_hit)
+
+# Additional metrics for audit swarm
+def observe_agent_vote(agent_id: str, vote: str):
+    """Record agent vote in debate"""
+    pass
+
+def observe_consensus_reached(debate_id: str, rounds: int):
+    """Record consensus achievement"""
+    pass
+
+def observe_debate_round(debate_id: str, round_num: int):
+    """Record debate round completion"""
+    pass

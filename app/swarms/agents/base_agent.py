@@ -21,7 +21,9 @@ from uuid import uuid4
 from app.core.ai_logger import logger
 from app.core.circuit_breaker import with_circuit_breaker
 from app.core.observability import get_tracer
-from app.infrastructure.langgraph.rag_pipeline import LangGraphRAGPipeline
+# DEPRECATED: LangChain RAG pipeline replaced by AGNO
+# from app.infrastructure.langgraph.rag_pipeline import LangGraphRAGPipeline
+# TODO: Replace with AGNO-based RAG pipeline
 from app.infrastructure.models.portkey_router import PortkeyRouterModel
 from app.memory.unified_memory_store import UnifiedMemoryStore
 from app.swarms.communication.message_bus import MessageBus, MessageType, SwarmMessage

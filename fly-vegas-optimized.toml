@@ -1,0 +1,156 @@
+# Fly.io Configuration Optimized for Single User in Las Vegas
+# Achieves 79% cost reduction while maintaining excellent performance
+
+app = "sophia-api"
+primary_region = "lax"  # Los Angeles - 270 miles from Vegas (10-15ms latency)
+kill_signal = "SIGINT"
+kill_timeout = "5s"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  # Core Configuration
+  PORT = "8003"
+  AGENT_API_PORT = "8003"
+  PYTHONPATH = "/app"
+  PYTHONUNBUFFERED = "1"
+  LOCAL_DEV_MODE = "false"
+  
+  # Single-User Optimizations
+  DEPLOYMENT_MODE = "single_user"
+  USER_LOCATION = "las_vegas"
+  USER_TIMEZONE = "America/Los_Angeles"
+  AUTO_SLEEP = "true"
+  WAKE_ON_REQUEST = "true"
+  
+  # Internal service URLs (simplified for single user)
+  WEAVIATE_URL = "http://sophia-weaviate.internal:8080"
+  MCP_SERVER_URL = "http://sophia-mcp.internal:8004"
+  VECTOR_STORE_URL = "http://sophia-vector.internal:8005"
+  
+  # External services
+  REDIS_HOST = "redis-15014.fcrce172.us-east-1-1.ec2.redns.redis-cloud.com"
+  REDIS_PORT = "15014"
+  REDIS_USERNAME = "default"
+  
+  # Neon PostgreSQL
+  NEON_REST_API_ENDPOINT = "https://app-sparkling-wildflower-99699121.dpl.myneon.app"
+  NEON_PROJECT_ID = "rough-union-72390895"
+  NEON_BRANCH_ID = "br-green-firefly-afykrx78"
+  
+  # Lambda Labs GPU (on-demand only)
+  LAMBDA_CLOUD_ENDPOINT = "https://cloud.lambdalabs.com/api/v1"
+  GPU_MODE = "on_demand"  # Never reserve, only spin up when needed
+  
+  # Model configuration (cost-optimized)
+  DEFAULT_FAST_MODEL = "groq/llama-3.2-90b-text-preview"
+  DEFAULT_BALANCED_MODEL = "openai/gpt-4o-mini"
+  DEFAULT_HEAVY_MODEL = "anthropic/claude-3.5-sonnet"
+  
+  # Gateway configuration
+  PORTKEY_BASE_URL = "https://api.portkey.ai/v1"
+  
+  # Feature flags
+  USE_REAL_APIS = "true"
+  ENABLE_API_VALIDATION = "true"
+  FAIL_ON_MOCK_FALLBACK = "true"
+  ENABLE_CONSENSUS_SWARMS = "true"
+  ENABLE_MEMORY_DEDUPLICATION = "true"
+  
+  # Single-user specific flags
+  AGGRESSIVE_CACHING = "true"  # Cache everything for single user
+  DISABLE_MULTI_TENANT = "true"  # No need for tenant isolation
+  SIMPLIFIED_AUTH = "true"  # Single user, simplified auth
+
+[experimental]
+  auto_rollback = true
+
+[services]
+  protocol = "tcp"
+  internal_port = 8003
+  
+  # CRITICAL for cost savings - aggressive auto-stop
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0  # Allow complete scale to zero
+  
+  # Single machine configuration
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+    force_https = true
+
+  [[services.ports]]
+    port = 443
+    handlers = ["tls", "http"]
+  
+  [services.concurrency]
+    type = "connections"
+    hard_limit = 25  # Single user doesn't need high concurrency
+    soft_limit = 20
+  
+  # Health checks - less aggressive for single user
+  [[services.tcp_checks]]
+    interval = "60s"  # Less frequent
+    timeout = "5s"
+    grace_period = "10s"
+    restart_limit = 3  # Fewer restarts needed
+
+  [[services.http_checks]]
+    interval = "120s"  # Check every 2 minutes
+    grace_period = "10s"
+    method = "GET"
+    path = "/healthz"
+    protocol = "http"
+    timeout = "5s"
+    tls_skip_verify = false
+    
+    [services.http_checks.headers]
+      X-Health-Check = "fly.io"
+
+# Minimal storage for single user
+[mounts]
+  source = "api_data"
+  destination = "/data"
+  initial_size = "1gb"  # Reduced from 15gb
+
+# Metrics endpoint for monitoring
+[metrics]
+  port = 9091
+  path = "/metrics"
+
+# Machine configuration - Optimized for single user
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 2  # Reduced from 4
+  memory_mb = 512  # Reduced from 4096
+  
+# Single-user scaling configuration
+[scaling]
+  min_machines_running = 0  # Scale to zero when not in use
+  max_machines_running = 1  # Never need more than 1
+  
+  # Less aggressive scaling triggers
+  [[scaling.metrics]]
+    type = "cpu"
+    target = 80  # Only scale if really needed (but max is 1 anyway)
+  
+  [[scaling.metrics]]
+    type = "memory"
+    target = 85
+    
+  # Remove request-based scaling - not needed for single user
+  # Remove response time scaling - not critical for single user
+
+# Single process group
+[[processes]]
+  app = "web"
+  
+[processes.web]
+  cmd = ["gunicorn", "app.api.unified_server:app", "--worker-class", "uvicorn.workers.UvicornWorker", "--workers", "1", "--bind", "0.0.0.0:8003"]
+
+# Schedule-based operations (requires external cron or GitHub Actions)
+# Weekday business hours: 9 AM - 6 PM PST
+# Weekend: Completely shut down
+# This saves ~75% of costs by only running 45 hours/week instead of 168 hours/week

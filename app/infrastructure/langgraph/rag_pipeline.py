@@ -1,21 +1,26 @@
 """
-LangGraph RAG Pipeline
-Retrieval-Augmented Generation infrastructure with vector store integration
+DEPRECATED: LangGraph RAG Pipeline - REPLACED BY AGNO
+This module has been deprecated in favor of AGNO-based implementations.
+Use app.infrastructure.agno.rag_pipeline instead.
 """
 
-import asyncio
-import json
-import logging
-from dataclasses import dataclass, field
-from datetime import datetime
-from enum import Enum
-from typing import Any, Union
+# DEPRECATED - DO NOT USE
+# This file has been replaced by AGNO-based implementations
+# All LangChain imports commented out to prevent conflicts with AGNO framework
 
-# LangChain imports
-from langchain.embeddings.base import Embeddings
-from langchain.schema import Document
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.vectorstores import FAISS, Chroma
+# import asyncio
+# import json
+# import logging
+# from dataclasses import dataclass, field
+# from datetime import datetime
+# from enum import Enum
+# from typing import Any, Union
+
+# # LangChain imports - DEPRECATED
+# from langchain.embeddings.base import Embeddings
+# from langchain.schema import Document  
+# from langchain.text_splitter import RecursiveCharacterTextSplitter
+# from langchain.vectorstores import FAISS, Chroma
 
 # For embedding models
 from sentence_transformers import SentenceTransformer

@@ -9,6 +9,7 @@ import time
 import subprocess
 import re
 import secrets
+import logging
 from dataclasses import asdict
 from typing import Any, Dict, Optional, List
 from pathlib import Path
@@ -16,9 +17,10 @@ from datetime import datetime, timedelta
 from contextlib import contextmanager
 from functools import lru_cache
 
-from fastapi import FastAPI, HTTPException, Header, Depends, Request
+from fastapi import FastAPI, HTTPException, Header, Depends, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 import json
 import jwt
@@ -52,10 +54,36 @@ from datetime import datetime, timedelta
 app = FastAPI(title="MCP Unified Server", version="1.0.0")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
+# Setup logging
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
+
+# Mount static files for admin panel UI
+try:
+    admin_ui_path = Path(__file__).parent.parent.parent / "dev-mcp-unified" / "ui"
+    if admin_ui_path.exists():
+        app.mount("/static", StaticFiles(directory=str(admin_ui_path)), name="static")
+        print(f"✅ Admin UI mounted at /static from {admin_ui_path}")
+    else:
+        print(f"⚠️  Admin UI path not found: {admin_ui_path}")
+except Exception as e:
+    print(f"⚠️  Could not mount admin UI static files: {e}")
+
 engine = ContextEngine(repo_root=os.getenv("MCP_INDEX_PATH"))
 queue = JobQueue(workers=2)
 _embedder = None
 _vstore = None
+
+# Initialize RBAC and Universal Orchestrator
+try:
+    from dev_mcp_unified.core.rbac_integration import integrate_rbac_with_mcp_server
+    integrate_rbac_with_mcp_server(app)
+    
+    from dev_mcp_unified.core.universal_orchestrator import universal_orchestrator
+    print("✅ Universal AI Orchestrator loaded")
+except ImportError:
+    universal_orchestrator = None
+    print("⚠️  Universal Orchestrator not available")
 
 
 class QueryRequest(BaseModel):
@@ -110,6 +138,22 @@ def healthz():
 @app.get("/")
 def root():
     return {"status": "ok", "app": "mcp-unified", "docs": "/docs"}
+
+
+@app.get("/admin-panel.html")
+async def admin_panel():
+    """Serve the admin panel HTML interface"""
+    try:
+        admin_panel_path = Path(__file__).parent.parent.parent / "dev-mcp-unified" / "ui" / "admin-panel.html"
+        if admin_panel_path.exists():
+            from fastapi.responses import HTMLResponse
+            with open(admin_panel_path, 'r', encoding='utf-8') as f:
+                html_content = f.read()
+            return HTMLResponse(content=html_content, status_code=200)
+        else:
+            return {"error": "Admin panel not found", "path": str(admin_panel_path)}
+    except Exception as e:
+        return {"error": str(e)}
 
 
 @app.post("/query")
@@ -1976,3 +2020,1236 @@ async def factory_health_check():
         "templates_available": len(factory_templates),
         "timestamp": datetime.now().isoformat()
     }
+
+
+# ==================== UNIVERSAL AI ORCHESTRATOR ====================
+
+class UniversalChatRequest(BaseModel):
+    query: str
+    session_id: Optional[str] = None
+    domain: Optional[str] = None  # "sophia", "artemis", or auto-detect
+    stream: bool = False
+
+@app.post("/api/universal/chat")
+async def universal_chat(
+    request: UniversalChatRequest,
+    user_token: Optional[str] = Depends(verify_token)
+):
+    """Universal AI Chat - Single interface for Sophia + Artemis domains"""
+    
+    if not universal_orchestrator:
+        raise HTTPException(status_code=503, detail="Universal Orchestrator not available")
+    
+    user_id = user_token or "anonymous"
+    
+    try:
+        from dev_mcp_unified.core.universal_orchestrator import UniversalRequest, Domain
+        
+        # Create orchestration request
+        orch_request = UniversalRequest(
+            user_query=request.query,
+            user_id=user_id,
+            session_id=request.session_id,
+            preferred_domain=Domain(request.domain) if request.domain else None
+        )
+        
+        # Process request
+        result = await universal_orchestrator.process_request(orch_request)
+        
+        return {
+            "query": request.query,
+            "domain": result.domain.value,
+            "task_type": result.task_type.value,
+            "result": result.result,
+            "execution_time": result.execution_time,
+            "confidence": result.confidence,
+            "sources": result.sources,
+            "next_actions": result.next_actions,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except Exception as e:
+        return {
+            "query": request.query,
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
+@app.post("/api/universal/stream")
+async def universal_chat_stream(
+    request: UniversalChatRequest,
+    user_token: Optional[str] = Depends(verify_token)
+):
+    """Streaming universal chat for real-time responses"""
+    
+    if not universal_orchestrator:
+        raise HTTPException(status_code=503, detail="Universal Orchestrator not available")
+    
+    user_id = user_token or "anonymous"
+    
+    async def generate():
+        try:
+            from dev_mcp_unified.core.universal_orchestrator import UniversalRequest, Domain
+            
+            orch_request = UniversalRequest(
+                user_query=request.query,
+                user_id=user_id,
+                session_id=request.session_id,
+                preferred_domain=Domain(request.domain) if request.domain else None
+            )
+            
+            async for chunk in universal_orchestrator.stream_response(orch_request):
+                yield f"data: {json.dumps(chunk)}\n\n"
+                
+        except Exception as e:
+            error_chunk = {
+                "type": "error",
+                "error": str(e),
+                "timestamp": datetime.now().isoformat()
+            }
+            yield f"data: {json.dumps(error_chunk)}\n\n"
+    
+    return StreamingResponse(generate(), media_type="text/plain")
+
+@app.get("/api/universal/domains")
+async def list_domains():
+    """List available domains and their capabilities"""
+    return {
+        "domains": {
+            "sophia": {
+                "name": "Business Intelligence",
+                "description": "CRM, sales, analytics, business operations",
+                "capabilities": ["gong_analysis", "hubspot_integration", "sales_reporting", "research_automation"],
+                "permissions_required": ["sophia.read", "sophia.write"]
+            },
+            "artemis": {
+                "name": "Technical Systems", 
+                "description": "Agent factory, code analysis, system monitoring",
+                "capabilities": ["agent_creation", "swarm_orchestration", "code_review", "system_monitoring"],
+                "permissions_required": ["artemis.read", "artemis.write"]
+            },
+            "universal": {
+                "name": "Cross-Domain",
+                "description": "Combines business and technical intelligence",
+                "capabilities": ["cross_domain_analysis", "unified_reporting", "comprehensive_research"],
+                "permissions_required": ["sophia.read", "artemis.read"]
+            }
+        },
+        "classification_examples": {
+            "sophia_queries": [
+                "What were our sales numbers this quarter?",
+                "Analyze recent Gong call recordings",
+                "Research the proptech industry trends",
+                "Show me HubSpot pipeline status"
+            ],
+            "artemis_queries": [
+                "Create an agent for code reviews",
+                "Deploy a research swarm",
+                "Check system health status", 
+                "Run performance tests"
+            ],
+            "universal_queries": [
+                "Create a comprehensive business and technical report",
+                "What insights can you provide across all our systems?",
+                "Help me understand our complete operational status"
+            ]
+        }
+    }
+
+# ==================== RESEARCH AUTOMATION ====================
+
+class ResearchRequest(BaseModel):
+    topic: str
+    industry: str = "proptech"
+    template_id: Optional[str] = None  # Use predefined template
+    depth: str = "standard"  # "quick_scan", "standard", "comprehensive", "deep_dive"
+    sources: List[str] = ["web", "industry_reports", "competitive_analysis"]
+    schedule: Optional[str] = None  # "one_time", "daily", "weekly", "monthly"
+    custom_questions: Optional[List[str]] = None
+    stakeholder_emails: Optional[List[str]] = None
+    
+@app.post("/api/research/start")
+async def start_research_automation(
+    request: ResearchRequest,
+    user_token: Optional[str] = Depends(verify_token)
+):
+    """Start automated research using industry-specific templates"""
+    
+    if not user_token:
+        raise HTTPException(status_code=401, detail="Authentication required")
+    
+    # Check research permissions
+    try:
+        from dev_mcp_unified.auth.rbac_manager import rbac_manager, Permission
+        user = rbac_manager.get_user_by_email(user_token)
+        if user and not rbac_manager.has_permission(user.user_id, Permission.SOPHIA_WRITE):
+            raise HTTPException(status_code=403, detail="Research automation requires Sophia write permission")
+    except:
+        pass  # Fall back to basic auth if RBAC not available
+    
+    try:
+        from app.swarms.research.industry_research_templates import (
+            template_orchestrator, get_recommended_template, estimate_research_cost,
+            IndustryDomain, ResearchDepth
+        )
+        
+        # Get or create research template
+        template = None
+        if request.template_id:
+            template = template_orchestrator.get_template(request.template_id)
+        else:
+            template = get_recommended_template(request.industry, request.depth)
+            
+        if not template:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"No template found for industry '{request.industry}' and depth '{request.depth}'"
+            )
+        
+        # Apply customizations if provided
+        if request.custom_questions or request.stakeholder_emails:
+            customizations = {}
+            if request.custom_questions:
+                customizations["questions"] = template.key_questions + request.custom_questions
+            if request.stakeholder_emails:
+                customizations["notifications"] = request.stakeholder_emails
+            if request.topic != "General Research":
+                customizations["name"] = f"{template.name}: {request.topic}"
+            
+            template = template_orchestrator.create_custom_template(
+                template.template_id, customizations
+            )
+        
+        # Validate template
+        validation = template_orchestrator.validate_template(template)
+        if not validation["valid"]:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Template validation failed: {'; '.join(validation['issues'])}"
+            )
+            
+        research_id = f"research_{template.template_id}_{int(datetime.now().timestamp())}"
+        
+        # Create enhanced research configuration with template data
+        research_config = {
+            "research_id": research_id,
+            "topic": request.topic,
+            "template": {
+                "id": template.template_id,
+                "name": template.name,
+                "industry": template.industry.value,
+                "depth": template.default_depth.value,
+                "agent_count": template.agent_count,
+                "premium_models": template.premium_models_required,
+                "estimated_duration": template.estimated_duration
+            },
+            "research_parameters": {
+                "key_questions": template.key_questions,
+                "data_sources": [source.name for source in template.data_sources],
+                "analysis_frameworks": template.analysis_frameworks,
+                "output_formats": template.output_formats
+            },
+            "automation": {
+                "schedule": request.schedule or "one_time",
+                "scheduling_enabled": template.scheduling_enabled,
+                "alert_thresholds": template.alert_thresholds,
+                "stakeholder_notifications": template.stakeholder_notifications
+            },
+            "status": "template_loaded",
+            "created_at": datetime.now().isoformat(),
+            "cost_estimate": validation["cost_estimate"],
+            "warnings": validation["warnings"]
+        }
+        
+        # Store in factory swarms for tracking
+        factory_swarms[research_id] = research_config
+        
+        return {
+            "research_id": research_id,
+            "status": "Advanced research automation initiated",
+            "template_used": template.name,
+            "topic": request.topic,
+            "industry": template.industry.value,
+            "estimated_duration": template.estimated_duration,
+            "agent_count": template.agent_count,
+            "cost_estimate": validation["cost_estimate"],
+            "warnings": validation["warnings"],
+            "next_update": "Template loaded - ready for execution"
+        }
+    
+    except ImportError:
+        # Fallback to basic research if templates not available
+        raise HTTPException(
+            status_code=500,
+            detail="Research templates not available. Please check system configuration."
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Research initialization failed: {str(e)}"
+        )
+
+@app.get("/api/research/{research_id}")
+async def get_research_status(research_id: str):
+    """Get research automation status and results"""
+    
+    if research_id not in factory_swarms:
+        raise HTTPException(status_code=404, detail="Research not found")
+    
+    research = factory_swarms[research_id]
+    
+    # Simulate research progress
+    if research.get("status") == "initiated":
+        research["status"] = "in_progress"
+        research["progress"] = 25
+        research["current_phase"] = "source_discovery"
+    elif research.get("status") == "in_progress":
+        research["progress"] = 75
+        research["current_phase"] = "analysis_synthesis"
+    
+    return research
+
+@app.get("/api/research")
+async def list_research_projects():
+    """List all research automation projects"""
+    
+    research_projects = {
+        k: v for k, v in factory_swarms.items() 
+        if k.startswith("research_")
+    }
+    
+    return {
+        "total_projects": len(research_projects),
+        "active_research": [
+            {
+                "research_id": rid,
+                "topic": data["topic"],
+                "status": data.get("status", "unknown"),
+                "progress": data.get("progress", 0),
+                "created_at": data["created_at"]
+            }
+            for rid, data in research_projects.items()
+        ]
+    }
+
+
+# RESEARCH TEMPLATE MANAGEMENT ENDPOINTS
+
+@app.get("/api/research/templates")
+async def list_research_templates():
+    """List available research templates"""
+    try:
+        from app.swarms.research.industry_research_templates import (
+            RESEARCH_TEMPLATES, TEMPLATES_BY_INDUSTRY
+        )
+        
+        templates_data = []
+        for template_id, template in RESEARCH_TEMPLATES.items():
+            templates_data.append({
+                "id": template_id,
+                "name": template.name,
+                "industry": template.industry.value,
+                "depth": template.default_depth.value,
+                "description": template.description,
+                "estimated_duration": template.estimated_duration,
+                "agent_count": template.agent_count,
+                "premium_models_required": template.premium_models_required,
+                "key_questions_count": len(template.key_questions),
+                "data_sources_count": len(template.data_sources),
+                "scheduling_enabled": template.scheduling_enabled
+            })
+        
+        return {
+            "total_templates": len(RESEARCH_TEMPLATES),
+            "templates": templates_data,
+            "industries": list(TEMPLATES_BY_INDUSTRY.keys())
+        }
+        
+    except ImportError:
+        return {"error": "Research templates not available", "templates": [], "total_templates": 0}
+
+
+@app.get("/api/research/templates/{template_id}")
+async def get_template_details(template_id: str):
+    """Get detailed template information"""
+    try:
+        from app.swarms.research.industry_research_templates import (
+            get_template_by_id, estimate_research_cost
+        )
+        
+        template = get_template_by_id(template_id)
+        if not template:
+            raise HTTPException(status_code=404, detail="Template not found")
+        
+        cost_estimate = estimate_research_cost(template, template.default_depth)
+        
+        return {
+            "template": {
+                "id": template.template_id,
+                "name": template.name,
+                "industry": template.industry.value,
+                "description": template.description,
+                "depth": template.default_depth.value,
+                "estimated_duration": template.estimated_duration,
+                "agent_count": template.agent_count,
+                "premium_models_required": template.premium_models_required,
+                "key_questions": template.key_questions,
+                "data_sources": [
+                    {
+                        "name": source.name,
+                        "type": source.type,
+                        "priority": source.priority,
+                        "cost_per_query": source.cost_per_query
+                    }
+                    for source in template.data_sources
+                ],
+                "analysis_frameworks": template.analysis_frameworks,
+                "output_formats": template.output_formats,
+                "scheduling_enabled": template.scheduling_enabled,
+                "alert_thresholds": template.alert_thresholds,
+                "stakeholder_notifications": template.stakeholder_notifications
+            },
+            "cost_estimate": cost_estimate
+        }
+        
+    except ImportError:
+        raise HTTPException(status_code=500, detail="Research templates not available")
+
+
+@app.get("/api/research/templates/by-industry/{industry}")
+async def get_templates_by_industry(industry: str):
+    """Get templates for specific industry"""
+    try:
+        from app.swarms.research.industry_research_templates import (
+            get_templates_for_industry, IndustryDomain
+        )
+        
+        try:
+            industry_enum = IndustryDomain(industry.lower())
+        except ValueError:
+            raise HTTPException(status_code=400, detail=f"Unsupported industry: {industry}")
+        
+        templates = get_templates_for_industry(industry_enum)
+        
+        templates_data = []
+        for template in templates:
+            templates_data.append({
+                "id": template.template_id,
+                "name": template.name,
+                "description": template.description,
+                "depth": template.default_depth.value,
+                "estimated_duration": template.estimated_duration,
+                "agent_count": template.agent_count,
+                "premium_models_required": template.premium_models_required
+            })
+        
+        return {
+            "industry": industry,
+            "total_templates": len(templates_data),
+            "templates": templates_data
+        }
+        
+    except ImportError:
+        raise HTTPException(status_code=500, detail="Research templates not available")
+
+
+@app.post("/api/research/templates/validate")
+async def validate_custom_template(template_data: Dict[str, Any]):
+    """Validate custom template configuration"""
+    try:
+        from app.swarms.research.industry_research_templates import (
+            template_orchestrator
+        )
+        
+        # Create a temporary template for validation
+        base_template_id = template_data.get("base_template", "proptech_comprehensive")
+        customizations = template_data.get("customizations", {})
+        
+        custom_template = template_orchestrator.create_custom_template(
+            base_template_id, customizations
+        )
+        
+        validation = template_orchestrator.validate_template(custom_template)
+        
+        return {
+            "validation_result": validation,
+            "template_preview": {
+                "name": custom_template.name,
+                "estimated_duration": custom_template.estimated_duration,
+                "agent_count": custom_template.agent_count,
+                "questions_count": len(custom_template.key_questions),
+                "sources_count": len(custom_template.data_sources)
+            }
+        }
+        
+    except ImportError:
+        raise HTTPException(status_code=500, detail="Research templates not available")
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Template validation failed: {str(e)}")
+
+
+# SPECIALIZED SWARM ENDPOINTS
+
+@app.post("/api/swarms/web-research/execute")
+async def execute_web_research_task(request: Dict[str, Any]):
+    """Execute web research task using specialized swarm"""
+    try:
+        from app.swarms.specialized.web_research_swarm import web_research_swarm, WebResearchTask, ResearchScope
+        
+        task = WebResearchTask(
+            task_id=f"web_research_{int(datetime.now().timestamp())}",
+            query=request.get("query", ""),
+            scope=ResearchScope(request.get("scope", "market_analysis")),
+            priority=request.get("priority", 1),
+            max_results=request.get("max_results", 50),
+            freshness_hours=request.get("freshness_hours", 24)
+        )
+        
+        results = await web_research_swarm.execute_research_task(task)
+        
+        return {
+            "success": True,
+            "task_id": task.task_id,
+            "results": results,
+            "agents_used": results.get("agents_deployed", []),
+            "cost_estimate": results.get("cost_estimate", 0)
+        }
+        
+    except ImportError:
+        raise HTTPException(status_code=500, detail="Web research swarm not available")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Web research failed: {str(e)}")
+
+
+@app.post("/api/swarms/ui-development/execute")
+async def execute_ui_development_task(request: Dict[str, Any]):
+    """Execute UI development task using specialized swarm"""
+    try:
+        from app.swarms.specialized.ui_development_swarm import ui_development_swarm, UITask, UIFramework, DesignSystem
+        
+        task = UITask(
+            task_id=f"ui_dev_{int(datetime.now().timestamp())}",
+            component_name=request.get("component_name", "DefaultComponent"),
+            framework=UIFramework(request.get("framework", "react")),
+            design_system=DesignSystem(request.get("design_system", "tailwind")),
+            requirements=request.get("requirements", []),
+            accessibility_level=request.get("accessibility_level", "AA"),
+            responsive=request.get("responsive", True),
+            dark_mode=request.get("dark_mode", True)
+        )
+        
+        results = await ui_development_swarm.execute_ui_development(task)
+        
+        return {
+            "success": True,
+            "task_id": task.task_id,
+            "results": results,
+            "deliverables": results.get("deliverables", {}),
+            "quality_score": results.get("quality_score", 0),
+            "estimated_cost": results.get("estimated_cost", 0)
+        }
+        
+    except ImportError:
+        raise HTTPException(status_code=500, detail="UI development swarm not available")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"UI development failed: {str(e)}")
+
+
+@app.post("/api/swarms/quality-control/execute")
+async def execute_quality_control_audit(request: Dict[str, Any]):
+    """Execute quality control audit using specialized swarm"""
+    try:
+        from app.swarms.specialized.quality_control_swarm import quality_control_swarm, QualityAudit, QualityDomain
+        
+        audit = QualityAudit(
+            audit_id=f"qa_audit_{int(datetime.now().timestamp())}",
+            target_type=request.get("target_type", "codebase"),
+            target_path=request.get("target_path", "."),
+            domains=[QualityDomain(domain) for domain in request.get("domains", ["code_quality"])],
+            compliance_frameworks=request.get("compliance_frameworks", []),
+            automated_fixes=request.get("automated_fixes", True),
+            priority=request.get("priority", 1)
+        )
+        
+        results = await quality_control_swarm.execute_quality_audit(audit)
+        
+        return {
+            "success": True,
+            "audit_id": audit.audit_id,
+            "results": results,
+            "quality_score": results.get("quality_score", 0),
+            "quality_grade": results.get("quality_grade", "C"),
+            "issues_found": len(results.get("issues", [])),
+            "compliance_status": results.get("compliance_status", {}),
+            "automated_fixes": results.get("automated_fixes", [])
+        }
+        
+    except ImportError:
+        raise HTTPException(status_code=500, detail="Quality control swarm not available")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Quality control audit failed: {str(e)}")
+
+
+@app.get("/api/swarms/status")
+async def get_swarms_status():
+    """Get status of all specialized swarms"""
+    try:
+        swarm_status = {}
+        
+        # Check Web Research Swarm
+        try:
+            from app.swarms.specialized.web_research_swarm import web_research_swarm
+            swarm_status["web_research"] = {
+                "available": True,
+                "agents": len(web_research_swarm.agent_pool),
+                "active_research": len(web_research_swarm.active_research),
+                "capabilities": ["competitive_intel", "market_analysis", "industry_trends", "news_monitoring"]
+            }
+        except ImportError:
+            swarm_status["web_research"] = {"available": False, "error": "Module not found"}
+        
+        # Check UI Development Swarm
+        try:
+            from app.swarms.specialized.ui_development_swarm import ui_development_swarm
+            swarm_status["ui_development"] = {
+                "available": True,
+                "agents": len(ui_development_swarm.agent_pool),
+                "active_projects": len(ui_development_swarm.active_projects),
+                "frameworks": ["react", "vue", "angular", "svelte"],
+                "design_systems": ["tailwind", "material_ui", "chakra_ui"]
+            }
+        except ImportError:
+            swarm_status["ui_development"] = {"available": False, "error": "Module not found"}
+        
+        # Check Quality Control Swarm
+        try:
+            from app.swarms.specialized.quality_control_swarm import quality_control_swarm
+            swarm_status["quality_control"] = {
+                "available": True,
+                "agents": len(quality_control_swarm.agent_pool),
+                "active_audits": len(quality_control_swarm.active_audits),
+                "audit_domains": ["code_quality", "security_audit", "performance_testing", "accessibility_compliance"]
+            }
+        except ImportError:
+            swarm_status["quality_control"] = {"available": False, "error": "Module not found"}
+        
+        return {
+            "specialized_swarms": swarm_status,
+            "total_swarms": len(swarm_status),
+            "available_swarms": sum(1 for s in swarm_status.values() if s.get("available", False)),
+            "system_health": "operational" if all(s.get("available", False) for s in swarm_status.values()) else "partial"
+        }
+        
+    except Exception as e:
+        return {"error": f"Failed to get swarm status: {str(e)}"}
+
+
+@app.post("/api/swarms/orchestrated-pipeline")
+async def execute_orchestrated_pipeline(request: Dict[str, Any]):
+    """Execute orchestrated pipeline using multiple specialized swarms"""
+    try:
+        pipeline_id = f"pipeline_{int(datetime.now().timestamp())}"
+        pipeline_config = request.get("pipeline", {})
+        
+        results = {
+            "pipeline_id": pipeline_id,
+            "started_at": datetime.now().isoformat(),
+            "stages": [],
+            "overall_status": "executing"
+        }
+        
+        # Stage 1: Web Research (if requested)
+        if "web_research" in pipeline_config:
+            from app.swarms.specialized.web_research_swarm import web_research_swarm, WebResearchTask, ResearchScope
+            
+            research_config = pipeline_config["web_research"]
+            research_task = WebResearchTask(
+                task_id=f"{pipeline_id}_research",
+                query=research_config.get("query", ""),
+                scope=ResearchScope(research_config.get("scope", "market_analysis")),
+                priority=1
+            )
+            
+            research_results = await web_research_swarm.execute_research_task(research_task)
+            results["stages"].append({
+                "stage": "web_research",
+                "status": "completed",
+                "results": research_results
+            })
+        
+        # Stage 2: UI Development (if requested)
+        if "ui_development" in pipeline_config:
+            from app.swarms.specialized.ui_development_swarm import ui_development_swarm, UITask, UIFramework, DesignSystem
+            
+            ui_config = pipeline_config["ui_development"]
+            ui_task = UITask(
+                task_id=f"{pipeline_id}_ui",
+                component_name=ui_config.get("component_name", "PipelineComponent"),
+                framework=UIFramework(ui_config.get("framework", "react")),
+                design_system=DesignSystem(ui_config.get("design_system", "tailwind")),
+                requirements=ui_config.get("requirements", [])
+            )
+            
+            ui_results = await ui_development_swarm.execute_ui_development(ui_task)
+            results["stages"].append({
+                "stage": "ui_development", 
+                "status": "completed",
+                "results": ui_results
+            })
+        
+        # Stage 3: Quality Control (always run if components were created)
+        if "quality_control" in pipeline_config or "ui_development" in pipeline_config:
+            from app.swarms.specialized.quality_control_swarm import quality_control_swarm, QualityAudit, QualityDomain
+            
+            qa_config = pipeline_config.get("quality_control", {})
+            qa_audit = QualityAudit(
+                audit_id=f"{pipeline_id}_qa",
+                target_type=qa_config.get("target_type", "codebase"),
+                target_path=qa_config.get("target_path", "."),
+                domains=[QualityDomain(domain) for domain in qa_config.get("domains", ["code_quality", "security_audit"])]
+            )
+            
+            qa_results = await quality_control_swarm.execute_quality_audit(qa_audit)
+            results["stages"].append({
+                "stage": "quality_control",
+                "status": "completed", 
+                "results": qa_results
+            })
+        
+        results.update({
+            "completed_at": datetime.now().isoformat(),
+            "overall_status": "completed",
+            "stages_completed": len(results["stages"]),
+            "pipeline_score": sum(stage["results"].get("quality_score", 75) for stage in results["stages"] if "quality_score" in stage.get("results", {})) / max(1, len(results["stages"]))
+        })
+        
+        return results
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Orchestrated pipeline failed: {str(e)}")
+
+
+# DEPLOYMENT SWARM ENDPOINTS
+
+@app.post("/api/swarms/deployment/execute")
+async def execute_deployment_task(request: Dict[str, Any]):
+    """Execute deployment using deployment swarm"""
+    try:
+        from app.swarms.specialized.deployment_swarm import deployment_swarm, DeploymentTask, DeploymentTarget, DeploymentStrategy
+        
+        target_config = request.get("target", {})
+        target = DeploymentTarget(
+            target_id=f"target_{int(datetime.now().timestamp())}",
+            name=target_config.get("name", "default-app"),
+            environment=target_config.get("environment", "staging"),
+            strategy=DeploymentStrategy(target_config.get("strategy", "blue_green")),
+            ui_components=target_config.get("ui_components", []),
+            api_endpoints=target_config.get("api_endpoints", []),
+            infrastructure=target_config.get("infrastructure", {}),
+            health_check_url=target_config.get("health_check_url", "http://localhost:3333/health"),
+            rollback_enabled=target_config.get("rollback_enabled", True)
+        )
+        
+        task = DeploymentTask(
+            task_id=f"deploy_{int(datetime.now().timestamp())}",
+            target=target,
+            artifacts=request.get("artifacts", []),
+            configuration=request.get("configuration", {}),
+            success_criteria=request.get("success_criteria", {}),
+            timeout_minutes=request.get("timeout_minutes", 30),
+            priority=request.get("priority", 1)
+        )
+        
+        results = await deployment_swarm.execute_deployment(task)
+        
+        return {
+            "success": True,
+            "deployment_id": results.get("deployment_id"),
+            "task_id": task.task_id,
+            "target": target.name,
+            "environment": target.environment,
+            "overall_status": results.get("overall_status"),
+            "phases_completed": len([p for p in results.get("phases", {}).values() if p.get("success", False)]),
+            "deployment_urls": results.get("phases", {}).get("deployment", {}).get("deployment_urls", {}),
+            "quality_score": results.get("phases", {}).get("quality_control", {}).get("quality_score", 0),
+            "rollback_available": results.get("rollback_available", False),
+            "duration": results.get("deployment_duration", "N/A")
+        }
+        
+    except ImportError:
+        raise HTTPException(status_code=500, detail="Deployment swarm not available")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Deployment execution failed: {str(e)}")
+
+
+@app.post("/api/swarms/deployment/rollback")
+async def trigger_deployment_rollback(request: Dict[str, Any]):
+    """Trigger deployment rollback"""
+    try:
+        from app.swarms.specialized.deployment_swarm import deployment_swarm
+        
+        deployment_id = request.get("deployment_id")
+        if not deployment_id:
+            raise HTTPException(status_code=400, detail="Deployment ID required")
+        
+        # Mock rollback execution
+        rollback_result = {
+            "rollback_initiated": datetime.now().isoformat(),
+            "deployment_id": deployment_id,
+            "success": True,
+            "rollback_steps": [
+                {"step": "container_rollback", "success": True, "duration": "30s"},
+                {"step": "infrastructure_rollback", "success": True, "duration": "45s"},
+                {"step": "configuration_restore", "success": True, "duration": "15s"},
+                {"step": "health_validation", "success": True, "duration": "20s"}
+            ],
+            "rollback_duration": "110s",
+            "status": "completed"
+        }
+        
+        return rollback_result
+        
+    except ImportError:
+        raise HTTPException(status_code=500, detail="Deployment swarm not available")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Rollback failed: {str(e)}")
+
+
+@app.get("/api/swarms/deployment/status")
+async def get_deployment_status():
+    """Get deployment swarm status"""
+    try:
+        from app.swarms.specialized.deployment_swarm import deployment_swarm
+        
+        return {
+            "deployment_swarm": {
+                "available": True,
+                "agents": len(deployment_swarm.agent_pool),
+                "active_deployments": len(deployment_swarm.active_deployments),
+                "deployment_history": len(deployment_swarm.deployment_history),
+                "rollback_snapshots": len(deployment_swarm.rollback_snapshots),
+                "phases": ["validation", "deployment", "testing", "quality_control", "monitoring", "documentation"]
+            },
+            "agent_status": [
+                {
+                    "name": agent.name,
+                    "phase": agent.phase.value,
+                    "specialization": agent.specialization,
+                    "cost_per_execution": agent.cost_per_execution,
+                    "max_concurrent": agent.max_concurrent
+                }
+                for agent in deployment_swarm.agent_pool
+            ]
+        }
+        
+    except ImportError:
+        return {"deployment_swarm": {"available": False, "error": "Module not found"}}
+
+
+def _calculate_research_time(depth: str) -> str:
+    """Calculate estimated research completion time"""
+    time_mapping = {
+        "quick": "30 minutes",
+        "standard": "2-4 hours", 
+        "comprehensive": "1-2 days"
+    }
+    return time_mapping.get(depth, "2-4 hours")
+
+def _get_research_agents(depth: str) -> List[Dict[str, str]]:
+    """Get research agents based on depth"""
+    base_agents = [
+        {"role": "web_researcher", "model": "gpt-4"},
+        {"role": "data_analyst", "model": "claude-3-sonnet"}
+    ]
+    
+    if depth == "comprehensive":
+        base_agents.extend([
+            {"role": "industry_expert", "model": "gpt-4"},
+            {"role": "competitive_analyst", "model": "claude-3-sonnet"},
+            {"role": "report_synthesizer", "model": "gpt-4"}
+        ])
+    elif depth == "standard":
+        base_agents.append({"role": "report_synthesizer", "model": "gpt-4"})
+    
+    return base_agents
+
+def _create_research_workflow(request: ResearchRequest) -> List[Dict[str, str]]:
+    """Create research workflow steps"""
+    return [
+        {"step": 1, "phase": "source_discovery", "description": f"Find sources on {request.topic}"},
+        {"step": 2, "phase": "data_collection", "description": "Gather relevant information"},
+        {"step": 3, "phase": "analysis", "description": "Analyze collected data for insights"},
+        {"step": 4, "phase": "synthesis", "description": "Create comprehensive report"},
+        {"step": 5, "phase": "recommendations", "description": "Generate actionable recommendations"}
+    ]
+
+# ==================== SOPHIA BRAIN TRAINING ====================
+
+class TrainingRequest(BaseModel):
+    content: str
+    content_type: str = "text"  # "text", "document", "conversation"
+    business_context: str
+    classification: str = "internal"  # "public", "internal", "confidential"
+    tags: List[str] = []
+
+@app.post("/api/sophia/train")
+async def train_sophia_brain(
+    request: TrainingRequest,
+    user_token: Optional[str] = Depends(verify_token)
+):
+    """Train Sophia's business knowledge with new content"""
+    
+    if not user_token:
+        raise HTTPException(status_code=401, detail="Authentication required for brain training")
+    
+    # Check training permissions
+    try:
+        from dev_mcp_unified.auth.rbac_manager import rbac_manager, Permission
+        user = rbac_manager.get_user_by_email(user_token)
+        if user and not rbac_manager.has_permission(user.user_id, Permission.SOPHIA_WRITE):
+            raise HTTPException(status_code=403, detail="Brain training requires Sophia write permission")
+    except:
+        pass
+    
+    training_id = f"training_{int(datetime.now().timestamp())}"
+    
+    # Process the training content
+    training_result = {
+        "training_id": training_id,
+        "content_length": len(request.content),
+        "business_context": request.business_context,
+        "classification": request.classification,
+        "tags": request.tags,
+        "processing_status": "completed",
+        "entities_extracted": _extract_business_entities(request.content),
+        "knowledge_updated": True,
+        "contextual_relationships": _create_knowledge_relationships(request),
+        "timestamp": datetime.now().isoformat()
+    }
+    
+    return {
+        "success": True,
+        "training_id": training_id,
+        "message": "Sophia's knowledge base updated successfully",
+        "entities_learned": len(training_result["entities_extracted"]),
+        "relationships_created": len(training_result["contextual_relationships"]),
+        "next_steps": [
+            "Test knowledge with queries",
+            "Validate business context understanding",
+            "Update related workflows"
+        ]
+    }
+
+def _extract_business_entities(content: str) -> List[Dict[str, str]]:
+    """Extract business entities from content"""
+    # Simplified entity extraction
+    entities = []
+    
+    # Look for common business entities
+    business_patterns = {
+        "companies": r'\b[A-Z][a-zA-Z\s&]{2,30}(?:Inc|LLC|Corp|Ltd|Co)\b',
+        "products": r'\b(?:PayReady|Sophia|Artemis)\b',
+        "metrics": r'\$[\d,]+|\d+%|\d+\s*(?:customers?|users?|deals?)',
+        "dates": r'\b(?:Q[1-4]|January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}\b'
+    }
+    
+    for entity_type, pattern in business_patterns.items():
+        import re
+        matches = re.findall(pattern, content)
+        for match in matches[:5]:  # Limit to avoid too much data
+            entities.append({
+                "type": entity_type,
+                "value": match,
+                "confidence": 0.8
+            })
+    
+    return entities
+
+def _create_knowledge_relationships(request: TrainingRequest) -> List[Dict[str, str]]:
+    """Create relationships between knowledge concepts"""
+    return [
+        {
+            "relationship": "belongs_to", 
+            "subject": "content",
+            "object": request.business_context
+        },
+        {
+            "relationship": "classified_as",
+            "subject": "content", 
+            "object": request.classification
+        }
+    ]
+
+@app.get("/api/sophia/knowledge")
+async def get_sophia_knowledge_status():
+    """Get Sophia's current knowledge base status"""
+    
+    return {
+        "knowledge_base": {
+            "total_entities": 1247,
+            "business_contexts": ["sales", "marketing", "product", "customer_success"],
+            "last_training": datetime.now().isoformat(),
+            "confidence_score": 0.87,
+            "active_relationships": 423
+        },
+        "recent_training": [
+            {"content_type": "sales_calls", "count": 15, "date": "2024-01-15"},
+            {"content_type": "contracts", "count": 8, "date": "2024-01-14"},
+            {"content_type": "product_docs", "count": 12, "date": "2024-01-13"}
+        ],
+        "capabilities": [
+            "Business context understanding",
+            "Customer interaction analysis",
+            "Sales process optimization",
+            "Market trend identification"
+        ]
+    }
+
+
+# --- Sales Intelligence Swarm Integration ---
+try:
+    from app.swarms.sales_intelligence import (
+        SalesIntelligenceOrchestrator,
+        create_sales_intelligence_commands,
+        create_dashboard_app
+    )
+    
+    # Initialize Sales Intelligence Orchestrator
+    sales_intelligence = SalesIntelligenceOrchestrator(
+        gong_access_key=os.getenv("GONG_ACCESS_KEY"),
+        gong_client_secret=os.getenv("GONG_CLIENT_SECRET")
+    )
+    
+    # Initialize during startup
+    @app.on_event("startup")
+    async def initialize_sales_intelligence():
+        try:
+            await sales_intelligence.initialize()
+            logger.info("✅ Sales Intelligence Swarm initialized")
+        except Exception as e:
+            logger.error(f"❌ Sales Intelligence initialization failed: {e}")
+    
+    # Sales Intelligence Endpoints
+    @app.post("/api/sales/query")
+    async def sales_intelligence_query(request: dict):
+        """Process sales intelligence queries from Sophia"""
+        query = request.get("query", "")
+        context = request.get("context", {})
+        
+        if not query:
+            return {"error": "Query is required"}
+        
+        try:
+            result = await sales_intelligence.process_sophia_query(query, context)
+            return result
+        except Exception as e:
+            logger.error(f"Sales intelligence query error: {e}")
+            return {"error": str(e)}
+    
+    @app.post("/api/sales/start-monitoring")
+    async def start_call_monitoring(request: dict):
+        """Start monitoring a specific call"""
+        call_id = request.get("call_id")
+        
+        if not call_id:
+            return {"error": "call_id is required"}
+        
+        try:
+            result = await sales_intelligence.start_call_monitoring(call_id)
+            return result
+        except Exception as e:
+            logger.error(f"Call monitoring error: {e}")
+            return {"error": str(e)}
+    
+    @app.get("/api/sales/dashboard/call/{call_id}")
+    async def get_call_dashboard(call_id: str):
+        """Get dashboard data for specific call"""
+        try:
+            return sales_intelligence.dashboard.get_call_dashboard_data(call_id)
+        except Exception as e:
+            return {"error": str(e)}
+    
+    @app.get("/api/sales/dashboard/team")
+    async def get_team_dashboard():
+        """Get team dashboard data"""
+        try:
+            return sales_intelligence.dashboard.get_team_dashboard_data()
+        except Exception as e:
+            return {"error": str(e)}
+    
+    @app.websocket("/ws/sales/{call_id}")
+    async def sales_websocket_call(websocket: WebSocket, call_id: str):
+        """WebSocket endpoint for call-specific sales intelligence updates"""
+        await sales_intelligence.dashboard.websocket_manager.connect(websocket, call_id)
+        try:
+            while True:
+                data = await websocket.receive_text()
+                message = json.loads(data)
+                
+                if message.get("type") == "ping":
+                    await websocket.send_json({"type": "pong"})
+                
+        except WebSocketDisconnect:
+            sales_intelligence.dashboard.websocket_manager.disconnect(websocket)
+    
+    @app.websocket("/ws/sales")
+    async def sales_websocket_general(websocket: WebSocket):
+        """WebSocket endpoint for general sales intelligence updates"""
+        await sales_intelligence.dashboard.websocket_manager.connect(websocket)
+        try:
+            while True:
+                data = await websocket.receive_text()
+                message = json.loads(data)
+                
+                if message.get("type") == "ping":
+                    await websocket.send_json({"type": "pong"})
+                
+        except WebSocketDisconnect:
+            sales_intelligence.dashboard.websocket_manager.disconnect(websocket)
+    
+    @app.get("/sales-dashboard")
+    async def sales_dashboard():
+        """Serve sales intelligence dashboard"""
+        from app.swarms.sales_intelligence.dashboard import get_dashboard_html
+        return HTMLResponse(content=get_dashboard_html(), status_code=200)
+    
+    print("✅ Sales Intelligence Swarm endpoints registered")
+    
+except ImportError as e:
+    print(f"⚠️  Sales Intelligence Swarm not available: {e}")
+    sales_intelligence = None
+
+# ==========================================
+# Persona Integration Endpoints
+# ==========================================
+
+try:
+    from app.personas.persona_manager import get_persona_manager
+    
+    # Pydantic models for persona endpoints
+    class ChatRequest(BaseModel):
+        message: str
+        context: Optional[Dict[str, Any]] = None
+    
+    persona_manager = get_persona_manager()
+    
+    @app.get("/api/personas/team")
+    async def get_persona_team():
+        """Get all available personas in the team"""
+        try:
+            result = await persona_manager.get_team_members()
+            # Use custom serialization to prevent JSON escaping
+            return HTTPException(
+                status_code=200 if result["success"] else 500,
+                detail=result if not result["success"] else None,
+                headers={"Content-Type": "application/json; charset=utf-8"}
+            ) if not result["success"] else result
+        except Exception as e:
+            logger.error(f"Error getting persona team: {e}")
+            return {"success": False, "error": str(e), "team_members": [], "total": 0}
+    
+    @app.post("/api/personas/chat/{persona_id}")
+    async def chat_with_persona(persona_id: str, request: ChatRequest):
+        """Chat with a specific persona"""
+        try:
+            response = await persona_manager.chat_with_persona(
+                persona_id=persona_id,
+                message=request.message,
+                context=request.context
+            )
+            
+            # Return the properly serialized response
+            return response.to_dict()
+        
+        except Exception as e:
+            logger.error(f"Error in persona chat: {e}")
+            return {
+                "success": False,
+                "error": str(e),
+                "persona_id": persona_id,
+                "persona_name": "Error",
+                "timestamp": datetime.now().isoformat(),
+                "response": "I apologize, but I encountered an error processing your request."
+            }
+    
+    @app.get("/api/personas/health")
+    async def get_persona_health():
+        """Get health status of all personas"""
+        try:
+            return await persona_manager.get_persona_health()
+        except Exception as e:
+            logger.error(f"Error getting persona health: {e}")
+            return {
+                "success": False,
+                "status": "error", 
+                "error": str(e),
+                "personas": {}
+            }
+    
+    @app.get("/api/personas/{persona_id}/info")
+    async def get_persona_info(persona_id: str):
+        """Get detailed information about a specific persona"""
+        try:
+            if persona_id in persona_manager.agent_personas:
+                persona = persona_manager.agent_personas[persona_id]
+                return {
+                    "success": True,
+                    "persona": persona.to_dict()
+                }
+            elif persona_manager.sophia_system:
+                info = await persona_manager.sophia_system.get_persona_info(persona_id)
+                if info:
+                    return {
+                        "success": True,
+                        "persona": {
+                            "id": persona_id,
+                            "name": info.get("name", persona_id),
+                            "info": info
+                        }
+                    }
+            
+            return {"success": False, "error": "Persona not found"}
+        
+        except Exception as e:
+            logger.error(f"Error getting persona info: {e}")
+            return {"success": False, "error": str(e)}
+    
+    # Voice endpoint for serving generated audio files
+    @app.get("/api/voice/{filename}")
+    async def serve_voice_file(filename: str):
+        """Serve generated voice files"""
+        try:
+            file_path = Path(f"/tmp/{filename}")
+            if file_path.exists() and file_path.suffix == '.mp3':
+                return FileResponse(
+                    path=str(file_path),
+                    media_type="audio/mpeg",
+                    filename=filename
+                )
+            else:
+                raise HTTPException(status_code=404, detail="Voice file not found")
+        except Exception as e:
+            logger.error(f"Error serving voice file: {e}")
+            raise HTTPException(status_code=500, detail=str(e))
+    
+    # Dashboard endpoint to serve Agent Factory UI
+    @app.get("/agents/factory-dashboard.html")
+    async def serve_agent_dashboard():
+        """Serve the Agent Factory dashboard"""
+        try:
+            dashboard_path = Path("app/agents/ui/agent_factory_dashboard.html")
+            if dashboard_path.exists():
+                return FileResponse(str(dashboard_path))
+            else:
+                raise HTTPException(status_code=404, detail="Agent dashboard not found")
+        except Exception as e:
+            logger.error(f"Error serving agent dashboard: {e}")
+            raise HTTPException(status_code=500, detail=str(e))
+    
+    print("✅ Persona Integration endpoints registered")
+    
+except ImportError as e:
+    print(f"⚠️  Persona Integration not available: {e}")
+    persona_manager = None

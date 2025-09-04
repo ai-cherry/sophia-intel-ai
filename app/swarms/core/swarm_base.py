@@ -205,8 +205,16 @@ class SwarmBase(ABC):
 
         # Internal state
         self.execution_history = []
+        
+        # ENFORCE PARALLEL EXECUTION RULE
+        from app.swarms.core.parallel_config import ParallelEnforcer
+        self.parallel_config = ParallelEnforcer.enforce_for_swarm(
+            swarm_id=config.swarm_id,
+            agent_count=len(self.agents) if self.agents else config.agent_count
+        )
 
         logger.info(f"🐝 Initialized {config.swarm_type.value} swarm: {config.swarm_id}")
+        logger.info(f"⚡ Parallel execution enforced with {self.parallel_config.agent_count} unique virtual keys")
 
     async def initialize(self) -> bool:
         """Initialize swarm components and agents"""
@@ -625,7 +633,7 @@ DEFAULT_SWARM_CONFIGS = {
         swarm_type=SwarmType.GENESIS,
         execution_mode=SwarmExecutionMode.EVOLUTIONARY,
         agent_types=["evolutionary_planner", "innovator", "evolver", "optimizer"],
-        capabilities=[SwarmCapability.CREATIVITY, SwarmCapability.QUALITY_ASSURANCE, SwarmCapability.PLAYER],
+        capabilities=[SwarmCapability.CREATIVITY, SwarmCapability.QUALITY_ASSURANCE, SwarmCapability.PLANNING],
         enabled_patterns=["strategy_archive", "quality_gates", "evolution"]
     ),
 

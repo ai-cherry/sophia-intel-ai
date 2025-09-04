@@ -15,11 +15,23 @@ from app.core.circuit_breaker import with_circuit_breaker
 # PORTKEY VIRTUAL KEYS - REAL CONNECTIONS
 # ============================================
 
+# Load environment for real virtual keys
+from dotenv import load_dotenv
+load_dotenv('.env.portkey')
+
 PORTKEY_VIRTUAL_KEYS = {
-    "OPENAI": "openai-vk-190a60",              # OpenAI models (GPT-4o, etc.)
-    "XAI": "xai-vk-e65d0f",                    # X.AI/Grok models
-    "OPENROUTER": "vkj-openrouter-cc4151",     # OpenRouter gateway for all models
-    "TOGETHER": "together-ai-670469",          # Together AI for embeddings/fast inference
+    "OPENAI": os.getenv("PORTKEY_VK_OPENAI", "openai-vk-190a60"),
+    "XAI": os.getenv("PORTKEY_VK_XAI", "xai-vk-e65d0f"),
+    "OPENROUTER": os.getenv("PORTKEY_VK_OPENROUTER", "vkj-openrouter-cc4151"),
+    "TOGETHER": os.getenv("PORTKEY_VK_TOGETHER", "together-ai-670469"),
+    "ANTHROPIC": os.getenv("PORTKEY_VK_ANTHROPIC", "anthropic-vk-b42804"),
+    "DEEPSEEK": os.getenv("PORTKEY_VK_DEEPSEEK", "deepseek-vk-24102f"),
+    "PERPLEXITY": os.getenv("PORTKEY_VK_PERPLEXITY", "perplexity-vk-56c172"),
+    "GROQ": os.getenv("PORTKEY_VK_GROQ", "groq-vk-6b9b52"),
+    "MISTRAL": os.getenv("PORTKEY_VK_MISTRAL", "mistral-vk-f92861"),
+    "COHERE": os.getenv("PORTKEY_VK_COHERE", "cohere-vk-496fa9"),
+    "MILVUS": os.getenv("PORTKEY_VK_MILVUS", "milvus-vk-34fa02"),
+    "QDRANT": os.getenv("PORTKEY_VK_QDRANT", "qdrant-vk-d2b62a"),
 }
 
 # ============================================

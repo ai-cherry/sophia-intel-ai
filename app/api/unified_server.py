@@ -8,7 +8,8 @@ from typing import Any, Optional
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse, JSONResponse, Response
+from fastapi.responses import StreamingResponse, JSONResponse, Response, FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 # Load environment variables from .env file
@@ -48,6 +49,9 @@ from app.api.unified_gateway import router as unified_gateway_router
 from app.factory import router as factory_router
 # from app.ui.unified.chat_orchestrator import router as orchestrator_router  # Module deleted
 
+# Persona agents router
+from app.agents.personas.api_routes import router as personas_router
+
 app = FastAPI(
     title="Sophia Intel AI API",
     description="Sophia Intel AI Platform API",
@@ -73,7 +77,11 @@ app.include_router(infrastructure_router, prefix="/api/infrastructure")
 app.include_router(super_orchestrator_router, prefix="/api/super")
 app.include_router(teams_router, prefix="/api/teams")
 app.include_router(factory_router)  # Agent Factory endpoints
+app.include_router(personas_router)  # Persona agents endpoints - includes /api/personas prefix
 # app.include_router(memory_api_router, prefix="/api/memory-v2")  # Module has import issues
+
+# Mount static files for UI components
+app.mount("/static", StaticFiles(directory="app/agents/ui"), name="static")
 
 # Add middleware
 app.add_middleware(
@@ -119,6 +127,21 @@ async def startup_event():
         # Initialize message bus
         await message_bus_instance.initialize()
         logger.info("✅ Message bus initialized")
+        
+        # Initialize persona agents
+        from app.agents.personas.api_routes import persona_manager
+        try:
+            # Initialize the main personas
+            await persona_manager.initialize_persona("marcus")
+            logger.info("✅ Marcus (Sales Coach) initialized")
+            
+            await persona_manager.initialize_persona("sarah")
+            logger.info("✅ Sarah (Client Health) initialized")
+            
+            logger.info("✅ AI Team Members ready for interaction")
+        except Exception as e:
+            logger.warning(f"⚠️ Persona initialization warning: {e}")
+            # Don't fail startup if personas can't initialize
 
         logger.info(f"""
         🚀 UNIFIED SERVER READY - REAL AI MODELS ACTIVE
@@ -126,6 +149,7 @@ async def startup_event():
         - Portkey Gateway: ACTIVE
         - OpenRouter: CONNECTED
         - Message Bus: OPERATIONAL
+        - AI Team Members: Marcus & Sarah ONLINE
         - Hub: http://localhost:{os.getenv('AGENT_API_PORT', '8003')}/hub
         - WebSocket: ws://localhost:{os.getenv('AGENT_API_PORT', '8003')}/ws/bus
         - Models: Grok-5, Qwen3-30B, DeepSeek, Gemini
@@ -481,6 +505,11 @@ async def generate_embeddings_endpoint(request: dict[str, Any]):
                 status_code=503,
                 detail=f"Embedding service unavailable: {str(e)}"
             )
+
+@app.get("/agents/factory-dashboard.html")
+async def agent_factory_dashboard():
+    """Serve the Agent Factory dashboard"""
+    return FileResponse("app/agents/ui/agent_factory_dashboard.html")
 
 @app.get("/models")
 async def list_models():

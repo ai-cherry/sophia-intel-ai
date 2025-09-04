@@ -17,6 +17,7 @@ from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, Field
+from app.models.schemas import ModelFieldsModel
 
 # Import existing factory infrastructure
 from app.factory.agent_factory import AgentFactory
@@ -66,7 +67,7 @@ class TechnicalPersonality(str, Enum):
     SECURITY_PARANOID = "security_paranoid"  # Security-first mindset
     PERFORMANCE_OBSESSED = "performance_obsessed"  # Performance optimization focused
 
-class ArtemisAgentTemplate(BaseModel):
+class ArtemisAgentTemplate(ModelFieldsModel):
     """Template for Artemis technical agents"""
     name: str
     role: TechnicalAgentRole

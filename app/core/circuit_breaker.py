@@ -380,7 +380,20 @@ def with_circuit_breaker(
 
         @functools.wraps(func)
         def sync_wrapper(*args, **kwargs):
-            return asyncio.run(breaker.call(func, *args, **kwargs))
+            # Try to get the current event loop
+            try:
+                loop = asyncio.get_running_loop()
+                # We're already in an event loop, run in a thread
+                import concurrent.futures
+                with concurrent.futures.ThreadPoolExecutor() as executor:
+                    future = executor.submit(
+                        asyncio.run, 
+                        breaker.call(func, *args, **kwargs)
+                    )
+                    return future.result()
+            except RuntimeError:
+                # No running loop, safe to use asyncio.run
+                return asyncio.run(breaker.call(func, *args, **kwargs))
 
         if asyncio.iscoroutinefunction(func):
             return async_wrapper

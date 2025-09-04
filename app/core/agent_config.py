@@ -10,6 +10,7 @@ from enum import Enum
 from typing import Any, Optional
 
 from pydantic import BaseModel, Field, validator
+from app.models.schemas import ModelFieldsModel
 
 
 class Environment(str, Enum):
@@ -34,7 +35,7 @@ class ModelConfig(BaseModel):
     enable_emergency_fallback: bool = True
 
 
-class AgentRoleConfig(BaseModel):
+class AgentRoleConfig(ModelFieldsModel):
     """Role-specific agent configuration"""
     role_name: str
     system_prompt_template: Optional[str] = None

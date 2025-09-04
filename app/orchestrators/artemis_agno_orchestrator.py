@@ -22,6 +22,10 @@ from app.orchestrators.dynamic_tool_integration import (
     handle_api_test_command,
     ToolStatus
 )
+from app.orchestrators.enhanced_orchestrator_mixin import (
+    EnhancedOrchestratorMixin,
+    ProactiveAssistant
+)
 
 # Import AGNO Teams
 from app.swarms.artemis_agno_teams import (
@@ -85,7 +89,7 @@ class AGNOTechnicalResponse(TechnicalResponse):
     tactical_implications: List[str] = field(default_factory=list)
 
 
-class ArtemisAGNOOrchestrator:
+class ArtemisAGNOOrchestrator(EnhancedOrchestratorMixin):
     """
     Artemis AGNO Universal Technical Orchestrator
     
@@ -97,6 +101,7 @@ class ArtemisAGNOOrchestrator:
     """
     
     def __init__(self, config: Optional[Dict] = None):
+        super().__init__()
         self.config = config or {}
         
         # AGNO Teams (initialized later)
@@ -155,6 +160,15 @@ class ArtemisAGNOOrchestrator:
                 "performance": self.performance_team
             }
             
+            
+            # Initialize memory system for contextual intelligence
+            try:
+                project_path = "/Users/lynnmusil/sophia-intel-ai"  # Could be configurable
+                await self.initialize_memory("artemis-global", project_path)
+                logger.info("🧠 Memory system initialized for contextual intelligence")
+            except Exception as e:
+                logger.warning(f"Memory system initialization failed: {e}")
+                
             logger.info(f"✅ Artemis AGNO Orchestrator fully operational with {len(self.agno_teams)} specialized teams")
             return True
             
@@ -211,7 +225,25 @@ class ArtemisAGNOOrchestrator:
         try:
             logger.info(f"⚔️ Artemis AGNO processing technical request: {request[:100]}...")
             
-            # Classify request for AGNO routing
+            # Initialize session-specific memory if needed
+            session_id = context.session_id if context else f"artemis-{int(start_time)}"
+            if not self._memory_initialized:
+                try:
+                    await self.initialize_memory(session_id, "/Users/lynnmusil/sophia-intel-ai")
+                    logger.info(f"🧠 Session memory initialized: {session_id}")
+                except Exception as e:
+                    logger.warning(f"Session memory initialization failed: {e}")
+            
+            # Add interaction to memory
+            memory_context = None
+            if self._memory_initialized:
+                try:
+                    memory_context = await self.process_with_memory(request, "user", {"context": context.__dict__ if context else {}})
+                    logger.debug(f"💭 Memory context: {len(memory_context.get('working_memory', {}).get('messages', []))} messages")
+                except Exception as e:
+                    logger.warning(f"Memory processing failed: {e}")
+            
+            # Classify request for AGNO routing (now with memory context)
             command_type = await self._classify_agno_technical_request(request)
             
             # Route to appropriate AGNO Teams
@@ -221,6 +253,22 @@ class ArtemisAGNOOrchestrator:
             synthesized_response = await self._synthesize_team_results(
                 team_results, command_type, request, context
             )
+            
+            # Add contextual intelligence if memory is available
+            if self._memory_initialized:
+                try:
+                    contextual_intro = await self.get_contextual_response(request)
+                    if contextual_intro and contextual_intro != self._get_default_response(request):
+                        synthesized_response.content = f"🧠 {contextual_intro}\n\n{synthesized_response.content}"
+                        
+                    # Learn from interaction outcome  
+                    await self.memory_system.learn_from_outcome(
+                        action=f"technical_{command_type.value}",
+                        outcome={"success": synthesized_response.success, "teams_used": len(team_results)},
+                        success=synthesized_response.success
+                    )
+                except Exception as e:
+                    logger.debug(f"Memory enhancement failed: {e}")
             
             # Add tactical personality flair
             synthesized_response.content = self.personality.add_personality_flair(

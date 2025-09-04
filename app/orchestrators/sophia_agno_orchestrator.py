@@ -22,6 +22,10 @@ from app.orchestrators.dynamic_tool_integration import (
     handle_api_test_command,
     ToolStatus
 )
+from app.orchestrators.enhanced_orchestrator_mixin import (
+    EnhancedOrchestratorMixin,
+    ProactiveAssistant
+)
 
 # Import AGNO Teams
 from app.swarms.sophia_agno_teams import (
@@ -82,7 +86,7 @@ class AGNOBusinessResponse(BusinessResponse):
     strategic_implications: List[str] = field(default_factory=list)
 
 
-class SophiaAGNOOrchestrator:
+class SophiaAGNOOrchestrator(EnhancedOrchestratorMixin):
     """
     Sophia AGNO Universal Business Orchestrator
     
@@ -94,6 +98,7 @@ class SophiaAGNOOrchestrator:
     """
     
     def __init__(self, config: Optional[Dict] = None):
+        super().__init__()
         self.config = config or {}
         
         # AGNO Teams (initialized later)
@@ -166,6 +171,15 @@ class SophiaAGNOOrchestrator:
                 "market_analysis": self.market_analysis_team
             }
             
+            
+            # Initialize memory system for contextual intelligence
+            try:
+                project_path = "/Users/lynnmusil/sophia-intel-ai"  # Could be configurable
+                await self.initialize_memory("sophia-global", project_path)
+                logger.info("🧠 Memory system initialized for contextual intelligence")
+            except Exception as e:
+                logger.warning(f"Memory system initialization failed: {e}")
+                
             logger.info(f"✅ Sophia AGNO Orchestrator fully operational with {len(self.agno_teams)} specialized teams")
             return True
             
@@ -222,8 +236,29 @@ class SophiaAGNOOrchestrator:
         try:
             logger.info(f"💎 Sophia AGNO processing business request: {request[:100]}...")
             
-            # First use enhanced command recognition
-            parsed_command = await self.command_recognizer.classify_intent(request, context.__dict__ if context else None)
+            # Initialize session-specific memory if needed
+            session_id = context.session_id if context else f"sophia-{int(start_time)}"
+            if not self._memory_initialized:
+                try:
+                    await self.initialize_memory(session_id, "/Users/lynnmusil/sophia-intel-ai")
+                    logger.info(f"🧠 Session memory initialized: {session_id}")
+                except Exception as e:
+                    logger.warning(f"Session memory initialization failed: {e}")
+            
+            # Add interaction to memory
+            memory_context = None
+            if self._memory_initialized:
+                try:
+                    memory_context = await self.process_with_memory(request, "user", {"context": context.__dict__ if context else {}})
+                    logger.debug(f"💭 Memory context: {len(memory_context.get('working_memory', {}).get('messages', []))} messages")
+                except Exception as e:
+                    logger.warning(f"Memory processing failed: {e}")
+            
+            # First use enhanced command recognition (now with memory context)
+            context_dict = context.__dict__ if context else {}
+            if memory_context:
+                context_dict.update(memory_context)
+            parsed_command = await self.command_recognizer.classify_intent(request, context_dict)
             
             # Handle API testing commands with the dynamic tool integration
             if parsed_command.intent in [CommandIntent.API_TEST, CommandIntent.API_CONNECT, CommandIntent.API_STATUS]:
@@ -710,7 +745,20 @@ class SophiaAGNOOrchestrator:
                 
                 # Format response with personality
                 if result["success"]:
+                    # Add contextual intelligence if memory is available
+                    contextual_intro = ""
+                    if self._memory_initialized:
+                        try:
+                            contextual_intro = await self.get_contextual_response(f"test {service} api")
+                            if contextual_intro and contextual_intro != self._get_default_response(f"test {service} api"):
+                                contextual_intro = f"🧠 {contextual_intro}\n\n"
+                            else:
+                                contextual_intro = ""
+                        except Exception:
+                            contextual_intro = ""
+                    
                     response_text = (
+                        f"{contextual_intro}"
                         f"🎆 Boom! Successfully connected to {service.title()} API! ✨\n\n"
                         f"💎 **Connection Status**: {result['status']}\n"
                         f"🎯 **Latency**: {result.get('latency_ms', 0):.1f}ms\n"
@@ -741,6 +789,20 @@ class SophiaAGNOOrchestrator:
                             response_text += f"  🔧 {step}\n"
                     
                     response_text += "\nLet me know if you need help with the configuration!"
+                
+                # Learn from API testing outcome
+                if self._memory_initialized:
+                    try:
+                        await self.memory_system.learn_from_outcome(
+                            action=f"api_test_{service}",
+                            outcome=result,
+                            success=result["success"]
+                        )
+                        # Track API testing frequency for suggestions
+                        if self.memory_system.working.current_task != f"api_testing_{service}":
+                            self.memory_system.working.set_task(f"api_testing_{service}")
+                    except Exception as e:
+                        logger.debug(f"Memory learning failed: {e}")
                 
                 return AGNOBusinessResponse(
                     success=result["success"],

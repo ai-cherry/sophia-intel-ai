@@ -8,7 +8,7 @@ import logging
 import os
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Optional
+from typing import Any, Optional, Dict
 
 # Real AGNO framework imports
 from agno.agent import Agent
@@ -159,19 +159,33 @@ class SophiaAGNOTeam:
             # Import locally to avoid circular dependency
             from app.api.portkey_unified_router import get_optimal_model_for_role, unified_router
 
-            if not unified_router.session:
-                await unified_router.initialize()
+            # Check if we're in an event loop context
+            try:
+                loop = asyncio.get_running_loop()
+                if loop and loop.is_running():
+                    # We're already in an event loop, use the async call directly
+                    if not unified_router.session:
+                        await unified_router.initialize()
 
-            model_name = await get_optimal_model_for_role(
-                agent_role=role,
-                execution_strategy=self.config.strategy,
-                task_complexity=task_complexity
-            )
-            
-            # Find matching config for the returned model
-            for model_config in self.APPROVED_MODELS.values():
-                if model_config["model"] in model_name:
-                    return model_config
+                    model_name = await get_optimal_model_for_role(
+                        agent_role=role,
+                        execution_strategy=self.config.strategy,
+                        task_complexity=task_complexity
+                    )
+                    
+                    # Find matching config for the returned model
+                    for model_config in self.APPROVED_MODELS.values():
+                        if model_config["model"] in model_name:
+                            return model_config
+                else:
+                    # No event loop running, fall back to default
+                    logger.debug(f"No event loop available for model optimization for {role}")
+                    return self.APPROVED_MODELS.get(role, self.APPROVED_MODELS["generator"])
+                    
+            except RuntimeError:
+                # No event loop available
+                logger.debug(f"No event loop available for model optimization for {role}")
+                return self.APPROVED_MODELS.get(role, self.APPROVED_MODELS["generator"])
             
             # Fallback to approved model config
             return self.APPROVED_MODELS.get(role, self.APPROVED_MODELS["generator"])
@@ -330,6 +344,25 @@ class SophiaAGNOTeam:
         })
 
         return result
+
+    async def _create_specialized_agent(self, role: str, config: Dict[str, Any]) -> Agent:
+        """Create specialized agent with base configuration - override in subclasses for personality"""
+        
+        agent = Agent(
+            name=config['role'],
+            model=config['model'],
+            instructions=config['instructions'],
+            extra_data={
+                "role": config['role'],
+                "team": self.config.name,
+                "domain": getattr(self, 'domain', {}).get('value', 'general_operations') if hasattr(getattr(self, 'domain', {}), 'get') else str(getattr(self, 'domain', 'general_operations')),
+                "personality_type": "base",
+                "temperature": config.get('temperature', 0.5),
+                "created_at": asyncio.get_event_loop().time() if hasattr(asyncio, 'get_event_loop') else 0
+            }
+        )
+        
+        return agent
 
     # Note: The old execution methods (_execute_standard, _execute_debate, _execute_consensus) 
     # have been replaced with direct AGNO Team.run() calls above.

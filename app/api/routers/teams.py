@@ -11,6 +11,7 @@ from typing import Any, Optional
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field, validator
+from app.models.schemas import ModelFieldsModel
 
 from app.api.dependencies import get_orchestrator, get_state
 from app.core.middleware import with_timeout
@@ -319,7 +320,7 @@ async def run_team_compat(
 # Dynamic Configuration Endpoints
 # ============================================
 
-class TeamCreateRequest(BaseModel):
+class TeamCreateRequest(ModelFieldsModel):
     """Request model for creating new teams."""
     id: str = Field(..., min_length=1, max_length=100, description="Team identifier")
     name: str = Field(..., min_length=1, max_length=200, description="Team display name")
@@ -336,7 +337,7 @@ class TeamCreateRequest(BaseModel):
             raise ValueError("Team ID must be alphanumeric with hyphens/underscores")
         return v
 
-class TeamUpdateRequest(BaseModel):
+class TeamUpdateRequest(ModelFieldsModel):
     """Request model for updating team metadata."""
     name: Optional[str] = Field(None, min_length=1, max_length=200, description="Team display name")
     description: Optional[str] = Field(None, min_length=1, max_length=1000, description="Team description")

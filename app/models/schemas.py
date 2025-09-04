@@ -22,6 +22,10 @@ class StatusModel(BaseModel):
     status: Literal["success", "error", "pending", "processing"] = Field(..., description="Operation status")
     message: Optional[str] = Field(None, description="Status message")
 
+class ModelFieldsModel(BaseModel):
+    """Base model for models with model_* fields (prevents Pydantic namespace warnings)."""
+    model_config = {"protected_namespaces": ()}
+
 # ============================================
 # Error Models (Standardized)
 # ============================================
@@ -51,7 +55,7 @@ class TeamMember(BaseModel):
     role: str = Field(..., description="Member role")
     model: Optional[str] = Field(None, description="Model used")
 
-class TeamInfo(BaseModel):
+class TeamInfo(ModelFieldsModel):
     """Team/Swarm information."""
     id: constr(min_length=1, max_length=100) = Field(..., description="Team identifier")
     name: str = Field(..., description="Team name")
@@ -235,12 +239,12 @@ class SystemHealth(TimestampedModel):
 # Configuration Models
 # ============================================
 
-class ConfigUpdate(BaseModel):
+class ConfigUpdate(ModelFieldsModel):
     """Configuration update request."""
     section: str = Field(..., description="Configuration section")
     key: str = Field(..., description="Configuration key")
     value: Any = Field(..., description="New value")
-    validate: bool = Field(default=True, description="Validate before applying")
+    validate_config: bool = Field(default=True, description="Validate before applying")
 
 class ConfigResponse(TimestampedModel):
     """Configuration response."""
@@ -273,6 +277,7 @@ __all__ = [
     # Base
     "TimestampedModel",
     "StatusModel",
+    "ModelFieldsModel",
     # Errors
     "ErrorDetail",
     "ErrorResponse",

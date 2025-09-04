@@ -340,7 +340,7 @@ class DynamicPortkeyClient:
 
     @with_circuit_breaker("external_api")
     async def get_available_models(self,
-                                  tier: Union[str, Optional][ModelTier] = None,
+                                  tier: Optional[Union[str, ModelTier]] = None,
                                   max_cost: Optional[float] = None) -> list[str]:
         """
         Get list of available models matching criteria.

@@ -540,6 +540,25 @@
             background: rgba(74, 144, 226, 0.05);
         }
 
+        /* Chat Enhancements */
+        .message.typing .message-content {
+            opacity: 0.7;
+            font-style: italic;
+        }
+        
+        .message.error .message-content {
+            color: var(--danger);
+            background: rgba(239, 83, 80, 0.1);
+            border: 1px solid rgba(239, 83, 80, 0.2);
+            padding: var(--spacing-sm);
+            border-radius: var(--border-radius);
+        }
+        
+        .message-content strong {
+            color: var(--primary-blue);
+            font-weight: 600;
+        }
+        
         /* Status Indicators */
         .status {
             display: inline-flex;
@@ -2037,7 +2056,7 @@
             const sendButton = document.getElementById('sendButton');
             const chatMessages = document.getElementById('chatMessages');
 
-            function sendMessage() {
+            async function sendMessage() {
                 const message = chatInput.value.trim();
                 if (message) {
                     // Add user message
@@ -2052,20 +2071,68 @@
                     // Clear input
                     chatInput.value = '';
 
-                    // Simulate Sophia's response
-                    setTimeout(() => {
+                    // Show typing indicator
+                    const typingDiv = document.createElement('div');
+                    typingDiv.className = 'message sophia typing';
+                    typingDiv.innerHTML = `
+                        <div class="message-avatar">S</div>
+                        <div class="message-content">Thinking...</div>
+                    `;
+                    chatMessages.appendChild(typingDiv);
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+                    try {
+                        // Call actual Sophia API
+                        const response = await fetch('http://localhost:9000/api/sophia/chat', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                message: message,
+                                session_id: 'intelligence-hub-' + Date.now(),
+                                include_voice: false
+                            })
+                        });
+
+                        const data = await response.json();
+                        
+                        // Remove typing indicator
+                        typingDiv.remove();
+
+                        // Add Sophia's actual response
                         const sophiaMessage = document.createElement('div');
                         sophiaMessage.className = 'message sophia';
+                        
+                        // Format the response (handle markdown, etc)
+                        let responseContent = data.response || data.content || 'I encountered an issue processing your request.';
+                        
+                        // Convert markdown bold to HTML
+                        responseContent = responseContent.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                        // Convert line breaks
+                        responseContent = responseContent.replace(/\n/g, '<br>');
+                        
                         sophiaMessage.innerHTML = `
                             <div class="message-avatar">S</div>
-                            <div class="message-content">I understand you're asking about "${message}". Let me analyze this from first principles and provide you with a strategic perspective. What specific aspect would you like me to focus on?</div>
+                            <div class="message-content">${responseContent}</div>
                         `;
                         chatMessages.appendChild(sophiaMessage);
                         chatMessages.scrollTop = chatMessages.scrollHeight;
-                    }, 1500);
-
-                    // Scroll to bottom
-                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                        
+                    } catch (error) {
+                        // Remove typing indicator
+                        typingDiv.remove();
+                        
+                        // Show error message
+                        const errorMessage = document.createElement('div');
+                        errorMessage.className = 'message sophia error';
+                        errorMessage.innerHTML = `
+                            <div class="message-avatar">S</div>
+                            <div class="message-content">I'm having trouble connecting to my intelligence systems. Please check if the Sophia server is running on port 9000. Error: ${error.message}</div>
+                        `;
+                        chatMessages.appendChild(errorMessage);
+                        chatMessages.scrollTop = chatMessages.scrollHeight;
+                    }
                 }
             }
 

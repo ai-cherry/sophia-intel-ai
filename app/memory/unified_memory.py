@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Any
 from uuid import uuid4
 
-import aioredis
+import redis.asyncio as aioredis
 
 logger = logging.getLogger(__name__)
 

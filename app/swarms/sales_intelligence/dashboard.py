@@ -20,7 +20,7 @@ from enum import Enum
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
-import aioredis
+import redis.asyncio as aioredis
 
 from .agents import AgentOutput, AgentPriority
 from .feedback_engine import FeedbackMessage, FeedbackType

@@ -6,7 +6,7 @@ import time
 from datetime import datetime
 from typing import Any
 
-import aioredis
+import redis.asyncio as aioredis
 
 from app.core.ai_logger import logger
 from app.core.circuit_breaker import with_circuit_breaker

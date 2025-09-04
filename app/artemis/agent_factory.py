@@ -71,7 +71,7 @@ class ArtemisAgentTemplate(BaseModel):
     name: str
     role: TechnicalAgentRole
     personality: TechnicalPersonality
-    model_config: Dict[str, Any]
+    model_configuration: Dict[str, Any]  # Renamed from model_config to avoid Pydantic conflict
     system_prompt: str
     capabilities: List[str]
     tools: List[str] = []
@@ -118,7 +118,7 @@ class ArtemisAgentFactory(AgentFactory):
                 name="Code Review Specialist",
                 role=TechnicalAgentRole.CODE_REVIEWER,
                 personality=TechnicalPersonality.CRITICAL_ANALYTICAL,
-                model_config={
+                model_configuration={
                     "provider": "deepseek",
                     "model": "deepseek-chat", 
                     "virtual_key": "deepseek-vk-24102f",
@@ -168,7 +168,7 @@ RESPONSE STYLE:
                 name="Security Auditor",
                 role=TechnicalAgentRole.SECURITY_AUDITOR,
                 personality=TechnicalPersonality.SECURITY_PARANOID,
-                model_config={
+                model_configuration={
                     "provider": "anthropic",
                     "model": "claude-3-5-sonnet-20241022",
                     "virtual_key": "anthropic-vk-b42804",
@@ -225,7 +225,7 @@ RESPONSE FORMAT:
                 name="Performance Optimizer",
                 role=TechnicalAgentRole.PERFORMANCE_OPTIMIZER,
                 personality=TechnicalPersonality.PERFORMANCE_OBSESSED,
-                model_config={
+                model_configuration={
                     "provider": "groq",
                     "model": "groq/llama-3.1-70b-versatile",
                     "virtual_key": "groq-vk-6b9b52", 
@@ -282,7 +282,7 @@ RESPONSE STYLE:
                 name="Architecture Critic",
                 role=TechnicalAgentRole.ARCHITECTURE_CRITIC,
                 personality=TechnicalPersonality.TACTICAL_PRECISE,
-                model_config={
+                model_configuration={
                     "provider": "openai",
                     "model": "gpt-4o",
                     "virtual_key": "openai-vk-190a60",
@@ -339,7 +339,7 @@ CRITIQUE STYLE:
                 name="Vulnerability Scanner",
                 role=TechnicalAgentRole.VULNERABILITY_SCANNER,
                 personality=TechnicalPersonality.SECURITY_PARANOID,
-                model_config={
+                model_configuration={
                     "provider": "mistral",
                     "model": "mistral/mixtral-8x7b-instruct",
                     "virtual_key": "mistral-vk-f92861",
@@ -396,7 +396,7 @@ SCAN REPORT FORMAT:
                 name="Code Refactoring Specialist",
                 role=TechnicalAgentRole.CODE_REFACTORING_SPECIALIST,
                 personality=TechnicalPersonality.PASSIONATE_TECHNICAL,
-                model_config={
+                model_configuration={
                     "provider": "openai",
                     "model": "gpt-4o",
                     "virtual_key": "openai-vk-190a60",
@@ -464,9 +464,9 @@ RESPONSE STYLE:
             'name': template.name,
             'role': template.role.value,
             'personality': template.personality.value,
-            'model': template.model_config['model'],
+            'model': template.model_configuration['model'],
             'virtual_key': template.virtual_key,
-            'temperature': template.model_config.get('temperature', 0.3),
+            'temperature': template.model_configuration.get('temperature', 0.3),
             'system_prompt': template.system_prompt,
             'capabilities': template.capabilities,
             'tools': template.tools,
@@ -780,8 +780,8 @@ RESPONSE STYLE:
                 'capabilities': template.capabilities,
                 'tactical_traits': template.tactical_traits,
                 'model_info': {
-                    'provider': template.model_config['provider'],
-                    'model': template.model_config['model'],
+                    'provider': template.model_configuration['provider'],
+                    'model': template.model_configuration['model'],
                     'virtual_key': template.virtual_key
                 }
             }

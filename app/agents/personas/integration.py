@@ -14,14 +14,14 @@ from dataclasses import asdict
 from fastapi import HTTPException
 from pydantic import BaseModel
 
-from . import (
-    create_persona_agent,
-    get_available_personas,
-    PERSONA_REGISTRY,
-    BasePersonaAgent
-)
+from .base_persona import BasePersonaAgent
 from ..models import AgentStatus
 from ..agent_factory import AgentFactory
+
+# Import after module initialization to avoid circular import
+def _get_persona_imports():
+    from . import create_persona_agent, get_available_personas, PERSONA_REGISTRY
+    return create_persona_agent, get_available_personas, PERSONA_REGISTRY
 
 
 class PersonaInteractionRequest(BaseModel):
@@ -69,6 +69,7 @@ class PersonaManager:
         """Initialize all persona agents"""
         initialization_results = {}
         
+        create_persona_agent, _, PERSONA_REGISTRY = _get_persona_imports()
         for persona_type in PERSONA_REGISTRY:
             try:
                 persona_agent = create_persona_agent(persona_type)
@@ -90,6 +91,7 @@ class PersonaManager:
         """Handle interaction with a specific persona agent"""
         
         # Validate persona type
+        _, _, PERSONA_REGISTRY = _get_persona_imports()
         if request.persona_type not in PERSONA_REGISTRY:
             available_types = list(PERSONA_REGISTRY.keys())
             raise HTTPException(
@@ -99,6 +101,7 @@ class PersonaManager:
         
         # Get or create persona agent
         if request.persona_type not in self.active_personas:
+            create_persona_agent, _, _ = _get_persona_imports()
             persona_agent = create_persona_agent(request.persona_type)
             await persona_agent.initialize_agent()
             self.active_personas[request.persona_type] = persona_agent
@@ -352,6 +355,7 @@ class PersonaAgentFactory:
         """
         
         # Add persona agents as special agent types in the factory
+        _, _, PERSONA_REGISTRY = _get_persona_imports()
         for persona_type, persona_info in PERSONA_REGISTRY.items():
             # Register persona as an agent type
             agent_factory.register_agent_type(
@@ -367,6 +371,7 @@ class PersonaAgentFactory:
         Create an agent blueprint for a persona agent that can be used
         with the existing agent factory system.
         """
+        _, _, PERSONA_REGISTRY = _get_persona_imports()
         if persona_type not in PERSONA_REGISTRY:
             raise ValueError(f"Unknown persona type: {persona_type}")
         

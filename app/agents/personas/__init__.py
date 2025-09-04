@@ -24,8 +24,8 @@ from .base_persona import (
     ConversationStyle,
     Memory,
     LearningPattern,
-    HealthStatus,
 )
+from .client_health import HealthStatus
 
 from .sales_coach import SalesCoachAgent
 from .client_health import ClientHealthAgent

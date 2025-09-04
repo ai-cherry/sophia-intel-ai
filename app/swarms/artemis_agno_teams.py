@@ -14,11 +14,10 @@ from datetime import datetime
 from app.swarms.agno_teams import (
     SophiaAGNOTeam, 
     AGNOTeamConfig, 
-    ExecutionStrategy,
-    Agent, 
-    Team, 
-    Task
+    ExecutionStrategy
 )
+from agno.agent import Agent
+from agno.team import Team
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +40,7 @@ class TechnicalPersonality:
     allows_tactical_language: bool = True
 
 
-class ArtemisCodeAnalysisTeam(EnhancedArtemisAGNOTeam):
+class ArtemisCodeAnalysisTeam(SophiaAGNOTeam):
     """
     Code Analysis AGNO Team
     Specialized in code review, quality assessment, and technical debt analysis
@@ -145,7 +144,7 @@ class ArtemisCodeAnalysisTeam(EnhancedArtemisAGNOTeam):
         return self._enhance_with_technical_personality(result, "refactoring_opportunities")
 
 
-class ArtemisSecurityTeam(EnhancedArtemisAGNOTeam):
+class ArtemisSecurityTeam(SophiaAGNOTeam):
     """
     Security AGNO Team
     Specialized in security auditing, vulnerability assessment, and threat analysis
@@ -232,7 +231,7 @@ class ArtemisSecurityTeam(EnhancedArtemisAGNOTeam):
         return self._enhance_with_technical_personality(result, "vulnerability_assessment")
 
 
-class ArtemisArchitectureTeam(EnhancedArtemisAGNOTeam):
+class ArtemisArchitectureTeam(SophiaAGNOTeam):
     """
     Architecture AGNO Team  
     Specialized in system architecture review, design patterns, and scalability analysis
@@ -319,7 +318,7 @@ class ArtemisArchitectureTeam(EnhancedArtemisAGNOTeam):
         return self._enhance_with_technical_personality(result, "scalability_analysis")
 
 
-class ArtemisPerformanceTeam(EnhancedArtemisAGNOTeam):
+class ArtemisPerformanceTeam(SophiaAGNOTeam):
     """
     Performance AGNO Team
     Specialized in performance optimization, monitoring, and system efficiency
@@ -407,7 +406,7 @@ class ArtemisPerformanceTeam(EnhancedArtemisAGNOTeam):
 
 
 # Base class extensions for specialized agent creation
-class EnhancedArtemisAGNOTeam(SophiaAGNOTeam):
+class SophiaAGNOTeam(SophiaAGNOTeam):
     """Extended base class with technical personality integration"""
     
     async def _create_specialized_agent(self, role: str, config: Dict[str, Any]) -> Agent:

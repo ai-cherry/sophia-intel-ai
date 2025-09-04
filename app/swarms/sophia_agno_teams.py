@@ -14,11 +14,10 @@ from datetime import datetime
 from app.swarms.agno_teams import (
     SophiaAGNOTeam, 
     AGNOTeamConfig, 
-    ExecutionStrategy,
-    Agent, 
-    Team, 
-    Task
+    ExecutionStrategy
 )
+from agno.agent import Agent
+from agno.team import Team
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +39,7 @@ class BusinessPersonality:
     business_focus: str = "revenue_optimization"
 
 
-class SophiaSalesIntelligenceTeam(EnhancedSophiaAGNOTeam):
+class SophiaSalesIntelligenceTeam(SophiaAGNOTeam):  # Changed from SophiaAGNOTeam
     """
     Sales Intelligence AGNO Team
     Specialized in pipeline management, deal analysis, and revenue optimization
@@ -155,7 +154,7 @@ class SophiaSalesIntelligenceTeam(EnhancedSophiaAGNOTeam):
         return self._enhance_with_business_personality(result, "revenue_forecast")
 
 
-class SophiaResearchTeam(EnhancedSophiaAGNOTeam):
+class SophiaResearchTeam(SophiaAGNOTeam):
     """
     Research AGNO Team
     Specialized in market research, competitive intelligence, and industry analysis
@@ -242,7 +241,7 @@ class SophiaResearchTeam(EnhancedSophiaAGNOTeam):
         return self._enhance_with_business_personality(result, "competitive_analysis")
 
 
-class SophiaClientSuccessTeam(EnhancedSophiaAGNOTeam):
+class SophiaClientSuccessTeam(SophiaAGNOTeam):
     """
     Client Success AGNO Team  
     Specialized in customer health monitoring, retention strategies, and expansion opportunities
@@ -329,7 +328,7 @@ class SophiaClientSuccessTeam(EnhancedSophiaAGNOTeam):
         return self._enhance_with_business_personality(result, "expansion_opportunities")
 
 
-class SophiaMarketAnalysisTeam(EnhancedSophiaAGNOTeam):
+class SophiaMarketAnalysisTeam(SophiaAGNOTeam):
     """
     Market Analysis AGNO Team
     Specialized in market trends, opportunities, and strategic positioning analysis
@@ -417,7 +416,7 @@ class SophiaMarketAnalysisTeam(EnhancedSophiaAGNOTeam):
 
 
 # Base class extensions for specialized agent creation  
-class EnhancedSophiaAGNOTeam(SophiaAGNOTeam):
+class SophiaAGNOTeam(SophiaAGNOTeam):
     """Extended base class with business personality integration"""
     
     async def _create_specialized_agent(self, role: str, config: Dict[str, Any]) -> Agent:

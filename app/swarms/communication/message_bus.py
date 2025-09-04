@@ -67,21 +67,19 @@ class MessageBus:
 
         if not self.redis:
             try:
-                self.redis = await aioredis.create_redis_pool(
+                # Use the current redis-py async API
+                self.redis = await aioredis.from_url(
                     self.redis_url,
-                    minsize=5,
-                    maxsize=20
+                    max_connections=20,
+                    decode_responses=False
                 )
                 logger.info("✅ Successfully connected to Redis with connection pool")
             except Exception as e:
                 logger.error(f"Failed to initialize Redis connection pool: {str(e)}")
                 raise
 
-        # Create global namespace
-        try:
-            await self.redis.execute(b'STRUCT', b'CREATE', b'bus', b'type', b'string', b'data')
-        except Exception as e:
-            logger.warning(f"Failed to create Redis struct: {e}")
+        # Create global namespace (skip custom STRUCT command as it's not standard Redis)
+        # This was likely for a Redis module that may not be installed
 
         # Setup Redis streams
         self.streams = {

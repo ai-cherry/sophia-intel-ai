@@ -11,6 +11,18 @@ from dataclasses import dataclass, field
 from enum import Enum
 import json
 
+# Import enhanced components for smarter orchestration
+from app.orchestrators.enhanced_command_recognition import (
+    EnhancedCommandRecognizer,
+    CommandIntent,
+    ParsedCommand
+)
+from app.orchestrators.dynamic_tool_integration import (
+    tool_registry,
+    handle_api_test_command,
+    ToolStatus
+)
+
 # Import AGNO Teams
 from app.swarms.sophia_agno_teams import (
     SophiaAGNOTeamFactory,
@@ -98,6 +110,11 @@ class SophiaAGNOOrchestrator:
         self.business_context_cache = {}
         self.personality = SophiaPersonality()
         
+        # Enhanced intelligence components
+        self.command_recognizer = EnhancedCommandRecognizer()
+        self.tool_registry = tool_registry  # Use global registry
+        self.initialized_tools = set()
+        
         # Business domains under AGNO control
         self.controlled_domains = [
             "sales_intelligence",
@@ -126,6 +143,20 @@ class SophiaAGNOOrchestrator:
             ]
             
             await asyncio.gather(*team_initialization_tasks)
+            
+            # Initialize enhanced components for smarter orchestration
+            logger.info("🎆 Initializing dynamic tool integration for API testing...")
+            
+            # Initialize critical business tools
+            business_tools = ["gong", "hubspot", "salesforce"]
+            tool_init_results = await self.tool_registry.initialize(business_tools)
+            
+            for tool, success in tool_init_results.items():
+                if success:
+                    self.initialized_tools.add(tool)
+                    logger.info(f"  ✅ {tool.title()} connector ready")
+                else:
+                    logger.info(f"  ⚠️ {tool.title()} connector unavailable (check credentials)")
             
             # Register teams
             self.agno_teams = {
@@ -191,6 +222,13 @@ class SophiaAGNOOrchestrator:
         try:
             logger.info(f"💎 Sophia AGNO processing business request: {request[:100]}...")
             
+            # First use enhanced command recognition
+            parsed_command = await self.command_recognizer.classify_intent(request, context.__dict__ if context else None)
+            
+            # Handle API testing commands with the dynamic tool integration
+            if parsed_command.intent in [CommandIntent.API_TEST, CommandIntent.API_CONNECT, CommandIntent.API_STATUS]:
+                return await self._handle_api_command(parsed_command, context)
+            
             # Classify request for AGNO routing
             command_type = await self._classify_agno_business_request(request)
             
@@ -223,7 +261,19 @@ class SophiaAGNOOrchestrator:
             )
     
     async def _classify_agno_business_request(self, request: str) -> AGNOBusinessCommandType:
-        """Classify business request for AGNO Team routing"""
+        """Classify business request for AGNO Team routing using enhanced recognition"""
+        # First use the enhanced command recognizer for better accuracy
+        parsed_command = await self.command_recognizer.classify_intent(request)
+        
+        # Handle API testing commands specifically
+        if parsed_command.intent in [
+            CommandIntent.API_TEST,
+            CommandIntent.API_CONNECT,
+            CommandIntent.API_STATUS
+        ]:
+            # This is an API testing command, not a business intelligence query
+            return AGNOBusinessCommandType.BUSINESS_INTELLIGENCE  # Will be handled specially
+        
         request_lower = request.lower()
         
         # Sales intelligence patterns
@@ -549,7 +599,13 @@ class SophiaAGNOOrchestrator:
         """Generate synthesized content from team results"""
         
         if not successful_teams:
-            return f"My specialized intelligence teams encountered challenges processing your request: '{original_request}'. Let me recalibrate and try a different approach."
+            # Check if this looks like an API/integration command that wasn't properly routed
+            api_keywords = ['api', 'integration', 'connection', 'audit', 'test', 'check', 'github', 'gong', 'hubspot', 'salesforce']
+            if any(keyword in original_request.lower() for keyword in api_keywords):
+                return f"Let me help you with that integration request. It seems the API testing system needs to be invoked. Try being more specific: 'test github api connection' or 'check github integration status'."
+            
+            # Default fallback message
+            return f"No AGNO teams were able to process this request. The intelligence coordination system needs attention. - This is the kind of insight that moves needles."
         
         # Build synthesized response
         content_parts = []
@@ -609,6 +665,161 @@ class SophiaAGNOOrchestrator:
             synthesis = f"Intelligence coordination across {len(successful_teams)} specialized teams provides comprehensive business insights with cross-functional strategic implications."
         
         return synthesis
+    
+    async def _handle_api_command(
+        self,
+        parsed_command: ParsedCommand,
+        context: Optional[BusinessContext] = None
+    ) -> AGNOBusinessResponse:
+        """Handle API testing and integration commands using dynamic tool integration"""
+        
+        try:
+            # Extract service name from parsed command
+            service = parsed_command.parameters.get("service")
+            
+            if not service:
+                # Try to extract from the original message
+                for tool in ["gong", "hubspot", "salesforce", "github", "slack"]:
+                    if tool in parsed_command.original_message.lower():
+                        service = tool
+                        break
+            
+            if not service:
+                return AGNOBusinessResponse(
+                    success=False,
+                    content="I need to know which service you want to test. Try: 'test gong api connection' or 'test hubspot connection'",
+                    command_type="api_test",
+                    metadata={"available_services": ["gong", "hubspot", "salesforce", "github"]}
+                )
+            
+            # Initialize the tool if needed
+            if service not in self.initialized_tools:
+                logger.info(f"Initializing {service} connector for the first time...")
+                init_result = await self.tool_registry.initialize([service])
+                
+                if init_result.get(service):
+                    self.initialized_tools.add(service)
+                    logger.info(f"✅ {service} connector initialized successfully")
+                else:
+                    logger.warning(f"⚠️ Failed to initialize {service} connector")
+            
+            # Handle different API command intents
+            if parsed_command.intent == CommandIntent.API_TEST:
+                # Test the API connection
+                result = await handle_api_test_command(service, context.__dict__ if context else None)
+                
+                # Format response with personality
+                if result["success"]:
+                    response_text = (
+                        f"🎆 Boom! Successfully connected to {service.title()} API! ✨\n\n"
+                        f"💎 **Connection Status**: {result['status']}\n"
+                        f"🎯 **Latency**: {result.get('latency_ms', 0):.1f}ms\n"
+                        f"🚀 **Capabilities**: {', '.join(result.get('capabilities', [])[:5])}\n\n"
+                    )
+                    
+                    if result.get('details'):
+                        response_text += "**Connection Details:**\n"
+                        for key, value in result['details'].items():
+                            response_text += f"  • {key}: {value}\n"
+                    
+                    if result.get('suggestions'):
+                        response_text += f"\n**Next Steps:**\n"
+                        for suggestion in result['suggestions']:
+                            response_text += f"  👉 {suggestion}\n"
+                    
+                    response_text = self.personality.add_personality_flair(response_text)
+                    
+                else:
+                    response_text = (
+                        f"😕 Couldn't connect to {service.title()} API.\n\n"
+                        f"**Error**: {result.get('message', 'Connection failed')}\n\n"
+                    )
+                    
+                    if result.get('troubleshooting'):
+                        response_text += "**Troubleshooting Steps:**\n"
+                        for step in result['troubleshooting']:
+                            response_text += f"  🔧 {step}\n"
+                    
+                    response_text += "\nLet me know if you need help with the configuration!"
+                
+                return AGNOBusinessResponse(
+                    success=result["success"],
+                    content=response_text,
+                    command_type="api_test",
+                    data=result,
+                    metadata={
+                        "service": service,
+                        "intent": parsed_command.intent.value,
+                        "confidence": parsed_command.confidence
+                    },
+                    agno_teams_used=[],
+                    timestamp=datetime.utcnow().isoformat()
+                )
+            
+            elif parsed_command.intent == CommandIntent.API_STATUS:
+                # Check API status
+                status = await self.tool_registry.get_tool_status(service)
+                
+                response_text = (
+                    f"📊 **{service.title()} API Status**:\n\n"
+                    f"Status: {status.get('status', 'unknown')}\n"
+                    f"Priority: {status.get('priority', 'normal')}\n"
+                )
+                
+                if status.get('capabilities'):
+                    response_text += f"Available Operations: {', '.join(status['capabilities'][:5])}\n"
+                
+                return AGNOBusinessResponse(
+                    success=True,
+                    content=self.personality.add_personality_flair(response_text),
+                    command_type="api_status",
+                    data=status,
+                    metadata={"service": service},
+                    agno_teams_used=[],
+                    timestamp=datetime.utcnow().isoformat()
+                )
+            
+            elif parsed_command.intent == CommandIntent.API_CONNECT:
+                # Initialize and connect to API
+                init_result = await self.tool_registry.initialize([service])
+                success = init_result.get(service, False)
+                
+                if success:
+                    self.initialized_tools.add(service)
+                    response_text = f"✅ Successfully initialized and connected to {service.title()} API! Ready for operations."
+                else:
+                    response_text = f"❌ Failed to connect to {service.title()} API. Please check your credentials."
+                
+                return AGNOBusinessResponse(
+                    success=success,
+                    content=self.personality.add_personality_flair(response_text),
+                    command_type="api_connect",
+                    metadata={"service": service},
+                    agno_teams_used=[],
+                    timestamp=datetime.utcnow().isoformat()
+                )
+            
+            else:
+                # Unknown API command
+                return AGNOBusinessResponse(
+                    success=False,
+                    content=f"I'm not sure how to handle that API command. Try 'test {service} api' or 'check {service} status'",
+                    command_type="api_unknown",
+                    metadata={"service": service, "intent": parsed_command.intent.value},
+                    agno_teams_used=[],
+                    timestamp=datetime.utcnow().isoformat()
+                )
+                
+        except Exception as e:
+            logger.error(f"Error handling API command: {str(e)}")
+            return AGNOBusinessResponse(
+                success=False,
+                content=f"Encountered an error while handling the API command: {str(e)}",
+                command_type="api_error",
+                metadata={"error": str(e)},
+                agno_teams_used=[],
+                timestamp=datetime.utcnow().isoformat()
+            )
     
     def _generate_strategic_implications(
         self, 

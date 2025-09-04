@@ -9,10 +9,11 @@ from datetime import datetime
 import json
 import logging
 
-from app.agents.personas import PersonaRegistry, create_persona_agent
-from app.agents.personas.sales_coach import SalesCoachAgent, DealAnalysis, PerformanceReview
-from app.agents.personas.client_health import ClientHealthAgent, ClientHealthAssessment
-from app.core.auth import get_current_user
+from app.agents.personas import PERSONA_REGISTRY, create_persona_agent
+from app.agents.personas.sales_coach import SalesCoachAgent
+from app.agents.personas.client_health import ClientHealthAgent
+# DealAnalysis, PerformanceReview, ClientHealthAssessment will be added when needed
+from app.api.auth import get_current_user
 from app.swarms.core.portkey_virtual_keys import get_virtual_key
 from app.swarms.core.task_router import TaskRouter
 
@@ -596,12 +597,12 @@ async def get_system_stats():
     """Get overall system statistics"""
     
     stats = {
-        "total_personas": len(PersonaRegistry.list_personas()),
-        "active_personas": len([p for p in PersonaRegistry.list_personas() 
+        "total_personas": len(PERSONA_REGISTRY.list_personas()),
+        "active_personas": len([p for p in PERSONA_REGISTRY.list_personas() 
                                if persona_manager.has_persona(p)]),
         "total_interactions": sum(
             persona_manager.get_persona(p).conversation_count 
-            for p in PersonaRegistry.list_personas() 
+            for p in PERSONA_REGISTRY.list_personas() 
             if persona_manager.has_persona(p)
         ),
         "websocket_connections": sum(len(conns) for conns in manager.active_connections.values())

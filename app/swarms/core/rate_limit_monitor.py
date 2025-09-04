@@ -152,6 +152,7 @@ class RateLimitMonitor:
     
     def _start_monitoring(self):
         """Start background monitoring tasks"""
+        import threading
         
         async def monitor_loop():
             while self.monitoring_enabled:
@@ -159,8 +160,19 @@ class RateLimitMonitor:
                 self._cleanup_old_data()
                 self._analyze_patterns()
         
-        # Start monitoring in background
-        asyncio.create_task(monitor_loop())
+        # Try to start monitoring in background
+        try:
+            loop = asyncio.get_running_loop()
+            asyncio.create_task(monitor_loop())
+        except RuntimeError:
+            # No event loop running, create one in a thread for monitoring
+            def run_monitor():
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                loop.run_until_complete(monitor_loop())
+            
+            monitor_thread = threading.Thread(target=run_monitor, daemon=True)
+            monitor_thread.start()
     
     def record_request(
         self,

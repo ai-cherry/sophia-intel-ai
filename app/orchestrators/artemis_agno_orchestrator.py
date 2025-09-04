@@ -11,6 +11,18 @@ from dataclasses import dataclass, field
 from enum import Enum
 import json
 
+# Import enhanced components for smarter orchestration
+from app.orchestrators.enhanced_command_recognition import (
+    EnhancedCommandRecognizer,
+    CommandIntent,
+    ParsedCommand
+)
+from app.orchestrators.dynamic_tool_integration import (
+    tool_registry,
+    handle_api_test_command,
+    ToolStatus
+)
+
 # Import AGNO Teams
 from app.swarms.artemis_agno_teams import (
     ArtemisAGNOTeamFactory,
@@ -98,6 +110,11 @@ class ArtemisAGNOOrchestrator:
         
         # Session management
         self.active_sessions = {}
+        
+        # Enhanced intelligence components
+        self.command_recognizer = EnhancedCommandRecognizer()
+        self.tool_registry = tool_registry  # Shared registry
+        self.initialized_tools = set()
         self.system_context_cache = {}
         self.personality = ArtemisPersonality()
         

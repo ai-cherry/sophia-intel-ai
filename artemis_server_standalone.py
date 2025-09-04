@@ -51,6 +51,14 @@ app.add_middleware(
 # Include Artemis Agent Factory router
 app.include_router(factory_router)
 
+# Include Research Swarm router
+try:
+    from app.api.routers.research_swarm import router as research_swarm_router
+    app.include_router(research_swarm_router)
+    logger.info("✅ Research Swarm router included")
+except ImportError as e:
+    logger.warning(f"Could not import research swarm router: {e}")
+
 # Pydantic models for API requests
 class TechnicalRequest(BaseModel):
     message: str

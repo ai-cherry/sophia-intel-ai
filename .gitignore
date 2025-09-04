@@ -23,6 +23,11 @@ Pulumi.*.yaml
 .pulumi/
 pulumi/stack-*.json
 
+# Backup files
+*.backup
+*.bak
+*~
+
 # Python
 __pycache__/
 *.py[cod]

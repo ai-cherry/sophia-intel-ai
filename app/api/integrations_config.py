@@ -56,13 +56,14 @@ INTEGRATIONS = {
     "slack": {
         "enabled": True,
         "status": "connected",
-        "client_id": "293968207940.84057706630910663091",
-        "client_secret": "778e2fb5b026f97587210602acfe1e0b",
-        "signing_secret": "535eff2a503b06c333ec880f0e61d3c0",
-        "app_token": "xapp-1-A08BXNNKH2P-8419174294449-0017379454ab9f022e02af300c29819d9d665e961a0d223aa782c2c9e0cd875f",
-        "socket_token": "xapp-1-A08BXNNKH2P-8419174294449-0017379454ab9f022e02af300c29819d9d665e961a0d223aa782c2c9e0cd875f",
-        "bot_token": "xoxe.xoxb-1-MS0yLTI5Mzk2ODIwNzk0MC04Mzk5OTUyNDE5MjA2LTg0MjkzOTEwOTc3MjgtODQxOTI2NzQzNjExMy01NmExNGJlMjNmNmNlZGQ2ODkzYTk4MzZlNTM5OWNhY2Q4NThiZmIwZmJmZThlMzc0YTgyNzg5NDRhMGQ1N2I1",
-        "stats": {"workspace": "Pay Ready", "integration": "active"}
+        "app_id": "A09DJ6AUFC5",
+        "client_id": "293968207940.9460214967413",
+        "client_secret": "8e0a3bd7049edcabd398c5883c5c83d1",
+        "signing_secret": "ce5719fc0c9a48b9b49e9d5dcf815ddd",
+        "verification_token": "8yhl8QLHfeXrQwSpYZcl0fEi",
+        "app_token": "xapp-1-A09DJ6AUFC5-9448177425223-bacbf66491d53f1b97fa861946b3d72b0bc1245a92731e65410035ebd0a33ed6",
+        "app_name": "Sophia-AI-Assistant",
+        "stats": {"workspace": "Pay Ready", "integration": "active", "app": "Sophia-AI-Assistant"}
     },
     "elevenlabs": {
         "enabled": True,

@@ -91,7 +91,7 @@ class ArtemisAgentFactory(AgentFactory):
     
     def __init__(self, catalog_path: Optional[str] = None):
         # Initialize base factory
-        super().__init__(catalog_path or "./artemis_agent_catalog")
+        super().__init__(catalog_path or "./agent_catalog")
         
         # Artemis-specific configurations
         self.technical_templates = self._initialize_technical_templates()

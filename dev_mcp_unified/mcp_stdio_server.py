@@ -47,7 +47,7 @@ async def _call_tool(name: str, arguments: dict | None):
 
 async def main():
     async with stdio_server() as (r, w):
-        await app.run(r, w)
+        await app.run(r, w, app.create_initialization_options())
 
 
 if __name__ == "__main__":

@@ -14,7 +14,7 @@ import uvicorn
 import os
 import asyncio
 import logging
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 
 # Import the AGNO Universal Business Orchestrator
 from app.orchestrators.sophia_agno_orchestrator import (
@@ -25,6 +25,15 @@ from app.orchestrators.sophia_agno_orchestrator import (
 
 # Import Sophia Business Agent Factory
 from app.sophia.agent_factory import sophia_business_factory
+
+# Import Slack integration
+from app.integrations.slack_integration import (
+    SlackClient, 
+    send_slack_message, 
+    test_slack_connection, 
+    get_slack_channels,
+    SlackIntegrationError
+)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -74,6 +83,25 @@ class TeamCreateRequest(BaseModel):
 class TaskExecuteRequest(BaseModel):
     task: str
     context: Optional[Dict[str, Any]] = None
+
+# Slack API request models
+class SlackMessageRequest(BaseModel):
+    channel: str
+    text: str
+    thread_ts: Optional[str] = None
+    blocks: Optional[List[Dict[str, Any]]] = None
+    attachments: Optional[List[Dict[str, Any]]] = None
+
+class SlackUpdateMessageRequest(BaseModel):
+    channel: str
+    ts: str
+    text: str
+    blocks: Optional[List[Dict[str, Any]]] = None
+    attachments: Optional[List[Dict[str, Any]]] = None
+
+class SlackDeleteMessageRequest(BaseModel):
+    channel: str
+    ts: str
 
 # Serve the Agent Factory dashboard
 @app.get("/agents/factory-dashboard.html")
@@ -232,6 +260,239 @@ async def sophia_business_insights():
         raise HTTPException(status_code=503, detail="Sophia orchestrator not initialized")
     
     return await sophia_orchestrator.get_business_insights_summary()
+
+# Slack Integration Endpoints
+@app.get("/api/slack/status")
+async def slack_integration_status():
+    """Get Slack integration status and test connection"""
+    try:
+        result = await test_slack_connection()
+        return result
+    except Exception as e:
+        logger.error(f"Slack status check error: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+@app.post("/api/slack/send-message")
+async def slack_send_message(request: SlackMessageRequest):
+    """Send a message to a Slack channel"""
+    try:
+        result = await send_slack_message(
+            channel=request.channel,
+            text=request.text,
+            thread_ts=request.thread_ts,
+            blocks=request.blocks,
+            attachments=request.attachments
+        )
+        return result
+    except Exception as e:
+        logger.error(f"Slack send message error: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+@app.post("/api/slack/update-message")
+async def slack_update_message(request: SlackUpdateMessageRequest):
+    """Update an existing Slack message"""
+    try:
+        client = SlackClient()
+        result = await client.update_message(
+            channel=request.channel,
+            ts=request.ts,
+            text=request.text,
+            blocks=request.blocks,
+            attachments=request.attachments
+        )
+        return result
+    except SlackIntegrationError as e:
+        logger.error(f"Slack update message error: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e),
+            "error_code": e.error_code
+        }
+    except Exception as e:
+        logger.error(f"Slack update message error: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+@app.post("/api/slack/delete-message")
+async def slack_delete_message(request: SlackDeleteMessageRequest):
+    """Delete a Slack message"""
+    try:
+        client = SlackClient()
+        result = await client.delete_message(
+            channel=request.channel,
+            ts=request.ts
+        )
+        return result
+    except SlackIntegrationError as e:
+        logger.error(f"Slack delete message error: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e),
+            "error_code": e.error_code
+        }
+    except Exception as e:
+        logger.error(f"Slack delete message error: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+@app.get("/api/slack/channels")
+async def slack_list_channels():
+    """List all Slack channels in the workspace"""
+    try:
+        result = await get_slack_channels()
+        return result
+    except Exception as e:
+        logger.error(f"Slack list channels error: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+@app.get("/api/slack/channel/{channel_id}")
+async def slack_get_channel_info(channel_id: str):
+    """Get information about a specific Slack channel"""
+    try:
+        client = SlackClient()
+        result = await client.get_channel_info(channel_id)
+        return result
+    except SlackIntegrationError as e:
+        logger.error(f"Slack get channel info error: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e),
+            "error_code": e.error_code
+        }
+    except Exception as e:
+        logger.error(f"Slack get channel info error: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+@app.get("/api/slack/users")
+async def slack_list_users():
+    """List all users in the Slack workspace"""
+    try:
+        client = SlackClient()
+        result = await client.list_users()
+        return result
+    except SlackIntegrationError as e:
+        logger.error(f"Slack list users error: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e),
+            "error_code": e.error_code
+        }
+    except Exception as e:
+        logger.error(f"Slack list users error: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+@app.get("/api/slack/user/{user_id}")
+async def slack_get_user_info(user_id: str):
+    """Get information about a specific Slack user"""
+    try:
+        client = SlackClient()
+        result = await client.get_user_info(user_id)
+        return result
+    except SlackIntegrationError as e:
+        logger.error(f"Slack get user info error: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e),
+            "error_code": e.error_code
+        }
+    except Exception as e:
+        logger.error(f"Slack get user info error: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+@app.get("/api/slack/history/{channel_id}")
+async def slack_get_conversation_history(
+    channel_id: str, 
+    limit: int = 100,
+    oldest: Optional[str] = None,
+    latest: Optional[str] = None
+):
+    """Get conversation history from a Slack channel"""
+    try:
+        client = SlackClient()
+        result = await client.get_conversation_history(
+            channel=channel_id,
+            limit=limit,
+            oldest=oldest,
+            latest=latest
+        )
+        return result
+    except SlackIntegrationError as e:
+        logger.error(f"Slack get history error: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e),
+            "error_code": e.error_code
+        }
+    except Exception as e:
+        logger.error(f"Slack get history error: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+@app.post("/api/slack/join-channel/{channel_id}")
+async def slack_join_channel(channel_id: str):
+    """Join a Slack channel"""
+    try:
+        client = SlackClient()
+        result = await client.join_channel(channel_id)
+        return result
+    except SlackIntegrationError as e:
+        logger.error(f"Slack join channel error: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e),
+            "error_code": e.error_code
+        }
+    except Exception as e:
+        logger.error(f"Slack join channel error: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+@app.post("/api/slack/leave-channel/{channel_id}")
+async def slack_leave_channel(channel_id: str):
+    """Leave a Slack channel"""
+    try:
+        client = SlackClient()
+        result = await client.leave_channel(channel_id)
+        return result
+    except SlackIntegrationError as e:
+        logger.error(f"Slack leave channel error: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e),
+            "error_code": e.error_code
+        }
+    except Exception as e:
+        logger.error(f"Slack leave channel error: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e)
+        }
 
 # Legacy persona endpoints for backward compatibility
 @app.get("/api/personas/team")

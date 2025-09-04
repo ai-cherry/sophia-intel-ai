@@ -1,0 +1,235 @@
+{
+  "test_run_summary": {
+    "timestamp": "2025-09-04T11:28:36.695828",
+    "total_execution_time_ms": 700.6320953369141,
+    "sophia_server_url": "http://localhost:3333",
+    "slack_workspace": "Pay Ready"
+  },
+  "results_summary": {
+    "total_tests": 15,
+    "passed": 5,
+    "failed": 5,
+    "warnings": 5,
+    "skipped": 0,
+    "success_rate_percent": 33.33
+  },
+  "integration_status": {
+    "slack_api_connectivity": "failed",
+    "sophia_server_found": "passed",
+    "direct_messaging": "failed",
+    "workflow_integration": "partial"
+  },
+  "recommendations": [
+    {
+      "priority": "medium",
+      "issue": "5 tests failed",
+      "suggestion": "Review failed tests and implement missing Slack integration endpoints"
+    },
+    {
+      "priority": "high",
+      "issue": "Slack messaging not working",
+      "suggestion": "Implement Slack SDK integration with proper bot token authentication"
+    }
+  ],
+  "detailed_results": [
+    {
+      "test_name": "find_sophia_server",
+      "status": "passed",
+      "timestamp": "2025-09-04T11:28:36.001065",
+      "execution_time_ms": 5.873203277587891,
+      "details": {
+        "active_url": "http://localhost:3333",
+        "endpoint": "/docs"
+      },
+      "error": null
+    },
+    {
+      "test_name": "slack_api_auth",
+      "status": "failed",
+      "timestamp": "2025-09-04T11:28:36.245161",
+      "execution_time_ms": 249.9711513519287,
+      "details": {},
+      "error": "Slack auth failed: account_inactive"
+    },
+    {
+      "test_name": "sophia_endpoint__api_integrations_status",
+      "status": "failed",
+      "timestamp": "2025-09-04T11:28:36.246759",
+      "execution_time_ms": 251.56497955322266,
+      "details": {
+        "status_code": 404,
+        "response_size": 23,
+        "has_data": true
+      },
+      "error": "HTTP 404"
+    },
+    {
+      "test_name": "sophia_endpoint__business_slack_test",
+      "status": "failed",
+      "timestamp": "2025-09-04T11:28:36.247212",
+      "execution_time_ms": 252.01821327209473,
+      "details": {
+        "status_code": 404,
+        "response_size": 23,
+        "has_data": true
+      },
+      "error": "HTTP 404"
+    },
+    {
+      "test_name": "sophia_endpoint__api_business_dashboard",
+      "status": "passed",
+      "timestamp": "2025-09-04T11:28:36.247596",
+      "execution_time_ms": 252.40230560302734,
+      "details": {
+        "status_code": 200,
+        "response_size": 686,
+        "has_data": true
+      },
+      "error": null
+    },
+    {
+      "test_name": "sophia_endpoint__api_factory_personas",
+      "status": "passed",
+      "timestamp": "2025-09-04T11:28:36.248224",
+      "execution_time_ms": 253.02910804748535,
+      "details": {
+        "status_code": 200,
+        "response_size": 3593,
+        "has_data": true
+      },
+      "error": null
+    },
+    {
+      "test_name": "sophia_endpoint__health",
+      "status": "failed",
+      "timestamp": "2025-09-04T11:28:36.248555",
+      "execution_time_ms": 253.36027145385742,
+      "details": {
+        "status_code": 404,
+        "response_size": 23,
+        "has_data": true
+      },
+      "error": "HTTP 404"
+    },
+    {
+      "test_name": "slack_message_send",
+      "status": "warning",
+      "timestamp": "2025-09-04T11:28:36.249889",
+      "execution_time_ms": 254.69517707824707,
+      "details": {
+        "endpoint": "/api/integrations/slack/send",
+        "status_code": 404,
+        "response": {
+          "detail": "Not Found"
+        }
+      },
+      "error": "HTTP 404"
+    },
+    {
+      "test_name": "slack_message_message",
+      "status": "warning",
+      "timestamp": "2025-09-04T11:28:36.250263",
+      "execution_time_ms": 255.06830215454102,
+      "details": {
+        "endpoint": "/business/slack/message",
+        "status_code": 404,
+        "response": {
+          "detail": "Not Found"
+        }
+      },
+      "error": "HTTP 404"
+    },
+    {
+      "test_name": "slack_message_notify",
+      "status": "warning",
+      "timestamp": "2025-09-04T11:28:36.250631",
+      "execution_time_ms": 255.43618202209473,
+      "details": {
+        "endpoint": "/api/business/slack/notify",
+        "status_code": 404,
+        "response": {
+          "detail": "Not Found"
+        }
+      },
+      "error": "HTTP 404"
+    },
+    {
+      "test_name": "slack_channels_list",
+      "status": "failed",
+      "timestamp": "2025-09-04T11:28:36.474014",
+      "execution_time_ms": 478.82699966430664,
+      "details": {},
+      "error": "Failed to get channels: account_inactive"
+    },
+    {
+      "test_name": "workflow_trigger",
+      "status": "passed",
+      "timestamp": "2025-09-04T11:28:36.476084",
+      "execution_time_ms": 480.89122772216797,
+      "details": {
+        "endpoint": "/api/business/workflows/trigger",
+        "status_code": 200,
+        "payload": {
+          "type": "slack_notification",
+          "message": "Test workflow"
+        },
+        "response": {
+          "error": "Unknown workflow type",
+          "supported_types": [
+            "lead_qualification",
+            "project_optimization",
+            "call_analysis"
+          ]
+        }
+      },
+      "error": null
+    },
+    {
+      "test_name": "workflow_send",
+      "status": "warning",
+      "timestamp": "2025-09-04T11:28:36.476708",
+      "execution_time_ms": 481.51397705078125,
+      "details": {
+        "endpoint": "/api/business/notifications/send",
+        "status_code": 404,
+        "payload": {
+          "platform": "slack",
+          "message": "Test notification"
+        },
+        "response": {
+          "detail": "Not Found"
+        }
+      },
+      "error": "HTTP 404"
+    },
+    {
+      "test_name": "workflow_deploy",
+      "status": "warning",
+      "timestamp": "2025-09-04T11:28:36.477216",
+      "execution_time_ms": 482.0210933685303,
+      "details": {
+        "endpoint": "/api/factory/deploy",
+        "status_code": 404,
+        "payload": {
+          "persona": "sophia",
+          "task": "slack integration test"
+        },
+        "response": {
+          "detail": "Not Found"
+        }
+      },
+      "error": "HTTP 404"
+    },
+    {
+      "test_name": "error_handling_invalid_token",
+      "status": "passed",
+      "timestamp": "2025-09-04T11:28:36.695610",
+      "execution_time_ms": 700.4179954528809,
+      "details": {
+        "expected_error": "invalid_auth",
+        "received_error": "invalid_auth"
+      },
+      "error": null
+    }
+  ]
+}

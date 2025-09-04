@@ -11,7 +11,7 @@ INTEGRATIONS = {
         "api_url": "https://us-70092.api.gong.io",
         "access_key": "TCZDJU2H6QYORC4MEF4KSYJH45NLBAGD",
         "client_secret": "eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjIwNzIyOTQ1MjEsImFjY2Vzc0tleSI6IlRDWkRKVTJINlFZT1JDNE1FRjRLU1lKSDQ1TkxCQUdEIn0.YH4lUulx2FYO3JIIfNF4vPPGJ6g_ea85s2cHfwCRnhE",
-        "stats": {"users": 92, "calls": "100+", "company": "PayReady"}
+        "stats": {"users": 92, "calls": "100+", "company": "Pay Ready"}
     },
     "asana": {
         "enabled": True,
@@ -46,11 +46,12 @@ INTEGRATIONS = {
         "note": "Token expired - needs refresh"
     },
     "looker": {
-        "enabled": False,
-        "status": "needs_instance_url",
+        "enabled": True,
+        "status": "connected",
         "client_id": "jChsJPr9FDP2qSCYyyD2",
         "client_secret": "kXxhgscT87fstFBcPRTNj733",
-        "note": "Credentials ready - provide instance URL to complete"
+        "base_url": "https://payready.cloud.looker.com",
+        "stats": {"instance": "Pay Ready", "integration": "ready"}
     },
     "slack": {
         "enabled": True,
@@ -61,7 +62,7 @@ INTEGRATIONS = {
         "app_token": "xapp-1-A08BXNNKH2P-8419174294449-0017379454ab9f022e02af300c29819d9d665e961a0d223aa782c2c9e0cd875f",
         "socket_token": "xapp-1-A08BXNNKH2P-8419174294449-0017379454ab9f022e02af300c29819d9d665e961a0d223aa782c2c9e0cd875f",
         "bot_token": "xoxe.xoxb-1-MS0yLTI5Mzk2ODIwNzk0MC04Mzk5OTUyNDE5MjA2LTg0MjkzOTEwOTc3MjgtODQxOTI2NzQzNjExMy01NmExNGJlMjNmNmNlZGQ2ODkzYTk4MzZlNTM5OWNhY2Q4NThiZmIwZmJmZThlMzc0YTgyNzg5NDRhMGQ1N2I1",
-        "stats": {"workspace": "PayReady", "integration": "active"}
+        "stats": {"workspace": "Pay Ready", "integration": "active"}
     },
     "elevenlabs": {
         "enabled": True,

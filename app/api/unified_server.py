@@ -44,6 +44,7 @@ from app.api.resilient_websocket_endpoints import router as resilient_ws_router
 
 # from app.api.routers.memory import router as memory_api_router  # Module has import issues
 from app.api.routers.teams import router as teams_router
+from app.api.routers.looker import router as looker_router
 from app.api.super_orchestrator_router import router as super_orchestrator_router
 from app.api.unified_gateway import router as unified_gateway_router
 from app.factory import router as factory_router
@@ -76,6 +77,7 @@ app.include_router(infrastructure_router, prefix="/api/infrastructure")
 # app.include_router(orchestrator_router, prefix="/orchestrator")  # Module deleted
 app.include_router(super_orchestrator_router, prefix="/api/super")
 app.include_router(teams_router, prefix="/api/teams")
+app.include_router(looker_router, prefix="/api")
 app.include_router(factory_router)  # Agent Factory endpoints
 app.include_router(personas_router)  # Persona agents endpoints - includes /api/personas prefix
 # app.include_router(memory_api_router, prefix="/api/memory-v2")  # Module has import issues

@@ -6,7 +6,7 @@ Enhanced business orchestrator using AGNO Teams for specialized intelligence ope
 import asyncio
 import logging
 from datetime import datetime
-from typing import Dict, List, Optional, Any, Union, Callable
+from typing import Dict, List, Optional, Any, Union
 from dataclasses import dataclass, field
 from enum import Enum
 import json
@@ -22,15 +22,6 @@ from app.orchestrators.dynamic_tool_integration import (
     handle_api_test_command,
     ToolStatus
 )
-from app.orchestrators.enhanced_orchestrator_mixin import (
-    EnhancedOrchestratorMixin,
-    ProactiveAssistant
-)
-from app.orchestrators.shared_orchestrator_base import (
-    BaseAGNOOrchestrator,
-    OrchestrationConfig,
-    SharedOrchestrationUtils
-)
 
 # Import AGNO Teams
 from app.swarms.sophia_agno_teams import (
@@ -41,7 +32,6 @@ from app.swarms.sophia_agno_teams import (
     SophiaMarketAnalysisTeam,
     BusinessDomain
 )
-from app.swarms.shared_resources import PersonalityType
 
 # Import base orchestrator components
 from app.orchestrators.sophia_universal_orchestrator import (
@@ -92,7 +82,7 @@ class AGNOBusinessResponse(BusinessResponse):
     strategic_implications: List[str] = field(default_factory=list)
 
 
-class SophiaAGNOOrchestrator(BaseAGNOOrchestrator):
+class SophiaAGNOOrchestrator:
     """
     Sophia AGNO Universal Business Orchestrator
     
@@ -103,27 +93,17 @@ class SophiaAGNOOrchestrator(BaseAGNOOrchestrator):
     - Market Analysis Team: Trends, opportunities, positioning
     """
     
-    @property
-    def orchestrator_name(self) -> str:
-        return "sophia"
-    
-    @property
-    def personality_type(self) -> PersonalityType:
-        return PersonalityType.SOPHIA_STRATEGIC
-    
     def __init__(self, config: Optional[Dict] = None):
-        orchestration_config = OrchestrationConfig()
-        if config:
-            orchestration_config.enable_api_integrations = config.get('enable_api_integrations', True)
-            orchestration_config.enable_memory = config.get('enable_memory', True)
-        
-        super().__init__(orchestration_config)
+        self.config = config or {}
         
         # AGNO Teams (initialized later)
         self.sales_intelligence_team: Optional[SophiaSalesIntelligenceTeam] = None
         self.research_team: Optional[SophiaResearchTeam] = None
         self.client_success_team: Optional[SophiaClientSuccessTeam] = None
         self.market_analysis_team: Optional[SophiaMarketAnalysisTeam] = None
+        
+        # Team registry
+        self.agno_teams: Dict[str, Any] = {}
         
         # Session management
         self.active_sessions = {}
@@ -149,56 +129,24 @@ class SophiaAGNOOrchestrator(BaseAGNOOrchestrator):
         
         logger.info("💎 Sophia AGNO Orchestrator initialized - preparing AGNO Teams")
     
-    async def _initialize_domain_teams(self) -> Dict[str, Any]:
-        """Initialize Sophia's business domain teams"""
-        teams = {}
-        
-        # Initialize teams using shared utility
-        results = await asyncio.gather(
-            SharedOrchestrationUtils.safe_team_initialization(
-                SophiaAGNOTeamFactory.create_sales_intelligence_team, "Sales Intelligence Team"
-            ),
-            SharedOrchestrationUtils.safe_team_initialization(
-                SophiaAGNOTeamFactory.create_research_team, "Research Team"
-            ),
-            SharedOrchestrationUtils.safe_team_initialization(
-                SophiaAGNOTeamFactory.create_client_success_team, "Client Success Team" 
-            ),
-            SharedOrchestrationUtils.safe_team_initialization(
-                SophiaAGNOTeamFactory.create_market_analysis_team, "Market Analysis Team"
-            ),
-            return_exceptions=True
-        )
-        
-        # Process results
-        for team_name, team in results:
-            if team is not None:
-                teams[team_name.lower().replace(' ', '_')] = team
-                # Store in both registries for compatibility
-                if 'sales_intelligence' in team_name.lower():
-                    self.sales_intelligence_team = team
-                elif 'research' in team_name.lower():
-                    self.research_team = team
-                elif 'client_success' in team_name.lower():
-                    self.client_success_team = team
-                elif 'market_analysis' in team_name.lower():
-                    self.market_analysis_team = team
-        
-        self.agno_teams = teams
-        return teams
-    
-    def _get_team_initialization_tasks(self) -> List[Callable]:
-        """Get list of team initialization tasks"""
-        return [
-            self._initialize_sales_intelligence_team,
-            self._initialize_research_team,
-            self._initialize_client_success_team,
-            self._initialize_market_analysis_team
-        ]
-    
-    async def _initialize_api_integrations(self):
-        """Initialize Sophia-specific API integrations"""
+    async def initialize(self) -> bool:
+        """Initialize all AGNO Teams and orchestration capabilities"""
         try:
+            logger.info("🚀 Initializing Sophia AGNO Teams...")
+            
+            # Initialize all AGNO teams concurrently
+            team_initialization_tasks = [
+                self._initialize_sales_intelligence_team(),
+                self._initialize_research_team(),
+                self._initialize_client_success_team(),
+                self._initialize_market_analysis_team()
+            ]
+            
+            await asyncio.gather(*team_initialization_tasks)
+            
+            # Initialize enhanced components for smarter orchestration
+            logger.info("🎆 Initializing dynamic tool integration for API testing...")
+            
             # Initialize critical business tools
             business_tools = ["gong", "hubspot", "salesforce"]
             tool_init_results = await self.tool_registry.initialize(business_tools)
@@ -209,9 +157,21 @@ class SophiaAGNOOrchestrator(BaseAGNOOrchestrator):
                     logger.info(f"  ✅ {tool.title()} connector ready")
                 else:
                     logger.info(f"  ⚠️ {tool.title()} connector unavailable (check credentials)")
-                    
+            
+            # Register teams
+            self.agno_teams = {
+                "sales_intelligence": self.sales_intelligence_team,
+                "research": self.research_team,
+                "client_success": self.client_success_team,
+                "market_analysis": self.market_analysis_team
+            }
+            
+            logger.info(f"✅ Sophia AGNO Orchestrator fully operational with {len(self.agno_teams)} specialized teams")
+            return True
+            
         except Exception as e:
-            logger.warning(f"API integration initialization issues: {e}")
+            logger.error(f"Sophia AGNO initialization failed: {str(e)}")
+            return False
     
     async def _initialize_sales_intelligence_team(self):
         """Initialize Sales Intelligence AGNO Team"""
@@ -262,29 +222,8 @@ class SophiaAGNOOrchestrator(BaseAGNOOrchestrator):
         try:
             logger.info(f"💎 Sophia AGNO processing business request: {request[:100]}...")
             
-            # Initialize session-specific memory if needed
-            session_id = context.session_id if context else f"sophia-{int(start_time)}"
-            if not self._memory_initialized:
-                try:
-                    await self.initialize_memory(session_id, "/Users/lynnmusil/sophia-intel-ai")
-                    logger.info(f"🧠 Session memory initialized: {session_id}")
-                except Exception as e:
-                    logger.warning(f"Session memory initialization failed: {e}")
-            
-            # Add interaction to memory
-            memory_context = None
-            if self._memory_initialized:
-                try:
-                    memory_context = await self.process_with_memory(request, "user", {"context": context.__dict__ if context else {}})
-                    logger.debug(f"💭 Memory context: {len(memory_context.get('working_memory', {}).get('messages', []))} messages")
-                except Exception as e:
-                    logger.warning(f"Memory processing failed: {e}")
-            
-            # First use enhanced command recognition (now with memory context)
-            context_dict = context.__dict__ if context else {}
-            if memory_context:
-                context_dict.update(memory_context)
-            parsed_command = await self.command_recognizer.classify_intent(request, context_dict)
+            # First use enhanced command recognition
+            parsed_command = await self.command_recognizer.classify_intent(request, context.__dict__ if context else None)
             
             # Handle API testing commands with the dynamic tool integration
             if parsed_command.intent in [CommandIntent.API_TEST, CommandIntent.API_CONNECT, CommandIntent.API_STATUS]:
@@ -771,20 +710,7 @@ class SophiaAGNOOrchestrator(BaseAGNOOrchestrator):
                 
                 # Format response with personality
                 if result["success"]:
-                    # Add contextual intelligence if memory is available
-                    contextual_intro = ""
-                    if self._memory_initialized:
-                        try:
-                            contextual_intro = await self.get_contextual_response(f"test {service} api")
-                            if contextual_intro and contextual_intro != self._get_default_response(f"test {service} api"):
-                                contextual_intro = f"🧠 {contextual_intro}\n\n"
-                            else:
-                                contextual_intro = ""
-                        except Exception:
-                            contextual_intro = ""
-                    
                     response_text = (
-                        f"{contextual_intro}"
                         f"🎆 Boom! Successfully connected to {service.title()} API! ✨\n\n"
                         f"💎 **Connection Status**: {result['status']}\n"
                         f"🎯 **Latency**: {result.get('latency_ms', 0):.1f}ms\n"
@@ -815,20 +741,6 @@ class SophiaAGNOOrchestrator(BaseAGNOOrchestrator):
                             response_text += f"  🔧 {step}\n"
                     
                     response_text += "\nLet me know if you need help with the configuration!"
-                
-                # Learn from API testing outcome
-                if self._memory_initialized:
-                    try:
-                        await self.memory_system.learn_from_outcome(
-                            action=f"api_test_{service}",
-                            outcome=result,
-                            success=result["success"]
-                        )
-                        # Track API testing frequency for suggestions
-                        if self.memory_system.working.current_task != f"api_testing_{service}":
-                            self.memory_system.working.set_task(f"api_testing_{service}")
-                    except Exception as e:
-                        logger.debug(f"Memory learning failed: {e}")
                 
                 return AGNOBusinessResponse(
                     success=result["success"],

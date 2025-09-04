@@ -114,6 +114,24 @@ class BIIntegrationTester:
             auth_method="oauth",
             required_env_vars=["ASANA_ACCESS_TOKEN", "LINEAR_API_KEY"],
         ),
+        ConnectionTest(
+            name="looker_health_check",
+            endpoint="/api/business/looker/health",
+            auth_method="none",
+            required_env_vars=[],
+        ),
+        ConnectionTest(
+            name="looker_looks",
+            endpoint="/api/business/looker/looks",
+            auth_method="none", 
+            required_env_vars=[],
+        ),
+        ConnectionTest(
+            name="looker_dashboards",
+            endpoint="/api/business/looker/dashboards",
+            auth_method="none",
+            required_env_vars=[],
+        ),
     ]
     
     async def test_connection(self, test_config: ConnectionTest) -> Dict[str, Any]:
@@ -261,6 +279,26 @@ class BIIntegrationTester:
             data_validation_rules={
                 "pipeline": {"type": "list", "min_length": 0},
                 "ai_insights.success_probability": {"type": "float", "min_value": 0, "max_value": 1}
+            }
+        ),
+        DataFlowTest(
+            name="looker_looks_data_structure",
+            source_endpoint="/api/business/looker/looks",
+            expected_fields=["looks", "count", "retrieved_at"],
+            data_validation_rules={
+                "looks": {"type": "list", "min_length": 0},
+                "count": {"type": "int", "min_value": 0},
+                "retrieved_at": {"type": "string"}
+            }
+        ),
+        DataFlowTest(
+            name="looker_dashboards_data_structure", 
+            source_endpoint="/api/business/looker/dashboards",
+            expected_fields=["dashboards", "count", "retrieved_at"],
+            data_validation_rules={
+                "dashboards": {"type": "list", "min_length": 0},
+                "count": {"type": "int", "min_value": 0},
+                "retrieved_at": {"type": "string"}
             }
         )
     ]

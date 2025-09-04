@@ -110,25 +110,16 @@ class SophiaSalesIntelligenceTeam(SophiaAGNOTeam):  # Changed from SophiaAGNOTea
         # Create and add agents to team
         for role, config in sales_agents.items():
             agent = await self._create_specialized_agent(role, config)
-            self.team.add_agent(agent)
+            self.agents.append(agent)
             
         logger.info(f"💎 Sophia Sales Intelligence Team initialized with {len(sales_agents)} specialized agents")
     
     async def analyze_pipeline_health(self, pipeline_data: Dict[str, Any]) -> Dict[str, Any]:
         """Analyze sales pipeline health and provide strategic insights"""
         
-        task = Task(
-            description=f"Analyze sales pipeline health and provide strategic recommendations: {json.dumps(pipeline_data, indent=2)}",
-            metadata={
-                "task_type": "pipeline_analysis",
-                "domain": "sales_intelligence",
-                "priority": "high"
-            }
-        )
-        
         result = await self.execute_task(
-            "Conduct comprehensive sales pipeline analysis focusing on deal progression, risk assessment, and revenue optimization opportunities",
-            context={"pipeline_data": pipeline_data, "analysis_type": "health_assessment"}
+            f"Conduct comprehensive sales pipeline analysis focusing on deal progression, risk assessment, and revenue optimization opportunities: {json.dumps(pipeline_data, indent=2)}",
+            context={"pipeline_data": pipeline_data, "analysis_type": "health_assessment", "task_type": "pipeline_analysis", "priority": "high"}
         )
         
         return self._enhance_with_business_personality(result, "pipeline_analysis")
@@ -216,7 +207,7 @@ class SophiaResearchTeam(SophiaAGNOTeam):
         
         for role, config in research_agents.items():
             agent = await self._create_specialized_agent(role, config)
-            self.team.add_agent(agent)
+            self.agents.append(agent)
             
         logger.info(f"💎 Sophia Research Team initialized with {len(research_agents)} specialized agents")
     
@@ -303,7 +294,7 @@ class SophiaClientSuccessTeam(SophiaAGNOTeam):
         
         for role, config in success_agents.items():
             agent = await self._create_specialized_agent(role, config)
-            self.team.add_agent(agent)
+            self.agents.append(agent)
             
         logger.info(f"💎 Sophia Client Success Team initialized with {len(success_agents)} specialized agents")
     
@@ -390,7 +381,7 @@ class SophiaMarketAnalysisTeam(SophiaAGNOTeam):
         
         for role, config in analysis_agents.items():
             agent = await self._create_specialized_agent(role, config)
-            self.team.add_agent(agent)
+            self.agents.append(agent)
             
         logger.info(f"💎 Sophia Market Analysis Team initialized with {len(analysis_agents)} specialized agents")
     

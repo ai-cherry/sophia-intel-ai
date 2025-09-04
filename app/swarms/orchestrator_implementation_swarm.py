@@ -130,7 +130,7 @@ class OrchestratorImplementationSwarm(SophiaAGNOTeam):
         # Create the implementation team
         self.implementation_team = Team(
             name="Orchestrator Implementation Team",
-            agents=list(self.implementation_agents.values()),
+            members=list(self.implementation_agents.values()),
             instructions="""
             You are an elite engineering team implementing advanced AI orchestrator improvements.
             
@@ -170,7 +170,7 @@ class OrchestratorImplementationSwarm(SophiaAGNOTeam):
             - Performance optimization
             - Error handling and recovery
             """,
-            metadata={"role": "code_architect"}
+            #metadata={"role": "code_architect"}
         )
     
     async def _create_command_engineer_agent(self) -> Agent:
@@ -200,7 +200,7 @@ class OrchestratorImplementationSwarm(SophiaAGNOTeam):
             - Semantic similarity for intent
             - Context carryover for follow-ups
             """,
-            metadata={"role": "command_engineer"}
+            #metadata={"role": "command_engineer"}
         )
     
     async def _create_integration_specialist_agent(self) -> Agent:
@@ -232,7 +232,7 @@ class OrchestratorImplementationSwarm(SophiaAGNOTeam):
             - Response caching
             - Webhook handlers
             """,
-            metadata={"role": "integration_specialist"}
+            #metadata={"role": "integration_specialist"}
         )
     
     async def _create_memory_engineer_agent(self) -> Agent:
@@ -260,7 +260,7 @@ class OrchestratorImplementationSwarm(SophiaAGNOTeam):
             Use Redis for fast access, vector DBs for semantic search,
             and implement intelligent caching strategies.
             """,
-            metadata={"role": "memory_engineer"}
+            #metadata={"role": "memory_engineer"}
         )
     
     async def _create_learning_architect_agent(self) -> Agent:
@@ -288,7 +288,7 @@ class OrchestratorImplementationSwarm(SophiaAGNOTeam):
             Implement reinforcement learning patterns where the system
             improves based on outcomes and user feedback.
             """,
-            metadata={"role": "learning_architect"}
+            #metadata={"role": "learning_architect"}
         )
     
     async def _create_test_engineer_agent(self) -> Agent:
@@ -315,7 +315,7 @@ class OrchestratorImplementationSwarm(SophiaAGNOTeam):
             
             Ensure all improvements are thoroughly tested before deployment.
             """,
-            metadata={"role": "test_engineer"}
+            #metadata={"role": "test_engineer"}
         )
     
     async def _create_deployment_specialist_agent(self) -> Agent:
@@ -342,7 +342,7 @@ class OrchestratorImplementationSwarm(SophiaAGNOTeam):
             
             Ensure zero-downtime deployments with safe rollback options.
             """,
-            metadata={"role": "deployment_specialist"}
+            #metadata={"role": "deployment_specialist"}
         )
     
     async def implement_improvements(

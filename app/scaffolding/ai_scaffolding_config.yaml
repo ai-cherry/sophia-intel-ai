@@ -1,0 +1,350 @@
+# AI Scaffolding Configuration
+# ==============================
+# Central configuration for the AI scaffolding system
+
+# Meta-Tagging Configuration
+meta_tagging:
+  enabled: true
+  auto_tag_on_save: true
+  cache_metadata: true
+  exclude_patterns:
+    - "*.test.py"
+    - "*.spec.py"
+    - "__pycache__"
+    - ".venv"
+    - "venv"
+
+  # AI hints configuration
+  ai_hints:
+    calculate_risk: true
+    suggest_tests: true
+    identify_optimizations: true
+    max_suggestions: 5
+    risk_thresholds:
+      low: 0.3
+      medium: 0.6
+      high: 0.8
+      critical: 0.9
+
+# Semantic Classification
+semantic_classification:
+  enabled: true
+  confidence_threshold: 0.7
+  learn_from_codebase: true
+  max_learning_examples: 100
+
+  # Role priorities for routing
+  role_priorities:
+    orchestrator: 10
+    validator: 9
+    transformer: 8
+    processor: 7
+    repository: 6
+    api_endpoint: 5
+    helper: 1
+
+# Embedding System
+embeddings:
+  enabled: true
+  model: "text-embedding-3-large"
+  dimensions: 3072
+  chunk_size: 1024
+  chunk_overlap: 128
+
+  # Chunking strategies by file type
+  chunking_strategies:
+    python: "ast_based"
+    javascript: "semantic_boundaries"
+    markdown: "semantic_boundaries"
+    json: "fixed_size"
+    yaml: "fixed_size"
+    default: "sliding_window"
+
+  # Multi-modal embedding types to generate
+  embedding_types:
+    - code
+    - documentation
+    - semantic
+    - usage
+    - structural
+
+# Persona Management
+personas:
+  enabled: true
+  default_persona: "sophia"
+
+  # Sophia configuration
+  sophia:
+    temperature: 0.7
+    max_tokens: 4000
+    evolution_enabled: true
+    performance_threshold: 0.8
+    domains:
+      - business_intelligence
+      - data_analytics
+      - market_research
+      - competitive_analysis
+    traits:
+      - analytical
+      - business_focused
+      - systematic
+      - proactive
+
+  # Artemis configuration
+  artemis:
+    temperature: 0.5
+    max_tokens: 8000
+    evolution_enabled: true
+    performance_threshold: 0.85
+    domains:
+      - software_architecture
+      - code_generation
+      - testing
+      - documentation
+    traits:
+      - technical
+      - code_focused
+      - pragmatic
+      - autonomous
+
+  # Cross-persona knowledge sharing
+  knowledge_sharing:
+    enabled: true
+    frequency: "on_demand"
+    share_insights: true
+    share_patterns: true
+
+# Memory Configuration
+memory:
+  # Hierarchical memory tiers
+  tiers:
+    l1_hot:
+      backend: "redis"
+      ttl_seconds: 3600
+      max_size_mb: 512
+
+    l2_warm:
+      backend: "weaviate"
+      ttl_seconds: 86400
+      max_size_mb: 5120
+
+    l3_cold:
+      backend: "postgres"
+      ttl_seconds: 604800
+      max_size_mb: 51200
+
+    l4_archive:
+      backend: "s3"
+      ttl_seconds: null # permanent
+      max_size_mb: null # unlimited
+
+  # Domain isolation
+  domain_isolation:
+    enabled: true
+    domains:
+      - sophia
+      - artemis
+      - shared
+
+  # Caching strategy
+  caching:
+    enabled: true
+    cache_embeddings: true
+    cache_metadata: true
+    cache_insights: true
+    eviction_policy: "lru"
+
+# MCP Server Orchestration
+mcp_orchestration:
+  enabled: true
+  default_strategy: "adaptive"
+  max_parallel_tasks: 10
+  timeout_seconds: 300
+  retry_count: 3
+
+  # Server registry
+  servers:
+    - name: "filesystem"
+      endpoint: "mcp://localhost:3000/fs"
+      capabilities:
+        - file_access
+        - data_transformation
+
+    - name: "database"
+      endpoint: "mcp://localhost:3001/db"
+      capabilities:
+        - database_query
+        - data_transformation
+
+    - name: "web"
+      endpoint: "mcp://localhost:3002/web"
+      capabilities:
+        - web_search
+        - api_call
+
+    - name: "github"
+      endpoint: "mcp://localhost:3003/github"
+      capabilities:
+        - github_integration
+        - code_execution
+
+  # Execution strategies
+  strategies:
+    sequential:
+      max_tasks: 5
+
+    parallel:
+      max_workers: 10
+
+    dag_based:
+      enable_optimization: true
+
+    adaptive:
+      auto_select: true
+
+# Documentation Generation
+documentation:
+  enabled: true
+  auto_generate: true
+  output_dir: "docs/generated"
+
+  # Documentation types to generate
+  types:
+    - api_reference
+    - user_guide
+    - developer_guide
+    - architecture
+
+  # Complexity tiers for examples
+  complexity_tiers:
+    enabled: true
+    default_tier: "intermediate"
+    generate_all_tiers: false
+
+  # Living documentation
+  living_docs:
+    enabled: true
+    watch_for_changes: true
+    update_frequency: "on_save"
+
+  # Concept mapping
+  concept_mapping:
+    enabled: true
+    generate_diagrams: true
+    diagram_format: "mermaid"
+
+# Quality Assurance
+quality_assurance:
+  enabled: true
+
+  # Quality metrics and thresholds
+  metrics:
+    readability:
+      weight: 0.15
+      threshold: 0.7
+
+    maintainability:
+      weight: 0.2
+      threshold: 0.7
+
+    testability:
+      weight: 0.15
+      threshold: 0.6
+
+    performance:
+      weight: 0.15
+      threshold: 0.6
+
+    security:
+      weight: 0.2
+      threshold: 0.8
+
+    documentation:
+      weight: 0.15
+      threshold: 0.5
+
+  # Auto-improvement
+  auto_improvement:
+    enabled: true
+    max_iterations: 3
+    target_score: 0.8
+
+# Integration Settings
+integrations:
+  # Portkey integration
+  portkey:
+    enabled: true
+    api_key_env: "PORTKEY_API_KEY"
+
+  # OpenAI integration
+  openai:
+    enabled: true
+    api_key_env: "OPENAI_API_KEY"
+    model: "gpt-4"
+
+  # Anthropic integration
+  anthropic:
+    enabled: true
+    api_key_env: "ANTHROPIC_API_KEY"
+    model: "claude-3-opus-20240229"
+
+  # Database integrations
+  postgres:
+    enabled: true
+    url_env: "POSTGRES_URL"
+
+  redis:
+    enabled: true
+    url_env: "REDIS_URL"
+
+  weaviate:
+    enabled: true
+    url_env: "WEAVIATE_URL"
+    api_key_env: "WEAVIATE_API_KEY"
+
+# Monitoring and Logging
+monitoring:
+  enabled: true
+  log_level: "INFO"
+
+  # Metrics to track
+  metrics:
+    - task_execution_time
+    - memory_usage
+    - api_calls
+    - error_rate
+    - cache_hit_rate
+
+  # Alerts
+  alerts:
+    enabled: true
+    channels:
+      - email
+      - slack
+
+    thresholds:
+      error_rate: 0.1
+      response_time_ms: 5000
+      memory_usage_mb: 1024
+
+# Development Settings
+development:
+  debug_mode: false
+  verbose_logging: false
+  mock_external_apis: false
+
+  # Hot reload
+  hot_reload:
+    enabled: true
+    watch_patterns:
+      - "*.py"
+      - "*.yaml"
+      - "*.json"
+
+  # Testing
+  testing:
+    auto_generate_tests: true
+    coverage_threshold: 80
+    test_frameworks:
+      - pytest
+      - unittest

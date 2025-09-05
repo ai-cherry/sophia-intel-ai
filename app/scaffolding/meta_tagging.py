@@ -1,559 +1,846 @@
 """
-Meta-Tagging Engine for AI Scaffolding
-=======================================
+Comprehensive Meta-Tagging System for Sophia AI
 
-This module provides comprehensive AST-based analysis and meta-tagging for Python code,
-enabling semantic understanding and AI-driven code operations.
-
-AI Context:
-- Primary consumer: AI coding assistants and swarms
-- Optimization: High-frequency reads, infrequent writes
-- Critical for: Code understanding, modification risk assessment, test generation
+This module provides a unified meta-tagging infrastructure for intelligent code analysis,
+classification, and enhancement suggestions. It enables AI systems to better understand
+codebase structure, component relationships, and optimization opportunities.
 """
 
 import ast
+import asyncio
 import hashlib
-import inspect
 import json
 import logging
-from dataclasses import dataclass, field
+import os
+import re
+import uuid
+from dataclasses import asdict, dataclass, field
+from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional, Set, TypeVar
 
+# Configure logging
 logger = logging.getLogger(__name__)
+
+T = TypeVar("T")
 
 
 class SemanticRole(Enum):
-    """Semantic roles for code components"""
-    
-    # Orchestration roles
-    ORCHESTRATOR = "orchestrator"
-    COORDINATOR = "coordinator"
-    DISPATCHER = "dispatcher"
-    
-    # Processing roles
-    TRANSFORMER = "transformer"
-    PROCESSOR = "processor"
-    ANALYZER = "analyzer"
-    
-    # Validation roles
-    VALIDATOR = "validator"
-    SANITIZER = "sanitizer"
-    GUARD = "guard"
-    
-    # Storage roles
-    REPOSITORY = "repository"
-    CACHE = "cache"
-    STORE = "store"
-    
-    # Communication roles
-    API_ENDPOINT = "api_endpoint"
-    EVENT_HANDLER = "event_handler"
-    MESSAGE_BROKER = "message_broker"
-    
-    # Utility roles
-    HELPER = "helper"
-    UTILITY = "utility"
-    FACTORY = "factory"
-    BUILDER = "builder"
-    
-    # AI-specific roles
-    PROMPT_TEMPLATE = "prompt_template"
-    EMBEDDING_GENERATOR = "embedding_generator"
-    VECTOR_STORE = "vector_store"
-    LLM_INTERFACE = "llm_interface"
+    """Component classification based on architectural role."""
+
+    # Core Infrastructure
+    ORCHESTRATOR = "orchestrator"  # High-level coordination logic
+    PROCESSOR = "processor"  # Data processing/transformation
+    GATEWAY = "gateway"  # External interface/API endpoints
+    REPOSITORY = "repository"  # Data persistence layer
+    SERVICE = "service"  # Business logic services
+
+    # AI/ML Components
+    AGENT = "agent"  # AI agents/swarms
+    MODEL = "model"  # ML models/inference
+    PIPELINE = "pipeline"  # Data/ML pipelines
+    ANALYZER = "analyzer"  # Analysis/evaluation tools
+
+    # System Components
+    MIDDLEWARE = "middleware"  # Cross-cutting concerns
+    UTILITY = "utility"  # Helper functions/utilities
+    CONFIG = "config"  # Configuration management
+    ROUTER = "router"  # Request routing/dispatch
+
+    # Data Components
+    SCHEMA = "schema"  # Data models/schemas
+    ADAPTER = "adapter"  # External integration
+    CACHE = "cache"  # Caching mechanisms
+    VALIDATOR = "validator"  # Data validation
+
+    # Testing & Quality
+    TEST = "test"  # Test cases/fixtures
+    MOCK = "mock"  # Test mocks/stubs
+    BENCHMARK = "benchmark"  # Performance tests
+
+    # Documentation & Metadata
+    DOCUMENTATION = "documentation"  # Documentation files
+    EXAMPLE = "example"  # Example/demo code
+    SCRIPT = "script"  # Automation scripts
+
+    UNKNOWN = "unknown"  # Unclassified components
 
 
-class ComplexityLevel(Enum):
-    """Code complexity levels for AI guidance"""
-    
-    TRIVIAL = 1  # Simple getters/setters
-    LOW = 2      # Basic logic, <10 lines
-    MEDIUM = 3   # Moderate logic, 10-50 lines
-    HIGH = 4     # Complex logic, 50-200 lines
-    CRITICAL = 5  # Critical/complex logic, >200 lines or high cyclomatic complexity
+class Complexity(Enum):
+    """Code complexity assessment."""
+
+    TRIVIAL = 1  # Simple utilities, getters/setters
+    LOW = 2  # Basic logic, simple transformations
+    MODERATE = 3  # Multiple responsibilities, some complexity
+    HIGH = 4  # Complex algorithms, multiple dependencies
+    CRITICAL = 5  # Core systems, high risk modifications
+
+
+class Priority(Enum):
+    """Priority levels for maintenance and optimization."""
+
+    LOW = 1  # Nice to have improvements
+    MEDIUM = 2  # Beneficial optimizations
+    HIGH = 3  # Important for system health
+    CRITICAL = 4  # Essential for stability/security
+
+
+class ModificationRisk(Enum):
+    """Risk assessment for code modifications."""
+
+    SAFE = 1  # Low impact, well-tested
+    MODERATE = 2  # Some dependencies, moderate testing
+    HIGH = 3  # Many dependencies, complex logic
+    CRITICAL = 4  # Core infrastructure, high blast radius
 
 
 @dataclass
-class AIHints:
-    """AI-specific hints for code modification and understanding"""
-    
-    modification_risk: float = 0.5  # 0.0 (safe) to 1.0 (dangerous)
-    test_requirements: List[str] = field(default_factory=list)
-    optimization_potential: float = 0.0  # 0.0 (optimized) to 1.0 (needs work)
+class MetaTag:
+    """Comprehensive metadata for code components."""
+
+    # Core Identity
+    id: str = field(default_factory=lambda: str(uuid.uuid4()))
+    file_path: str = ""
+    component_name: str = ""
+    line_range: tuple[int, int] = (0, 0)
+
+    # Classification
+    semantic_role: SemanticRole = SemanticRole.UNKNOWN
+    complexity: Complexity = Complexity.MODERATE
+    priority: Priority = Priority.MEDIUM
+    modification_risk: ModificationRisk = ModificationRisk.MODERATE
+
+    # Capabilities & Dependencies
+    capabilities: Set[str] = field(default_factory=set)
+    dependencies: Set[str] = field(default_factory=set)
+    dependents: Set[str] = field(default_factory=set)
+    external_integrations: Set[str] = field(default_factory=set)
+
+    # AI Enhancement Hints
+    optimization_opportunities: List[str] = field(default_factory=list)
     refactoring_suggestions: List[str] = field(default_factory=list)
-    dependencies: List[str] = field(default_factory=list)
-    side_effects: List[str] = field(default_factory=list)
-    concurrency_safe: bool = True
-    idempotent: bool = True
-    pure_function: bool = False
-    
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "modification_risk": self.modification_risk,
-            "test_requirements": self.test_requirements,
-            "optimization_potential": self.optimization_potential,
-            "refactoring_suggestions": self.refactoring_suggestions,
-            "dependencies": self.dependencies,
-            "side_effects": self.side_effects,
-            "concurrency_safe": self.concurrency_safe,
-            "idempotent": self.idempotent,
-            "pure_function": self.pure_function,
-        }
+    test_requirements: List[str] = field(default_factory=list)
+    security_considerations: List[str] = field(default_factory=list)
 
+    # Quality Metrics
+    cyclomatic_complexity: int = 0
+    lines_of_code: int = 0
+    test_coverage: Optional[float] = None
+    documentation_score: float = 0.0
+    type_safety_score: float = 0.0
 
-@dataclass
-class CodeMetadata:
-    """Comprehensive metadata for a code element"""
-    
-    # Identity
-    name: str
-    type: str  # function, class, method, module
-    path: str
-    line_start: int
-    line_end: int
-    
-    # Semantic information
-    semantic_role: SemanticRole
-    complexity: ComplexityLevel
-    description: str = ""
-    
-    # Structural information
-    parent: Optional[str] = None
-    children: List[str] = field(default_factory=list)
-    imports: List[str] = field(default_factory=list)
-    exports: List[str] = field(default_factory=list)
-    
-    # AI hints
-    ai_hints: AIHints = field(default_factory=AIHints)
-    
-    # Relationships
-    calls: List[str] = field(default_factory=list)
-    called_by: List[str] = field(default_factory=list)
-    
-    # Content hash for change detection
-    content_hash: str = ""
-    
-    # Tags for categorization
+    # Metadata
+    created_at: datetime = field(default_factory=datetime.now)
+    updated_at: datetime = field(default_factory=datetime.now)
+    version: str = "1.0.0"
+    confidence_score: float = 0.0
     tags: Set[str] = field(default_factory=set)
-    
+
+    # Hash for change detection
+    content_hash: str = ""
+
+    def __post_init__(self):
+        """Validate and normalize tag data."""
+        self.updated_at = datetime.now()
+
+        # Ensure sets are actually sets
+        if isinstance(self.capabilities, list):
+            self.capabilities = set(self.capabilities)
+        if isinstance(self.dependencies, list):
+            self.dependencies = set(self.dependencies)
+        if isinstance(self.dependents, list):
+            self.dependents = set(self.dependents)
+        if isinstance(self.external_integrations, list):
+            self.external_integrations = set(self.external_integrations)
+        if isinstance(self.tags, list):
+            self.tags = set(self.tags)
+
     def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary with serializable values."""
+        data = asdict(self)
+
+        # Convert enums to values
+        data["semantic_role"] = self.semantic_role.value
+        data["complexity"] = self.complexity.value
+        data["priority"] = self.priority.value
+        data["modification_risk"] = self.modification_risk.value
+
+        # Convert sets to lists for JSON serialization
+        for field_name in [
+            "capabilities",
+            "dependencies",
+            "dependents",
+            "external_integrations",
+            "tags",
+        ]:
+            if field_name in data and isinstance(data[field_name], set):
+                data[field_name] = list(data[field_name])
+
+        # Convert datetime to ISO string
+        for dt_field in ["created_at", "updated_at"]:
+            if dt_field in data and isinstance(data[dt_field], datetime):
+                data[dt_field] = data[dt_field].isoformat()
+
+        return data
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "MetaTag":
+        """Create MetaTag from dictionary."""
+        # Convert enum strings back to enums
+        if "semantic_role" in data:
+            data["semantic_role"] = SemanticRole(data["semantic_role"])
+        if "complexity" in data:
+            data["complexity"] = Complexity(data["complexity"])
+        if "priority" in data:
+            data["priority"] = Priority(data["priority"])
+        if "modification_risk" in data:
+            data["modification_risk"] = ModificationRisk(data["modification_risk"])
+
+        # Convert lists back to sets
+        for field_name in [
+            "capabilities",
+            "dependencies",
+            "dependents",
+            "external_integrations",
+            "tags",
+        ]:
+            if field_name in data and isinstance(data[field_name], list):
+                data[field_name] = set(data[field_name])
+
+        # Convert datetime strings back to datetime
+        for dt_field in ["created_at", "updated_at"]:
+            if dt_field in data and isinstance(data[dt_field], str):
+                data[dt_field] = datetime.fromisoformat(data[dt_field])
+
+        return cls(**data)
+
+    def update_confidence(self, confidence: float):
+        """Update confidence score with validation."""
+        self.confidence_score = max(0.0, min(1.0, confidence))
+        self.updated_at = datetime.now()
+
+    def add_capability(self, capability: str):
+        """Add a capability with update tracking."""
+        self.capabilities.add(capability)
+        self.updated_at = datetime.now()
+
+    def add_dependency(self, dependency: str):
+        """Add a dependency with update tracking."""
+        self.dependencies.add(dependency)
+        self.updated_at = datetime.now()
+
+    def add_optimization(self, optimization: str):
+        """Add an optimization opportunity."""
+        if optimization not in self.optimization_opportunities:
+            self.optimization_opportunities.append(optimization)
+            self.updated_at = datetime.now()
+
+
+class MetaTagRegistry:
+    """Centralized registry for managing meta-tags across the codebase."""
+
+    def __init__(self, storage_path: Optional[str] = None):
+        """Initialize registry with optional persistent storage."""
+        self.storage_path = storage_path or "meta_tags_registry.json"
+        self._tags: Dict[str, MetaTag] = {}
+        self._file_index: Dict[str, Set[str]] = {}  # file_path -> tag_ids
+        self._role_index: Dict[SemanticRole, Set[str]] = {}  # role -> tag_ids
+        self._dependency_graph: Dict[str, Set[str]] = {}  # component -> dependencies
+
+        # Initialize role index
+        for role in SemanticRole:
+            self._role_index[role] = set()
+
+        self.load()
+
+    def register(self, tag: MetaTag) -> str:
+        """Register a meta-tag and update indices."""
+        tag_id = tag.id
+        self._tags[tag_id] = tag
+
+        # Update file index
+        if tag.file_path not in self._file_index:
+            self._file_index[tag.file_path] = set()
+        self._file_index[tag.file_path].add(tag_id)
+
+        # Update role index
+        self._role_index[tag.semantic_role].add(tag_id)
+
+        # Update dependency graph
+        if tag.component_name:
+            self._dependency_graph[tag.component_name] = tag.dependencies.copy()
+
+        logger.info(f"Registered meta-tag for {tag.component_name} in {tag.file_path}")
+        return tag_id
+
+    def get(self, tag_id: str) -> Optional[MetaTag]:
+        """Retrieve a meta-tag by ID."""
+        return self._tags.get(tag_id)
+
+    def get_by_file(self, file_path: str) -> List[MetaTag]:
+        """Get all meta-tags for a specific file."""
+        tag_ids = self._file_index.get(file_path, set())
+        return [self._tags[tag_id] for tag_id in tag_ids if tag_id in self._tags]
+
+    def get_by_role(self, role: SemanticRole) -> List[MetaTag]:
+        """Get all meta-tags for a specific semantic role."""
+        tag_ids = self._role_index.get(role, set())
+        return [self._tags[tag_id] for tag_id in tag_ids if tag_id in self._tags]
+
+    def get_by_component(self, component_name: str) -> Optional[MetaTag]:
+        """Get meta-tag for a specific component."""
+        for tag in self._tags.values():
+            if tag.component_name == component_name:
+                return tag
+        return None
+
+    def search(
+        self,
+        role: Optional[SemanticRole] = None,
+        complexity: Optional[Complexity] = None,
+        capabilities: Optional[Set[str]] = None,
+        tags: Optional[Set[str]] = None,
+    ) -> List[MetaTag]:
+        """Search meta-tags by various criteria."""
+        results = list(self._tags.values())
+
+        if role:
+            results = [tag for tag in results if tag.semantic_role == role]
+
+        if complexity:
+            results = [tag for tag in results if tag.complexity == complexity]
+
+        if capabilities:
+            results = [tag for tag in results if capabilities.issubset(tag.capabilities)]
+
+        if tags:
+            results = [tag for tag in results if tags.intersection(tag.tags)]
+
+        return results
+
+    def get_dependencies(self, component_name: str) -> Set[str]:
+        """Get dependencies for a component."""
+        return self._dependency_graph.get(component_name, set())
+
+    def get_dependents(self, component_name: str) -> Set[str]:
+        """Get components that depend on the given component."""
+        dependents = set()
+        for comp, deps in self._dependency_graph.items():
+            if component_name in deps:
+                dependents.add(comp)
+        return dependents
+
+    def update_dependencies(self):
+        """Update bidirectional dependency relationships."""
+        for tag in self._tags.values():
+            if tag.component_name:
+                # Update dependents for each dependency
+                for dep in tag.dependencies:
+                    dep_tag = self.get_by_component(dep)
+                    if dep_tag:
+                        dep_tag.dependents.add(tag.component_name)
+
+    def get_high_risk_components(self) -> List[MetaTag]:
+        """Get components with high modification risk."""
+        return [
+            tag
+            for tag in self._tags.values()
+            if tag.modification_risk in [ModificationRisk.HIGH, ModificationRisk.CRITICAL]
+        ]
+
+    def get_optimization_candidates(self) -> List[MetaTag]:
+        """Get components with optimization opportunities."""
+        return [tag for tag in self._tags.values() if tag.optimization_opportunities]
+
+    def save(self):
+        """Save registry to persistent storage."""
+        try:
+            data = {
+                "tags": {tag_id: tag.to_dict() for tag_id, tag in self._tags.items()},
+                "metadata": {
+                    "total_tags": len(self._tags),
+                    "last_updated": datetime.now().isoformat(),
+                    "version": "1.0.0",
+                },
+            }
+
+            with open(self.storage_path, "w") as f:
+                json.dump(data, f, indent=2, default=str)
+
+            logger.info(f"Saved {len(self._tags)} meta-tags to {self.storage_path}")
+
+        except Exception as e:
+            logger.error(f"Failed to save meta-tags: {e}")
+
+    def load(self):
+        """Load registry from persistent storage."""
+        if not os.path.exists(self.storage_path):
+            return
+
+        try:
+            with open(self.storage_path) as f:
+                data = json.load(f)
+
+            # Load tags
+            for tag_id, tag_data in data.get("tags", {}).items():
+                tag = MetaTag.from_dict(tag_data)
+                self.register(tag)
+
+            # Update dependency relationships
+            self.update_dependencies()
+
+            logger.info(f"Loaded {len(self._tags)} meta-tags from {self.storage_path}")
+
+        except Exception as e:
+            logger.error(f"Failed to load meta-tags: {e}")
+
+    def stats(self) -> Dict[str, Any]:
+        """Get registry statistics."""
+        role_counts = {}
+        for role in SemanticRole:
+            role_counts[role.value] = len(self._role_index[role])
+
+        complexity_counts = {}
+        for complexity in Complexity:
+            complexity_counts[complexity.value] = len(
+                [tag for tag in self._tags.values() if tag.complexity == complexity]
+            )
+
         return {
-            "name": self.name,
-            "type": self.type,
-            "path": self.path,
-            "line_start": self.line_start,
-            "line_end": self.line_end,
-            "semantic_role": self.semantic_role.value,
-            "complexity": self.complexity.value,
-            "description": self.description,
-            "parent": self.parent,
-            "children": self.children,
-            "imports": self.imports,
-            "exports": self.exports,
-            "ai_hints": self.ai_hints.to_dict(),
-            "calls": self.calls,
-            "called_by": self.called_by,
-            "content_hash": self.content_hash,
-            "tags": list(self.tags),
+            "total_tags": len(self._tags),
+            "files_covered": len(self._file_index),
+            "role_distribution": role_counts,
+            "complexity_distribution": complexity_counts,
+            "high_risk_components": len(self.get_high_risk_components()),
+            "optimization_candidates": len(self.get_optimization_candidates()),
+            "avg_confidence": (
+                sum(tag.confidence_score for tag in self._tags.values()) / len(self._tags)
+                if self._tags
+                else 0
+            ),
         }
 
 
-class ASTAnalyzer(ast.NodeVisitor):
-    """AST visitor for extracting code metadata"""
-    
-    def __init__(self, file_path: str):
-        self.file_path = file_path
-        self.current_class = None
-        self.metadata: List[CodeMetadata] = []
-        self.imports: List[str] = []
-        self.call_graph: Dict[str, Set[str]] = {}
-        
-    def visit_Import(self, node: ast.Import) -> None:
-        """Track imports"""
-        for alias in node.names:
-            self.imports.append(alias.name)
-        self.generic_visit(node)
-        
-    def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
-        """Track from imports"""
-        if node.module:
-            for alias in node.names:
-                self.imports.append(f"{node.module}.{alias.name}")
-        self.generic_visit(node)
-        
-    def visit_ClassDef(self, node: ast.ClassDef) -> None:
-        """Analyze class definitions"""
-        self.current_class = node.name
-        
-        # Determine semantic role
-        role = self._infer_semantic_role(node.name, node)
-        
-        # Calculate complexity
-        complexity = self._calculate_complexity(node)
-        
-        # Generate AI hints
-        ai_hints = self._generate_ai_hints(node, is_class=True)
-        
-        # Extract docstring
-        description = ast.get_docstring(node) or ""
-        
-        metadata = CodeMetadata(
-            name=node.name,
-            type="class",
-            path=self.file_path,
-            line_start=node.lineno,
-            line_end=node.end_lineno or node.lineno,
-            semantic_role=role,
-            complexity=complexity,
-            description=description[:200],  # Limit description length
-            imports=self.imports.copy(),
-            ai_hints=ai_hints,
-            content_hash=self._generate_hash(ast.unparse(node)),
-            tags=self._generate_tags(node.name, role),
-        )
-        
-        self.metadata.append(metadata)
-        self.generic_visit(node)
-        self.current_class = None
-        
-    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
-        """Analyze function definitions"""
-        self._analyze_function(node)
-        
-    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
-        """Analyze async function definitions"""
-        self._analyze_function(node, is_async=True)
-        
-    def _analyze_function(self, node: ast.FunctionDef, is_async: bool = False) -> None:
-        """Common function analysis logic"""
-        # Determine full name
-        if self.current_class:
-            full_name = f"{self.current_class}.{node.name}"
-            parent = self.current_class
-        else:
-            full_name = node.name
-            parent = None
-            
-        # Determine semantic role
-        role = self._infer_semantic_role(node.name, node)
-        
-        # Calculate complexity
-        complexity = self._calculate_complexity(node)
-        
-        # Generate AI hints
-        ai_hints = self._generate_ai_hints(node, is_async=is_async)
-        
-        # Extract docstring
-        description = ast.get_docstring(node) or ""
-        
-        # Find function calls
-        calls = self._extract_function_calls(node)
-        
-        metadata = CodeMetadata(
-            name=full_name,
-            type="async_function" if is_async else "function",
-            path=self.file_path,
-            line_start=node.lineno,
-            line_end=node.end_lineno or node.lineno,
-            semantic_role=role,
-            complexity=complexity,
-            description=description[:200],
-            parent=parent,
-            ai_hints=ai_hints,
-            calls=calls,
-            content_hash=self._generate_hash(ast.unparse(node)),
-            tags=self._generate_tags(node.name, role),
-        )
-        
-        self.metadata.append(metadata)
-        self.generic_visit(node)
-        
-    def _infer_semantic_role(self, name: str, node: ast.AST) -> SemanticRole:
-        """Infer semantic role from name and context"""
-        name_lower = name.lower()
-        
-        # Check for specific patterns
-        if "orchestrat" in name_lower:
-            return SemanticRole.ORCHESTRATOR
-        elif "transform" in name_lower:
-            return SemanticRole.TRANSFORMER
-        elif "process" in name_lower:
-            return SemanticRole.PROCESSOR
-        elif "validat" in name_lower:
-            return SemanticRole.VALIDATOR
-        elif "analyz" in name_lower or "analyse" in name_lower:
-            return SemanticRole.ANALYZER
-        elif "repositor" in name_lower or "repo" in name_lower:
-            return SemanticRole.REPOSITORY
-        elif "cache" in name_lower:
-            return SemanticRole.CACHE
-        elif "store" in name_lower or "storage" in name_lower:
-            return SemanticRole.STORE
-        elif "endpoint" in name_lower or "route" in name_lower:
-            return SemanticRole.API_ENDPOINT
-        elif "handler" in name_lower or "handle" in name_lower:
-            return SemanticRole.EVENT_HANDLER
-        elif "factory" in name_lower:
-            return SemanticRole.FACTORY
-        elif "builder" in name_lower or "build" in name_lower:
-            return SemanticRole.BUILDER
-        elif "prompt" in name_lower:
-            return SemanticRole.PROMPT_TEMPLATE
-        elif "embed" in name_lower:
-            return SemanticRole.EMBEDDING_GENERATOR
-        elif "vector" in name_lower:
-            return SemanticRole.VECTOR_STORE
-        elif "llm" in name_lower or "model" in name_lower:
-            return SemanticRole.LLM_INTERFACE
-        elif "util" in name_lower or "helper" in name_lower:
-            return SemanticRole.UTILITY
-        else:
-            # Default based on node type
-            if isinstance(node, ast.ClassDef):
-                if any(base.id == "BaseModel" for base in node.bases if hasattr(base, "id")):
-                    return SemanticRole.VALIDATOR
-                return SemanticRole.UTILITY
-            return SemanticRole.HELPER
-            
-    def _calculate_complexity(self, node: ast.AST) -> ComplexityLevel:
-        """Calculate code complexity"""
-        # Count nodes for complexity
-        total_nodes = sum(1 for _ in ast.walk(node))
-        
-        # Count control flow statements
-        control_flow = sum(
-            1 for n in ast.walk(node)
-            if isinstance(n, (ast.If, ast.For, ast.While, ast.Try, ast.With))
-        )
-        
-        # Estimate based on metrics
-        if total_nodes < 20 and control_flow <= 1:
-            return ComplexityLevel.TRIVIAL
-        elif total_nodes < 50 and control_flow <= 3:
-            return ComplexityLevel.LOW
-        elif total_nodes < 200 and control_flow <= 10:
-            return ComplexityLevel.MEDIUM
-        elif total_nodes < 500 and control_flow <= 20:
-            return ComplexityLevel.HIGH
-        else:
-            return ComplexityLevel.CRITICAL
-            
-    def _generate_ai_hints(
-        self, node: ast.AST, is_class: bool = False, is_async: bool = False
-    ) -> AIHints:
-        """Generate AI-specific hints for code modification"""
-        hints = AIHints()
-        
-        # Analyze for side effects
-        has_io = any(
-            isinstance(n, ast.Call) and hasattr(n.func, "id") and
-            n.func.id in ["print", "open", "write", "read"]
-            for n in ast.walk(node)
-        )
-        
-        has_network = any(
-            isinstance(n, ast.Call) and hasattr(n.func, "attr") and
-            n.func.attr in ["get", "post", "put", "delete", "request"]
-            for n in ast.walk(node)
-        )
-        
-        has_db = any(
-            isinstance(n, ast.Call) and hasattr(n.func, "attr") and
-            any(db_op in n.func.attr.lower() for db_op in ["query", "insert", "update", "delete", "execute"])
-            for n in ast.walk(node)
-        )
-        
-        # Set modification risk
-        if has_db:
-            hints.modification_risk = 0.9
-            hints.side_effects.append("database_operations")
-        elif has_network:
-            hints.modification_risk = 0.7
-            hints.side_effects.append("network_operations")
-        elif has_io:
-            hints.modification_risk = 0.5
-            hints.side_effects.append("io_operations")
-        else:
-            hints.modification_risk = 0.2
-            
-        # Analyze for concurrency safety
-        if is_async:
-            hints.concurrency_safe = False  # Needs careful review
-            hints.test_requirements.append("async_test_required")
-            
-        # Check for global state modification
-        has_global = any(isinstance(n, ast.Global) for n in ast.walk(node))
-        if has_global:
-            hints.concurrency_safe = False
-            hints.side_effects.append("global_state_modification")
-            hints.modification_risk = max(hints.modification_risk, 0.7)
-            
-        # Test requirements
-        if is_class:
-            hints.test_requirements.extend(["unit_test", "integration_test"])
-        elif hints.modification_risk > 0.5:
-            hints.test_requirements.extend(["unit_test", "integration_test", "regression_test"])
-        else:
-            hints.test_requirements.append("unit_test")
-            
-        # Optimization potential
-        nested_loops = sum(
-            1 for n in ast.walk(node)
-            if isinstance(n, (ast.For, ast.While)) and
-            any(isinstance(child, (ast.For, ast.While)) for child in ast.walk(n))
-        )
-        
-        if nested_loops > 2:
-            hints.optimization_potential = 0.9
-            hints.refactoring_suggestions.append("consider_vectorization")
-        elif nested_loops > 0:
-            hints.optimization_potential = 0.5
-            hints.refactoring_suggestions.append("review_loop_efficiency")
-            
-        return hints
-        
-    def _extract_function_calls(self, node: ast.AST) -> List[str]:
-        """Extract function calls from a node"""
-        calls = []
-        for n in ast.walk(node):
-            if isinstance(n, ast.Call):
-                if hasattr(n.func, "id"):
-                    calls.append(n.func.id)
-                elif hasattr(n.func, "attr"):
-                    calls.append(n.func.attr)
-        return calls
-        
-    def _generate_hash(self, content: str) -> str:
-        """Generate content hash for change detection"""
-        return hashlib.sha256(content.encode()).hexdigest()[:16]
-        
-    def _generate_tags(self, name: str, role: SemanticRole) -> Set[str]:
-        """Generate descriptive tags"""
-        tags = {role.value}
-        
-        # Add pattern-based tags
-        if name.startswith("test_") or name.endswith("_test"):
-            tags.add("test")
-        if name.startswith("_"):
-            tags.add("private")
-        if name.isupper():
-            tags.add("constant")
-        if "async" in name.lower():
-            tags.add("async")
-            
-        return tags
+class AutoTagger:
+    """Automated tagging system using AST analysis and pattern matching."""
 
+    def __init__(self, registry: MetaTagRegistry):
+        self.registry = registry
 
-class MetaTaggingEngine:
-    """Main engine for meta-tagging Python code"""
-    
-    def __init__(self, project_root: Path):
-        self.project_root = project_root
-        self.metadata_cache: Dict[str, List[CodeMetadata]] = {}
-        self.call_graph: Dict[str, Set[str]] = {}
-        
-    def analyze_file(self, file_path: Path) -> List[CodeMetadata]:
-        """Analyze a single Python file"""
+        # Pattern matching for semantic roles
+        self.role_patterns = {
+            SemanticRole.ORCHESTRATOR: [
+                r"orchestrat",
+                r"coordinat",
+                r"manage",
+                r"control",
+                r"supervisor",
+            ],
+            SemanticRole.PROCESSOR: [
+                r"process",
+                r"transform",
+                r"convert",
+                r"parse",
+                r"encode",
+                r"decode",
+            ],
+            SemanticRole.GATEWAY: [
+                r"gateway",
+                r"api",
+                r"endpoint",
+                r"route",
+                r"handler",
+                r"controller",
+            ],
+            SemanticRole.SERVICE: [r"service", r"business", r"logic", r"operation"],
+            SemanticRole.AGENT: [r"agent", r"swarm", r"ai", r"autonomous", r"intelligent"],
+            SemanticRole.MODEL: [r"model", r"neural", r"ml", r"predict", r"inference", r"train"],
+            SemanticRole.REPOSITORY: [
+                r"repository",
+                r"repo",
+                r"storage",
+                r"persist",
+                r"database",
+                r"db",
+            ],
+            SemanticRole.UTILITY: [r"util", r"helper", r"tool", r"common", r"shared"],
+        }
+
+        # Capability patterns
+        self.capability_patterns = {
+            "async": r"async\s+def|await\s+",
+            "api": r"@app\.|@router\.|FastAPI|APIRouter",
+            "database": r"database|sql|query|transaction",
+            "ai": r"model|agent|neural|ml|ai",
+            "caching": r"cache|redis|memcache",
+            "validation": r"valid|schema|pydantic",
+            "logging": r"log|logger|logging",
+            "config": r"config|settings|environment",
+            "testing": r"test|mock|assert|pytest",
+            "security": r"auth|security|token|encrypt|decrypt",
+        }
+
+    async def tag_file(self, file_path: str) -> List[MetaTag]:
+        """Analyze and tag a single file."""
         try:
-            with open(file_path, "r", encoding="utf-8") as f:
-                source = f.read()
-                
-            tree = ast.parse(source, filename=str(file_path))
-            analyzer = ASTAnalyzer(str(file_path.relative_to(self.project_root)))
-            analyzer.visit(tree)
-            
-            # Cache results
-            self.metadata_cache[str(file_path)] = analyzer.metadata
-            
-            # Update call graph
-            for meta in analyzer.metadata:
-                if meta.calls:
-                    self.call_graph[meta.name] = set(meta.calls)
-                    
-            return analyzer.metadata
-            
+            with open(file_path, encoding="utf-8") as f:
+                content = f.read()
+
+            # Generate content hash
+            content_hash = hashlib.md5(content.encode()).hexdigest()
+
+            tags = []
+
+            # Try AST analysis for Python files
+            if file_path.endswith(".py"):
+                tags.extend(await self._analyze_python_file(file_path, content, content_hash))
+            else:
+                # Basic analysis for other files
+                tag = await self._analyze_generic_file(file_path, content, content_hash)
+                if tag:
+                    tags.append(tag)
+
+            # Register all tags
+            for tag in tags:
+                self.registry.register(tag)
+
+            return tags
+
         except Exception as e:
-            logger.error(f"Failed to analyze {file_path}: {e}")
+            logger.error(f"Failed to tag file {file_path}: {e}")
             return []
-            
-    def analyze_directory(self, directory: Path) -> Dict[str, List[CodeMetadata]]:
-        """Analyze all Python files in a directory recursively"""
-        results = {}
-        
-        for py_file in directory.rglob("*.py"):
-            # Skip virtual environments and cache directories
-            if any(skip in py_file.parts for skip in [".venv", "venv", "__pycache__", ".git"]):
-                continue
-                
-            metadata = self.analyze_file(py_file)
-            if metadata:
-                results[str(py_file)] = metadata
-                
-        # Build reverse call graph
-        self._build_reverse_call_graph()
-        
-        return results
-        
-    def _build_reverse_call_graph(self) -> None:
-        """Build the called_by relationships from call graph"""
-        for caller, callees in self.call_graph.items():
-            for callee in callees:
-                # Find all metadata entries for the callee
-                for file_meta in self.metadata_cache.values():
-                    for meta in file_meta:
-                        if meta.name == callee or meta.name.endswith(f".{callee}"):
-                            if caller not in meta.called_by:
-                                meta.called_by.append(caller)
-                                
-    def export_metadata(self, output_path: Path) -> None:
-        """Export all metadata to JSON"""
-        export_data = {}
-        
-        for file_path, metadata_list in self.metadata_cache.items():
-            export_data[file_path] = [meta.to_dict() for meta in metadata_list]
-            
-        with open(output_path, "w", encoding="utf-8") as f:
-            json.dump(export_data, f, indent=2)
-            
-        logger.info(f"Exported metadata to {output_path}")
-        
-    def query_by_role(self, role: SemanticRole) -> List[CodeMetadata]:
-        """Query all code elements with a specific semantic role"""
-        results = []
-        for metadata_list in self.metadata_cache.values():
-            for meta in metadata_list:
-                if meta.semantic_role == role:
-                    results.append(meta)
-        return results
-        
-    def query_by_complexity(
-        self, min_complexity: ComplexityLevel, max_complexity: ComplexityLevel = None
-    ) -> List[CodeMetadata]:
-        """Query code elements by complexity range"""
-        results = []
-        max_complexity = max_complexity or ComplexityLevel.CRITICAL
-        
-        for metadata_list in self.metadata_cache.values():
-            for meta in metadata_list:
-                if min_complexity.value <= meta.complexity.value <= max_complexity.value:
-                    results.append(meta)
-        return results
-        
-    def get_modification_risks(self) -> List[Tuple[CodeMetadata, float]]:
-        """Get all code elements sorted by modification risk"""
-        risks = []
-        for metadata_list in self.metadata_cache.values():
-            for meta in metadata_list:
-                risks.append((meta, meta.ai_hints.modification_risk))
-                
-        return sorted(risks, key=lambda x: x[1], reverse=True)
+
+    async def _analyze_python_file(
+        self, file_path: str, content: str, content_hash: str
+    ) -> List[MetaTag]:
+        """Analyze Python file using AST."""
+        try:
+            tree = ast.parse(content)
+            tags = []
+
+            # Analyze classes
+            for node in ast.walk(tree):
+                if isinstance(node, ast.ClassDef):
+                    tag = await self._create_class_tag(file_path, node, content, content_hash)
+                    tags.append(tag)
+
+                elif isinstance(node, ast.FunctionDef):
+                    # Only tag top-level functions
+                    if hasattr(node, "parent") and isinstance(node.parent, ast.Module):
+                        tag = await self._create_function_tag(
+                            file_path, node, content, content_hash
+                        )
+                        tags.append(tag)
+
+            # If no classes or functions, create a module-level tag
+            if not tags:
+                tag = await self._create_module_tag(file_path, content, content_hash)
+                tags.append(tag)
+
+            return tags
+
+        except SyntaxError as e:
+            logger.warning(f"Syntax error in {file_path}: {e}")
+            return [await self._analyze_generic_file(file_path, content, content_hash)]
+
+    async def _create_class_tag(
+        self, file_path: str, node: ast.ClassDef, content: str, content_hash: str
+    ) -> MetaTag:
+        """Create meta-tag for a class."""
+        tag = MetaTag(
+            file_path=file_path,
+            component_name=node.name,
+            line_range=(node.lineno, getattr(node, "end_lineno", node.lineno)),
+            content_hash=content_hash,
+        )
+
+        # Determine semantic role
+        tag.semantic_role = self._determine_role(node.name, content)
+
+        # Analyze capabilities
+        tag.capabilities = self._extract_capabilities(content)
+
+        # Calculate complexity
+        tag.complexity = self._calculate_complexity(node)
+        tag.cyclomatic_complexity = self._calculate_cyclomatic_complexity(node)
+
+        # Extract dependencies
+        tag.dependencies = self._extract_dependencies(content)
+
+        # Generate AI hints
+        await self._generate_ai_hints(tag, content)
+
+        return tag
+
+    async def _create_function_tag(
+        self, file_path: str, node: ast.FunctionDef, content: str, content_hash: str
+    ) -> MetaTag:
+        """Create meta-tag for a function."""
+        tag = MetaTag(
+            file_path=file_path,
+            component_name=node.name,
+            line_range=(node.lineno, getattr(node, "end_lineno", node.lineno)),
+            content_hash=content_hash,
+        )
+
+        # Determine semantic role
+        tag.semantic_role = self._determine_role(node.name, content)
+
+        # Analyze capabilities
+        tag.capabilities = self._extract_capabilities(content)
+
+        # Calculate complexity
+        tag.complexity = self._calculate_complexity(node)
+        tag.cyclomatic_complexity = self._calculate_cyclomatic_complexity(node)
+
+        # Extract dependencies
+        tag.dependencies = self._extract_dependencies(content)
+
+        # Generate AI hints
+        await self._generate_ai_hints(tag, content)
+
+        return tag
+
+    async def _create_module_tag(self, file_path: str, content: str, content_hash: str) -> MetaTag:
+        """Create meta-tag for a module."""
+        module_name = Path(file_path).stem
+
+        tag = MetaTag(
+            file_path=file_path,
+            component_name=module_name,
+            line_range=(1, len(content.splitlines())),
+            content_hash=content_hash,
+        )
+
+        # Determine semantic role
+        tag.semantic_role = self._determine_role(module_name, content)
+
+        # Analyze capabilities
+        tag.capabilities = self._extract_capabilities(content)
+
+        # Calculate basic metrics
+        tag.lines_of_code = len(
+            [
+                line
+                for line in content.splitlines()
+                if line.strip() and not line.strip().startswith("#")
+            ]
+        )
+
+        # Extract dependencies
+        tag.dependencies = self._extract_dependencies(content)
+
+        # Generate AI hints
+        await self._generate_ai_hints(tag, content)
+
+        return tag
+
+    async def _analyze_generic_file(
+        self, file_path: str, content: str, content_hash: str
+    ) -> Optional[MetaTag]:
+        """Analyze non-Python files."""
+        file_name = Path(file_path).name
+
+        tag = MetaTag(
+            file_path=file_path,
+            component_name=file_name,
+            line_range=(1, len(content.splitlines())),
+            content_hash=content_hash,
+        )
+
+        # Basic role determination
+        if file_path.endswith((".json", ".yaml", ".yml", ".toml")):
+            tag.semantic_role = SemanticRole.CONFIG
+        elif file_path.endswith((".md", ".rst", ".txt")):
+            tag.semantic_role = SemanticRole.DOCUMENTATION
+        elif file_path.endswith((".sql",)):
+            tag.semantic_role = SemanticRole.SCHEMA
+        elif file_path.endswith((".sh", ".bat", ".ps1")):
+            tag.semantic_role = SemanticRole.SCRIPT
+        else:
+            tag.semantic_role = SemanticRole.UNKNOWN
+
+        # Basic metrics
+        tag.lines_of_code = len(content.splitlines())
+        tag.complexity = Complexity.LOW if tag.lines_of_code < 50 else Complexity.MODERATE
+
+        return tag
+
+    def _determine_role(self, name: str, content: str) -> SemanticRole:
+        """Determine semantic role based on name and content patterns."""
+        name_lower = name.lower()
+        content_sample = content[:1000].lower()  # First 1000 chars for efficiency
+
+        for role, patterns in self.role_patterns.items():
+            for pattern in patterns:
+                if re.search(pattern, name_lower) or re.search(pattern, content_sample):
+                    return role
+
+        return SemanticRole.UNKNOWN
+
+    def _extract_capabilities(self, content: str) -> Set[str]:
+        """Extract capabilities from content analysis."""
+        capabilities = set()
+        content_lower = content.lower()
+
+        for capability, pattern in self.capability_patterns.items():
+            if re.search(pattern, content_lower):
+                capabilities.add(capability)
+
+        return capabilities
+
+    def _calculate_complexity(self, node: ast.AST) -> Complexity:
+        """Calculate complexity based on AST node analysis."""
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            # Function complexity based on statements
+            stmt_count = len([n for n in ast.walk(node) if isinstance(n, ast.stmt)])
+            if stmt_count < 5:
+                return Complexity.TRIVIAL
+            elif stmt_count < 15:
+                return Complexity.LOW
+            elif stmt_count < 30:
+                return Complexity.MODERATE
+            elif stmt_count < 50:
+                return Complexity.HIGH
+            else:
+                return Complexity.CRITICAL
+
+        elif isinstance(node, ast.ClassDef):
+            # Class complexity based on methods and attributes
+            methods = [
+                n for n in node.body if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))
+            ]
+            if len(methods) < 3:
+                return Complexity.LOW
+            elif len(methods) < 8:
+                return Complexity.MODERATE
+            elif len(methods) < 15:
+                return Complexity.HIGH
+            else:
+                return Complexity.CRITICAL
+
+        return Complexity.MODERATE
+
+    def _calculate_cyclomatic_complexity(self, node: ast.AST) -> int:
+        """Calculate cyclomatic complexity."""
+        complexity = 1  # Base complexity
+
+        for child in ast.walk(node):
+            if isinstance(child, (ast.If, ast.While, ast.For, ast.AsyncFor)) or isinstance(
+                child, ast.ExceptHandler
+            ):
+                complexity += 1
+            elif isinstance(child, ast.BoolOp):
+                complexity += len(child.values) - 1
+
+        return complexity
+
+    def _extract_dependencies(self, content: str) -> Set[str]:
+        """Extract dependencies from import statements."""
+        dependencies = set()
+
+        try:
+            tree = ast.parse(content)
+            for node in ast.walk(tree):
+                if isinstance(node, ast.Import):
+                    for alias in node.names:
+                        dependencies.add(alias.name.split(".")[0])
+                elif isinstance(node, ast.ImportFrom):
+                    if node.module:
+                        dependencies.add(node.module.split(".")[0])
+        except:
+            # Fallback to regex if AST parsing fails
+            import_pattern = r"(?:from\s+(\w+)|import\s+(\w+))"
+            matches = re.findall(import_pattern, content)
+            for match in matches:
+                dep = match[0] or match[1]
+                if dep:
+                    dependencies.add(dep)
+
+        return dependencies
+
+    async def _generate_ai_hints(self, tag: MetaTag, content: str):
+        """Generate AI enhancement hints."""
+        # Basic heuristics for optimization opportunities
+        if "TODO" in content or "FIXME" in content:
+            tag.optimization_opportunities.append("Contains TODO/FIXME comments")
+
+        if tag.cyclomatic_complexity > 10:
+            tag.optimization_opportunities.append(
+                "High cyclomatic complexity - consider refactoring"
+            )
+
+        if tag.lines_of_code > 100 and tag.semantic_role != SemanticRole.CONFIG:
+            tag.refactoring_suggestions.append(
+                "Large file - consider breaking into smaller modules"
+            )
+
+        if "password" in content.lower() or "secret" in content.lower():
+            tag.security_considerations.append("Contains sensitive data references")
+
+        # Test requirements based on complexity
+        if tag.complexity.value >= Complexity.MODERATE.value:
+            tag.test_requirements.append("Unit tests recommended for moderate+ complexity")
+
+        if "async" in tag.capabilities:
+            tag.test_requirements.append("Async testing patterns required")
+
+        # Set confidence based on available information
+        confidence = 0.5  # Base confidence
+        if tag.semantic_role != SemanticRole.UNKNOWN:
+            confidence += 0.2
+        if tag.capabilities:
+            confidence += 0.2
+        if tag.dependencies:
+            confidence += 0.1
+
+        tag.update_confidence(confidence)
 
 
-# Convenience function for quick analysis
-def analyze_codebase(project_root: str = ".") -> MetaTaggingEngine:
-    """Quick analysis of entire codebase"""
-    engine = MetaTaggingEngine(Path(project_root))
-    engine.analyze_directory(Path(project_root))
-    return engine
+# Global registry instance
+_global_registry: Optional[MetaTagRegistry] = None
+
+
+def get_global_registry() -> MetaTagRegistry:
+    """Get the global meta-tag registry."""
+    global _global_registry
+    if _global_registry is None:
+        _global_registry = MetaTagRegistry()
+    return _global_registry
+
+
+async def auto_tag_directory(
+    directory_path: str, file_patterns: List[str] = None
+) -> Dict[str, List[MetaTag]]:
+    """Auto-tag all files in a directory."""
+    if file_patterns is None:
+        file_patterns = ["*.py", "*.js", "*.ts", "*.json", "*.yaml", "*.yml"]
+
+    registry = get_global_registry()
+    tagger = AutoTagger(registry)
+
+    results = {}
+
+    for pattern in file_patterns:
+        for file_path in Path(directory_path).rglob(pattern):
+            if file_path.is_file() and not any(part.startswith(".") for part in file_path.parts):
+                try:
+                    tags = await tagger.tag_file(str(file_path))
+                    results[str(file_path)] = tags
+                except Exception as e:
+                    logger.error(f"Failed to process {file_path}: {e}")
+
+    return results
+
+
+if __name__ == "__main__":
+    # Example usage
+    async def main():
+        registry = get_global_registry()
+        results = await auto_tag_directory(".", ["*.py"])
+
+        print(f"Tagged {len(results)} files")
+        print("Registry stats:", registry.stats())
+
+    asyncio.run(main())

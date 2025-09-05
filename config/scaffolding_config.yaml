@@ -1,0 +1,291 @@
+# Sophia AI Scaffolding Configuration
+# ====================================
+#
+# This configuration file defines the setup for all AI scaffolding components
+# including memory systems, orchestrators, documentation, and integrations.
+
+system:
+  name: "Sophia AI Scaffolding"
+  version: "1.0.0"
+  environment: "development" # development, staging, production
+  log_level: "INFO" # DEBUG, INFO, WARNING, ERROR
+  health_check_interval: 60 # seconds
+  max_restart_attempts: 3
+  initialization_timeout: 300 # seconds
+
+# Component Configurations
+components:
+  # Hierarchical Memory System (4-tier architecture)
+  memory_system:
+    enabled: true
+
+    # L1: Redis Hot Cache (< 1ms access)
+    redis_url: "redis://localhost:6379"
+    redis_max_connections: 20
+    redis_timeout: 5
+
+    # L2: Weaviate Vector Search (< 10ms)
+    weaviate_url: "http://localhost:8080"
+    weaviate_timeout: 30
+
+    # L3: Neon Structured Data (< 100ms)
+    neon_connection: "postgresql://user:pass@localhost/sophia_db"  # pragma: allowlist secret
+    neon_pool_size: 10
+    neon_timeout: 60
+
+    # L4: S3 Cold Storage (< 1s)
+    s3_bucket: "sophia-memory-storage"
+    aws_region: "us-east-1"
+    s3_storage_class: "STANDARD_IA"
+
+    # Memory optimization settings
+    cache_warm_threshold: 10 # Access count for L1 promotion
+    cache_ttl_hot: 3600 # 1 hour
+    cache_ttl_warm: 1800 # 30 minutes
+    cache_ttl_cool: 900 # 15 minutes
+
+  # Multi-Modal Embedding System
+  embedding_system:
+    enabled: true
+
+    # Primary embedding models
+    default_model: "text-embedding-ada-002"
+    code_model: "text-embedding-ada-002"
+    documentation_model: "text-embedding-ada-002"
+
+    # Embedding configuration
+    embedding_dimension: 1536
+    batch_size: 100
+    max_retries: 3
+    timeout: 30
+
+    # Caching settings
+    cache_embeddings: true
+    embedding_cache_ttl: 86400 # 24 hours
+
+    # Chunking strategies
+    default_chunk_size: 1000
+    max_chunk_overlap: 200
+    chunk_strategy: "semantic_boundaries"
+
+  # Meta-Tagging System
+  meta_tagging:
+    enabled: true
+
+    # Analysis settings
+    auto_tag_code: true
+    semantic_analysis: true
+    dependency_tracking: true
+
+    # AI hint integration
+    ai_hints_enabled: true
+    auto_generate_hints: true
+    hint_confidence_threshold: 0.7
+
+    # Tag categories
+    enable_semantic_roles: true
+    enable_complexity_analysis: true
+    enable_architecture_patterns: true
+
+  # Persona Management System
+  persona_manager:
+    enabled: true
+
+    # Default personas
+    default_persona: "sophia"
+    enable_artemis: true
+    enable_hybrid: true
+
+    # Evolution settings
+    evolution_enabled: true
+    evolution_threshold: 0.8
+    max_evolution_steps: 5
+
+    # Performance tracking
+    track_performance: true
+    performance_window: 100 # tasks
+
+  # MCP Orchestrator
+  mcp_orchestrator:
+    enabled: true
+
+    # Execution settings
+    max_concurrent_nodes: 10
+    default_timeout: 300
+    max_retry_attempts: 3
+
+    # Server registry
+    default_servers:
+      - type: "filesystem"
+        url: "mcp://filesystem"
+        max_concurrent: 10
+        timeout: 30
+
+      - type: "database"
+        url: "mcp://database"
+        max_concurrent: 5
+        timeout: 60
+
+      - type: "web_search"
+        url: "mcp://web_search"
+        max_concurrent: 3
+        timeout: 120
+
+      - type: "code_analysis"
+        url: "mcp://code_analysis"
+        max_concurrent: 5
+        timeout: 45
+
+    # DAG execution
+    enable_parallel_execution: true
+    dag_visualization: true
+    result_aggregation: "merge"
+
+  # Living Documentation System
+  documentation_system:
+    enabled: true
+
+    # Directory settings
+    docs_directory: "./docs"
+    templates_directory: "./docs/templates"
+
+    # Generation settings
+    auto_generate: true
+    scan_interval: 3600 # 1 hour
+    update_threshold: 0.3 # Regenerate if freshness < 30%
+
+    # AI context
+    generate_ai_context: true
+    ai_context_types:
+      - "purpose"
+      - "usage_patterns"
+      - "integration_points"
+      - "performance_notes"
+
+    # Example tiers
+    generate_examples: true
+    example_complexity_levels:
+      - "beginner"
+      - "intermediate"
+      - "advanced"
+
+    # Quality metrics
+    target_completeness: 0.8
+    target_freshness: 0.9
+    target_coverage: 0.7
+
+# Integration Settings
+integrations:
+  # Cross-component communication
+  event_bus:
+    enabled: true
+    max_event_history: 1000
+    event_retention_hours: 24
+
+  # Health monitoring
+  health_monitoring:
+    enabled: true
+    check_interval: 60
+    alert_on_degraded: true
+    alert_on_failed: true
+    auto_restart_failed: true
+
+  # Metrics collection
+  metrics:
+    enabled: true
+    collection_interval: 30
+    retention_days: 30
+    export_prometheus: false
+    export_json: true
+
+# Environment-specific overrides
+environments:
+  development:
+    system:
+      log_level: "DEBUG"
+    components:
+      memory_system:
+        redis_url: "redis://localhost:6379"
+        neon_connection: "postgresql://user:pass@localhost/sophia_dev"  # pragma: allowlist secret
+
+  staging:
+    system:
+      log_level: "INFO"
+    components:
+      memory_system:
+        redis_url: "redis://staging-redis:6379"
+        neon_connection: "postgresql://user:pass@staging-db/sophia_staging"  # pragma: allowlist secret
+
+  production:
+    system:
+      log_level: "WARNING"
+      health_check_interval: 30
+    components:
+      memory_system:
+        redis_url: "redis://prod-redis:6379"
+        neon_connection: "postgresql://user:pass@prod-db/sophia_prod"  # pragma: allowlist secret
+        redis_max_connections: 50
+        neon_pool_size: 20
+
+# Security settings
+security:
+  # API keys and secrets (use environment variables in production)
+  redis_password: "${REDIS_PASSWORD}"
+  neon_password: "${NEON_PASSWORD}"
+  aws_access_key: "${AWS_ACCESS_KEY_ID}"
+  aws_secret_key: "${AWS_SECRET_ACCESS_KEY}"
+
+  # Encryption
+  encrypt_sensitive_data: true
+  encryption_key: "${ENCRYPTION_KEY}"
+
+  # Access control
+  enable_rbac: true
+  require_authentication: true
+
+# Logging configuration
+logging:
+  # Log levels by component
+  component_levels:
+    memory_system: "INFO"
+    embedding_system: "INFO"
+    meta_tagging: "DEBUG"
+    mcp_orchestrator: "INFO"
+    documentation_system: "INFO"
+    integration_hub: "INFO"
+
+  # Log formats
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+  # Log destinations
+  console:
+    enabled: true
+    level: "INFO"
+
+  file:
+    enabled: true
+    level: "DEBUG"
+    filename: "logs/sophia_scaffolding.log"
+    max_size: "100MB"
+    backup_count: 5
+
+  json:
+    enabled: false
+    filename: "logs/sophia_scaffolding.jsonl"
+
+# Feature flags
+features:
+  # Experimental features
+  enable_experimental_embeddings: false
+  enable_advanced_reasoning: false
+  enable_auto_code_generation: false
+
+  # Performance optimizations
+  enable_caching: true
+  enable_batch_processing: true
+  enable_parallel_init: true
+
+  # Debugging
+  debug_mode: false
+  trace_execution: false
+  profile_performance: false

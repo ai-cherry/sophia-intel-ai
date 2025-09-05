@@ -1,478 +1,854 @@
 """
-Semantic Role Classification System
-=====================================
+Advanced Semantic Classifier for Meta-Tagging System
 
-Advanced semantic classification using ML models and pattern matching
-to automatically categorize code components based on their behavior and context.
-
-AI Context:
-- Uses embeddings for semantic similarity matching
-- Learns from codebase patterns over time
-- Critical for intelligent code routing and orchestration
+This module provides sophisticated pattern-based semantic classification for code components,
+including role detection, capability identification, risk assessment, and confidence scoring.
 """
 
+import ast
 import logging
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple
+from re import Pattern
+from typing import Any, Dict, List, Optional, Tuple
 
-import numpy as np
+from .meta_tagging import Complexity, ModificationRisk, Priority, SemanticRole
 
 logger = logging.getLogger(__name__)
 
 
-class CodePattern(Enum):
-    """Common code patterns in the system"""
-    
-    # Architectural patterns
-    SINGLETON = "singleton"
-    FACTORY = "factory"
-    OBSERVER = "observer"
-    STRATEGY = "strategy"
-    ADAPTER = "adapter"
-    FACADE = "facade"
-    DECORATOR = "decorator"
-    PROXY = "proxy"
-    
-    # Behavioral patterns
-    CHAIN_OF_RESPONSIBILITY = "chain_of_responsibility"
-    COMMAND = "command"
-    ITERATOR = "iterator"
-    MEDIATOR = "mediator"
-    MEMENTO = "memento"
-    STATE = "state"
-    TEMPLATE_METHOD = "template_method"
-    VISITOR = "visitor"
-    
-    # Data patterns
-    REPOSITORY = "repository"
-    DTO = "data_transfer_object"
-    ENTITY = "entity"
-    VALUE_OBJECT = "value_object"
-    AGGREGATE = "aggregate"
-    
-    # AI/ML patterns
-    PIPELINE = "pipeline"
-    TRANSFORMER = "transformer"
-    EMBEDDING = "embedding"
-    PROMPT_ENGINEERING = "prompt_engineering"
-    VECTOR_SEARCH = "vector_search"
-    RAG_PATTERN = "rag_pattern"
+class AnalysisContext(Enum):
+    """Context for semantic analysis."""
+
+    FILE_NAME = "file_name"
+    CLASS_NAME = "class_name"
+    FUNCTION_NAME = "function_name"
+    MODULE_DOCSTRING = "module_docstring"
+    IMPORT_STATEMENTS = "import_statements"
+    INHERITANCE = "inheritance"
+    DECORATORS = "decorators"
+    COMMENTS = "comments"
+    CODE_STRUCTURE = "code_structure"
 
 
 @dataclass
-class SemanticSignature:
-    """Semantic signature for code classification"""
-    
-    # Keywords that indicate role
-    primary_keywords: Set[str] = field(default_factory=set)
-    secondary_keywords: Set[str] = field(default_factory=set)
-    
-    # Method patterns
-    method_patterns: List[re.Pattern] = field(default_factory=list)
-    
-    # Import patterns
-    import_patterns: List[str] = field(default_factory=list)
-    
-    # Inheritance patterns
-    base_classes: List[str] = field(default_factory=list)
-    
-    # Decorator patterns
-    decorators: List[str] = field(default_factory=list)
-    
-    # Return type patterns
-    return_types: List[str] = field(default_factory=list)
-    
-    # Confidence threshold
-    min_confidence: float = 0.7
+class PatternMatch:
+    """Represents a pattern match with confidence scoring."""
+
+    pattern: str
+    match_text: str
+    confidence: float
+    context: AnalysisContext
+    line_number: Optional[int] = None
+
+
+@dataclass
+class ClassificationResult:
+    """Complete classification result with confidence metrics."""
+
+    semantic_role: SemanticRole
+    confidence: float
+    primary_matches: List[PatternMatch]
+    secondary_matches: List[PatternMatch]
+    reasoning: List[str]
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "semantic_role": self.semantic_role.value,
+            "confidence": self.confidence,
+            "primary_matches": [
+                {
+                    "pattern": m.pattern,
+                    "match_text": m.match_text,
+                    "confidence": m.confidence,
+                    "context": m.context.value,
+                }
+                for m in self.primary_matches
+            ],
+            "reasoning": self.reasoning,
+        }
 
 
 class SemanticClassifier:
-    """Main classifier for semantic role detection"""
-    
+    """Advanced semantic classifier with pattern matching and confidence scoring."""
+
     def __init__(self):
-        self.signatures = self._build_signatures()
-        self.pattern_matchers = self._build_pattern_matchers()
-        self.learned_patterns: Dict[str, SemanticSignature] = {}
-        
-    def _build_signatures(self) -> Dict[str, SemanticSignature]:
-        """Build semantic signatures for each role"""
-        return {
-            "orchestrator": SemanticSignature(
-                primary_keywords={"orchestrate", "coordinate", "manage", "direct", "control"},
-                secondary_keywords={"flow", "pipeline", "sequence", "chain", "workflow"},
-                method_patterns=[
-                    re.compile(r".*orchestrate.*"),
-                    re.compile(r".*coordinate.*"),
-                    re.compile(r".*_flow$"),
-                ],
-                base_classes=["BaseOrchestrator", "Orchestrator", "Coordinator"],
-                decorators=["orchestrator", "workflow"],
-            ),
-            
-            "transformer": SemanticSignature(
-                primary_keywords={"transform", "convert", "map", "translate", "adapt"},
-                secondary_keywords={"input", "output", "format", "schema", "structure"},
-                method_patterns=[
-                    re.compile(r".*transform.*"),
-                    re.compile(r".*convert.*"),
-                    re.compile(r".*to_.*"),
-                    re.compile(r".*from_.*"),
-                ],
-                import_patterns=["transformers", "sklearn.preprocessing"],
-            ),
-            
-            "validator": SemanticSignature(
-                primary_keywords={"validate", "verify", "check", "assert", "ensure"},
-                secondary_keywords={"rule", "constraint", "requirement", "condition"},
-                method_patterns=[
-                    re.compile(r".*validate.*"),
-                    re.compile(r".*verify.*"),
-                    re.compile(r".*check.*"),
-                    re.compile(r"is_.*"),
-                ],
-                base_classes=["BaseModel", "Validator", "Schema"],
-                decorators=["validator", "field_validator"],
-            ),
-            
-            "repository": SemanticSignature(
-                primary_keywords={"repository", "store", "persist", "fetch", "query"},
-                secondary_keywords={"database", "cache", "storage", "collection"},
-                method_patterns=[
-                    re.compile(r"^get_.*"),
-                    re.compile(r"^find_.*"),
-                    re.compile(r"^save.*"),
-                    re.compile(r"^delete.*"),
-                    re.compile(r"^update.*"),
-                ],
-                base_classes=["Repository", "BaseRepository", "Store"],
-                import_patterns=["sqlalchemy", "asyncpg", "redis", "mongodb"],
-            ),
-            
-            "api_endpoint": SemanticSignature(
-                primary_keywords={"route", "endpoint", "api", "rest", "graphql"},
-                secondary_keywords={"request", "response", "http", "get", "post"},
-                decorators=["route", "get", "post", "put", "delete", "api", "endpoint"],
-                import_patterns=["fastapi", "flask", "django.urls", "aiohttp"],
-            ),
-            
-            "event_handler": SemanticSignature(
-                primary_keywords={"handle", "on", "event", "trigger", "listen"},
-                secondary_keywords={"emit", "dispatch", "subscribe", "publish"},
-                method_patterns=[
-                    re.compile(r"^on_.*"),
-                    re.compile(r".*handle.*"),
-                    re.compile(r".*_handler$"),
-                ],
-                decorators=["event", "handler", "listener"],
-            ),
-            
-            "llm_interface": SemanticSignature(
-                primary_keywords={"llm", "model", "ai", "generate", "complete"},
-                secondary_keywords={"prompt", "token", "embedding", "inference"},
-                method_patterns=[
-                    re.compile(r".*generate.*"),
-                    re.compile(r".*complete.*"),
-                    re.compile(r".*embed.*"),
-                ],
-                import_patterns=["openai", "anthropic", "transformers", "langchain"],
-            ),
-            
-            "prompt_template": SemanticSignature(
-                primary_keywords={"prompt", "template", "instruction", "context"},
-                secondary_keywords={"format", "variable", "placeholder", "system"},
-                method_patterns=[
-                    re.compile(r".*prompt.*"),
-                    re.compile(r".*template.*"),
-                    re.compile(r".*format.*"),
-                ],
-                return_types=["str", "PromptTemplate", "ChatPromptTemplate"],
-            ),
-            
-            "vector_store": SemanticSignature(
-                primary_keywords={"vector", "embedding", "similarity", "search", "index"},
-                secondary_keywords={"faiss", "pinecone", "weaviate", "qdrant"},
-                method_patterns=[
-                    re.compile(r".*search.*"),
-                    re.compile(r".*similarity.*"),
-                    re.compile(r".*embed.*"),
-                    re.compile(r".*index.*"),
-                ],
-                import_patterns=["faiss", "pinecone", "weaviate", "qdrant", "chromadb"],
-            ),
+        """Initialize classifier with comprehensive pattern sets."""
+        # Multi-layered pattern matching with confidence weights
+        self.role_patterns = self._initialize_role_patterns()
+        self.capability_patterns = self._initialize_capability_patterns()
+        self.complexity_indicators = self._initialize_complexity_indicators()
+        self.risk_indicators = self._initialize_risk_indicators()
+
+        # Context-specific pattern weights
+        self.context_weights = {
+            AnalysisContext.FILE_NAME: 0.8,
+            AnalysisContext.CLASS_NAME: 0.9,
+            AnalysisContext.FUNCTION_NAME: 0.7,
+            AnalysisContext.MODULE_DOCSTRING: 0.6,
+            AnalysisContext.IMPORT_STATEMENTS: 0.5,
+            AnalysisContext.INHERITANCE: 0.8,
+            AnalysisContext.DECORATORS: 0.9,
+            AnalysisContext.COMMENTS: 0.4,
+            AnalysisContext.CODE_STRUCTURE: 0.6,
         }
-        
-    def _build_pattern_matchers(self) -> Dict[CodePattern, SemanticSignature]:
-        """Build matchers for design patterns"""
-        return {
-            CodePattern.SINGLETON: SemanticSignature(
-                primary_keywords={"instance", "singleton"},
-                method_patterns=[
-                    re.compile(r"get_instance"),
-                    re.compile(r"__new__"),
-                ],
-            ),
-            
-            CodePattern.FACTORY: SemanticSignature(
-                primary_keywords={"create", "build", "factory", "make"},
-                method_patterns=[
-                    re.compile(r"^create_.*"),
-                    re.compile(r"^build_.*"),
-                    re.compile(r"^make_.*"),
-                ],
-            ),
-            
-            CodePattern.OBSERVER: SemanticSignature(
-                primary_keywords={"observe", "notify", "subscribe", "listener"},
-                method_patterns=[
-                    re.compile(r"attach.*"),
-                    re.compile(r"detach.*"),
-                    re.compile(r"notify.*"),
-                ],
-            ),
-            
-            CodePattern.REPOSITORY: SemanticSignature(
-                primary_keywords={"repository", "dao", "store"},
-                method_patterns=[
-                    re.compile(r"^find.*"),
-                    re.compile(r"^save.*"),
-                    re.compile(r"^delete.*"),
-                ],
-            ),
-            
-            CodePattern.PIPELINE: SemanticSignature(
-                primary_keywords={"pipeline", "flow", "chain", "sequence"},
-                method_patterns=[
-                    re.compile(r".*pipeline.*"),
-                    re.compile(r".*flow.*"),
-                    re.compile(r".*step.*"),
-                ],
-            ),
-            
-            CodePattern.RAG_PATTERN: SemanticSignature(
-                primary_keywords={"retrieval", "augmented", "generation", "rag"},
-                secondary_keywords={"retrieve", "generate", "context", "document"},
-                import_patterns=["langchain", "llama_index"],
-            ),
-        }
-        
-    def classify(
+
+    def _initialize_role_patterns(
         self,
-        name: str,
-        content: str = "",
-        imports: List[str] = None,
-        base_classes: List[str] = None,
-        decorators: List[str] = None,
-        methods: List[str] = None,
-    ) -> Tuple[Optional[str], float, List[CodePattern]]:
-        """
-        Classify a code element and return role, confidence, and patterns
-        
-        Returns:
-            Tuple of (role, confidence, patterns)
-        """
-        imports = imports or []
-        base_classes = base_classes or []
-        decorators = decorators or []
-        methods = methods or []
-        
-        # Score each signature
-        scores = {}
-        
-        for role, signature in self.signatures.items():
-            score = 0.0
-            matches = 0
-            
-            # Check primary keywords (high weight)
-            for keyword in signature.primary_keywords:
-                if keyword in name.lower() or keyword in content.lower():
-                    score += 0.3
-                    matches += 1
-                    
-            # Check secondary keywords (medium weight)
-            for keyword in signature.secondary_keywords:
-                if keyword in name.lower() or keyword in content.lower():
-                    score += 0.15
-                    matches += 1
-                    
-            # Check method patterns
-            for pattern in signature.method_patterns:
-                for method in methods:
-                    if pattern.match(method):
-                        score += 0.2
-                        matches += 1
-                        break
-                        
-            # Check imports
-            for import_pattern in signature.import_patterns:
-                for imp in imports:
-                    if import_pattern in imp:
-                        score += 0.25
-                        matches += 1
-                        break
-                        
-            # Check base classes
-            for base in signature.base_classes:
-                if base in base_classes:
-                    score += 0.35
-                    matches += 1
-                    
-            # Check decorators
-            for decorator in signature.decorators:
-                if decorator in decorators:
-                    score += 0.3
-                    matches += 1
-                    
-            # Normalize score
-            if matches > 0:
-                scores[role] = min(score, 1.0)
-                
-        # Find best match
-        if scores:
-            best_role = max(scores, key=scores.get)
-            confidence = scores[best_role]
-            
-            # Check if confidence meets threshold
-            if confidence >= self.signatures[best_role].min_confidence:
-                # Also detect patterns
-                patterns = self._detect_patterns(
-                    name, content, imports, base_classes, methods
+    ) -> Dict[SemanticRole, Dict[AnalysisContext, List[Tuple[Pattern, float]]]]:
+        """Initialize comprehensive role-based pattern matching."""
+
+        def compile_patterns(patterns: List[Tuple[str, float]]) -> List[Tuple[Pattern, float]]:
+            return [(re.compile(pattern, re.IGNORECASE), weight) for pattern, weight in patterns]
+
+        return {
+            SemanticRole.ORCHESTRATOR: {
+                AnalysisContext.FILE_NAME: compile_patterns(
+                    [
+                        (r"orchestrat", 0.9),
+                        (r"coordinat", 0.8),
+                        (r"manage", 0.7),
+                        (r"control", 0.8),
+                        (r"supervisor", 0.8),
+                        (r"director", 0.7),
+                        (r"commander", 0.8),
+                    ]
+                ),
+                AnalysisContext.CLASS_NAME: compile_patterns(
+                    [
+                        (r".*Orchestrator$", 0.95),
+                        (r".*Manager$", 0.8),
+                        (r".*Controller$", 0.7),
+                        (r".*Coordinator$", 0.9),
+                        (r".*Supervisor$", 0.8),
+                    ]
+                ),
+                AnalysisContext.CODE_STRUCTURE: compile_patterns(
+                    [
+                        (r"def\s+orchestrate", 0.8),
+                        (r"def\s+coordinate", 0.7),
+                        (r"def\s+manage", 0.6),
+                        (r"workflow|pipeline", 0.6),
+                    ]
+                ),
+            },
+            SemanticRole.PROCESSOR: {
+                AnalysisContext.FILE_NAME: compile_patterns(
+                    [
+                        (r"process", 0.9),
+                        (r"transform", 0.8),
+                        (r"convert", 0.8),
+                        (r"parse", 0.7),
+                        (r"encode", 0.7),
+                        (r"decode", 0.7),
+                        (r"filter", 0.6),
+                        (r"mapper", 0.7),
+                    ]
+                ),
+                AnalysisContext.CLASS_NAME: compile_patterns(
+                    [
+                        (r".*Processor$", 0.95),
+                        (r".*Transformer$", 0.9),
+                        (r".*Converter$", 0.9),
+                        (r".*Parser$", 0.8),
+                        (r".*Filter$", 0.7),
+                        (r".*Mapper$", 0.8),
+                    ]
+                ),
+                AnalysisContext.CODE_STRUCTURE: compile_patterns(
+                    [
+                        (r"def\s+process", 0.8),
+                        (r"def\s+transform", 0.8),
+                        (r"def\s+convert", 0.7),
+                        (r"def\s+parse", 0.7),
+                    ]
+                ),
+            },
+            SemanticRole.GATEWAY: {
+                AnalysisContext.FILE_NAME: compile_patterns(
+                    [
+                        (r"gateway", 0.9),
+                        (r"api", 0.8),
+                        (r"endpoint", 0.8),
+                        (r"route", 0.7),
+                        (r"handler", 0.7),
+                        (r"controller", 0.6),
+                        (r"interface", 0.6),
+                    ]
+                ),
+                AnalysisContext.DECORATORS: compile_patterns(
+                    [
+                        (r"@app\.", 0.9),
+                        (r"@router\.", 0.9),
+                        (r"@api\.", 0.8),
+                        (r"@route", 0.8),
+                        (r"@endpoint", 0.8),
+                    ]
+                ),
+                AnalysisContext.IMPORT_STATEMENTS: compile_patterns(
+                    [(r"fastapi", 0.8), (r"flask", 0.8), (r"django", 0.7), (r"APIRouter", 0.9)]
+                ),
+            },
+            SemanticRole.AGENT: {
+                AnalysisContext.FILE_NAME: compile_patterns(
+                    [
+                        (r"agent", 0.9),
+                        (r"swarm", 0.9),
+                        (r"autonomous", 0.8),
+                        (r"intelligent", 0.7),
+                        (r"bot", 0.6),
+                        (r"ai", 0.7),
+                    ]
+                ),
+                AnalysisContext.CLASS_NAME: compile_patterns(
+                    [(r".*Agent$", 0.95), (r".*Swarm$", 0.9), (r".*Bot$", 0.7), (r"AI.*", 0.8)]
+                ),
+                AnalysisContext.IMPORT_STATEMENTS: compile_patterns(
+                    [(r"langchain", 0.8), (r"openai", 0.7), (r"anthropic", 0.7), (r"swarms", 0.9)]
+                ),
+            },
+            SemanticRole.MODEL: {
+                AnalysisContext.FILE_NAME: compile_patterns(
+                    [
+                        (r"model", 0.9),
+                        (r"neural", 0.8),
+                        (r"ml", 0.7),
+                        (r"predict", 0.7),
+                        (r"inference", 0.8),
+                        (r"train", 0.6),
+                    ]
+                ),
+                AnalysisContext.CLASS_NAME: compile_patterns(
+                    [(r".*Model$", 0.9), (r".*Network$", 0.7), (r".*Predictor$", 0.8)]
+                ),
+                AnalysisContext.IMPORT_STATEMENTS: compile_patterns(
+                    [
+                        (r"torch", 0.8),
+                        (r"tensorflow", 0.8),
+                        (r"sklearn", 0.7),
+                        (r"transformers", 0.8),
+                    ]
+                ),
+            },
+            SemanticRole.REPOSITORY: {
+                AnalysisContext.FILE_NAME: compile_patterns(
+                    [
+                        (r"repository", 0.9),
+                        (r"repo", 0.8),
+                        (r"storage", 0.7),
+                        (r"persist", 0.7),
+                        (r"database", 0.8),
+                        (r"db", 0.7),
+                        (r"dao", 0.8),
+                    ]
+                ),
+                AnalysisContext.CLASS_NAME: compile_patterns(
+                    [
+                        (r".*Repository$", 0.95),
+                        (r".*Storage$", 0.8),
+                        (r".*DAO$", 0.9),
+                        (r".*Store$", 0.7),
+                    ]
+                ),
+                AnalysisContext.IMPORT_STATEMENTS: compile_patterns(
+                    [(r"sqlalchemy", 0.8), (r"pymongo", 0.8), (r"redis", 0.6), (r"sqlite", 0.7)]
+                ),
+            },
+            SemanticRole.SERVICE: {
+                AnalysisContext.FILE_NAME: compile_patterns(
+                    [(r"service", 0.9), (r"business", 0.6), (r"logic", 0.5), (r"operation", 0.6)]
+                ),
+                AnalysisContext.CLASS_NAME: compile_patterns(
+                    [(r".*Service$", 0.95), (r".*Logic$", 0.7), (r".*Operations$", 0.7)]
+                ),
+            },
+            SemanticRole.UTILITY: {
+                AnalysisContext.FILE_NAME: compile_patterns(
+                    [
+                        (r"util", 0.9),
+                        (r"helper", 0.8),
+                        (r"tool", 0.7),
+                        (r"common", 0.6),
+                        (r"shared", 0.6),
+                    ]
+                ),
+                AnalysisContext.CLASS_NAME: compile_patterns(
+                    [(r".*Utils?$", 0.9), (r".*Helper$", 0.9), (r".*Tools?$", 0.8)]
+                ),
+            },
+            SemanticRole.CONFIG: {
+                AnalysisContext.FILE_NAME: compile_patterns(
+                    [
+                        (r"config", 0.9),
+                        (r"settings", 0.8),
+                        (r"environment", 0.6),
+                        (r"\.json$", 0.7),
+                        (r"\.yaml$", 0.8),
+                        (r"\.yml$", 0.8),
+                        (r"\.toml$", 0.7),
+                    ]
                 )
-                return best_role, confidence, patterns
-                
-        # No confident match, try to detect patterns anyway
-        patterns = self._detect_patterns(
-            name, content, imports, base_classes, methods
-        )
-        
-        # Default to helper/utility
-        return "helper", 0.5, patterns
-        
-    def _detect_patterns(
-        self,
-        name: str,
-        content: str,
-        imports: List[str],
-        base_classes: List[str],
-        methods: List[str],
-    ) -> List[CodePattern]:
-        """Detect design patterns in code"""
-        detected = []
-        
-        for pattern, signature in self.pattern_matchers.items():
-            score = 0.0
-            
-            # Similar scoring logic as classify
-            for keyword in signature.primary_keywords:
-                if keyword in name.lower() or keyword in content.lower():
-                    score += 0.4
-                    
-            for method_pattern in signature.method_patterns:
-                for method in methods:
-                    if method_pattern.match(method):
-                        score += 0.3
-                        break
-                        
-            for import_pattern in signature.import_patterns or []:
-                for imp in imports:
-                    if import_pattern in imp:
-                        score += 0.3
-                        break
-                        
-            if score >= 0.5:  # Lower threshold for pattern detection
-                detected.append(pattern)
-                
-        return detected
-        
-    def learn_pattern(
-        self, role: str, examples: List[Dict[str, Any]]
-    ) -> None:
-        """Learn new patterns from examples"""
-        # Aggregate common features from examples
-        all_keywords = []
-        all_methods = []
-        all_imports = []
-        all_bases = []
-        
-        for example in examples:
-            # Extract features from example
-            name = example.get("name", "")
-            content = example.get("content", "")
-            
-            # Extract keywords from name and content
-            words = re.findall(r"\w+", (name + " " + content).lower())
-            all_keywords.extend(words)
-            
-            # Collect other features
-            all_methods.extend(example.get("methods", []))
-            all_imports.extend(example.get("imports", []))
-            all_bases.extend(example.get("base_classes", []))
-            
-        # Find most common features
-        from collections import Counter
-        
-        keyword_counts = Counter(all_keywords)
-        method_counts = Counter(all_methods)
-        import_counts = Counter(all_imports)
-        base_counts = Counter(all_bases)
-        
-        # Create learned signature
-        signature = SemanticSignature(
-            primary_keywords=set(
-                k for k, v in keyword_counts.most_common(5) if v >= len(examples) * 0.5
+            },
+            SemanticRole.TEST: {
+                AnalysisContext.FILE_NAME: compile_patterns(
+                    [(r"test", 0.9), (r"spec", 0.7), (r"_test\.py$", 0.95), (r"test_.*\.py$", 0.95)]
+                ),
+                AnalysisContext.IMPORT_STATEMENTS: compile_patterns(
+                    [(r"pytest", 0.9), (r"unittest", 0.8), (r"mock", 0.7)]
+                ),
+            },
+        }
+
+    def _initialize_capability_patterns(self) -> Dict[str, List[Tuple[Pattern, float]]]:
+        """Initialize capability detection patterns."""
+
+        def compile_patterns(patterns: List[Tuple[str, float]]) -> List[Tuple[Pattern, float]]:
+            return [(re.compile(pattern, re.IGNORECASE), weight) for pattern, weight in patterns]
+
+        return {
+            "async": compile_patterns(
+                [(r"async\s+def", 0.9), (r"await\s+", 0.8), (r"asyncio", 0.7), (r"aiohttp", 0.7)]
             ),
-            secondary_keywords=set(
-                k for k, v in keyword_counts.most_common(10)[5:] if v >= len(examples) * 0.3
+            "api": compile_patterns(
+                [
+                    (r"@app\.", 0.9),
+                    (r"@router\.", 0.9),
+                    (r"FastAPI", 0.8),
+                    (r"APIRouter", 0.8),
+                    (r"@api_route", 0.8),
+                ]
             ),
-            import_patterns=[
-                imp for imp, count in import_counts.most_common(3)
-                if count >= len(examples) * 0.4
-            ],
-            base_classes=[
-                base for base, count in base_counts.most_common(3)
-                if count >= len(examples) * 0.4
-            ],
-        )
-        
-        # Store learned pattern
-        self.learned_patterns[role] = signature
-        
-        # Merge with existing signatures
-        if role in self.signatures:
-            existing = self.signatures[role]
-            existing.primary_keywords.update(signature.primary_keywords)
-            existing.secondary_keywords.update(signature.secondary_keywords)
-            existing.import_patterns.extend(signature.import_patterns)
-            existing.base_classes.extend(signature.base_classes)
+            "database": compile_patterns(
+                [
+                    (r"database", 0.8),
+                    (r"sql", 0.7),
+                    (r"query", 0.6),
+                    (r"transaction", 0.7),
+                    (r"session", 0.5),
+                ]
+            ),
+            "ai": compile_patterns(
+                [
+                    (r"model", 0.6),
+                    (r"agent", 0.8),
+                    (r"neural", 0.8),
+                    (r"ml", 0.7),
+                    (r"ai", 0.7),
+                    (r"openai", 0.8),
+                    (r"anthropic", 0.8),
+                ]
+            ),
+            "caching": compile_patterns(
+                [(r"cache", 0.8), (r"redis", 0.9), (r"memcache", 0.9), (r"@lru_cache", 0.8)]
+            ),
+            "validation": compile_patterns(
+                [(r"valid", 0.6), (r"schema", 0.7), (r"pydantic", 0.9), (r"BaseModel", 0.8)]
+            ),
+            "logging": compile_patterns([(r"log", 0.7), (r"logger", 0.8), (r"logging", 0.8)]),
+            "config": compile_patterns(
+                [(r"config", 0.8), (r"settings", 0.7), (r"environment", 0.6)]
+            ),
+            "testing": compile_patterns(
+                [(r"test", 0.8), (r"mock", 0.8), (r"assert", 0.6), (r"pytest", 0.9)]
+            ),
+            "security": compile_patterns(
+                [
+                    (r"auth", 0.8),
+                    (r"security", 0.8),
+                    (r"token", 0.7),
+                    (r"encrypt", 0.8),
+                    (r"decrypt", 0.8),
+                    (r"hash", 0.6),
+                ]
+            ),
+            "monitoring": compile_patterns(
+                [(r"monitor", 0.8), (r"metric", 0.7), (r"telemetry", 0.8), (r"observability", 0.8)]
+            ),
+            "websocket": compile_patterns(
+                [(r"websocket", 0.9), (r"ws", 0.6), (r"socket\.io", 0.8)]
+            ),
+            "streaming": compile_patterns([(r"stream", 0.7), (r"chunk", 0.6), (r"yield", 0.5)]),
+        }
+
+    def _initialize_complexity_indicators(self) -> Dict[str, Tuple[Pattern, float]]:
+        """Initialize complexity assessment patterns."""
+        return {
+            "high_nesting": (re.compile(r"(\s{12,})", re.MULTILINE), 0.7),
+            "many_conditionals": (re.compile(r"\bif\b.*\belse\b.*\belif\b", re.IGNORECASE), 0.6),
+            "exception_handling": (re.compile(r"try:.*except.*:", re.DOTALL), 0.5),
+            "recursion": (re.compile(r"def\s+(\w+).*\1\s*\(", re.MULTILINE), 0.8),
+            "metaclasses": (re.compile(r"metaclass=", re.IGNORECASE), 0.9),
+            "decorators": (re.compile(r"@\w+", re.MULTILINE), 0.4),
+            "lambda_functions": (re.compile(r"lambda\s+", re.IGNORECASE), 0.3),
+            "comprehensions": (re.compile(r"\[.*for.*in.*\]", re.MULTILINE), 0.3),
+        }
+
+    def _initialize_risk_indicators(self) -> Dict[str, Tuple[Pattern, float]]:
+        """Initialize risk assessment patterns."""
+        return {
+            "global_state": (re.compile(r"global\s+\w+", re.IGNORECASE), 0.7),
+            "exec_eval": (re.compile(r"\b(exec|eval)\s*\(", re.IGNORECASE), 0.9),
+            "dynamic_imports": (re.compile(r"__import__|importlib", re.IGNORECASE), 0.6),
+            "file_operations": (re.compile(r"open\s*\(|file\s*=", re.IGNORECASE), 0.4),
+            "network_calls": (re.compile(r"requests\.|urllib|http", re.IGNORECASE), 0.5),
+            "subprocess": (re.compile(r"subprocess|os\.system|os\.popen", re.IGNORECASE), 0.8),
+            "database_writes": (re.compile(r"INSERT|UPDATE|DELETE|DROP", re.IGNORECASE), 0.6),
+            "environment_vars": (re.compile(r"os\.environ|getenv", re.IGNORECASE), 0.3),
+        }
+
+    def classify_component(
+        self, component_name: str, file_path: str, content: str, ast_node: Optional[ast.AST] = None
+    ) -> ClassificationResult:
+        """Classify a component with comprehensive analysis."""
+
+        # Extract analysis contexts
+        contexts = self._extract_contexts(component_name, file_path, content, ast_node)
+
+        # Pattern matching across all contexts
+        all_matches = []
+        role_scores = {}
+
+        for role in SemanticRole:
+            if role in self.role_patterns:
+                role_matches = self._match_role_patterns(role, contexts)
+                all_matches.extend(role_matches)
+
+                # Calculate weighted score for this role
+                role_score = sum(
+                    match.confidence * self.context_weights[match.context] for match in role_matches
+                )
+                role_scores[role] = role_score
+
+        # Determine best role
+        if not role_scores:
+            best_role = SemanticRole.UNKNOWN
+            confidence = 0.1
+            primary_matches = []
+            reasoning = ["No pattern matches found"]
         else:
-            self.signatures[role] = signature
-            
-        logger.info(f"Learned new pattern for role: {role}")
-        
-    def get_role_confidence_threshold(self, role: str) -> float:
-        """Get the confidence threshold for a role"""
-        if role in self.signatures:
-            return self.signatures[role].min_confidence
-        return 0.7
-        
-    def update_confidence_threshold(
-        self, role: str, new_threshold: float
-    ) -> None:
-        """Update confidence threshold for a role"""
-        if role in self.signatures:
-            self.signatures[role].min_confidence = new_threshold
-            logger.info(f"Updated confidence threshold for {role} to {new_threshold}")
+            best_role = max(role_scores, key=role_scores.get)
+            raw_confidence = role_scores[best_role]
+
+            # Normalize confidence (assuming max possible score is around 5.0)
+            confidence = min(0.95, raw_confidence / 5.0)
+
+            # Separate primary and secondary matches
+            role_matches = [
+                m for m in all_matches if self._get_role_for_pattern(m.pattern) == best_role
+            ]
+            primary_matches = sorted(role_matches, key=lambda m: m.confidence, reverse=True)[:3]
+
+            reasoning = self._generate_reasoning(best_role, primary_matches, contexts)
+
+        # Get secondary matches from other roles
+        secondary_matches = [
+            m for m in all_matches if self._get_role_for_pattern(m.pattern) != best_role
+        ]
+        secondary_matches = sorted(secondary_matches, key=lambda m: m.confidence, reverse=True)[:3]
+
+        return ClassificationResult(
+            semantic_role=best_role,
+            confidence=confidence,
+            primary_matches=primary_matches,
+            secondary_matches=secondary_matches,
+            reasoning=reasoning,
+        )
+
+    def _extract_contexts(
+        self, component_name: str, file_path: str, content: str, ast_node: Optional[ast.AST] = None
+    ) -> Dict[AnalysisContext, str]:
+        """Extract all analysis contexts from the component."""
+
+        contexts = {
+            AnalysisContext.FILE_NAME: Path(file_path).name,
+            AnalysisContext.CLASS_NAME: (
+                component_name if ast_node and isinstance(ast_node, ast.ClassDef) else ""
+            ),
+            AnalysisContext.FUNCTION_NAME: (
+                component_name if ast_node and isinstance(ast_node, ast.FunctionDef) else ""
+            ),
+            AnalysisContext.COMMENTS: self._extract_comments(content),
+            AnalysisContext.CODE_STRUCTURE: content,
+        }
+
+        # Extract module docstring
+        try:
+            tree = ast.parse(content)
+            if (
+                tree.body
+                and isinstance(tree.body[0], ast.Expr)
+                and isinstance(tree.body[0].value, ast.Constant)
+                and isinstance(tree.body[0].value.value, str)
+            ):
+                contexts[AnalysisContext.MODULE_DOCSTRING] = tree.body[0].value.value
+        except:
+            contexts[AnalysisContext.MODULE_DOCSTRING] = ""
+
+        # Extract import statements
+        contexts[AnalysisContext.IMPORT_STATEMENTS] = self._extract_imports(content)
+
+        # Extract inheritance info
+        if ast_node and isinstance(ast_node, ast.ClassDef):
+            inheritance = [
+                base.id if isinstance(base, ast.Name) else str(base) for base in ast_node.bases
+            ]
+            contexts[AnalysisContext.INHERITANCE] = " ".join(inheritance)
+        else:
+            contexts[AnalysisContext.INHERITANCE] = ""
+
+        # Extract decorators
+        contexts[AnalysisContext.DECORATORS] = self._extract_decorators(content)
+
+        return contexts
+
+    def _extract_comments(self, content: str) -> str:
+        """Extract all comments from content."""
+        comment_lines = []
+        for line in content.splitlines():
+            stripped = line.strip()
+            if stripped.startswith("#"):
+                comment_lines.append(stripped[1:].strip())
+        return " ".join(comment_lines)
+
+    def _extract_imports(self, content: str) -> str:
+        """Extract import statements."""
+        import_lines = []
+        for line in content.splitlines():
+            stripped = line.strip()
+            if stripped.startswith(("import ", "from ")):
+                import_lines.append(stripped)
+        return " ".join(import_lines)
+
+    def _extract_decorators(self, content: str) -> str:
+        """Extract decorator usage."""
+        decorator_pattern = re.compile(r"@[\w.]+", re.MULTILINE)
+        decorators = decorator_pattern.findall(content)
+        return " ".join(decorators)
+
+    def _match_role_patterns(
+        self, role: SemanticRole, contexts: Dict[AnalysisContext, str]
+    ) -> List[PatternMatch]:
+        """Match patterns for a specific role across all contexts."""
+        matches = []
+
+        if role not in self.role_patterns:
+            return matches
+
+        role_pattern_set = self.role_patterns[role]
+
+        for context, text in contexts.items():
+            if not text or context not in role_pattern_set:
+                continue
+
+            patterns = role_pattern_set[context]
+            for pattern, weight in patterns:
+                match_obj = pattern.search(text)
+                if match_obj:
+                    matches.append(
+                        PatternMatch(
+                            pattern=pattern.pattern,
+                            match_text=match_obj.group(0),
+                            confidence=weight,
+                            context=context,
+                        )
+                    )
+
+        return matches
+
+    def _get_role_for_pattern(self, pattern_str: str) -> SemanticRole:
+        """Determine which role a pattern belongs to."""
+        for role, context_patterns in self.role_patterns.items():
+            for context, patterns in context_patterns.items():
+                for pattern, _ in patterns:
+                    if pattern.pattern == pattern_str:
+                        return role
+        return SemanticRole.UNKNOWN
+
+    def _generate_reasoning(
+        self, role: SemanticRole, matches: List[PatternMatch], contexts: Dict[AnalysisContext, str]
+    ) -> List[str]:
+        """Generate human-readable reasoning for classification."""
+        reasoning = []
+
+        if matches:
+            strongest_match = matches[0]
+            reasoning.append(
+                f"Strong {role.value} pattern '{strongest_match.match_text}' found in {strongest_match.context.value}"
+            )
+
+        # Add context-specific reasoning
+        if role == SemanticRole.ORCHESTRATOR and any(
+            "manage" in str(m.match_text).lower() for m in matches
+        ):
+            reasoning.append("Contains management/coordination patterns typical of orchestrators")
+
+        if role == SemanticRole.AGENT and contexts[AnalysisContext.IMPORT_STATEMENTS]:
+            ai_imports = ["openai", "anthropic", "langchain", "swarms"]
+            found_imports = [
+                imp
+                for imp in ai_imports
+                if imp in contexts[AnalysisContext.IMPORT_STATEMENTS].lower()
+            ]
+            if found_imports:
+                reasoning.append(f"AI/ML imports detected: {', '.join(found_imports)}")
+
+        if role == SemanticRole.GATEWAY and contexts[AnalysisContext.DECORATORS]:
+            api_decorators = ["@app.", "@router.", "@route"]
+            found_decorators = [
+                dec for dec in api_decorators if dec in contexts[AnalysisContext.DECORATORS]
+            ]
+            if found_decorators:
+                reasoning.append(f"API decorators found: {', '.join(found_decorators)}")
+
+        return reasoning or [f"Classified as {role.value} based on pattern analysis"]
+
+    def identify_capabilities(self, content: str) -> Dict[str, float]:
+        """Identify component capabilities with confidence scores."""
+        capabilities = {}
+
+        for capability, patterns in self.capability_patterns.items():
+            max_confidence = 0.0
+
+            for pattern, weight in patterns:
+                if pattern.search(content):
+                    max_confidence = max(max_confidence, weight)
+
+            if max_confidence > 0.0:
+                capabilities[capability] = max_confidence
+
+        return capabilities
+
+    def assess_complexity(
+        self, content: str, ast_node: Optional[ast.AST] = None
+    ) -> Tuple[Complexity, float, List[str]]:
+        """Assess component complexity with detailed analysis."""
+        indicators = []
+        total_score = 0.0
+
+        # Pattern-based complexity indicators
+        for indicator, (pattern, weight) in self.complexity_indicators.items():
+            matches = pattern.findall(content)
+            if matches:
+                count = len(matches)
+                indicator_score = weight * min(count / 5.0, 1.0)  # Normalize to max 1.0
+                total_score += indicator_score
+                indicators.append(f"{indicator}: {count} occurrences")
+
+        # AST-based complexity (if available)
+        if ast_node:
+            ast_complexity = self._calculate_ast_complexity(ast_node)
+            total_score += ast_complexity
+            if ast_complexity > 0.5:
+                indicators.append(f"High AST complexity: {ast_complexity:.2f}")
+
+        # Lines of code factor
+        loc = len([line for line in content.splitlines() if line.strip()])
+        if loc > 100:
+            loc_factor = min((loc - 100) / 500.0, 1.0)
+            total_score += loc_factor
+            indicators.append(f"Large codebase: {loc} lines")
+
+        # Determine complexity level
+        if total_score < 0.5:
+            complexity = Complexity.TRIVIAL
+        elif total_score < 1.0:
+            complexity = Complexity.LOW
+        elif total_score < 2.0:
+            complexity = Complexity.MODERATE
+        elif total_score < 3.5:
+            complexity = Complexity.HIGH
+        else:
+            complexity = Complexity.CRITICAL
+
+        return complexity, total_score, indicators
+
+    def _calculate_ast_complexity(self, node: ast.AST) -> float:
+        """Calculate AST-based complexity score."""
+        complexity = 0.0
+
+        for child in ast.walk(node):
+            if isinstance(child, (ast.If, ast.While, ast.For, ast.AsyncFor)):
+                complexity += 0.1
+            elif isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                complexity += 0.05
+            elif isinstance(child, ast.ClassDef) or isinstance(child, ast.ExceptHandler):
+                complexity += 0.1
+            elif isinstance(child, ast.BoolOp):
+                complexity += 0.05 * (len(child.values) - 1)
+
+        return complexity
+
+    def assess_risk(
+        self, content: str, contexts: Dict[AnalysisContext, str]
+    ) -> Tuple[ModificationRisk, float, List[str]]:
+        """Assess modification risk with detailed analysis."""
+        risk_factors = []
+        total_risk = 0.0
+
+        # Pattern-based risk indicators
+        for indicator, (pattern, weight) in self.risk_indicators.items():
+            if pattern.search(content):
+                total_risk += weight
+                risk_factors.append(f"Contains {indicator}")
+
+        # Context-based risk factors
+        if "core" in contexts[AnalysisContext.FILE_NAME].lower():
+            total_risk += 0.5
+            risk_factors.append("Core system component")
+
+        if "main" in contexts[AnalysisContext.FILE_NAME].lower():
+            total_risk += 0.3
+            risk_factors.append("Main module")
+
+        # Import-based risk
+        risky_imports = ["os", "sys", "subprocess", "pickle", "__import__"]
+        imports_text = contexts.get(AnalysisContext.IMPORT_STATEMENTS, "").lower()
+        for risky_import in risky_imports:
+            if risky_import in imports_text:
+                total_risk += 0.2
+                risk_factors.append(f"Uses risky import: {risky_import}")
+
+        # Determine risk level
+        if total_risk < 0.5:
+            risk = ModificationRisk.SAFE
+        elif total_risk < 1.0:
+            risk = ModificationRisk.MODERATE
+        elif total_risk < 2.0:
+            risk = ModificationRisk.HIGH
+        else:
+            risk = ModificationRisk.CRITICAL
+
+        return risk, total_risk, risk_factors
+
+    def generate_priority(
+        self,
+        semantic_role: SemanticRole,
+        complexity: Complexity,
+        risk: ModificationRisk,
+        capabilities: Dict[str, float],
+    ) -> Tuple[Priority, List[str]]:
+        """Generate priority level with reasoning."""
+        priority_score = 0.0
+        reasoning = []
+
+        # Role-based priority
+        high_priority_roles = [SemanticRole.ORCHESTRATOR, SemanticRole.GATEWAY, SemanticRole.AGENT]
+        if semantic_role in high_priority_roles:
+            priority_score += 1.0
+            reasoning.append(f"{semantic_role.value} is high-priority role")
+
+        # Complexity factor
+        if complexity.value >= Complexity.HIGH.value:
+            priority_score += 0.5
+            reasoning.append("High complexity requires attention")
+
+        # Risk factor
+        if risk.value >= ModificationRisk.HIGH.value:
+            priority_score += 0.7
+            reasoning.append("High modification risk")
+
+        # Capability-based priority
+        critical_capabilities = ["security", "database", "api"]
+        for cap in critical_capabilities:
+            if cap in capabilities and capabilities[cap] > 0.7:
+                priority_score += 0.3
+                reasoning.append(f"Critical capability: {cap}")
+
+        # Determine priority level
+        if priority_score < 0.5:
+            priority = Priority.LOW
+        elif priority_score < 1.0:
+            priority = Priority.MEDIUM
+        elif priority_score < 1.8:
+            priority = Priority.HIGH
+        else:
+            priority = Priority.CRITICAL
+
+        return priority, reasoning
+
+    def enhanced_classify(
+        self, component_name: str, file_path: str, content: str, ast_node: Optional[ast.AST] = None
+    ) -> Dict[str, Any]:
+        """Perform comprehensive classification with all metrics."""
+
+        # Extract contexts
+        contexts = self._extract_contexts(component_name, file_path, content, ast_node)
+
+        # Primary classification
+        classification = self.classify_component(component_name, file_path, content, ast_node)
+
+        # Capability identification
+        capabilities = self.identify_capabilities(content)
+
+        # Complexity assessment
+        complexity, complexity_score, complexity_indicators = self.assess_complexity(
+            content, ast_node
+        )
+
+        # Risk assessment
+        risk, risk_score, risk_factors = self.assess_risk(content, contexts)
+
+        # Priority generation
+        priority, priority_reasoning = self.generate_priority(
+            classification.semantic_role, complexity, risk, capabilities
+        )
+
+        return {
+            "classification": classification.to_dict(),
+            "capabilities": capabilities,
+            "complexity": {
+                "level": complexity.value,
+                "score": complexity_score,
+                "indicators": complexity_indicators,
+            },
+            "risk": {"level": risk.value, "score": risk_score, "factors": risk_factors},
+            "priority": {"level": priority.value, "reasoning": priority_reasoning},
+            "contexts": {ctx.value: text for ctx, text in contexts.items()},
+            "overall_confidence": classification.confidence,
+        }
 
 
-# Global classifier instance
-_classifier = None
+# Utility functions for external use
+def quick_classify(component_name: str, file_path: str, content: str) -> SemanticRole:
+    """Quick classification for simple use cases."""
+    classifier = SemanticClassifier()
+    result = classifier.classify_component(component_name, file_path, content)
+    return result.semantic_role
 
 
-def get_semantic_classifier() -> SemanticClassifier:
-    """Get or create the global semantic classifier"""
-    global _classifier
-    if _classifier is None:
-        _classifier = SemanticClassifier()
-    return _classifier
+def detailed_analysis(
+    component_name: str, file_path: str, content: str, ast_node: Optional[ast.AST] = None
+) -> Dict[str, Any]:
+    """Comprehensive analysis for detailed insights."""
+    classifier = SemanticClassifier()
+    return classifier.enhanced_classify(component_name, file_path, content, ast_node)
+
+
+if __name__ == "__main__":
+    # Example usage
+    sample_code = '''
+    import asyncio
+    from fastapi import FastAPI, APIRouter
+
+    class UserOrchestrator:
+        """Orchestrates user management operations."""
+
+        def __init__(self):
+            self.app = FastAPI()
+
+        async def coordinate_user_creation(self, user_data):
+            # Complex orchestration logic
+            result = await self.process_user_data(user_data)
+            return result
+    '''
+
+    result = detailed_analysis("UserOrchestrator", "user_orchestrator.py", sample_code)
+    print("Classification Result:")
+    print(f"Role: {result['classification']['semantic_role']}")
+    print(f"Confidence: {result['classification']['confidence']:.2f}")
+    print(f"Capabilities: {list(result['capabilities'].keys())}")
+    print(f"Complexity: {result['complexity']['level']}")
+    print(f"Risk: {result['risk']['level']}")
+    print(f"Priority: {result['priority']['level']}")

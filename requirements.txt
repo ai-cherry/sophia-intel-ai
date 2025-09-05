@@ -17,6 +17,9 @@ bleach==6.1.0
 coverage==7.6.2
 cryptography==44.0.1
 
+# Embeddings and Vector Search
+faiss-cpu==1.7.4
+
 # Web Framework
 fastapi==0.116.1
 httpx==0.27.0

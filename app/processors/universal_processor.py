@@ -14,6 +14,10 @@ Features:
 - Memory-efficient processing
 """
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 # Code processing
 import asyncio
 import io
@@ -1082,7 +1086,7 @@ if __name__ == "__main__":
             mode=ProcessingMode.STREAMING,
             extract_embeddings=True,
             enable_ocr=True,
-            progress_callback=lambda msg, progress: print(f"Progress: {progress:.1%} - {msg}"),
+            progress_callback=lambda msg, progress: logger.info(f"Progress: {progress:.1%} - {msg}"),
         )
 
         processor = UniversalFileProcessor(config)
@@ -1092,30 +1096,30 @@ if __name__ == "__main__":
 
         for file_path in test_files:
             if Path(file_path).exists():
-                print(f"\nProcessing {file_path}...")
+                logger.info(f"\nProcessing {file_path}...")
                 result = await processor.process_file(file_path)
 
-                print(f"Success: {result.success}")
-                print(f"File type: {result.file_type.value}")
-                print(f"Processing time: {result.processing_time:.2f}s")
-                print(f"Text chunks: {len(result.text_chunks)}")
-                print(f"Embeddings: {len(result.embeddings)}")
+                logger.info(f"Success: {result.success}")
+                logger.info(f"File type: {result.file_type.value}")
+                logger.info(f"Processing time: {result.processing_time:.2f}s")
+                logger.info(f"Text chunks: {len(result.text_chunks)}")
+                logger.info(f"Embeddings: {len(result.embeddings)}")
 
                 if result.error:
-                    print(f"Error: {result.error}")
+                    logger.error(f"Error: {result.error}")
 
                 if result.warnings:
-                    print(f"Warnings: {result.warnings}")
+                    logger.warning(f"Warnings: {result.warnings}")
 
         # Show supported file types
-        print("\nSupported file types:")
+        logger.info("\nSupported file types:")
         for file_type in processor.get_supported_file_types():
-            print(f"  - {file_type.value}")
+            logger.info(f"  - {file_type.value}")
 
         # Show processor info
-        print("\nProcessor information:")
+        logger.info("\nProcessor information:")
         for processor_name, supported_types in processor.get_processor_info().items():
-            print(f"  {processor_name}: {', '.join(supported_types)}")
+            logger.info(f"  {processor_name}: {', '.join(supported_types)}")
 
     # Run example
     asyncio.run(main())

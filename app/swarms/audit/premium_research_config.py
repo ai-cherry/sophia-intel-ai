@@ -408,26 +408,17 @@ RESEARCH_METHODOLOGIES = {
 # API Configuration with fallbacks
 API_CONFIGURATIONS = {
     "openrouter": {
-        "api_key": os.getenv(
-            "OPENROUTER_API_KEY",
-            "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",
-        ),
+        "api_key": os.getenv("OPENROUTER_API_KEY"),
         "base_url": "https://openrouter.ai/api/v1",
         "priority": 1,
     },
     "openai": {
-        "api_key": os.getenv(
-            "OPENAI_API_KEY",
-            "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",
-        ),
+        "api_key": os.getenv("OPENAI_API_KEY"),
         "base_url": "https://api.openai.com/v1",
         "priority": 2,
     },
     "anthropic": {
-        "api_key": os.getenv(
-            "ANTHROPIC_API_KEY",
-            "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",
-        ),
+        "api_key": os.getenv("ANTHROPIC_API_KEY"),
         "base_url": "https://api.anthropic.com",
         "priority": 3,
     },
@@ -439,21 +430,17 @@ API_CONFIGURATIONS = {
         "priority": 4,
     },
     "deepseek": {
-        "api_key": get_config().get("DEEPSEEK_API_KEY", "sk-c8a5f1725d7b4f96b29a3d041848cb74"),
+        "api_key": get_config().get("DEEPSEEK_API_KEY", os.getenv("DEEPSEEK_API_KEY")),
         "base_url": "https://api.deepseek.com",
         "priority": 5,
     },
     "groq": {
-        "api_key": os.getenv(
-            "GROQ_API_KEY", "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"
-        ),
+        "api_key": os.getenv("GROQ_API_KEY"),
         "base_url": "https://api.groq.com/openai/v1",
         "priority": 6,
     },
     "together": {
-        "api_key": os.getenv(
-            "TOGETHER_AI_API_KEY", "tgp_v1_HE_uluFh-fELZDmEP9xKZXuSBT4a8EHd6s9CmSe5WWo"
-        ),
+        "api_key": os.getenv("TOGETHER_AI_API_KEY"),
         "base_url": "https://api.together.xyz",
         "priority": 7,
     },

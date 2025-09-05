@@ -5,6 +5,7 @@ Provides text-to-speech capabilities using ElevenLabs API
 import base64
 import io
 import logging
+import os
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
@@ -54,8 +55,12 @@ class SophiaVoiceIntegration:
     Provides text-to-speech capabilities with multiple voice personas
     """
 
-    def __init__(self, api_key: str = "sk_0b68a8ac28119888145589965bf097211889379a3da2ad41"):
-        self.api_key = api_key
+    def __init__(self, api_key: str = None):
+        self.api_key = api_key or os.getenv("ELEVENLABS_API_KEY")
+        if not self.api_key:
+            raise ValueError(
+                "ElevenLabs API key not found. Set ELEVENLABS_API_KEY environment variable."
+            )
         self.base_url = "https://api.elevenlabs.io/v1"
         self.voices = self._initialize_voices()
         self.persona_voice_mapping = self._initialize_persona_mapping()

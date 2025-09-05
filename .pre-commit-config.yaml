@@ -8,7 +8,7 @@ default_language_version:
 repos:
   # General fixes
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
+    rev: v6.0.0
     hooks:
       - id: trailing-whitespace
         exclude: ^(.*\.md|.*\.mdx)$
@@ -32,7 +32,7 @@ repos:
 
   # Security - Enhanced Secret Detection
   - repo: https://github.com/Yelp/detect-secrets
-    rev: v1.4.0
+    rev: v1.5.0
     hooks:
       - id: detect-secrets
         args: [--baseline, .secrets.baseline]
@@ -40,13 +40,13 @@ repos:
 
   # Gitleaks - Advanced Secret Scanner
   - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.18.0
+    rev: v8.28.0
     hooks:
       - id: gitleaks
 
   # Bandit - Python Security Linter
   - repo: https://github.com/PyCQA/bandit
-    rev: 1.7.5
+    rev: 1.8.6
     hooks:
       - id: bandit
         args: ["-r", "app/", "--skip", "B101"]
@@ -54,14 +54,14 @@ repos:
 
   # Safety - Check Python dependencies for vulnerabilities
   - repo: https://github.com/Lucas-C/pre-commit-hooks-safety
-    rev: v1.3.2
+    rev: v1.4.2
     hooks:
       - id: python-safety-dependencies-check
         files: requirements.*\.txt$
 
   # Python formatting
   - repo: https://github.com/psf/black
-    rev: 23.12.1
+    rev: 25.1.0
     hooks:
       - id: black
         language_version: python3.11
@@ -69,21 +69,21 @@ repos:
 
   # Python imports
   - repo: https://github.com/PyCQA/isort
-    rev: 5.13.2
+    rev: 6.0.1
     hooks:
       - id: isort
         args: [--profile, black, --line-length, "100"]
 
   # Python linting
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.1.9
+    rev: v0.12.12
     hooks:
       - id: ruff
         args: [--fix, --exit-non-zero-on-fix]
 
   # Python type checking
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.8.0
+    rev: v1.17.1
     hooks:
       - id: mypy
         additional_dependencies:
@@ -104,7 +104,7 @@ repos:
 
   # YAML formatting
   - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v3.1.0
+    rev: v4.0.0-alpha.8
     hooks:
       - id: prettier
         types_or: [yaml, json, markdown]
@@ -112,14 +112,14 @@ repos:
 
   # Shell script checks
   - repo: https://github.com/shellcheck-py/shellcheck-py
-    rev: v0.9.0.6
+    rev: v0.11.0.1
     hooks:
       - id: shellcheck
         args: [--severity=warning]
 
   # Markdown linting
   - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.38.0
+    rev: v0.45.0
     hooks:
       - id: markdownlint
         args: [--fix]
@@ -127,7 +127,7 @@ repos:
 
   # SQL formatting
   - repo: https://github.com/sqlfluff/sqlfluff
-    rev: 3.0.0a1
+    rev: 3.4.2
     hooks:
       - id: sqlfluff-lint
         args: [--dialect, sqlite]
@@ -138,7 +138,7 @@ repos:
 
   # Dockerfile linting
   - repo: https://github.com/hadolint/hadolint
-    rev: v2.12.1-beta
+    rev: v2.13.1
     hooks:
       - id: hadolint-docker
         args: [--ignore, DL3008, --ignore, DL3009]
@@ -159,7 +159,7 @@ repos:
         language: system
         pass_filenames: false
         always_run: true
-        stages: [commit]
+        stages: [pre-commit]
         verbose: true
 
       - id: check-architecture
@@ -168,7 +168,7 @@ repos:
         language: system
         pass_filenames: false
         always_run: true
-        stages: [commit]
+        stages: [pre-commit]
         verbose: true
 
       - id: no-print-statements
@@ -184,7 +184,7 @@ repos:
         language: pygrep
         types: [python]
         exclude: ^(tests/|scripts/|docs/)
-        stages: [commit]
+        stages: [pre-commit]
 
       - id: requirements-sync
         name: Sync requirements
@@ -214,7 +214,7 @@ repos:
             .*-20[0-9]{2}-[01][0-9]-[0-3][0-9].*\.(md|json)$|
             .*20[0-9]{2}-[01][0-9]-[0-3][0-9].*\.(md|json)$
           )$
-        stages: [commit]
+        stages: [pre-commit]
 
 # Configuration for specific hooks
 exclude: |
@@ -240,4 +240,4 @@ exclude: |
   )$
 
 fail_fast: false
-default_stages: [commit, push]
+default_stages: [pre-commit, pre-push]

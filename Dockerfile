@@ -1,79 +1,71 @@
-# Multi-stage build for optimal size and security
+# Sophia + Artemis Multi-stage Dockerfile
+
+# Stage 1: Builder
 FROM python:3.11-slim as builder
 
+WORKDIR /build
+
 # Install build dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     g++ \
-    git \
+    make \
+    libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Set working directory
-WORKDIR /app
-
-# Copy requirements and install dependencies
+# Copy requirements
 COPY requirements.txt .
-RUN pip install --no-cache-dir --user -r requirements.txt
 
-# Production stage
+# Install Python dependencies
+RUN pip install --upgrade pip && \
+    pip install --user --no-cache-dir -r requirements.txt
+
+# Stage 2: Runtime
 FROM python:3.11-slim
 
+WORKDIR /app
+
 # Install runtime dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq5 \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Create non-root user
-RUN useradd -m -u 1000 agno && \
-    mkdir -p /app/tmp && \
-    chown -R agno:agno /app
-
 # Copy Python packages from builder
-COPY --from=builder /root/.local /home/agno/.local
+COPY --from=builder /root/.local /root/.local
 
-# Set working directory
-WORKDIR /app
+# Make sure scripts in .local are usable
+ENV PATH=/root/.local/bin:$PATH
 
 # Copy application code
-COPY --chown=agno:agno app/ ./app/
-COPY --chown=agno:agno agent-ui/ ./agent-ui/
+COPY app/ /app/app/
+COPY scripts/ /app/scripts/
 
-# Switch to non-root user
-USER agno
+# Create necessary directories
+RUN mkdir -p /app/logs /app/.secrets /app/data
 
-# Update PATH
-ENV PATH=/home/agno/.local/bin:$PATH
+# Set environment variables
+ENV PYTHONPATH=/app
+ENV PYTHONUNBUFFERED=1
+ENV ENVIRONMENT=production
 
-# Environment variables (defaults)
-ENV AGENT_API_PORT=8003 \
-    PLAYGROUND_URL=http://localhost:7777 \
-    MCP_FILESYSTEM=true \
-    MCP_GIT=true \
-    MCP_SUPERMEMORY=true \
-    GRAPHRAG_ENABLED=true \
-    HYBRID_SEARCH=true \
-    EVALUATION_GATES=true \
-    PYTHONUNBUFFERED=1
+# Create non-root user
+RUN useradd -m -u 1000 sophia && \
+    chown -R sophia:sophia /app
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:${AGENT_API_PORT}/healthz || exit 1
+USER sophia
 
 # Expose port
-EXPOSE 8003
+EXPOSE 8000
 
-# Labels
-ARG BUILD_DATE
-ARG VCS_REF
-ARG VERSION
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
 
-LABEL org.opencontainers.image.created="${BUILD_DATE}" \
-      org.opencontainers.image.source="https://github.com/ai-cherry/sophia-intel-ai" \
-      org.opencontainers.image.version="${VERSION}" \
-      org.opencontainers.image.revision="${VCS_REF}" \
-      org.opencontainers.image.vendor="AI Cherry" \
-      org.opencontainers.image.title="Sophia Intel AI" \
-      org.opencontainers.image.description="Unified Agent API with MCP, embeddings, and evaluation gates"
-
-# Run the SuperOrchestrator or unified server based on environment
-CMD ["sh", "-c", "if [ \"$RUN_MODE\" = \"orchestrator\" ]; then python -m app.core.super_orchestrator; else python -m app.api.unified_server; fi"]
+# Default command
+CMD ["gunicorn", "app.main:app", \
+     "--workers", "4", \
+     "--worker-class", "uvicorn.workers.UvicornWorker", \
+     "--bind", "0.0.0.0:8000", \
+     "--access-logfile", "-", \
+     "--error-logfile", "-"]

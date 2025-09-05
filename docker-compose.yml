@@ -1,32 +1,69 @@
-version: "3.8"
+version: '3.8'
 
 services:
-  sophia-ai:
-    build: .
+  # Redis for L1 cache and ephemeral storage
+  redis:
+    image: redis:7-alpine
+    container_name: sophia-redis
     ports:
-      - "8000:8000"
-    environment:
-      - PYTHONPATH=/app
-      - SLACK_BOT_TOKEN=${SLACK_BOT_TOKEN}
-      - LOOKER_CLIENT_ID=${LOOKER_CLIENT_ID}
-      - LOOKER_CLIENT_SECRET=${LOOKER_CLIENT_SECRET}
+      - "6379:6379"
     volumes:
-      - ./logs:/app/logs
+      - redis-data:/data
+    command: redis-server --appendonly yes
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/api/slack/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
-  nginx:
-    image: nginx:alpine
+  # Weaviate for L2 vector storage
+  weaviate:
+    image: semitechnologies/weaviate:latest
+    container_name: sophia-weaviate
     ports:
-      - "80:80"
-      - "443:443"
+      - "8080:8080"
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf
-      - ./ssl:/etc/ssl
-    depends_on:
-      - sophia-ai
+      - weaviate-data:/var/lib/weaviate
+    environment:
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
+      PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
+      DEFAULT_VECTORIZER_MODULE: 'text2vec-openai'
+      ENABLE_MODULES: 'text2vec-openai,generative-openai'
+      CLUSTER_HOSTNAME: 'node1'
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/v1/.well-known/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # PostgreSQL for L3 structured storage
+  postgres:
+    image: postgres:15-alpine
+    container_name: sophia-postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+    environment:
+      POSTGRES_DB: sophia
+      POSTGRES_USER: sophia
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sophia123}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sophia"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  redis-data:
+  weaviate-data:
+  postgres-data:
+
+networks:
+  default:
+    name: sophia-network
+    driver: bridge

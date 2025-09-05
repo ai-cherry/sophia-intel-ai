@@ -1086,7 +1086,9 @@ if __name__ == "__main__":
             mode=ProcessingMode.STREAMING,
             extract_embeddings=True,
             enable_ocr=True,
-            progress_callback=lambda msg, progress: logger.info(f"Progress: {progress:.1%} - {msg}"),
+            progress_callback=lambda msg, progress: logger.info(
+                f"Progress: {progress:.1%} - {msg}"
+            ),
         )
 
         processor = UniversalFileProcessor(config)

@@ -11,13 +11,46 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Optional
 
-import aioboto3
-import asyncpg
-import redis.asyncio as aioredis
-import weaviate
+# Optional imports for different storage backends
+try:
+    import aioboto3
+
+    HAS_S3 = True
+except ImportError:
+    HAS_S3 = False
+
+try:
+    import asyncpg
+
+    HAS_POSTGRES = True
+except ImportError:
+    HAS_POSTGRES = False
+
+try:
+    import redis.asyncio as aioredis
+
+    HAS_REDIS = True
+except ImportError:
+    import redis as aioredis  # Fallback to sync redis
+
+    HAS_REDIS = True
+
+try:
+    import weaviate
+    from weaviate.auth import AuthApiKey
+
+    HAS_WEAVIATE = True
+except ImportError:
+    HAS_WEAVIATE = False
+
+try:
+    from mem0 import Memory
+
+    HAS_MEM0 = True
+except ImportError:
+    HAS_MEM0 = False
+
 import yaml
-from mem0 import Memory
-from weaviate.auth import AuthApiKey
 
 from app.core.portkey_manager import TaskType, get_portkey_manager
 from app.core.secrets_manager import get_secret
@@ -430,6 +463,10 @@ class UnifiedMemoryRouter:
 
     async def archive(self, key: str, data: bytes, metadata: dict = None) -> str:
         """Store in cold storage (S3)"""
+        if not HAS_S3:
+            logger.warning("S3 not available, skipping archive")
+            return key
+        
         session = aioboto3.Session()
 
         async with session.client(
@@ -463,8 +500,12 @@ class UnifiedMemoryRouter:
             )
         return self._redis
 
-    async def _get_weaviate(self) -> weaviate.Client:
+    async def _get_weaviate(self):
         """Get or create Weaviate client"""
+        if not HAS_WEAVIATE:
+            logger.warning("Weaviate not available")
+            return None
+            
         if self._weaviate is None:
             url = get_secret("WEAVIATE_URL", "http://localhost:8080")
             api_key = get_secret("WEAVIATE_API_KEY")
@@ -477,8 +518,12 @@ class UnifiedMemoryRouter:
 
         return self._weaviate
 
-    async def _get_neon(self) -> asyncpg.Connection:
+    async def _get_neon(self):
         """Get or create Neon PostgreSQL connection"""
+        if not HAS_POSTGRES:
+            logger.warning("PostgreSQL not available")
+            return None
+            
         if self._neon is None:
             dsn = get_secret("NEON_DATABASE_URL")
             if not dsn:
@@ -488,8 +533,12 @@ class UnifiedMemoryRouter:
 
         return self._neon
 
-    async def _get_mem0(self) -> Memory:
+    async def _get_mem0(self):
         """Get or create Mem0 client"""
+        if not HAS_MEM0:
+            logger.warning("Mem0 not available")
+            return None
+            
         if self._mem0 is None:
             api_key = get_secret("MEM0_API_KEY")
             organization = get_secret("MEM0_ORG")

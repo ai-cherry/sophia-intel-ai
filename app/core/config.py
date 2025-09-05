@@ -2,6 +2,7 @@
 Unified Configuration System for Sophia Intel AI
 Single source of truth for all configuration values.
 """
+
 from pathlib import Path
 from typing import Optional
 
@@ -164,6 +165,54 @@ class AppSettings(BaseSettings):
     logs_dir: Path = Field(default=Path("logs"), env="LOGS_DIR")
     tmp_dir: Path = Field(default=Path("tmp"), env="TMP_DIR")
     data_dir: Path = Field(default=Path("data"), env="DATA_DIR")
+
+    # ============================================
+    # Production Settings
+    # ============================================
+
+    # Security
+    secret_key: SecretStr = Field(
+        default=SecretStr("dev-key-change-in-production"), env="SECRET_KEY"
+    )
+    jwt_secret: SecretStr = Field(default=SecretStr("dev-jwt-secret"), env="JWT_SECRET")
+    jwt_expiry_hours: int = Field(default=24, env="JWT_EXPIRY_HOURS")
+
+    # Authentication & Authorization
+    require_auth: bool = Field(default=False, env="REQUIRE_AUTH")
+    auth_token_header: str = Field(default="Authorization", env="AUTH_TOKEN_HEADER")
+    admin_api_key: Optional[SecretStr] = Field(default=None, env="ADMIN_API_KEY")
+
+    # Resource Management
+    max_concurrent_requests: int = Field(default=100, env="MAX_CONCURRENT_REQUESTS")
+    request_timeout_seconds: int = Field(default=300, env="REQUEST_TIMEOUT_SECONDS")
+
+    # Memory Management
+    memory_cleanup_interval: int = Field(default=300, env="MEMORY_CLEANUP_INTERVAL")
+    max_memory_usage_mb: int = Field(default=2048, env="MAX_MEMORY_USAGE_MB")
+
+    # Database Connection Pooling
+    redis_max_connections: int = Field(default=50, env="REDIS_MAX_CONNECTIONS")
+    redis_retry_attempts: int = Field(default=3, env="REDIS_RETRY_ATTEMPTS")
+    redis_connection_timeout: int = Field(default=30, env="REDIS_CONNECTION_TIMEOUT")
+
+    # WebSocket Configuration
+    websocket_max_connections: int = Field(default=1000, env="WEBSOCKET_MAX_CONNECTIONS")
+    websocket_heartbeat_interval: int = Field(default=30, env="WEBSOCKET_HEARTBEAT_INTERVAL")
+    websocket_max_message_size: int = Field(default=1024 * 1024, env="WEBSOCKET_MAX_MESSAGE_SIZE")
+
+    # Circuit Breaker Settings
+    circuit_breaker_failure_threshold: int = Field(default=5, env="CB_FAILURE_THRESHOLD")
+    circuit_breaker_timeout_seconds: int = Field(default=60, env="CB_TIMEOUT_SECONDS")
+    circuit_breaker_reset_timeout: int = Field(default=300, env="CB_RESET_TIMEOUT")
+
+    # Health Check Configuration
+    health_check_interval: int = Field(default=60, env="HEALTH_CHECK_INTERVAL")
+    health_check_timeout: int = Field(default=10, env="HEALTH_CHECK_TIMEOUT")
+
+    # Error Handling
+    max_retries: int = Field(default=3, env="MAX_RETRIES")
+    retry_base_delay: float = Field(default=1.0, env="RETRY_BASE_DELAY")
+    retry_max_delay: float = Field(default=60.0, env="RETRY_MAX_DELAY")
 
     # ============================================
     # Validation

@@ -2,6 +2,7 @@
 Sophia Business Intelligence Orchestrator
 Specialized for enterprise BI, analytics, and strategic insights
 """
+
 import asyncio
 import json
 import logging
@@ -35,6 +36,8 @@ class BusinessContext:
     currency: str = "USD"
     time_zone: str = "America/Los_Angeles"
     compliance_requirements: list[str] = field(default_factory=list)
+    has_foundational_knowledge: bool = False
+    foundational_categories: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -98,16 +101,39 @@ class SophiaOrchestrator(BaseOrchestrator):
         self.forecast_engine = ForecastEngine(self)
         self.competitive_intel = CompetitiveIntelligence(self)
 
+        # Initialize Foundational Knowledge Manager
+        try:
+            from app.knowledge.foundational_manager import FoundationalKnowledgeManager
+
+            self.foundational_knowledge = FoundationalKnowledgeManager()
+            logger.info("Foundational Knowledge Manager initialized")
+        except Exception as e:
+            logger.warning(f"Foundational Knowledge not available: {e}")
+            self.foundational_knowledge = None
+
         logger.info("Sophia BI Orchestrator initialized")
 
     def _get_default_context(self) -> BusinessContext:
         """Get default business context"""
-        return BusinessContext(
+        context = BusinessContext(
             industry="Technology",
             company_size="Mid-Market",
             key_metrics=["ARR", "NRR", "CAC", "LTV", "Churn"],
             fiscal_year_start="01-01",
         )
+
+        # Update if foundational knowledge is available
+        if self.foundational_knowledge:
+            context.has_foundational_knowledge = True
+            context.foundational_categories = [
+                "company_overview",
+                "strategic_initiatives",
+                "executive_decisions",
+                "market_intelligence",
+                "operational_metrics",
+            ]
+
+        return context
 
     def _init_connectors(self):
         """Initialize enterprise connectors"""
@@ -201,6 +227,33 @@ class SophiaOrchestrator(BaseOrchestrator):
             Dictionary of gathered data by source
         """
         data = {}
+
+        # First, get foundational knowledge if available
+        if self.foundational_knowledge:
+            try:
+                # Get Pay-Ready foundational context
+                foundational_context = await self.foundational_knowledge.get_pay_ready_context()
+                data["foundational_knowledge"] = foundational_context
+
+                # Search for relevant foundational knowledge
+                if task.content:
+                    relevant_knowledge = await self.foundational_knowledge.search(
+                        task.content, include_operational=False
+                    )
+                    if relevant_knowledge:
+                        data["relevant_foundational"] = [
+                            {
+                                "name": k.name,
+                                "category": k.category,
+                                "priority": k.priority.value,
+                                "content": k.content,
+                            }
+                            for k in relevant_knowledge[:5]  # Top 5 most relevant
+                        ]
+
+                logger.info(f"Gathered foundational knowledge for task {task.id}")
+            except Exception as e:
+                logger.warning(f"Failed to gather foundational knowledge: {e}")
 
         # Determine which connectors to query based on task
         relevant_connectors = self._select_relevant_connectors(task)
@@ -310,6 +363,9 @@ class SophiaOrchestrator(BaseOrchestrator):
 
     def _prepare_messages(self, task: Task, context: dict[str, Any]) -> list[dict[str, str]]:
         """Prepare messages for LLM"""
+        # Check if we have foundational knowledge
+        has_foundational = "foundational_knowledge" in context
+
         system_prompt = f"""You are Sophia, an expert Business Intelligence analyst specializing in {self.business_context.industry}.
 
 Your role is to:
@@ -322,6 +378,8 @@ Your role is to:
 Key metrics to focus on: {', '.join(self.business_context.key_metrics)}
 Currency: {self.business_context.currency}
 Compliance requirements: {', '.join(self.business_context.compliance_requirements) if self.business_context.compliance_requirements else 'Standard'}
+
+{"IMPORTANT: You have access to Pay-Ready's foundational knowledge. Prioritize this core business context in your analysis." if has_foundational else ""}
 
 Always cite data sources and express confidence levels."""
 

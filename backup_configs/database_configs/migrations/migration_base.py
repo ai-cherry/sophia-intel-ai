@@ -1,6 +1,5 @@
 """
-Database Migration Base Classes
-Shared utilities for database-agnostic migrations
+Base migration utilities shared across all migrations
 """
 from __future__ import annotations
 
@@ -11,9 +10,8 @@ from typing import Any
 
 try:
     import psycopg2
-    POSTGRES_AVAILABLE = True
 except ImportError:
-    POSTGRES_AVAILABLE = False
+    psycopg2 = None
 
 
 @dataclass
@@ -40,8 +38,8 @@ class DatabaseMigrator:
         if self.config.db_type == "sqlite":
             return sqlite3.connect(self.config.db_path or "sophia.db")
         elif self.config.db_type == "postgresql":
-            if not POSTGRES_AVAILABLE:
-                raise ImportError("psycopg2 is required for PostgreSQL support. Install with: pip install psycopg2-binary")
+            if psycopg2 is None:
+                raise ImportError("psycopg2 is required for PostgreSQL support. Install it with: pip install psycopg2-binary")
             return psycopg2.connect(
                 host=self.config.db_host,
                 port=self.config.db_port or 5432,
@@ -92,9 +90,7 @@ class DatabaseMigrator:
 
     def get_boolean_type(self) -> str:
         """Get appropriate boolean type for database"""
-        if self.config.db_type == "sqlite":
-            return "INTEGER DEFAULT 1"  # SQLite uses 0/1 for boolean
-        elif self.config.db_type == "postgresql":
+        if self.config.db_type == "sqlite" or self.config.db_type == "postgresql":
             return "BOOLEAN DEFAULT TRUE"
 
 

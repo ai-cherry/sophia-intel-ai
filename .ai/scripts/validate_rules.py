@@ -40,12 +40,19 @@ class RulesValidator:
         """Check for mock implementations in the codebase"""
         print("🔍 Checking for mock implementations...")
 
-        prohibited = self.master_rules.get("enforcement", {}).get("anti_mock_policy", {}).get("prohibited_patterns", [])
+        prohibited = (
+            self.master_rules.get("enforcement", {})
+            .get("anti_mock_policy", {})
+            .get("prohibited_patterns", [])
+        )
 
         for pattern in ["*.py", "*.ts", "*.tsx", "*.js", "*.jsx"]:
             for file_path in self.project_root.rglob(pattern):
                 # Skip test directories and node_modules
-                if any(part in str(file_path) for part in ["node_modules", "__pycache__", ".git", "tests/fixtures"]):
+                if any(
+                    part in str(file_path)
+                    for part in ["node_modules", "__pycache__", ".git", "tests/fixtures"]
+                ):
                     continue
 
                 try:
@@ -56,21 +63,25 @@ class RulesValidator:
                         # Convert glob pattern to regex
                         regex = prohibited_pattern.replace("*", ".*")
                         if re.search(regex, content, re.IGNORECASE):
-                            self.errors.append(f"❌ Mock pattern '{prohibited_pattern}' found in {file_path}")
+                            self.errors.append(
+                                f"❌ Mock pattern '{prohibited_pattern}' found in {file_path}"
+                            )
 
                     # Check for specific mock indicators
                     mock_indicators = [
-                        r'class\s+Mock\w+',
-                        r'class\s+Fake\w+',
-                        r'class\s+Stub\w+',
-                        r'def\s+mock_\w+',
+                        r"class\s+Mock\w+",
+                        r"class\s+Fake\w+",
+                        r"class\s+Stub\w+",
+                        r"def\s+mock_\w+",
                         r'return\s+["\']mock["\']',
                         r'console\.log\(["\']simulated',
                     ]
 
                     for indicator in mock_indicators:
                         if re.search(indicator, content):
-                            self.errors.append(f"❌ Mock indicator found in {file_path}: {indicator}")
+                            self.errors.append(
+                                f"❌ Mock indicator found in {file_path}: {indicator}"
+                            )
 
                 except Exception as e:
                     self.warnings.append(f"⚠️  Could not read {file_path}: {e}")
@@ -107,7 +118,11 @@ class RulesValidator:
                     self.warnings.append(f"⚠️  Empty file found: {file_path}")
 
         # Check for old files (not modified in 30 days)
-        max_age = self.master_rules.get("enforcement", {}).get("zero_debris", {}).get("max_file_age_hours", 720)
+        max_age = (
+            self.master_rules.get("enforcement", {})
+            .get("zero_debris", {})
+            .get("max_file_age_hours", 720)
+        )
         cutoff_time = datetime.now() - timedelta(hours=max_age)
 
         for file_path in self.project_root.rglob("*"):
@@ -124,7 +139,11 @@ class RulesValidator:
         """Check for forbidden phrases in code"""
         print("🔍 Checking for forbidden phrases...")
 
-        forbidden = self.master_rules.get("enforcement", {}).get("truth_verification", {}).get("forbidden_phrases", [])
+        forbidden = (
+            self.master_rules.get("enforcement", {})
+            .get("truth_verification", {})
+            .get("forbidden_phrases", [])
+        )
 
         for pattern in ["*.py", "*.ts", "*.tsx", "*.md"]:
             for file_path in self.project_root.rglob(pattern):
@@ -138,10 +157,12 @@ class RulesValidator:
                     for phrase in forbidden:
                         if phrase.lower() in content:
                             # Check if it's in a comment or string
-                            lines = file_path.read_text().split('\n')
+                            lines = file_path.read_text().split("\n")
                             for i, line in enumerate(lines, 1):
                                 if phrase.lower() in line.lower():
-                                    self.errors.append(f"❌ Forbidden phrase '{phrase}' in {file_path}:{i}")
+                                    self.errors.append(
+                                        f"❌ Forbidden phrase '{phrase}' in {file_path}:{i}"
+                                    )
 
                 except Exception as e:
                     self.warnings.append(f"⚠️  Could not read {file_path}: {e}")
@@ -192,7 +213,9 @@ class RulesValidator:
 
                     for field in required_fields:
                         if field not in metadata:
-                            self.errors.append(f"❌ MDC file {mdc_file} missing required field: {field}")
+                            self.errors.append(
+                                f"❌ MDC file {mdc_file} missing required field: {field}"
+                            )
 
                     print(f"  ✅ Valid MDC: {mdc_file}")
 
@@ -218,9 +241,9 @@ class RulesValidator:
 
                     # Check for unapproved packages
                     unapproved = []
-                    for line in content.split('\n'):
-                        if line and not line.startswith('#'):
-                            package = line.split('==')[0].split('>=')[0].split('<')[0].strip()
+                    for line in content.split("\n"):
+                        if line and not line.startswith("#"):
+                            package = line.split("==")[0].split(">=")[0].split("<")[0].strip()
 
                             # Check if package is in approved list
                             approved = False
@@ -231,11 +254,13 @@ class RulesValidator:
                                             approved = True
                                             break
 
-                            if not approved and package and package not in ['', '-r', '-e']:
+                            if not approved and package and package not in ["", "-r", "-e"]:
                                 unapproved.append(package)
 
                     if unapproved:
-                        self.warnings.append(f"⚠️  Potentially unapproved packages in {req_file}: {unapproved}")
+                        self.warnings.append(
+                            f"⚠️  Potentially unapproved packages in {req_file}: {unapproved}"
+                        )
 
                 except Exception as e:
                     self.warnings.append(f"⚠️  Could not read {req_file}: {e}")
@@ -249,9 +274,12 @@ class RulesValidator:
                     with open(package_path) as f:
                         package_data = json.load(f)
 
-                    dependencies = {**package_data.get("dependencies", {}), **package_data.get("devDependencies", {})}
+                    dependencies = {
+                        **package_data.get("dependencies", {}),
+                        **package_data.get("devDependencies", {}),
+                    }
 
-                    for dep, version in dependencies.items():
+                    for dep, _version in dependencies.items():
                         # Check major frameworks
                         if dep in ["vue", "angular", "svelte", "ember"]:
                             self.errors.append(f"❌ Unapproved framework in {package_file}: {dep}")
@@ -294,6 +322,7 @@ class RulesValidator:
 
         return len(self.errors) == 0
 
+
 def main():
     validator = RulesValidator()
     success = validator.run_validation()
@@ -304,6 +333,7 @@ def main():
     else:
         print("\n✅ Validation successful!")
         sys.exit(0)
+
 
 if __name__ == "__main__":
     main()

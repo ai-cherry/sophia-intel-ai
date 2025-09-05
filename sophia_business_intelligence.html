@@ -15,7 +15,7 @@
             --sophia-accent: #9ECAE1;
             --sophia-wisdom: #3182BD;
             --sophia-insight: #08519C;
-            
+
             /* Dark Theme Foundation */
             --bg-primary: #0B0E14;
             --bg-secondary: #151925;
@@ -23,20 +23,20 @@
             --bg-card: #252B3D;
             --bg-chat: #1A202C;
             --bg-input: #2D3748;
-            
+
             /* Text Colors */
             --text-primary: #FFFFFF;
             --text-secondary: #CBD5E0;
             --text-muted: #718096;
             --text-accent: var(--sophia-primary);
-            
+
             /* Interactive Elements */
             --border-primary: var(--sophia-primary);
             --border-secondary: #374151;
             --shadow-primary: rgba(74, 144, 226, 0.2);
             --shadow-secondary: rgba(0, 0, 0, 0.3);
             --glow-primary: 0 0 20px var(--sophia-primary);
-            
+
             /* Layout */
             --border-radius: 12px;
             --border-radius-lg: 16px;
@@ -69,7 +69,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: 
+            background:
                 radial-gradient(ellipse at 20% 30%, rgba(74, 144, 226, 0.1) 0%, transparent 50%),
                 radial-gradient(ellipse at 80% 70%, rgba(49, 113, 181, 0.08) 0%, transparent 50%),
                 radial-gradient(ellipse at 40% 90%, rgba(8, 81, 156, 0.06) 0%, transparent 50%);
@@ -573,7 +573,7 @@
             .main-container {
                 flex-direction: column;
             }
-            
+
             .widgets-sidebar {
                 width: 100%;
                 border-left: none;
@@ -586,11 +586,11 @@
                 flex-direction: column;
                 gap: var(--spacing-sm);
             }
-            
+
             .chat-section {
                 padding: var(--spacing-sm);
             }
-            
+
             .widgets-sidebar {
                 padding: var(--spacing-sm);
             }
@@ -678,9 +678,9 @@
 
                 <div class="chat-input-area">
                     <div class="chat-input-group">
-                        <textarea 
-                            id="chatInput" 
-                            class="chat-input" 
+                        <textarea
+                            id="chatInput"
+                            class="chat-input"
                             placeholder="Ask me anything about your business... sales performance, market trends, customer insights, strategic analysis..."
                             rows="2"
                         ></textarea>
@@ -711,10 +711,10 @@
                         <div class="metric-label">Pipeline Value</div>
                         <i class="fas fa-funnel-dollar metric-icon"></i>
                     </div>
-                    <div class="metric-value">$2.4M</div>
-                    <div class="metric-change positive">+18% this quarter</div>
+                    <div class="metric-value" data-metric="pipeline-value">Loading...</div>
+                    <div class="metric-change" data-metric="pipeline-change">Calculating...</div>
                     <div class="progress-bar">
-                        <div class="progress-fill" style="width: 73%;"></div>
+                        <div class="progress-fill" data-progress="pipeline-progress" style="width: 0%;"></div>
                     </div>
                     <button class="drill-down-btn">View Pipeline Details</button>
                 </div>
@@ -724,10 +724,10 @@
                         <div class="metric-label">Win Rate</div>
                         <i class="fas fa-trophy metric-icon"></i>
                     </div>
-                    <div class="metric-value">73%</div>
-                    <div class="metric-change positive">+5% improvement</div>
+                    <div class="metric-value" data-metric="win-rate">Loading...</div>
+                    <div class="metric-change" data-metric="win-rate-change">Calculating...</div>
                     <div class="progress-bar">
-                        <div class="progress-fill" style="width: 73%;"></div>
+                        <div class="progress-fill" data-progress="pipeline-progress" style="width: 0%;"></div>
                     </div>
                     <button class="drill-down-btn">Analyze Win/Loss Factors</button>
                 </div>
@@ -744,8 +744,8 @@
                         <div class="metric-label">Calls Analyzed Today</div>
                         <i class="fas fa-phone-alt metric-icon"></i>
                     </div>
-                    <div class="metric-value">47</div>
-                    <div class="metric-change positive">Avg Score: 89%</div>
+                    <div class="metric-value" data-metric="calls-analyzed">Loading...</div>
+                    <div class="metric-change" data-metric="avg-score">Calculating...</div>
                     <div>
                         <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 8px;">
                             Top Keywords: Budget (23), Timeline (18), Decision (15)
@@ -759,8 +759,8 @@
                         <div class="metric-label">Customer Sentiment</div>
                         <i class="fas fa-heart metric-icon"></i>
                     </div>
-                    <div class="metric-value">+87%</div>
-                    <div class="metric-change positive">Highly positive trend</div>
+                    <div class="metric-value" data-metric="sentiment-score">Loading...</div>
+                    <div class="metric-change" data-metric="sentiment-trend">Calculating...</div>
                     <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 8px;">
                         🟢 Positive: 67% | 🟡 Neutral: 20% | 🔴 Negative: 13%
                     </div>
@@ -779,8 +779,8 @@
                         <div class="metric-label">Market Intelligence</div>
                         <i class="fas fa-globe metric-icon"></i>
                     </div>
-                    <div class="metric-value">12</div>
-                    <div class="metric-change positive">New insights this week</div>
+                    <div class="metric-value" data-metric="market-insights">Loading...</div>
+                    <div class="metric-change" data-metric="insights-trend">Calculating...</div>
                     <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 8px;">
                         🔥 Trending: AI adoption in healthcare, fintech consolidation
                     </div>
@@ -792,8 +792,8 @@
                         <div class="metric-label">Competitive Analysis</div>
                         <i class="fas fa-chess metric-icon"></i>
                     </div>
-                    <div class="metric-value">94%</div>
-                    <div class="metric-change positive">Intelligence coverage</div>
+                    <div class="metric-value" data-metric="competitive-coverage">Loading...</div>
+                    <div class="metric-change" data-metric="coverage-status">Calculating...</div>
                     <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 8px;">
                         Monitoring 23 competitors, 8 new product launches detected
                     </div>
@@ -812,10 +812,10 @@
                         <div class="metric-label">Client Health Score</div>
                         <i class="fas fa-heartbeat metric-icon"></i>
                     </div>
-                    <div class="metric-value">8.7/10</div>
-                    <div class="metric-change positive">+0.3 this month</div>
+                    <div class="metric-value" data-metric="client-health">Loading...</div>
+                    <div class="metric-change" data-metric="health-trend">Calculating...</div>
                     <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 8px;">
-                        🟢 Healthy: 73% | 🟡 At Risk: 19% | 🔴 Critical: 8%
+                        <span data-metric="health-breakdown">Loading health breakdown...</span>
                     </div>
                     <button class="drill-down-btn">Client Health Analysis</button>
                 </div>
@@ -825,10 +825,10 @@
                         <div class="metric-label">Revenue Forecast</div>
                         <i class="fas fa-chart-area metric-icon"></i>
                     </div>
-                    <div class="metric-value">$8.2M</div>
-                    <div class="metric-change positive">Q4 projection +12%</div>
+                    <div class="metric-value" data-metric="revenue-forecast">Loading...</div>
+                    <div class="metric-change" data-metric="forecast-trend">Calculating...</div>
                     <div class="progress-bar">
-                        <div class="progress-fill" style="width: 67%;"></div>
+                        <div class="progress-fill" data-progress="revenue-progress" style="width: 0%;"></div>
                     </div>
                     <button class="drill-down-btn">View Revenue Model</button>
                 </div>
@@ -845,7 +845,7 @@
                 this.speechSynthesis = null;
                 this.isListening = false;
                 this.drillDownMode = false;
-                
+
                 this.init();
             }
 
@@ -855,7 +855,31 @@
                 this.connectWebSocket();
                 this.startRealTimeUpdates();
                 this.loadWelcomeMessage();
+
+                // Add cleanup on page unload
+                window.addEventListener('beforeunload', () => this.destroy());
+                window.addEventListener('unload', () => this.destroy());
+
                 console.log('🧠 Sophia Business Intelligence Platform initialized');
+            }
+
+            destroy() {
+                // Cleanup to prevent memory leaks
+                if (this.metricsInterval) {
+                    clearInterval(this.metricsInterval);
+                    this.metricsInterval = null;
+                }
+
+                if (this.websocket) {
+                    this.websocket.close();
+                    this.websocket = null;
+                }
+
+                if (this.recognition) {
+                    this.recognition.abort();
+                }
+
+                console.log('🧹 Sophia Business Intelligence cleanup completed');
             }
 
             setupEventListeners() {
@@ -889,7 +913,7 @@
             async sendMessage() {
                 const input = document.getElementById('chatInput');
                 const message = input.value.trim();
-                
+
                 if (!message) return;
 
                 // Add user message
@@ -902,11 +926,11 @@
                 try {
                     // Simulate Sophia's intelligent response
                     const response = await this.generateSophiaResponse(message);
-                    
+
                     // Remove typing indicator and add response
                     this.removeMessage(typingId);
                     this.addMessage('sophia', response);
-                    
+
                     if (this.voiceEnabled) {
                         this.speak(response);
                     }
@@ -917,34 +941,113 @@
             }
 
             async generateSophiaResponse(message) {
-                // Simulate API call to Sophia orchestrator
-                await new Promise(resolve => setTimeout(resolve, 1500 + Math.random() * 1000));
-                
-                // Intelligent response generation based on message content
+                // Route message to appropriate API based on content
                 const lowerMessage = message.toLowerCase();
-                
-                if (lowerMessage.includes('sales') || lowerMessage.includes('pipeline')) {
-                    return `Based on your current pipeline analysis, I see $2.4M in active opportunities with a 73% win rate. Your Q3 performance shows strong momentum in enterprise deals, particularly in the healthcare and fintech verticals. The correlation between Gong call scores and close rates suggests your discovery methodology is highly effective. Would you like me to deep-dive into the specific accounts that are most likely to close this quarter?`;
+
+                try {
+                    if (lowerMessage.includes('sales') || lowerMessage.includes('pipeline')) {
+                        return await this.getSalesIntelligence(message);
+                    }
+
+                    if (lowerMessage.includes('customer') || lowerMessage.includes('client') || lowerMessage.includes('at risk')) {
+                        return await this.getCustomerIntelligence(message);
+                    }
+
+                    if (lowerMessage.includes('gong') || lowerMessage.includes('calls')) {
+                        return await this.getGongIntelligence(message);
+                    }
+
+                    if (lowerMessage.includes('linear') || lowerMessage.includes('tasks') || lowerMessage.includes('projects')) {
+                        return await this.getLinearIntelligence(message);
+                    }
+
+                    if (lowerMessage.includes('asana') || lowerMessage.includes('workflow')) {
+                        return await this.getAsanaIntelligence(message);
+                    }
+
+                    // Default to Sophia orchestrator for general intelligence
+                    return await this.getGeneralIntelligence(message);
+
+                } catch (error) {
+                    console.error('API call failed:', error);
+                    return `I encountered an issue accessing your business data. The systems appear to be temporarily unavailable. Please try again in a moment, or let me know what specific information you need and I'll attempt a different approach.`;
                 }
-                
-                if (lowerMessage.includes('customer') || lowerMessage.includes('client')) {
-                    return `Your client health metrics are strong at 8.7/10 average score. I'm tracking engagement patterns across 47 accounts and notice that clients with regular quarterly business reviews have 34% higher retention rates. Three accounts currently require immediate attention due to declining usage metrics. Shall I prioritize these for your customer success team and draft strategic retention plans?`;
+            }
+
+            async getSalesIntelligence(message) {
+                const response = await fetch('/api/personas/sales-coach/query', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: message })
+                });
+
+                if (!response.ok) throw new Error('Sales API failed');
+                const data = await response.json();
+                return data.response || 'Sales intelligence temporarily unavailable.';
+            }
+
+            async getCustomerIntelligence(message) {
+                const response = await fetch('/api/personas/client-health/query', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: message })
+                });
+
+                if (!response.ok) throw new Error('Customer API failed');
+                const data = await response.json();
+                return data.response || 'Customer intelligence temporarily unavailable.';
+            }
+
+            async getGongIntelligence(message) {
+                const response = await fetch('/api/gong/search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: message, limit: 5 })
+                });
+
+                if (!response.ok) throw new Error('Gong API failed');
+                const data = await response.json();
+
+                if (data.results && data.results.length > 0) {
+                    return `I found ${data.count} relevant call insights:\n\n${data.results.map(r => `• ${r.summary || r.content}`).join('\n')}`;
                 }
-                
-                if (lowerMessage.includes('market') || lowerMessage.includes('competitive')) {
-                    return `My market intelligence analysis reveals significant opportunities in the AI-driven healthcare space, with 23% projected growth. I'm monitoring 23 competitors and recently identified 8 new product launches that could impact your positioning. The competitive landscape shows consolidation trends that create partnership opportunities. Would you like me to generate a strategic market entry plan for the emerging segments I've identified?`;
-                }
-                
-                if (lowerMessage.includes('gong') || lowerMessage.includes('calls')) {
-                    return `Today's Gong analysis of 47 calls shows an average score of 89% with strong discovery patterns. Key conversation themes include budget discussions (23 mentions), timeline concerns (18 mentions), and decision-making processes (15 mentions). I've identified 3 calls with exceptional techniques that should be scaled across your team. The sentiment analysis reveals highly positive customer engagement. Shall I prepare a coaching playbook based on your top-performing calls?`;
-                }
-                
-                if (lowerMessage.includes('revenue') || lowerMessage.includes('forecast')) {
-                    return `Revenue forecasting models project $8.2M for Q4, representing 12% growth over Q3. This forecast incorporates pipeline velocity, seasonal patterns, and competitive factors. The model shows 87% confidence in achieving $7.5M minimum, with upside potential driven by 3 enterprise deals currently in final negotiations. I recommend adjusting territory assignments to capture the additional $700K opportunity I've identified. Would you like me to model different scenarios and resource allocation strategies?`;
-                }
-                
-                // Default strategic response
-                return `I've processed your query through multiple analytical frameworks. Based on your business context and current performance metrics, I recommend we approach this strategically. Your data suggests several optimization opportunities across sales velocity, customer engagement, and market positioning. Let me orchestrate a comprehensive analysis across our AI agent network to provide you with actionable insights. What specific business outcome are you prioritizing right now?`;
+                return 'No relevant Gong call data found for your query.';
+            }
+
+            async getLinearIntelligence(message) {
+                const response = await fetch('/api/integrations/linear/search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: message })
+                });
+
+                if (!response.ok) throw new Error('Linear API failed');
+                const data = await response.json();
+                return data.summary || 'Linear project data temporarily unavailable.';
+            }
+
+            async getAsanaIntelligence(message) {
+                const response = await fetch('/api/integrations/asana/search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: message })
+                });
+
+                if (!response.ok) throw new Error('Asana API failed');
+                const data = await response.json();
+                return data.summary || 'Asana workflow data temporarily unavailable.';
+            }
+
+            async getGeneralIntelligence(message) {
+                const response = await fetch('/api/orchestrators/sophia/query', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: message })
+                });
+
+                if (!response.ok) throw new Error('Orchestrator API failed');
+                const data = await response.json();
+                return data.response || 'General intelligence temporarily unavailable.';
             }
 
             addMessage(sender, content, isTemporary = false) {
@@ -953,22 +1056,66 @@
                 const messageId = Date.now() + Math.random();
                 messageDiv.id = `message-${messageId}`;
                 messageDiv.className = `message ${sender}`;
-                
+
                 const time = new Date().toLocaleTimeString();
                 const avatar = sender === 'user' ? 'U' : 'S';
-                
-                messageDiv.innerHTML = `
-                    <div class="message-avatar">${avatar}</div>
-                    <div class="message-content">
-                        <div class="message-time">${time}</div>
-                        <div>${content}</div>
-                    </div>
-                `;
-                
+
+                // Create elements safely to prevent XSS
+                const avatarDiv = document.createElement('div');
+                avatarDiv.className = 'message-avatar';
+                avatarDiv.textContent = avatar;
+
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'message-content';
+
+                const timeDiv = document.createElement('div');
+                timeDiv.className = 'message-time';
+                timeDiv.textContent = time;
+
+                const textDiv = document.createElement('div');
+                // Allow HTML for system messages (sophia), sanitize user input
+                if (sender === 'sophia' && content.includes('<')) {
+                    textDiv.innerHTML = this.sanitizeContent(content);
+                } else {
+                    textDiv.textContent = content;
+                }
+
+                contentDiv.appendChild(timeDiv);
+                contentDiv.appendChild(textDiv);
+                messageDiv.appendChild(avatarDiv);
+                messageDiv.appendChild(contentDiv);
                 messagesContainer.appendChild(messageDiv);
                 messagesContainer.scrollTop = messagesContainer.scrollHeight;
-                
+
                 return isTemporary ? messageId : null;
+            }
+
+            sanitizeContent(content) {
+                // Basic HTML sanitization - allow safe formatting tags only
+                const allowedTags = ['b', 'i', 'strong', 'em', 'br', 'p', 'div', 'span'];
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = content;
+
+                // Remove script tags and event handlers
+                const scripts = tempDiv.querySelectorAll('script');
+                scripts.forEach(script => script.remove());
+
+                const elements = tempDiv.querySelectorAll('*');
+                elements.forEach(el => {
+                    // Remove event handler attributes
+                    Array.from(el.attributes).forEach(attr => {
+                        if (attr.name.startsWith('on')) {
+                            el.removeAttribute(attr.name);
+                        }
+                    });
+
+                    // Remove non-allowed tags
+                    if (!allowedTags.includes(el.tagName.toLowerCase())) {
+                        el.outerHTML = el.textContent;
+                    }
+                });
+
+                return tempDiv.innerHTML;
             }
 
             removeMessage(messageId) {
@@ -988,7 +1135,7 @@
 
             loadWelcomeMessage() {
                 setTimeout(() => {
-                    this.addMessage('sophia', 'Welcome back to Sophia Business Intelligence! I have full access to your business ecosystem including Gong recordings, pipeline data, customer analytics, and market intelligence. I\'m ready to provide strategic insights and orchestrate complex analyses. How can I drive your business forward today?');
+                    this.addMessage('sophia', 'Welcome to Sophia Business Intelligence! I\'m connected to your live business data including Gong recordings, pipeline analytics, customer health metrics, and market intelligence. I can provide real-time insights and orchestrate analyses across your entire business ecosystem. What would you like to analyze today?');
                 }, 500);
             }
 
@@ -1054,41 +1201,73 @@
                     utterance.rate = 1.0;
                     utterance.pitch = 1.0;
                     utterance.volume = 0.8;
-                    
+
                     // Find a professional female voice
                     const voices = this.speechSynthesis.getVoices();
-                    const preferredVoice = voices.find(voice => 
-                        voice.name.includes('Female') || 
+                    const preferredVoice = voices.find(voice =>
+                        voice.name.includes('Female') ||
                         voice.name.includes('Samantha')
                     );
                     if (preferredVoice) {
                         utterance.voice = preferredVoice;
                     }
-                    
+
                     this.speechSynthesis.speak(utterance);
                 }
             }
 
             connectWebSocket() {
                 try {
-                    this.websocket = new WebSocket('ws://localhost:9000/ws');
-                    
+                    // Use secure WebSocket protocol for production
+                    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                    this.websocket = new WebSocket(`${protocol}//${window.location.host}/ws/sophia`);
+
                     this.websocket.onopen = () => {
                         console.log('🔗 WebSocket connected to Sophia orchestrator');
+                        this.reconnectAttempts = 0;
+                        this.websocket.send(JSON.stringify({
+                            type: 'auth',
+                            client: 'sophia_bi_dashboard'
+                        }));
                     };
 
                     this.websocket.onmessage = (event) => {
-                        const data = JSON.parse(event.data);
-                        this.handleWebSocketMessage(data);
+                        try {
+                            const data = JSON.parse(event.data);
+                            this.handleWebSocketMessage(data);
+                        } catch (error) {
+                            console.error('Invalid WebSocket message:', error);
+                        }
                     };
 
                     this.websocket.onclose = () => {
                         console.log('🔌 WebSocket disconnected. Attempting reconnection...');
-                        setTimeout(() => this.connectWebSocket(), 5000);
+                        this.scheduleReconnection();
+                    };
+
+                    this.websocket.onerror = (error) => {
+                        console.error('WebSocket error:', error);
                     };
                 } catch (error) {
                     console.error('WebSocket connection failed:', error);
+                    this.scheduleReconnection();
                 }
+            }
+
+            scheduleReconnection() {
+                if (!this.reconnectAttempts) this.reconnectAttempts = 0;
+                this.reconnectAttempts++;
+
+                // Exponential backoff: 1s, 2s, 4s, 8s, max 30s
+                const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts - 1), 30000);
+
+                setTimeout(() => {
+                    if (this.reconnectAttempts <= 10) {
+                        this.connectWebSocket();
+                    } else {
+                        console.error('Max WebSocket reconnection attempts reached');
+                    }
+                }, delay);
             }
 
             handleWebSocketMessage(data) {
@@ -1118,21 +1297,102 @@
             }
 
             startRealTimeUpdates() {
-                // Simulate real-time metric updates
-                setInterval(() => {
-                    this.simulateMetricUpdates();
-                }, 30000); // Update every 30 seconds
+                // Load real metrics on startup
+                this.loadRealMetrics();
+
+                // Update metrics every 2 minutes
+                this.metricsInterval = setInterval(() => {
+                    this.loadRealMetrics();
+                }, 120000);
             }
 
-            simulateMetricUpdates() {
-                // Simulate realistic business metric changes
-                const metrics = document.querySelectorAll('.metric-value');
-                metrics.forEach(metric => {
-                    // Add subtle animation to show data is live
+            async loadRealMetrics() {
+                try {
+                    // Use Promise.allSettled for better error resilience
+                    const results = await Promise.allSettled([
+                        fetch('/api/personas/sales-coach/metrics').then(r => r.ok ? r.json() : Promise.reject(r.statusText)),
+                        fetch('/api/gong/stats').then(r => r.ok ? r.json() : Promise.reject(r.statusText)),
+                        fetch('/api/personas/client-health/metrics').then(r => r.ok ? r.json() : Promise.reject(r.statusText))
+                    ]);
+
+                    const metrics = {
+                        sales: results[0].status === 'fulfilled' ? results[0].value : null,
+                        gong: results[1].status === 'fulfilled' ? results[1].value : null,
+                        health: results[2].status === 'fulfilled' ? results[2].value : null
+                    };
+
+                    this.updateMetricsDisplay(metrics);
+
+                    // Log any failures for monitoring
+                    results.forEach((result, index) => {
+                        if (result.status === 'rejected') {
+                            const apiNames = ['Sales API', 'Gong API', 'Client Health API'];
+                            console.warn(`${apiNames[index]} failed:`, result.reason);
+                        }
+                    });
+
+                } catch (error) {
+                    console.error('Critical error loading metrics:', error);
+                    this.showMetricsError();
+                }
+            }
+
+            showMetricsError() {
+                document.querySelectorAll('[data-metric]').forEach(element => {
+                    if (element.textContent === 'Loading...') {
+                        element.textContent = 'Error';
+                        element.style.color = '#EF4444';
+                    }
+                });
+            }
+
+            updateMetricsDisplay(metrics) {
+                // Use data attributes to update specific metrics
+                const metricUpdates = {
+                    'pipeline-value': metrics.sales?.pipeline_value ? `$${(metrics.sales.pipeline_value / 1000000).toFixed(1)}M` : 'N/A',
+                    'pipeline-change': metrics.sales?.pipeline_change || 'No data',
+                    'win-rate': metrics.sales?.win_rate ? `${Math.round(metrics.sales.win_rate * 100)}%` : 'N/A',
+                    'win-rate-change': metrics.sales?.win_rate_change || 'No data',
+                    'calls-analyzed': metrics.gong?.total_chunks?.toString() || '0',
+                    'avg-score': metrics.gong?.avg_score ? `Avg Score: ${metrics.gong.avg_score}%` : 'No data',
+                    'sentiment-score': metrics.gong?.sentiment_score || 'N/A',
+                    'sentiment-trend': metrics.gong?.sentiment_trend || 'No data',
+                    'market-insights': metrics.research?.insights_count?.toString() || '0',
+                    'insights-trend': metrics.research?.insights_trend || 'No data',
+                    'competitive-coverage': metrics.competitive?.coverage_percent || 'N/A',
+                    'coverage-status': metrics.competitive?.status || 'No data',
+                    'client-health': metrics.health?.average_score ? `${metrics.health.average_score.toFixed(1)}/10` : 'N/A',
+                    'health-trend': metrics.health?.trend || 'No data',
+                    'revenue-forecast': metrics.sales?.revenue_forecast ? `$${(metrics.sales.revenue_forecast / 1000000).toFixed(1)}M` : 'N/A',
+                    'forecast-trend': metrics.sales?.forecast_trend || 'No data'
+                };
+
+                // Update each metric by data attribute
+                Object.entries(metricUpdates).forEach(([metricKey, value]) => {
+                    const element = document.querySelector(`[data-metric="${metricKey}"]`);
+                    if (element) {
+                        element.textContent = value;
+
+                        // Add positive/negative classes for changes
+                        if (metricKey.includes('change') || metricKey.includes('trend')) {
+                            element.classList.remove('positive', 'negative');
+                            if (value.includes('+') || value.includes('improvement') || value.includes('positive')) {
+                                element.classList.add('positive');
+                            } else if (value.includes('-') || value.includes('decline') || value.includes('negative')) {
+                                element.classList.add('negative');
+                            }
+                        }
+                    }
+                });
+
+                // Animate updated metrics
+                document.querySelectorAll('[data-metric]').forEach(metric => {
                     metric.style.transform = 'scale(1.05)';
+                    metric.style.color = 'var(--sophia-primary)';
                     setTimeout(() => {
                         metric.style.transform = 'scale(1)';
-                    }, 200);
+                        metric.style.color = '';
+                    }, 300);
                 });
             }
 
@@ -1148,37 +1408,134 @@
             }
         }
 
-        // Drill-down functions for widgets
-        function drillDownSales() {
-            window.sophia.addMessage('sophia', '📊 **Pipeline Deep Dive**: Your $2.4M pipeline breaks down as follows: Enterprise (67% - $1.6M), Mid-Market (23% - $552K), SMB (10% - $240K). Top 5 deals by value are: GlobalTech ($450K, 85% prob), InnovaCorp ($380K, 70% prob), TechStart ($290K, 60% prob), DataFlow ($220K, 80% prob), CloudSys ($180K, 75% prob). Velocity has improved 23% with average deal cycle now 47 days. Would you like me to analyze specific bottlenecks or create action plans for the top opportunities?');
+        // Real drill-down functions using actual APIs
+        async function drillDownSales() {
+            const response = await fetch('/api/personas/sales-coach/pipeline-analysis', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ analysis_type: 'deep_dive' })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                window.sophia.addMessage('sophia', data.analysis || 'Pipeline analysis temporarily unavailable.');
+            } else {
+                window.sophia.addMessage('sophia', 'Unable to retrieve pipeline analysis. Please try again.');
+            }
         }
 
-        function drillDownWinRate() {
-            window.sophia.addMessage('sophia', '🏆 **Win Rate Analysis**: Your 73% win rate outperforms industry average by 18%. Key success factors: Strong discovery calls (92% correlation with wins), technical demos with 3+ stakeholders (84% win rate), and proposals submitted within 5 days of request (79% win rate). Loss analysis shows pricing concerns (34%), feature gaps (28%), and timing issues (23%) as primary factors. I recommend: 1) Scale discovery framework across team 2) Accelerate demo scheduling 3) Implement competitive pricing strategy. Shall I create detailed action plans for each recommendation?');
+        async function drillDownWinRate() {
+            const response = await fetch('/api/personas/sales-coach/win-rate-analysis', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                window.sophia.addMessage('sophia', data.analysis || 'Win rate analysis temporarily unavailable.');
+            } else {
+                window.sophia.addMessage('sophia', 'Unable to retrieve win rate analysis. Please try again.');
+            }
         }
 
-        function drillDownGongCalls() {
-            window.sophia.addMessage('sophia', '📞 **Gong Analytics Deep Dive**: Today\'s 47 calls show exceptional quality with 89% avg score. Top performers: Sarah Johnson (96% avg, 8 calls), Mike Chen (94% avg, 6 calls), Lisa Rodriguez (92% avg, 5 calls). Best practices identified: Questions in first 3 minutes (correlation with 94% scores), pain point discovery average 12 minutes per call, next steps confirmed in 89% of high-scoring calls. Coaching opportunities: 3 reps need discovery training, 2 need closing technique work. I can generate personalized coaching plans and schedule follow-up sessions. Ready to proceed?');
+        async function drillDownGongCalls() {
+            const response = await fetch('/api/gong/recent-calls', {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                const summary = `📞 **Recent Gong Calls**: Found ${data.count} calls in the ${data.period}.\n\n${data.calls.map(c => `• ${c.title} (${c.duration}min) - ${c.participants.join(', ')}`).join('\n')}`;
+                window.sophia.addMessage('sophia', summary);
+            } else {
+                window.sophia.addMessage('sophia', 'Unable to retrieve Gong call data. Please try again.');
+            }
         }
 
-        function drillDownSentiment() {
-            window.sophia.addMessage('sophia', '💭 **Customer Sentiment Analysis**: 87% positive sentiment represents a 12% improvement over last quarter. Sentiment drivers: Product reliability (94% positive mentions), support response time (89% positive), and feature requests being addressed (76% positive). Areas of concern: Pricing transparency (23% negative mentions), onboarding complexity (18% negative). Positive sentiment correlates with 34% higher expansion revenue and 67% higher NPS scores. I recommend: 1) Pricing communication strategy 2) Simplified onboarding process 3) Proactive outreach to negative sentiment accounts. Shall I prioritize these initiatives and create implementation timelines?');
+        async function drillDownSentiment() {
+            const response = await fetch('/api/gong/search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query: 'customer sentiment analysis', limit: 10 })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.results && data.results.length > 0) {
+                    const summary = `💭 **Customer Sentiment Analysis**: Found ${data.count} relevant insights:\n\n${data.results.map(r => `• ${r.summary || r.content}`).slice(0, 5).join('\n')}`;
+                    window.sophia.addMessage('sophia', summary);
+                } else {
+                    window.sophia.addMessage('sophia', 'No customer sentiment data available in recent calls.');
+                }
+            } else {
+                window.sophia.addMessage('sophia', 'Unable to retrieve sentiment analysis. Please try again.');
+            }
         }
 
-        function drillDownMarketIntel() {
-            window.sophia.addMessage('sophia', '🌍 **Market Intelligence Report**: 12 new insights this week reveal significant opportunities. Key trends: AI adoption in healthcare accelerating (34% YoY growth), fintech consolidation creating partnership opportunities (23 M&A deals), and remote work tools market expanding (45% growth). Competitive analysis shows: 3 competitors launching similar features (threat level: medium), 2 strategic partnerships available (opportunity level: high), and 1 market gap in mid-market healthcare AI (opportunity level: very high). Market entry cost estimated at $2.3M with 18-month ROI. Shall I develop a strategic market entry plan with resource requirements and timeline?');
+        async function drillDownMarketIntel() {
+            const response = await fetch('/api/integrations/linear/search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query: 'market research competitive intelligence' })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                window.sophia.addMessage('sophia', data.summary || 'Market intelligence data temporarily unavailable.');
+            } else {
+                window.sophia.addMessage('sophia', 'Unable to retrieve market intelligence. Please try again.');
+            }
         }
 
-        function drillDownCompetitive() {
-            window.sophia.addMessage('sophia', '♟️ **Competitive Intelligence Update**: Monitoring 23 competitors across 5 categories. Recent developments: CompetitorA launched AI analytics feature (impacts 34% of our deals), CompetitorB raised $50M Series C (expansion threat), CompetitorC acquired by enterprise player (market consolidation signal). Our competitive position: Superior in AI/ML capabilities (89% win rate against), weaker in enterprise security features (67% win rate), equal in pricing for mid-market (73% win rate). Recommended actions: 1) Accelerate security roadmap 2) Adjust pricing strategy for enterprise 3) Leverage AI superiority in messaging. Shall I create battle cards and competitive positioning materials?');
+        async function drillDownCompetitive() {
+            const response = await fetch('/api/gong/search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query: 'competitor competitive analysis mentions', limit: 10 })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.results && data.results.length > 0) {
+                    const summary = `♟️ **Competitive Intelligence**: Found ${data.count} competitive mentions:\n\n${data.results.map(r => `• ${r.summary || r.content}`).slice(0, 5).join('\n')}`;
+                    window.sophia.addMessage('sophia', summary);
+                } else {
+                    window.sophia.addMessage('sophia', 'No competitive mentions found in recent calls.');
+                }
+            } else {
+                window.sophia.addMessage('sophia', 'Unable to retrieve competitive intelligence. Please try again.');
+            }
         }
 
-        function drillDownCustomerHealth() {
-            window.sophia.addMessage('sophia', '💚 **Client Health Deep Analysis**: 8.7/10 average health score with strong upward trend (+0.3 this month). Health factors: Usage frequency (weight: 30%, avg score: 8.9), Support ticket volume (weight: 25%, avg score: 8.4), Feature adoption (weight: 20%, avg score: 8.6), Executive engagement (weight: 15%, avg score: 8.8), Payment history (weight: 10%, avg score: 9.1). At-risk accounts (19%): TechCorp (declining usage), DataSys (support escalations), CloudFlow (low feature adoption). Action plan: Schedule executive reviews with at-risk accounts, implement usage optimization programs, enhance onboarding for new features. Expected impact: +0.5 health score improvement, 12% reduction in churn risk. Proceed with implementations?');
+        async function drillDownCustomerHealth() {
+            const response = await fetch('/api/personas/client-health/analysis', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ analysis_type: 'comprehensive' })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                window.sophia.addMessage('sophia', data.analysis || 'Customer health analysis temporarily unavailable.');
+            } else {
+                window.sophia.addMessage('sophia', 'Unable to retrieve customer health analysis. Please try again.');
+            }
         }
 
-        function drillDownRevenueForecast() {
-            window.sophia.addMessage('sophia', '📈 **Revenue Forecast Deep Dive**: Q4 projection of $8.2M represents 12% growth with 89% confidence interval of $7.6M-$8.8M. Model incorporates: Pipeline velocity (47-day avg cycle), seasonal patterns (Q4 typically +15%), competitive factors (3 major launches impact), and economic indicators (business software spending +8%). Upside scenarios ($9.1M possible): Enterprise deals closing early (3 identified), expansion revenue acceleration (+23% YoY), and new market entry success. Downside risks: Economic uncertainty (-5% impact), competitive pressure (-8% impact), team capacity constraints (-3% impact). Recommendation: Secure $7.8M baseline with focused effort on $1.3M upside opportunity. Shall I create detailed quarter execution plan?');
+        async function drillDownRevenueForecast() {
+            const response = await fetch('/api/personas/sales-coach/forecast', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ forecast_type: 'revenue', period: 'Q4' })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                window.sophia.addMessage('sophia', data.forecast || 'Revenue forecast temporarily unavailable.');
+            } else {
+                window.sophia.addMessage('sophia', 'Unable to retrieve revenue forecast. Please try again.');
+            }
         }
 
         // Initialize Sophia Business Intelligence

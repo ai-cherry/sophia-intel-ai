@@ -4,13 +4,13 @@
     "version": "1.0.0",
     "description": "Intelligent NL command routing with swarm integration"
   },
-  
+
   "complexity_thresholds": {
     "lite": 0.3,
     "balanced": 0.7,
     "description": "Thresholds for determining execution mode based on task complexity"
   },
-  
+
   "execution_modes": {
     "lite": {
       "description": "Fast, simple execution for basic commands",
@@ -29,19 +29,25 @@
     "quality": {
       "description": "High-quality execution for complex tasks",
       "max_agents": 7,
-      "patterns": ["memory_enrichment", "swarm", "debate", "quality_gates", "consensus"],
+      "patterns": [
+        "memory_enrichment",
+        "swarm",
+        "debate",
+        "quality_gates",
+        "consensus"
+      ],
       "timeout_seconds": 30,
       "quality_target": 0.9
     }
   },
-  
+
   "swarm_eligible_intents": [
     "EXECUTE_WORKFLOW",
     "QUERY_DATA",
     "RUN_AGENT",
     "SCALE_SERVICE"
   ],
-  
+
   "memory_enrichment": {
     "enabled": true,
     "max_history": 10,
@@ -49,7 +55,7 @@
     "similarity_threshold": 0.7,
     "cache_ttl_seconds": 300
   },
-  
+
   "optimization": {
     "auto_adjust_mode": true,
     "performance_target_ms": 5000,
@@ -57,7 +63,7 @@
     "learning_rate": 0.1,
     "adjustment_window": 10
   },
-  
+
   "circuit_breakers": {
     "memory": {
       "failure_threshold": 3,
@@ -80,14 +86,14 @@
       "success_threshold": 3
     }
   },
-  
+
   "fallback": {
     "enable_graceful_degradation": true,
     "fallback_to_simple": true,
     "max_retry_attempts": 2,
     "retry_delay_ms": 1000
   },
-  
+
   "swarm_patterns": {
     "debate": {
       "enabled": true,
@@ -153,7 +159,7 @@
       }
     }
   },
-  
+
   "agent_roles": {
     "researcher": {
       "description": "Gathers information and analyzes requirements",
@@ -186,7 +192,7 @@
       "max_tokens": 500
     }
   },
-  
+
   "performance_monitoring": {
     "enabled": true,
     "metrics_collection_interval_seconds": 60,
@@ -199,7 +205,7 @@
     "export_metrics": true,
     "metrics_export_path": "tmp/metrics/"
   },
-  
+
   "logging": {
     "level": "INFO",
     "detailed_tracing": false,
@@ -207,7 +213,7 @@
     "log_swarm_decisions": true,
     "log_performance_metrics": true
   },
-  
+
   "api_endpoints": {
     "base_path": "/api/v1/nl",
     "swarm_path": "/api/v1/swarm",
@@ -216,28 +222,23 @@
     "cors_enabled": true,
     "cors_origins": ["http://localhost:3000", "http://localhost:8501"]
   },
-  
+
   "session_management": {
     "default_timeout_minutes": 30,
     "max_sessions_per_user": 5,
     "enable_session_persistence": true,
     "persistence_backend": "redis"
   },
-  
+
   "security": {
     "enable_api_key_auth": true,
     "enable_rate_limiting": true,
     "rate_limit_requests_per_minute": 60,
     "enable_input_validation": true,
     "max_input_length": 5000,
-    "prohibited_patterns": [
-      "rm -rf",
-      "sudo",
-      "DROP TABLE",
-      "DELETE FROM"
-    ]
+    "prohibited_patterns": ["rm -rf", "sudo", "DROP TABLE", "DELETE FROM"]
   },
-  
+
   "integrations": {
     "n8n": {
       "enabled": true,
@@ -261,7 +262,7 @@
       "dashboard_url": "http://localhost:3000/d/nl-swarm-dashboard"
     }
   },
-  
+
   "experimental_features": {
     "enable_multi_modal": false,
     "enable_streaming_responses": false,

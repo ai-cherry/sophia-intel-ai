@@ -10,13 +10,13 @@ This document presents a comprehensive optimization strategy for the Sophia-Arte
 
 ### Fly.io Deployment Status
 
-| Service | Region | Resources | Auto-scaling | Status |
-|---------|--------|-----------|--------------|---------|
-| sophia-api | sjc | 4 CPU, 4GB RAM | 2-20 machines | ✅ Configured |
-| sophia-bridge | sjc | 2 CPU, 2GB RAM | 1-10 machines | ✅ Configured |
-| sophia-mcp | sjc | 2 CPU, 2GB RAM | 1-10 machines | ✅ Configured |
-| sophia-vector | sjc | 2 CPU, 2GB RAM | 1-10 machines | ✅ Configured |
-| sophia-ui | sjc | 1 CPU, 1GB RAM | 1-5 machines | ✅ Configured |
+| Service       | Region | Resources      | Auto-scaling  | Status        |
+| ------------- | ------ | -------------- | ------------- | ------------- |
+| sophia-api    | sjc    | 4 CPU, 4GB RAM | 2-20 machines | ✅ Configured |
+| sophia-bridge | sjc    | 2 CPU, 2GB RAM | 1-10 machines | ✅ Configured |
+| sophia-mcp    | sjc    | 2 CPU, 2GB RAM | 1-10 machines | ✅ Configured |
+| sophia-vector | sjc    | 2 CPU, 2GB RAM | 1-10 machines | ✅ Configured |
+| sophia-ui     | sjc    | 1 CPU, 1GB RAM | 1-5 machines  | ✅ Configured |
 
 ### Infrastructure Gaps
 
@@ -34,9 +34,9 @@ This document presents a comprehensive optimization strategy for the Sophia-Arte
 
 ```yaml
 regions:
-  primary: sjc  # San Jose - 370 miles from Las Vegas (~15ms latency)
-  backup: lax  # Los Angeles - 270 miles from Las Vegas (~10ms latency)
-  
+  primary: sjc # San Jose - 370 miles from Las Vegas (~15ms latency)
+  backup: lax # Los Angeles - 270 miles from Las Vegas (~10ms latency)
+
 deployment_strategy:
   type: single-tenant-optimized
   user_location: las_vegas_nv
@@ -65,7 +65,7 @@ primary_region = "lax"  # Closest to Las Vegas
   auto_stop_machines = true      # Critical for cost savings
   auto_start_machines = true     # Wake on demand
   min_machines_running = 0       # Allow complete scale to zero
-  
+
   [[services.http_checks]]
     interval = "60s"  # Less frequent for single user
     grace_period = "10s"
@@ -83,17 +83,17 @@ optimization:
   location_specific:
     user_timezone: "America/Los_Angeles"
     peak_hours: "9am-6pm PST"
-    
+
   scaling_strategy:
     business_hours:
-      lax: 1  # 1 machine during work hours
+      lax: 1 # 1 machine during work hours
     off_hours:
-      lax: 0  # Scale to zero after hours
-      
-  wake_up_time: "< 2 seconds"  # Fast cold start
-  
+      lax: 0 # Scale to zero after hours
+
+  wake_up_time: "< 2 seconds" # Fast cold start
+
   estimated_monthly_cost:
-    current: "$180/month"  # 24/7 operation
+    current: "$180/month" # 24/7 operation
     optimized: "$45/month" # 9 hours/day operation
     savings: "$135/month" # 75% reduction
 ```
@@ -130,44 +130,44 @@ class LambdaLabsOrchestrator:
     """
     Orchestrates GPU workloads between Fly.io and Lambda Labs
     """
-    
+
     def __init__(self):
         self.base_url = "https://cloud.lambdalabs.com/api/v1"
         self.api_key = os.environ.get("LAMBDA_LABS_API_KEY")
         self.active_instances = {}
-        
+
     async def route_workload(self, workload: Dict[str, Any]) -> Dict[str, Any]:
         """Route workload to appropriate infrastructure"""
-        
+
         workload_type = self._classify_workload(workload)
-        
+
         if workload_type in [GPUWorkloadType.TRAINING, GPUWorkloadType.BATCH_PROCESSING]:
             # Route to Lambda Labs for GPU processing
             return await self._execute_on_lambda_labs(workload)
         else:
             # Keep on Fly.io for CPU workloads
             return await self._execute_on_fly(workload)
-    
+
     async def _execute_on_lambda_labs(self, workload: Dict[str, Any]) -> Dict[str, Any]:
         """Execute workload on Lambda Labs GPU infrastructure"""
-        
+
         # Provision GPU instance if needed
         instance_id = await self._provision_gpu_instance()
-        
+
         # Execute workload
         result = await self._run_gpu_workload(instance_id, workload)
-        
+
         # Auto-shutdown management
         asyncio.create_task(self._schedule_shutdown(instance_id))
-        
+
         return result
-    
+
     async def _provision_gpu_instance(self) -> str:
         """Provision Lambda Labs GPU instance"""
-        
+
         async with aiohttp.ClientSession() as session:
             headers = {"Authorization": f"Bearer {self.api_key}"}
-            
+
             payload = {
                 "region_name": "us-tx-1",
                 "instance_type_name": "gpu_1x_a100",
@@ -175,7 +175,7 @@ class LambdaLabsOrchestrator:
                 "ssh_key_names": ["sophia-artemis-key"],
                 "quantity": 1
             }
-            
+
             async with session.post(
                 f"{self.base_url}/instance-operations/launch",
                 headers=headers,
@@ -183,17 +183,17 @@ class LambdaLabsOrchestrator:
             ) as response:
                 result = await response.json()
                 instance_id = result["instance_ids"][0]
-                
+
                 self.active_instances[instance_id] = {
                     "status": "provisioning",
                     "created_at": datetime.now()
                 }
-                
+
                 return instance_id
-    
+
     def _classify_workload(self, workload: Dict[str, Any]) -> GPUWorkloadType:
         """Classify workload type for routing"""
-        
+
         if "training" in workload.get("task_type", ""):
             return GPUWorkloadType.TRAINING
         elif "batch" in workload.get("task_type", ""):
@@ -230,7 +230,7 @@ get_active_env() {
 deploy_to_inactive() {
     local active=$(get_active_env)
     local target_app=""
-    
+
     if [ "$active" = "blue" ]; then
         target_app=$GREEN_APP
         echo "🟢 Deploying to GREEN environment..."
@@ -238,10 +238,10 @@ deploy_to_inactive() {
         target_app=$BLUE_APP
         echo "🔵 Deploying to BLUE environment..."
     fi
-    
+
     # Deploy to target environment
     fly deploy --app $target_app --config fly-unified-api.toml
-    
+
     # Run health checks
     echo "🏥 Running health checks..."
     for i in {1..30}; do
@@ -251,14 +251,14 @@ deploy_to_inactive() {
         fi
         sleep 10
     done
-    
+
     # Switch traffic
     echo "🔄 Switching traffic to new deployment..."
     fly ips list --app $APP_NAME | grep -v "VERSION" | awk '{print $1}' | while read ip; do
         fly ips allocate-v4 --app $target_app
         fly ips release $ip --app $active_app
     done
-    
+
     echo "✅ Blue-Green deployment complete!"
 }
 
@@ -323,7 +323,7 @@ class VegasCostOptimizer:
     """
     Optimizes cloud infrastructure costs for single user in Las Vegas
     """
-    
+
     def __init__(self):
         self.fly_pricing = {
             "shared-cpu-1x": 0.0000008,  # per second ($2.07/month if 24/7)
@@ -331,12 +331,12 @@ class VegasCostOptimizer:
             "shared-cpu-4x": 0.0000032,  # per second ($8.30/month if 24/7)
             "performance-2x": 0.0000139  # per second ($36/month if 24/7)
         }
-        
+
         self.lambda_labs_pricing = {
             "gpu_1x_a100": 1.29,  # per hour (only pay when used)
             "on_demand": True     # No reserved instances needed
         }
-        
+
         self.user_profile = {
             "location": "Las Vegas, NV",
             "timezone": "PST",
@@ -344,17 +344,17 @@ class VegasCostOptimizer:
             "work_days": [1, 2, 3, 4, 5],  # Monday to Friday
             "usage_pattern": "development"  # Not production
         }
-    
+
     async def optimize_single_user_deployment(self) -> Dict[str, Any]:
         """Optimize deployment for single Las Vegas user"""
-        
+
         recommendations = {
             "immediate_actions": [],
             "scheduled_actions": [],
             "cost_breakdown": {},
             "total_savings": 0
         }
-        
+
         # Immediate cost-saving actions
         recommendations["immediate_actions"] = [
             {
@@ -388,7 +388,7 @@ class VegasCostOptimizer:
                 "monthly_savings": "$240"
             }
         ]
-        
+
         # Scheduled optimizations
         recommendations["scheduled_actions"] = [
             {
@@ -409,7 +409,7 @@ class VegasCostOptimizer:
                 "monthly_savings": "$40"
             }
         ]
-        
+
         # GPU optimization for single user
         recommendations["gpu_strategy"] = {
             "approach": "on-demand only",
@@ -422,7 +422,7 @@ class VegasCostOptimizer:
             "estimated_usage": "10 hours/month",
             "monthly_cost": "$13"  # vs $930 for reserved instance
         }
-        
+
         # Cost breakdown
         recommendations["cost_breakdown"] = {
             "current": {
@@ -439,12 +439,12 @@ class VegasCostOptimizer:
             "annual_savings": "$1,704",
             "reduction_percentage": "79%"
         }
-        
+
         return recommendations
-    
+
     def generate_fly_config(self) -> str:
         """Generate optimized Fly.io configuration for Las Vegas user"""
-        
+
         return """
 # fly-vegas-optimized.toml
 app = "sophia-api-vegas"
@@ -465,7 +465,7 @@ primary_region = "lax"  # Los Angeles - closest to Vegas
   auto_stop_machines = true
   auto_start_machines = true
   min_machines_running = 0  # Allow complete shutdown
-  
+
   [services.concurrency]
     type = "connections"
     hard_limit = 10  # Single user doesn't need high concurrency
@@ -491,17 +491,17 @@ monitoring:
   distributed_tracing:
     provider: datadog
     sampling_rate: 0.1
-    
+
   metrics:
     collectors:
       - prometheus
       - cloudwatch
     export_interval: 60s
-    
+
   logging:
     aggregator: elasticsearch
     retention_days: 30
-    
+
   alerts:
     channels:
       - slack
@@ -534,23 +534,23 @@ class FlyDeployment(pulumi.ComponentResource):
     """
     Pulumi component for Fly.io deployment management
     """
-    
+
     def __init__(self, name: str, config: Dict[str, Any], opts=None):
         super().__init__("sophia:fly:Deployment", name, None, opts)
-        
+
         # Deploy to multiple regions
         for region, machine_count in config["regions"].items():
             self._deploy_region(name, region, machine_count, config)
-        
+
         # Set up monitoring
         self._setup_monitoring(name, config)
-        
+
         # Configure auto-scaling
         self._configure_autoscaling(name, config)
-    
+
     def _deploy_region(self, app_name: str, region: str, machines: int, config: Dict):
         """Deploy app to specific region"""
-        
+
         deploy_cmd = command.local.Command(
             f"{app_name}-deploy-{region}",
             create=f"""
@@ -559,12 +559,12 @@ class FlyDeployment(pulumi.ComponentResource):
             """,
             opts=pulumi.ResourceOptions(parent=self)
         )
-        
+
         return deploy_cmd
-    
+
     def _setup_monitoring(self, app_name: str, config: Dict):
         """Setup monitoring for Fly.io app"""
-        
+
         monitoring_cmd = command.local.Command(
             f"{app_name}-monitoring",
             create=f"""
@@ -573,7 +573,7 @@ class FlyDeployment(pulumi.ComponentResource):
             """,
             opts=pulumi.ResourceOptions(parent=self)
         )
-        
+
         return monitoring_cmd
 ```
 
@@ -582,21 +582,25 @@ class FlyDeployment(pulumi.ComponentResource):
 ## 📈 Implementation Roadmap
 
 ### Phase 1: Foundation (Week 1-2)
+
 - [ ] Set up multi-region deployment on Fly.io
 - [ ] Implement container optimization
 - [ ] Configure basic cost monitoring
 
 ### Phase 2: GPU Integration (Week 3-4)
+
 - [ ] Integrate Lambda Labs API
 - [ ] Implement workload routing logic
 - [ ] Set up GPU auto-scaling
 
 ### Phase 3: Advanced Deployment (Week 5-6)
+
 - [ ] Implement blue-green deployment
 - [ ] Set up canary deployments
 - [ ] Configure automated rollback
 
 ### Phase 4: Monitoring & Optimization (Week 7-8)
+
 - [ ] Deploy distributed tracing
 - [ ] Implement cost optimization engine
 - [ ] Set up comprehensive alerting
@@ -606,12 +610,14 @@ class FlyDeployment(pulumi.ComponentResource):
 ## 💰 Expected Outcomes
 
 ### Performance Improvements (Single-User Las Vegas)
+
 - **15ms latency** from LAX region (vs 25ms from SJC)
 - **2-second cold starts** when waking from sleep
 - **3x faster** ML workloads with on-demand Lambda Labs GPU
 - **100% availability** during business hours (9 AM - 6 PM PST)
 
 ### Cost Optimizations (Single-User Las Vegas)
+
 - **79% reduction** in infrastructure costs through:
   - Scale to zero during nights and weekends
   - Single region deployment (LAX only)
@@ -621,6 +627,7 @@ class FlyDeployment(pulumi.ComponentResource):
 - **$1,704/year savings** with single-user optimization
 
 ### Operational Benefits
+
 - **Zero-downtime deployments** with blue-green strategy
 - **Automated failure recovery** with health checks and rollback
 - **Real-time cost visibility** with monitoring dashboard
@@ -656,9 +663,10 @@ python -m app.gpu.lambda_executor --workload training --instances 1 --auto-termi
 ## 📊 Monitoring Dashboard
 
 Access deployment metrics and monitoring:
-- Fly.io Dashboard: https://fly.io/apps/sophia-api
-- Lambda Labs Console: https://cloud.lambdalabs.com/instances
-- Cost Analytics: https://fly.io/organizations/sophia/billing
+
+- Fly.io Dashboard: <https://fly.io/apps/sophia-api>
+- Lambda Labs Console: <https://cloud.lambdalabs.com/instances>
+- Cost Analytics: <https://fly.io/organizations/sophia/billing>
 
 ---
 

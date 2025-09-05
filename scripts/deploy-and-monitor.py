@@ -32,7 +32,7 @@ class ProductionDeploymentManager:
             {"name": "sophia-vector", "config": "fly-vector-store.toml", "priority": 3},
             {"name": "sophia-api", "config": "fly-unified-api.toml", "priority": 4},
             {"name": "sophia-bridge", "config": "fly-agno-bridge.toml", "priority": 5},
-            {"name": "sophia-ui", "config": "fly-agent-ui.toml", "priority": 6}
+            {"name": "sophia-ui", "config": "fly-agent-ui.toml", "priority": 6},
         ]
 
     def install_fly_cli(self) -> bool:
@@ -49,7 +49,9 @@ class ProductionDeploymentManager:
         try:
             # Install Fly CLI for macOS
             install_cmd = ["curl", "-L", "https://fly.io/install.sh", "|", "sh"]
-            result = subprocess.run(" ".join(install_cmd), shell=True, capture_output=True, text=True)
+            result = subprocess.run(
+                " ".join(install_cmd), shell=True, capture_output=True, text=True
+            )
 
             if result.returncode == 0:
                 logger.info("✅ Fly CLI installed successfully")
@@ -65,10 +67,7 @@ class ProductionDeploymentManager:
         """Authenticate with Fly.io"""
         try:
             result = subprocess.run(
-                ["fly", "auth", "token"],
-                input=self.fly_api_token,
-                text=True,
-                capture_output=True
+                ["fly", "auth", "token"], input=self.fly_api_token, text=True, capture_output=True
             )
 
             if result.returncode == 0:
@@ -122,11 +121,14 @@ class ProductionDeploymentManager:
         # 2. Deploy the service
         try:
             deploy_cmd = [
-                "fly", "deploy",
-                "--config", config_file,
-                "--app", app_name,
+                "fly",
+                "deploy",
+                "--config",
+                config_file,
+                "--app",
+                app_name,
                 "--remote-only",
-                "--detach"
+                "--detach",
             ]
 
             deploy_result = subprocess.run(deploy_cmd, capture_output=True, text=True, timeout=600)
@@ -140,22 +142,18 @@ class ProductionDeploymentManager:
                     "status": "deployed",
                     "app_name": app_name,
                     "public_url": f"https://{app_name}.fly.dev",
-                    "health_status": deployment_status
+                    "health_status": deployment_status,
                 }
             else:
                 logger.info(f"⚠️  Deployment issue for {app_name}: {deploy_result.stderr}")
-                return {
-                    "status": "warning",
-                    "app_name": app_name,
-                    "error": deploy_result.stderr
-                }
+                return {"status": "warning", "app_name": app_name, "error": deploy_result.stderr}
 
         except subprocess.TimeoutExpired:
             logger.info(f"⏱️  Deployment timeout for {app_name} (continuing in background)")
             return {
                 "status": "deploying",
                 "app_name": app_name,
-                "note": "Background deployment in progress"
+                "note": "Background deployment in progress",
             }
         except Exception as e:
             logger.info(f"❌ Deployment error for {app_name}: {e}")
@@ -179,16 +177,20 @@ class ProductionDeploymentManager:
                     # Check if any machines are running
                     allocations = status_data.get("Allocations", [])
                     if allocations:
-                        running_count = sum(1 for alloc in allocations if alloc.get("Status") == "running")
+                        running_count = sum(
+                            1 for alloc in allocations if alloc.get("Status") == "running"
+                        )
                         if running_count > 0:
                             logger.info(f"✅ {app_name} is running ({running_count} instances)")
                             return {
                                 "status": "healthy",
                                 "running_instances": running_count,
-                                "total_allocations": len(allocations)
+                                "total_allocations": len(allocations),
                             }
 
-                logger.info(f"⏳ Waiting for {app_name} to start... ({int(time.time() - start_time)}s)")
+                logger.info(
+                    f"⏳ Waiting for {app_name} to start... ({int(time.time() - start_time)}s)"
+                )
                 time.sleep(30)
 
             except Exception as e:
@@ -210,14 +212,10 @@ class ProductionDeploymentManager:
                 "url": url,
                 "status_code": response.status_code,
                 "healthy": response.status_code == 200,
-                "response_time_ms": response.elapsed.total_seconds() * 1000
+                "response_time_ms": response.elapsed.total_seconds() * 1000,
             }
         except Exception as e:
-            return {
-                "url": url,
-                "healthy": False,
-                "error": str(e)
-            }
+            return {"url": url, "healthy": False, "error": str(e)}
 
     def set_production_secrets(self, app_name: str) -> bool:
         """Set production secrets for a service"""
@@ -226,26 +224,24 @@ class ProductionDeploymentManager:
         secrets_map = {
             "sophia-weaviate": {
                 "WEAVIATE_API_KEY": os.environ.get("WEAVIATE_API_KEY", ""),
-                "OPENAI_API_KEY": os.environ.get("OPENAI_API_KEY", "")
+                "OPENAI_API_KEY": os.environ.get("OPENAI_API_KEY", ""),
             },
             "sophia-mcp": {
                 "NEON_DATABASE_URL": os.environ.get("NEON_DATABASE_URL", ""),
-                "REDIS_PASSWORD": os.environ.get("REDIS_PASSWORD", "")
+                "REDIS_PASSWORD": os.environ.get("REDIS_PASSWORD", ""),
             },
             "sophia-vector": {
                 "PORTKEY_API_KEY": os.environ.get("PORTKEY_API_KEY", ""),
-                "COHERE_API_KEY": os.environ.get("COHERE_API_KEY", "")
+                "COHERE_API_KEY": os.environ.get("COHERE_API_KEY", ""),
             },
             "sophia-api": {
                 "PORTKEY_API_KEY": os.environ.get("PORTKEY_API_KEY", ""),
                 "NEON_DATABASE_URL": os.environ.get("NEON_DATABASE_URL", ""),
                 "LAMBDA_LABS_API_KEY": os.environ.get("LAMBDA_LABS_API_KEY", ""),
-                "REDIS_PASSWORD": os.environ.get("REDIS_PASSWORD", "")
+                "REDIS_PASSWORD": os.environ.get("REDIS_PASSWORD", ""),
             },
-            "sophia-bridge": {
-                "PORTKEY_API_KEY": os.environ.get("PORTKEY_API_KEY", "")
-            },
-            "sophia-ui": {}  # Frontend doesn't need backend secrets
+            "sophia-bridge": {"PORTKEY_API_KEY": os.environ.get("PORTKEY_API_KEY", "")},
+            "sophia-ui": {},  # Frontend doesn't need backend secrets
         }
 
         service_secrets = secrets_map.get(app_name, {})
@@ -323,7 +319,7 @@ class ProductionDeploymentManager:
             "sophia-vector": "/health",
             "sophia-api": "/healthz",
             "sophia-bridge": "/healthz",
-            "sophia-ui": "/"
+            "sophia-ui": "/",
         }
 
         for app_name, health_path in health_endpoints.items():
@@ -333,21 +329,27 @@ class ProductionDeploymentManager:
                 monitoring_results[app_name] = health_result
 
                 if health_result.get("healthy"):
-                    logger.info(f"✅ {app_name} is healthy ({health_result['response_time_ms']:.0f}ms)")
+                    logger.info(
+                        f"✅ {app_name} is healthy ({health_result['response_time_ms']:.0f}ms)"
+                    )
                 else:
-                    logger.info(f"⚠️  {app_name} health check failed: {health_result.get('error', 'Unknown')}")
+                    logger.info(
+                        f"⚠️  {app_name} health check failed: {health_result.get('error', 'Unknown')}"
+                    )
             else:
                 logger.info(f"⏭️  Skipping {app_name} - not deployed successfully")
                 monitoring_results[app_name] = {"status": "not_deployed"}
 
         return monitoring_results
 
-    def generate_deployment_report(self,
-                                 deployment_results: dict[str, Any],
-                                 monitoring_results: dict[str, Any]) -> str:
+    def generate_deployment_report(
+        self, deployment_results: dict[str, Any], monitoring_results: dict[str, Any]
+    ) -> str:
         """Generate comprehensive deployment and monitoring report"""
 
-        successful_deployments = len([r for r in deployment_results.values() if r.get("status") == "deployed"])
+        successful_deployments = len(
+            [r for r in deployment_results.values() if r.get("status") == "deployed"]
+        )
         healthy_services = len([r for r in monitoring_results.values() if r.get("healthy")])
 
         report = f"""
@@ -449,12 +451,19 @@ def main():
 
         # Save JSON results for automation
         with open("production-deployment-results.json", "w") as f:
-            json.dump({
-                "deployment": deployment_results,
-                "monitoring": monitoring_results,
-                "timestamp": datetime.now().isoformat(),
-                "success_rate": len([r for r in deployment_results.values() if r.get("status") == "deployed"]) / len(manager.services)
-            }, f, indent=2)
+            json.dump(
+                {
+                    "deployment": deployment_results,
+                    "monitoring": monitoring_results,
+                    "timestamp": datetime.now().isoformat(),
+                    "success_rate": len(
+                        [r for r in deployment_results.values() if r.get("status") == "deployed"]
+                    )
+                    / len(manager.services),
+                },
+                f,
+                indent=2,
+            )
 
         # Final summary
         successful = len([r for r in deployment_results.values() if r.get("status") == "deployed"])

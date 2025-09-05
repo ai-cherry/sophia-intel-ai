@@ -9,11 +9,11 @@ from typing import Any
 def as_json_or_error(content: str, required: list[str]) -> dict[str, Any]:
     """
     Parse JSON content and validate required fields.
-    
+
     Args:
         content: Raw string content to parse
         required: List of required field names
-    
+
     Returns:
         Parsed dict if valid, or dict with "_error" key if invalid
     """
@@ -27,6 +27,7 @@ def as_json_or_error(content: str, required: list[str]) -> dict[str, Any]:
         return {"_error": f"missing-keys:{missing}", "raw": data}
 
     return data
+
 
 def extract_json_from_markdown(content: str) -> str:
     """

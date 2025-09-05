@@ -12,6 +12,7 @@ from typing import Any
 
 class SystemType(Enum):
     """All AI system types under orchestrator control"""
+
     AGENT = "agent"
     SWARM = "swarm"
     MICRO_SWARM = "micro_swarm"
@@ -25,6 +26,7 @@ class SystemType(Enum):
 
 class SystemStatus(Enum):
     """System operational status"""
+
     IDLE = "idle"
     ACTIVE = "active"
     PROCESSING = "processing"
@@ -36,6 +38,7 @@ class SystemStatus(Enum):
 @dataclass
 class RegisteredSystem:
     """Complete representation of any AI system"""
+
     id: str
     name: str
     type: SystemType
@@ -117,7 +120,7 @@ class UniversalRegistry:
             "by_type": by_type,
             "by_status": by_status,
             "health_score": self._calculate_health_score(),
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
     def _calculate_health_score(self) -> float:
@@ -136,8 +139,8 @@ class UniversalRegistry:
         healthy = active + processing + idle
 
         score = (healthy / total) * 100
-        score -= (error * 10)  # Penalty for errors
-        score -= (offline * 5)  # Penalty for offline
+        score -= error * 10  # Penalty for errors
+        score -= offline * 5  # Penalty for offline
 
         return max(0, min(100, score))
 
@@ -158,20 +161,16 @@ class NaturalLanguageController:
             # Status queries
             "status": ["show", "status", "health", "what's running"],
             "list": ["list", "show all", "get all"],
-
             # Control commands
             "start": ["start", "launch", "spawn", "create", "deploy"],
             "stop": ["stop", "kill", "terminate", "shutdown"],
             "restart": ["restart", "reboot", "refresh"],
             "scale": ["scale", "resize", "expand", "shrink"],
-
             # Micro-swarm specific
             "swarm": ["swarm", "micro-swarm", "task force"],
-
             # Analysis
             "analyze": ["analyze", "inspect", "debug", "diagnose"],
             "optimize": ["optimize", "improve", "enhance", "tune"],
-
             # Coordination
             "coordinate": ["coordinate", "orchestrate", "manage"],
             "connect": ["connect", "link", "integrate"],
@@ -232,7 +231,8 @@ class NaturalLanguageController:
 
         # Extract numbers for scaling
         import re
-        numbers = re.findall(r'\d+', command)
+
+        numbers = re.findall(r"\d+", command)
         if numbers:
             entities["count"] = int(numbers[0])
 
@@ -245,14 +245,14 @@ class NaturalLanguageController:
             return {
                 "response": f"Found {len(systems)} {entities['system_type'].value} systems",
                 "systems": [self._system_to_dict(s) for s in systems],
-                "success": True
+                "success": True,
             }
         else:
             report = self.registry.get_health_report()
             return {
                 "response": f"System health: {report['health_score']:.1f}%",
                 "report": report,
-                "success": True
+                "success": True,
             }
 
     async def _handle_start_command(self, entities: dict) -> dict:
@@ -267,7 +267,7 @@ class NaturalLanguageController:
             name=name,
             type=system_type,
             status=SystemStatus.ACTIVE,
-            capabilities=self._get_default_capabilities(system_type)
+            capabilities=self._get_default_capabilities(system_type),
         )
 
         await self.registry.register(new_system)
@@ -275,7 +275,7 @@ class NaturalLanguageController:
         return {
             "response": f"Started {system_type.value}: {name}",
             "system_id": new_system.id,
-            "success": True
+            "success": True,
         }
 
     async def _handle_stop_command(self, entities: dict) -> dict:
@@ -288,22 +288,15 @@ class NaturalLanguageController:
                     return {
                         "response": f"Stopped {system.name}",
                         "system_id": system.id,
-                        "success": True
+                        "success": True,
                     }
 
-        return {
-            "response": "System not found",
-            "success": False
-        }
+        return {"response": "System not found", "success": False}
 
     async def _handle_swarm_command(self, entities: dict) -> dict:
         """Handle micro-swarm specific commands"""
         # This integrates with the micro-swarm plan
-        return {
-            "response": "Micro-swarm command processing",
-            "entities": entities,
-            "success": True
-        }
+        return {"response": "Micro-swarm command processing", "entities": entities, "success": True}
 
     async def _handle_analysis_command(self, entities: dict) -> dict:
         """Handle analysis commands"""
@@ -313,30 +306,22 @@ class NaturalLanguageController:
             "active_systems": len(active),
             "total_systems": len(self.registry.systems),
             "health_score": self.registry.get_health_report()["health_score"],
-            "recommendations": self._generate_recommendations()
+            "recommendations": self._generate_recommendations(),
         }
 
-        return {
-            "response": "System analysis complete",
-            "analysis": analysis,
-            "success": True
-        }
+        return {"response": "System analysis complete", "analysis": analysis, "success": True}
 
     async def _handle_coordination_command(self, entities: dict) -> dict:
         """Handle coordination between systems"""
         # This would coordinate multiple systems
-        return {
-            "response": "Coordination initiated",
-            "entities": entities,
-            "success": True
-        }
+        return {"response": "Coordination initiated", "entities": entities, "success": True}
 
     async def _handle_generic_command(self, command: str) -> dict:
         """Handle unknown commands with AI interpretation"""
         return {
             "response": f"Processing: {command}",
             "interpreted_as": "generic_command",
-            "success": True
+            "success": True,
         }
 
     def _get_default_capabilities(self, system_type: SystemType) -> list[str]:
@@ -358,7 +343,7 @@ class NaturalLanguageController:
             "type": system.type.value,
             "status": system.status.value,
             "capabilities": system.capabilities,
-            "last_activity": system.last_activity.isoformat()
+            "last_activity": system.last_activity.isoformat(),
         }
 
     def _generate_recommendations(self) -> list[str]:
@@ -407,12 +392,14 @@ class RealTimeMonitor:
             alerts = self.check_alerts(metrics)
 
             # Broadcast to all subscribers
-            await self.broadcast_update({
-                "type": "metrics_update",
-                "metrics": metrics,
-                "alerts": alerts,
-                "timestamp": datetime.now().isoformat()
-            })
+            await self.broadcast_update(
+                {
+                    "type": "metrics_update",
+                    "metrics": metrics,
+                    "alerts": alerts,
+                    "timestamp": datetime.now().isoformat(),
+                }
+            )
 
             await asyncio.sleep(1)  # Update every second
 
@@ -424,8 +411,8 @@ class RealTimeMonitor:
                 "total_active": 0,
                 "total_requests": 0,
                 "avg_response_time": 0,
-                "error_count": 0
-            }
+                "error_count": 0,
+            },
         }
 
         for system in self.registry.systems.values():
@@ -433,7 +420,7 @@ class RealTimeMonitor:
                 "status": system.status.value,
                 "last_activity": system.last_activity.isoformat(),
                 "error_count": system.error_count,
-                **system.metrics
+                **system.metrics,
             }
             metrics["systems"][system.id] = system_metrics
 
@@ -451,17 +438,20 @@ class RealTimeMonitor:
         # Check error rate
         total_systems = len(self.registry.systems)
         if total_systems > 0:
-            error_systems = len([s for s in self.registry.systems.values()
-                               if s.status == SystemStatus.ERROR])
+            error_systems = len(
+                [s for s in self.registry.systems.values() if s.status == SystemStatus.ERROR]
+            )
             error_rate = error_systems / total_systems
 
             if error_rate > self.alert_thresholds["error_rate"]:
-                alerts.append({
-                    "level": "critical",
-                    "message": f"High error rate: {error_rate:.1%}",
-                    "metric": "error_rate",
-                    "value": error_rate
-                })
+                alerts.append(
+                    {
+                        "level": "critical",
+                        "message": f"High error rate: {error_rate:.1%}",
+                        "metric": "error_rate",
+                        "value": error_rate,
+                    }
+                )
 
         return alerts
 
@@ -489,5 +479,5 @@ __all__ = [
     "RegisteredSystem",
     "UniversalRegistry",
     "NaturalLanguageController",
-    "RealTimeMonitor"
+    "RealTimeMonitor",
 ]

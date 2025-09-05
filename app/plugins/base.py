@@ -6,7 +6,7 @@ Base classes and interfaces for dynamic plugin loading.
 import logging
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Any, Optional, Union
+from typing import Any, Optional
 
 from pydantic import BaseModel, Field
 
@@ -16,8 +16,10 @@ logger = logging.getLogger(__name__)
 # Plugin Metadata
 # ============================================
 
+
 class PluginMetadata(BaseModel):
     """Metadata for plugin identification and configuration."""
+
     name: str = Field(..., description="Unique plugin name")
     version: str = Field(..., description="Semantic version")
     description: str = Field(..., description="Plugin description")
@@ -27,9 +29,11 @@ class PluginMetadata(BaseModel):
     tags: list[str] = Field(default_factory=list, description="Plugin tags")
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
+
 # ============================================
 # Base Plugin Classes
 # ============================================
+
 
 class Plugin(ABC):
     """Base class for all plugins."""
@@ -42,7 +46,7 @@ class Plugin(ABC):
     @abstractmethod
     async def initialize(self, config: dict[str, Any]) -> None:
         """Initialize plugin with configuration.
-        
+
         Args:
             config: Plugin configuration dictionary
         """
@@ -61,32 +65,28 @@ class Plugin(ABC):
 
     def validate_config(self, config: dict[str, Any]) -> bool:
         """Validate plugin configuration.
-        
+
         Args:
             config: Configuration to validate
-            
+
         Returns:
             True if valid, False otherwise
         """
         return True  # Override in subclasses
 
+
 class SwarmPlugin(Plugin):
     """Base class for swarm plugins."""
 
     @abstractmethod
-    async def execute_task(
-        self,
-        task: str,
-        context: dict[str, Any],
-        stream: bool = False
-    ) -> Any:
+    async def execute_task(self, task: str, context: dict[str, Any], stream: bool = False) -> Any:
         """Execute a swarm task.
-        
+
         Args:
             task: Task description
             context: Execution context
             stream: Whether to stream results
-            
+
         Returns:
             Task execution result
         """
@@ -94,7 +94,7 @@ class SwarmPlugin(Plugin):
     @abstractmethod
     def get_agents(self) -> list[dict[str, Any]]:
         """Get list of agents in the swarm.
-        
+
         Returns:
             List of agent configurations
         """
@@ -102,26 +102,23 @@ class SwarmPlugin(Plugin):
     @abstractmethod
     def get_capabilities(self) -> list[str]:
         """Get swarm capabilities.
-        
+
         Returns:
             List of capability strings
         """
+
 
 class ToolPlugin(Plugin):
     """Base class for tool plugins."""
 
     @abstractmethod
-    async def execute(
-        self,
-        operation: str,
-        parameters: dict[str, Any]
-    ) -> Any:
+    async def execute(self, operation: str, parameters: dict[str, Any]) -> Any:
         """Execute a tool operation.
-        
+
         Args:
             operation: Operation to perform
             parameters: Operation parameters
-            
+
         Returns:
             Operation result
         """
@@ -129,76 +126,64 @@ class ToolPlugin(Plugin):
     @abstractmethod
     def get_operations(self) -> list[str]:
         """Get available operations.
-        
+
         Returns:
             List of operation names
         """
+
 
 class MemoryPlugin(Plugin):
     """Base class for memory plugins."""
 
     @abstractmethod
-    async def store(
-        self,
-        key: str,
-        value: Any,
-        metadata: Optional[dict[str, Any]] = None
-    ) -> bool:
+    async def store(self, key: str, value: Any, metadata: Optional[dict[str, Any]] = None) -> bool:
         """Store data in memory.
-        
+
         Args:
             key: Storage key
             value: Value to store
             metadata: Optional metadata
-            
+
         Returns:
             Success status
         """
 
     @abstractmethod
-    async def retrieve(
-        self,
-        key: str
-    ) -> Optional[Any]:
+    async def retrieve(self, key: str) -> Optional[Any]:
         """Retrieve data from memory.
-        
+
         Args:
             key: Storage key
-            
+
         Returns:
             Stored value or None
         """
 
     @abstractmethod
-    async def search(
-        self,
-        query: str,
-        limit: int = 10
-    ) -> list[dict[str, Any]]:
+    async def search(self, query: str, limit: int = 10) -> list[dict[str, Any]]:
         """Search memory.
-        
+
         Args:
             query: Search query
             limit: Maximum results
-            
+
         Returns:
             Search results
         """
 
+
 # ============================================
 # Plugin Interfaces
 # ============================================
+
 
 class IPluginValidator:
     """Interface for plugin validation."""
 
     def validate_metadata(self, metadata: PluginMetadata) -> bool:
         """Validate plugin metadata."""
-        required_fields = ['name', 'version', 'description', 'author']
-        for field in required_fields:
-            if not getattr(metadata, field, None):
-                return False
-        return True
+        required_fields = ["name", "version", "description", "author"]
+        return all(getattr(metadata, field, None) for field in required_fields)
 
     def validate_dependencies(self, dependencies: list[str]) -> bool:
         """Validate plugin dependencies."""
@@ -208,9 +193,9 @@ class IPluginValidator:
     def validate_interface(self, plugin: Plugin) -> bool:
         """Validate plugin implements required interface."""
         required_methods = {
-            SwarmPlugin: ['execute_task', 'get_agents', 'get_capabilities'],
-            ToolPlugin: ['execute', 'get_operations'],
-            MemoryPlugin: ['store', 'retrieve', 'search']
+            SwarmPlugin: ["execute_task", "get_agents", "get_capabilities"],
+            ToolPlugin: ["execute", "get_operations"],
+            MemoryPlugin: ["store", "retrieve", "search"],
         }
 
         plugin_type = type(plugin).__bases__[0]
@@ -220,16 +205,20 @@ class IPluginValidator:
                     return False
         return True
 
+
 # ============================================
 # Plugin Events
 # ============================================
 
+
 class PluginEvent(BaseModel):
     """Event emitted by plugins."""
+
     plugin_name: str
     event_type: str
     timestamp: datetime = Field(default_factory=datetime.utcnow)
     data: dict[str, Any] = Field(default_factory=dict)
+
 
 class PluginEventHandler:
     """Handle plugin events."""
@@ -237,13 +226,9 @@ class PluginEventHandler:
     def __init__(self):
         self._handlers: dict[str, list[callable]] = {}
 
-    def register_handler(
-        self,
-        event_type: str,
-        handler: callable
-    ) -> None:
+    def register_handler(self, event_type: str, handler: callable) -> None:
         """Register event handler.
-        
+
         Args:
             event_type: Type of event to handle
             handler: Handler function
@@ -252,12 +237,9 @@ class PluginEventHandler:
             self._handlers[event_type] = []
         self._handlers[event_type].append(handler)
 
-    async def emit(
-        self,
-        event: PluginEvent
-    ) -> None:
+    async def emit(self, event: PluginEvent) -> None:
         """Emit plugin event.
-        
+
         Args:
             event: Event to emit
         """
@@ -268,9 +250,11 @@ class PluginEventHandler:
                 except Exception as e:
                     logger.error(f"Error handling event {event.event_type}: {e}")
 
+
 # ============================================
 # Plugin Hooks
 # ============================================
+
 
 class PluginHooks:
     """Hooks for plugin lifecycle."""
@@ -300,6 +284,7 @@ class PluginHooks:
         """Called when plugin encounters error."""
         logger.error(f"Plugin {plugin.metadata.name} error: {error}")
 
+
 # ============================================
 # Export
 # ============================================
@@ -313,5 +298,5 @@ __all__ = [
     "IPluginValidator",
     "PluginEvent",
     "PluginEventHandler",
-    "PluginHooks"
+    "PluginHooks",
 ]

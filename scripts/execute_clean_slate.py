@@ -79,7 +79,7 @@ class CleanSlateExecutor:
             "app/swarms/coding/swarm_orchestrator.py",
             "app/swarms/unified_enhanced_orchestrator.py",
             "app/api/orchestra_manager.py",
-            "app/ui/unified/chat_orchestrator.py"
+            "app/ui/unified/chat_orchestrator.py",
         ]
 
         for file_path in orchestrators_to_delete:
@@ -118,11 +118,7 @@ class CleanSlateExecutor:
         # For now, just report what would be deleted
         if not self.dry_run:
             # Keep only essential components
-            essential_components = [
-                "App.tsx",
-                "index.tsx",
-                "Dashboard.tsx"
-            ]
+            essential_components = ["App.tsx", "index.tsx", "Dashboard.tsx"]
 
             for file_path in ui_files:
                 if file_path.name not in essential_components:
@@ -169,26 +165,23 @@ class CleanSlateExecutor:
                         import_line = "from app.core.ai_logger import logger\n"
                         if "import" in content:
                             # Add after other imports
-                            lines = content.split('\n')
+                            lines = content.split("\n")
                             import_idx = 0
                             for i, line in enumerate(lines):
-                                if line.startswith('import ') or line.startswith('from '):
+                                if line.startswith("import ") or line.startswith("from "):
                                     import_idx = i
                             lines.insert(import_idx + 1, import_line)
-                            content = '\n'.join(lines)
+                            content = "\n".join(lines)
                         else:
                             content = import_line + content
 
                     # Replace print with logger.info
                     import re
-                    content = re.sub(
-                        r'print\((.*?)\)',
-                        r'logger.info(\1)',
-                        content
-                    )
+
+                    content = re.sub(r"print\((.*?)\)", r"logger.info(\1)", content)
 
                     if not self.dry_run and content != original:
-                        with open(file_path, 'w') as f:
+                        with open(file_path, "w") as f:
                             f.write(content)
                         self.modified_files.append(str(file_path))
                         count += 1
@@ -238,7 +231,7 @@ class CleanSlateExecutor:
             "statistics": {
                 "files_deleted": len(self.deleted_files),
                 "files_modified": len(self.modified_files),
-                "files_created": len(self.created_files)
+                "files_created": len(self.created_files),
             },
             "deleted_files": self.deleted_files,
             "modified_files": self.modified_files,
@@ -247,12 +240,12 @@ class CleanSlateExecutor:
                 "orchestrators": 1,  # SuperOrchestrator
                 "managers": 3,  # Embedded in SuperOrchestrator
                 "docker_files": 1,  # Single Dockerfile
-            }
+            },
         }
 
         # Save report
         report_path = "consolidation_report.json"
-        with open(report_path, 'w') as f:
+        with open(report_path, "w") as f:
             json.dump(report, f, indent=2)
 
         # Print summary

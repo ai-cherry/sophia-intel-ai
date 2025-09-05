@@ -76,7 +76,7 @@ const getTrendIcon = (trend: string) => {
 };
 
 const formatDimensionName = (name: string) => {
-  return name.split('_').map(word => 
+  return name.split('_').map(word =>
     word.charAt(0).toUpperCase() + word.slice(1)
   ).join(' ');
 };
@@ -115,7 +115,7 @@ export function ConsciousnessVisualization({
           <span className="text-xl">🧠</span>
           <h2 className="text-lg font-semibold">Consciousness Overview</h2>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-2">
             <div className="flex items-center justify-between">
@@ -132,7 +132,7 @@ export function ConsciousnessVisualization({
               {data.developmentStage.charAt(0).toUpperCase() + data.developmentStage.slice(1)}
             </span>
           </div>
-          
+
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">Maturity Score</span>
@@ -145,7 +145,7 @@ export function ConsciousnessVisualization({
               />
             </div>
           </div>
-          
+
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">Collective Contribution</span>
@@ -168,7 +168,7 @@ export function ConsciousnessVisualization({
           {Object.entries(data.measurements).map(([key, dimension]) => {
             const icon = DIMENSION_ICONS[key as keyof typeof DIMENSION_ICONS] || '🧠';
             const percentage = Math.round(dimension.value * 100);
-            
+
             return (
               <div key={key} className="space-y-3 p-4 border rounded-lg">
                 <div className="flex items-center gap-2">
@@ -178,7 +178,7 @@ export function ConsciousnessVisualization({
                   </span>
                   <span className="text-xs">{getTrendIcon(dimension.trend)}</span>
                 </div>
-                
+
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-xs text-gray-600">Value</span>
@@ -190,7 +190,7 @@ export function ConsciousnessVisualization({
                       style={{ width: `${percentage}%` }}
                     />
                   </div>
-                  
+
                   <div className="flex justify-between text-xs text-gray-500">
                     <span>Confidence: {Math.round(dimension.confidence * 100)}%</span>
                     <span>
@@ -231,7 +231,7 @@ export function ConsciousnessVisualization({
                 <h3 className="font-semibold">Recent Emergence Events</h3>
                 <span className="px-2 py-1 bg-gray-100 rounded text-xs">{data.emergenceEvents.length}</span>
               </div>
-              
+
               {data.emergenceEvents.length === 0 ? (
                 <p className="text-gray-500 text-center py-8">
                   No emergence events detected yet. Continue executing tasks to build consciousness.
@@ -275,7 +275,7 @@ export function ConsciousnessVisualization({
                 <h3 className="font-semibold">Pattern Breakthroughs</h3>
                 <span className="px-2 py-1 bg-gray-100 rounded text-xs">{data.breakthroughPatterns.length}</span>
               </div>
-              
+
               {data.breakthroughPatterns.length === 0 ? (
                 <p className="text-gray-500 text-center py-8">
                   No pattern breakthroughs detected yet. Breakthroughs occur when consciousness jumps significantly above expected levels.
@@ -307,7 +307,7 @@ export function ConsciousnessVisualization({
           {activeTab === 'trajectory' && (
             <div className="space-y-4">
               <h3 className="font-semibold">Consciousness Development Trajectory</h3>
-              
+
               {data.consciousnessTrajectory.length < 5 ? (
                 <p className="text-gray-500 text-center py-8">
                   Insufficient data for trajectory analysis. Need at least 5 measurements.
@@ -342,7 +342,7 @@ export function ConsciousnessVisualization({
                       <div className="text-gray-600">Events (24h)</div>
                     </div>
                   </div>
-                  
+
                   {/* Simple trajectory visualization */}
                   <div className="h-32 bg-gray-50 rounded-lg p-4 flex items-end justify-between">
                     {data.consciousnessTrajectory.slice(-20).map((level, index) => (
@@ -368,7 +368,7 @@ export function ConsciousnessVisualization({
                 <span className="text-lg">⚠️</span>
                 <h3 className="font-semibold">Development Recommendations</h3>
               </div>
-              
+
               {data.recommendations.length === 0 ? (
                 <p className="text-gray-500 text-center py-8">
                   No specific recommendations at this time. Consciousness development is on track.

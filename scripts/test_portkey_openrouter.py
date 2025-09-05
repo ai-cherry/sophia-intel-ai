@@ -12,7 +12,8 @@ from dotenv import load_dotenv
 from app.core.ai_logger import logger
 
 # Load environment
-load_dotenv('.env.local', override=True)
+load_dotenv(".env.local", override=True)
+
 
 async def test_portkey_with_openrouter():
     """Test Portkey using OpenRouter as the provider for all models."""
@@ -24,32 +25,28 @@ async def test_portkey_with_openrouter():
         logger.info("❌ Missing API keys")
         return False
 
-    logger.info("\n" + "="*60)
+    logger.info("\n" + "=" * 60)
     logger.info("🔐 Testing Portkey → OpenRouter Integration")
-    logger.info("="*60)
+    logger.info("=" * 60)
 
     # Test different models through Portkey → OpenRouter
     test_cases = [
-        {
-            "name": "GPT-4 via OpenRouter",
-            "model": "openai/gpt-4o-mini",
-            "provider": "openrouter"
-        },
+        {"name": "GPT-4 via OpenRouter", "model": "openai/gpt-4o-mini", "provider": "openrouter"},
         {
             "name": "Claude via OpenRouter",
             "model": "anthropic/claude-3-haiku-20240307",
-            "provider": "openrouter"
+            "provider": "openrouter",
         },
         {
             "name": "Llama via OpenRouter",
             "model": "meta-llama/llama-3.2-3b-instruct",
-            "provider": "openrouter"
+            "provider": "openrouter",
         },
         {
             "name": "Qwen Coder via OpenRouter",
             "model": "qwen/qwen-2.5-coder-32b-instruct",
-            "provider": "openrouter"
-        }
+            "provider": "openrouter",
+        },
     ]
 
     async with httpx.AsyncClient(timeout=30.0) as client:
@@ -67,14 +64,14 @@ async def test_portkey_with_openrouter():
                         "x-portkey-api-key-openrouter": openrouter_key,  # Pass OpenRouter key
                         "Content-Type": "application/json",
                         "HTTP-Referer": "http://localhost:3000",  # Required by OpenRouter
-                        "X-Title": "Sophia Intel AI"  # Required by OpenRouter
+                        "X-Title": "Sophia Intel AI",  # Required by OpenRouter
                     },
                     json={
                         "model": test["model"],
                         "messages": [{"role": "user", "content": "Say 'Hello' in one word"}],
                         "max_tokens": 10,
-                        "temperature": 0.1
-                    }
+                        "temperature": 0.1,
+                    },
                 )
 
                 if response.status_code == 200:
@@ -87,18 +84,21 @@ async def test_portkey_with_openrouter():
                         logger.info("      → Need to configure virtual key in Portkey dashboard")
                     try:
                         error = response.json()
-                        logger.info(f"      → Error: {error.get('error', {}).get('message', 'Unknown')}")
+                        logger.info(
+                            f"      → Error: {error.get('error', {}).get('message', 'Unknown')}"
+                        )
                     except:
                         pass
 
             except Exception as e:
                 logger.info(f"   ❌ Error: {str(e)[:100]}")
 
-    logger.info("\n" + "="*60)
+    logger.info("\n" + "=" * 60)
     logger.info("📊 Configuration Instructions")
-    logger.info("="*60)
+    logger.info("=" * 60)
 
-    print("""
+    print(
+        """
 To make this work, in Portkey dashboard:
 
 1. Create a Virtual Key with:
@@ -119,9 +119,11 @@ To make this work, in Portkey dashboard:
    - Portkey's caching and observability
    - Automatic fallbacks
    - Cost tracking
-    """)
+    """
+    )
 
     return True
+
 
 async def test_direct_openrouter():
     """Test OpenRouter directly to confirm it works."""
@@ -141,13 +143,13 @@ async def test_direct_openrouter():
                 "Authorization": f"Bearer {openrouter_key}",
                 "HTTP-Referer": "http://localhost:3000",
                 "X-Title": "Sophia Intel AI",
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
             },
             json={
                 "model": "meta-llama/llama-3.2-3b-instruct",  # Cheap, fast model
                 "messages": [{"role": "user", "content": "Say 'working' in one word"}],
-                "max_tokens": 10
-            }
+                "max_tokens": 10,
+            },
         )
 
         if response.status_code == 200:
@@ -158,6 +160,7 @@ async def test_direct_openrouter():
         else:
             logger.info(f"❌ OpenRouter Direct: Failed ({response.status_code})")
             return False
+
 
 async def main():
     """Run all tests."""
@@ -172,10 +175,11 @@ async def main():
     # Test Portkey with OpenRouter
     await test_portkey_with_openrouter()
 
-    logger.info("\n" + "="*60)
+    logger.info("\n" + "=" * 60)
     logger.info("✨ Summary")
-    logger.info("="*60)
-    print("""
+    logger.info("=" * 60)
+    print(
+        """
 Your setup:
 ✅ OpenRouter API key is valid and working
 ✅ Access to 300+ models through OpenRouter
@@ -186,7 +190,9 @@ Next step:
 2. Create virtual key with OpenRouter as provider
 3. Use your OpenRouter API key in the virtual key
 4. You'll have unified access to all models!
-    """)
+    """
+    )
+
 
 if __name__ == "__main__":
     asyncio.run(main())

@@ -1,0 +1,91 @@
+{
+  "channels": {
+    "#payments": {
+      "purpose": "Master payment processing alerts (270 views report)",
+      "alert_types": ["critical", "high"],
+      "reports": ["master_payments"],
+      "frequency": "real-time",
+      "permissions": {
+        "sophia_can_post": true,
+        "alert_mentions": ["@finance-team", "@payments-lead"],
+        "escalation_channels": ["#finance-alerts"]
+      },
+      "business_hours": {
+        "enabled": true,
+        "timezone": "America/New_York",
+        "hours": "08:00-18:00",
+        "after_hours_channel": "#finance-alerts"
+      }
+    },
+    "#finance": {
+      "purpose": "ABS history and balance monitoring (252 views)",
+      "alert_types": ["high", "medium"],
+      "reports": ["abs_history"],
+      "frequency": "hourly",
+      "permissions": {
+        "sophia_can_post": true,
+        "alert_mentions": ["@finance-team"],
+        "escalation_channels": ["#finance-alerts"]
+      }
+    },
+    "#operations": {
+      "purpose": "Batch processing and operational alerts (235 views)",
+      "alert_types": ["high", "medium"],
+      "reports": ["batch_processing"],
+      "frequency": "every_4_hours",
+      "permissions": {
+        "sophia_can_post": true,
+        "alert_mentions": ["@ops-team"],
+        "escalation_channels": ["#tech-alerts"]
+      }
+    },
+    "#finance-alerts": {
+      "purpose": "Critical financial alerts and escalations",
+      "alert_types": ["critical"],
+      "reports": ["all"],
+      "frequency": "immediate",
+      "permissions": {
+        "sophia_can_post": true,
+        "alert_mentions": ["@finance-leadership", "@on-call"],
+        "escalation_channels": ["#executive"]
+      }
+    },
+    "#tech-alerts": {
+      "purpose": "System issues and data quality problems",
+      "alert_types": ["medium", "high"],
+      "reports": ["system_health", "data_quality"],
+      "frequency": "immediate",
+      "permissions": {
+        "sophia_can_post": true,
+        "alert_mentions": ["@tech-team", "@on-call-engineer"]
+      }
+    },
+    "#general": {
+      "purpose": "Daily summaries and general updates",
+      "alert_types": ["low"],
+      "reports": ["daily_summary"],
+      "frequency": "daily",
+      "permissions": {
+        "sophia_can_post": true,
+        "alert_mentions": [],
+        "business_hours_only": true
+      }
+    }
+  },
+  "global_settings": {
+    "rate_limits": {
+      "max_alerts_per_hour": 10,
+      "max_alerts_per_day": 50,
+      "cooldown_between_similar_alerts": "15_minutes"
+    },
+    "emergency_contacts": {
+      "critical_alerts": ["@finance-director", "@cto"],
+      "system_down": ["@on-call-engineer", "@devops"]
+    },
+    "business_hours": {
+      "timezone": "America/New_York",
+      "weekdays": "Monday-Friday",
+      "hours": "08:00-18:00"
+    }
+  }
+}

@@ -11,18 +11,18 @@ echo "
 stop_by_pid() {
     local pid=$1
     local name=$2
-    
+
     if [ ! -z "$pid" ] && kill -0 $pid 2>/dev/null; then
         echo "  Stopping $name (PID: $pid)..."
         kill $pid 2>/dev/null
-        
+
         # Wait for process to stop (max 5 seconds)
         local count=0
         while kill -0 $pid 2>/dev/null && [ $count -lt 5 ]; do
             sleep 1
             count=$((count + 1))
         done
-        
+
         # Force kill if still running
         if kill -0 $pid 2>/dev/null; then
             echo "    Force killing $name..."
@@ -35,13 +35,13 @@ stop_by_pid() {
 if [ -f .pids ]; then
     echo "📋 Using saved PIDs..."
     source .pids
-    
+
     stop_by_pid "$MCP_PID" "MCP Server"
     stop_by_pid "$API_PID" "API Server"
     stop_by_pid "$SOPHIA_PID" "Sophia Server"
     stop_by_pid "$ARTEMIS_PID" "Artemis Server"
     stop_by_pid "$PERSONA_PID" "Persona Server"
-    
+
     rm -f .pids
 else
     echo "📋 No PID file found, stopping by process name..."
@@ -56,7 +56,7 @@ for process in "mcp_server" "unified_server" "sophia_server" "artemis_server" "p
         echo "  Stopping $process..."
         pkill -f "$process" 2>/dev/null
         sleep 1
-        
+
         # Force kill if still running
         if pgrep -f "$process" > /dev/null 2>&1; then
             echo "    Force killing $process..."

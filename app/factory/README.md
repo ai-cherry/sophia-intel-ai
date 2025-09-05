@@ -133,15 +133,20 @@ Open `ui/agent_factory_dashboard.html` in a browser for a complete dashboard exp
 ### React Components
 
 ```jsx
-import { AgentFactoryDashboard, useAgentFactory } from './ui/AgentFactoryComponents';
-import './ui/AgentFactoryStyles.css';
+import {
+  AgentFactoryDashboard,
+  useAgentFactory,
+} from "./ui/AgentFactoryComponents";
+import "./ui/AgentFactoryStyles.css";
 
 function App() {
   return (
     <AgentFactoryDashboard
       defaultTab="inventory"
-      onSwarmCreated={(result) => console.log('Swarm created:', result)}
-      onAgentSelected={(agent, selected) => console.log('Agent selected:', agent.name)}
+      onSwarmCreated={(result) => console.log("Swarm created:", result)}
+      onAgentSelected={(agent, selected) =>
+        console.log("Agent selected:", agent.name)
+      }
     />
   );
 }
@@ -150,7 +155,11 @@ function App() {
 ### Individual Components
 
 ```jsx
-import { AgentCard, SwarmTemplateCard, AgentGrid } from './ui/AgentFactoryComponents';
+import {
+  AgentCard,
+  SwarmTemplateCard,
+  AgentGrid,
+} from "./ui/AgentFactoryComponents";
 
 // Use individual components
 <AgentGrid
@@ -158,7 +167,7 @@ import { AgentCard, SwarmTemplateCard, AgentGrid } from './ui/AgentFactoryCompon
   selectedAgents={selected}
   onAgentSelect={handleSelect}
   onAgentViewDetails={handleDetails}
-/>
+/>;
 ```
 
 ## 🔧 API Endpoints
@@ -217,7 +226,7 @@ GET /api/factory/inventory/stats
 # Available specialties
 GET /api/factory/inventory/specialties
 
-# Available capabilities  
+# Available capabilities
 GET /api/factory/inventory/capabilities
 
 # Health check
@@ -229,6 +238,7 @@ GET /api/factory/health
 The system includes a comprehensive catalog of specialized agents:
 
 ### Development Team
+
 - **Senior Software Architect** - System design and architecture decisions
 - **Senior Full-Stack Developer** - End-to-end application development
 - **Frontend Specialist** - UI/UX implementation expert
@@ -238,11 +248,13 @@ The system includes a comprehensive catalog of specialized agents:
 - **Security Specialist** - Application and infrastructure security
 
 ### Business Intelligence Team
+
 - **Business Analyst** - Requirements and process analysis
 - **Data Scientist** - Advanced analytics and machine learning
 - **Product Manager** - Product strategy and roadmap management
 
 Each agent includes:
+
 - **Detailed Capabilities** - Specific skills and expertise areas
 - **Personality Traits** - Interaction styles and approaches
 - **Performance Metrics** - Success rates and usage statistics
@@ -254,18 +266,21 @@ Each agent includes:
 Pre-configured swarm templates for common use cases:
 
 ### Software Development Team
+
 - **Required**: Architect, Developer, Tester
 - **Optional**: DevOps, Security
 - **Execution**: Hierarchical
 - **Best for**: Full-stack application development
 
 ### Business Intelligence Team
+
 - **Required**: Business Analyst, Data Scientist
 - **Optional**: Product Manager
 - **Execution**: Parallel analysis
 - **Best for**: Data-driven insights and decision making
 
 ### Security Assessment Team
+
 - **Required**: Security Specialist, Analyst
 - **Optional**: Architect
 - **Execution**: Linear assessment
@@ -278,7 +293,7 @@ Comprehensive data models for production deployment:
 ```python
 # Core tables
 - agent_blueprints      # Agent definitions and metadata
-- swarm_templates      # Reusable swarm configurations  
+- swarm_templates      # Reusable swarm configurations
 - swarm_instances      # Created swarm instances
 - swarm_executions     # Execution history and results
 - agent_executions     # Individual agent performance
@@ -317,7 +332,7 @@ factory = AgentFactory(catalog_path="/custom/path/to/catalog")
 # Load existing catalog
 factory._load_catalog_from_file(Path("my_catalog.json"))
 
-# Save current state  
+# Save current state
 factory._save_comprehensive_catalog()
 ```
 
@@ -333,12 +348,14 @@ factory._save_comprehensive_catalog()
 ## 📈 Monitoring and Analytics
 
 ### Performance Metrics
+
 - Agent success rates and response times
 - Swarm execution statistics
 - Cost tracking and optimization
 - Usage patterns and trends
 
 ### Dashboards
+
 - Real-time inventory status
 - Performance analytics
 - Cost analysis
@@ -372,7 +389,7 @@ CMD ["uvicorn", "app.factory.agent_factory:router", "--host", "0.0.0.0", "--port
 ### Production Setup
 
 1. **Database Setup** - Initialize PostgreSQL with schema
-2. **Environment Configuration** - Set production environment variables  
+2. **Environment Configuration** - Set production environment variables
 3. **Load Balancer** - Configure for high availability
 4. **Monitoring** - Set up logging and metrics collection
 5. **Backup Strategy** - Regular database backups
@@ -380,6 +397,7 @@ CMD ["uvicorn", "app.factory.agent_factory:router", "--host", "0.0.0.0", "--port
 ## 🔮 Future Enhancements
 
 ### Phase 2: Advanced Features
+
 - **AI-Powered Agent Recommendations** - ML-based agent selection
 - **Dynamic Agent Learning** - Agents that improve over time
 - **Advanced Swarm Patterns** - More sophisticated execution modes
@@ -387,6 +405,7 @@ CMD ["uvicorn", "app.factory.agent_factory:router", "--host", "0.0.0.0", "--port
 - **Integration Marketplace** - Third-party agent extensions
 
 ### Phase 3: Enterprise Features
+
 - **Multi-tenant Support** - Organization-level isolation
 - **Advanced Analytics** - Predictive performance modeling
 - **Compliance Framework** - SOC2, GDPR compliance
@@ -417,4 +436,4 @@ This project is part of the Sophia Intelligence AI platform.
 
 **Built with ❤️ for the AI-powered future**
 
-*The Agent Factory system represents a new paradigm in AI agent management, providing the foundation for scalable, intelligent swarm orchestration.*
+_The Agent Factory system represents a new paradigm in AI agent management, providing the foundation for scalable, intelligent swarm orchestration._

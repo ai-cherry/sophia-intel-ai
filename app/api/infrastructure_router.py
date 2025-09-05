@@ -19,13 +19,16 @@ router = APIRouter(tags=["infrastructure"])
 # Initialize the swarm
 infra_swarm = InfraOpsSwarm()
 
+
 class InfrastructureTaskRequest(BaseModel):
     """Request model for infrastructure tasks"""
+
     type: str
     description: str
     context: dict[str, Any] = {}
     require_approval: bool = False
     priority: int = 5
+
 
 @router.post("/execute")
 async def execute_infrastructure_task(request: InfrastructureTaskRequest):
@@ -38,7 +41,7 @@ async def execute_infrastructure_task(request: InfrastructureTaskRequest):
             "description": request.description,
             "context": request.context,
             "require_approval": request.require_approval,
-            "priority": request.priority
+            "priority": request.priority,
         }
 
         result = await infra_swarm.execute_infrastructure_task(task)
@@ -47,6 +50,7 @@ async def execute_infrastructure_task(request: InfrastructureTaskRequest):
     except Exception as e:
         logger.error(f"Infrastructure task execution failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.get("/status")
 async def get_swarm_status():
@@ -59,6 +63,7 @@ async def get_swarm_status():
         logger.error(f"Failed to get swarm status: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @router.get("/health")
 async def health_check():
     """
@@ -69,6 +74,7 @@ async def health_check():
     except Exception as e:
         logger.error(f"Health check failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.post("/security-scan")
 async def security_scan(description: str = "Scan for exposed secrets"):
@@ -82,10 +88,10 @@ async def security_scan(description: str = "Scan for exposed secrets"):
             "context": {
                 "scope": "all",
                 "check_for": ["api_keys", "passwords", "tokens", "credentials"],
-                "severity_threshold": "low"
+                "severity_threshold": "low",
             },
             "require_approval": False,
-            "priority": 8
+            "priority": 8,
         }
 
         result = await infra_swarm.execute_infrastructure_task(task)
@@ -97,16 +103,13 @@ async def security_scan(description: str = "Scan for exposed secrets"):
             "findings": [
                 {
                     "severity": "info",
-                    "finding": "All API keys are properly configured as environment variables"
+                    "finding": "All API keys are properly configured as environment variables",
                 },
+                {"severity": "info", "finding": "No hardcoded credentials found in codebase"},
                 {
                     "severity": "info",
-                    "finding": "No hardcoded credentials found in codebase"
+                    "finding": "Secret rotation is configured for critical services",
                 },
-                {
-                    "severity": "info",
-                    "finding": "Secret rotation is configured for critical services"
-                }
             ],
             "summary": {
                 "total_files_scanned": 156,
@@ -114,10 +117,10 @@ async def security_scan(description: str = "Scan for exposed secrets"):
                 "recommendations": [
                     "Continue using environment variables for sensitive data",
                     "Enable automated secret rotation for all services",
-                    "Implement secret scanning in CI/CD pipeline"
-                ]
+                    "Implement secret scanning in CI/CD pipeline",
+                ],
             },
-            "swarm_result": result
+            "swarm_result": result,
         }
 
         return scan_results

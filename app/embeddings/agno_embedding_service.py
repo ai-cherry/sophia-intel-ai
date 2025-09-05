@@ -8,7 +8,6 @@ import asyncio
 import hashlib
 import json
 import logging
-import os
 import time
 from dataclasses import dataclass, field
 from enum import Enum
@@ -26,15 +25,19 @@ logger = logging.getLogger(__name__)
 # Configuration Models
 # ============================================
 
+
 class EmbeddingProvider(str, Enum):
     """Supported embedding providers via Portkey"""
+
     TOGETHER = "together"
     OPENAI = "openai"
     COHERE = "cohere"
     VOYAGE = "voyage"
 
+
 class EmbeddingModel(str, Enum):
     """Best available embedding models on Together AI (as of Sept 2025)"""
+
     # Together AI Models - Best on Platform
     BGE_LARGE_EN = "BAAI/bge-large-en-v1.5"  # MTEB 64.23, English, 1024D, max 512
     BGE_BASE_EN = "BAAI/bge-base-en-v1.5"  # MTEB ~63, English, 768D, max 512
@@ -55,9 +58,11 @@ class EmbeddingModel(str, Enum):
     # Cohere Models
     EMBED_V3 = "embed-english-v3.0"
 
+
 @dataclass
 class ModelSpec:
     """Specifications for each embedding model"""
+
     provider: EmbeddingProvider
     dimensions: int
     max_tokens: int
@@ -68,29 +73,32 @@ class ModelSpec:
     supports_instruct: bool = False
     multilingual: bool = False
 
+
 class PortkeyConfig(BaseModel):
     """Portkey gateway configuration"""
+
     api_key: str
     virtual_keys: dict[str, str] = Field(default_factory=dict)
     base_url: str = "https://api.portkey.ai/v1"
-    cache_config: dict[str, Any] = Field(default_factory=lambda: {
-        "enabled": True,
-        "ttl_seconds": 3600
-    })
-    retry_config: dict[str, Any] = Field(default_factory=lambda: {
-        "max_retries": 3,
-        "retry_on": ["rate_limit", "timeout"],
-        "exponential_base": 2
-    })
-    observability: dict[str, Any] = Field(default_factory=lambda: {
-        "trace": True,
-        "metrics": True,
-        "logs": True
-    })
+    cache_config: dict[str, Any] = Field(
+        default_factory=lambda: {"enabled": True, "ttl_seconds": 3600}
+    )
+    retry_config: dict[str, Any] = Field(
+        default_factory=lambda: {
+            "max_retries": 3,
+            "retry_on": ["rate_limit", "timeout"],
+            "exponential_base": 2,
+        }
+    )
+    observability: dict[str, Any] = Field(
+        default_factory=lambda: {"trace": True, "metrics": True, "logs": True}
+    )
+
 
 @dataclass
 class AgnoEmbeddingRequest:
     """Request for embedding generation (renamed to avoid conflicts)"""
+
     texts: list[str]
     model: Optional[EmbeddingModel] = None
     use_case: str = "general"  # rag, search, clustering, classification
@@ -99,9 +107,11 @@ class AgnoEmbeddingRequest:
     instruct_prefix: Optional[str] = None  # For instruct models
     metadata: dict[str, Any] = field(default_factory=dict)
 
+
 @dataclass
 class EmbeddingResponse:
     """Response from embedding generation"""
+
     embeddings: list[list[float]]
     model_used: str
     provider: str
@@ -111,6 +121,7 @@ class EmbeddingResponse:
     cost_estimate: float
     cached: bool = False
     metadata: dict[str, Any] = field(default_factory=dict)
+
 
 # ============================================
 # Model Registry
@@ -125,7 +136,7 @@ MODEL_REGISTRY = {
         mteb_score=64.23,
         strengths=["English semantic search", "RAG", "Q&A agents"],
         use_cases=["rag", "search", "general"],
-        cost_per_1k_tokens=0.0001
+        cost_per_1k_tokens=0.0001,
     ),
     EmbeddingModel.BGE_BASE_EN: ModelSpec(
         provider=EmbeddingProvider.TOGETHER,
@@ -134,7 +145,7 @@ MODEL_REGISTRY = {
         mteb_score=63.0,
         strengths=["Fast English retrieval", "High volume"],
         use_cases=["search", "clustering"],
-        cost_per_1k_tokens=0.00008
+        cost_per_1k_tokens=0.00008,
     ),
     EmbeddingModel.GTE_MODERNBERT_BASE: ModelSpec(
         provider=EmbeddingProvider.TOGETHER,
@@ -143,7 +154,7 @@ MODEL_REGISTRY = {
         mteb_score=64.38,
         strengths=["Long docs", "Code retrieval", "Extended context"],
         use_cases=["rag", "code", "long_context"],
-        cost_per_1k_tokens=0.00012
+        cost_per_1k_tokens=0.00012,
     ),
     EmbeddingModel.E5_LARGE_INSTRUCT: ModelSpec(
         provider=EmbeddingProvider.TOGETHER,
@@ -154,7 +165,7 @@ MODEL_REGISTRY = {
         use_cases=["multilingual", "translation", "global"],
         cost_per_1k_tokens=0.00015,
         supports_instruct=True,
-        multilingual=True
+        multilingual=True,
     ),
     EmbeddingModel.M2_BERT_8K: ModelSpec(
         provider=EmbeddingProvider.TOGETHER,
@@ -163,7 +174,7 @@ MODEL_REGISTRY = {
         mteb_score=60.0,
         strengths=["8K context", "Efficient", "Balanced"],
         use_cases=["general", "rag"],
-        cost_per_1k_tokens=0.0001
+        cost_per_1k_tokens=0.0001,
     ),
     EmbeddingModel.M2_BERT_32K: ModelSpec(
         provider=EmbeddingProvider.TOGETHER,
@@ -172,13 +183,14 @@ MODEL_REGISTRY = {
         mteb_score=60.0,
         strengths=["32K context", "Books", "Legal docs", "Ultra-long"],
         use_cases=["long_context", "books", "legal"],
-        cost_per_1k_tokens=0.00018
+        cost_per_1k_tokens=0.00018,
     ),
 }
 
 # ============================================
 # Agno Embedding Service
 # ============================================
+
 
 class AgnoEmbeddingService:
     """
@@ -197,13 +209,13 @@ class AgnoEmbeddingService:
     def _load_config_from_env(self) -> PortkeyConfig:
         """Load configuration from environment variables"""
         return PortkeyConfig(
-            api_key=os.getenv("PORTKEY_API_KEY", ""),
+            api_key=get_config().get("PORTKEY_API_KEY", ""),
             virtual_keys={
-                "together": os.getenv("TOGETHER_VIRTUAL_KEY", ""),
-                "openai": os.getenv("OPENAI_VIRTUAL_KEY", ""),
-                "cohere": os.getenv("COHERE_VIRTUAL_KEY", ""),
-                "voyage": os.getenv("VOYAGE_VIRTUAL_KEY", "")
-            }
+                "together": get_config().get("TOGETHER_VIRTUAL_KEY", ""),
+                "openai": get_config().get("OPENAI_VIRTUAL_KEY", ""),
+                "cohere": get_config().get("COHERE_VIRTUAL_KEY", ""),
+                "voyage": get_config().get("VOYAGE_VIRTUAL_KEY", ""),
+            },
         )
 
     def _initialize_client(self):
@@ -213,29 +225,34 @@ class AgnoEmbeddingService:
             from openai import AsyncOpenAI
 
             self._client = AsyncOpenAI(
-                api_key=self.portkey_config.api_key,
-                base_url=self.portkey_config.base_url,
+                api_key=self.get_config_manager().get_integration_config("portkey").get("api_key"),
+                base_url=self.get_config_manager()
+                .get_integration_config("portkey")
+                .get("base_url"),
                 default_headers={
-                    "x-portkey-api-key": self.portkey_config.api_key,
+                    "x-portkey-api-key": self.get_config_manager()
+                    .get_integration_config("portkey")
+                    .get("api_key"),
                     "x-portkey-mode": "proxy",
-                    "x-portkey-cache": str(self.portkey_config.cache_config["enabled"]).lower()
-                }
+                    "x-portkey-cache": str(
+                        self.get_config_manager()
+                        .get_integration_config("portkey")
+                        .get("cache_config")["enabled"]
+                    ).lower(),
+                },
             )
             logger.info("Initialized Portkey client for embedding service")
         except ImportError:
             logger.warning("OpenAI client not available, using mock implementation")
             self._client = None
 
-    async def embed(
-        self,
-        request: AgnoEmbeddingRequest
-    ) -> EmbeddingResponse:
+    async def embed(self, request: AgnoEmbeddingRequest) -> EmbeddingResponse:
         """
         Generate embeddings using optimal model selection
-        
+
         Args:
             request: Embedding request with texts and parameters
-            
+
         Returns:
             EmbeddingResponse with embeddings and metadata
         """
@@ -246,7 +263,7 @@ class AgnoEmbeddingService:
             request.model = self._model_selector.select_model(
                 use_case=request.use_case,
                 language=request.language,
-                max_length=request.max_length or self._estimate_max_length(request.texts)
+                max_length=request.max_length or self._estimate_max_length(request.texts),
             )
 
         # Get model spec
@@ -266,7 +283,7 @@ class AgnoEmbeddingService:
             texts=request.texts,
             model=request.model,
             model_spec=model_spec,
-            instruct_prefix=request.instruct_prefix
+            instruct_prefix=request.instruct_prefix,
         )
 
         # Calculate metrics
@@ -286,8 +303,8 @@ class AgnoEmbeddingService:
             metadata={
                 **request.metadata,
                 "use_case": request.use_case,
-                "language": request.language
-            }
+                "language": request.language,
+            },
         )
 
         # Cache response
@@ -300,7 +317,7 @@ class AgnoEmbeddingService:
         texts: list[str],
         model: EmbeddingModel,
         model_spec: ModelSpec,
-        instruct_prefix: Optional[str] = None
+        instruct_prefix: Optional[str] = None,
     ) -> list[list[float]]:
         """Generate embeddings using Portkey gateway"""
 
@@ -318,19 +335,22 @@ class AgnoEmbeddingService:
                 extra_body = {
                     "portkey_config": {
                         "provider": model_spec.provider.value,
-                        "virtual_key": self.portkey_config.virtual_keys.get(
-                            model_spec.provider.value, ""
-                        ),
-                        "retry": self.portkey_config.retry_config,
-                        "cache": self.portkey_config.cache_config
+                        "virtual_key": self.get_config_manager()
+                        .get_integration_config("portkey")
+                        .get("virtual_keys")
+                        .get(model_spec.provider.value, ""),
+                        "retry": self.get_config_manager()
+                        .get_integration_config("portkey")
+                        .get("retry_config"),
+                        "cache": self.get_config_manager()
+                        .get_integration_config("portkey")
+                        .get("cache_config"),
                     }
                 }
 
                 # Make embedding request
                 response = await self._client.embeddings.create(
-                    model=model.value,
-                    input=texts,
-                    extra_body=extra_body
+                    model=model.value, input=texts, extra_body=extra_body
                 )
 
                 # Extract embeddings
@@ -344,11 +364,7 @@ class AgnoEmbeddingService:
             # Mock implementation for testing
             return self._generate_mock_embeddings(texts, model_spec.dimensions)
 
-    def _generate_mock_embeddings(
-        self,
-        texts: list[str],
-        dimensions: int
-    ) -> list[list[float]]:
+    def _generate_mock_embeddings(self, texts: list[str], dimensions: int) -> list[list[float]]:
         """Generate mock embeddings for testing"""
         embeddings = []
         for text in texts:
@@ -375,23 +391,18 @@ class AgnoEmbeddingService:
 
     def _get_cache_key(self, request: EmbeddingRequest) -> str:
         """Generate cache key for request"""
-        text_hash = hashlib.sha256(
-            json.dumps(request.texts, sort_keys=True).encode()
-        ).hexdigest()
+        text_hash = hashlib.sha256(json.dumps(request.texts, sort_keys=True).encode()).hexdigest()
 
         components = [
             text_hash,
             request.model.value if request.model else "auto",
             request.use_case,
-            request.language
+            request.language,
         ]
         return ":".join(components)
 
     async def create_agent_embeddings(
-        self,
-        agent_id: str,
-        context: str,
-        memory_type: str = "semantic"
+        self, agent_id: str, context: str, memory_type: str = "semantic"
     ) -> EmbeddingResponse:
         """
         Create embeddings for agent memory storage
@@ -400,19 +411,12 @@ class AgnoEmbeddingService:
         request = AgnoEmbeddingRequest(
             texts=[context],
             use_case="rag" if memory_type == "semantic" else "search",
-            metadata={
-                "agent_id": agent_id,
-                "memory_type": memory_type,
-                "timestamp": time.time()
-            }
+            metadata={"agent_id": agent_id, "memory_type": memory_type, "timestamp": time.time()},
         )
         return await self.embed(request)
 
     async def create_swarm_embeddings(
-        self,
-        swarm_id: str,
-        documents: list[str],
-        task_type: str = "retrieval"
+        self, swarm_id: str, documents: list[str], task_type: str = "retrieval"
     ) -> EmbeddingResponse:
         """
         Create embeddings for swarm coordination
@@ -436,24 +440,22 @@ class AgnoEmbeddingService:
             metadata={
                 "swarm_id": swarm_id,
                 "task_type": task_type,
-                "document_count": len(documents)
-            }
+                "document_count": len(documents),
+            },
         )
 
         return await self.embed(request)
 
     def get_model_recommendations(
-        self,
-        use_case: str,
-        requirements: dict[str, Any]
+        self, use_case: str, requirements: dict[str, Any]
     ) -> list[tuple[EmbeddingModel, ModelSpec]]:
         """
         Get model recommendations based on use case and requirements
-        
+
         Args:
             use_case: Type of use case (rag, search, multilingual, etc.)
             requirements: Requirements dict with keys like max_tokens, language, etc.
-            
+
         Returns:
             List of (model, spec) tuples sorted by relevance
         """
@@ -497,19 +499,16 @@ class AgnoEmbeddingService:
 
         return [(model, spec) for model, spec, _ in recommendations[:5]]
 
+
 # ============================================
 # Model Selector
 # ============================================
 
+
 class ModelSelector:
     """Intelligent model selection based on use case and content"""
 
-    def select_model(
-        self,
-        use_case: str,
-        language: str,
-        max_length: int
-    ) -> EmbeddingModel:
+    def select_model(self, use_case: str, language: str, max_length: int) -> EmbeddingModel:
         """Select optimal model based on parameters"""
 
         # Multi-language content
@@ -535,9 +534,11 @@ class ModelSelector:
         # Default to balanced model
         return EmbeddingModel.M2_BERT_8K
 
+
 # ============================================
 # Agno Agent Integration
 # ============================================
+
 
 class AgnoEmbeddingAgent:
     """
@@ -550,27 +551,20 @@ class AgnoEmbeddingAgent:
         self.name = "embedding_agent"
         self.description = "Generates embeddings for text using optimal models"
 
-    async def embed_for_agent(
-        self,
-        agent,
-        text: str,
-        purpose: str = "memory"
-    ) -> dict[str, Any]:
+    async def embed_for_agent(self, agent, text: str, purpose: str = "memory") -> dict[str, Any]:
         """
         Generate embeddings for an agent's use
         Compatible with Agno agent.tools interface
         """
         response = await self.service.create_agent_embeddings(
-            agent_id=getattr(agent, 'id', 'unknown'),
-            context=text,
-            memory_type=purpose
+            agent_id=getattr(agent, "id", "unknown"), context=text, memory_type=purpose
         )
 
         return {
             "embedding": response.embeddings[0],
             "model": response.model_used,
             "dimensions": response.dimensions,
-            "metadata": response.metadata
+            "metadata": response.metadata,
         }
 
     def as_tool(self) -> dict[str, Any]:
@@ -582,14 +576,16 @@ class AgnoEmbeddingAgent:
             "description": "Generate embeddings for text",
             "parameters": {
                 "text": {"type": "string", "required": True},
-                "purpose": {"type": "string", "default": "memory"}
+                "purpose": {"type": "string", "default": "memory"},
             },
-            "handler": self.embed_for_agent
+            "handler": self.embed_for_agent,
         }
+
 
 # ============================================
 # CLI Interface
 # ============================================
+
 
 async def main():
     """CLI for testing Agno embedding service"""
@@ -607,8 +603,7 @@ async def main():
 
     if args.recommendations:
         recs = service.get_model_recommendations(
-            use_case=args.use_case,
-            requirements={"max_tokens": 1000, "high_quality": True}
+            use_case=args.use_case, requirements={"max_tokens": 1000, "high_quality": True}
         )
         logger.info("\n📊 Model Recommendations:")
         for model, spec in recs:
@@ -623,7 +618,7 @@ async def main():
         request = EmbeddingRequest(
             texts=[args.text],
             model=EmbeddingModel(args.model) if args.model else None,
-            use_case=args.use_case
+            use_case=args.use_case,
         )
 
         response = await service.embed(request)
@@ -635,6 +630,7 @@ async def main():
         logger.info(f"  Latency: {response.latency_ms:.2f}ms")
         logger.info(f"  Cost: ${response.cost_estimate:.6f}")
         logger.info(f"  First 10 values: {response.embeddings[0][:10]}")
+
 
 if __name__ == "__main__":
     asyncio.run(main())

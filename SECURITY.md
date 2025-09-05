@@ -3,14 +3,17 @@
 Date: 2025-09-04
 
 Summary of changes
+
 - Replaced python-jose (which depends on ecdsa) with PyJWT across the project to eliminate an unfixed side-channel timing advisory on ecdsa (GHSA-wj6h-64fc-37mp / CVE-2024-23342).
 - Updated manifests and lockfiles using uv for reproducible builds.
 
 Rationale
+
 - ecdsa library has a known timing side-channel on P-256 affecting signing operations. The upstream ecdsa project treats side-channel resistance as out-of-scope, and no fix is planned.
-- PyJWT uses cryptography for algorithms like HS*, RS*, and ES* and does not depend on the ecdsa package, avoiding the advisory.
+- PyJWT uses cryptography for algorithms like HS*, RS*, and ES\* and does not depend on the ecdsa package, avoiding the advisory.
 
 Scope of changes
+
 - Code: app/api/auth.py updated to use PyJWT (import jwt) and catch jwt.PyJWTError.
 - Dependencies:
   - requirements.txt: python-jose[cryptography] → PyJWT==2.9.0
@@ -22,12 +25,14 @@ Scope of changes
   - requirements-2025.lock
 
 Operational guidance
+
 - Installing environments (examples):
   - uv venv .venv && uv pip sync -r requirements.lock
   - uv venv app/.venv && uv pip sync -r app/requirements.lock
   - uv venv .venv-2025 && uv pip sync -r requirements-2025.lock
 
 Compatibility notes
+
 - PyJWT API:
   - Encode: jwt.encode(payload, key, algorithm="HS256")
   - Decode: jwt.decode(token, key, algorithms=["HS256"])
@@ -35,9 +40,10 @@ Compatibility notes
 - Existing modules already using import jwt (PyJWT) required no change; only modules using from jose import ... were updated.
 
 Verification
+
 - pip-audit and safety show no vulnerabilities stemming from ecdsa after the change.
 - Unit/integration tests that rely on jwt should continue to pass; tests using import jwt were already PyJWT-based.
 
 Contact
-- For questions about this change, open an issue or contact the maintainers.
 
+- For questions about this change, open an issue or contact the maintainers.

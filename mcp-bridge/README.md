@@ -51,18 +51,21 @@ Multi-assistant coordination bridge for Sophia Intel AI, enabling seamless integ
 ### Installation
 
 1. Install dependencies:
+
 ```bash
 cd mcp-bridge
 npm install
 ```
 
 2. Copy environment configuration:
+
 ```bash
 cp .env.example .env
 # Edit .env with your configuration
 ```
 
 3. Build TypeScript:
+
 ```bash
 npm run build
 ```
@@ -70,11 +73,13 @@ npm run build
 ### Starting the Bridge
 
 #### Option 1: Start all adapters
+
 ```bash
 npm run dev
 ```
 
 #### Option 2: Start individual adapters
+
 ```bash
 # Claude Desktop
 npm run claude
@@ -140,6 +145,7 @@ Add to VS Code settings:
 ## Available Tools
 
 ### Claude Desktop Tools
+
 - `store_memory`: Store information in knowledge base
 - `search_memory`: Search for memories
 - `update_memory`: Update existing memories
@@ -147,6 +153,7 @@ Add to VS Code settings:
 - `get_context`: Get contextual information
 
 ### Roo/Cursor Tools
+
 - `store_code_memory`: Store code patterns
 - `search_code_patterns`: Find code patterns
 - `analyze_codebase`: Analyze project structure
@@ -156,6 +163,7 @@ Add to VS Code settings:
 - `get_team_context`: Get team context
 
 ### Cline Tools
+
 - `create_task`: Create development tasks
 - `execute_task`: Execute tasks autonomously
 - `analyze_project`: Analyze project health
@@ -167,33 +175,39 @@ Add to VS Code settings:
 ## Monitoring
 
 ### Health Check
+
 ```bash
 curl http://localhost:8004/health
 ```
 
 ### Metrics
+
 ```bash
 curl http://localhost:8004/metrics
 ```
 
 ### Dashboards
-- Prometheus: http://localhost:9090
-- Grafana: http://localhost:3001 (admin/sophia-monitor)
-- Jaeger: http://localhost:16686
+
+- Prometheus: <http://localhost:9090>
+- Grafana: <http://localhost:3001> (admin/sophia-monitor)
+- Jaeger: <http://localhost:16686>
 
 ## Development
 
 ### Running Tests
+
 ```bash
 npm test
 ```
 
 ### Building for Production
+
 ```bash
 npm run build
 ```
 
 ### Debugging
+
 Set `LOG_LEVEL=debug` in your `.env` file for verbose logging.
 
 ## Security
@@ -207,6 +221,7 @@ Set `LOG_LEVEL=debug` in your `.env` file for verbose logging.
 ## Troubleshooting
 
 ### Redis Connection Issues
+
 ```bash
 # Check Redis is running
 redis-cli ping
@@ -216,6 +231,7 @@ redis-cli -h localhost -p 6379
 ```
 
 ### MCP Server Not Responding
+
 ```bash
 # Check server status
 curl http://localhost:8004/health
@@ -225,6 +241,7 @@ tail -f mcp-bridge.log
 ```
 
 ### Adapter Startup Issues
+
 ```bash
 # Run adapter directly for debugging
 tsx src/claude-adapter.ts

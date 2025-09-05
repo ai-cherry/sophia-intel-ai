@@ -1,11 +1,13 @@
 # User Management System Architecture
 
 ## Overview
+
 Hierarchical access control system for Sophia Intelligence AI platform with email invitations and granular permissions.
 
 ## User Hierarchy
 
 ### 1. Platform Level Access
+
 - **Owner** (you): Full access to everything
 - **Admin**: Full access to assigned domains
 - **Manager**: Limited management within domains
@@ -13,23 +15,28 @@ Hierarchical access control system for Sophia Intelligence AI platform with emai
 - **Viewer**: Read-only access
 
 ### 2. Domain Level Access
+
 - **Sophia Domain**: Business intelligence and operations
 - **Artemis Domain**: Development and technical systems
 
 ### 3. Service Level Access
-#### Sophia Services:
+
+#### Sophia Services
+
 - CRM Integration (HubSpot, Salesforce)
 - Call Analysis (Gong)
 - Project Management (Asana, Linear, Notion)
 - Business Analytics & Reporting
 
-#### Artemis Services:
+#### Artemis Services
+
 - Agent Factory
 - Swarm Orchestration
 - Code Management
 - System Monitoring
 
 ### 4. Data Classification Levels
+
 - **Public**: General business information
 - **Internal**: Company operational data
 - **Confidential**: Financial reports, contracts
@@ -39,6 +46,7 @@ Hierarchical access control system for Sophia Intelligence AI platform with emai
 ## Technical Implementation
 
 ### Database Schema
+
 ```sql
 -- User management tables
 CREATE TABLE users (
@@ -74,6 +82,7 @@ CREATE TABLE user_role_assignments (
 ```
 
 ### API Endpoints
+
 ```
 POST /api/admin/users/invite
 GET  /api/admin/users
@@ -84,6 +93,7 @@ GET  /api/auth/permissions/check
 ```
 
 ### UI Components
+
 - User Management Tab in unified dashboard
 - Email invitation workflow
 - Permission matrix interface

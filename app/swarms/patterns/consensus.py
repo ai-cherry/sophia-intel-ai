@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class ConsensusConfig(PatternConfig):
     """Configuration for consensus pattern."""
+
     consensus_method: str = "weighted_voting"  # simple_majority, weighted_voting, ranked_choice
     min_agreement: float = 0.6
     tie_breaker: str = "seniority"  # random, seniority, performance
@@ -56,11 +57,7 @@ class ConsensusPattern(SwarmPattern):
 
         self.voting_history.append(consensus)
 
-        return PatternResult(
-            success=True,
-            data=consensus,
-            pattern_name="consensus"
-        )
+        return PatternResult(success=True, data=consensus, pattern_name="consensus")
 
     async def _collect_votes(self, proposals: list, agents: list) -> dict:
         """Collect votes from all agents."""
@@ -74,17 +71,18 @@ class ConsensusPattern(SwarmPattern):
         """Get vote from individual agent."""
         # Simulate voting
         import random
+
         return {
             "choice": random.choice(proposals) if proposals else None,
             "confidence": random.random(),
-            "reasoning": "Simulated vote"
+            "reasoning": "Simulated vote",
         }
 
     def _determine_consensus(self, votes: dict) -> dict:
         """Determine consensus from votes."""
         # Count votes
         vote_counts = {}
-        for agent, vote in votes.items():
+        for _agent, vote in votes.items():
             choice = vote.get("choice")
             if choice:
                 vote_counts[str(choice)] = vote_counts.get(str(choice), 0) + 1
@@ -98,7 +96,7 @@ class ConsensusPattern(SwarmPattern):
                 "winner": winners[0] if len(winners) == 1 else None,
                 "is_tie": len(winners) > 1,
                 "tied_options": winners if len(winners) > 1 else [],
-                "vote_counts": vote_counts
+                "vote_counts": vote_counts,
             }
 
         return {"winner": None, "is_tie": False}
@@ -113,6 +111,7 @@ class ConsensusPattern(SwarmPattern):
             consensus["winner"] = consensus["tied_options"][0]
         else:  # random
             import random
+
             consensus["winner"] = random.choice(consensus["tied_options"])
 
         consensus["tie_broken_by"] = self.config.tie_breaker

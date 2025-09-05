@@ -5,8 +5,9 @@ A comprehensive testing strategy for validating integrations with business intel
 ## 🎯 Overview
 
 This framework provides systematic testing of BI platform integrations with focus on:
+
 - **Connection reliability** and authentication
-- **Data flow validation** and structure integrity  
+- **Data flow validation** and structure integrity
 - **End-to-end workflow** testing
 - **Performance benchmarking** and SLA compliance
 - **Error handling** and fallback strategies
@@ -24,8 +25,9 @@ Tests fundamental connectivity to each BI platform:
 - **Rate limit handling** - Respect platform limits and retry-after headers
 
 **Supported Platforms:**
+
 - **Gong** - Call intelligence and analysis
-- **HubSpot** - CRM and marketing automation  
+- **HubSpot** - CRM and marketing automation
 - **Salesforce** - CRM and pipeline management
 - **Asana** - Task and project coordination
 - **Linear** - Project management and issue tracking
@@ -55,7 +57,7 @@ Tests complete business processes:
 Comprehensive performance testing:
 
 - **Load testing** - Concurrent users, request volumes
-- **Response time analysis** - Average, P95, P99 percentiles  
+- **Response time analysis** - Average, P95, P99 percentiles
 - **Throughput measurement** - Requests per second
 - **Resource monitoring** - CPU, memory, network utilization
 - **SLA compliance** - Performance thresholds validation
@@ -88,10 +90,10 @@ Set up environment variables for platform integrations:
 ```bash
 # Gong Integration
 export GONG_ACCESS_KEY="your-gong-access-key"
-export GONG_CLIENT_SECRET="your-gong-client-secret" 
+export GONG_CLIENT_SECRET="your-gong-client-secret"
 export GONG_BASE_URL="https://api.gong.io"
 
-# HubSpot Integration  
+# HubSpot Integration
 export HUBSPOT_API_KEY="your-hubspot-api-key"
 
 # Salesforce Integration
@@ -101,7 +103,7 @@ export SALESFORCE_INSTANCE_URL="https://your-instance.salesforce.com"
 # Asana Integration
 export ASANA_ACCESS_TOKEN="your-asana-access-token"
 
-# Linear Integration  
+# Linear Integration
 export LINEAR_API_KEY="your-linear-api-key"
 
 # OpenRouter for AI agents (if using)
@@ -111,21 +113,25 @@ export OPENROUTER_API_KEY="your-openrouter-api-key"
 ### Running Tests
 
 #### Quick Test Suite (Recommended for CI/CD)
+
 ```bash
 python run_comprehensive_tests.py --quick
 ```
 
-#### Full Test Suite  
+#### Full Test Suite
+
 ```bash
 python run_comprehensive_tests.py
 ```
 
 #### Platform-Specific Testing
+
 ```bash
 python run_comprehensive_tests.py --platform gong
 ```
 
 #### Custom Output Directory
+
 ```bash
 python run_comprehensive_tests.py --output ./custom_reports
 ```
@@ -133,6 +139,7 @@ python run_comprehensive_tests.py --output ./custom_reports
 ### Running Individual Test Components
 
 #### Connection Tests Only
+
 ```python
 import asyncio
 from test_bi_integrations import BIIntegrationTester
@@ -146,14 +153,15 @@ asyncio.run(test_connections())
 ```
 
 #### Performance Benchmarks Only
-```python  
+
+```python
 import asyncio
 from performance_benchmarking import BIPerformanceBenchmarker
 
 async def run_benchmarks():
     benchmarker = BIPerformanceBenchmarker()
     results = await benchmarker.run_standard_benchmark_suite()
-    
+
     for name, result in results.items():
         print(f"{name}: {result.avg_response_time_ms:.2f}ms avg, {result.success_rate:.1%} success")
 
@@ -161,6 +169,7 @@ asyncio.run(run_benchmarks())
 ```
 
 #### Mock Data Generation
+
 ```python
 from mock_data_generator import BIMockDataGenerator, MockDataConfig
 
@@ -180,18 +189,21 @@ crm_data = generator.generate_crm_contacts(config)
 The framework generates comprehensive reports:
 
 ### JSON Reports
+
 - **`comprehensive_test_results_{timestamp}.json`** - Full test results with detailed metrics
 - **`test_summary_{timestamp}.json`** - Executive summary for dashboards
 - **`bi_performance_benchmark_{timestamp}.json`** - Performance analysis report
 
-### Markdown Reports  
+### Markdown Reports
+
 - **`test_report_{timestamp}.md`** - Human-readable test report
 
 ### Report Structure
+
 ```json
 {
   "start_time": "2025-09-03T10:30:00",
-  "end_time": "2025-09-03T10:45:00", 
+  "end_time": "2025-09-03T10:45:00",
   "connection_tests": {
     "summary": {
       "total_tests": 6,
@@ -221,13 +233,14 @@ The framework generates comprehensive reports:
 ## 🔧 Configuration
 
 ### SLA Thresholds
+
 ```python
 from performance_benchmarking import SLAThresholds
 
 thresholds = SLAThresholds(
     max_response_time_ms=5000,      # 5 second max response
     max_p95_response_time_ms=8000,   # 8 second P95
-    max_p99_response_time_ms=15000,  # 15 second P99  
+    max_p99_response_time_ms=15000,  # 15 second P99
     min_success_rate=0.95,           # 95% success rate
     max_error_rate=0.05,             # 5% error rate
     min_throughput_rps=1.0           # 1 request/second minimum
@@ -235,6 +248,7 @@ thresholds = SLAThresholds(
 ```
 
 ### Circuit Breaker Configuration
+
 ```python
 from dev_mcp_unified.integrations.error_handling import CircuitBreakerConfig
 
@@ -245,7 +259,8 @@ circuit_config = CircuitBreakerConfig(
 )
 ```
 
-### Retry Configuration  
+### Retry Configuration
+
 ```python
 from dev_mcp_unified.integrations.error_handling import RetryConfig
 
@@ -261,10 +276,11 @@ retry_config = RetryConfig(
 ## 🏗️ Architecture
 
 ### Test Framework Architecture
+
 ```
 tests/integration/business_intelligence/
 ├── test_bi_integrations.py      # Core integration testing
-├── performance_benchmarking.py  # Performance and load testing  
+├── performance_benchmarking.py  # Performance and load testing
 ├── mock_data_generator.py      # Realistic mock data generation
 ├── run_comprehensive_tests.py   # Test orchestration and reporting
 └── README.md                   # Documentation
@@ -274,6 +290,7 @@ dev_mcp_unified/integrations/
 ```
 
 ### Integration Flow
+
 ```
 ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
 │   Test Runner   │───▶│ Integration Test │───▶│  BI Platforms   │
@@ -295,41 +312,45 @@ dev_mcp_unified/integrations/
 
 ### Standard Benchmark Suite
 
-| Test Name | Description | Concurrent Users | Total Requests |
-|-----------|-------------|------------------|----------------|
-| `health_check_baseline` | Basic health endpoint | 1 | 5 |
-| `gong_calls_light_load` | Gong calls (7 days) | 2 | 20 |
-| `gong_calls_medium_load` | Gong calls (30 days) | 5 | 50 |  
-| `crm_contacts_performance` | CRM contacts | 3 | 30 |
-| `crm_pipeline_performance` | CRM pipeline | 2 | 20 |
-| `dashboard_load_test` | Business dashboard | 4 | 40 |
-| `projects_overview_stress` | Projects overview | 3 | 25 |
-| `workflow_trigger_performance` | Workflow automation | 2 | 15 |
-| `high_concurrency_test` | Stress test | 10 | 100 |
+| Test Name                      | Description           | Concurrent Users | Total Requests |
+| ------------------------------ | --------------------- | ---------------- | -------------- |
+| `health_check_baseline`        | Basic health endpoint | 1                | 5              |
+| `gong_calls_light_load`        | Gong calls (7 days)   | 2                | 20             |
+| `gong_calls_medium_load`       | Gong calls (30 days)  | 5                | 50             |
+| `crm_contacts_performance`     | CRM contacts          | 3                | 30             |
+| `crm_pipeline_performance`     | CRM pipeline          | 2                | 20             |
+| `dashboard_load_test`          | Business dashboard    | 4                | 40             |
+| `projects_overview_stress`     | Projects overview     | 3                | 25             |
+| `workflow_trigger_performance` | Workflow automation   | 2                | 15             |
+| `high_concurrency_test`        | Stress test           | 10               | 100            |
 
 ### Performance Metrics
 
 - **Response Time** - Average, median, P95, P99, min, max
 - **Throughput** - Requests per second (RPS)
 - **Success Rate** - Percentage of successful requests
-- **Error Rate** - Percentage of failed requests  
+- **Error Rate** - Percentage of failed requests
 - **Resource Utilization** - CPU, memory, network usage
 
 ## 🛡️ Error Handling Strategies
 
 ### Circuit Breaker Pattern
+
 Prevents cascade failures by "opening" when failure threshold is reached:
+
 - **Closed** - Normal operation
-- **Open** - Failures detected, requests blocked  
+- **Open** - Failures detected, requests blocked
 - **Half-Open** - Testing if service recovered
 
 ### Fallback Strategies
+
 1. **Cache Fallback** - Return cached data (even if stale)
 2. **Mock Data Fallback** - Generate realistic mock responses
-3. **Degraded Mode** - Return minimal/empty responses  
+3. **Degraded Mode** - Return minimal/empty responses
 4. **Service Bypass** - Skip non-critical integrations
 
 ### Retry Logic
+
 - **Exponential Backoff** - Increasing delays between retries
 - **Jitter** - Randomization to prevent thundering herd
 - **Respectful Retries** - Honor rate limit headers
@@ -338,12 +359,14 @@ Prevents cascade failures by "opening" when failure threshold is reached:
 ## 🔍 Monitoring & Alerting
 
 ### Health Checks
+
 - **Platform Status** - Individual integration health
 - **Response Times** - Performance degradation detection
 - **Error Rates** - Failure pattern analysis
 - **Data Quality** - Schema and content validation
 
 ### Alert Conditions
+
 - **Critical** - Platform completely down, auth failures
 - **Warning** - High response times, degraded performance
 - **Info** - Successful recoveries, configuration changes
@@ -351,6 +374,7 @@ Prevents cascade failures by "opening" when failure threshold is reached:
 ## 📝 Usage Examples
 
 ### CI/CD Integration
+
 ```yaml
 # GitHub Actions example
 name: BI Integration Tests
@@ -364,8 +388,8 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.11'
-      - name: Install dependencies  
+          python-version: "3.11"
+      - name: Install dependencies
         run: pip install -r requirements.txt
       - name: Start MCP Server
         run: |
@@ -379,6 +403,7 @@ jobs:
 ```
 
 ### Production Monitoring
+
 ```python
 import asyncio
 from test_bi_integrations import BIIntegrationTester
@@ -387,17 +412,18 @@ async def health_check():
     """Production health check for monitoring systems"""
     async with BIIntegrationTester() as tester:
         health = await tester.get_integration_health()
-        
+
         if health["overall_status"] != "healthy":
             # Send alert to monitoring system
             send_alert(f"BI Integration unhealthy: {health['overall_status']}")
-            
+
         return health
 
 # Run every 5 minutes in production
 ```
 
 ### Custom Test Scenarios
+
 ```python
 from test_bi_integrations import BIIntegrationTester, ConnectionTest
 
@@ -410,7 +436,7 @@ async def custom_test():
         required_env_vars=["CUSTOM_API_TOKEN"],
         timeout_seconds=15
     )
-    
+
     async with BIIntegrationTester() as tester:
         result = await tester.test_connection(custom_test)
         print(f"Custom test result: {result}")
@@ -421,9 +447,10 @@ async def custom_test():
 ### Adding New Platform Integration
 
 1. **Add connection test configuration:**
+
 ```python
 ConnectionTest(
-    name="new_platform_test", 
+    name="new_platform_test",
     endpoint="/api/business/new-platform",
     auth_method="api_key",
     required_env_vars=["NEW_PLATFORM_API_KEY"]
@@ -431,6 +458,7 @@ ConnectionTest(
 ```
 
 2. **Add data flow validation:**
+
 ```python
 DataFlowTest(
     name="new_platform_data_structure",
@@ -441,6 +469,7 @@ DataFlowTest(
 ```
 
 3. **Add mock data generator:**
+
 ```python
 def generate_new_platform_data(self, config: MockDataConfig):
     # Generate realistic mock data for the platform
@@ -448,6 +477,7 @@ def generate_new_platform_data(self, config: MockDataConfig):
 ```
 
 4. **Add performance benchmark:**
+
 ```python
 BenchmarkConfig(
     name="new_platform_performance",
@@ -458,6 +488,7 @@ BenchmarkConfig(
 ```
 
 ### Running Development Tests
+
 ```bash
 # Run with verbose logging
 export LOG_LEVEL=DEBUG

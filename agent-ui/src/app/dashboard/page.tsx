@@ -41,8 +41,8 @@ export default function DashboardPage() {
         <aside className="w-80 border-r border-white/10 bg-white/5 backdrop-blur-md overflow-y-auto">
           <div className="p-4">
             <h2 className="text-lg font-semibold mb-4 text-[#00e0ff]">Swarms</h2>
-            <SwarmList 
-              apiEndpoint="/teams" 
+            <SwarmList
+              apiEndpoint="/teams"
               onSelect={(teamId) => setSelectedTeamId(teamId)}
               selectedTeamId={selectedTeamId}
             />
@@ -94,7 +94,7 @@ export default function DashboardPage() {
           {/* Tab Content */}
           <div className="flex-1 overflow-hidden">
             {activeTab === 'chat' && (
-              <ManagerChat 
+              <ManagerChat
                 websocketUrl={`/ws/${Date.now()}/${Math.random().toString(36).substr(2, 9)}`}
                 persona="AI Orchestra Manager"
               />

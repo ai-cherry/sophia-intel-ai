@@ -14,7 +14,12 @@
     },
     "balanced": {
       "description": "Default balanced mode",
-      "enabled_patterns": ["safety", "quality_gates", "debate", "strategy_archive"],
+      "enabled_patterns": [
+        "safety",
+        "quality_gates",
+        "debate",
+        "strategy_archive"
+      ],
       "max_agents": 5,
       "timeout_seconds": 30,
       "memory_enabled": true,
@@ -56,7 +61,7 @@
       "avg_execution_time": 2.5,
       "memory_usage_mb": 100,
       "cpu_overhead_percent": 25,
-      "reliability_score": 0.90
+      "reliability_score": 0.9
     },
     "strategy_archive": {
       "avg_execution_time": 0.4,
@@ -91,8 +96,21 @@
   },
   "task_complexity_analysis": {
     "simple_keywords": ["fix", "update", "change", "modify", "add", "remove"],
-    "medium_keywords": ["implement", "create", "integrate", "optimize", "improve"],
-    "complex_keywords": ["architect", "design", "refactor", "scale", "migrate", "enterprise"],
+    "medium_keywords": [
+      "implement",
+      "create",
+      "integrate",
+      "optimize",
+      "improve"
+    ],
+    "complex_keywords": [
+      "architect",
+      "design",
+      "refactor",
+      "scale",
+      "migrate",
+      "enterprise"
+    ],
     "complexity_thresholds": {
       "simple": 0.3,
       "medium": 0.7,

@@ -15,12 +15,12 @@ def search_code(query: str, path: str = ".") -> dict[str, Any]:
             ["grep", "-r", "--include=*.py", query, path],
             capture_output=True,
             text=True,
-            timeout=10
+            timeout=10,
         )
         return {
             "query": query,
-            "matches": result.stdout.split('\n')[:10],  # First 10 matches
-            "count": len(result.stdout.split('\n')) if result.stdout else 0
+            "matches": result.stdout.split("\n")[:10],  # First 10 matches
+            "count": len(result.stdout.split("\n")) if result.stdout else 0,
         }
     except Exception as e:
         return {"query": query, "error": str(e), "matches": [], "count": 0}
@@ -32,14 +32,14 @@ def read_file(file_path: str) -> dict[str, Any]:
         if not os.path.exists(file_path):
             return {"error": f"File not found: {file_path}"}
 
-        with open(file_path, encoding='utf-8') as f:
+        with open(file_path, encoding="utf-8") as f:
             content = f.read()
 
         return {
             "file_path": file_path,
             "content": content[:2000],  # Limit content size
             "size": len(content),
-            "lines": len(content.split('\n'))
+            "lines": len(content.split("\n")),
         }
     except Exception as e:
         return {"file_path": file_path, "error": str(e)}
@@ -50,13 +50,13 @@ def write_file(file_path: str, content: str) -> dict[str, Any]:
     try:
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
 
-        with open(file_path, 'w', encoding='utf-8') as f:
+        with open(file_path, "w", encoding="utf-8") as f:
             f.write(content)
 
         return {
             "file_path": file_path,
             "success": True,
-            "bytes_written": len(content.encode('utf-8'))
+            "bytes_written": len(content.encode("utf-8")),
         }
     except Exception as e:
         return {"file_path": file_path, "error": str(e), "success": False}
@@ -71,16 +71,18 @@ def list_directory(dir_path: str = ".") -> dict[str, Any]:
         items = []
         for item in os.listdir(dir_path):
             full_path = os.path.join(dir_path, item)
-            items.append({
-                "name": item,
-                "type": "directory" if os.path.isdir(full_path) else "file",
-                "size": os.path.getsize(full_path) if os.path.isfile(full_path) else 0
-            })
+            items.append(
+                {
+                    "name": item,
+                    "type": "directory" if os.path.isdir(full_path) else "file",
+                    "size": os.path.getsize(full_path) if os.path.isfile(full_path) else 0,
+                }
+            )
 
         return {
             "directory": dir_path,
             "items": items[:20],  # Limit to 20 items
-            "total": len(items)
+            "total": len(items),
         }
     except Exception as e:
         return {"directory": dir_path, "error": str(e)}
@@ -90,23 +92,17 @@ def git_status() -> dict[str, Any]:
     """Get git status."""
     try:
         result = subprocess.run(
-            ["git", "status", "--porcelain"],
-            capture_output=True,
-            text=True,
-            timeout=10
+            ["git", "status", "--porcelain"], capture_output=True, text=True, timeout=10
         )
 
         files = []
-        for line in result.stdout.split('\n'):
+        for line in result.stdout.split("\n"):
             if line.strip():
                 status = line[:2]
                 filename = line[3:]
                 files.append({"status": status, "file": filename})
 
-        return {
-            "files": files,
-            "clean": len(files) == 0
-        }
+        return {"files": files, "clean": len(files) == 0}
     except Exception as e:
         return {"error": str(e), "files": [], "clean": False}
 
@@ -118,14 +114,14 @@ def run_tests(test_path: str = "tests/") -> dict[str, Any]:
             ["python3", "-m", "pytest", test_path, "-v", "--tb=short"],
             capture_output=True,
             text=True,
-            timeout=30
+            timeout=30,
         )
 
         return {
             "exit_code": result.returncode,
             "output": result.stdout[-1000:],  # Last 1000 chars
             "errors": result.stderr[-1000:] if result.stderr else "",
-            "passed": result.returncode == 0
+            "passed": result.returncode == 0,
         }
     except Exception as e:
         return {"error": str(e), "passed": False}
@@ -188,15 +184,12 @@ class GitCommit:
     def __call__(self, message: str):
         try:
             result = subprocess.run(
-                ["git", "commit", "-m", message],
-                capture_output=True,
-                text=True,
-                timeout=10
+                ["git", "commit", "-m", message], capture_output=True, text=True, timeout=10
             )
             return {
                 "success": result.returncode == 0,
                 "output": result.stdout,
-                "error": result.stderr
+                "error": result.stderr,
             }
         except Exception as e:
             return {"error": str(e), "success": False}
@@ -208,10 +201,7 @@ class GitAdd:
     def __call__(self, file_path: str):
         try:
             result = subprocess.run(
-                ["git", "add", file_path],
-                capture_output=True,
-                text=True,
-                timeout=10
+                ["git", "add", file_path], capture_output=True, text=True, timeout=10
             )
             return {"success": result.returncode == 0, "file": file_path}
         except Exception as e:
@@ -231,15 +221,12 @@ class RunTypeCheck:
     def __call__(self, file_path: str = "."):
         try:
             result = subprocess.run(
-                ["python3", "-m", "mypy", file_path],
-                capture_output=True,
-                text=True,
-                timeout=20
+                ["python3", "-m", "mypy", file_path], capture_output=True, text=True, timeout=20
             )
             return {
                 "success": result.returncode == 0,
                 "output": result.stdout,
-                "errors": result.stderr
+                "errors": result.stderr,
             }
         except Exception as e:
             return {"error": str(e), "success": False}
@@ -251,15 +238,12 @@ class RunLint:
     def __call__(self, file_path: str = "."):
         try:
             result = subprocess.run(
-                ["python3", "-m", "flake8", file_path],
-                capture_output=True,
-                text=True,
-                timeout=20
+                ["python3", "-m", "flake8", file_path], capture_output=True, text=True, timeout=20
             )
             return {
                 "success": result.returncode == 0,
                 "output": result.stdout,
-                "issues": result.stdout.split('\n') if result.stdout else []
+                "issues": result.stdout.split("\n") if result.stdout else [],
             }
         except Exception as e:
             return {"error": str(e), "success": False}
@@ -271,15 +255,12 @@ class FormatCode:
     def __call__(self, file_path: str):
         try:
             result = subprocess.run(
-                ["python3", "-m", "black", file_path],
-                capture_output=True,
-                text=True,
-                timeout=20
+                ["python3", "-m", "black", file_path], capture_output=True, text=True, timeout=20
             )
             return {
                 "success": result.returncode == 0,
                 "formatted": result.returncode == 0,
-                "output": result.stdout
+                "output": result.stdout,
             }
         except Exception as e:
             return {"error": str(e), "success": False}

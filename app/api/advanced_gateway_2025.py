@@ -17,12 +17,14 @@ from dotenv import load_dotenv
 from app.core.circuit_breaker import with_circuit_breaker
 
 # Load environment variables
-load_dotenv('.env.local')
+load_dotenv(".env.local")
 
 logger = logging.getLogger(__name__)
 
+
 class TaskType(Enum):
     """Task-based model routing."""
+
     REASONING = "reasoning"
     CREATIVE = "creative"
     CODING = "coding"
@@ -30,14 +32,17 @@ class TaskType(Enum):
     GENERAL = "general"
     EMBEDDINGS = "embeddings"
 
+
 @dataclass
 class ModelConfig2025:
     """Latest 2025 model configuration."""
+
     model_name: str
     virtual_key: str
     max_tokens: int = 4000
     temperature: float = 0.7
     timeout: float = 30.0
+
 
 class AdvancedAIGateway2025:
     """Production AI Gateway with latest 2025 models and virtual keys."""
@@ -52,17 +57,13 @@ class AdvancedAIGateway2025:
             "misses": 0,
             "total_requests": 0,
             "cost_saved": 0.0,
-            "last_reset": None
+            "last_reset": None,
         }
 
     @with_circuit_breaker("external_api")
     def validate_environment(self):
         """Validate required API keys."""
-        required_keys = [
-            "PORTKEY_API_KEY",
-            "OPENROUTER_API_KEY",
-            "ANTHROPIC_API_KEY"
-        ]
+        required_keys = ["PORTKEY_API_KEY", "OPENROUTER_API_KEY", "ANTHROPIC_API_KEY"]
 
         missing_keys = [key for key in required_keys if not os.getenv(key)]
         if missing_keys:
@@ -79,43 +80,38 @@ class AdvancedAIGateway2025:
                 model_name="x-ai/grok-2-1212",  # Latest xAI model
                 virtual_key="xai-vk-e65d0f",  # Your XAI virtual key
                 max_tokens=4000,
-                temperature=0.3
+                temperature=0.3,
             ),
-
             TaskType.CREATIVE: ModelConfig2025(
                 model_name="google/gemini-2.0-flash-exp",  # Latest Gemini via OpenRouter
                 virtual_key="vkj-openrouter-cc4151",  # Your OpenRouter virtual key
                 max_tokens=6000,
-                temperature=0.8
+                temperature=0.8,
             ),
-
             TaskType.CODING: ModelConfig2025(
                 model_name="anthropic/claude-3.5-sonnet-20241022",  # Latest Claude via OpenRouter
                 virtual_key="vkj-openrouter-cc4151",  # Your OpenRouter virtual key
                 max_tokens=4000,
-                temperature=0.2
+                temperature=0.2,
             ),
-
             TaskType.FAST: ModelConfig2025(
                 model_name="openai/gpt-4o-mini-2024-07-18",  # Speed optimized via OpenRouter
                 virtual_key="vkj-openrouter-cc4151",  # Your OpenRouter virtual key
                 max_tokens=2000,
-                temperature=0.7
+                temperature=0.7,
             ),
-
             TaskType.GENERAL: ModelConfig2025(
                 model_name="anthropic/claude-3.5-sonnet-20241022",  # Reliable default
                 virtual_key="vkj-openrouter-cc4151",  # Your OpenRouter virtual key
                 max_tokens=3000,
-                temperature=0.7
+                temperature=0.7,
             ),
-
             TaskType.EMBEDDINGS: ModelConfig2025(
                 model_name="togethercomputer/m2-bert-80M-32k-retrieval",  # 32k context
                 virtual_key="together-ai-670469",  # Your Together AI virtual key
                 max_tokens=1,  # Not applicable for embeddings
-                temperature=0.0
-            )
+                temperature=0.0,
+            ),
         }
 
     @with_circuit_breaker("external_api")
@@ -124,10 +120,7 @@ class AdvancedAIGateway2025:
         self.portkey_configs = {
             "llm_config": {
                 "strategy": {"mode": "single"},
-                "retry": {
-                    "attempts": 3,
-                    "on_status_codes": [429, 500, 502, 503, 504]
-                },
+                "retry": {"attempts": 3, "on_status_codes": [429, 500, 502, 503, 504]},
                 "cache": {
                     "enabled": True,
                     "mode": "semantic",
@@ -135,14 +128,10 @@ class AdvancedAIGateway2025:
                     "similarity_threshold": 0.95,
                     "embedding_model": "togethercomputer/m2-bert-80M-32k-retrieval",
                     "max_cache_size": 10000,
-                    "cache_eviction_policy": "lru"
+                    "cache_eviction_policy": "lru",
                 },
-                "metadata": {
-                    "environment": "production",
-                    "version": "2025.1"
-                }
+                "metadata": {"environment": "production", "version": "2025.1"},
             },
-
             "embedding_config": {
                 "strategy": {"mode": "single"},
                 "retry": {"attempts": 2},
@@ -153,18 +142,20 @@ class AdvancedAIGateway2025:
                     "similarity_threshold": 0.98,
                     "embedding_model": "togethercomputer/m2-bert-80M-32k-retrieval",
                     "max_cache_size": 5000,
-                    "cache_eviction_policy": "lru"
+                    "cache_eviction_policy": "lru",
                 },
-                "metadata": {"service": "embeddings"}
-            }
+                "metadata": {"service": "embeddings"},
+            },
         }
 
     @with_circuit_breaker("external_api")
-    async def chat_completion(self,
-                            messages: list[dict[str, str]],
-                            task_type: TaskType = TaskType.GENERAL,
-                            stream: bool = False,
-                            **kwargs) -> dict[str, Any]:
+    async def chat_completion(
+        self,
+        messages: list[dict[str, str]],
+        task_type: TaskType = TaskType.GENERAL,
+        stream: bool = False,
+        **kwargs,
+    ) -> dict[str, Any]:
         """Execute chat completion with latest 2025 models via Portkey virtual keys and semantic caching."""
 
         # Update cache metrics
@@ -173,16 +164,18 @@ class AdvancedAIGateway2025:
         config = self.model_configs[task_type]
 
         # Determine config type
-        portkey_config = (self.portkey_configs["embedding_config"]
-                         if task_type == TaskType.EMBEDDINGS
-                         else self.portkey_configs["llm_config"])
+        portkey_config = (
+            self.portkey_configs["embedding_config"]
+            if task_type == TaskType.EMBEDDINGS
+            else self.portkey_configs["llm_config"]
+        )
 
         # Setup headers for Portkey with virtual keys
         headers = {
             "x-portkey-api-key": os.getenv("PORTKEY_API_KEY"),
             "x-portkey-config": json.dumps(portkey_config),
             "x-portkey-provider": config.virtual_key,  # Use virtual key
-            "content-type": "application/json"
+            "content-type": "application/json",
         }
 
         # Prepare payload
@@ -191,18 +184,18 @@ class AdvancedAIGateway2025:
             "messages": messages,
             "max_tokens": config.max_tokens,
             "temperature": config.temperature,
-            "stream": stream
+            "stream": stream,
         }
         payload.update(kwargs)
 
         # Make API call through Portkey
         async with httpx.AsyncClient(timeout=config.timeout) as client:
-            logger.info(f"Calling {task_type.value} model: {config.model_name} via {config.virtual_key}")
+            logger.info(
+                f"Calling {task_type.value} model: {config.model_name} via {config.virtual_key}"
+            )
 
             response = await client.post(
-                "https://api.portkey.ai/v1/chat/completions",
-                headers=headers,
-                json=payload
+                "https://api.portkey.ai/v1/chat/completions", headers=headers, json=payload
             )
 
             if response.status_code != 200:
@@ -211,7 +204,7 @@ class AdvancedAIGateway2025:
                 raise httpx.HTTPStatusError(
                     f"Portkey returned {response.status_code}: {error_details}",
                     request=response.request,
-                    response=response
+                    response=response,
                 )
 
             result = response.json()
@@ -233,30 +226,25 @@ class AdvancedAIGateway2025:
             return result
 
     @with_circuit_breaker("external_api")
-    async def generate_embeddings(self,
-                                texts: list[str],
-                                model: str = "togethercomputer/m2-bert-80M-32k-retrieval") -> dict[str, Any]:
+    async def generate_embeddings(
+        self, texts: list[str], model: str = "togethercomputer/m2-bert-80M-32k-retrieval"
+    ) -> dict[str, Any]:
         """Generate embeddings using Together AI via Portkey virtual keys."""
 
         headers = {
             "x-portkey-api-key": os.getenv("PORTKEY_API_KEY"),
             "x-portkey-config": json.dumps(self.portkey_configs["embedding_config"]),
             "x-portkey-provider": "@TOGETHER_EMBEDDINGS",
-            "content-type": "application/json"
+            "content-type": "application/json",
         }
 
-        payload = {
-            "input": texts,
-            "model": model
-        }
+        payload = {"input": texts, "model": model}
 
         async with httpx.AsyncClient(timeout=30.0) as client:
             logger.info(f"Generating embeddings with {model} via Together AI")
 
             response = await client.post(
-                "https://api.portkey.ai/v1/embeddings",
-                headers=headers,
-                json=payload
+                "https://api.portkey.ai/v1/embeddings", headers=headers, json=payload
             )
 
             if response.status_code != 200:
@@ -264,7 +252,7 @@ class AdvancedAIGateway2025:
                 raise httpx.HTTPStatusError(
                     f"Together AI embeddings failed: {response.status_code} - {error_details}",
                     request=response.request,
-                    response=response
+                    response=response,
                 )
 
             result = response.json()
@@ -273,10 +261,9 @@ class AdvancedAIGateway2025:
 
             return result
 
-    async def smart_chat(self,
-                        messages: list[dict[str, str]],
-                        task_type: TaskType = TaskType.GENERAL,
-                        **kwargs) -> dict[str, Any]:
+    async def smart_chat(
+        self, messages: list[dict[str, str]], task_type: TaskType = TaskType.GENERAL, **kwargs
+    ) -> dict[str, Any]:
         """Smart model routing based on task type with latest 2025 models."""
 
         try:
@@ -292,7 +279,7 @@ class AdvancedAIGateway2025:
                 TaskType.CREATIVE: TaskType.GENERAL,
                 TaskType.CODING: TaskType.FAST,
                 TaskType.FAST: TaskType.GENERAL,
-                TaskType.GENERAL: TaskType.FAST
+                TaskType.GENERAL: TaskType.FAST,
             }
 
             fallback_type = fallback_map.get(task_type, TaskType.FAST)
@@ -302,7 +289,9 @@ class AdvancedAIGateway2025:
                 return await self.chat_completion(messages, fallback_type, **kwargs)
 
             except Exception as fallback_error:
-                logger.error(f"All models failed. Primary: {primary_error}, Fallback: {fallback_error}")
+                logger.error(
+                    f"All models failed. Primary: {primary_error}, Fallback: {fallback_error}"
+                )
                 raise Exception(f"Smart routing failed: {primary_error}")
 
     @with_circuit_breaker("external_api")
@@ -313,7 +302,7 @@ class AdvancedAIGateway2025:
                 response = await client.get(
                     "https://openrouter.ai/api/v1/models",
                     headers={"Authorization": f"Bearer {os.getenv('OPENROUTER_API_KEY')}"},
-                    timeout=10.0
+                    timeout=10.0,
                 )
 
                 if response.status_code == 200:
@@ -324,9 +313,13 @@ class AdvancedAIGateway2025:
                     latest_models = {
                         "gpt_5_models": [m["id"] for m in models if "gpt-5" in m["id"]],
                         "gemini_25_models": [m["id"] for m in models if "gemini-2.5" in m["id"]],
-                        "claude_4_models": [m["id"] for m in models if "claude-4" in m["id"] or "claude-sonnet-4" in m["id"]],
+                        "claude_4_models": [
+                            m["id"]
+                            for m in models
+                            if "claude-4" in m["id"] or "claude-sonnet-4" in m["id"]
+                        ],
                         "llama_4_models": [m["id"] for m in models if "llama-4" in m["id"]],
-                        "all_models": [m["id"] for m in models]
+                        "all_models": [m["id"] for m in models],
                     }
 
                     return latest_models
@@ -353,19 +346,20 @@ class AdvancedAIGateway2025:
                         "status": "healthy",
                         "model": self.model_configs[task_type].model_name,
                         "virtual_key": self.model_configs[task_type].virtual_key,
-                        "embedding_dimensions": len(result.get("data", [{}])[0].get("embedding", []))
+                        "embedding_dimensions": len(
+                            result.get("data", [{}])[0].get("embedding", [])
+                        ),
                     }
                 else:
                     # Test chat completions
                     result = await self.chat_completion(
-                        messages=[{"role": "user", "content": "Hi"}],
-                        task_type=task_type
+                        messages=[{"role": "user", "content": "Hi"}], task_type=task_type
                     )
                     health_status[task_type.value] = {
                         "status": "healthy",
                         "model": result.get("model_name"),
                         "virtual_key": result.get("virtual_key"),
-                        "response_received": bool(result.get("choices"))
+                        "response_received": bool(result.get("choices")),
                     }
 
             except Exception as e:
@@ -373,7 +367,7 @@ class AdvancedAIGateway2025:
                     "status": "unhealthy",
                     "error": str(e),
                     "model": self.model_configs[task_type].model_name,
-                    "virtual_key": self.model_configs[task_type].virtual_key
+                    "virtual_key": self.model_configs[task_type].virtual_key,
                 }
 
         # Overall health
@@ -384,12 +378,9 @@ class AdvancedAIGateway2025:
             "overall_status": "healthy" if healthy_count == total_count else "degraded",
             "healthy_services": healthy_count,
             "total_services": total_count,
-            "virtual_keys_configured": [
-                "@OPENROUTER_MAIN",
-                "@TOGETHER_EMBEDDINGS"
-            ],
+            "virtual_keys_configured": ["@OPENROUTER_MAIN", "@TOGETHER_EMBEDDINGS"],
             "latest_models_available": await self.get_latest_models(),
-            "services": health_status
+            "services": health_status,
         }
 
     @with_circuit_breaker("external_api")
@@ -412,19 +403,25 @@ class AdvancedAIGateway2025:
             "cache_config": {
                 "llm_cache_ttl": self.portkey_configs["llm_config"]["cache"]["ttl"],
                 "embedding_cache_ttl": self.portkey_configs["embedding_config"]["cache"]["ttl"],
-                "similarity_threshold_llm": self.portkey_configs["llm_config"]["cache"]["similarity_threshold"],
-                "similarity_threshold_embeddings": self.portkey_configs["embedding_config"]["cache"]["similarity_threshold"]
-            }
+                "similarity_threshold_llm": self.portkey_configs["llm_config"]["cache"][
+                    "similarity_threshold"
+                ],
+                "similarity_threshold_embeddings": self.portkey_configs["embedding_config"][
+                    "cache"
+                ]["similarity_threshold"],
+            },
         }
 
     @with_circuit_breaker("external_api")
-    async def invalidate_cache(self, pattern: Optional[str] = None, model: Optional[str] = None) -> dict[str, Any]:
+    async def invalidate_cache(
+        self, pattern: Optional[str] = None, model: Optional[str] = None
+    ) -> dict[str, Any]:
         """Invalidate cache entries based on pattern or model."""
         try:
             # Prepare invalidation request
             headers = {
                 "x-portkey-api-key": os.getenv("PORTKEY_API_KEY"),
-                "content-type": "application/json"
+                "content-type": "application/json",
             }
 
             payload = {}
@@ -435,9 +432,7 @@ class AdvancedAIGateway2025:
 
             async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.post(
-                    "https://api.portkey.ai/v1/cache/invalidate",
-                    headers=headers,
-                    json=payload
+                    "https://api.portkey.ai/v1/cache/invalidate", headers=headers, json=payload
                 )
 
                 if response.status_code == 200:
@@ -447,7 +442,7 @@ class AdvancedAIGateway2025:
                         "success": True,
                         "entries_invalidated": result.get("entries_invalidated", 0),
                         "pattern": pattern,
-                        "model": model
+                        "model": model,
                     }
                 else:
                     logger.error(f"Cache invalidation failed: {response.status_code}")
@@ -455,17 +450,12 @@ class AdvancedAIGateway2025:
                         "success": False,
                         "error": f"HTTP {response.status_code}",
                         "pattern": pattern,
-                        "model": model
+                        "model": model,
                     }
 
         except Exception as e:
             logger.error(f"Cache invalidation error: {e}")
-            return {
-                "success": False,
-                "error": str(e),
-                "pattern": pattern,
-                "model": model
-            }
+            return {"success": False, "error": str(e), "pattern": pattern, "model": model}
 
     async def clear_all_cache(self) -> dict[str, Any]:
         """Clear all cached entries across all models."""
@@ -478,17 +468,20 @@ class AdvancedAIGateway2025:
     def reset_cache_metrics(self):
         """Reset cache performance metrics."""
         from datetime import datetime
+
         self.cache_metrics = {
             "hits": 0,
             "misses": 0,
             "total_requests": 0,
             "cost_saved": 0.0,
-            "last_reset": datetime.now().isoformat()
+            "last_reset": datetime.now().isoformat(),
         }
         logger.info("Cache metrics reset")
 
+
 # Global instance
 _advanced_gateway = None
+
 
 def get_advanced_gateway() -> AdvancedAIGateway2025:
     """Get or create the global advanced gateway instance."""
@@ -497,6 +490,7 @@ def get_advanced_gateway() -> AdvancedAIGateway2025:
         _advanced_gateway = AdvancedAIGateway2025()
     return _advanced_gateway
 
+
 # Convenience functions for easy integration
 @with_circuit_breaker("external_api")
 async def chat_with_gpt5(messages: list[dict[str, str]], **kwargs) -> dict[str, Any]:
@@ -504,11 +498,13 @@ async def chat_with_gpt5(messages: list[dict[str, str]], **kwargs) -> dict[str, 
     gateway = get_advanced_gateway()
     return await gateway.smart_chat(messages, TaskType.REASONING, **kwargs)
 
+
 @with_circuit_breaker("external_api")
 async def chat_with_gemini25_pro(messages: list[dict[str, str]], **kwargs) -> dict[str, Any]:
     """Chat with Gemini 2.5 Pro (1M context) via OpenRouter virtual key."""
     gateway = get_advanced_gateway()
     return await gateway.smart_chat(messages, TaskType.CREATIVE, **kwargs)
+
 
 @with_circuit_breaker("external_api")
 async def chat_with_claude_sonnet4(messages: list[dict[str, str]], **kwargs) -> dict[str, Any]:
@@ -516,13 +512,17 @@ async def chat_with_claude_sonnet4(messages: list[dict[str, str]], **kwargs) -> 
     gateway = get_advanced_gateway()
     return await gateway.smart_chat(messages, TaskType.CODING, **kwargs)
 
+
 @with_circuit_breaker("llm")
 async def generate_embeddings_32k(texts: list[str]) -> dict[str, Any]:
     """Generate embeddings with 32k context via Together AI virtual key."""
     gateway = get_advanced_gateway()
     return await gateway.generate_embeddings(texts)
 
-async def smart_route_chat(messages: list[dict[str, str]], task_hint: str = "general") -> dict[str, Any]:
+
+async def smart_route_chat(
+    messages: list[dict[str, str]], task_hint: str = "general"
+) -> dict[str, Any]:
     """Automatically route to best model based on task hint."""
     gateway = get_advanced_gateway()
 
@@ -531,7 +531,7 @@ async def smart_route_chat(messages: list[dict[str, str]], task_hint: str = "gen
         TaskType.REASONING: ["analyze", "reason", "logic", "math", "problem", "think"],
         TaskType.CREATIVE: ["write", "story", "creative", "imagine", "art", "design"],
         TaskType.CODING: ["code", "program", "debug", "function", "algorithm", "python"],
-        TaskType.FAST: ["quick", "simple", "fast", "brief", "short"]
+        TaskType.FAST: ["quick", "simple", "fast", "brief", "short"],
     }
 
     # Detect task type from content

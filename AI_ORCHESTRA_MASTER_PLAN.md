@@ -1,11 +1,13 @@
 # AI Orchestra - Unified Agent Ecosystem Master Plan
 
 ## Executive Summary
+
 Transform the current fragmented agent ecosystem into a unified, swarm-focused platform with natural language control, comprehensive UI, and enterprise service integrations.
 
 ## Current State Analysis
 
 ### ✅ What's Working Well
+
 - **Backend Infrastructure**: Strong foundation with `unified_enhanced_orchestrator.py`, memory systems, consciousness tracking
 - **Legacy Cleanup**: HTML prototypes already removed (good decision!)
 - **Infrastructure**: `agno_infraops_swarm.py` exists but needs exposure
@@ -13,6 +15,7 @@ Transform the current fragmented agent ecosystem into a unified, swarm-focused p
 - **Next.js Foundation**: Modern React app ready for expansion
 
 ### ⚠️ Areas Needing Work
+
 - **No Unified Chat Orchestrator**: Missing backend to bridge NL commands and swarms
 - **No AI Manager Persona**: Need central orchestration personality
 - **Teams API Limited**: Lacks configuration endpoints for LLM models, personas, instructions
@@ -30,20 +33,20 @@ graph TB
         Memory[Memory Explorer]
         Metrics[Metrics Panel]
     end
-    
+
     subgraph Orchestration [AI Orchestra Core]
         Manager[AI Manager Persona]
         ChatOrch[Chat Orchestrator]
         Facade[Unified Facade]
         Swarms[Swarm Registry]
     end
-    
+
     subgraph Infrastructure [Infrastructure Layer]
         Secrets[Pulumi ESC]
         Connectors[Service Connectors]
         InfraOps[InfraOps Swarm]
     end
-    
+
     subgraph Services [External Services]
         GitHub[GitHub]
         Lambda[Lambda Labs]
@@ -52,14 +55,14 @@ graph TB
         Slack[Slack]
         Others[HubSpot/Salesforce/etc]
     end
-    
+
     UI --> ChatOrch
     Chat --> Manager
     Manager --> Facade
     Facade --> Swarms
     Config --> Swarms
     Memory --> Weaviate
-    
+
     Swarms --> Secrets
     Swarms --> Connectors
     Connectors --> Services
@@ -69,24 +72,31 @@ graph TB
 ## Implementation Plan
 
 ### Phase 1: Clean Up Roo/Cline Dependencies
+
 **Goal**: Remove technical debt and focus on swarm architecture
 
 ### Phase 2: Build Core Chat Orchestrator
+
 **Goal**: Create unified backend for natural language control
 
 ### Phase 3: Implement AI Manager Persona
+
 **Goal**: Establish central orchestration personality
 
 ### Phase 4: Enhance Teams API
+
 **Goal**: Enable dynamic swarm configuration
 
 ### Phase 5: Build Unified Dashboard
+
 **Goal**: Create comprehensive UI for all operations
 
 ### Phase 6: Integrate External Services
+
 **Goal**: Connect to business and code services
 
 ### Phase 7: Implement Secret Management
+
 **Goal**: Secure credential handling via Pulumi ESC
 
 ## Detailed UI Specification
@@ -98,12 +108,12 @@ graph TB
       "header": {
         "logo": "🌀 AI Orchestra",
         "menu": [
-          {"label": "Dashboard", "link": "/dashboard"},
-          {"label": "Memory", "link": "/memory"},
-          {"label": "InfraOps", "link": "/infra"},
-          {"label": "Connectors", "link": "/connectors"}
+          { "label": "Dashboard", "link": "/dashboard" },
+          { "label": "Memory", "link": "/memory" },
+          { "label": "InfraOps", "link": "/infra" },
+          { "label": "Connectors", "link": "/connectors" }
         ],
-        "userAvatar": {"initials": "AO", "status": "online"}
+        "userAvatar": { "initials": "AO", "status": "online" }
       },
       "panels": {
         "leftSidebar": {
@@ -182,11 +192,7 @@ graph TB
             {
               "title": "Memory Explorer",
               "component": "MemoryExplorer",
-              "features": [
-                "Vector search",
-                "Entry management",
-                "Visualization"
-              ]
+              "features": ["Vector search", "Entry management", "Visualization"]
             }
           ]
         }
@@ -226,18 +232,21 @@ graph TB
 ## Natural Language Commands
 
 ### Swarm Management
+
 - "Deploy development swarm with GPT-4"
 - "Enable memory sharing for analysis swarm"
 - "Pause all swarms except infrastructure"
 - "Switch coding swarm to Claude-3"
 
 ### Configuration
+
 - "Give GitHub write access to deployment swarm"
 - "Rotate API keys for production swarms"
 - "Set resource limit to 4 CPUs for data swarm"
 - "Enable debug logging for all swarms"
 
 ### Operations
+
 - "Deploy new version to staging"
 - "Run security scan on production"
 - "Backup all memory to S3"
@@ -246,11 +255,13 @@ graph TB
 ## Service Connectors
 
 ### Code Services
+
 - **GitHub**: Repository management, PR creation, issue tracking
 - **Lambda Labs**: GPU compute for training/inference
 - **Pulumi**: Infrastructure as code, deployment automation
 
 ### Data Services
+
 - **Neon**: PostgreSQL database operations
 - **Redis**: Caching and pub/sub messaging
 - **Weaviate**: Vector search and storage
@@ -258,6 +269,7 @@ graph TB
 - **Airbyte**: Data pipeline management
 
 ### Business Services
+
 - **Slack**: Team notifications and commands
 - **Gong**: Sales call analysis
 - **HubSpot**: CRM operations
@@ -267,6 +279,7 @@ graph TB
 ## Secret Management Strategy
 
 ### Development (.env files)
+
 ```bash
 # swarms/dev/.env
 GITHUB_TOKEN=ghp_xxx
@@ -279,6 +292,7 @@ PULUMI_ACCESS_TOKEN=xxx
 ```
 
 ### Production (Pulumi ESC)
+
 ```yaml
 # pulumi/environments/production.yaml
 values:
@@ -294,12 +308,14 @@ values:
 ## Success Metrics
 
 ### Technical
+
 - Response time < 200ms for API calls
 - WebSocket latency < 50ms
 - 99.9% uptime for orchestrator
 - Zero credential leaks
 
 ### Business
+
 - 80% of operations via natural language
 - 50% reduction in manual configuration
 - 90% developer satisfaction score
@@ -308,18 +324,21 @@ values:
 ## Risk Mitigation
 
 ### Security
+
 - All credentials in Pulumi ESC
 - Least-privilege access per swarm
 - Audit logging for all operations
 - Regular security scans
 
 ### Reliability
+
 - Graceful degradation
 - Circuit breakers for external services
 - Automatic retry with backoff
 - Health checks and monitoring
 
 ### Scalability
+
 - Horizontal scaling for swarms
 - Queue-based task distribution
 - Resource pooling

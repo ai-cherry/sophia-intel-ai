@@ -118,7 +118,7 @@ class ClineMCPClient {
           return await this.getTaskQueue(headers);
         case 'execute_task':
           return await this.executeTask(args, headers);
-        
+
         // Project management
         case 'analyze_project':
           return await this.analyzeProject(args, headers);
@@ -126,7 +126,7 @@ class ClineMCPClient {
           return await this.planImplementation(args, headers);
         case 'track_progress':
           return await this.trackProgress(args, headers);
-        
+
         // Code generation
         case 'generate_code':
           return await this.generateCode(args, headers);
@@ -134,13 +134,13 @@ class ClineMCPClient {
           return await this.implementFeature(args, headers);
         case 'fix_bug':
           return await this.fixBug(args, headers);
-        
+
         // Collaboration
         case 'coordinate_with_team':
           return await this.coordinateWithTeam(args, headers);
         case 'request_review':
           return await this.requestReview(args, headers);
-        
+
         default:
           throw new Error(`Unknown tool: ${toolName}`);
       }
@@ -196,7 +196,7 @@ class ClineMCPClient {
 
   private async updateTask(args: any, headers: any): Promise<Task> {
     const taskIndex = this.taskQueue.findIndex(t => t.id === args.task_id);
-    
+
     if (taskIndex === -1) {
       throw new Error(`Task ${args.task_id} not found`);
     }
@@ -209,7 +209,7 @@ class ClineMCPClient {
 
     // Validate updated task
     const validated = TaskSchema.parse(updatedTask);
-    
+
     // Update in queue
     this.taskQueue[taskIndex] = validated;
 
@@ -269,14 +269,14 @@ class ClineMCPClient {
 
   private async executeTask(args: any, headers: any): Promise<any> {
     const task = this.taskQueue.find(t => t.id === args.task_id);
-    
+
     if (!task) {
       throw new Error(`Task ${args.task_id} not found`);
     }
 
     // Set as active
     this.activeTask = task;
-    
+
     // Update status
     await this.updateTask({
       task_id: task.id,
@@ -324,7 +324,7 @@ class ClineMCPClient {
     // Update task status
     await this.updateTask({
       task_id: task.id,
-      updates: { 
+      updates: {
         status: 'completed',
         metadata: {
           ...task.metadata,
@@ -489,7 +489,7 @@ class ClineMCPClient {
   private async trackProgress(args: any, headers: any): Promise<any> {
     // Get all tasks for project
     const tasks = await this.getTaskQueue(headers);
-    
+
     // Calculate progress
     const totalTasks = tasks.length;
     const completedTasks = tasks.filter(t => t.status === 'completed').length;
@@ -572,7 +572,7 @@ class ClineMCPClient {
       const result = await this.executeTask({
         task_id: task.id
       }, headers);
-      
+
       if (task.type === 'feature') {
         implementation.files_created.push(...(result.files_created || []));
         implementation.files_modified.push(...(result.files_modified || []));
@@ -818,21 +818,21 @@ async function main() {
       inputSchema: {
         type: 'object',
         properties: {
-          type: { 
-            type: 'string', 
+          type: {
+            type: 'string',
             enum: ['feature', 'bug', 'refactor', 'test', 'docs'],
             description: 'Task type'
           },
           title: { type: 'string', description: 'Task title' },
           description: { type: 'string', description: 'Task description' },
-          priority: { 
-            type: 'string', 
+          priority: {
+            type: 'string',
             enum: ['low', 'medium', 'high', 'critical'],
             description: 'Task priority'
           },
           project: { type: 'string', description: 'Project name' },
-          dependencies: { 
-            type: 'array', 
+          dependencies: {
+            type: 'array',
             items: { type: 'string' },
             description: 'Task dependencies'
           }
@@ -960,10 +960,10 @@ async function main() {
   // Handle tool calls
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const { name, arguments: args } = request.params;
-    
+
     try {
       const result = await mcpClient.callTool(name, args);
-      
+
       return {
         content: [
           {
@@ -994,9 +994,9 @@ async function main() {
   // Handle get prompt request
   server.setRequestHandler(GetPromptRequestSchema, async (request) => {
     const { name, arguments: args } = request.params;
-    
+
     let promptText = '';
-    
+
     switch (name) {
       case 'implement_feature':
         promptText = `# Feature Implementation Guide
@@ -1018,7 +1018,7 @@ Feature: ${args?.feature_name || 'New Feature'}
 - Add logging for debugging
 - Ensure backward compatibility`;
         break;
-        
+
       case 'fix_bug':
         promptText = `# Bug Fix Guide
 
@@ -1032,7 +1032,7 @@ Bug: ${args?.bug_description || 'Bug to fix'}
 5. Verify fix works
 6. Document the solution`;
         break;
-        
+
       case 'refactor_code':
         promptText = `# Code Refactoring Guide
 
@@ -1046,11 +1046,11 @@ Target: ${args?.target_files || 'Files to refactor'}
 5. Ensure tests still pass
 6. Update documentation`;
         break;
-        
+
       default:
         promptText = 'Unknown prompt';
     }
-    
+
     return {
       description: prompts.find(p => p.name === name)?.description || '',
       messages: [
@@ -1068,9 +1068,9 @@ Target: ${args?.target_files || 'Files to refactor'}
   // Start server with stdio transport
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  
+
   logger.info('Cline MCP Adapter is running');
-  
+
   // Handle graceful shutdown
   process.on('SIGINT', async () => {
     logger.info('Shutting down...');

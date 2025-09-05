@@ -37,7 +37,7 @@ if curl -s http://localhost:$AGENT_API_PORT/healthz > /dev/null; then
     echo "  - /hub/ - Agent hub interface"
     echo ""
     echo "Press Ctrl+C to stop the server"
-    
+
     # Keep the script running
     wait $SERVER_PID
 else

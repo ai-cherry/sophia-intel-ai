@@ -1,8 +1,9 @@
 # 🔧 Cline/VS Code MCP Integration Setup
+
 ## Sophia Intel AI - Model Context Protocol for Cline/VS Code
 
 **Setup Status:** ✅ Ready for Connection  
-**MCP Server:** http://localhost:8000  
+**MCP Server:** <http://localhost:8000>  
 **Protocol:** MCP 1.0  
 **Cline Extension:** Enhanced with MCP Support
 
@@ -11,6 +12,7 @@
 ## 🚀 Quick Setup Instructions
 
 ### 1. Ensure MCP Server is Running
+
 ```bash
 # Start the MCP verification server
 cd sophia-intel-ai
@@ -26,20 +28,20 @@ Your VS Code is already configured with MCP support in `.vscode/settings.json`:
 
 ```json
 {
-    "cline.mcpServers": {
-        "sophia": {
-            "command": "node",
-            "args": ["./mcp-bridge/dist/cline-adapter.js"],
-            "env": {
-                "MCP_SERVER_URL": "http://localhost:8000",
-                "LOG_LEVEL": "info",
-                "REDIS_URL": "redis://localhost:6379",
-                "WORKSPACE_ID": "sophia-intel-ai"
-            }
-        }
-    },
-    "cline.enableMcp": true,
-    "cline.mcpTimeout": 30000
+  "cline.mcpServers": {
+    "sophia": {
+      "command": "node",
+      "args": ["./mcp-bridge/dist/cline-adapter.js"],
+      "env": {
+        "MCP_SERVER_URL": "http://localhost:8000",
+        "LOG_LEVEL": "info",
+        "REDIS_URL": "redis://localhost:6379",
+        "WORKSPACE_ID": "sophia-intel-ai"
+      }
+    }
+  },
+  "cline.enableMcp": true,
+  "cline.mcpTimeout": 30000
 }
 ```
 
@@ -53,6 +55,7 @@ Your VS Code is already configured with MCP support in `.vscode/settings.json`:
 3. **Reload VS Code** to activate MCP integration
 
 ### 4. Verify Prerequisites
+
 ```bash
 # Check Redis is running
 redis-cli ping
@@ -69,6 +72,7 @@ ls -la dist/  # Should show cline-adapter.js
 ## 🧠 Cline MCP Commands
 
 ### Memory Management
+
 ```
 /mcp store "Working on AI swarm orchestration system"
 /mcp search "swarm"
@@ -76,6 +80,7 @@ ls -la dist/  # Should show cline-adapter.js
 ```
 
 ### Task Management
+
 ```
 /mcp task create "Implement multi-agent debate system"
 /mcp task list
@@ -84,6 +89,7 @@ ls -la dist/  # Should show cline-adapter.js
 ```
 
 ### Code Context
+
 ```
 /mcp context save "Current file: improved_swarm.py"
 /mcp context load "swarm implementation"
@@ -91,6 +97,7 @@ ls -la dist/  # Should show cline-adapter.js
 ```
 
 ### Cross-Tool Sync
+
 ```
 /mcp sync workspace
 /mcp broadcast "Starting Phase 5 implementation"
@@ -102,6 +109,7 @@ ls -la dist/  # Should show cline-adapter.js
 ## 🎯 Enhanced Cline Features with MCP
 
 ### 1. Persistent Task Memory
+
 ```
 # Create a task that persists across sessions
 /mcp task create "Refactor swarm communication system" --priority high --type refactor
@@ -114,6 +122,7 @@ ls -la dist/  # Should show cline-adapter.js
 ```
 
 ### 2. Smart Code Generation
+
 ```
 # Generate code with shared context
 /mcp generate "Create a new agent type for code review" --context swarm-system
@@ -123,6 +132,7 @@ ls -la dist/  # Should show cline-adapter.js
 ```
 
 ### 3. Advanced Project Management
+
 ```
 # Track project progress
 /mcp project status sophia-intel-ai
@@ -139,35 +149,37 @@ ls -la dist/  # Should show cline-adapter.js
 ## 🔧 Advanced Configuration
 
 ### Enhanced .vscode/settings.json
+
 ```json
 {
-    "cline.mcpServers": {
-        "sophia": {
-            "command": "node",
-            "args": ["./mcp-bridge/dist/cline-adapter.js"],
-            "env": {
-                "MCP_SERVER_URL": "http://localhost:8000",
-                "LOG_LEVEL": "debug",
-                "REDIS_URL": "redis://localhost:6379",
-                "WORKSPACE_ID": "sophia-intel-ai",
-                "ENABLE_TASK_MANAGEMENT": "true",
-                "ENABLE_CODE_CONTEXT": "true",
-                "ENABLE_CROSS_TOOL_SYNC": "true",
-                "MAX_MEMORY_ENTRIES": "1000",
-                "MEMORY_RETENTION_DAYS": "30"
-            }
-        }
-    },
-    "cline.enableMcp": true,
-    "cline.mcpTimeout": 30000,
-    "cline.mcpRetryAttempts": 3,
-    "cline.autoSaveContext": true,
-    "cline.contextSaveInterval": 300000,
-    "cline.enableWebSocket": true
+  "cline.mcpServers": {
+    "sophia": {
+      "command": "node",
+      "args": ["./mcp-bridge/dist/cline-adapter.js"],
+      "env": {
+        "MCP_SERVER_URL": "http://localhost:8000",
+        "LOG_LEVEL": "debug",
+        "REDIS_URL": "redis://localhost:6379",
+        "WORKSPACE_ID": "sophia-intel-ai",
+        "ENABLE_TASK_MANAGEMENT": "true",
+        "ENABLE_CODE_CONTEXT": "true",
+        "ENABLE_CROSS_TOOL_SYNC": "true",
+        "MAX_MEMORY_ENTRIES": "1000",
+        "MEMORY_RETENTION_DAYS": "30"
+      }
+    }
+  },
+  "cline.enableMcp": true,
+  "cline.mcpTimeout": 30000,
+  "cline.mcpRetryAttempts": 3,
+  "cline.autoSaveContext": true,
+  "cline.contextSaveInterval": 300000,
+  "cline.enableWebSocket": true
 }
 ```
 
 ### Custom Environment File (.env.cline)
+
 ```bash
 # Cline MCP Configuration
 MCP_SERVER_URL=http://localhost:8000
@@ -196,12 +208,14 @@ RESPECT_CODE_STYLE=true
 ## 🚦 Testing MCP Integration
 
 ### Test 1: Basic MCP Connection
+
 1. Open VS Code in `sophia-intel-ai`
 2. Open Cline panel (usually in sidebar)
 3. Type: `/mcp status`
 4. Should show: "✅ Connected to Sophia MCP Server"
 
 ### Test 2: Memory Operations
+
 ```
 # Store memory
 /mcp store "Testing Cline MCP integration - all systems working"
@@ -213,6 +227,7 @@ RESPECT_CODE_STYLE=true
 ```
 
 ### Test 3: Task Management
+
 ```
 # Create a task
 /mcp task create "Test MCP task creation" --type test
@@ -224,6 +239,7 @@ RESPECT_CODE_STYLE=true
 ```
 
 ### Test 4: Cross-Tool Communication
+
 ```
 # Send a message to other connected tools
 /mcp broadcast "Cline MCP connection verified and working"
@@ -241,6 +257,7 @@ RESPECT_CODE_STYLE=true
 ### Issue: Cline Not Recognizing MCP Commands
 
 **Solution 1: Restart VS Code**
+
 ```bash
 # Close VS Code completely
 # Reopen in project directory
@@ -248,10 +265,12 @@ code sophia-intel-ai
 ```
 
 **Solution 2: Check Extension Version**
+
 - Ensure Cline extension supports MCP
 - Update to latest version if needed
 
 **Solution 3: Verify Configuration**
+
 ```bash
 # Check settings file
 cat .vscode/settings.json | grep -A 20 "mcpServers"
@@ -260,11 +279,13 @@ cat .vscode/settings.json | grep -A 20 "mcpServers"
 ### Issue: MCP Server Connection Failed
 
 **Check Server Status:**
+
 ```bash
 curl http://localhost:8000/healthz
 ```
 
 **Restart Server if Needed:**
+
 ```bash
 pkill -f mcp_verification_server
 python3 mcp_verification_server.py
@@ -273,12 +294,14 @@ python3 mcp_verification_server.py
 ### Issue: Redis Connection Problems
 
 **Start Redis:**
+
 ```bash
 redis-server &
 redis-cli ping  # Should return PONG
 ```
 
 **Check Redis Configuration:**
+
 ```bash
 redis-cli config get bind
 redis-cli config get port
@@ -287,6 +310,7 @@ redis-cli config get port
 ### Issue: Node.js/Adapter Problems
 
 **Reinstall MCP Bridge:**
+
 ```bash
 cd mcp-bridge
 npm install
@@ -299,6 +323,7 @@ ls -la dist/cline-adapter.js  # Should exist
 ## 🎯 Advanced Usage Patterns
 
 ### 1. Autonomous Development Workflow
+
 ```
 # Start a complex development task
 /mcp task create "Implement AI swarm consensus algorithm" --type feature --priority high
@@ -314,6 +339,7 @@ ls -la dist/cline-adapter.js  # Should exist
 ```
 
 ### 2. Cross-Tool Development Session
+
 ```
 # Start session with shared context
 /mcp session start "Phase 5 Implementation"
@@ -329,6 +355,7 @@ ls -la dist/cline-adapter.js  # Should exist
 ```
 
 ### 3. Code Review Workflow
+
 ```
 # Create review task
 /mcp task create "Review swarm communication refactor" --type review
@@ -348,6 +375,7 @@ ls -la dist/cline-adapter.js  # Should exist
 ## 📊 MCP Integration Features
 
 ### ✅ Fully Functional
+
 - **Memory Persistence**: Store and retrieve development context
 - **Task Management**: Create, track, and complete development tasks
 - **Code Context**: Automatic context awareness for better AI assistance
@@ -356,16 +384,17 @@ ls -la dist/cline-adapter.js  # Should exist
 - **Smart Generation**: Context-aware code generation
 
 ### 🔧 Available Commands
-| Command | Description | Example |
-|---------|-------------|---------|
-| `/mcp status` | Check connection status | Shows server health |
-| `/mcp store` | Store memory/context | Store current work |
-| `/mcp search` | Search memories | Find previous work |
-| `/mcp task` | Task management | Create/track tasks |
-| `/mcp context` | Context operations | Save/load context |
-| `/mcp sync` | Cross-tool sync | Sync with other tools |
-| `/mcp workspace` | Workspace status | Project overview |
-| `/mcp broadcast` | Send messages | Notify other tools |
+
+| Command          | Description             | Example               |
+| ---------------- | ----------------------- | --------------------- |
+| `/mcp status`    | Check connection status | Shows server health   |
+| `/mcp store`     | Store memory/context    | Store current work    |
+| `/mcp search`    | Search memories         | Find previous work    |
+| `/mcp task`      | Task management         | Create/track tasks    |
+| `/mcp context`   | Context operations      | Save/load context     |
+| `/mcp sync`      | Cross-tool sync         | Sync with other tools |
+| `/mcp workspace` | Workspace status        | Project overview      |
+| `/mcp broadcast` | Send messages           | Notify other tools    |
 
 ---
 
@@ -374,7 +403,7 @@ ls -la dist/cline-adapter.js  # Should exist
 When Cline MCP integration is working correctly:
 
 1. **✅ Command Recognition**: `/mcp` commands are recognized and autocomplete
-2. **✅ Server Connection**: `/mcp status` shows connected state  
+2. **✅ Server Connection**: `/mcp status` shows connected state
 3. **✅ Memory Operations**: Can store and retrieve context successfully
 4. **✅ Task Management**: Tasks are created and tracked properly
 5. **✅ Cross-Tool Sync**: Context is shared with Cursor/Roo automatically

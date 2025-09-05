@@ -98,7 +98,7 @@ class RooMCPClient {
           return await this.searchCodePatterns(args, headers);
         case 'get_code_context':
           return await this.getCodeContext(args, headers);
-        
+
         // Code intelligence
         case 'analyze_codebase':
           return await this.analyzeCodebase(args, headers);
@@ -106,13 +106,13 @@ class RooMCPClient {
           return await this.suggestRefactoring(args, headers);
         case 'generate_tests':
           return await this.generateTests(args, headers);
-        
+
         // Collaboration
         case 'share_insight':
           return await this.shareInsight(args, headers);
         case 'get_team_context':
           return await this.getTeamContext(args, headers);
-        
+
         default:
           throw new Error(`Unknown tool: ${toolName}`);
       }
@@ -309,7 +309,7 @@ class RooMCPClient {
   private extractPatterns(results: any[]): any[] {
     // Extract common code patterns
     const patterns = new Map<string, number>();
-    
+
     for (const result of results) {
       // Simple pattern extraction (would be more sophisticated in production)
       const content = result.content;
@@ -335,7 +335,7 @@ class RooMCPClient {
 
   private generateSuggestions(analysis: any): any[] {
     const suggestions: any[] = [];
-    
+
     // Generate suggestions based on patterns
     for (const pattern of analysis.patterns) {
       if (pattern.pattern === 'async' && pattern.percentage > 50) {
@@ -354,7 +354,7 @@ class RooMCPClient {
     // Get list of active assistants from Redis
     const keys = await redis.keys('session:*');
     const assistants = new Set<string>();
-    
+
     for (const key of keys) {
       const session = await redis.get(key);
       if (session) {
@@ -364,7 +364,7 @@ class RooMCPClient {
         }
       }
     }
-    
+
     return Array.from(assistants);
   }
 }
@@ -499,10 +499,10 @@ async function main() {
   // Handle tool calls
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const { name, arguments: args } = request.params;
-    
+
     try {
       const result = await mcpClient.callTool(name, args);
-      
+
       return {
         content: [
           {
@@ -548,7 +548,7 @@ async function main() {
   // Handle resource reading
   server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
     const { uri } = request.params;
-    
+
     if (uri === 'sophia://codebase') {
       return {
         contents: [
@@ -567,16 +567,16 @@ async function main() {
         ]
       };
     }
-    
+
     return { contents: [] };
   });
 
   // Start server with stdio transport
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  
+
   logger.info('Roo/Cursor MCP Adapter is running');
-  
+
   // Handle graceful shutdown
   process.on('SIGINT', async () => {
     logger.info('Shutting down...');

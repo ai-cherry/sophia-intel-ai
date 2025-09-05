@@ -16,7 +16,8 @@ from dotenv import load_dotenv
 from app.core.ai_logger import logger
 
 # Load environment
-load_dotenv('.env.local', override=True)
+load_dotenv(".env.local", override=True)
+
 
 class ModelCatalogCreator:
     """Create a catalog of all available models."""
@@ -32,8 +33,8 @@ class ModelCatalogCreator:
             "metadata": {
                 "created": datetime.now().isoformat(),
                 "total_models": 0,
-                "providers": set()
-            }
+                "providers": set(),
+            },
         }
 
     async def fetch_openrouter_models(self) -> list[dict[str, Any]]:
@@ -44,9 +45,7 @@ class ModelCatalogCreator:
             async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.get(
                     "https://openrouter.ai/api/v1/models",
-                    headers={
-                        "Authorization": f"Bearer {self.openrouter_key}"
-                    }
+                    headers={"Authorization": f"Bearer {self.openrouter_key}"},
                 )
 
                 if response.status_code == 200:
@@ -70,9 +69,7 @@ class ModelCatalogCreator:
             async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.get(
                     "https://api.together.xyz/v1/models",
-                    headers={
-                        "Authorization": f"Bearer {self.together_key}"
-                    }
+                    headers={"Authorization": f"Bearer {self.together_key}"},
                 )
 
                 if response.status_code == 200:
@@ -99,9 +96,9 @@ class ModelCatalogCreator:
                         "override_params": {
                             "headers": {
                                 "HTTP-Referer": "http://localhost:3000",
-                                "X-Title": "Sophia Intel AI"
+                                "X-Title": "Sophia Intel AI",
                             }
-                        }
+                        },
                     }
 
                     response = await client.post(
@@ -109,35 +106,29 @@ class ModelCatalogCreator:
                         headers={
                             "x-portkey-api-key": self.portkey_key,
                             "x-portkey-config": json.dumps(config),
-                            "Content-Type": "application/json"
+                            "Content-Type": "application/json",
                         },
                         json={
                             "model": model_id,
                             "messages": [{"role": "user", "content": "test"}],
                             "max_tokens": 1,
-                            "temperature": 0
-                        }
+                            "temperature": 0,
+                        },
                     )
 
                     return response.status_code == 200
 
                 elif provider == "together":
-                    config = {
-                        "provider": "together-ai",
-                        "api_key": self.together_key
-                    }
+                    config = {"provider": "together-ai", "api_key": self.together_key}
 
                     response = await client.post(
                         "https://api.portkey.ai/v1/embeddings",
                         headers={
                             "x-portkey-api-key": self.portkey_key,
                             "x-portkey-config": json.dumps(config),
-                            "Content-Type": "application/json"
+                            "Content-Type": "application/json",
                         },
-                        json={
-                            "model": model_id,
-                            "input": "test"
-                        }
+                        json={"model": model_id, "input": "test"},
                     )
 
                     return response.status_code == 200
@@ -157,12 +148,12 @@ class ModelCatalogCreator:
             "DeepSeek": [],
             "Groq": [],
             "Z-AI": [],
-            "Other": []
+            "Other": [],
         }
 
         for model in models:
             model_id = model.get("id", "")
-            model_name = model.get("name", model_id)
+            model.get("name", model_id)
 
             # Extract provider from model ID
             if model_id.startswith("openai/"):
@@ -212,20 +203,20 @@ class ModelCatalogCreator:
             f.write('        "headers": {\n')
             f.write('            "HTTP-Referer": "http://localhost:3000",\n')
             f.write('            "X-Title": "Sophia Intel AI"\n')
-            f.write('        }\n')
-            f.write('    }\n')
-            f.write('}\n\n')
+            f.write("        }\n")
+            f.write("    }\n")
+            f.write("}\n\n")
             f.write("client = OpenAI(\n")
             f.write('    api_key=os.getenv("PORTKEY_API_KEY"),\n')
             f.write('    base_url="https://api.portkey.ai/v1",\n')
-            f.write('    default_headers={\n')
+            f.write("    default_headers={\n")
             f.write('        "x-portkey-config": json.dumps(config)\n')
-            f.write('    }\n')
-            f.write(')\n\n')
-            f.write('response = client.chat.completions.create(\n')
+            f.write("    }\n")
+            f.write(")\n\n")
+            f.write("response = client.chat.completions.create(\n")
             f.write('    model="z-ai/glm-4.5",  # Or any model from the catalog\n')
             f.write('    messages=[{"role": "user", "content": "Hello"}]\n')
-            f.write(')\n')
+            f.write(")\n")
             f.write("```\n\n")
 
             f.write("## 💬 Chat Models by Provider\n\n")
@@ -252,7 +243,9 @@ class ModelCatalogCreator:
 
                         status = "✅" if model.get("available", False) else "⚠️"
 
-                        f.write(f"| `{model_id}` | {name} | {context:,} | {input_price} | {output_price} | {status} |\n")
+                        f.write(
+                            f"| `{model_id}` | {name} | {context:,} | {input_price} | {output_price} | {status} |\n"
+                        )
 
                     if len(models) > 10:
                         f.write(f"\n*... and {len(models) - 10} more {provider} models*\n\n")
@@ -275,7 +268,9 @@ class ModelCatalogCreator:
 
             f.write("\n## 🎯 Recommended Models\n\n")
             f.write("### For Code Generation\n")
-            f.write("- **Primary**: `qwen/qwen-2.5-coder-32b-instruct` - Excellent code generation\n")
+            f.write(
+                "- **Primary**: `qwen/qwen-2.5-coder-32b-instruct` - Excellent code generation\n"
+            )
             f.write("- **Alternative**: `deepseek/deepseek-coder-v2` - Strong reasoning\n")
             f.write("- **Fast**: `codellama/codellama-34b-instruct` - Quick responses\n\n")
 
@@ -302,9 +297,9 @@ class ModelCatalogCreator:
 
     async def create_catalog(self):
         """Create the complete model catalog."""
-        logger.info("\n" + "="*60)
+        logger.info("\n" + "=" * 60)
         logger.info("🚀 CREATING MODEL CATALOG")
-        logger.info("="*60)
+        logger.info("=" * 60)
 
         # Fetch models from OpenRouter
         openrouter_models = await self.fetch_openrouter_models()
@@ -320,7 +315,7 @@ class ModelCatalogCreator:
             "anthropic/claude-3.5-sonnet",
             "qwen/qwen-2.5-coder-32b-instruct",
             "meta-llama/llama-3.2-3b-instruct",
-            "z-ai/glm-4.5"
+            "z-ai/glm-4.5",
         ]
 
         for model_id in key_models:
@@ -329,7 +324,7 @@ class ModelCatalogCreator:
             logger.info(f"  {status} {model_id}")
 
             # Mark availability in the catalog
-            for provider, models in categorized.items():
+            for _provider, models in categorized.items():
                 for model in models:
                     if model.get("id") == model_id:
                         model["available"] = available
@@ -356,7 +351,7 @@ class ModelCatalogCreator:
                     "name": model.get("display_name", model_id),
                     "dimension": model.get("embedding_size"),
                     "provider": "Together AI",
-                    "available": model_id == test_embedding and available
+                    "available": model_id == test_embedding and available,
                 }
 
         # Create markdown catalog
@@ -369,9 +364,9 @@ class ModelCatalogCreator:
             json.dump(self.catalog, f, indent=2)
             logger.info("✅ Created model_catalog.json")
 
-        logger.info("\n" + "="*60)
+        logger.info("\n" + "=" * 60)
         logger.info("✅ MODEL CATALOG COMPLETE!")
-        logger.info("="*60)
+        logger.info("=" * 60)
         logger.info("\nFiles created:")
         logger.info("  • MODEL_CATALOG.md - Human-readable catalog")
         logger.info("  • model_catalog.json - Machine-readable catalog")

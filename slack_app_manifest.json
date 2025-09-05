@@ -1,0 +1,49 @@
+{
+  "display_information": {
+    "name": "Sophia AI Assistant",
+    "description": "AI-powered business intelligence assistant for Pay Ready",
+    "background_color": "#2c3e50"
+  },
+  "features": {
+    "bot_user": {
+      "display_name": "Sophia AI Assistant",
+      "always_online": true
+    },
+    "slash_commands": [
+      {
+        "command": "/sophia",
+        "description": "Get Pay Ready business intelligence insights",
+        "usage_hint": "help | reports | alerts | status",
+        "should_escape": false
+      }
+    ]
+  },
+  "oauth_config": {
+    "scopes": {
+      "bot": [
+        "chat:write",
+        "chat:write.public",
+        "channels:read",
+        "groups:read",
+        "im:read",
+        "im:write",
+        "commands",
+        "users:read",
+        "reactions:write"
+      ]
+    }
+  },
+  "settings": {
+    "event_subscriptions": {
+      "request_url": "https://your-domain.com/api/slack/webhook",
+      "bot_events": ["app_mention", "message.im"]
+    },
+    "interactivity": {
+      "is_enabled": true,
+      "request_url": "https://your-domain.com/api/slack/webhook"
+    },
+    "org_deploy_enabled": false,
+    "socket_mode_enabled": false,
+    "token_rotation_enabled": false
+  }
+}

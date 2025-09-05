@@ -7,7 +7,7 @@ This directory contains the Pulumi infrastructure configuration for the slim-agn
 ### 1. Prerequisites
 
 - Pulumi CLI installed (`brew install pulumi/tap/pulumi`)
-- Pulumi Personal Access Token (PAT) from https://app.pulumi.com/account/tokens
+- Pulumi Personal Access Token (PAT) from <https://app.pulumi.com/account/tokens>
 
 ### 2. Initialize Pulumi
 
@@ -67,14 +67,14 @@ pulumi stack select prod
 
 ## Configuration Values
 
-| Key | Description | Secret |
-|-----|-------------|--------|
-| `weaviateUrl` | Weaviate instance URL | No |
-| `openaiBaseUrl` | Portkey gateway URL for chat | No |
-| `embedBaseUrl` | Portkey gateway URL for embeddings | No |
-| `portkeyOpenRouterVK` | Portkey Virtual Key for OpenRouter | Yes |
-| `portkeyTogetherVK` | Portkey Virtual Key for Together AI | Yes |
-| `environment` | Environment name (dev/staging/prod) | No |
+| Key                   | Description                         | Secret |
+| --------------------- | ----------------------------------- | ------ |
+| `weaviateUrl`         | Weaviate instance URL               | No     |
+| `openaiBaseUrl`       | Portkey gateway URL for chat        | No     |
+| `embedBaseUrl`        | Portkey gateway URL for embeddings  | No     |
+| `portkeyOpenRouterVK` | Portkey Virtual Key for OpenRouter  | Yes    |
+| `portkeyTogetherVK`   | Portkey Virtual Key for Together AI | Yes    |
+| `environment`         | Environment name (dev/staging/prod) | No     |
 
 ## Future Additions
 

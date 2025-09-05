@@ -51,7 +51,7 @@ class CircuitBreaker:
 
     def _time_since_failure(self) -> float:
         """Time since last failure."""
-        return time.time() - self.last_failure_time if self.last_failure_time else float('inf')
+        return time.time() - self.last_failure_time if self.last_failure_time else float("inf")
 
     def _time_until_reset(self) -> float:
         """Time until automatic reset."""
@@ -126,9 +126,7 @@ class PatternPerformanceMetrics:
     def is_performing_poorly(self) -> bool:
         """Check if pattern is performing poorly."""
         return (
-            self.success_rate < 0.8 or
-            self.avg_execution_time > 5.0 or
-            self.memory_usage_mb > 200
+            self.success_rate < 0.8 or self.avg_execution_time > 5.0 or self.memory_usage_mb > 200
         )
 
 
@@ -172,17 +170,14 @@ class GracefulDegradationManager:
                 "action": "disable_memory_operations",
                 "fallback_mode": "lite",
                 "min_agents_fallback": 3,
-                "timeout_multiplier": 0.7
+                "timeout_multiplier": 0.7,
             },
             "consensus_failure": {
                 "action": "skip_consensus_round",
                 "alternative": "simple_judge_decision",
-                "quality_impact": -0.1
+                "quality_impact": -0.1,
             },
-            "debate_failure": {
-                "action": "use_single_round",
-                "alternative": "sequential_critique"
-            }
+            "debate_failure": {"action": "use_single_round", "alternative": "sequential_critique"},
         }
 
     def mark_component_degraded(self, component_name: str, error_message: str = ""):
@@ -190,7 +185,7 @@ class GracefulDegradationManager:
         self.degraded_components[component_name] = {
             "timestamp": time.time(),
             "error_message": error_message,
-            "recovery_attempts": self.recovery_attempts.get(component_name, 0)
+            "recovery_attempts": self.recovery_attempts.get(component_name, 0),
         }
         logger.warning(f"Component {component_name} marked as degraded: {error_message}")
 
@@ -200,10 +195,9 @@ class GracefulDegradationManager:
 
     def get_degradation_strategy(self, component_name: str) -> dict[str, Any]:
         """Get degradation strategy for a component."""
-        return self.degradation_strategies.get(component_name, {
-            "action": "skip_operation",
-            "alternative": None
-        })
+        return self.degradation_strategies.get(
+            component_name, {"action": "skip_operation", "alternative": None}
+        )
 
     def attempt_component_recovery(self, component_name: str) -> bool:
         """Attempt to recover a degraded component."""
@@ -257,14 +251,8 @@ class SwarmOptimizer:
     def _get_default_config(self) -> dict[str, Any]:
         """Default optimization configuration."""
         return {
-            "circuit_breaker_defaults": {
-                "failure_threshold": 3,
-                "recovery_timeout": 30.0
-            },
-            "performance_targets": {
-                "max_execution_time": 60.0,
-                "max_memory_mb": 500
-            }
+            "circuit_breaker_defaults": {"failure_threshold": 3, "recovery_timeout": 30.0},
+            "performance_targets": {"max_execution_time": 60.0, "max_memory_mb": 500},
         }
 
     def get_circuit_breaker(self, component_name: str) -> CircuitBreaker:
@@ -340,11 +328,11 @@ class SwarmOptimizer:
         else:
             return modes.get("balanced", {})
 
-    async def benchmark_swarm_execution(self, swarm_func, task: dict[str, Any],
-                                       *args, **kwargs) -> SwarmBenchmarkData:
+    async def benchmark_swarm_execution(
+        self, swarm_func, task: dict[str, Any], *args, **kwargs
+    ) -> SwarmBenchmarkData:
         """Benchmark a swarm execution for performance optimization."""
         start_time = time.time()
-        start_memory = 0  # Would get actual memory usage in production
 
         try:
             # Execute swarm function
@@ -362,7 +350,7 @@ class SwarmOptimizer:
             total_execution_time=execution_time,
             memory_usage_mb=memory_used,
             quality_score=result.get("quality_score", 0.0) if result else 0.0,
-            final_result=result
+            final_result=result,
         )
 
         # Analyze pattern weights (would be more sophisticated in production)
@@ -371,7 +359,9 @@ class SwarmOptimizer:
             for pattern in result["patterns_used"]:
                 benchmark.pattern_weights[pattern] = 1.0 / total_patterns
 
-        logger.info(f"Benchmarked swarm execution: {execution_time:.2f}s, complexity: {benchmark.task_complexity_score:.2f}")
+        logger.info(
+            f"Benchmarked swarm execution: {execution_time:.2f}s, complexity: {benchmark.task_complexity_score:.2f}"
+        )
         return benchmark
 
     def get_optimization_recommendations(self) -> dict[str, Any]:
@@ -380,7 +370,7 @@ class SwarmOptimizer:
             "pattern_performance": {},
             "system_health": self.degradation_manager.get_system_health_score(),
             "performance_alerts": [],
-            "optimization_suggestions": []
+            "optimization_suggestions": [],
         }
 
         # Analyze pattern performance
@@ -389,28 +379,34 @@ class SwarmOptimizer:
                 "avg_execution_time": metrics.avg_execution_time,
                 "success_rate": metrics.success_rate,
                 "memory_usage_mb": metrics.memory_usage_mb,
-                "executions": metrics.execution_count
+                "executions": metrics.execution_count,
             }
 
             if metrics.is_performing_poorly:
-                recommendations["performance_alerts"].append({
-                    "pattern": pattern_name,
-                    "issue": "Poor performance metrics",
-                    "recommendation": "Consider disabling or optimizing"
-                })
+                recommendations["performance_alerts"].append(
+                    {
+                        "pattern": pattern_name,
+                        "issue": "Poor performance metrics",
+                        "recommendation": "Consider disabling or optimizing",
+                    }
+                )
 
         # Generate suggestions
         if recommendations["system_health"] < 0.8:
-            recommendations["optimization_suggestions"].append({
-                "type": "health",
-                "suggestion": "Multiple components degraded - consider lite mode"
-            })
+            recommendations["optimization_suggestions"].append(
+                {
+                    "type": "health",
+                    "suggestion": "Multiple components degraded - consider lite mode",
+                }
+            )
 
         if any(metrics.is_performing_poorly for metrics in self.performance_metrics.values()):
-            recommendations["optimization_suggestions"].append({
-                "type": "patterns",
-                "suggestion": "Some patterns performing poorly - use selective pattern enabling"
-            })
+            recommendations["optimization_suggestions"].append(
+                {
+                    "type": "patterns",
+                    "suggestion": "Some patterns performing poorly - use selective pattern enabling",
+                }
+            )
 
         return recommendations
 
@@ -425,7 +421,6 @@ class SwarmOptimizer:
 async def performance_monitoring(optimizer: SwarmOptimizer, pattern_name: str):
     """Context manager for performance monitoring."""
     start_time = time.time()
-    start_memory = 0  # Would get actual memory usage
 
     try:
         yield
@@ -440,7 +435,5 @@ async def performance_monitoring(optimizer: SwarmOptimizer, pattern_name: str):
     except Exception:
         # Record failed execution
         execution_time = time.time() - start_time
-        optimizer.get_performance_metrics(pattern_name).record_execution(
-            execution_time, False, 0
-        )
+        optimizer.get_performance_metrics(pattern_name).record_execution(execution_time, False, 0)
         raise

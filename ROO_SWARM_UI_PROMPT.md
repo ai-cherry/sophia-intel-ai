@@ -1,4 +1,5 @@
 # 🎨 Roo: Swarm UI Enhancement & Real-Time Visualization
+
 ## Your Mission: Create Stunning Swarm Visualization with Perfect MCP Integration
 
 **Priority:** CRITICAL  
@@ -10,6 +11,7 @@
 ## 🎯 **YOUR OBJECTIVES**
 
 Transform the agent UI into a **revolutionary swarm visualization platform** that:
+
 1. Shows real-time 6-way AI coordination in action
 2. Provides intuitive swarm management interface
 3. Visualizes MCP message flow between all participants
@@ -22,6 +24,7 @@ Transform the agent UI into a **revolutionary swarm visualization platform** tha
 ### **1.1 Examine Current UI Architecture**
 
 **Files to analyze:**
+
 ```typescript
 // Priority files for enhancement
 agent-ui/src/components/playground/    // Current playground
@@ -32,6 +35,7 @@ agent-ui/src/api/                      // API integration
 ```
 
 **Required improvements:**
+
 1. **Real-time WebSocket integration** for MCP messages
 2. **Interactive swarm visualization** with D3.js or React Flow
 3. **Performance monitoring dashboard** with live metrics
@@ -40,6 +44,7 @@ agent-ui/src/api/                      // API integration
 ### **1.2 Create Swarm Visualization Dashboard**
 
 **File:** `agent-ui/src/components/swarm/SwarmDashboard.tsx`
+
 ```typescript
 import React, { useState, useEffect, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
@@ -80,23 +85,23 @@ export const SwarmDashboard: React.FC = () => {
     { id: 'swarm_debate', type: 'swarm', name: 'Debate Swarm', status: 'idle', position: [1, -2, 0], connections: [], metrics: { tasksCompleted: 0, avgResponseTime: 0, successRate: 100 } },
     { id: 'swarm_memory', type: 'swarm', name: 'Memory Swarm', status: 'idle', position: [0, -2, 2], connections: [], metrics: { tasksCompleted: 0, avgResponseTime: 0, successRate: 100 } }
   ]);
-  
+
   const [messages, setMessages] = useState<MCPMessage[]>([]);
   const [activeConnections, setActiveConnections] = useState<Set<string>>(new Set());
   const { ws, sendMessage } = useWebSocket('ws://localhost:8000/ws/mcp');
-  
+
   // 3D Visualization Component
   const SwarmNode3D = ({ node }: { node: SwarmNode }) => {
     const meshRef = useRef();
     const [hovered, setHovered] = useState(false);
-    
+
     const color = {
       'claude': '#8B5CF6',
       'roo': '#10B981',
       'cline': '#3B82F6',
       'swarm': '#F59E0B'
     }[node.type];
-    
+
     return (
       <mesh
         ref={meshRef}
@@ -105,8 +110,8 @@ export const SwarmDashboard: React.FC = () => {
         onPointerOut={() => setHovered(false)}
       >
         <sphereGeometry args={[0.5, 32, 32]} />
-        <meshStandardMaterial 
-          color={color} 
+        <meshStandardMaterial
+          color={color}
           emissive={node.status === 'working' ? color : '#000000'}
           emissiveIntensity={node.status === 'working' ? 0.5 : 0}
         />
@@ -123,14 +128,14 @@ export const SwarmDashboard: React.FC = () => {
       </mesh>
     );
   };
-  
+
   // Connection Lines
   const ConnectionLine = ({ from, to, active }: any) => {
     const fromNode = nodes.find(n => n.id === from);
     const toNode = nodes.find(n => n.id === to);
-    
+
     if (!fromNode || !toNode) return null;
-    
+
     return (
       <Line
         points={[fromNode.position, toNode.position]}
@@ -140,7 +145,7 @@ export const SwarmDashboard: React.FC = () => {
       />
     );
   };
-  
+
   return (
     <div className="swarm-dashboard">
       <header className="dashboard-header">
@@ -151,7 +156,7 @@ export const SwarmDashboard: React.FC = () => {
           <Badge variant="default">{messages.length} Messages</Badge>
         </div>
       </header>
-      
+
       <Grid cols={2} className="main-content">
         {/* 3D Visualization */}
         <Card title="Swarm Network Visualization" className="visualization-card">
@@ -159,18 +164,18 @@ export const SwarmDashboard: React.FC = () => {
             <ambientLight intensity={0.5} />
             <pointLight position={[10, 10, 10]} />
             <OrbitControls enablePan={true} enableZoom={true} enableRotate={true} />
-            
+
             {nodes.map(node => (
               <SwarmNode3D key={node.id} node={node} />
             ))}
-            
+
             {Array.from(activeConnections).map(conn => {
               const [from, to] = conn.split('-');
               return <ConnectionLine key={conn} from={from} to={to} active={true} />;
             })}
           </Canvas>
         </Card>
-        
+
         {/* Real-time Metrics */}
         <div className="metrics-section">
           <Card title="Performance Metrics">
@@ -191,21 +196,21 @@ export const SwarmDashboard: React.FC = () => {
               ))}
             </div>
           </Card>
-          
+
           <Card title="Active Coordination Tasks">
             <TaskList tasks={activeTasks} />
           </Card>
         </div>
       </Grid>
-      
+
       {/* Message Flow */}
       <Card title="Real-time MCP Message Flow" className="message-flow">
         <MessageFlowVisualization messages={messages} />
       </Card>
-      
+
       {/* Control Panel */}
       <Card title="Swarm Control Panel" className="control-panel">
-        <SwarmControlPanel 
+        <SwarmControlPanel
           onLaunchTask={handleLaunchTask}
           onConfigureSwarm={handleConfigureSwarm}
         />
@@ -222,6 +227,7 @@ export const SwarmDashboard: React.FC = () => {
 ### **2.1 Create Message Flow Component**
 
 **File:** `agent-ui/src/components/swarm/MessageFlow.tsx`
+
 ```typescript
 import React, { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
@@ -230,26 +236,26 @@ import { motion, AnimatePresence } from 'framer-motion';
 export const MessageFlowVisualization: React.FC<{ messages: MCPMessage[] }> = ({ messages }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const [flowData, setFlowData] = useState<any[]>([]);
-  
+
   useEffect(() => {
     if (!svgRef.current) return;
-    
+
     const svg = d3.select(svgRef.current);
     const width = 800;
     const height = 400;
-    
+
     // Create Sankey diagram for message flow
     const sankey = d3.sankey()
       .nodeWidth(15)
       .nodePadding(10)
       .extent([[1, 1], [width - 1, height - 6]]);
-    
+
     // Process messages into flow data
     const nodes = Array.from(new Set(messages.flatMap(m => [m.source, m.target])))
       .map(name => ({ name }));
-    
+
     const links = messages.reduce((acc, msg) => {
-      const existing = acc.find(l => 
+      const existing = acc.find(l =>
         l.source === msg.source && l.target === msg.target
       );
       if (existing) {
@@ -264,9 +270,9 @@ export const MessageFlowVisualization: React.FC<{ messages: MCPMessage[] }> = ({
       }
       return acc;
     }, []);
-    
+
     const graph = sankey({ nodes, links });
-    
+
     // Draw nodes
     svg.selectAll('.node')
       .data(graph.nodes)
@@ -277,7 +283,7 @@ export const MessageFlowVisualization: React.FC<{ messages: MCPMessage[] }> = ({
       .attr('width', d => d.x1 - d.x0)
       .attr('height', d => d.y1 - d.y0)
       .attr('fill', d => getNodeColor(d.name));
-    
+
     // Draw links with animation
     svg.selectAll('.link')
       .data(graph.links)
@@ -291,9 +297,9 @@ export const MessageFlowVisualization: React.FC<{ messages: MCPMessage[] }> = ({
         d3.select(this).style('opacity', 1);
         showTooltip(event, d);
       });
-      
+
   }, [messages]);
-  
+
   return (
     <div className="message-flow-viz">
       <svg ref={svgRef} width={800} height={400} />
@@ -310,6 +316,7 @@ export const MessageFlowVisualization: React.FC<{ messages: MCPMessage[] }> = ({
 ### **2.2 Swarm Control Panel**
 
 **File:** `agent-ui/src/components/swarm/ControlPanel.tsx`
+
 ```typescript
 import React, { useState } from 'react';
 import { Button, Select, Input, Switch, Tabs } from '@/components/ui';
@@ -323,7 +330,7 @@ export const SwarmControlPanel: React.FC = () => {
     priority: 'normal',
     timeout: 30
   });
-  
+
   const predefinedTasks = [
     {
       id: 'feature_dev',
@@ -347,14 +354,14 @@ export const SwarmControlPanel: React.FC = () => {
       capabilities: ['performance', 'caching', 'optimization']
     }
   ];
-  
+
   const launchTask = async () => {
     const task = {
       type: selectedTask,
       config: taskConfig,
       timestamp: new Date().toISOString()
     };
-    
+
     // Send to MCP
     await sendToMCP({
       source: 'ui_control_panel',
@@ -363,7 +370,7 @@ export const SwarmControlPanel: React.FC = () => {
       content: task
     });
   };
-  
+
   return (
     <div className="control-panel">
       <Tabs defaultValue="tasks">
@@ -372,7 +379,7 @@ export const SwarmControlPanel: React.FC = () => {
           <TabsTrigger value="config">Swarm Config</TabsTrigger>
           <TabsTrigger value="deployment">Deployment</TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="tasks">
           <div className="task-launcher">
             <Select
@@ -384,7 +391,7 @@ export const SwarmControlPanel: React.FC = () => {
                 description: t.description
               }))}
             />
-            
+
             <div className="task-config">
               <MultiSelect
                 label="Participants"
@@ -395,14 +402,14 @@ export const SwarmControlPanel: React.FC = () => {
                   'swarm_coding', 'swarm_debate', 'swarm_memory'
                 ]}
               />
-              
+
               <Select
                 label="Priority"
                 value={taskConfig.priority}
                 onChange={p => setTaskConfig({...taskConfig, priority: p})}
                 options={['low', 'normal', 'high', 'critical']}
               />
-              
+
               <Input
                 label="Timeout (seconds)"
                 type="number"
@@ -410,7 +417,7 @@ export const SwarmControlPanel: React.FC = () => {
                 onChange={t => setTaskConfig({...taskConfig, timeout: parseInt(t)})}
               />
             </div>
-            
+
             <div className="task-actions">
               <Button onClick={launchTask} variant="primary" icon={<PlayIcon />}>
                 Launch Coordinated Task
@@ -421,11 +428,11 @@ export const SwarmControlPanel: React.FC = () => {
             </div>
           </div>
         </TabsContent>
-        
+
         <TabsContent value="config">
           <SwarmConfiguration />
         </TabsContent>
-        
+
         <TabsContent value="deployment">
           <DeploymentControl />
         </TabsContent>
@@ -442,6 +449,7 @@ export const SwarmControlPanel: React.FC = () => {
 ### **3.1 Deployment Control Center**
 
 **File:** `agent-ui/src/components/deployment/DeploymentCenter.tsx`
+
 ```typescript
 import React, { useState, useEffect } from 'react';
 import { Card, Button, Badge, Table, Alert } from '@/components/ui';
@@ -461,7 +469,7 @@ export const DeploymentCenter: React.FC = () => {
   const [services, setServices] = useState<Service[]>([]);
   const [deploymentEnv, setDeploymentEnv] = useState<'local' | 'docker' | 'cloud'>('local');
   const [portStrategy, setPortStrategy] = useState<'fixed' | 'dynamic'>('dynamic');
-  
+
   const defaultServices = [
     { name: 'MCP Server', type: 'core', defaultPort: 8000 },
     { name: 'Swarm Coordinator', type: 'swarm', defaultPort: 8001 },
@@ -471,39 +479,39 @@ export const DeploymentCenter: React.FC = () => {
     { name: 'Prometheus', type: 'monitoring', defaultPort: 9090 },
     { name: 'Redis', type: 'cache', defaultPort: 6379 }
   ];
-  
+
   useEffect(() => {
     // Fetch service status
     fetchServiceStatus();
     const interval = setInterval(fetchServiceStatus, 5000);
     return () => clearInterval(interval);
   }, []);
-  
+
   const fetchServiceStatus = async () => {
     const response = await fetch('/api/deployment/services');
     const data = await response.json();
     setServices(data.services);
   };
-  
+
   const deployAllServices = async () => {
     const config = {
       environment: deploymentEnv,
       portStrategy: portStrategy,
       services: defaultServices
     };
-    
+
     const response = await fetch('/api/deployment/deploy-all', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(config)
     });
-    
+
     if (response.ok) {
       const result = await response.json();
       setServices(result.services);
     }
   };
-  
+
   const ServiceRow = ({ service }: { service: Service }) => (
     <tr>
       <td>{service.name}</td>
@@ -540,7 +548,7 @@ export const DeploymentCenter: React.FC = () => {
       </td>
     </tr>
   );
-  
+
   return (
     <div className="deployment-center">
       <Card title="🚀 Universal Deployment Control">
@@ -571,7 +579,7 @@ export const DeploymentCenter: React.FC = () => {
               </Button>
             </div>
           </div>
-          
+
           <div className="config-section">
             <h3>Port Strategy</h3>
             <RadioGroup value={portStrategy} onChange={setPortStrategy}>
@@ -579,7 +587,7 @@ export const DeploymentCenter: React.FC = () => {
               <Radio value="dynamic">Dynamic Assignment</Radio>
             </RadioGroup>
           </div>
-          
+
           <div className="deployment-actions">
             <Button
               variant="primary"
@@ -595,7 +603,7 @@ export const DeploymentCenter: React.FC = () => {
           </div>
         </div>
       </Card>
-      
+
       <Card title="Service Status">
         <Table>
           <thead>
@@ -616,7 +624,7 @@ export const DeploymentCenter: React.FC = () => {
           </tbody>
         </Table>
       </Card>
-      
+
       <Card title="Port Allocation Map">
         <PortAllocationVisualizer services={services} />
       </Card>
@@ -628,6 +636,7 @@ export const DeploymentCenter: React.FC = () => {
 ### **3.2 Port Allocation Visualizer**
 
 **File:** `agent-ui/src/components/deployment/PortVisualizer.tsx`
+
 ```typescript
 export const PortAllocationVisualizer: React.FC<{ services: Service[] }> = ({ services }) => {
   const portRanges = [
@@ -636,7 +645,7 @@ export const PortAllocationVisualizer: React.FC<{ services: Service[] }> = ({ se
     { start: 9000, end: 9999, label: 'Monitoring', color: '#F59E0B' },
     { start: 6000, end: 6999, label: 'Databases', color: '#EF4444' }
   ];
-  
+
   return (
     <div className="port-visualizer">
       <svg width="100%" height="200">
@@ -658,14 +667,14 @@ export const PortAllocationVisualizer: React.FC<{ services: Service[] }> = ({ se
             </text>
           </g>
         ))}
-        
+
         {services.map(service => {
-          const range = portRanges.find(r => 
+          const range = portRanges.find(r =>
             service.port >= r.start && service.port <= r.end
           );
           const rangeIndex = portRanges.indexOf(range);
           const relativePos = (service.port - range.start) / (range.end - range.start);
-          
+
           return (
             <g key={service.name}>
               <circle
@@ -686,7 +695,7 @@ export const PortAllocationVisualizer: React.FC<{ services: Service[] }> = ({ se
           );
         })}
       </svg>
-      
+
       <div className="port-legend">
         {services.map(service => (
           <div key={service.name} className="legend-item">
@@ -707,80 +716,87 @@ export const PortAllocationVisualizer: React.FC<{ services: Service[] }> = ({ se
 ### **4.1 MCP WebSocket Hook**
 
 **File:** `agent-ui/src/hooks/useMCPConnection.ts`
-```typescript
-import { useEffect, useState, useCallback, useRef } from 'react';
-import { useStore } from '@/store';
 
-export const useMCPConnection = (url: string = 'ws://localhost:8000/ws/mcp') => {
+```typescript
+import { useEffect, useState, useCallback, useRef } from "react";
+import { useStore } from "@/store";
+
+export const useMCPConnection = (
+  url: string = "ws://localhost:8000/ws/mcp",
+) => {
   const [isConnected, setIsConnected] = useState(false);
   const [messages, setMessages] = useState<any[]>([]);
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout>();
-  
+
   const connect = useCallback(() => {
     if (wsRef.current?.readyState === WebSocket.OPEN) return;
-    
+
     const ws = new WebSocket(url);
-    
+
     ws.onopen = () => {
       setIsConnected(true);
-      console.log('MCP WebSocket connected');
-      
+      console.log("MCP WebSocket connected");
+
       // Send registration message
-      ws.send(JSON.stringify({
-        source: 'agent_ui',
-        target: 'broadcast',
-        type: 'ui_registration',
-        content: {
-          capabilities: ['visualization', 'control', 'monitoring'],
-          version: '1.0.0'
-        }
-      }));
+      ws.send(
+        JSON.stringify({
+          source: "agent_ui",
+          target: "broadcast",
+          type: "ui_registration",
+          content: {
+            capabilities: ["visualization", "control", "monitoring"],
+            version: "1.0.0",
+          },
+        }),
+      );
     };
-    
+
     ws.onmessage = (event) => {
       const message = JSON.parse(event.data);
-      setMessages(prev => [...prev, message]);
-      
+      setMessages((prev) => [...prev, message]);
+
       // Update store based on message type
-      if (message.type === 'swarm_status_update') {
+      if (message.type === "swarm_status_update") {
         updateSwarmStatus(message.content);
-      } else if (message.type === 'task_progress') {
+      } else if (message.type === "task_progress") {
         updateTaskProgress(message.content);
-      } else if (message.type === 'metrics_update') {
+      } else if (message.type === "metrics_update") {
         updateMetrics(message.content);
       }
     };
-    
+
     ws.onerror = (error) => {
-      console.error('MCP WebSocket error:', error);
+      console.error("MCP WebSocket error:", error);
     };
-    
+
     ws.onclose = () => {
       setIsConnected(false);
-      console.log('MCP WebSocket disconnected, reconnecting...');
-      
+      console.log("MCP WebSocket disconnected, reconnecting...");
+
       // Reconnect after 3 seconds
       reconnectTimeoutRef.current = setTimeout(() => {
         connect();
       }, 3000);
     };
-    
+
     wsRef.current = ws;
   }, [url]);
-  
+
   const sendMessage = useCallback((message: any) => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify({
-        ...message,
-        timestamp: new Date().toISOString()
-      }));
+      wsRef.current.send(
+        JSON.stringify({
+          ...message,
+          timestamp: new Date().toISOString(),
+        }),
+      );
     }
   }, []);
-  
+
   useEffect(() => {
     connect();
-    
+
     return () => {
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
@@ -790,12 +806,12 @@ export const useMCPConnection = (url: string = 'ws://localhost:8000/ws/mcp') => 
       }
     };
   }, [connect]);
-  
+
   return {
     isConnected,
     messages,
     sendMessage,
-    reconnect: connect
+    reconnect: connect,
   };
 };
 ```
@@ -805,24 +821,28 @@ export const useMCPConnection = (url: string = 'ws://localhost:8000/ws/mcp') => 
 ## 🚀 **IMPLEMENTATION CHECKLIST**
 
 ### **Phase 1: UI Analysis (Day 1-2)**
+
 - [ ] Analyze current agent-ui structure
 - [ ] Set up D3.js and Three.js dependencies
 - [ ] Create base swarm dashboard component
 - [ ] Implement WebSocket connection
 
 ### **Phase 2: Visualization (Day 3-4)**
+
 - [ ] Build 3D swarm network visualization
 - [ ] Create message flow Sankey diagram
 - [ ] Implement real-time metrics dashboard
 - [ ] Add interactive control panel
 
 ### **Phase 3: Deployment UI (Day 5-6)**
+
 - [ ] Create deployment control center
 - [ ] Build port allocation visualizer
 - [ ] Add service health monitoring
 - [ ] Implement log viewer
 
 ### **Phase 4: Testing (Day 7)**
+
 - [ ] Test 6-way coordination visualization
 - [ ] Validate WebSocket reliability
 - [ ] Performance test with 1000+ messages

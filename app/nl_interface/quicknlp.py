@@ -12,7 +12,7 @@ import time
 from dataclasses import dataclass
 from enum import Enum
 from functools import cached_property, lru_cache
-from typing import Any, Optional, Union
+from typing import Any, Optional
 
 from app.core.ai_logger import logger
 from app.core.circuit_breaker import with_circuit_breaker
@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 
 class CommandIntent(Enum):
     """Supported command intents"""
+
     SYSTEM_STATUS = "system_status"
     RUN_AGENT = "run_agent"
     SCALE_SERVICE = "scale_service"
@@ -38,6 +39,7 @@ class CommandIntent(Enum):
 @dataclass
 class ParsedCommand:
     """Structured representation of a parsed command"""
+
     intent: CommandIntent
     entities: dict[str, Any]
     raw_text: str
@@ -72,7 +74,9 @@ class QuickNLP:
             ],
             CommandIntent.SCALE_SERVICE: [
                 re.compile(r"scale\s+(service\s+)?(\w+)\s+to\s+(\d+)", re.IGNORECASE),
-                re.compile(r"(Union[increase, decrease])\s+(\w+)\s+(instances?|replicas?)", re.IGNORECASE),
+                re.compile(
+                    r"(Union[increase, decrease])\s+(\w+)\s+(instances?|replicas?)", re.IGNORECASE
+                ),
                 re.compile(r"set\s+(\w+)\s+(instances?|replicas?)\s+to\s+(\d+)", re.IGNORECASE),
             ],
             CommandIntent.EXECUTE_WORKFLOW: [
@@ -135,7 +139,7 @@ class QuickNLP:
             entities=entities,
             raw_text=text,
             confidence=confidence,
-            workflow_trigger=workflow_trigger
+            workflow_trigger=workflow_trigger,
         )
 
     def _match_patterns(self, text: str) -> tuple[CommandIntent, dict[str, Any], float]:
@@ -160,7 +164,7 @@ class QuickNLP:
         agent_name = None
 
         for group in groups:
-            if group and group.lower() not in ['run', 'start', 'execute', 'launch', 'agent']:
+            if group and group.lower() not in ["run", "start", "execute", "launch", "agent"]:
                 agent_name = group
                 break
 
@@ -183,7 +187,7 @@ class QuickNLP:
         workflow_name = None
 
         for group in groups:
-            if group and group.lower() not in ['run', 'execute', 'trigger', 'workflow', 'start']:
+            if group and group.lower() not in ["run", "execute", "trigger", "workflow", "start"]:
                 workflow_name = group
                 break
 
@@ -195,7 +199,7 @@ class QuickNLP:
         service_name = None
 
         for group in groups:
-            if group and group.lower() not in ['stop', 'halt', 'shutdown', 'service']:
+            if group and group.lower() not in ["stop", "halt", "shutdown", "service"]:
                 service_name = group
                 break
 
@@ -204,7 +208,9 @@ class QuickNLP:
     def _extract_query_params(self, text: str, match: re.Match) -> dict[str, Any]:
         """Extract query parameters"""
         # Simple extraction of query terms
-        query_terms = re.sub(r"(query|search|find|get|Union[for, data])", "", text, flags=re.IGNORECASE)
+        query_terms = re.sub(
+            r"(query|search|find|get|Union[for, data])", "", text, flags=re.IGNORECASE
+        )
         query_terms = query_terms.strip()
 
         return {"query": query_terms}
@@ -224,7 +230,7 @@ class QuickNLP:
             prompt = f"""
             Analyze this command and extract the intent and entities.
             Command: "{text}"
-            
+
             Respond with JSON only:
             {{
                 "intent": "one of: system_status, run_agent, scale_service, execute_workflow, query_data, stop_service, list_agents, get_metrics, help, unknown",
@@ -234,13 +240,8 @@ class QuickNLP:
 
             response = await http_post(
                 f"{self.ollama_url}/api/generate",
-                json={
-                    "model": "llama3.2",
-                    "prompt": prompt,
-                    "format": "json",
-                    "stream": False
-                },
-                timeout=10
+                json={"model": "llama3.2", "prompt": prompt, "format": "json", "stream": False},
+                timeout=10,
             )
 
             if response.status_code == 200:
@@ -248,7 +249,11 @@ class QuickNLP:
                 parsed = json.loads(result.get("response", "{}"))
 
                 intent_str = parsed.get("intent", "unknown")
-                intent = CommandIntent[intent_str.upper()] if intent_str.upper() in CommandIntent.__members__ else CommandIntent.UNKNOWN
+                intent = (
+                    CommandIntent[intent_str.upper()]
+                    if intent_str.upper() in CommandIntent.__members__
+                    else CommandIntent.UNKNOWN
+                )
                 entities = parsed.get("entities", {})
 
                 return intent, entities, 0.7
@@ -284,48 +289,44 @@ class QuickNLP:
             {
                 "intent": "system_status",
                 "description": "Check system status",
-                "examples": ["show system status", "how is the system doing"]
+                "examples": ["show system status", "how is the system doing"],
             },
             {
                 "intent": "run_agent",
                 "description": "Run a specific agent",
-                "examples": ["run agent researcher", "start coding agent"]
+                "examples": ["run agent researcher", "start coding agent"],
             },
             {
                 "intent": "scale_service",
                 "description": "Scale a service",
-                "examples": ["scale ollama to 3", "increase redis instances"]
+                "examples": ["scale ollama to 3", "increase redis instances"],
             },
             {
                 "intent": "execute_workflow",
                 "description": "Execute a workflow",
-                "examples": ["run workflow data-pipeline", "execute backup workflow"]
+                "examples": ["run workflow data-pipeline", "execute backup workflow"],
             },
             {
                 "intent": "query_data",
                 "description": "Query data",
-                "examples": ["search for user documents", "find recent logs"]
+                "examples": ["search for user documents", "find recent logs"],
             },
             {
                 "intent": "stop_service",
                 "description": "Stop a service",
-                "examples": ["stop redis", "shutdown ollama service"]
+                "examples": ["stop redis", "shutdown ollama service"],
             },
             {
                 "intent": "list_agents",
                 "description": "List available agents",
-                "examples": ["list all agents", "show available agents"]
+                "examples": ["list all agents", "show available agents"],
             },
             {
                 "intent": "get_metrics",
                 "description": "Get performance metrics",
-                "examples": ["show metrics", "get metrics for ollama"]
+                "examples": ["show metrics", "get metrics for ollama"],
             },
-            {
-                "intent": "help",
-                "description": "Show help",
-                "examples": ["help", "what can you do"]
-            }
+            {"intent": "help", "description": "Show help", "examples": ["help", "what can you do"]},
         ]
 
 
@@ -339,11 +340,11 @@ class CachedQuickNLP(QuickNLP):
         self,
         ollama_url: str = "http://localhost:11434",
         cache_size: int = 1024,
-        pattern_cache_ttl: int = 3600
+        pattern_cache_ttl: int = 3600,
     ):
         """
         Initialize Cached QuickNLP
-        
+
         Args:
             ollama_url: URL for Ollama API
             cache_size: Size of LRU cache
@@ -353,11 +354,7 @@ class CachedQuickNLP(QuickNLP):
         self.cache_size = cache_size
         self.pattern_cache_ttl = pattern_cache_ttl
         self._pattern_cache = {}
-        self._cache_stats = {
-            "hits": 0,
-            "misses": 0,
-            "total_requests": 0
-        }
+        self._cache_stats = {"hits": 0, "misses": 0, "total_requests": 0}
 
         # Pre-compile all patterns for faster matching
         self._compiled_patterns = self._precompile_patterns()
@@ -388,7 +385,7 @@ class CachedQuickNLP(QuickNLP):
             CommandIntent.STOP_SERVICE: {"stop", "halt", "shutdown", "service"},
             CommandIntent.LIST_AGENTS: {"list", "show", "agents", "available"},
             CommandIntent.GET_METRICS: {"metrics", "performance", "stats", "show"},
-            CommandIntent.HELP: {"help", "commands", "what"}
+            CommandIntent.HELP: {"help", "commands", "what"},
         }
 
         for intent, words in intent_keywords_map.items():
@@ -405,7 +402,7 @@ class CachedQuickNLP(QuickNLP):
     def _tokenize_text(self, text: str) -> set:
         """Tokenize text into words for keyword matching"""
         # Simple tokenization - can be enhanced with NLTK if needed
-        words = re.findall(r'\b\w+\b', text.lower())
+        words = re.findall(r"\b\w+\b", text.lower())
         return set(words)
 
     def _get_candidate_intents(self, text: str) -> list[CommandIntent]:
@@ -427,11 +424,7 @@ class CachedQuickNLP(QuickNLP):
         return candidates
 
     @lru_cache(maxsize=1024)
-    def _cached_pattern_match(
-        self,
-        text: str,
-        pattern_str: str
-    ) -> re.Optional[Match]:
+    def _cached_pattern_match(self, text: str, pattern_str: str) -> re.Optional[Match]:
         """Cached pattern matching"""
         pattern = re.compile(pattern_str, re.IGNORECASE)
         return pattern.search(text)
@@ -458,10 +451,7 @@ class CachedQuickNLP(QuickNLP):
         candidate_intents = self._get_candidate_intents(text)
 
         # Try pattern matching on candidates first
-        intent, entities, confidence = self._optimized_match_patterns(
-            text,
-            candidate_intents
-        )
+        intent, entities, confidence = self._optimized_match_patterns(text, candidate_intents)
 
         # If no pattern matched, use Ollama for intent extraction
         if intent == CommandIntent.UNKNOWN:
@@ -476,14 +466,11 @@ class CachedQuickNLP(QuickNLP):
             entities=entities,
             raw_text=text,
             confidence=confidence,
-            workflow_trigger=workflow_trigger
+            workflow_trigger=workflow_trigger,
         )
 
         # Cache the result
-        self._pattern_cache[text_hash] = {
-            "result": result,
-            "timestamp": time.time()
-        }
+        self._pattern_cache[text_hash] = {"result": result, "timestamp": time.time()}
 
         # Clean old cache entries periodically
         if len(self._pattern_cache) > self.cache_size:
@@ -495,9 +482,7 @@ class CachedQuickNLP(QuickNLP):
         return result
 
     def _optimized_match_patterns(
-        self,
-        text: str,
-        candidate_intents: list[CommandIntent]
+        self, text: str, candidate_intents: list[CommandIntent]
     ) -> tuple[CommandIntent, dict[str, Any], float]:
         """
         Optimized pattern matching with candidate filtering
@@ -521,7 +506,8 @@ class CachedQuickNLP(QuickNLP):
         """Clean up old cache entries"""
         current_time = time.time()
         expired_keys = [
-            key for key, entry in self._pattern_cache.items()
+            key
+            for key, entry in self._pattern_cache.items()
             if current_time - entry["timestamp"] > self.pattern_cache_ttl
         ]
 
@@ -535,8 +521,7 @@ class CachedQuickNLP(QuickNLP):
         stats = self._cache_stats.copy()
         stats["cache_size"] = len(self._pattern_cache)
         stats["hit_rate"] = (
-            stats["hits"] / stats["total_requests"]
-            if stats["total_requests"] > 0 else 0
+            stats["hits"] / stats["total_requests"] if stats["total_requests"] > 0 else 0
         )
         return stats
 
@@ -551,7 +536,7 @@ class CachedQuickNLP(QuickNLP):
     def warm_cache(self, sample_texts: list[str]):
         """
         Warm up cache with sample texts for better initial performance
-        
+
         Args:
             sample_texts: List of sample texts to pre-process
         """
@@ -568,10 +553,10 @@ class CachedQuickNLP(QuickNLP):
     def benchmark(self, test_texts: list[str]) -> dict[str, float]:
         """
         Benchmark performance with test texts
-        
+
         Args:
             test_texts: List of texts to benchmark
-            
+
         Returns:
             Performance metrics
         """
@@ -598,7 +583,7 @@ class CachedQuickNLP(QuickNLP):
             "improvement": (cold_time - warm_time) / cold_time * 100,
             "avg_cold_ms": cold_time / len(test_texts) * 1000,
             "avg_warm_ms": warm_time / len(test_texts) * 1000,
-            "cache_stats": self.get_cache_stats()
+            "cache_stats": self.get_cache_stats(),
         }
 
 
@@ -621,7 +606,7 @@ if __name__ == "__main__":
         "execute workflow backup",
         "query data about users",
         "stop redis service",
-        "show system status"  # Duplicate to test cache
+        "show system status",  # Duplicate to test cache
     ]
 
     # Warm cache

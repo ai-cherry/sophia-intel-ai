@@ -2,15 +2,15 @@ name: CI Pipeline
 
 on:
   push:
-    branches: [ main, develop, feature/* ]
+    branches: [main, develop, feature/*]
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
   workflow_dispatch:
 
 env:
-  PYTHON_VERSION: '3.11'
-  NODE_VERSION: '18'
-  CACHE_VERSION: 'v1'
+  PYTHON_VERSION: "3.11"
+  NODE_VERSION: "18"
+  CACHE_VERSION: "v1"
 
 jobs:
   # ============================================
@@ -21,12 +21,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-      
+
       - name: Cache Python dependencies
         uses: actions/cache@v4
         with:
@@ -34,18 +34,18 @@ jobs:
           key: ${{ runner.os }}-pip-${{ env.CACHE_VERSION }}-${{ hashFiles('**/pyproject.toml') }}
           restore-keys: |
             ${{ runner.os }}-pip-${{ env.CACHE_VERSION }}-
-      
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install black ruff mypy
-      
+
       - name: Run Black formatter
         run: black --check app tests
-      
+
       - name: Run Ruff linter
         run: ruff check app tests
-      
+
       - name: Run MyPy type checker
         run: mypy app --ignore-missing-imports
 
@@ -57,35 +57,35 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-      
+
       - name: Install security tools
         run: |
           pip install bandit safety
-      
+
       - name: Run Bandit security scan
         run: bandit -r app -ll
-      
+
       - name: Check for known vulnerabilities
         run: safety check --json
-      
+
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-      
+          scan-type: "fs"
+          scan-ref: "."
+          format: "sarif"
+          output: "trivy-results.sarif"
+
       - name: Upload Trivy results to GitHub Security
         uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
-          sarif_file: 'trivy-results.sarif'
+          sarif_file: "trivy-results.sarif"
 
   # ============================================
   # Unit Tests
@@ -95,27 +95,27 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.10', '3.11', '3.12']
-    
+        python-version: ["3.10", "3.11", "3.12"]
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      
+
       - name: Cache Python dependencies
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-test-${{ env.CACHE_VERSION }}-${{ hashFiles('**/pyproject.toml') }}
-      
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -e ".[test]"
-      
+
       - name: Run unit tests with coverage
         run: |
           pytest tests/unit \
@@ -124,7 +124,7 @@ jobs:
             --cov-report=html \
             --cov-report=term-missing \
             -v
-      
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
@@ -132,7 +132,7 @@ jobs:
           flags: unittests
           name: codecov-umbrella
           fail_ci_if_error: false
-      
+
       - name: Upload coverage reports
         uses: actions/upload-artifact@v4
         with:
@@ -155,7 +155,7 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-      
+
       postgres:
         image: postgres:16-alpine
         env:
@@ -169,20 +169,20 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-      
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -e ".[test]"
-      
+
       - name: Set up test environment
         env:
           REDIS_URL: redis://localhost:6379
@@ -190,7 +190,7 @@ jobs:
         run: |
           echo "REDIS_URL=$REDIS_URL" >> $GITHUB_ENV
           echo "POSTGRES_URL=$POSTGRES_URL" >> $GITHUB_ENV
-      
+
       - name: Run integration tests
         run: |
           pytest tests/integration \
@@ -205,30 +205,30 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: 'agent-ui/package-lock.json'
-      
+          cache: "npm"
+          cache-dependency-path: "agent-ui/package-lock.json"
+
       - name: Install UI dependencies
         working-directory: ./agent-ui
         run: npm ci
-      
+
       - name: Run UI linting
         working-directory: ./agent-ui
         run: npm run lint
-      
+
       - name: Run UI tests
         working-directory: ./agent-ui
         run: npm test -- --coverage --watchAll=false
-      
+
       - name: Build UI
         working-directory: ./agent-ui
         run: npm run build
-      
+
       - name: Upload UI build artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -243,10 +243,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-      
+
       - name: Build API Docker image
         uses: docker/build-push-action@v5
         with:
@@ -256,7 +256,7 @@ jobs:
           tags: sophia-intel-api:test
           cache-from: type=gha
           cache-to: type=gha,mode=max
-      
+
       - name: Build UI Docker image
         uses: docker/build-push-action@v5
         with:
@@ -266,7 +266,7 @@ jobs:
           tags: sophia-intel-ui:test
           cache-from: type=gha
           cache-to: type=gha,mode=max
-      
+
       - name: Test Docker Compose
         run: |
           docker-compose -f docker-compose.yml config
@@ -281,28 +281,28 @@ jobs:
     needs: [docker]
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-      
+
       - name: Install Playwright
         run: |
           npm install -g playwright
           playwright install chromium
-      
+
       - name: Start services
         run: |
           docker-compose up -d
           sleep 30  # Wait for services to start
-      
+
       - name: Run E2E tests
         run: |
           pytest tests/e2e \
             -v \
             --tb=short
-      
+
       - name: Stop services
         if: always()
         run: docker-compose down
@@ -316,23 +316,23 @@ jobs:
     if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-      
+
       - name: Install dependencies
         run: |
           pip install -e ".[test]"
           pip install locust
-      
+
       - name: Run performance tests
         run: |
           # Start API server in background
           python -m app.api.unified_server &
           sleep 10
-          
+
           # Run Locust tests
           locust -f tests/performance/locustfile.py \
             --headless \

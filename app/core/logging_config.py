@@ -17,6 +17,7 @@ from app.core.config import settings
 # Custom Formatters
 # ============================================
 
+
 class StructuredFormatter(logging.Formatter):
     """JSON structured logging formatter."""
 
@@ -33,35 +34,36 @@ class StructuredFormatter(logging.Formatter):
         }
 
         # Add extra fields
-        if hasattr(record, 'user_id'):
-            log_obj['user_id'] = record.user_id
-        if hasattr(record, 'request_id'):
-            log_obj['request_id'] = record.request_id
-        if hasattr(record, 'trace_id'):
-            log_obj['trace_id'] = record.trace_id
-        if hasattr(record, 'team_id'):
-            log_obj['team_id'] = record.team_id
+        if hasattr(record, "user_id"):
+            log_obj["user_id"] = record.user_id
+        if hasattr(record, "request_id"):
+            log_obj["request_id"] = record.request_id
+        if hasattr(record, "trace_id"):
+            log_obj["trace_id"] = record.trace_id
+        if hasattr(record, "team_id"):
+            log_obj["team_id"] = record.team_id
 
         # Add exception info if present
         if record.exc_info:
-            log_obj['exception'] = {
-                'type': record.exc_info[0].__name__,
-                'message': str(record.exc_info[1]),
-                'traceback': traceback.format_exception(*record.exc_info)
+            log_obj["exception"] = {
+                "type": record.exc_info[0].__name__,
+                "message": str(record.exc_info[1]),
+                "traceback": traceback.format_exception(*record.exc_info),
             }
 
         return json.dumps(log_obj)
+
 
 class ColoredFormatter(logging.Formatter):
     """Colored console formatter for development."""
 
     COLORS = {
-        'DEBUG': '\033[36m',      # Cyan
-        'INFO': '\033[32m',       # Green
-        'WARNING': '\033[33m',    # Yellow
-        'ERROR': '\033[31m',      # Red
-        'CRITICAL': '\033[35m',   # Magenta
-        'RESET': '\033[0m'
+        "DEBUG": "\033[36m",  # Cyan
+        "INFO": "\033[32m",  # Green
+        "WARNING": "\033[33m",  # Yellow
+        "ERROR": "\033[31m",  # Red
+        "CRITICAL": "\033[35m",  # Magenta
+        "RESET": "\033[0m",
     }
 
     def format(self, record: logging.LogRecord) -> str:
@@ -73,9 +75,11 @@ class ColoredFormatter(logging.Formatter):
 
         return super().format(record)
 
+
 # ============================================
 # Custom Filters
 # ============================================
+
 
 class RequestIdFilter(logging.Filter):
     """Add request ID to log records."""
@@ -84,16 +88,25 @@ class RequestIdFilter(logging.Filter):
         """Add request context to record."""
         # Get request ID from context (would be set by middleware)
         import contextvars
-        request_id_var = contextvars.ContextVar('request_id', default='no-request')
+
+        request_id_var = contextvars.ContextVar("request_id", default="no-request")
         record.request_id = request_id_var.get()
         return True
+
 
 class SensitiveDataFilter(logging.Filter):
     """Filter out sensitive data from logs."""
 
     SENSITIVE_KEYS = [
-        'password', 'token', 'api_key', 'secret', 'authorization',
-        'credit_card', 'ssn', 'email', 'phone'
+        "password",
+        "token",
+        "api_key",
+        "secret",
+        "authorization",
+        "credit_card",
+        "ssn",
+        "email",
+        "phone",
     ]
 
     def filter(self, record: logging.LogRecord) -> bool:
@@ -105,17 +118,20 @@ class SensitiveDataFilter(logging.Filter):
             if key in message.lower():
                 # Simple redaction - could be more sophisticated
                 import re
+
                 pattern = rf'{key}["\']?\s*[:=]\s*["\']?[\w\-\.]+'
-                message = re.sub(pattern, f'{key}=***REDACTED***', message, flags=re.IGNORECASE)
+                message = re.sub(pattern, f"{key}=***REDACTED***", message, flags=re.IGNORECASE)
 
         record.msg = message
         record.args = ()  # Clear args to prevent re-formatting
 
         return True
 
+
 # ============================================
 # Logging Configuration
 # ============================================
+
 
 def get_logging_config() -> dict[str, Any]:
     """Get logging configuration dictionary."""
@@ -127,38 +143,29 @@ def get_logging_config() -> dict[str, Any]:
     config = {
         "version": 1,
         "disable_existing_loggers": False,
-
         "formatters": {
-            "structured": {
-                "()": StructuredFormatter
-            },
+            "structured": {"()": StructuredFormatter},
             "colored": {
                 "()": ColoredFormatter,
                 "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-                "datefmt": "%Y-%m-%d %H:%M:%S"
+                "datefmt": "%Y-%m-%d %H:%M:%S",
             },
             "simple": {
                 "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-                "datefmt": "%Y-%m-%d %H:%M:%S"
-            }
-        },
-
-        "filters": {
-            "request_id": {
-                "()": RequestIdFilter
+                "datefmt": "%Y-%m-%d %H:%M:%S",
             },
-            "sensitive_data": {
-                "()": SensitiveDataFilter
-            }
         },
-
+        "filters": {
+            "request_id": {"()": RequestIdFilter},
+            "sensitive_data": {"()": SensitiveDataFilter},
+        },
         "handlers": {
             "console": {
                 "class": "logging.StreamHandler",
                 "level": settings.log_level,
                 "formatter": "colored" if settings.environment == "development" else "simple",
                 "filters": ["request_id", "sensitive_data"],
-                "stream": "ext://sys.stdout"
+                "stream": "ext://sys.stdout",
             },
             "file": {
                 "class": "logging.handlers.RotatingFileHandler",
@@ -167,7 +174,7 @@ def get_logging_config() -> dict[str, Any]:
                 "filters": ["request_id", "sensitive_data"],
                 "filename": str(logs_dir / "sophia_intel.log"),
                 "maxBytes": 10485760,  # 10MB
-                "backupCount": 5
+                "backupCount": 5,
             },
             "error_file": {
                 "class": "logging.handlers.RotatingFileHandler",
@@ -176,77 +183,55 @@ def get_logging_config() -> dict[str, Any]:
                 "filters": ["request_id"],
                 "filename": str(logs_dir / "errors.log"),
                 "maxBytes": 10485760,  # 10MB
-                "backupCount": 5
-            }
+                "backupCount": 5,
+            },
         },
-
         "loggers": {
             # App loggers
             "app": {
                 "level": settings.log_level,
                 "handlers": ["console", "file", "error_file"],
-                "propagate": False
+                "propagate": False,
             },
             "app.api": {
                 "level": settings.log_level,
                 "handlers": ["console", "file", "error_file"],
-                "propagate": False
+                "propagate": False,
             },
             "app.swarms": {
                 "level": settings.log_level,
                 "handlers": ["console", "file"],
-                "propagate": False
+                "propagate": False,
             },
             "app.memory": {
                 "level": settings.log_level,
                 "handlers": ["console", "file"],
-                "propagate": False
+                "propagate": False,
             },
             "app.tasks": {
                 "level": settings.log_level,
                 "handlers": ["console", "file"],
-                "propagate": False
+                "propagate": False,
             },
-
             # Third-party loggers
-            "uvicorn": {
-                "level": "INFO",
-                "handlers": ["console"],
-                "propagate": False
-            },
+            "uvicorn": {"level": "INFO", "handlers": ["console"], "propagate": False},
             "uvicorn.error": {
                 "level": "INFO",
                 "handlers": ["console", "error_file"],
-                "propagate": False
+                "propagate": False,
             },
-            "uvicorn.access": {
-                "level": "INFO",
-                "handlers": ["console"],
-                "propagate": False
-            },
-            "httpx": {
-                "level": "WARNING",
-                "handlers": ["console"],
-                "propagate": False
-            },
-            "openai": {
-                "level": "WARNING",
-                "handlers": ["console"],
-                "propagate": False
-            }
+            "uvicorn.access": {"level": "INFO", "handlers": ["console"], "propagate": False},
+            "httpx": {"level": "WARNING", "handlers": ["console"], "propagate": False},
+            "openai": {"level": "WARNING", "handlers": ["console"], "propagate": False},
         },
-
-        "root": {
-            "level": settings.log_level,
-            "handlers": ["console", "file"]
-        }
+        "root": {"level": settings.log_level, "handlers": ["console", "file"]},
     }
 
     # Add Sentry handler if configured
-    if hasattr(settings, 'sentry_dsn') and settings.sentry_dsn:
+    if hasattr(settings, "sentry_dsn") and settings.sentry_dsn:
         config["handlers"]["sentry"] = {
             "class": "sentry_sdk.integrations.logging.SentryHandler",
-            "level": "ERROR"
+            "level": "ERROR",
         }
         for logger in config["loggers"].values():
             if "error_file" in logger.get("handlers", []):
@@ -254,9 +239,11 @@ def get_logging_config() -> dict[str, Any]:
 
     return config
 
+
 # ============================================
 # Logger Factory
 # ============================================
+
 
 class LoggerFactory:
     """Factory for creating configured loggers."""
@@ -282,8 +269,8 @@ class LoggerFactory:
             extra={
                 "environment": settings.environment,
                 "log_level": settings.log_level,
-                "logs_dir": str(settings.logs_dir)
-            }
+                "logs_dir": str(settings.logs_dir),
+            },
         )
 
     @classmethod
@@ -294,9 +281,11 @@ class LoggerFactory:
 
         return logging.getLogger(name)
 
+
 # ============================================
 # Context Managers
 # ============================================
+
 
 class LogContext:
     """Context manager for adding context to logs."""
@@ -321,12 +310,15 @@ class LogContext:
         """Clear context variables."""
         # Context vars are automatically cleaned up
 
+
 # ============================================
 # Utility Functions
 # ============================================
 
+
 def log_function_call(logger: logging.Logger):
     """Decorator to log function calls."""
+
     def decorator(func):
         from functools import wraps
 
@@ -337,22 +329,19 @@ def log_function_call(logger: logging.Logger):
                 extra={
                     "function": func.__name__,
                     "args": str(args)[:100],  # Truncate long args
-                    "kwargs": str(kwargs)[:100]
-                }
+                    "kwargs": str(kwargs)[:100],
+                },
             )
 
             try:
                 result = func(*args, **kwargs)
-                logger.debug(
-                    f"Completed {func.__name__}",
-                    extra={"function": func.__name__}
-                )
+                logger.debug(f"Completed {func.__name__}", extra={"function": func.__name__})
                 return result
             except Exception as e:
                 logger.error(
                     f"Error in {func.__name__}: {e}",
                     extra={"function": func.__name__},
-                    exc_info=True
+                    exc_info=True,
                 )
                 raise
 
@@ -363,29 +352,28 @@ def log_function_call(logger: logging.Logger):
                 extra={
                     "function": func.__name__,
                     "args": str(args)[:100],
-                    "kwargs": str(kwargs)[:100]
-                }
+                    "kwargs": str(kwargs)[:100],
+                },
             )
 
             try:
                 result = await func(*args, **kwargs)
-                logger.debug(
-                    f"Completed async {func.__name__}",
-                    extra={"function": func.__name__}
-                )
+                logger.debug(f"Completed async {func.__name__}", extra={"function": func.__name__})
                 return result
             except Exception as e:
                 logger.error(
                     f"Error in async {func.__name__}: {e}",
                     extra={"function": func.__name__},
-                    exc_info=True
+                    exc_info=True,
                 )
                 raise
 
         import asyncio
+
         return async_wrapper if asyncio.iscoroutinefunction(func) else wrapper
 
     return decorator
+
 
 def setup_logging():
     """Setup logging for the application."""
@@ -399,6 +387,7 @@ def setup_logging():
     logger = LoggerFactory.get_logger(__name__)
     logger.info("Sophia Intel AI logging initialized")
 
+
 # ============================================
 # Export
 # ============================================
@@ -411,5 +400,5 @@ __all__ = [
     "StructuredFormatter",
     "ColoredFormatter",
     "RequestIdFilter",
-    "SensitiveDataFilter"
+    "SensitiveDataFilter",
 ]

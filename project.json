@@ -63,9 +63,7 @@
     "docker-build": {
       "executor": "nx:run-commands",
       "options": {
-        "commands": [
-          "docker build -t sophia-intel-ai:latest -f Dockerfile ."
-        ]
+        "commands": ["docker build -t sophia-intel-ai:latest -f Dockerfile ."]
       },
       "dependsOn": ["build"]
     },

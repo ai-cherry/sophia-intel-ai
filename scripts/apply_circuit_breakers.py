@@ -41,7 +41,7 @@ class CircuitBreakerApplicator:
         "external_apis": [
             (r"http(x|s)?://((?!localhost|127\.0\.0\.1))", "external_api"),
             (r"portkey|openrouter", "external_api"),
-        ]
+        ],
     }
 
     def __init__(self, dry_run: bool = True):
@@ -52,7 +52,7 @@ class CircuitBreakerApplicator:
             "files_updated": 0,
             "circuit_breakers_added": {},
             "functions_protected": [],
-            "errors": []
+            "errors": [],
         }
 
     def scan_directory(self, directory: Path) -> None:
@@ -61,7 +61,10 @@ class CircuitBreakerApplicator:
 
         for py_file in directory.rglob("*.py"):
             # Skip test files and the circuit breaker module itself
-            if any(skip in str(py_file) for skip in ["test", "__pycache__", ".git", "circuit_breaker.py"]):
+            if any(
+                skip in str(py_file)
+                for skip in ["test", "__pycache__", ".git", "circuit_breaker.py"]
+            ):
                 continue
 
             self.report["files_analyzed"] += 1
@@ -77,7 +80,7 @@ class CircuitBreakerApplicator:
                 breakers_needed = set()
 
                 # Check for each pattern type
-                for category, patterns in self.CRITICAL_PATTERNS.items():
+                for _category, patterns in self.CRITICAL_PATTERNS.items():
                     for pattern, breaker_type in patterns:
                         if re.search(pattern, content, re.IGNORECASE):
                             breakers_needed.add(breaker_type)
@@ -103,7 +106,7 @@ class CircuitBreakerApplicator:
             functions_to_protect = []
 
             for node in ast.walk(tree):
-                if isinstance(node, ast.FunctionDef) or isinstance(node, ast.AsyncFunctionDef):
+                if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                     # Check if function contains external calls
                     func_source = ast.get_source_segment(content, node)
                     if func_source:
@@ -119,7 +122,7 @@ class CircuitBreakerApplicator:
             content = self._add_circuit_breaker_import(content)
 
             # Apply decorators to functions
-            for func_name, breaker_type, line_no in functions_to_protect:
+            for func_name, breaker_type, _line_no in functions_to_protect:
                 content = self._add_decorator_to_function(content, func_name, breaker_type)
                 self.report["functions_protected"].append(f"{file_path.name}:{func_name}")
 
@@ -132,12 +135,12 @@ class CircuitBreakerApplicator:
             if content != original_content:
                 if not self.dry_run:
                     # Backup original
-                    backup_path = file_path.with_suffix('.py.bak')
-                    with open(backup_path, 'w') as f:
+                    backup_path = file_path.with_suffix(".py.bak")
+                    with open(backup_path, "w") as f:
                         f.write(original_content)
 
                     # Write updated content
-                    with open(file_path, 'w') as f:
+                    with open(file_path, "w") as f:
                         f.write(content)
 
                     logger.info(f"    ✅ Protected {len(functions_to_protect)} functions")
@@ -158,16 +161,12 @@ class CircuitBreakerApplicator:
         """Check if function needs protection based on its content"""
         patterns_to_check = []
 
-        for category, patterns in self.CRITICAL_PATTERNS.items():
+        for _category, patterns in self.CRITICAL_PATTERNS.items():
             for pattern, btype in patterns:
                 if btype == breaker_type:
                     patterns_to_check.append(pattern)
 
-        for pattern in patterns_to_check:
-            if re.search(pattern, func_source, re.IGNORECASE):
-                return True
-
-        return False
+        return any(re.search(pattern, func_source, re.IGNORECASE) for pattern in patterns_to_check)
 
     def _add_circuit_breaker_import(self, content: str) -> str:
         """Add circuit breaker import to file"""
@@ -180,7 +179,7 @@ class CircuitBreakerApplicator:
         # Find the last import line
         last_import_idx = 0
         for i, line in enumerate(lines):
-            if line.startswith(('import ', 'from ')) and not line.startswith('from __future__'):
+            if line.startswith(("import ", "from ")) and not line.startswith("from __future__"):
                 last_import_idx = i
 
         # Insert import
@@ -191,7 +190,7 @@ class CircuitBreakerApplicator:
         else:
             lines.insert(0, import_line)
 
-        return '\n'.join(lines)
+        return "\n".join(lines)
 
     def _add_decorator_to_function(self, content: str, func_name: str, breaker_type: str) -> str:
         """Add circuit breaker decorator to a function"""
@@ -201,11 +200,11 @@ class CircuitBreakerApplicator:
         # Find the function definition
         for i, line in enumerate(lines):
             # Match function definition
-            if re.match(rf'^(\s*)(async\s+)?def\s+{re.escape(func_name)}\s*\(', line):
-                indent = re.match(r'^(\s*)', line).group(1)
+            if re.match(rf"^(\s*)(async\s+)?def\s+{re.escape(func_name)}\s*\(", line):
+                indent = re.match(r"^(\s*)", line).group(1)
 
                 # Check if previous line is already a decorator
-                if i > 0 and lines[i-1].strip().startswith('@'):
+                if i > 0 and lines[i - 1].strip().startswith("@"):
                     # Add after existing decorators
                     lines.insert(i, indent + decorator)
                 else:
@@ -213,7 +212,7 @@ class CircuitBreakerApplicator:
                     lines.insert(i, indent + decorator)
                 break
 
-        return '\n'.join(lines)
+        return "\n".join(lines)
 
     def generate_report(self) -> None:
         """Generate application report"""
@@ -226,19 +225,19 @@ class CircuitBreakerApplicator:
         logger.info(f"Files updated: {self.report['files_updated']}")
         logger.info(f"Functions protected: {len(self.report['functions_protected'])}")
 
-        if self.report['circuit_breakers_added']:
+        if self.report["circuit_breakers_added"]:
             logger.info("\nCircuit breakers by type:")
-            for breaker_type, count in self.report['circuit_breakers_added'].items():
+            for breaker_type, count in self.report["circuit_breakers_added"].items():
                 logger.info(f"  - {breaker_type}: {count}")
 
-        if self.report['errors']:
+        if self.report["errors"]:
             logger.info(f"\n⚠️  Errors encountered: {len(self.report['errors'])}")
-            for error in self.report['errors'][:5]:
+            for error in self.report["errors"][:5]:
                 logger.info(f"  - {error}")
 
         # Save detailed report
         report_path = Path("circuit_breaker_application_report.json")
-        with open(report_path, 'w') as f:
+        with open(report_path, "w") as f:
             json.dump(self.report, f, indent=2, default=str)
 
         logger.info(f"\n📄 Detailed report saved to: {report_path}")
@@ -267,18 +266,10 @@ class CircuitBreakerApplicator:
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Apply circuit breakers to external service calls"
-    )
+    parser = argparse.ArgumentParser(description="Apply circuit breakers to external service calls")
+    parser.add_argument("--directory", default="app", help="Directory to scan (default: app)")
     parser.add_argument(
-        "--directory",
-        default="app",
-        help="Directory to scan (default: app)"
-    )
-    parser.add_argument(
-        "--live",
-        action="store_true",
-        help="Run in live mode (actually modify files)"
+        "--live", action="store_true", help="Run in live mode (actually modify files)"
     )
 
     args = parser.parse_args()

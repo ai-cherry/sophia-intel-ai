@@ -73,5 +73,4 @@ curl -f https://sophia-vector.fly.dev/health
 - Dockerfile now exposes 8003 and implements /healthz for the Unified API.
 - Fly TOMLs no longer reference missing Dockerfiles and do not enable Consul.
 - Bridge CORS defaults are restricted for production; override via Fly secrets if necessary.
-- Agent UI proxies to http://localhost:8003 during local development.
-
+- Agent UI proxies to <http://localhost:8003> during local development.

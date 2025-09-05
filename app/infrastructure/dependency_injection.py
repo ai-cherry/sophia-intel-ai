@@ -4,21 +4,24 @@ Provides centralized dependency management for the AI Orchestra system
 """
 
 import asyncio
+import contextlib
 import logging
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Optional, Protocol, TypeVar, Union
+from typing import Any, Optional, Protocol, TypeVar
 
 logger = logging.getLogger(__name__)
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 # ==================== Service Configuration ====================
+
 
 @dataclass
 class ServiceConfig:
     """Central configuration for all services"""
+
     # Service URLs
     ollama_url: str = "http://localhost:11434"
     redis_url: str = "redis://localhost:6379"
@@ -49,35 +52,61 @@ class ServiceConfig:
     max_concurrent_requests: int = 100
 
     @classmethod
-    def from_env(cls) -> 'ServiceConfig':
+    def from_env(cls) -> "ServiceConfig":
         """Create configuration from environment variables"""
         import os
+
         return cls(
-            ollama_url=os.getenv("OLLAMA_URL", cls.ollama_url),
-            redis_url=os.getenv("REDIS_URL", cls.redis_url),
-            mcp_server_url=os.getenv("MCP_SERVER_URL", cls.mcp_server_url),
-            n8n_url=os.getenv("N8N_URL", cls.n8n_url),
-            max_websocket_connections=int(os.getenv("MAX_WEBSOCKET_CONNECTIONS", cls.max_websocket_connections)),
-            connection_idle_timeout_seconds=int(os.getenv("CONNECTION_IDLE_TIMEOUT", cls.connection_idle_timeout_seconds))
+            ollama_url=get_config().get('OLLAMA_URL', 'cls.ollama_url'),
+            redis_url=get_config().get('REDIS_URL', 'cls.redis_url'),
+            mcp_server_url=get_config().get('MCP_SERVER_URL', 'cls.mcp_server_url'),
+            n8n_url=get_config().get('N8N_URL', 'cls.n8n_url'),
+            max_websocket_connections=int(
+                get_config().get('MAX_WEBSOCKET_CONNECTIONS', cls.max_websocket_connections)
+            ),
+            connection_idle_timeout_seconds=int(
+                get_config().get('CONNECTION_IDLE_TIMEOUT', cls.connection_idle_timeout_seconds)
+            ),
         )
+
 
 # ==================== Service Interfaces ====================
 
+
 class ChatOrchestratorProtocol(Protocol):
     """Protocol defining ChatOrchestrator interface"""
-    async def initialize(self) -> None: ...
-    async def handle_chat(self, request: Any) -> Any: ...
-    async def stream_tokens(self, message: str, session_id: str) -> Any: ...
-    async def get_metrics(self) -> dict[str, Any]: ...
-    async def shutdown(self) -> None: ...
+
+    async def initialize(self) -> None:
+        ...
+
+    async def handle_chat(self, request: Any) -> Any:
+        ...
+
+    async def stream_tokens(self, message: str, session_id: str) -> Any:
+        ...
+
+    async def get_metrics(self) -> dict[str, Any]:
+        ...
+
+    async def shutdown(self) -> None:
+        ...
+
 
 class ManagerProtocol(Protocol):
     """Protocol defining Orchestra Manager interface"""
-    def interpret_intent(self, message: str, context: Any) -> tuple: ...
-    def generate_response(self, intent: str, parameters: dict, context: Any) -> str: ...
-    def get_status(self) -> dict[str, Any]: ...
+
+    def interpret_intent(self, message: str, context: Any) -> tuple:
+        ...
+
+    def generate_response(self, intent: str, parameters: dict, context: Any) -> str:
+        ...
+
+    def get_status(self) -> dict[str, Any]:
+        ...
+
 
 # ==================== Dependency Injection Container ====================
+
 
 class DIContainer:
     """
@@ -98,10 +127,12 @@ class DIContainer:
 
         logger.info("DIContainer initialized")
 
-    def register(self, service_type: type[T], factory: Callable[..., T], lifetime: str = "transient"):
+    def register(
+        self, service_type: type[T], factory: Callable[..., T], lifetime: str = "transient"
+    ):
         """
         Register a service factory
-        
+
         Args:
             service_type: Type of service to register
             factory: Factory function to create service
@@ -124,11 +155,11 @@ class DIContainer:
     async def resolve(self, service_type: type[T], scope: Optional[str] = None) -> T:
         """
         Resolve a service instance
-        
+
         Args:
             service_type: Type of service to resolve
             scope: Optional scope for scoped services
-            
+
         Returns:
             Service instance
         """
@@ -166,7 +197,7 @@ class DIContainer:
             return await factory()
         return factory()
 
-    def create_scope(self, scope_id: str) -> 'ServiceScope':
+    def create_scope(self, scope_id: str) -> "ServiceScope":
         """Create a new service scope"""
         return ServiceScope(self, scope_id)
 
@@ -175,7 +206,7 @@ class DIContainer:
         if scope_id in self._scoped_services:
             # Clean up scoped services
             for service in self._scoped_services[scope_id].values():
-                if hasattr(service, 'dispose'):
+                if hasattr(service, "dispose"):
                     service.dispose()
             del self._scoped_services[scope_id]
             logger.debug(f"Disposed scope {scope_id}")
@@ -184,7 +215,7 @@ class DIContainer:
         """Dispose of all services"""
         # Dispose singletons
         for service in self._singletons.values():
-            if hasattr(service, 'dispose'):
+            if hasattr(service, "dispose"):
                 if asyncio.iscoroutinefunction(service.dispose):
                     await service.dispose()
                 else:
@@ -198,7 +229,9 @@ class DIContainer:
         self._services.clear()
         logger.info("DIContainer disposed")
 
+
 # ==================== Service Scope ====================
+
 
 class ServiceScope:
     """Scoped service resolution context"""
@@ -222,7 +255,9 @@ class ServiceScope:
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         self.dispose()
 
+
 # ==================== Connection Pool Manager ====================
+
 
 class WebSocketConnectionPool:
     """
@@ -238,14 +273,16 @@ class WebSocketConnectionPool:
             "total_connections": 0,
             "active_connections": 0,
             "evicted_connections": 0,
-            "rejected_connections": 0
+            "rejected_connections": 0,
         }
-        logger.info(f"WebSocketConnectionPool initialized with max {self.max_connections} connections")
+        logger.info(
+            f"WebSocketConnectionPool initialized with max {self.max_connections} connections"
+        )
 
     async def acquire_connection(self, key: str, connection: Any) -> bool:
         """
         Acquire a connection slot
-        
+
         Returns:
             True if connection was added, False if pool is full
         """
@@ -274,7 +311,7 @@ class WebSocketConnectionPool:
     async def _evict_oldest(self) -> bool:
         """
         Evict the oldest connection
-        
+
         Returns:
             True if a connection was evicted
         """
@@ -287,7 +324,7 @@ class WebSocketConnectionPool:
 
         # Close the connection
         try:
-            if hasattr(oldest_conn, 'websocket'):
+            if hasattr(oldest_conn, "websocket"):
                 await oldest_conn.websocket.close()
         except:
             pass
@@ -301,10 +338,14 @@ class WebSocketConnectionPool:
         """Get pool metrics"""
         return {
             **self.metrics,
-            "utilization": len(self.connections) / self.max_connections if self.max_connections > 0 else 0
+            "utilization": len(self.connections) / self.max_connections
+            if self.max_connections > 0
+            else 0,
         }
 
+
 # ==================== Session State Manager ====================
+
 
 class SessionStateManager:
     """
@@ -331,7 +372,7 @@ class SessionStateManager:
                     "created_at": datetime.utcnow(),
                     "last_activity": datetime.utcnow(),
                     "history": [],
-                    "metadata": {}
+                    "metadata": {},
                 }
             else:
                 self.sessions[session_id]["last_activity"] = datetime.utcnow()
@@ -343,14 +384,11 @@ class SessionStateManager:
         session = await self.get_session(session_id)
 
         async with self._lock:
-            session["history"].append({
-                **entry,
-                "timestamp": datetime.utcnow().isoformat()
-            })
+            session["history"].append({**entry, "timestamp": datetime.utcnow().isoformat()})
 
             # Trim history if needed
             if len(session["history"]) > self.max_history:
-                session["history"] = session["history"][-self.max_history:]
+                session["history"] = session["history"][-self.max_history :]
 
     async def update_metadata(self, session_id: str, metadata: dict[str, Any]):
         """Update session metadata"""
@@ -389,12 +427,12 @@ class SessionStateManager:
         """Clean up manager"""
         if self._cleanup_task:
             self._cleanup_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self._cleanup_task
-            except asyncio.CancelledError:
-                pass
+
 
 # ==================== Service Registration ====================
+
 
 def register_services(container: DIContainer):
     """Register all services with the DI container"""
@@ -410,26 +448,14 @@ def register_services(container: DIContainer):
     config = container.config
 
     # Register infrastructure services
-    container.register_singleton(
-        WebSocketConnectionPool,
-        lambda: WebSocketConnectionPool(config)
-    )
+    container.register_singleton(WebSocketConnectionPool, lambda: WebSocketConnectionPool(config))
 
-    container.register_singleton(
-        SessionStateManager,
-        lambda: SessionStateManager(config)
-    )
+    container.register_singleton(SessionStateManager, lambda: SessionStateManager(config))
 
     # Register embedding services
-    container.register_singleton(
-        PortkeyGateway,
-        lambda: PortkeyGateway()
-    )
+    container.register_singleton(PortkeyGateway, lambda: PortkeyGateway())
 
-    container.register_singleton(
-        AgnoEmbeddingService,
-        lambda: AgnoEmbeddingService()
-    )
+    container.register_singleton(AgnoEmbeddingService, lambda: AgnoEmbeddingService())
 
     # Register core services
     container.register_singleton(
@@ -438,21 +464,18 @@ def register_services(container: DIContainer):
             ollama_url=config.ollama_url,
             redis_url=config.redis_url,
             mcp_server_url=config.mcp_server_url,
-            n8n_url=config.n8n_url
-        )
+            n8n_url=config.n8n_url,
+        ),
     )
 
-    container.register_singleton(
-        UnifiedOrchestratorFacade,
-        lambda: UnifiedOrchestratorFacade()
-    )
+    container.register_singleton(UnifiedOrchestratorFacade, lambda: UnifiedOrchestratorFacade())
 
     # OrchestraManager removed - functionality integrated into SuperOrchestrator
 
     # Register ChatOrchestrator with dependencies
     async def create_chat_orchestrator():
-        dispatcher = await container.resolve(SmartCommandDispatcher)
-        facade = await container.resolve(UnifiedOrchestratorFacade)
+        await container.resolve(SmartCommandDispatcher)
+        await container.resolve(UnifiedOrchestratorFacade)
         pool = await container.resolve(WebSocketConnectionPool)
         sessions = await container.resolve(SessionStateManager)
 
@@ -461,7 +484,7 @@ def register_services(container: DIContainer):
             ollama_url=config.ollama_url,
             redis_url=config.redis_url,
             mcp_server_url=config.mcp_server_url,
-            n8n_url=config.n8n_url
+            n8n_url=config.n8n_url,
         )
 
         # Inject additional dependencies
@@ -471,17 +494,16 @@ def register_services(container: DIContainer):
         await orchestrator.initialize()
         return orchestrator
 
-    container.register_singleton(
-        ChatOrchestrator,
-        create_chat_orchestrator
-    )
+    container.register_singleton(ChatOrchestrator, create_chat_orchestrator)
 
     logger.info("All services registered with DI container")
+
 
 # ==================== Global Container Instance ====================
 
 # Create global container (will be replaced by proper initialization)
 _global_container: Optional[DIContainer] = None
+
 
 def get_container() -> DIContainer:
     """Get the global DI container"""
@@ -492,6 +514,7 @@ def get_container() -> DIContainer:
         register_services(_global_container)
     return _global_container
 
+
 async def initialize_container(config: Optional[ServiceConfig] = None) -> DIContainer:
     """Initialize the global DI container"""
     global _global_container
@@ -501,6 +524,7 @@ async def initialize_container(config: Optional[ServiceConfig] = None) -> DICont
     _global_container = DIContainer(config or ServiceConfig.from_env())
     register_services(_global_container)
     return _global_container
+
 
 # ==================== Export ====================
 
@@ -514,5 +538,5 @@ __all__ = [
     "ManagerProtocol",
     "get_container",
     "initialize_container",
-    "register_services"
+    "register_services",
 ]

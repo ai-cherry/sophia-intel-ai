@@ -13,8 +13,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any
 
-from enum import Enum
-# TODO: Define AgentRole locally or use SuperOrchestrator
+# Define AgentRole locally or use SuperOrchestrator
 from app.core.circuit_breaker import with_circuit_breaker
 from app.nl_interface.memory_connector import NLInteraction, NLMemoryConnector
 from app.nl_interface.quicknlp import CachedQuickNLP, CommandIntent, ParsedCommand
@@ -30,13 +29,15 @@ logger = logging.getLogger(__name__)
 
 class ExecutionMode(Enum):
     """Execution modes based on task complexity"""
-    LITE = "lite"          # Simple, fast execution
+
+    LITE = "lite"  # Simple, fast execution
     BALANCED = "balanced"  # Balanced speed/quality
-    QUALITY = "quality"    # High quality, slower
+    QUALITY = "quality"  # High quality, slower
 
 
 class ComponentStatus(Enum):
     """Component availability status"""
+
     AVAILABLE = "available"
     DEGRADED = "degraded"
     UNAVAILABLE = "unavailable"
@@ -45,6 +46,7 @@ class ComponentStatus(Enum):
 @dataclass
 class EnrichedCommand:
     """Command enriched with context and memory"""
+
     parsed_command: ParsedCommand
     session_id: str
     user_context: dict[str, Any]
@@ -58,6 +60,7 @@ class EnrichedCommand:
 @dataclass
 class ExecutionResult:
     """Result of command execution"""
+
     success: bool
     response: Any
     execution_mode: ExecutionMode
@@ -81,11 +84,11 @@ class SmartCommandDispatcher:
         redis_url: str = "redis://localhost:6379",
         mcp_server_url: str = "http://localhost:8004",
         n8n_url: str = "http://localhost:5678",
-        config_file: str = "app/config/nl_swarm_integration.json"
+        config_file: str = "app/config/nl_swarm_integration.json",
     ):
         """
         Initialize Smart Command Dispatcher
-        
+
         Args:
             ollama_url: URL for Ollama LLM service
             redis_url: URL for Redis cache/state
@@ -101,15 +104,13 @@ class SmartCommandDispatcher:
 
         # Execution engines
         self.orchestrator = OptimizedAgentOrchestrator(
-            redis_url=redis_url,
-            ollama_url=ollama_url,
-            n8n_url=n8n_url
+            redis_url=redis_url, ollama_url=ollama_url, n8n_url=n8n_url
         )
 
         # Initialize swarm with mock agents for now
         self.swarm = ImprovedAgentSwarm(
             agents=["planner", "executor", "critic", "judge"],
-            config_file="app/swarms/swarm_optimization_config.json"
+            config_file="app/swarms/swarm_optimization_config.json",
         )
 
         # Configuration
@@ -120,7 +121,7 @@ class SmartCommandDispatcher:
             "memory": CircuitBreaker(failure_threshold=3, recovery_timeout=30),
             "swarm": CircuitBreaker(failure_threshold=2, recovery_timeout=60),
             "orchestrator": CircuitBreaker(failure_threshold=3, recovery_timeout=30),
-            "n8n": CircuitBreaker(failure_threshold=5, recovery_timeout=20)
+            "n8n": CircuitBreaker(failure_threshold=5, recovery_timeout=20),
         }
 
         # Performance tracking
@@ -130,7 +131,7 @@ class SmartCommandDispatcher:
             "failure_count": 0,
             "mode_usage": {"lite": 0, "balanced": 0, "quality": 0},
             "avg_execution_time": 0,
-            "total_execution_time": 0
+            "total_execution_time": 0,
         }
 
         # Session state
@@ -150,45 +151,28 @@ class SmartCommandDispatcher:
     def _get_default_config(self) -> dict[str, Any]:
         """Get default configuration"""
         return {
-            "complexity_thresholds": {
-                "lite": 0.3,
-                "balanced": 0.7
-            },
-            "swarm_eligible_intents": [
-                "EXECUTE_WORKFLOW",
-                "QUERY_DATA",
-                "RUN_AGENT"
-            ],
-            "memory_enrichment": {
-                "enabled": True,
-                "max_history": 10,
-                "include_similar": True
-            },
+            "complexity_thresholds": {"lite": 0.3, "balanced": 0.7},
+            "swarm_eligible_intents": ["EXECUTE_WORKFLOW", "QUERY_DATA", "RUN_AGENT"],
+            "memory_enrichment": {"enabled": True, "max_history": 10, "include_similar": True},
             "optimization": {
                 "auto_adjust_mode": True,
                 "performance_target_ms": 5000,
-                "quality_target": 0.8
+                "quality_target": 0.8,
             },
-            "fallback": {
-                "enable_graceful_degradation": True,
-                "fallback_to_simple": True
-            }
+            "fallback": {"enable_graceful_degradation": True, "fallback_to_simple": True},
         }
 
     async def process_command(
-        self,
-        text: str,
-        session_id: str,
-        user_context: Optional[dict[str, Any]] = None
+        self, text: str, session_id: str, user_context: Optional[dict[str, Any]] = None
     ) -> ExecutionResult:
         """
         Process a natural language command with intelligent routing
-        
+
         Args:
             text: The natural language command
             session_id: Session identifier for context
             user_context: Optional user context
-            
+
         Returns:
             ExecutionResult with response and metadata
         """
@@ -198,13 +182,13 @@ class SmartCommandDispatcher:
         try:
             # Parse the command
             parsed_command = self.nlp.process(text)
-            logger.info(f"Parsed command: {parsed_command.intent.value} (confidence: {parsed_command.confidence:.2f})")
+            logger.info(
+                f"Parsed command: {parsed_command.intent.value} (confidence: {parsed_command.confidence:.2f})"
+            )
 
             # Enrich with memory and context
             enriched_command = await self._enrich_with_memory(
-                parsed_command,
-                session_id,
-                user_context or {}
+                parsed_command, session_id, user_context or {}
             )
 
             # Analyze complexity and select execution mode
@@ -223,9 +207,7 @@ class SmartCommandDispatcher:
 
             # Store interaction in memory
             await self._integrate_memory_results(
-                enriched_command,
-                result,
-                execution_time=time.time() - start_time
+                enriched_command, result, execution_time=time.time() - start_time
             )
 
             # Update statistics
@@ -241,7 +223,7 @@ class SmartCommandDispatcher:
                 execution_mode=execution_mode,
                 execution_time=execution_time,
                 patterns_used=self._get_patterns_used(execution_mode),
-                quality_score=result.get("quality_score", 0.8) if isinstance(result, dict) else 0.8
+                quality_score=result.get("quality_score", 0.8) if isinstance(result, dict) else 0.8,
             )
 
         except Exception as e:
@@ -259,23 +241,20 @@ class SmartCommandDispatcher:
                 execution_time=time.time() - start_time,
                 patterns_used=[],
                 quality_score=0,
-                error=str(e)
+                error=str(e),
             )
 
     async def _enrich_with_memory(
-        self,
-        parsed_command: ParsedCommand,
-        session_id: str,
-        user_context: dict[str, Any]
+        self, parsed_command: ParsedCommand, session_id: str, user_context: dict[str, Any]
     ) -> EnrichedCommand:
         """
         Enrich command with memory and conversation history
-        
+
         Args:
             parsed_command: The parsed NL command
             session_id: Session identifier
             user_context: User context
-            
+
         Returns:
             EnrichedCommand with context and history
         """
@@ -285,7 +264,7 @@ class SmartCommandDispatcher:
             user_context=user_context,
             conversation_history=[],
             complexity_score=0.5,
-            recommended_mode=ExecutionMode.BALANCED
+            recommended_mode=ExecutionMode.BALANCED,
         )
 
         if not self.config["memory_enrichment"]["enabled"]:
@@ -296,22 +275,19 @@ class SmartCommandDispatcher:
             async def fetch_memory():
                 # Get conversation history
                 history = await self.memory_connector.retrieve_session_history(
-                    session_id,
-                    limit=self.config["memory_enrichment"]["max_history"]
+                    session_id, limit=self.config["memory_enrichment"]["max_history"]
                 )
 
                 # Get context summary
                 context_summary = await self.memory_connector.get_context_summary(
-                    session_id,
-                    max_interactions=5
+                    session_id, max_interactions=5
                 )
 
                 # Search for similar interactions if enabled
                 similar = []
                 if self.config["memory_enrichment"]["include_similar"]:
                     similar = await self.memory_connector.search_interactions(
-                        parsed_command.raw_text,
-                        limit=3
+                        parsed_command.raw_text, limit=3
                     )
 
                 return history, context_summary, similar
@@ -336,16 +312,13 @@ class SmartCommandDispatcher:
 
         return enriched
 
-    async def _analyze_and_select_mode(
-        self,
-        enriched_command: EnrichedCommand
-    ) -> ExecutionMode:
+    async def _analyze_and_select_mode(self, enriched_command: EnrichedCommand) -> ExecutionMode:
         """
         Analyze task complexity and select optimal execution mode
-        
+
         Args:
             enriched_command: The enriched command
-            
+
         Returns:
             Recommended execution mode
         """
@@ -354,7 +327,7 @@ class SmartCommandDispatcher:
             "description": enriched_command.parsed_command.raw_text,
             "intent": enriched_command.parsed_command.intent.value,
             "entities": enriched_command.parsed_command.entities,
-            "history_length": len(enriched_command.conversation_history)
+            "history_length": len(enriched_command.conversation_history),
         }
 
         complexity_score = self.optimizer.calculate_task_complexity(task_dict)
@@ -386,7 +359,9 @@ class SmartCommandDispatcher:
             return recommended_mode
 
         avg_time = self.execution_stats["avg_execution_time"]
-        success_rate = self.execution_stats["success_count"] / self.execution_stats["total_commands"]
+        success_rate = (
+            self.execution_stats["success_count"] / self.execution_stats["total_commands"]
+        )
 
         target_time = self.config["optimization"]["performance_target_ms"] / 1000
         target_quality = self.config["optimization"]["quality_target"]
@@ -411,23 +386,21 @@ class SmartCommandDispatcher:
         """Check if command is eligible for swarm execution"""
         intent_name = enriched_command.parsed_command.intent.name
         return (
-            intent_name in self.config["swarm_eligible_intents"] and
-            enriched_command.complexity_score > 0.4 and
-            self.degradation_manager.is_component_available("swarm")
+            intent_name in self.config["swarm_eligible_intents"]
+            and enriched_command.complexity_score > 0.4
+            and self.degradation_manager.is_component_available("swarm")
         )
 
     async def _dispatch_to_swarm(
-        self,
-        enriched_command: EnrichedCommand,
-        execution_mode: ExecutionMode
+        self, enriched_command: EnrichedCommand, execution_mode: ExecutionMode
     ) -> dict[str, Any]:
         """
         Dispatch command to swarm for execution
-        
+
         Args:
             enriched_command: The enriched command
             execution_mode: Selected execution mode
-            
+
         Returns:
             Execution result from swarm
         """
@@ -439,7 +412,7 @@ class SmartCommandDispatcher:
                 "entities": enriched_command.parsed_command.entities,
                 "context": enriched_command.user_context,
                 "complexity": enriched_command.complexity_score,
-                "mode": execution_mode.value
+                "mode": execution_mode.value,
             }
 
             # Configure swarm based on mode
@@ -451,7 +424,9 @@ class SmartCommandDispatcher:
 
             result = await self.circuit_breakers["swarm"].call(swarm_execute)
 
-            logger.info(f"Swarm execution completed with quality score: {result.get('quality_score', 0)}")
+            logger.info(
+                f"Swarm execution completed with quality score: {result.get('quality_score', 0)}"
+            )
             return result
 
         except Exception as e:
@@ -462,17 +437,15 @@ class SmartCommandDispatcher:
             return await self._handle_agent_execution(enriched_command, ExecutionMode.LITE)
 
     async def _handle_agent_execution(
-        self,
-        enriched_command: EnrichedCommand,
-        execution_mode: ExecutionMode
+        self, enriched_command: EnrichedCommand, execution_mode: ExecutionMode
     ) -> dict[str, Any]:
         """
         Handle agent execution commands
-        
+
         Args:
             enriched_command: The enriched command
             execution_mode: Selected execution mode
-            
+
         Returns:
             Agent execution result
         """
@@ -495,7 +468,7 @@ class SmartCommandDispatcher:
                         session_id=enriched_command.session_id,
                         user_request=enriched_command.parsed_command.raw_text,
                         workflow_name=f"agent_{agent_name}",
-                        agents_chain=agents_chain
+                        agents_chain=agents_chain,
                     )
 
             context = await self.circuit_breakers["orchestrator"].call(orchestrator_execute)
@@ -505,7 +478,7 @@ class SmartCommandDispatcher:
                 "execution_context": context.state,
                 "tasks_completed": len(context.tasks),
                 "quality_score": 0.85,
-                "execution_time": context.end_time - context.start_time if context.end_time else 0
+                "execution_time": context.end_time - context.start_time if context.end_time else 0,
             }
 
         except Exception as e:
@@ -514,17 +487,15 @@ class SmartCommandDispatcher:
             return {"error": str(e), "quality_score": 0}
 
     async def _handle_complex_query(
-        self,
-        enriched_command: EnrichedCommand,
-        execution_mode: ExecutionMode
+        self, enriched_command: EnrichedCommand, execution_mode: ExecutionMode
     ) -> dict[str, Any]:
         """
         Handle complex data queries
-        
+
         Args:
             enriched_command: The enriched command
             execution_mode: Selected execution mode
-            
+
         Returns:
             Query result
         """
@@ -539,19 +510,16 @@ class SmartCommandDispatcher:
             "query": query_text,
             "results": f"Query results for: {query_text}",
             "result_count": 10,
-            "quality_score": 0.7
+            "quality_score": 0.7,
         }
 
-    async def _handle_simple_command(
-        self,
-        enriched_command: EnrichedCommand
-    ) -> dict[str, Any]:
+    async def _handle_simple_command(self, enriched_command: EnrichedCommand) -> dict[str, Any]:
         """
         Handle simple commands that don't need complex processing
-        
+
         Args:
             enriched_command: The enriched command
-            
+
         Returns:
             Simple command result
         """
@@ -572,7 +540,7 @@ class SmartCommandDispatcher:
                 "intent": intent.value,
                 "entities": entities,
                 "response": f"Processed {intent.value} command",
-                "quality_score": 0.9
+                "quality_score": 0.9,
             }
 
     @with_circuit_breaker("webhook")
@@ -583,13 +551,13 @@ class SmartCommandDispatcher:
                 "memory": self._check_component_status("memory"),
                 "swarm": self._check_component_status("swarm"),
                 "orchestrator": self._check_component_status("orchestrator"),
-                "n8n": self._check_component_status("n8n")
+                "n8n": self._check_component_status("n8n"),
             },
             "health_score": self.degradation_manager.get_system_health_score(),
             "active_sessions": len(self.active_sessions),
             "execution_stats": self.execution_stats,
             "cache_stats": self.nlp.get_cache_stats(),
-            "quality_score": 1.0
+            "quality_score": 1.0,
         }
 
     def _check_component_status(self, component: str) -> str:
@@ -604,14 +572,11 @@ class SmartCommandDispatcher:
         return ComponentStatus.AVAILABLE.value
 
     async def _integrate_memory_results(
-        self,
-        enriched_command: EnrichedCommand,
-        result: Any,
-        execution_time: float
+        self, enriched_command: EnrichedCommand, result: Any, execution_time: float
     ):
         """
         Store command execution results in memory
-        
+
         Args:
             enriched_command: The enriched command
             result: Execution result
@@ -630,9 +595,11 @@ class SmartCommandDispatcher:
                 execution_result={
                     "execution_mode": enriched_command.recommended_mode.value,
                     "execution_time": execution_time,
-                    "quality_score": result.get("quality_score", 0) if isinstance(result, dict) else 0
+                    "quality_score": result.get("quality_score", 0)
+                    if isinstance(result, dict)
+                    else 0,
                 },
-                metadata=enriched_command.metadata
+                metadata=enriched_command.metadata,
             )
 
             await self.memory_connector.store_interaction(interaction)
@@ -642,19 +609,16 @@ class SmartCommandDispatcher:
             logger.warning(f"Failed to store interaction in memory: {e}")
 
     async def _handle_with_fallback(
-        self,
-        text: str,
-        session_id: str,
-        original_error: str
+        self, text: str, session_id: str, original_error: str
     ) -> ExecutionResult:
         """
         Handle command with fallback mechanism
-        
+
         Args:
             text: Original command text
             session_id: Session ID
             original_error: Error from original attempt
-            
+
         Returns:
             Fallback execution result
         """
@@ -670,7 +634,7 @@ class SmartCommandDispatcher:
                 "entities": parsed.entities,
                 "response": f"Fallback response for {parsed.intent.value}",
                 "original_error": original_error,
-                "quality_score": 0.5
+                "quality_score": 0.5,
             }
 
             return ExecutionResult(
@@ -680,7 +644,7 @@ class SmartCommandDispatcher:
                 execution_time=0,
                 patterns_used=["fallback"],
                 quality_score=0.5,
-                metadata={"fallback": True}
+                metadata={"fallback": True},
             )
 
         except Exception as e:
@@ -692,7 +656,7 @@ class SmartCommandDispatcher:
                 execution_time=0,
                 patterns_used=["fallback"],
                 quality_score=0,
-                error=f"Both primary and fallback failed: {original_error}, {e}"
+                error=f"Both primary and fallback failed: {original_error}, {e}",
             )
 
     def _get_patterns_used(self, mode: ExecutionMode) -> list[str]:
@@ -708,8 +672,7 @@ class SmartCommandDispatcher:
         """Update average execution time"""
         self.execution_stats["total_execution_time"] += execution_time
         self.execution_stats["avg_execution_time"] = (
-            self.execution_stats["total_execution_time"] /
-            self.execution_stats["total_commands"]
+            self.execution_stats["total_execution_time"] / self.execution_stats["total_commands"]
         )
 
     def _get_performance_metrics(self) -> dict[str, Any]:
@@ -726,17 +689,16 @@ class SmartCommandDispatcher:
                 name: {
                     "state": cb.state,
                     "failure_count": cb.failure_count,
-                    "success_count": cb.success_count
+                    "success_count": cb.success_count,
                 }
                 for name, cb in self.circuit_breakers.items()
-            }
+            },
         }
 
         # Calculate overall quality score
         if self.execution_stats["total_commands"] > 0:
             metrics["overall_quality_score"] = (
-                self.execution_stats["success_count"] /
-                self.execution_stats["total_commands"]
+                self.execution_stats["success_count"] / self.execution_stats["total_commands"]
             )
         else:
             metrics["overall_quality_score"] = 0
@@ -744,17 +706,15 @@ class SmartCommandDispatcher:
         return metrics
 
     async def optimize_for_session(
-        self,
-        session_id: str,
-        optimization_goal: str = "balanced"
+        self, session_id: str, optimization_goal: str = "balanced"
     ) -> dict[str, Any]:
         """
         Optimize dispatcher settings for a specific session
-        
+
         Args:
             session_id: Session to optimize for
             optimization_goal: Goal (speed, quality, balanced)
-            
+
         Returns:
             Optimization result
         """
@@ -793,7 +753,7 @@ class SmartCommandDispatcher:
             "optimization_mode": recommended_mode,
             "patterns": patterns_to_enable,
             "avg_complexity": avg_complexity,
-            "intent_distribution": intent_distribution
+            "intent_distribution": intent_distribution,
         }
 
         return {
@@ -803,17 +763,19 @@ class SmartCommandDispatcher:
             "analysis": {
                 "avg_complexity": avg_complexity,
                 "interaction_count": len(history),
-                "most_common_intent": max(intent_distribution.items(), key=lambda x: x[1])[0] if intent_distribution else None
-            }
+                "most_common_intent": max(intent_distribution.items(), key=lambda x: x[1])[0]
+                if intent_distribution
+                else None,
+            },
         }
 
     async def get_session_status(self, session_id: str) -> dict[str, Any]:
         """
         Get real-time status for a session
-        
+
         Args:
             session_id: Session identifier
-            
+
         Returns:
             Session status information
         """
@@ -831,7 +793,7 @@ class SmartCommandDispatcher:
             "optimization_settings": session_info,
             "recent_interactions": len(history),
             "context_summary": context,
-            "last_interaction": history[-1] if history else None
+            "last_interaction": history[-1] if history else None,
         }
 
     async def shutdown(self):
@@ -871,9 +833,7 @@ async def example_usage():
         logger.info(f"{'='*60}")
 
         result = await dispatcher.process_command(
-            text=command,
-            session_id=session_id,
-            user_context={"urgency": "normal"}
+            text=command, session_id=session_id, user_context={"urgency": "normal"}
         )
 
         logger.info(f"Success: {result.success}")
@@ -908,4 +868,5 @@ async def example_usage():
 
 if __name__ == "__main__":
     import asyncio
+
     asyncio.run(example_usage())

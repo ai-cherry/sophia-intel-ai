@@ -11,7 +11,7 @@ import uuid
 from collections import deque
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional, Union
+from typing import Any, Optional
 
 # Removed langchain dependency - use portkey instead
 from pydantic import BaseModel
@@ -57,22 +57,26 @@ class PatternAnalyzer:
         # Count error frequency
         error_count = sum(1 for log in self.log_window if log.level == "ERROR")
         if error_count > len(self.log_window) * 0.3:  # >30% errors
-            self.anomalies.append({
-                "type": "high_error_rate",
-                "severity": "high",
-                "details": f"{error_count} errors in last {len(self.log_window)} logs"
-            })
+            self.anomalies.append(
+                {
+                    "type": "high_error_rate",
+                    "severity": "high",
+                    "details": f"{error_count} errors in last {len(self.log_window)} logs",
+                }
+            )
 
         # Detect repeated messages
         messages = [log.message for log in self.log_window]
         for msg in set(messages):
             if messages.count(msg) > 5:
-                self.anomalies.append({
-                    "type": "repeated_message",
-                    "severity": "medium",
-                    "message": msg,
-                    "count": messages.count(msg)
-                })
+                self.anomalies.append(
+                    {
+                        "type": "repeated_message",
+                        "severity": "medium",
+                        "message": msg,
+                        "count": messages.count(msg),
+                    }
+                )
 
     def get_anomalies(self) -> list[dict]:
         anomalies = self.anomalies.copy()
@@ -94,7 +98,7 @@ class AILogger:
         return cls._instance
 
     def __init__(self):
-        if not hasattr(self, 'initialized'):
+        if not hasattr(self, "initialized"):
             # Setup standard Python logger
             self.logger = logging.getLogger("AILogger")
             self.logger.setLevel(logging.DEBUG)
@@ -103,14 +107,13 @@ class AILogger:
             console_handler = logging.StreamHandler()
             console_handler.setLevel(logging.INFO)
             formatter = logging.Formatter(
-                '%(asctime)s | %(levelname)-8s | %(message)s',
-                datefmt='%Y-%m-%d %H:%M:%S'
+                "%(asctime)s | %(levelname)-8s | %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
             )
             console_handler.setFormatter(formatter)
             self.logger.addHandler(console_handler)
 
             # File handler for persistent logs
-            file_handler = logging.FileHandler('logs/ai_system.log')
+            file_handler = logging.FileHandler("logs/ai_system.log")
             file_handler.setLevel(logging.DEBUG)
             file_handler.setFormatter(formatter)
             self.logger.addHandler(file_handler)
@@ -144,14 +147,14 @@ class AILogger:
             return {
                 "function": caller_frame.f_code.co_name,
                 "file": caller_frame.f_code.co_filename.split("/")[-1],
-                "line": caller_frame.f_lineno
+                "line": caller_frame.f_lineno,
             }
         return {}
 
     def log(self, level: LogLevel, message: str, context: dict = None, trace_id: str = None):
         """
         Main logging method that replaces print()
-        
+
         Usage:
             logger.log(LogLevel.INFO, "Task completed", {"task_id": "123"})
         """
@@ -168,7 +171,7 @@ class AILogger:
             trace_id=trace_id or self.generate_trace_id(),
             source=caller_info.get("file", "unknown"),
             line_number=caller_info.get("line"),
-            function_name=caller_info.get("function")
+            function_name=caller_info.get("function"),
         )
 
         # Add to pattern analyzer
@@ -223,10 +226,7 @@ class AILogger:
         while True:
             try:
                 # Collect batch of logs for analysis
-                log_entry = await asyncio.wait_for(
-                    self.analysis_queue.get(),
-                    timeout=5.0
-                )
+                log_entry = await asyncio.wait_for(self.analysis_queue.get(), timeout=5.0)
                 batch.append(log_entry)
 
                 # Process batch if large enough or timeout
@@ -253,31 +253,26 @@ class AILogger:
             # Prepare context for AI
             context = {
                 "recent_errors": [
-                    {"message": log.message, "context": log.context}
-                    for log in self.error_context
+                    {"message": log.message, "context": log.context} for log in self.error_context
                 ],
                 "anomalies": anomalies,
                 "logs_to_analyze": [
-                    {
-                        "level": log.level,
-                        "message": log.message,
-                        "context": log.context
-                    }
+                    {"level": log.level, "message": log.message, "context": log.context}
                     for log in logs
-                ]
+                ],
             }
 
             prompt = f"""
             Analyze these system logs and provide insights:
-            
+
             {json.dumps(context, indent=2, default=str)}
-            
+
             Provide:
             1. Root cause analysis for any errors
             2. Performance implications
             3. Suggested actions
             4. Severity assessment (1-10)
-            
+
             Format as JSON with keys: root_cause, performance_impact, actions, severity
             """
 
@@ -289,10 +284,7 @@ class AILogger:
                 await self._trigger_alert(analysis)
 
             # Log the analysis
-            self.info(
-                "AI Analysis Complete",
-                {"analysis": analysis, "logs_analyzed": len(logs)}
-            )
+            self.info("AI Analysis Complete", {"analysis": analysis, "logs_analyzed": len(logs)})
 
         except Exception as e:
             self.error(f"AI analysis failed: {e}")
@@ -305,7 +297,7 @@ class AILogger:
             "severity": analysis.get("severity"),
             "root_cause": analysis.get("root_cause"),
             "actions": analysis.get("actions"),
-            "type": "AI_ALERT"
+            "type": "AI_ALERT",
         }
 
         # Log critical alert
@@ -356,7 +348,7 @@ class AILogger:
         - Error rate: {error_rate:.2%}
         - Warning rate: {warning_rate:.2%}
         - Total logs: {total_logs}
-        
+
         Provide performance assessment and recommendations.
         Format as JSON.
         """
@@ -395,6 +387,7 @@ def print_replacement(*args, **kwargs):
 def replace_print_globally():
     """Replace Python's built-in print with AI logger"""
     import builtins
+
     builtins.print = print_replacement
 
 

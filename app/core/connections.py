@@ -8,7 +8,7 @@ import asyncio
 import logging
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
-from typing import Any, Optional, Union
+from typing import Any, Optional
 
 import aiohttp
 import redis.asyncio as aioredis
@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class ConnectionConfig:
     """Configuration for connection pools"""
+
     # HTTP settings
     http_pool_size: int = 100
     http_timeout: int = 30
@@ -40,7 +41,7 @@ class ConnectionManager:
     Ensures proper connection pooling and resource management.
     """
 
-    _instance: Optional['ConnectionManager'] = None
+    _instance: Optional["ConnectionManager"] = None
     _lock = asyncio.Lock()
 
     def __new__(cls):
@@ -49,7 +50,7 @@ class ConnectionManager:
         return cls._instance
 
     def __init__(self, config: Optional[ConnectionConfig] = None):
-        if not hasattr(self, '_initialized'):
+        if not hasattr(self, "_initialized"):
             self.config = config or ConnectionConfig()
             self._http_session: aiohttp.Optional[ClientSession] = None
             self._redis_pool: aioredis.Optional[Redis] = None
@@ -58,7 +59,7 @@ class ConnectionManager:
                 "http_requests": 0,
                 "redis_operations": 0,
                 "connection_errors": 0,
-                "pool_exhaustion": 0
+                "pool_exhaustion": 0,
             }
 
     async def initialize(self):
@@ -76,28 +77,22 @@ class ConnectionManager:
                     limit=self.config.http_pool_size,
                     limit_per_host=30,
                     ttl_dns_cache=300,
-                    keepalive_timeout=self.config.http_keepalive_timeout
+                    keepalive_timeout=self.config.http_keepalive_timeout,
                 )
 
                 timeout = aiohttp.ClientTimeout(
-                    total=self.config.http_timeout,
-                    connect=5,
-                    sock_read=10
+                    total=self.config.http_timeout, connect=5, sock_read=10
                 )
 
                 self._http_session = aiohttp.ClientSession(
                     connector=connector,
                     timeout=timeout,
-                    headers={
-                        "User-Agent": "Sophia-Intel-AI/2.1.0",
-                        "Accept": "application/json"
-                    }
+                    headers={"User-Agent": "Sophia-Intel-AI/2.1.0", "Accept": "application/json"},
                 )
 
                 # Initialize Redis connection pool
                 self._redis_pool = await aioredis.from_url(
-                    "redis://localhost:6379",
-                    decode_responses=True
+                    "redis://localhost:6379", decode_responses=True
                 )
 
                 # Test connections
@@ -154,9 +149,11 @@ class ConnectionManager:
             except aiohttp.ClientError as e:
                 self._metrics["connection_errors"] += 1
                 if attempt == self.config.max_retries - 1:
-                    logger.error(f"HTTP request failed after {self.config.max_retries} attempts: {e}")
+                    logger.error(
+                        f"HTTP request failed after {self.config.max_retries} attempts: {e}"
+                    )
                     raise
-                await asyncio.sleep(self.config.retry_delay * (2 ** attempt))
+                await asyncio.sleep(self.config.retry_delay * (2**attempt))
 
     # Redis Methods
 
@@ -245,6 +242,7 @@ async def get_connection_manager() -> ConnectionManager:
 
 # Convenience functions
 
+
 async def http_get(url: str, **kwargs) -> dict[str, Any]:
     """Convenience function for HTTP GET"""
     manager = await get_connection_manager()
@@ -270,6 +268,7 @@ async def redis_set(key: str, value: str, ex: Optional[int] = None) -> bool:
 
 
 # Migration helpers for existing code
+
 
 class MigrationHelper:
     """Helper class to migrate existing synchronous code"""

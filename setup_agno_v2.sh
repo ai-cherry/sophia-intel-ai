@@ -22,13 +22,13 @@ echo "🏗️ Creating Agno workspace..."
 if [ ! -d "agno-workspace" ]; then
     ag ws create --template agent-api --name sophia-intel
     cd sophia-intel
-    
+
     # Copy our custom playground
     cp ../app/agno_v2/playground.py .
-    
+
     # Copy environment configuration
     cp ../.env.portkey .env
-    
+
     cd ..
 else
     echo "Workspace already exists"
@@ -40,7 +40,7 @@ if [ ! -d "agent-ui" ]; then
     npx create-agent-ui@latest agent-ui
     cd agent-ui
     npm install
-    
+
     # Create UI configuration
     cat > .env.local <<EOF
 NEXT_PUBLIC_API_URL=http://127.0.0.1:7777
@@ -48,7 +48,7 @@ NEXT_PUBLIC_APP_NAME=Sophia Intel AI
 NEXT_PUBLIC_ENABLE_TEAMS=true
 NEXT_PUBLIC_ENABLE_MEMORY=true
 EOF
-    
+
     cd ..
 else
     echo "Agent UI already exists"

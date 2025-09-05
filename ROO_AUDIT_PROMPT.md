@@ -1,4 +1,5 @@
 # 🎨 Roo/Cursor: Frontend Repository Audit & Optimization
+
 ## Comprehensive UI/UX Analysis, Planning & Implementation Phase
 
 **🎯 Your Mission:** Lead the comprehensive frontend audit and optimization of Sophia Intel AI repository. You'll conduct deep UI/UX analysis, create detailed improvement plans, and implement critical optimizations while coordinating with Cline (backend) and Claude (quality control) through MCP.
@@ -10,6 +11,7 @@
 ### **🔍 Deep Frontend Analysis Tasks:**
 
 #### **Task 1.1: Component Architecture Assessment**
+
 **Deliverable:** Comprehensive frontend architecture analysis
 
 ```bash
@@ -22,12 +24,14 @@ find agent-ui/src -name "*.tsx" -exec grep -l "console\." {} \;  # Debug stateme
 ```
 
 **Planning Deliverables:**
+
 1. **Component Inventory Report** - All components with complexity ratings
 2. **Architecture Decision Record** - Current state and improvement path
-3. **Component Reusability Analysis** - Duplication and consolidation opportunities  
+3. **Component Reusability Analysis** - Duplication and consolidation opportunities
 4. **Hook Usage Patterns** - State management optimization opportunities
 
 #### **Task 1.2: Performance & Bundle Analysis**
+
 **Deliverable:** Frontend performance optimization strategy
 
 ```bash
@@ -40,12 +44,14 @@ find agent-ui/public -type f -exec du -h {} \; | sort -hr  # Asset size analysis
 ```
 
 **Planning Deliverables:**
+
 1. **Bundle Size Analysis** - Current state and optimization targets
 2. **Performance Bottleneck Report** - Component rendering issues
 3. **Asset Optimization Plan** - Image, font, and resource optimization
 4. **Dependency Audit** - Security and performance impact assessment
 
 #### **Task 1.3: UI/UX Consistency & Accessibility Analysis**
+
 **Deliverable:** Design system and accessibility improvement plan
 
 ```bash
@@ -57,6 +63,7 @@ grep -r "color:\|background:\|font-" agent-ui/src --include="*.css" --include="*
 ```
 
 **Planning Deliverables:**
+
 1. **Design System Compliance Report** - Consistency analysis
 2. **Accessibility Audit** - WCAG 2.1 compliance assessment
 3. **Visual Consistency Plan** - Color, typography, spacing standardization
@@ -65,14 +72,18 @@ grep -r "color:\|background:\|font-" agent-ui/src --include="*.css" --include="*
 ### **🎯 Planning Phase Requirements:**
 
 #### **Documentation Standards:**
+
 Create these documents in `agent-ui/audit/frontend/`:
+
 - `COMPONENT_ARCHITECTURE_ANALYSIS.md` - Component structure and optimization plan
 - `PERFORMANCE_OPTIMIZATION_STRATEGY.md` - Bundle and runtime performance improvements
 - `UI_UX_CONSISTENCY_REPORT.md` - Design system and accessibility improvements
 - `IMPLEMENTATION_ROADMAP.md` - Phased frontend optimization timeline
 
 #### **MCP Integration Requirements:**
+
 Use these MCP commands to coordinate:
+
 ```bash
 @sophia-mcp store "Frontend Analysis: Found [X] components need optimization"
 @sophia-mcp store "Bundle Analysis: Current size [Y]MB, target [Z]MB reduction"
@@ -88,9 +99,11 @@ Use these MCP commands to coordinate:
 ### **🚀 High-Priority Implementation Tasks:**
 
 #### **Task 2.1: Component Architecture Optimization**
+
 **Files to Create/Modify:**
 
 1. **Component Performance Analyzer** (`agent-ui/src/tools/ComponentAnalyzer.tsx`)
+
 ```typescript
 // Create component analysis and optimization tool
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
@@ -113,7 +126,7 @@ export const ComponentAnalyzer: React.FC<ComponentAnalyzerProps> = ({
   // - Re-render pattern detection
   // - Memory leak identification
   // - Optimization recommendations
-  
+
   const analyzeComponent = useCallback(async (componentName: string) => {
     // Component analysis logic
     // Performance metrics collection
@@ -129,16 +142,17 @@ export const ComponentAnalyzer: React.FC<ComponentAnalyzerProps> = ({
 ```
 
 2. **Optimized Hook Library** (`agent-ui/src/hooks/optimized/`)
+
 ```typescript
 // Create performance-optimized custom hooks
 
 // useOptimizedMemo.ts - Advanced memoization
-import { useMemo, useRef, DependencyList } from 'react';
+import { useMemo, useRef, DependencyList } from "react";
 
 export function useOptimizedMemo<T>(
   factory: () => T,
   deps: DependencyList,
-  isEqual?: (a: T, b: T) => boolean
+  isEqual?: (a: T, b: T) => boolean,
 ): T {
   // Implement advanced memoization with custom equality
   // Deep comparison for complex objects
@@ -146,16 +160,16 @@ export function useOptimizedMemo<T>(
 }
 
 // useSmartEffect.ts - Optimized effect hook
-import { useEffect, useRef, DependencyList } from 'react';
+import { useEffect, useRef, DependencyList } from "react";
 
 export function useSmartEffect(
   effect: () => void | (() => void),
   deps: DependencyList,
-  options?: { 
-    skipFirst?: boolean; 
-    debounce?: number; 
+  options?: {
+    skipFirst?: boolean;
+    debounce?: number;
     throttle?: number;
-  }
+  },
 ): void {
   // Implement optimized effect with:
   // - Debouncing and throttling
@@ -173,6 +187,7 @@ export function usePerformanceMonitor(componentName: string) {
 ```
 
 3. **Component Design System** (`agent-ui/src/components/design-system/`)
+
 ```typescript
 // Create standardized, optimized components
 
@@ -229,14 +244,15 @@ export const OptimizedButton = memo(forwardRef<HTMLButtonElement, ButtonProps>(
 #### **Task 2.2: Performance Optimization Implementation**
 
 1. **Bundle Optimization System** (`agent-ui/scripts/optimize-bundle.ts`)
+
 ```typescript
 // Advanced bundle optimization tooling
-import webpack from 'webpack';
-import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
-import CompressionPlugin from 'compression-webpack-plugin';
+import webpack from "webpack";
+import { BundleAnalyzerPlugin } from "webpack-bundle-analyzer";
+import CompressionPlugin from "compression-webpack-plugin";
 
 interface BundleOptimizationConfig {
-  target: 'development' | 'production';
+  target: "development" | "production";
   analyze: boolean;
   compress: boolean;
   splitChunks: boolean;
@@ -278,9 +294,10 @@ class BundleOptimizer {
 ```
 
 2. **Performance Monitoring Integration** (`agent-ui/src/lib/performance-monitor.ts`)
+
 ```typescript
 // Comprehensive performance monitoring
-import { getCLS, getFID, getFCP, getLCP, getTTFB, Metric } from 'web-vitals';
+import { getCLS, getFID, getFCP, getLCP, getTTFB, Metric } from "web-vitals";
 
 interface PerformanceMetrics {
   cls: number;
@@ -293,7 +310,12 @@ interface PerformanceMetrics {
 
 class PerformanceMonitor {
   private metrics: PerformanceMetrics = {
-    cls: 0, fid: 0, fcp: 0, lcp: 0, ttfb: 0, customMetrics: {}
+    cls: 0,
+    fid: 0,
+    fcp: 0,
+    lcp: 0,
+    ttfb: 0,
+    customMetrics: {},
   };
 
   initialize(): void {
@@ -303,7 +325,7 @@ class PerformanceMonitor {
     getFCP(this.handleMetric.bind(this));
     getLCP(this.handleMetric.bind(this));
     getTTFB(this.handleMetric.bind(this));
-    
+
     // Custom performance monitoring
     this.monitorComponentPerformance();
     this.monitorApiPerformance();
@@ -331,11 +353,12 @@ class PerformanceMonitor {
 ```
 
 3. **Asset Optimization Pipeline** (`agent-ui/scripts/optimize-assets.ts`)
+
 ```typescript
 // Automated asset optimization
-import sharp from 'sharp';
-import { glob } from 'glob';
-import { promises as fs } from 'fs';
+import sharp from "sharp";
+import { glob } from "glob";
+import { promises as fs } from "fs";
 
 interface AssetOptimizationConfig {
   imageQuality: number;
@@ -377,9 +400,10 @@ class AssetOptimizer {
 #### **Task 2.3: UI/UX Enhancement Implementation**
 
 1. **Accessibility Enhancement System** (`agent-ui/src/lib/accessibility-enhancer.tsx`)
+
 ```typescript
 // Comprehensive accessibility implementation
-import React, { createContext, useContext, ReactNode } from 'react';
+import React, { createContext, useContext, ReactNode } from "react";
 
 interface A11yConfig {
   enableScreenReaderSupport: boolean;
@@ -415,7 +439,9 @@ class FocusManager {
   }
 }
 
-export const A11yProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const A11yProvider: React.FC<{ children: ReactNode }> = ({
+  children,
+}) => {
   // Accessibility context provider
   // Global accessibility settings
   // Keyboard navigation management
@@ -432,6 +458,7 @@ export const AccessibleModal: React.FC<ModalProps> = (props) => {
 ```
 
 2. **Design System Implementation** (`agent-ui/src/components/design-system/`)
+
 ```typescript
 // Comprehensive design system
 
@@ -439,55 +466,55 @@ export const AccessibleModal: React.FC<ModalProps> = (props) => {
 export const designTokens = {
   colors: {
     primary: {
-      50: '#eff6ff',
-      100: '#dbeafe',
+      50: "#eff6ff",
+      100: "#dbeafe",
       // ... full color palette
-      900: '#1e3a8a',
+      900: "#1e3a8a",
     },
     // Semantic color mappings
     semantic: {
-      success: '#10b981',
-      warning: '#f59e0b',
-      error: '#ef4444',
-      info: '#3b82f6',
-    }
+      success: "#10b981",
+      warning: "#f59e0b",
+      error: "#ef4444",
+      info: "#3b82f6",
+    },
   },
   typography: {
     fontFamilies: {
-      sans: ['Inter', 'system-ui', 'sans-serif'],
-      mono: ['JetBrains Mono', 'monospace'],
+      sans: ["Inter", "system-ui", "sans-serif"],
+      mono: ["JetBrains Mono", "monospace"],
     },
     fontSizes: {
-      xs: '0.75rem',
-      sm: '0.875rem',
+      xs: "0.75rem",
+      sm: "0.875rem",
       // ... complete type scale
     },
     lineHeights: {
       tight: 1.25,
       normal: 1.5,
       relaxed: 1.75,
-    }
+    },
   },
   spacing: {
     // 8pt grid system
-    0: '0',
-    1: '0.25rem',
-    2: '0.5rem',
+    0: "0",
+    1: "0.25rem",
+    2: "0.5rem",
     // ... complete spacing scale
   },
   breakpoints: {
-    sm: '640px',
-    md: '768px',
-    lg: '1024px',
-    xl: '1280px',
-    '2xl': '1536px',
-  }
+    sm: "640px",
+    md: "768px",
+    lg: "1024px",
+    xl: "1280px",
+    "2xl": "1536px",
+  },
 } as const;
 
 // ThemeProvider.tsx - Theme management
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({
   children,
-  defaultTheme = 'light'
+  defaultTheme = "light",
 }) => {
   // Theme switching logic
   // CSS custom property management
@@ -497,10 +524,11 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
 ```
 
 3. **Responsive Design System** (`agent-ui/src/lib/responsive.tsx`)
+
 ```typescript
 // Advanced responsive design utilities
-import { useMediaQuery } from '@/hooks/useMediaQuery';
-import { designTokens } from '@/components/design-system/DesignTokens';
+import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { designTokens } from "@/components/design-system/DesignTokens";
 
 interface ResponsiveConfig {
   mobile: ReactNode;
@@ -513,13 +541,15 @@ export const Responsive: React.FC<ResponsiveConfig> = ({
   mobile,
   tablet,
   desktop,
-  fallback
+  fallback,
 }) => {
   const isMobile = useMediaQuery(`(max-width: ${designTokens.breakpoints.md})`);
   const isTablet = useMediaQuery(
-    `(min-width: ${designTokens.breakpoints.md}) and (max-width: ${designTokens.breakpoints.lg})`
+    `(min-width: ${designTokens.breakpoints.md}) and (max-width: ${designTokens.breakpoints.lg})`,
   );
-  const isDesktop = useMediaQuery(`(min-width: ${designTokens.breakpoints.lg})`);
+  const isDesktop = useMediaQuery(
+    `(min-width: ${designTokens.breakpoints.lg})`,
+  );
 
   // Responsive rendering logic
   // Progressive enhancement
@@ -531,7 +561,7 @@ export const ResponsiveImage: React.FC<ResponsiveImageProps> = ({
   src,
   alt,
   sizes,
-  loading = 'lazy',
+  loading = "lazy",
   ...props
 }) => {
   // Responsive image implementation
@@ -548,9 +578,11 @@ export const ResponsiveImage: React.FC<ResponsiveImageProps> = ({
 ### **🔬 Comprehensive Testing Strategy:**
 
 #### **Task 3.1: Automated Testing Implementation**
+
 Create comprehensive test suites:
 
 1. **Component Testing Suite** (`agent-ui/src/__tests__/components/`)
+
 ```typescript
 // ComponentPerformance.test.tsx - Performance testing
 import { render, screen, waitFor } from '@testing-library/react';
@@ -560,7 +592,7 @@ import { PerformanceProfiler } from '../test-utils/PerformanceProfiler';
 describe('Component Performance Tests', () => {
   it('should render within performance budget', async () => {
     const profiler = new PerformanceProfiler();
-    
+
     await act(async () => {
       profiler.start();
       render(<ComplexComponent data={largeDataset} />);
@@ -581,6 +613,7 @@ describe('Component Performance Tests', () => {
 ```
 
 2. **Accessibility Testing Suite** (`agent-ui/src/__tests__/accessibility/`)
+
 ```typescript
 // A11y.test.tsx - Accessibility testing
 import { render, screen } from '@testing-library/react';
@@ -599,22 +632,22 @@ describe('Accessibility Tests', () => {
   it('should support keyboard navigation', async () => {
     const user = userEvent.setup();
     render(<NavigationComponent />);
-    
+
     // Test tab order
     await user.tab();
     expect(screen.getByRole('button', { name: /first/i })).toHaveFocus();
-    
+
     await user.tab();
     expect(screen.getByRole('button', { name: /second/i })).toHaveFocus();
   });
 
   it('should provide proper screen reader support', () => {
     render(<DataTable data={mockData} />);
-    
+
     // Test ARIA labels
     expect(screen.getByRole('table')).toHaveAttribute('aria-label');
     expect(screen.getAllByRole('columnheader')).toHaveLength(expectedColumns);
-    
+
     // Test live regions
     expect(screen.getByRole('status')).toBeInTheDocument();
   });
@@ -622,45 +655,50 @@ describe('Accessibility Tests', () => {
 ```
 
 3. **Visual Regression Testing** (`agent-ui/src/__tests__/visual/`)
+
 ```typescript
 // VisualRegression.test.tsx - Visual testing
-import { chromium } from 'playwright';
-import { expect, test } from '@playwright/test';
+import { chromium } from "playwright";
+import { expect, test } from "@playwright/test";
 
-test.describe('Visual Regression Tests', () => {
-  test('should match design system components', async ({ page }) => {
-    await page.goto('/storybook');
-    
+test.describe("Visual Regression Tests", () => {
+  test("should match design system components", async ({ page }) => {
+    await page.goto("/storybook");
+
     // Test button variants
     await page.locator('[data-testid="button-primary"]').screenshot();
-    await expect(page.locator('[data-testid="button-primary"]'))
-      .toHaveScreenshot('button-primary.png');
-    
+    await expect(
+      page.locator('[data-testid="button-primary"]'),
+    ).toHaveScreenshot("button-primary.png");
+
     // Test responsive breakpoints
     await page.setViewportSize({ width: 768, height: 1024 });
-    await expect(page.locator('[data-testid="responsive-layout"]'))
-      .toHaveScreenshot('layout-tablet.png');
+    await expect(
+      page.locator('[data-testid="responsive-layout"]'),
+    ).toHaveScreenshot("layout-tablet.png");
   });
 
-  test('should maintain consistency across themes', async ({ page }) => {
+  test("should maintain consistency across themes", async ({ page }) => {
     // Light theme screenshot
-    await page.goto('/dashboard');
-    await expect(page).toHaveScreenshot('dashboard-light.png');
-    
+    await page.goto("/dashboard");
+    await expect(page).toHaveScreenshot("dashboard-light.png");
+
     // Dark theme screenshot
     await page.click('[data-testid="theme-toggle"]');
-    await expect(page).toHaveScreenshot('dashboard-dark.png');
+    await expect(page).toHaveScreenshot("dashboard-dark.png");
   });
 });
 ```
 
 #### **Task 3.2: Performance Validation**
+
 - **Bundle Size:** Achieve target size reductions (>30% improvement)
 - **Core Web Vitals:** Meet all Google performance standards
 - **Load Times:** <3 seconds initial load, <1 second navigation
 - **Memory Usage:** <100MB average, no memory leaks
 
 #### **Task 3.3: Quality Assurance**
+
 - **TypeScript Coverage:** 100% type safety
 - **Component Coverage:** >95% test coverage for UI components
 - **Accessibility Score:** 100% WCAG 2.1 AA compliance
@@ -673,18 +711,21 @@ test.describe('Visual Regression Tests', () => {
 ### **🏆 Required Deliverables:**
 
 #### **Planning Phase Outputs:**
+
 1. **Component Architecture Report** - Current state and optimization roadmap
 2. **Performance Analysis** - Bundle size, rendering, and optimization strategy
 3. **UI/UX Consistency Audit** - Design system and accessibility improvements
 4. **Implementation Timeline** - Detailed frontend optimization schedule
 
 #### **Implementation Phase Outputs:**
+
 1. **Optimized Component Library** - Performance-enhanced, reusable components
 2. **Advanced Performance Monitoring** - Real-time metrics and optimization tools
 3. **Comprehensive Design System** - Consistent, accessible UI components
 4. **Bundle Optimization Suite** - Automated build optimization and analysis
 
 #### **Quality Metrics Targets:**
+
 - **Performance:** 50%+ bundle size reduction, <3s load time, >90 Lighthouse score
 - **Accessibility:** 100% WCAG 2.1 AA compliance, full keyboard navigation
 - **Code Quality:** 100% TypeScript coverage, >95% component test coverage
@@ -693,6 +734,7 @@ test.describe('Visual Regression Tests', () => {
 ### **🔄 Continuous MCP Coordination:**
 
 #### **Daily Check-ins:**
+
 ```bash
 # Morning standup
 @sophia-mcp store "Roo Daily: Working on [specific task], [X]% complete"
@@ -706,6 +748,7 @@ test.describe('Visual Regression Tests', () => {
 ```
 
 #### **Quality Gates:**
+
 ```bash
 # Before each commit
 @sophia-mcp store "Quality Check: All tests passing, accessibility validated"
@@ -718,12 +761,14 @@ test.describe('Visual Regression Tests', () => {
 ## 🚀 **Getting Started**
 
 ### **Immediate Actions:**
+
 1. **Review the full audit plan** in `REPOSITORY_AUDIT_PLAN.md`
 2. **Set up your development environment** with all analysis tools
 3. **Begin Phase 1 analysis** with the provided commands
 4. **Start MCP coordination** with regular progress updates
 
 ### **Development Setup:**
+
 ```bash
 # Install analysis tools
 cd agent-ui
@@ -739,11 +784,12 @@ mkdir -p audit/frontend/{analysis,performance,accessibility,implementation}
 ```
 
 ### **Success Criteria:**
+
 ✅ Complete all planning deliverables within 3 days  
 ✅ Implement all critical performance and accessibility improvements  
 ✅ Achieve all quality metrics targets  
 ✅ Maintain perfect coordination with Cline and Claude through MCP  
-✅ Deliver production-ready, optimized frontend system  
+✅ Deliver production-ready, optimized frontend system
 
 ---
 

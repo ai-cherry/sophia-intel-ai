@@ -5,9 +5,8 @@ This module provides factory functions for creating specialized agents
 with appropriate models, tools, and instructions for software development tasks.
 """
 
-from typing import Optional
-
 from textwrap import dedent
+from typing import Optional
 
 from agno.agent import Agent
 from agno.tools import Function as Tool
@@ -30,7 +29,8 @@ from app.tools.basic_tools import (
 )
 
 # System prompts for role-specific behavior
-PLANNER_SYS = dedent(f"""
+PLANNER_SYS = dedent(
+    f"""
 You are the Planner. Convert vague goals into an executable plan.
 Return a strict JSON object per PLANNER_SCHEMA; do not include extra text.
 
@@ -42,9 +42,11 @@ Focus on:
 - Assessing global risks
 - Suggesting appropriate tools
 - Defining success metrics
-""")
+"""
+)
 
-CRITIC_SYS = dedent(f"""
+CRITIC_SYS = dedent(
+    f"""
 You are the Critic. Provide a structured review of all proposals.
 Return strict JSON per CRITIC_SCHEMA; no extra prose.
 
@@ -57,9 +59,11 @@ Review across these dimensions:
 - Performance: time complexity, space usage, scalability
 - Usability: API design, error messages, documentation
 - Maintainability: code clarity, test coverage, modularity
-""")
+"""
+)
 
-JUDGE_SYS = dedent(f"""
+JUDGE_SYS = dedent(
+    f"""
 You are the Judge. Compare and merge proposals using the quality rubric.
 Return strict JSON per JUDGE_SCHEMA; no extra prose.
 
@@ -71,9 +75,11 @@ Decision criteria:
 - reject: critical issues that cannot be fixed
 
 Always include concrete runner_instructions for implementation.
-""")
+"""
+)
 
-GENERATOR_SYS = dedent(f"""
+GENERATOR_SYS = dedent(
+    f"""
 You are a Code Generator. Create implementation plans with tests.
 When asked, return JSON per GENERATOR_SCHEMA:
 
@@ -84,7 +90,9 @@ Focus on:
 - Comprehensive test coverage
 - Clear implementation steps
 - Risk assessment
-""")
+"""
+)
+
 
 def make_planner(name: str = "Planner") -> Agent:
     """Create a planning agent with strategic capabilities."""
@@ -99,37 +107,32 @@ def make_planner(name: str = "Planner") -> Agent:
         tools=[CodeSearch(), ListDirectory(), GitStatus()],
         reasoning=True,
         markdown=True,
-        show_tool_calls=True
+        show_tool_calls=True,
     )
+
 
 def make_generator(
     name: str,
     model_name: str,
     tools: Optional[list[Tool]] = None,
-    role_note: str = "Implement spec with tests and minimal diff"
+    role_note: str = "Implement spec with tests and minimal diff",
 ) -> Agent:
     """
     Create a code generation agent with specific model.
-    
+
     Args:
         name: Agent name for identification
         model_name: Model name from ROLE_MODELS or direct model ID
         tools: List of tools to provide to the agent
         role_note: Specific role description for the agent
-        
+
     Returns:
         Configured Agent instance
     """
     m_id = ROLE_MODELS.get(model_name, model_name)
     params = ROLE_PARAMS.get(model_name, {})
 
-    default_tools = [
-        CodeSearch(),
-        ReadFile(),
-        ListDirectory(),
-        RunTests(),
-        RunTypeCheck()
-    ]
+    default_tools = [CodeSearch(), ReadFile(), ListDirectory(), RunTests(), RunTypeCheck()]
 
     return Agent(
         name=name,
@@ -138,8 +141,9 @@ def make_generator(
         instructions=GENERATOR_SYS,
         tools=tools or default_tools,
         markdown=True,
-        show_tool_calls=True
+        show_tool_calls=True,
     )
+
 
 def make_critic(name: str = "Critic") -> Agent:
     """Create a review agent with structured critique capabilities."""
@@ -151,16 +155,11 @@ def make_critic(name: str = "Critic") -> Agent:
         role="Structured review across security/data/logic/perf/UX",
         model=agno_chat_model(m_id, **params),
         instructions=CRITIC_SYS,
-        tools=[
-            CodeSearch(),
-            ReadFile(),
-            GitDiff(),
-            RunLint(),
-            RunTypeCheck()
-        ],
+        tools=[CodeSearch(), ReadFile(), GitDiff(), RunLint(), RunTypeCheck()],
         markdown=True,
-        show_tool_calls=True
+        show_tool_calls=True,
     )
+
 
 def make_judge(name: str = "Judge") -> Agent:
     """Create a decision agent with merge capabilities."""
@@ -172,14 +171,11 @@ def make_judge(name: str = "Judge") -> Agent:
         role="Select or merge proposals; instruct Runner",
         model=agno_chat_model(m_id, **params),
         instructions=JUDGE_SYS,
-        tools=[
-            GitStatus(),
-            GitDiff(),
-            RunTests()
-        ],
+        tools=[GitStatus(), GitDiff(), RunTests()],
         markdown=True,
-        show_tool_calls=True
+        show_tool_calls=True,
     )
+
 
 def make_lead(name: str = "Lead-Engineer") -> Agent:
     """Create a coordination agent to orchestrate the team."""
@@ -190,30 +186,29 @@ def make_lead(name: str = "Lead-Engineer") -> Agent:
         name=name,
         role="Coordinate debate; enforce constraints; route tasks",
         model=agno_chat_model(m_id, **params),
-        instructions=dedent("""
+        instructions=dedent(
+            """
         You are the Lead Engineer coordinating the team.
-        
+
         Your responsibilities:
         - Route tasks to appropriate team members
         - Coordinate parallel work when possible
         - Enforce quality gates and constraints
         - Synthesize multiple proposals
         - Ensure all acceptance criteria are met
-        
+
         When coordinating:
         1. First, have generators propose competing approaches
         2. Then, have the critic review all proposals
         3. If revision needed, have generators apply fixes
         4. Finally, have the judge make the final decision
-        """),
-        tools=[
-            CodeSearch(),
-            ListDirectory(),
-            GitStatus()
-        ],
+        """
+        ),
+        tools=[CodeSearch(), ListDirectory(), GitStatus()],
         markdown=True,
-        show_tool_calls=True
+        show_tool_calls=True,
     )
+
 
 def make_runner(name: str = "Runner") -> Agent:
     """Create an execution agent with write permissions (gated by judge)."""
@@ -224,18 +219,20 @@ def make_runner(name: str = "Runner") -> Agent:
         name=name,
         role="Execute approved changes with write permissions",
         model=agno_chat_model(m_id, **params),
-        instructions=dedent("""
+        instructions=dedent(
+            """
         You are the Runner, responsible for executing approved changes.
-        
+
         CRITICAL: You may ONLY execute if you have explicit judge approval.
         Check for runner_instructions from the judge before any action.
-        
+
         When executing:
         1. Follow runner_instructions exactly
         2. Make minimal, precise changes
         3. Run tests after changes
         4. Report success/failure clearly
-        """),
+        """
+        ),
         tools=[
             ReadFile(),
             WriteFile(),  # Write tools ONLY for runner
@@ -243,28 +240,33 @@ def make_runner(name: str = "Runner") -> Agent:
             GitCommit(),
             RunTests(),
             RunLint(),
-            FormatCode()
+            FormatCode(),
         ],
         markdown=True,
-        show_tool_calls=True
+        show_tool_calls=True,
     )
+
 
 # Backward compatibility functions
 def create_lead_agent() -> Agent:
     """Legacy: Create the Lead agent that coordinates the team."""
     return make_lead()
 
+
 def create_coder_a_agent() -> Agent:
     """Legacy: Create Coder A agent specialized in implementation."""
     return make_generator("Coder-A", "coderA")
+
 
 def create_coder_b_agent() -> Agent:
     """Legacy: Create Coder B agent specialized in optimization."""
     return make_generator("Coder-B", "coderB")
 
+
 def create_critic_agent() -> Agent:
     """Legacy: Create Critic agent for code review."""
     return make_critic()
+
 
 def create_judge_agent() -> Agent:
     """Legacy: Create Judge agent for final decisions."""

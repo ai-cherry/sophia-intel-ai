@@ -49,7 +49,7 @@ agents:
     tags:
       - role:planner
       - team:coding
-    
+
   generator:
     model: x-ai/grok-4
     role: code_generation
@@ -57,7 +57,7 @@ agents:
     tags:
       - role:generator
       - team:coding
-    
+
   critic:
     model: x-ai/grok-4
     role: code_review
@@ -164,11 +164,13 @@ print(f"MCP Server Status: {health['status']}")
 The enhanced memory system automatically extracts tags from:
 
 1. **Content Analysis**
+
    - Programming language detection
    - Code patterns (async, decorators, classes)
    - Domain keywords (API, database, testing)
 
 2. **Metadata Context**
+
    - Task IDs and agent roles
    - File paths and extensions
    - Execution patterns and strategies
@@ -218,16 +220,16 @@ await memory_client.store_memory(
 
 All memory entries must include tags from these categories:
 
-| Category | Format | Example | Required |
-|----------|--------|---------|----------|
-| Task | `task:{id}` | `task:TASK-123` | Yes |
-| Role | `role:{name}` | `role:generator` | Yes |
-| Repository | `repo:{name}` | `repo:sophia-intel-ai` | Yes |
-| File | `file:{name}` | `file:api.py` | When applicable |
-| Language | `lang:{name}` | `lang:python` | Auto-detected |
-| Pattern | `pattern:{type}` | `pattern:async` | Auto-detected |
-| Model | `model:{name}` | `model:gpt-5` | Yes |
-| Status | `status:{state}` | `status:success` | Yes |
+| Category   | Format           | Example                | Required        |
+| ---------- | ---------------- | ---------------------- | --------------- |
+| Task       | `task:{id}`      | `task:TASK-123`        | Yes             |
+| Role       | `role:{name}`    | `role:generator`       | Yes             |
+| Repository | `repo:{name}`    | `repo:sophia-intel-ai` | Yes             |
+| File       | `file:{name}`    | `file:api.py`          | When applicable |
+| Language   | `lang:{name}`    | `lang:python`          | Auto-detected   |
+| Pattern    | `pattern:{type}` | `pattern:async`        | Auto-detected   |
+| Model      | `model:{name}`   | `model:gpt-5`          | Yes             |
+| Status     | `status:{state}` | `status:success`       | Yes             |
 
 ### Hierarchical Tagging
 
@@ -340,7 +342,7 @@ async def connect_mcp_websocket():
             "action": "subscribe",
             "topics": ["memory_stored", "memory_retrieved"]
         }))
-        
+
         # Listen for events
         async for message in websocket:
             event = json.loads(message)
@@ -356,6 +358,7 @@ async def connect_mcp_websocket():
 **Symptom**: `ConnectionError: Cannot connect to MCP server`
 
 **Solution**:
+
 ```bash
 # Check if MCP server is running
 curl http://localhost:8003/health
@@ -372,6 +375,7 @@ lsof -i :8003
 **Symptom**: Tags are not being automatically generated
 
 **Solution**:
+
 ```python
 # Ensure auto_tag is enabled
 result = await memory_client.store_memory(
@@ -394,6 +398,7 @@ memory_client.push_context({
 **Symptom**: Search queries return no results
 
 **Solution**:
+
 ```python
 # Check tag format
 results = await memory_client.search_memories(
@@ -412,6 +417,7 @@ all_memories = await memory_client.search_memories(
 ### Performance Optimization
 
 1. **Batch Operations**
+
    ```python
    # Store multiple memories efficiently
    memories = [...]
@@ -419,6 +425,7 @@ all_memories = await memory_client.search_memories(
    ```
 
 2. **Connection Pooling**
+
    ```python
    # Reuse connections
    async with aiohttp.ClientSession() as session:
@@ -427,10 +434,11 @@ all_memories = await memory_client.search_memories(
    ```
 
 3. **Cache Frequently Used Tags**
+
    ```python
    # Cache tag lookups
    from functools import lru_cache
-   
+
    @lru_cache(maxsize=1000)
    def get_tag_hierarchy(tag: str):
        return parse_tag_hierarchy(tag)

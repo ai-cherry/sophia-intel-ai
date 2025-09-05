@@ -28,7 +28,10 @@ class DuplicateDetector:
     def scan_python_files(self):
         """Scan Python files for duplicate classes and functions"""
         for py_file in self.root_path.rglob("*.py"):
-            if any(skip in py_file.parts for skip in ["venv", "__pycache__", "node_modules", ".git", "build", "dist"]):
+            if any(
+                skip in py_file.parts
+                for skip in ["venv", "__pycache__", "node_modules", ".git", "build", "dist"]
+            ):
                 continue
 
             try:
@@ -40,8 +43,7 @@ class DuplicateDetector:
                         self.classes[node.name].append(str(py_file))
                     elif isinstance(node, ast.FunctionDef):
                         # Only track top-level functions to avoid method duplicates
-                        if not any(isinstance(parent, ast.ClassDef)
-                                  for parent in ast.walk(tree)):
+                        if not any(isinstance(parent, ast.ClassDef) for parent in ast.walk(tree)):
                             self.functions[node.name].append(str(py_file))
             except Exception as e:
                 self.warnings.append(f"⚠️  Could not parse {py_file}: {e}")
@@ -51,7 +53,10 @@ class DuplicateDetector:
         patterns = ["*.jsx", "*.tsx"]
         for pattern in patterns:
             for component_file in self.root_path.rglob(pattern):
-                if any(skip in component_file.parts for skip in ["node_modules", ".git", "build", "dist", ".next"]):
+                if any(
+                    skip in component_file.parts
+                    for skip in ["node_modules", ".git", "build", "dist", ".next"]
+                ):
                     continue
 
                 try:
@@ -79,7 +84,10 @@ class DuplicateDetector:
     def scan_api_endpoints(self):
         """Scan for duplicate API endpoints"""
         for py_file in self.root_path.rglob("*.py"):
-            if any(skip in py_file.parts for skip in ["venv", "__pycache__", "node_modules", ".git", "build", "dist"]):
+            if any(
+                skip in py_file.parts
+                for skip in ["venv", "__pycache__", "node_modules", ".git", "build", "dist"]
+            ):
                 continue
 
             try:
@@ -87,10 +95,11 @@ class DuplicateDetector:
                     content = f.read()
 
                 import re
+
                 # FastAPI/Flask endpoints
                 patterns = [
                     r'@(?:app|router)\.(?:get|post|put|delete|patch)\s*\(\s*["\']([^"\']+)["\']',
-                    r'@(?:app|router)\.route\s*\(\s*["\']([^"\']+)["\']'
+                    r'@(?:app|router)\.route\s*\(\s*["\']([^"\']+)["\']',
                 ]
 
                 for pattern in patterns:
@@ -103,8 +112,9 @@ class DuplicateDetector:
 
     def scan_docker_services(self):
         """Scan docker-compose files for duplicate services"""
-        docker_files = list(self.root_path.rglob("docker-compose*.yml")) + \
-                      list(self.root_path.rglob("docker-compose*.yaml"))
+        docker_files = list(self.root_path.rglob("docker-compose*.yml")) + list(
+            self.root_path.rglob("docker-compose*.yaml")
+        )
 
         for docker_file in docker_files:
             try:
@@ -124,32 +134,32 @@ class DuplicateDetector:
         for class_name, locations in self.classes.items():
             if len(locations) > 1:
                 self.errors.append(
-                    f"❌ Duplicate class '{class_name}' found in:\n" +
-                    "\n".join(f"    - {loc}" for loc in locations)
+                    f"❌ Duplicate class '{class_name}' found in:\n"
+                    + "\n".join(f"    - {loc}" for loc in locations)
                 )
 
         # Check React components
         for component_name, locations in self.components.items():
             if len(locations) > 1:
                 self.errors.append(
-                    f"❌ Duplicate React component '{component_name}' found in:\n" +
-                    "\n".join(f"    - {loc}" for loc in locations)
+                    f"❌ Duplicate React component '{component_name}' found in:\n"
+                    + "\n".join(f"    - {loc}" for loc in locations)
                 )
 
         # Check API endpoints
         for endpoint, locations in self.endpoints.items():
             if len(locations) > 1:
                 self.errors.append(
-                    f"❌ Duplicate API endpoint '{endpoint}' found in:\n" +
-                    "\n".join(f"    - {loc}" for loc in locations)
+                    f"❌ Duplicate API endpoint '{endpoint}' found in:\n"
+                    + "\n".join(f"    - {loc}" for loc in locations)
                 )
 
         # Check Docker services
         for service, locations in self.docker_services.items():
             if len(locations) > 1:
                 self.warnings.append(
-                    f"⚠️  Duplicate Docker service '{service}' found in:\n" +
-                    "\n".join(f"    - {loc}" for loc in locations)
+                    f"⚠️  Duplicate Docker service '{service}' found in:\n"
+                    + "\n".join(f"    - {loc}" for loc in locations)
                 )
 
     def check_naming_conflicts(self):
@@ -157,11 +167,9 @@ class DuplicateDetector:
         # Check for similar class names
         class_names = list(self.classes.keys())
         for i, name1 in enumerate(class_names):
-            for name2 in class_names[i+1:]:
+            for name2 in class_names[i + 1 :]:
                 if name1.lower() == name2.lower() and name1 != name2:
-                    self.warnings.append(
-                        f"⚠️  Similar class names found: '{name1}' and '{name2}'"
-                    )
+                    self.warnings.append(f"⚠️  Similar class names found: '{name1}' and '{name2}'")
                 elif self._is_similar(name1, name2):
                     self.warnings.append(
                         f"⚠️  Potentially confusing class names: '{name1}' and '{name2}'"
@@ -174,6 +182,7 @@ class DuplicateDetector:
 
         # Simple similarity check
         from difflib import SequenceMatcher
+
         similarity = SequenceMatcher(None, s1.lower(), s2.lower()).ratio()
         return similarity > threshold
 

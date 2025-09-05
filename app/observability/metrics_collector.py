@@ -1,5 +1,6 @@
 """Comprehensive observability system for MCP tools and agents."""
 import asyncio
+import contextlib
 import json
 import logging
 import time
@@ -7,7 +8,7 @@ from collections import defaultdict, deque
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import Any, Optional, Union
+from typing import Any, Optional
 
 import psutil
 
@@ -15,16 +16,20 @@ from app.core.ai_logger import logger
 
 logger = logging.getLogger(__name__)
 
+
 @dataclass
 class MetricPoint:
     """Single metric data point."""
+
     timestamp: datetime
     value: float
     labels: dict[str, str] = field(default_factory=dict)
 
+
 @dataclass
 class ToolExecutionTrace:
     """Detailed trace of tool execution."""
+
     tool_name: str
     start_time: datetime
     end_time: Optional[datetime] = None
@@ -36,6 +41,7 @@ class ToolExecutionTrace:
     memory_before: int = 0
     memory_after: int = 0
     context: dict[str, Any] = field(default_factory=dict)
+
 
 class MetricsCollector:
     """Collects and aggregates system metrics."""
@@ -55,18 +61,12 @@ class MetricsCollector:
         """Stop metrics collection."""
         if self._cleanup_task:
             self._cleanup_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self._cleanup_task
-            except asyncio.CancelledError:
-                pass
 
     def record(self, name: str, value: float, labels: dict[str, str] = None):
         """Record a metric value."""
-        point = MetricPoint(
-            timestamp=datetime.now(),
-            value=value,
-            labels=labels or {}
-        )
+        point = MetricPoint(timestamp=datetime.now(), value=value, labels=labels or {})
         self.metrics[name].append(point)
 
     def increment(self, name: str, value: float = 1.0, labels: dict[str, str] = None):
@@ -98,7 +98,7 @@ class MetricsCollector:
             "avg": sum(values) / len(values),
             "min": min(values),
             "max": max(values),
-            "latest": values[-1]
+            "latest": values[-1],
         }
 
     async def _cleanup_loop(self):
@@ -119,8 +119,7 @@ class MetricsCollector:
         for name in list(self.metrics.keys()):
             # Filter out old points
             self.metrics[name] = deque(
-                (p for p in self.metrics[name] if p.timestamp > cutoff),
-                maxlen=10000
+                (p for p in self.metrics[name] if p.timestamp > cutoff), maxlen=10000
             )
 
             # Remove empty metrics
@@ -147,6 +146,7 @@ class MetricsCollector:
 
         return "\n".join(lines)
 
+
 class TraceCollector:
     """Collects execution traces for debugging."""
 
@@ -154,18 +154,22 @@ class TraceCollector:
         self.traces: deque = deque(maxlen=max_traces)
         self.active_traces: dict[str, ToolExecutionTrace] = {}
 
-    def start_trace(self, trace_id: str, tool_name: str, context: dict[str, Any] = None) -> ToolExecutionTrace:
+    def start_trace(
+        self, trace_id: str, tool_name: str, context: dict[str, Any] = None
+    ) -> ToolExecutionTrace:
         """Start a new trace."""
         trace = ToolExecutionTrace(
             tool_name=tool_name,
             start_time=datetime.now(),
             context=context or {},
-            memory_before=psutil.Process().memory_info().rss
+            memory_before=psutil.Process().memory_info().rss,
         )
         self.active_traces[trace_id] = trace
         return trace
 
-    def end_trace(self, trace_id: str, success: bool = True, error: str = None, output_size: int = 0):
+    def end_trace(
+        self, trace_id: str, success: bool = True, error: str = None, output_size: int = 0
+    ):
         """End an active trace."""
         if trace_id not in self.active_traces:
             logger.warning(f"Trace {trace_id} not found")
@@ -197,17 +201,22 @@ class TraceCollector:
         """Export traces as JSON."""
         traces_data = []
         for trace in self.traces:
-            traces_data.append({
-                "tool": trace.tool_name,
-                "start": trace.start_time.isoformat(),
-                "end": trace.end_time.isoformat() if trace.end_time else None,
-                "duration_ms": trace.duration_ms,
-                "success": trace.success,
-                "error": trace.error,
-                "memory_delta": trace.memory_after - trace.memory_before if trace.memory_after else 0,
-                "context": trace.context
-            })
+            traces_data.append(
+                {
+                    "tool": trace.tool_name,
+                    "start": trace.start_time.isoformat(),
+                    "end": trace.end_time.isoformat() if trace.end_time else None,
+                    "duration_ms": trace.duration_ms,
+                    "success": trace.success,
+                    "error": trace.error,
+                    "memory_delta": trace.memory_after - trace.memory_before
+                    if trace.memory_after
+                    else 0,
+                    "context": trace.context,
+                }
+            )
         return json.dumps(traces_data, indent=2)
+
 
 class AlertManager:
     """Manages alerts based on metrics thresholds."""
@@ -224,7 +233,7 @@ class AlertManager:
         condition: str,
         threshold: float,
         window_minutes: int = 5,
-        cooldown_minutes: int = 15
+        cooldown_minutes: int = 15,
     ):
         """Add an alert rule."""
         self.alert_rules[name] = {
@@ -233,7 +242,7 @@ class AlertManager:
             "threshold": threshold,
             "window_minutes": window_minutes,
             "cooldown_minutes": cooldown_minutes,
-            "last_fired": None
+            "last_fired": None,
         }
 
     def register_callback(self, callback: Callable):
@@ -260,7 +269,14 @@ class AlertManager:
             value = stats.get("avg", 0)
             should_fire = False
 
-            if rule["condition"] == "gt" and value > rule["threshold"] or rule["condition"] == "lt" and value < rule["threshold"] or rule["condition"] == "eq" and value == rule["threshold"]:
+            if (
+                rule["condition"] == "gt"
+                and value > rule["threshold"]
+                or rule["condition"] == "lt"
+                and value < rule["threshold"]
+                or rule["condition"] == "eq"
+                and value == rule["threshold"]
+            ):
                 should_fire = True
 
             if should_fire:
@@ -274,7 +290,7 @@ class AlertManager:
             "metric": rule["metric"],
             "value": value,
             "threshold": rule["threshold"],
-            "condition": rule["condition"]
+            "condition": rule["condition"],
         }
 
         self.alerts.append(alert)
@@ -287,7 +303,10 @@ class AlertManager:
             except Exception as e:
                 logger.error(f"Alert callback error: {e}")
 
-        logger.warning(f"ALERT: {name} - {rule['metric']} {rule['condition']} {rule['threshold']} (value: {value})")
+        logger.warning(
+            f"ALERT: {name} - {rule['metric']} {rule['condition']} {rule['threshold']} (value: {value})"
+        )
+
 
 class ObservabilitySystem:
     """Main observability system integrating all components."""
@@ -305,38 +324,22 @@ class ObservabilitySystem:
         """Setup default alert rules."""
         # High error rate
         self.alerts.add_rule(
-            "high_error_rate",
-            "tool_errors_per_minute",
-            "gt",
-            threshold=10,
-            window_minutes=5
+            "high_error_rate", "tool_errors_per_minute", "gt", threshold=10, window_minutes=5
         )
 
         # High memory usage
         self.alerts.add_rule(
-            "high_memory",
-            "memory_usage_mb",
-            "gt",
-            threshold=1000,
-            window_minutes=5
+            "high_memory", "memory_usage_mb", "gt", threshold=1000, window_minutes=5
         )
 
         # Slow tool execution
         self.alerts.add_rule(
-            "slow_execution",
-            "tool_duration_ms",
-            "gt",
-            threshold=5000,
-            window_minutes=10
+            "slow_execution", "tool_duration_ms", "gt", threshold=5000, window_minutes=10
         )
 
         # Low success rate
         self.alerts.add_rule(
-            "low_success_rate",
-            "tool_success_rate",
-            "lt",
-            threshold=0.8,
-            window_minutes=15
+            "low_success_rate", "tool_success_rate", "lt", threshold=0.8, window_minutes=15
         )
 
     async def start(self):
@@ -350,10 +353,8 @@ class ObservabilitySystem:
         await self.metrics.stop()
         if self._monitoring_task:
             self._monitoring_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self._monitoring_task
-            except asyncio.CancelledError:
-                pass
 
     async def _monitoring_loop(self):
         """Main monitoring loop."""
@@ -384,7 +385,7 @@ class ObservabilitySystem:
             self.metrics.record("memory_usage_mb", psutil.Process().memory_info().rss / 1024 / 1024)
 
             # Disk usage
-            disk = psutil.disk_usage('/')
+            disk = psutil.disk_usage("/")
             self.metrics.record("system_disk_percent", disk.percent)
 
             # Network connections
@@ -448,23 +449,19 @@ class ObservabilitySystem:
                     "tool": t.tool_name,
                     "duration_ms": t.duration_ms,
                     "success": t.success,
-                    "error": t.error
+                    "error": t.error,
                 }
                 for t in self.traces.get_recent_traces(10)
             ],
             "alerts": [
-                {
-                    "name": a["name"],
-                    "timestamp": a["timestamp"].isoformat(),
-                    "value": a["value"]
-                }
+                {"name": a["name"], "timestamp": a["timestamp"].isoformat(), "value": a["value"]}
                 for a in self.alerts.alerts[-10:]
             ],
             "system": {
                 "cpu_percent": self.metrics.get_latest("system_cpu_percent"),
                 "memory_percent": self.metrics.get_latest("system_memory_percent"),
-                "disk_percent": self.metrics.get_latest("system_disk_percent")
-            }
+                "disk_percent": self.metrics.get_latest("system_disk_percent"),
+            },
         }
 
     def export_metrics(self, format: str = "json") -> str:
@@ -475,7 +472,7 @@ class ObservabilitySystem:
             data = {
                 "timestamp": datetime.now().isoformat(),
                 "metrics": {},
-                "traces": json.loads(self.traces.export_json())
+                "traces": json.loads(self.traces.export_json()),
             }
 
             for name in self.metrics.metrics:
@@ -487,8 +484,10 @@ class ObservabilitySystem:
         else:
             raise ValueError(f"Unknown format: {format}")
 
+
 # Global observability instance
 observability = ObservabilitySystem()
+
 
 async def main():
     """Test observability system."""
@@ -497,7 +496,7 @@ async def main():
     try:
         # Simulate tool executions
         for i in range(5):
-            with observability.tool_execution_context("test_tool") as ctx:
+            with observability.tool_execution_context("test_tool"):
                 await asyncio.sleep(0.1)
                 if i == 3:
                     raise ValueError("Test error")
@@ -512,6 +511,7 @@ async def main():
 
     finally:
         await observability.stop()
+
 
 if __name__ == "__main__":
     asyncio.run(main())

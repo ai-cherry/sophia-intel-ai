@@ -85,7 +85,7 @@ if [ -f "scripts/init-postgres.sql" ]; then
     echo -e "${GREEN}✅ Schema migration completed${NC}"
 else
     echo -e "${YELLOW}⚠️ init-postgres.sql not found, creating basic schema...${NC}"
-    
+
     # Create basic schema for Sophia Intel AI
     psql "$NEON_CONNECTION_STRING" <<EOF
 -- Sophia Intel AI Production Schema
@@ -154,7 +154,7 @@ GRANT ALL PRIVILEGES ON SCHEMA sophia_ai TO ${NEON_USER};
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA sophia_ai TO ${NEON_USER};
 
 EOF
-    
+
     echo -e "${GREEN}✅ Basic schema created${NC}"
 fi
 
@@ -189,8 +189,8 @@ echo -e "${BLUE}📊 Created ${TABLE_COUNT} tables in sophia_ai schema${NC}"
 echo -e "${BLUE}🧪 Testing basic database operations...${NC}"
 psql "$NEON_CONNECTION_STRING" <<EOF
 -- Test insert
-INSERT INTO sophia_ai.agents (name, type, model, config) 
-VALUES ('test-agent', 'consensus', 'gpt-4o-mini', '{"test": true}') 
+INSERT INTO sophia_ai.agents (name, type, model, config)
+VALUES ('test-agent', 'consensus', 'gpt-4o-mini', '{"test": true}')
 ON CONFLICT DO NOTHING;
 
 -- Test select

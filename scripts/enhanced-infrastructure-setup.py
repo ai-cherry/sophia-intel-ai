@@ -20,6 +20,7 @@ from app.core.ai_logger import logger
 @dataclass
 class EnhancedServiceConfig:
     """Enhanced service configuration with production optimizations"""
+
     name: str
     secrets: dict[str, str]
     scaling_config: dict[str, Any]
@@ -54,19 +55,26 @@ class EnhancedFlyManager:
 
         # Scale VM resources
         vm_cmd = [
-            "fly", "scale", "vm",
+            "fly",
+            "scale",
+            "vm",
             f"shared-cpu-{scaling_config.get('cpu_cores', 1)}x",
-            "--memory", f"{scaling_config.get('memory_mb', 1024)}mb",
-            "--app", app_name
+            "--memory",
+            f"{scaling_config.get('memory_mb', 1024)}mb",
+            "--app",
+            app_name,
         ]
 
         vm_result = subprocess.run(vm_cmd, capture_output=True, text=True)
 
         # Set instance counts
         count_cmd = [
-            "fly", "scale", "count",
-            str(scaling_config.get('min_instances', 1)),
-            "--app", app_name
+            "fly",
+            "scale",
+            "count",
+            str(scaling_config.get("min_instances", 1)),
+            "--app",
+            app_name,
         ]
 
         count_result = subprocess.run(count_cmd, capture_output=True, text=True)
@@ -80,16 +88,13 @@ class EnhancedFlyManager:
 
         return success
 
-    def deploy_with_health_check(self, app_name: str, config_file: str, max_wait: int = 600) -> bool:
+    def deploy_with_health_check(
+        self, app_name: str, config_file: str, max_wait: int = 600
+    ) -> bool:
         """Deploy app and wait for health checks to pass"""
 
         # Deploy the app
-        deploy_cmd = [
-            "fly", "deploy",
-            "--config", config_file,
-            "--app", app_name,
-            "--remote-only"
-        ]
+        deploy_cmd = ["fly", "deploy", "--config", config_file, "--app", app_name, "--remote-only"]
 
         logger.info(f"🚀 Deploying {app_name}...")
         deploy_result = subprocess.run(deploy_cmd, capture_output=True, text=True)
@@ -127,10 +132,7 @@ class LambdaGPUManager:
     def __init__(self, api_key: str):
         self.api_key = api_key
         self.base_url = "https://cloud.lambdalabs.com/api/v1"
-        self.headers = {
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json"
-        }
+        self.headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
 
     def provision_gpu_cluster(self, cluster_config: dict[str, Any]) -> dict:
         """Provision GPU instances for AI workloads"""
@@ -143,19 +145,21 @@ class LambdaGPUManager:
                     "instance_type_name": cluster_config.get("instance_type", "gpu_1x_a10"),
                     "region_name": cluster_config.get("region", "us-west-1"),
                     "ssh_key_names": cluster_config.get("ssh_keys", ["default"]),
-                    "quantity": 1
+                    "quantity": 1,
                 }
 
                 response = requests.post(
                     f"{self.base_url}/instance-operations/launch",
                     headers=self.headers,
-                    json=payload
+                    json=payload,
                 )
 
                 if response.status_code == 200:
                     instance_data = response.json()
                     instances.append(instance_data["instance_ids"][0])
-                    logger.info(f"✅ GPU instance {i+1} launched: {instance_data['instance_ids'][0]}")
+                    logger.info(
+                        f"✅ GPU instance {i+1} launched: {instance_data['instance_ids'][0]}"
+                    )
                 else:
                     logger.info(f"⚠️  GPU instance {i+1} launch warning: {response.text}")
 
@@ -166,7 +170,7 @@ class LambdaGPUManager:
             "instances": instances,
             "cluster_size": len(instances),
             "instance_type": cluster_config.get("instance_type"),
-            "region": cluster_config.get("region")
+            "region": cluster_config.get("region"),
         }
 
 
@@ -188,7 +192,7 @@ class RedisCloudManager:
             "cache_endpoint": "redis-15014.fcrce172.us-east-1-1.ec2.redns.redis-cloud.com:15014",
             "cache_type": "redis_cloud",
             "memory_gb": cache_config.get("memory_gb", 1),
-            "status": "configured"
+            "status": "configured",
         }
 
 
@@ -198,10 +202,7 @@ class PortkeyGatewayManager:
     def __init__(self, api_key: str):
         self.api_key = api_key
         self.base_url = "https://api.portkey.ai/v1"
-        self.headers = {
-            "x-portkey-api-key": api_key,
-            "Content-Type": "application/json"
-        }
+        self.headers = {"x-portkey-api-key": api_key, "Content-Type": "application/json"}
 
     def setup_production_gateway(self, gateway_config: dict[str, Any]) -> dict:
         """Setup production-ready LLM gateway with fallback chains"""
@@ -210,30 +211,16 @@ class PortkeyGatewayManager:
         config = {
             "strategy": {"mode": "fallback"},
             "targets": [
-                {
-                    "provider": "openai",
-                    "model": "gpt-4o-mini",
-                    "weight": 1.0
-                },
-                {
-                    "provider": "anthropic",
-                    "model": "claude-3-haiku-20240307",
-                    "weight": 0.8
-                },
+                {"provider": "openai", "model": "gpt-4o-mini", "weight": 1.0},
+                {"provider": "anthropic", "model": "claude-3-haiku-20240307", "weight": 0.8},
                 {
                     "provider": "together-ai",
                     "model": "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",
-                    "weight": 0.6
-                }
+                    "weight": 0.6,
+                },
             ],
-            "retry": {
-                "attempts": 3,
-                "on_status_codes": [429, 500, 502, 503, 504]
-            },
-            "cache": {
-                "enabled": True,
-                "ttl": 3600
-            }
+            "retry": {"attempts": 3, "on_status_codes": [429, 500, 502, 503, 504]},
+            "cache": {"enabled": True, "ttl": 3600},
         }
 
         return {
@@ -241,7 +228,7 @@ class PortkeyGatewayManager:
             "fallback_chains": len(config["targets"]),
             "cache_enabled": True,
             "retry_attempts": 3,
-            "status": "configured"
+            "status": "configured",
         }
 
 
@@ -259,8 +246,7 @@ class EnhancedInfrastructureManager:
         self.redis_manager = None
         if os.environ.get("REDIS_CLOUD_API_KEY") and os.environ.get("REDIS_CLOUD_SECRET_KEY"):
             self.redis_manager = RedisCloudManager(
-                os.environ["REDIS_CLOUD_API_KEY"],
-                os.environ["REDIS_CLOUD_SECRET_KEY"]
+                os.environ["REDIS_CLOUD_API_KEY"], os.environ["REDIS_CLOUD_SECRET_KEY"]
             )
 
         self.portkey_manager = None
@@ -275,7 +261,7 @@ class EnhancedInfrastructureManager:
             "ENVIRONMENT": "production",
             "LOG_LEVEL": "INFO",
             "USE_REAL_APIS": "true",
-            "ENABLE_API_VALIDATION": "true"
+            "ENABLE_API_VALIDATION": "true",
         }
 
         # Service-specific secrets
@@ -283,19 +269,19 @@ class EnhancedInfrastructureManager:
             "sophia-weaviate": {
                 **base_secrets,
                 "WEAVIATE_API_KEY": os.environ.get("WEAVIATE_API_KEY", ""),
-                "OPENAI_API_KEY": os.environ.get("OPENAI_API_KEY", "")
+                "OPENAI_API_KEY": os.environ.get("OPENAI_API_KEY", ""),
             },
             "sophia-mcp": {
                 **base_secrets,
                 "WEAVIATE_URL": "http://sophia-weaviate.internal:8080",
                 "NEON_DATABASE_URL": os.environ.get("NEON_DATABASE_URL", ""),
-                "REDIS_URL": "redis://redis-15014.fcrce172.us-east-1-1.ec2.redns.redis-cloud.com:15014"
+                "REDIS_URL": "redis://redis-15014.fcrce172.us-east-1-1.ec2.redns.redis-cloud.com:15014",
             },
             "sophia-vector": {
                 **base_secrets,
                 "WEAVIATE_URL": "http://sophia-weaviate.internal:8080",
                 "PORTKEY_API_KEY": os.environ.get("PORTKEY_API_KEY", ""),
-                "COHERE_API_KEY": os.environ.get("COHERE_API_KEY", "")
+                "COHERE_API_KEY": os.environ.get("COHERE_API_KEY", ""),
             },
             "sophia-api": {
                 **base_secrets,
@@ -304,18 +290,18 @@ class EnhancedInfrastructureManager:
                 "VECTOR_STORE_URL": "http://sophia-vector.internal:8005",
                 "PORTKEY_API_KEY": os.environ.get("PORTKEY_API_KEY", ""),
                 "NEON_DATABASE_URL": os.environ.get("NEON_DATABASE_URL", ""),
-                "LAMBDA_LABS_API_KEY": os.environ.get("LAMBDA_API_KEY", "")
+                "LAMBDA_LABS_API_KEY": os.environ.get("LAMBDA_API_KEY", ""),
             },
             "sophia-bridge": {
                 **base_secrets,
                 "UNIFIED_API_URL": "http://sophia-api.internal:8003",
-                "ENABLE_CORS": "true"
+                "ENABLE_CORS": "true",
             },
             "sophia-ui": {
                 **base_secrets,
                 "NEXT_PUBLIC_API_URL": "https://sophia-api.fly.dev",
-                "NEXT_PUBLIC_BRIDGE_URL": "https://sophia-bridge.fly.dev"
-            }
+                "NEXT_PUBLIC_BRIDGE_URL": "https://sophia-bridge.fly.dev",
+            },
         }
 
         return service_secrets
@@ -328,38 +314,38 @@ class EnhancedInfrastructureManager:
                 "cpu_cores": 2,
                 "memory_mb": 2048,
                 "min_instances": 1,
-                "max_instances": 4
+                "max_instances": 4,
             },
             "sophia-mcp": {
                 "cpu_cores": 2,
                 "memory_mb": 2048,
                 "min_instances": 1,
-                "max_instances": 8
+                "max_instances": 8,
             },
             "sophia-vector": {
                 "cpu_cores": 2,
                 "memory_mb": 2048,
                 "min_instances": 1,
-                "max_instances": 12
+                "max_instances": 12,
             },
             "sophia-api": {
                 "cpu_cores": 4,
                 "memory_mb": 4096,
                 "min_instances": 2,
-                "max_instances": 20
+                "max_instances": 20,
             },
             "sophia-bridge": {
                 "cpu_cores": 1,
                 "memory_mb": 1024,
                 "min_instances": 1,
-                "max_instances": 8
+                "max_instances": 8,
             },
             "sophia-ui": {
                 "cpu_cores": 1,
                 "memory_mb": 1024,
                 "min_instances": 1,
-                "max_instances": 6
-            }
+                "max_instances": 6,
+            },
         }
 
     async def deploy_enhanced_infrastructure(self) -> dict[str, Any]:
@@ -375,55 +361,55 @@ class EnhancedInfrastructureManager:
         scaling_configs = self.get_scaling_configurations()
 
         services = [
-            "sophia-weaviate", "sophia-mcp", "sophia-vector",
-            "sophia-api", "sophia-bridge", "sophia-ui"
+            "sophia-weaviate",
+            "sophia-mcp",
+            "sophia-vector",
+            "sophia-api",
+            "sophia-bridge",
+            "sophia-ui",
         ]
 
         # 2. Configure secrets for all services
         logger.info("\n🔐 Configuring Production Secrets...")
         for service_name in services:
-            success = self.fly_manager.set_secrets_bulk(
-                service_name,
-                service_secrets[service_name]
-            )
+            success = self.fly_manager.set_secrets_bulk(service_name, service_secrets[service_name])
             results[f"{service_name}_secrets"] = success
 
         # 3. Configure auto-scaling
         logger.info("\n⚖️  Configuring Auto-Scaling...")
         for service_name in services:
             success = self.fly_manager.configure_auto_scaling(
-                service_name,
-                scaling_configs[service_name]
+                service_name, scaling_configs[service_name]
             )
             results[f"{service_name}_scaling"] = success
 
         # 4. Setup GPU cluster (if available)
         if self.lambda_manager:
             logger.info("\n🖥️  Setting up GPU Cluster...")
-            gpu_result = self.lambda_manager.provision_gpu_cluster({
-                "instance_count": 2,
-                "instance_type": "gpu_1x_a10",
-                "region": "us-west-1",
-                "ssh_keys": ["sophia-intel-gpu"]
-            })
+            gpu_result = self.lambda_manager.provision_gpu_cluster(
+                {
+                    "instance_count": 2,
+                    "instance_type": "gpu_1x_a10",
+                    "region": "us-west-1",
+                    "ssh_keys": ["sophia-intel-gpu"],
+                }
+            )
             results["gpu_cluster"] = gpu_result
 
         # 5. Setup Redis cache layer (if available)
         if self.redis_manager:
             logger.info("\n🗄️  Setting up Cache Layer...")
-            cache_result = self.redis_manager.setup_cache_layer({
-                "memory_gb": 2,
-                "region": "us-east-1"
-            })
+            cache_result = self.redis_manager.setup_cache_layer(
+                {"memory_gb": 2, "region": "us-east-1"}
+            )
             results["cache_layer"] = cache_result
 
         # 6. Setup enhanced LLM gateway (if available)
         if self.portkey_manager:
             logger.info("\n🌐 Setting up Enhanced LLM Gateway...")
-            gateway_result = self.portkey_manager.setup_production_gateway({
-                "fallback_enabled": True,
-                "cache_enabled": True
-            })
+            gateway_result = self.portkey_manager.setup_production_gateway(
+                {"fallback_enabled": True, "cache_enabled": True}
+            )
             results["llm_gateway"] = gateway_result
 
         # 7. Deploy services with health checks
@@ -436,15 +422,13 @@ class EnhancedInfrastructureManager:
             "sophia-vector": "fly-sophia-vector.toml",
             "sophia-api": "fly-sophia-api.toml",
             "sophia-bridge": "fly-sophia-bridge.toml",
-            "sophia-ui": "fly-sophia-ui.toml"
+            "sophia-ui": "fly-sophia-ui.toml",
         }
 
         for service_name, config_file in service_configs.items():
             if os.path.exists(config_file):
                 success = self.fly_manager.deploy_with_health_check(
-                    service_name,
-                    config_file,
-                    max_wait=600
+                    service_name, config_file, max_wait=600
                 )
                 deployment_results[service_name] = success
             else:
@@ -461,8 +445,12 @@ class EnhancedInfrastructureManager:
         logger.info("📊 ENHANCED INFRASTRUCTURE DEPLOYMENT SUMMARY")
         logger.info("=" * 70)
         logger.info(f"✅ Services Deployed: {successful_deployments}/{total_services}")
-        logger.info(f"🔐 Secrets Configured: {sum(1 for k, v in results.items() if k.endswith('_secrets') and v)}/6")
-        logger.info(f"⚖️  Auto-Scaling Configured: {sum(1 for k, v in results.items() if k.endswith('_scaling') and v)}/6")
+        logger.info(
+            f"🔐 Secrets Configured: {sum(1 for k, v in results.items() if k.endswith('_secrets') and v)}/6"
+        )
+        logger.info(
+            f"⚖️  Auto-Scaling Configured: {sum(1 for k, v in results.items() if k.endswith('_scaling') and v)}/6"
+        )
 
         if "gpu_cluster" in results:
             gpu_count = results["gpu_cluster"].get("cluster_size", 0)
@@ -474,7 +462,9 @@ class EnhancedInfrastructureManager:
         if "llm_gateway" in results:
             logger.info("🌐 LLM Gateway: Enhanced")
 
-        logger.info(f"\n🎯 Infrastructure Status: {'🟢 OPERATIONAL' if successful_deployments == total_services else '🟡 PARTIAL'}")
+        logger.info(
+            f"\n🎯 Infrastructure Status: {'🟢 OPERATIONAL' if successful_deployments == total_services else '🟡 PARTIAL'}"
+        )
 
         return results
 

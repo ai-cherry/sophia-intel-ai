@@ -17,6 +17,7 @@ from pydantic import BaseModel, Field
 # Optional OpenAI import
 try:
     from openai import AsyncOpenAI
+
     OPENAI_AVAILABLE = True
 except ImportError:
     OPENAI_AVAILABLE = False
@@ -32,10 +33,10 @@ except ImportError:
     # Fallback if observability not available
     class DummyMetrics:
         def __init__(self):
-            self.embedding_cache_hits = type('obj', (object,), {'inc': lambda: None})()
-            self.embedding_cache_misses = type('obj', (object,), {'inc': lambda: None})()
-            self.embeddings_generated = type('obj', (object,), {'inc': lambda x: None})()
-            self.embedding_errors = type('obj', (object,), {'inc': lambda: None})()
+            self.embedding_cache_hits = type("obj", (object,), {"inc": lambda: None})()
+            self.embedding_cache_misses = type("obj", (object,), {"inc": lambda: None})()
+            self.embeddings_generated = type("obj", (object,), {"inc": lambda x: None})()
+            self.embedding_errors = type("obj", (object,), {"inc": lambda: None})()
 
         def get_embedding_cache_hit_rate(self):
             return 0.0
@@ -46,31 +47,38 @@ except ImportError:
         """Dummy decorator when tracing not available."""
         return func
 
+
 logger = logging.getLogger(__name__)
 
 # ============================================
 # Data Models
 # ============================================
 
+
 class EmbeddingModel(str, Enum):
     """Available embedding models."""
+
     ADA_002 = "text-embedding-ada-002"
     EMBEDDING_3_SMALL = "text-embedding-3-small"
     EMBEDDING_3_LARGE = "text-embedding-3-large"
     EMBEDDING_3_SMALL_512 = "text-embedding-3-small-512"  # Reduced dimensions
     EMBEDDING_3_LARGE_1024 = "text-embedding-3-large-1024"  # Reduced dimensions
 
+
 class EmbeddingPurpose(str, Enum):
     """Purpose of embedding generation."""
+
     SEARCH = "search"
     CLUSTERING = "clustering"
     CLASSIFICATION = "classification"
     SIMILARITY = "similarity"
     INDEXING = "indexing"
 
+
 @dataclass
 class EmbeddingMetadata:
     """Metadata for embeddings."""
+
     model: str
     dimensions: int
     purpose: str
@@ -84,12 +92,14 @@ class EmbeddingMetadata:
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         data = asdict(self)
-        data['timestamp'] = self.timestamp.isoformat()
+        data["timestamp"] = self.timestamp.isoformat()
         return data
+
 
 @dataclass
 class EmbeddingResult:
     """Result of embedding generation."""
+
     embedding: list[float]
     metadata: EmbeddingMetadata
     text: str
@@ -106,27 +116,31 @@ class EmbeddingResult:
             "embedding": self.embedding,
             "metadata": self.metadata.to_dict(),
             "text": self.text,
-            "text_hash": self.text_hash
+            "text_hash": self.text_hash,
         }
+
 
 class EmbeddingRequest(BaseModel):
     """Request for embedding generation."""
+
     texts: list[str]
     model: EmbeddingModel = EmbeddingModel.EMBEDDING_3_SMALL
     purpose: EmbeddingPurpose = EmbeddingPurpose.SEARCH
     dimensions: Optional[int] = None
     metadata: dict[str, Any] = Field(default_factory=dict)
 
+
 # ============================================
 # Embedding Pipeline
 # ============================================
+
 
 class StandardizedEmbeddingPipeline:
     """Standardized pipeline for generating embeddings."""
 
     def __init__(self):
         """Initialize the embedding pipeline."""
-        if OPENAI_AVAILABLE and hasattr(settings, 'openai_api_key'):
+        if OPENAI_AVAILABLE and hasattr(settings, "openai_api_key"):
             self.client = AsyncOpenAI(api_key=settings.openai_api_key)
         else:
             self.client = None
@@ -141,15 +155,12 @@ class StandardizedEmbeddingPipeline:
 
     @trace_async
     @with_circuit_breaker("llm")
-    async def generate_embeddings(
-        self,
-        request: EmbeddingRequest
-    ) -> list[EmbeddingResult]:
+    async def generate_embeddings(self, request: EmbeddingRequest) -> list[EmbeddingResult]:
         """Generate embeddings for texts.
-        
+
         Args:
             request: Embedding request with texts and configuration
-            
+
         Returns:
             List of embedding results with metadata
         """
@@ -180,20 +191,20 @@ class StandardizedEmbeddingPipeline:
         # Generate new embeddings if needed
         if texts_to_embed:
             new_embeddings = await self._generate_batch(
-                texts_to_embed,
-                request.model,
-                request.dimensions
+                texts_to_embed, request.model, request.dimensions
             )
 
             # Create results and cache
-            for idx, text, embedding in zip(text_indices, texts_to_embed, new_embeddings, strict=False):
+            for idx, text, embedding in zip(
+                text_indices, texts_to_embed, new_embeddings, strict=False
+            ):
                 result = self._create_result(
                     text=text,
                     embedding=embedding,
                     model=request.model,
                     purpose=request.purpose,
                     start_time=start_time,
-                    custom_metadata=request.metadata
+                    custom_metadata=request.metadata,
                 )
 
                 # Cache the result
@@ -211,18 +222,15 @@ class StandardizedEmbeddingPipeline:
         return [result for _, result in results]
 
     async def _generate_batch(
-        self,
-        texts: list[str],
-        model: EmbeddingModel,
-        dimensions: Optional[int] = None
+        self, texts: list[str], model: EmbeddingModel, dimensions: Optional[int] = None
     ) -> list[list[float]]:
         """Generate embeddings for a batch of texts.
-        
+
         Args:
             texts: Texts to embed
             model: Embedding model to use
             dimensions: Optional dimension reduction
-            
+
         Returns:
             List of embedding vectors
         """
@@ -234,15 +242,12 @@ class StandardizedEmbeddingPipeline:
 
         try:
             # Prepare request parameters
-            params = {
-                "input": texts,
-                "model": model.value
-            }
+            params = {"input": texts, "model": model.value}
 
             # Add dimensions if specified and supported
             if dimensions and model in [
                 EmbeddingModel.EMBEDDING_3_SMALL,
-                EmbeddingModel.EMBEDDING_3_LARGE
+                EmbeddingModel.EMBEDDING_3_LARGE,
             ]:
                 params["dimensions"] = dimensions
 
@@ -261,10 +266,10 @@ class StandardizedEmbeddingPipeline:
 
     def _preprocess_texts(self, texts: list[str]) -> list[str]:
         """Preprocess texts for embedding.
-        
+
         Args:
             texts: Raw texts
-            
+
         Returns:
             Processed texts
         """
@@ -272,7 +277,7 @@ class StandardizedEmbeddingPipeline:
 
         for text in texts:
             # Normalize whitespace
-            text = ' '.join(text.split())
+            text = " ".join(text.split())
 
             # Truncate if too long (8191 token limit)
             # Rough estimate: 1 token ≈ 4 characters
@@ -292,10 +297,10 @@ class StandardizedEmbeddingPipeline:
         model: EmbeddingModel,
         purpose: EmbeddingPurpose,
         start_time: datetime,
-        custom_metadata: dict[str, Any]
+        custom_metadata: dict[str, Any],
     ) -> EmbeddingResult:
         """Create an embedding result with metadata.
-        
+
         Args:
             text: Original text
             embedding: Embedding vector
@@ -303,7 +308,7 @@ class StandardizedEmbeddingPipeline:
             purpose: Purpose of embedding
             start_time: When generation started
             custom_metadata: Additional metadata
-            
+
         Returns:
             Complete embedding result
         """
@@ -319,37 +324,25 @@ class StandardizedEmbeddingPipeline:
             source_hash=text_hash[:16],
             token_count=token_count,
             generation_time_ms=generation_time_ms,
-            custom_metadata=custom_metadata
+            custom_metadata=custom_metadata,
         )
 
         return EmbeddingResult(
-            embedding=embedding,
-            metadata=metadata,
-            text=text,
-            text_hash=text_hash
+            embedding=embedding, metadata=metadata, text=text, text_hash=text_hash
         )
 
-    def _get_cache_key(
-        self,
-        text: str,
-        model: EmbeddingModel,
-        purpose: EmbeddingPurpose
-    ) -> str:
+    def _get_cache_key(self, text: str, model: EmbeddingModel, purpose: EmbeddingPurpose) -> str:
         """Generate cache key for embedding.
-        
+
         Args:
             text: Text to embed
             model: Model to use
             purpose: Purpose of embedding
-            
+
         Returns:
             Cache key
         """
-        components = [
-            hashlib.sha256(text.encode()).hexdigest(),
-            model.value,
-            purpose.value
-        ]
+        components = [hashlib.sha256(text.encode()).hexdigest(), model.value, purpose.value]
         return ":".join(components)
 
     def clear_cache(self):
@@ -359,21 +352,21 @@ class StandardizedEmbeddingPipeline:
 
     def get_cache_stats(self) -> dict[str, Any]:
         """Get cache statistics.
-        
+
         Returns:
             Cache statistics
         """
         return {
             "size": len(self._cache),
-            "memory_mb": sum(
-                len(str(v.embedding)) for v in self._cache.values()
-            ) / (1024 * 1024),
-            "hit_rate": metrics.get_embedding_cache_hit_rate()
+            "memory_mb": sum(len(str(v.embedding)) for v in self._cache.values()) / (1024 * 1024),
+            "hit_rate": metrics.get_embedding_cache_hit_rate(),
         }
+
 
 # ============================================
 # Batch Processing
 # ============================================
+
 
 class BatchEmbeddingProcessor:
     """Process embeddings in batches for efficiency."""
@@ -382,10 +375,10 @@ class BatchEmbeddingProcessor:
         self,
         pipeline: StandardizedEmbeddingPipeline,
         batch_size: int = 100,
-        max_concurrent: int = 5
+        max_concurrent: int = 5,
     ):
         """Initialize batch processor.
-        
+
         Args:
             pipeline: Embedding pipeline to use
             batch_size: Size of each batch
@@ -401,30 +394,26 @@ class BatchEmbeddingProcessor:
         documents: list[dict[str, Any]],
         text_field: str = "content",
         model: EmbeddingModel = EmbeddingModel.EMBEDDING_3_SMALL,
-        purpose: EmbeddingPurpose = EmbeddingPurpose.INDEXING
+        purpose: EmbeddingPurpose = EmbeddingPurpose.INDEXING,
     ) -> list[dict[str, Any]]:
         """Process documents and add embeddings.
-        
+
         Args:
             documents: Documents to process
             text_field: Field containing text to embed
             model: Embedding model to use
             purpose: Purpose of embeddings
-            
+
         Returns:
             Documents with embeddings added
         """
         # Create batches
         batches = [
-            documents[i:i + self.batch_size]
-            for i in range(0, len(documents), self.batch_size)
+            documents[i : i + self.batch_size] for i in range(0, len(documents), self.batch_size)
         ]
 
         # Process batches concurrently
-        tasks = [
-            self._process_batch(batch, text_field, model, purpose)
-            for batch in batches
-        ]
+        tasks = [self._process_batch(batch, text_field, model, purpose) for batch in batches]
 
         results = await asyncio.gather(*tasks)
 
@@ -441,16 +430,16 @@ class BatchEmbeddingProcessor:
         batch: list[dict[str, Any]],
         text_field: str,
         model: EmbeddingModel,
-        purpose: EmbeddingPurpose
+        purpose: EmbeddingPurpose,
     ) -> list[dict[str, Any]]:
         """Process a single batch of documents.
-        
+
         Args:
             batch: Batch of documents
             text_field: Field containing text
             model: Embedding model
             purpose: Purpose of embeddings
-            
+
         Returns:
             Processed documents
         """
@@ -459,11 +448,7 @@ class BatchEmbeddingProcessor:
             texts = [doc.get(text_field, "") for doc in batch]
 
             # Generate embeddings
-            request = EmbeddingRequest(
-                texts=texts,
-                model=model,
-                purpose=purpose
-            )
+            request = EmbeddingRequest(texts=texts, model=model, purpose=purpose)
 
             results = await self.pipeline.generate_embeddings(request)
 
@@ -474,17 +459,19 @@ class BatchEmbeddingProcessor:
 
             return batch
 
+
 # ============================================
 # Similarity Functions
 # ============================================
 
+
 def cosine_similarity(embedding1: list[float], embedding2: list[float]) -> float:
     """Calculate cosine similarity between two embeddings.
-    
+
     Args:
         embedding1: First embedding
         embedding2: Second embedding
-        
+
     Returns:
         Cosine similarity score (0-1)
     """
@@ -500,13 +487,14 @@ def cosine_similarity(embedding1: list[float], embedding2: list[float]) -> float
 
     return float(dot_product / (norm1 * norm2))
 
+
 def euclidean_distance(embedding1: list[float], embedding2: list[float]) -> float:
     """Calculate Euclidean distance between two embeddings.
-    
+
     Args:
         embedding1: First embedding
         embedding2: Second embedding
-        
+
     Returns:
         Euclidean distance
     """
@@ -515,20 +503,21 @@ def euclidean_distance(embedding1: list[float], embedding2: list[float]) -> floa
 
     return float(np.linalg.norm(vec1 - vec2))
 
+
 def find_most_similar(
     query_embedding: list[float],
     embeddings: list[list[float]],
     top_k: int = 10,
-    metric: str = "cosine"
+    metric: str = "cosine",
 ) -> list[tuple[int, float]]:
     """Find most similar embeddings to query.
-    
+
     Args:
         query_embedding: Query embedding
         embeddings: List of embeddings to search
         top_k: Number of results to return
         metric: Similarity metric (cosine or euclidean)
-        
+
     Returns:
         List of (index, score) tuples
     """
@@ -547,6 +536,7 @@ def find_most_similar(
 
     return scores[:top_k]
 
+
 # ============================================
 # Export
 # ============================================
@@ -561,5 +551,5 @@ __all__ = [
     "EmbeddingRequest",
     "cosine_similarity",
     "euclidean_distance",
-    "find_most_similar"
+    "find_most_similar",
 ]

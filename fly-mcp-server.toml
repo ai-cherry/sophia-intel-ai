@@ -12,20 +12,20 @@ kill_timeout = "5s"
   PYTHONPATH = "/app"
   PYTHONUNBUFFERED = "1"
   LOCAL_DEV_MODE = "false"
-  
+
   # Internal service URLs (will use Fly.io internal networking)
   WEAVIATE_URL = "http://sophia-weaviate.internal:8080"
-  
+
   # Public environment variables
   REDIS_HOST = "redis-15014.fcrce172.us-east-1-1.ec2.redns.redis-cloud.com"
   REDIS_PORT = "15014"
   REDIS_USERNAME = "default"
-  
+
   # Neon PostgreSQL
   NEON_REST_API_ENDPOINT = "https://app-sparkling-wildflower-99699121.dpl.myneon.app"
   NEON_PROJECT_ID = "rough-union-72390895"
   NEON_BRANCH_ID = "br-green-firefly-afykrx78"
-  
+
   # Feature flags
   USE_REAL_APIS = "true"
   ENABLE_API_VALIDATION = "true"
@@ -49,7 +49,7 @@ kill_timeout = "5s"
   [[services.ports]]
     port = 443
     handlers = ["tls", "http"]
-  
+
   [services.concurrency]
     type = "connections"
     hard_limit = 150
@@ -69,7 +69,7 @@ kill_timeout = "5s"
     protocol = "http"
     timeout = "3s"
     tls_skip_verify = false
-    
+
     [services.http_checks.headers]
       X-Health-Check = "fly.io"
 
@@ -89,20 +89,20 @@ kill_timeout = "5s"
   cpu_kind = "shared"
   cpus = 2
   memory_mb = 2048
-  
+
 # Auto-scaling configuration
 [scaling]
   min_machines_running = 1
   max_machines_running = 8
-  
+
   [[scaling.metrics]]
     type = "cpu"
     target = 70
-  
+
   [[scaling.metrics]]
     type = "memory"
     target = 75
-    
+
   [[scaling.metrics]]
     type = "requests"
     target = 100

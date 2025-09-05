@@ -12,7 +12,12 @@
     "cline": "tsx src/cline-adapter.ts",
     "test": "vitest"
   },
-  "keywords": ["mcp", "claude", "ai", "sophia"],
+  "keywords": [
+    "mcp",
+    "claude",
+    "ai",
+    "sophia"
+  ],
   "author": "Sophia Intel AI",
   "license": "MIT",
   "dependencies": {

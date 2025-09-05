@@ -697,7 +697,7 @@
                 <h2>Your AI Teammates</h2>
                 <span class="status">🟢 All Systems Operational</span>
             </div>
-            
+
             <div class="persona-grid">
                 <!-- Marcus - Sales Coach -->
                 <div class="persona-card">
@@ -712,7 +712,7 @@
                             <div class="persona-tagline">"Every 'no' is one step closer to your breakthrough 'yes'!"</div>
                         </div>
                     </div>
-                    
+
                     <div class="persona-metrics">
                         <div class="metric-item">
                             <div class="metric-value">847</div>
@@ -727,7 +727,7 @@
                             <div class="metric-label">Deals Influenced</div>
                         </div>
                     </div>
-                    
+
                     <div class="persona-skills">
                         <span class="skill-tag">Deal Coaching</span>
                         <span class="skill-tag">Objection Handling</span>
@@ -735,7 +735,7 @@
                         <span class="skill-tag">Motivation</span>
                         <span class="skill-tag">Skill Development</span>
                     </div>
-                    
+
                     <div class="learning-progress">
                         <div class="progress-header">
                             <span>Learning Progress</span>
@@ -745,7 +745,7 @@
                             <div class="progress-fill" style="width: 78%;"></div>
                         </div>
                     </div>
-                    
+
                     <div class="persona-actions">
                         <button class="btn btn-primary" onclick="openChat('marcus')">
                             💬 Start Coaching Session
@@ -769,7 +769,7 @@
                             <div class="persona-tagline">"Proactive care is the best care - let's prevent problems before they start"</div>
                         </div>
                     </div>
-                    
+
                     <div class="persona-metrics">
                         <div class="metric-item">
                             <div class="metric-value">312</div>
@@ -784,7 +784,7 @@
                             <div class="metric-label">Health Score Avg</div>
                         </div>
                     </div>
-                    
+
                     <div class="persona-skills">
                         <span class="skill-tag">Health Monitoring</span>
                         <span class="skill-tag">Risk Detection</span>
@@ -792,7 +792,7 @@
                         <span class="skill-tag">Intervention</span>
                         <span class="skill-tag">Analytics</span>
                     </div>
-                    
+
                     <div class="learning-progress">
                         <div class="progress-header">
                             <span>Learning Progress</span>
@@ -802,7 +802,7 @@
                             <div class="progress-fill" style="width: 65%;"></div>
                         </div>
                     </div>
-                    
+
                     <div class="persona-actions">
                         <button class="btn btn-primary" onclick="openChat('sarah')">
                             💬 Discuss Client Health
@@ -845,7 +845,7 @@
         <div class="section-header">
             <h2>Available Agent Templates</h2>
         </div>
-        
+
         <div class="agent-grid">
             <!-- Architect Agent -->
             <div class="agent-card" onclick="selectAgent('architect')">
@@ -954,13 +954,13 @@
                     Select agents from inventory to create a coordinated team
                 </p>
             </div>
-            
+
             <div class="selected-agents" id="selected-agents">
                 <div style="color: var(--text-secondary); margin: auto;">
                     No agents selected. Choose from the Agent Inventory tab.
                 </div>
             </div>
-            
+
             <div style="margin-top: 20px;">
                 <h4 style="margin-bottom: 15px;">Quick Templates</h4>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
@@ -978,7 +978,7 @@
                     </button>
                 </div>
             </div>
-            
+
             <div style="margin-top: 30px; display: flex; gap: 15px;">
                 <button class="btn btn-primary" style="flex: 1;" onclick="deploySwarm()">
                     🚀 Deploy Swarm
@@ -995,7 +995,7 @@
         <div class="section-header">
             <h2>Performance Analytics</h2>
         </div>
-        
+
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-value">14</div>
@@ -1026,11 +1026,11 @@
             </div>
             <div class="chat-close" onclick="closeChat()">✕</div>
         </div>
-        
+
         <div class="chat-messages" id="chat-messages">
             <!-- Messages will appear here -->
         </div>
-        
+
         <div class="chat-input-container">
             <input type="text" class="chat-input" id="chat-input" placeholder="Type your message..." onkeypress="handleKeyPress(event)">
             <button class="chat-send" onclick="sendMessage()">Send</button>
@@ -1056,15 +1056,15 @@
             document.querySelectorAll('.tab-content').forEach(tab => {
                 tab.classList.remove('active');
             });
-            
+
             // Remove active class from all nav tabs
             document.querySelectorAll('.nav-tab').forEach(navTab => {
                 navTab.classList.remove('active');
             });
-            
+
             // Show selected tab
             document.getElementById(tabId).classList.add('active');
-            
+
             // Add active class to clicked nav tab
             event.target.classList.add('active');
         }
@@ -1079,12 +1079,12 @@
 
         function updateSelectedAgentsDisplay() {
             const container = document.getElementById('selected-agents');
-            
+
             if (selectedAgents.length === 0) {
                 container.innerHTML = '<div style="color: var(--text-secondary); margin: auto;">No agents selected. Choose from the Agent Inventory tab.</div>';
                 return;
             }
-            
+
             container.innerHTML = selectedAgents.map(agent => `
                 <div class="selected-agent-chip">
                     ${getAgentEmoji(agent)} ${getAgentName(agent)}
@@ -1130,7 +1130,7 @@
                 security_audit: ['security', 'qa', 'architect'],
                 full_stack: ['architect', 'developer', 'qa', 'security', 'devops', 'data_scientist']
             };
-            
+
             selectedAgents = templates[templateType] || [];
             updateSelectedAgentsDisplay();
             switchTab('swarm-builder');
@@ -1146,7 +1146,7 @@
                 alert('Please select at least one agent for your swarm.');
                 return;
             }
-            
+
             alert(`Deploying swarm with ${selectedAgents.length} agents: ${selectedAgents.map(a => getAgentName(a)).join(', ')}`);
         }
 
@@ -1157,7 +1157,7 @@
             const chatAvatar = document.getElementById('chat-avatar');
             const chatName = document.getElementById('chat-persona-name');
             const messagesContainer = document.getElementById('chat-messages');
-            
+
             if (persona === 'marcus') {
                 chatAvatar.innerHTML = '💪';
                 chatAvatar.className = 'chat-avatar sales';
@@ -1167,13 +1167,13 @@
                 chatAvatar.className = 'chat-avatar health';
                 chatName.textContent = 'Dr. Sarah Chen';
             }
-            
+
             // Load chat history
             messagesContainer.innerHTML = '';
             chatMessages[persona].forEach(msg => {
                 addMessageToChat(msg.text, msg.type);
             });
-            
+
             chatInterface.classList.add('active');
             document.getElementById('chat-input').focus();
         }
@@ -1186,16 +1186,16 @@
         function sendMessage() {
             const input = document.getElementById('chat-input');
             const message = input.value.trim();
-            
+
             if (!message || !currentChat) return;
-            
+
             // Add user message
             addMessageToChat(message, 'user');
             chatMessages[currentChat].push({ type: 'user', text: message, time: new Date() });
-            
+
             // Clear input
             input.value = '';
-            
+
             // Simulate response
             setTimeout(() => {
                 const response = getPersonaResponse(currentChat, message);
@@ -1208,21 +1208,21 @@
             const messagesContainer = document.getElementById('chat-messages');
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${type}`;
-            
+
             const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            
+
             messageDiv.innerHTML = `
                 <div class="message-bubble">${text}</div>
                 <div class="message-time">${time}</div>
             `;
-            
+
             messagesContainer.appendChild(messageDiv);
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
 
         function getPersonaResponse(persona, userMessage) {
             const lowerMessage = userMessage.toLowerCase();
-            
+
             if (persona === 'marcus') {
                 if (lowerMessage.includes('deal') || lowerMessage.includes('opportunity')) {
                     return "Great question about deals! Let me analyze that opportunity for you. What's the deal size and current stage? Remember, every deal has a path to success - we just need to find it! 🎯";

@@ -11,6 +11,7 @@ from typing import Any, Optional
 
 class ResponseStatus(Enum):
     """Status of the LLM response."""
+
     SUCCESS = "success"
     FALLBACK = "fallback"
     CACHED = "cached"
@@ -22,6 +23,7 @@ class ResponseStatus(Enum):
 @dataclass
 class TokenStats:
     """Token usage statistics for a request."""
+
     prompt_tokens: int = 0
     completion_tokens: int = 0
     total_tokens: int = 0
@@ -42,6 +44,7 @@ class LLMResponse:
     Standardized response from LLM operations.
     Ensures consistent structure for all LLM interactions.
     """
+
     # Core response data
     content: str
     success: bool
@@ -89,7 +92,9 @@ class LLMResponse:
                 "completion_tokens": self.token_stats.completion_tokens if self.token_stats else 0,
                 "total_tokens": self.token_stats.total_tokens if self.token_stats else 0,
                 "cached_tokens": self.token_stats.cached_tokens if self.token_stats else 0,
-            } if self.token_stats else None,
+            }
+            if self.token_stats
+            else None,
             "estimated_cost": self.estimated_cost,
             "error": self.error,
             "error_code": self.error_code,
@@ -97,7 +102,7 @@ class LLMResponse:
             "trace_id": self.trace_id,
             "session_id": self.session_id,
             "attempts": self.attempts,
-            "final_model": self.final_model
+            "final_model": self.final_model,
         }
 
     @classmethod
@@ -108,7 +113,7 @@ class LLMResponse:
             success=False,
             status=ResponseStatus.ERROR,
             error=error,
-            error_code=error_code
+            error_code=error_code,
         )
 
     @classmethod
@@ -119,5 +124,5 @@ class LLMResponse:
             success=True,
             status=ResponseStatus.CACHED,
             model=original_model,
-            metadata={"source": "cache"}
+            metadata={"source": "cache"},
         )

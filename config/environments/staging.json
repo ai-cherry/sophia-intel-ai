@@ -1,0 +1,13 @@
+{
+  "debug": false,
+  "log_level": "INFO",
+  "database": {
+    "path": "data/staging_database.db",
+    "pool_size": 10
+  },
+  "features": {
+    "hot_reload": false,
+    "debug_ui": false,
+    "mock_integrations": false
+  }
+}

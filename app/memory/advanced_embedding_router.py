@@ -17,24 +17,26 @@ from dotenv import load_dotenv
 from app.core.ai_logger import logger
 
 # Load environment variables
-load_dotenv('.env.milvus')
+load_dotenv(".env.milvus")
 
 logger = logging.getLogger(__name__)
 
 
 class ContentType(Enum):
     """Content types for model routing"""
-    SHORT_TEXT = "short_text"      # <512 tokens
-    MEDIUM_TEXT = "medium_text"     # 512-8K tokens
-    LONG_TEXT = "long_text"         # >8K tokens
-    CODE = "code"                   # Source code
-    RERANKING = "reranking"         # Reranking tasks
-    MULTILINGUAL = "multilingual"   # Multi-language content
+
+    SHORT_TEXT = "short_text"  # <512 tokens
+    MEDIUM_TEXT = "medium_text"  # 512-8K tokens
+    LONG_TEXT = "long_text"  # >8K tokens
+    CODE = "code"  # Source code
+    RERANKING = "reranking"  # Reranking tasks
+    MULTILINGUAL = "multilingual"  # Multi-language content
 
 
 @dataclass
 class EmbeddingResult:
     """Result from embedding generation"""
+
     embeddings: list[list[float]]
     model_used: str
     dimensions: int
@@ -55,60 +57,60 @@ class AdvancedEmbeddingRouter:
 
     def __init__(self):
         """Initialize embedding router with Portkey configuration"""
-        self.portkey_api_key = os.getenv('PORTKEY_API_KEY')
-        self.together_key = os.getenv('TOGETHER_VIRTUAL_KEY')
+        self.portkey_api_key = os.getenv("PORTKEY_API_KEY")
+        self.together_key = os.getenv("TOGETHER_VIRTUAL_KEY")
 
         # Context-aware model routing
         self.model_routing = {
-            ContentType.SHORT_TEXT: 'BAAI/bge-large-en-v1.5',
-            ContentType.MEDIUM_TEXT: 'togethercomputer/m2-bert-8k',
-            ContentType.LONG_TEXT: 'togethercomputer/m2-bert-80k',
-            ContentType.CODE: 'text-embedding-3-large',
-            ContentType.RERANKING: 'salesforce/SFR-Embedding-2_R',
-            ContentType.MULTILINGUAL: 'Alibaba-NLP/gte-Qwen2-7B-instruct'
+            ContentType.SHORT_TEXT: "BAAI/bge-large-en-v1.5",
+            ContentType.MEDIUM_TEXT: "togethercomputer/m2-bert-8k",
+            ContentType.LONG_TEXT: "togethercomputer/m2-bert-80k",
+            ContentType.CODE: "text-embedding-3-large",
+            ContentType.RERANKING: "salesforce/SFR-Embedding-2_R",
+            ContentType.MULTILINGUAL: "Alibaba-NLP/gte-Qwen2-7B-instruct",
         }
 
         # Model specifications
         self.model_specs = {
-            'BAAI/bge-large-en-v1.5': {
-                'dimensions': 1024,
-                'max_tokens': 512,
-                'cost_per_1k_tokens': 0.00008
+            "BAAI/bge-large-en-v1.5": {
+                "dimensions": 1024,
+                "max_tokens": 512,
+                "cost_per_1k_tokens": 0.00008,
             },
-            'togethercomputer/m2-bert-8k': {
-                'dimensions': 768,
-                'max_tokens': 8192,
-                'cost_per_1k_tokens': 0.00012
+            "togethercomputer/m2-bert-8k": {
+                "dimensions": 768,
+                "max_tokens": 8192,
+                "cost_per_1k_tokens": 0.00012,
             },
-            'togethercomputer/m2-bert-80k': {
-                'dimensions': 768,
-                'max_tokens': 80000,
-                'cost_per_1k_tokens': 0.00020
+            "togethercomputer/m2-bert-80k": {
+                "dimensions": 768,
+                "max_tokens": 80000,
+                "cost_per_1k_tokens": 0.00020,
             },
-            'text-embedding-3-large': {
-                'dimensions': 3072,
-                'max_tokens': 8191,
-                'cost_per_1k_tokens': 0.00013
+            "text-embedding-3-large": {
+                "dimensions": 3072,
+                "max_tokens": 8191,
+                "cost_per_1k_tokens": 0.00013,
             },
-            'salesforce/SFR-Embedding-2_R': {
-                'dimensions': 1024,
-                'max_tokens': 8192,
-                'cost_per_1k_tokens': 0.00010
+            "salesforce/SFR-Embedding-2_R": {
+                "dimensions": 1024,
+                "max_tokens": 8192,
+                "cost_per_1k_tokens": 0.00010,
             },
-            'Alibaba-NLP/gte-Qwen2-7B-instruct': {
-                'dimensions': 3584,
-                'max_tokens': 32768,
-                'cost_per_1k_tokens': 0.00015
-            }
+            "Alibaba-NLP/gte-Qwen2-7B-instruct": {
+                "dimensions": 3584,
+                "max_tokens": 32768,
+                "cost_per_1k_tokens": 0.00015,
+            },
         }
 
         # Performance metrics
         self.metrics = {
-            'total_embeddings': 0,
-            'total_tokens': 0,
-            'total_cost': 0.0,
-            'avg_latency_ms': 0.0,
-            'model_usage': {}
+            "total_embeddings": 0,
+            "total_tokens": 0,
+            "total_cost": 0.0,
+            "avg_latency_ms": 0.0,
+            "model_usage": {},
         }
 
         # Initialize Portkey client (mock for now)
@@ -129,7 +131,7 @@ class AdvancedEmbeddingRouter:
         token_count = len(text.split())
 
         # Check for code patterns
-        code_indicators = ['def ', 'class ', 'import ', 'function', 'const ', 'var ']
+        code_indicators = ["def ", "class ", "import ", "function", "const ", "var "]
         if any(indicator in text for indicator in code_indicators):
             return ContentType.CODE
 
@@ -149,20 +151,21 @@ class AdvancedEmbeddingRouter:
         self,
         text: str,
         content_type: Optional[ContentType] = None,
-        dimensions: Optional[int] = 1024
+        dimensions: Optional[int] = 1024,
     ) -> EmbeddingResult:
         """
         Generate embeddings for single text with intelligent routing
-        
+
         Args:
             text: Input text to embed
             content_type: Optional content type override
             dimensions: Target embedding dimensions
-            
+
         Returns:
             EmbeddingResult with embeddings and metadata
         """
         import time
+
         start_time = time.perf_counter()
 
         # Auto-detect content type if not provided
@@ -175,14 +178,12 @@ class AdvancedEmbeddingRouter:
 
         try:
             # Generate embeddings (mock for now)
-            embeddings = await self._generate_embeddings_mock(
-                text, model, dimensions
-            )
+            embeddings = await self._generate_embeddings_mock(text, model, dimensions)
 
             # Calculate metrics
             latency_ms = (time.perf_counter() - start_time) * 1000
             token_count = len(text.split())
-            cost = (token_count / 1000) * model_spec['cost_per_1k_tokens']
+            cost = (token_count / 1000) * model_spec["cost_per_1k_tokens"]
 
             # Update metrics
             self._update_metrics(model, token_count, cost, latency_ms)
@@ -193,7 +194,7 @@ class AdvancedEmbeddingRouter:
                 dimensions=dimensions,
                 latency_ms=latency_ms,
                 tokens_processed=token_count,
-                cost_estimate=cost
+                cost_estimate=cost,
             )
 
         except Exception as e:
@@ -206,21 +207,22 @@ class AdvancedEmbeddingRouter:
         texts: list[str],
         content_type: Optional[ContentType] = None,
         dimensions: Optional[int] = 1024,
-        batch_size: int = 100
+        batch_size: int = 100,
     ) -> EmbeddingResult:
         """
         Generate embeddings for multiple texts with batching
-        
+
         Args:
             texts: List of texts to embed
             content_type: Optional content type override
             dimensions: Target embedding dimensions
             batch_size: Batch size for processing
-            
+
         Returns:
             EmbeddingResult with all embeddings
         """
         import time
+
         start_time = time.perf_counter()
 
         all_embeddings = []
@@ -229,7 +231,7 @@ class AdvancedEmbeddingRouter:
 
         # Process in batches
         for i in range(0, len(texts), batch_size):
-            batch = texts[i:i + batch_size]
+            batch = texts[i : i + batch_size]
 
             # Detect content type from first text if not provided
             if content_type is None:
@@ -245,7 +247,7 @@ class AdvancedEmbeddingRouter:
             batch_tokens = sum(len(text.split()) for text in batch)
             total_tokens += batch_tokens
             model_spec = self.model_specs[self.model_routing[content_type]]
-            total_cost += (batch_tokens / 1000) * model_spec['cost_per_1k_tokens']
+            total_cost += (batch_tokens / 1000) * model_spec["cost_per_1k_tokens"]
 
         # Calculate final metrics
         latency_ms = (time.perf_counter() - start_time) * 1000
@@ -256,39 +258,32 @@ class AdvancedEmbeddingRouter:
             dimensions=dimensions,
             latency_ms=latency_ms,
             tokens_processed=total_tokens,
-            cost_estimate=total_cost
+            cost_estimate=total_cost,
         )
 
     async def rerank_documents(
-        self,
-        query: str,
-        documents: list[str],
-        top_k: int = 10
+        self, query: str, documents: list[str], top_k: int = 10
     ) -> list[tuple[int, float]]:
         """
         Rerank documents using specialized reranking model
-        
+
         Args:
             query: Search query
             documents: List of documents to rerank
             top_k: Number of top results to return
-            
+
         Returns:
             List of (index, score) tuples
         """
         # Use reranking model
-        rerank_model = self.model_routing[ContentType.RERANKING]
+        self.model_routing[ContentType.RERANKING]
 
         # Generate query embedding
-        query_result = await self.get_embeddings(
-            query, ContentType.RERANKING
-        )
+        query_result = await self.get_embeddings(query, ContentType.RERANKING)
         query_embedding = np.array(query_result.embeddings[0])
 
         # Generate document embeddings
-        doc_result = await self.get_embeddings_batch(
-            documents, ContentType.RERANKING
-        )
+        doc_result = await self.get_embeddings_batch(documents, ContentType.RERANKING)
         doc_embeddings = np.array(doc_result.embeddings)
 
         # Calculate cosine similarities
@@ -303,10 +298,7 @@ class AdvancedEmbeddingRouter:
         return results
 
     async def _generate_embeddings_mock(
-        self,
-        text: str,
-        model: str,
-        dimensions: int
+        self, text: str, model: str, dimensions: int
     ) -> list[float]:
         """Mock embedding generation (replace with actual Portkey call)"""
         # Simulate API delay
@@ -320,10 +312,7 @@ class AdvancedEmbeddingRouter:
         return embeddings.tolist()
 
     async def _generate_batch_embeddings_mock(
-        self,
-        texts: list[str],
-        model: str,
-        dimensions: int
+        self, texts: list[str], model: str, dimensions: int
     ) -> list[list[float]]:
         """Mock batch embedding generation"""
         embeddings = []
@@ -333,10 +322,7 @@ class AdvancedEmbeddingRouter:
         return embeddings
 
     async def _fallback_embedding(
-        self,
-        text: str,
-        dimensions: int,
-        original_error: Exception
+        self, text: str, dimensions: int, original_error: Exception
     ) -> EmbeddingResult:
         """Fallback to alternative embedding model"""
         logger.warning(f"Falling back due to error: {original_error}")
@@ -346,9 +332,7 @@ class AdvancedEmbeddingRouter:
 
         try:
             embeddings = await self._generate_embeddings_mock(
-                text[:512],  # Truncate for fallback
-                fallback_model,
-                dimensions
+                text[:512], fallback_model, dimensions  # Truncate for fallback
             )
 
             return EmbeddingResult(
@@ -357,7 +341,7 @@ class AdvancedEmbeddingRouter:
                 dimensions=dimensions,
                 latency_ms=50.0,
                 tokens_processed=len(text.split()),
-                cost_estimate=0.00008
+                cost_estimate=0.00008,
             )
         except Exception as e:
             logger.error(f"Fallback also failed: {e}")
@@ -368,55 +352,51 @@ class AdvancedEmbeddingRouter:
                 dimensions=dimensions,
                 latency_ms=0.0,
                 tokens_processed=0,
-                cost_estimate=0.0
+                cost_estimate=0.0,
             )
 
-    def _update_metrics(
-        self,
-        model: str,
-        tokens: int,
-        cost: float,
-        latency: float
-    ):
+    def _update_metrics(self, model: str, tokens: int, cost: float, latency: float):
         """Update performance metrics"""
-        self.metrics['total_embeddings'] += 1
-        self.metrics['total_tokens'] += tokens
-        self.metrics['total_cost'] += cost
+        self.metrics["total_embeddings"] += 1
+        self.metrics["total_tokens"] += tokens
+        self.metrics["total_cost"] += cost
 
         # Update average latency
-        n = self.metrics['total_embeddings']
-        prev_avg = self.metrics['avg_latency_ms']
-        self.metrics['avg_latency_ms'] = (prev_avg * (n - 1) + latency) / n
+        n = self.metrics["total_embeddings"]
+        prev_avg = self.metrics["avg_latency_ms"]
+        self.metrics["avg_latency_ms"] = (prev_avg * (n - 1) + latency) / n
 
         # Track model usage
-        if model not in self.metrics['model_usage']:
-            self.metrics['model_usage'][model] = 0
-        self.metrics['model_usage'][model] += 1
+        if model not in self.metrics["model_usage"]:
+            self.metrics["model_usage"][model] = 0
+        self.metrics["model_usage"][model] += 1
 
     def get_metrics(self) -> dict[str, Any]:
         """Get current performance metrics"""
         return {
             **self.metrics,
-            'cost_per_embedding': (
-                self.metrics['total_cost'] / self.metrics['total_embeddings']
-                if self.metrics['total_embeddings'] > 0 else 0
+            "cost_per_embedding": (
+                self.metrics["total_cost"] / self.metrics["total_embeddings"]
+                if self.metrics["total_embeddings"] > 0
+                else 0
             ),
-            'avg_tokens_per_embedding': (
-                self.metrics['total_tokens'] / self.metrics['total_embeddings']
-                if self.metrics['total_embeddings'] > 0 else 0
-            )
+            "avg_tokens_per_embedding": (
+                self.metrics["total_tokens"] / self.metrics["total_embeddings"]
+                if self.metrics["total_embeddings"] > 0
+                else 0
+            ),
         }
 
 
 # Example usage
 if __name__ == "__main__":
+
     async def test_embedding_router():
         router = AdvancedEmbeddingRouter()
 
         # Test single embedding
         result = await router.get_embeddings(
-            "This is a test of the advanced embedding system",
-            ContentType.SHORT_TEXT
+            "This is a test of the advanced embedding system", ContentType.SHORT_TEXT
         )
         logger.info(f"Generated {len(result.embeddings[0])} dimensional embedding")
         logger.info(f"Model used: {result.model_used}")
@@ -426,7 +406,7 @@ if __name__ == "__main__":
         texts = [
             "First document about AI",
             "Second document about machine learning",
-            "Third document about embeddings"
+            "Third document about embeddings",
         ]
         batch_result = await router.get_embeddings_batch(texts)
         logger.info(f"\nGenerated {len(batch_result.embeddings)} embeddings")

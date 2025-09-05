@@ -282,7 +282,7 @@
             .dashboard-grid {
                 grid-template-columns: 1fr;
             }
-            
+
             .status-bar {
                 flex-direction: column;
                 gap: 15px;
@@ -491,8 +491,8 @@
                 .reduce((sum, [, config]) => sum + config.tpm, 0);
 
             document.getElementById('active-providers').textContent = activeCount;
-            document.getElementById('total-tpm').textContent = totalTPM >= 1000000 
-                ? `${(totalTPM/1000000).toFixed(1)}M` 
+            document.getElementById('total-tpm').textContent = totalTPM >= 1000000
+                ? `${(totalTPM/1000000).toFixed(1)}M`
                 : `${(totalTPM/1000).toFixed(0)}K`;
             document.getElementById('parallel-factor').textContent = `${activeCount}x`;
         }
@@ -500,8 +500,8 @@
         function showAlert(message, type = 'info') {
             const alertBox = document.getElementById('alert-box');
             alertBox.textContent = message;
-            alertBox.style.background = type === 'error' ? 'rgba(255, 68, 68, 0.9)' : 
-                                       type === 'success' ? 'rgba(0, 255, 136, 0.9)' : 
+            alertBox.style.background = type === 'error' ? 'rgba(255, 68, 68, 0.9)' :
+                                       type === 'success' ? 'rgba(0, 255, 136, 0.9)' :
                                        'rgba(255, 170, 0, 0.9)';
             alertBox.style.display = 'block';
             setTimeout(() => {
@@ -544,9 +544,9 @@
             setInterval(() => {
                 Object.keys(providers).forEach(name => {
                     if (providerStatus[name]?.status === 'active') {
-                        const newUsage = Math.max(0, Math.min(100, 
+                        const newUsage = Math.max(0, Math.min(100,
                             providerStatus[name].usage + (Math.random() * 10 - 5)));
-                        updateProviderStatus(name, 
+                        updateProviderStatus(name,
                             newUsage > 90 ? 'limited' : 'active',
                             providerStatus[name].latency,
                             newUsage
@@ -578,7 +578,7 @@
             a.href = url;
             a.download = `metrics_${Date.now()}.json`;
             a.click();
-            
+
             showAlert('Metrics exported!', 'success');
         }
 

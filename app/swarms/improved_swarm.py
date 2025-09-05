@@ -9,7 +9,7 @@ import logging
 import random
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional, Union
+from typing import Any, Optional
 
 from app.core.ai_logger import logger
 
@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 # ============================================
 # Pattern 1: Structured Adversarial Debate
 # ============================================
+
 
 class AdversarialDebateSystem:
     """Implements structured debate between agents to improve solution quality."""
@@ -44,21 +45,21 @@ class AdversarialDebateSystem:
             judge = random.choice([a for a in self.agents if a not in [advocate, critic]])
             verdict = await self._evaluate_arguments(judge, pro_argument, con_argument, solution)
 
-            debate_results.append({
-                "solution": solution,
-                "pro_argument": pro_argument,
-                "con_argument": con_argument,
-                "verdict": verdict,
-                "score": verdict.get("score", 0.5)
-            })
+            debate_results.append(
+                {
+                    "solution": solution,
+                    "pro_argument": pro_argument,
+                    "con_argument": con_argument,
+                    "verdict": verdict,
+                    "score": verdict.get("score", 0.5),
+                }
+            )
 
         # Select best solution based on debate outcomes
         best_debate = max(debate_results, key=lambda x: x["score"])
-        self.debate_history.append({
-            "problem": problem,
-            "winner": best_debate,
-            "timestamp": datetime.now().isoformat()
-        })
+        self.debate_history.append(
+            {"problem": problem, "winner": best_debate, "timestamp": datetime.now().isoformat()}
+        )
 
         return best_debate
 
@@ -67,12 +68,8 @@ class AdversarialDebateSystem:
         return {
             "agent": str(agent),
             "stance": "support",
-            "points": [
-                "Efficient implementation",
-                "Scalable architecture",
-                "Well-tested approach"
-            ],
-            "confidence": 0.85
+            "points": ["Efficient implementation", "Scalable architecture", "Well-tested approach"],
+            "confidence": 0.85,
         }
 
     async def _generate_con_argument(self, agent, solution):
@@ -83,9 +80,9 @@ class AdversarialDebateSystem:
             "points": [
                 "Potential edge cases not covered",
                 "Performance concerns at scale",
-                "Maintenance complexity"
+                "Maintenance complexity",
             ],
-            "confidence": 0.75
+            "confidence": 0.75,
         }
 
     async def _evaluate_arguments(self, judge, pro, con, solution):
@@ -105,13 +102,14 @@ class AdversarialDebateSystem:
             "judge": str(judge),
             "decision": decision,
             "score": score,
-            "reasoning": f"Pro argument strength: {pro_strength}, Con: {con_strength}"
+            "reasoning": f"Pro argument strength: {pro_strength}, Con: {con_strength}",
         }
 
 
 # ============================================
 # Pattern 2: Quality Gates with Automatic Retry
 # ============================================
+
 
 class QualityGateSystem:
     """Implements quality thresholds with automatic retry strategies."""
@@ -137,7 +135,7 @@ class QualityGateSystem:
                     "result": result,
                     "quality_score": quality_score,
                     "rounds_required": round_num + 1,
-                    "status": "success"
+                    "status": "success",
                 }
 
             # Apply retry strategy based on quality level
@@ -150,7 +148,7 @@ class QualityGateSystem:
             "result": result,
             "quality_score": quality_score,
             "rounds_required": self.max_retries,
-            "status": "max_rounds_exceeded"
+            "status": "max_rounds_exceeded",
         }
 
     async def _execute_workflow(self, problem, agents):
@@ -168,16 +166,18 @@ class QualityGateSystem:
                 prompt=prompt,
                 role="generator",  # Use generator role for problem solving
                 temperature=0.7,
-                max_tokens=2048
+                max_tokens=2048,
             )
 
             # Return REAL response from OpenRouter
             return {
                 "solution": response.get("content", ""),
-                "confidence": response.get("metadata", {}).get("real_api_call", False) and 0.9 or 0.5,
+                "confidence": response.get("metadata", {}).get("real_api_call", False)
+                and 0.9
+                or 0.5,
                 "model_used": response.get("metadata", {}).get("model_used", "unknown"),
                 "real_api": response.get("metadata", {}).get("real_api_call", False),
-                "provider": response.get("metadata", {}).get("provider", "unknown")
+                "provider": response.get("metadata", {}).get("provider", "unknown"),
             }
         except Exception as e:
             logger.error(f"OpenRouter API call failed: {e}")
@@ -186,7 +186,7 @@ class QualityGateSystem:
                 "solution": f"Error with OpenRouter API: {str(e)}",
                 "confidence": 0.1,
                 "error": str(e),
-                "real_api": False
+                "real_api": False,
             }
 
     async def _assess_quality(self, result):
@@ -211,6 +211,7 @@ class QualityGateSystem:
 # Pattern 3: Strategy Archive and Reuse
 # ============================================
 
+
 class StrategyArchive:
     """Archives and reuses successful agent interaction patterns."""
 
@@ -228,11 +229,12 @@ class StrategyArchive:
     def save_archive(self):
         """Save archive to disk."""
         self.archive_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(self.archive_path, 'w') as f:
+        with open(self.archive_path, "w") as f:
             json.dump(self.patterns, f, indent=2)
 
-    def archive_success(self, problem_type: str, roles: list[str],
-                       interaction_sequence: str, quality_score: float):
+    def archive_success(
+        self, problem_type: str, roles: list[str], interaction_sequence: str, quality_score: float
+    ):
         """Archive a successful pattern."""
         if quality_score < 0.8:
             return  # Only archive high-quality solutions
@@ -243,7 +245,7 @@ class StrategyArchive:
             "interaction_sequence": interaction_sequence,
             "success_score": quality_score,
             "usage_count": 1,
-            "last_updated": datetime.now().isoformat()
+            "last_updated": datetime.now().isoformat(),
         }
 
         if problem_type not in self.patterns["problem_types"]:
@@ -273,6 +275,7 @@ class StrategyArchive:
 # Pattern 4: Simple Safety Boundaries
 # ============================================
 
+
 class SafetyBoundarySystem:
     """Implements safety controls to prevent harmful behavior."""
 
@@ -292,7 +295,7 @@ class SafetyBoundarySystem:
             return False, {
                 "status": "rejected",
                 "reason": "Risk score exceeds maximum threshold",
-                "risk_score": risk_score
+                "risk_score": risk_score,
             }
 
         # Check for prohibited actions
@@ -303,7 +306,7 @@ class SafetyBoundarySystem:
             return False, {
                 "status": "rejected",
                 "reason": f"Contains prohibited actions: {prohibited}",
-                "detected_actions": list(detected_actions)
+                "detected_actions": list(detected_actions),
             }
 
         # Check if human approval needed
@@ -313,13 +316,13 @@ class SafetyBoundarySystem:
             return True, {
                 "status": "requires_approval",
                 "actions_requiring_approval": list(needs_approval),
-                "risk_score": risk_score
+                "risk_score": risk_score,
             }
 
         return True, {
             "status": "approved",
             "risk_score": risk_score,
-            "detected_actions": list(detected_actions)
+            "detected_actions": list(detected_actions),
         }
 
     async def _assess_risk(self, task):
@@ -349,6 +352,7 @@ class SafetyBoundarySystem:
 # ============================================
 # Pattern 5: Dynamic Role Assignment
 # ============================================
+
 
 class DynamicRoleAssigner:
     """Assigns agent roles based on problem analysis."""
@@ -419,6 +423,7 @@ class DynamicRoleAssigner:
 # Pattern 6: Consensus with Tie-Breaking
 # ============================================
 
+
 class ConsensusSystem:
     """Handles disagreements between agents systematically."""
 
@@ -443,7 +448,7 @@ class ConsensusSystem:
                 "consensus": True,
                 "winner": winner,
                 "agreement_level": agreement_level,
-                "votes": votes
+                "votes": votes,
             }
 
         # Need tie-breaking
@@ -461,14 +466,14 @@ class ConsensusSystem:
             "winner": winner,
             "agreement_level": agreement_level,
             "tie_broken_by": "judge" if len(agents) <= 3 else "ranked_voting",
-            "votes": votes
+            "votes": votes,
         }
 
     async def _collect_votes(self, agents, options):
         """Collect votes from agents."""
         votes = dict.fromkeys(options, 0)
 
-        for agent in agents:
+        for _agent in agents:
             # Simulate voting
             choice = random.choice(options)
             votes[choice] += 1
@@ -503,6 +508,7 @@ class ConsensusSystem:
 # ============================================
 # Pattern 7: Adaptive Parameters
 # ============================================
+
 
 class AdaptiveParameterManager:
     """Manages adaptive parameters based on performance."""
@@ -565,6 +571,7 @@ class AdaptiveParameterManager:
 # Pattern 8: Cross-Domain Knowledge Transfer
 # ============================================
 
+
 class KnowledgeTransferSystem:
     """Transfers successful strategies between problem domains."""
 
@@ -574,8 +581,9 @@ class KnowledgeTransferSystem:
         self.domain_mappings = {}
         self.transfer_history = []
 
-    async def attempt_transfer(self, source_domain: str, target_domain: str,
-                              pattern: dict) -> Optional[dict]:
+    async def attempt_transfer(
+        self, source_domain: str, target_domain: str, pattern: dict
+    ) -> Optional[dict]:
         """Attempt to transfer knowledge between domains."""
 
         # Calculate similarity between domains
@@ -591,13 +599,15 @@ class KnowledgeTransferSystem:
         success_rate = await self._test_adaptation(adapted_pattern, target_domain)
 
         if success_rate >= self.transfer_threshold:
-            self.transfer_history.append({
-                "source": source_domain,
-                "target": target_domain,
-                "pattern": adapted_pattern,
-                "success_rate": success_rate,
-                "timestamp": datetime.now().isoformat()
-            })
+            self.transfer_history.append(
+                {
+                    "source": source_domain,
+                    "target": target_domain,
+                    "pattern": adapted_pattern,
+                    "success_rate": success_rate,
+                    "timestamp": datetime.now().isoformat(),
+                }
+            )
 
             logger.info(f"Successfully transferred pattern from {source_domain} to {target_domain}")
             return adapted_pattern
@@ -613,7 +623,7 @@ class KnowledgeTransferSystem:
         related = {
             "code": ["analysis", "research"],
             "research": ["analysis", "code"],
-            "analysis": ["code", "research"]
+            "analysis": ["code", "research"],
         }
 
         if domain2 in related.get(domain1, []):
@@ -641,6 +651,7 @@ class KnowledgeTransferSystem:
 # Main Improved Agent Swarm Class
 # ============================================
 
+
 class ImprovedAgentSwarm:
     """Unified improved agent swarm with optimized pattern selection."""
 
@@ -651,6 +662,7 @@ class ImprovedAgentSwarm:
         # Initialize optimizer for pattern selection
         try:
             from app.swarms.performance_optimizer import SwarmOptimizer
+
             self.optimizer = SwarmOptimizer()
         except ImportError:
             logger.warning("SwarmOptimizer not available - using basic optimization")
@@ -668,7 +680,9 @@ class ImprovedAgentSwarm:
 
         # Backward compatibility attributes
         self.debate_system = self.patterns.get("debate")
-        self.quality_gates = self.patterns.get("quality_gates", self._create_minimal_quality_gates())
+        self.quality_gates = self.patterns.get(
+            "quality_gates", self._create_minimal_quality_gates()
+        )
         self.strategy_archive = self.patterns.get("strategy_archive")
         self.role_assigner = self.patterns.get("role_assigner")
         self.consensus_system = self.patterns.get("consensus")
@@ -680,7 +694,9 @@ class ImprovedAgentSwarm:
         self.pattern_usage_stats = {}
         self.pattern_effectiveness = {}
 
-        logger.info(f"Improved Agent Swarm initialized with {self.optimization_mode} mode ({len(self.patterns)} patterns)")
+        logger.info(
+            f"Improved Agent Swarm initialized with {self.optimization_mode} mode ({len(self.patterns)} patterns)"
+        )
 
     def _load_config(self, config_file: str) -> dict:
         """Load configuration from file."""
@@ -704,8 +720,15 @@ class ImprovedAgentSwarm:
             elif self.optimization_mode == "balanced":
                 enabled = ["quality_gates", "debate", "strategy_archive", "role_assigner"]
             else:  # quality mode
-                enabled = ["debate", "quality_gates", "strategy_archive", "role_assigner",
-                          "consensus", "param_manager", "transfer_system"]
+                enabled = [
+                    "debate",
+                    "quality_gates",
+                    "strategy_archive",
+                    "role_assigner",
+                    "consensus",
+                    "param_manager",
+                    "transfer_system",
+                ]
         else:
             enabled = self.enabled_patterns
 
@@ -726,10 +749,14 @@ class ImprovedAgentSwarm:
             patterns["consensus"] = ConsensusSystem(self.config.get("consensus_config", {}))
 
         if "param_manager" in enabled:
-            patterns["param_manager"] = AdaptiveParameterManager(self.config.get("adaptive_parameters", {}))
+            patterns["param_manager"] = AdaptiveParameterManager(
+                self.config.get("adaptive_parameters", {})
+            )
 
         if "transfer_system" in enabled:
-            patterns["transfer_system"] = KnowledgeTransferSystem(self.config.get("knowledge_transfer", {}))
+            patterns["transfer_system"] = KnowledgeTransferSystem(
+                self.config.get("knowledge_transfer", {})
+            )
 
         return patterns
 
@@ -738,7 +765,7 @@ class ImprovedAgentSwarm:
         minimal_config = {
             "min_quality_threshold": 0.6,
             "max_retry_rounds": 1,
-            "retry_strategies": {}
+            "retry_strategies": {},
         }
         return QualityGateSystem(minimal_config)
 
@@ -752,39 +779,40 @@ class ImprovedAgentSwarm:
                 "max_retry_rounds": 3,
                 "retry_strategies": {
                     "low_quality": {"threshold": 0.4, "action": "expand_agent_team"},
-                    "medium_quality": {"threshold": 0.6, "action": "increase_creativity"}
-                }
+                    "medium_quality": {"threshold": 0.6, "action": "increase_creativity"},
+                },
             },
             "safety_config": {
                 "max_risk_level": 0.7,
                 "prohibited_actions": ["file_delete", "system_modification"],
-                "require_human_approval": ["code_execution", "external_api_calls"]
+                "require_human_approval": ["code_execution", "external_api_calls"],
             },
             "role_assignment": {
                 "complexity_thresholds": {
                     "simple": {"max": 0.3, "roles": ["generator", "validator"]},
                     "medium": {"max": 0.7, "roles": ["planner", "generator", "critic"]},
-                    "complex": {"max": 1.0, "roles": ["planner", "specialist_a", "specialist_b", "critic", "judge"]}
+                    "complex": {
+                        "max": 1.0,
+                        "roles": ["planner", "specialist_a", "specialist_b", "critic", "judge"],
+                    },
                 }
             },
             "consensus_config": {
                 "agreement_threshold": 0.7,
                 "tie_breaking_methods": {
                     "small_group": {"max_agents": 3, "method": "judge_agent"},
-                    "large_group": {"min_agents": 4, "method": "ranked_voting"}
-                }
+                    "large_group": {"min_agents": 4, "method": "ranked_voting"},
+                },
             },
             "adaptive_parameters": {
                 "parameters": {
                     "temperature": {"min": 0.1, "max": 1.0, "default": 0.7},
-                    "agent_count": {"min": 2, "max": 10, "default": 3}
+                    "agent_count": {"min": 2, "max": 10, "default": 3},
                 },
                 "learning_rate": 0.1,
-                "history_window": 5
+                "history_window": 5,
             },
-            "knowledge_transfer": {
-                "transfer_success_threshold": 0.6
-            }
+            "knowledge_transfer": {"transfer_success_threshold": 0.6},
         }
 
     async def solve_with_improvements(self, problem: dict) -> dict:
@@ -807,7 +835,9 @@ class ImprovedAgentSwarm:
             self.patterns = self._initialize_patterns_selectively()
             # Refresh pattern handles
             self.debate_system = self.patterns.get("debate")
-            self.quality_gates = self.patterns.get("quality_gates", self._create_minimal_quality_gates())
+            self.quality_gates = self.patterns.get(
+                "quality_gates", self._create_minimal_quality_gates()
+            )
             self.strategy_archive = self.patterns.get("strategy_archive")
             self.role_assigner = self.patterns.get("role_assigner")
             self.consensus_system = self.patterns.get("consensus")
@@ -826,7 +856,7 @@ class ImprovedAgentSwarm:
 
         # Pattern 2: Quality-gated execution
         initial_result = await self.quality_gates.execute_with_quality_gates(
-            problem, self.agents[:len(agent_roles)]
+            problem, self.agents[: len(agent_roles)]
         )
 
         # Pattern 1: Adversarial debate if quality is borderline
@@ -839,9 +869,7 @@ class ImprovedAgentSwarm:
                 for i in range(2)
             ]
 
-            debate_result = await self.debate_system.conduct_debate(
-                str(problem), alternatives
-            )
+            debate_result = await self.debate_system.conduct_debate(str(problem), alternatives)
             initial_result["result"] = debate_result["solution"]
             initial_result["quality_score"] = debate_result["score"]
 
@@ -855,10 +883,7 @@ class ImprovedAgentSwarm:
         # Archive successful pattern
         if initial_result["quality_score"] > 0.8:
             self.strategy_archive.archive_success(
-                problem_type,
-                agent_roles,
-                "standard_flow",
-                initial_result["quality_score"]
+                problem_type, agent_roles, "standard_flow", initial_result["quality_score"]
             )
 
         # Pattern 7: Update adaptive parameters
@@ -870,28 +895,33 @@ class ImprovedAgentSwarm:
             for target_domain in ["code", "research", "analysis"]:
                 if target_domain != problem_type:
                     await self.transfer_system.attempt_transfer(
-                        problem_type, target_domain,
-                        {"roles": agent_roles, "quality": initial_result["quality_score"]}
+                        problem_type,
+                        target_domain,
+                        {"roles": agent_roles, "quality": initial_result["quality_score"]},
                     )
 
         # Track performance
         execution_time = (datetime.now() - start_time).total_seconds()
-        self.performance_history.append({
-            "problem": problem,
-            "quality_score": initial_result["quality_score"],
-            "execution_time": execution_time,
-            "patterns_used": [
-                "safety_check", "dynamic_roles", "quality_gates",
-                "adversarial_debate" if initial_result["quality_score"] < 0.8 else None
-            ]
-        })
+        self.performance_history.append(
+            {
+                "problem": problem,
+                "quality_score": initial_result["quality_score"],
+                "execution_time": execution_time,
+                "patterns_used": [
+                    "safety_check",
+                    "dynamic_roles",
+                    "quality_gates",
+                    "adversarial_debate" if initial_result["quality_score"] < 0.8 else None,
+                ],
+            }
+        )
 
         return {
             **initial_result,
             "execution_time": execution_time,
             "agent_roles": agent_roles,
             "safety_check": safety_result,
-            "current_parameters": self.param_manager.get_current_parameters()
+            "current_parameters": self.param_manager.get_current_parameters(),
         }
 
     def get_performance_metrics(self) -> dict:
@@ -911,13 +941,14 @@ class ImprovedAgentSwarm:
                 len(pt["successful_patterns"])
                 for pt in self.strategy_archive.patterns["problem_types"].values()
             ),
-            "transfer_attempts": len(self.transfer_system.transfer_history)
+            "transfer_attempts": len(self.transfer_system.transfer_history),
         }
 
 
 # ============================================
 # MCP-UI Integration
 # ============================================
+
 
 class MCPUIIntegration:
     """Integrates MCP-UI capabilities with the improved swarm."""
@@ -937,7 +968,7 @@ class MCPUIIntegration:
                     {
                         "name": "Performance Metrics",
                         "type": "dashboard",
-                        "data": self.swarm.get_performance_metrics()
+                        "data": self.swarm.get_performance_metrics(),
                     },
                     {
                         "name": "Pattern Controls",
@@ -946,21 +977,21 @@ class MCPUIIntegration:
                             {"id": "adversarial_debate", "enabled": True},
                             {"id": "quality_gates", "enabled": True},
                             {"id": "strategy_archive", "enabled": True},
-                            {"id": "safety_boundaries", "enabled": True}
-                        ]
+                            {"id": "safety_boundaries", "enabled": True},
+                        ],
                     },
                     {
                         "name": "Agent Management",
                         "type": "list",
-                        "agents": [str(a) for a in self.swarm.agents]
-                    }
+                        "agents": [str(a) for a in self.swarm.agents],
+                    },
                 ],
                 "actions": [
                     {"label": "Run Test", "tool": "swarm.test", "params": {}},
                     {"label": "Clear Archive", "tool": "swarm.clear_archive", "params": {}},
-                    {"label": "Reset Parameters", "tool": "swarm.reset_params", "params": {}}
-                ]
-            }
+                    {"label": "Reset Parameters", "tool": "swarm.reset_params", "params": {}},
+                ],
+            },
         }
 
     def create_debate_viewer(self, debate_id: str) -> dict:
@@ -973,8 +1004,8 @@ class MCPUIIntegration:
             "content": {
                 "title": "Adversarial Debate Viewer",
                 "debate_count": len(debates),
-                "recent_debates": debates[-5:] if debates else []
-            }
+                "recent_debates": debates[-5:] if debates else [],
+            },
         }
 
 
@@ -991,7 +1022,7 @@ if __name__ == "__main__":
         test_problem = {
             "type": "code",
             "description": "Create a function to validate email addresses",
-            "complexity": 0.5
+            "complexity": 0.5,
         }
 
         # Solve with improvements

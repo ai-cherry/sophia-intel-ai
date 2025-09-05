@@ -11,7 +11,7 @@ import logging
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Optional, Union
+from typing import Any, Optional
 
 from app.core.ai_logger import logger
 
@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 
 class OperationType(Enum):
     """CRDT operation types"""
+
     ADD = "add"
     UPDATE = "update"
     DELETE = "delete"
@@ -29,6 +30,7 @@ class OperationType(Enum):
 @dataclass
 class VectorClock:
     """Vector clock for causality tracking"""
+
     clock: dict[str, int] = field(default_factory=dict)
 
     def increment(self, agent_id: str):
@@ -38,22 +40,18 @@ class VectorClock:
     def update(self, other_clock: dict[str, int]):
         """Update with another vector clock"""
         for agent_id, timestamp in other_clock.items():
-            self.clock[agent_id] = max(
-                self.clock.get(agent_id, 0),
-                timestamp
-            )
+            self.clock[agent_id] = max(self.clock.get(agent_id, 0), timestamp)
 
-    def happens_before(self, other: 'VectorClock') -> bool:
+    def happens_before(self, other: "VectorClock") -> bool:
         """Check if this clock happens before another"""
         for agent_id, timestamp in self.clock.items():
             if timestamp > other.clock.get(agent_id, 0):
                 return False
         return any(
-            timestamp < other.clock.get(agent_id, 0)
-            for agent_id, timestamp in self.clock.items()
+            timestamp < other.clock.get(agent_id, 0) for agent_id, timestamp in self.clock.items()
         )
 
-    def concurrent_with(self, other: 'VectorClock') -> bool:
+    def concurrent_with(self, other: "VectorClock") -> bool:
         """Check if clocks are concurrent"""
         return not self.happens_before(other) and not other.happens_before(self)
 
@@ -65,6 +63,7 @@ class VectorClock:
 @dataclass
 class MemoryOperation:
     """Represents a CRDT memory operation"""
+
     operation_id: str
     operation_type: OperationType
     memory_id: str
@@ -92,13 +91,14 @@ class MemoryOperation:
 @dataclass
 class CRDTMemoryState:
     """State-based CRDT for memory"""
+
     memory_id: str
     content: dict[str, Any]
     vector_clock: VectorClock
     tombstone: bool = False  # For deletion tracking
     last_modified: float = field(default_factory=time.time)
 
-    def merge(self, other: 'CRDTMemoryState') -> 'CRDTMemoryState':
+    def merge(self, other: "CRDTMemoryState") -> "CRDTMemoryState":
         """Merge with another state using CRDT rules"""
         # If one is deleted (tombstone), deleted state wins
         if self.tombstone or other.tombstone:
@@ -127,7 +127,7 @@ class CRDTMemoryState:
                 content=merged_content,
                 vector_clock=merged_clock,
                 tombstone=False,
-                last_modified=max(self.last_modified, other.last_modified)
+                last_modified=max(self.last_modified, other.last_modified),
             )
 
     def _merge_content(self, content1: dict, content2: dict) -> dict:
@@ -145,7 +145,11 @@ class CRDTMemoryState:
                     merged[key] = list(set(content1[key] + content2[key]))
                 else:
                     # Use value with higher timestamp
-                    merged[key] = content1[key] if self.last_modified >= other.last_modified else content2[key]
+                    merged[key] = (
+                        content1[key]
+                        if self.last_modified >= other.last_modified
+                        else content2[key]
+                    )
             elif key in content1:
                 merged[key] = content1[key]
             else:
@@ -167,7 +171,7 @@ class CRDTMemoryStore:
     def __init__(self, agent_id: str, sync_interval: float = 1.0):
         """
         Initialize CRDT memory store
-        
+
         Args:
             agent_id: Unique agent identifier
             sync_interval: Synchronization interval in seconds
@@ -193,11 +197,11 @@ class CRDTMemoryStore:
 
         # Metrics
         self.metrics = {
-            'operations_sent': 0,
-            'operations_received': 0,
-            'conflicts_resolved': 0,
-            'sync_cycles': 0,
-            'avg_sync_time_ms': 0.0
+            "operations_sent": 0,
+            "operations_received": 0,
+            "conflicts_resolved": 0,
+            "sync_cycles": 0,
+            "avg_sync_time_ms": 0.0,
         }
 
     async def start(self):
@@ -214,19 +218,16 @@ class CRDTMemoryStore:
         logger.info(f"Stopped CRDT memory store for agent {self.agent_id}")
 
     async def add_memory(
-        self,
-        memory_id: str,
-        content: dict[str, Any],
-        broadcast: bool = True
+        self, memory_id: str, content: dict[str, Any], broadcast: bool = True
     ) -> bool:
         """
         Add new memory with CRDT tracking
-        
+
         Args:
             memory_id: Unique memory identifier
             content: Memory content
             broadcast: Whether to broadcast to peers
-            
+
         Returns:
             Success status
         """
@@ -241,7 +242,7 @@ class CRDTMemoryStore:
             content=content,
             agent_id=self.agent_id,
             timestamp=time.time(),
-            vector_clock=self.vector_clock.to_dict()
+            vector_clock=self.vector_clock.to_dict(),
         )
 
         # Apply locally
@@ -257,19 +258,16 @@ class CRDTMemoryStore:
         return True
 
     async def update_memory(
-        self,
-        memory_id: str,
-        updates: dict[str, Any],
-        broadcast: bool = True
+        self, memory_id: str, updates: dict[str, Any], broadcast: bool = True
     ) -> bool:
         """
         Update existing memory
-        
+
         Args:
             memory_id: Memory identifier
             updates: Updates to apply
             broadcast: Whether to broadcast to peers
-            
+
         Returns:
             Success status
         """
@@ -288,7 +286,7 @@ class CRDTMemoryStore:
             content=updates,
             agent_id=self.agent_id,
             timestamp=time.time(),
-            vector_clock=self.vector_clock.to_dict()
+            vector_clock=self.vector_clock.to_dict(),
         )
 
         # Apply locally
@@ -303,18 +301,14 @@ class CRDTMemoryStore:
 
         return True
 
-    async def delete_memory(
-        self,
-        memory_id: str,
-        broadcast: bool = True
-    ) -> bool:
+    async def delete_memory(self, memory_id: str, broadcast: bool = True) -> bool:
         """
         Delete memory (mark as tombstone)
-        
+
         Args:
             memory_id: Memory identifier
             broadcast: Whether to broadcast to peers
-            
+
         Returns:
             Success status
         """
@@ -332,7 +326,7 @@ class CRDTMemoryStore:
             content={},
             agent_id=self.agent_id,
             timestamp=time.time(),
-            vector_clock=self.vector_clock.to_dict()
+            vector_clock=self.vector_clock.to_dict(),
         )
 
         # Apply locally
@@ -350,10 +344,10 @@ class CRDTMemoryStore:
     async def get_memory(self, memory_id: str) -> Optional[dict[str, Any]]:
         """
         Get memory content
-        
+
         Args:
             memory_id: Memory identifier
-            
+
         Returns:
             Memory content or None
         """
@@ -362,16 +356,13 @@ class CRDTMemoryStore:
             return state.content
         return None
 
-    async def merge_remote_operations(
-        self,
-        operations: list[MemoryOperation]
-    ) -> int:
+    async def merge_remote_operations(self, operations: list[MemoryOperation]) -> int:
         """
         Merge operations from remote agent
-        
+
         Args:
             operations: List of remote operations
-            
+
         Returns:
             Number of operations applied
         """
@@ -395,7 +386,7 @@ class CRDTMemoryStore:
                 # Update vector clock
                 self.vector_clock.update(op.vector_clock)
 
-        self.metrics['operations_received'] += len(operations)
+        self.metrics["operations_received"] += len(operations)
 
         return applied
 
@@ -409,7 +400,7 @@ class CRDTMemoryStore:
                 memory_id=memory_id,
                 content=operation.content,
                 vector_clock=VectorClock(operation.vector_clock),
-                tombstone=False
+                tombstone=False,
             )
 
         elif operation.operation_type == OperationType.UPDATE:
@@ -426,10 +417,7 @@ class CRDTMemoryStore:
 
         return True
 
-    async def _apply_operation_with_conflict_resolution(
-        self,
-        operation: MemoryOperation
-    ) -> bool:
+    async def _apply_operation_with_conflict_resolution(self, operation: MemoryOperation) -> bool:
         """Apply operation with CRDT conflict resolution"""
         memory_id = operation.memory_id
 
@@ -438,7 +426,7 @@ class CRDTMemoryStore:
             memory_id=memory_id,
             content=operation.content,
             vector_clock=VectorClock(operation.vector_clock),
-            tombstone=(operation.operation_type == OperationType.DELETE)
+            tombstone=(operation.operation_type == OperationType.DELETE),
         )
 
         if memory_id in self.memory_states:
@@ -448,7 +436,7 @@ class CRDTMemoryStore:
 
             if merged_state != existing_state:
                 self.memory_states[memory_id] = merged_state
-                self.metrics['conflicts_resolved'] += 1
+                self.metrics["conflicts_resolved"] += 1
         else:
             # New memory
             self.memory_states[memory_id] = new_state
@@ -461,11 +449,11 @@ class CRDTMemoryStore:
             return
 
         tasks = []
-        for peer_id, peer in self.peers.items():
+        for _peer_id, peer in self.peers.items():
             tasks.append(peer.merge_remote_operations([operation]))
 
         await asyncio.gather(*tasks, return_exceptions=True)
-        self.metrics['operations_sent'] += len(self.peers)
+        self.metrics["operations_sent"] += len(self.peers)
 
     async def _sync_loop(self):
         """Periodic synchronization loop"""
@@ -485,27 +473,26 @@ class CRDTMemoryStore:
 
         # Get operations to sync
         ops_to_sync = [
-            op for op in self.operation_log
-            if op.operation_id not in self.pending_operations
+            op for op in self.operation_log if op.operation_id not in self.pending_operations
         ]
 
         # Send to all peers
         tasks = []
-        for peer_id, peer in self.peers.items():
+        for _peer_id, peer in self.peers.items():
             tasks.append(peer.merge_remote_operations(ops_to_sync))
 
-        results = await asyncio.gather(*tasks, return_exceptions=True)
+        await asyncio.gather(*tasks, return_exceptions=True)
 
         # Update metrics
         sync_time_ms = (time.perf_counter() - start_time) * 1000
-        self.metrics['sync_cycles'] += 1
-        n = self.metrics['sync_cycles']
-        prev_avg = self.metrics['avg_sync_time_ms']
-        self.metrics['avg_sync_time_ms'] = (prev_avg * (n - 1) + sync_time_ms) / n
+        self.metrics["sync_cycles"] += 1
+        n = self.metrics["sync_cycles"]
+        prev_avg = self.metrics["avg_sync_time_ms"]
+        self.metrics["avg_sync_time_ms"] = (prev_avg * (n - 1) + sync_time_ms) / n
 
         logger.debug(f"Synced with {len(self.peers)} peers in {sync_time_ms:.2f}ms")
 
-    def add_peer(self, peer_id: str, peer: 'CRDTMemoryStore'):
+    def add_peer(self, peer_id: str, peer: "CRDTMemoryStore"):
         """Add peer for synchronization"""
         self.peers[peer_id] = peer
         logger.info(f"Added peer {peer_id} to agent {self.agent_id}")
@@ -519,18 +506,19 @@ class CRDTMemoryStore:
     def get_state_snapshot(self) -> dict[str, Any]:
         """Get snapshot of current state"""
         return {
-            'agent_id': self.agent_id,
-            'vector_clock': self.vector_clock.to_dict(),
-            'memory_count': len(self.memory_states),
-            'active_memories': sum(1 for s in self.memory_states.values() if not s.tombstone),
-            'tombstones': sum(1 for s in self.memory_states.values() if s.tombstone),
-            'operation_log_size': len(self.operation_log),
-            'metrics': self.metrics
+            "agent_id": self.agent_id,
+            "vector_clock": self.vector_clock.to_dict(),
+            "memory_count": len(self.memory_states),
+            "active_memories": sum(1 for s in self.memory_states.values() if not s.tombstone),
+            "tombstones": sum(1 for s in self.memory_states.values() if s.tombstone),
+            "operation_log_size": len(self.operation_log),
+            "metrics": self.metrics,
         }
 
 
 # Example usage
 if __name__ == "__main__":
+
     async def test_crdt_sync():
         # Create two agents
         agent1 = CRDTMemoryStore("agent-1")

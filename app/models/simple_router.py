@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 from openai import OpenAI
 
 # Load environment variables
-load_dotenv('.env.local')
+load_dotenv(".env.local")
 
 # Role→Model mappings
 ROLE_MODELS = {
@@ -21,7 +21,7 @@ ROLE_MODELS = {
     "generator": "gpt-4",
     "fast": "gpt-3.5-turbo",
     "balanced": "gpt-4",
-    "heavy": "gpt-4"
+    "heavy": "gpt-4",
 }
 
 # Role parameters
@@ -32,7 +32,7 @@ ROLE_PARAMS = {
     "generator": {"temperature": 0.7, "max_tokens": 3000},
     "fast": {"temperature": 0.7, "max_tokens": 1000},
     "balanced": {"temperature": 0.7, "max_tokens": 2000},
-    "heavy": {"temperature": 0.7, "max_tokens": 4000}
+    "heavy": {"temperature": 0.7, "max_tokens": 4000},
 }
 
 
@@ -54,14 +54,13 @@ class SimpleOpenAIChat:
         """Simple invoke method."""
         try:
             response = self.client.chat.completions.create(
-                model=self.model,
-                messages=messages,
-                **{**self.params, **kwargs}
+                model=self.model, messages=messages, **{**self.params, **kwargs}
             )
             return response.choices[0].message.content
         except Exception as e:
             # Log the error and re-raise - no mock fallbacks allowed
             import logging
+
             logger = logging.getLogger(__name__)
             logger.error(f"OpenAI API call failed: {e}")
             raise Exception(f"OpenAI API call failed: {e}") from e

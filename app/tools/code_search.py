@@ -16,58 +16,49 @@ class CodeSearch(Tool):
     parameters = {
         "type": "object",
         "properties": {
-            "query": {
-                "type": "string",
-                "description": "The search query to find relevant code"
-            },
+            "query": {"type": "string", "description": "The search query to find relevant code"},
             "limit": {
                 "type": "integer",
                 "description": "Maximum number of results to return",
-                "default": 8
+                "default": 8,
             },
             "semantic_weight": {
                 "type": "number",
                 "description": "Weight for semantic search (0-1, default 0.65)",
                 "default": 0.65,
                 "minimum": 0.0,
-                "maximum": 1.0
+                "maximum": 1.0,
             },
             "show_citations": {
                 "type": "boolean",
                 "description": "Include inline citations in results",
-                "default": True
-            }
+                "default": True,
+            },
         },
-        "required": ["query"]
+        "required": ["query"],
     }
 
     @with_circuit_breaker("database")
     @with_circuit_breaker("database")
     async def run(
-        self,
-        query: str,
-        limit: int = 8,
-        semantic_weight: float = 0.65,
-        show_citations: bool = True
+        self, query: str, limit: int = 8, semantic_weight: float = 0.65, show_citations: bool = True
     ) -> str:
         """
         Search for code using hybrid retrieval from dual collections.
-        
+
         Args:
             query: The search query
             limit: Maximum number of results
             semantic_weight: Balance between semantic (1.0) and keyword (0.0) search
             show_citations: Whether to include citation markers
-            
+
         Returns:
             Formatted string with search results and citations
         """
         try:
             # Perform hybrid search across both collections
             results = await hybrid_search_merge(
-                query=query,
-                k=limit,
-                semantic_weight=semantic_weight
+                query=query, k=limit, semantic_weight=semantic_weight
             )
 
             if not results:
@@ -95,7 +86,7 @@ class CodeSearch(Tool):
                 if len(content) > 600:
                     # Try to break at a natural boundary
                     truncated = content[:550]
-                    last_newline = truncated.rfind('\n')
+                    last_newline = truncated.rfind("\n")
                     if last_newline > 400:
                         content = truncated[:last_newline] + "\n... (truncated)"
                     else:
@@ -121,6 +112,7 @@ class CodeSearch(Tool):
         except Exception as e:
             return f"Error searching code: {str(e)}"
 
+
 class SmartCodeSearch(CodeSearch):
     """
     Enhanced code search with automatic query expansion and reranking.
@@ -130,35 +122,33 @@ class SmartCodeSearch(CodeSearch):
     description = "Intelligent code search with query understanding and result reranking"
 
     async def run(
-        self,
-        query: str,
-        limit: int = 8,
-        semantic_weight: float = 0.65,
-        show_citations: bool = True
+        self, query: str, limit: int = 8, semantic_weight: float = 0.65, show_citations: bool = True
     ) -> str:
         """
         Smart search with query expansion and multiple search strategies.
-        
+
         Args:
             query: The search query
             limit: Maximum number of results
             semantic_weight: Balance between semantic and keyword search
             show_citations: Whether to include citation markers
-            
+
         Returns:
             Enhanced search results with smart ranking
         """
         try:
             # Detect query intent
-            is_implementation = any(word in query.lower() for word in [
-                "implement", "function", "method", "class", "def", "async"
-            ])
-            is_usage = any(word in query.lower() for word in [
-                "use", "call", "invoke", "example", "usage"
-            ])
-            is_error = any(word in query.lower() for word in [
-                "error", "bug", "fix", "issue", "problem", "exception"
-            ])
+            is_implementation = any(
+                word in query.lower()
+                for word in ["implement", "function", "method", "class", "def", "async"]
+            )
+            is_usage = any(
+                word in query.lower() for word in ["use", "call", "invoke", "example", "usage"]
+            )
+            is_error = any(
+                word in query.lower()
+                for word in ["error", "bug", "fix", "issue", "problem", "exception"]
+            )
 
             # Adjust search parameters based on intent
             if is_implementation:
@@ -173,9 +163,7 @@ class SmartCodeSearch(CodeSearch):
 
             # Run primary search
             primary_results = await hybrid_search_merge(
-                query=query,
-                k=limit,
-                semantic_weight=semantic_weight
+                query=query, k=limit, semantic_weight=semantic_weight
             )
 
             # If few results, try alternative search strategy
@@ -183,9 +171,7 @@ class SmartCodeSearch(CodeSearch):
                 # Try with opposite weight
                 alt_weight = 1.0 - semantic_weight
                 alt_results = await hybrid_search_merge(
-                    query=query,
-                    k=limit // 2,
-                    semantic_weight=alt_weight
+                    query=query, k=limit // 2, semantic_weight=alt_weight
                 )
 
                 # Merge results, preferring primary
@@ -201,7 +187,7 @@ class SmartCodeSearch(CodeSearch):
                 query=query,
                 limit=limit,
                 semantic_weight=semantic_weight,
-                show_citations=show_citations
+                show_citations=show_citations,
             )
 
         except Exception:

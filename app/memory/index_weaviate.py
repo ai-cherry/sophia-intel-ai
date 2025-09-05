@@ -1,12 +1,11 @@
-import os
 from typing import Any
 
 import weaviate
 import weaviate.classes as wvc
 
 from app import settings
-from app.core.circuit_breaker import with_circuit_breaker
 from app.core.ai_logger import logger
+from app.core.circuit_breaker import with_circuit_breaker
 from app.memory.embed_router import (
     DIM_A,
     DIM_B,
@@ -25,12 +24,14 @@ def _client():
     except:
         # Fallback to v3 client
         from weaviate import Client
+
         return Client(url=settings.WEAVIATE_URL)
+
 
 def ensure_schema(collection: str, dim: int):
     """
     Ensure the collection exists with proper configuration.
-    
+
     Args:
         collection: Collection name
         dim: Vector dimension
@@ -52,7 +53,7 @@ def ensure_schema(collection: str, dim: int):
                         wvc.config.Property(name="end_line", data_type=wvc.config.DataType.INT),
                         wvc.config.Property(name="chunk_id", data_type=wvc.config.DataType.TEXT),
                         wvc.config.Property(name="priority", data_type=wvc.config.DataType.TEXT),
-                    ]
+                    ],
                 )
         except:
             # v3 client fallback
@@ -68,15 +69,16 @@ def ensure_schema(collection: str, dim: int):
                         {"name": "end_line", "dataType": ["int"]},
                         {"name": "chunk_id", "dataType": ["string"]},
                         {"name": "priority", "dataType": ["string"]},
-                    ]
+                    ],
                 }
                 client.schema.create_class(schema)
+
 
 async def upsert_chunks_dual(ids, texts, payloads, lang=""):
     """
     Routes chunks to A or B collection based on length/priority.
     Embeds accordingly and writes to the appropriate collection.
-    
+
     Args:
         ids: List of chunk IDs
         texts: List of chunk texts
@@ -99,7 +101,7 @@ async def upsert_chunks_dual(ids, texts, payloads, lang=""):
     with _client() as client:
         # Process Tier A chunks
         if A_txt:
-            collection_a = os.getenv("WEAVIATE_COLLECTION_A", "CodeChunk_A")
+            collection_a = get_config().get("WEAVIATE_COLLECTION_A", "CodeChunk_A")
             ensure_schema(collection_a, DIM_A)
 
             try:
@@ -117,11 +119,13 @@ async def upsert_chunks_dual(ids, texts, payloads, lang=""):
                 with client.batch as batch:
                     for k, i in enumerate(A_idx):
                         props = {**payloads[i], "content": texts[i]}
-                        batch.add_data_object(props, collection_a, uuid=str(ids[i]), vector=vecsA[k])
+                        batch.add_data_object(
+                            props, collection_a, uuid=str(ids[i]), vector=vecsA[k]
+                        )
 
         # Process Tier B chunks
         if B_txt:
-            collection_b = os.getenv("WEAVIATE_COLLECTION_B", "CodeChunk_B")
+            collection_b = get_config().get("WEAVIATE_COLLECTION_B", "CodeChunk_B")
             ensure_schema(collection_b, DIM_B)
 
             try:
@@ -138,19 +142,22 @@ async def upsert_chunks_dual(ids, texts, payloads, lang=""):
                 with client.batch as batch:
                     for k, i in enumerate(B_idx):
                         props = {**payloads[i], "content": texts[i]}
-                        batch.add_data_object(props, collection_b, uuid=str(ids[i]), vector=vecsB[k])
+                        batch.add_data_object(
+                            props, collection_b, uuid=str(ids[i]), vector=vecsB[k]
+                        )
+
 
 @with_circuit_breaker("database")
 async def hybrid_search_merge(query: str, k: int = 8, semantic_weight: float = 0.65):
     """
     Query both collections with vector + BM25 and merge results.
     Simple weighted score: s = w*semantic + (1-w)*bm25_norm
-    
+
     Args:
         query: Search query
         k: Number of results
         semantic_weight: Weight for semantic search (0-1)
-    
+
     Returns:
         Merged and ranked results
     """
@@ -164,7 +171,7 @@ async def hybrid_search_merge(query: str, k: int = 8, semantic_weight: float = 0
     with _client() as client:
         # Search Collection A
         try:
-            collection_a = os.getenv("WEAVIATE_COLLECTION_A", "CodeChunk_A")
+            collection_a = get_config().get("WEAVIATE_COLLECTION_A", "CodeChunk_A")
 
             try:
                 # v4 client
@@ -173,31 +180,37 @@ async def hybrid_search_merge(query: str, k: int = 8, semantic_weight: float = 0
                 # Vector search
                 resA = colA.query.near_vector(qA, limit=k)
                 for r in resA.objects:
-                    out.append({
-                        "collection": "A",
-                        "sem": r.metadata.distance if hasattr(r.metadata, 'distance') else 0.5,
-                        "bm25": 0.0,
-                        "prop": r.properties
-                    })
+                    out.append(
+                        {
+                            "collection": "A",
+                            "sem": r.metadata.distance if hasattr(r.metadata, "distance") else 0.5,
+                            "bm25": 0.0,
+                            "prop": r.properties,
+                        }
+                    )
 
                 # BM25 search
                 try:
                     bm = colA.query.bm25(query, limit=k)
                     for r in bm.objects:
-                        out.append({
-                            "collection": "A",
-                            "sem": 1.0,  # No semantic score for BM25
-                            "bm25": 0.8,  # Fixed BM25 score
-                            "prop": r.properties
-                        })
+                        out.append(
+                            {
+                                "collection": "A",
+                                "sem": 1.0,  # No semantic score for BM25
+                                "bm25": 0.8,  # Fixed BM25 score
+                                "prop": r.properties,
+                            }
+                        )
                 except:
                     pass  # BM25 might not be available
 
             except:
                 # v3 client fallback
                 result = (
-                    client.query
-                    .get(collection_a, ["path", "lang", "start_line", "end_line", "chunk_id", "content"])
+                    client.query.get(
+                        collection_a,
+                        ["path", "lang", "start_line", "end_line", "chunk_id", "content"],
+                    )
                     .with_near_vector({"vector": qA})
                     .with_limit(k)
                     .with_additional(["certainty", "id"])
@@ -205,18 +218,20 @@ async def hybrid_search_merge(query: str, k: int = 8, semantic_weight: float = 0
                 )
                 if "data" in result and "Get" in result["data"]:
                     for r in result["data"]["Get"].get(collection_a, []):
-                        out.append({
-                            "collection": "A",
-                            "sem": 1.0 - r.get("_additional", {}).get("certainty", 0.5),
-                            "bm25": 0.0,
-                            "prop": r
-                        })
+                        out.append(
+                            {
+                                "collection": "A",
+                                "sem": 1.0 - r.get("_additional", {}).get("certainty", 0.5),
+                                "bm25": 0.0,
+                                "prop": r,
+                            }
+                        )
         except Exception as e:
             logger.info(f"Error searching collection A: {e}")
 
         # Search Collection B
         try:
-            collection_b = os.getenv("WEAVIATE_COLLECTION_B", "CodeChunk_B")
+            collection_b = get_config().get("WEAVIATE_COLLECTION_B", "CodeChunk_B")
 
             try:
                 # v4 client
@@ -225,31 +240,32 @@ async def hybrid_search_merge(query: str, k: int = 8, semantic_weight: float = 0
                 # Vector search
                 resB = colB.query.near_vector(qB, limit=k)
                 for r in resB.objects:
-                    out.append({
-                        "collection": "B",
-                        "sem": r.metadata.distance if hasattr(r.metadata, 'distance') else 0.5,
-                        "bm25": 0.0,
-                        "prop": r.properties
-                    })
+                    out.append(
+                        {
+                            "collection": "B",
+                            "sem": r.metadata.distance if hasattr(r.metadata, "distance") else 0.5,
+                            "bm25": 0.0,
+                            "prop": r.properties,
+                        }
+                    )
 
                 # BM25 search
                 try:
                     bm = colB.query.bm25(query, limit=k)
                     for r in bm.objects:
-                        out.append({
-                            "collection": "B",
-                            "sem": 1.0,
-                            "bm25": 0.8,
-                            "prop": r.properties
-                        })
+                        out.append(
+                            {"collection": "B", "sem": 1.0, "bm25": 0.8, "prop": r.properties}
+                        )
                 except:
                     pass
 
             except:
                 # v3 client fallback
                 result = (
-                    client.query
-                    .get(collection_b, ["path", "lang", "start_line", "end_line", "chunk_id", "content"])
+                    client.query.get(
+                        collection_b,
+                        ["path", "lang", "start_line", "end_line", "chunk_id", "content"],
+                    )
                     .with_near_vector({"vector": qB})
                     .with_limit(k)
                     .with_additional(["certainty", "id"])
@@ -257,12 +273,14 @@ async def hybrid_search_merge(query: str, k: int = 8, semantic_weight: float = 0
                 )
                 if "data" in result and "Get" in result["data"]:
                     for r in result["data"]["Get"].get(collection_b, []):
-                        out.append({
-                            "collection": "B",
-                            "sem": 1.0 - r.get("_additional", {}).get("certainty", 0.5),
-                            "bm25": 0.0,
-                            "prop": r
-                        })
+                        out.append(
+                            {
+                                "collection": "B",
+                                "sem": 1.0 - r.get("_additional", {}).get("certainty", 0.5),
+                                "bm25": 0.0,
+                                "prop": r,
+                            }
+                        )
         except Exception as e:
             logger.info(f"Error searching collection B: {e}")
 
@@ -293,21 +311,22 @@ async def hybrid_search_merge(query: str, k: int = 8, semantic_weight: float = 0
     results.sort(key=lambda x: x["score"], reverse=True)
     return results[:k]
 
+
 # Legacy functions for backward compatibility
 def get_client():
     """Legacy: Get Weaviate client instance."""
     return _client()
+
 
 def ensure_schema_legacy(client):
     """Legacy: Ensure the required classes exist in Weaviate schema."""
     ensure_schema(settings.WEAVIATE_CLASS_CODE, DIM_B)
     ensure_schema(settings.WEAVIATE_CLASS_DOC, DIM_B)
 
+
 @with_circuit_breaker("database")
 async def search_by_vector(
-    vector: list[float],
-    class_name: str = None,
-    limit: int = 5
+    vector: list[float], class_name: str = None, limit: int = 5
 ) -> list[dict[str, Any]]:
     """Legacy: Search Weaviate using a vector."""
     # Use hybrid search instead

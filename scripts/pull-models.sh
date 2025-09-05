@@ -23,7 +23,7 @@ log() {
     shift
     local message="$*"
     local timestamp=$(date '+%H:%M:%S')
-    
+
     case $level in
         "INFO")  echo -e "${BLUE}[${timestamp}] INFO: ${message}${NC}" ;;
         "SUCCESS") echo -e "${GREEN}[${timestamp}] SUCCESS: ${message}${NC}" ;;
@@ -34,7 +34,7 @@ log() {
 
 check_ollama() {
     log "INFO" "Checking Ollama service..."
-    
+
     if curl -s "${OLLAMA_HOST}/api/tags" > /dev/null 2>&1; then
         log "SUCCESS" "Ollama is running at ${OLLAMA_HOST}"
         return 0
@@ -53,18 +53,18 @@ list_models() {
 pull_model() {
     local model=$1
     log "INFO" "Pulling model: ${model}"
-    
+
     # Pull the model using Ollama API
     response=$(curl -s -X POST "${OLLAMA_HOST}/api/pull" \
         -H "Content-Type: application/json" \
         -d "{\"name\": \"${model}\"}")
-    
+
     if [ $? -eq 0 ]; then
         log "SUCCESS" "Successfully initiated pull for ${model}"
-        
+
         # Monitor progress
         log "INFO" "Downloading ${model}... This may take several minutes..."
-        
+
         # Use ollama CLI if available, otherwise use API
         if command -v ollama &> /dev/null; then
             ollama pull "${model}"
@@ -89,7 +89,7 @@ pull_model() {
 test_model() {
     local model=$1
     log "INFO" "Testing model: ${model}"
-    
+
     # Simple test prompt
     response=$(curl -s -X POST "${OLLAMA_HOST}/api/generate" \
         -H "Content-Type: application/json" \
@@ -102,7 +102,7 @@ test_model() {
                 \"num_predict\": 50
             }
         }")
-    
+
     if echo "$response" | grep -q "response"; then
         log "SUCCESS" "Model ${model} is working correctly"
         echo -e "${GREEN}Response: $(echo "$response" | python3 -c "import sys, json; print(json.load(sys.stdin).get('response', 'No response')[:100])")${NC}"
@@ -117,19 +117,19 @@ main() {
     echo -e "${BLUE}  🤖 OLLAMA MODEL SETUP FOR SOPHIA INTEL AI"
     echo -e "${BLUE}  📅 $(date '+%Y-%m-%d %H:%M:%S')"
     echo -e "${BLUE}════════════════════════════════════════════════════════════════${NC}"
-    
+
     # Check if Ollama is running
     if ! check_ollama; then
         exit 1
     fi
-    
+
     # List current models
     list_models
-    
+
     # Pull each model
     for model in "${MODELS[@]}"; do
         echo -e "\n${BLUE}────────────────────────────────────────${NC}"
-        
+
         # Check if model already exists
         if curl -s "${OLLAMA_HOST}/api/tags" | grep -q "\"${model}\""; then
             log "INFO" "Model ${model} already exists, skipping download"
@@ -139,18 +139,18 @@ main() {
                 continue
             fi
         fi
-        
+
         # Test the model
         test_model "${model}"
     done
-    
+
     echo -e "\n${BLUE}════════════════════════════════════════════════════════════════${NC}"
     log "SUCCESS" "Model setup completed!"
-    
+
     # Final model list
     echo -e "\n${GREEN}Available models:${NC}"
     list_models
-    
+
     echo -e "\n${GREEN}Next steps:${NC}"
     echo "1. Models are ready for use with the RAG pipeline"
     echo "2. Default model is set to: llama3.2:3b"

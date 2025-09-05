@@ -16,10 +16,13 @@ from app.swarms.communication.message_bus import MessageBus, MessageType
 router = APIRouter()
 openrouter_gateway = OpenRouterGateway()
 
+
 @router.post("/chat")
 async def chat_endpoint(request: ChatRequest):
     """Unified chat endpoint with OpenRouter model routing"""
-    if "openrouter" in request.model or any(m in request.model for m in ["openai/gpt-5", "x-ai/", "anthropic/"]):
+    if "openrouter" in request.model or any(
+        m in request.model for m in ["openai/gpt-5", "x-ai/", "anthropic/"]
+    ):
         response = await openrouter_gateway.chat_completion(
             model=request.model,
             messages=request.messages,
@@ -28,7 +31,7 @@ async def chat_endpoint(request: ChatRequest):
             top_p=request.top_p,
             presence_penalty=request.presence_penalty,
             frequency_penalty=request.frequency_penalty,
-            stop=request.stop
+            stop=request.stop,
         )
         return {"choices": [{"message": {"content": response.choices[0].message.content}}]}
 
@@ -36,11 +39,13 @@ async def chat_endpoint(request: ChatRequest):
     # [Add default OpenAI client handling here]
     raise HTTPException(status_code=404, detail="OpenRouter model not found")
 
+
 @router.post("/embeddings")
 async def embeddings(request: EmbeddingRequest):
     sanitized_text = clean(request.text)
     record_cost("embedding", sanitized_text)
     return {"embedding": [0.1, 0.2, 0.3]}
+
 
 @router.post("/mcp/memory/store")
 async def store_memory_endpoint(request: MemoryStoreRequest):
@@ -48,11 +53,13 @@ async def store_memory_endpoint(request: MemoryStoreRequest):
     store_memory(sanitized_content, request.metadata)
     return {"status": "success"}
 
+
 @router.post("/mcp/memory/search")
 async def search_memory_endpoint(request: MemorySearchRequest):
     sanitized_query = clean(request.query)
     results = search_memory(sanitized_query, request.filters, request.top_k)
     return {"results": results}
+
 
 @router.post("/mcp/memory/update")
 async def update_memory_endpoint(request: MemoryUpdateRequest):
@@ -60,14 +67,17 @@ async def update_memory_endpoint(request: MemoryUpdateRequest):
     update_memory(request.memory_id, sanitized_content, request.metadata)
     return {"status": "success"}
 
+
 @router.post("/mcp/memory/delete")
 async def delete_memory_endpoint(request: MemoryDeleteRequest):
     delete_memory(request.memory_id)
     return {"status": "success"}
 
+
 @router.get("/health")
 async def health_check():
     return {"status": "ok"}
+
 
 # WebSocket endpoint for real-time message streaming
 @router.websocket("/ws/swarm")
@@ -78,7 +88,7 @@ async def websocket_swarm_endpoint(websocket: WebSocket):
     query_params = websocket.query_params
     thread_id = query_params.get("thread_id", None)
     agent_id = query_params.get("agent_id", None)
-    pattern = query_params.get("pattern", None)
+    query_params.get("pattern", None)
     message_type = query_params.get("type", None)
 
     # Convert types if needed
@@ -99,8 +109,7 @@ async def websocket_swarm_endpoint(websocket: WebSocket):
     try:
         # Start subscription to the message bus
         async for message in bus.subscribe(
-            agent_id or "all",
-            [message_type] if message_type else None
+            agent_id or "all", [message_type] if message_type else None
         ):
             # Filter messages based on parameters
             if thread_id and message.thread_id != thread_id:
@@ -117,7 +126,7 @@ async def websocket_swarm_endpoint(websocket: WebSocket):
                 "timestamp": message.timestampisoformat(),
                 "priority": message.priority,
                 "trace_id": message.trace_id,
-                "span_id": message.span_id
+                "span_id": message.span_id,
             }
 
             # Send formatted message to UI
@@ -133,6 +142,7 @@ async def websocket_swarm_endpoint(websocket: WebSocket):
     finally:
         # Disable the WebSocket subscription
         pass
+
 
 # Initialize bus for websockets (to be run on startup)
 # Note: These handlers should be registered at the app level, not router level

@@ -16,7 +16,8 @@ from dotenv import load_dotenv
 from app.core.ai_logger import logger
 
 # Load environment variables
-load_dotenv('.env.local')
+load_dotenv(".env.local")
+
 
 class APIValidator:
     def __init__(self):
@@ -29,11 +30,11 @@ class APIValidator:
         """Log with timestamp and color coding."""
         timestamp = datetime.now().strftime("%H:%M:%S")
         colors = {
-            "INFO": "\033[94m",      # Blue
-            "SUCCESS": "\033[92m",   # Green
-            "WARNING": "\033[93m",   # Yellow
-            "ERROR": "\033[91m",     # Red
-            "RESET": "\033[0m"       # Reset
+            "INFO": "\033[94m",  # Blue
+            "SUCCESS": "\033[92m",  # Green
+            "WARNING": "\033[93m",  # Yellow
+            "ERROR": "\033[91m",  # Red
+            "RESET": "\033[0m",  # Reset
         }
         color = colors.get(level, colors["INFO"])
         logger.info(f"{color}[{timestamp}] {level}: {message}{colors['RESET']}")
@@ -55,20 +56,29 @@ class APIValidator:
                 response = await client.get(
                     "https://api.openai.com/v1/models",
                     headers={"Authorization": f"Bearer {api_key}"},
-                    timeout=10.0
+                    timeout=10.0,
                 )
 
                 if response.status_code == 200:
                     models = response.json()
                     model_count = len(models.get("data", []))
-                    self.log(f"✅ OpenAI API connected successfully - {model_count} models available", "SUCCESS")
+                    self.log(
+                        f"✅ OpenAI API connected successfully - {model_count} models available",
+                        "SUCCESS",
+                    )
                     self.passed_tests += 1
                     self.results["openai"] = {"status": "success", "models": model_count}
                     return True
                 else:
-                    self.log(f"❌ OpenAI API failed with status {response.status_code}: {response.text}", "ERROR")
+                    self.log(
+                        f"❌ OpenAI API failed with status {response.status_code}: {response.text}",
+                        "ERROR",
+                    )
                     self.failed_tests += 1
-                    self.results["openai"] = {"status": "failed", "error": f"HTTP {response.status_code}"}
+                    self.results["openai"] = {
+                        "status": "failed",
+                        "error": f"HTTP {response.status_code}",
+                    }
                     return False
 
         except Exception as e:
@@ -97,26 +107,35 @@ class APIValidator:
                     headers={
                         "x-api-key": api_key,
                         "anthropic-version": "2023-06-01",
-                        "content-type": "application/json"
+                        "content-type": "application/json",
                     },
                     json={
                         "model": "claude-3-haiku-20240307",
                         "max_tokens": 10,
-                        "messages": [{"role": "user", "content": "Hi"}]
+                        "messages": [{"role": "user", "content": "Hi"}],
                     },
-                    timeout=10.0
+                    timeout=10.0,
                 )
 
                 if response.status_code == 200:
-                    result = response.json()
+                    response.json()
                     self.log("✅ Anthropic API connected successfully", "SUCCESS")
                     self.passed_tests += 1
-                    self.results["anthropic"] = {"status": "success", "model": "claude-3-haiku-20240307"}
+                    self.results["anthropic"] = {
+                        "status": "success",
+                        "model": "claude-3-haiku-20240307",
+                    }
                     return True
                 else:
-                    self.log(f"❌ Anthropic API failed with status {response.status_code}: {response.text}", "ERROR")
+                    self.log(
+                        f"❌ Anthropic API failed with status {response.status_code}: {response.text}",
+                        "ERROR",
+                    )
                     self.failed_tests += 1
-                    self.results["anthropic"] = {"status": "failed", "error": f"HTTP {response.status_code}"}
+                    self.results["anthropic"] = {
+                        "status": "failed",
+                        "error": f"HTTP {response.status_code}",
+                    }
                     return False
 
         except Exception as e:
@@ -142,20 +161,29 @@ class APIValidator:
                 response = await client.get(
                     "https://openrouter.ai/api/v1/models",
                     headers={"Authorization": f"Bearer {api_key}"},
-                    timeout=10.0
+                    timeout=10.0,
                 )
 
                 if response.status_code == 200:
                     models = response.json()
                     model_count = len(models.get("data", []))
-                    self.log(f"✅ OpenRouter API connected successfully - {model_count} models available", "SUCCESS")
+                    self.log(
+                        f"✅ OpenRouter API connected successfully - {model_count} models available",
+                        "SUCCESS",
+                    )
                     self.passed_tests += 1
                     self.results["openrouter"] = {"status": "success", "models": model_count}
                     return True
                 else:
-                    self.log(f"❌ OpenRouter API failed with status {response.status_code}: {response.text}", "ERROR")
+                    self.log(
+                        f"❌ OpenRouter API failed with status {response.status_code}: {response.text}",
+                        "ERROR",
+                    )
                     self.failed_tests += 1
-                    self.results["openrouter"] = {"status": "failed", "error": f"HTTP {response.status_code}"}
+                    self.results["openrouter"] = {
+                        "status": "failed",
+                        "error": f"HTTP {response.status_code}",
+                    }
                     return False
 
         except Exception as e:
@@ -169,22 +197,16 @@ class APIValidator:
         self.log("Testing Weaviate v1.32+ connection...")
         self.total_tests += 1
 
-        weaviate_url = os.getenv("WEAVIATE_URL", "http://localhost:8080")
+        weaviate_url = get_config().get("WEAVIATE_URL", "http://localhost:8080")
 
         try:
             async with httpx.AsyncClient() as client:
                 # Test Weaviate readiness endpoint
-                response = await client.get(
-                    f"{weaviate_url}/v1/.well-known/ready",
-                    timeout=10.0
-                )
+                response = await client.get(f"{weaviate_url}/v1/.well-known/ready", timeout=10.0)
 
                 if response.status_code == 200:
                     # Get meta information
-                    meta_response = await client.get(
-                        f"{weaviate_url}/v1/meta",
-                        timeout=5.0
-                    )
+                    meta_response = await client.get(f"{weaviate_url}/v1/meta", timeout=5.0)
 
                     if meta_response.status_code == 200:
                         meta_data = meta_response.json()
@@ -194,7 +216,7 @@ class APIValidator:
                         self.results["weaviate"] = {
                             "status": "success",
                             "version": version,
-                            "features": "v1.32+ with RQ compression"
+                            "features": "v1.32+ with RQ compression",
                         }
                         return True
                     else:
@@ -203,9 +225,15 @@ class APIValidator:
                         self.results["weaviate"] = {"status": "success", "version": "1.32+"}
                         return True
                 else:
-                    self.log(f"❌ Weaviate failed with status {response.status_code}: {response.text}", "ERROR")
+                    self.log(
+                        f"❌ Weaviate failed with status {response.status_code}: {response.text}",
+                        "ERROR",
+                    )
                     self.failed_tests += 1
-                    self.results["weaviate"] = {"status": "failed", "error": f"HTTP {response.status_code}"}
+                    self.results["weaviate"] = {
+                        "status": "failed",
+                        "error": f"HTTP {response.status_code}",
+                    }
                     return False
 
         except Exception as e:
@@ -228,6 +256,7 @@ class APIValidator:
 
         try:
             import redis
+
             client = redis.from_url(redis_url, decode_responses=True)
 
             # Test connection
@@ -269,17 +298,16 @@ class APIValidator:
         if not openai_api_key:
             self.log("❌ OpenAI API key not found (required for Portkey proxy)", "ERROR")
             self.failed_tests += 1
-            self.results["portkey"] = {"status": "failed", "error": "Missing OpenAI API key for Portkey"}
+            self.results["portkey"] = {
+                "status": "failed",
+                "error": "Missing OpenAI API key for Portkey",
+            }
             return False
 
         try:
             async with httpx.AsyncClient() as client:
                 # Test Portkey with minimal configuration that works
-                config_object = {
-                    "retry": {
-                        "attempts": 2
-                    }
-                }
+                config_object = {"retry": {"attempts": 2}}
 
                 # Test with your real virtual key IDs from Portkey dashboard
                 response = await client.post(
@@ -288,26 +316,38 @@ class APIValidator:
                         "x-portkey-api-key": portkey_api_key,
                         "x-portkey-virtual-key": "vkj-openrouter-cc4151",  # Your OpenRouter virtual key
                         "x-portkey-config": json.dumps(config_object),
-                        "content-type": "application/json"
+                        "content-type": "application/json",
                     },
                     json={
                         "model": "anthropic/claude-3-haiku",  # Use OpenRouter model
                         "messages": [{"role": "user", "content": "test portkey virtual keys"}],
-                        "max_tokens": 10
+                        "max_tokens": 10,
                     },
-                    timeout=15.0
+                    timeout=15.0,
                 )
 
                 if response.status_code == 200:
-                    result = response.json()
-                    self.log("✅ Portkey Gateway connected successfully with virtual keys", "SUCCESS")
+                    response.json()
+                    self.log(
+                        "✅ Portkey Gateway connected successfully with virtual keys", "SUCCESS"
+                    )
                     self.passed_tests += 1
-                    self.results["portkey"] = {"status": "success", "provider": "openai", "model": "gpt-3.5-turbo"}
+                    self.results["portkey"] = {
+                        "status": "success",
+                        "provider": "openai",
+                        "model": "gpt-3.5-turbo",
+                    }
                     return True
                 else:
-                    self.log(f"❌ Portkey failed with status {response.status_code}: {response.text}", "ERROR")
+                    self.log(
+                        f"❌ Portkey failed with status {response.status_code}: {response.text}",
+                        "ERROR",
+                    )
                     self.failed_tests += 1
-                    self.results["portkey"] = {"status": "failed", "error": f"HTTP {response.status_code}"}
+                    self.results["portkey"] = {
+                        "status": "failed",
+                        "error": f"HTTP {response.status_code}",
+                    }
                     return False
 
         except Exception as e:
@@ -328,7 +368,7 @@ class APIValidator:
             self.test_openrouter_api(),
             self.test_weaviate_connection(),
             self.test_redis_connection(),
-            self.test_portkey_gateway()
+            self.test_portkey_gateway(),
         ]
 
         await asyncio.gather(*tests, return_exceptions=True)
@@ -358,15 +398,18 @@ class APIValidator:
                 "total_tests": self.total_tests,
                 "passed_tests": self.passed_tests,
                 "failed_tests": self.failed_tests,
-                "success_rate": (self.passed_tests / self.total_tests * 100) if self.total_tests > 0 else 0
+                "success_rate": (self.passed_tests / self.total_tests * 100)
+                if self.total_tests > 0
+                else 0,
             },
-            "results": self.results
+            "results": self.results,
         }
 
         with open(filename, "w") as f:
             json.dump(results_data, f, indent=2)
 
         self.log(f"📁 Results saved to {filename}")
+
 
 async def main():
     """Main entry point."""
@@ -385,6 +428,7 @@ async def main():
     except Exception as e:
         validator.log(f"💥 Unexpected error: {e}", "ERROR")
         sys.exit(1)
+
 
 if __name__ == "__main__":
     asyncio.run(main())

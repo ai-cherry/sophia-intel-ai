@@ -7,7 +7,9 @@ This document describes the integrated architecture connecting AI swarms with MC
 ## 🏗️ Architecture Components
 
 ### 1. **Unified Orchestrator Facade** (`app/orchestration/unified_facade.py`)
+
 Central routing layer that:
+
 - Routes requests to appropriate swarm implementations
 - Manages MCP assistant coordination
 - Handles memory context injection/extraction
@@ -15,19 +17,24 @@ Central routing layer that:
 - Wraps calls with circuit breakers and monitoring
 
 ### 2. **Mode Normalizer** (`app/orchestration/mode_normalizer.py`)
+
 Ensures consistent optimization modes across all swarms:
+
 - Normalizes mode strings (fast/lite/speed → LITE)
 - Provides unified configuration for each mode
 - Calculates mode costs and selects optimal modes
 - Handles graceful degradation strategies
 
 ### 3. **MCP Bridge System** (`mcp-bridge/`)
+
 TypeScript adapters for AI assistants:
+
 - **Claude Desktop**: General memory and context operations
 - **Roo/Cursor**: Code intelligence and pattern analysis
 - **Cline**: Autonomous task execution and project management
 
 ### 4. **Swarm Implementations**
+
 - **Coding Swarm**: Debate pipeline with critic/judge/gates
 - **Improved Swarm**: 8 improvement patterns with selective activation
 - **Simple Agents**: Sequential agent execution
@@ -65,11 +72,11 @@ Response Stream (SSE/NDJSON)
 
 ### Unified Optimization Modes
 
-| Mode | Aliases | Timeout | Max Agents | Patterns | Use Case |
-|------|---------|---------|------------|----------|----------|
-| **LITE** | fast, speed, quick | 30s | 2 | Safety only | Urgent/simple tasks |
-| **BALANCED** | normal, standard | 120s | 5 | Safety, Roles, Gates | Default operation |
-| **QUALITY** | thorough, complete | 300s | 10 | All 8 patterns | Complex/critical tasks |
+| Mode         | Aliases            | Timeout | Max Agents | Patterns             | Use Case               |
+| ------------ | ------------------ | ------- | ---------- | -------------------- | ---------------------- |
+| **LITE**     | fast, speed, quick | 30s     | 2          | Safety only          | Urgent/simple tasks    |
+| **BALANCED** | normal, standard   | 120s    | 5          | Safety, Roles, Gates | Default operation      |
+| **QUALITY**  | thorough, complete | 300s    | 10         | All 8 patterns       | Complex/critical tasks |
 
 ### Mode Selection Logic
 
@@ -87,12 +94,14 @@ Default → BALANCED
 ### Circuit Breaker Protection
 
 Components protected:
+
 - Memory operations (search/store)
 - LLM calls
 - MCP assistant communications
 - Vector database queries
 
 Degradation strategies:
+
 - Skip non-critical operations
 - Reduce agent count
 - Fallback to simpler mode
@@ -101,6 +110,7 @@ Degradation strategies:
 ### Performance Monitoring
 
 Metrics collected:
+
 - Execution time per pattern
 - Success/failure rates
 - Quality scores
@@ -110,6 +120,7 @@ Metrics collected:
 ## 🔧 Implementation Fixes Applied
 
 ### 1. **Mode Normalization Fix**
+
 ```python
 # Before (in coding swarm):
 def _is_fast_mode(self):
@@ -122,6 +133,7 @@ def _is_fast_mode(self):
 ```
 
 ### 2. **Optimizer Wiring**
+
 ```python
 # Improved swarm now uses optimizer for dynamic mode selection:
 mode_cfg = self.optimizer.get_optimal_swarm_config(problem)
@@ -130,6 +142,7 @@ self.enabled_patterns = mode_cfg["patterns"]
 ```
 
 ### 3. **Circuit Breaker Integration**
+
 ```python
 # All external calls now wrapped:
 cb = self.optimizer.get_circuit_breaker("memory")
@@ -138,6 +151,7 @@ async with performance_monitoring(self.optimizer, "memory_search"):
 ```
 
 ### 4. **Pattern Module Usage**
+
 ```python
 # Replaced inline implementations with imports:
 from app.swarms.patterns.adversarial_debate import AdversarialDebateSystem
@@ -150,26 +164,29 @@ from app.swarms.patterns.quality_gates import QualityGateSystem
 ### Coordination Strategies
 
 **Code-Heavy Tasks:**
+
 1. Roo analyzes codebase patterns
 2. Cline creates implementation plan
 3. Claude synthesizes and reviews
 
 **General Tasks:**
+
 1. Claude performs initial analysis
 2. Cline executes autonomously (if not lite mode)
 3. Results synthesized
 
 ### Assistant Capabilities
 
-| Assistant | Strengths | Best For |
-|-----------|-----------|----------|
-| **Claude** | General reasoning, synthesis | Analysis, review, documentation |
-| **Roo/Cursor** | Code intelligence, patterns | Refactoring, code search, patterns |
-| **Cline** | Autonomous execution | Implementation, testing, planning |
+| Assistant      | Strengths                    | Best For                           |
+| -------------- | ---------------------------- | ---------------------------------- |
+| **Claude**     | General reasoning, synthesis | Analysis, review, documentation    |
+| **Roo/Cursor** | Code intelligence, patterns  | Refactoring, code search, patterns |
+| **Cline**      | Autonomous execution         | Implementation, testing, planning  |
 
 ## 🚀 Usage Examples
 
 ### Basic Execution
+
 ```python
 from app.orchestration.wire_integration import IntegratedSwarmSystem
 
@@ -184,6 +201,7 @@ result = await system.execute_with_mode_selection(
 ```
 
 ### MCP Coordinated Execution
+
 ```python
 # Use specific assistants
 result = await system.execute_mcp_coordinated(
@@ -194,6 +212,7 @@ result = await system.execute_mcp_coordinated(
 ```
 
 ### Manual Mode Control
+
 ```python
 from app.orchestration.unified_facade import SwarmRequest, SwarmType, OptimizationMode
 
@@ -211,12 +230,14 @@ async for event in facade.execute(request):
 ## 📊 Monitoring & Observability
 
 ### Prometheus Metrics
+
 - `swarm_execution_seconds{swarm_type, mode}`
 - `swarm_pattern_success_total{pattern}`
 - `swarm_circuit_breaker_open{component}`
 - `swarm_quality_score{swarm_type}`
 
 ### Grafana Dashboards
+
 - Swarm execution times by mode
 - Pattern effectiveness
 - Circuit breaker states
@@ -224,6 +245,7 @@ async for event in facade.execute(request):
 - Cost analysis by mode
 
 ### Logging
+
 ```python
 # Structured logging at key points:
 logger.info("Swarm execution", extra={
@@ -245,18 +267,21 @@ logger.info("Swarm execution", extra={
 ## 🧪 Testing Strategy
 
 ### Unit Tests
+
 - Mode normalization correctness
 - Circuit breaker state transitions
 - Pattern selection logic
 - Degradation strategies
 
 ### Integration Tests
+
 - End-to-end swarm execution
 - MCP assistant coordination
 - Memory operations with failures
 - Mode transitions under load
 
 ### Performance Tests
+
 - Latency comparison: LITE vs QUALITY
 - Throughput under various modes
 - Resource utilization
@@ -286,6 +311,7 @@ logger.info("Swarm execution", extra={
 ## 🔄 Migration Path
 
 ### From Current State
+
 1. Deploy Unified Orchestrator Facade
 2. Apply mode normalization fixes
 3. Wire optimizer and circuit breakers
@@ -294,6 +320,7 @@ logger.info("Swarm execution", extra={
 6. Monitor and tune
 
 ### Rollback Plan
+
 1. Keep original endpoints active
 2. Use feature flags for gradual rollout
 3. Monitor error rates and latency

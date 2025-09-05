@@ -299,12 +299,12 @@ async function main() {
   // Handle tool calls
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const { name, arguments: args } = request.params;
-    
+
     try {
       // Check cache first
       const cacheKey = `claude:${name}:${JSON.stringify(args)}`;
       const cached = await redis.get(cacheKey);
-      
+
       if (cached) {
         logger.info(`Cache hit for ${name}`);
         return {
@@ -319,10 +319,10 @@ async function main() {
 
       // Call MCP server
       const result = await mcpClient.callTool(name, args);
-      
+
       // Cache result
       await redis.setEx(cacheKey, 300, JSON.stringify(result));
-      
+
       return {
         content: [
           {
@@ -348,9 +348,9 @@ async function main() {
   // Start server with stdio transport
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  
+
   logger.info('Claude Desktop MCP Adapter is running');
-  
+
   // Handle graceful shutdown
   process.on('SIGINT', async () => {
     logger.info('Shutting down...');

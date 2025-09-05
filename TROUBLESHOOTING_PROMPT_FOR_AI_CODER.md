@@ -1,15 +1,18 @@
 # AI Agent Swarm UI Local Deployment Troubleshooting Guide
 
 ## Context
+
 You are helping fix a React/Next.js UI (agent-ui) that connects to a Python FastAPI backend (unified_server.py) for an AI agent swarm system. The UI runs on port 3000, the API runs on port 8003, but there are persistent connection and data mapping issues.
 
 ## Current Issues to Fix
 
 ### 1. Port/URL Drift Issues
+
 **Problem**: UI keeps trying to connect to port 8000 (old cached value) instead of 8003
 **Root Cause**: localStorage persists old endpoint under 'endpoint-storage' key from Zustand store
 
 **Solutions to Implement**:
+
 ```typescript
 // agent-ui/src/store.ts - Add migration to fix cached endpoints
 persist: {
@@ -19,7 +22,7 @@ persist: {
     const state = persistedState as any;
     // Force migration from old ports to new
     if (state.selectedEndpoint) {
-      if (state.selectedEndpoint.includes(':8000') || 
+      if (state.selectedEndpoint.includes(':8000') ||
           state.selectedEndpoint.includes(':7777')) {
         state.selectedEndpoint = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8003';
       }
@@ -38,6 +41,7 @@ persist: {
 ```
 
 ### 2. Next.js Rewrites for Development
+
 **Problem**: Hardcoded URLs cause CORS issues and port confusion
 **Solution**: Add Next.js rewrites to proxy API calls
 
@@ -45,44 +49,52 @@ persist: {
 // agent-ui/next.config.ts
 const nextConfig = {
   async rewrites() {
-    const apiBase = process.env.API_BASE_URL || 'http://localhost:8003';
+    const apiBase = process.env.API_BASE_URL || "http://localhost:8003";
     return [
       {
-        source: '/api/:path*',
-        destination: `${apiBase}/:path*`
-      }
+        source: "/api/:path*",
+        destination: `${apiBase}/:path*`,
+      },
     ];
-  }
+  },
 };
 ```
 
 ### 3. Select Component Empty Value Crash
+
 **Problem**: Radix Select.Item crashes when value prop is empty string
 **Location**: agent-ui/src/components/playground/Sidebar/EntitySelector.tsx
 
 **Fix in API transforms**:
+
 ```typescript
 // agent-ui/src/api/playground.ts
-export const getPlaygroundAgentsAPI = async (selectedEndpoint: string): Promise<ComboboxAgent[]> => {
-  const response = await fetchJSON(`${buildEndpointUrl(selectedEndpoint, '/agents')}`);
+export const getPlaygroundAgentsAPI = async (
+  selectedEndpoint: string,
+): Promise<ComboboxAgent[]> => {
+  const response = await fetchJSON(
+    `${buildEndpointUrl(selectedEndpoint, "/agents")}`,
+  );
   const data = await response.json();
-  
+
   // Normalize and filter out invalid entries
   const agents: ComboboxAgent[] = data
     .map((item: any) => ({
-      value: item.agent_id || item.id || item.name || '',
-      label: item.name || item.id || item.agent_id || 'Unnamed Agent',
+      value: item.agent_id || item.id || item.name || "",
+      label: item.name || item.id || item.agent_id || "Unnamed Agent",
       model: {
-        provider: item.model?.provider || item.model_pool || 'unknown'
+        provider: item.model?.provider || item.model_pool || "unknown",
       },
-      storage: !!item.storage
+      storage: !!item.storage,
     }))
-    .filter((agent: ComboboxAgent) => agent.value !== '');
-  
+    .filter((agent: ComboboxAgent) => agent.value !== "");
+
   if (data.length !== agents.length) {
-    console.warn(`Filtered out ${data.length - agents.length} agents with empty values`);
+    console.warn(
+      `Filtered out ${data.length - agents.length} agents with empty values`,
+    );
   }
-  
+
   return agents;
 };
 
@@ -90,6 +102,7 @@ export const getPlaygroundAgentsAPI = async (selectedEndpoint: string): Promise<
 ```
 
 **Fix in EntitySelector**:
+
 ```typescript
 // agent-ui/src/components/playground/Sidebar/EntitySelector.tsx
 const safeValue = useMemo(() => {
@@ -103,17 +116,19 @@ const safeValue = useMemo(() => {
 ```
 
 ### 4. API Response "No solution generated" Error
+
 **Problem**: Backend returns nested response but UI expects flat content
 **Location**: app/api/unified_server.py
 
 **Add helper function**:
+
 ```python
 # app/api/unified_server.py
 def _extract_solution(result: dict) -> str:
     """Extract actual solution content from nested response structures"""
     if not result:
         return "Error: No result received"
-    
+
     # Try common paths for content
     paths_to_try = [
         lambda r: r.get('content'),
@@ -125,7 +140,7 @@ def _extract_solution(result: dict) -> str:
         lambda r: r.get('final_answer'),
         lambda r: r.get('assistant_message'),
     ]
-    
+
     for path in paths_to_try:
         try:
             content = path(result)
@@ -133,11 +148,11 @@ def _extract_solution(result: dict) -> str:
                 return content
         except (KeyError, IndexError, TypeError):
             continue
-    
+
     # Last resort - return raw result as string
     if isinstance(result, str):
         return result
-    
+
     # Log the structure for debugging
     import json
     logger.warning(f"Could not extract solution from structure: {json.dumps(result, indent=2)[:500]}")
@@ -147,11 +162,11 @@ def _extract_solution(result: dict) -> str:
 @swarms_router.post("/teams/run")
 async def run_team(request: TeamRunRequest):
     # ... existing code ...
-    
+
     # In non-streaming response section
     content = _extract_solution(result)
     success = not content.startswith("Error:")
-    
+
     return JSONResponse(content={
         "success": success,
         "content": content,
@@ -160,22 +175,25 @@ async def run_team(request: TeamRunRequest):
 ```
 
 ### 5. Route Path Alignment
-**Problem**: UI uses /v1/playground/* but API exposes /teams, /workflows directly
+
+**Problem**: UI uses /v1/playground/\* but API exposes /teams, /workflows directly
 
 **Fix all route references**:
+
 ```typescript
 // agent-ui/src/api/routes.ts
 export const API_ROUTES = {
-  AGENTS: '/agents',  // NOT /v1/playground/agents
-  TEAMS: '/teams',
-  WORKFLOWS: '/workflows',
-  TEAM_RUN: '/teams/run',
-  WORKFLOW_RUN: '/workflows/run',
-  HEALTH: '/healthz'
+  AGENTS: "/agents", // NOT /v1/playground/agents
+  TEAMS: "/teams",
+  WORKFLOWS: "/workflows",
+  TEAM_RUN: "/teams/run",
+  WORKFLOW_RUN: "/workflows/run",
+  HEALTH: "/healthz",
 };
 ```
 
 ### 6. Node.js OOM Errors
+
 **Problem**: Next.js dev server runs out of memory
 **Solution**: Set NODE_OPTIONS when starting dev server
 
@@ -185,30 +203,37 @@ NODE_OPTIONS="--max-old-space-size=4096" npm run dev
 ```
 
 ### 7. Duplicate/Legacy Files Cleanup
+
 **Files to handle**:
+
 - Remove `agent-ui/src/lib/endpointutils.ts` (lowercase) - keep only `endpointUtils.ts`
 - Remove or rename old `/ui` directory to `/ui-legacy` if it exists
 - Clean Next.js cache: `rm -rf agent-ui/.next`
 
 ### 8. Default Endpoint Configuration
+
 **Update all default references**:
+
 ```typescript
 // agent-ui/src/lib/endpointUtils.ts
-export const DEFAULT_ENDPOINT = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8003';
+export const DEFAULT_ENDPOINT =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003";
 export const DEFAULT_ENDPOINT_CONFIG = {
   url: DEFAULT_ENDPOINT,
   timeout: 10000,
   retries: 3,
-  healthPath: '/healthz'
+  healthPath: "/healthz",
 };
 
 // agent-ui/src/components/swarm/EndpointPicker.tsx
 // Update placeholder
-placeholder="http://localhost:8003"
+placeholder = "http://localhost:8003";
 ```
 
 ## Health-Gated Start Script
+
 Create `start-local.sh`:
+
 ```bash
 #!/bin/bash
 set -e
@@ -268,17 +293,19 @@ wait
 ## Testing Checklist
 
 1. **Clear browser cache/localStorage**:
+
    - Open Chrome DevTools > Application > Storage > Clear site data
    - Or use incognito mode
 
 2. **Verify endpoints**:
+
    ```bash
    # API health check
    curl -s http://localhost:8003/healthz
-   
+
    # Teams endpoint
    curl -s http://localhost:8003/teams
-   
+
    # Test team run
    curl -X POST http://localhost:8003/teams/run \
      -H "Content-Type: application/json" \
@@ -286,70 +313,94 @@ wait
    ```
 
 3. **Check for port references**:
+
    ```bash
    # Should return nothing
    rg -n "localhost:8000|:8000|:7777|/v1/playground" agent-ui/src
    ```
 
 4. **Create test page** `agent-ui/public/test-api.html`:
+
    ```html
-   <!DOCTYPE html>
+   <!doctype html>
    <html>
-   <head>
-     <title>API Connection Test</title>
-     <style>
-       body { font-family: monospace; padding: 20px; }
-       .test { margin: 10px 0; padding: 10px; border: 1px solid #ccc; }
-       .success { background: #d4edda; }
-       .error { background: #f8d7da; }
-     </style>
-   </head>
-   <body>
-     <h1>API Connection Test</h1>
-     
-     <div id="localStorage-info"></div>
-     
-     <button onclick="testEndpoint('http://localhost:8000')">Test Port 8000</button>
-     <button onclick="testEndpoint('http://localhost:8003')">Test Port 8003</button>
-     <button onclick="clearStorage()">Clear LocalStorage</button>
-     
-     <div id="results"></div>
-     
-     <script>
-       // Show localStorage
-       document.getElementById('localStorage-info').innerHTML = 
-         '<h3>LocalStorage:</h3><pre>' + 
-         JSON.stringify(Object.fromEntries(
-           Object.entries(localStorage).filter(([k]) => k.includes('endpoint'))
-         ), null, 2) + '</pre>';
-       
-       async function testEndpoint(url) {
-         const div = document.createElement('div');
-         div.className = 'test';
-         
-         try {
-           const response = await fetch(url + '/healthz');
-           if (response.ok) {
-             div.className += ' success';
-             div.innerHTML = `✅ ${url} - Success`;
-           } else {
-             div.className += ' error';
-             div.innerHTML = `❌ ${url} - Failed: ${response.status}`;
-           }
-         } catch (e) {
-           div.className += ' error';
-           div.innerHTML = `❌ ${url} - Error: ${e.message}`;
+     <head>
+       <title>API Connection Test</title>
+       <style>
+         body {
+           font-family: monospace;
+           padding: 20px;
          }
-         
-         document.getElementById('results').appendChild(div);
-       }
-       
-       function clearStorage() {
-         localStorage.clear();
-         location.reload();
-       }
-     </script>
-   </body>
+         .test {
+           margin: 10px 0;
+           padding: 10px;
+           border: 1px solid #ccc;
+         }
+         .success {
+           background: #d4edda;
+         }
+         .error {
+           background: #f8d7da;
+         }
+       </style>
+     </head>
+     <body>
+       <h1>API Connection Test</h1>
+
+       <div id="localStorage-info"></div>
+
+       <button onclick="testEndpoint('http://localhost:8000')">
+         Test Port 8000
+       </button>
+       <button onclick="testEndpoint('http://localhost:8003')">
+         Test Port 8003
+       </button>
+       <button onclick="clearStorage()">Clear LocalStorage</button>
+
+       <div id="results"></div>
+
+       <script>
+         // Show localStorage
+         document.getElementById("localStorage-info").innerHTML =
+           "<h3>LocalStorage:</h3><pre>" +
+           JSON.stringify(
+             Object.fromEntries(
+               Object.entries(localStorage).filter(([k]) =>
+                 k.includes("endpoint"),
+               ),
+             ),
+             null,
+             2,
+           ) +
+           "</pre>";
+
+         async function testEndpoint(url) {
+           const div = document.createElement("div");
+           div.className = "test";
+
+           try {
+             const response = await fetch(url + "/healthz");
+             if (response.ok) {
+               div.className += " success";
+               div.innerHTML = `✅ ${url} - Success`;
+             } else {
+               div.className += " error";
+               div.innerHTML = `❌ ${url} - Failed: ${response.status}`;
+             }
+           } catch (e) {
+             div.className += " error";
+             div.innerHTML = `❌ ${url} - Error: ${e.message}`;
+           }
+
+           document.getElementById("results").appendChild(div);
+         }
+
+         function clearStorage() {
+           localStorage.clear();
+           location.reload();
+         }
+       </script>
+     </body>
    </html>
    ```
 
@@ -401,6 +452,7 @@ open http://localhost:3000
 ## Final Notes
 
 This system uses:
+
 - **Frontend**: Next.js 14+ with TypeScript, Zustand for state, Radix UI components
 - **Backend**: FastAPI with Python, OpenRouter/Portkey for LLM routing
 - **Ports**: UI on 3000, API on 8003

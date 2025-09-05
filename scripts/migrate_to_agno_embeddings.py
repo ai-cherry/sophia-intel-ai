@@ -14,45 +14,25 @@ from pathlib import Path
 MIGRATION_PATTERNS = [
     # Old import patterns to replace
     (
-        r'from app\.memory\.embedding_pipeline import.*',
-        'from app.embeddings.agno_embedding_service import AgnoEmbeddingService, EmbeddingRequest'
+        r"from app\.memory\.embedding_pipeline import.*",
+        "from app.embeddings.agno_embedding_service import AgnoEmbeddingService, EmbeddingRequest",
     ),
     (
-        r'from app\.memory\.dual_tier_embeddings import.*',
-        'from app.embeddings.agno_embedding_service import AgnoEmbeddingService, EmbeddingModel'
+        r"from app\.memory\.dual_tier_embeddings import.*",
+        "from app.embeddings.agno_embedding_service import AgnoEmbeddingService, EmbeddingModel",
     ),
     (
-        r'from app\.memory\.advanced_embedding_router import.*',
-        'from app.embeddings.portkey_integration import PortkeyGateway'
+        r"from app\.memory\.advanced_embedding_router import.*",
+        "from app.embeddings.portkey_integration import PortkeyGateway",
     ),
-
     # Old class instantiations
-    (
-        r'StandardizedEmbeddingPipeline\(\)',
-        'AgnoEmbeddingService()'
-    ),
-    (
-        r'DualTierEmbedder\(\)',
-        'AgnoEmbeddingService()'
-    ),
-    (
-        r'AdvancedEmbeddingRouter\(\)',
-        'AgnoEmbeddingService()'
-    ),
-
+    (r"StandardizedEmbeddingPipeline\(\)", "AgnoEmbeddingService()"),
+    (r"DualTierEmbedder\(\)", "AgnoEmbeddingService()"),
+    (r"AdvancedEmbeddingRouter\(\)", "AgnoEmbeddingService()"),
     # Method calls
-    (
-        r'pipeline\.generate_embeddings\((.*?)\)',
-        r'await service.embed(EmbeddingRequest(texts=\1))'
-    ),
-    (
-        r'embedder\.embed_single\((.*?)\)',
-        r'await service.embed(EmbeddingRequest(texts=[\1]))'
-    ),
-    (
-        r'embedder\.embed_batch\((.*?)\)',
-        r'await service.embed(EmbeddingRequest(texts=\1))'
-    ),
+    (r"pipeline\.generate_embeddings\((.*?)\)", r"await service.embed(EmbeddingRequest(texts=\1))"),
+    (r"embedder\.embed_single\((.*?)\)", r"await service.embed(EmbeddingRequest(texts=[\1]))"),
+    (r"embedder\.embed_batch\((.*?)\)", r"await service.embed(EmbeddingRequest(texts=\1))"),
 ]
 
 # Files to migrate
@@ -67,6 +47,7 @@ FILES_TO_MIGRATE = [
 # ============================================
 # Migration Functions
 # ============================================
+
 
 def find_files_to_migrate(base_path: str = ".") -> list[Path]:
     """Find all Python files that need migration"""
@@ -91,27 +72,33 @@ def find_files_to_migrate(base_path: str = ".") -> list[Path]:
         content = py_file.read_text()
 
         # Check for old imports
-        if any(pattern in content for pattern in [
-            "embedding_pipeline",
-            "dual_tier_embeddings",
-            "advanced_embedding_router",
-            "StandardizedEmbeddingPipeline",
-            "DualTierEmbedder",
-            "AdvancedEmbeddingRouter"
-        ]):
-            if py_file not in files:
-                files.append(py_file)
+        if (
+            any(
+                pattern in content
+                for pattern in [
+                    "embedding_pipeline",
+                    "dual_tier_embeddings",
+                    "advanced_embedding_router",
+                    "StandardizedEmbeddingPipeline",
+                    "DualTierEmbedder",
+                    "AdvancedEmbeddingRouter",
+                ]
+            )
+            and py_file not in files
+        ):
+            files.append(py_file)
 
     return files
+
 
 def migrate_file(file_path: Path, dry_run: bool = True) -> tuple[bool, str]:
     """
     Migrate a single file to use new embedding service
-    
+
     Args:
         file_path: Path to file
         dry_run: If True, don't write changes
-        
+
     Returns:
         Tuple of (success, message)
     """
@@ -130,20 +117,23 @@ def migrate_file(file_path: Path, dry_run: bool = True) -> tuple[bool, str]:
         content = update_method_signatures(content)
 
         # Add new imports if needed
-        if "AgnoEmbeddingService" in content and "from app.embeddings.agno_embedding_service" not in content:
+        if (
+            "AgnoEmbeddingService" in content
+            and "from app.embeddings.agno_embedding_service" not in content
+        ):
             imports = """from app.embeddings.agno_embedding_service import (
     AgnoEmbeddingService,
     EmbeddingRequest,
     EmbeddingModel
 )\n"""
             # Add after other imports
-            content = re.sub(r'(import.*?\n\n)', r'\1' + imports, content, count=1)
+            content = re.sub(r"(import.*?\n\n)", r"\1" + imports, content, count=1)
 
         # Check if changes were made
         if content != original_content:
             if not dry_run:
                 # Backup original
-                backup_path = file_path.with_suffix('.py.bak')
+                backup_path = file_path.with_suffix(".py.bak")
                 backup_path.write_text(original_content)
 
                 # Write migrated content
@@ -158,14 +148,15 @@ def migrate_file(file_path: Path, dry_run: bool = True) -> tuple[bool, str]:
     except Exception as e:
         return False, f"Error migrating {file_path}: {e}"
 
+
 def add_async_await(content: str) -> str:
     """Add async/await to embedding calls"""
 
     # Make embedding methods async
     patterns = [
-        (r'def (.*embed.*)\(', r'async def \1('),
-        (r'service\.embed\(', r'await service.embed('),
-        (r'gateway\.create_embeddings\(', r'await gateway.create_embeddings('),
+        (r"def (.*embed.*)\(", r"async def \1("),
+        (r"service\.embed\(", r"await service.embed("),
+        (r"gateway\.create_embeddings\(", r"await gateway.create_embeddings("),
     ]
 
     for old, new in patterns:
@@ -173,28 +164,25 @@ def add_async_await(content: str) -> str:
 
     return content
 
+
 def update_method_signatures(content: str) -> str:
     """Update method signatures to match new API"""
 
     # Update embedding method calls
     content = re.sub(
-        r'generate_embeddings\(\s*texts=([^,\)]+)',
-        r'embed(EmbeddingRequest(texts=\1)',
-        content
+        r"generate_embeddings\(\s*texts=([^,\)]+)", r"embed(EmbeddingRequest(texts=\1)", content
     )
 
     # Update embedding response handling
-    content = re.sub(
-        r'for result in results:',
-        r'for embedding in response.embeddings:',
-        content
-    )
+    content = re.sub(r"for result in results:", r"for embedding in response.embeddings:", content)
 
     return content
+
 
 # ============================================
 # Migration Report
 # ============================================
+
 
 def generate_migration_report(results: list[tuple[Path, bool, str]]) -> str:
     """Generate migration report"""
@@ -237,9 +225,11 @@ def generate_migration_report(results: list[tuple[Path, bool, str]]) -> str:
 
     return "\n".join(report)
 
+
 # ============================================
 # Example Updates
 # ============================================
+
 
 def create_example_updates():
     """Create example files showing how to use new service"""
@@ -261,23 +251,23 @@ class SmartAgent:
     def __init__(self):
         self.embedding_service = AgnoEmbeddingService()
         self.embedding_agent = AgnoEmbeddingAgent(self.embedding_service)
-    
+
     async def process_document(self, document: str):
         """Process document with embeddings"""
-        
+
         # Generate embeddings for RAG
         response = await self.embedding_service.create_agent_embeddings(
             agent_id=self.id,
             context=document,
             memory_type="semantic"
         )
-        
+
         # Store in vector DB
         await self.store_embedding(
             embedding=response.embeddings[0],
             metadata=response.metadata
         )
-        
+
         return response
 
 # Usage with Agno Agent
@@ -301,23 +291,23 @@ from app.embeddings.agno_embedding_service import AgnoEmbeddingService
 class DocumentSwarm:
     def __init__(self):
         self.embedding_service = AgnoEmbeddingService()
-    
+
     async def process_documents(self, documents: list[str]):
         """Process documents in swarm"""
-        
+
         # Generate embeddings for all documents
         response = await self.embedding_service.create_swarm_embeddings(
             swarm_id=self.id,
             documents=documents,
             task_type="retrieval"
         )
-        
+
         # Distribute to agents based on similarity
         clusters = self.cluster_by_similarity(response.embeddings)
-        
+
         for cluster in clusters:
             await self.assign_to_agent(cluster)
-        
+
         return response
 '''
 
@@ -334,7 +324,7 @@ from app.core.ai_logger import logger
 
 async def generate_embeddings(texts: list[str]):
     """Generate embeddings via API"""
-    
+
     async with httpx.AsyncClient() as client:
         response = await client.post(
             "http://localhost:8000/embeddings/create",
@@ -344,7 +334,7 @@ async def generate_embeddings(texts: list[str]):
                 "language": "en"
             }
         )
-        
+
         result = response.json()
         return result["data"]["embeddings"]
 
@@ -358,9 +348,11 @@ async def generate_embeddings(texts: list[str]):
 
     return examples
 
+
 # ============================================
 # Main Migration Script
 # ============================================
+
 
 def main():
     """Run migration script"""
@@ -417,6 +409,7 @@ def main():
 
     if args.dry_run:
         logger.info("\nThis was a dry run. Use without --dry-run to apply changes.")
+
 
 if __name__ == "__main__":
     main()

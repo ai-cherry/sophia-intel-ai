@@ -1,26 +1,26 @@
 from datetime import datetime, timedelta
 from typing import Optional
 
+import jwt
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-import jwt
 
 from app.security.input_validator import validate_api_key
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 # Configuration from environment
-import os
 
 from dotenv import load_dotenv
 
-load_dotenv('.env.local')
+load_dotenv(".env.local")
 
-SECRET_KEY = os.getenv("JWT_SECRET_KEY", os.urandom(32).hex())
-ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
-ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
+SECRET_KEY = get_config().get("JWT_SECRET_KEY", "os.urandom(32).hex()")
+ALGORITHM = get_config().get("JWT_ALGORITHM", "HS256")
+ACCESS_TOKEN_EXPIRE_MINUTES = int(get_config().get("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()
@@ -31,6 +31,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
+
 
 async def get_current_user(token: str = Depends(oauth2_scheme)):
     credentials_exception = HTTPException(
@@ -47,6 +48,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         raise credentials_exception
     return username
 
+
 @router.post("/login")
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     # In production, validate against user database
@@ -59,9 +61,10 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
 
     access_token = create_access_token(
         data={"sub": form_data.username},
-        expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
     )
     return {"access_token": access_token, "token_type": "bearer"}
+
 
 @router.get("/verify")
 async def verify_token(current_user: str = Depends(get_current_user)):

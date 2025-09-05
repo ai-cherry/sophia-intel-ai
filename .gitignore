@@ -107,3 +107,15 @@ verification_report.json
 dev-mcp-unified/.env.local
 dev-mcp-unified/.env.mcp.local
 dev-mcp-unified/*.secret
+
+# Reports and ephemeral artifacts
+deployment_results/
+test_reports/
+**/test_reports/
+reports/
+artifacts/
+tests/**/test_reports/
+
+# Timestamped report files
+*20??-??-??*.md
+*20??-??-??*.json

@@ -1,4 +1,5 @@
 # 🔥 REAL AI SWARM INTEGRATION PLAN
+
 ## Making the 6-Way Coordination Actually Fucking Work
 
 **Goal:** Transform our mock swarm UI into a REAL AI-powered code-writing, problem-solving, debate-having beast.
@@ -7,7 +8,8 @@
 
 ## 📊 CURRENT STATE ANALYSIS
 
-### What We Have (REAL):
+### What We Have (REAL)
+
 - ✅ MCP Server running on port 8003
 - ✅ Working API endpoints with CORS
 - ✅ Modern React Dashboard at localhost:3000/dashboard
@@ -15,7 +17,8 @@
 - ✅ Message routing system
 - ✅ Port 8000 available for real Python backend
 
-### What's FAKE:
+### What's FAKE
+
 - ❌ Mock responses instead of real AI
 - ❌ No actual swarm intelligence
 - ❌ No real code generation
@@ -27,18 +30,22 @@
 
 ### Objective: Connect REAL AI models to our swarm system
 
-### Tasks:
+### Tasks
+
 1. **Create Real Swarm Orchestrator** (`app/api/real_swarm_execution.py`)
+
    - Connect to OpenRouter API (we have the key!)
    - Implement real Claude/GPT model calls
    - Add proper prompt engineering for each swarm type
 
 2. **Implement Swarm Types**:
+
    - **Strategic Swarm**: Uses Claude-3 for planning
    - **Coding Swarm**: Uses GPT-4 for implementation
    - **Debate Swarm**: Uses multiple models for perspective
 
 3. **Create Bridge Server** (`app/api/swarm_bridge_server.py`)
+
    - FastAPI server on port 8000
    - Real endpoints that MCP server can call
    - Actual AI model integration
@@ -55,19 +62,23 @@
 
 ### Objective: Make the UI show REAL swarm activity
 
-### Tasks:
+### Tasks
+
 1. **WebSocket Integration**:
+
    - Real-time status updates from swarms
    - Live agent activity visualization
    - Actual coordination display
 
 2. **3D Swarm Visualization**:
+
    - Three.js network graph
    - Real agent nodes
    - Message flow animation
    - Actual coordination paths
 
 3. **Enhanced UI Features**:
+
    - Code syntax highlighting
    - File tree browser
    - Git integration panel
@@ -84,14 +95,17 @@
 
 ### Objective: Connect everything together
 
-### Tasks:
+### Tasks
+
 1. **Update MCP Server**:
+
    - Replace mock responses with real API calls
    - Connect to Python backend at port 8000
    - Implement proper error handling
    - Add authentication
 
 2. **Coordination Protocol**:
+
    - Message routing between swarms
    - Task distribution logic
    - Result aggregation
@@ -107,9 +121,10 @@
 
 ## 💻 IMPLEMENTATION PROMPTS
 
-### PROMPT FOR CLINE:
+### PROMPT FOR CLINE
+
 ```
-You need to create a REAL AI swarm backend that actually works. 
+You need to create a REAL AI swarm backend that actually works.
 
 CONTEXT:
 - MCP server at port 8003 has mock endpoints
@@ -142,7 +157,8 @@ YOUR TASKS:
 Make it REAL. No mocks. Actual AI responses.
 ```
 
-### PROMPT FOR ROO:
+### PROMPT FOR ROO
+
 ```
 The backend is getting real AI integration. You need to upgrade the UI to show REAL swarm activity.
 
@@ -158,7 +174,7 @@ YOUR TASKS:
    - Agent nodes
    - Message flows
    - Coordination paths
-   
+
 4. Enhanced features:
    - Syntax highlighting for code responses
    - File browser for generated code
@@ -177,16 +193,20 @@ Make it look like a real AI command center, not a mock.
 
 ## 🧪 TESTING PLAN
 
-### Test Scenarios:
+### Test Scenarios
+
 1. **Code Generation Test**:
+
    - Ask: "Write a Python web scraper"
    - Verify: Actual working code returned
 
 2. **Multi-Swarm Coordination**:
+
    - Ask: "Design and implement a REST API"
    - Verify: Strategic plans → Coding implements → Debate reviews
 
 3. **Real-Time Streaming**:
+
    - Monitor WebSocket messages
    - Verify live status updates
    - Check coordination visualization
@@ -216,17 +236,19 @@ Make it look like a real AI command center, not a mock.
 Once Cline and Roo complete their parts:
 
 1. **Connect MCP to Real Backend**:
+
    ```javascript
    // In MCP server index.ts
-   const response = await fetch('http://localhost:8000/swarm/execute', {
-     method: 'POST',
-     body: JSON.stringify({ message, swarm_type })
+   const response = await fetch("http://localhost:8000/swarm/execute", {
+     method: "POST",
+     body: JSON.stringify({ message, swarm_type }),
    });
    ```
 
 2. **Stream Real Responses**:
+
    ```javascript
-   const ws = new WebSocket('ws://localhost:8000/ws/swarm');
+   const ws = new WebSocket("ws://localhost:8000/ws/swarm");
    ws.onmessage = (event) => {
      // Stream to client
    };

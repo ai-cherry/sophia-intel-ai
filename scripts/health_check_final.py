@@ -10,11 +10,12 @@ import aiohttp
 
 from app.core.ai_logger import logger
 
-GREEN = '\033[92m'
-RED = '\033[91m'
-YELLOW = '\033[93m'
-BLUE = '\033[94m'
-RESET = '\033[0m'
+GREEN = "\033[92m"
+RED = "\033[91m"
+YELLOW = "\033[93m"
+BLUE = "\033[94m"
+RESET = "\033[0m"
+
 
 async def check_all_systems():
     """Comprehensive health check of all components."""
@@ -64,12 +65,9 @@ async def check_all_systems():
             payload = {
                 "team_id": "strategic-swarm",
                 "message": "Health check test",
-                "use_memory": False
+                "use_memory": False,
             }
-            async with session.post(
-                "http://localhost:8003/teams/run",
-                json=payload
-            ) as resp:
+            async with session.post("http://localhost:8003/teams/run", json=payload) as resp:
                 if resp.status == 200:
                     content = await resp.text()
                     if "real_execution" in content and "mock" not in content.lower():
@@ -120,12 +118,9 @@ async def check_all_systems():
             test_payload = {
                 "topic": "health_check",
                 "content": "Testing ModernBERT embeddings",
-                "source": "final_check"
+                "source": "final_check",
             }
-            async with session.post(
-                "http://localhost:8003/memory/add",
-                json=test_payload
-            ) as resp:
+            async with session.post("http://localhost:8003/memory/add", json=test_payload) as resp:
                 if resp.status == 200:
                     logger.info(f"{GREEN}  ✅ ModernBERT: ACTIVE (Voyage-3/Cohere){RESET}")
                     results["embeddings"] = True
@@ -161,6 +156,7 @@ async def check_all_systems():
     logger.info(f"\n{BLUE}Timestamp: {datetime.now().isoformat()}{RESET}\n")
 
     return all_healthy
+
 
 if __name__ == "__main__":
     success = asyncio.run(check_all_systems())

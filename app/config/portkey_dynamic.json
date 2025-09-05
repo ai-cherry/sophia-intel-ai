@@ -6,58 +6,58 @@
     "conditions": [
       {
         "query": {
-          "params.model": {"$eq": "latest-gpt"}
+          "params.model": { "$eq": "latest-gpt" }
         },
         "then": "gpt5-target"
       },
       {
         "query": {
-          "params.model": {"$eq": "latest-claude"}
+          "params.model": { "$eq": "latest-claude" }
         },
         "then": "claude4-target"
       },
       {
         "query": {
-          "params.model": {"$eq": "latest-gemini"}
+          "params.model": { "$eq": "latest-gemini" }
         },
         "then": "gemini25-target"
       },
       {
         "query": {
-          "params.model": {"$eq": "best-reasoning"}
+          "params.model": { "$eq": "best-reasoning" }
         },
         "then": "reasoning-target"
       },
       {
         "query": {
-          "params.model": {"$eq": "best-coding"}
+          "params.model": { "$eq": "best-coding" }
         },
         "then": "coding-target"
       },
       {
         "query": {
-          "params.model": {"$eq": "best-vision"}
+          "params.model": { "$eq": "best-vision" }
         },
         "then": "vision-target"
       },
       {
         "query": {
-          "params.model": {"$eq": "free-tier"}
+          "params.model": { "$eq": "free-tier" }
         },
         "then": "free-target"
       },
       {
         "query": {
           "$and": [
-            {"metadata.priority": {"$eq": "critical"}},
-            {"metadata.budget": {"$gte": 100}}
+            { "metadata.priority": { "$eq": "critical" } },
+            { "metadata.budget": { "$gte": 100 } }
           ]
         },
         "then": "premium-target"
       },
       {
         "query": {
-          "metadata.cost_sensitive": {"$eq": true}
+          "metadata.cost_sensitive": { "$eq": true }
         },
         "then": "cost-optimized-target"
       }
@@ -92,7 +92,10 @@
           "provider": {
             "order": ["anthropic"],
             "allow_fallbacks": true,
-            "fallback_models": ["anthropic/claude-sonnet-4", "anthropic/claude-3.7-sonnet"]
+            "fallback_models": [
+              "anthropic/claude-sonnet-4",
+              "anthropic/claude-3.7-sonnet"
+            ]
           }
         }
       }
@@ -106,7 +109,10 @@
           "provider": {
             "order": ["google"],
             "allow_fallbacks": true,
-            "fallback_models": ["google/gemini-2.5-flash", "google/gemini-2.0-flash-001"]
+            "fallback_models": [
+              "google/gemini-2.5-flash",
+              "google/gemini-2.0-flash-001"
+            ]
           }
         }
       }
@@ -120,7 +126,10 @@
           "provider": {
             "order": ["deepseek", "openai"],
             "allow_fallbacks": true,
-            "fallback_models": ["openai/o3", "anthropic/claude-3.7-sonnet:thinking"]
+            "fallback_models": [
+              "openai/o3",
+              "anthropic/claude-3.7-sonnet:thinking"
+            ]
           }
         }
       }
@@ -134,7 +143,11 @@
           "provider": {
             "order": ["x-ai", "qwen", "deepseek"],
             "allow_fallbacks": true,
-            "fallback_models": ["qwen/qwen3-coder", "mistralai/codestral-2501", "deepseek/deepseek-chat-v3.1"]
+            "fallback_models": [
+              "qwen/qwen3-coder",
+              "mistralai/codestral-2501",
+              "deepseek/deepseek-chat-v3.1"
+            ]
           }
         }
       }

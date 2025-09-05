@@ -8,7 +8,7 @@ import logging
 import time
 import uuid
 from datetime import datetime
-from typing import Any, Union
+from typing import Any
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Query, Request
 from pydantic import BaseModel, Field
@@ -30,7 +30,7 @@ from app.nl_interface.memory_connector import NLInteraction, NLMemoryConnector
 # Configure comprehensive logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s'
+    format="%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s",
 )
 logger = logging.getLogger(__name__)
 
@@ -54,6 +54,7 @@ except Exception as _e:
     dispatcher = None
 memory_connector = None
 smart_dispatcher = None
+
 
 # Initialize components on startup
 async def initialize_components():
@@ -83,22 +84,31 @@ async def initialize_components():
 # Request/Response Models
 # ============================================
 
+
 class NLProcessRequest(BaseModel):
     """Request model for NL processing"""
+
     text: str = Field(..., description="Natural language command text")
-    context: Optional[dict[str, Any]] = Field(default={}, description="Optional context for processing")
+    context: Optional[dict[str, Any]] = Field(
+        default={}, description="Optional context for processing"
+    )
     session_id: Optional[str] = Field(default=None, description="Session ID for tracking")
     api_key: Optional[str] = Field(default=None, description="API key for authentication")
 
 
 class StandardResponse(BaseModel):
     """Standardized response format for all endpoints - ENHANCED FOR PRODUCTION"""
+
     success: bool
     message: str = Field(..., description="Human-readable response message")
     response: str = Field("", description="Detailed response text")
     intent: Optional[str] = None
-    data: Optional[dict[str, Any]] = Field(default_factory=dict, description="Structured data payload")
-    metadata: Optional[dict[str, Any]] = Field(default_factory=dict, description="Additional metadata")
+    data: Optional[dict[str, Any]] = Field(
+        default_factory=dict, description="Structured data payload"
+    )
+    metadata: Optional[dict[str, Any]] = Field(
+        default_factory=dict, description="Additional metadata"
+    )
     workflow_id: Optional[str] = None
     session_id: Optional[str] = None
     user_id: Optional[str] = None
@@ -111,17 +121,24 @@ class StandardResponse(BaseModel):
         super().__init__(**data)
         # Ensure message is set if not provided
         if not self.message and self.response:
-            self.message = self.response[:100] + "..." if len(self.response) > 100 else self.response
+            self.message = (
+                self.response[:100] + "..." if len(self.response) > 100 else self.response
+            )
+
 
 class NLProcessResponse(StandardResponse):
     """Enhanced response model for NL processing"""
+
     entities: Optional[dict[str, Any]] = None
     confidence: Optional[float] = None
-    security: Optional[dict[str, Any]] = Field(default_factory=dict, description="Security validation info")
+    security: Optional[dict[str, Any]] = Field(
+        default_factory=dict, description="Security validation info"
+    )
 
 
 class WorkflowTriggerRequest(BaseModel):
     """Request model for workflow trigger"""
+
     workflow_id: str = Field(..., description="Workflow ID to trigger")
     payload: dict[str, Any] = Field(default={}, description="Payload for workflow")
     async_execution: bool = Field(default=False, description="Execute asynchronously")
@@ -129,6 +146,7 @@ class WorkflowTriggerRequest(BaseModel):
 
 class WorkflowStatusResponse(BaseModel):
     """Response model for workflow status"""
+
     workflow_id: str
     execution_id: str
     status: str
@@ -140,6 +158,7 @@ class WorkflowStatusResponse(BaseModel):
 
 class IntentInfo(BaseModel):
     """Model for intent information"""
+
     name: str
     description: str
     examples: list[str]
@@ -150,12 +169,11 @@ class IntentInfo(BaseModel):
 # Core Endpoints
 # ============================================
 
+
 @router.post("/process", response_model=NLProcessResponse)
 @with_circuit_breaker("webhook")
 async def process_natural_language(
-    request: NLProcessRequest,
-    background_tasks: BackgroundTasks,
-    req: Request
+    request: NLProcessRequest, background_tasks: BackgroundTasks, req: Request
 ) -> NLProcessResponse:
     """
     Process natural language command with intelligent routing via SmartCommandDispatcher
@@ -177,13 +195,13 @@ async def process_natural_language(
         try:
             # Process with smart dispatcher for intelligent routing
             execution_result = await smart_dispatcher.process_command(
-                text=request.text,
-                session_id=session_id,
-                user_context=request.context
+                text=request.text, session_id=session_id, user_context=request.context
             )
 
             # Extract response data
-            response_data = execution_result.response if isinstance(execution_result.response, dict) else {}
+            response_data = (
+                execution_result.response if isinstance(execution_result.response, dict) else {}
+            )
 
             return NLProcessResponse(
                 success=execution_result.success,
@@ -193,14 +211,14 @@ async def process_natural_language(
                     "execution_mode": execution_result.execution_mode.value,
                     "patterns_used": execution_result.patterns_used,
                     "quality_score": execution_result.quality_score,
-                    "context": request.context
+                    "context": request.context,
                 },
                 workflow_id=response_data.get("workflow_id"),
                 session_id=session_id,
                 entities=response_data.get("entities", {}),
                 confidence=response_data.get("confidence", execution_result.quality_score),
                 execution_time_ms=execution_result.execution_time * 1000,
-                error=execution_result.error
+                error=execution_result.error,
             )
 
         except Exception as e:
@@ -212,7 +230,9 @@ async def process_natural_language(
         # Process the natural language text
         parsed_command: ParsedCommand = nlp_processor.process(request.text)
 
-        logger.info(f"Parsed command - Intent: {parsed_command.intent.value}, Confidence: {parsed_command.confidence:.2f}")
+        logger.info(
+            f"Parsed command - Intent: {parsed_command.intent.value}, Confidence: {parsed_command.confidence:.2f}"
+        )
         logger.debug(f"Entities: {parsed_command.entities}")
 
         # Get intent pattern for response formatting
@@ -222,7 +242,7 @@ async def process_natural_language(
         if intent_pattern:
             response_text = intent_pattern.response_template.format(
                 **parsed_command.entities,
-                **{"status_details": "Processing...", "execution_result": "Started"}
+                **{"status_details": "Processing...", "execution_result": "Started"},
             )
         else:
             response_text = f"Processing command: {parsed_command.intent.value}"
@@ -237,7 +257,7 @@ async def process_natural_language(
                 entities=parsed_command.entities,
                 confidence=parsed_command.confidence,
                 response=response_text,
-                workflow_id=parsed_command.workflow_trigger
+                workflow_id=parsed_command.workflow_trigger,
             )
             background_tasks.add_task(memory_connector.store_interaction, interaction)
 
@@ -251,8 +271,8 @@ async def process_natural_language(
                     "command": request.text,
                     "intent": parsed_command.intent.value,
                     "entities": parsed_command.entities,
-                    "session_id": session_id
-                }
+                    "session_id": session_id,
+                },
             )
 
         # Handle special intents
@@ -261,12 +281,7 @@ async def process_natural_language(
         elif parsed_command.intent == CommandIntent.RUN_AGENT:
             agent_name = parsed_command.entities.get("agent_name", "default")
             logger.info(f"Starting agent execution: {agent_name}")
-            background_tasks.add_task(
-                execute_agent_async,
-                session_id,
-                request.text,
-                agent_name
-            )
+            background_tasks.add_task(execute_agent_async, session_id, request.text, agent_name)
             response_text = f"Starting agent '{agent_name}'..."
 
         execution_time = (time.time() - start_time) * 1000
@@ -279,13 +294,13 @@ async def process_natural_language(
             data={
                 "entities": parsed_command.entities,
                 "context": request.context,
-                "execution_mode": "simple"
+                "execution_mode": "simple",
             },
             workflow_id=parsed_command.workflow_trigger,
             session_id=session_id,
             entities=parsed_command.entities,
             confidence=parsed_command.confidence,
-            execution_time_ms=execution_time
+            execution_time_ms=execution_time,
         )
 
     except Exception as e:
@@ -297,7 +312,7 @@ async def process_natural_language(
             response=f"Failed to process command: {str(e)}",
             session_id=session_id,
             execution_time_ms=execution_time,
-            error=str(e)
+            error=str(e),
         )
 
 
@@ -313,7 +328,7 @@ async def list_available_intents() -> list[IntentInfo]:
                 name=cmd["intent"],
                 description=cmd["description"],
                 examples=cmd["examples"],
-                entities=[]
+                entities=[],
             )
             for cmd in commands
         ]
@@ -326,8 +341,7 @@ async def list_available_intents() -> list[IntentInfo]:
 @router.post("/workflows/trigger")
 @with_circuit_breaker("webhook")
 async def trigger_workflow(
-    request: WorkflowTriggerRequest,
-    background_tasks: BackgroundTasks
+    request: WorkflowTriggerRequest, background_tasks: BackgroundTasks
 ) -> dict[str, Any]:
     """
     Trigger an n8n workflow
@@ -337,30 +351,23 @@ async def trigger_workflow(
 
         if request.async_execution:
             # Execute in background
-            background_tasks.add_task(
-                trigger_workflow_async,
-                request.workflow_id,
-                request.payload
-            )
+            background_tasks.add_task(trigger_workflow_async, request.workflow_id, request.payload)
 
             return {
                 "success": True,
                 "execution_id": execution_id,
                 "status": "started",
-                "message": "Workflow triggered asynchronously"
+                "message": "Workflow triggered asynchronously",
             }
         else:
             # Execute synchronously
-            result = await trigger_workflow_async(
-                request.workflow_id,
-                request.payload
-            )
+            result = await trigger_workflow_async(request.workflow_id, request.payload)
 
             return {
                 "success": True,
                 "execution_id": execution_id,
                 "status": "completed",
-                "result": result
+                "result": result,
             }
 
     except Exception as e:
@@ -384,7 +391,7 @@ async def get_workflow_status(execution_id: str) -> WorkflowStatusResponse:
             started_at=datetime.now().isoformat(),
             completed_at=None,
             result=None,
-            error=None
+            error=None,
         )
 
     except Exception as e:
@@ -396,12 +403,13 @@ async def get_workflow_status(execution_id: str) -> WorkflowStatusResponse:
 # Agent Endpoints
 # ============================================
 
+
 @router.post("/agents/execute")
 async def execute_agent(
     agent_name: str = Query(..., description="Name of agent to execute"),
     task: str = Query(..., description="Task for the agent"),
     session_id: Optional[str] = Query(None, description="Session ID"),
-    background_tasks: BackgroundTasks = None
+    background_tasks: BackgroundTasks = None,
 ) -> dict[str, Any]:
     """
     Execute a specific agent
@@ -415,7 +423,7 @@ async def execute_agent(
             "coder": AgentRole.CODER,
             "reviewer": AgentRole.REVIEWER,
             "executor": AgentRole.EXECUTOR,
-            "monitor": AgentRole.MONITOR
+            "monitor": AgentRole.MONITOR,
         }
 
         agent_role = agent_role_map.get(agent_name.lower())
@@ -424,19 +432,14 @@ async def execute_agent(
 
         # Execute agent workflow
         if background_tasks:
-            background_tasks.add_task(
-                execute_agent_workflow,
-                session_id,
-                task,
-                [agent_role]
-            )
+            background_tasks.add_task(execute_agent_workflow, session_id, task, [agent_role])
 
             return {
                 "success": True,
                 "session_id": session_id,
                 "agent": agent_name,
                 "status": "started",
-                "message": f"Agent {agent_name} execution started"
+                "message": f"Agent {agent_name} execution started",
             }
         else:
             # Execute synchronously
@@ -444,7 +447,7 @@ async def execute_agent(
                 session_id=session_id,
                 user_request=task,
                 workflow_name=f"{agent_name}_workflow",
-                agents_chain=[agent_role]
+                agents_chain=[agent_role],
             )
 
             return {
@@ -452,7 +455,7 @@ async def execute_agent(
                 "session_id": session_id,
                 "agent": agent_name,
                 "status": "completed",
-                "result": context.state
+                "result": context.state,
             }
 
     except Exception as e:
@@ -471,7 +474,7 @@ async def list_agents() -> dict[str, Any]:
         return {
             "success": True,
             "agents": agents,
-            "default_workflow": agent_orchestrator.get_default_workflow()
+            "default_workflow": agent_orchestrator.get_default_workflow(),
         }
 
     except Exception as e:
@@ -495,7 +498,7 @@ async def get_agent_status(session_id: str) -> dict[str, Any]:
             "session_id": session_id,
             "status": context.get("state", {}),
             "current_step": context.get("current_step", 0),
-            "tasks": context.get("tasks", [])
+            "tasks": context.get("tasks", []),
         }
 
     except HTTPException:
@@ -509,6 +512,7 @@ async def get_agent_status(session_id: str) -> dict[str, Any]:
 # System Status Endpoints
 # ============================================
 
+
 @router.get("/system/status")
 @with_circuit_breaker("webhook")
 async def get_system_status() -> dict[str, Any]:
@@ -516,11 +520,7 @@ async def get_system_status() -> dict[str, Any]:
     Get system status including all services
     """
     try:
-        status = {
-            "timestamp": datetime.now().isoformat(),
-            "services": {},
-            "health": "healthy"
-        }
+        status = {"timestamp": datetime.now().isoformat(), "services": {}, "health": "healthy"}
 
         # Check Ollama
         try:
@@ -568,6 +568,7 @@ async def get_system_status() -> dict[str, Any]:
 # Workflow Callback Handler
 # ============================================
 
+
 @router.post("/workflows/callback")
 @with_circuit_breaker("webhook")
 async def workflow_callback(
@@ -577,12 +578,14 @@ async def workflow_callback(
     timestamp: str,
     result: Optional[dict[str, Any]] = None,
     error: Optional[str] = None,
-    session_id: Optional[str] = None
+    session_id: Optional[str] = None,
 ) -> StandardResponse:
     """
     Handle workflow completion callbacks from n8n
     """
-    logger.info(f"Received workflow callback - ID: {workflow_id}, Status: {status}, Execution: {execution_id}")
+    logger.info(
+        f"Received workflow callback - ID: {workflow_id}, Status: {status}, Execution: {execution_id}"
+    )
 
     try:
         # Store callback information
@@ -592,7 +595,7 @@ async def workflow_callback(
             "execution_id": execution_id,
             "timestamp": timestamp,
             "result": result,
-            "error": error
+            "error": error,
         }
 
         # Update memory if available
@@ -611,20 +614,20 @@ async def workflow_callback(
             success=True,
             response=f"Workflow {workflow_id} callback processed",
             data=callback_data,
-            workflow_id=workflow_id
+            workflow_id=workflow_id,
         )
 
     except Exception as e:
         logger.error(f"Error processing workflow callback: {e}", exc_info=True)
         return StandardResponse(
-            success=False,
-            response="Failed to process workflow callback",
-            error=str(e)
+            success=False, response="Failed to process workflow callback", error=str(e)
         )
+
 
 # ============================================
 # Helper Functions
 # ============================================
+
 
 @with_circuit_breaker("external_api")
 async def trigger_workflow_async(workflow_id: str, payload: dict[str, Any]) -> dict[str, Any]:
@@ -639,9 +642,7 @@ async def trigger_workflow_async(workflow_id: str, payload: dict[str, Any]) -> d
 
         # Call n8n webhook endpoint
         response = await http_post(
-            f"http://localhost:5678/webhook/{workflow_id}",
-            json=payload,
-            timeout=30
+            f"http://localhost:5678/webhook/{workflow_id}", json=payload, timeout=30
         )
 
         if response.status_code == 200:
@@ -667,7 +668,7 @@ async def execute_agent_async(session_id: str, task: str, agent_name: str):
             "researcher": AgentRole.RESEARCHER,
             "coder": AgentRole.CODER,
             "reviewer": AgentRole.REVIEWER,
-            "default": AgentRole.RESEARCHER
+            "default": AgentRole.RESEARCHER,
         }
 
         agent_role = agent_role_map.get(agent_name.lower(), AgentRole.RESEARCHER)
@@ -676,7 +677,7 @@ async def execute_agent_async(session_id: str, task: str, agent_name: str):
             session_id=session_id,
             user_request=task,
             workflow_name=f"{agent_name}_workflow",
-            agents_chain=[agent_role]
+            agents_chain=[agent_role],
         )
 
         logger.info(f"Agent {agent_name} execution completed for session {session_id[:8]}")
@@ -687,11 +688,7 @@ async def execute_agent_async(session_id: str, task: str, agent_name: str):
         raise
 
 
-async def execute_agent_workflow(
-    session_id: str,
-    task: str,
-    agents_chain: list[AgentRole]
-):
+async def execute_agent_workflow(session_id: str, task: str, agents_chain: list[AgentRole]):
     """
     Execute agent workflow
     """
@@ -700,7 +697,7 @@ async def execute_agent_workflow(
             session_id=session_id,
             user_request=task,
             workflow_name="custom_workflow",
-            agents_chain=agents_chain
+            agents_chain=agents_chain,
         )
     except Exception as e:
         logger.error(f"Error executing agent workflow: {e}")
@@ -709,6 +706,7 @@ async def execute_agent_workflow(
 # ============================================
 # Swarm Integration Endpoints
 # ============================================
+
 
 @router.get("/swarm/status/{session_id}")
 async def get_swarm_status(session_id: str) -> dict[str, Any]:
@@ -720,10 +718,7 @@ async def get_swarm_status(session_id: str) -> dict[str, Any]:
 
     try:
         status = await smart_dispatcher.get_session_status(session_id)
-        return {
-            "success": True,
-            **status
-        }
+        return {"success": True, **status}
     except Exception as e:
         logger.error(f"Error getting swarm status: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -739,11 +734,7 @@ async def get_swarm_performance() -> dict[str, Any]:
 
     try:
         metrics = smart_dispatcher._get_performance_metrics()
-        return {
-            "success": True,
-            "timestamp": datetime.now().isoformat(),
-            **metrics
-        }
+        return {"success": True, "timestamp": datetime.now().isoformat(), **metrics}
     except Exception as e:
         logger.error(f"Error getting swarm performance: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -752,7 +743,9 @@ async def get_swarm_performance() -> dict[str, Any]:
 @router.post("/swarm/optimize")
 async def optimize_swarm_mode(
     session_id: str = Query(..., description="Session ID to optimize"),
-    optimization_goal: str = Query("balanced", description="Optimization goal: speed, quality, or balanced")
+    optimization_goal: str = Query(
+        "balanced", description="Optimization goal: speed, quality, or balanced"
+    ),
 ) -> dict[str, Any]:
     """
     Optimize swarm execution mode for a specific session
@@ -765,10 +758,7 @@ async def optimize_swarm_mode(
 
     try:
         result = await smart_dispatcher.optimize_for_session(session_id, optimization_goal)
-        return {
-            "success": True,
-            **result
-        }
+        return {"success": True, **result}
     except Exception as e:
         logger.error(f"Error optimizing swarm mode: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -786,21 +776,21 @@ async def get_execution_modes() -> dict[str, Any]:
                 "name": "Lite Mode",
                 "description": "Fast, simple execution for basic commands",
                 "complexity_threshold": 0.3,
-                "patterns": ["quick_nlp", "simple_execution"]
+                "patterns": ["quick_nlp", "simple_execution"],
             },
             "balanced": {
                 "name": "Balanced Mode",
                 "description": "Balanced speed and quality for moderate complexity",
                 "complexity_threshold": 0.7,
-                "patterns": ["memory_enrichment", "orchestrator", "quality_gates"]
+                "patterns": ["memory_enrichment", "orchestrator", "quality_gates"],
             },
             "quality": {
                 "name": "Quality Mode",
                 "description": "High-quality execution for complex tasks",
                 "complexity_threshold": 1.0,
-                "patterns": ["memory_enrichment", "swarm", "debate", "quality_gates", "consensus"]
-            }
-        }
+                "patterns": ["memory_enrichment", "swarm", "debate", "quality_gates", "consensus"],
+            },
+        },
     }
 
 
@@ -820,13 +810,13 @@ async def reset_swarm_metrics() -> dict[str, Any]:
             "failure_count": 0,
             "mode_usage": {"lite": 0, "balanced": 0, "quality": 0},
             "avg_execution_time": 0,
-            "total_execution_time": 0
+            "total_execution_time": 0,
         }
 
         return {
             "success": True,
             "message": "Swarm metrics reset successfully",
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
     except Exception as e:
         logger.error(f"Error resetting swarm metrics: {e}")
@@ -837,6 +827,7 @@ async def reset_swarm_metrics() -> dict[str, Any]:
 # Health Check
 # ============================================
 
+
 @router.get("/health")
 async def health_check() -> dict[str, str]:
     """
@@ -846,5 +837,5 @@ async def health_check() -> dict[str, str]:
         "status": "healthy",
         "service": "natural-language-interface",
         "timestamp": datetime.now().isoformat(),
-        "smart_dispatcher": "available" if smart_dispatcher else "unavailable"
+        "smart_dispatcher": "available" if smart_dispatcher else "unavailable",
     }

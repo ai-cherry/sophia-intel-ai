@@ -14,7 +14,8 @@ from dotenv import load_dotenv
 from app.core.ai_logger import logger
 
 # Load environment
-load_dotenv('.env.local', override=True)
+load_dotenv(".env.local", override=True)
+
 
 class PortkeyVirtualKeyCreator:
     """Create virtual keys in Portkey programmatically."""
@@ -31,7 +32,9 @@ class PortkeyVirtualKeyCreator:
         self.base_url = "https://api.portkey.ai/v1"
         self.created_keys = {}
 
-    async def create_virtual_key(self, name: str, description: str, default_model: str = None) -> dict[str, Any]:
+    async def create_virtual_key(
+        self, name: str, description: str, default_model: str = None
+    ) -> dict[str, Any]:
         """Create a single virtual key in Portkey."""
 
         logger.info(f"\n📝 Creating virtual key: {name}")
@@ -44,11 +47,8 @@ class PortkeyVirtualKeyCreator:
             "description": description,
             "config": {
                 "base_url": "https://openrouter.ai/api/v1",
-                "headers": {
-                    "HTTP-Referer": "http://localhost:3000",
-                    "X-Title": "Sophia Intel AI"
-                }
-            }
+                "headers": {"HTTP-Referer": "http://localhost:3000", "X-Title": "Sophia Intel AI"},
+            },
         }
 
         if default_model:
@@ -61,9 +61,9 @@ class PortkeyVirtualKeyCreator:
                     f"{self.base_url}/admin/virtual-keys",
                     headers={
                         "x-portkey-api-key": self.portkey_api_key,
-                        "Content-Type": "application/json"
+                        "Content-Type": "application/json",
                     },
-                    json=config
+                    json=config,
                 )
 
                 if response.status_code in [200, 201]:
@@ -88,63 +88,61 @@ class PortkeyVirtualKeyCreator:
     async def create_all_virtual_keys(self):
         """Create all 7 virtual keys."""
 
-        logger.info("\n" + "="*60)
+        logger.info("\n" + "=" * 60)
         logger.info("🚀 CREATING PORTKEY VIRTUAL KEYS")
-        logger.info("="*60)
+        logger.info("=" * 60)
 
         # Define all virtual keys to create
         virtual_keys = [
             {
                 "name": "openrouter-main",
                 "description": "Main OpenRouter access for general purpose",
-                "default_model": "openrouter/auto"
+                "default_model": "openrouter/auto",
             },
             {
                 "name": "gpt-models",
                 "description": "GPT-4 and GPT-3.5 models via OpenRouter",
-                "default_model": "openai/gpt-4o"
+                "default_model": "openai/gpt-4o",
             },
             {
                 "name": "claude-models",
                 "description": "Claude models (Sonnet, Opus, Haiku) via OpenRouter",
-                "default_model": "anthropic/claude-3.5-sonnet"
+                "default_model": "anthropic/claude-3.5-sonnet",
             },
             {
                 "name": "qwen-coder",
                 "description": "Qwen 2.5 Coder for primary code generation",
-                "default_model": "qwen/qwen-2.5-coder-32b-instruct"
+                "default_model": "qwen/qwen-2.5-coder-32b-instruct",
             },
             {
                 "name": "deepseek-coder",
                 "description": "DeepSeek Coder v2 for alternative code generation",
-                "default_model": "deepseek/deepseek-coder-v2"
+                "default_model": "deepseek/deepseek-coder-v2",
             },
             {
                 "name": "fast-inference",
                 "description": "Fast, cheap models for quick tasks",
-                "default_model": "meta-llama/llama-3.2-3b-instruct"
+                "default_model": "meta-llama/llama-3.2-3b-instruct",
             },
             {
                 "name": "groq-speed",
                 "description": "Groq for ultra-fast inference",
-                "default_model": "groq/llama-3.1-70b-versatile"
-            }
+                "default_model": "groq/llama-3.1-70b-versatile",
+            },
         ]
 
         # Create each virtual key
         results = []
         for vk in virtual_keys:
             result = await self.create_virtual_key(
-                vk["name"],
-                vk["description"],
-                vk.get("default_model")
+                vk["name"], vk["description"], vk.get("default_model")
             )
             results.append((vk["name"], result))
 
         # Summary
-        logger.info("\n" + "="*60)
+        logger.info("\n" + "=" * 60)
         logger.info("📊 SUMMARY")
-        logger.info("="*60)
+        logger.info("=" * 60)
 
         successful = sum(1 for _, r in results if r.get("success"))
         total = len(results)
@@ -190,7 +188,7 @@ class PortkeyVirtualKeyCreator:
             "qwen-coder": "PORTKEY_VK_QWEN",
             "deepseek-coder": "PORTKEY_VK_DEEPSEEK",
             "fast-inference": "PORTKEY_VK_FAST",
-            "groq-speed": "PORTKEY_VK_GROQ"
+            "groq-speed": "PORTKEY_VK_GROQ",
         }
 
         # Check if virtual key section exists
@@ -214,7 +212,7 @@ class PortkeyVirtualKeyCreator:
                     lines.append(f"{env_var}={vk_id}\n")
 
         # Write back to file
-        with open(env_path, 'w') as f:
+        with open(env_path, "w") as f:
             f.writelines(lines)
 
         logger.info("✅ .env.local updated with virtual key IDs")
@@ -222,11 +220,12 @@ class PortkeyVirtualKeyCreator:
     async def provide_manual_instructions(self):
         """Provide manual instructions if API creation fails."""
 
-        logger.info("\n" + "="*60)
+        logger.info("\n" + "=" * 60)
         logger.info("📋 MANUAL SETUP INSTRUCTIONS")
-        logger.info("="*60)
+        logger.info("=" * 60)
 
-        print("""
+        print(
+            """
 Since programmatic creation didn't work, here's how to create them manually:
 
 1. Go to https://app.portkey.ai
@@ -254,14 +253,15 @@ PORTKEY_VK_QWEN=<id>
 PORTKEY_VK_DEEPSEEK=<id>
 PORTKEY_VK_FAST=<id>
 PORTKEY_VK_GROQ=<id>
-        """)
+        """
+        )
 
     async def test_virtual_keys(self):
         """Test if virtual keys are working."""
 
-        logger.info("\n" + "="*60)
+        logger.info("\n" + "=" * 60)
         logger.info("🧪 TESTING VIRTUAL KEYS")
-        logger.info("="*60)
+        logger.info("=" * 60)
 
         if not self.created_keys:
             logger.info("No keys to test (none were created)")
@@ -276,13 +276,13 @@ PORTKEY_VK_GROQ=<id>
                     f"{self.base_url}/chat/completions",
                     headers={
                         "Authorization": f"Bearer {test_key}",
-                        "Content-Type": "application/json"
+                        "Content-Type": "application/json",
                     },
                     json={
                         "model": "meta-llama/llama-3.2-3b-instruct",
                         "messages": [{"role": "user", "content": "Say 'working' in one word"}],
-                        "max_tokens": 5
-                    }
+                        "max_tokens": 5,
+                    },
                 )
 
                 if response.status_code == 200:

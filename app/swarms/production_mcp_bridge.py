@@ -15,14 +15,17 @@ from app.core.ai_logger import logger
 
 logger = logging.getLogger(__name__)
 
+
 class ReviewType(Enum):
     CODE_REVIEW = "code-review"
     QUALITY_CHECK = "quality-check"
     SECURITY_SCAN = "security-scan"
 
+
 @dataclass
 class MCPConfig:
     """MCP Server Configuration"""
+
     host: str = "localhost"
     port: int = 8003
     timeout: int = 30
@@ -32,14 +35,14 @@ class MCPConfig:
     def base_url(self):
         return f"http://{self.host}:{self.port}"
 
+
 class ProductionMCPBridge:
     """Bridge between AI Swarm and MCP Server"""
 
     def __init__(self, config: Optional[MCPConfig] = None):
         self.config = config or MCPConfig()
         self.client = httpx.AsyncClient(
-            timeout=self.config.timeout,
-            limits=httpx.Limits(max_keepalive_connections=10)
+            timeout=self.config.timeout, limits=httpx.Limits(max_keepalive_connections=10)
         )
 
     async def health_check(self) -> bool:
@@ -60,8 +63,8 @@ class ProductionMCPBridge:
                 json={
                     "code": code,
                     "language": language,
-                    "model": "x-ai/grok-code-fast-1"  # Use approved model
-                }
+                    "model": "x-ai/grok-code-fast-1",  # Use approved model
+                },
             )
 
             if response.status_code == 200:
@@ -84,8 +87,8 @@ class ProductionMCPBridge:
                 json={
                     "code": code,
                     "metrics": metrics,
-                    "model": "qwen/qwen3-30b-a3b"  # Use approved model
-                }
+                    "model": "qwen/qwen3-30b-a3b",  # Use approved model
+                },
             )
 
             if response.status_code == 200:
@@ -97,7 +100,9 @@ class ProductionMCPBridge:
             logger.error(f"Quality check error: {e}")
             return {"error": str(e)}
 
-    async def swarm_request(self, task: str, agents: list[str], context: dict[str, Any]) -> dict[str, Any]:
+    async def swarm_request(
+        self, task: str, agents: list[str], context: dict[str, Any]
+    ) -> dict[str, Any]:
         """Send task to swarm through MCP"""
         try:
             response = await self.client.post(
@@ -106,8 +111,8 @@ class ProductionMCPBridge:
                     "task": task,
                     "agents": agents,
                     "context": context,
-                    "model": "openai/gpt-5"  # Use approved premium model
-                }
+                    "model": "openai/gpt-5",  # Use approved premium model
+                },
             )
 
             if response.status_code == 200:
@@ -132,8 +137,10 @@ class ProductionMCPBridge:
         """Close the HTTP client"""
         await self.client.aclose()
 
+
 # Singleton instance for global use
 _bridge_instance: Optional[ProductionMCPBridge] = None
+
 
 def get_mcp_bridge(config: Optional[MCPConfig] = None) -> ProductionMCPBridge:
     """Get or create MCP bridge instance"""
@@ -141,6 +148,7 @@ def get_mcp_bridge(config: Optional[MCPConfig] = None) -> ProductionMCPBridge:
     if _bridge_instance is None:
         _bridge_instance = ProductionMCPBridge(config)
     return _bridge_instance
+
 
 async def test_bridge():
     """Test MCP bridge connectivity"""
@@ -167,6 +175,7 @@ def calculate_fibonacci(n):
         logger.info(f"Swarm Status: {status}")
 
     await bridge.close()
+
 
 if __name__ == "__main__":
     asyncio.run(test_bridge())

@@ -41,36 +41,31 @@ class ArchitectureChecker:
                 "agents": 9,
                 "managers": 3,
                 "ui_components": 15,
-                "docker_files": 1
+                "docker_files": 1,
             },
             "naming_conventions": {
                 "classes": "PascalCase",
                 "functions": "snake_case",
                 "constants": "UPPER_SNAKE_CASE",
-                "files": "snake_case"
+                "files": "snake_case",
             },
-            "forbidden_patterns": [
-                "exec(",
-                "eval(",
-                "__import__",
-                "os.system("
-            ],
+            "forbidden_patterns": ["exec(", "eval(", "__import__", "os.system("],
             "required_patterns": {
                 "api_endpoints": ["@router", "APIRouter"],
                 "react_components": ["React.Component", "useState", "export"],
-                "python_classes": ["__init__", "self"]
+                "python_classes": ["__init__", "self"],
             },
             "dependency_rules": {
                 "max_imports_per_file": 30,
                 "forbidden_imports": ["*"],
-                "circular_import_check": True
+                "circular_import_check": True,
             },
             "file_structure": {
                 "max_file_size_kb": 500,
                 "max_lines_per_file": 1000,
                 "max_functions_per_file": 20,
-                "max_classes_per_file": 5
-            }
+                "max_classes_per_file": 5,
+            },
         }
 
     def check_component_limits(self):
@@ -80,7 +75,7 @@ class ArchitectureChecker:
             "agents": 0,
             "managers": 0,
             "ui_components": 0,
-            "docker_files": 0
+            "docker_files": 0,
         }
 
         # Count orchestrators
@@ -103,26 +98,34 @@ class ArchitectureChecker:
                     component_counts["ui_components"] += 1
 
         # Count Docker files
-        component_counts["docker_files"] = len(list(Path(".").glob("Dockerfile*"))) + \
-                                          len(list(Path(".").rglob("docker-compose*.y*ml")))
+        component_counts["docker_files"] = len(list(Path(".").glob("Dockerfile*"))) + len(
+            list(Path(".").rglob("docker-compose*.y*ml"))
+        )
 
         # Check against limits
         max_components = self.config.get("max_components", {})
         for component_type, count in component_counts.items():
-            limit = max_components.get(component_type, float('inf'))
+            limit = max_components.get(component_type, float("inf"))
             if count > limit:
-                self.violations.append(
-                    f"❌ Too many {component_type}: {count} (limit: {limit})"
-                )
+                self.violations.append(f"❌ Too many {component_type}: {count} (limit: {limit})")
             elif count > limit * 0.8:  # Warning at 80% of limit
-                self.warnings.append(
-                    f"⚠️  Approaching limit for {component_type}: {count}/{limit}"
-                )
+                self.warnings.append(f"⚠️  Approaching limit for {component_type}: {count}/{limit}")
 
     def check_naming_conventions(self):
         """Check if naming follows conventions"""
         for py_file in Path(".").rglob("*.py"):
-            if any(skip in py_file.parts for skip in ["venv", ".venv", "__pycache__", "node_modules", ".git", "build", "dist"]):
+            if any(
+                skip in py_file.parts
+                for skip in [
+                    "venv",
+                    ".venv",
+                    "__pycache__",
+                    "node_modules",
+                    ".git",
+                    "build",
+                    "dist",
+                ]
+            ):
                 continue
 
             try:
@@ -159,7 +162,18 @@ class ArchitectureChecker:
         forbidden = self.config.get("forbidden_patterns", [])
 
         for py_file in Path(".").rglob("*.py"):
-            if any(skip in py_file.parts for skip in ["venv", ".venv", "__pycache__", "node_modules", ".git", "build", "dist"]):
+            if any(
+                skip in py_file.parts
+                for skip in [
+                    "venv",
+                    ".venv",
+                    "__pycache__",
+                    "node_modules",
+                    ".git",
+                    "build",
+                    "dist",
+                ]
+            ):
                 continue
 
             try:
@@ -180,7 +194,18 @@ class ArchitectureChecker:
         rules = self.config.get("file_structure", {})
 
         for py_file in Path(".").rglob("*.py"):
-            if any(skip in py_file.parts for skip in ["venv", ".venv", "__pycache__", "node_modules", ".git", "build", "dist"]):
+            if any(
+                skip in py_file.parts
+                for skip in [
+                    "venv",
+                    ".venv",
+                    "__pycache__",
+                    "node_modules",
+                    ".git",
+                    "build",
+                    "dist",
+                ]
+            ):
                 continue
 
             try:
@@ -231,15 +256,29 @@ class ArchitectureChecker:
         max_imports = rules.get("max_imports_per_file", 30)
 
         for py_file in Path(".").rglob("*.py"):
-            if any(skip in py_file.parts for skip in ["venv", ".venv", "__pycache__", "node_modules", ".git", "build", "dist"]):
+            if any(
+                skip in py_file.parts
+                for skip in [
+                    "venv",
+                    ".venv",
+                    "__pycache__",
+                    "node_modules",
+                    ".git",
+                    "build",
+                    "dist",
+                ]
+            ):
                 continue
 
             try:
                 with open(py_file, encoding="utf-8") as f:
                     tree = ast.parse(f.read())
 
-                imports = [node for node in ast.walk(tree)
-                          if isinstance(node, (ast.Import, ast.ImportFrom))]
+                imports = [
+                    node
+                    for node in ast.walk(tree)
+                    if isinstance(node, (ast.Import, ast.ImportFrom))
+                ]
 
                 if len(imports) > max_imports:
                     self.violations.append(
@@ -251,9 +290,7 @@ class ArchitectureChecker:
                     if isinstance(imp, ast.ImportFrom):
                         for alias in imp.names:
                             if alias.name == "*":
-                                self.violations.append(
-                                    f"❌ Wildcard import found in {py_file}"
-                                )
+                                self.violations.append(f"❌ Wildcard import found in {py_file}")
 
             except Exception:
                 pass

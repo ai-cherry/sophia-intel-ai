@@ -9,7 +9,7 @@ The Agent Factory is a sophisticated system for creating, configuring, and execu
 ### ✅ **Completed (Phase 1)**
 
 - **Visual Swarm Builder**: Drag-and-drop interface for creating agent swarms
-- **Pre-built Templates**: Ready-to-use swarm patterns (Coding, Debate, Consensus)  
+- **Pre-built Templates**: Ready-to-use swarm patterns (Coding, Debate, Consensus)
 - **Real-time Cost Estimation**: Track estimated costs before execution
 - **Live Testing Sandbox**: Test swarms with sample tasks
 - **Multi-Agent Coordination**: Coordinated execution with different patterns
@@ -20,12 +20,14 @@ The Agent Factory is a sophisticated system for creating, configuring, and execu
 ### 🚀 **Available Swarm Templates**
 
 1. **Coding Swarm** (4 agents)
+
    - Code Planner → Code Generator → Security Reviewer → **Quality Reviewer**
    - Pattern: Hierarchical execution
    - Best for: Code generation, review, and optimization
 
 2. **Debate Swarm** (3 agents)
-   - Advocate ↔ Critic → Judge  
+
+   - Advocate ↔ Critic → Judge
    - Pattern: Adversarial debate
    - Best for: Decision making, risk assessment
 
@@ -53,7 +55,7 @@ The Agent Factory is a sophisticated system for creating, configuring, and execu
 ### Core Factory Operations
 
 - `GET /api/factory/health` - Service health check
-- `GET /api/factory/templates` - Available swarm templates  
+- `GET /api/factory/templates` - Available swarm templates
 - `GET /api/factory/patterns` - Execution patterns
 - `POST /api/factory/create` - Create new swarm
 - `GET /api/factory/swarms` - List all swarms
@@ -72,7 +74,7 @@ curl -X POST http://127.0.0.1:3333/api/factory/create \\
     "agents": [
       {
         "name": "Planner",
-        "role": "planner", 
+        "role": "planner",
         "model": "qwen/qwen3-30b-a3b",
         "temperature": 0.3,
         "instructions": "Create implementation plan",
@@ -81,7 +83,7 @@ curl -X POST http://127.0.0.1:3333/api/factory/create \\
     ]
   }'
 
-# Execute the swarm  
+# Execute the swarm
 curl -X POST http://127.0.0.1:3333/api/factory/swarms/{swarm_id}/execute \\
   -H "Content-Type: application/json" \\
   -d '{"task": "Create a Python function for file processing"}'
@@ -110,14 +112,14 @@ curl -X POST http://127.0.0.1:3333/api/factory/swarms/{swarm_id}/execute \\
 
 ## 🧩 **Agent Roles**
 
-| Role | Purpose | Typical Models |
-|------|---------|----------------|
-| **planner** | Requirements analysis, architecture | qwen/qwen3-30b-a3b |
-| **generator** | Content/code creation | x-ai/grok-code-fast-1 |  
-| **critic** | Bug detection, security review | openai/gpt-5-chat |
+| Role                 | Purpose                                | Typical Models            |
+| -------------------- | -------------------------------------- | ------------------------- |
+| **planner**          | Requirements analysis, architecture    | qwen/qwen3-30b-a3b        |
+| **generator**        | Content/code creation                  | x-ai/grok-code-fast-1     |
+| **critic**           | Bug detection, security review         | openai/gpt-5-chat         |
 | **quality_reviewer** | 🆕 Code quality, style, best practices | anthropic/claude-sonnet-4 |
-| **judge** | Final decisions, synthesis | openai/gpt-5-chat |
-| **runner** | Task execution, coordination | google/gemini-2.5-flash |
+| **judge**            | Final decisions, synthesis             | openai/gpt-5-chat         |
+| **runner**           | Task execution, coordination           | google/gemini-2.5-flash   |
 
 ## 📊 **Quality Improvements**
 
@@ -131,7 +133,7 @@ curl -X POST http://127.0.0.1:3333/api/factory/swarms/{swarm_id}/execute \\
 ### Accessibility (WCAG 2.1 AA)
 
 - ✅ **ARIA Labels**: Screen reader support
-- ✅ **Keyboard Navigation**: Full keyboard accessibility  
+- ✅ **Keyboard Navigation**: Full keyboard accessibility
 - ✅ **Focus Management**: Proper focus indicators
 - ✅ **Color Contrast**: Sufficient contrast ratios
 - 🔄 **Screen Reader Announcements**: Dynamic content changes (in progress)
@@ -153,7 +155,7 @@ def test_agent_creation():
     factory = AgentFactory()
     agent_config = AgentConfig(
         name="Test Agent",
-        role="planner", 
+        role="planner",
         model="qwen/qwen3-30b-a3b",
         instructions="Test instructions"
     )
@@ -169,7 +171,7 @@ def test_swarm_execution():
 ### Manual Testing Checklist
 
 - [ ] Template loading works correctly
-- [ ] Agent configuration updates properly  
+- [ ] Agent configuration updates properly
 - [ ] Cost estimation displays accurately
 - [ ] Swarm creation succeeds
 - [ ] Swarm execution returns results
@@ -182,7 +184,7 @@ def test_swarm_execution():
 
 - **Business Templates**: Sales, Support, Analytics swarms
 - **CRM Integration**: HubSpot, Salesforce connectivity
-- **Workflow Automation**: Business process orchestration  
+- **Workflow Automation**: Business process orchestration
 - **Multi-tenancy**: Client data isolation
 - **Role-based Access**: Business user vs developer permissions
 
@@ -210,7 +212,7 @@ def test_swarm_execution():
 cd ~/sophia-intel-ai
 python3 -m uvicorn dev_mcp_unified.core.mcp_server:app --host 127.0.0.1 --port 3333 --reload
 
-# 2. Open factory interface  
+# 2. Open factory interface
 open "file:///Users/lynnmusil/sophia-intel-ai/dev-mcp-unified/ui/multi-chat-artemis.html"
 
 # 3. Test API endpoints
@@ -223,14 +225,14 @@ curl http://127.0.0.1:3333/api/factory/health
 
 - **Security**: All inputs validated, XSS prevention required
 - **Accessibility**: WCAG 2.1 AA compliance mandatory
-- **Performance**: < 3s page load, < 5s API responses  
+- **Performance**: < 3s page load, < 5s API responses
 - **Testing**: Unit tests for all new functionality
 - **Documentation**: Inline comments and README updates
 
 ### Review Process
 
 1. **UX Review**: Ensure usability and accessibility
-2. **Code Review**: Security, performance, maintainability  
+2. **Code Review**: Security, performance, maintainability
 3. **Testing**: Manual and automated test coverage
 4. **Integration**: Verify MCP server compatibility
 

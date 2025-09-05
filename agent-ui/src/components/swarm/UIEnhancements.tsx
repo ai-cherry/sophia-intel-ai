@@ -9,12 +9,12 @@ import { Button } from '@/components/ui/button';
  * Simplified from the original extensive UI enhancements
  */
 
-export function SwarmVisualization({ 
-  swarmId, 
-  status 
-}: { 
-  swarmId: string; 
-  status: string; 
+export function SwarmVisualization({
+  swarmId,
+  status
+}: {
+  swarmId: string;
+  status: string;
 }) {
   const swarmIcons: Record<string, string> = {
     'strategic-swarm': '🎯',
@@ -49,7 +49,7 @@ export function SwarmVisualization({
 
 export function StreamingIndicator({ isStreaming }: { isStreaming: boolean }) {
   if (!isStreaming) return null;
-  
+
   return (
     <div className="flex items-center gap-2 px-3 py-1 bg-blue-900/20 border border-blue-700/30 rounded-full">
       <div className="flex gap-1">
@@ -62,9 +62,9 @@ export function StreamingIndicator({ isStreaming }: { isStreaming: boolean }) {
   );
 }
 
-export function BasicMetrics({ 
-  metrics 
-}: { 
+export function BasicMetrics({
+  metrics
+}: {
   metrics?: {
     confidence?: number;
     latency?: number;
@@ -114,14 +114,14 @@ export function BasicMetrics({
   );
 }
 
-export function AgentStatusCard({ 
-  agent, 
-  role, 
-  status 
-}: { 
-  agent: string; 
-  role: string; 
-  status: string; 
+export function AgentStatusCard({
+  agent,
+  role,
+  status
+}: {
+  agent: string;
+  role: string;
+  status: string;
 }) {
   const roleColors: Record<string, string> = {
     'generator': 'border-green-500/50 bg-green-50',
@@ -146,9 +146,9 @@ export function AgentStatusCard({
   );
 }
 
-export function SimpleTaskProgress({ 
-  tasks 
-}: { 
+export function SimpleTaskProgress({
+  tasks
+}: {
   tasks?: Array<{ name: string; status: string }>;
 }) {
   if (!tasks || tasks.length === 0) {
@@ -168,20 +168,20 @@ export function SimpleTaskProgress({
         <span className="text-gray-600">Progress</span>
         <span className="text-gray-800 font-medium">{completed}/{tasks.length} tasks</span>
       </div>
-      
+
       <div className="w-full bg-gray-200 rounded-full h-2">
-        <div 
+        <div
           className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-300"
           style={{ width: `${progress}%` }}
         />
       </div>
-      
+
       <div className="space-y-1 mt-3 max-h-32 overflow-y-auto">
         {tasks.map((task, i) => (
           <div key={i} className="flex items-center gap-2 text-xs">
             <span className={cn(
               'w-1.5 h-1.5 rounded-full',
-              task.status === 'completed' ? 'bg-green-500' : 
+              task.status === 'completed' ? 'bg-green-500' :
               task.status === 'running' ? 'bg-blue-500' : 'bg-gray-400'
             )}>
             </span>
@@ -197,17 +197,17 @@ export function SimpleTaskProgress({
   );
 }
 
-export function QuickMessageInput({ 
-  onSend, 
+export function QuickMessageInput({
+  onSend,
   placeholder = "Quick message to swarm...",
-  isDisabled = false 
-}: { 
+  isDisabled = false
+}: {
   onSend: (message: string) => void;
   placeholder?: string;
   isDisabled?: boolean;
 }) {
   const [message, setMessage] = useState('');
-  
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (message.trim() && !isDisabled) {

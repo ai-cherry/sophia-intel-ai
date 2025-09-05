@@ -13,9 +13,9 @@ from datetime import datetime, timedelta
 from functools import wraps
 
 import httpx
-from pybreaker import CircuitBreaker
 from fastapi import HTTPException, Request, status
 from fastapi.responses import JSONResponse
+from pybreaker import CircuitBreaker
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
@@ -34,7 +34,7 @@ limiter = Limiter(
     key_func=get_remote_address,
     default_limits=["100 per minute"],
     storage_uri=settings.redis_url if settings.redis_url else None,
-    strategy="fixed-window"
+    strategy="fixed-window",
 )
 
 # Custom rate limit configurations
@@ -46,6 +46,7 @@ RATE_LIMITS = {
     "/index/update": "10 per hour",
     "/v1/playground/agents/*/runs": "30 per minute",
 }
+
 
 class RateLimitMiddleware:
     """Enhanced rate limiting middleware with per-endpoint limits."""
@@ -77,13 +78,13 @@ class RateLimitMiddleware:
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,
                 content={
                     "detail": "Rate limit exceeded",
-                    "retry_after": self.get_retry_after(client_id, endpoint)
+                    "retry_after": self.get_retry_after(client_id, endpoint),
                 },
                 headers={
                     "Retry-After": str(self.get_retry_after(client_id, endpoint)),
                     "X-RateLimit-Limit": self.limits[endpoint],
-                    "X-RateLimit-Remaining": "0"
-                }
+                    "X-RateLimit-Remaining": "0",
+                },
             )
 
         # Process request
@@ -91,7 +92,9 @@ class RateLimitMiddleware:
 
         # Add rate limit headers
         response.headers["X-RateLimit-Limit"] = self.limits[endpoint]
-        response.headers["X-RateLimit-Remaining"] = str(self.get_remaining_requests(client_id, endpoint))
+        response.headers["X-RateLimit-Remaining"] = str(
+            self.get_remaining_requests(client_id, endpoint)
+        )
 
         return response
 
@@ -127,9 +130,11 @@ class RateLimitMiddleware:
         used = self.request_counts[key]["count"]
         return max(0, limit - used)
 
+
 # ============================================
 # Error Handling
 # ============================================
+
 
 class ErrorHandlingMiddleware:
     """Comprehensive error handling middleware."""
@@ -154,8 +159,8 @@ class ErrorHandlingMiddleware:
                     "error": e.detail,
                     "status": e.status_code,
                     "timestamp": datetime.utcnow().isoformat(),
-                    "path": str(request.url.path)
-                }
+                    "path": str(request.url.path),
+                },
             )
 
         except RateLimitExceeded:
@@ -165,9 +170,9 @@ class ErrorHandlingMiddleware:
                 content={
                     "error": "Rate limit exceeded",
                     "retry_after": 60,
-                    "timestamp": datetime.utcnow().isoformat()
+                    "timestamp": datetime.utcnow().isoformat(),
                 },
-                headers={"Retry-After": "60"}
+                headers={"Retry-After": "60"},
             )
 
         except Exception as e:
@@ -192,13 +197,15 @@ class ErrorHandlingMiddleware:
                     "status": 500,
                     "timestamp": datetime.utcnow().isoformat(),
                     "path": str(request.url.path),
-                    "trace": trace
-                }
+                    "trace": trace,
+                },
             )
+
 
 # ============================================
 # Circuit Breaker
 # ============================================
+
 
 class CircuitBreakerMiddleware:
     """Circuit breaker for external services."""
@@ -215,25 +222,13 @@ class CircuitBreakerMiddleware:
         """Configure circuit breakers for known services."""
 
         # Weaviate circuit breaker
-        self.breakers['weaviate'] = CircuitBreaker(
-            fail_max=5,
-            reset_timeout=60,
-            name='weaviate'
-        )
+        self.breakers["weaviate"] = CircuitBreaker(fail_max=5, reset_timeout=60, name="weaviate")
 
         # OpenAI/OpenRouter circuit breaker
-        self.breakers['openai'] = CircuitBreaker(
-            fail_max=3,
-            reset_timeout=30,
-            name='openai'
-        )
+        self.breakers["openai"] = CircuitBreaker(fail_max=3, reset_timeout=30, name="openai")
 
         # Redis circuit breaker
-        self.breakers['redis'] = CircuitBreaker(
-            fail_max=10,
-            reset_timeout=20,
-            name='redis'
-        )
+        self.breakers["redis"] = CircuitBreaker(fail_max=10, reset_timeout=20, name="redis")
 
     async def __call__(self, request: Request, call_next):
         # Check circuit breakers for relevant endpoints
@@ -242,10 +237,10 @@ class CircuitBreakerMiddleware:
         # Check if any breakers are open
         open_breakers = []
         for name, breaker in self.breakers.items():
-            if breaker.state == 'open':
+            if breaker.state == "open":
                 open_breakers.append(name)
 
-        if open_breakers and endpoint.startswith('/teams/run'):
+        if open_breakers and endpoint.startswith("/teams/run"):
             # Service degradation - return cached or default response
             return JSONResponse(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -253,26 +248,23 @@ class CircuitBreakerMiddleware:
                     "error": "Service temporarily unavailable",
                     "services": open_breakers,
                     "retry_after": 30,
-                    "timestamp": datetime.utcnow().isoformat()
+                    "timestamp": datetime.utcnow().isoformat(),
                 },
-                headers={"Retry-After": "30"}
+                headers={"Retry-After": "30"},
             )
 
         return await call_next(request)
+
 
 # ============================================
 # Retry Logic
 # ============================================
 
+
 class RetryableHTTPClient:
     """HTTP client with automatic retry logic."""
 
-    def __init__(
-        self,
-        max_retries: int = 3,
-        backoff_factor: float = 0.5,
-        timeout: float = 30.0
-    ):
+    def __init__(self, max_retries: int = 3, backoff_factor: float = 0.5, timeout: float = 30.0):
         self.max_retries = max_retries
         self.backoff_factor = backoff_factor
         self.timeout = timeout
@@ -282,17 +274,9 @@ class RetryableHTTPClient:
             retries=max_retries,
         )
 
-        self.client = httpx.AsyncClient(
-            transport=self.transport,
-            timeout=httpx.Timeout(timeout)
-        )
+        self.client = httpx.AsyncClient(transport=self.transport, timeout=httpx.Timeout(timeout))
 
-    async def request_with_retry(
-        self,
-        method: str,
-        url: str,
-        **kwargs
-    ) -> httpx.Response:
+    async def request_with_retry(self, method: str, url: str, **kwargs) -> httpx.Response:
         """Make request with exponential backoff retry."""
 
         last_exception = None
@@ -325,19 +309,22 @@ class RetryableHTTPClient:
 
     async def _backoff(self, attempt: int):
         """Exponential backoff with jitter."""
-        delay = self.backoff_factor * (2 ** attempt)
+        delay = self.backoff_factor * (2**attempt)
         # Add jitter
         import random
-        delay *= (0.5 + random.random())
+
+        delay *= 0.5 + random.random()
         await asyncio.sleep(delay)
 
     async def close(self):
         """Close HTTP client."""
         await self.client.aclose()
 
+
 # ============================================
 # Timeout Middleware
 # ============================================
+
 
 class TimeoutMiddleware:
     """Request timeout middleware."""
@@ -359,10 +346,7 @@ class TimeoutMiddleware:
 
         try:
             # Run request with timeout
-            response = await asyncio.wait_for(
-                call_next(request),
-                timeout=timeout
-            )
+            response = await asyncio.wait_for(call_next(request), timeout=timeout)
             return response
 
         except asyncio.TimeoutError:
@@ -373,19 +357,17 @@ class TimeoutMiddleware:
                 content={
                     "error": "Request timeout",
                     "timeout": timeout,
-                    "timestamp": datetime.utcnow().isoformat()
-                }
+                    "timestamp": datetime.utcnow().isoformat(),
+                },
             )
+
 
 # ============================================
 # Resilience Decorators
 # ============================================
 
-def with_retry(
-    max_attempts: int = 3,
-    backoff: float = 1.0,
-    exceptions: tuple = (Exception,)
-):
+
+def with_retry(max_attempts: int = 3, backoff: float = 1.0, exceptions: tuple = (Exception,)):
     """Decorator for automatic retry with exponential backoff."""
 
     def decorator(func: Callable) -> Callable:
@@ -400,16 +382,14 @@ def with_retry(
                     last_exception = e
 
                     if attempt < max_attempts - 1:
-                        delay = backoff * (2 ** attempt)
+                        delay = backoff * (2**attempt)
                         logger.warning(
                             f"Attempt {attempt + 1} failed for {func.__name__}: {e}. "
                             f"Retrying in {delay}s..."
                         )
                         await asyncio.sleep(delay)
                     else:
-                        logger.error(
-                            f"All {max_attempts} attempts failed for {func.__name__}: {e}"
-                        )
+                        logger.error(f"All {max_attempts} attempts failed for {func.__name__}: {e}")
 
             raise last_exception
 
@@ -424,22 +404,21 @@ def with_retry(
                     last_exception = e
 
                     if attempt < max_attempts - 1:
-                        delay = backoff * (2 ** attempt)
+                        delay = backoff * (2**attempt)
                         logger.warning(
                             f"Attempt {attempt + 1} failed for {func.__name__}: {e}. "
                             f"Retrying in {delay}s..."
                         )
                         time.sleep(delay)
                     else:
-                        logger.error(
-                            f"All {max_attempts} attempts failed for {func.__name__}: {e}"
-                        )
+                        logger.error(f"All {max_attempts} attempts failed for {func.__name__}: {e}")
 
             raise last_exception
 
         return async_wrapper if asyncio.iscoroutinefunction(func) else sync_wrapper
 
     return decorator
+
 
 def with_timeout(seconds: int):
     """Decorator to add timeout to async functions."""
@@ -448,24 +427,23 @@ def with_timeout(seconds: int):
         @wraps(func)
         async def wrapper(*args, **kwargs):
             try:
-                return await asyncio.wait_for(
-                    func(*args, **kwargs),
-                    timeout=seconds
-                )
+                return await asyncio.wait_for(func(*args, **kwargs), timeout=seconds)
             except asyncio.TimeoutError:
                 logger.error(f"{func.__name__} timed out after {seconds}s")
                 raise HTTPException(
                     status_code=status.HTTP_504_GATEWAY_TIMEOUT,
-                    detail=f"Operation timed out after {seconds} seconds"
+                    detail=f"Operation timed out after {seconds} seconds",
                 )
 
         return wrapper
 
     return decorator
 
+
 # ============================================
 # Setup Function
 # ============================================
+
 
 def setup_middleware(app):
     """Setup all middleware for the application."""
@@ -487,6 +465,7 @@ def setup_middleware(app):
 
     logger.info("Middleware stack configured")
 
+
 # Export components
 __all__ = [
     "setup_middleware",
@@ -497,5 +476,5 @@ __all__ = [
     "RetryableHTTPClient",
     "with_retry",
     "with_timeout",
-    "limiter"
+    "limiter",
 ]

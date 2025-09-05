@@ -16,6 +16,7 @@ This document defines the holistic, scalable standards for AI agent orchestratio
 ## 🏗️ Core Orchestration Principles
 
 ### 1. Simplicity First (OpenAI Swarm Pattern)
+
 ```python
 # Start simple, add complexity only when needed
 if task.complexity < 0.3:
@@ -41,7 +42,7 @@ class AgentDefinition:
     handoff_agents: List[str]        # Agents it can hand off to
     context_variables: Dict[str, Any] # Shared context
     safety_constraints: List[str]    # Safety boundaries
-    
+
     def can_handle(self, task: Task) -> bool:
         """Determine if this agent can handle the task"""
         pass
@@ -50,6 +51,7 @@ class AgentDefinition:
 ## 📋 Orchestration Patterns
 
 ### Sequential Pattern
+
 ```python
 # For linear, predictable workflows
 class SequentialOrchestrator:
@@ -65,6 +67,7 @@ class SequentialOrchestrator:
 ```
 
 ### Concurrent Pattern
+
 ```python
 # For parallel, independent analysis
 class ConcurrentOrchestrator:
@@ -81,6 +84,7 @@ class ConcurrentOrchestrator:
 ```
 
 ### Hierarchical Pattern
+
 ```python
 # For complex, multi-level coordination
 class HierarchicalOrchestrator:
@@ -100,6 +104,7 @@ class HierarchicalOrchestrator:
 ## 🔄 Communication Protocols
 
 ### Inter-Agent Messaging
+
 ```python
 # Standardized message format (IBM pattern)
 @dataclass
@@ -111,13 +116,14 @@ class AgentMessage:
     timestamp: datetime
     correlation_id: str
     priority: int
-    
+
     def to_json(self) -> str:
         """Serialize for transport"""
         pass
 ```
 
 ### Handoff Protocol
+
 ```python
 # Clean handoff between agents (OpenAI Swarm)
 class HandoffProtocol:
@@ -130,7 +136,7 @@ class HandoffProtocol:
         """
         if not to_agent.can_handle(context['task']):
             raise HandoffError(f"{to_agent.id} cannot handle task")
-        
+
         to_agent.receive_context(context)
         from_agent.cleanup()
 ```
@@ -140,6 +146,7 @@ class HandoffProtocol:
 ### For Each Swarm Implementation
 
 Create these files:
+
 ```
 /docs/swarms/{swarm-name}/
 ├── README.md              # Overview and purpose
@@ -152,6 +159,7 @@ Create these files:
 ```
 
 ### Agent Documentation Template
+
 ```yaml
 # agents.yaml
 agents:
@@ -176,10 +184,11 @@ agents:
 ## 🛡️ Safety and Error Handling
 
 ### Safety Boundaries (Anthropic Pattern)
+
 ```python
 class SafetyBoundary:
     """Enforce safety constraints on all agents"""
-    
+
     def __init__(self):
         self.constraints = [
             NoCodeExecution(),
@@ -188,7 +197,7 @@ class SafetyBoundary:
             RateLimiting(),
             OutputValidation()
         ]
-    
+
     def validate(self, agent_output: Any) -> bool:
         """Validate output against all constraints"""
         for constraint in self.constraints:
@@ -198,17 +207,18 @@ class SafetyBoundary:
 ```
 
 ### Error Recovery
+
 ```python
 class ErrorRecovery:
     """Graceful degradation and recovery"""
-    
+
     strategies = {
         'agent_failure': fallback_to_simpler_agent,
         'timeout': reduce_complexity_and_retry,
         'rate_limit': implement_backoff,
         'consensus_failure': request_human_intervention
     }
-    
+
     def handle(self, error: Exception, context: Dict):
         strategy = self.strategies.get(type(error).__name__)
         return strategy(error, context) if strategy else self.default_recovery()
@@ -217,6 +227,7 @@ class ErrorRecovery:
 ## 📊 Monitoring and Observability
 
 ### Required Metrics
+
 ```python
 # Every orchestration MUST track:
 class OrchestrationMetrics:
@@ -227,13 +238,14 @@ class OrchestrationMetrics:
     token_usage: Dict[str, int]  # Tokens per agent
     cost_estimate: float         # Estimated cost
     quality_score: float         # Output quality metric
-    
+
     def to_prometheus(self):
         """Export to Prometheus format"""
         pass
 ```
 
 ### Logging Standards
+
 ```python
 # Structured logging for all orchestrations
 import structlog
@@ -252,6 +264,7 @@ logger.info(
 ## 🔗 Integration Points
 
 ### With Unified Orchestrator
+
 ```python
 # All swarms MUST integrate with UnifiedOrchestratorFacade
 from app.orchestration.unified_facade import UnifiedOrchestratorFacade
@@ -259,7 +272,7 @@ from app.orchestration.unified_facade import UnifiedOrchestratorFacade
 class CustomSwarm:
     def __init__(self):
         self.facade = UnifiedOrchestratorFacade()
-    
+
     def register(self):
         """Register with the facade"""
         self.facade.register_swarm(
@@ -270,6 +283,7 @@ class CustomSwarm:
 ```
 
 ### With MCP Memory
+
 ```python
 # Memory integration for context sharing
 from app.mcp.unified_memory import UnifiedMemoryStore
@@ -277,14 +291,14 @@ from app.mcp.unified_memory import UnifiedMemoryStore
 class MemoryAwareOrchestrator:
     def __init__(self):
         self.memory = UnifiedMemoryStore()
-    
+
     async def execute_with_memory(self, task: Task):
         # Load relevant context
         context = await self.memory.search_memory(task.description)
-        
+
         # Execute with context
         result = await self.execute(task, context)
-        
+
         # Store result for future reference
         await self.memory.store_memory(
             content=result,
@@ -295,28 +309,30 @@ class MemoryAwareOrchestrator:
 ## 🚀 Scaling Considerations
 
 ### Horizontal Scaling
+
 ```python
 # Support for distributed execution
 class DistributedOrchestrator:
     def __init__(self):
         self.worker_pool = WorkerPool(min_workers=2, max_workers=100)
         self.load_balancer = RoundRobinBalancer()
-    
+
     async def execute_distributed(self, task: Task):
         # Partition task
         subtasks = self.partition(task)
-        
+
         # Distribute to workers
         results = await self.worker_pool.map(
             self.execute_subtask,
             subtasks
         )
-        
+
         # Aggregate results
         return self.aggregate(results)
 ```
 
 ### Resource Management
+
 ```python
 # Resource allocation and limits
 class ResourceManager:
@@ -326,7 +342,7 @@ class ResourceManager:
         'max_execution_time': 300,  # seconds
         'max_tokens_per_minute': 100000
     }
-    
+
     def allocate(self, agent: Agent) -> Resources:
         """Allocate resources within limits"""
         pass
@@ -335,12 +351,13 @@ class ResourceManager:
 ## 📝 Version Control
 
 ### Orchestration Versioning
+
 ```python
 # Version all orchestration patterns
 class VersionedOrchestration:
     version = "2.0.0"
     compatible_versions = ["1.9.0", "1.8.0"]
-    
+
     def migrate_from(self, old_version: str, data: Dict):
         """Migrate data from old version"""
         pass
@@ -349,20 +366,21 @@ class VersionedOrchestration:
 ## 🔍 Discovery and Registration
 
 ### Auto-Discovery Protocol
+
 ```python
 # Agents must be discoverable
 class AgentRegistry:
     """Central registry for all agents"""
-    
+
     def __init__(self):
         self.agents = {}
         self.capabilities = {}
-    
+
     def register(self, agent: Agent):
         self.agents[agent.id] = agent
         for capability in agent.capabilities:
             self.capabilities.setdefault(capability, []).append(agent.id)
-    
+
     def find_capable_agents(self, capability: str) -> List[Agent]:
         """Find agents with specific capability"""
         agent_ids = self.capabilities.get(capability, [])

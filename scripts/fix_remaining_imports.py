@@ -17,30 +17,36 @@ def fix_imports(file_path: Path) -> bool:
     # Fix patterns
     replacements = [
         # Unified orchestrator imports
-        (r'from app\.swarms\.unified_enhanced_orchestrator import UnifiedSwarmOrchestrator',
-         'from app.swarms import UnifiedSwarmOrchestrator'),
-
+        (
+            r"from app\.swarms\.unified_enhanced_orchestrator import UnifiedSwarmOrchestrator",
+            "from app.swarms import UnifiedSwarmOrchestrator",
+        ),
         # Coding swarm orchestrator
-        (r'from app\.swarms\.coding\.swarm_orchestrator import SwarmOrchestrator',
-         'from app.swarms import SwarmOrchestrator'),
-
+        (
+            r"from app\.swarms\.coding\.swarm_orchestrator import SwarmOrchestrator",
+            "from app.swarms import SwarmOrchestrator",
+        ),
         # Generic swarm import that should use new pattern
-        (r'from \.unified_enhanced_orchestrator import UnifiedSwarmOrchestrator',
-         'from app.swarms import UnifiedSwarmOrchestrator'),
-
+        (
+            r"from \.unified_enhanced_orchestrator import UnifiedSwarmOrchestrator",
+            "from app.swarms import UnifiedSwarmOrchestrator",
+        ),
         # Import that refers to old SwarmOrchestrator in coding module
-        (r'from \.coding\.swarm_orchestrator import SwarmOrchestrator',
-         'from app.swarms import SwarmOrchestrator'),
+        (
+            r"from \.coding\.swarm_orchestrator import SwarmOrchestrator",
+            "from app.swarms import SwarmOrchestrator",
+        ),
     ]
 
     for pattern, replacement in replacements:
         content = re.sub(pattern, replacement, content)
 
     if content != original:
-        with open(file_path, 'w') as f:
+        with open(file_path, "w") as f:
             f.write(content)
         return True
     return False
+
 
 def main():
     """Main function"""
@@ -67,6 +73,7 @@ def main():
             print(f"❌ File not found: {file_path}")
 
     print(f"\n✨ Fixed {fixed_count} files")
+
 
 if __name__ == "__main__":
     main()

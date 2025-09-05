@@ -46,13 +46,13 @@ test_endpoint() {
     local url=$2
     local expected_status=${3:-200}
     local timeout=${4:-10}
-    
+
     TOTAL_TESTS=$((TOTAL_TESTS + 1))
     echo -e "${BLUE}🔍 Testing ${name}...${NC}"
-    
+
     local response=$(curl -s -w "HTTPSTATUS:%{http_code}" --max-time $timeout "$url" || echo "HTTPSTATUS:000")
     local status=$(echo "$response" | tr -d '\n' | sed -e 's/.*HTTPSTATUS://')
-    
+
     if [ "$status" -eq "$expected_status" ]; then
         echo -e "${GREEN}✅ ${name} - Status: ${status}${NC}"
         PASSED_TESTS=$((PASSED_TESTS + 1))
@@ -69,12 +69,12 @@ test_json_endpoint() {
     local url=$2
     local expected_field=$3
     local timeout=${4:-10}
-    
+
     TOTAL_TESTS=$((TOTAL_TESTS + 1))
     echo -e "${BLUE}🔍 Testing ${name} JSON response...${NC}"
-    
+
     local response=$(curl -s --max-time $timeout "$url" || echo '{"error": "connection_failed"}')
-    
+
     if echo "$response" | jq -e ".$expected_field" > /dev/null 2>&1; then
         echo -e "${GREEN}✅ ${name} - JSON field '${expected_field}' found${NC}"
         PASSED_TESTS=$((PASSED_TESTS + 1))
@@ -93,15 +93,15 @@ post_json_test() {
     local payload=$3
     local expected_field=$4
     local timeout=${5:-30}
-    
+
     TOTAL_TESTS=$((TOTAL_TESTS + 1))
     echo -e "${BLUE}🔍 Testing ${name} POST...${NC}"
-    
+
     local response=$(curl -s --max-time $timeout \
         -H "Content-Type: application/json" \
         -d "$payload" \
         "$url" || echo '{"error": "connection_failed"}')
-    
+
     if echo "$response" | jq -e ".$expected_field" > /dev/null 2>&1; then
         echo -e "${GREEN}✅ ${name} - POST successful${NC}"
         PASSED_TESTS=$((PASSED_TESTS + 1))
@@ -195,7 +195,7 @@ if echo "$SWARM_RESPONSE" | jq -e ".success" > /dev/null 2>&1; then
     SWARM_ID=$(echo "$SWARM_RESPONSE" | jq -r ".session_id // .id")
     echo -e "${GREEN}✅ Consensus Swarm Created - ID: ${SWARM_ID}${NC}"
     PASSED_TESTS=$((PASSED_TESTS + 1))
-    
+
     # Test swarm status
     if test_json_endpoint "Swarm Status" "${BASE_URL}/api/swarms/${SWARM_ID}/status" "status"; then
         echo -e "${GREEN}✅ Swarm status tracking works${NC}"
@@ -255,7 +255,7 @@ GPU_STATUS=$(curl -s --max-time 15 \
 if echo "$GPU_STATUS" | jq -e ".available" > /dev/null 2>&1 && [ "$(echo "$GPU_STATUS" | jq -r ".available")" = "true" ]; then
     echo -e "${GREEN}✅ Lambda Labs GPU Available${NC}"
     PASSED_TESTS=$((PASSED_TESTS + 1))
-    
+
     # Test small GPU task (if available)
     echo -e "${BLUE}🔍 Testing small GPU task...${NC}"
     GPU_TASK_PAYLOAD='{
@@ -265,12 +265,12 @@ if echo "$GPU_STATUS" | jq -e ".available" > /dev/null 2>&1 && [ "$(echo "$GPU_S
             "model": "voyage-3-large"
         }
     }'
-    
+
     GPU_RESPONSE=$(timeout 120 curl -s \
         -H "Content-Type: application/json" \
         -d "$GPU_TASK_PAYLOAD" \
         "${BASE_URL}/api/gpu/execute" 2>/dev/null || echo '{"success": false}')
-    
+
     if echo "$GPU_RESPONSE" | jq -e ".success" > /dev/null 2>&1 && [ "$(echo "$GPU_RESPONSE" | jq -r ".success")" = "true" ]; then
         echo -e "${GREEN}✅ GPU Task Execution Success${NC}"
         PASSED_TESTS=$((PASSED_TESTS + 1))
@@ -278,7 +278,7 @@ if echo "$GPU_STATUS" | jq -e ".available" > /dev/null 2>&1 && [ "$(echo "$GPU_S
         echo -e "${YELLOW}⚠️ GPU Task Execution - May take longer in production${NC}"
         WARNINGS=$((WARNINGS + 1))
     fi
-    
+
     TOTAL_TESTS=$((TOTAL_TESTS + 2))
 else
     echo -e "${YELLOW}⚠️ Lambda Labs GPU Not Available - Skipping GPU tests${NC}"

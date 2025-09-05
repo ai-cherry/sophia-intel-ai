@@ -7,7 +7,7 @@ stages:
   planning:
     agent: "claude"
     priority: 100
-    timeout: 1800  # 30 minutes
+    timeout: 1800 # 30 minutes
     tasks:
       - id: "create_todo"
         name: "Create TODO list"
@@ -26,12 +26,12 @@ stages:
       - todo_items_count: ">0"
       - api_endpoints_defined: true
       - test_coverage_planned: ">80%"
-    
+
   implementation:
     agent: "roo"
     priority: 90
     depends_on: ["planning"]
-    timeout: 7200  # 2 hours
+    timeout: 7200 # 2 hours
     tasks:
       - id: "backend_impl"
         name: "Implement backend"
@@ -48,12 +48,12 @@ stages:
       - no_lint_errors: true
       - coverage_minimum: 80
     rollback_on_failure: true
-    
+
   security_validation:
     agent: "swarm:security"
     priority: 80
     depends_on: ["implementation"]
-    timeout: 900  # 15 minutes
+    timeout: 900 # 15 minutes
     tasks:
       - id: "security_scan"
         name: "Security audit"
@@ -65,13 +65,13 @@ stages:
       - no_high_vulnerabilities: true
       - dependencies_up_to_date: true
       - compliance_passed: true
-    blocking: true  # Must pass to continue
-    
+    blocking: true # Must pass to continue
+
   documentation:
     agent: "swarm:research"
     priority: 70
     depends_on: ["implementation"]
-    parallel: true  # Can run alongside security
+    parallel: true # Can run alongside security
     timeout: 1800
     tasks:
       - id: "update_readme"
@@ -103,9 +103,9 @@ communication:
     - type: "redis"
       key: "workflow:feature_development"
   status_updates:
-    frequency: 300  # Every 5 minutes
+    frequency: 300 # Every 5 minutes
     format: "json"
-    
+
 quality_gates:
   - stage: "planning"
     gate: "completeness"
@@ -116,7 +116,7 @@ quality_gates:
   - stage: "security_validation"
     gate: "vulnerability_count"
     threshold: 0
-    
+
 metrics:
   track:
     - total_duration

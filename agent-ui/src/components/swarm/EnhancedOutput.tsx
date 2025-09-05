@@ -26,13 +26,13 @@ export function EnhancedOutput({ streamData = '' }: EnhancedOutputProps) {
     // Parse the streaming data - simplified for Phase 1
     const lines = streamData.split('\n');
     const parsedPhases: OutputPhase[] = [];
-    
+
     lines.forEach(line => {
       if (line.startsWith('data: ') && !line.includes('[DONE]')) {
         try {
           const data = JSON.parse(line.substring(6));
           parsedPhases.push(data);
-          
+
           if (data.phase === 'complete' && data.final) {
             setFinalResult(data.final);
           }
@@ -118,7 +118,7 @@ export function EnhancedOutput({ streamData = '' }: EnhancedOutputProps) {
             <span>📊</span>
             Execution Summary
           </h3>
-          
+
           <div className="grid grid-cols-2 gap-3 text-sm">
             {finalResult.team_id && (
               <div>

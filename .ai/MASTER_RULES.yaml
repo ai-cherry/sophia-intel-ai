@@ -64,12 +64,12 @@ agents:
   claude_coder:
     role: "architect"
     priority: 100
-    capabilities: 
+    capabilities:
       - "system_design"
       - "complex_logic"
       - "documentation"
       - "testing_strategy"
-    task_scope: 
+    task_scope:
       - "architecture_decisions"
       - "api_design"
       - "test_planning"
@@ -77,7 +77,7 @@ agents:
     communication: "stdio"
     context_limit: 200000
     temperature: 0.3
-    
+
   roo_coder:
     role: "builder"
     priority: 90
@@ -94,29 +94,30 @@ agents:
     communication: "http"
     context_limit: 128000
     temperature: 0.5
-    
+
   swarm_agents:
     strategic:
       role: "planner"
       priority: 95
-      capabilities: ["task_breakdown", "dependency_analysis", "resource_planning"]
+      capabilities:
+        ["task_breakdown", "dependency_analysis", "resource_planning"]
       task_scope: ["project_planning", "milestone_tracking", "risk_assessment"]
       temperature: 0.2
-      
+
     development:
       role: "implementer"
       priority: 85
       capabilities: ["coding", "testing", "debugging", "optimization"]
       task_scope: ["feature_development", "unit_testing", "integration"]
       temperature: 0.5
-      
+
     security:
       role: "validator"
       priority: 80
       capabilities: ["security_audit", "compliance_check", "vulnerability_scan"]
       task_scope: ["code_review", "dependency_audit", "security_testing"]
       temperature: 0.1
-      
+
     research:
       role: "explorer"
       priority: 70
@@ -132,18 +133,18 @@ orchestration:
   duplicate_detection: true
   max_retries: 3
   timeout_seconds: 300
-  
+
   task_allocation:
     strategy: "capability-match"
     load_balancing: true
     max_parallel: 3
     queue_type: "priority"
-    
+
   communication_channels:
     shared_memory: "redis://localhost:6379/agent-coordination"
     state_store: "weaviate://localhost:8080/agent-state"
     file_exchange: "/tmp/sophia-agent-exchange"
-    
+
   error_handling:
     on_failure: "rollback"
     notify_agents: true
@@ -153,7 +154,7 @@ orchestration:
 # === TECH STACK CONSTRAINTS ===
 tech_stack:
   approved:
-    backend: 
+    backend:
       - "FastAPI==0.104.1"
       - "Python>=3.11"
       - "Pydantic==2.5.0"
@@ -177,14 +178,14 @@ tech_stack:
       - "Portkey"
       - "OpenRouter"
       - "Together AI"
-  
+
   forbidden_additions:
     - "New web frameworks"
     - "Alternative ORMs"
     - "Additional CSS frameworks"
     - "New state management libraries"
     - "Duplicate functionality libraries"
-  
+
   evaluation_criteria:
     existing_solution_percentage: 90
     improvement_factor_required: 10
@@ -201,26 +202,26 @@ quality_gates:
       formatting: "black --check"
       testing: "pytest --cov-min=80"
       security: "bandit -r app/"
-      
+
     typescript:
       linting: "eslint --fix"
       type_checking: "tsc --noEmit"
       testing: "jest --coverage"
       formatting: "prettier --check"
-    
+
   performance:
     api_latency_p50_ms: 100
     api_latency_p99_ms: 500
     memory_usage_mb: 512
     startup_time_seconds: 30
     concurrent_requests: 100
-    
+
   reliability:
     accuracy_eval_minimum: 90
     reliability_eval_minimum: 95
     uptime_percent_minimum: 99.9
     error_rate_maximum: 0.1
-    
+
   security:
     dependency_scan: true
     secret_scan: true
@@ -234,17 +235,17 @@ documentation:
     - "CONTRIBUTING.md"
     - ".ai/RULES.md"
     - "docs/architecture.md"
-    
+
   inline_requirements:
     python_docstrings: true
     typescript_jsdoc: true
     complex_logic_comments: true
-    
+
   maximum_sizes:
     readme_lines: 500
     doc_file_lines: 1000
     comment_lines: 5
-    
+
   update_policy: "maintain-not-expand"
 
 # === MONITORING AND REPORTING ===
@@ -255,12 +256,12 @@ monitoring:
     - code_quality_score
     - test_coverage
     - performance_metrics
-    
+
   reporting_format:
     summary: "markdown"
     detailed: "json"
     frequency: "per_task"
-    
+
   alerting:
     on_failure: true
     on_degradation: true

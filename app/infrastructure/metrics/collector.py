@@ -27,148 +27,142 @@ registry = CollectorRegistry()
 
 # Request metrics
 request_count = Counter(
-    'ai_orchestra_requests_total',
-    'Total number of requests',
-    ['method', 'endpoint', 'status'],
-    registry=registry
+    "ai_orchestra_requests_total",
+    "Total number of requests",
+    ["method", "endpoint", "status"],
+    registry=registry,
 )
 
 request_duration = Histogram(
-    'ai_orchestra_request_duration_seconds',
-    'Request duration in seconds',
-    ['method', 'endpoint'],
-    registry=registry
+    "ai_orchestra_request_duration_seconds",
+    "Request duration in seconds",
+    ["method", "endpoint"],
+    registry=registry,
 )
 
 # WebSocket metrics
 websocket_connections = Gauge(
-    'ai_orchestra_websocket_connections_active',
-    'Number of active WebSocket connections',
-    registry=registry
+    "ai_orchestra_websocket_connections_active",
+    "Number of active WebSocket connections",
+    registry=registry,
 )
 
 websocket_messages = Counter(
-    'ai_orchestra_websocket_messages_total',
-    'Total WebSocket messages',
-    ['direction', 'message_type'],
-    registry=registry
+    "ai_orchestra_websocket_messages_total",
+    "Total WebSocket messages",
+    ["direction", "message_type"],
+    registry=registry,
 )
 
 # Circuit breaker metrics
 circuit_breaker_state = Gauge(
-    'ai_orchestra_circuit_breaker_state',
-    'Circuit breaker state (0=closed, 1=open, 2=half-open)',
-    ['circuit_name'],
-    registry=registry
+    "ai_orchestra_circuit_breaker_state",
+    "Circuit breaker state (0=closed, 1=open, 2=half-open)",
+    ["circuit_name"],
+    registry=registry,
 )
 
 circuit_breaker_failures = Counter(
-    'ai_orchestra_circuit_breaker_failures_total',
-    'Total circuit breaker failures',
-    ['circuit_name'],
-    registry=registry
+    "ai_orchestra_circuit_breaker_failures_total",
+    "Total circuit breaker failures",
+    ["circuit_name"],
+    registry=registry,
 )
 
 # Error metrics
 error_count = Counter(
-    'ai_orchestra_errors_total',
-    'Total number of errors',
-    ['component', 'error_type'],
-    registry=registry
+    "ai_orchestra_errors_total",
+    "Total number of errors",
+    ["component", "error_type"],
+    registry=registry,
 )
 
 # Token generation metrics
 token_generation_rate = Summary(
-    'ai_orchestra_token_generation_rate',
-    'Token generation rate per second',
-    registry=registry
+    "ai_orchestra_token_generation_rate", "Token generation rate per second", registry=registry
 )
 
 token_count = Counter(
-    'ai_orchestra_tokens_generated_total',
-    'Total tokens generated',
-    ['session_id'],
-    registry=registry
+    "ai_orchestra_tokens_generated_total",
+    "Total tokens generated",
+    ["session_id"],
+    registry=registry,
 )
 
 # ==================== Business Metrics ====================
 
 # Chat session metrics
 chat_sessions = Gauge(
-    'ai_orchestra_chat_sessions_active',
-    'Number of active chat sessions',
-    registry=registry
+    "ai_orchestra_chat_sessions_active", "Number of active chat sessions", registry=registry
 )
 
 chat_messages = Counter(
-    'ai_orchestra_chat_messages_total',
-    'Total chat messages processed',
-    ['session_id', 'execution_mode'],
-    registry=registry
+    "ai_orchestra_chat_messages_total",
+    "Total chat messages processed",
+    ["session_id", "execution_mode"],
+    registry=registry,
 )
 
 # Swarm execution metrics
 swarm_executions = Counter(
-    'ai_orchestra_swarm_executions_total',
-    'Total swarm executions',
-    ['swarm_type', 'status'],
-    registry=registry
+    "ai_orchestra_swarm_executions_total",
+    "Total swarm executions",
+    ["swarm_type", "status"],
+    registry=registry,
 )
 
 swarm_duration = Histogram(
-    'ai_orchestra_swarm_duration_seconds',
-    'Swarm execution duration',
-    ['swarm_type'],
-    registry=registry
+    "ai_orchestra_swarm_duration_seconds",
+    "Swarm execution duration",
+    ["swarm_type"],
+    registry=registry,
 )
 
 # Manager intent metrics
 manager_intent_detections = Counter(
-    'ai_orchestra_manager_intent_detections_total',
-    'Total intent detections',
-    ['intent', 'confidence_bucket'],
-    registry=registry
+    "ai_orchestra_manager_intent_detections_total",
+    "Total intent detections",
+    ["intent", "confidence_bucket"],
+    registry=registry,
 )
 
 manager_accuracy = Summary(
-    'ai_orchestra_manager_accuracy',
-    'Manager intent detection accuracy',
-    registry=registry
+    "ai_orchestra_manager_accuracy", "Manager intent detection accuracy", registry=registry
 )
 
 # API version usage
 api_version_usage = Counter(
-    'ai_orchestra_api_version_usage_total',
-    'API version usage',
-    ['version', 'endpoint'],
-    registry=registry
+    "ai_orchestra_api_version_usage_total",
+    "API version usage",
+    ["version", "endpoint"],
+    registry=registry,
 )
 
 # Connection pool metrics
 connection_pool_size = Gauge(
-    'ai_orchestra_connection_pool_size',
-    'Current connection pool size',
-    registry=registry
+    "ai_orchestra_connection_pool_size", "Current connection pool size", registry=registry
 )
 
 connection_pool_utilization = Gauge(
-    'ai_orchestra_connection_pool_utilization',
-    'Connection pool utilization percentage',
-    registry=registry
+    "ai_orchestra_connection_pool_utilization",
+    "Connection pool utilization percentage",
+    registry=registry,
 )
 
 # Session memory metrics
 session_memory_usage = Gauge(
-    'ai_orchestra_session_memory_bytes',
-    'Session memory usage in bytes',
-    ['session_id'],
-    registry=registry
+    "ai_orchestra_session_memory_bytes",
+    "Session memory usage in bytes",
+    ["session_id"],
+    registry=registry,
 )
 
 # ==================== Metric Decorators ====================
 
+
 def track_request(method: str, endpoint: str):
     """Decorator to track HTTP request metrics"""
+
     def decorator(func: Callable) -> Callable:
         @wraps(func)
         async def async_wrapper(*args, **kwargs):
@@ -205,6 +199,7 @@ def track_request(method: str, endpoint: str):
                 request_duration.labels(method=method, endpoint=endpoint).observe(duration)
 
         import asyncio
+
         if asyncio.iscoroutinefunction(func):
             return async_wrapper
         else:
@@ -212,8 +207,10 @@ def track_request(method: str, endpoint: str):
 
     return decorator
 
+
 def track_swarm_execution(swarm_type: str):
     """Decorator to track swarm execution metrics"""
+
     def decorator(func: Callable) -> Callable:
         @wraps(func)
         async def wrapper(*args, **kwargs):
@@ -235,6 +232,7 @@ def track_swarm_execution(swarm_type: str):
 
     return decorator
 
+
 @contextmanager
 def track_operation_time(metric: Histogram, **labels):
     """Context manager to track operation time"""
@@ -245,7 +243,9 @@ def track_operation_time(metric: Histogram, **labels):
         duration = time.time() - start_time
         metric.labels(**labels).observe(duration)
 
+
 # ==================== Custom Collectors ====================
+
 
 class SystemMetricsCollector:
     """Custom collector for system metrics"""
@@ -255,41 +255,33 @@ class SystemMetricsCollector:
 
         # CPU usage
         yield GaugeMetricFamily(
-            'ai_orchestra_cpu_usage_percent',
-            'CPU usage percentage',
-            value=psutil.cpu_percent()
+            "ai_orchestra_cpu_usage_percent", "CPU usage percentage", value=psutil.cpu_percent()
         )
 
         # Memory usage
         memory = psutil.virtual_memory()
         yield GaugeMetricFamily(
-            'ai_orchestra_memory_usage_bytes',
-            'Memory usage in bytes',
-            value=memory.used
+            "ai_orchestra_memory_usage_bytes", "Memory usage in bytes", value=memory.used
         )
         yield GaugeMetricFamily(
-            'ai_orchestra_memory_usage_percent',
-            'Memory usage percentage',
-            value=memory.percent
+            "ai_orchestra_memory_usage_percent", "Memory usage percentage", value=memory.percent
         )
 
         # Disk usage
-        disk = psutil.disk_usage('/')
+        disk = psutil.disk_usage("/")
         yield GaugeMetricFamily(
-            'ai_orchestra_disk_usage_bytes',
-            'Disk usage in bytes',
-            value=disk.used
+            "ai_orchestra_disk_usage_bytes", "Disk usage in bytes", value=disk.used
         )
         yield GaugeMetricFamily(
-            'ai_orchestra_disk_usage_percent',
-            'Disk usage percentage',
-            value=disk.percent
+            "ai_orchestra_disk_usage_percent", "Disk usage percentage", value=disk.percent
         )
+
 
 # Register custom collector
 registry.register(SystemMetricsCollector())
 
 # ==================== Metrics Aggregator ====================
+
 
 class MetricsAggregator:
     """Aggregates and manages metrics"""
@@ -356,25 +348,26 @@ class MetricsAggregator:
         """Export metrics in Prometheus format"""
         return generate_latest(registry)
 
+
 # ==================== FastAPI Integration ====================
 
 # Global aggregator instance
 metrics_aggregator = MetricsAggregator()
 
+
 async def metrics_endpoint() -> Response:
     """
     Prometheus metrics endpoint
-    
+
     Returns:
         Metrics in Prometheus format
     """
     metrics_data = metrics_aggregator.export_metrics()
-    return Response(
-        content=metrics_data,
-        media_type=CONTENT_TYPE_LATEST
-    )
+    return Response(content=metrics_data, media_type=CONTENT_TYPE_LATEST)
+
 
 # ==================== Metrics Middleware ====================
+
 
 class MetricsMiddleware:
     """Middleware to collect request metrics"""
@@ -411,17 +404,11 @@ class MetricsMiddleware:
                 raise
             finally:
                 duration = time.time() - start_time
-                request_count.labels(
-                    method=method,
-                    endpoint=path,
-                    status=status
-                ).inc()
-                request_duration.labels(
-                    method=method,
-                    endpoint=path
-                ).observe(duration)
+                request_count.labels(method=method, endpoint=path, status=status).inc()
+                request_duration.labels(method=method, endpoint=path).observe(duration)
         else:
             await self.app(scope, receive, send)
+
 
 # ==================== Export ====================
 
@@ -430,42 +417,39 @@ MetricsCollector = SystemMetricsCollector
 
 __all__ = [
     # Classes
-    'MetricsCollector',
-    'SystemMetricsCollector',
-    'MetricsAggregator',
-    'MetricsMiddleware',
+    "MetricsCollector",
+    "SystemMetricsCollector",
+    "MetricsAggregator",
+    "MetricsMiddleware",
     # Metrics
-    'request_count',
-    'request_duration',
-    'websocket_connections',
-    'websocket_messages',
-    'circuit_breaker_state',
-    'circuit_breaker_failures',
-    'error_count',
-    'token_generation_rate',
-    'token_count',
-    'chat_sessions',
-    'chat_messages',
-    'swarm_executions',
-    'swarm_duration',
-    'manager_intent_detections',
-    'manager_accuracy',
-    'api_version_usage',
-    'connection_pool_size',
-    'connection_pool_utilization',
-    'session_memory_usage',
-
+    "request_count",
+    "request_duration",
+    "websocket_connections",
+    "websocket_messages",
+    "circuit_breaker_state",
+    "circuit_breaker_failures",
+    "error_count",
+    "token_generation_rate",
+    "token_count",
+    "chat_sessions",
+    "chat_messages",
+    "swarm_executions",
+    "swarm_duration",
+    "manager_intent_detections",
+    "manager_accuracy",
+    "api_version_usage",
+    "connection_pool_size",
+    "connection_pool_utilization",
+    "session_memory_usage",
     # Decorators and utilities
-    'track_request',
-    'track_swarm_execution',
-    'track_operation_time',
-
+    "track_request",
+    "track_swarm_execution",
+    "track_operation_time",
     # Classes
-    'MetricsAggregator',
-    'MetricsMiddleware',
-    'SystemMetricsCollector',
-
+    "MetricsAggregator",
+    "MetricsMiddleware",
+    "SystemMetricsCollector",
     # Functions
-    'metrics_endpoint',
-    'metrics_aggregator'
+    "metrics_endpoint",
+    "metrics_aggregator",
 ]

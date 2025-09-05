@@ -32,13 +32,12 @@ class DynamicPortkeyClient:
     """
 
     @with_circuit_breaker("external_api")
-    def __init__(self,
-                 portkey_api_key: str,
-                 openrouter_api_key: str,
-                 config_path: Optional[str] = None):
+    def __init__(
+        self, portkey_api_key: str, openrouter_api_key: str, config_path: Optional[str] = None
+    ):
         """
         Initialize dynamic Portkey client.
-        
+
         Args:
             portkey_api_key: Portkey API key
             openrouter_api_key: OpenRouter API key
@@ -58,24 +57,16 @@ class DynamicPortkeyClient:
                 self.config = json.load(f)
 
         # Initialize OpenRouter client for model management
-        self.openrouter = OpenRouterLatest(
-            api_key=openrouter_api_key,
-            app_name="Sophia-Intel-AI"
-        )
+        self.openrouter = OpenRouterLatest(api_key=openrouter_api_key, app_name="Sophia-Intel-AI")
 
         # Initialize Portkey client
-        self.client = Portkey(
-            api_key=portkey_api_key,
-            config=self._generate_portkey_config()
-        )
+        self.client = Portkey(api_key=portkey_api_key, config=self._generate_portkey_config())
 
         # Alternative: Use OpenAI client with Portkey headers
         self.openai_client = AsyncOpenAI(
             api_key=portkey_api_key,
             base_url=PORTKEY_GATEWAY_URL,
-            default_headers={
-                "x-portkey-config": json.dumps(self._generate_portkey_config())
-            }
+            default_headers={"x-portkey-config": json.dumps(self._generate_portkey_config())},
         )
 
         # Model cache and health tracking
@@ -90,15 +81,9 @@ class DynamicPortkeyClient:
             "provider": "openrouter",
             "api_key": self.openrouter_key,
             "override_params": {
-                "headers": {
-                    "HTTP-Referer": "http://localhost:3000",
-                    "X-Title": "Sophia-Intel-AI"
-                }
+                "headers": {"HTTP-Referer": "http://localhost:3000", "X-Title": "Sophia-Intel-AI"}
             },
-            "retry": {
-                "attempts": 3,
-                "on_status_codes": [429, 502, 503]
-            }
+            "retry": {"attempts": 3, "on_status_codes": [429, 502, 503]},
         }
 
     @with_circuit_breaker("external_api")
@@ -109,16 +94,18 @@ class DynamicPortkeyClient:
         logger.info(f"Refreshed model cache: {len(self.model_cache)} models available")
 
     @with_circuit_breaker("external_api")
-    async def get_model_for_task(self,
-                                 task: Union[str, TaskType] = TaskType.GENERAL,
-                                 budget: Union[str, ModelTier] = ModelTier.BALANCED) -> str:
+    async def get_model_for_task(
+        self,
+        task: Union[str, TaskType] = TaskType.GENERAL,
+        budget: Union[str, ModelTier] = ModelTier.BALANCED,
+    ) -> str:
         """
         Get the best available model for a specific task.
-        
+
         Args:
             task: Task type (reasoning, coding, creative, etc.)
             budget: Budget tier (premium, balanced, free)
-            
+
         Returns:
             Model ID string
         """
@@ -142,22 +129,24 @@ class DynamicPortkeyClient:
         return datetime.now() - self.last_refresh > timedelta(hours=6)
 
     @with_circuit_breaker("external_api")
-    async def create_completion(self,
-                              messages: list[dict[str, str]],
-                              model: Optional[str] = None,
-                              task: Union[str, TaskType] = TaskType.GENERAL,
-                              budget: Union[str, ModelTier] = ModelTier.BALANCED,
-                              **kwargs) -> dict[str, Any]:
+    async def create_completion(
+        self,
+        messages: list[dict[str, str]],
+        model: Optional[str] = None,
+        task: Union[str, TaskType] = TaskType.GENERAL,
+        budget: Union[str, ModelTier] = ModelTier.BALANCED,
+        **kwargs,
+    ) -> dict[str, Any]:
         """
         Create chat completion with dynamic model selection.
-        
+
         Args:
             messages: Chat messages
             model: Specific model or semantic name (e.g., "latest-gpt", "best-coding")
             task: Task type if model not specified
             budget: Budget tier if model not specified
             **kwargs: Additional OpenAI API parameters
-            
+
         Returns:
             API response dict
         """
@@ -181,21 +170,20 @@ class DynamicPortkeyClient:
             model=model,
             task=TaskType[task.upper()] if isinstance(task, str) else task,
             tier=ModelTier[budget.upper()] if isinstance(budget, str) else budget,
-            **kwargs
+            **kwargs,
         )
 
-    async def create_completion_with_metadata(self,
-                                             messages: list[dict[str, str]],
-                                             metadata: dict[str, Any],
-                                             **kwargs) -> dict[str, Any]:
+    async def create_completion_with_metadata(
+        self, messages: list[dict[str, str]], metadata: dict[str, Any], **kwargs
+    ) -> dict[str, Any]:
         """
         Create completion with metadata-driven routing.
-        
+
         Args:
             messages: Chat messages
             metadata: Routing metadata (priority, budget, environment, etc.)
             **kwargs: Additional API parameters
-            
+
         Returns:
             API response dict
         """
@@ -217,24 +205,19 @@ class DynamicPortkeyClient:
         # Add metadata to request
         kwargs["metadata"] = metadata
 
-        return await self.create_completion(
-            messages=messages,
-            model=model,
-            **kwargs
-        )
+        return await self.create_completion(messages=messages, model=model, **kwargs)
 
-    async def stream_completion(self,
-                              messages: list[dict[str, str]],
-                              model: Optional[str] = None,
-                              **kwargs):
+    async def stream_completion(
+        self, messages: list[dict[str, str]], model: Optional[str] = None, **kwargs
+    ):
         """
         Stream chat completion with dynamic model selection.
-        
+
         Args:
             messages: Chat messages
             model: Model ID or semantic name
             **kwargs: Additional API parameters
-            
+
         Yields:
             Streaming response chunks
         """
@@ -250,9 +233,7 @@ class DynamicPortkeyClient:
         kwargs["stream"] = True
 
         response = await self.openai_client.chat.completions.create(
-            model=model,
-            messages=messages,
-            **kwargs
+            model=model, messages=messages, **kwargs
         )
 
         async for chunk in response:
@@ -262,10 +243,10 @@ class DynamicPortkeyClient:
     async def check_model_health(self, model_id: str) -> dict[str, Any]:
         """
         Check health status of a specific model.
-        
+
         Args:
             model_id: Model identifier
-            
+
         Returns:
             Health status dict
         """
@@ -274,7 +255,7 @@ class DynamicPortkeyClient:
         self.health_status[model_id] = {
             "available": health,
             "checked_at": datetime.now().isoformat(),
-            "model_info": self.openrouter.get_model_info(model_id)
+            "model_info": self.openrouter.get_model_info(model_id),
         }
 
         return self.health_status[model_id]
@@ -282,18 +263,14 @@ class DynamicPortkeyClient:
     async def monitor_all_models(self) -> dict[str, Any]:
         """
         Monitor health of all configured models.
-        
+
         Returns:
             Health report for all models
         """
         report = {
             "timestamp": datetime.now().isoformat(),
             "models": {},
-            "summary": {
-                "total": 0,
-                "available": 0,
-                "unavailable": 0
-            }
+            "summary": {"total": 0, "available": 0, "unavailable": 0},
         }
 
         # Check all models in config
@@ -321,34 +298,31 @@ class DynamicPortkeyClient:
         return report
 
     @with_circuit_breaker("external_api")
-    def estimate_cost(self,
-                     model_id: str,
-                     prompt_tokens: int,
-                     completion_tokens: int) -> float:
+    def estimate_cost(self, model_id: str, prompt_tokens: int, completion_tokens: int) -> float:
         """
         Estimate cost for a completion.
-        
+
         Args:
             model_id: Model identifier
             prompt_tokens: Number of prompt tokens
             completion_tokens: Number of completion tokens
-            
+
         Returns:
             Estimated cost in USD
         """
         return self.openrouter.estimate_cost(model_id, prompt_tokens, completion_tokens)
 
     @with_circuit_breaker("external_api")
-    async def get_available_models(self,
-                                  tier: Optional[Union[str, ModelTier]] = None,
-                                  max_cost: Optional[float] = None) -> list[str]:
+    async def get_available_models(
+        self, tier: Optional[Union[str, ModelTier]] = None, max_cost: Optional[float] = None
+    ) -> list[str]:
         """
         Get list of available models matching criteria.
-        
+
         Args:
             tier: Model tier filter
             max_cost: Maximum cost per 1M tokens
-            
+
         Returns:
             List of model IDs
         """
@@ -361,16 +335,16 @@ class DynamicPortkeyClient:
 
         return self.openrouter.get_available_models(tier, max_cost)
 
-    async def benchmark_models(self,
-                              prompt: str,
-                              models: Optional[list[str]] = None) -> dict[str, Any]:
+    async def benchmark_models(
+        self, prompt: str, models: Optional[list[str]] = None
+    ) -> dict[str, Any]:
         """
         Benchmark response time and quality across models.
-        
+
         Args:
             prompt: Test prompt
             models: List of models to test (or use defaults)
-            
+
         Returns:
             Benchmark results
         """
@@ -381,7 +355,7 @@ class DynamicPortkeyClient:
                 "anthropic/claude-3.7-sonnet",
                 "deepseek/deepseek-chat-v3.1",
                 "google/gemini-2.5-flash",
-                "deepseek/deepseek-chat-v3.1:free"
+                "deepseek/deepseek-chat-v3.1:free",
             ]
 
         results = {}
@@ -394,7 +368,7 @@ class DynamicPortkeyClient:
                     messages=[{"role": "user", "content": prompt}],
                     model=model_id,
                     max_tokens=100,
-                    temperature=0.7
+                    temperature=0.7,
                 )
 
                 elapsed = (datetime.now() - start_time).total_seconds()
@@ -406,15 +380,12 @@ class DynamicPortkeyClient:
                     "cost": self.estimate_cost(
                         model_id,
                         response.get("usage", {}).get("prompt_tokens", 0),
-                        response.get("usage", {}).get("completion_tokens", 0)
-                    )
+                        response.get("usage", {}).get("completion_tokens", 0),
+                    ),
                 }
 
             except Exception as e:
-                results[model_id] = {
-                    "success": False,
-                    "error": str(e)
-                }
+                results[model_id] = {"success": False, "error": str(e)}
 
         return results
 
@@ -424,24 +395,21 @@ class DynamicPortkeyClient:
 async def create_dynamic_client() -> DynamicPortkeyClient:
     """Create a dynamic Portkey client with environment configuration."""
     from dotenv import load_dotenv
-    load_dotenv('.env.local')
+
+    load_dotenv(".env.local")
 
     return DynamicPortkeyClient(
         portkey_api_key=os.getenv("PORTKEY_API_KEY"),
-        openrouter_api_key=os.getenv("OPENROUTER_API_KEY")
+        openrouter_api_key=os.getenv("OPENROUTER_API_KEY"),
     )
 
 
-async def quick_completion(prompt: str,
-                          task: str = "general",
-                          budget: str = "balanced") -> str:
+async def quick_completion(prompt: str, task: str = "general", budget: str = "balanced") -> str:
     """Quick helper for single completions."""
     client = await create_dynamic_client()
 
     response = await client.create_completion(
-        messages=[{"role": "user", "content": prompt}],
-        task=task,
-        budget=budget
+        messages=[{"role": "user", "content": prompt}], task=task, budget=budget
     )
 
     return response["choices"][0]["message"]["content"]

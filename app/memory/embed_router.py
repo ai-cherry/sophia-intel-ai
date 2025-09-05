@@ -1,10 +1,8 @@
-from __future__ import annotations
 """
 Embedding router with caching for dual-tier embeddings.
 Routes to appropriate model based on chunk characteristics.
 """
-from typing import Optional, Union
-
+from __future__ import annotations
 import hashlib
 import json
 import os
@@ -17,16 +15,18 @@ from app.core.ai_logger import logger
 from app.core.circuit_breaker import with_circuit_breaker
 
 # Configuration from environment
-EMBED_BASE_URL = os.getenv("EMBED_BASE_URL", "https://api.portkey.ai/v1")
-EMBED_API_KEY = os.getenv("EMBED_API_KEY", os.getenv("VK_TOGETHER", ""))  # Portkey Virtual Key for Together
+EMBED_BASE_URL = get_config().get("EMBED_BASE_URL", "https://api.portkey.ai/v1")
+EMBED_API_KEY = os.getenv(
+    "EMBED_API_KEY", get_config().get("VK_TOGETHER", "")
+)  # Portkey Virtual Key for Together
 
 # Tier A: Long context, high accuracy (32k tokens)
-MODEL_A = os.getenv("EMBED_MODEL_A", "togethercomputer/m2-bert-80M-32k-retrieval")
-DIM_A = int(os.getenv("EMBED_DIM_A", "768"))
+MODEL_A = get_config().get("EMBED_MODEL_A", "togethercomputer/m2-bert-80M-32k-retrieval")
+DIM_A = int(get_config().get("EMBED_DIM_A", "768"))
 
 # Tier B: Fast, frequent use
-MODEL_B = os.getenv("EMBED_MODEL_B", "BAAI/bge-large-en-v1.5")
-DIM_B = int(os.getenv("EMBED_DIM_B", "1024"))
+MODEL_B = get_config().get("EMBED_MODEL_B", "BAAI/bge-large-en-v1.5")
+DIM_B = int(get_config().get("EMBED_DIM_B", "1024"))
 
 # Initialize OpenAI client for embeddings (via Portkey)
 _EMBED = OpenAI(base_url=EMBED_BASE_URL, api_key=EMBED_API_KEY)
@@ -34,11 +34,13 @@ _EMBED = OpenAI(base_url=EMBED_BASE_URL, api_key=EMBED_API_KEY)
 # Cache configuration
 _CACHE_PATH = "tmp/embeddings_cache.db"
 
+
 def _ensure_cache():
     """Ensure cache database exists and is initialized."""
     os.makedirs("tmp", exist_ok=True)
     conn = sqlite3.connect(_CACHE_PATH)
-    conn.execute("""
+    conn.execute(
+        """
         CREATE TABLE IF NOT EXISTS cache(
             sha TEXT NOT NULL,
             model TEXT NOT NULL,
@@ -46,59 +48,60 @@ def _ensure_cache():
             ts REAL NOT NULL,
             PRIMARY KEY(sha, model)
         )
-    """)
+    """
+    )
     conn.commit()
     return conn
+
 
 def _sha(data: str) -> str:
     """Generate SHA-1 hash of text."""
     return hashlib.sha1(data.encode("utf-8")).hexdigest()
 
-def _cache_get(conn, sha: str, model: str) -> Optional[list[float]]:
+
+def _cache_get(conn, sha: str, model: str) -> list[float] | None:
     """Retrieve cached embedding if exists."""
-    cur = conn.execute(
-        "SELECT vec FROM cache WHERE sha=? AND model=?",
-        (sha, model)
-    )
+    cur = conn.execute("SELECT vec FROM cache WHERE sha=? AND model=?", (sha, model))
     row = cur.fetchone()
     return json.loads(row[0]) if row else None
+
 
 def _cache_put(conn, sha: str, model: str, vec: list[float]) -> None:
     """Store embedding in cache."""
     conn.execute(
         "INSERT OR REPLACE INTO cache(sha, model, vec, ts) VALUES(?, ?, ?, ?)",
-        (sha, model, json.dumps(vec), time.time())
+        (sha, model, json.dumps(vec), time.time()),
     )
     conn.commit()
+
 
 @with_circuit_breaker("external_api")
 def embed_batch(texts: list[str], model: str) -> list[list[float]]:
     """
     Call Portkey→Together through OpenAI SDK for batch embedding.
-    
+
     Args:
         texts: List of texts to embed
         model: Model identifier
-    
+
     Returns:
         List of embedding vectors
     """
     r = _EMBED.embeddings.create(model=model, input=texts)
     return [d.embedding for d in r.data]
 
+
 def choose_model_for_chunk(
-    text: str,
-    lang: Optional[str] = None,
-    priority: Optional[str] = None
+    text: str, lang: str | None = None, priority: str | None = None
 ) -> tuple[str, int]:
     """
     Choose appropriate embedding model based on chunk characteristics.
-    
+
     Args:
         text: Text content to embed
         lang: Programming language (optional)
         priority: Priority level (optional)
-    
+
     Returns:
         Tuple of (model_name, dimension)
     """
@@ -115,14 +118,15 @@ def choose_model_for_chunk(
     # Default to Tier B for speed
     return MODEL_B, DIM_B
 
+
 def embed_with_cache(texts: list[str], model: str) -> list[list[float]]:
     """
     Embed texts with caching to avoid redundant API calls.
-    
+
     Args:
         texts: List of texts to embed
         model: Model to use
-    
+
     Returns:
         List of embedding vectors
     """
@@ -157,6 +161,7 @@ def embed_with_cache(texts: list[str], model: str) -> list[list[float]]:
 
     conn.close()
     return out
+
 
 def clear_cache() -> None:
     """Clear the embedding cache."""

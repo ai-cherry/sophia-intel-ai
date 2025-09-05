@@ -19,7 +19,7 @@ const Tabs = React.forwardRef<
 >(({ className, value, defaultValue, onValueChange, children, ...props }, ref) => {
   const [internalValue, setInternalValue] = React.useState(defaultValue || "")
   const currentValue = value !== undefined ? value : internalValue
-  
+
   const handleValueChange = (newValue: string) => {
     if (value === undefined) {
       setInternalValue(newValue)
@@ -57,7 +57,7 @@ const TabsTrigger = React.forwardRef<
   React.ButtonHTMLAttributes<HTMLButtonElement> & { value: string }
 >(({ className, value, ...props }, ref) => {
   const context = React.useContext(TabsContext)
-  
+
   return (
     <button
       ref={ref}
@@ -78,9 +78,9 @@ const TabsContent = React.forwardRef<
   React.HTMLAttributes<HTMLDivElement> & { value: string }
 >(({ className, value, ...props }, ref) => {
   const context = React.useContext(TabsContext)
-  
+
   if (context.value !== value) return null
-  
+
   return (
     <div
       ref={ref}

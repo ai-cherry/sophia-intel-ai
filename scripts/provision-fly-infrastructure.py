@@ -19,6 +19,7 @@ from app.core.ai_logger import logger
 @dataclass
 class ServiceSpec:
     """Specification for a Fly.io service"""
+
     name: str
     image: str | None = None
     dockerfile: str | None = None
@@ -37,25 +38,15 @@ class FlyInfrastructureProvisioner:
 
     def __init__(self, api_token: str):
         self.api_token = api_token
-        self.headers = {
-            "Authorization": f"Bearer {api_token}",
-            "Content-Type": "application/json"
-        }
+        self.headers = {"Authorization": f"Bearer {api_token}", "Content-Type": "application/json"}
         self.base_url = "https://api.fly.io/v1"
         self.org_slug = "personal"  # Use personal org
 
     def create_app(self, app_name: str) -> dict[str, Any]:
         """Create a Fly.io application"""
-        payload = {
-            "app_name": app_name,
-            "org_slug": self.org_slug
-        }
+        payload = {"app_name": app_name, "org_slug": self.org_slug}
 
-        response = requests.post(
-            f"{self.base_url}/apps",
-            headers=self.headers,
-            json=payload
-        )
+        response = requests.post(f"{self.base_url}/apps", headers=self.headers, json=payload)
 
         if response.status_code in [200, 201]:
             logger.info(f"✅ Created Fly.io app: {app_name}")
@@ -63,31 +54,26 @@ class FlyInfrastructureProvisioner:
         elif response.status_code == 422 and "already exists" in response.text.lower():
             logger.info(f"📱 App {app_name} already exists, continuing...")
             # Get existing app info
-            get_response = requests.get(
-                f"{self.base_url}/apps/{app_name}",
-                headers=self.headers
-            )
+            get_response = requests.get(f"{self.base_url}/apps/{app_name}", headers=self.headers)
             if get_response.status_code == 200:
                 return get_response.json()
             else:
                 logger.info(f"Warning: Could not get existing app info: {get_response.text}")
                 return {"name": app_name, "status": "exists"}
         else:
-            logger.info(f"⚠️  Failed to create app {app_name}: {response.status_code} - {response.text}")
+            logger.info(
+                f"⚠️  Failed to create app {app_name}: {response.status_code} - {response.text}"
+            )
             return {"name": app_name, "status": "error", "error": response.text}
 
-    def create_volume(self, app_name: str, volume_name: str, size_gb: int, region: str = "sjc") -> dict[str, Any]:
+    def create_volume(
+        self, app_name: str, volume_name: str, size_gb: int, region: str = "sjc"
+    ) -> dict[str, Any]:
         """Create a persistent volume for an app"""
-        payload = {
-            "name": volume_name,
-            "size_gb": size_gb,
-            "region": region
-        }
+        payload = {"name": volume_name, "size_gb": size_gb, "region": region}
 
         response = requests.post(
-            f"{self.base_url}/apps/{app_name}/volumes",
-            headers=self.headers,
-            json=payload
+            f"{self.base_url}/apps/{app_name}/volumes", headers=self.headers, json=payload
         )
 
         if response.status_code in [200, 201]:
@@ -112,7 +98,9 @@ class FlyInfrastructureProvisioner:
         volume_info = None
         if spec.volume_size_gb > 0:
             volume_name = f"{spec.name.replace('-', '_')}_data"
-            volume_info = self.create_volume(spec.name, volume_name, spec.volume_size_gb, primary_region)
+            volume_info = self.create_volume(
+                spec.name, volume_name, spec.volume_size_gb, primary_region
+            )
 
         # 3. Generate fly.toml configuration
         toml_config = self.generate_fly_toml(spec, volume_info, primary_region)
@@ -120,7 +108,7 @@ class FlyInfrastructureProvisioner:
         # 4. Write the fly.toml file
         toml_filename = f"fly-{spec.name}.toml"
         try:
-            with open(toml_filename, 'w') as f:
+            with open(toml_filename, "w") as f:
                 f.write(toml_config)
             logger.info(f"📄 Generated {toml_filename}")
         except Exception as e:
@@ -133,10 +121,12 @@ class FlyInfrastructureProvisioner:
             "fly_toml": toml_filename,
             "public_url": f"https://{spec.name}.fly.dev",
             "internal_url": f"http://{spec.name}.internal:{spec.port}",
-            "status": "configured"
+            "status": "configured",
         }
 
-    def generate_fly_toml(self, spec: ServiceSpec, volume_info: dict | None, primary_region: str) -> str:
+    def generate_fly_toml(
+        self, spec: ServiceSpec, volume_info: dict | None, primary_region: str
+    ) -> str:
         """Generate fly.toml configuration for a service"""
 
         toml_lines = [
@@ -144,8 +134,8 @@ class FlyInfrastructureProvisioner:
             f'primary_region = "{primary_region}"',
             'kill_signal = "SIGINT"',
             'kill_timeout = "5s"',
-            '',
-            '[build]'
+            "",
+            "[build]",
         ]
 
         if spec.dockerfile:
@@ -155,88 +145,93 @@ class FlyInfrastructureProvisioner:
 
         # Environment variables
         if spec.env_vars:
-            toml_lines.extend(['', '[env]'])
+            toml_lines.extend(["", "[env]"])
             for key, value in spec.env_vars.items():
                 toml_lines.append(f'  {key} = "{value}"')
 
         # Experimental features
-        toml_lines.extend([
-            '',
-            '[experimental]',
-            '  auto_rollback = true',
-            '  enable_consul = true'
-        ])
+        toml_lines.extend(
+            ["", "[experimental]", "  auto_rollback = true", "  enable_consul = true"]
+        )
 
         # Services configuration
-        toml_lines.extend([
-            '',
-            '[services]',
-            '  protocol = "tcp"',
-            f'  internal_port = {spec.port}',
-            '  auto_stop_machines = true',
-            '  auto_start_machines = true',
-            f'  min_machines_running = {spec.min_instances}',
-            '',
-            '  [[services.ports]]',
-            '    port = 80',
-            '    handlers = ["http"]',
-            '    force_https = true',
-            '',
-            '  [[services.ports]]',
-            '    port = 443',
-            '    handlers = ["tls", "http"]',
-            '',
-            '  [services.concurrency]',
-            '    type = "connections"',
-            '    hard_limit = 250',
-            '    soft_limit = 200',
-            '',
-            '  [[services.http_checks]]',
-            '    interval = "30s"',
-            '    grace_period = "10s"',
-            '    method = "GET"',
-            f'    path = "{spec.health_check_path}"',
-            '    protocol = "http"',
-            '    timeout = "10s"',
-            '    tls_skip_verify = false'
-        ])
+        toml_lines.extend(
+            [
+                "",
+                "[services]",
+                '  protocol = "tcp"',
+                f"  internal_port = {spec.port}",
+                "  auto_stop_machines = true",
+                "  auto_start_machines = true",
+                f"  min_machines_running = {spec.min_instances}",
+                "",
+                "  [[services.ports]]",
+                "    port = 80",
+                '    handlers = ["http"]',
+                "    force_https = true",
+                "",
+                "  [[services.ports]]",
+                "    port = 443",
+                '    handlers = ["tls", "http"]',
+                "",
+                "  [services.concurrency]",
+                '    type = "connections"',
+                "    hard_limit = 250",
+                "    soft_limit = 200",
+                "",
+                "  [[services.http_checks]]",
+                '    interval = "30s"',
+                '    grace_period = "10s"',
+                '    method = "GET"',
+                f'    path = "{spec.health_check_path}"',
+                '    protocol = "http"',
+                '    timeout = "10s"',
+                "    tls_skip_verify = false",
+            ]
+        )
 
         # Volumes configuration
         if volume_info and spec.volume_size_gb > 0:
-            toml_lines.extend([
-                '',
-                '[mounts]',
-                f'  source = "{volume_info.get("name", f"{spec.name}_data")}"',
-                '  destination = "/data"',
-                f'  initial_size = "{spec.volume_size_gb}gb"'
-            ])
+            toml_lines.extend(
+                [
+                    "",
+                    "[mounts]",
+                    f'  source = "{volume_info.get("name", f"{spec.name}_data")}"',
+                    '  destination = "/data"',
+                    f'  initial_size = "{spec.volume_size_gb}gb"',
+                ]
+            )
 
         # Machine configuration
-        toml_lines.extend([
-            '',
-            '[[vm]]',
-            '  cpu_kind = "shared"',
-            f'  cpus = {spec.cpu_cores}',
-            f'  memory_mb = {spec.memory_mb}'
-        ])
+        toml_lines.extend(
+            [
+                "",
+                "[[vm]]",
+                '  cpu_kind = "shared"',
+                f"  cpus = {spec.cpu_cores}",
+                f"  memory_mb = {spec.memory_mb}",
+            ]
+        )
 
         # Auto-scaling configuration
-        toml_lines.extend([
-            '',
-            '[scaling]',
-            f'  min_machines_running = {spec.min_instances}',
-            f'  max_machines_running = {spec.max_instances}',
-            '',
-            '  [[scaling.metrics]]',
-            '    type = "cpu"',
-            '    target = 70',
-            '',
-            '  [[scaling.metrics]]',
-            '    type = "memory"',
-            '    target = 75'
-        ])
+        toml_lines.extend(
+            [
+                "",
+                "[scaling]",
+                f"  min_machines_running = {spec.min_instances}",
+                f"  max_machines_running = {spec.max_instances}",
+                "",
+                "  [[scaling.metrics]]",
+                '    type = "cpu"',
+                "    target = 70",
+                "",
+                "  [[scaling.metrics]]",
+                '    type = "memory"',
+                "    target = 75",
+            ]
+        )
 
-        return '\n'.join(toml_lines)
+        return "\n".join(toml_lines)
 
 
 def main():
@@ -278,10 +273,9 @@ def main():
                 "CLUSTER_HOSTNAME": "node1",
                 "ENABLE_MULTI_TENANCY": "true",
                 "AUTO_TENANT_CREATION": "true",
-                "GOGC": "100"
-            }
+                "GOGC": "100",
+            },
         ),
-
         # 2. MCP Memory Management Server
         ServiceSpec(
             name="sophia-mcp",
@@ -291,7 +285,7 @@ def main():
             cpu_cores=2.0,
             min_instances=1,
             max_instances=8,
-            volume_size_gb=5,   # 5GB for memory data
+            volume_size_gb=5,  # 5GB for memory data
             health_check_path="/health",
             env_vars={
                 "MCP_SERVER_PORT": "8004",
@@ -301,10 +295,9 @@ def main():
                 "WEAVIATE_URL": "http://sophia-weaviate.internal:8080",
                 "USE_REAL_APIS": "true",
                 "ENABLE_API_VALIDATION": "true",
-                "ENABLE_MCP_PROTOCOL": "true"
-            }
+                "ENABLE_MCP_PROTOCOL": "true",
+            },
         ),
-
         # 3. Vector Store with 3-tier embeddings
         ServiceSpec(
             name="sophia-vector",
@@ -328,10 +321,9 @@ def main():
                 "PORTKEY_BASE_URL": "https://api.portkey.ai/v1",
                 "USE_REAL_APIS": "true",
                 "ENABLE_API_VALIDATION": "true",
-                "ENABLE_EMBEDDING_CACHE": "true"
-            }
+                "ENABLE_EMBEDDING_CACHE": "true",
+            },
         ),
-
         # 4. Unified API - Main Orchestrator (Critical Service)
         ServiceSpec(
             name="sophia-api",
@@ -359,10 +351,9 @@ def main():
                 "ENABLE_API_VALIDATION": "true",
                 "FAIL_ON_MOCK_FALLBACK": "true",
                 "ENABLE_CONSENSUS_SWARMS": "true",
-                "ENABLE_MEMORY_DEDUPLICATION": "true"
-            }
+                "ENABLE_MEMORY_DEDUPLICATION": "true",
+            },
         ),
-
         # 5. Agno Bridge - UI Compatibility Layer
         ServiceSpec(
             name="sophia-bridge",
@@ -372,7 +363,7 @@ def main():
             cpu_cores=1.0,
             min_instances=1,
             max_instances=8,
-            volume_size_gb=2,   # Minimal storage
+            volume_size_gb=2,  # Minimal storage
             health_check_path="/healthz",
             env_vars={
                 "PORT": "7777",
@@ -386,10 +377,9 @@ def main():
                 "CORS_ORIGINS": "*",
                 "DEBUG": "false",
                 "USE_REAL_APIS": "true",
-                "ENABLE_API_VALIDATION": "true"
-            }
+                "ENABLE_API_VALIDATION": "true",
+            },
         ),
-
         # 6. Agent UI - Next.js Frontend
         ServiceSpec(
             name="sophia-ui",
@@ -399,7 +389,7 @@ def main():
             cpu_cores=1.0,
             min_instances=1,
             max_instances=6,
-            volume_size_gb=1,   # Minimal storage
+            volume_size_gb=1,  # Minimal storage
             health_check_path="/",
             env_vars={
                 "NODE_ENV": "production",
@@ -413,9 +403,9 @@ def main():
                 "NEXT_PUBLIC_ENVIRONMENT": "production",
                 "NEXT_PUBLIC_ENABLE_CONSENSUS_UI": "true",
                 "NEXT_PUBLIC_ENABLE_MEMORY_DEDUP_UI": "true",
-                "NEXT_PUBLIC_ENABLE_SWARM_MONITORING": "true"
-            }
-        )
+                "NEXT_PUBLIC_ENABLE_SWARM_MONITORING": "true",
+            },
+        ),
     ]
 
     # Provision all services
@@ -439,7 +429,7 @@ def main():
     logger.info("📊 SOPHIA INTEL AI INFRASTRUCTURE DEPLOYMENT SUMMARY")
     logger.info("=" * 60)
 
-    successful_deployments = len([s for s in deployed_services.values() if 'error' not in s])
+    successful_deployments = len([s for s in deployed_services.values() if "error" not in s])
     logger.info(f"🏗️  Total Services Configured: {successful_deployments}/{len(services)}")
     logger.info(f"💾 Total Storage Provisioned: {total_storage}GB")
     logger.info(f"⚖️  Total Maximum Instances: {total_max_instances}")
@@ -448,7 +438,7 @@ def main():
 
     logger.info("\n📱 SERVICE ENDPOINTS:")
     for service_name, result in deployed_services.items():
-        if 'error' not in result:
+        if "error" not in result:
             logger.info(f"  • {service_name}:")
             logger.info(f"    - Public:   {result['public_url']}")
             logger.info(f"    - Internal: {result['internal_url']}")
@@ -462,8 +452,12 @@ def main():
 
     logger.info("\n⚖️  AUTO-SCALING CONFIGURATION:")
     for service_spec in services:
-        logger.info(f"  • {service_spec.name}: {service_spec.min_instances}-{service_spec.max_instances} instances")
-        logger.info(f"    Memory: {service_spec.memory_mb}MB, CPU: {service_spec.cpu_cores} cores, Storage: {service_spec.volume_size_gb}GB")
+        logger.info(
+            f"  • {service_spec.name}: {service_spec.min_instances}-{service_spec.max_instances} instances"
+        )
+        logger.info(
+            f"    Memory: {service_spec.memory_mb}MB, CPU: {service_spec.cpu_cores} cores, Storage: {service_spec.volume_size_gb}GB"
+        )
 
     logger.info("\n🎯 NEXT STEPS:")
     logger.info("  1. Deploy each service using: fly deploy --config fly-<service-name>.toml")
@@ -481,7 +475,7 @@ def main():
             "total_max_instances": total_max_instances,
             "primary_region": "sjc",
             "secondary_region": "iad",
-            "timestamp": time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime())
+            "timestamp": time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime()),
         },
         "services": deployed_services,
         "infrastructure_specs": {
@@ -492,10 +486,10 @@ def main():
                 "max_instances": service_spec.max_instances,
                 "volume_size_gb": service_spec.volume_size_gb,
                 "port": service_spec.port,
-                "health_check_path": service_spec.health_check_path
+                "health_check_path": service_spec.health_check_path,
             }
             for service_spec in services
-        }
+        },
     }
 
     with open("fly-deployment-results.json", "w") as f:

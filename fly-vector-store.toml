@@ -12,18 +12,18 @@ kill_timeout = "5s"
   PYTHONPATH = "/app"
   PYTHONUNBUFFERED = "1"
   LOCAL_DEV_MODE = "false"
-  
+
   # Internal service URLs (will use Fly.io internal networking)
   WEAVIATE_URL = "http://sophia-weaviate.internal:8080"
-  
+
   # Modern 3-tier embeddings configuration
   EMBEDDING_TIER_S_MODEL = "voyage-3-large"
   EMBEDDING_TIER_A_MODEL = "cohere/embed-multilingual-v3.0"
   EMBEDDING_TIER_B_MODEL = "BAAI/bge-base-en-v1.5"
-  
+
   # Gateway configuration
   PORTKEY_BASE_URL = "https://api.portkey.ai/v1"
-  
+
   # Feature flags
   USE_REAL_APIS = "true"
   ENABLE_API_VALIDATION = "true"
@@ -47,7 +47,7 @@ kill_timeout = "5s"
   [[services.ports]]
     port = 443
     handlers = ["tls", "http"]
-  
+
   [services.concurrency]
     type = "connections"
     hard_limit = 200
@@ -67,7 +67,7 @@ kill_timeout = "5s"
     protocol = "http"
     timeout = "3s"
     tls_skip_verify = false
-    
+
     [services.http_checks.headers]
       X-Health-Check = "fly.io"
 
@@ -87,20 +87,20 @@ kill_timeout = "5s"
   cpu_kind = "shared"
   cpus = 2
   memory_mb = 2048
-  
+
 # Auto-scaling configuration - more aggressive for embedding workloads
 [scaling]
   min_machines_running = 1
   max_machines_running = 12
-  
+
   [[scaling.metrics]]
     type = "cpu"
     target = 65  # Lower threshold for embedding processing
-  
+
   [[scaling.metrics]]
     type = "memory"
     target = 70
-    
+
   [[scaling.metrics]]
     type = "requests"
     target = 80  # Scale earlier for embedding requests

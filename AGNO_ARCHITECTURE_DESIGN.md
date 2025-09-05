@@ -11,6 +11,7 @@ This document outlines the comprehensive AGNO-based architecture for Sophia (Bus
 Based on analysis of `/app/swarms/agno_teams.py` and `/app/agno_bridge.py`:
 
 1. **Existing AGNO Implementation**:
+
    - Mock AGNO classes (Team, Agent, Task) are in place
    - SophiaAGNOTeam class provides AGNO Team orchestration
    - Integration with Portkey routing is established
@@ -18,6 +19,7 @@ Based on analysis of `/app/swarms/agno_teams.py` and `/app/agno_bridge.py`:
    - Circuit breaker patterns and memory integration are supported
 
 2. **Current Integration Patterns**:
+
    - AGNO Bridge provides compatibility with AGNO UI expectations
    - Virtual key allocation ensures true parallel execution
    - 10 provider configurations with unique virtual keys
@@ -65,6 +67,7 @@ Based on analysis of `/app/swarms/agno_teams.py` and `/app/agno_bridge.py`:
 ### 1. Sales Intelligence AGNO Team
 
 **Configuration:**
+
 ```python
 SOPHIA_SALES_INTELLIGENCE_CONFIG = AGNOTeamConfig(
     name="sophia-sales-intelligence",
@@ -78,6 +81,7 @@ SOPHIA_SALES_INTELLIGENCE_CONFIG = AGNOTeamConfig(
 ```
 
 **Team Composition:**
+
 - **Lead Sales Analyst** (GPT-4): Strategy and deal pipeline analysis
 - **Market Research Specialist** (Perplexity): Real-time market intelligence
 - **Customer Success Predictor** (Claude): Churn risk and expansion opportunities
@@ -85,10 +89,11 @@ SOPHIA_SALES_INTELLIGENCE_CONFIG = AGNOTeamConfig(
 - **Revenue Forecaster** (Cohere): Advanced analytics and predictions
 
 **Portkey Virtual Key Mapping:**
+
 ```python
 SOPHIA_SALES_VK_MAPPING = {
     "lead_sales_analyst": "openai-vk-190a60",
-    "market_researcher": "perplexity-vk-56c172", 
+    "market_researcher": "perplexity-vk-56c172",
     "success_predictor": "anthropic-vk-b42804",
     "competition_tracker": "xai-vk-e65d0f",
     "revenue_forecaster": "cohere-vk-496fa9"
@@ -96,14 +101,16 @@ SOPHIA_SALES_VK_MAPPING = {
 ```
 
 **Personality Traits:**
+
 - Business-focused language and metrics
-- ROI and KPI-driven responses  
+- ROI and KPI-driven responses
 - Strategic thinking with tactical recommendations
 - Executive-ready insights and summaries
 
 ### 2. Research AGNO Team
 
 **Configuration:**
+
 ```python
 SOPHIA_RESEARCH_CONFIG = AGNOTeamConfig(
     name="sophia-research-team",
@@ -117,12 +124,14 @@ SOPHIA_RESEARCH_CONFIG = AGNOTeamConfig(
 ```
 
 **Team Composition:**
+
 - **Primary Researcher** (Perplexity): Real-time data gathering with citations
 - **Data Synthesizer** (Claude): Deep analysis and pattern recognition
 - **Fact Checker** (OpenAI): Verification and validation
 - **Insight Generator** (Mistral): Creative connections and implications
 
 **Portkey Virtual Key Mapping:**
+
 ```python
 SOPHIA_RESEARCH_VK_MAPPING = {
     "primary_researcher": "perplexity-vk-56c172",
@@ -135,6 +144,7 @@ SOPHIA_RESEARCH_VK_MAPPING = {
 ### 3. Client Success AGNO Team
 
 **Configuration:**
+
 ```python
 SOPHIA_CLIENT_SUCCESS_CONFIG = AGNOTeamConfig(
     name="sophia-client-success",
@@ -148,6 +158,7 @@ SOPHIA_CLIENT_SUCCESS_CONFIG = AGNOTeamConfig(
 ```
 
 **Team Composition:**
+
 - **Relationship Analyst** (Claude): Client health scoring and relationship mapping
 - **Expansion Specialist** (GPT-4): Upsell and cross-sell opportunities
 - **Risk Assessor** (Groq): Fast churn prediction and intervention recommendations
@@ -156,6 +167,7 @@ SOPHIA_CLIENT_SUCCESS_CONFIG = AGNOTeamConfig(
 ### 4. Market Analysis AGNO Team
 
 **Configuration:**
+
 ```python
 SOPHIA_MARKET_ANALYSIS_CONFIG = AGNOTeamConfig(
     name="sophia-market-analysis",
@@ -169,6 +181,7 @@ SOPHIA_MARKET_ANALYSIS_CONFIG = AGNOTeamConfig(
 ```
 
 **Team Composition:**
+
 - **Market Trend Analyst** (Perplexity): Real-time trend identification
 - **Competitive Analyst** (XAI): Competitor monitoring and positioning
 - **Economic Forecaster** (DeepSeek): Economic impact analysis
@@ -180,6 +193,7 @@ SOPHIA_MARKET_ANALYSIS_CONFIG = AGNOTeamConfig(
 ### 1. Code Analysis AGNO Team
 
 **Configuration:**
+
 ```python
 ARTEMIS_CODE_ANALYSIS_CONFIG = AGNOTeamConfig(
     name="artemis-code-analysis",
@@ -193,6 +207,7 @@ ARTEMIS_CODE_ANALYSIS_CONFIG = AGNOTeamConfig(
 ```
 
 **Team Composition:**
+
 - **Code Architect** (GPT-4): High-level architecture assessment
 - **Security Scanner** (Claude): Security vulnerability analysis
 - **Performance Auditor** (DeepSeek): Performance bottleneck identification
@@ -201,6 +216,7 @@ ARTEMIS_CODE_ANALYSIS_CONFIG = AGNOTeamConfig(
 - **Test Strategist** (Mistral): Test coverage and strategy analysis
 
 **Portkey Virtual Key Mapping:**
+
 ```python
 ARTEMIS_CODE_VK_MAPPING = {
     "code_architect": "openai-vk-190a60",
@@ -215,6 +231,7 @@ ARTEMIS_CODE_VK_MAPPING = {
 ### 2. Security Audit AGNO Team
 
 **Configuration:**
+
 ```python
 ARTEMIS_SECURITY_CONFIG = AGNOTeamConfig(
     name="artemis-security-audit",
@@ -228,6 +245,7 @@ ARTEMIS_SECURITY_CONFIG = AGNOTeamConfig(
 ```
 
 **Team Composition:**
+
 - **Vulnerability Scanner** (Claude): Deep security analysis
 - **Threat Modeler** (GPT-4): Threat landscape assessment
 - **Compliance Checker** (DeepSeek): Regulatory compliance verification
@@ -237,9 +255,10 @@ ARTEMIS_SECURITY_CONFIG = AGNOTeamConfig(
 ### 3. Architecture Review AGNO Team
 
 **Configuration:**
+
 ```python
 ARTEMIS_ARCHITECTURE_CONFIG = AGNOTeamConfig(
-    name="artemis-architecture-review", 
+    name="artemis-architecture-review",
     strategy=ExecutionStrategy.DEBATE,
     max_agents=4,
     timeout=50,
@@ -250,6 +269,7 @@ ARTEMIS_ARCHITECTURE_CONFIG = AGNOTeamConfig(
 ```
 
 **Team Composition:**
+
 - **System Architect** (GPT-4): Overall system design evaluation
 - **Scalability Expert** (Claude): Scalability and performance architecture
 - **Integration Specialist** (Groq): API and integration architecture
@@ -258,6 +278,7 @@ ARTEMIS_ARCHITECTURE_CONFIG = AGNOTeamConfig(
 ### 4. Performance Optimization AGNO Team
 
 **Configuration:**
+
 ```python
 ARTEMIS_PERFORMANCE_CONFIG = AGNOTeamConfig(
     name="artemis-performance-optimization",
@@ -271,6 +292,7 @@ ARTEMIS_PERFORMANCE_CONFIG = AGNOTeamConfig(
 ```
 
 **Team Composition:**
+
 - **Performance Profiler** (Groq): Fast performance bottleneck detection
 - **Database Optimizer** (DeepSeek): Database and query optimization
 - **Caching Strategist** (Together): Caching and optimization strategies
@@ -283,34 +305,34 @@ ARTEMIS_PERFORMANCE_CONFIG = AGNOTeamConfig(
 ```python
 class AGNOSwarmIntegration(SwarmBase):
     """Integration layer between AGNO Teams and SwarmBase"""
-    
+
     def __init__(self, agno_config: AGNOTeamConfig, swarm_config: SwarmConfig):
         super().__init__(swarm_config)
         self.agno_team = SophiaAGNOTeam(agno_config)
         self.personality_layer = self._init_personality_layer()
-    
+
     def _init_personality_layer(self):
         """Initialize personality traits based on team type"""
         if "sophia" in self.agno_team.config.name:
             return SophiaBusinessPersonality()
         else:
             return ArtemisTechnicalPersonality()
-    
+
     async def solve_problem(self, problem: dict[str, Any]) -> SwarmResponse:
         """Execute problem solving through AGNO Team with personality"""
-        
+
         # Apply personality filter to problem
         enhanced_problem = self.personality_layer.enhance_problem(problem)
-        
+
         # Execute through AGNO Team
         agno_result = await self.agno_team.execute_task(
             enhanced_problem["description"],
             enhanced_problem["context"]
         )
-        
+
         # Apply personality to response
         personality_response = self.personality_layer.format_response(agno_result)
-        
+
         return SwarmResponse(
             success=agno_result.get("success", True),
             result=personality_response,
@@ -329,7 +351,7 @@ class AGNOSwarmIntegration(SwarmBase):
 ```python
 class SophiaBusinessPersonality:
     """Business-focused personality for Sophia teams"""
-    
+
     def enhance_problem(self, problem: dict[str, Any]) -> dict[str, Any]:
         business_context = {
             "focus": "business_impact",
@@ -337,12 +359,12 @@ class SophiaBusinessPersonality:
             "language": "executive",
             "format": "strategic_insights"
         }
-        
+
         return {
             **problem,
             "context": {**problem.get("context", {}), **business_context}
         }
-    
+
     def format_response(self, agno_result: dict[str, Any]) -> dict[str, Any]:
         """Format response with business-oriented language"""
         return {
@@ -354,7 +376,7 @@ class SophiaBusinessPersonality:
 
 class ArtemisTechnicalPersonality:
     """Technical-focused personality for Artemis teams"""
-    
+
     def enhance_problem(self, problem: dict[str, Any]) -> dict[str, Any]:
         technical_context = {
             "focus": "technical_excellence",
@@ -362,12 +384,12 @@ class ArtemisTechnicalPersonality:
             "language": "technical",
             "format": "detailed_analysis"
         }
-        
+
         return {
             **problem,
             "context": {**problem.get("context", {}), **technical_context}
         }
-    
+
     def format_response(self, agno_result: dict[str, Any]) -> dict[str, Any]:
         """Format response with technical precision"""
         return {
@@ -383,30 +405,30 @@ class ArtemisTechnicalPersonality:
 ```python
 class AGNOPortkeyRouter:
     """Specialized Portkey routing for AGNO Teams"""
-    
+
     @staticmethod
     def get_optimal_routing(team_name: str) -> dict[str, str]:
         """Get optimal virtual key routing for AGNO team"""
-        
+
         routing_configs = {
             "sophia-sales-intelligence": SOPHIA_SALES_VK_MAPPING,
             "sophia-research-team": SOPHIA_RESEARCH_VK_MAPPING,
             "artemis-code-analysis": ARTEMIS_CODE_VK_MAPPING,
             # ... additional mappings
         }
-        
+
         return routing_configs.get(team_name, {})
-    
+
     @staticmethod
     async def validate_routing_capacity(team_config: AGNOTeamConfig) -> dict[str, Any]:
         """Validate that routing has sufficient capacity"""
-        
+
         routing = AGNOPortkeyRouter.get_optimal_routing(team_config.name)
         virtual_keys = list(routing.values())
-        
+
         from app.swarms.core.portkey_virtual_keys import calculate_swarm_capacity
         capacity = calculate_swarm_capacity(virtual_keys)
-        
+
         return {
             "team": team_config.name,
             "agents": len(routing),
@@ -422,20 +444,20 @@ class AGNOPortkeyRouter:
 ```python
 class AGNOTeamFactory:
     """Factory for creating configured AGNO Teams"""
-    
+
     @staticmethod
     async def create_sophia_team(team_type: str) -> AGNOSwarmIntegration:
         """Create Sophia business intelligence team"""
-        
+
         team_configs = {
             "sales_intelligence": SOPHIA_SALES_INTELLIGENCE_CONFIG,
             "research": SOPHIA_RESEARCH_CONFIG,
             "client_success": SOPHIA_CLIENT_SUCCESS_CONFIG,
             "market_analysis": SOPHIA_MARKET_ANALYSIS_CONFIG
         }
-        
+
         agno_config = team_configs[team_type]
-        
+
         # Create corresponding SwarmConfig
         swarm_config = SwarmConfig(
             swarm_id=f"sophia-{team_type}-{uuid4().hex[:8]}",
@@ -444,25 +466,25 @@ class AGNOTeamFactory:
             capabilities=[SwarmCapability.RESEARCH, SwarmCapability.ANALYSIS],
             memory_enabled=True
         )
-        
+
         team = AGNOSwarmIntegration(agno_config, swarm_config)
         await team.initialize()
-        
+
         return team
-    
+
     @staticmethod
     async def create_artemis_team(team_type: str) -> AGNOSwarmIntegration:
         """Create Artemis technical operations team"""
-        
+
         team_configs = {
             "code_analysis": ARTEMIS_CODE_ANALYSIS_CONFIG,
             "security_audit": ARTEMIS_SECURITY_CONFIG,
             "architecture_review": ARTEMIS_ARCHITECTURE_CONFIG,
             "performance_optimization": ARTEMIS_PERFORMANCE_CONFIG
         }
-        
+
         agno_config = team_configs[team_type]
-        
+
         swarm_config = SwarmConfig(
             swarm_id=f"artemis-{team_type}-{uuid4().hex[:8]}",
             swarm_type=SwarmType.CODING,
@@ -470,10 +492,10 @@ class AGNOTeamFactory:
             capabilities=[SwarmCapability.CODING, SwarmCapability.QUALITY_ASSURANCE],
             memory_enabled=True
         )
-        
+
         team = AGNOSwarmIntegration(agno_config, swarm_config)
         await team.initialize()
-        
+
         return team
 ```
 
@@ -483,16 +505,16 @@ class AGNOTeamFactory:
 @app.post("/sophia/teams/{team_type}/execute")
 async def execute_sophia_team(team_type: str, request: TeamExecutionRequest):
     """Execute Sophia business intelligence team"""
-    
+
     team = await AGNOTeamFactory.create_sophia_team(team_type)
-    
+
     try:
         result = await team.solve_problem({
             "description": request.task,
             "context": request.context,
             "priority": "business_critical"
         })
-        
+
         return {
             "success": True,
             "result": result.result,
@@ -506,26 +528,26 @@ async def execute_sophia_team(team_type: str, request: TeamExecutionRequest):
     finally:
         await team.cleanup()
 
-@app.post("/artemis/teams/{team_type}/execute") 
+@app.post("/artemis/teams/{team_type}/execute")
 async def execute_artemis_team(team_type: str, request: TeamExecutionRequest):
     """Execute Artemis technical operations team"""
-    
+
     team = await AGNOTeamFactory.create_artemis_team(team_type)
-    
+
     try:
         result = await team.solve_problem({
             "description": request.task,
             "context": request.context,
             "priority": "technical_excellence"
         })
-        
+
         return {
             "success": True,
             "result": result.result,
             "execution_time": result.execution_time,
             "team_info": {
                 "type": team_type,
-                "personality": "technical_operations", 
+                "personality": "technical_operations",
                 "port": 8000
             }
         }
@@ -536,17 +558,20 @@ async def execute_artemis_team(team_type: str, request: TeamExecutionRequest):
 ## DEPLOYMENT CONSIDERATIONS
 
 ### Resource Allocation
+
 - **Sophia Teams**: 4-5 agents each, total ~18 agents across all teams
 - **Artemis Teams**: 4-6 agents each, total ~19 agents across all teams
 - **Total Virtual Keys Required**: 37 (within available 10 unique provider keys)
 
 ### Performance Characteristics
+
 - **Parallel Execution**: True parallelism through unique Portkey virtual keys
 - **Total TPM Capacity**: ~1.45M tokens per minute across all providers
 - **Total RPM Capacity**: ~76,000 requests per minute
 - **Average Response Time**: 15-45 seconds depending on strategy and complexity
 
 ### Monitoring and Metrics
+
 - Individual team performance tracking
 - Personality layer effectiveness metrics
 - Portkey routing efficiency monitoring
@@ -558,7 +583,7 @@ This AGNO-based architecture provides:
 
 1. **True Parallel Execution**: Unique virtual keys ensure no provider conflicts
 2. **Personality-Driven Responses**: Business-focused Sophia vs technical-focused Artemis
-3. **Comprehensive Coverage**: 8 specialized teams covering business and technical needs  
+3. **Comprehensive Coverage**: 8 specialized teams covering business and technical needs
 4. **Scalable Integration**: Clean integration with existing SwarmBase architecture
 5. **Production Ready**: Circuit breakers, memory integration, and proper error handling
 
@@ -567,7 +592,7 @@ The architecture leverages the existing AGNO framework while providing specializ
 ## NEXT STEPS
 
 1. Implement AGNOSwarmIntegration class
-2. Create personality layer implementations  
+2. Create personality layer implementations
 3. Build AGNOTeamFactory with all team configurations
 4. Add API endpoints for team execution
 5. Deploy with proper monitoring and metrics collection

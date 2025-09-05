@@ -73,7 +73,7 @@ export const MCPStatus: React.FC = () => {
 
   const checkService = async (service: MCPService): Promise<ServiceStatus> => {
     const startTime = Date.now();
-    
+
     try {
       const response = await fetch(`${service.url}${service.endpoint}`, {
         method: 'GET',
@@ -84,10 +84,10 @@ export const MCPStatus: React.FC = () => {
       });
 
       const latency = Date.now() - startTime;
-      
+
       if (response.ok) {
         const data = await response.json().catch(() => ({}));
-        
+
         return {
           name: service.name,
           status: 'healthy',
@@ -125,7 +125,7 @@ export const MCPStatus: React.FC = () => {
 
   const checkAllServices = useCallback(async () => {
     setIsChecking(true);
-    
+
     const checks = MCP_SERVICES.map(async (service) => {
       const status = await checkService(service);
       return [service.name, status] as [string, ServiceStatus];
@@ -179,8 +179,8 @@ export const MCPStatus: React.FC = () => {
   const getOverallHealth = () => {
     const statuses = Array.from(services.values());
     const criticalServices = MCP_SERVICES.filter(s => s.critical);
-    
-    const criticalStatuses = statuses.filter(s => 
+
+    const criticalStatuses = statuses.filter(s =>
       criticalServices.some(cs => cs.name === s.name)
     );
 
@@ -209,7 +209,7 @@ export const MCPStatus: React.FC = () => {
             {overallHealth === 'degraded' && <AlertCircle className="w-5 h-5 text-orange-500" />}
             {overallHealth === 'critical' && <WifiOff className="w-5 h-5 text-red-500" />}
           </div>
-          
+
           <div className="flex items-center gap-2">
             <TooltipProvider>
               <Tooltip>
@@ -223,7 +223,7 @@ export const MCPStatus: React.FC = () => {
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  {autoRefresh 
+                  {autoRefresh
                     ? `Auto-refreshing every ${refreshInterval / 1000}s`
                     : 'Click to enable auto-refresh'
                   }
@@ -260,7 +260,7 @@ export const MCPStatus: React.FC = () => {
               >
                 <div className="flex items-center gap-3">
                   {getStatusIcon(status.status)}
-                  
+
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="font-medium">{service.name}</span>
@@ -284,7 +284,7 @@ export const MCPStatus: React.FC = () => {
                         {status.latency}ms
                       </span>
                     </div>
-                    
+
                     {status.error && (
                       <TooltipProvider>
                         <Tooltip>
@@ -295,7 +295,7 @@ export const MCPStatus: React.FC = () => {
                           </TooltipTrigger>
                           <TooltipContent>
                             <p className="max-w-xs">{status.error}</p>
-                            <a 
+                            <a
                               href={`/docs/troubleshooting#${service.name.toLowerCase().replace(' ', '-')}`}
                               className="text-xs text-blue-400 underline mt-2 block"
                             >
@@ -321,8 +321,8 @@ export const MCPStatus: React.FC = () => {
               .map(service => (
                 <div key={service.name} className="flex items-center gap-2">
                   <span className="text-xs w-24 truncate">{service.name}</span>
-                  <Progress 
-                    value={Math.min((service.latency / 1000) * 100, 100)} 
+                  <Progress
+                    value={Math.min((service.latency / 1000) * 100, 100)}
                     className="flex-1"
                   />
                   <span className="text-xs w-12 text-right">{service.latency}ms</span>

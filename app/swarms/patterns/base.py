@@ -6,15 +6,17 @@ import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Generic, TypeVar, Optional
+from typing import Any, Generic, Optional, TypeVar
 
 logger = logging.getLogger(__name__)
 
-T = TypeVar('T')
+T = TypeVar("T")
+
 
 @dataclass
 class PatternConfig:
     """Base configuration for swarm patterns."""
+
     enabled: bool = True
     max_retries: int = 3
     timeout_seconds: float = 300.0
@@ -32,6 +34,7 @@ class PatternConfig:
 @dataclass
 class PatternResult(Generic[T]):
     """Result from pattern execution."""
+
     success: bool
     data: Optional[T] = None
     error: Optional[str] = None
@@ -49,7 +52,7 @@ class PatternResult(Generic[T]):
             "metrics": self.metrics,
             "timestamp": self.timestamp,
             "pattern_name": self.pattern_name,
-            "execution_time": self.execution_time
+            "execution_time": self.execution_time,
         }
 
 
@@ -80,11 +83,11 @@ class SwarmPattern(ABC):
     async def execute(self, context: dict[str, Any], agents: list[Any]) -> PatternResult:
         """
         Execute the pattern with given context and agents.
-        
+
         Args:
             context: Execution context containing problem, constraints, etc.
             agents: List of available agents
-            
+
         Returns:
             PatternResult containing execution outcome
         """
@@ -111,7 +114,9 @@ class SwarmPattern(ABC):
             "successful_executions": successful,
             "success_rate": successful / total if total > 0 else 0,
             "average_execution_time": avg_time,
-            "last_execution": self.execution_history[-1].timestamp if self.execution_history else None
+            "last_execution": self.execution_history[-1].timestamp
+            if self.execution_history
+            else None,
         }
 
     def reset_history(self) -> None:

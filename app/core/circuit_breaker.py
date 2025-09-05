@@ -13,40 +13,43 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Any, Generic, Optional, TypeVar, Union
+from typing import Any, Generic, Optional, TypeVar
 
 logger = logging.getLogger(__name__)
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 class CircuitState(Enum):
     """Circuit breaker states"""
-    CLOSED = "closed"      # Normal operation
-    OPEN = "open"         # Blocking calls due to failures
+
+    CLOSED = "closed"  # Normal operation
+    OPEN = "open"  # Blocking calls due to failures
     HALF_OPEN = "half_open"  # Testing if service recovered
 
 
 @dataclass
 class CircuitBreakerConfig:
     """Configuration for circuit breaker"""
-    failure_threshold: int = 3          # Failures before opening (lowered for faster detection)
-    success_threshold: int = 2          # Successes in half-open before closing
-    timeout: float = 30.0               # Seconds before trying half-open (faster recovery)
+
+    failure_threshold: int = 3  # Failures before opening (lowered for faster detection)
+    success_threshold: int = 2  # Successes in half-open before closing
+    timeout: float = 30.0  # Seconds before trying half-open (faster recovery)
     expected_exception: type = Exception  # Exception types to catch
-    exclude_exceptions: tuple = ()       # Exceptions to not catch
+    exclude_exceptions: tuple = ()  # Exceptions to not catch
 
     # Advanced settings
     failure_rate_threshold: float = 0.5  # Failure rate to open circuit
-    slow_call_duration: float = 5.0     # Seconds to consider call slow
+    slow_call_duration: float = 5.0  # Seconds to consider call slow
     slow_call_rate_threshold: float = 0.5  # Slow call rate to open
-    minimum_calls: int = 10             # Min calls before calculating rates
-    sliding_window_size: int = 100      # Size of sliding window
+    minimum_calls: int = 10  # Min calls before calculating rates
+    sliding_window_size: int = 100  # Size of sliding window
 
 
 @dataclass
 class CallMetrics:
     """Metrics for a single call"""
+
     timestamp: datetime
     duration: float
     success: bool
@@ -84,7 +87,7 @@ class CircuitBreaker(Generic[T]):
         # Lazy initialization of lock
         if self._lock is None:
             self._lock = asyncio.Lock()
-        
+
         async with self._lock:
             # Check if circuit should be opened
             if self.state == CircuitState.OPEN:
@@ -124,7 +127,7 @@ class CircuitBreaker(Generic[T]):
         # Lazy initialization of lock
         if self._lock is None:
             self._lock = asyncio.Lock()
-        
+
         async with self._lock:
             self.total_calls += 1
             self.total_successes += 1
@@ -132,11 +135,9 @@ class CircuitBreaker(Generic[T]):
             self.consecutive_failures = 0
 
             # Add to metrics
-            self.call_metrics.append(CallMetrics(
-                timestamp=datetime.now(),
-                duration=duration,
-                success=True
-            ))
+            self.call_metrics.append(
+                CallMetrics(timestamp=datetime.now(), duration=duration, success=True)
+            )
 
             # State transitions
             if self.state == CircuitState.HALF_OPEN:
@@ -156,7 +157,7 @@ class CircuitBreaker(Generic[T]):
         # Lazy initialization of lock
         if self._lock is None:
             self._lock = asyncio.Lock()
-        
+
         async with self._lock:
             self.total_calls += 1
             self.total_failures += 1
@@ -165,12 +166,11 @@ class CircuitBreaker(Generic[T]):
             self.last_failure_time = time.time()
 
             # Add to metrics
-            self.call_metrics.append(CallMetrics(
-                timestamp=datetime.now(),
-                duration=duration,
-                success=False,
-                exception=exception
-            ))
+            self.call_metrics.append(
+                CallMetrics(
+                    timestamp=datetime.now(), duration=duration, success=False, exception=exception
+                )
+            )
 
             # State transitions
             if self.state == CircuitState.HALF_OPEN:
@@ -219,10 +219,7 @@ class CircuitBreaker(Generic[T]):
             return False
 
         recent_metrics = list(self.call_metrics)
-        slow_calls = sum(
-            1 for m in recent_metrics
-            if m.duration >= self.config.slow_call_duration
-        )
+        slow_calls = sum(1 for m in recent_metrics if m.duration >= self.config.slow_call_duration)
         slow_rate = slow_calls / len(recent_metrics)
 
         return slow_rate >= self.config.slow_call_rate_threshold
@@ -242,7 +239,7 @@ class CircuitBreaker(Generic[T]):
         # Lazy initialization of lock
         if self._lock is None:
             self._lock = asyncio.Lock()
-        
+
         async with self._lock:
             self._open_circuit("manual open")
 
@@ -251,7 +248,7 @@ class CircuitBreaker(Generic[T]):
         # Lazy initialization of lock
         if self._lock is None:
             self._lock = asyncio.Lock()
-        
+
         async with self._lock:
             self.state = CircuitState.CLOSED
             self.failure_count = 0
@@ -265,7 +262,7 @@ class CircuitBreaker(Generic[T]):
         # Lazy initialization of lock
         if self._lock is None:
             self._lock = asyncio.Lock()
-        
+
         async with self._lock:
             self.state = CircuitState.CLOSED
             self.failure_count = 0
@@ -283,10 +280,7 @@ class CircuitBreaker(Generic[T]):
 
     def get_state(self) -> dict[str, Any]:
         """Get current state and metrics"""
-        success_rate = (
-            self.total_successes / self.total_calls
-            if self.total_calls > 0 else 0
-        )
+        success_rate = self.total_successes / self.total_calls if self.total_calls > 0 else 0
 
         return {
             "name": self.name,
@@ -298,12 +292,13 @@ class CircuitBreaker(Generic[T]):
             "consecutive_failures": self.consecutive_failures,
             "consecutive_successes": self.consecutive_successes,
             "last_state_change": self.last_state_change.isoformat(),
-            "metrics_window_size": len(self.call_metrics)
+            "metrics_window_size": len(self.call_metrics),
         }
 
 
 class CircuitOpenException(Exception):
     """Exception raised when circuit is open"""
+
     pass
 
 
@@ -317,16 +312,11 @@ class CircuitBreakerManager:
         self._default_config = CircuitBreakerConfig()
 
     def get_or_create(
-        self,
-        name: str,
-        config: Optional[CircuitBreakerConfig] = None
+        self, name: str, config: Optional[CircuitBreakerConfig] = None
     ) -> CircuitBreaker:
         """Get existing or create new circuit breaker"""
         if name not in self._breakers:
-            self._breakers[name] = CircuitBreaker(
-                name,
-                config or self._default_config
-            )
+            self._breakers[name] = CircuitBreaker(name, config or self._default_config)
         return self._breakers[name]
 
     def get(self, name: str) -> Optional[CircuitBreaker]:
@@ -340,16 +330,12 @@ class CircuitBreakerManager:
 
     def get_all_states(self) -> dict[str, dict[str, Any]]:
         """Get states of all circuit breakers"""
-        return {
-            name: breaker.get_state()
-            for name, breaker in self._breakers.items()
-        }
+        return {name: breaker.get_state() for name, breaker in self._breakers.items()}
 
     def get_open_circuits(self) -> list[str]:
         """Get list of open circuits"""
         return [
-            name for name, breaker in self._breakers.items()
-            if breaker.state == CircuitState.OPEN
+            name for name, breaker in self._breakers.items() if breaker.state == CircuitState.OPEN
         ]
 
 
@@ -357,20 +343,15 @@ class CircuitBreakerManager:
 _circuit_manager = CircuitBreakerManager()
 
 
-def get_circuit_breaker(
-    name: str,
-    config: Optional[CircuitBreakerConfig] = None
-) -> CircuitBreaker:
+def get_circuit_breaker(name: str, config: Optional[CircuitBreakerConfig] = None) -> CircuitBreaker:
     """Get or create a circuit breaker"""
     return _circuit_manager.get_or_create(name, config)
 
 
 # Decorator for adding circuit breaker to functions
-def with_circuit_breaker(
-    name: str,
-    config: Optional[CircuitBreakerConfig] = None
-):
+def with_circuit_breaker(name: str, config: Optional[CircuitBreakerConfig] = None):
     """Decorator to add circuit breaker protection to a function"""
+
     def decorator(func):
         breaker = get_circuit_breaker(name, config)
 
@@ -382,14 +363,12 @@ def with_circuit_breaker(
         def sync_wrapper(*args, **kwargs):
             # Try to get the current event loop
             try:
-                loop = asyncio.get_running_loop()
+                asyncio.get_running_loop()
                 # We're already in an event loop, run in a thread
                 import concurrent.futures
+
                 with concurrent.futures.ThreadPoolExecutor() as executor:
-                    future = executor.submit(
-                        asyncio.run, 
-                        breaker.call(func, *args, **kwargs)
-                    )
+                    future = executor.submit(asyncio.run, breaker.call(func, *args, **kwargs))
                     return future.result()
             except RuntimeError:
                 # No running loop, safe to use asyncio.run
@@ -405,41 +384,42 @@ def with_circuit_breaker(
 
 # Pre-configured circuit breakers for common services
 
+
 def get_llm_circuit_breaker() -> CircuitBreaker:
     """Get circuit breaker for LLM API calls"""
-    return get_circuit_breaker("llm", CircuitBreakerConfig(
-        failure_threshold=3,
-        timeout=30,
-        slow_call_duration=10,
-        expected_exception=(Exception,)
-    ))
+    return get_circuit_breaker(
+        "llm",
+        CircuitBreakerConfig(
+            failure_threshold=3, timeout=30, slow_call_duration=10, expected_exception=(Exception,)
+        ),
+    )
 
 
 def get_weaviate_circuit_breaker() -> CircuitBreaker:
     """Get circuit breaker for Weaviate queries"""
-    return get_circuit_breaker("weaviate", CircuitBreakerConfig(
-        failure_threshold=5,
-        timeout=20,
-        slow_call_duration=3,
-        expected_exception=(Exception,)
-    ))
+    return get_circuit_breaker(
+        "weaviate",
+        CircuitBreakerConfig(
+            failure_threshold=5, timeout=20, slow_call_duration=3, expected_exception=(Exception,)
+        ),
+    )
 
 
 def get_redis_circuit_breaker() -> CircuitBreaker:
     """Get circuit breaker for Redis operations"""
-    return get_circuit_breaker("redis", CircuitBreakerConfig(
-        failure_threshold=10,
-        timeout=10,
-        slow_call_duration=1,
-        expected_exception=(Exception,)
-    ))
+    return get_circuit_breaker(
+        "redis",
+        CircuitBreakerConfig(
+            failure_threshold=10, timeout=10, slow_call_duration=1, expected_exception=(Exception,)
+        ),
+    )
 
 
 def get_webhook_circuit_breaker() -> CircuitBreaker:
     """Get circuit breaker for webhook calls"""
-    return get_circuit_breaker("webhook", CircuitBreakerConfig(
-        failure_threshold=3,
-        timeout=60,
-        slow_call_duration=5,
-        expected_exception=(Exception,)
-    ))
+    return get_circuit_breaker(
+        "webhook",
+        CircuitBreakerConfig(
+            failure_threshold=3, timeout=60, slow_call_duration=5, expected_exception=(Exception,)
+        ),
+    )

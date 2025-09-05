@@ -138,7 +138,7 @@ export const usePlaygroundStore = create<PlaygroundStore>()(
       migrate: (persistedState: any, version: number) => {
         // Migrate from old ports to unified API on 8003
         if (version < 2 && persistedState.selectedEndpoint) {
-          if (persistedState.selectedEndpoint.includes(':8000') || 
+          if (persistedState.selectedEndpoint.includes(':8000') ||
               persistedState.selectedEndpoint.includes(':7777') ||
               persistedState.selectedEndpoint.includes(':8005')) {
             persistedState.selectedEndpoint = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8003';

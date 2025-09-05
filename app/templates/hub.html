@@ -359,7 +359,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             const chatTab = document.getElementById('chat-tab');
             let chatInitialized = false;
-            
+
             chatTab.addEventListener('click', function() {
                 if (!chatInitialized) {
                     window.chatInterface = new ChatInterface('native-chat-container');

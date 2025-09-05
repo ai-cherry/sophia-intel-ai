@@ -1,7 +1,9 @@
 # 🎯 Comprehensive Local Deployment Strategy
+
 ## Sophia & Artemis Intelligence Platform
 
 ### Version 3.0.0 - Unified Architecture
+
 **Last Updated:** December 2024
 
 ---
@@ -20,56 +22,56 @@ graph TB
         UI3[Agent Factory Dashboard :3333/agents]
         UI4[Sales Dashboard :3333/sales]
     end
-    
+
     subgraph "API Gateway Layer"
         MCP[MCP Unified Server :3333]
         API[Unified API Server :8006]
     end
-    
+
     subgraph "Service Layer"
         SOPHIA[Sophia Business Server :9000]
         ARTEMIS[Artemis Technical Server :8001]
         PERSONA[Persona Server :8085]
     end
-    
+
     subgraph "Orchestration Layer"
         SORCH[Sophia Orchestrator]
         AORCH[Artemis Orchestrator]
         UORCH[Universal Orchestrator]
     end
-    
+
     subgraph "Agent Layer"
         AGENTS[Agent Factory]
         SWARMS[Swarm Controllers]
         PERSONAS[AI Personas]
     end
-    
+
     subgraph "Data Layer"
         DB[(SQLite RBAC)]
         CACHE[(Redis Cache)]
         MEMORY[(Vector Memory)]
     end
-    
+
     UI1 --> MCP
     UI2 --> ARTEMIS
     UI3 --> MCP
     UI4 --> MCP
-    
+
     MCP --> API
     MCP --> SOPHIA
     MCP --> ARTEMIS
-    
+
     API --> SORCH
     API --> AORCH
-    
+
     SOPHIA --> SORCH
     ARTEMIS --> AORCH
     PERSONA --> PERSONAS
-    
+
     SORCH --> AGENTS
     AORCH --> AGENTS
     UORCH --> SWARMS
-    
+
     AGENTS --> DB
     SWARMS --> MEMORY
     MCP --> CACHE
@@ -79,15 +81,15 @@ graph TB
 
 ## 📊 Service Architecture Matrix
 
-| Service | Port | Purpose | Dependencies | Status |
-|---------|------|---------|--------------|---------|
-| **MCP Unified Server** | 3333 | Main API Gateway & Static Files | All services | Primary |
-| **Unified API Server** | 8006 | Core Business Logic | Database, Agents | Active |
-| **Sophia Business Server** | 9000 | Business Intelligence | AGNO Orchestrator | Active |
-| **Artemis Technical Server** | 8001 | Technical Operations | AGNO Orchestrator | Active |
-| **Persona Server** | 8085 | AI Personas (Apollo/Athena) | Agent Factory | Active |
-| **Redis Cache** | 6379 | Caching & Rate Limiting | - | Optional |
-| **Vector DB** | 8100 | Memory & Embeddings | - | Optional |
+| Service                      | Port | Purpose                         | Dependencies      | Status   |
+| ---------------------------- | ---- | ------------------------------- | ----------------- | -------- |
+| **MCP Unified Server**       | 3333 | Main API Gateway & Static Files | All services      | Primary  |
+| **Unified API Server**       | 8006 | Core Business Logic             | Database, Agents  | Active   |
+| **Sophia Business Server**   | 9000 | Business Intelligence           | AGNO Orchestrator | Active   |
+| **Artemis Technical Server** | 8001 | Technical Operations            | AGNO Orchestrator | Active   |
+| **Persona Server**           | 8085 | AI Personas (Apollo/Athena)     | Agent Factory     | Active   |
+| **Redis Cache**              | 6379 | Caching & Rate Limiting         | -                 | Optional |
+| **Vector DB**                | 8100 | Memory & Embeddings             | -                 | Optional |
 
 ---
 
@@ -96,6 +98,7 @@ graph TB
 ### Phase 1: Environment Preparation
 
 #### 1.1 Create Master Configuration File
+
 ```bash
 # Create .env.local with all required variables
 cat > .env.local << 'EOF'
@@ -142,6 +145,7 @@ EOF
 ```
 
 #### 1.2 Install Dependencies
+
 ```bash
 # Python dependencies
 pip install -r requirements.txt
@@ -159,6 +163,7 @@ python3 migrations/001_rbac_foundation.py up
 The correct startup order is critical for proper service initialization:
 
 #### 2.1 Start Core Infrastructure
+
 ```bash
 # 1. Start Redis (optional but recommended)
 redis-server --daemonize yes
@@ -168,6 +173,7 @@ python3 migrations/001_rbac_foundation.py up
 ```
 
 #### 2.2 Start Primary Services
+
 ```bash
 #!/bin/bash
 # save as: start_core_services.sh
@@ -199,6 +205,7 @@ echo "  API Server: http://localhost:$API_PORT (PID: $API_PID)"
 ```
 
 #### 2.3 Start Application Services
+
 ```bash
 #!/bin/bash
 # save as: start_app_services.sh
@@ -236,6 +243,7 @@ echo "  Personas: http://localhost:$PERSONA_PORT (PID: $PERSONA_PID)"
 ### Phase 3: Unified Deployment Script
 
 #### 3.1 Complete Deployment Script
+
 ```bash
 #!/bin/bash
 # save as: deploy_all.sh
@@ -262,7 +270,7 @@ wait_for_service() {
     local name=$2
     local max_attempts=30
     local attempt=0
-    
+
     echo "Waiting for $name on port $port..."
     while [ $attempt -lt $max_attempts ]; do
         if curl -s "http://localhost:$port/health" > /dev/null 2>&1; then
@@ -372,6 +380,7 @@ echo "
 ```
 
 #### 3.2 Shutdown Script
+
 ```bash
 #!/bin/bash
 # save as: stop_all.sh
@@ -381,7 +390,7 @@ echo "🛑 Stopping all services..."
 # Load PIDs if available
 if [ -f .pids ]; then
     source .pids
-    
+
     for pid_var in MCP_PID API_PID SOPHIA_PID ARTEMIS_PID PERSONA_PID; do
         pid=${!pid_var}
         if [ ! -z "$pid" ] && kill -0 $pid 2>/dev/null; then
@@ -389,7 +398,7 @@ if [ -f .pids ]; then
             kill $pid
         fi
     done
-    
+
     rm .pids
 else
     # Fallback: kill by name
@@ -410,6 +419,7 @@ echo "✅ All services stopped"
 ```
 
 #### 3.3 Health Check Script
+
 ```bash
 #!/bin/bash
 # save as: health_check.sh
@@ -424,9 +434,9 @@ check_service() {
     local port=$1
     local name=$2
     local endpoint=${3:-/health}
-    
+
     printf "%-25s" "$name:"
-    
+
     if curl -s "http://localhost:$port$endpoint" > /dev/null 2>&1; then
         echo "✅ Online"
         return 0
@@ -456,7 +466,7 @@ echo -n "Apollo Persona: "
 response=$(curl -s -X POST "http://localhost:$PERSONA_PORT/api/personas/chat/apollo" \
     -H "Content-Type: application/json" \
     -d '{"message": "Hello"}' 2>/dev/null)
-    
+
 if [ ! -z "$response" ]; then
     echo "✅ Responding"
 else
@@ -467,7 +477,7 @@ echo -n "Athena Persona: "
 response=$(curl -s -X POST "http://localhost:$PERSONA_PORT/api/personas/chat/athena" \
     -H "Content-Type: application/json" \
     -d '{"message": "Hello"}' 2>/dev/null)
-    
+
 if [ ! -z "$response" ]; then
     echo "✅ Responding"
 else
@@ -484,6 +494,7 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 ### Environment-Specific Configurations
 
 #### Development (.env.development)
+
 ```bash
 LOCAL_DEV_MODE=true
 DEBUG=true
@@ -493,6 +504,7 @@ CORS_ORIGINS=["*"]
 ```
 
 #### Staging (.env.staging)
+
 ```bash
 LOCAL_DEV_MODE=false
 DEBUG=false
@@ -502,6 +514,7 @@ CORS_ORIGINS=["https://staging.sophia-ai.com"]
 ```
 
 #### Production (.env.production)
+
 ```bash
 LOCAL_DEV_MODE=false
 DEBUG=false
@@ -512,6 +525,7 @@ RATE_LIMIT_ENABLED=true
 ```
 
 ### Dynamic Configuration Loading
+
 ```python
 # config_loader.py
 import os
@@ -522,12 +536,12 @@ def load_environment():
     """Load environment-specific configuration"""
     env = os.getenv("ENVIRONMENT", "development")
     env_file = Path(f".env.{env}")
-    
+
     if env_file.exists():
         load_dotenv(env_file)
     else:
         load_dotenv(".env.local")
-    
+
     return env
 ```
 
@@ -536,6 +550,7 @@ def load_environment():
 ## 🔍 Monitoring & Observability
 
 ### Log Aggregation
+
 ```bash
 # Create log directory structure
 mkdir -p logs/{mcp,api,sophia,artemis,persona}
@@ -545,6 +560,7 @@ tail -f logs/*/*.log | tee logs/aggregate.log
 ```
 
 ### Metrics Collection
+
 ```python
 # metrics_collector.py
 from prometheus_client import Counter, Histogram, start_http_server
@@ -557,39 +573,42 @@ start_http_server(9090)
 ```
 
 ### Health Dashboard
+
 ```html
 <!-- health_dashboard.html -->
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
+  <head>
     <title>Service Health Dashboard</title>
     <script>
-        async function checkHealth() {
-            const services = [
-                {name: 'MCP Server', port: 3333},
-                {name: 'API Server', port: 8006},
-                {name: 'Sophia', port: 9000},
-                {name: 'Artemis', port: 8001},
-                {name: 'Personas', port: 8085}
-            ];
-            
-            for (const service of services) {
-                try {
-                    const response = await fetch(`http://localhost:${service.port}/health`);
-                    updateStatus(service.name, response.ok ? 'online' : 'offline');
-                } catch (error) {
-                    updateStatus(service.name, 'offline');
-                }
-            }
+      async function checkHealth() {
+        const services = [
+          { name: "MCP Server", port: 3333 },
+          { name: "API Server", port: 8006 },
+          { name: "Sophia", port: 9000 },
+          { name: "Artemis", port: 8001 },
+          { name: "Personas", port: 8085 },
+        ];
+
+        for (const service of services) {
+          try {
+            const response = await fetch(
+              `http://localhost:${service.port}/health`,
+            );
+            updateStatus(service.name, response.ok ? "online" : "offline");
+          } catch (error) {
+            updateStatus(service.name, "offline");
+          }
         }
-        
-        setInterval(checkHealth, 5000);
+      }
+
+      setInterval(checkHealth, 5000);
     </script>
-</head>
-<body onload="checkHealth()">
+  </head>
+  <body onload="checkHealth()">
     <h1>Service Health Dashboard</h1>
     <div id="status"></div>
-</body>
+  </body>
 </html>
 ```
 
@@ -599,17 +618,18 @@ start_http_server(9090)
 
 ### Common Issues & Solutions
 
-| Issue | Symptoms | Solution |
-|-------|----------|----------|
-| **Port Conflicts** | "Address already in use" | Run `./stop_all.sh` then retry |
-| **Import Errors** | "Module not found" | Check `PYTHONPATH` and reinstall deps |
-| **API Key Errors** | 401/403 responses | Verify `.env.local` has valid keys |
-| **Database Errors** | "Table not found" | Run migrations: `python3 migrations/001_rbac_foundation.py up` |
-| **Redis Connection** | "Connection refused" | Start Redis: `redis-server --daemonize yes` |
-| **Memory Issues** | High RAM usage | Restart services, check for memory leaks |
-| **Circular Imports** | Import errors on startup | Check recent code changes in imports |
+| Issue                | Symptoms                 | Solution                                                       |
+| -------------------- | ------------------------ | -------------------------------------------------------------- |
+| **Port Conflicts**   | "Address already in use" | Run `./stop_all.sh` then retry                                 |
+| **Import Errors**    | "Module not found"       | Check `PYTHONPATH` and reinstall deps                          |
+| **API Key Errors**   | 401/403 responses        | Verify `.env.local` has valid keys                             |
+| **Database Errors**  | "Table not found"        | Run migrations: `python3 migrations/001_rbac_foundation.py up` |
+| **Redis Connection** | "Connection refused"     | Start Redis: `redis-server --daemonize yes`                    |
+| **Memory Issues**    | High RAM usage           | Restart services, check for memory leaks                       |
+| **Circular Imports** | Import errors on startup | Check recent code changes in imports                           |
 
 ### Debug Commands
+
 ```bash
 # Check running processes
 ps aux | grep -E "(sophia|artemis|mcp|persona)"
@@ -632,6 +652,7 @@ python3 -c "import sys; print('\n'.join(sys.path))"
 ## 🎯 Optimization Tips
 
 ### Performance Tuning
+
 1. **Enable Redis caching** for improved response times
 2. **Use connection pooling** for database connections
 3. **Enable HTTP/2** in production deployments
@@ -639,6 +660,7 @@ python3 -c "import sys; print('\n'.join(sys.path))"
 5. **Use async/await** properly to prevent blocking
 
 ### Resource Management
+
 ```bash
 # Limit memory usage
 ulimit -v 4194304  # 4GB limit
@@ -648,6 +670,7 @@ htop -p $(pgrep -d, "sophia|artemis|mcp")
 ```
 
 ### Scaling Strategy
+
 - **Horizontal**: Run multiple instances behind a load balancer
 - **Vertical**: Increase resources for compute-intensive operations
 - **Caching**: Implement multi-level caching (Redis + in-memory)
@@ -667,6 +690,7 @@ htop -p $(pgrep -d, "sophia|artemis|mcp")
 ## 🔄 Quick Reference
 
 ### Essential Commands
+
 ```bash
 # Full deployment
 ./deploy_all.sh
@@ -691,12 +715,13 @@ rm sophia_rbac.db && python3 migrations/001_rbac_foundation.py up
 ```
 
 ### Service URLs
-- **Main Hub**: http://localhost:3333/static/sophia-intelligence-hub.html
-- **API Docs**: http://localhost:8006/docs
-- **Sophia**: http://localhost:9000
-- **Artemis**: http://localhost:8001
-- **Personas**: http://localhost:8085
+
+- **Main Hub**: <http://localhost:3333/static/sophia-intelligence-hub.html>
+- **API Docs**: <http://localhost:8006/docs>
+- **Sophia**: <http://localhost:9000>
+- **Artemis**: <http://localhost:8001>
+- **Personas**: <http://localhost:8085>
 
 ---
 
-*This deployment strategy ensures reliable, scalable, and maintainable local development environment for the Sophia-Artemis Intelligence Platform.*
+_This deployment strategy ensures reliable, scalable, and maintainable local development environment for the Sophia-Artemis Intelligence Platform._

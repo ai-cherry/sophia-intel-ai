@@ -14,15 +14,15 @@ export interface SeparatorProps extends React.HTMLAttributes<HTMLDivElement> {
 
 const Separator = React.forwardRef<HTMLDivElement, SeparatorProps>(
   (
-    { 
-      className, 
-      orientation = "horizontal", 
+    {
+      className,
+      orientation = "horizontal",
       decorative = true,
       variant = "default",
       spacing = "medium",
       fadeEdges = false,
       animated = false,
-      ...props 
+      ...props
     },
     ref
   ) => {
@@ -37,8 +37,8 @@ const Separator = React.forwardRef<HTMLDivElement, SeparatorProps>(
     // Style variations
     const variantClasses = {
       default: "bg-gray-200 dark:bg-gray-700",
-      thick: orientation === "horizontal" 
-        ? "h-[2px] bg-gray-300 dark:bg-gray-600" 
+      thick: orientation === "horizontal"
+        ? "h-[2px] bg-gray-300 dark:bg-gray-600"
         : "w-[2px] bg-gray-300 dark:bg-gray-600",
       dashed: `${orientation === "horizontal" ? "h-[1px]" : "w-[1px]"} border-dashed ${
         orientation === "horizontal" ? "border-b" : "border-r"

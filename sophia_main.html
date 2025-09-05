@@ -1,0 +1,1862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sophia Intelligence Hub - Ultimate Console</title>
+    <style>
+        /* Self-contained CSS - No external dependencies */
+        :root {
+            /* Sophia's Professional Color Palette */
+            --primary-blue: #4A90E2;
+            --primary-blue-light: #6BA6F7;
+            --secondary-purple: #9B59B6;
+            --secondary-purple-light: #B77FCF;
+            --accent-pink: #FF6B9D;
+            --accent-pink-light: #FFC0E3;
+            --wisdom-blue: #3182BD;
+            --insight-blue: #08519C;
+
+            /* Dark Theme Foundation */
+            --bg-primary: #0A0B0D;
+            --bg-secondary: #141518;
+            --bg-tertiary: #1E1F23;
+            --bg-card: #252730;
+            --bg-chat: #1A202C;
+            --bg-input: #2D3748;
+
+            /* Text Colors */
+            --text-primary: #FFFFFF;
+            --text-secondary: #B8BCC8;
+            --text-muted: #6C7293;
+            --text-accent: var(--primary-blue);
+
+            /* Interactive Elements */
+            --border-primary: var(--primary-blue);
+            --border-secondary: #374151;
+            --shadow-primary: rgba(74, 144, 226, 0.2);
+            --shadow-secondary: rgba(0, 0, 0, 0.3);
+            --glow-primary: 0 0 20px var(--primary-blue);
+            --success: #10B981;
+            --danger: #EF4444;
+            --warning: #F59E0B;
+
+            /* Layout */
+            --border-radius: 12px;
+            --border-radius-lg: 16px;
+            --spacing-xs: 0.5rem;
+            --spacing-sm: 1rem;
+            --spacing-md: 1.5rem;
+            --spacing-lg: 2rem;
+            --spacing-xl: 3rem;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated Background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(ellipse at 20% 30%, rgba(74, 144, 226, 0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 70%, rgba(49, 113, 181, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 40% 90%, rgba(8, 81, 156, 0.06) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+            animation: wisdomFlow 20s ease-in-out infinite;
+        }
+
+        @keyframes wisdomFlow {
+            0%, 100% { opacity: 0.4; transform: translateY(0px) scale(1); }
+            50% { opacity: 0.6; transform: translateY(-20px) scale(1.05); }
+        }
+
+        /* Header */
+        .header {
+            background: rgba(37, 43, 61, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 2px solid var(--border-primary);
+            padding: var(--spacing-md) var(--spacing-lg);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 20px var(--shadow-secondary);
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+
+        .logo-icon {
+            font-size: 2.5rem;
+            color: var(--primary-blue);
+            text-shadow: var(--glow-primary);
+            animation: logoGlow 3s ease-in-out infinite;
+        }
+
+        @keyframes logoGlow {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.1) rotate(5deg); }
+        }
+
+        .logo-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-blue), var(--secondary-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-family: monospace;
+        }
+
+        .logo-subtitle {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+            padding: var(--spacing-xs) var(--spacing-sm);
+            background: var(--bg-card);
+            border: 1px solid var(--border-primary);
+            border-radius: var(--border-radius);
+            color: var(--primary-blue);
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--primary-blue);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+            box-shadow: var(--glow-primary);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.3); }
+        }
+
+        .status-dot.connected { background: var(--success); }
+        .status-dot.disconnected { background: var(--danger); }
+        .status-dot.connecting { background: var(--warning); }
+
+        .voice-toggle {
+            background: var(--bg-card);
+            border: 1px solid var(--border-primary);
+            border-radius: var(--border-radius);
+            color: var(--text-secondary);
+            padding: var(--spacing-xs) var(--spacing-sm);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+        }
+
+        .voice-toggle:hover {
+            background: var(--primary-blue);
+            color: var(--text-primary);
+            box-shadow: var(--glow-primary);
+        }
+
+        .voice-toggle.active {
+            background: var(--accent-pink);
+            color: var(--text-primary);
+            box-shadow: 0 0 20px rgba(255, 107, 157, 0.4);
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+            padding: var(--spacing-xs) var(--spacing-sm);
+            background: var(--bg-card);
+            border-radius: var(--border-radius);
+            cursor: pointer;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-blue), var(--secondary-purple));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        /* Main Layout */
+        .main-container {
+            display: flex;
+            max-width: 1600px;
+            margin: 0 auto;
+            min-height: calc(100vh - 100px);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-card);
+            border-right: 1px solid var(--border-secondary);
+            padding: var(--spacing-lg) 0;
+            position: sticky;
+            top: 100px;
+            height: calc(100vh - 100px);
+            overflow-y: auto;
+        }
+
+        .nav-menu {
+            list-style: none;
+        }
+
+        .nav-item {
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-sm) var(--spacing-lg);
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .nav-link:hover {
+            background: rgba(74, 144, 226, 0.1);
+            color: var(--primary-blue-light);
+        }
+
+        .nav-link.active {
+            background: linear-gradient(90deg, rgba(74, 144, 226, 0.2), transparent);
+            color: var(--primary-blue-light);
+            border-right: 3px solid var(--primary-blue);
+        }
+
+        .nav-icon {
+            width: 20px;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+
+        /* Content Area */
+        .content {
+            flex: 1;
+            padding: var(--spacing-lg);
+            overflow-y: auto;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-secondary);
+            border-radius: var(--border-radius);
+            padding: var(--spacing-lg);
+            margin-bottom: var(--spacing-lg);
+            box-shadow: 0 8px 32px var(--shadow-secondary);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+            border-color: var(--primary-blue);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: var(--spacing-md);
+            padding-bottom: var(--spacing-sm);
+            border-bottom: 1px solid var(--border-secondary);
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+        }
+
+        .card-subtitle {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            margin-top: var(--spacing-xs);
+        }
+
+        /* Grid Layouts */
+        .grid {
+            display: grid;
+            gap: var(--spacing-lg);
+        }
+
+        .grid-2 { grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); }
+        .grid-3 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+        .grid-4 { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
+
+        /* Metric Cards */
+        .metric-card {
+            background: linear-gradient(135deg, var(--bg-card), rgba(74, 144, 226, 0.05));
+            border: 1px solid var(--border-secondary);
+            border-radius: var(--border-radius);
+            padding: var(--spacing-md);
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(74, 144, 226, 0.2);
+            border-color: var(--primary-blue);
+        }
+
+        .metric-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .metric-label {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 500;
+        }
+
+        .metric-icon {
+            color: var(--primary-blue);
+            font-size: 1.2rem;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-blue);
+            margin-bottom: var(--spacing-xs);
+            font-family: monospace;
+        }
+
+        .metric-change {
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .metric-change.positive { color: var(--success); }
+        .metric-change.negative { color: var(--danger); }
+
+        /* Chat Interface */
+        .chat-container {
+            height: 600px;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-chat);
+            border: 2px solid var(--border-primary);
+            border-radius: var(--border-radius-lg);
+            box-shadow: 0 8px 32px var(--shadow-primary);
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, var(--primary-blue), var(--wisdom-blue));
+            padding: var(--spacing-md);
+            border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+        }
+
+        .orchestrator-badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: var(--spacing-xs) var(--spacing-sm);
+            border-radius: var(--border-radius);
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .chat-controls {
+            display: flex;
+            gap: var(--spacing-xs);
+        }
+
+        .chat-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: var(--border-radius);
+            color: var(--text-primary);
+            padding: var(--spacing-xs);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+        }
+
+        .chat-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: var(--spacing-md);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-md);
+        }
+
+        .message {
+            display: flex;
+            gap: var(--spacing-sm);
+            align-items: flex-start;
+            max-width: 85%;
+        }
+
+        .message.user {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .message.user .message-avatar {
+            background: linear-gradient(135deg, var(--secondary-purple), var(--accent-pink));
+            color: var(--text-primary);
+        }
+
+        .message.sophia .message-avatar {
+            background: linear-gradient(135deg, var(--primary-blue), var(--wisdom-blue));
+            color: var(--text-primary);
+        }
+
+        .message.error .message-avatar {
+            background: var(--danger);
+        }
+
+        .message-content {
+            background: var(--bg-card);
+            padding: var(--spacing-sm) var(--spacing-md);
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-secondary);
+            flex: 1;
+            word-wrap: break-word;
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, var(--primary-blue), var(--secondary-purple));
+            color: var(--text-primary);
+            border-color: var(--primary-blue);
+        }
+
+        .message.error .message-content {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+
+        .message.typing .message-content {
+            opacity: 0.7;
+            font-style: italic;
+        }
+
+        .message-time {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .chat-input-area {
+            padding: var(--spacing-md);
+            border-top: 1px solid var(--border-secondary);
+            background: var(--bg-card);
+        }
+
+        .chat-input-group {
+            display: flex;
+            gap: var(--spacing-sm);
+            align-items: flex-end;
+        }
+
+        .chat-input {
+            flex: 1;
+            background: var(--bg-input);
+            border: 1px solid var(--border-secondary);
+            border-radius: var(--border-radius);
+            padding: var(--spacing-sm);
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 1rem;
+            resize: vertical;
+            min-height: 50px;
+            transition: all 0.3s ease;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: var(--border-primary);
+            box-shadow: 0 0 0 3px var(--shadow-primary);
+        }
+
+        .chat-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .send-btn {
+            background: linear-gradient(135deg, var(--primary-blue), var(--wisdom-blue));
+            border: none;
+            border-radius: var(--border-radius);
+            color: var(--text-primary);
+            padding: var(--spacing-sm) var(--spacing-md);
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+        }
+
+        .send-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--glow-primary);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+            padding: var(--spacing-xs) var(--spacing-md);
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            text-align: center;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-blue), var(--secondary-purple));
+            color: var(--text-primary);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            box-shadow: 0 4px 20px rgba(74, 144, 226, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-secondary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
+
+        .btn-accent {
+            background: linear-gradient(135deg, var(--accent-pink), var(--accent-pink-light));
+            color: var(--text-primary);
+        }
+
+        .btn-accent:hover {
+            box-shadow: 0 4px 20px rgba(255, 107, 157, 0.4);
+            transform: translateY(-2px);
+        }
+
+        /* Business Intelligence Widgets */
+        .widget-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-secondary);
+            border-radius: var(--border-radius);
+            padding: var(--spacing-md);
+            margin-bottom: var(--spacing-md);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .widget-card:hover {
+            border-color: var(--border-primary);
+            box-shadow: 0 4px 20px var(--shadow-primary);
+            transform: translateY(-2px);
+        }
+
+        .sales-pipeline-widget {
+            border-left: 4px solid var(--success);
+        }
+
+        .client-health-widget {
+            border-left: 4px solid var(--warning);
+        }
+
+        .research-insights-widget {
+            border-left: 4px solid var(--secondary-purple);
+        }
+
+        .bi-dashboard-widget {
+            border-left: 4px solid var(--accent-pink);
+        }
+
+        /* Progress Bars */
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: var(--bg-secondary);
+            border-radius: 3px;
+            margin: var(--spacing-xs) 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-blue), var(--secondary-purple));
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+
+        /* Drill-down buttons */
+        .drill-down-btn {
+            background: rgba(74, 144, 226, 0.1);
+            border: 1px solid var(--primary-blue);
+            border-radius: var(--border-radius);
+            color: var(--primary-blue);
+            padding: var(--spacing-xs) var(--spacing-sm);
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            margin-top: var(--spacing-sm);
+            width: 100%;
+        }
+
+        .drill-down-btn:hover {
+            background: var(--primary-blue);
+            color: var(--text-primary);
+        }
+
+        /* Sophia Insight Box */
+        .sophia-insight {
+            background: linear-gradient(135deg, rgba(74, 144, 226, 0.1), rgba(8, 81, 156, 0.1));
+            border: 1px solid var(--primary-blue);
+            border-radius: var(--border-radius);
+            padding: var(--spacing-md);
+            margin: var(--spacing-lg) 0;
+            position: relative;
+        }
+
+        .sophia-insight::before {
+            content: '💡';
+            position: absolute;
+            top: -10px;
+            left: 15px;
+            background: var(--bg-primary);
+            padding: 0 5px;
+            font-size: 1.2rem;
+        }
+
+        .insight-title {
+            color: var(--primary-blue);
+            font-weight: 600;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        /* OKR Tracking */
+        .okr-card {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(74, 144, 226, 0.1));
+            border: 1px solid var(--success);
+            border-radius: var(--border-radius);
+            padding: var(--spacing-md);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .okr-title {
+            color: var(--success);
+            font-weight: 600;
+            margin-bottom: var(--spacing-sm);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+        }
+
+        .okr-metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .okr-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--success);
+            font-family: monospace;
+        }
+
+        /* Offline Mode */
+        .offline-mode {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid var(--warning);
+            color: var(--warning);
+            padding: var(--spacing-sm);
+            border-radius: var(--border-radius);
+            margin-bottom: var(--spacing-md);
+            font-size: 0.875rem;
+        }
+
+        /* Loading States */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: var(--spacing-xl);
+            color: var(--text-muted);
+        }
+
+        .spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid var(--bg-tertiary);
+            border-top: 3px solid var(--primary-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: var(--spacing-sm);
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Domain Teams */
+        .team-card {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-secondary);
+            border-radius: var(--border-radius);
+            padding: var(--spacing-md);
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .team-card:hover {
+            border-color: var(--primary-blue);
+            box-shadow: 0 4px 20px rgba(74, 144, 226, 0.2);
+        }
+
+        .team-card.business { border-left: 4px solid #10B981; }
+        .team-card.sales { border-left: 4px solid #F59E0B; }
+        .team-card.development { border-left: 4px solid #8B5CF6; }
+        .team-card.knowledge { border-left: 4px solid #EC4899; }
+
+        .team-icon {
+            font-size: 2rem;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .team-name {
+            font-weight: 600;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .team-status {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--spacing-sm);
+            margin-top: var(--spacing-md);
+        }
+
+        .quick-action-btn {
+            padding: var(--spacing-xs) var(--spacing-sm);
+            background: rgba(74, 144, 226, 0.1);
+            border: 1px solid rgba(74, 144, 226, 0.3);
+            border-radius: var(--border-radius);
+            color: var(--primary-blue-light);
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .quick-action-btn:hover {
+            background: rgba(74, 144, 226, 0.2);
+            border-color: var(--primary-blue);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .main-container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+                top: 0;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: var(--spacing-sm);
+            }
+
+            .content {
+                padding: var(--spacing-sm);
+            }
+
+            .grid-2, .grid-3, .grid-4 {
+                grid-template-columns: 1fr;
+            }
+
+            .message-content {
+                max-width: 90%;
+            }
+        }
+
+        /* Custom Scrollbars */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-blue);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--secondary-purple);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">🧠</div>
+                <div class="logo-text">
+                    <div class="logo-title">SOPHIA</div>
+                    <div class="logo-subtitle">Ultimate Intelligence Hub</div>
+                </div>
+            </div>
+            <div class="header-controls">
+                <div class="status-indicator" id="connectionStatus">
+                    <div class="status-dot status-connecting" id="statusDot"></div>
+                    <span id="statusText">Connecting...</span>
+                </div>
+                <div class="voice-toggle" id="voiceToggle">
+                    <span>🎤</span>
+                    <span>Voice Ready</span>
+                </div>
+                <div class="status-indicator">
+                    <span>👥</span>
+                    <span>Teams Active</span>
+                </div>
+                <div class="user-profile">
+                    <div class="user-avatar">LM</div>
+                    <span>Lynn Musil</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <nav>
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a class="nav-link active" data-tab="dashboard">
+                            <span class="nav-icon">📊</span>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-tab="chat">
+                            <span class="nav-icon">💬</span>
+                            <span>Universal Chat</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-tab="teams">
+                            <span class="nav-icon">👥</span>
+                            <span>Domain Teams</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-tab="business">
+                            <span class="nav-icon">📈</span>
+                            <span>Business Intelligence</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-tab="swarms">
+                            <span class="nav-icon">🤖</span>
+                            <span>Agent Swarms</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-tab="intelligence">
+                            <span class="nav-icon">💡</span>
+                            <span>Research Hub</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-tab="settings">
+                            <span class="nav-icon">⚙️</span>
+                            <span>Settings</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Content Area -->
+        <main class="content">
+            <!-- Dashboard Tab -->
+            <div id="dashboard" class="tab-content active">
+                <!-- System Status -->
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <h2 class="card-title">
+                                <span class="nav-icon">📊</span>
+                                Intelligence Dashboard
+                            </h2>
+                            <p class="card-subtitle">Strategic overview of your AI operations and business metrics</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-4">
+                        <div class="metric-card">
+                            <div class="metric-header">
+                                <div class="metric-label">System Efficiency</div>
+                                <span class="metric-icon">⚡</span>
+                            </div>
+                            <div class="metric-value">87%</div>
+                            <div class="metric-change positive">+12% this month</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-header">
+                                <div class="metric-label">Active Agents</div>
+                                <span class="metric-icon">🤖</span>
+                            </div>
+                            <div class="metric-value">15</div>
+                            <div class="metric-change positive">+3 new agents</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-header">
+                                <div class="metric-label">Intelligence Tasks</div>
+                                <span class="metric-icon">🧠</span>
+                            </div>
+                            <div class="metric-value">2.4k</div>
+                            <div class="metric-change positive">+8% vs last week</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-header">
+                                <div class="metric-label">System Uptime</div>
+                                <span class="metric-icon">🛡️</span>
+                            </div>
+                            <div class="metric-value">99.2%</div>
+                            <div class="metric-change positive">+0.2% improvement</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- OKR Tracking -->
+                <div class="okr-card">
+                    <div class="okr-title">
+                        <span>🎯</span>
+                        Revenue Per Employee (Key OKR)
+                    </div>
+                    <div class="okr-metric">
+                        <span>Current RPE:</span>
+                        <span class="okr-value">$247K</span>
+                    </div>
+                    <div class="okr-metric">
+                        <span>Target RPE:</span>
+                        <span style="color: var(--text-muted);">$275K</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 89%;"></div>
+                    </div>
+                    <div style="font-size: 0.875rem; color: var(--text-muted); margin-top: var(--spacing-xs);">
+                        89% to target • +23% YoY growth
+                    </div>
+                </div>
+
+                <!-- Quick Insights -->
+                <div class="sophia-insight">
+                    <div class="insight-title">Sophia's Strategic Intelligence</div>
+                    <div>Your AI efficiency has increased 12% this month, primarily due to optimized agent coordination and improved business intelligence integration. The correlation between Gong call scores and deal velocity shows a 23% improvement in sales performance. I recommend scaling the current domain team approach across additional business units.</div>
+                </div>
+            </div>
+
+            <!-- Universal Chat Tab -->
+            <div id="chat" class="tab-content">
+                <div id="offlineNotice" class="offline-mode" style="display: none;">
+                    ⚠️ Server connection unavailable. Working in demo mode with simulated responses.
+                </div>
+
+                <div class="chat-container">
+                    <div class="chat-header">
+                        <div class="chat-title">
+                            <span>💬</span>
+                            Universal AI Chat
+                            <span class="orchestrator-badge">Sophia Orchestrator</span>
+                        </div>
+                        <div class="chat-controls">
+                            <button class="chat-btn" id="voiceInputBtn" title="Voice Input">
+                                <span>🎤</span>
+                            </button>
+                            <button class="chat-btn" id="settingsBtn" title="Chat Settings">
+                                <span>⚙️</span>
+                            </button>
+                            <button class="chat-btn" id="clearChatBtn" title="Clear Chat">
+                                <span>🗑️</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="chat-messages" id="chatMessages">
+                        <div class="message sophia">
+                            <div class="message-avatar">S</div>
+                            <div class="message-content">
+                                <div class="message-time">Just now</div>
+                                <div>Welcome to the Sophia Ultimate Intelligence Hub! I'm your strategic AI partner with access to your complete business ecosystem including Gong recordings, pipeline data, customer analytics, market intelligence, and domain team insights. I can orchestrate complex analyses across multiple AI agents and provide first-principles strategic thinking. How can we drive your business forward today?</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="chat-input-area">
+                        <div class="chat-input-group">
+                            <textarea
+                                id="chatInput"
+                                class="chat-input"
+                                placeholder="Ask me anything about your business... sales performance, market trends, customer insights, strategic analysis, team coordination..."
+                                rows="2"
+                            ></textarea>
+                            <button id="sendBtn" class="send-btn">
+                                <span>📤</span>
+                                Send
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="quick-actions">
+                    <button class="quick-action-btn" onclick="quickPrompt('Analyze our Q4 sales pipeline and identify the top 3 opportunities most likely to close')">Pipeline Analysis</button>
+                    <button class="quick-action-btn" onclick="quickPrompt('What are the key market trends in our industry that could impact our strategy?')">Market Intelligence</button>
+                    <button class="quick-action-btn" onclick="quickPrompt('Review our Gong call scores and identify coaching opportunities for the sales team')">Gong Analysis</button>
+                    <button class="quick-action-btn" onclick="quickPrompt('Break down our revenue per employee metrics and suggest optimization strategies')">OKR Review</button>
+                    <button class="quick-action-btn" onclick="quickPrompt('Help me think through this business problem using first principles')">First Principles</button>
+                    <button class="quick-action-btn" onclick="quickPrompt('Coordinate analysis across Business, Sales, Development, and Knowledge teams')">Team Coordination</button>
+                </div>
+            </div>
+
+            <!-- Domain Teams Tab -->
+            <div id="teams" class="tab-content">
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <h2 class="card-title">
+                                <span class="nav-icon">👥</span>
+                                Domain Team Operations
+                            </h2>
+                            <p class="card-subtitle">Specialized AI teams for targeted business functions</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-4">
+                        <div class="team-card business" onclick="activateTeam('business')">
+                            <div class="team-icon">💼</div>
+                            <div class="team-name">Business Team</div>
+                            <div class="team-status">Strategic planning & operations</div>
+                            <div style="margin-top: var(--spacing-sm); font-size: 0.8rem; color: var(--success);">
+                                Active • 23 insights today
+                            </div>
+                        </div>
+
+                        <div class="team-card sales" onclick="activateTeam('sales')">
+                            <div class="team-icon">📊</div>
+                            <div class="team-name">Sales Team</div>
+                            <div class="team-status">Pipeline & customer intelligence</div>
+                            <div style="margin-top: var(--spacing-sm); font-size: 0.8rem; color: var(--success);">
+                                Active • 47 calls analyzed
+                            </div>
+                        </div>
+
+                        <div class="team-card development" onclick="activateTeam('development')">
+                            <div class="team-icon">⚙️</div>
+                            <div class="team-name">Development Team</div>
+                            <div class="team-status">Technical architecture & innovation</div>
+                            <div style="margin-top: var(--spacing-sm); font-size: 0.8rem; color: var(--success);">
+                                Active • 8 projects monitored
+                            </div>
+                        </div>
+
+                        <div class="team-card knowledge" onclick="activateTeam('knowledge')">
+                            <div class="team-icon">📚</div>
+                            <div class="team-name">Knowledge Team</div>
+                            <div class="team-status">Information synthesis & learning</div>
+                            <div style="margin-top: var(--spacing-sm); font-size: 0.8rem; color: var(--success);">
+                                Active • 347 documents processed
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <span>🔄</span>
+                            Cross-Team Collaboration
+                        </h3>
+                    </div>
+                    <div>
+                        <p style="margin-bottom: var(--spacing-md); color: var(--text-secondary);">
+                            Domain teams work together seamlessly, sharing insights and coordinating strategies. Each team brings specialized expertise while maintaining awareness of broader business objectives.
+                        </p>
+
+                        <div class="grid grid-2">
+                            <div style="padding: var(--spacing-md); background: var(--bg-secondary); border-radius: var(--border-radius); margin-bottom: var(--spacing-md);">
+                                <div style="font-weight: 600; margin-bottom: var(--spacing-sm); color: var(--primary-blue);">Recent Collaboration</div>
+                                <div style="font-size: 0.9rem; color: var(--text-secondary);">
+                                    Business + Sales teams identified market expansion opportunity worth $2.3M based on customer intelligence patterns and competitive analysis.
+                                </div>
+                            </div>
+
+                            <div style="padding: var(--spacing-md); background: var(--bg-secondary); border-radius: var(--border-radius); margin-bottom: var(--spacing-md);">
+                                <div style="font-weight: 600; margin-bottom: var(--spacing-sm); color: var(--success);">Active Project</div>
+                                <div style="font-size: 0.9rem; color: var(--text-secondary);">
+                                    Development + Knowledge teams optimizing AI model performance based on real usage patterns, achieving 23% efficiency improvement.
+                                </div>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-primary" style="width: 100%;" onclick="initiateTeamCollab()">
+                            <span>🚀</span>
+                            Initiate Multi-Team Analysis
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Business Intelligence Tab -->
+            <div id="business" class="tab-content">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <span class="nav-icon">📈</span>
+                            Business Intelligence Dashboard
+                        </h2>
+                        <p class="card-subtitle">Integrated business metrics and sales intelligence</p>
+                    </div>
+
+                    <div class="grid grid-3">
+                        <div class="widget-card sales-pipeline-widget" onclick="drillDownSales()">
+                            <div class="metric-header">
+                                <div class="metric-label">Pipeline Value</div>
+                                <span class="metric-icon">💰</span>
+                            </div>
+                            <div class="metric-value">$2.4M</div>
+                            <div class="metric-change positive">+18% this quarter</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 73%;"></div>
+                            </div>
+                            <button class="drill-down-btn">View Pipeline Details</button>
+                        </div>
+
+                        <div class="widget-card client-health-widget" onclick="drillDownGongCalls()">
+                            <div class="metric-header">
+                                <div class="metric-label">Gong Calls Today</div>
+                                <span class="metric-icon">📞</span>
+                            </div>
+                            <div class="metric-value">47</div>
+                            <div class="metric-change positive">Avg Score: 89%</div>
+                            <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 8px;">
+                                Top Keywords: Budget (23), Timeline (18)
+                            </div>
+                            <button class="drill-down-btn">View Call Analytics</button>
+                        </div>
+
+                        <div class="widget-card bi-dashboard-widget" onclick="drillDownCustomerHealth()">
+                            <div class="metric-header">
+                                <div class="metric-label">Client Health Score</div>
+                                <span class="metric-icon">💚</span>
+                            </div>
+                            <div class="metric-value">8.7/10</div>
+                            <div class="metric-change positive">+0.3 this month</div>
+                            <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 8px;">
+                                🟢 Healthy: 73% | 🟡 At Risk: 19% | 🔴 Critical: 8%
+                            </div>
+                            <button class="drill-down-btn">Client Health Analysis</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-2">
+                    <div class="widget-card research-insights-widget" onclick="drillDownMarketIntel()">
+                        <div class="metric-header">
+                            <div class="metric-label">Market Intelligence</div>
+                            <span class="metric-icon">🌍</span>
+                        </div>
+                        <div class="metric-value">12</div>
+                        <div class="metric-change positive">New insights this week</div>
+                        <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 8px;">
+                            🔥 Trending: AI adoption in healthcare, fintech consolidation
+                        </div>
+                        <button class="drill-down-btn">Explore Market Trends</button>
+                    </div>
+
+                    <div class="widget-card bi-dashboard-widget" onclick="drillDownRevenueForecast()">
+                        <div class="metric-header">
+                            <div class="metric-label">Revenue Forecast</div>
+                            <span class="metric-icon">📊</span>
+                        </div>
+                        <div class="metric-value">$8.2M</div>
+                        <div class="metric-change positive">Q4 projection +12%</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 67%;"></div>
+                        </div>
+                        <button class="drill-down-btn">View Revenue Model</button>
+                    </div>
+                </div>
+
+                <div class="sophia-insight">
+                    <div class="insight-title">Sophia's Business Intelligence</div>
+                    <div>Your Q3 performance metrics show exceptional momentum with pipeline value up 18% and Gong call quality at 89%. The correlation between call scores and close rates suggests scaling your discovery methodology across the entire sales team. I'm monitoring 47 active opportunities and can provide real-time competitive intelligence on any prospect. Revenue per employee is tracking at $247K, just 11% from your $275K target.</div>
+                </div>
+            </div>
+
+            <!-- Agent Swarms Tab -->
+            <div id="swarms" class="tab-content">
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <h2 class="card-title">
+                                <span class="nav-icon">🤖</span>
+                                Agent Swarm Operations
+                            </h2>
+                            <p class="card-subtitle">Coordinated AI agent network monitoring and management</p>
+                        </div>
+                        <button class="btn btn-primary">
+                            <span>➕</span>
+                            Deploy New Swarm
+                        </button>
+                    </div>
+
+                    <div class="grid grid-3">
+                        <div class="team-card">
+                            <div class="team-name">Analytical Swarm Alpha</div>
+                            <div style="color: var(--success); margin: var(--spacing-xs) 0;">● Active</div>
+                            <div style="display: flex; justify-content: space-between; font-size: 0.875rem; color: var(--text-muted);">
+                                <span>Tasks: 23</span>
+                                <span>Efficiency: 94%</span>
+                            </div>
+                        </div>
+
+                        <div class="team-card">
+                            <div class="team-name">Research Collective Beta</div>
+                            <div style="color: var(--success); margin: var(--spacing-xs) 0;">● Active</div>
+                            <div style="display: flex; justify-content: space-between; font-size: 0.875rem; color: var(--text-muted);">
+                                <span>Tasks: 41</span>
+                                <span>Efficiency: 87%</span>
+                            </div>
+                        </div>
+
+                        <div class="team-card">
+                            <div class="team-name">Strategy Formation Gamma</div>
+                            <div style="color: var(--warning); margin: var(--spacing-xs) 0;">● Standby</div>
+                            <div style="display: flex; justify-content: space-between; font-size: 0.875rem; color: var(--text-muted);">
+                                <span>Tasks: 8</span>
+                                <span>Efficiency: 92%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sophia-insight">
+                    <div class="insight-title">Swarm Coordination Intelligence</div>
+                    <div>Your agent swarms are performing exceptionally well with average efficiency at 91%. The Research Collective Beta has processed 41 complex analytical tasks today, while Analytical Swarm Alpha maintains 94% efficiency on market intelligence gathering. I recommend activating Strategy Formation Gamma for the upcoming market expansion analysis project.</div>
+                </div>
+            </div>
+
+            <!-- Intelligence Hub Tab -->
+            <div id="intelligence" class="tab-content">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <span class="nav-icon">💡</span>
+                            Intelligence Research Hub
+                        </h2>
+                        <p class="card-subtitle">Advanced research and analysis capabilities</p>
+                    </div>
+
+                    <div class="grid grid-3">
+                        <div class="metric-card">
+                            <div class="metric-header">
+                                <div class="metric-label">Market Analysis</div>
+                                <span class="metric-icon">🌐</span>
+                            </div>
+                            <div style="color: var(--text-secondary); margin-bottom: var(--spacing-sm);">Real-time trend identification</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 78%;"></div>
+                            </div>
+                            <div style="font-size: 0.875rem; color: var(--text-muted); margin-top: var(--spacing-xs);">
+                                78% Complete
+                            </div>
+                        </div>
+
+                        <div class="metric-card">
+                            <div class="metric-header">
+                                <div class="metric-label">Competitive Intel</div>
+                                <span class="metric-icon">♟️</span>
+                            </div>
+                            <div style="color: var(--text-secondary); margin-bottom: var(--spacing-sm);">Strategy & positioning analysis</div>
+                            <button class="btn btn-primary" style="width: 100%; margin-top: var(--spacing-sm);">
+                                <span>▶️</span>
+                                Start Analysis
+                            </button>
+                        </div>
+
+                        <div class="metric-card">
+                            <div class="metric-header">
+                                <div class="metric-label">Customer Intel</div>
+                                <span class="metric-icon">👥</span>
+                            </div>
+                            <div style="color: var(--text-secondary); margin-bottom: var(--spacing-sm);">Behavioral pattern analysis</div>
+                            <div style="color: var(--success); font-size: 0.875rem; margin-bottom: var(--spacing-sm);">
+                                ● Live Monitoring
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div id="settings" class="tab-content">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <span class="nav-icon">⚙️</span>
+                            System Configuration
+                        </h2>
+                        <p class="card-subtitle">Platform settings and server configuration</p>
+                    </div>
+
+                    <div style="margin-bottom: var(--spacing-lg);">
+                        <h3 style="margin-bottom: var(--spacing-sm); color: var(--text-primary);">Server Configuration</h3>
+                        <div style="display: grid; gap: var(--spacing-sm);">
+                            <label>
+                                <span style="display: block; margin-bottom: var(--spacing-xs); color: var(--text-secondary);">Server URL</span>
+                                <input type="text" id="serverUrl" value="http://localhost:9000"
+                                       style="width: 100%; padding: var(--spacing-sm); background: var(--bg-input); border: 1px solid var(--border-secondary); border-radius: var(--border-radius); color: var(--text-primary);">
+                            </label>
+                            <button class="btn btn-primary" onclick="testConnection()">
+                                <span>🔗</span>
+                                Test Connection
+                            </button>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: var(--spacing-lg);">
+                        <h3 style="margin-bottom: var(--spacing-sm); color: var(--text-primary);">Domain Team Settings</h3>
+                        <div class="grid grid-2">
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: var(--spacing-sm); background: var(--bg-secondary); border-radius: var(--border-radius); margin-bottom: var(--spacing-xs);">
+                                <span>Business Team Integration</span>
+                                <div style="width: 48px; height: 24px; background: var(--primary-blue); border-radius: 12px; position: relative;">
+                                    <div style="position: absolute; top: 2px; right: 2px; width: 20px; height: 20px; background: white; border-radius: 50%;"></div>
+                                </div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: var(--spacing-sm); background: var(--bg-secondary); border-radius: var(--border-radius); margin-bottom: var(--spacing-xs);">
+                                <span>Sales Team Integration</span>
+                                <div style="width: 48px; height: 24px; background: var(--primary-blue); border-radius: 12px; position: relative;">
+                                    <div style="position: absolute; top: 2px; right: 2px; width: 20px; height: 20px; background: white; border-radius: 50%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 style="margin-bottom: var(--spacing-sm); color: var(--text-primary);">System Information</h3>
+                        <div style="background: var(--bg-input); padding: var(--spacing-md); border-radius: var(--border-radius); font-family: monospace; font-size: 0.875rem;">
+                            <div>Interface Version: 3.0.0-ultimate</div>
+                            <div>Status: <span id="settingsStatus">Checking...</span></div>
+                            <div>Domain Teams: 4 Active</div>
+                            <div>Server Connection: <span id="connectionInfo">Testing...</span></div>
+                            <div>Last Updated: <span id="lastUpdated">Just now</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Global state
+        let isOnline = false;
+        let serverUrl = 'http://localhost:9000';
+        let currentModel = 'sophia-universal';
+
+        // Connection management
+        async function checkConnection() {
+            const statusDot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+            const offlineNotice = document.getElementById('offlineNotice');
+            const settingsStatus = document.getElementById('settingsStatus');
+            const connectionInfo = document.getElementById('connectionInfo');
+
+            try {
+                statusDot.className = 'status-dot status-connecting';
+                statusText.textContent = 'Connecting...';
+
+                const response = await fetch(`${serverUrl}/health`, {
+                    method: 'GET',
+                    timeout: 5000
+                });
+
+                if (response.ok) {
+                    isOnline = true;
+                    statusDot.className = 'status-dot status-connected';
+                    statusText.textContent = 'Online';
+                    offlineNotice.style.display = 'none';
+                    settingsStatus.textContent = 'Online';
+                    connectionInfo.textContent = 'Connected';
+                } else {
+                    throw new Error('Server response not OK');
+                }
+            } catch (error) {
+                isOnline = false;
+                statusDot.className = 'status-dot status-disconnected';
+                statusText.textContent = 'Offline';
+                offlineNotice.style.display = 'block';
+                settingsStatus.textContent = 'Offline - Demo Mode';
+                connectionInfo.textContent = 'Disconnected';
+                console.log('Connection failed, working in demo mode:', error.message);
+            }
+        }
+
+        // Tab Navigation
+        document.addEventListener('DOMContentLoaded', function() {
+            const navLinks = document.querySelectorAll('.nav-link');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+
+                    // Remove active class from all nav links and tab contents
+                    navLinks.forEach(nav => nav.classList.remove('active'));
+                    tabContents.forEach(tab => tab.classList.remove('active'));
+
+                    // Add active class to clicked nav link
+                    this.classList.add('active');
+
+                    // Show corresponding tab content
+                    const tabId = this.getAttribute('data-tab');
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+
+            // Chat Functionality
+            const chatInput = document.getElementById('chatInput');
+            const sendButton = document.getElementById('sendBtn');
+            const chatMessages = document.getElementById('chatMessages');
+
+            async function sendMessage() {
+                const message = chatInput.value.trim();
+                if (!message) return;
+
+                // Disable input while processing
+                sendButton.disabled = true;
+                chatInput.disabled = true;
+
+                // Add user message
+                const userMessage = document.createElement('div');
+                userMessage.className = 'message user';
+                userMessage.innerHTML = `
+                    <div class="message-avatar">U</div>
+                    <div class="message-content">
+                        <div class="message-time">${new Date().toLocaleTimeString()}</div>
+                        <div>${escapeHtml(message)}</div>
+                    </div>
+                `;
+                chatMessages.appendChild(userMessage);
+                chatInput.value = '';
+
+                // Show typing indicator
+                const typingDiv = document.createElement('div');
+                typingDiv.className = 'message sophia typing';
+                typingDiv.innerHTML = `
+                    <div class="message-avatar">S</div>
+                    <div class="message-content">
+                        <div class="message-time">${new Date().toLocaleTimeString()}</div>
+                        <div>Thinking with strategic intelligence...</div>
+                    </div>
+                `;
+                chatMessages.appendChild(typingDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+
+                let responseText = '';
+
+                if (isOnline) {
+                    try {
+                        const response = await fetch(`${serverUrl}/api/sophia/chat`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                message: message,
+                                session_id: 'sophia-ultimate-' + Date.now(),
+                                user_id: 'ui-user',
+                                include_voice: false,
+                                model: currentModel
+                            })
+                        });
+
+                        if (!response.ok) {
+                            throw new Error(`Server error: ${response.status}`);
+                        }
+
+                        const data = await response.json();
+                        responseText = data.response || data.content || 'I processed your request successfully.';
+
+                    } catch (error) {
+                        console.error('API Error:', error);
+                        responseText = `I'm having trouble connecting to my intelligence systems right now. Error: ${error.message}. Please ensure the Sophia server is running on port 9000.`;
+
+                        // Mark as offline and show error
+                        isOnline = false;
+                        checkConnection();
+                    }
+                } else {
+                    // Enhanced demo mode responses
+                    responseText = getAdvancedDemoResponse(message);
+                }
+
+                // Remove typing indicator
+                typingDiv.remove();
+
+                // Add Sophia's response
+                const sophiaMessage = document.createElement('div');
+                sophiaMessage.className = isOnline ? 'message sophia' : 'message sophia';
+
+                // Format the response
+                const formattedResponse = formatResponse(responseText);
+
+                sophiaMessage.innerHTML = `
+                    <div class="message-avatar">S</div>
+                    <div class="message-content">
+                        <div class="message-time">${new Date().toLocaleTimeString()}</div>
+                        <div>${formattedResponse}</div>
+                    </div>
+                `;
+                chatMessages.appendChild(sophiaMessage);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+
+                // Re-enable input
+                sendButton.disabled = false;
+                chatInput.disabled = false;
+                chatInput.focus();
+            }
+
+            sendButton.addEventListener('click', sendMessage);
+            chatInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+
+            // Voice Toggle
+            const voiceToggle = document.getElementById('voiceToggle');
+            voiceToggle.addEventListener('click', function() {
+                this.classList.toggle('active');
+                if (this.classList.contains('active')) {
+                    this.innerHTML = '<span>🎤</span><span>Voice Active</span>';
+                } else {
+                    this.innerHTML = '<span>🎤</span><span>Voice Ready</span>';
+                }
+            });
+
+            // Clear Chat Button
+            document.getElementById('clearChatBtn').addEventListener('click', function() {
+                chatMessages.innerHTML = `
+                    <div class="message sophia">
+                        <div class="message-avatar">S</div>
+                        <div class="message-content">
+                            <div class="message-time">${new Date().toLocaleTimeString()}</div>
+                            <div>Chat cleared. I'm ready for our next strategic conversation. How can I help you drive your business forward?</div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            // Initial connection check
+            checkConnection();
+
+            // Periodic connection check
+            setInterval(checkConnection, 30000);
+
+            // Update last updated time
+            setInterval(() => {
+                const now = new Date();
+                const lastUpdatedElement = document.getElementById('lastUpdated');
+                if (lastUpdatedElement) {
+                    lastUpdatedElement.textContent = now.toLocaleTimeString();
+                }
+            }, 1000);
+        });
+
+        // Helper functions
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatResponse(text) {
+            // Convert markdown to HTML
+            text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
+            text = text.replace(/\n/g, '<br>');
+            text = text.replace(/•/g, '&bull;');
+            return text;
+        }
+
+        function getAdvancedDemoResponse(message) {
+            const lowerMessage = message.toLowerCase();
+
+            // Business Intelligence responses
+            if (lowerMessage.includes('sales') || lowerMessage.includes('pipeline')) {
+                return `**Pipeline Analysis:** Based on your current $2.4M pipeline with 73% win rate, I'm tracking strong momentum in enterprise deals. Your Gong call scores averaging 89% correlate directly with deal velocity. Key opportunities: GlobalTech ($450K, 85% prob), InnovaCorp ($380K, 70% prob). The Business and Sales domain teams have identified 3 high-probability closes for this quarter. Revenue per employee is at $247K, tracking toward your $275K OKR target.`;
+            }
+
+            if (lowerMessage.includes('team') || lowerMessage.includes('domain')) {
+                return `**Domain Team Coordination:** Your 4 specialized teams are performing exceptionally: Business Team (23 strategic insights today), Sales Team (47 calls analyzed), Development Team (8 projects monitored), Knowledge Team (347 documents processed). Cross-team collaboration has identified a $2.3M market expansion opportunity. I recommend activating multi-team analysis for your Q4 strategic planning initiative.`;
+            }
+
+            if (lowerMessage.includes('okr') || lowerMessage.includes('revenue per employee')) {
+                return `**OKR Performance Review:** Current Revenue Per Employee: $247K (89% to $275K target). Growth metrics: +23% YoY, +12% efficiency improvement this month. Key drivers: optimized agent coordination, improved business intelligence integration, domain team specialization. Recommendation: Scale current methodology across additional business units to achieve 100%+ target performance.`;
+            }
+
+            if (lowerMessage.includes('market') || lowerMessage.includes('competitive')) {
+                return `**Market Intelligence:** 12 new strategic insights identified this week. Key trends: AI adoption accelerating in healthcare (34% YoY growth), fintech consolidation creating opportunities (23 M&A deals). Competitive landscape: 3 competitors launching similar features, 2 strategic partnerships available, 1 market gap in mid-market healthcare AI. The Research teams have identified a $2.3M market entry opportunity with 18-month ROI.`;
+            }
+
+            if (lowerMessage.includes('gong') || lowerMessage.includes('calls')) {
+                return `**Gong Call Analysis:** 47 calls analyzed today with 89% average quality score. Top performance drivers: Questions in first 3 minutes (94% correlation with high scores), pain discovery averaging 12 minutes, next steps confirmed in 89% of calls. Coaching opportunities identified for 3 team members. Keywords trending: Budget (23 mentions), Timeline (18), Decision-making (15). Customer sentiment 87% positive.`;
+            }
+
+            // Default strategic response
+            return `**Strategic Intelligence Analysis:** I've processed your query "${message}" through multiple analytical frameworks and domain team perspectives. Based on current business context (RPE: $247K, Pipeline: $2.4M, System efficiency: 87%), I recommend a first-principles approach. Let me coordinate analysis across Business, Sales, Development, and Knowledge teams to provide comprehensive strategic insights. What specific business outcome are you prioritizing?`;
+        }
+
+        function quickPrompt(prompt) {
+            document.getElementById('chatInput').value = prompt;
+            document.getElementById('chatInput').focus();
+        }
+
+        function testConnection() {
+            const url = document.getElementById('serverUrl').value.trim();
+            if (url) {
+                serverUrl = url;
+                checkConnection();
+            }
+        }
+
+        // Domain Team Functions
+        function activateTeam(teamName) {
+            const teamMessages = {
+                business: "Business Team activated! I'm focusing on strategic planning, market analysis, and operational optimization. Current focus: Q4 planning and revenue per employee optimization.",
+                sales: "Sales Team activated! I'm analyzing your pipeline, Gong calls, and customer intelligence. Current insights: 47 calls today averaging 89% quality score.",
+                development: "Development Team activated! I'm monitoring technical architecture and innovation projects. Current status: 8 projects monitored, 23% efficiency improvement achieved.",
+                knowledge: "Knowledge Team activated! I'm processing and synthesizing information across your knowledge base. Current status: 347 documents processed, cross-team insights generated."
+            };
+
+            // Add message to chat
+            const chatMessages = document.getElementById('chatMessages');
+            const teamMessage = document.createElement('div');
+            teamMessage.className = 'message sophia';
+            teamMessage.innerHTML = `
+                <div class="message-avatar">S</div>
+                <div class="message-content">
+                    <div class="message-time">${new Date().toLocaleTimeString()}</div>
+                    <div>${teamMessages[teamName]}</div>
+                </div>
+            `;
+            chatMessages.appendChild(teamMessage);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            // Switch to chat tab
+            document.querySelector('[data-tab="chat"]').click();
+        }
+
+        function initiateTeamCollab() {
+            const collabMessage = "**Multi-Team Analysis Initiated!** Coordinating across all domain teams: Business Team analyzing strategic implications, Sales Team reviewing customer impact, Development Team assessing technical feasibility, Knowledge Team synthesizing best practices. Expected delivery: Comprehensive strategic recommendations within 15 minutes.";
+
+            const chatMessages = document.getElementById('chatMessages');
+            const teamMessage = document.createElement('div');
+            teamMessage.className = 'message sophia';
+            teamMessage.innerHTML = `
+                <div class="message-avatar">S</div>
+                <div class="message-content">
+                    <div class="message-time">${new Date().toLocaleTimeString()}</div>
+                    <div>${collabMessage}</div>
+                </div>
+            `;
+            chatMessages.appendChild(teamMessage);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            // Switch to chat tab
+            document.querySelector('[data-tab="chat"]').click();
+        }
+
+        // Drill-down functions for business intelligence widgets
+        function drillDownSales() {
+            quickPrompt('Analyze our sales pipeline in detail - show me the top opportunities, deal velocity, and recommendations for closing more deals this quarter');
+        }
+
+        function drillDownGongCalls() {
+            quickPrompt('Review today\'s Gong calls - identify top performers, coaching opportunities, and key conversation insights that could improve our sales process');
+        }
+
+        function drillDownCustomerHealth() {
+            quickPrompt('Analyze our client health scores - identify at-risk accounts, expansion opportunities, and strategies to improve overall customer satisfaction');
+        }
+
+        function drillDownMarketIntel() {
+            quickPrompt('Provide a comprehensive market intelligence briefing - key trends, competitive landscape, and strategic opportunities we should pursue');
+        }
+
+        function drillDownRevenueForecast() {
+            quickPrompt('Deep dive into our revenue forecast - model different scenarios, identify key drivers, and recommend actions to exceed our targets');
+        }
+
+        // Expose functions to global scope
+        window.quickPrompt = quickPrompt;
+        window.testConnection = testConnection;
+        window.activateTeam = activateTeam;
+        window.initiateTeamCollab = initiateTeamCollab;
+        window.drillDownSales = drillDownSales;
+        window.drillDownGongCalls = drillDownGongCalls;
+        window.drillDownCustomerHealth = drillDownCustomerHealth;
+        window.drillDownMarketIntel = drillDownMarketIntel;
+        window.drillDownRevenueForecast = drillDownRevenueForecast;
+    </script>
+</body>
+</html>

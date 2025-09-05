@@ -1,8 +1,9 @@
 # 🎯 Roo/Cursor MCP Integration Setup
+
 ## Sophia Intel AI - Model Context Protocol for Roo/Cursor
 
 **Setup Status:** ✅ Ready for Connection  
-**MCP Server:** http://localhost:8000  
+**MCP Server:** <http://localhost:8000>  
 **Protocol:** MCP 1.0
 
 ---
@@ -10,6 +11,7 @@
 ## 🚀 Quick Setup Instructions
 
 ### 1. Ensure MCP Server is Running
+
 ```bash
 # Start the MCP verification server
 cd sophia-intel-ai
@@ -25,21 +27,22 @@ The MCP configuration is already set up in your project at `.cursor/mcp.json`:
 
 ```json
 {
-    "mcpServers": {
-        "sophia-mcp": {
-            "command": "node",
-            "args": ["./mcp-bridge/dist/roo-adapter.js"],
-            "env": {
-                "MCP_SERVER_URL": "http://localhost:8000",
-                "LOG_LEVEL": "info",
-                "REDIS_URL": "redis://localhost:6379"
-            }
-        }
+  "mcpServers": {
+    "sophia-mcp": {
+      "command": "node",
+      "args": ["./mcp-bridge/dist/roo-adapter.js"],
+      "env": {
+        "MCP_SERVER_URL": "http://localhost:8000",
+        "LOG_LEVEL": "info",
+        "REDIS_URL": "redis://localhost:6379"
+      }
     }
+  }
 }
 ```
 
 ### 3. Verify Redis is Running
+
 ```bash
 # Test Redis connection
 redis-cli ping
@@ -62,16 +65,19 @@ redis-cli ping
 ## 🧠 Available MCP Commands
 
 ### Memory Management
+
 - `@sophia-mcp store [context]` - Store development context
 - `@sophia-mcp search [query]` - Search shared memories
 - `@sophia-mcp workspace` - Get current workspace context
 
 ### Code Context Sharing
+
 - `@sophia-mcp sync` - Sync current file context
 - `@sophia-mcp share [description]` - Share current code context
 - `@sophia-mcp recall [project]` - Recall project context
 
 ### Cross-Tool Collaboration
+
 - `@sophia-mcp broadcast [message]` - Send message to other tools
 - `@sophia-mcp status` - Check MCP connection status
 - `@sophia-mcp history` - View shared context history
@@ -81,6 +87,7 @@ redis-cli ping
 ## 🔧 Advanced Configuration
 
 ### Custom Environment Variables
+
 Create a `.env.cursor` file in your project root:
 
 ```bash
@@ -102,21 +109,22 @@ CURSOR_SESSION_ID=auto-generated
 ```
 
 ### Performance Tuning
+
 ```json
 {
-    "mcpServers": {
-        "sophia-mcp": {
-            "command": "node",
-            "args": ["./mcp-bridge/dist/roo-adapter.js"],
-            "env": {
-                "MCP_SERVER_URL": "http://localhost:8000",
-                "LOG_LEVEL": "info",
-                "MEMORY_CACHE_SIZE": "100",
-                "WEBSOCKET_TIMEOUT": "30000",
-                "RETRY_ATTEMPTS": "3"
-            }
-        }
+  "mcpServers": {
+    "sophia-mcp": {
+      "command": "node",
+      "args": ["./mcp-bridge/dist/roo-adapter.js"],
+      "env": {
+        "MCP_SERVER_URL": "http://localhost:8000",
+        "LOG_LEVEL": "info",
+        "MEMORY_CACHE_SIZE": "100",
+        "WEBSOCKET_TIMEOUT": "30000",
+        "RETRY_ATTEMPTS": "3"
+      }
     }
+  }
 }
 ```
 
@@ -125,22 +133,26 @@ CURSOR_SESSION_ID=auto-generated
 ## 🚦 Connection Testing
 
 ### Test 1: Basic Connectivity
+
 ```bash
 # In Cursor/Roo terminal
 curl http://localhost:8000/healthz
 ```
 
 ### Test 2: Memory Store
+
 ```
 @sophia-mcp store "Test memory from Cursor - MCP working!"
 ```
 
 ### Test 3: Memory Search
+
 ```
 @sophia-mcp search "MCP working"
 ```
 
 ### Test 4: Workspace Sync
+
 ```
 @sophia-mcp workspace
 ```
@@ -150,6 +162,7 @@ curl http://localhost:8000/healthz
 ## 🔍 Troubleshooting
 
 ### Issue: MCP Server Not Found
+
 ```bash
 # Check if server is running
 ps aux | grep mcp_verification_server
@@ -158,6 +171,7 @@ python3 mcp_verification_server.py
 ```
 
 ### Issue: Redis Connection Failed
+
 ```bash
 # Start Redis if not running
 redis-server
@@ -166,6 +180,7 @@ redis-cli ping
 ```
 
 ### Issue: Node.js Dependencies
+
 ```bash
 # Install MCP bridge dependencies
 cd mcp-bridge
@@ -174,6 +189,7 @@ npm run build
 ```
 
 ### Issue: Port 8000 Already in Use
+
 ```bash
 # Find process using port 8000
 lsof -i :8000
@@ -187,6 +203,7 @@ python3 mcp_verification_server.py
 ## 📊 Expected Behavior
 
 ### ✅ Working Correctly
+
 - **Status Bar**: Shows "Sophia MCP: Connected"
 - **Autocomplete**: `@sophia-mcp` appears in suggestions
 - **Memory Commands**: Store/search commands work
@@ -194,6 +211,7 @@ python3 mcp_verification_server.py
 - **Real-time Sync**: Changes appear in other connected tools
 
 ### ❌ Common Issues
+
 - **Status**: "MCP: Disconnected" or no MCP status
 - **Commands**: `@sophia-mcp` not recognized
 - **Errors**: Connection timeout or server unreachable
@@ -204,21 +222,25 @@ python3 mcp_verification_server.py
 ## 🎯 Usage Examples
 
 ### Store Code Context
+
 ```
 @sophia-mcp store "Currently working on the swarm orchestration system in app/swarms/improved_swarm.py. The main challenge is implementing multi-agent debate systems with consensus building."
 ```
 
 ### Search for Related Work
+
 ```
 @sophia-mcp search "swarm orchestration"
 ```
 
 ### Share Current File Context
+
 ```
 @sophia-mcp sync "Reviewing the message bus implementation for cross-agent communication"
 ```
 
 ### Get Workspace Status
+
 ```
 @sophia-mcp workspace
 ```
@@ -228,13 +250,17 @@ python3 mcp_verification_server.py
 ## 🔗 Integration with Other Tools
 
 ### With Cline/VS Code
+
 The MCP server enables seamless context sharing:
+
 - **Shared Memory**: Both tools access the same memory store
 - **Real-time Updates**: Changes in one tool appear in the other
 - **Cross-references**: Code references work across tools
 
 ### With Claude Desktop
+
 Full integration for:
+
 - **Project Context**: Shared understanding of codebase
 - **Code History**: Access to previous conversations
 - **Development State**: Current progress and challenges
@@ -244,6 +270,7 @@ Full integration for:
 ## 📝 Configuration Files
 
 Your project already includes these configured files:
+
 - ✅ `.cursor/mcp.json` - Cursor MCP configuration
 - ✅ `mcp-bridge/dist/roo-adapter.js` - Roo/Cursor adapter
 - ✅ `mcp_verification_server.py` - MCP server

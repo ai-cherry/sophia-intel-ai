@@ -8,20 +8,21 @@ from app.indexing.indexer import index_file
 # Configure logger
 logger = logging.getLogger(__name__)
 
+
 def get_changed_files() -> list[str]:
     """
     Get list of changed files using git diff.
-    
+
     Returns:
         List of changed file paths, empty list if no changes or on error
     """
     try:
         result = subprocess.run(
-            ['git', 'diff', '--name-only', 'HEAD'],
+            ["git", "diff", "--name-only", "HEAD"],
             capture_output=True,
             text=True,
             check=True,
-            timeout=30
+            timeout=30,
         )
 
         if not result.stdout:
@@ -46,10 +47,11 @@ def get_changed_files() -> list[str]:
         logger.error(f"Unexpected error getting changed files: {str(e)}")
         return []
 
+
 async def incremental_index(batch_size: int = 100):
     """
     Reindex only changed files.
-    
+
     Args:
         batch_size: Number of files to process in each batch
     """
@@ -66,7 +68,7 @@ async def incremental_index(batch_size: int = 100):
     failed_count = 0
 
     for i in range(0, len(changed_files), batch_size):
-        batch = changed_files[i:i + batch_size]
+        batch = changed_files[i : i + batch_size]
         logger.info(f"Processing batch {i // batch_size + 1} ({len(batch)} files)")
 
         for file_path in batch:
@@ -84,11 +86,11 @@ async def incremental_index(batch_size: int = 100):
 
     logger.info(f"Incremental indexing complete. Indexed: {indexed_count}, Failed: {failed_count}")
 
+
 if __name__ == "__main__":
     # Setup basic logging
     logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     )
 
     # Run the async function

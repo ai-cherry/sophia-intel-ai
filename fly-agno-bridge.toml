@@ -12,18 +12,18 @@ kill_timeout = "5s"
   PYTHONPATH = "/app"
   PYTHONUNBUFFERED = "1"
   LOCAL_DEV_MODE = "false"
-  
+
   # Internal service URLs (Fly.io internal networking)
   UNIFIED_API_URL = "http://sophia-api.internal:8003"
   MCP_SERVER_URL = "http://sophia-mcp.internal:8004"
   VECTOR_STORE_URL = "http://sophia-vector.internal:8005"
-  
+
   # Bridge-specific configuration
   ENABLE_CORS = "true"
   # Restrict default CORS origins for production; override via Fly secrets if needed
   CORS_ORIGINS = "https://sophia-ui.fly.dev,https://sophia-ui-staging.fly.dev"
   DEBUG = "false"
-  
+
   # Feature flags
   USE_REAL_APIS = "true"
   ENABLE_API_VALIDATION = "true"
@@ -46,7 +46,7 @@ kill_timeout = "5s"
   [[services.ports]]
     port = 443
     handlers = ["tls", "http"]
-  
+
   [services.concurrency]
     type = "connections"
     hard_limit = 100
@@ -66,7 +66,7 @@ kill_timeout = "5s"
     protocol = "http"
     timeout = "2s"
     tls_skip_verify = false
-    
+
     [services.http_checks.headers]
       X-Health-Check = "fly.io"
 
@@ -86,24 +86,24 @@ kill_timeout = "5s"
   cpu_kind = "shared"
   cpus = 1
   memory_mb = 1024
-  
+
 # Auto-scaling configuration - moderate scaling for bridge
 [scaling]
   min_machines_running = 1
   max_machines_running = 8
-  
+
   [[scaling.metrics]]
     type = "cpu"
     target = 70
-  
+
   [[scaling.metrics]]
     type = "memory"
     target = 75
-    
+
   [[scaling.metrics]]
     type = "requests"
     target = 120
-    
+
   [[scaling.metrics]]
     type = "response_time"
     target = "100ms"  # Fast response for UI bridge
@@ -111,6 +111,6 @@ kill_timeout = "5s"
 # Process configuration for lightweight FastAPI server
 [[processes]]
   app = "web"
-  
+
 [processes.web]
   cmd = ["python", "-m", "uvicorn", "app.agno_bridge:app", "--host", "0.0.0.0", "--port", "7777", "--workers", "2"]

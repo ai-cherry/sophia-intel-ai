@@ -19,16 +19,16 @@ echo "======================================"
 safe_remove() {
     local pattern=$1
     local description=$2
-    
+
     echo -e "${YELLOW}🔍 Looking for ${description}...${NC}"
-    
+
     # Find files matching pattern
     files=$(find . -name "${pattern}" -type f 2>/dev/null | grep -v ".git" | grep -v "node_modules" || true)
-    
+
     if [ -n "$files" ]; then
         echo -e "${RED}Found files to remove:${NC}"
         echo "$files"
-        
+
         # Ask for confirmation in interactive mode
         if [ -t 0 ]; then
             read -p "Remove these files? (y/n) " -n 1 -r
@@ -79,7 +79,7 @@ empty_files=$(find . -type f -size 0 ! -name "__init__.py" ! -path "./.git/*" ! 
 if [ -n "$empty_files" ]; then
     echo -e "${RED}Found empty files:${NC}"
     echo "$empty_files"
-    
+
     if [ -t 0 ]; then
         read -p "Remove these empty files? (y/n) " -n 1 -r
         echo

@@ -20,13 +20,14 @@ from uuid import uuid4
 from opentelemetry import trace
 from opentelemetry.trace import SpanKind
 
+from app.memory.unified_memory import UnifiedMemoryStore
+from app.swarms.communication.message_bus import MessageBus, MessageType, SwarmMessage
+
 from ...observability.prometheus_metrics import (
     observe_agent_vote,
     observe_consensus_reached,
     observe_debate_round,
 )
-from app.swarms.communication.message_bus import MessageBus, MessageType, SwarmMessage
-from app.memory.unified_memory import UnifiedMemoryStore
 
 logger = logging.getLogger(__name__)
 tracer = trace.get_tracer(__name__)
@@ -34,6 +35,7 @@ tracer = trace.get_tracer(__name__)
 
 class DebatePhase(Enum):
     """Phases of multi-agent debate"""
+
     INITIALIZATION = "initialization"
     OPENING_STATEMENTS = "opening_statements"
     CROSS_EXAMINATION = "cross_examination"
@@ -45,6 +47,7 @@ class DebatePhase(Enum):
 
 class VoteType(Enum):
     """Types of votes in consensus building"""
+
     APPROVE = "approve"
     REJECT = "reject"
     ABSTAIN = "abstain"
@@ -54,6 +57,7 @@ class VoteType(Enum):
 @dataclass
 class DebateProposal:
     """A proposal being debated"""
+
     id: str = field(default_factory=lambda: f"prop_{uuid4().hex[:8]}")
     title: str = ""
     description: str = ""
@@ -68,6 +72,7 @@ class DebateProposal:
 @dataclass
 class AgentVote:
     """A vote cast by an agent"""
+
     agent_id: str
     proposal_id: str
     vote: VoteType
@@ -80,6 +85,7 @@ class AgentVote:
 @dataclass
 class DebateRound:
     """A single round of debate"""
+
     phase: DebatePhase
     proposal: DebateProposal
     round_id: str = field(default_factory=lambda: f"round_{uuid4().hex[:8]}")
@@ -93,10 +99,10 @@ class DebateRound:
 class MultiAgentDebateSystem:
     """
     Advanced multi-agent debate system with consensus building.
-    
+
     Features demonstrated with MCP enhancement:
     - Persistent debate memory across sessions
-    - Cross-tool visibility into debate progress  
+    - Cross-tool visibility into debate progress
     - Architecture consistent with our swarm patterns
     - Full observability and metrics
     """
@@ -107,7 +113,7 @@ class MultiAgentDebateSystem:
         memory_store: UnifiedMemoryStore,
         min_participants: int = 3,
         consensus_threshold: float = 0.7,
-        max_rounds: int = 5
+        max_rounds: int = 5,
     ):
         self.message_bus = message_bus
         self.memory_store = memory_store
@@ -125,10 +131,7 @@ class MultiAgentDebateSystem:
         logger.info("🗣️ MultiAgentDebateSystem initialized - enhanced with MCP integration")
 
     async def register_debate_agent(
-        self,
-        agent_id: str,
-        capabilities: list[str],
-        expertise: dict[str, float]
+        self, agent_id: str, capabilities: list[str], expertise: dict[str, float]
     ) -> bool:
         """Register an agent for debate participation"""
         with tracer.start_span("register_debate_agent", kind=SpanKind.SERVER) as span:
@@ -140,7 +143,7 @@ class MultiAgentDebateSystem:
                 "expertise": expertise,
                 "registered_at": datetime.now(timezone.utc),
                 "debates_participated": 0,
-                "consensus_rate": 0.0
+                "consensus_rate": 0.0,
             }
 
             # Store in MCP for cross-tool visibility
@@ -150,8 +153,8 @@ class MultiAgentDebateSystem:
                     "type": "agent_registration",
                     "agent_id": agent_id,
                     "capabilities": capabilities,
-                    "expertise": expertise
-                }
+                    "expertise": expertise,
+                },
             )
 
             logger.info(f"✅ Registered debate agent: {agent_id}")
@@ -161,7 +164,7 @@ class MultiAgentDebateSystem:
         self,
         proposal: DebateProposal,
         required_expertise: Optional[list[str]] = None,
-        timeout_minutes: int = 30
+        timeout_minutes: int = 30,
     ) -> str:
         """Initiate a new multi-agent debate"""
         with tracer.start_span("initiate_debate", kind=SpanKind.SERVER) as span:
@@ -171,19 +174,20 @@ class MultiAgentDebateSystem:
 
             # Select appropriate agents for this debate
             selected_agents = await self._select_agents_for_debate(
-                required_expertise or [],
-                self.min_participants
+                required_expertise or [], self.min_participants
             )
 
             if len(selected_agents) < self.min_participants:
-                raise ValueError(f"Insufficient agents for debate: {len(selected_agents)} < {self.min_participants}")
+                raise ValueError(
+                    f"Insufficient agents for debate: {len(selected_agents)} < {self.min_participants}"
+                )
 
             # Create initial debate round
             debate_round = DebateRound(
                 round_id=debate_id,
                 phase=DebatePhase.INITIALIZATION,
                 proposal=proposal,
-                participants=selected_agents
+                participants=selected_agents,
             )
 
             self.active_debates[debate_id] = debate_round
@@ -197,11 +201,11 @@ class MultiAgentDebateSystem:
                     "proposal": {
                         "id": proposal.id,
                         "title": proposal.title,
-                        "description": proposal.description
+                        "description": proposal.description,
                     },
                     "participants": selected_agents,
-                    "phase": debate_round.phase.value
-                }
+                    "phase": debate_round.phase.value,
+                },
             )
 
             # Notify participating agents
@@ -212,8 +216,8 @@ class MultiAgentDebateSystem:
                     "debate_id": debate_id,
                     "proposal": proposal.__dict__,
                     "participants": selected_agents,
-                    "expected_duration": timeout_minutes
-                }
+                    "expected_duration": timeout_minutes,
+                },
             )
 
             logger.info(f"🗣️ Debate initiated: {debate_id} - {proposal.title}")
@@ -221,11 +225,7 @@ class MultiAgentDebateSystem:
 
             return debate_id
 
-    async def conduct_debate_round(
-        self,
-        debate_id: str,
-        phase: DebatePhase
-    ) -> DebateRound:
+    async def conduct_debate_round(self, debate_id: str, phase: DebatePhase) -> DebateRound:
         """Conduct a single round of debate"""
         with tracer.start_span("conduct_debate_round", kind=SpanKind.SERVER) as span:
             span.set_attribute("debate.id", debate_id)
@@ -264,19 +264,19 @@ class MultiAgentDebateSystem:
                     "phase": phase.value,
                     "duration_seconds": debate_round.duration_seconds,
                     "participants": len(debate_round.participants),
-                    "statements": len(debate_round.statements)
-                }
+                    "statements": len(debate_round.statements),
+                },
             )
 
             observe_debate_round(debate_id, phase.value, len(debate_round.participants))
 
-            logger.info(f"⏱️ Debate round completed: {phase.value} ({debate_round.duration_seconds:.2f}s)")
+            logger.info(
+                f"⏱️ Debate round completed: {phase.value} ({debate_round.duration_seconds:.2f}s)"
+            )
             return debate_round
 
     async def _select_agents_for_debate(
-        self,
-        required_expertise: list[str],
-        min_count: int
+        self, required_expertise: list[str], min_count: int
     ) -> list[str]:
         """Select the best agents for a specific debate topic"""
         # Score agents based on expertise match
@@ -298,21 +298,18 @@ class MultiAgentDebateSystem:
 
         # Sort by score and select top agents
         agent_scores.sort(key=lambda x: x[1], reverse=True)
-        selected = [agent_id for agent_id, _ in agent_scores[:min_count * 2]]
+        selected = [agent_id for agent_id, _ in agent_scores[: min_count * 2]]
 
         # Ensure minimum count
         if len(selected) < min_count:
             # Add any remaining agents to meet minimum
-            remaining = [aid for aid in self.registered_agents.keys() if aid not in selected]
-            selected.extend(remaining[:min_count - len(selected)])
+            remaining = [aid for aid in self.registered_agents if aid not in selected]
+            selected.extend(remaining[: min_count - len(selected)])
 
-        return selected[:min_count * 2]  # Cap at reasonable maximum
+        return selected[: min_count * 2]  # Cap at reasonable maximum
 
     async def _broadcast_debate_message(
-        self,
-        debate_id: str,
-        message_type: str,
-        content: dict[str, Any]
+        self, debate_id: str, message_type: str, content: dict[str, Any]
     ):
         """Broadcast a message to all debate participants"""
         if debate_id not in self.active_debates:
@@ -325,12 +322,8 @@ class MultiAgentDebateSystem:
                 sender_agent_id="debate_system",
                 receiver_agent_id=participant,
                 message_type=MessageType.PROPOSAL,  # Reusing existing enum
-                content={
-                    "debate_id": debate_id,
-                    "message_type": message_type,
-                    "data": content
-                },
-                thread_id=debate_id
+                content={"debate_id": debate_id, "message_type": message_type, "data": content},
+                thread_id=debate_id,
             )
 
             await self.message_bus.publish_message(message)
@@ -347,7 +340,7 @@ class MultiAgentDebateSystem:
                 "agent_id": participant,
                 "type": "opening_statement",
                 "content": f"Opening statement from {participant} regarding {debate_round.proposal.title}",
-                "timestamp": datetime.now(timezone.utc).isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             }
             debate_round.statements.append(statement)
 
@@ -374,7 +367,7 @@ class MultiAgentDebateSystem:
                 proposal_id=debate_round.proposal.id,
                 vote=VoteType.APPROVE,  # Simulated
                 reasoning=f"Voting rationale from {participant}",
-                confidence=0.8  # Simulated confidence
+                confidence=0.8,  # Simulated confidence
             )
             debate_round.votes.append(vote)
             observe_agent_vote(debate_round.round_id, participant, vote.vote.value)
@@ -403,13 +396,15 @@ class MultiAgentDebateSystem:
                     "proposal_id": debate_round.proposal.id,
                     "consensus_ratio": consensus_ratio,
                     "approve_votes": approve_votes,
-                    "total_votes": total_votes
-                }
+                    "total_votes": total_votes,
+                },
             )
 
             logger.info(f"✅ Consensus reached: {consensus_ratio:.2%} approval")
         else:
-            logger.info(f"❌ No consensus: {consensus_ratio:.2%} approval (need {self.consensus_threshold:.2%})")
+            logger.info(
+                f"❌ No consensus: {consensus_ratio:.2%} approval (need {self.consensus_threshold:.2%})"
+            )
 
         return consensus_reached
 
@@ -438,8 +433,8 @@ class MultiAgentDebateSystem:
                 "debate_id": debate_id,
                 "outcome": debate_round.outcome,
                 "total_rounds": len(self.debate_history),
-                "final_phase": debate_round.phase.value
-            }
+                "final_phase": debate_round.phase.value,
+            },
         )
 
         logger.info(f"🏁 Debate finalized: {debate_id} - {debate_round.outcome}")
@@ -448,9 +443,7 @@ class MultiAgentDebateSystem:
 
 # Factory function for easy initialization
 async def create_debate_system(
-    message_bus: MessageBus,
-    memory_store: UnifiedMemoryStore,
-    **kwargs
+    message_bus: MessageBus, memory_store: UnifiedMemoryStore, **kwargs
 ) -> MultiAgentDebateSystem:
     """Create and initialize a multi-agent debate system"""
     system = MultiAgentDebateSystem(message_bus, memory_store, **kwargs)
@@ -465,9 +458,9 @@ async def create_debate_system(
                 "persistent_memory",
                 "cross_tool_visibility",
                 "consensus_tracking",
-                "agent_performance_metrics"
-            ]
-        }
+                "agent_performance_metrics",
+            ],
+        },
     )
 
     return system

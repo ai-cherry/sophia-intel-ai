@@ -74,10 +74,7 @@ async def get_router():
 
 
 @router.post("/select-model", response_model=RouteSelectionResponse)
-async def select_optimal_model(
-    request: RouteSelectionRequest,
-    router_instance = Depends(get_router)
-):
+async def select_optimal_model(request: RouteSelectionRequest, router_instance=Depends(get_router)):
     """
     Select optimal model for given role and parameters
     """
@@ -87,8 +84,7 @@ async def select_optimal_model(
             execution_strategy = ExecutionStrategy(request.execution_strategy.lower())
         except ValueError:
             raise HTTPException(
-                status_code=400,
-                detail=f"Invalid execution strategy: {request.execution_strategy}"
+                status_code=400, detail=f"Invalid execution strategy: {request.execution_strategy}"
             )
 
         # Parse routing strategy
@@ -98,8 +94,7 @@ async def select_optimal_model(
                 routing_strategy = RoutingStrategy(request.routing_strategy.lower())
             except ValueError:
                 raise HTTPException(
-                    status_code=400,
-                    detail=f"Invalid routing strategy: {request.routing_strategy}"
+                    status_code=400, detail=f"Invalid routing strategy: {request.routing_strategy}"
                 )
 
         # Build route config
@@ -107,7 +102,7 @@ async def select_optimal_model(
             strategy=routing_strategy,
             max_cost_per_request=request.max_cost_per_request,
             fallback_enabled=request.fallback_enabled,
-            cache_enabled=request.cache_enabled
+            cache_enabled=request.cache_enabled,
         )
 
         # Get routing decision
@@ -115,7 +110,7 @@ async def select_optimal_model(
             agent_role=request.agent_role,
             task_complexity=request.task_complexity,
             execution_strategy=execution_strategy,
-            route_config=route_config
+            route_config=route_config,
         )
 
         return RouteSelectionResponse(**result)
@@ -125,10 +120,7 @@ async def select_optimal_model(
 
 
 @router.post("/completion", response_model=CompletionResponse)
-async def route_completion(
-    request: CompletionRequest,
-    router_instance = Depends(get_router)
-):
+async def route_completion(request: CompletionRequest, router_instance=Depends(get_router)):
     """
     Route completion request through optimal model
     """
@@ -138,8 +130,7 @@ async def route_completion(
             execution_strategy = ExecutionStrategy(request.execution_strategy.lower())
         except ValueError:
             raise HTTPException(
-                status_code=400,
-                detail=f"Invalid execution strategy: {request.execution_strategy}"
+                status_code=400, detail=f"Invalid execution strategy: {request.execution_strategy}"
             )
 
         # Build route config from request
@@ -155,7 +146,7 @@ async def route_completion(
             execution_strategy=execution_strategy,
             route_config=route_config,
             temperature=request.temperature,
-            max_tokens=request.max_tokens
+            max_tokens=request.max_tokens,
         )
 
         return CompletionResponse(**result)
@@ -165,7 +156,7 @@ async def route_completion(
 
 
 @router.get("/analytics", response_model=AnalyticsResponse)
-async def get_routing_analytics(router_instance = Depends(get_router)):
+async def get_routing_analytics(router_instance=Depends(get_router)):
     """
     Get routing and usage analytics
     """
@@ -193,7 +184,7 @@ async def list_approved_models():
             "model": model,
             "temperature": config.TEMPERATURES.get(role, 0.5),
             "max_tokens": config.MAX_TOKENS.get(role, 4000),
-            "purpose": role.replace("_", " ").title()
+            "purpose": role.replace("_", " ").title(),
         }
 
     return {
@@ -201,7 +192,7 @@ async def list_approved_models():
         "total_models": len(models_info),
         "strategies": [strategy.value for strategy in ExecutionStrategy],
         "routing_strategies": [strategy.value for strategy in RoutingStrategy],
-        "model_tiers": [tier.value for tier in ModelTier]
+        "model_tiers": [tier.value for tier in ModelTier],
     }
 
 
@@ -223,19 +214,15 @@ async def health_check():
             "models_registered": model_count,
             "cache_size": cache_size,
             "virtual_keys_configured": len(unified_router.VIRTUAL_KEYS),
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
     except Exception as e:
-        return {
-            "status": "unhealthy",
-            "error": str(e),
-            "timestamp": datetime.now().isoformat()
-        }
+        return {"status": "unhealthy", "error": str(e), "timestamp": datetime.now().isoformat()}
 
 
 @router.post("/cache/clear")
-async def clear_routing_cache(router_instance = Depends(get_router)):
+async def clear_routing_cache(router_instance=Depends(get_router)):
     """
     Clear the routing cache
     """
@@ -246,7 +233,7 @@ async def clear_routing_cache(router_instance = Depends(get_router)):
         return {
             "success": True,
             "cleared_entries": cache_size_before,
-            "message": f"Cleared {cache_size_before} cache entries"
+            "message": f"Cleared {cache_size_before} cache entries",
         }
 
     except Exception as e:
@@ -254,7 +241,7 @@ async def clear_routing_cache(router_instance = Depends(get_router)):
 
 
 @router.get("/usage/{model}")
-async def get_model_usage(model: str, router_instance = Depends(get_router)):
+async def get_model_usage(model: str, router_instance=Depends(get_router)):
     """
     Get usage statistics for a specific model
     """
@@ -271,7 +258,7 @@ async def get_model_usage(model: str, router_instance = Depends(get_router)):
         "requests_per_minute": metrics.requests_per_minute,
         "error_count": metrics.error_count,
         "last_success": metrics.last_success.isoformat(),
-        "total_requests": router_instance.request_counts.get(model, 0)
+        "total_requests": router_instance.request_counts.get(model, 0),
     }
 
 
@@ -285,32 +272,32 @@ async def get_routing_strategies():
         RoutingStrategy.COST_OPTIMIZED.value: {
             "name": "Cost Optimized",
             "description": "Prioritizes cheapest models while maintaining quality",
-            "weight_factors": "70% cost, 20% performance, 10% availability"
+            "weight_factors": "70% cost, 20% performance, 10% availability",
         },
         RoutingStrategy.PERFORMANCE_FIRST.value: {
             "name": "Performance First",
             "description": "Prioritizes fastest and most reliable models",
-            "weight_factors": "80% performance, 10% cost, 10% availability"
+            "weight_factors": "80% performance, 10% cost, 10% availability",
         },
         RoutingStrategy.BALANCED.value: {
             "name": "Balanced",
             "description": "Balanced approach considering all factors",
-            "weight_factors": "40% performance, 30% cost, 30% availability"
+            "weight_factors": "40% performance, 30% cost, 30% availability",
         },
         RoutingStrategy.FASTEST_AVAILABLE.value: {
             "name": "Fastest Available",
             "description": "Prioritizes lowest latency models",
-            "weight_factors": "60% latency, 30% availability, 10% cost"
+            "weight_factors": "60% latency, 30% availability, 10% cost",
         },
         RoutingStrategy.HIGHEST_QUALITY.value: {
             "name": "Highest Quality",
             "description": "Prioritizes premium models for complex tasks",
-            "weight_factors": "50% performance, 30% availability, 20% cost + tier bonus"
-        }
+            "weight_factors": "50% performance, 30% availability, 20% cost + tier bonus",
+        },
     }
 
     return {
         "strategies": strategies,
         "default": RoutingStrategy.BALANCED.value,
-        "total_strategies": len(strategies)
+        "total_strategies": len(strategies),
     }

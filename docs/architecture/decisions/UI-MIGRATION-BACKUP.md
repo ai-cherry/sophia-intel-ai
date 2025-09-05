@@ -1,6 +1,7 @@
 # UI Migration Backup & Rollback Procedures
 
 ## Migration Context
+
 **Date**: September 1, 2025  
 **Phase**: Final UI Consolidation - Phase 4  
 **Task**: Safe removal of legacy ui/ directory after successful migration to agent-ui/
@@ -8,13 +9,16 @@
 ## Backup Details
 
 ### Backup Location
+
 - **Directory**: `ui-backup-20250901_100740`
 - **Full Path**: `/Users/lynnmusil/sophia-intel-ai/ui-backup-20250901_100740`
 - **Created**: 2025-09-01 10:07:40 PST
 - **Size**: 26 directories and files
 
 ### Backup Contents
+
 The backup contains all original ui/ directory contents including:
+
 - 8 unique swarm components that were migrated
 - Complete Next.js project structure
 - All dependencies and configuration files
@@ -24,6 +28,7 @@ The backup contains all original ui/ directory contents including:
 ## Rollback Procedures
 
 ### Quick Rollback
+
 If immediate rollback is needed after ui/ directory removal:
 
 ```bash
@@ -32,19 +37,23 @@ mv ui-backup-20250901_100740 ui
 ```
 
 ### Verification After Rollback
+
 1. Check ui/ directory structure is restored
 2. Verify swarm components are accessible
 3. Test any references that were updated in Phase 3
 
 ### Full System Rollback
+
 If complete rollback to pre-migration state is needed:
 
 1. **Restore ui/ directory**:
+
    ```bash
    mv ui-backup-20250901_100740 ui
    ```
 
 2. **Remove migrated components from agent-ui/**:
+
    ```bash
    rm -rf agent-ui/src/components/swarm/
    rm agent-ui/src/types/swarm.ts
@@ -75,10 +84,12 @@ If complete rollback to pre-migration state is needed:
 ## Contact & Support
 
 If rollback is needed:
+
 1. Follow procedures above
 2. Document any issues encountered
 3. Review ADR-001 for additional context
 4. Check git history for reference to specific changes made
 
 ---
-*This document was created as part of ADR-001: UI Consolidation Strategy implementation.*
+
+_This document was created as part of ADR-001: UI Consolidation Strategy implementation._

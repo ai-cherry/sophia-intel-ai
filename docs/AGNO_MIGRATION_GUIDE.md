@@ -7,18 +7,21 @@ This guide details the migration from our custom swarm implementation to Agno 1.
 ## Key Improvements
 
 ### 1. **Unified LLM Gateway (Portkey)**
+
 - Single endpoint for all LLM providers
 - Automatic failover and load balancing
 - Cost tracking and budgets
 - Request caching and optimization
 
 ### 2. **Native Teams API (Agno 1.8.1)**
+
 - Built-in team orchestration
 - Parallel agent execution
 - Automatic judge-based consensus
 - Memory sharing across agents
 
 ### 3. **Agent UI Integration**
+
 - Modern chat interface
 - Real-time agent visualization
 - Team selection UI
@@ -37,6 +40,7 @@ pip3 install -U agno==1.8.1 portkey-ai 'fastapi[standard]'
 Replace individual provider keys with Portkey configuration:
 
 **Before (Multiple Providers):**
+
 ```python
 OPENAI_API_KEY=sk-...
 ANTHROPIC_API_KEY=sk-ant-...
@@ -44,6 +48,7 @@ GROQ_API_KEY=gsk-...
 ```
 
 **After (Portkey Gateway):**
+
 ```python
 OPENAI_API_BASE=https://api.portkey.ai/v1/openai
 OPENAI_API_KEY=pk_live_YOUR_PORTKEY_KEY
@@ -52,6 +57,7 @@ OPENAI_API_KEY=pk_live_YOUR_PORTKEY_KEY
 ### Step 3: Agent Definition Migration
 
 **Before (Custom Agent):**
+
 ```python
 from app.swarms.coding.agents import make_generator
 
@@ -64,6 +70,7 @@ agent = make_generator(
 ```
 
 **After (Agno 1.8.1):**
+
 ```python
 from agno.agent import Agent
 from agno.tools.duckduckgo import DuckDuckGo
@@ -81,17 +88,19 @@ agent = Agent(
 ### Step 4: Team Migration
 
 **Before (Custom Team):**
+
 ```python
 class CodingTeam:
     def __init__(self):
         self.agents = [make_lead(), make_generator(), make_critic()]
-    
+
     async def solve(self, problem):
         # Custom orchestration logic
         pass
 ```
 
 **After (Agno Teams):**
+
 ```python
 from agno.teams import Team
 
@@ -108,12 +117,12 @@ result = await team.run("Implement user authentication")
 
 ### Step 5: Swarm to Teams Mapping
 
-| Old Swarm | New Agno Team | Agents | Use Case |
-|-----------|---------------|---------|----------|
-| CodingTeam (5) | standard_team | planner, coder, critic, tester, judge | Regular tasks |
-| CodingSwarm (10+) | advanced_team | planner, 2 coders, critic, security, judge | Complex features |
-| FastSwarm (3) | fast_team | coder_fast, critic, judge | Quick fixes |
-| GENESIS (30+) | genesis_team | All specialists + judge | Critical features |
+| Old Swarm         | New Agno Team | Agents                                     | Use Case          |
+| ----------------- | ------------- | ------------------------------------------ | ----------------- |
+| CodingTeam (5)    | standard_team | planner, coder, critic, tester, judge      | Regular tasks     |
+| CodingSwarm (10+) | advanced_team | planner, 2 coders, critic, security, judge | Complex features  |
+| FastSwarm (3)     | fast_team     | coder_fast, critic, judge                  | Quick fixes       |
+| GENESIS (30+)     | genesis_team  | All specialists + judge                    | Critical features |
 
 ### Step 6: Tool Migration
 
@@ -137,6 +146,7 @@ agent = Agent(
 ### Step 7: API Migration
 
 **Before (Custom Endpoints):**
+
 ```python
 @app.post("/teams/run")
 async def run_team(problem: str):
@@ -145,6 +155,7 @@ async def run_team(problem: str):
 ```
 
 **After (Agno FastAPI):**
+
 ```python
 from agno.apps.fastapi import create_fastapi_app
 
@@ -183,8 +194,8 @@ Configure in `portkey_config.json`:
       "name": "Code Generation",
       "pattern": "coder",
       "load_balance": [
-        {"model": "qwen-2.5-coder", "weight": 0.5},
-        {"model": "deepseek-coder", "weight": 0.5}
+        { "model": "qwen-2.5-coder", "weight": 0.5 },
+        { "model": "deepseek-coder", "weight": 0.5 }
       ]
     }
   ]
@@ -223,7 +234,8 @@ response = httpx.post(
 
 ### 3. Verify in Agent UI
 
-Open http://localhost:3000 and test:
+Open <http://localhost:3000> and test:
+
 - Individual agents
 - Team collaboration
 - Memory persistence
@@ -239,15 +251,15 @@ If issues arise, rollback by:
 
 ## Benefits Summary
 
-| Feature | Before | After |
-|---------|--------|-------|
+| Feature             | Before            | After              |
+| ------------------- | ----------------- | ------------------ |
 | Provider Management | Multiple API keys | Single Portkey key |
-| Failover | Manual | Automatic |
-| Cost Tracking | None | Built-in |
-| Team Orchestration | Custom code | Native API |
-| UI | None | Agent UI |
-| Memory | Custom | Native Memory API |
-| Observability | Limited | Full traces |
+| Failover            | Manual            | Automatic          |
+| Cost Tracking       | None              | Built-in           |
+| Team Orchestration  | Custom code       | Native API         |
+| UI                  | None              | Agent UI           |
+| Memory              | Custom            | Native Memory API  |
+| Observability       | Limited           | Full traces        |
 
 ## Next Steps
 
@@ -284,6 +296,7 @@ If issues arise, rollback by:
 ## Conclusion
 
 The migration to Agno 1.8.1 provides:
+
 - ✅ Simplified multi-provider management
 - ✅ Built-in team orchestration
 - ✅ Modern UI out of the box

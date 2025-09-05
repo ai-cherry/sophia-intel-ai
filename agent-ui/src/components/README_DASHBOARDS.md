@@ -3,10 +3,11 @@
 ## IMPORTANT: Which Dashboard to Use
 
 ### ✅ USE THIS: UnifiedSuperDashboard.tsx
+
 - **Location**: `agent-ui/src/components/UnifiedSuperDashboard.tsx`
 - **Lines**: 1102
 - **Status**: ACTIVE - This is the primary dashboard
-- **Features**: 
+- **Features**:
   - 8 comprehensive tabs (Overview, Systems, Swarms, Analytics, Models, Infrastructure, Monitoring, History)
   - Natural language command interface
   - Full personality integration
@@ -16,6 +17,7 @@
   - WebSocket port: 8000 (correct)
 
 ### ⚠️ DEPRECATED: SuperOrchestratorDashboard.tsx
+
 - **Location**: `agent-ui/src/components/SuperOrchestratorDashboard.tsx`
 - **Lines**: 483
 - **Status**: DEPRECATED - Keep for reference only
@@ -36,12 +38,14 @@ function App() {
 ## Backend Files
 
 The dashboard connects to these backend components:
+
 - `app/core/super_orchestrator.py` - Main orchestrator engine
 - `app/core/orchestrator_personality.py` - Personality system
 - `app/api/super_orchestrator_router.py` - API endpoints
 - `app/core/orchestrator_enhancements.py` - Universal registry and monitoring
 
 ## WebSocket Configuration
+
 - Endpoint: `ws://localhost:8000/ws/orchestrator`
 - Backend port: 8000
 - Frontend port: 3000 (Next.js dev server)
@@ -49,6 +53,7 @@ The dashboard connects to these backend components:
 ## Customization Based on User Preferences
 
 This dashboard was customized based on these preferences:
+
 - Natural language control with visual support
 - Swarm Intelligence → Task Progress → System Health → Cost visibility priorities
 - AI-suggested but customizable micro-swarms

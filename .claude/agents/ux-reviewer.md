@@ -45,6 +45,7 @@ Structure your review as:
 **Specific Recommendations**: Concrete, implementable suggestions with rationale
 
 When reviewing code that affects UI:
+
 - Examine component structure and reusability
 - Check for proper semantic HTML usage
 - Verify accessibility attributes are correctly implemented

@@ -47,49 +47,49 @@ const CostDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [timeRange, setTimeRange] = useState('7')
-  
+
   // Data state
   const [summary, setSummary] = useState<CostSummary | null>(null)
   const [dailyCosts, setDailyCosts] = useState<DailyCost[]>([])
   const [topModels, setTopModels] = useState<TopModel[]>([])
-  
+
   const fetchCostData = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
-      
+
       // Fetch cost summary
       const summaryResponse = await fetch(
         `${APIRoutes.GetCostSummary(selectedEndpoint)}?days=${timeRange}`
       )
-      
+
       if (!summaryResponse.ok) {
         throw new Error('Failed to fetch cost summary')
       }
-      
+
       const summaryData = await summaryResponse.json()
       setSummary(summaryData.summary)
-      
+
       // Fetch daily costs
       const dailyResponse = await fetch(
         `${APIRoutes.GetDailyCosts(selectedEndpoint)}?days=${timeRange}`
       )
-      
+
       if (dailyResponse.ok) {
         const dailyData = await dailyResponse.json()
         setDailyCosts(dailyData.daily_costs)
       }
-      
+
       // Fetch top models
       const modelsResponse = await fetch(
         `${APIRoutes.GetTopModels(selectedEndpoint)}?limit=10`
       )
-      
+
       if (modelsResponse.ok) {
         const modelsData = await modelsResponse.json()
         setTopModels(modelsData.top_models)
       }
-      
+
     } catch (err) {
       console.error('Failed to fetch cost data:', err)
       setError(err instanceof Error ? err.message : 'Unknown error')
@@ -97,26 +97,26 @@ const CostDashboard: React.FC = () => {
       setLoading(false)
     }
   }, [selectedEndpoint, timeRange])
-  
+
   useEffect(() => {
     fetchCostData()
   }, [selectedEndpoint, timeRange, fetchCostData])
-  
+
   const formatCurrency = (amount: number) => {
     if (amount === 0) return '$0.00'
     if (amount < 0.01) return `$${amount.toFixed(6)}`
     return `$${amount.toFixed(2)}`
   }
-  
+
   const formatNumber = (num: number) => {
     if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`
     if (num >= 1000) return `${(num / 1000).toFixed(1)}K`
     return num.toString()
   }
-  
+
   // Chart colors
   const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4']
-  
+
   // Prepare chart data
   const pieData = summary ? [
     { name: 'LLM Completions', value: summary.llm_completion_cost, color: COLORS[0] },
@@ -124,7 +124,7 @@ const CostDashboard: React.FC = () => {
     { name: 'Swarm Execution', value: summary.swarm_execution_cost, color: COLORS[2] },
     { name: 'API Calls', value: summary.api_call_cost, color: COLORS[3] }
   ].filter(item => item.value > 0) : []
-  
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -144,7 +144,7 @@ const CostDashboard: React.FC = () => {
       </div>
     )
   }
-  
+
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
@@ -160,7 +160,7 @@ const CostDashboard: React.FC = () => {
       </div>
     )
   }
-  
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -194,7 +194,7 @@ const CostDashboard: React.FC = () => {
           </Button>
         </div>
       </div>
-      
+
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
@@ -212,7 +212,7 @@ const CostDashboard: React.FC = () => {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -228,7 +228,7 @@ const CostDashboard: React.FC = () => {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -244,7 +244,7 @@ const CostDashboard: React.FC = () => {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -264,7 +264,7 @@ const CostDashboard: React.FC = () => {
           </CardContent>
         </Card>
       </div>
-      
+
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Daily Cost List */}
@@ -304,7 +304,7 @@ const CostDashboard: React.FC = () => {
             </div>
           </CardContent>
         </Card>
-        
+
         {/* Cost Breakdown */}
         <Card>
           <CardHeader>
@@ -317,7 +317,7 @@ const CostDashboard: React.FC = () => {
               {pieData.map((item) => (
                 <div key={item.name} className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div 
+                    <div
                       className="w-4 h-4 rounded-full"
                       style={{ backgroundColor: item.color }}
                     />
@@ -342,7 +342,7 @@ const CostDashboard: React.FC = () => {
           </CardContent>
         </Card>
       </div>
-      
+
       {/* Top Models Table */}
       <Card>
         <CardHeader>
@@ -394,7 +394,7 @@ const CostDashboard: React.FC = () => {
                 ))}
               </tbody>
             </table>
-            
+
             {topModels.length === 0 && (
               <div className="text-center py-8 text-muted-foreground">
                 No model usage data available

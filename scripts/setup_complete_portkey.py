@@ -11,7 +11,8 @@ import httpx
 from dotenv import load_dotenv, set_key
 
 # Load environment
-load_dotenv('.env.local', override=True)
+load_dotenv(".env.local", override=True)
+
 
 class CompletePortkeySetup:
     """Complete setup for Portkey with all providers."""
@@ -19,16 +20,18 @@ class CompletePortkeySetup:
     def __init__(self):
         # API Keys
         self.portkey_key = "hPxFZGd8AN269n4bznDf2/Onbi8I"
-        self.openrouter_key = "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"
+        self.openrouter_key = (
+            "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"
+        )
         self.together_key = "tgp_v1_HE_uluFh-fELZDmEP9xKZXuSBT4a8EHd6s9CmSe5WWo"
 
         self.base_url = "https://api.portkey.ai/v1"
 
     async def test_direct_providers(self):
         """Test all providers directly first."""
-        logger.info("\n" + "="*60)
+        logger.info("\n" + "=" * 60)
         logger.info("🔍 TESTING DIRECT PROVIDER ACCESS")
-        logger.info("="*60)
+        logger.info("=" * 60)
 
         results = {}
 
@@ -41,13 +44,13 @@ class CompletePortkeySetup:
                     headers={
                         "Authorization": f"Bearer {self.openrouter_key}",
                         "HTTP-Referer": "http://localhost:3000",
-                        "X-Title": "Sophia Intel AI"
+                        "X-Title": "Sophia Intel AI",
                     },
                     json={
                         "model": "meta-llama/llama-3.2-3b-instruct",
                         "messages": [{"role": "user", "content": "Say 'OpenRouter OK' in 2 words"}],
-                        "max_tokens": 10
-                    }
+                        "max_tokens": 10,
+                    },
                 )
 
                 if response.status_code == 200:
@@ -71,12 +74,12 @@ class CompletePortkeySetup:
                     "https://api.together.xyz/v1/embeddings",
                     headers={
                         "Authorization": f"Bearer {self.together_key}",
-                        "Content-Type": "application/json"
+                        "Content-Type": "application/json",
                     },
                     json={
                         "model": "togethercomputer/m2-bert-80M-8k-retrieval",
-                        "input": "Test embedding"
-                    }
+                        "input": "Test embedding",
+                    },
                 )
 
                 if response.status_code == 200:
@@ -95,9 +98,9 @@ class CompletePortkeySetup:
 
     async def setup_portkey_configs(self):
         """Set up Portkey configurations for all use cases."""
-        logger.info("\n" + "="*60)
+        logger.info("\n" + "=" * 60)
         logger.info("🔧 CONFIGURING PORTKEY GATEWAY")
-        logger.info("="*60)
+        logger.info("=" * 60)
 
         # Define configurations for different use cases
         configs = {
@@ -106,18 +109,15 @@ class CompletePortkeySetup:
                 "provider": "openrouter",
                 "base_url": "https://openrouter.ai/api/v1",
                 "api_key": self.openrouter_key,
-                "headers": {
-                    "HTTP-Referer": "http://localhost:3000",
-                    "X-Title": "Sophia Intel AI"
-                }
+                "headers": {"HTTP-Referer": "http://localhost:3000", "X-Title": "Sophia Intel AI"},
             },
             "embeddings": {
                 "description": "Embeddings via Together AI",
                 "provider": "together",
                 "base_url": "https://api.together.xyz/v1",
                 "api_key": self.together_key,
-                "model": "togethercomputer/m2-bert-80M-8k-retrieval"
-            }
+                "model": "togethercomputer/m2-bert-80M-8k-retrieval",
+            },
         }
 
         # Test Portkey with different configurations
@@ -144,9 +144,9 @@ class CompletePortkeySetup:
                     "override_params": {
                         "headers": {
                             "HTTP-Referer": "http://localhost:3000",
-                            "X-Title": "Sophia Intel AI"
+                            "X-Title": "Sophia Intel AI",
                         }
-                    }
+                    },
                 }
 
                 response = await client.post(
@@ -154,13 +154,15 @@ class CompletePortkeySetup:
                     headers={
                         "x-portkey-api-key": self.portkey_key,
                         "x-portkey-config": json.dumps(config),
-                        "Content-Type": "application/json"
+                        "Content-Type": "application/json",
                     },
                     json={
                         "model": "meta-llama/llama-3.2-3b-instruct",
-                        "messages": [{"role": "user", "content": "Say 'Portkey chat working' in 3 words"}],
-                        "max_tokens": 10
-                    }
+                        "messages": [
+                            {"role": "user", "content": "Say 'Portkey chat working' in 3 words"}
+                        ],
+                        "max_tokens": 10,
+                    },
                 )
 
                 if response.status_code == 200:
@@ -185,22 +187,19 @@ class CompletePortkeySetup:
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
                 # Create Portkey config for Together AI
-                config = {
-                    "provider": "together",
-                    "api_key": self.together_key
-                }
+                config = {"provider": "together", "api_key": self.together_key}
 
                 response = await client.post(
                     f"{self.base_url}/embeddings",
                     headers={
                         "x-portkey-api-key": self.portkey_key,
                         "x-portkey-config": json.dumps(config),
-                        "Content-Type": "application/json"
+                        "Content-Type": "application/json",
                     },
                     json={
                         "model": "togethercomputer/m2-bert-80M-8k-retrieval",
-                        "input": "Test embedding through Portkey"
-                    }
+                        "input": "Test embedding through Portkey",
+                    },
                 )
 
                 if response.status_code == 200:
@@ -222,9 +221,9 @@ class CompletePortkeySetup:
 
     async def update_env_file(self):
         """Update .env.local with all configurations."""
-        logger.info("\n" + "="*60)
+        logger.info("\n" + "=" * 60)
         logger.info("📝 UPDATING ENVIRONMENT CONFIGURATION")
-        logger.info("="*60)
+        logger.info("=" * 60)
 
         env_path = ".env.local"
 
@@ -234,24 +233,20 @@ class CompletePortkeySetup:
             "OPENROUTER_API_KEY": self.openrouter_key,
             "PORTKEY_API_KEY": self.portkey_key,
             "TOGETHER_API_KEY": self.together_key,
-
             # Portkey Gateway Configuration
             "OPENAI_BASE_URL": "https://api.portkey.ai/v1",
             "PORTKEY_BASE_URL": "https://api.portkey.ai/v1",
-
             # Embedding Configuration
             "EMBED_BASE_URL": "https://api.portkey.ai/v1",
             "EMBED_API_KEY": self.portkey_key,
             "EMBED_MODEL": "togethercomputer/m2-bert-80M-8k-retrieval",
             "EMBED_PROVIDER": "together",
-
             # Model Routing (via OpenRouter)
             "PRIMARY_CHAT_PROVIDER": "openrouter",
             "PRIMARY_EMBED_PROVIDER": "together",
-
             # Headers for OpenRouter
             "HTTP_REFERER": "http://localhost:3000",
-            "X_TITLE": "Sophia Intel AI"
+            "X_TITLE": "Sophia Intel AI",
         }
 
         for key, value in updates.items():
@@ -262,9 +257,9 @@ class CompletePortkeySetup:
 
     def create_usage_examples(self):
         """Create example code for using the configured setup."""
-        logger.info("\n" + "="*60)
+        logger.info("\n" + "=" * 60)
         logger.info("💡 USAGE EXAMPLES")
-        logger.info("="*60)
+        logger.info("=" * 60)
 
         examples = """
 # === CHAT COMPLETIONS (via Portkey → OpenRouter) ===
@@ -355,15 +350,15 @@ Via Together AI (Embeddings):
 
     async def run_complete_setup(self):
         """Run the complete setup process."""
-        logger.info("\n" + "="*60)
+        logger.info("\n" + "=" * 60)
         logger.info("🚀 COMPLETE PORTKEY + PROVIDERS SETUP")
-        logger.info("="*60)
+        logger.info("=" * 60)
 
         # Test direct provider access
         provider_results = await self.test_direct_providers()
 
         # Set up Portkey configurations
-        configs = await self.setup_portkey_configs()
+        await self.setup_portkey_configs()
 
         # Update environment file
         await self.update_env_file()
@@ -372,13 +367,17 @@ Via Together AI (Embeddings):
         self.create_usage_examples()
 
         # Final summary
-        logger.info("\n" + "="*60)
+        logger.info("\n" + "=" * 60)
         logger.info("✅ SETUP COMPLETE!")
-        logger.info("="*60)
+        logger.info("=" * 60)
 
         logger.info("\n📊 Provider Status:")
-        logger.info(f"  • OpenRouter: {'✅ Working' if provider_results.get('openrouter') else '❌ Failed'}")
-        logger.info(f"  • Together AI: {'✅ Working' if provider_results.get('together') else '❌ Failed'}")
+        logger.info(
+            f"  • OpenRouter: {'✅ Working' if provider_results.get('openrouter') else '❌ Failed'}"
+        )
+        logger.info(
+            f"  • Together AI: {'✅ Working' if provider_results.get('together') else '❌ Failed'}"
+        )
         logger.info("  • Portkey Gateway: ✅ Configured")
 
         logger.info("\n🔑 API Keys Configured:")

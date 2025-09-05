@@ -12,40 +12,28 @@ from app.core.ai_logger import logger
 # Initialize Prometheus metrics with duplicate handling
 try:
     model_tokens_total = Counter(
-        'model_tokens_total',
-        'Total tokens processed per model',
-        ['model', 'type']
+        "model_tokens_total", "Total tokens processed per model", ["model", "type"]
     )
 except ValueError:
     # Metric already exists, get it from registry
-    model_tokens_total = REGISTRY._names_to_collectors['model_tokens_total']
+    model_tokens_total = REGISTRY._names_to_collectors["model_tokens_total"]
 
 try:
-    model_latency_seconds = Histogram(
-        'model_latency_seconds',
-        'Model request latency',
-        ['model']
-    )
+    model_latency_seconds = Histogram("model_latency_seconds", "Model request latency", ["model"])
 except ValueError:
-    model_latency_seconds = REGISTRY._names_to_collectors['model_latency_seconds']
+    model_latency_seconds = REGISTRY._names_to_collectors["model_latency_seconds"]
 
 try:
     model_cost_usd_total = Counter(
-        'model_cost_usd_total',
-        'Total cost in USD per model',
-        ['model', 'type']
+        "model_cost_usd_total", "Total cost in USD per model", ["model", "type"]
     )
 except ValueError:
-    model_cost_usd_total = REGISTRY._names_to_collectors['model_cost_usd_total']
+    model_cost_usd_total = REGISTRY._names_to_collectors["model_cost_usd_total"]
 
 try:
-    model_cost_usd_today = Counter(
-        'model_cost_usd_today',
-        'Cost so far today per model',
-        ['model']
-    )
+    model_cost_usd_today = Counter("model_cost_usd_today", "Cost so far today per model", ["model"])
 except ValueError:
-    model_cost_usd_today = REGISTRY._names_to_collectors['model_cost_usd_today']
+    model_cost_usd_today = REGISTRY._names_to_collectors["model_cost_usd_today"]
 
 AVAILABLE_MODELS = {
     "openai/gpt-5": {
@@ -53,72 +41,73 @@ AVAILABLE_MODELS = {
         "input_cost": 1.25,
         "output_cost": 10.0,
         "capabilities": ["chat", "code", "reasoning", "multimodal"],
-        "priority": "premium"
+        "priority": "premium",
     },
     "x-ai/grok-4": {
         "context": 128000,
         "input_cost": 0.8,
         "output_cost": 6.0,
         "capabilities": ["chat", "code", "analysis"],
-        "priority": "premium"
+        "priority": "premium",
     },
     "anthropic/claude-sonnet-4": {
         "context": 200000,
         "input_cost": 0.5,
         "output_cost": 4.0,
         "capabilities": ["chat", "code", "writing"],
-        "priority": "standard"
+        "priority": "standard",
     },
     "x-ai/grok-code-fast-1": {
         "context": 32000,
         "input_cost": 0.3,
         "output_cost": 2.0,
         "capabilities": ["code"],
-        "priority": "specialized"
+        "priority": "specialized",
     },
     "google/gemini-2.5-flash": {
         "context": 100000,
         "input_cost": 0.1,
         "output_cost": 0.5,
         "capabilities": ["chat", "fast"],
-        "priority": "economy"
+        "priority": "economy",
     },
     "google/gemini-2.5-pro": {
         "context": 200000,
         "input_cost": 0.6,
         "output_cost": 4.5,
         "capabilities": ["chat", "code", "multimodal"],
-        "priority": "standard"
+        "priority": "standard",
     },
     "deepseek/deepseek-chat-v3-0324": {
         "context": 64000,
         "input_cost": 0.2,
         "output_cost": 1.5,
         "capabilities": ["chat", "memory"],
-        "priority": "economy"
+        "priority": "economy",
     },
     "deepseek/deepseek-chat-v3.1": {
         "context": 64000,
         "input_cost": 0.2,
         "output_cost": 1.5,
         "capabilities": ["chat", "memory"],
-        "priority": "economy"
+        "priority": "economy",
     },
     "qwen/qwen3-30b-a3b": {
         "context": 32000,
         "input_cost": 0.15,
         "output_cost": 1.0,
         "capabilities": ["chat", "reasoning"],
-        "priority": "economy"
+        "priority": "economy",
     },
     "z-ai/glm-4.5-air": {
         "context": 32000,
         "input_cost": 0.05,
         "output_cost": 0.3,
         "capabilities": ["chat", "lightweight"],
-        "priority": "economy"
-    }
+        "priority": "economy",
+    },
 }
+
 
 class OpenRouterGateway:
     def __init__(self):
@@ -126,9 +115,8 @@ class OpenRouterGateway:
             base_url="https://openrouter.ai/api/v1",
             api_key=os.getenv("OPENROUTER_API_KEY"),
             http_client=httpx.AsyncClient(
-                timeout=60.0,
-                limits=httpx.Limits(max_keepalive_connections=10)
-            )
+                timeout=60.0, limits=httpx.Limits(max_keepalive_connections=10)
+            ),
         )
 
     async def chat_completion(self, model: str, messages: list[dict], **kwargs):
@@ -144,9 +132,9 @@ class OpenRouterGateway:
                 messages=messages,
                 extra_headers={
                     "HTTP-Referer": "https://sophia-intel-ai.com",
-                    "X-Title": "Sophia Intel AI"
+                    "X-Title": "Sophia Intel AI",
                 },
-                **kwargs
+                **kwargs,
             )
             latency = time.time() - start_time
             model_latency_seconds.labels(model=model).observe(latency)
@@ -183,40 +171,28 @@ class OpenRouterGateway:
             "openai/gpt-5": [
                 "anthropic/claude-sonnet-4",
                 "google/gemini-2.5-pro",
-                "z-ai/glm-4.5-air"
+                "z-ai/glm-4.5-air",
             ],
             "x-ai/grok-4": [
                 "anthropic/claude-sonnet-4",
                 "google/gemini-2.5-pro",
-                "z-ai/glm-4.5-air"
+                "z-ai/glm-4.5-air",
             ],
-            "anthropic/claude-sonnet-4": [
-                "google/gemini-2.5-pro",
-                "z-ai/glm-4.5-air"
-            ],
-            "x-ai/grok-code-fast-1": [
-                "google/gemini-2.5-flash",
-                "z-ai/glm-4.5-air"
-            ],
-            "google/gemini-2.5-flash": [
-                "google/gemini-2.5-pro",
-                "z-ai/glm-4.5-air"
-            ],
-            "google/gemini-2.5-pro": [
-                "google/gemini-2.5-flash",
-                "z-ai/glm-4.5-air"
-            ],
-            "deepseek/deepseek-chat-v3.1": [
-                "z-ai/glm-4.5-air"
-            ],
-            "z-ai/glm-4.5-air": None
+            "anthropic/claude-sonnet-4": ["google/gemini-2.5-pro", "z-ai/glm-4.5-air"],
+            "x-ai/grok-code-fast-1": ["google/gemini-2.5-flash", "z-ai/glm-4.5-air"],
+            "google/gemini-2.5-flash": ["google/gemini-2.5-pro", "z-ai/glm-4.5-air"],
+            "google/gemini-2.5-pro": ["google/gemini-2.5-flash", "z-ai/glm-4.5-air"],
+            "deepseek/deepseek-chat-v3.1": ["z-ai/glm-4.5-air"],
+            "z-ai/glm-4.5-air": None,
         }
         return fallback_chain.get(model, [None])[0] if fallback_chain.get(model) else None
+
 
 # Test only for local development
 if __name__ == "__main__":
     import asyncio
     import logging
+
     logging.basicConfig(level=logging.INFO)
 
     async def test_gateway():
@@ -227,16 +203,14 @@ if __name__ == "__main__":
             [{"role": "user", "content": "What is the capital of France?"}],
             max_tokens=10,
             temperature=0.1,
-            think_hard=True
+            think_hard=True,
         )
         logger.info(f"GPT-5 Response: {response.choices[0].message.content}")
 
         logger.info("\nTesting fallback chain (invalid model)")
         try:
             response = await gateway.chat_completion(
-                "invalid-model",
-                [{"role": "user", "content": "Hello"}],
-                max_tokens=10
+                "invalid-model", [{"role": "user", "content": "Hello"}], max_tokens=10
             )
             logger.info(f"Fallback Response: {response.choices[0].message.content}")
         except Exception as e:

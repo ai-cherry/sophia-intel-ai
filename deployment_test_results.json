@@ -24,21 +24,13 @@
         "status": 200,
         "response_time_ms": 1.56,
         "content_type": "application/json",
-        "data_keys": [
-          "status",
-          "timestamp",
-          "systems"
-        ]
+        "data_keys": ["status", "timestamp", "systems"]
       },
       "/api/metrics": {
         "status": 200,
         "response_time_ms": 106.63,
         "content_type": "application/json",
-        "data_keys": [
-          "status",
-          "error",
-          "timestamp"
-        ]
+        "data_keys": ["status", "error", "timestamp"]
       },
       "/agents": {
         "status": 200,

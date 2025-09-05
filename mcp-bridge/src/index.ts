@@ -31,14 +31,14 @@ interface AdapterConfig {
 
 class MCPBridgeOrchestrator {
   private adapters: Map<string, any> = new Map();
-  
+
   constructor() {
     logger.info('Initializing MCP Bridge Orchestrator');
   }
 
   async startAdapter(config: AdapterConfig): Promise<void> {
     logger.info(`Starting ${config.name} adapter...`);
-    
+
     const adapter = spawn('tsx', [config.script], {
       env: {
         ...process.env,
@@ -58,7 +58,7 @@ class MCPBridgeOrchestrator {
     adapter.on('close', (code) => {
       logger.info(`[${config.name}] Process exited with code ${code}`);
       this.adapters.delete(config.name);
-      
+
       // Restart on unexpected exit
       if (code !== 0) {
         logger.info(`Restarting ${config.name} adapter in 5 seconds...`);
@@ -105,12 +105,12 @@ class MCPBridgeOrchestrator {
 
   async stopAll(): Promise<void> {
     logger.info('Stopping all MCP adapters...');
-    
+
     for (const [name, adapter] of this.adapters) {
       logger.info(`Stopping ${name}...`);
       adapter.kill('SIGTERM');
     }
-    
+
     this.adapters.clear();
     logger.info('All adapters stopped');
   }
@@ -119,7 +119,7 @@ class MCPBridgeOrchestrator {
 // Main execution
 async function main() {
   const orchestrator = new MCPBridgeOrchestrator();
-  
+
   // Handle shutdown signals
   process.on('SIGINT', async () => {
     logger.info('Received SIGINT, shutting down gracefully...');

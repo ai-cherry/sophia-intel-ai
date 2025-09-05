@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 # Singleton memory store instance
 _memory_store = None
 
+
 class UnifiedMemoryStore:
     """Redis-backed unified memory storage with proper async implementation"""
 
@@ -33,9 +34,9 @@ class UnifiedMemoryStore:
         """Actual Redis initialization"""
         try:
             self.pool = await aioredis.create_redis_pool(
-                self.config.get('redis_url', 'redis://localhost:6379'),
-                minsize=self.config.get('min_pool_size', 5),
-                maxsize=self.config.get('max_pool_size', 20)
+                self.config.get("redis_url", "redis://localhost:6379"),
+                minsize=self.config.get("min_pool_size", 5),
+                maxsize=self.config.get("max_pool_size", 20),
             )
             self.redis = self.pool
             logger.info("✅ Redis memory store connected successfully")
@@ -59,7 +60,7 @@ class UnifiedMemoryStore:
             **metadata,
             "timestamp": timestamp,
             "type": metadata.get("type", "text"),
-            "memory_id": memory_id
+            "memory_id": memory_id,
         }
 
         # Store metadata separately for indexing
@@ -92,11 +93,15 @@ class UnifiedMemoryStore:
             content = await self.redis.get(f"memory:{mem_id}:content")
             meta = await self.redis.hgetall(f"memory:{mem_id}:meta")
 
-            results.append({
-                "id": mem_id.decode() if isinstance(mem_id, bytes) else mem_id,
-                "content": content.decode() if isinstance(content, bytes) else content,
-                "metadata": {k.decode(): v.decode() for k,v in meta.items()} if isinstance(meta, dict) else meta
-            })
+            results.append(
+                {
+                    "id": mem_id.decode() if isinstance(mem_id, bytes) else mem_id,
+                    "content": content.decode() if isinstance(content, bytes) else content,
+                    "metadata": {k.decode(): v.decode() for k, v in meta.items()}
+                    if isinstance(meta, dict)
+                    else meta,
+                }
+            )
 
         logger.debug(f"🔍 Returned {len(results)} matches for query '{query}'")
         return results
@@ -153,32 +158,35 @@ class UnifiedMemoryStore:
             await self.redis.wait_closed()
             logger.info("Redis connection closed")
 
+
 # Module-level async wrappers for API compatibility
 def get_memory_store():
     """Return a singleton UnifiedMemoryStore instance"""
     global _memory_store
     if _memory_store is None:
         # Initialize with default config
-        _memory_store = UnifiedMemoryStore({
-            "redis_url": "redis://localhost:6379",
-            "min_pool_size": 5,
-            "max_pool_size": 20
-        })
+        _memory_store = UnifiedMemoryStore(
+            {"redis_url": "redis://localhost:6379", "min_pool_size": 5, "max_pool_size": 20}
+        )
         # Async initialize
         asyncio.create_task(_memory_store.initialize())
     return _memory_store
+
 
 async def store_memory(content: str, metadata: dict[str, Any]):
     store = await get_memory_store()
     return await store.store_memory(content, metadata)
 
+
 async def search_memory(query: str, filters: dict[str, Any] = None, top_k: int = 10):
     store = await get_memory_store()
     return await store.search_memory(query, filters)
 
+
 async def update_memory(memory_id: str, content: str, metadata: dict[str, Any]):
     store = await get_memory_store()
     return await store.update_memory(memory_id, content, metadata)
+
 
 async def delete_memory(memory_id: str):
     store = await get_memory_store()

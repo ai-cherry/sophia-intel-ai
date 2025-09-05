@@ -46,12 +46,12 @@ import os
 
 try:
     client = weaviate.Client("http://localhost:8080")
-    
+
     # Export schema
     schema = client.schema.get()
     with open("$BACKUP_DIR/weaviate_schema.json", "w") as f:
         json.dump(schema, f, indent=2)
-    
+
     # Export data (simplified - in production use batch export)
     print("✓ Weaviate schema exported")
 except Exception as e:

@@ -3,6 +3,7 @@
 ## Phase 1: Foundation Setup (Week 1-2)
 
 ### Database Schema Implementation
+
 - [ ] **Day 1-2**: Implement user management database schema
   - Extend existing SQLite database with user management tables
   - Add database migration script for existing installations
@@ -10,6 +11,7 @@
   - Test schema with sample data
 
 ### Core Authentication Enhancement
+
 - [ ] **Day 3-4**: Enhance existing JWT authentication
   - Extend current JWT system with role-based claims
   - Implement secure token generation and validation
@@ -17,6 +19,7 @@
   - Create user session management
 
 ### Basic User CRUD Operations
+
 - [ ] **Day 5-7**: Implement core user management APIs
   - User creation, update, deletion endpoints
   - Role assignment and permission management
@@ -26,6 +29,7 @@
 ## Phase 2: Permission System (Week 3)
 
 ### Hierarchical Permissions
+
 - [ ] **Day 1-2**: Platform-level permission system
   - Implement role hierarchy (Owner > Admin > Member > Viewer)
   - Create permission checking utilities
@@ -33,6 +37,7 @@
   - Test permission cascading
 
 ### Domain Access Control
+
 - [ ] **Day 3-4**: Domain-specific access control
   - Implement Artemis/Sophia domain access levels
   - Integrate with existing Artemis and Sophia tabs
@@ -40,6 +45,7 @@
   - Test cross-domain permission isolation
 
 ### Service-Level Permissions
+
 - [ ] **Day 5-7**: Granular service permissions
   - Business Intelligence service access controls
   - Agent Factory permission system
@@ -49,6 +55,7 @@
 ## Phase 3: Admin Interface (Week 4)
 
 ### Admin UI Development
+
 - [ ] **Day 1-3**: Admin tab and navigation
   - Add "Admin" tab to existing tabbed interface
   - Implement admin sidebar navigation
@@ -56,6 +63,7 @@
   - Style consistency with existing design system
 
 ### User Management Interface
+
 - [ ] **Day 4-5**: User management screens
   - User list with filtering and search
   - User detail views and editing
@@ -63,6 +71,7 @@
   - User status management (active/suspended/deactivated)
 
 ### Permission Management UI
+
 - [ ] **Day 6-7**: Permission and role management
   - Permissions matrix visualization
   - Role assignment interface
@@ -72,6 +81,7 @@
 ## Phase 4: Advanced Features (Week 5)
 
 ### Invitation System
+
 - [ ] **Day 1-2**: User invitation workflow
   - Email invitation system
   - Invitation acceptance flow
@@ -79,6 +89,7 @@
   - Custom invitation messages
 
 ### Audit and Monitoring
+
 - [ ] **Day 3-4**: Enhanced audit capabilities
   - Comprehensive audit trail
   - Real-time activity monitoring
@@ -86,6 +97,7 @@
   - Audit log export functionality
 
 ### Session Management
+
 - [ ] **Day 5-7**: Advanced session features
   - Active session monitoring
   - Session termination capabilities
@@ -95,6 +107,7 @@
 ## Phase 5: Security Hardening (Week 6)
 
 ### Security Implementation
+
 - [ ] **Day 1-2**: Authentication security
   - Advanced rate limiting
   - Failed login attempt monitoring
@@ -102,6 +115,7 @@
   - Password policy enforcement
 
 ### Data Protection
+
 - [ ] **Day 3-4**: Data security measures
   - Sensitive data encryption at rest
   - Secure data transmission
@@ -109,6 +123,7 @@
   - Data access logging
 
 ### Security Testing
+
 - [ ] **Day 5-7**: Security validation
   - Penetration testing scenarios
   - SQL injection prevention testing
@@ -118,6 +133,7 @@
 ## Phase 6: Enterprise Features (Week 7-8)
 
 ### SAML/SSO Integration (Optional)
+
 - [ ] **Week 7**: Single Sign-On support
   - SAML 2.0 integration
   - OAuth 2.0 / OpenID Connect support
@@ -125,6 +141,7 @@
   - Multi-factor authentication
 
 ### Advanced Analytics
+
 - [ ] **Week 8**: User analytics and reporting
   - User activity analytics
   - Permission usage reports
@@ -136,6 +153,7 @@
 ### Integration Points with Existing System
 
 #### 1. MCP Server Integration (`dev_mcp_unified/core/mcp_server.py`)
+
 ```python
 # Add to existing imports
 from user_management.auth import UserAuthManager
@@ -149,7 +167,7 @@ perm_manager = PermissionManager()
 def verify_token_with_permissions(authorization: Optional[str] = Header(None)):
     if not authorization:
         return None, {}
-    
+
     user_id, permissions = auth_manager.verify_token(authorization.replace("Bearer ", ""))
     return user_id, permissions
 
@@ -163,58 +181,61 @@ async def factory_list_swarms(auth_data=Depends(verify_token_with_permissions)):
 ```
 
 #### 2. UI Integration Pattern
+
 ```javascript
 // Add to existing multi-chat-artemis.html
 const tabs = [
-    { id: 'artemis', name: 'Artemis', icon: '🤖', access: 'artemis' },
-    { id: 'factory', name: 'Factory', icon: '🏭', access: 'agent_factory' },
-    { id: 'sophia', name: 'Sophia', icon: '📊', access: 'sophia' },
-    { id: 'analytics', name: 'Analytics', icon: '📈', access: 'analytics' },
-    { id: 'admin', name: 'Admin', icon: '⚙️', access: 'admin', adminOnly: true }
+  { id: "artemis", name: "Artemis", icon: "🤖", access: "artemis" },
+  { id: "factory", name: "Factory", icon: "🏭", access: "agent_factory" },
+  { id: "sophia", name: "Sophia", icon: "📊", access: "sophia" },
+  { id: "analytics", name: "Analytics", icon: "📈", access: "analytics" },
+  { id: "admin", name: "Admin", icon: "⚙️", access: "admin", adminOnly: true },
 ];
 
 // Check user permissions and show/hide tabs
 async function initializeTabs() {
-    const userProfile = await fetchUserProfile();
-    
-    tabs.forEach(tab => {
-        const tabElement = document.getElementById(`${tab.id}-tab`);
-        const hasAccess = checkUserAccess(userProfile, tab.access);
-        const isAdmin = userProfile.permissions.platform.includes('user_management');
-        
-        if (tab.adminOnly && !isAdmin) {
-            tabElement.style.display = 'none';
-        } else if (!hasAccess) {
-            tabElement.classList.add('disabled');
-        }
-    });
+  const userProfile = await fetchUserProfile();
+
+  tabs.forEach((tab) => {
+    const tabElement = document.getElementById(`${tab.id}-tab`);
+    const hasAccess = checkUserAccess(userProfile, tab.access);
+    const isAdmin =
+      userProfile.permissions.platform.includes("user_management");
+
+    if (tab.adminOnly && !isAdmin) {
+      tabElement.style.display = "none";
+    } else if (!hasAccess) {
+      tabElement.classList.add("disabled");
+    }
+  });
 }
 ```
 
 ### Database Migration Strategy
 
 #### For Existing Installations
+
 ```python
 # migration_script.py
 def migrate_existing_installation():
     """Migrate existing MCP server to include user management"""
-    
+
     # 1. Backup existing database
     backup_database()
-    
+
     # 2. Run schema updates
     with get_db_connection() as conn:
         # Execute user management schema
         with open('user_management_schema.sql', 'r') as f:
             conn.executescript(f.read())
-    
+
     # 3. Create initial admin user from current setup
     admin_password = os.getenv("MCP_PASSWORD", "sophia-dev")
     create_admin_user("admin@localhost", "System Administrator", admin_password)
-    
+
     # 4. Grant full permissions to admin
     grant_all_permissions("admin_user_id")
-    
+
     print("Migration completed successfully!")
     print("Access admin interface at: http://localhost:3333/admin")
 ```
@@ -222,13 +243,15 @@ def migrate_existing_installation():
 ### API Endpoint Priority Order
 
 #### Critical Endpoints (Week 1-2)
+
 1. `POST /api/admin/users` - Create users
-2. `GET /api/admin/users` - List users  
+2. `GET /api/admin/users` - List users
 3. `PUT /api/admin/users/{id}/permissions` - Update permissions
 4. `POST /api/auth/login` - Enhanced authentication
 5. `GET /api/profile` - User profile endpoint
 
-#### Important Endpoints (Week 3-4)  
+#### Important Endpoints (Week 3-4)
+
 1. `POST /api/admin/users/invite` - Send invitations
 2. `POST /api/invites/accept` - Accept invitations
 3. `GET /api/admin/permissions/matrix` - Permission matrix
@@ -236,6 +259,7 @@ def migrate_existing_installation():
 5. `DELETE /api/admin/sessions/{id}` - Session management
 
 #### Enhancement Endpoints (Week 5-6)
+
 1. `GET /api/admin/sessions` - Active sessions
 2. `POST /api/admin/roles` - Custom roles
 3. `GET /api/admin/analytics` - User analytics
@@ -244,12 +268,14 @@ def migrate_existing_installation():
 ## Risk Mitigation
 
 ### Technical Risks
+
 - **Database corruption**: Implement automated backups and WAL mode
 - **Performance impact**: Use database indexes and connection pooling
 - **Security vulnerabilities**: Regular security audits and testing
 - **Integration conflicts**: Gradual rollout with feature flags
 
-### Business Risks  
+### Business Risks
+
 - **User adoption**: Provide clear migration path and documentation
 - **Workflow disruption**: Implement during low-usage periods
 - **Training requirements**: Create admin user guides and tutorials
@@ -258,12 +284,14 @@ def migrate_existing_installation():
 ## Success Metrics
 
 ### Technical Metrics
+
 - Zero-downtime deployment
 - < 100ms additional latency for authenticated requests
 - 99.9% uptime for authentication services
 - Zero security incidents during rollout
 
 ### Business Metrics
+
 - 100% admin user adoption within 2 weeks
 - < 1 day average time to onboard new users
 - 90% reduction in manual permission management
@@ -272,12 +300,14 @@ def migrate_existing_installation():
 ## Rollback Plan
 
 ### Emergency Rollback Procedure
+
 1. **Database rollback**: Restore from pre-migration backup
 2. **Code rollback**: Revert to previous MCP server version
 3. **Configuration rollback**: Remove user management environment variables
 4. **UI rollback**: Hide admin tab and restore original authentication
 
 ### Partial Rollback Options
+
 1. **Disable new features**: Feature flags to disable user management
 2. **Read-only mode**: Allow viewing but disable modifications
 3. **Admin-only mode**: Restrict access to admin users only

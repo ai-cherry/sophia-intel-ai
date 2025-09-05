@@ -10,11 +10,10 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional, Union
+from typing import Any, Optional
 
 import aiohttp
 
-from app.config.env_loader import get_env_config
 from app.core.circuit_breaker import with_circuit_breaker
 from app.memory.supermemory_mcp import MemoryEntry, MemoryType
 
@@ -23,6 +22,7 @@ logger = logging.getLogger(__name__)
 
 class SwarmMemoryEventType(Enum):
     """Types of swarm memory events."""
+
     SWARM_INITIALIZED = "swarm_initialized"
     TASK_STARTED = "task_started"
     TASK_COMPLETED = "task_completed"
@@ -39,6 +39,7 @@ class SwarmMemoryEventType(Enum):
 @dataclass
 class SwarmMemoryEvent:
     """Structured swarm memory event."""
+
     event_type: SwarmMemoryEventType
     swarm_type: str
     swarm_id: str
@@ -53,7 +54,7 @@ class SwarmMemoryEvent:
             "swarm_type": self.swarm_type,
             "swarm_id": self.swarm_id,
             "data": self.data,
-            "metadata": self.metadata
+            "metadata": self.metadata,
         }
 
         topic = f"SwarmEvent:{self.event_type.value}:{self.swarm_type}"
@@ -64,7 +65,7 @@ class SwarmMemoryEvent:
             source=f"swarm_{self.swarm_type}",
             tags=["swarm_event", self.event_type.value, self.swarm_type],
             memory_type=MemoryType.EPISODIC,
-            timestamp=self.timestamp
+            timestamp=self.timestamp,
         )
 
 
@@ -77,7 +78,7 @@ class SwarmMemoryClient:
     def __init__(self, swarm_type: str, swarm_id: str):
         """
         Initialize swarm memory client.
-        
+
         Args:
             swarm_type: Type of swarm (coding_team, coding_swarm, etc.)
             swarm_id: Unique identifier for this swarm instance
@@ -130,18 +131,18 @@ class SwarmMemoryClient:
         content: str,
         memory_type: MemoryType = MemoryType.SEMANTIC,
         tags: Optional[list[str]] = None,
-        metadata: Optional[dict[str, Any]] = None
+        metadata: Optional[dict[str, Any]] = None,
     ) -> dict[str, Any]:
         """
         Store memory entry in unified memory system.
-        
+
         Args:
             topic: Memory topic/title
             content: Memory content
             memory_type: Type of memory (semantic, episodic, procedural)
             tags: Optional tags for categorization
             metadata: Optional metadata
-            
+
         Returns:
             Storage result with hash_id and status
         """
@@ -153,7 +154,7 @@ class SwarmMemoryClient:
 
         # Add metadata tags
         if metadata:
-            for key in ['task_id', 'agent_role', 'repo_path', 'file_path']:
+            for key in ["task_id", "agent_role", "repo_path", "file_path"]:
                 if key in metadata:
                     tags_list.append(metadata[key])
 
@@ -162,7 +163,7 @@ class SwarmMemoryClient:
             "content": content,
             "source": f"swarm_{self.swarm_type}_{self.swarm_id}",
             "tags": tags_list,
-            "memory_type": memory_type.value
+            "memory_type": memory_type.value,
         }
 
         # Add metadata
@@ -171,8 +172,7 @@ class SwarmMemoryClient:
 
         try:
             async with self.session.post(
-                f"{self.mcp_server_url}/mcp/memory/add",
-                json=entry_data
+                f"{self.mcp_server_url}/mcp/memory/add", json=entry_data
             ) as response:
                 if response.status == 200:
                     result = await response.json()
@@ -195,18 +195,18 @@ class SwarmMemoryClient:
         limit: int = 10,
         memory_type: Optional[MemoryType] = None,
         tags: Optional[list[str]] = None,
-        include_other_swarms: bool = True
+        include_other_swarms: bool = True,
     ) -> list[dict[str, Any]]:
         """
         Search memory with swarm-aware filtering.
-        
+
         Args:
             query: Search query
             limit: Maximum results
             memory_type: Filter by memory type
             tags: Filter by tags
             include_other_swarms: Include memories from other swarms
-            
+
         Returns:
             List of matching memory entries
         """
@@ -214,10 +214,7 @@ class SwarmMemoryClient:
             await self.initialize()
 
         # Build search request
-        search_data = {
-            "query": query,
-            "limit": limit
-        }
+        search_data = {"query": query, "limit": limit}
 
         if memory_type:
             search_data["memory_type"] = memory_type.value
@@ -232,8 +229,7 @@ class SwarmMemoryClient:
 
         try:
             async with self.session.post(
-                f"{self.mcp_server_url}/mcp/memory/search",
-                json=search_data
+                f"{self.mcp_server_url}/mcp/memory/search", json=search_data
             ) as response:
                 if response.status == 200:
                     result = await response.json()
@@ -256,11 +252,11 @@ class SwarmMemoryClient:
         self,
         event_type: SwarmMemoryEventType,
         data: dict[str, Any],
-        metadata: Optional[dict[str, Any]] = None
+        metadata: Optional[dict[str, Any]] = None,
     ):
         """
         Log swarm event to memory system.
-        
+
         Args:
             event_type: Type of swarm event
             data: Event data
@@ -272,7 +268,7 @@ class SwarmMemoryClient:
             swarm_id=self.swarm_id,
             timestamp=datetime.now(),
             data=data,
-            metadata=metadata or {}
+            metadata=metadata or {},
         )
 
         # Convert to memory entry and store
@@ -283,7 +279,7 @@ class SwarmMemoryClient:
                 topic=memory_entry.topic,
                 content=memory_entry.content,
                 memory_type=memory_entry.memory_type,
-                tags=memory_entry.tags
+                tags=memory_entry.tags,
             )
         except Exception as e:
             logger.error(f"Failed to log swarm event: {e}")
@@ -292,17 +288,15 @@ class SwarmMemoryClient:
 
     @with_circuit_breaker("database")
     async def get_swarm_history(
-        self,
-        event_types: Optional[list[SwarmMemoryEventType]] = None,
-        limit: int = 50
+        self, event_types: Optional[list[SwarmMemoryEventType]] = None, limit: int = 50
     ) -> list[dict[str, Any]]:
         """
         Get swarm execution history from memory.
-        
+
         Args:
             event_types: Filter by specific event types
             limit: Maximum results
-            
+
         Returns:
             List of swarm events
         """
@@ -318,7 +312,7 @@ class SwarmMemoryClient:
             limit=limit,
             memory_type=MemoryType.EPISODIC,
             tags=["swarm_event"],
-            include_other_swarms=False
+            include_other_swarms=False,
         )
 
         # Parse event data from memory entries
@@ -341,11 +335,11 @@ class SwarmMemoryClient:
         pattern_name: str,
         pattern_data: dict[str, Any],
         success_score: float,
-        context: Optional[dict[str, Any]] = None
+        context: Optional[dict[str, Any]] = None,
     ):
         """
         Store successful pattern in memory system.
-        
+
         Args:
             pattern_name: Name of the pattern
             pattern_data: Pattern configuration and results
@@ -358,7 +352,7 @@ class SwarmMemoryClient:
             "success_score": success_score,
             "context": context or {},
             "swarm_type": self.swarm_type,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
         await self.store_memory(
@@ -366,24 +360,21 @@ class SwarmMemoryClient:
             content=json.dumps(pattern_content, default=str),
             memory_type=MemoryType.PROCEDURAL,
             tags=["pattern", "strategy", self.swarm_type, pattern_name],
-            metadata={"success_score": success_score}
+            metadata={"success_score": success_score},
         )
 
     @with_circuit_breaker("database")
     async def retrieve_patterns(
-        self,
-        pattern_name: Optional[str] = None,
-        min_success_score: float = 0.7,
-        limit: int = 10
+        self, pattern_name: Optional[str] = None, min_success_score: float = 0.7, limit: int = 10
     ) -> list[dict[str, Any]]:
         """
         Retrieve successful patterns from memory.
-        
+
         Args:
             pattern_name: Specific pattern name to search for
             min_success_score: Minimum success score threshold
             limit: Maximum results
-            
+
         Returns:
             List of matching patterns
         """
@@ -394,10 +385,7 @@ class SwarmMemoryClient:
             query = f"Pattern swarm_type:{self.swarm_type}"
 
         memories = await self.search_memory(
-            query=query,
-            limit=limit,
-            memory_type=MemoryType.PROCEDURAL,
-            tags=["pattern"]
+            query=query, limit=limit, memory_type=MemoryType.PROCEDURAL, tags=["pattern"]
         )
 
         # Filter by success score and parse
@@ -419,14 +407,11 @@ class SwarmMemoryClient:
     # ============================================
 
     async def send_message_to_swarm(
-        self,
-        target_swarm_type: str,
-        message: dict[str, Any],
-        priority: str = "normal"
+        self, target_swarm_type: str, message: dict[str, Any], priority: str = "normal"
     ):
         """
         Send message to another swarm through memory system.
-        
+
         Args:
             target_swarm_type: Target swarm type
             message: Message content
@@ -437,14 +422,14 @@ class SwarmMemoryClient:
             "to_swarm": target_swarm_type,
             "message": message,
             "priority": priority,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
         await self.store_memory(
             topic=f"InterSwarm:{self.swarm_type}->{target_swarm_type}",
             content=json.dumps(comm_data, default=str),
             memory_type=MemoryType.EPISODIC,
-            tags=["inter_swarm", "communication", self.swarm_type, target_swarm_type, priority]
+            tags=["inter_swarm", "communication", self.swarm_type, target_swarm_type, priority],
         )
 
         # Log communication event
@@ -453,23 +438,21 @@ class SwarmMemoryClient:
             {
                 "target_swarm": target_swarm_type,
                 "message_summary": str(message)[:100],
-                "priority": priority
-            }
+                "priority": priority,
+            },
         )
 
     @with_circuit_breaker("database")
     async def get_messages_for_swarm(
-        self,
-        priority_filter: Optional[str] = None,
-        limit: int = 20
+        self, priority_filter: Optional[str] = None, limit: int = 20
     ) -> list[dict[str, Any]]:
         """
         Get messages sent to this swarm.
-        
+
         Args:
             priority_filter: Filter by priority level
             limit: Maximum messages to retrieve
-            
+
         Returns:
             List of messages for this swarm
         """
@@ -481,10 +464,7 @@ class SwarmMemoryClient:
             tags.append(priority_filter)
 
         memories = await self.search_memory(
-            query=query,
-            limit=limit,
-            memory_type=MemoryType.EPISODIC,
-            tags=tags
+            query=query, limit=limit, memory_type=MemoryType.EPISODIC, tags=tags
         )
 
         # Parse and return messages
@@ -502,9 +482,9 @@ class SwarmMemoryClient:
         messages.sort(
             key=lambda m: (
                 priority_order.get(m.get("priority", "normal"), 2),
-                m.get("timestamp", "")
+                m.get("timestamp", ""),
             ),
-            reverse=True
+            reverse=True,
         )
 
         return messages
@@ -518,11 +498,11 @@ class SwarmMemoryClient:
         learning_type: str,
         content: str,
         confidence: float,
-        context: Optional[dict[str, Any]] = None
+        context: Optional[dict[str, Any]] = None,
     ):
         """
         Store learning or insight gained by swarm.
-        
+
         Args:
             learning_type: Type of learning (pattern, optimization, error_correction, etc.)
             content: Learning content
@@ -535,7 +515,7 @@ class SwarmMemoryClient:
             "confidence": confidence,
             "context": context or {},
             "swarm_type": self.swarm_type,
-            "swarm_id": self.swarm_id
+            "swarm_id": self.swarm_id,
         }
 
         await self.store_memory(
@@ -543,7 +523,7 @@ class SwarmMemoryClient:
             content=json.dumps(learning_data, default=str),
             memory_type=MemoryType.SEMANTIC,
             tags=["learning", learning_type, self.swarm_type],
-            metadata={"confidence": confidence}
+            metadata={"confidence": confidence},
         )
 
         logger.info(f"Stored learning: {learning_type} (confidence: {confidence:.2f})")
@@ -554,25 +534,22 @@ class SwarmMemoryClient:
         learning_type: Optional[str] = None,
         min_confidence: float = 0.7,
         include_other_swarms: bool = True,
-        limit: int = 20
+        limit: int = 20,
     ) -> list[dict[str, Any]]:
         """
         Retrieve relevant learnings from memory.
-        
+
         Args:
             learning_type: Specific type of learning to search for
             min_confidence: Minimum confidence threshold
             include_other_swarms: Include learnings from other swarms
             limit: Maximum results
-            
+
         Returns:
             List of relevant learnings
         """
         # Build search query
-        if learning_type:
-            query = f"Learning:{learning_type}"
-        else:
-            query = "Learning"
+        query = f"Learning:{learning_type}" if learning_type else "Learning"
 
         tags = ["learning"]
         if not include_other_swarms:
@@ -583,7 +560,7 @@ class SwarmMemoryClient:
             limit=limit,
             memory_type=MemoryType.SEMANTIC,
             tags=tags,
-            include_other_swarms=include_other_swarms
+            include_other_swarms=include_other_swarms,
         )
 
         # Filter by confidence and parse
@@ -607,14 +584,14 @@ class SwarmMemoryClient:
     async def load_swarm_context(self) -> dict[str, Any]:
         """
         Load contextual information for swarm initialization.
-        
+
         Returns:
             Context data including patterns, learnings, and history
         """
         context = {
             "swarm_type": self.swarm_type,
             "swarm_id": self.swarm_id,
-            "loaded_at": datetime.now().isoformat()
+            "loaded_at": datetime.now().isoformat(),
         }
 
         # Load recent patterns
@@ -629,8 +606,10 @@ class SwarmMemoryClient:
         # Load inter-swarm messages
         context["messages"] = await self.get_messages_for_swarm(limit=10)
 
-        logger.info(f"Loaded swarm context: {len(context['patterns'])} patterns, "
-                   f"{len(context['learnings'])} learnings, {len(context['recent_events'])} events")
+        logger.info(
+            f"Loaded swarm context: {len(context['patterns'])} patterns, "
+            f"{len(context['learnings'])} learnings, {len(context['recent_events'])} events"
+        )
 
         return context
 
@@ -639,13 +618,11 @@ class SwarmMemoryClient:
     # ============================================
 
     async def store_performance_metrics(
-        self,
-        metrics: dict[str, Any],
-        execution_context: Optional[dict[str, Any]] = None
+        self, metrics: dict[str, Any], execution_context: Optional[dict[str, Any]] = None
     ):
         """
         Store swarm performance metrics.
-        
+
         Args:
             metrics: Performance metrics data
             execution_context: Optional execution context
@@ -655,7 +632,7 @@ class SwarmMemoryClient:
             "execution_context": execution_context or {},
             "swarm_type": self.swarm_type,
             "swarm_id": self.swarm_id,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
         await self.store_memory(
@@ -663,22 +640,20 @@ class SwarmMemoryClient:
             content=json.dumps(metrics_data, default=str),
             memory_type=MemoryType.EPISODIC,
             tags=["metrics", "performance", self.swarm_type],
-            metadata={"execution_time": metrics.get("execution_time", 0)}
+            metadata={"execution_time": metrics.get("execution_time", 0)},
         )
 
     @with_circuit_breaker("database")
     async def get_performance_trends(
-        self,
-        metric_name: Optional[str] = None,
-        days: int = 7
+        self, metric_name: Optional[str] = None, days: int = 7
     ) -> list[dict[str, Any]]:
         """
         Get performance trends over time.
-        
+
         Args:
             metric_name: Specific metric to analyze
             days: Number of days to look back
-            
+
         Returns:
             List of performance data points
         """
@@ -689,7 +664,7 @@ class SwarmMemoryClient:
             limit=100,
             memory_type=MemoryType.EPISODIC,
             tags=["metrics", "performance"],
-            include_other_swarms=False
+            include_other_swarms=False,
         )
 
         # Parse and filter by date
@@ -703,11 +678,13 @@ class SwarmMemoryClient:
 
                 if timestamp >= cutoff:
                     if metric_name and metric_name in content.get("metrics", {}):
-                        trends.append({
-                            "timestamp": content["timestamp"],
-                            "value": content["metrics"][metric_name],
-                            "context": content.get("execution_context", {})
-                        })
+                        trends.append(
+                            {
+                                "timestamp": content["timestamp"],
+                                "value": content["metrics"][metric_name],
+                                "context": content.get("execution_context", {}),
+                            }
+                        )
                     elif not metric_name:
                         trends.append(content)
             except (json.JSONDecodeError, ValueError):
@@ -724,12 +701,14 @@ class SwarmMemoryClient:
     def _cache_for_retry(self, operation: str, data: dict[str, Any]):
         """Cache failed operation for retry."""
         if len(self.memory_cache) < 100:  # Limit cache size
-            cache_key = f"{operation}_{hashlib.md5(json.dumps(data, default=str).encode()).hexdigest()[:8]}"
+            cache_key = (
+                f"{operation}_{hashlib.md5(json.dumps(data, default=str).encode()).hexdigest()[:8]}"
+            )
             self.memory_cache[cache_key] = {
                 "operation": operation,
                 "data": data,
                 "timestamp": datetime.now(),
-                "retry_count": 0
+                "retry_count": 0,
             }
 
     async def retry_failed_operations(self):
@@ -773,6 +752,7 @@ class SwarmMemoryClient:
 # Memory Pattern Mixins
 # ============================================
 
+
 class SwarmMemoryMixin:
     """
     Mixin class to add memory capabilities to existing swarm classes.
@@ -797,9 +777,9 @@ class SwarmMemoryMixin:
         await self.memory_client.log_swarm_event(
             SwarmMemoryEventType.SWARM_INITIALIZED,
             {
-                "agent_count": len(getattr(self, 'agents', [])),
-                "config": getattr(self, 'config', {})
-            }
+                "agent_count": len(getattr(self, "agents", [])),
+                "config": getattr(self, "config", {}),
+            },
         )
 
         logger.info(f"Memory initialized for {swarm_type}:{swarm_id}")
@@ -824,8 +804,8 @@ class SwarmMemoryMixin:
                 "success": result.get("success", False),
                 "quality_score": result.get("quality_score", 0),
                 "execution_time": result.get("execution_time", 0),
-                "agent_roles": result.get("agent_roles", [])
-            }
+                "agent_roles": result.get("agent_roles", []),
+            },
         )
 
         # Store successful patterns
@@ -835,10 +815,10 @@ class SwarmMemoryMixin:
                 pattern_data={
                     "task": task,
                     "result_summary": {k: v for k, v in result.items() if k != "result"},
-                    "agent_roles": result.get("agent_roles", [])
+                    "agent_roles": result.get("agent_roles", []),
                 },
                 success_score=result.get("quality_score", 0),
-                context={"execution_time": result.get("execution_time", 0)}
+                context={"execution_time": result.get("execution_time", 0)},
             )
 
     @with_circuit_breaker("database")
@@ -850,14 +830,12 @@ class SwarmMemoryMixin:
         # Search for relevant patterns
         task_type = task.get("type", "general")
         patterns = await self.memory_client.retrieve_patterns(
-            pattern_name=f"successful_{task_type}",
-            limit=3
+            pattern_name=f"successful_{task_type}", limit=3
         )
 
         # Search for relevant learnings
         learnings = await self.memory_client.retrieve_learnings(
-            learning_type="optimization",
-            limit=5
+            learning_type="optimization", limit=5
         )
 
         # Get recent similar tasks
@@ -865,11 +843,11 @@ class SwarmMemoryMixin:
             query=str(task.get("description", ""))[:100],
             limit=5,
             memory_type=MemoryType.EPISODIC,
-            tags=["swarm_event", "task_completed"]
+            tags=["swarm_event", "task_completed"],
         )
 
         return {
             "relevant_patterns": patterns,
             "relevant_learnings": learnings,
-            "similar_tasks": similar_tasks
+            "similar_tasks": similar_tasks,
         }

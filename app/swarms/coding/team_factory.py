@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 class TeamFactory:
     """
     Factory for creating and configuring coding swarm teams.
-    
+
     This class encapsulates the logic for building teams with different
     compositions, tool sets, and execution modes based on configuration.
     """
@@ -33,18 +33,20 @@ class TeamFactory:
     def create_team(config: SwarmConfiguration) -> Team:
         """
         Create a coding team based on the provided configuration.
-        
+
         Args:
             config: SwarmConfiguration specifying team composition and settings
-            
+
         Returns:
             Configured Team instance ready for execution
-            
+
         Raises:
             ValueError: If configuration is invalid
         """
-        logger.info(f"Creating coding team with pool: {config.pool}, "
-                   f"max_generators: {config.max_generators}")
+        logger.info(
+            f"Creating coding team with pool: {config.pool}, "
+            f"max_generators: {config.max_generators}"
+        )
 
         # Create core agents
         lead = TeamFactory._create_lead_agent(config)
@@ -58,7 +60,7 @@ class TeamFactory:
         generators = TeamFactory._build_generators(config)
         if len(generators) > config.max_generators:
             logger.warning(f"Limiting generators from {len(generators)} to {config.max_generators}")
-            generators = generators[:config.max_generators]
+            generators = generators[: config.max_generators]
         members.extend(generators)
 
         # Add critic and judge
@@ -77,7 +79,7 @@ class TeamFactory:
             members=members,
             markdown=True,
             show_members_responses=config.stream_responses,
-            instructions=TeamFactory._get_team_instructions(config)
+            instructions=TeamFactory._get_team_instructions(config),
         )
 
         # Set the lead as manager for coordination
@@ -90,18 +92,14 @@ class TeamFactory:
     def _create_lead_agent(config: SwarmConfiguration) -> Agent:
         """
         Create a lead agent with appropriate tools based on configuration.
-        
+
         Args:
             config: SwarmConfiguration for tool access settings
-            
+
         Returns:
             Configured lead Agent
         """
-        tools = [
-            CodeSearch(),
-            ListDirectory(),
-            GitStatus()
-        ]
+        tools = [CodeSearch(), ListDirectory(), GitStatus()]
 
         # Add additional tools based on configuration
         if config.enable_file_write:
@@ -126,10 +124,10 @@ class TeamFactory:
     def _build_generators(config: SwarmConfiguration) -> list[Agent]:
         """
         Build generator agents based on configuration.
-        
+
         Args:
             config: SwarmConfiguration specifying generator settings
-            
+
         Returns:
             List of configured generator Agents
         """
@@ -146,9 +144,7 @@ class TeamFactory:
 
         # Add custom concurrent models
         if config.concurrent_models:
-            generators.extend(
-                TeamFactory._build_custom_generators(config.concurrent_models)
-            )
+            generators.extend(TeamFactory._build_custom_generators(config.concurrent_models))
 
         return generators
 
@@ -160,14 +156,14 @@ class TeamFactory:
                 name="Coder-A",
                 model_name="coderA",
                 tools=[CodeSearch()],
-                role_note="Implement approach A with comprehensive tests"
+                role_note="Implement approach A with comprehensive tests",
             ),
             make_generator(
                 name="Coder-B",
                 model_name="coderB",
                 tools=[CodeSearch()],
-                role_note="Implement approach B with minimal changes"
-            )
+                role_note="Implement approach B with minimal changes",
+            ),
         ]
 
     @staticmethod
@@ -175,10 +171,10 @@ class TeamFactory:
     def _build_pool_generators(model_ids: list[str]) -> list[Agent]:
         """
         Build generators from a pool of model IDs.
-        
+
         Args:
             model_ids: List of OpenRouter model IDs
-            
+
         Returns:
             List of generator Agents
         """
@@ -190,7 +186,7 @@ class TeamFactory:
                 model=agno_chat_model(model_id),
                 tools=[CodeSearch()],
                 markdown=True,
-                show_tool_calls=True
+                show_tool_calls=True,
             )
             generators.append(agent)
 
@@ -200,10 +196,10 @@ class TeamFactory:
     def _build_custom_generators(model_names: list[str]) -> list[Agent]:
         """
         Build generators from custom model names.
-        
+
         Args:
             model_names: List of model names or IDs
-            
+
         Returns:
             List of generator Agents
         """
@@ -214,7 +210,7 @@ class TeamFactory:
                     name=f"Custom-{i}",
                     model_name=model_name,
                     tools=[CodeSearch()],
-                    role_note=f"Implement custom approach {i}"
+                    role_note=f"Implement custom approach {i}",
                 )
             )
 
@@ -224,10 +220,10 @@ class TeamFactory:
     def _create_runner_agent(config: SwarmConfiguration) -> Agent:
         """
         Create a runner agent with appropriate permissions.
-        
+
         Args:
             config: SwarmConfiguration for runner settings
-            
+
         Returns:
             Configured runner Agent
         """
@@ -236,8 +232,7 @@ class TeamFactory:
         # Restrict tools based on configuration
         if not config.enable_file_write:
             # Remove write tools from runner if disabled
-            runner.tools = [t for t in runner.tools
-                          if not isinstance(t, WriteFile)]
+            runner.tools = [t for t in runner.tools if not isinstance(t, WriteFile)]
 
         return runner
 
@@ -245,10 +240,10 @@ class TeamFactory:
     def _get_team_instructions(config: SwarmConfiguration) -> str:
         """
         Generate team instructions based on configuration.
-        
+
         Args:
             config: SwarmConfiguration for team settings
-            
+
         Returns:
             Formatted instruction string
         """
@@ -259,7 +254,7 @@ class TeamFactory:
         - Max Rounds: {config.max_rounds}
         - Accuracy Threshold: {config.accuracy_threshold}
         - Auto-approve Low Risk: {config.auto_approve_low_risk}
-        
+
         Workflow:
         1. Lead analyzes task and coordinates generators
         2. Generators propose competing implementations
@@ -271,7 +266,7 @@ class TeamFactory:
             instructions += "\n5. Runner executes approved changes"
 
         instructions += """
-        
+
         Quality Standards:
         - Comprehensive testing required
         - Minimal code changes preferred
@@ -286,10 +281,10 @@ class TeamFactory:
     def validate_configuration(config: SwarmConfiguration) -> None:
         """
         Validate a swarm configuration for consistency.
-        
+
         Args:
             config: SwarmConfiguration to validate
-            
+
         Raises:
             ValueError: If configuration is invalid
         """

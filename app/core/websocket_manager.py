@@ -13,14 +13,17 @@ from fastapi import WebSocket, WebSocketDisconnect
 
 logger = logging.getLogger(__name__)
 
+
 @dataclass
 class WSConnection:
     """WebSocket connection info"""
+
     websocket: WebSocket
     client_id: str
     session_id: str
     subscriptions: set[str]
     connected_at: datetime
+
 
 class WebSocketManager:
     """
@@ -42,27 +45,22 @@ class WebSocketManager:
             "total_connections": 0,
             "active_connections": 0,
             "messages_sent": 0,
-            "messages_failed": 0
+            "messages_failed": 0,
         }
 
     async def initialize(self):
         """Initialize WebSocket manager"""
         logger.info("WebSocket Manager initialized")
 
-    async def connect(
-        self,
-        websocket: WebSocket,
-        client_id: str,
-        session_id: str
-    ) -> WSConnection:
+    async def connect(self, websocket: WebSocket, client_id: str, session_id: str) -> WSConnection:
         """
         Accept new WebSocket connection
-        
+
         Args:
             websocket: FastAPI WebSocket instance
             client_id: Unique client identifier
             session_id: Session identifier
-            
+
         Returns:
             WSConnection instance
         """
@@ -73,7 +71,7 @@ class WebSocketManager:
             client_id=client_id,
             session_id=session_id,
             subscriptions=set(),
-            connected_at=datetime.utcnow()
+            connected_at=datetime.utcnow(),
         )
 
         self.connections[client_id] = connection
@@ -81,12 +79,15 @@ class WebSocketManager:
         self.metrics["active_connections"] += 1
 
         # Send welcome message
-        await self.send_to_client(client_id, {
-            "type": "connected",
-            "client_id": client_id,
-            "session_id": session_id,
-            "timestamp": datetime.utcnow().isoformat()
-        })
+        await self.send_to_client(
+            client_id,
+            {
+                "type": "connected",
+                "client_id": client_id,
+                "session_id": session_id,
+                "timestamp": datetime.utcnow().isoformat(),
+            },
+        )
 
         # Send any queued messages
         await self._send_queued_messages(client_id)
@@ -97,7 +98,7 @@ class WebSocketManager:
     async def disconnect(self, client_id: str):
         """
         Handle WebSocket disconnection
-        
+
         Args:
             client_id: Client to disconnect
         """
@@ -124,7 +125,7 @@ class WebSocketManager:
     async def subscribe(self, client_id: str, channel: str):
         """
         Subscribe client to a channel
-        
+
         Args:
             client_id: Client identifier
             channel: Channel name to subscribe to
@@ -142,18 +143,17 @@ class WebSocketManager:
         self.channels[channel].add(client_id)
 
         # Confirm subscription
-        await self.send_to_client(client_id, {
-            "type": "subscribed",
-            "channel": channel,
-            "timestamp": datetime.utcnow().isoformat()
-        })
+        await self.send_to_client(
+            client_id,
+            {"type": "subscribed", "channel": channel, "timestamp": datetime.utcnow().isoformat()},
+        )
 
         logger.debug(f"Client {client_id} subscribed to {channel}")
 
     async def unsubscribe(self, client_id: str, channel: str):
         """
         Unsubscribe client from a channel
-        
+
         Args:
             client_id: Client identifier
             channel: Channel to unsubscribe from
@@ -169,7 +169,7 @@ class WebSocketManager:
     async def send_to_client(self, client_id: str, message: dict[str, Any]):
         """
         Send message to specific client
-        
+
         Args:
             client_id: Target client
             message: Message to send
@@ -201,7 +201,7 @@ class WebSocketManager:
     async def broadcast(self, channel: str, message: dict[str, Any]):
         """
         Broadcast message to all subscribers of a channel
-        
+
         Args:
             channel: Channel to broadcast to
             message: Message to broadcast
@@ -223,15 +223,10 @@ class WebSocketManager:
 
         logger.debug(f"Broadcasted to {len(tasks)} clients on {channel}")
 
-    async def broadcast_swarm_event(
-        self,
-        session_id: str,
-        event_type: str,
-        data: dict[str, Any]
-    ):
+    async def broadcast_swarm_event(self, session_id: str, event_type: str, data: dict[str, Any]):
         """
         Broadcast swarm execution event
-        
+
         Args:
             session_id: Session executing the swarm
             event_type: Type of swarm event
@@ -242,20 +237,15 @@ class WebSocketManager:
             "event_type": event_type,
             "session_id": session_id,
             "data": data,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
         await self.broadcast(f"swarm_{session_id}", message)
 
-    async def broadcast_memory_update(
-        self,
-        memory_id: str,
-        operation: str,
-        data: dict[str, Any]
-    ):
+    async def broadcast_memory_update(self, memory_id: str, operation: str, data: dict[str, Any]):
         """
         Broadcast memory update event
-        
+
         Args:
             memory_id: Memory item ID
             operation: Operation performed (create, update, delete)
@@ -266,7 +256,7 @@ class WebSocketManager:
             "memory_id": memory_id,
             "operation": operation,
             "data": data,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
         await self.broadcast("memory_updates", message)
@@ -274,15 +264,11 @@ class WebSocketManager:
     async def broadcast_metrics(self, metrics: dict[str, Any]):
         """
         Broadcast system metrics
-        
+
         Args:
             metrics: Current system metrics
         """
-        message = {
-            "type": "metrics",
-            "data": metrics,
-            "timestamp": datetime.utcnow().isoformat()
-        }
+        message = {"type": "metrics", "data": metrics, "timestamp": datetime.utcnow().isoformat()}
 
         await self.broadcast("system_metrics", message)
 
@@ -304,17 +290,15 @@ class WebSocketManager:
         del self.message_queue[client_id]
 
     async def handle_client_message(
-        self,
-        client_id: str,
-        message: dict[str, Any]
+        self, client_id: str, message: dict[str, Any]
     ) -> dict[str, Any]:
         """
         Handle incoming message from client
-        
+
         Args:
             client_id: Source client
             message: Received message
-            
+
         Returns:
             Response to send back
         """
@@ -336,35 +320,27 @@ class WebSocketManager:
                 return {"type": "unsubscribed", "channel": channel}
 
         elif msg_type == "get_metrics":
-            return {
-                "type": "metrics",
-                "data": self.get_metrics()
-            }
+            return {"type": "metrics", "data": self.get_metrics()}
 
         else:
-            return {
-                "type": "error",
-                "message": f"Unknown message type: {msg_type}"
-            }
+            return {"type": "error", "message": f"Unknown message type: {msg_type}"}
 
     def get_metrics(self) -> dict[str, Any]:
         """Get WebSocket manager metrics"""
         return {
             **self.metrics,
             "channels": {
-                channel: len(subscribers)
-                for channel, subscribers in self.channels.items()
+                channel: len(subscribers) for channel, subscribers in self.channels.items()
             },
             "queued_messages": {
-                client: len(messages)
-                for client, messages in self.message_queue.items()
-            }
+                client: len(messages) for client, messages in self.message_queue.items()
+            },
         }
 
     async def websocket_endpoint(self, websocket: WebSocket, client_id: str, session_id: str):
         """
         FastAPI WebSocket endpoint handler
-        
+
         Usage in FastAPI:
         @app.websocket("/ws/{client_id}/{session_id}")
         async def websocket_endpoint(websocket: WebSocket, client_id: str, session_id: str):

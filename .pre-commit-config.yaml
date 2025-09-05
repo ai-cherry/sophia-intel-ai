@@ -37,21 +37,21 @@ repos:
       - id: detect-secrets
         args: [--baseline, .secrets.baseline]
         exclude: ^(.*\.lock|package-lock\.json|pnpm-lock\.yaml)$
-  
+
   # Gitleaks - Advanced Secret Scanner
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.18.0
     hooks:
       - id: gitleaks
-  
+
   # Bandit - Python Security Linter
   - repo: https://github.com/PyCQA/bandit
     rev: 1.7.5
     hooks:
       - id: bandit
-        args: ['-r', 'app/', '--skip', 'B101']
+        args: ["-r", "app/", "--skip", "B101"]
         files: .py$
-  
+
   # Safety - Check Python dependencies for vulnerabilities
   - repo: https://github.com/Lucas-C/pre-commit-hooks-safety
     rev: v1.3.2
@@ -161,7 +161,7 @@ repos:
         always_run: true
         stages: [commit]
         verbose: true
-      
+
       - id: check-architecture
         name: Check architecture compliance
         entry: python scripts/check_architecture.py
@@ -170,14 +170,14 @@ repos:
         always_run: true
         stages: [commit]
         verbose: true
-      
+
       - id: no-print-statements
         name: No print statements
         entry: '\bprint\('
         language: pygrep
         types: [python]
         exclude: ^(scripts/|tests/|.*_test\.py|.*debug.*\.py)$
-      
+
       - id: no-todos
         name: No TODO comments in production
         entry: '#\s*(TODO|FIXME|XXX)'
@@ -185,20 +185,36 @@ repos:
         types: [python]
         exclude: ^(tests/|scripts/|docs/)
         stages: [commit]
-      
+
       - id: requirements-sync
         name: Sync requirements
         entry: python scripts/sync_requirements.py
         language: system
         files: ^(requirements.*\.txt|pyproject\.toml)$
         pass_filenames: false
-      
+
       - id: api-schema-update
         name: Update OpenAPI schema
         entry: python scripts/update_openapi.py
         language: system
         files: ^app/api/.*\.py$
         pass_filenames: false
+
+      - id: forbid-ephemeral-reports
+        name: Block committing ephemeral report artifacts
+        language: script
+        entry: scripts/hooks/block_ephemeral_reports.sh
+        files: |
+          (?x)^(
+            deployment_results/.*|
+            test_reports/.*|
+            reports/.*|
+            artifacts/.*|
+            .*/test_reports/.*|
+            .*-20[0-9]{2}-[01][0-9]-[0-3][0-9].*\.(md|json)$|
+            .*20[0-9]{2}-[01][0-9]-[0-3][0-9].*\.(md|json)$
+          )$
+        stages: [commit]
 
 # Configuration for specific hooks
 exclude: |

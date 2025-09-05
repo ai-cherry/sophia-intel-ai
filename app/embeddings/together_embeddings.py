@@ -7,7 +7,6 @@ import asyncio
 import hashlib
 import json
 import logging
-import os
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
@@ -21,17 +20,18 @@ logger = logging.getLogger(__name__)
 
 class EmbeddingModel(Enum):
     """Available Together AI embedding models."""
+
     # Long-context models
     M2_BERT_32K = "togethercomputer/m2-bert-80M-32k-retrieval"  # 32K tokens, best for long docs
-    M2_BERT_8K = "togethercomputer/m2-bert-80M-8k-retrieval"    # 8K tokens, balanced
-    M2_BERT_2K = "togethercomputer/m2-bert-80M-2k-retrieval"    # 2K tokens, fast
+    M2_BERT_8K = "togethercomputer/m2-bert-80M-8k-retrieval"  # 8K tokens, balanced
+    M2_BERT_2K = "togethercomputer/m2-bert-80M-2k-retrieval"  # 2K tokens, fast
 
     # General purpose
-    BGE_LARGE = "BAAI/bge-large-en-v1.5"      # 512 tokens, high quality
-    BGE_BASE = "BAAI/bge-base-en-v1.5"        # 512 tokens, fast
+    BGE_LARGE = "BAAI/bge-large-en-v1.5"  # 512 tokens, high quality
+    BGE_BASE = "BAAI/bge-base-en-v1.5"  # 512 tokens, fast
 
     # Specialized
-    UAE_LARGE = "WhereIsAI/UAE-Large-V1"      # 512 tokens, maximum accuracy
+    UAE_LARGE = "WhereIsAI/UAE-Large-V1"  # 512 tokens, maximum accuracy
     GTE_MODERNBERT = "Alibaba-NLP/gte-modernbert-base"  # 8192 tokens, modern architecture
     E5_MULTILINGUAL = "intfloat/multilingual-e5-large-instruct"  # 514 tokens, 100+ languages
 
@@ -39,17 +39,19 @@ class EmbeddingModel(Enum):
 @dataclass
 class EmbeddingConfig:
     """Configuration for embedding service."""
+
     # API Keys
-    portkey_api_key: str = field(default_factory=lambda: os.getenv("PORTKEY_API_KEY", ""))
-    together_api_key: str = field(default_factory=lambda: os.getenv("TOGETHER_API_KEY", ""))
-    virtual_key: Optional[str] = field(default_factory=lambda: os.getenv("PORTKEY_TOGETHER_VK", "together-ai-670469"))
+    portkey_api_key: str = field(default_factory=lambda: get_config().get("PORTKEY_API_KEY", ""))
+    together_api_key: str = field(default_factory=lambda: get_config().get("TOGETHER_API_KEY", ""))
+    virtual_key: Optional[str] = field(
+        default_factory=lambda: get_config().get("PORTKEY_TOGETHER_VK", "together-ai-670469")
+    )
 
     # Model selection
     primary_model: EmbeddingModel = EmbeddingModel.M2_BERT_8K
-    fallback_models: list[EmbeddingModel] = field(default_factory=lambda: [
-        EmbeddingModel.BGE_LARGE,
-        EmbeddingModel.BGE_BASE
-    ])
+    fallback_models: list[EmbeddingModel] = field(
+        default_factory=lambda: [EmbeddingModel.BGE_LARGE, EmbeddingModel.BGE_BASE]
+    )
 
     # Cache settings
     cache_enabled: bool = True
@@ -70,6 +72,7 @@ class EmbeddingConfig:
 @dataclass
 class EmbeddingResult:
     """Result from embedding operation."""
+
     embeddings: list[list[float]]
     model: str
     dimensions: int
@@ -101,16 +104,17 @@ class TogetherEmbeddingService:
                     "x-portkey-api-key": self.config.portkey_api_key,
                     "x-portkey-virtual-key": self.config.virtual_key or "together-ai-670469",
                     "x-portkey-provider": "together-ai",
-                    "x-portkey-config": json.dumps(self._get_portkey_config())
-                }
+                    "x-portkey-config": json.dumps(self._get_portkey_config()),
+                },
             )
             self.primary_client = self.portkey_client
-            logger.info(f"Initialized Portkey gateway for Together AI embeddings (VK: {self.config.virtual_key})")
+            logger.info(
+                f"Initialized Portkey gateway for Together AI embeddings (VK: {self.config.virtual_key})"
+            )
         else:
             # Direct Together AI client
             self.together_client = OpenAI(
-                api_key=self.config.together_api_key,
-                base_url=self.config.together_base_url
+                api_key=self.config.together_api_key, base_url=self.config.together_base_url
             )
             self.primary_client = self.together_client
             logger.info("Initialized direct Together AI client for embeddings")
@@ -122,12 +126,12 @@ class TogetherEmbeddingService:
                 "enabled": self.config.cache_enabled,
                 "ttl": self.config.cache_ttl_seconds,
                 "mode": "semantic",
-                "similarity_threshold": self.config.similarity_threshold
+                "similarity_threshold": self.config.similarity_threshold,
             },
             "retry": {
                 "attempts": self.config.max_retries,
                 "on_status_codes": [429, 500, 502, 503],
-                "exponential_backoff": True
+                "exponential_backoff": True,
             },
             "strategy": {
                 "mode": "fallback",
@@ -135,17 +139,14 @@ class TogetherEmbeddingService:
                     {
                         "provider": "together-ai",
                         "model": self.config.primary_model.value,
-                        "weight": 1.0
+                        "weight": 1.0,
                     }
-                ] + [
-                    {
-                        "provider": "together-ai",
-                        "model": model.value,
-                        "weight": 0.8 - i * 0.1
-                    }
-                    for i, model in enumerate(self.config.fallback_models)
                 ]
-            }
+                + [
+                    {"provider": "together-ai", "model": model.value, "weight": 0.8 - i * 0.1}
+                    for i, model in enumerate(self.config.fallback_models)
+                ],
+            },
         }
 
     def _get_cache_key(self, text: str, model: str) -> str:
@@ -189,23 +190,21 @@ class TogetherEmbeddingService:
             self._cache[cache_key] = (embedding, now)
 
     async def embed_async(
-        self,
-        texts: list[str],
-        model: Optional[EmbeddingModel] = None,
-        use_cache: bool = True
+        self, texts: list[str], model: Optional[EmbeddingModel] = None, use_cache: bool = True
     ) -> EmbeddingResult:
         """
         Asynchronously generate embeddings for texts.
-        
+
         Args:
             texts: List of texts to embed
             model: Embedding model to use (defaults to primary)
             use_cache: Whether to use cache
-            
+
         Returns:
             EmbeddingResult with embeddings and metadata
         """
         import time
+
         start_time = time.time()
 
         model = model or self.config.primary_model
@@ -223,7 +222,7 @@ class TogetherEmbeddingService:
                     dimensions=len(cached_embeddings[0]),
                     tokens_used=0,
                     latency_ms=0,
-                    cached=True
+                    cached=True,
                 )
 
             # Get texts that need embedding
@@ -236,7 +235,7 @@ class TogetherEmbeddingService:
         # Batch processing
         all_new_embeddings = []
         for i in range(0, len(texts_to_embed), self.config.batch_size):
-            batch = texts_to_embed[i:i + self.config.batch_size]
+            batch = texts_to_embed[i : i + self.config.batch_size]
 
             # Try primary and fallback models
             last_error = None
@@ -245,7 +244,7 @@ class TogetherEmbeddingService:
                     response = await asyncio.to_thread(
                         self.primary_client.embeddings.create,
                         model=attempt_model.value,
-                        input=batch
+                        input=batch,
                     )
 
                     batch_embeddings = [e.embedding for e in response.data]
@@ -291,15 +290,12 @@ class TogetherEmbeddingService:
             metadata={
                 "cache_hits": len(cached_embeddings),
                 "cache_misses": len(miss_indices),
-                "batch_size": self.config.batch_size
-            }
+                "batch_size": self.config.batch_size,
+            },
         )
 
     def embed(
-        self,
-        texts: list[str],
-        model: Optional[EmbeddingModel] = None,
-        use_cache: bool = True
+        self, texts: list[str], model: Optional[EmbeddingModel] = None, use_cache: bool = True
     ) -> EmbeddingResult:
         """
         Synchronous wrapper for embed_async.
@@ -317,11 +313,11 @@ class TogetherEmbeddingService:
         query: str,
         documents: list[str],
         top_k: int = 5,
-        model: Optional[EmbeddingModel] = None
+        model: Optional[EmbeddingModel] = None,
     ) -> list[tuple[int, float, str]]:
         """
         Search documents using semantic similarity.
-        
+
         Returns:
             List of (index, similarity_score, document) tuples
         """
@@ -343,18 +339,16 @@ class TogetherEmbeddingService:
 
     @staticmethod
     def recommend_model(
-        text_length: int,
-        use_case: str = "general",
-        language: str = "en"
+        text_length: int, use_case: str = "general", language: str = "en"
     ) -> EmbeddingModel:
         """
         Recommend best model based on text characteristics.
-        
+
         Args:
             text_length: Approximate token count
             use_case: One of 'rag', 'search', 'clustering', 'classification'
             language: Language code (e.g., 'en', 'zh', 'multi')
-            
+
         Returns:
             Recommended EmbeddingModel
         """

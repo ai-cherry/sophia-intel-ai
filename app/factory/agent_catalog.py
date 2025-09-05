@@ -5,23 +5,25 @@ This module provides a catalog of specialized agents with detailed capabilities,
 personality traits, and optimized configurations for various business domains.
 """
 
-from datetime import datetime
-from typing import List, Dict, Any
-from dataclasses import dataclass
+from typing import Any
 
 from app.core.agent_config import AgentRoleConfig, ModelConfig
 from app.factory.models import (
-    AgentBlueprint, AgentMetadata, AgentSpecialty, AgentCapability, 
-    AgentPersonality
+    AgentBlueprint,
+    AgentCapability,
+    AgentMetadata,
+    AgentPersonality,
+    AgentSpecialty,
 )
 
 # =============================================================================
 # SPECIALIZED AGENT CREATION METHODS
 # =============================================================================
 
+
 class SpecializedAgentCatalog:
     """Catalog of pre-built specialized agents with turnkey configurations"""
-    
+
     @staticmethod
     def create_architect_agent() -> AgentBlueprint:
         """Senior Software Architect - System design and architecture"""
@@ -31,7 +33,7 @@ class SpecializedAgentCatalog:
                 name="Senior Software Architect",
                 description="Designs scalable system architectures, makes technology decisions, and ensures architectural consistency across projects.",
                 version="1.0.0",
-                tags=["architecture", "system_design", "technical_leadership", "scalability"]
+                tags=["architecture", "system_design", "technical_leadership", "scalability"],
             ),
             specialty=AgentSpecialty.ARCHITECT,
             capabilities=[
@@ -40,18 +42,21 @@ class SpecializedAgentCatalog:
                 AgentCapability.PLANNING,
                 AgentCapability.DECISION_MAKING,
                 AgentCapability.RISK_ASSESSMENT,
-                AgentCapability.DOCUMENTATION
+                AgentCapability.DOCUMENTATION,
             ],
             personality=AgentPersonality.ANALYTICAL,
             config=AgentRoleConfig(
                 role_name="architect",
                 model_settings=ModelConfig(
-                    temperature=0.3,
-                    max_tokens=4096,
-                    cost_limit_per_request=0.85
+                    temperature=0.3, max_tokens=4096, cost_limit_per_request=0.85
                 ),
-                tools=["architecture_analyzer", "design_patterns", "scalability_assessor", "tech_stack_recommender"],
-                max_reasoning_steps=20
+                tools=[
+                    "architecture_analyzer",
+                    "design_patterns",
+                    "scalability_assessor",
+                    "tech_stack_recommender",
+                ],
+                max_reasoning_steps=20,
             ),
             system_prompt_template="""You are a Senior Software Architect with 15+ years of experience in designing scalable, maintainable systems.
 
@@ -81,13 +86,18 @@ Provide clear, actionable recommendations with implementation guidance.""",
                 "system_design": "Create comprehensive system architecture diagrams and documentation",
                 "technology_selection": "Evaluate and recommend appropriate technology stacks",
                 "code_review": "Review code for architectural compliance and best practices",
-                "risk_assessment": "Identify technical risks and provide mitigation strategies"
+                "risk_assessment": "Identify technical risks and provide mitigation strategies",
             },
-            tools=["system_design", "architecture_patterns", "performance_modeling", "risk_analysis"],
+            tools=[
+                "system_design",
+                "architecture_patterns",
+                "performance_modeling",
+                "risk_analysis",
+            ],
             max_concurrent_tasks=3,
-            rate_limit_per_hour=50
+            rate_limit_per_hour=50,
         )
-    
+
     @staticmethod
     def create_senior_developer_agent() -> AgentBlueprint:
         """Senior Full-Stack Developer - End-to-end development"""
@@ -97,7 +107,7 @@ Provide clear, actionable recommendations with implementation guidance.""",
                 name="Senior Full-Stack Developer",
                 description="Experienced developer capable of building complete applications from frontend to backend with modern technologies.",
                 version="1.0.0",
-                tags=["full_stack", "web_development", "api_design", "database_design"]
+                tags=["full_stack", "web_development", "api_design", "database_design"],
             ),
             specialty=AgentSpecialty.DEVELOPER,
             capabilities=[
@@ -106,18 +116,16 @@ Provide clear, actionable recommendations with implementation guidance.""",
                 AgentCapability.CODE_REVIEW,
                 AgentCapability.TESTING,
                 AgentCapability.DATA_ANALYSIS,
-                AgentCapability.DOCUMENTATION
+                AgentCapability.DOCUMENTATION,
             ],
             personality=AgentPersonality.DETAIL_ORIENTED,
             config=AgentRoleConfig(
                 role_name="senior_developer",
                 model_settings=ModelConfig(
-                    temperature=0.4,
-                    max_tokens=6000,
-                    cost_limit_per_request=0.75
+                    temperature=0.4, max_tokens=6000, cost_limit_per_request=0.75
                 ),
                 tools=["code_generator", "debugger", "test_runner", "api_tester"],
-                max_reasoning_steps=15
+                max_reasoning_steps=15,
             ),
             system_prompt_template="""You are a Senior Full-Stack Developer with expertise in modern web technologies and best practices.
 
@@ -148,13 +156,18 @@ Provide complete, production-ready code with proper error handling, logging, and
                 "feature_development": "Implement complete features from UI to database",
                 "api_development": "Design and implement RESTful or GraphQL APIs",
                 "bug_fixing": "Debug and resolve complex technical issues",
-                "code_optimization": "Improve code performance and maintainability"
+                "code_optimization": "Improve code performance and maintainability",
             },
-            tools=["web_frameworks", "database_tools", "testing_frameworks", "performance_profilers"],
+            tools=[
+                "web_frameworks",
+                "database_tools",
+                "testing_frameworks",
+                "performance_profilers",
+            ],
             max_concurrent_tasks=4,
-            rate_limit_per_hour=80
+            rate_limit_per_hour=80,
         )
-    
+
     @staticmethod
     def create_frontend_developer_agent() -> AgentBlueprint:
         """Frontend Specialist - UI/UX implementation expert"""
@@ -164,7 +177,7 @@ Provide complete, production-ready code with proper error handling, logging, and
                 name="Frontend Development Specialist",
                 description="Specializes in creating responsive, accessible, and performant user interfaces using modern frontend technologies.",
                 version="1.0.0",
-                tags=["frontend", "ui", "react", "responsive_design", "accessibility"]
+                tags=["frontend", "ui", "react", "responsive_design", "accessibility"],
             ),
             specialty=AgentSpecialty.DEVELOPER,
             capabilities=[
@@ -172,18 +185,16 @@ Provide complete, production-ready code with proper error handling, logging, and
                 AgentCapability.DESIGN,
                 AgentCapability.TESTING,
                 AgentCapability.OPTIMIZATION,
-                AgentCapability.PRESENTATION
+                AgentCapability.PRESENTATION,
             ],
             personality=AgentPersonality.CREATIVE,
             config=AgentRoleConfig(
                 role_name="frontend_developer",
                 model_settings=ModelConfig(
-                    temperature=0.5,
-                    max_tokens=5000,
-                    cost_limit_per_request=0.65
+                    temperature=0.5, max_tokens=5000, cost_limit_per_request=0.65
                 ),
                 tools=["react_tools", "css_frameworks", "testing_tools", "design_systems"],
-                max_reasoning_steps=12
+                max_reasoning_steps=12,
             ),
             system_prompt_template="""You are a Frontend Development Specialist focused on creating exceptional user experiences.
 
@@ -215,13 +226,18 @@ Focus on creating intuitive, fast, and accessible user interfaces that work seam
                 "component_development": "Create reusable React/Vue components with proper props and state management",
                 "responsive_design": "Implement mobile-first responsive layouts using modern CSS techniques",
                 "performance_optimization": "Optimize frontend performance using best practices and monitoring tools",
-                "accessibility_implementation": "Ensure WCAG compliance and implement accessibility features"
+                "accessibility_implementation": "Ensure WCAG compliance and implement accessibility features",
             },
-            tools=["component_libraries", "css_frameworks", "performance_tools", "accessibility_checkers"],
+            tools=[
+                "component_libraries",
+                "css_frameworks",
+                "performance_tools",
+                "accessibility_checkers",
+            ],
             max_concurrent_tasks=5,
-            rate_limit_per_hour=100
+            rate_limit_per_hour=100,
         )
-    
+
     @staticmethod
     def create_backend_developer_agent() -> AgentBlueprint:
         """Backend Specialist - API and infrastructure expert"""
@@ -231,7 +247,7 @@ Focus on creating intuitive, fast, and accessible user interfaces that work seam
                 name="Backend Development Specialist",
                 description="Expert in server-side development, API design, database optimization, and scalable backend architectures.",
                 version="1.0.0",
-                tags=["backend", "api", "database", "microservices", "performance"]
+                tags=["backend", "api", "database", "microservices", "performance"],
             ),
             specialty=AgentSpecialty.DEVELOPER,
             capabilities=[
@@ -240,18 +256,16 @@ Focus on creating intuitive, fast, and accessible user interfaces that work seam
                 AgentCapability.TESTING,
                 AgentCapability.MONITORING,
                 AgentCapability.OPTIMIZATION,
-                AgentCapability.DEPLOYMENT
+                AgentCapability.DEPLOYMENT,
             ],
             personality=AgentPersonality.ANALYTICAL,
             config=AgentRoleConfig(
                 role_name="backend_developer",
                 model_settings=ModelConfig(
-                    temperature=0.3,
-                    max_tokens=5500,
-                    cost_limit_per_request=0.70
+                    temperature=0.3, max_tokens=5500, cost_limit_per_request=0.70
                 ),
                 tools=["api_frameworks", "database_tools", "monitoring_tools", "load_testing"],
-                max_reasoning_steps=18
+                max_reasoning_steps=18,
             ),
             system_prompt_template="""You are a Backend Development Specialist with expertise in scalable server-side architectures.
 
@@ -284,13 +298,18 @@ Provide production-ready backend code with proper error handling, security, and 
                 "api_development": "Design and implement scalable REST or GraphQL APIs",
                 "database_optimization": "Optimize database schemas, queries, and performance",
                 "microservices_design": "Create loosely coupled microservices with proper communication patterns",
-                "performance_tuning": "Identify and resolve performance bottlenecks in backend systems"
+                "performance_tuning": "Identify and resolve performance bottlenecks in backend systems",
             },
-            tools=["backend_frameworks", "database_optimizers", "api_testing_tools", "performance_monitors"],
+            tools=[
+                "backend_frameworks",
+                "database_optimizers",
+                "api_testing_tools",
+                "performance_monitors",
+            ],
             max_concurrent_tasks=4,
-            rate_limit_per_hour=75
+            rate_limit_per_hour=75,
         )
-    
+
     @staticmethod
     def create_devops_engineer_agent() -> AgentBlueprint:
         """DevOps Engineer - Infrastructure and deployment automation"""
@@ -300,7 +319,7 @@ Provide production-ready backend code with proper error handling, security, and 
                 name="DevOps Engineer",
                 description="Specializes in infrastructure automation, CI/CD pipelines, container orchestration, and cloud platform management.",
                 version="1.0.0",
-                tags=["devops", "infrastructure", "automation", "containers", "cloud"]
+                tags=["devops", "infrastructure", "automation", "containers", "cloud"],
             ),
             specialty=AgentSpecialty.DEVOPS,
             capabilities=[
@@ -309,18 +328,16 @@ Provide production-ready backend code with proper error handling, security, and 
                 AgentCapability.OPTIMIZATION,
                 AgentCapability.CODING,
                 AgentCapability.RISK_ASSESSMENT,
-                AgentCapability.DOCUMENTATION
+                AgentCapability.DOCUMENTATION,
             ],
             personality=AgentPersonality.DETAIL_ORIENTED,
             config=AgentRoleConfig(
                 role_name="devops_engineer",
                 model_settings=ModelConfig(
-                    temperature=0.2,
-                    max_tokens=4500,
-                    cost_limit_per_request=0.80
+                    temperature=0.2, max_tokens=4500, cost_limit_per_request=0.80
                 ),
                 tools=["terraform", "kubernetes", "docker", "ci_cd_tools", "monitoring_stack"],
-                max_reasoning_steps=15
+                max_reasoning_steps=15,
             ),
             system_prompt_template="""You are a DevOps Engineer focused on building reliable, scalable, and secure infrastructure.
 
@@ -352,13 +369,13 @@ Focus on creating robust, automated, and observable infrastructure that enables 
                 "infrastructure_setup": "Design and implement scalable cloud infrastructure using IaC",
                 "ci_cd_pipeline": "Create automated CI/CD pipelines with security and quality gates",
                 "container_orchestration": "Set up and manage Kubernetes clusters with proper networking and security",
-                "monitoring_setup": "Implement comprehensive monitoring, logging, and alerting systems"
+                "monitoring_setup": "Implement comprehensive monitoring, logging, and alerting systems",
             },
             tools=["terraform", "kubernetes_tools", "ci_cd_platforms", "monitoring_solutions"],
             max_concurrent_tasks=3,
-            rate_limit_per_hour=60
+            rate_limit_per_hour=60,
         )
-    
+
     @staticmethod
     def create_qa_engineer_agent() -> AgentBlueprint:
         """QA Engineer - Quality assurance and testing expert"""
@@ -368,7 +385,7 @@ Focus on creating robust, automated, and observable infrastructure that enables 
                 name="Quality Assurance Engineer",
                 description="Ensures software quality through comprehensive testing strategies, test automation, and quality processes.",
                 version="1.0.0",
-                tags=["qa", "testing", "automation", "quality", "validation"]
+                tags=["qa", "testing", "automation", "quality", "validation"],
             ),
             specialty=AgentSpecialty.TESTER,
             capabilities=[
@@ -377,18 +394,21 @@ Focus on creating robust, automated, and observable infrastructure that enables 
                 AgentCapability.DOCUMENTATION,
                 AgentCapability.RISK_ASSESSMENT,
                 AgentCapability.OPTIMIZATION,
-                AgentCapability.REQUIREMENTS_ANALYSIS
+                AgentCapability.REQUIREMENTS_ANALYSIS,
             ],
             personality=AgentPersonality.DETAIL_ORIENTED,
             config=AgentRoleConfig(
                 role_name="qa_engineer",
                 model_settings=ModelConfig(
-                    temperature=0.3,
-                    max_tokens=4000,
-                    cost_limit_per_request=0.60
+                    temperature=0.3, max_tokens=4000, cost_limit_per_request=0.60
                 ),
-                tools=["test_automation", "performance_testing", "security_testing", "bug_tracking"],
-                max_reasoning_steps=12
+                tools=[
+                    "test_automation",
+                    "performance_testing",
+                    "security_testing",
+                    "bug_tracking",
+                ],
+                max_reasoning_steps=12,
             ),
             system_prompt_template="""You are a Quality Assurance Engineer focused on ensuring high-quality software delivery.
 
@@ -420,13 +440,13 @@ Focus on preventing defects, automating repetitive tasks, and ensuring comprehen
                 "test_strategy": "Develop comprehensive testing strategies for applications and systems",
                 "test_automation": "Implement automated test suites for functional and non-functional testing",
                 "performance_testing": "Design and execute performance tests to identify bottlenecks and capacity limits",
-                "quality_assessment": "Evaluate software quality and provide recommendations for improvement"
+                "quality_assessment": "Evaluate software quality and provide recommendations for improvement",
             },
             tools=["test_frameworks", "automation_tools", "performance_tools", "quality_metrics"],
             max_concurrent_tasks=6,
-            rate_limit_per_hour=90
+            rate_limit_per_hour=90,
         )
-    
+
     @staticmethod
     def create_security_specialist_agent() -> AgentBlueprint:
         """Security Specialist - Application and infrastructure security"""
@@ -436,7 +456,7 @@ Focus on preventing defects, automating repetitive tasks, and ensuring comprehen
                 name="Security Specialist",
                 description="Focuses on application security, threat modeling, security testing, and implementing security best practices.",
                 version="1.0.0",
-                tags=["security", "threat_modeling", "penetration_testing", "compliance"]
+                tags=["security", "threat_modeling", "penetration_testing", "compliance"],
             ),
             specialty=AgentSpecialty.SECURITY,
             capabilities=[
@@ -445,18 +465,21 @@ Focus on preventing defects, automating repetitive tasks, and ensuring comprehen
                 AgentCapability.TESTING,
                 AgentCapability.DOCUMENTATION,
                 AgentCapability.REQUIREMENTS_ANALYSIS,
-                AgentCapability.MONITORING
+                AgentCapability.MONITORING,
             ],
             personality=AgentPersonality.CAUTIOUS,
             config=AgentRoleConfig(
                 role_name="security_specialist",
                 model_settings=ModelConfig(
-                    temperature=0.2,
-                    max_tokens=4500,
-                    cost_limit_per_request=0.75
+                    temperature=0.2, max_tokens=4500, cost_limit_per_request=0.75
                 ),
-                tools=["security_scanners", "threat_modeling", "penetration_testing", "compliance_tools"],
-                max_reasoning_steps=18
+                tools=[
+                    "security_scanners",
+                    "threat_modeling",
+                    "penetration_testing",
+                    "compliance_tools",
+                ],
+                max_reasoning_steps=18,
             ),
             system_prompt_template="""You are a Security Specialist focused on protecting applications and infrastructure from threats.
 
@@ -488,13 +511,17 @@ Provide actionable security recommendations with implementation guidance and pri
                 "security_assessment": "Conduct comprehensive security assessments of applications and infrastructure",
                 "threat_modeling": "Create detailed threat models and attack surface analysis",
                 "security_code_review": "Review code for security vulnerabilities and provide remediation guidance",
-                "compliance_audit": "Evaluate compliance with security frameworks and regulations"
+                "compliance_audit": "Evaluate compliance with security frameworks and regulations",
             },
-            tools=["vulnerability_scanners", "threat_modeling_tools", "security_testing_frameworks"],
+            tools=[
+                "vulnerability_scanners",
+                "threat_modeling_tools",
+                "security_testing_frameworks",
+            ],
             max_concurrent_tasks=3,
-            rate_limit_per_hour=50
+            rate_limit_per_hour=50,
         )
-    
+
     @staticmethod
     def create_business_analyst_agent() -> AgentBlueprint:
         """Business Analyst - Requirements and process analysis"""
@@ -504,7 +531,12 @@ Provide actionable security recommendations with implementation guidance and pri
                 name="Business Analyst",
                 description="Bridges business and technology by analyzing requirements, documenting processes, and ensuring solutions meet business needs.",
                 version="1.0.0",
-                tags=["business_analysis", "requirements", "process_improvement", "stakeholder_management"]
+                tags=[
+                    "business_analysis",
+                    "requirements",
+                    "process_improvement",
+                    "stakeholder_management",
+                ],
             ),
             specialty=AgentSpecialty.ANALYST,
             capabilities=[
@@ -513,18 +545,21 @@ Provide actionable security recommendations with implementation guidance and pri
                 AgentCapability.DOCUMENTATION,
                 AgentCapability.PRESENTATION,
                 AgentCapability.DECISION_MAKING,
-                AgentCapability.PLANNING
+                AgentCapability.PLANNING,
             ],
             personality=AgentPersonality.COLLABORATIVE,
             config=AgentRoleConfig(
                 role_name="business_analyst",
                 model_settings=ModelConfig(
-                    temperature=0.4,
-                    max_tokens=4000,
-                    cost_limit_per_request=0.55
+                    temperature=0.4, max_tokens=4000, cost_limit_per_request=0.55
                 ),
-                tools=["requirements_tools", "process_modeling", "data_analysis", "stakeholder_management"],
-                max_reasoning_steps=15
+                tools=[
+                    "requirements_tools",
+                    "process_modeling",
+                    "data_analysis",
+                    "stakeholder_management",
+                ],
+                max_reasoning_steps=15,
             ),
             system_prompt_template="""You are a Business Analyst focused on translating business needs into technical requirements.
 
@@ -557,13 +592,13 @@ Focus on creating clear, actionable requirements that bridge the gap between bus
                 "requirements_gathering": "Collect and document detailed business requirements from stakeholders",
                 "process_analysis": "Analyze current business processes and identify improvement opportunities",
                 "solution_design": "Design solutions that meet business objectives and technical constraints",
-                "stakeholder_communication": "Facilitate communication between business and technical teams"
+                "stakeholder_communication": "Facilitate communication between business and technical teams",
             },
             tools=["requirements_management", "process_modeling_tools", "collaboration_platforms"],
             max_concurrent_tasks=5,
-            rate_limit_per_hour=70
+            rate_limit_per_hour=70,
         )
-    
+
     @staticmethod
     def create_data_scientist_agent() -> AgentBlueprint:
         """Data Scientist - Advanced analytics and machine learning"""
@@ -573,7 +608,7 @@ Focus on creating clear, actionable requirements that bridge the gap between bus
                 name="Data Scientist",
                 description="Extracts insights from data using statistical analysis, machine learning, and predictive modeling to drive business decisions.",
                 version="1.0.0",
-                tags=["data_science", "machine_learning", "analytics", "statistics", "ai"]
+                tags=["data_science", "machine_learning", "analytics", "statistics", "ai"],
             ),
             specialty=AgentSpecialty.DATA_SCIENTIST,
             capabilities=[
@@ -582,18 +617,16 @@ Focus on creating clear, actionable requirements that bridge the gap between bus
                 AgentCapability.CODING,
                 AgentCapability.PRESENTATION,
                 AgentCapability.DECISION_MAKING,
-                AgentCapability.OPTIMIZATION
+                AgentCapability.OPTIMIZATION,
             ],
             personality=AgentPersonality.ANALYTICAL,
             config=AgentRoleConfig(
                 role_name="data_scientist",
                 model_settings=ModelConfig(
-                    temperature=0.3,
-                    max_tokens=5000,
-                    cost_limit_per_request=0.70
+                    temperature=0.3, max_tokens=5000, cost_limit_per_request=0.70
                 ),
                 tools=["ml_frameworks", "statistical_tools", "visualization", "data_platforms"],
-                max_reasoning_steps=20
+                max_reasoning_steps=20,
             ),
             system_prompt_template="""You are a Data Scientist specializing in extracting actionable insights from complex datasets.
 
@@ -627,14 +660,19 @@ Focus on delivering data-driven insights that directly impact business outcomes 
                 "data_analysis": "Perform comprehensive statistical analysis and identify patterns in data",
                 "model_development": "Build and validate predictive models for business applications",
                 "insight_generation": "Extract actionable business insights from complex datasets",
-                "data_visualization": "Create compelling visualizations to communicate findings"
+                "data_visualization": "Create compelling visualizations to communicate findings",
             },
-            tools=["python_data_stack", "ml_platforms", "visualization_tools", "statistical_software"],
+            tools=[
+                "python_data_stack",
+                "ml_platforms",
+                "visualization_tools",
+                "statistical_software",
+            ],
             max_concurrent_tasks=3,
-            rate_limit_per_hour=60
+            rate_limit_per_hour=60,
         )
 
-    @staticmethod  
+    @staticmethod
     def create_product_manager_agent() -> AgentBlueprint:
         """Product Manager - Product strategy and roadmap management"""
         return AgentBlueprint(
@@ -643,7 +681,13 @@ Focus on delivering data-driven insights that directly impact business outcomes 
                 name="Product Manager",
                 description="Drives product strategy, manages roadmaps, and ensures products meet market needs and business objectives.",
                 version="1.0.0",
-                tags=["product_management", "strategy", "roadmap", "market_research", "user_experience"]
+                tags=[
+                    "product_management",
+                    "strategy",
+                    "roadmap",
+                    "market_research",
+                    "user_experience",
+                ],
             ),
             specialty=AgentSpecialty.PRODUCT_MANAGER,
             capabilities=[
@@ -652,18 +696,21 @@ Focus on delivering data-driven insights that directly impact business outcomes 
                 AgentCapability.RESEARCH,
                 AgentCapability.PRESENTATION,
                 AgentCapability.REQUIREMENTS_ANALYSIS,
-                AgentCapability.COMPETITIVE_ANALYSIS
+                AgentCapability.COMPETITIVE_ANALYSIS,
             ],
             personality=AgentPersonality.BIG_PICTURE,
             config=AgentRoleConfig(
                 role_name="product_manager",
                 model_settings=ModelConfig(
-                    temperature=0.5,
-                    max_tokens=4500,
-                    cost_limit_per_request=0.65
+                    temperature=0.5, max_tokens=4500, cost_limit_per_request=0.65
                 ),
-                tools=["market_research", "user_analytics", "roadmap_tools", "competitive_intelligence"],
-                max_reasoning_steps=18
+                tools=[
+                    "market_research",
+                    "user_analytics",
+                    "roadmap_tools",
+                    "competitive_intelligence",
+                ],
+                max_reasoning_steps=18,
             ),
             system_prompt_template="""You are a Product Manager focused on delivering products that create value for users and businesses.
 
@@ -697,15 +744,15 @@ Focus on creating products that solve real user problems while achieving busines
                 "product_strategy": "Develop comprehensive product strategies and positioning",
                 "roadmap_planning": "Create detailed product roadmaps with feature prioritization",
                 "market_analysis": "Conduct market research and competitive intelligence analysis",
-                "requirements_definition": "Define detailed product requirements and user stories"
+                "requirements_definition": "Define detailed product requirements and user stories",
             },
             tools=["product_management_platforms", "analytics_tools", "user_research_tools"],
             max_concurrent_tasks=6,
-            rate_limit_per_hour=80
+            rate_limit_per_hour=80,
         )
 
     @staticmethod
-    def get_all_catalog_agents() -> List[AgentBlueprint]:
+    def get_all_catalog_agents() -> list[AgentBlueprint]:
         """Get all pre-built agents from the catalog"""
         catalog_methods = [
             SpecializedAgentCatalog.create_architect_agent,
@@ -717,9 +764,9 @@ Focus on creating products that solve real user problems while achieving busines
             SpecializedAgentCatalog.create_security_specialist_agent,
             SpecializedAgentCatalog.create_business_analyst_agent,
             SpecializedAgentCatalog.create_data_scientist_agent,
-            SpecializedAgentCatalog.create_product_manager_agent
+            SpecializedAgentCatalog.create_product_manager_agent,
         ]
-        
+
         agents = []
         for method in catalog_methods:
             try:
@@ -727,119 +774,102 @@ Focus on creating products that solve real user problems while achieving busines
                 agents.append(agent)
             except Exception as e:
                 print(f"Error creating agent from {method.__name__}: {e}")
-                
+
         return agents
 
     @staticmethod
-    def get_agents_by_specialty(specialty: AgentSpecialty) -> List[AgentBlueprint]:
+    def get_agents_by_specialty(specialty: AgentSpecialty) -> list[AgentBlueprint]:
         """Get all agents of a specific specialty"""
         all_agents = SpecializedAgentCatalog.get_all_catalog_agents()
         return [agent for agent in all_agents if agent.specialty == specialty]
-    
+
     @staticmethod
-    def get_agents_by_capability(capability: AgentCapability) -> List[AgentBlueprint]:
+    def get_agents_by_capability(capability: AgentCapability) -> list[AgentBlueprint]:
         """Get all agents with a specific capability"""
         all_agents = SpecializedAgentCatalog.get_all_catalog_agents()
         return [agent for agent in all_agents if capability in agent.capabilities]
+
 
 # =============================================================================
 # SWARM TEMPLATES WITH AGENT SELECTION
 # =============================================================================
 
+
 class SwarmTemplateLibrary:
     """Library of pre-configured swarm templates that select from agent catalog"""
-    
+
     @staticmethod
-    def get_software_development_team() -> Dict[str, Any]:
+    def get_software_development_team() -> dict[str, Any]:
         """Full-stack software development team"""
         return {
-            'id': 'software_dev_team',
-            'name': 'Software Development Team',
-            'description': 'Complete team for full-stack application development',
-            'required_specialties': [
+            "id": "software_dev_team",
+            "name": "Software Development Team",
+            "description": "Complete team for full-stack application development",
+            "required_specialties": [
                 AgentSpecialty.ARCHITECT.value,
                 AgentSpecialty.DEVELOPER.value,
-                AgentSpecialty.TESTER.value
+                AgentSpecialty.TESTER.value,
             ],
-            'required_capabilities': [
+            "required_capabilities": [
                 AgentCapability.CODING.value,
                 AgentCapability.TESTING.value,
-                AgentCapability.CODE_REVIEW.value
+                AgentCapability.CODE_REVIEW.value,
             ],
-            'optional_specialties': [
-                AgentSpecialty.DEVOPS.value,
-                AgentSpecialty.SECURITY.value
-            ],
-            'max_agents': 6,
-            'type': 'coding',
-            'execution_mode': 'hierarchical',
-            'config_overrides': {
-                'quality_threshold': 0.85,
-                'max_execution_time': 600.0
-            }
+            "optional_specialties": [AgentSpecialty.DEVOPS.value, AgentSpecialty.SECURITY.value],
+            "max_agents": 6,
+            "type": "coding",
+            "execution_mode": "hierarchical",
+            "config_overrides": {"quality_threshold": 0.85, "max_execution_time": 600.0},
         }
-    
+
     @staticmethod
-    def get_business_intelligence_team() -> Dict[str, Any]:
+    def get_business_intelligence_team() -> dict[str, Any]:
         """Business intelligence and analytics team"""
         return {
-            'id': 'bi_analytics_team',
-            'name': 'Business Intelligence Team',
-            'description': 'Team specialized in business analysis and data-driven insights',
-            'required_specialties': [
+            "id": "bi_analytics_team",
+            "name": "Business Intelligence Team",
+            "description": "Team specialized in business analysis and data-driven insights",
+            "required_specialties": [
                 AgentSpecialty.ANALYST.value,
-                AgentSpecialty.DATA_SCIENTIST.value
+                AgentSpecialty.DATA_SCIENTIST.value,
             ],
-            'required_capabilities': [
+            "required_capabilities": [
                 AgentCapability.DATA_ANALYSIS.value,
                 AgentCapability.RESEARCH.value,
-                AgentCapability.PRESENTATION.value
+                AgentCapability.PRESENTATION.value,
             ],
-            'optional_specialties': [
-                AgentSpecialty.PRODUCT_MANAGER.value
-            ],
-            'max_agents': 4,
-            'type': 'consensus',
-            'execution_mode': 'parallel',
-            'config_overrides': {
-                'quality_threshold': 0.80,
-                'memory_enabled': True
-            }
+            "optional_specialties": [AgentSpecialty.PRODUCT_MANAGER.value],
+            "max_agents": 4,
+            "type": "consensus",
+            "execution_mode": "parallel",
+            "config_overrides": {"quality_threshold": 0.80, "memory_enabled": True},
         }
-    
+
     @staticmethod
-    def get_security_assessment_team() -> Dict[str, Any]:
+    def get_security_assessment_team() -> dict[str, Any]:
         """Security assessment and review team"""
         return {
-            'id': 'security_team',
-            'name': 'Security Assessment Team',
-            'description': 'Comprehensive security analysis and threat assessment',
-            'required_specialties': [
-                AgentSpecialty.SECURITY.value,
-                AgentSpecialty.ANALYST.value
-            ],
-            'required_capabilities': [
+            "id": "security_team",
+            "name": "Security Assessment Team",
+            "description": "Comprehensive security analysis and threat assessment",
+            "required_specialties": [AgentSpecialty.SECURITY.value, AgentSpecialty.ANALYST.value],
+            "required_capabilities": [
                 AgentCapability.RISK_ASSESSMENT.value,
                 AgentCapability.CODE_REVIEW.value,
-                AgentCapability.TESTING.value
+                AgentCapability.TESTING.value,
             ],
-            'optional_specialties': [
-                AgentSpecialty.ARCHITECT.value
-            ],
-            'max_agents': 4,
-            'type': 'standard',
-            'execution_mode': 'linear',
-            'config_overrides': {
-                'quality_threshold': 0.90,
-                'max_execution_time': 900.0
-            }
+            "optional_specialties": [AgentSpecialty.ARCHITECT.value],
+            "max_agents": 4,
+            "type": "standard",
+            "execution_mode": "linear",
+            "config_overrides": {"quality_threshold": 0.90, "max_execution_time": 900.0},
         }
-    
+
     @staticmethod
-    def get_all_templates() -> List[Dict[str, Any]]:
+    def get_all_templates() -> list[dict[str, Any]]:
         """Get all available swarm templates"""
         return [
             SwarmTemplateLibrary.get_software_development_team(),
             SwarmTemplateLibrary.get_business_intelligence_team(),
-            SwarmTemplateLibrary.get_security_assessment_team()
+            SwarmTemplateLibrary.get_security_assessment_team(),
         ]

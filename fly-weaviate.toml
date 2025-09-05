@@ -11,25 +11,25 @@ kill_timeout = "10s"
   QUERY_DEFAULTS_LIMIT = "25"
   AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED = "true"
   PERSISTENCE_DATA_PATH = "/var/lib/weaviate"
-  
+
   # v1.32+ Advanced Features
   ENABLE_MODULES = "text2vec-openai,text2vec-cohere,text2vec-huggingface,generative-openai,qna-openai"
   DEFAULT_VECTORIZER_MODULE = "text2vec-openai"
-  
+
   # RQ Compression (75% memory reduction)
   VECTOR_INDEX_TYPE = "hnsw"
   ENABLE_VECTOR_QUANTIZATION = "true"
   QUANTIZATION_TYPE = "rq"
-  
+
   # Performance optimizations
   CLUSTER_HOSTNAME = "node1"
   CLUSTER_GOSSIP_BIND_PORT = "7946"
   CLUSTER_DATA_BIND_PORT = "7947"
-  
+
   # Multi-tenancy support
   ENABLE_MULTI_TENANCY = "true"
   AUTO_TENANT_CREATION = "true"
-  
+
   # Memory optimization
   GOGC = "100"
 
@@ -51,11 +51,11 @@ kill_timeout = "10s"
   [[services.ports]]
     port = 443
     handlers = ["tls", "http"]
-  
+
   [[services.ports]]
     port = 50051
     handlers = ["http"]  # gRPC over HTTP/2 for high-performance operations
-  
+
   [services.concurrency]
     type = "connections"
     hard_limit = 200
@@ -75,7 +75,7 @@ kill_timeout = "10s"
     protocol = "http"
     timeout = "5s"
     tls_skip_verify = false
-    
+
     [services.http_checks.headers]
       X-Health-Check = "fly.io"
 
@@ -95,16 +95,16 @@ kill_timeout = "10s"
   cpu_kind = "shared"
   cpus = 2
   memory_mb = 2048
-  
+
 # Auto-scaling configuration
 [scaling]
   min_machines_running = 1
   max_machines_running = 4
-  
+
   [[scaling.metrics]]
     type = "cpu"
     target = 70
-  
+
   [[scaling.metrics]]
     type = "memory"
     target = 75

@@ -33,6 +33,7 @@ Sophia Intel AI implements a sophisticated swarm intelligence system with 4 spec
 **Purpose**: High-level analysis, planning, and decision-making
 
 **Agents**:
+
 - **StrategicAnalyst**: Business strategy and market analysis
 - **RiskAssessor**: Risk evaluation and mitigation planning
 - **ResourceOptimizer**: Resource allocation and optimization
@@ -41,6 +42,7 @@ Sophia Intel AI implements a sophisticated swarm intelligence system with 4 spec
 - **ImpactAnalyzer**: Impact assessment and forecasting
 
 **Use Cases**:
+
 - Architecture decisions
 - Technology selection
 - Scaling strategies
@@ -52,6 +54,7 @@ Sophia Intel AI implements a sophisticated swarm intelligence system with 4 spec
 **Purpose**: Code generation, review, and optimization
 
 **Agents**:
+
 - **ArchitectureDesigner**: System design and patterns
 - **CodeGenerator**: Implementation and code writing
 - **CodeReviewer**: Code quality and best practices
@@ -60,6 +63,7 @@ Sophia Intel AI implements a sophisticated swarm intelligence system with 4 spec
 - **DocumentationWriter**: Technical documentation
 
 **Use Cases**:
+
 - Feature implementation
 - Code refactoring
 - Performance optimization
@@ -71,6 +75,7 @@ Sophia Intel AI implements a sophisticated swarm intelligence system with 4 spec
 **Purpose**: Security analysis, vulnerability detection, and compliance
 
 **Agents**:
+
 - **VulnerabilityScanner**: Security vulnerability detection
 - **PenetrationTester**: Simulated attack testing
 - **ComplianceAuditor**: Regulatory compliance checking
@@ -79,6 +84,7 @@ Sophia Intel AI implements a sophisticated swarm intelligence system with 4 spec
 - **SecurityArchitect**: Security architecture design
 
 **Use Cases**:
+
 - Security audits
 - Vulnerability assessment
 - Compliance verification
@@ -90,6 +96,7 @@ Sophia Intel AI implements a sophisticated swarm intelligence system with 4 spec
 **Purpose**: Information gathering, analysis, and knowledge synthesis
 
 **Agents**:
+
 - **DataAnalyst**: Data analysis and insights
 - **ResearchSpecialist**: Deep research and investigation
 - **KnowledgeSynthesizer**: Information synthesis
@@ -98,6 +105,7 @@ Sophia Intel AI implements a sophisticated swarm intelligence system with 4 spec
 - **ReportGenerator**: Comprehensive reporting
 
 **Use Cases**:
+
 - Market research
 - Technology evaluation
 - Competitive analysis
@@ -109,6 +117,7 @@ Sophia Intel AI implements a sophisticated swarm intelligence system with 4 spec
 All patterns integrate with the UnifiedOrchestratorFacade and follow the standards in `.ai-instructions/orchestration-standards.md`.
 
 ### Sequential Pattern
+
 ```python
 # For linear, predictable workflows
 # Each agent processes the output of the previous
@@ -122,6 +131,7 @@ result = await facade.execute_sequential(
 ```
 
 ### Parallel Pattern
+
 ```python
 # Agents execute simultaneously for faster results
 results = await orchestrator.execute_parallel(
@@ -131,6 +141,7 @@ results = await orchestrator.execute_parallel(
 ```
 
 ### Hierarchical Pattern
+
 ```python
 # Lead agent coordinates sub-agents
 result = await orchestrator.execute_hierarchical(
@@ -141,6 +152,7 @@ result = await orchestrator.execute_hierarchical(
 ```
 
 ### Consensus Pattern
+
 ```python
 # Multiple agents must agree on outcome
 result = await orchestrator.execute_consensus(
@@ -180,6 +192,7 @@ result = await orchestrator.execute_consensus(
 ## Swarm Configuration
 
 ### swarm_config.json
+
 ```json
 {
   "swarms": {
@@ -205,6 +218,7 @@ result = await orchestrator.execute_consensus(
 ## Performance Optimization
 
 ### Agent Selection Strategy
+
 ```python
 class AgentSelector:
     def select_agents(self, task: Task) -> List[Agent]:
@@ -215,18 +229,19 @@ class AgentSelector:
                 agent.capabilities,
                 task.requirements
             )
-        
+
         # Select top N agents
         return sorted(scores.items(), key=lambda x: x[1])[:task.max_agents]
 ```
 
 ### Load Balancing
+
 ```python
 class LoadBalancer:
     def distribute_tasks(self, tasks: List[Task], agents: List[Agent]):
         # Track agent workload
         workload = {agent.id: 0 for agent in agents}
-        
+
         # Distribute tasks evenly
         for task in tasks:
             agent = min(workload, key=workload.get)
@@ -245,6 +260,7 @@ class LoadBalancer:
 5. **Queue Depth**: Pending tasks per swarm
 
 ### Prometheus Metrics
+
 ```python
 # Agent execution time
 agent_execution_time = Histogram(
@@ -264,26 +280,31 @@ swarm_consensus_rate = Gauge(
 ## Best Practices
 
 ### 1. Task Decomposition
+
 - Break complex tasks into smaller, agent-specific subtasks
 - Define clear success criteria for each subtask
 - Ensure tasks are atomic and independent when possible
 
 ### 2. Agent Coordination
+
 - Use appropriate execution patterns for the task
 - Implement timeouts to prevent hanging
 - Handle partial failures gracefully
 
 ### 3. Context Management
+
 - Provide sufficient context to each agent
 - Share relevant results between agents
 - Maintain conversation history for coherence
 
 ### 4. Error Handling
+
 - Implement retry logic with exponential backoff
 - Use fallback agents for critical tasks
 - Log all errors for debugging
 
 ### 5. Performance Tuning
+
 - Monitor agent response times
 - Adjust parallelism based on load
 - Cache frequently used results
@@ -291,6 +312,7 @@ swarm_consensus_rate = Gauge(
 ## Examples
 
 ### Complex Task Orchestration
+
 ```python
 from sophia_intel import SwarmOrchestrator
 
@@ -323,6 +345,7 @@ result = await orchestrator.execute_complex_task(
 ```
 
 ### Custom Agent Definition
+
 ```python
 from sophia_intel import Agent, AgentCapability
 
@@ -338,7 +361,7 @@ class CustomAnalyst(Agent):
             model="claude-3-opus",
             temperature=0.7
         )
-    
+
     async def execute(self, task: str, context: dict) -> str:
         # Custom execution logic
         prompt = self.build_prompt(task, context)
@@ -351,16 +374,19 @@ class CustomAnalyst(Agent):
 ### Common Issues
 
 1. **Agent Timeout**
+
    - Increase timeout in swarm config
    - Check for infinite loops in prompts
    - Verify API rate limits
 
 2. **Low Consensus**
+
    - Review agent prompts for consistency
    - Adjust consensus threshold
    - Add more context to tasks
 
 3. **Poor Performance**
+
    - Reduce parallel agent count
    - Implement caching
    - Optimize prompt length

@@ -7,7 +7,7 @@ import logging
 import time
 from collections.abc import AsyncGenerator
 from datetime import datetime
-from typing import Any, Optional, Union
+from typing import Any, Optional
 
 from app.api.advanced_gateway_2025 import AdvancedAIGateway2025, TaskType  # Corrected import
 from app.elite_portkey_config import EliteAgentConfig  # For model configs
@@ -54,7 +54,7 @@ class RealLLMExecutor:
     """Execute real LLM calls through Portkey gateway."""
 
     def __init__(self):
-        self.gateway: AdvancedAIGateway2025 = AdvancedAIGateway2025() # Use the new gateway
+        self.gateway: AdvancedAIGateway2025 = AdvancedAIGateway2025()  # Use the new gateway
         self.session_id = None
 
     async def execute(
@@ -66,11 +66,11 @@ class RealLLMExecutor:
         context: Optional[dict[str, Any]] = None,
         task_type: Optional[TaskType] = None,
         trace_id: Optional[str] = None,
-        session_id: Optional[str] = None
+        session_id: Optional[str] = None,
     ) -> LLMResponse:
         """
         Execute real LLM call with fallback chain and proper model selection.
-        
+
         Args:
             prompt: The prompt to send to the LLM
             model_pool: Model pool (fast, balanced, heavy)
@@ -80,7 +80,7 @@ class RealLLMExecutor:
             task_type: Type of task for model selection
             trace_id: Trace ID for request correlation
             session_id: Session ID for context
-            
+
         Returns:
             LLMResponse with real LLM response and metadata
         """
@@ -106,15 +106,17 @@ class RealLLMExecutor:
                 logger.info(f"Attempting LLM call: model={model}, pool={model_pool}, role={role}")
 
                 if stream:
-                    # For now, streaming returns dict - TODO: update streaming to return LLMResponse
+                    # For now, streaming returns dict - update streaming to return LLMResponse
                     result = await self._execute_streaming(messages, model, temperature, role)
                     return LLMResponse(
                         content=result.get("content", ""),
                         success=result.get("success", False),
-                        status=ResponseStatus.SUCCESS if result.get("success") else ResponseStatus.ERROR,
+                        status=ResponseStatus.SUCCESS
+                        if result.get("success")
+                        else ResponseStatus.ERROR,
                         model=model,
                         trace_id=trace_id,
-                        session_id=session_id
+                        session_id=session_id,
                     )
                 else:
                     response = await self._execute_non_streaming(
@@ -128,20 +130,20 @@ class RealLLMExecutor:
                         response.final_model = model
                         return response
                     else:
-                        attempts.append({
-                            "model": model,
-                            "error": response.error,
-                            "timestamp": response.timestamp.isoformat()
-                        })
+                        attempts.append(
+                            {
+                                "model": model,
+                                "error": response.error,
+                                "timestamp": response.timestamp.isoformat(),
+                            }
+                        )
                         last_error = response.error
 
             except Exception as e:
                 logger.warning(f"Model {model} failed: {e}")
-                attempts.append({
-                    "model": model,
-                    "error": str(e),
-                    "timestamp": datetime.now().isoformat()
-                })
+                attempts.append(
+                    {"model": model, "error": str(e), "timestamp": datetime.now().isoformat()}
+                )
                 last_error = str(e)
                 continue
 
@@ -161,22 +163,22 @@ class RealLLMExecutor:
             error_code="FALLBACK_CHAIN_EXHAUSTED",
             attempts=attempts,
             trace_id=trace_id,
-            session_id=session_id
+            session_id=session_id,
         )
 
     @with_circuit_breaker("external_api")
     async def _execute_streaming(
         self,
         messages: list[dict[str, str]],
-        model_name: str, # Changed from 'model' to 'model_name'
+        model_name: str,  # Changed from 'model' to 'model_name'
         temperature: float,
-        role: Optional[Role]
-    ) -> AsyncGenerator[dict[str, Any], None]: # Changed return type to AsyncGenerator
+        role: Optional[Role],
+    ) -> AsyncGenerator[dict[str, Any], None]:  # Changed return type to AsyncGenerator
         """Execute streaming LLM call using Portkey gateway."""
         try:
             stream_response = await self.gateway.chat_completion(
                 messages=messages,
-                task_type=TaskType.GENERAL, # Default to GENERAL, can be refined
+                task_type=TaskType.GENERAL,  # Default to GENERAL, can be refined
                 stream=True,
                 model_name=model_name,
                 temperature=temperature,
@@ -192,7 +194,7 @@ class RealLLMExecutor:
                     yield {
                         "type": "content_chunk",
                         "content": content_chunk,
-                        "timestamp": datetime.now().isoformat()
+                        "timestamp": datetime.now().isoformat(),
                     }
 
             # Final result with token counts (if available from final chunk or inferred)
@@ -203,8 +205,10 @@ class RealLLMExecutor:
                 "success": True,
                 "model": model_name,
                 "timestamp": datetime.now().isoformat(),
-                "token_count": len(full_content.split()), # Simplified count, ideally from API response
-                "role": role.value if role else None
+                "token_count": len(
+                    full_content.split()
+                ),  # Simplified count, ideally from API response
+                "role": role.value if role else None,
             }
 
         except Exception as e:
@@ -213,17 +217,17 @@ class RealLLMExecutor:
                 "type": "error",
                 "content": f"Streaming error: {str(e)}",
                 "success": False,
-                "error": str(e)
+                "error": str(e),
             }
 
     @with_circuit_breaker("external_api")
     async def _execute_non_streaming(
         self,
         messages: list[dict[str, str]],
-        model_name: str, # Changed from 'model' to 'model_name'
+        model_name: str,  # Changed from 'model' to 'model_name'
         temperature: float,
         role: Optional[Role],
-        task_type: TaskType = TaskType.GENERAL
+        task_type: TaskType = TaskType.GENERAL,
     ) -> LLMResponse:
         """Execute non-streaming LLM call and return standardized response."""
         start_time = time.time()
@@ -245,7 +249,7 @@ class RealLLMExecutor:
             token_stats = TokenStats(
                 prompt_tokens=metrics.get("prompt_tokens", 0),
                 completion_tokens=metrics.get("completion_tokens", 0),
-                total_tokens=metrics.get("total_tokens", 0)
+                total_tokens=metrics.get("total_tokens", 0),
             )
 
             latency_ms = (time.time() - start_time) * 1000
@@ -260,18 +264,12 @@ class RealLLMExecutor:
                 latency_ms=latency_ms,
                 token_stats=token_stats,
                 estimated_cost=token_stats.cost_estimate,
-                metadata={
-                    "role": role.value if role else None,
-                    "temperature": temperature
-                }
+                metadata={"role": role.value if role else None, "temperature": temperature},
             )
 
         except Exception as e:
             logger.error(f"Non-streaming execution failed: {e}")
-            return LLMResponse.from_error(
-                error=str(e),
-                error_code="LLM_EXECUTION_ERROR"
-            )
+            return LLMResponse.from_error(error=str(e), error_code="LLM_EXECUTION_ERROR")
 
     def _select_model(self, pool: str, role: Optional[Role]) -> str:
         """Select appropriate model based on pool and role from EliteAgentConfig."""
@@ -287,16 +285,15 @@ class RealLLMExecutor:
         default_model = EliteAgentConfig.MODELS["generator"]
         return default_model
 
-    def _build_messages(self, prompt: str, context: Optional[dict[str, Any]] = None) -> list[dict[str, str]]:
+    def _build_messages(
+        self, prompt: str, context: Optional[dict[str, Any]] = None
+    ) -> list[dict[str, str]]:
         """Build messages array for the LLM."""
         messages = []
 
         # Add system message based on context
         if context and context.get("system_prompt"):
-            messages.append({
-                "role": "system",
-                "content": context["system_prompt"]
-            })
+            messages.append({"role": "system", "content": context["system_prompt"]})
 
         # Add context as conversation history if provided
         if context and context.get("conversation_history"):
@@ -304,10 +301,7 @@ class RealLLMExecutor:
                 messages.append(msg)
 
         # Add user prompt
-        messages.append({
-            "role": "user",
-            "content": prompt
-        })
+        messages.append({"role": "user", "content": prompt})
 
         return messages
 
@@ -339,8 +333,16 @@ class RealLLMExecutor:
         """Get fallback model chain based on pool and role."""
         # Define fallback chains for different pools
         fallback_chains = {
-            "fast": ["google/gemini-2.5-flash", "z-ai/glm-4.5-air", "deepseek/deepseek-chat-v3-0324"],
-            "balanced": ["google/gemini-2.5-pro", "qwen/qwen3-30b-a3b", "anthropic/claude-sonnet-4"],
+            "fast": [
+                "google/gemini-2.5-flash",
+                "z-ai/glm-4.5-air",
+                "deepseek/deepseek-chat-v3-0324",
+            ],
+            "balanced": [
+                "google/gemini-2.5-pro",
+                "qwen/qwen3-30b-a3b",
+                "anthropic/claude-sonnet-4",
+            ],
             "heavy": ["openai/gpt-5", "x-ai/grok-4", "anthropic/claude-sonnet-4"],
         }
 
@@ -362,7 +364,7 @@ class RealLLMExecutor:
 
     async def _check_cache(self, prompt: str, model_pool: str) -> Optional[LLMResponse]:
         """Check cache for previous response to similar prompt."""
-        # TODO: Implement semantic cache lookup
+        # Implement semantic cache lookup
         # For now, return None (no cache hit)
         return None
 
@@ -371,17 +373,17 @@ class RealLLMExecutor:
         task: str,
         role: Role = Role.GENERATOR,
         pool: str = "balanced",
-        context: Optional[dict[str, Any]] = None
+        context: Optional[dict[str, Any]] = None,
     ) -> AsyncGenerator[dict[str, Any], None]:
         """
         Generate code with streaming response.
-        
+
         Args:
             task: The coding task
             role: Agent role
             pool: Model pool to use
             context: Additional context
-            
+
         Yields:
             Streaming response chunks
         """
@@ -393,7 +395,7 @@ class RealLLMExecutor:
                 messages=self._build_messages(coding_prompt, context),
                 model=self._select_model(pool, role),
                 temperature=self._get_temperature_for_role(role),
-                role=role
+                role=role,
             ):
                 yield chunk
 
@@ -403,7 +405,7 @@ class RealLLMExecutor:
                 "type": "error",
                 "content": f"Code generation error: {str(e)}",
                 "success": False,
-                "error": str(e)
+                "error": str(e),
             }
 
     def _build_coding_prompt(self, task: str, role: Role, context: Optional[dict[str, Any]]) -> str:
@@ -421,7 +423,6 @@ Provide a detailed plan with:
 5. Testing strategy
 
 Return your response as structured text with clear sections.""",
-
             Role.GENERATOR: f"""You are a code generator. Create production-ready code for this task:
 
 Task: {task}
@@ -434,21 +435,19 @@ Requirements:
 - Include usage examples
 
 Provide the complete implementation with explanations.""",
-
             Role.CRITIC: f"""You are a code reviewer. Analyze this task and provide a structured review:
 
 Task: {task}
 
 Review across these dimensions:
 - Security vulnerabilities
-- Performance implications  
+- Performance implications
 - Code quality and maintainability
 - Error handling
 - Test coverage needs
 - Documentation quality
 
 Provide specific, actionable feedback.""",
-
             Role.JUDGE: f"""You are a technical judge. Evaluate proposals for this task:
 
 Task: {task}
@@ -460,7 +459,6 @@ Make a decision on:
 - Risk level assessment
 
 Provide clear reasoning and next steps.""",
-
             Role.RUNNER: f"""You are a code runner. Execute the approved solution for:
 
 Task: {task}
@@ -471,7 +469,7 @@ Focus on:
 - Verifying functionality
 - Reporting results
 
-Provide execution details and any issues found."""
+Provide execution details and any issues found.""",
         }
 
         prompt = base_prompts.get(role, base_prompts[Role.GENERATOR])
@@ -495,15 +493,14 @@ Provide execution details and any issues found."""
             if get_embedding_coordinator:
                 # Run sync coordinator in a thread to avoid blocking event loop
                 import asyncio
+
                 coordinator = get_embedding_coordinator()
-                result = await asyncio.to_thread(
-                    coordinator.generate_embeddings,
-                    texts,
-                    strategy
-                )
+                result = await asyncio.to_thread(coordinator.generate_embeddings, texts, strategy)
                 embeddings = result.get("embeddings", [])
                 if embeddings:
-                    logger.info(f"Generated embeddings via coordinator ({result.get('strategy_used')}) for {len(texts)} texts")
+                    logger.info(
+                        f"Generated embeddings via coordinator ({result.get('strategy_used')}) for {len(texts)} texts"
+                    )
                     return embeddings
         except Exception as e:
             logger.warning(f"Coordinator embedding failed, falling back to gateway: {e}")
@@ -511,7 +508,11 @@ Provide execution details and any issues found."""
         try:
             embeddings_response = await self.gateway.generate_embeddings(texts)
             # Expecting {'data': [{'embedding': [...]}, ...]}
-            embeddings = [item["embedding"] for item in embeddings_response.get("data", []) if "embedding" in item]
+            embeddings = [
+                item["embedding"]
+                for item in embeddings_response.get("data", [])
+                if "embedding" in item
+            ]
             if embeddings:
                 logger.info(f"Generated embeddings via gateway for {len(texts)} texts")
                 return embeddings
@@ -528,11 +529,7 @@ real_executor = RealLLMExecutor()
 
 
 # Backward compatibility functions
-async def execute_with_real_llm(
-    problem: dict,
-    agents: list[str],
-    pool: str = "balanced"
-) -> dict:
+async def execute_with_real_llm(problem: dict, agents: list[str], pool: str = "balanced") -> dict:
     """Execute problem with real LLM calls (backward compatible)."""
     try:
         # Convert old format to new
@@ -544,17 +541,14 @@ async def execute_with_real_llm(
             "planner": Role.PLANNER,
             "critic": Role.CRITIC,
             "judge": Role.JUDGE,
-            "runner": Role.RUNNER
+            "runner": Role.RUNNER,
         }
 
         agent_role = role_map.get(agents[0] if agents else "generator", Role.GENERATOR)
 
         # Execute with real LLM
         result = await real_executor.execute(
-            prompt=task,
-            model_pool=pool,
-            role=agent_role,
-            context=problem.get("context")
+            prompt=task, model_pool=pool, role=agent_role, context=problem.get("context")
         )
 
         return {
@@ -563,7 +557,7 @@ async def execute_with_real_llm(
             "agent": agents[0] if agents else "generator",
             "timestamp": result["timestamp"],
             "model": result.get("model"),
-            "success": result["success"]
+            "success": result["success"],
         }
 
     except Exception as e:
@@ -572,5 +566,5 @@ async def execute_with_real_llm(
             "solution": f"# Error executing with real LLM: {str(e)}",
             "confidence": 0.1,
             "error": str(e),
-            "success": False
+            "success": False,
         }

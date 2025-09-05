@@ -6,7 +6,6 @@ Tests all integration points and ensures everything is working properly.
 
 import asyncio
 import json
-import os
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -20,7 +19,7 @@ from dotenv import load_dotenv
 
 from app.core.ai_logger import logger
 
-load_dotenv('.env.local', override=True)
+load_dotenv(".env.local", override=True)
 
 
 class SwarmIntegrationTester:
@@ -31,17 +30,19 @@ class SwarmIntegrationTester:
         self.results = {
             "timestamp": datetime.now().isoformat(),
             "tests": [],
-            "summary": {"total": 0, "passed": 0, "failed": 0}
+            "summary": {"total": 0, "passed": 0, "failed": 0},
         }
 
     def _record_test(self, name: str, success: bool, details: str = ""):
         """Record test result."""
-        self.results["tests"].append({
-            "name": name,
-            "success": success,
-            "details": details,
-            "timestamp": datetime.now().isoformat()
-        })
+        self.results["tests"].append(
+            {
+                "name": name,
+                "success": success,
+                "details": details,
+                "timestamp": datetime.now().isoformat(),
+            }
+        )
         self.results["summary"]["total"] += 1
         if success:
             self.results["summary"]["passed"] += 1
@@ -50,9 +51,9 @@ class SwarmIntegrationTester:
 
     async def test_health_check(self):
         """Test basic health endpoint."""
-        logger.info("\n" + "="*60)
+        logger.info("\n" + "=" * 60)
         logger.info("🏥 Testing Health Check")
-        logger.info("="*60)
+        logger.info("=" * 60)
 
         async with httpx.AsyncClient() as client:
             try:
@@ -75,9 +76,9 @@ class SwarmIntegrationTester:
 
     async def test_teams_api(self):
         """Test teams API endpoints."""
-        logger.info("\n" + "="*60)
+        logger.info("\n" + "=" * 60)
         logger.info("👥 Testing Teams API")
-        logger.info("="*60)
+        logger.info("=" * 60)
 
         async with httpx.AsyncClient() as client:
             # Get available teams
@@ -103,32 +104,34 @@ class SwarmIntegrationTester:
                 {
                     "team_id": "SIMPLEX",
                     "message": "Test message for simplex team",
-                    "pool": "balanced"
+                    "pool": "balanced",
                 },
-                {
-                    "team_id": "CONSENSUS",
-                    "message": "Test consensus mechanism",
-                    "pool": "fast"
-                }
+                {"team_id": "CONSENSUS", "message": "Test consensus mechanism", "pool": "fast"},
             ]
 
             for req in test_requests:
                 try:
                     response = await client.post(
-                        f"{self.base_url}/teams/run",
-                        json=req,
-                        timeout=30.0
+                        f"{self.base_url}/teams/run", json=req, timeout=30.0
                     )
                     if response.status_code == 200:
                         # Handle streaming response
                         response_text = response.text
                         # Check if we got any content
                         if response_text and len(response_text.strip()) > 0:
-                            logger.info(f"✅ Team {req['team_id']}: Executed successfully (streaming)")
-                            self._record_test(f"Execute team {req['team_id']}", True, "Streaming response received")
+                            logger.info(
+                                f"✅ Team {req['team_id']}: Executed successfully (streaming)"
+                            )
+                            self._record_test(
+                                f"Execute team {req['team_id']}",
+                                True,
+                                "Streaming response received",
+                            )
                         else:
                             logger.info(f"⚠️ Team {req['team_id']}: Empty response")
-                            self._record_test(f"Execute team {req['team_id']}", False, "Empty streaming response")
+                            self._record_test(
+                                f"Execute team {req['team_id']}", False, "Empty streaming response"
+                            )
                     else:
                         logger.info(f"❌ Team {req['team_id']}: Failed ({response.status_code})")
                         error_detail = response.text[:200] if response.text else "No details"
@@ -139,9 +142,9 @@ class SwarmIntegrationTester:
 
     async def test_workflows_api(self):
         """Test workflows API endpoints."""
-        logger.info("\n" + "="*60)
+        logger.info("\n" + "=" * 60)
         logger.info("🔄 Testing Workflows API")
-        logger.info("="*60)
+        logger.info("=" * 60)
 
         async with httpx.AsyncClient() as client:
             # Get available workflows
@@ -166,14 +169,12 @@ class SwarmIntegrationTester:
             test_workflow = {
                 "workflow_id": "code_review",
                 "message": "Review this test code: def add(a, b): return a + b",
-                "pool": "balanced"
+                "pool": "balanced",
             }
 
             try:
                 response = await client.post(
-                    f"{self.base_url}/workflows/run",
-                    json=test_workflow,
-                    timeout=30.0
+                    f"{self.base_url}/workflows/run", json=test_workflow, timeout=30.0
                 )
                 if response.status_code == 200:
                     # Handle streaming response
@@ -193,9 +194,9 @@ class SwarmIntegrationTester:
 
     async def test_memory_system(self):
         """Test memory storage and retrieval."""
-        logger.info("\n" + "="*60)
+        logger.info("\n" + "=" * 60)
         logger.info("🧠 Testing Memory System")
-        logger.info("="*60)
+        logger.info("=" * 60)
 
         async with httpx.AsyncClient() as client:
             # Test memory add
@@ -205,14 +206,11 @@ class SwarmIntegrationTester:
                 "content": "This is a test memory entry for swarm testing",
                 "source": "test_script",
                 "tags": ["test", "integration"],
-                "memory_type": "semantic"
+                "memory_type": "semantic",
             }
 
             try:
-                response = await client.post(
-                    f"{self.base_url}/memory/add",
-                    json=test_memory
-                )
+                response = await client.post(f"{self.base_url}/memory/add", json=test_memory)
                 if response.status_code == 200:
                     logger.info("✅ Memory stored successfully")
                     self._record_test("Memory storage", True, "Success")
@@ -229,18 +227,19 @@ class SwarmIntegrationTester:
                 "query": "test memory swarm",
                 "top_k": 5,
                 "use_semantic": True,
-                "use_bm25": True
+                "use_bm25": True,
             }
 
             try:
-                response = await client.post(
-                    f"{self.base_url}/memory/search",
-                    json=search_query
-                )
+                response = await client.post(f"{self.base_url}/memory/search", json=search_query)
                 if response.status_code == 200:
                     results = response.json()
-                    logger.info(f"✅ Memory search returned {len(results.get('results', []))} results")
-                    self._record_test("Memory search", True, f"{len(results.get('results', []))} results")
+                    logger.info(
+                        f"✅ Memory search returned {len(results.get('results', []))} results"
+                    )
+                    self._record_test(
+                        "Memory search", True, f"{len(results.get('results', []))} results"
+                    )
                 else:
                     logger.info(f"❌ Memory search failed: {response.status_code}")
                     self._record_test("Memory search", False, f"Status {response.status_code}")
@@ -250,9 +249,9 @@ class SwarmIntegrationTester:
 
     async def test_search_system(self):
         """Test hybrid search functionality."""
-        logger.info("\n" + "="*60)
+        logger.info("\n" + "=" * 60)
         logger.info("🔍 Testing Search System")
-        logger.info("="*60)
+        logger.info("=" * 60)
 
         async with httpx.AsyncClient() as client:
             logger.info("\n1. Testing hybrid search...")
@@ -262,18 +261,17 @@ class SwarmIntegrationTester:
                 "use_semantic": True,
                 "use_bm25": True,
                 "use_reranker": False,
-                "include_graph": False
+                "include_graph": False,
             }
 
             try:
-                response = await client.post(
-                    f"{self.base_url}/search",
-                    json=search_request
-                )
+                response = await client.post(f"{self.base_url}/search", json=search_request)
                 if response.status_code == 200:
                     results = response.json()
                     logger.info(f"✅ Search returned {len(results.get('results', []))} results")
-                    self._record_test("Hybrid search", True, f"{len(results.get('results', []))} results")
+                    self._record_test(
+                        "Hybrid search", True, f"{len(results.get('results', []))} results"
+                    )
                 else:
                     logger.info(f"❌ Search failed: {response.status_code}")
                     self._record_test("Hybrid search", False, f"Status {response.status_code}")
@@ -283,15 +281,15 @@ class SwarmIntegrationTester:
 
     async def test_mcp_connections(self):
         """Test MCP server connections."""
-        logger.info("\n" + "="*60)
+        logger.info("\n" + "=" * 60)
         logger.info("🔌 Testing MCP Server Connections")
-        logger.info("="*60)
+        logger.info("=" * 60)
 
         # Check if MCP servers are configured
         mcp_servers = {
-            "filesystem": os.getenv("MCP_FILESYSTEM", "true").lower() == "true",
-            "git": os.getenv("MCP_GIT", "true").lower() == "true",
-            "supermemory": os.getenv("MCP_SUPERMEMORY", "true").lower() == "true"
+            "filesystem": get_config().get("MCP_FILESYSTEM", "true").lower() == "true",
+            "git": get_config().get("MCP_GIT", "true").lower() == "true",
+            "supermemory": get_config().get("MCP_SUPERMEMORY", "true").lower() == "true",
         }
 
         logger.info("\nMCP Server Configuration:")
@@ -302,9 +300,9 @@ class SwarmIntegrationTester:
 
     async def test_stats_endpoint(self):
         """Test statistics endpoint."""
-        logger.info("\n" + "="*60)
+        logger.info("\n" + "=" * 60)
         logger.info("📊 Testing Statistics")
-        logger.info("="*60)
+        logger.info("=" * 60)
 
         async with httpx.AsyncClient() as client:
             try:
@@ -325,9 +323,9 @@ class SwarmIntegrationTester:
 
     async def test_swarm_patterns(self):
         """Test swarm pattern implementations."""
-        logger.info("\n" + "="*60)
+        logger.info("\n" + "=" * 60)
         logger.info("🎭 Testing Swarm Patterns")
-        logger.info("="*60)
+        logger.info("=" * 60)
 
         # Import pattern modules
         try:
@@ -337,6 +335,7 @@ class SwarmIntegrationTester:
                 QualityGatesPattern,
                 SwarmComposer,
             )
+
             logger.info("✅ Pattern modules imported successfully")
             self._record_test("Pattern imports", True, "All patterns imported")
 
@@ -344,12 +343,12 @@ class SwarmIntegrationTester:
             patterns_to_test = [
                 ("Adversarial Debate", AdversarialDebatePattern),
                 ("Quality Gates", QualityGatesPattern),
-                ("Consensus", ConsensusPattern)
+                ("Consensus", ConsensusPattern),
             ]
 
             for name, PatternClass in patterns_to_test:
                 try:
-                    pattern = PatternClass()
+                    PatternClass()
                     logger.info(f"✅ {name} pattern initialized")
                     self._record_test(f"{name} pattern", True, "Initialized")
                 except Exception as e:
@@ -362,12 +361,12 @@ class SwarmIntegrationTester:
 
     async def test_ag_ui_connection(self):
         """Test AG UI dashboard connection."""
-        logger.info("\n" + "="*60)
+        logger.info("\n" + "=" * 60)
         logger.info("🖥️ Testing AG UI Dashboard Connection")
-        logger.info("="*60)
+        logger.info("=" * 60)
 
         # Check if AG UI is configured
-        ag_ui_port = os.getenv("AGENT_UI_PORT", "3000")
+        ag_ui_port = get_config().get("AGENT_UI_PORT", "3000")
         ag_ui_url = f"http://localhost:{ag_ui_port}"
 
         logger.info(f"\nChecking AG UI at {ag_ui_url}...")
@@ -392,17 +391,17 @@ class SwarmIntegrationTester:
 
     def print_summary(self):
         """Print test summary."""
-        logger.info("\n" + "="*60)
+        logger.info("\n" + "=" * 60)
         logger.info("📊 TEST SUMMARY")
-        logger.info("="*60)
+        logger.info("=" * 60)
 
         summary = self.results["summary"]
         logger.info(f"\nTotal Tests: {summary['total']}")
         logger.info(f"✅ Passed: {summary['passed']}")
         logger.info(f"❌ Failed: {summary['failed']}")
 
-        if summary['total'] > 0:
-            pass_rate = (summary['passed'] / summary['total']) * 100
+        if summary["total"] > 0:
+            pass_rate = (summary["passed"] / summary["total"]) * 100
             logger.info(f"Pass Rate: {pass_rate:.1f}%")
 
         # List failed tests
@@ -420,9 +419,9 @@ class SwarmIntegrationTester:
 
     async def run_all_tests(self):
         """Run all integration tests."""
-        logger.info("\n" + "="*60)
+        logger.info("\n" + "=" * 60)
         logger.info("🚀 COMPREHENSIVE SWARM INTEGRATION TEST")
-        logger.info("="*60)
+        logger.info("=" * 60)
         logger.info(f"Server: {self.base_url}")
         logger.info(f"Time: {datetime.now().isoformat()}")
 
@@ -441,7 +440,7 @@ class SwarmIntegrationTester:
             self.test_mcp_connections,
             self.test_stats_endpoint,
             self.test_swarm_patterns,
-            self.test_ag_ui_connection
+            self.test_ag_ui_connection,
         ]
 
         for test_func in test_suites:

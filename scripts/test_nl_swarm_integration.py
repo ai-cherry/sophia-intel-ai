@@ -22,15 +22,16 @@ from app.swarms.performance_optimizer import CircuitBreaker, SwarmOptimizer
 
 class Colors:
     """ANSI color codes for terminal output"""
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKCYAN = '\033[96m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
+
+    HEADER = "\033[95m"
+    OKBLUE = "\033[94m"
+    OKCYAN = "\033[96m"
+    OKGREEN = "\033[92m"
+    WARNING = "\033[93m"
+    FAIL = "\033[91m"
+    ENDC = "\033[0m"
+    BOLD = "\033[1m"
+    UNDERLINE = "\033[4m"
 
 
 class QualityControlTester:
@@ -49,7 +50,11 @@ class QualityControlTester:
 
     def print_test(self, test_name: str, passed: bool, details: str = ""):
         """Print test result"""
-        status = f"{Colors.OKGREEN}✓ PASSED{Colors.ENDC}" if passed else f"{Colors.FAIL}✗ FAILED{Colors.ENDC}"
+        status = (
+            f"{Colors.OKGREEN}✓ PASSED{Colors.ENDC}"
+            if passed
+            else f"{Colors.FAIL}✗ FAILED{Colors.ENDC}"
+        )
         logger.info(f"  {test_name}: {status}")
         if details:
             logger.info(f"    {Colors.OKCYAN}{details}{Colors.ENDC}")
@@ -59,11 +64,7 @@ class QualityControlTester:
         else:
             self.failed_tests += 1
 
-        self.test_results.append({
-            "test": test_name,
-            "passed": passed,
-            "details": details
-        })
+        self.test_results.append({"test": test_name, "passed": passed, "details": details})
 
     async def test_config_loading(self) -> bool:
         """Test configuration file loading"""
@@ -72,11 +73,7 @@ class QualityControlTester:
         try:
             # Check if config file exists
             config_path = Path("app/config/nl_swarm_integration.json")
-            self.print_test(
-                "Config file exists",
-                config_path.exists(),
-                f"Path: {config_path}"
-            )
+            self.print_test("Config file exists", config_path.exists(), f"Path: {config_path}")
 
             # Load and validate config
             if config_path.exists():
@@ -89,14 +86,14 @@ class QualityControlTester:
                     "execution_modes",
                     "swarm_eligible_intents",
                     "memory_enrichment",
-                    "circuit_breakers"
+                    "circuit_breakers",
                 ]
 
                 for section in required_sections:
                     self.print_test(
                         f"Config section '{section}'",
                         section in config,
-                        f"Found: {list(config.get(section, {}).keys())[:3]}..."
+                        f"Found: {list(config.get(section, {}).keys())[:3]}...",
                     )
 
                 return all(section in config for section in required_sections)
@@ -113,53 +110,40 @@ class QualityControlTester:
 
         try:
             # Initialize dispatcher
-            dispatcher = SmartCommandDispatcher(
-                config_file="app/config/nl_swarm_integration.json"
-            )
+            dispatcher = SmartCommandDispatcher(config_file="app/config/nl_swarm_integration.json")
             self.print_test("Dispatcher initialization", True, "Successfully created")
 
             # Test simple command (should use Lite mode)
             simple_result = await dispatcher.process_command(
-                text="show system status",
-                session_id="test-001"
+                text="show system status", session_id="test-001"
             )
 
             self.print_test(
                 "Simple command processing",
                 simple_result.success,
-                f"Mode: {simple_result.execution_mode.value}, Time: {simple_result.execution_time:.2f}s"
+                f"Mode: {simple_result.execution_mode.value}, Time: {simple_result.execution_time:.2f}s",
             )
 
             # Test complexity analysis
-            task = {
-                "description": "show system status",
-                "intent": "SYSTEM_STATUS"
-            }
+            task = {"description": "show system status", "intent": "SYSTEM_STATUS"}
             complexity = dispatcher.optimizer.calculate_task_complexity(task)
 
             self.print_test(
-                "Complexity calculation",
-                0 <= complexity <= 1,
-                f"Complexity: {complexity:.2f}"
+                "Complexity calculation", 0 <= complexity <= 1, f"Complexity: {complexity:.2f}"
             )
 
             # Test mode selection
             mode = ExecutionMode.LITE if complexity < 0.3 else ExecutionMode.BALANCED
             self.print_test(
-                "Mode selection logic",
-                mode == ExecutionMode.LITE,
-                f"Selected: {mode.value}"
+                "Mode selection logic", mode == ExecutionMode.LITE, f"Selected: {mode.value}"
             )
 
             # Test circuit breakers
             cb_test = all(
-                isinstance(cb, CircuitBreaker)
-                for cb in dispatcher.circuit_breakers.values()
+                isinstance(cb, CircuitBreaker) for cb in dispatcher.circuit_breakers.values()
             )
             self.print_test(
-                "Circuit breakers",
-                cb_test,
-                f"Breakers: {list(dispatcher.circuit_breakers.keys())}"
+                "Circuit breakers", cb_test, f"Breakers: {list(dispatcher.circuit_breakers.keys())}"
             )
 
             # Test performance metrics
@@ -167,7 +151,7 @@ class QualityControlTester:
             self.print_test(
                 "Performance metrics",
                 "dispatcher_stats" in metrics,
-                f"Metrics collected: {len(metrics)} categories"
+                f"Metrics collected: {len(metrics)} categories",
             )
 
             return simple_result.success
@@ -190,7 +174,7 @@ class QualityControlTester:
                 ("show system status", CommandIntent.SYSTEM_STATUS),
                 ("run agent researcher", CommandIntent.RUN_AGENT),
                 ("query data about users", CommandIntent.QUERY_DATA),
-                ("help", CommandIntent.HELP)
+                ("help", CommandIntent.HELP),
             ]
 
             all_passed = True
@@ -202,7 +186,7 @@ class QualityControlTester:
                 self.print_test(
                     f"Parse '{text[:20]}...'",
                     passed,
-                    f"Intent: {result.intent.value}, Confidence: {result.confidence:.2f}"
+                    f"Intent: {result.intent.value}, Confidence: {result.confidence:.2f}",
                 )
 
             # Test caching performance
@@ -215,7 +199,7 @@ class QualityControlTester:
             self.print_test(
                 "Cache performance",
                 cache_stats["hit_rate"] > 0.8,
-                f"Hit rate: {cache_stats['hit_rate']:.1%}, Time: {cached_time:.3f}s"
+                f"Hit rate: {cache_stats['hit_rate']:.1%}, Time: {cached_time:.3f}s",
             )
 
             return all_passed
@@ -242,30 +226,24 @@ class QualityControlTester:
                 intent="TEST",
                 entities={},
                 confidence=0.9,
-                response="test response"
+                response="test response",
             )
 
             stored = await memory.store_interaction(interaction)
-            self.print_test(
-                "Store interaction",
-                stored,
-                "Interaction stored in cache"
-            )
+            self.print_test("Store interaction", stored, "Interaction stored in cache")
 
             # Test retrieving history
             history = await memory.retrieve_session_history("test-002", limit=5)
             self.print_test(
                 "Retrieve history",
                 isinstance(history, list),
-                f"Retrieved {len(history)} interactions"
+                f"Retrieved {len(history)} interactions",
             )
 
             # Test context summary
             summary = await memory.get_context_summary("test-002")
             self.print_test(
-                "Context summary",
-                "session_id" in summary,
-                "Summary generated for session"
+                "Context summary", "session_id" in summary, "Summary generated for session"
             )
 
             await memory.disconnect()
@@ -288,7 +266,7 @@ class QualityControlTester:
             tasks = [
                 ({"description": "fix bug"}, "simple", 0.4),
                 ({"description": "implement new feature"}, "medium", 0.6),
-                ({"description": "architect enterprise system"}, "complex", 0.8)
+                ({"description": "architect enterprise system"}, "complex", 0.8),
             ]
 
             for task, label, expected_min in tasks:
@@ -296,24 +274,18 @@ class QualityControlTester:
                 self.print_test(
                     f"Complexity for '{label}' task",
                     complexity >= expected_min - 0.2,
-                    f"Score: {complexity:.2f}"
+                    f"Score: {complexity:.2f}",
                 )
 
             # Test circuit breaker
             cb = optimizer.get_circuit_breaker("test_component")
             self.print_test(
-                "Circuit breaker creation",
-                cb.state == "closed",
-                f"Initial state: {cb.state}"
+                "Circuit breaker creation", cb.state == "closed", f"Initial state: {cb.state}"
             )
 
             # Test degradation manager
             health = optimizer.degradation_manager.get_system_health_score()
-            self.print_test(
-                "System health check",
-                health == 1.0,
-                f"Health score: {health:.1%}"
-            )
+            self.print_test("System health check", health == 1.0, f"Health score: {health:.1%}")
 
             return True
 
@@ -335,9 +307,7 @@ class QualityControlTester:
                 # Check for new imports
                 has_dispatcher = "SmartCommandDispatcher" in content
                 self.print_test(
-                    "SmartCommandDispatcher import",
-                    has_dispatcher,
-                    "Import found in endpoints"
+                    "SmartCommandDispatcher import", has_dispatcher, "Import found in endpoints"
                 )
 
                 # Check for new endpoints
@@ -346,7 +316,7 @@ class QualityControlTester:
                     "/swarm/performance",
                     "/swarm/optimize",
                     "/swarm/modes",
-                    "/swarm/reset"
+                    "/swarm/reset",
                 ]
 
                 for endpoint in endpoints:
@@ -354,7 +324,7 @@ class QualityControlTester:
                     self.print_test(
                         f"Endpoint '{endpoint}'",
                         has_endpoint,
-                        "Defined" if has_endpoint else "Missing"
+                        "Defined" if has_endpoint else "Missing",
                     )
 
                 return has_dispatcher
@@ -376,24 +346,20 @@ class QualityControlTester:
             test_cases = [
                 ("list all agents", ExecutionMode.LITE, 0.5),
                 ("run agent researcher to analyze data", ExecutionMode.BALANCED, 2.0),
-                ("architect a microservices solution", ExecutionMode.QUALITY, 5.0)
+                ("architect a microservices solution", ExecutionMode.QUALITY, 5.0),
             ]
 
             session_id = "integration-test"
 
-            for command, expected_mode, max_time in test_cases:
-                result = await dispatcher.process_command(
-                    text=command,
-                    session_id=session_id
-                )
+            for command, expected_mode, _max_time in test_cases:
+                result = await dispatcher.process_command(text=command, session_id=session_id)
 
                 mode_match = result.execution_mode == expected_mode
-                time_ok = result.execution_time < max_time
 
                 self.print_test(
                     f"Flow: '{command[:30]}...'",
                     result.success and mode_match,
-                    f"Mode: {result.execution_mode.value}, Time: {result.execution_time:.2f}s"
+                    f"Mode: {result.execution_mode.value}, Time: {result.execution_time:.2f}s",
                 )
 
             # Test session optimization
@@ -401,7 +367,7 @@ class QualityControlTester:
             self.print_test(
                 "Session optimization",
                 "recommended_mode" in optimization,
-                f"Recommended: {optimization.get('recommended_mode', 'N/A')}"
+                f"Recommended: {optimization.get('recommended_mode', 'N/A')}",
             )
 
             return True
@@ -424,21 +390,31 @@ class QualityControlTester:
 
         if pass_rate >= 80:
             logger.info(f"\n{Colors.OKGREEN}{Colors.BOLD}✓ QUALITY CONTROL PASSED{Colors.ENDC}")
-            logger.info(f"{Colors.OKGREEN}The NL-Swarm integration meets production quality standards!{Colors.ENDC}")
+            logger.info(
+                f"{Colors.OKGREEN}The NL-Swarm integration meets production quality standards!{Colors.ENDC}"
+            )
         else:
-            logger.info(f"\n{Colors.WARNING}{Colors.BOLD}⚠ QUALITY CONTROL NEEDS ATTENTION{Colors.ENDC}")
-            logger.info(f"{Colors.WARNING}Some tests failed. Review the results above.{Colors.ENDC}")
+            logger.info(
+                f"\n{Colors.WARNING}{Colors.BOLD}⚠ QUALITY CONTROL NEEDS ATTENTION{Colors.ENDC}"
+            )
+            logger.info(
+                f"{Colors.WARNING}Some tests failed. Review the results above.{Colors.ENDC}"
+            )
 
         # Write detailed report
         report_path = Path("test_results_nl_swarm.json")
-        with open(report_path, 'w') as f:
-            json.dump({
-                "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
-                "passed": self.passed_tests,
-                "failed": self.failed_tests,
-                "pass_rate": pass_rate,
-                "results": self.test_results
-            }, f, indent=2)
+        with open(report_path, "w") as f:
+            json.dump(
+                {
+                    "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+                    "passed": self.passed_tests,
+                    "failed": self.failed_tests,
+                    "pass_rate": pass_rate,
+                    "results": self.test_results,
+                },
+                f,
+                indent=2,
+            )
 
         logger.info(f"\n{Colors.OKCYAN}Detailed report saved to: {report_path}{Colors.ENDC}")
 

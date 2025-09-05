@@ -35,9 +35,9 @@ start_service() {
     local name=$1
     local port=$2
     local command=$3
-    
+
     echo -e "${YELLOW}Starting $name on port $port...${NC}"
-    
+
     # Check if already running
     if check_port $port; then
         echo -e "${GREEN}✅ $name already running on port $port${NC}"
@@ -45,7 +45,7 @@ start_service() {
         # Start the service
         eval "$command" &
         sleep 3
-        
+
         # Verify it started
         if check_port $port; then
             echo -e "${GREEN}✅ $name started successfully on port $port${NC}"
@@ -70,7 +70,7 @@ echo "   fly deploy --config fly-vector-store.toml"
 echo "   fly deploy --config fly-agent-ui.toml"
 echo ""
 echo "3️⃣ Post-deploy health checks:"
-echo "   curl -f https://sophia-api.fly.dev/healthz" 
+echo "   curl -f https://sophia-api.fly.dev/healthz"
 echo "   curl -f https://sophia-bridge.fly.dev/healthz"
 echo "   curl -f https://sophia-mcp.fly.dev/health"
 echo "   curl -f https://sophia-vector.fly.dev/health"

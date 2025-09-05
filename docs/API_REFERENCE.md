@@ -3,11 +3,13 @@
 ## Endpoints
 
 ### Process Request
+
 **POST** `/orchestrator/process`
 
 Process any type of orchestration request.
 
 **Request Body:**
+
 ```json
 {
   "type": "chat|command|query|agent",
@@ -18,6 +20,7 @@ Process any type of orchestration request.
 ```
 
 **Response:**
+
 ```json
 {
   "type": "response_type",
@@ -27,6 +30,7 @@ Process any type of orchestration request.
 ```
 
 ### WebSocket Connection
+
 **WS** `/orchestrator/ws`
 
 Real-time connection for monitoring and updates.
@@ -34,6 +38,7 @@ Real-time connection for monitoring and updates.
 ## Request Types
 
 ### Chat
+
 ```json
 {
   "type": "chat",
@@ -42,6 +47,7 @@ Real-time connection for monitoring and updates.
 ```
 
 ### Command
+
 ```json
 {
   "type": "command",
@@ -51,6 +57,7 @@ Real-time connection for monitoring and updates.
 ```
 
 ### Query
+
 ```json
 {
   "type": "query",
@@ -59,6 +66,7 @@ Real-time connection for monitoring and updates.
 ```
 
 ### Agent
+
 ```json
 {
   "type": "agent",

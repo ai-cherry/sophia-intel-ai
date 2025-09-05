@@ -5,35 +5,33 @@ Sales intelligence, client success, business strategy, and market wisdom
 Now featuring Universal Business Orchestrator with natural language interface
 """
 
-from fastapi import FastAPI, HTTPException, Request
+import logging
+import os
+from typing import Any, Optional
+
+import uvicorn
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
-import uvicorn
-import os
-import asyncio
-import logging
-from typing import Optional, Dict, Any, List
 
-# Import the AGNO Universal Business Orchestrator
-from app.orchestrators.sophia_agno_orchestrator import (
-    SophiaAGNOOrchestrator,
-    BusinessContext,
-    AGNOBusinessCommandType as BusinessCommandType
+from app.core.config import get_config
+
+# Import Slack integration
+from app.integrations.slack_integration import (
+    SlackClient,
+    SlackIntegrationError,
+    get_slack_channels,
+    send_slack_message,
+    test_slack_connection,
 )
 
 # Import Sophia Business Agent Factory
 from app.sophia.agent_factory import sophia_business_factory
 
-# Import Slack integration
-from app.integrations.slack_integration import (
-    SlackClient, 
-    send_slack_message, 
-    test_slack_connection, 
-    get_slack_channels,
-    SlackIntegrationError
-)
+# Import the AGNO Universal Business Orchestrator
+from app.sophia.agno_orchestrator import BusinessContext, SophiaAGNOOrchestrator
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -41,7 +39,7 @@ logger = logging.getLogger(__name__)
 app = FastAPI(
     title="Sophia Intelligence Platform",
     description="Universal Business Intelligence Orchestrator with Natural Language Interface",
-    version="2.0.0"
+    version="2.0.0",
 )
 
 # Initialize the AGNO Universal Business Orchestrator
@@ -57,14 +55,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 # Pydantic models for API requests
 class BusinessRequest(BaseModel):
     message: str
     session_id: Optional[str] = None
     user_id: Optional[str] = None
     include_voice: bool = False
-    company_context: Optional[Dict[str, Any]] = None
+    company_context: Optional[dict[str, Any]] = None
     priority_level: str = "normal"
+
 
 class ChatRequest(BaseModel):
     message: str
@@ -72,36 +72,43 @@ class ChatRequest(BaseModel):
     user_id: Optional[str] = None
     include_voice: bool = False
 
+
 class AgentCreateRequest(BaseModel):
     template_id: str
-    custom_config: Optional[Dict[str, Any]] = None
+    custom_config: Optional[dict[str, Any]] = None
+
 
 class TeamCreateRequest(BaseModel):
     template_id: str
-    custom_config: Optional[Dict[str, Any]] = None
+    custom_config: Optional[dict[str, Any]] = None
+
 
 class TaskExecuteRequest(BaseModel):
     task: str
-    context: Optional[Dict[str, Any]] = None
+    context: Optional[dict[str, Any]] = None
+
 
 # Slack API request models
 class SlackMessageRequest(BaseModel):
     channel: str
     text: str
     thread_ts: Optional[str] = None
-    blocks: Optional[List[Dict[str, Any]]] = None
-    attachments: Optional[List[Dict[str, Any]]] = None
+    blocks: Optional[list[dict[str, Any]]] = None
+    attachments: Optional[list[dict[str, Any]]] = None
+
 
 class SlackUpdateMessageRequest(BaseModel):
     channel: str
     ts: str
     text: str
-    blocks: Optional[List[Dict[str, Any]]] = None
-    attachments: Optional[List[Dict[str, Any]]] = None
+    blocks: Optional[list[dict[str, Any]]] = None
+    attachments: Optional[list[dict[str, Any]]] = None
+
 
 class SlackDeleteMessageRequest(BaseModel):
     channel: str
     ts: str
+
 
 # Serve the Agent Factory dashboard
 @app.get("/agents/factory-dashboard.html")
@@ -113,6 +120,7 @@ async def get_dashboard():
     else:
         raise HTTPException(status_code=404, detail="Dashboard not found")
 
+
 # Serve the Sophia Business Factory UI
 @app.get("/sophia/factory")
 async def get_sophia_factory_ui():
@@ -123,55 +131,66 @@ async def get_sophia_factory_ui():
     else:
         raise HTTPException(status_code=404, detail="Factory UI not found")
 
+
 # Serve static files
 try:
     app.mount("/static", StaticFiles(directory="app/agents/ui"), name="static")
 except Exception:
     pass  # Continue if static files can't be mounted
 
+
 # Startup event to initialize orchestrator
 @app.on_event("startup")
 async def startup_event():
     global orchestrator_initialized
-    logger.info("🚀 Initializing Sophia AGNO Business Orchestrator with specialized intelligence teams...")
+    logger.info(
+        "🚀 Initializing Sophia AGNO Business Orchestrator with specialized intelligence teams..."
+    )
     orchestrator_initialized = await sophia_orchestrator.initialize()
     if orchestrator_initialized:
         logger.info("💎 Sophia AGNO Orchestrator ready with specialized business intelligence teams")
     else:
         logger.error("❌ Failed to initialize Sophia AGNO orchestrator")
 
+
 # Enhanced health check
 @app.get("/health")
 async def health_check():
-    orchestrator_status = await sophia_orchestrator.get_orchestrator_status() if orchestrator_initialized else {"status": "not_initialized"}
+    orchestrator_status = (
+        await sophia_orchestrator.get_orchestrator_status()
+        if orchestrator_initialized
+        else {"status": "not_initialized"}
+    )
     return {
         "status": "healthy" if orchestrator_initialized else "degraded",
         "service": "sophia_intelligence_platform",
         "orchestrator": orchestrator_status,
-        "version": "2.0.0"
+        "version": "2.0.0",
     }
+
 
 # =============================================================================
 # UNIVERSAL BUSINESS ORCHESTRATOR API ENDPOINTS
 # =============================================================================
+
 
 @app.post("/api/sophia/chat")
 async def sophia_universal_chat(request: ChatRequest):
     """Universal chat interface for all business operations"""
     if not orchestrator_initialized:
         raise HTTPException(status_code=503, detail="Sophia orchestrator not initialized")
-    
+
     try:
         # Create business context
         context = BusinessContext(
             user_id=request.user_id,
             session_id=request.session_id or f"session_{hash(request.message) % 10000}",
-            include_voice=request.include_voice
+            include_voice=request.include_voice,
         )
-        
+
         # Process through universal orchestrator
         response = await sophia_orchestrator.process_business_request(request.message, context)
-        
+
         return {
             "success": response.success,
             "response": response.content,
@@ -184,26 +203,27 @@ async def sophia_universal_chat(request: ChatRequest):
             "execution_time": response.execution_time,
             "timestamp": response.timestamp,
             "metadata": response.metadata,
-            "agno_teams_used": getattr(response, 'agno_teams_used', []),
-            "cross_team_synthesis": getattr(response, 'cross_team_synthesis', None),
-            "strategic_implications": getattr(response, 'strategic_implications', [])
+            "agno_teams_used": getattr(response, "agno_teams_used", []),
+            "cross_team_synthesis": getattr(response, "cross_team_synthesis", None),
+            "strategic_implications": getattr(response, "strategic_implications", []),
         }
-        
+
     except Exception as e:
         logger.error(f"Sophia chat error: {str(e)}")
         return {
             "success": False,
             "response": f"I encountered a strategic challenge: {str(e)}. Let me recalibrate and try a different approach.",
             "error": str(e),
-            "command_type": "error"
+            "command_type": "error",
         }
+
 
 @app.post("/api/sophia/business")
 async def sophia_business_operation(request: BusinessRequest):
     """Dedicated business operation endpoint with full context"""
     if not orchestrator_initialized:
         raise HTTPException(status_code=503, detail="Sophia orchestrator not initialized")
-    
+
     try:
         # Create comprehensive business context
         context = BusinessContext(
@@ -211,12 +231,12 @@ async def sophia_business_operation(request: BusinessRequest):
             session_id=request.session_id or f"biz_session_{hash(request.message) % 10000}",
             company_context=request.company_context,
             include_voice=request.include_voice,
-            priority_level=request.priority_level
+            priority_level=request.priority_level,
         )
-        
+
         # Process through universal orchestrator
         response = await sophia_orchestrator.process_business_request(request.message, context)
-        
+
         return {
             "success": response.success,
             "response": response.content,
@@ -230,36 +250,39 @@ async def sophia_business_operation(request: BusinessRequest):
             "execution_time": response.execution_time,
             "timestamp": response.timestamp,
             "metadata": response.metadata,
-            "agno_teams_used": getattr(response, 'agno_teams_used', []),
-            "team_specific_insights": getattr(response, 'team_specific_insights', {}),
-            "cross_team_synthesis": getattr(response, 'cross_team_synthesis', None),
-            "strategic_implications": getattr(response, 'strategic_implications', [])
+            "agno_teams_used": getattr(response, "agno_teams_used", []),
+            "team_specific_insights": getattr(response, "team_specific_insights", {}),
+            "cross_team_synthesis": getattr(response, "cross_team_synthesis", None),
+            "strategic_implications": getattr(response, "strategic_implications", []),
         }
-        
+
     except Exception as e:
         logger.error(f"Sophia business operation error: {str(e)}")
         return {
             "success": False,
             "response": f"Strategic roadblock encountered: {str(e)}. Analyzing alternative approaches...",
             "error": str(e),
-            "command_type": "error"
+            "command_type": "error",
         }
+
 
 @app.get("/api/sophia/status")
 async def sophia_status():
     """Get Sophia orchestrator status and capabilities"""
     if not orchestrator_initialized:
         return {"status": "not_initialized"}
-    
+
     return await sophia_orchestrator.get_orchestrator_status()
+
 
 @app.get("/api/sophia/insights")
 async def sophia_business_insights():
     """Get consolidated business insights summary"""
     if not orchestrator_initialized:
         raise HTTPException(status_code=503, detail="Sophia orchestrator not initialized")
-    
+
     return await sophia_orchestrator.get_business_insights_summary()
+
 
 # Slack Integration Endpoints
 @app.get("/api/slack/status")
@@ -270,10 +293,8 @@ async def slack_integration_status():
         return result
     except Exception as e:
         logger.error(f"Slack status check error: {str(e)}")
-        return {
-            "success": False,
-            "error": str(e)
-        }
+        return {"success": False, "error": str(e)}
+
 
 @app.post("/api/slack/send-message")
 async def slack_send_message(request: SlackMessageRequest):
@@ -284,15 +305,13 @@ async def slack_send_message(request: SlackMessageRequest):
             text=request.text,
             thread_ts=request.thread_ts,
             blocks=request.blocks,
-            attachments=request.attachments
+            attachments=request.attachments,
         )
         return result
     except Exception as e:
         logger.error(f"Slack send message error: {str(e)}")
-        return {
-            "success": False,
-            "error": str(e)
-        }
+        return {"success": False, "error": str(e)}
+
 
 @app.post("/api/slack/update-message")
 async def slack_update_message(request: SlackUpdateMessageRequest):
@@ -304,46 +323,31 @@ async def slack_update_message(request: SlackUpdateMessageRequest):
             ts=request.ts,
             text=request.text,
             blocks=request.blocks,
-            attachments=request.attachments
+            attachments=request.attachments,
         )
         return result
     except SlackIntegrationError as e:
         logger.error(f"Slack update message error: {str(e)}")
-        return {
-            "success": False,
-            "error": str(e),
-            "error_code": e.error_code
-        }
+        return {"success": False, "error": str(e), "error_code": e.error_code}
     except Exception as e:
         logger.error(f"Slack update message error: {str(e)}")
-        return {
-            "success": False,
-            "error": str(e)
-        }
+        return {"success": False, "error": str(e)}
+
 
 @app.post("/api/slack/delete-message")
 async def slack_delete_message(request: SlackDeleteMessageRequest):
     """Delete a Slack message"""
     try:
         client = SlackClient()
-        result = await client.delete_message(
-            channel=request.channel,
-            ts=request.ts
-        )
+        result = await client.delete_message(channel=request.channel, ts=request.ts)
         return result
     except SlackIntegrationError as e:
         logger.error(f"Slack delete message error: {str(e)}")
-        return {
-            "success": False,
-            "error": str(e),
-            "error_code": e.error_code
-        }
+        return {"success": False, "error": str(e), "error_code": e.error_code}
     except Exception as e:
         logger.error(f"Slack delete message error: {str(e)}")
-        return {
-            "success": False,
-            "error": str(e)
-        }
+        return {"success": False, "error": str(e)}
+
 
 @app.get("/api/slack/channels")
 async def slack_list_channels():
@@ -353,10 +357,8 @@ async def slack_list_channels():
         return result
     except Exception as e:
         logger.error(f"Slack list channels error: {str(e)}")
-        return {
-            "success": False,
-            "error": str(e)
-        }
+        return {"success": False, "error": str(e)}
+
 
 @app.get("/api/slack/channel/{channel_id}")
 async def slack_get_channel_info(channel_id: str):
@@ -367,17 +369,11 @@ async def slack_get_channel_info(channel_id: str):
         return result
     except SlackIntegrationError as e:
         logger.error(f"Slack get channel info error: {str(e)}")
-        return {
-            "success": False,
-            "error": str(e),
-            "error_code": e.error_code
-        }
+        return {"success": False, "error": str(e), "error_code": e.error_code}
     except Exception as e:
         logger.error(f"Slack get channel info error: {str(e)}")
-        return {
-            "success": False,
-            "error": str(e)
-        }
+        return {"success": False, "error": str(e)}
+
 
 @app.get("/api/slack/users")
 async def slack_list_users():
@@ -388,17 +384,11 @@ async def slack_list_users():
         return result
     except SlackIntegrationError as e:
         logger.error(f"Slack list users error: {str(e)}")
-        return {
-            "success": False,
-            "error": str(e),
-            "error_code": e.error_code
-        }
+        return {"success": False, "error": str(e), "error_code": e.error_code}
     except Exception as e:
         logger.error(f"Slack list users error: {str(e)}")
-        return {
-            "success": False,
-            "error": str(e)
-        }
+        return {"success": False, "error": str(e)}
+
 
 @app.get("/api/slack/user/{user_id}")
 async def slack_get_user_info(user_id: str):
@@ -409,48 +399,30 @@ async def slack_get_user_info(user_id: str):
         return result
     except SlackIntegrationError as e:
         logger.error(f"Slack get user info error: {str(e)}")
-        return {
-            "success": False,
-            "error": str(e),
-            "error_code": e.error_code
-        }
+        return {"success": False, "error": str(e), "error_code": e.error_code}
     except Exception as e:
         logger.error(f"Slack get user info error: {str(e)}")
-        return {
-            "success": False,
-            "error": str(e)
-        }
+        return {"success": False, "error": str(e)}
+
 
 @app.get("/api/slack/history/{channel_id}")
 async def slack_get_conversation_history(
-    channel_id: str, 
-    limit: int = 100,
-    oldest: Optional[str] = None,
-    latest: Optional[str] = None
+    channel_id: str, limit: int = 100, oldest: Optional[str] = None, latest: Optional[str] = None
 ):
     """Get conversation history from a Slack channel"""
     try:
         client = SlackClient()
         result = await client.get_conversation_history(
-            channel=channel_id,
-            limit=limit,
-            oldest=oldest,
-            latest=latest
+            channel=channel_id, limit=limit, oldest=oldest, latest=latest
         )
         return result
     except SlackIntegrationError as e:
         logger.error(f"Slack get history error: {str(e)}")
-        return {
-            "success": False,
-            "error": str(e),
-            "error_code": e.error_code
-        }
+        return {"success": False, "error": str(e), "error_code": e.error_code}
     except Exception as e:
         logger.error(f"Slack get history error: {str(e)}")
-        return {
-            "success": False,
-            "error": str(e)
-        }
+        return {"success": False, "error": str(e)}
+
 
 @app.post("/api/slack/join-channel/{channel_id}")
 async def slack_join_channel(channel_id: str):
@@ -461,17 +433,11 @@ async def slack_join_channel(channel_id: str):
         return result
     except SlackIntegrationError as e:
         logger.error(f"Slack join channel error: {str(e)}")
-        return {
-            "success": False,
-            "error": str(e),
-            "error_code": e.error_code
-        }
+        return {"success": False, "error": str(e), "error_code": e.error_code}
     except Exception as e:
         logger.error(f"Slack join channel error: {str(e)}")
-        return {
-            "success": False,
-            "error": str(e)
-        }
+        return {"success": False, "error": str(e)}
+
 
 @app.post("/api/slack/leave-channel/{channel_id}")
 async def slack_leave_channel(channel_id: str):
@@ -482,17 +448,11 @@ async def slack_leave_channel(channel_id: str):
         return result
     except SlackIntegrationError as e:
         logger.error(f"Slack leave channel error: {str(e)}")
-        return {
-            "success": False,
-            "error": str(e),
-            "error_code": e.error_code
-        }
+        return {"success": False, "error": str(e), "error_code": e.error_code}
     except Exception as e:
         logger.error(f"Slack leave channel error: {str(e)}")
-        return {
-            "success": False,
-            "error": str(e)
-        }
+        return {"success": False, "error": str(e)}
+
 
 # Legacy persona endpoints for backward compatibility
 @app.get("/api/personas/team")
@@ -504,7 +464,7 @@ async def get_team_mock():
         "team_members": [
             {
                 "id": "sophia_universal",
-                "name": "Sophia Universal Business Intelligence", 
+                "name": "Sophia Universal Business Intelligence",
                 "title": "Strategic Business Orchestrator",
                 "tagline": "Smart, strategic, and savvy - your complete business intelligence partner!",
                 "avatar": "💎",
@@ -513,47 +473,55 @@ async def get_team_mock():
                     "business_operations": "unlimited",
                     "domain_coverage": "complete",
                     "intelligence_level": "strategic",
-                    "response_time": "real-time"
+                    "response_time": "real-time",
                 },
                 "type": "universal_orchestrator",
                 "capabilities": [
                     "Sales Intelligence",
                     "Pipeline Management",
-                    "Client Success", 
+                    "Client Success",
                     "Market Research",
                     "Competitive Intelligence",
                     "Business Analytics",
                     "Strategic Planning",
-                    "Multi-step Workflows"
-                ]
+                    "Multi-step Workflows",
+                ],
             }
         ],
         "total": 1,
-        "orchestrator_status": "active" if orchestrator_initialized else "initializing"
+        "orchestrator_status": "active" if orchestrator_initialized else "initializing",
     }
+
 
 @app.post("/api/personas/chat/{persona_id}")
 async def chat_legacy_endpoint(persona_id: str, request: dict):
     """Legacy chat endpoint - now routes to Universal Orchestrator"""
     message = request.get("message", "")
-    
+
     # Route all requests to universal orchestrator
-    if orchestrator_initialized and persona_id in ["apollo", "athena", "sophia_universal", "sophia"]:
+    if orchestrator_initialized and persona_id in [
+        "apollo",
+        "athena",
+        "sophia_universal",
+        "sophia",
+    ]:
         try:
             context = BusinessContext(
                 session_id=f"legacy_session_{persona_id}_{hash(message) % 1000}"
             )
-            
+
             response = await sophia_orchestrator.process_business_request(message, context)
-            
+
             return {
                 "success": response.success,
                 "response": response.content,
                 "persona_id": "sophia_universal",
                 "timestamp": response.timestamp,
                 "command_type": response.command_type,
-                "insights": response.insights[:3] if response.insights else [],  # Limit for legacy compatibility
-                "recommendations": response.recommendations[:3] if response.recommendations else []
+                "insights": response.insights[:3]
+                if response.insights
+                else [],  # Limit for legacy compatibility
+                "recommendations": response.recommendations[:3] if response.recommendations else [],
             }
         except Exception as e:
             logger.error(f"Legacy chat routing error: {str(e)}")
@@ -562,14 +530,16 @@ async def chat_legacy_endpoint(persona_id: str, request: dict):
                 "response": f"I encountered a strategic challenge: {str(e)}. Let me recalibrate...",
                 "persona_id": persona_id,
                 "timestamp": "2024-12-03T22:20:00Z",
-                "error": str(e)
+                "error": str(e),
             }
-    
+
     return {"success": False, "error": "Persona not available or orchestrator not initialized"}
+
 
 # =============================================================================
 # SOPHIA BUSINESS AGENT FACTORY API ENDPOINTS
 # =============================================================================
+
 
 @app.get("/api/sophia/factory/templates")
 async def get_factory_templates():
@@ -579,69 +549,58 @@ async def get_factory_templates():
         return {
             "success": True,
             "templates": templates,
-            "message": "Business templates retrieved successfully"
+            "message": "Business templates retrieved successfully",
         }
     except Exception as e:
         logger.error(f"Failed to get factory templates: {e}")
-        return {
-            "success": False,
-            "error": str(e),
-            "message": "Failed to retrieve templates"
-        }
+        return {"success": False, "error": str(e), "message": "Failed to retrieve templates"}
+
 
 @app.post("/api/sophia/factory/create-agent")
 async def create_business_agent(request: AgentCreateRequest):
     """Create a business agent from template"""
     try:
         agent_id = await sophia_business_factory.create_business_agent(
-            template_id=request.template_id,
-            custom_config=request.custom_config
+            template_id=request.template_id, custom_config=request.custom_config
         )
-        
+
         return {
             "success": True,
             "agent_id": agent_id,
             "template_id": request.template_id,
-            "message": f"Business agent created successfully",
+            "message": "Business agent created successfully",
             "endpoints": {
                 "execute": f"/api/sophia/factory/execute/{agent_id}",
-                "status": f"/api/sophia/factory/agents/{agent_id}"
-            }
+                "status": f"/api/sophia/factory/agents/{agent_id}",
+            },
         }
     except Exception as e:
         logger.error(f"Failed to create business agent: {e}")
-        return {
-            "success": False,
-            "error": str(e),
-            "message": "Failed to create business agent"
-        }
+        return {"success": False, "error": str(e), "message": "Failed to create business agent"}
+
 
 @app.post("/api/sophia/factory/create-team")
 async def create_business_team(request: TeamCreateRequest):
     """Create a business team from template"""
     try:
         team_id = await sophia_business_factory.create_business_team(
-            template_id=request.template_id,
-            custom_config=request.custom_config
+            template_id=request.template_id, custom_config=request.custom_config
         )
-        
+
         return {
             "success": True,
             "team_id": team_id,
             "template_id": request.template_id,
-            "message": f"Business team created successfully",
+            "message": "Business team created successfully",
             "endpoints": {
                 "execute": f"/api/sophia/factory/execute/{team_id}",
-                "status": f"/api/sophia/factory/teams/{team_id}"
-            }
+                "status": f"/api/sophia/factory/teams/{team_id}",
+            },
         }
     except Exception as e:
         logger.error(f"Failed to create business team: {e}")
-        return {
-            "success": False,
-            "error": str(e),
-            "message": "Failed to create business team"
-        }
+        return {"success": False, "error": str(e), "message": "Failed to create business team"}
+
 
 @app.get("/api/sophia/factory/agents")
 async def list_created_agents():
@@ -652,15 +611,12 @@ async def list_created_agents():
             "success": True,
             "agents": agents,
             "total": len(agents),
-            "message": "Created agents retrieved successfully"
+            "message": "Created agents retrieved successfully",
         }
     except Exception as e:
         logger.error(f"Failed to list agents: {e}")
-        return {
-            "success": False,
-            "error": str(e),
-            "message": "Failed to retrieve agents"
-        }
+        return {"success": False, "error": str(e), "message": "Failed to retrieve agents"}
+
 
 @app.get("/api/sophia/factory/teams")
 async def list_created_teams():
@@ -671,15 +627,12 @@ async def list_created_teams():
             "success": True,
             "teams": teams,
             "total": len(teams),
-            "message": "Created teams retrieved successfully"
+            "message": "Created teams retrieved successfully",
         }
     except Exception as e:
         logger.error(f"Failed to list teams: {e}")
-        return {
-            "success": False,
-            "error": str(e),
-            "message": "Failed to retrieve teams"
-        }
+        return {"success": False, "error": str(e), "message": "Failed to retrieve teams"}
+
 
 @app.get("/api/sophia/factory/agents/{agent_id}")
 async def get_agent_info(agent_id: str):
@@ -687,14 +640,14 @@ async def get_agent_info(agent_id: str):
     try:
         agents = sophia_business_factory.get_created_agents()
         agent_info = next((agent for agent in agents if agent["id"] == agent_id), None)
-        
+
         if not agent_info:
             raise HTTPException(status_code=404, detail=f"Agent {agent_id} not found")
-        
+
         return {
             "success": True,
             "agent": agent_info,
-            "message": "Agent information retrieved successfully"
+            "message": "Agent information retrieved successfully",
         }
     except HTTPException:
         raise
@@ -703,8 +656,9 @@ async def get_agent_info(agent_id: str):
         return {
             "success": False,
             "error": str(e),
-            "message": "Failed to retrieve agent information"
+            "message": "Failed to retrieve agent information",
         }
+
 
 @app.get("/api/sophia/factory/teams/{team_id}")
 async def get_team_info(team_id: str):
@@ -712,47 +666,41 @@ async def get_team_info(team_id: str):
     try:
         teams = sophia_business_factory.get_created_teams()
         team_info = next((team for team in teams if team["id"] == team_id), None)
-        
+
         if not team_info:
             raise HTTPException(status_code=404, detail=f"Team {team_id} not found")
-        
+
         return {
             "success": True,
             "team": team_info,
-            "message": "Team information retrieved successfully"
+            "message": "Team information retrieved successfully",
         }
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Failed to get team info: {e}")
-        return {
-            "success": False,
-            "error": str(e),
-            "message": "Failed to retrieve team information"
-        }
+        return {"success": False, "error": str(e), "message": "Failed to retrieve team information"}
+
 
 @app.post("/api/sophia/factory/execute/{agent_or_team_id}")
 async def execute_business_task(agent_or_team_id: str, request: TaskExecuteRequest):
     """Execute a business task with an agent or team"""
     try:
         result = await sophia_business_factory.execute_business_task(
-            agent_or_team_id=agent_or_team_id,
-            task=request.task,
-            context=request.context
+            agent_or_team_id=agent_or_team_id, task=request.task, context=request.context
         )
-        
+
         return {
             "success": result["success"],
             "result": result,
-            "message": "Task executed successfully" if result["success"] else "Task execution failed"
+            "message": "Task executed successfully"
+            if result["success"]
+            else "Task execution failed",
         }
     except Exception as e:
         logger.error(f"Failed to execute business task: {e}")
-        return {
-            "success": False,
-            "error": str(e),
-            "message": "Failed to execute business task"
-        }
+        return {"success": False, "error": str(e), "message": "Failed to execute business task"}
+
 
 @app.get("/api/sophia/factory/metrics")
 async def get_factory_metrics():
@@ -762,15 +710,12 @@ async def get_factory_metrics():
         return {
             "success": True,
             "metrics": metrics,
-            "message": "Factory metrics retrieved successfully"
+            "message": "Factory metrics retrieved successfully",
         }
     except Exception as e:
         logger.error(f"Failed to get factory metrics: {e}")
-        return {
-            "success": False,
-            "error": str(e),
-            "message": "Failed to retrieve factory metrics"
-        }
+        return {"success": False, "error": str(e), "message": "Failed to retrieve factory metrics"}
+
 
 @app.get("/api/personas/health")
 async def health_mock():
@@ -780,9 +725,10 @@ async def health_mock():
         "status": "healthy",
         "personas": {
             "apollo": {"active": True, "name": "Apollo Thanos", "interactions": 156},
-            "athena": {"active": True, "name": "Athena Sophia", "interactions": 203}
-        }
+            "athena": {"active": True, "name": "Athena Sophia", "interactions": 203},
+        },
     }
+
 
 # Main route
 @app.get("/")
@@ -799,7 +745,7 @@ async def root():
             "Business Analytics & Strategic Planning",
             "Natural Language Business Operations",
             "Multi-step Workflow Execution",
-            "Voice Integration Support"
+            "Voice Integration Support",
         ],
         "endpoints": {
             "universal_chat": "/api/sophia/chat",
@@ -813,18 +759,20 @@ async def root():
             "factory_teams": "/api/sophia/factory/teams",
             "factory_metrics": "/api/sophia/factory/metrics",
             "health": "/health",
-            "docs": "/docs"
+            "docs": "/docs",
         },
-        "status": "operational" if orchestrator_initialized else "initializing"
+        "status": "operational" if orchestrator_initialized else "initializing",
     }
 
+
 if __name__ == "__main__":
-    port = int(os.getenv("SOPHIA_PORT", "9000"))
-    print(f"""
+    port = int(get_config().get("SOPHIA_PORT", "9000"))
+    logger.info(
+        f"""
 💎 SOPHIA UNIVERSAL BUSINESS ORCHESTRATOR & AGENT FACTORY
 =========================================================
 🚀 Intelligence API:  http://localhost:{port}/api/sophia/chat
-📊 Business Ops:      http://localhost:{port}/api/sophia/business  
+📊 Business Ops:      http://localhost:{port}/api/sophia/business
 🏭 Agent Factory:     http://localhost:{port}/sophia/factory
 📡 API Documentation: http://localhost:{port}/docs
 💙 Health & Status:   http://localhost:{port}/health
@@ -846,17 +794,17 @@ if __name__ == "__main__":
 🏭 BUSINESS AGENT FACTORY:
   ✨ Create Custom Business Intelligence Agents:
      • Sales Pipeline Analyst (PERPLEXITY-VK for market research)
-     • Revenue Forecaster (ANTHROPIC-VK for strategic analysis)  
+     • Revenue Forecaster (ANTHROPIC-VK for strategic analysis)
      • Client Success Manager (OPENAI-VK for relationship insights)
      • Market Research Specialist (DEEPSEEK-VK for data analysis)
      • Competitive Intelligence Agent (XAI-VK for creative insights)
-  
+
   🎯 Pre-built Business Teams:
      • Sales Intelligence Team
      • Client Success Team
-     • Market Research Team  
+     • Market Research Team
      • Strategic Business Team (all agents)
-  
+
   📊 Factory Endpoints:
      • GET  /api/sophia/factory/templates - List all templates
      • POST /api/sophia/factory/create-agent - Create business agent
@@ -868,7 +816,7 @@ if __name__ == "__main__":
 
 🔧 Domain Coverage:
   • Sales Intelligence    • Pipeline Management
-  • Client Success        • Market Research  
+  • Client Success        • Market Research
   • Competitive Intel     • Business Analytics
   • Strategic Planning    • Revenue Operations
 
@@ -878,6 +826,7 @@ if __name__ == "__main__":
   "Research our main competitor's pricing strategy and give recommendations"
 
 Starting Sophia Universal Business Orchestrator on port {port}...
-""")
-    
+"""
+    )
+
     uvicorn.run(app, host="0.0.0.0", port=port)

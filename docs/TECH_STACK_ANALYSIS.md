@@ -10,44 +10,46 @@ Our tech stack analysis reveals several opportunities for upgrades and improveme
 
 ### ✅ Up-to-Date Components
 
-| Component | Current Version | Latest Version | Status |
-|-----------|----------------|----------------|--------|
-| Agno | 1.8.1 | 1.8.1 | ✅ Current |
-| FastAPI | 0.116.1 | 0.116.1 | ✅ Current |
-| OpenAI SDK | 1.75.0 | 1.75.0 | ✅ Current |
-| SQLAlchemy | 2.0.43 | 2.0.43 | ✅ Current |
+| Component  | Current Version | Latest Version | Status     |
+| ---------- | --------------- | -------------- | ---------- |
+| Agno       | 1.8.1           | 1.8.1          | ✅ Current |
+| FastAPI    | 0.116.1         | 0.116.1        | ✅ Current |
+| OpenAI SDK | 1.75.0          | 1.75.0         | ✅ Current |
+| SQLAlchemy | 2.0.43          | 2.0.43         | ✅ Current |
 
 ### ⚠️ Components Needing Upgrade
 
-| Component | Current Version | Latest Version | Priority | Impact |
-|-----------|----------------|----------------|----------|---------|
-| Weaviate Server | Not Running | 1.32.0 | HIGH | Vector search unavailable |
-| Weaviate Client | Not Installed | 4.16.9 | HIGH | Cannot connect to vector DB |
-| Pulumi CLI | 3.186.0 | 3.192.0 | MEDIUM | Missing vigilant mode |
-| PostgreSQL | Not Configured | 17.5 (Neon) | MEDIUM | Missing latest performance |
-| Portkey SDK | Not Installed | Latest | HIGH | No unified gateway |
+| Component       | Current Version | Latest Version | Priority | Impact                      |
+| --------------- | --------------- | -------------- | -------- | --------------------------- |
+| Weaviate Server | Not Running     | 1.32.0         | HIGH     | Vector search unavailable   |
+| Weaviate Client | Not Installed   | 4.16.9         | HIGH     | Cannot connect to vector DB |
+| Pulumi CLI      | 3.186.0         | 3.192.0        | MEDIUM   | Missing vigilant mode       |
+| PostgreSQL      | Not Configured  | 17.5 (Neon)    | MEDIUM   | Missing latest performance  |
+| Portkey SDK     | Not Installed   | Latest         | HIGH     | No unified gateway          |
 
 ### 🔑 API Key Status
 
-| Provider | Status | Required | Purpose |
-|----------|--------|----------|---------|
-| Portkey | ❌ Missing | YES | Unified LLM gateway |
-| OpenRouter | ❌ Missing | YES | Access to 100+ models |
-| Anthropic | ⚠️ Key exists but 405 error | YES | Claude models |
-| OpenAI | ❌ Missing | Optional | GPT models (via Portkey) |
-| Groq | ❌ Missing | Optional | Fast inference |
-| Together | ❌ Missing | Optional | Open source models |
+| Provider   | Status                      | Required | Purpose                  |
+| ---------- | --------------------------- | -------- | ------------------------ |
+| Portkey    | ❌ Missing                  | YES      | Unified LLM gateway      |
+| OpenRouter | ❌ Missing                  | YES      | Access to 100+ models    |
+| Anthropic  | ⚠️ Key exists but 405 error | YES      | Claude models            |
+| OpenAI     | ❌ Missing                  | Optional | GPT models (via Portkey) |
+| Groq       | ❌ Missing                  | Optional | Fast inference           |
+| Together   | ❌ Missing                  | Optional | Open source models       |
 
 ## Gap Analysis
 
 ### 🔴 Critical Gaps (Immediate Action Required)
 
 1. **Weaviate Not Running**
+
    - Impact: No vector search capability
    - Solution: Deploy Weaviate v1.32 with Docker
    - Benefit: Collection aliases, RQ (3x memory efficiency), compressed HNSW
 
 2. **Portkey Not Configured**
+
    - Impact: No unified LLM routing, no failover
    - Solution: Configure Portkey API key and virtual keys
    - Benefit: Single gateway, automatic failover, cost tracking
@@ -63,8 +65,8 @@ Our tech stack analysis reveals several opportunities for upgrades and improveme
 1. **Pulumi Outdated**
    - Current: v3.186.0 → Latest: v3.192.0
    - New features: Vigilant mode, improved secrets handling
-   
 2. **PostgreSQL/Neon Not Configured**
+
    - Latest: PostgreSQL 17.5 via Neon
    - Benefits: Serverless, autoscaling, Azure integration
 
@@ -94,12 +96,14 @@ OPENROUTER_API_KEY=<your-key>
 ### Phase 2: This Week
 
 1. **Upgrade Pulumi**
+
    ```bash
    curl -fsSL https://get.pulumi.com | sh  # v3.192.0
    curl -fsSL https://get.pulumi.com/esc/install.sh | sh  # ESC v0.17.0
    ```
 
 2. **Set up Neon PostgreSQL**
+
    - Create account at neon.tech
    - Create project with PostgreSQL 17
    - Configure NEON_DATABASE_URL
@@ -112,6 +116,7 @@ OPENROUTER_API_KEY=<your-key>
 ### Phase 3: Optional Enhancements
 
 1. **Lambda Stack** (for GPU workloads)
+
    - CUDA 12.8, PyTorch 2.7.0, TensorFlow 2.19.0
    - One-line install for AI acceleration
 
@@ -123,17 +128,20 @@ OPENROUTER_API_KEY=<your-key>
 ## New Features to Leverage
 
 ### Weaviate 1.32 Features
+
 - **Collection Aliases**: Smooth schema migrations
 - **Rotational Quantization (RQ)**: 3x memory efficiency
 - **Compressed HNSW**: Reduced memory footprint
 - **Replica Movement GA**: Better scaling
 
 ### PostgreSQL 17 (via Neon)
+
 - **Native JSON operations**: Better performance
 - **Improved partitioning**: Faster queries
 - **Serverless advantages**: Auto-scaling, branching
 
 ### Pulumi 3.192.0
+
 - **Vigilant Mode**: Enhanced safety checks
 - **ESC Integration**: Better secrets management
 - **Improved performance**: Faster deployments
@@ -141,12 +149,14 @@ OPENROUTER_API_KEY=<your-key>
 ## Cost-Benefit Analysis
 
 ### Immediate Benefits (After Phase 1)
+
 - ✅ Vector search operational
 - ✅ Unified LLM gateway with failover
 - ✅ Access to 100+ models via OpenRouter
 - ✅ Cost tracking and optimization
 
 ### Long-term Benefits (After All Phases)
+
 - ✅ 3x memory efficiency (Weaviate RQ)
 - ✅ Serverless database scaling (Neon)
 - ✅ GPU acceleration ready (Lambda Stack)
@@ -155,6 +165,7 @@ OPENROUTER_API_KEY=<your-key>
 ## Implementation Script
 
 Run the provided upgrade script:
+
 ```bash
 chmod +x scripts/upgrade_tech_stack.sh
 ./scripts/upgrade_tech_stack.sh
@@ -163,7 +174,8 @@ chmod +x scripts/upgrade_tech_stack.sh
 ## Validation Checklist
 
 After upgrades, verify:
-- [ ] Weaviate accessible at http://localhost:8080
+
+- [ ] Weaviate accessible at <http://localhost:8080>
 - [ ] All Python packages installed (check with `pip list`)
 - [ ] Pulumi version shows v3.192.0
 - [ ] API keys configured in .env
@@ -173,17 +185,20 @@ After upgrades, verify:
 ## Summary
 
 **Current Readiness: 40%**
+
 - Core framework (Agno) is current
 - Critical services (Weaviate, Portkey) need setup
 - API keys need configuration
 
 **Target Readiness: 95%**
+
 - All services running latest versions
 - Full API key configuration
 - Unified gateway operational
 - Vector search enabled
 
 **Estimated Time to Full Readiness: 2-4 hours**
+
 - Phase 1: 30 minutes
 - Phase 2: 1-2 hours
 - Phase 3: 1 hour (optional)
@@ -197,5 +212,5 @@ After upgrades, verify:
 
 ---
 
-*Generated: August 30, 2025*
-*Analysis Tool: scripts/test_environment.py*
+_Generated: August 30, 2025_
+_Analysis Tool: scripts/test_environment.py_

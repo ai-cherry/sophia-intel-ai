@@ -1,0 +1,32 @@
+version: "3.8"
+
+services:
+  sophia-ai:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONPATH=/app
+      - SLACK_BOT_TOKEN=${SLACK_BOT_TOKEN}
+      - LOOKER_CLIENT_ID=${LOOKER_CLIENT_ID}
+      - LOOKER_CLIENT_SECRET=${LOOKER_CLIENT_SECRET}
+    volumes:
+      - ./logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/slack/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./ssl:/etc/ssl
+    depends_on:
+      - sophia-ai
+    restart: unless-stopped

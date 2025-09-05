@@ -40,7 +40,7 @@ export const APIRoutes = {
     teamId: string,
     sessionId: string
   ) => `${PlaygroundApiUrl}/teams/${teamId}/sessions/${sessionId}`,
-  
+
   // Cost tracking routes
   GetCostSummary: (PlaygroundApiUrl: string) =>
     `${PlaygroundApiUrl}/costs/summary`,

@@ -15,14 +15,14 @@ interface StreamViewProps {
   isStreaming?: boolean;
 }
 
-export function StreamView({ 
-  streamContent: externalStreamContent, 
-  lastResponse: externalLastResponse, 
-  isStreaming: externalIsStreaming 
+export function StreamView({
+  streamContent: externalStreamContent,
+  lastResponse: externalLastResponse,
+  isStreaming: externalIsStreaming
 }: StreamViewProps = {}) {
   // Use external props if provided, otherwise fall back to store
   const { isStreaming: storeIsStreaming } = usePlaygroundStore();
-  
+
   // For this component, we'll primarily rely on props passed from parent components
   // since the streaming state is managed in TeamWorkflowPanel
   const streamContent = externalStreamContent || '';

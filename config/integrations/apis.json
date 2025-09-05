@@ -1,0 +1,11 @@
+{
+  "rate_limiting": {
+    "requests_per_minute": 100,
+    "burst_limit": 10
+  },
+  "retries": {
+    "max_attempts": 3,
+    "backoff_factor": 2,
+    "timeout": 30
+  }
+}

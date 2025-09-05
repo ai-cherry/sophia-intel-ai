@@ -210,19 +210,19 @@
     .chat-container {
         max-height: 500px;
     }
-    
+
     .message-content {
         max-width: 85%;
     }
-    
+
     .chat-controls {
         flex-direction: column;
     }
-    
+
     .model-selector {
         width: 100%;
     }
-    
+
     .send-button {
         width: 100%;
     }

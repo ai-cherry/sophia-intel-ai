@@ -39,7 +39,7 @@ class ConsciousnessTrackingValidator:
             "memory_correlation": {},
             "evolution_integration": {},
             "collective_consciousness": {},
-            "overall_status": "unknown"
+            "overall_status": "unknown",
         }
 
     async def run_validation(self) -> dict[str, Any]:
@@ -81,9 +81,7 @@ class ConsciousnessTrackingValidator:
         mock_memory_client.search_memory = MagicMock(return_value=[])
 
         # Create consciousness tracker
-        tracker = ConsciousnessTracker(
-            "test_swarm", "validation_test", mock_memory_client
-        )
+        tracker = ConsciousnessTracker("test_swarm", "validation_test", mock_memory_client)
 
         results = {
             "initialization": False,
@@ -92,14 +90,14 @@ class ConsciousnessTrackingValidator:
             "emergence_detection": False,
             "pattern_breakthrough": False,
             "real_time_monitoring": False,
-            "reporting": False
+            "reporting": False,
         }
 
         # Test initialization
         results["initialization"] = (
-            tracker.swarm_type == "test_swarm" and
-            tracker.monitoring_active and
-            len(tracker.emergence_thresholds) == len(EmergenceEventType)
+            tracker.swarm_type == "test_swarm"
+            and tracker.monitoring_active
+            and len(tracker.emergence_thresholds) == len(EmergenceEventType)
         )
 
         # Test 5-dimensional measurement framework
@@ -118,36 +116,33 @@ class ConsciousnessTrackingValidator:
                     "clarity_score": 0.7,
                     "relevance_score": 0.8,
                     "info_sharing_score": 0.6,
-                    "feedback_score": 0.7
+                    "feedback_score": 0.7,
                 },
                 "role_performance": {"adherence_scores": [0.8, 0.7, 0.9]},
                 "conflicts": [],
-                "resolved_conflicts": 0
+                "resolved_conflicts": 0,
             },
             "performance_data": {
                 "quality_scores": [0.8],
                 "speed_score": 0.7,
                 "efficiency_score": 0.75,
-                "reliability_score": 0.85
+                "reliability_score": 0.85,
             },
             "memory_data": {
                 "patterns_applied": 2,
                 "pattern_types_recognized": ["test"],
-                "available_patterns": 5
+                "available_patterns": 5,
             },
-            "learning_data": {
-                "learnings_count": 3,
-                "avg_confidence": 0.8
-            }
+            "learning_data": {"learnings_count": 3, "avg_confidence": 0.8},
         }
 
         # Perform consciousness measurement
         measurements = await tracker.measure_consciousness(test_context)
 
         results["measurement_framework"] = (
-            len(measurements) == 5 and
-            all(dim in measurements for dim in ConsciousnessType) and
-            all(0 <= m.value <= 1 for m in measurements.values())
+            len(measurements) == 5
+            and all(dim in measurements for dim in ConsciousnessType)
+            and all(0 <= m.value <= 1 for m in measurements.values())
         )
 
         # Test baseline establishment
@@ -175,8 +170,7 @@ class ConsciousnessTrackingValidator:
 
         # Test real-time monitoring
         results["real_time_monitoring"] = (
-            tracker.monitoring_active and
-            len(tracker.alert_thresholds) > 0
+            tracker.monitoring_active and len(tracker.alert_thresholds) > 0
         )
 
         # Test reporting capabilities
@@ -184,14 +178,16 @@ class ConsciousnessTrackingValidator:
         report = await tracker.generate_consciousness_report()
 
         results["reporting"] = (
-            "profile" in metrics and
-            "statistics" in metrics and
-            "report_timestamp" in report and
-            "consciousness_profile" in report
+            "profile" in metrics
+            and "statistics" in metrics
+            and "report_timestamp" in report
+            and "consciousness_profile" in report
         )
 
         self.validation_results["core_functionality"] = results
-        logger.info(f"✅ Core functionality validation: {sum(results.values())}/{len(results)} tests passed")
+        logger.info(
+            f"✅ Core functionality validation: {sum(results.values())}/{len(results)} tests passed"
+        )
 
     async def _validate_integration(self):
         """Validate integration with orchestrators and swarms."""
@@ -201,7 +197,7 @@ class ConsciousnessTrackingValidator:
             "orchestrator_integration": False,
             "memory_client_integration": False,
             "swarm_integration": False,
-            "metrics_integration": False
+            "metrics_integration": False,
         }
 
         try:
@@ -216,8 +212,8 @@ class ConsciousnessTrackingValidator:
                 )
 
                 results["orchestrator_integration"] = (
-                    orchestrator.global_consciousness_tracker is not None and
-                    "consciousness_measurements" in orchestrator.global_metrics
+                    orchestrator.global_consciousness_tracker is not None
+                    and "consciousness_measurements" in orchestrator.global_metrics
                 )
 
             # Test memory client integration
@@ -232,9 +228,9 @@ class ConsciousnessTrackingValidator:
 
             # Test metrics integration
             results["metrics_integration"] = (
-                "consciousness_measurements" in orchestrator.global_metrics and
-                "emergence_events" in orchestrator.global_metrics and
-                "pattern_breakthroughs" in orchestrator.global_metrics
+                "consciousness_measurements" in orchestrator.global_metrics
+                and "emergence_events" in orchestrator.global_metrics
+                and "pattern_breakthroughs" in orchestrator.global_metrics
             )
 
         except Exception as e:
@@ -242,7 +238,9 @@ class ConsciousnessTrackingValidator:
             results = dict.fromkeys(results.keys(), False)
 
         self.validation_results["integration_tests"] = results
-        logger.info(f"✅ Integration validation: {sum(results.values())}/{len(results)} tests passed")
+        logger.info(
+            f"✅ Integration validation: {sum(results.values())}/{len(results)} tests passed"
+        )
 
     async def _validate_memory_correlation(self):
         """Validate memory-consciousness correlation."""
@@ -252,31 +250,35 @@ class ConsciousnessTrackingValidator:
             "memory_storage": False,
             "pattern_correlation": False,
             "historical_analysis": False,
-            "performance_correlation": False
+            "performance_correlation": False,
         }
 
         # Create mock memory client with realistic responses
         mock_memory_client = MagicMock()
         mock_memory_client.log_swarm_event = MagicMock(return_value=None)
         mock_memory_client.store_memory = MagicMock(return_value={"id": "test_memory"})
-        mock_memory_client.search_memory = MagicMock(return_value=[
-            {"content": json.dumps({"consciousness_level": 0.7, "quality_score": 0.8})},
-            {"content": json.dumps({"consciousness_level": 0.6, "quality_score": 0.7})}
-        ])
+        mock_memory_client.search_memory = MagicMock(
+            return_value=[
+                {"content": json.dumps({"consciousness_level": 0.7, "quality_score": 0.8})},
+                {"content": json.dumps({"consciousness_level": 0.6, "quality_score": 0.7})},
+            ]
+        )
         mock_memory_client.store_pattern = MagicMock(return_value=None)
         mock_memory_client.store_learning = MagicMock(return_value=None)
 
         tracker = ConsciousnessTracker("test", "memory_test", mock_memory_client)
 
         # Test memory storage
-        await tracker.measure_consciousness({
-            "task": {"type": "test"},
-            "agent_count": 3,
-            "execution_data": {"quality_score": 0.8, "success": True},
-            "performance_data": {"quality_scores": [0.8]},
-            "memory_data": {},
-            "learning_data": {}
-        })
+        await tracker.measure_consciousness(
+            {
+                "task": {"type": "test"},
+                "agent_count": 3,
+                "execution_data": {"quality_score": 0.8, "success": True},
+                "performance_data": {"quality_scores": [0.8]},
+                "memory_data": {},
+                "learning_data": {},
+            }
+        )
 
         results["memory_storage"] = mock_memory_client.log_swarm_event.called
 
@@ -287,17 +289,18 @@ class ConsciousnessTrackingValidator:
         results["historical_analysis"] = True  # Simplified for validation
 
         # Test performance correlation
-        correlation_result = await tracker.correlate_consciousness_with_performance({
-            "quality_scores": [0.7, 0.8, 0.9]
-        })
+        correlation_result = await tracker.correlate_consciousness_with_performance(
+            {"quality_scores": [0.7, 0.8, 0.9]}
+        )
 
         results["performance_correlation"] = (
-            "correlations" in correlation_result and
-            "predictive_insights" in correlation_result
+            "correlations" in correlation_result and "predictive_insights" in correlation_result
         )
 
         self.validation_results["memory_correlation"] = results
-        logger.info(f"✅ Memory correlation validation: {sum(results.values())}/{len(results)} tests passed")
+        logger.info(
+            f"✅ Memory correlation validation: {sum(results.values())}/{len(results)} tests passed"
+        )
 
     async def _validate_collective_consciousness(self):
         """Validate collective consciousness capabilities."""
@@ -307,7 +310,7 @@ class ConsciousnessTrackingValidator:
             "collective_correlation": False,
             "inter_swarm_sync": False,
             "contribution_calculation": False,
-            "global_insights": False
+            "global_insights": False,
         }
 
         mock_memory_client = MagicMock()
@@ -321,22 +324,26 @@ class ConsciousnessTrackingValidator:
         global_data = {
             "average_consciousness": 0.6,
             "active_swarms": 3,
-            "collective_trajectory": [0.5, 0.6, 0.65]
+            "collective_trajectory": [0.5, 0.6, 0.65],
         }
 
         correlation_result = await tracker.correlate_with_collective_consciousness(global_data)
 
         results["collective_correlation"] = (
-            "relative_position" in correlation_result and
-            "synchronization_score" in correlation_result
+            "relative_position" in correlation_result
+            and "synchronization_score" in correlation_result
         )
 
         results["inter_swarm_sync"] = correlation_result.get("synchronization_score", 0) >= 0
-        results["contribution_calculation"] = correlation_result.get("collective_contribution", 0) > 0
+        results["contribution_calculation"] = (
+            correlation_result.get("collective_contribution", 0) > 0
+        )
         results["global_insights"] = True  # Simplified for validation
 
         self.validation_results["collective_consciousness"] = results
-        logger.info(f"✅ Collective consciousness validation: {sum(results.values())}/{len(results)} tests passed")
+        logger.info(
+            f"✅ Collective consciousness validation: {sum(results.values())}/{len(results)} tests passed"
+        )
 
     def _generate_overall_assessment(self):
         """Generate overall validation assessment."""
@@ -365,7 +372,7 @@ class ConsciousnessTrackingValidator:
             "total_tests": total_tests,
             "passed_tests": passed_tests,
             "pass_percentage": pass_percentage,
-            "status": self.validation_results["overall_status"]
+            "status": self.validation_results["overall_status"],
         }
 
 
@@ -374,9 +381,9 @@ async def main():
     validator = ConsciousnessTrackingValidator()
     results = await validator.run_validation()
 
-    logger.info("\n" + "="*80)
+    logger.info("\n" + "=" * 80)
     logger.info("🧠 CONSCIOUSNESS TRACKING SYSTEM VALIDATION RESULTS")
-    logger.info("="*80)
+    logger.info("=" * 80)
 
     # Print detailed results
     for category, category_results in results.items():
@@ -401,9 +408,9 @@ async def main():
     if "error" in results:
         logger.info(f"\n❌ ERROR: {results['error']}")
 
-    logger.info("\n" + "="*80)
+    logger.info("\n" + "=" * 80)
     logger.info("🧠 CONSCIOUSNESS TRACKING VALIDATION COMPLETE")
-    logger.info("="*80)
+    logger.info("=" * 80)
 
     return results
 

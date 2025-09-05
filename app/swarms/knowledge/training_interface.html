@@ -396,19 +396,19 @@
                 margin: 10px;
                 border-radius: 15px;
             }
-            
+
             .header {
                 padding: 20px;
             }
-            
+
             .header h1 {
                 font-size: 2em;
             }
-            
+
             .main-content {
                 padding: 20px;
             }
-            
+
             .metrics-grid {
                 grid-template-columns: 1fr;
                 gap: 10px;
@@ -541,7 +541,7 @@
                         <input type="text" class="form-control" id="testQuery" placeholder="Ask Sophia anything...">
                     </div>
                     <button class="btn btn-warning" onclick="testKnowledge()">🔍 Test</button>
-                    
+
                     <div class="response-box" id="testResponse" style="display: none;">
                         <div id="responseContent"></div>
                         <div style="margin-top: 10px; font-size: 0.9em; color: #6c757d;">
@@ -678,7 +678,7 @@
         function handleDrop(e) {
             e.preventDefault();
             e.currentTarget.classList.remove('drag-over');
-            
+
             const files = Array.from(e.dataTransfer.files);
             processFiles(files);
         }
@@ -731,10 +731,10 @@
             try {
                 // Simulate API call to knowledge ingestion endpoint
                 const sources = [];
-                
+
                 if (urlInput) sources.push({type: 'url', source: urlInput});
                 if (textInput) sources.push({type: 'text', source: textInput});
-                
+
                 Array.from(fileInput).forEach(file => {
                     sources.push({type: 'file', source: file.name});
                 });
@@ -742,19 +742,19 @@
                 for (let i = 0; i < sources.length; i++) {
                     const source = sources[i];
                     const progress = ((i + 1) / sources.length) * 100;
-                    
+
                     updateProgress(progress, `Processing ${source.type}: ${source.source}`);
-                    
+
                     // Simulate processing delay
                     await sleep(1000 + Math.random() * 2000);
-                    
+
                     // Simulate results
                     const fragments = Math.floor(Math.random() * 20) + 5;
                     const concepts = Math.floor(Math.random() * 10) + 2;
-                    
+
                     knowledgeStats.items += fragments;
                     knowledgeStats.concepts += concepts;
-                    
+
                     addLog('success', `Processed ${source.type}: ${fragments} fragments, ${concepts} concepts extracted`);
                 }
 
@@ -763,7 +763,7 @@
 
                 updateMetrics();
                 addLog('success', 'Knowledge ingestion completed successfully');
-                
+
             } catch (error) {
                 addLog('error', `Ingestion failed: ${error.message}`);
             } finally {
@@ -786,18 +786,18 @@
             try {
                 // Simulate API call to custom training endpoint
                 await sleep(1500);
-                
+
                 const patterns = Math.floor(Math.random() * 5) + 2;
                 knowledgeStats.learning = Math.min(100, knowledgeStats.learning + 8);
-                
+
                 updateMetrics();
                 addLog('success', `Custom response trained successfully. ${patterns} patterns extracted.`);
-                
+
                 // Clear the form
                 document.getElementById('queryInput').value = '';
                 document.getElementById('responseInput').value = '';
                 document.getElementById('contextInput').value = '';
-                
+
             } catch (error) {
                 addLog('error', `Custom training failed: ${error.message}`);
             }
@@ -805,20 +805,20 @@
 
         async function testKnowledge() {
             const query = document.getElementById('testQuery').value;
-            
+
             if (!query) {
                 addLog('warning', 'Please enter a test query');
                 return;
             }
 
             addLog('info', `Testing knowledge: "${query}"`);
-            
+
             try {
                 // Simulate API call to knowledge testing endpoint
                 const startTime = Date.now();
                 await sleep(800 + Math.random() * 1200);
                 const processingTime = Date.now() - startTime;
-                
+
                 // Generate simulated response
                 const responses = [
                     "Based on my knowledge, this is a comprehensive explanation of the topic. The key concepts involve several interconnected principles that demonstrate the complexity and depth of the subject matter.",
@@ -826,13 +826,13 @@
                     "From my analysis of the available information, I can provide several perspectives on this topic, each offering valuable insights into the underlying mechanisms.",
                     "The topic you've asked about involves sophisticated concepts that can be understood through careful examination of the relationships between different components."
                 ];
-                
+
                 const response = responses[Math.floor(Math.random() * responses.length)];
                 const confidence = 0.6 + Math.random() * 0.35; // 60-95% confidence
-                
+
                 displayTestResponse(response, confidence, processingTime);
                 addLog('success', `Knowledge test completed (confidence: ${(confidence * 100).toFixed(1)}%)`);
-                
+
             } catch (error) {
                 addLog('error', `Knowledge test failed: ${error.message}`);
             }
@@ -843,34 +843,34 @@
             const responseContent = document.getElementById('responseContent');
             const confidenceScore = document.getElementById('confidenceScore');
             const processingTimeEl = document.getElementById('processingTime');
-            
+
             responseContent.textContent = response;
-            
+
             const confidencePercent = (confidence * 100).toFixed(1);
             let confidenceClass = 'confidence-low';
             if (confidence > 0.8) confidenceClass = 'confidence-high';
             else if (confidence > 0.6) confidenceClass = 'confidence-medium';
-            
+
             confidenceScore.innerHTML = `<span class="confidence-badge ${confidenceClass}">${confidencePercent}%</span>`;
             processingTimeEl.textContent = `${processingTime}ms`;
-            
+
             responseBox.style.display = 'block';
             responseBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
 
         async function optimizePerformance() {
             addLog('info', 'Starting performance optimization...');
-            
+
             try {
                 await sleep(2000);
-                
+
                 const improvement = Math.random() * 20 + 5;
                 knowledgeStats.efficiency = Math.min(100, knowledgeStats.efficiency + improvement);
                 knowledgeStats.learning = Math.min(100, knowledgeStats.learning + improvement * 0.5);
-                
+
                 updateMetrics();
                 addLog('success', `Performance optimization completed (+${improvement.toFixed(1)}% efficiency)`);
-                
+
             } catch (error) {
                 addLog('error', `Optimization failed: ${error.message}`);
             }
@@ -901,7 +901,7 @@
                 metrics: knowledgeStats,
                 session: trainingSession
             };
-            
+
             const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -909,14 +909,14 @@
             a.download = `sophia-training-metrics-${Date.now()}.json`;
             a.click();
             URL.revokeObjectURL(url);
-            
+
             addLog('info', 'Training metrics exported successfully');
         }
 
         function downloadLog() {
             const logEntries = Array.from(document.querySelectorAll('.log-entry')).map(entry => entry.textContent);
             const logText = logEntries.join('\n');
-            
+
             const blob = new Blob([logText], {type: 'text/plain'});
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -924,14 +924,14 @@
             a.download = `sophia-training-log-${Date.now()}.txt`;
             a.click();
             URL.revokeObjectURL(url);
-            
+
             addLog('info', 'Activity log downloaded successfully');
         }
 
         function showProgress(show) {
             const container = document.getElementById('progressContainer');
             container.style.display = show ? 'block' : 'none';
-            
+
             if (!show) {
                 updateProgress(0, '');
             }
@@ -940,7 +940,7 @@
         function updateProgress(percent, text) {
             const fill = document.getElementById('progressFill');
             const textEl = document.getElementById('progressText');
-            
+
             fill.style.width = `${percent}%`;
             textEl.textContent = text || `${percent.toFixed(1)}%`;
         }
@@ -956,13 +956,13 @@
             const log = document.getElementById('activityLog');
             const entry = document.createElement('div');
             entry.className = `log-entry ${type}`;
-            
+
             const timestamp = new Date().toLocaleTimeString();
             entry.innerHTML = `<strong>[${timestamp}]</strong> ${message}`;
-            
+
             log.appendChild(entry);
             log.scrollTop = log.scrollHeight;
-            
+
             // Limit log entries
             while (log.children.length > 100) {
                 log.removeChild(log.firstChild);
@@ -986,12 +986,12 @@
             const units = ['B', 'KB', 'MB', 'GB'];
             let size = bytes;
             let unitIndex = 0;
-            
+
             while (size >= 1024 && unitIndex < units.length - 1) {
                 size /= 1024;
                 unitIndex++;
             }
-            
+
             return `${size.toFixed(1)} ${units[unitIndex]}`;
         }
 

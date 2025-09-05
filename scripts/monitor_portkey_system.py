@@ -18,9 +18,10 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
 
 # Load environment
-load_dotenv('.env.local', override=True)
+load_dotenv(".env.local", override=True)
 
 console = Console()
+
 
 class PortkeySystemMonitor:
     """Monitor the complete Portkey system with all providers."""
@@ -36,7 +37,7 @@ class PortkeySystemMonitor:
             "together": "🔄 Checking...",
             "models": {},
             "embeddings": "🔄 Checking...",
-            "last_check": None
+            "last_check": None,
         }
 
         # Critical models to monitor
@@ -50,7 +51,11 @@ class PortkeySystemMonitor:
             {"name": "Llama 3.2", "id": "meta-llama/llama-3.2-3b-instruct", "type": "chat"},
             {"name": "GLM-4.5", "id": "z-ai/glm-4.5", "type": "chat"},
             {"name": "Groq Llama", "id": "groq/llama-3.1-70b-versatile", "type": "chat"},
-            {"name": "M2-BERT", "id": "togethercomputer/m2-bert-80M-8k-retrieval", "type": "embedding"}
+            {
+                "name": "M2-BERT",
+                "id": "togethercomputer/m2-bert-80M-8k-retrieval",
+                "type": "embedding",
+            },
         ]
 
     async def check_portkey_health(self) -> bool:
@@ -58,17 +63,14 @@ class PortkeySystemMonitor:
         try:
             async with httpx.AsyncClient(timeout=10.0) as client:
                 # Simple health check using Portkey
-                config = {
-                    "provider": "openrouter",
-                    "api_key": self.openrouter_key
-                }
+                config = {"provider": "openrouter", "api_key": self.openrouter_key}
 
                 response = await client.get(
                     "https://api.portkey.ai/v1/models",
                     headers={
                         "x-portkey-api-key": self.portkey_key,
-                        "x-portkey-config": json.dumps(config)
-                    }
+                        "x-portkey-config": json.dumps(config),
+                    },
                 )
 
                 if response.status_code == 200:
@@ -87,9 +89,7 @@ class PortkeySystemMonitor:
             async with httpx.AsyncClient(timeout=10.0) as client:
                 response = await client.get(
                     "https://openrouter.ai/api/v1/models",
-                    headers={
-                        "Authorization": f"Bearer {self.openrouter_key}"
-                    }
+                    headers={"Authorization": f"Bearer {self.openrouter_key}"},
                 )
 
                 if response.status_code == 200:
@@ -109,9 +109,7 @@ class PortkeySystemMonitor:
             async with httpx.AsyncClient(timeout=10.0) as client:
                 response = await client.get(
                     "https://api.together.xyz/v1/models",
-                    headers={
-                        "Authorization": f"Bearer {self.together_key}"
-                    }
+                    headers={"Authorization": f"Bearer {self.together_key}"},
                 )
 
                 if response.status_code == 200:
@@ -136,9 +134,9 @@ class PortkeySystemMonitor:
                         "override_params": {
                             "headers": {
                                 "HTTP-Referer": "http://localhost:3000",
-                                "X-Title": "Sophia Intel AI"
+                                "X-Title": "Sophia Intel AI",
                             }
-                        }
+                        },
                     }
 
                     response = await client.post(
@@ -146,34 +144,28 @@ class PortkeySystemMonitor:
                         headers={
                             "x-portkey-api-key": self.portkey_key,
                             "x-portkey-config": json.dumps(config),
-                            "Content-Type": "application/json"
+                            "Content-Type": "application/json",
                         },
                         json={
                             "model": model["id"],
                             "messages": [{"role": "user", "content": "Say 'OK' in one word"}],
                             "max_tokens": 5,
-                            "temperature": 0.1
-                        }
+                            "temperature": 0.1,
+                        },
                     )
 
                 elif model["type"] == "embedding":
                     # Test embedding model
-                    config = {
-                        "provider": "together-ai",
-                        "api_key": self.together_key
-                    }
+                    config = {"provider": "together-ai", "api_key": self.together_key}
 
                     response = await client.post(
                         "https://api.portkey.ai/v1/embeddings",
                         headers={
                             "x-portkey-api-key": self.portkey_key,
                             "x-portkey-config": json.dumps(config),
-                            "Content-Type": "application/json"
+                            "Content-Type": "application/json",
                         },
-                        json={
-                            "model": model["id"],
-                            "input": "Test"
-                        }
+                        json={"model": model["id"], "input": "Test"},
                     )
 
                 if response.status_code == 200:
@@ -204,9 +196,7 @@ class PortkeySystemMonitor:
             async with httpx.AsyncClient(timeout=10.0) as client:
                 response = await client.get(
                     "https://openrouter.ai/api/v1/models",
-                    headers={
-                        "Authorization": f"Bearer {self.openrouter_key}"
-                    }
+                    headers={"Authorization": f"Bearer {self.openrouter_key}"},
                 )
 
                 if response.status_code == 200:
@@ -219,7 +209,7 @@ class PortkeySystemMonitor:
                             pricing[model_id] = {
                                 "prompt": model.get("pricing", {}).get("prompt"),
                                 "completion": model.get("pricing", {}).get("completion"),
-                                "context": model.get("context_length", 0)
+                                "context": model.get("context_length", 0),
                             }
 
         except Exception:
@@ -252,11 +242,13 @@ class PortkeySystemMonitor:
 
     async def continuous_monitor(self, interval: int = 30):
         """Continuously monitor the system."""
-        console.print(Panel.fit(
-            "[bold cyan]Portkey System Monitor[/bold cyan]\n"
-            "Monitoring all components and models...",
-            border_style="cyan"
-        ))
+        console.print(
+            Panel.fit(
+                "[bold cyan]Portkey System Monitor[/bold cyan]\n"
+                "Monitoring all components and models...",
+                border_style="cyan",
+            )
+        )
 
         while True:
             # Update status
@@ -271,11 +263,13 @@ class PortkeySystemMonitor:
             console.clear()
 
             # Display header
-            console.print(Panel.fit(
-                f"[bold cyan]Portkey System Monitor[/bold cyan]\n"
-                f"Last check: {self.status['last_check']}",
-                border_style="cyan"
-            ))
+            console.print(
+                Panel.fit(
+                    f"[bold cyan]Portkey System Monitor[/bold cyan]\n"
+                    f"Last check: {self.status['last_check']}",
+                    border_style="cyan",
+                )
+            )
 
             # Display status tables
             console.logger.info(self.create_status_table())
@@ -284,20 +278,22 @@ class PortkeySystemMonitor:
 
             # Display summary
             all_good = (
-                "✅" in self.status["portkey"] and
-                "✅" in self.status["openrouter"] and
-                "✅" in self.status["together"] and
-                all("✅" in v for v in self.status["models"].values())
+                "✅" in self.status["portkey"]
+                and "✅" in self.status["openrouter"]
+                and "✅" in self.status["together"]
+                and all("✅" in v for v in self.status["models"].values())
             )
 
             if all_good:
-                console.print(Panel.fit(
-                    "[bold green]✅ All Systems Operational[/bold green]\n"
-                    "• 300+ models available via OpenRouter\n"
-                    "• Embeddings available via Together AI\n"
-                    "• Portkey gateway providing caching & observability",
-                    border_style="green"
-                ))
+                console.print(
+                    Panel.fit(
+                        "[bold green]✅ All Systems Operational[/bold green]\n"
+                        "• 300+ models available via OpenRouter\n"
+                        "• Embeddings available via Together AI\n"
+                        "• Portkey gateway providing caching & observability",
+                        border_style="green",
+                    )
+                )
             else:
                 issues = []
                 if "✅" not in self.status["portkey"]:
@@ -311,11 +307,12 @@ class PortkeySystemMonitor:
                 if failed_models:
                     issues.append(f"• {len(failed_models)} models unavailable")
 
-                console.print(Panel.fit(
-                    "[bold yellow]⚠️ Issues Detected[/bold yellow]\n" +
-                    "\n".join(issues),
-                    border_style="yellow"
-                ))
+                console.print(
+                    Panel.fit(
+                        "[bold yellow]⚠️ Issues Detected[/bold yellow]\n" + "\n".join(issues),
+                        border_style="yellow",
+                    )
+                )
 
             # Wait for next check
             console.logger.info(f"\nNext check in {interval} seconds... (Press Ctrl+C to exit)")
@@ -323,17 +320,11 @@ class PortkeySystemMonitor:
 
     async def quick_test(self):
         """Run a quick test of all components."""
-        console.print(Panel.fit(
-            "[bold cyan]Quick System Test[/bold cyan]",
-            border_style="cyan"
-        ))
+        console.print(Panel.fit("[bold cyan]Quick System Test[/bold cyan]", border_style="cyan"))
 
         with Progress(
-            SpinnerColumn(),
-            TextColumn("[progress.description]{task.description}"),
-            console=console
+            SpinnerColumn(), TextColumn("[progress.description]{task.description}"), console=console
         ) as progress:
-
             # Test Portkey
             task = progress.add_task("Testing Portkey Gateway...", total=1)
             portkey_ok = await self.check_portkey_health()
@@ -373,10 +364,12 @@ class PortkeySystemMonitor:
             pricing_table.add_column("Context", style="magenta")
 
             for model_id, info in pricing.items():
-                model_name = next((m["name"] for m in self.critical_models if m["id"] == model_id), model_id)
+                model_name = next(
+                    (m["name"] for m in self.critical_models if m["id"] == model_id), model_id
+                )
                 # Handle pricing which might be string or float
-                prompt_val = info.get('prompt')
-                completion_val = info.get('completion')
+                prompt_val = info.get("prompt")
+                completion_val = info.get("completion")
 
                 if prompt_val and isinstance(prompt_val, (int, float)):
                     input_price = f"${float(prompt_val):.2f}"
@@ -392,7 +385,7 @@ class PortkeySystemMonitor:
                 else:
                     output_price = "N/A"
 
-                context = f"{info['context']:,}" if info.get('context') else "N/A"
+                context = f"{info['context']:,}" if info.get("context") else "N/A"
                 pricing_table.add_row(model_name, input_price, output_price, context)
 
             console.logger.info()
@@ -400,32 +393,38 @@ class PortkeySystemMonitor:
 
         # Summary
         all_good = (
-            portkey_ok and openrouter_ok and together_ok and
-            all("✅" in v for v in self.status["models"].values())
+            portkey_ok
+            and openrouter_ok
+            and together_ok
+            and all("✅" in v for v in self.status["models"].values())
         )
 
         console.logger.info()
         if all_good:
-            console.print(Panel.fit(
-                "[bold green]✅ All Systems Operational![/bold green]\n\n"
-                "Your Portkey setup is fully functional:\n"
-                "• Access to 300+ models via OpenRouter\n"
-                "• High-quality embeddings via Together AI\n"
-                "• Unified gateway with caching & observability\n"
-                "• z-ai/glm-4.5 model available\n\n"
-                "[dim]Run with --monitor for continuous monitoring[/dim]",
-                border_style="green"
-            ))
+            console.print(
+                Panel.fit(
+                    "[bold green]✅ All Systems Operational![/bold green]\n\n"
+                    "Your Portkey setup is fully functional:\n"
+                    "• Access to 300+ models via OpenRouter\n"
+                    "• High-quality embeddings via Together AI\n"
+                    "• Unified gateway with caching & observability\n"
+                    "• z-ai/glm-4.5 model available\n\n"
+                    "[dim]Run with --monitor for continuous monitoring[/dim]",
+                    border_style="green",
+                )
+            )
         else:
-            console.print(Panel.fit(
-                "[bold red]❌ Issues Detected[/bold red]\n\n"
-                "Please check the status table above for details.\n"
-                "Common fixes:\n"
-                "• Verify API keys in .env.local\n"
-                "• Check network connectivity\n"
-                "• Ensure providers are not experiencing outages",
-                border_style="red"
-            ))
+            console.print(
+                Panel.fit(
+                    "[bold red]❌ Issues Detected[/bold red]\n\n"
+                    "Please check the status table above for details.\n"
+                    "Common fixes:\n"
+                    "• Verify API keys in .env.local\n"
+                    "• Check network connectivity\n"
+                    "• Ensure providers are not experiencing outages",
+                    border_style="red",
+                )
+            )
 
 
 async def main():
@@ -448,7 +447,9 @@ async def main():
         await monitor.quick_test()
 
         console.logger.info("\n[dim]Tip: Run with --monitor for continuous monitoring[/dim]")
-        console.logger.info("[dim]Example: python3 scripts/monitor_portkey_system.py --monitor --interval 60[/dim]")
+        console.logger.info(
+            "[dim]Example: python3 scripts/monitor_portkey_system.py --monitor --interval 60[/dim]"
+        )
 
 
 if __name__ == "__main__":

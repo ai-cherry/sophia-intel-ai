@@ -155,7 +155,7 @@ const ModelControlDashboard: React.FC = () => {
 
   useEffect(() => {
     fetchDashboardData()
-    
+
     if (autoRefresh) {
       const interval = setInterval(fetchDashboardData, 5000)
       return () => clearInterval(interval)
@@ -188,7 +188,7 @@ const ModelControlDashboard: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ model, task_type: taskType })
       })
-      
+
       if (response.ok) {
         toast.success(`Assigned ${model} to ${taskType}`)
         fetchDashboardData()
@@ -291,7 +291,7 @@ const ModelControlDashboard: React.FC = () => {
               </SelectContent>
             </Select>
           </div>
-          
+
           {selectedTask && dashboardData?.task_routing[selectedTask] && (
             <div className="bg-gray-50 rounded-lg p-4">
               <Paragraph className="font-semibold mb-2">Assigned Models:</Paragraph>
@@ -332,7 +332,7 @@ const ModelControlDashboard: React.FC = () => {
                   'bg-red-500'
                 }`} />
               </div>
-              
+
               <div className="space-y-2 mt-3">
                 <div className="flex justify-between items-center">
                   <span className="text-xs text-gray-500">Purpose:</span>

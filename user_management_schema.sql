@@ -128,18 +128,18 @@ CREATE TABLE IF NOT EXISTS user_sessions (
 );
 
 -- Insert default platform roles
-INSERT OR REPLACE INTO platform_roles (id, name, display_name, description, level, permissions, created_at) VALUES 
-('role_owner', 'owner', 'Platform Owner', 'Full system access and user management', 1, 
- '["user_management", "platform_admin", "domain_admin", "service_admin", "data_admin", "audit_access"]', 
+INSERT OR REPLACE INTO platform_roles (id, name, display_name, description, level, permissions, created_at) VALUES
+('role_owner', 'owner', 'Platform Owner', 'Full system access and user management', 1,
+ '["user_management", "platform_admin", "domain_admin", "service_admin", "data_admin", "audit_access"]',
  datetime('now')),
 ('role_admin', 'admin', 'Administrator', 'Platform administration and user management', 2,
- '["user_management", "domain_admin", "service_admin", "audit_access"]', 
+ '["user_management", "domain_admin", "service_admin", "audit_access"]',
  datetime('now')),
 ('role_member', 'member', 'Member', 'Standard platform access', 3,
- '["domain_access", "service_access"]', 
+ '["domain_access", "service_access"]',
  datetime('now')),
 ('role_viewer', 'viewer', 'Viewer', 'Read-only platform access', 4,
- '["domain_read", "service_read"]', 
+ '["domain_read", "service_read"]',
  datetime('now'));
 
 -- Create indexes for performance

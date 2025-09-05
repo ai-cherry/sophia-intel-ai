@@ -11,7 +11,7 @@ interface CriticReportProps {
 
 export function CriticReport({ data }: CriticReportProps) {
   const [collapsed, setCollapsed] = useState(false);
-  
+
   if (!data) return null;
 
   const critic = typeof data === 'string' ? safe(data) : data;

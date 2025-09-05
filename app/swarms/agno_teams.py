@@ -5,29 +5,25 @@ Real AGNO framework integration with Portkey routing
 
 import asyncio
 import logging
-import os
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Optional, Dict
+from typing import Any, Optional
 
 # Real AGNO framework imports
 from agno.agent import Agent
-from agno.team import Team
 from agno.models.portkey import Portkey as AGNOPortkey
+from agno.team import Team
 from portkey_ai import Portkey
 
 from app.core.circuit_breaker import with_circuit_breaker
-from app.swarms.enhanced_memory_integration import (
-    EnhancedSwarmMemoryClient,
-    auto_tag_and_store,
-)
+from app.swarms.enhanced_memory_integration import EnhancedSwarmMemoryClient, auto_tag_and_store
 
 logger = logging.getLogger(__name__)
 
 # Portkey virtual keys configuration
 PORTKEY_VIRTUAL_KEYS = {
     "deepseek": "deepseek-vk-24102f",
-    "openai": "openai-vk-190a60", 
+    "openai": "openai-vk-190a60",
     "anthropic": "anthropic-vk-b42804",
     "openrouter": "vkj-openrouter-cc4151",
     "perplexity": "perplexity-vk-56c172",
@@ -37,7 +33,7 @@ PORTKEY_VIRTUAL_KEYS = {
     "xai": "xai-vk-e65d0f",
     "together": "together-ai-670469",
     "qdrant": "qdrant-vk-d2b62a",
-    "cohere": "cohere-vk-496fa9"
+    "cohere": "cohere-vk-496fa9",
 }
 
 # Initialize Portkey client with new API key
@@ -46,16 +42,14 @@ portkey = Portkey(
     config={
         "retry": {"attempts": 3, "on_status": [429, 500, 502, 503]},
         "cache": {"simple": {"ttl": 3600}},
-        "guardrails": {
-            "pii": {"enabled": True},
-            "prompt_injection": {"enabled": True}
-        }
-    }
+        "guardrails": {"pii": {"enabled": True}, "prompt_injection": {"enabled": True}},
+    },
 )
 
 
 class ExecutionStrategy(Enum):
     """Swarm execution strategies"""
+
     LITE = "lite"  # Fast, minimal agents
     BALANCED = "balanced"  # Default balanced approach
     QUALITY = "quality"  # Comprehensive with consensus
@@ -66,6 +60,7 @@ class ExecutionStrategy(Enum):
 @dataclass
 class AGNOTeamConfig:
     """Configuration for AGNO Team"""
+
     name: str
     strategy: ExecutionStrategy = ExecutionStrategy.BALANCED
     max_agents: int = 5
@@ -83,18 +78,46 @@ class SophiaAGNOTeam:
 
     # Approved models with virtual key routing
     APPROVED_MODELS = {
-        "planner": {"provider": "deepseek", "model": "deepseek-chat", "virtual_key": "deepseek-vk-24102f"},
-        "generator": {"provider": "openai", "model": "gpt-4o-mini", "virtual_key": "openai-vk-190a60"},
+        "planner": {
+            "provider": "deepseek",
+            "model": "deepseek-chat",
+            "virtual_key": "deepseek-vk-24102f",
+        },
+        "generator": {
+            "provider": "openai",
+            "model": "gpt-4o-mini",
+            "virtual_key": "openai-vk-190a60",
+        },
         "critic": {"provider": "openai", "model": "gpt-4o-mini", "virtual_key": "openai-vk-190a60"},
         "judge": {"provider": "openai", "model": "gpt-4o", "virtual_key": "openai-vk-190a60"},
         "lead": {"provider": "openai", "model": "gpt-4o-mini", "virtual_key": "openai-vk-190a60"},
         "runner": {"provider": "openai", "model": "gpt-4o-mini", "virtual_key": "openai-vk-190a60"},
-        "architect": {"provider": "deepseek", "model": "deepseek-chat", "virtual_key": "deepseek-vk-24102f"},
-        "security": {"provider": "anthropic", "model": "claude-3-5-sonnet-20241022", "virtual_key": "anthropic-vk-b42804"},
+        "architect": {
+            "provider": "deepseek",
+            "model": "deepseek-chat",
+            "virtual_key": "deepseek-vk-24102f",
+        },
+        "security": {
+            "provider": "anthropic",
+            "model": "claude-3-5-sonnet-20241022",
+            "virtual_key": "anthropic-vk-b42804",
+        },
         "performance": {"provider": "openai", "model": "gpt-4o", "virtual_key": "openai-vk-190a60"},
-        "testing": {"provider": "openai", "model": "gpt-4o-mini", "virtual_key": "openai-vk-190a60"},
-        "debugger": {"provider": "openai", "model": "gpt-4o-mini", "virtual_key": "openai-vk-190a60"},
-        "refactorer": {"provider": "openai", "model": "gpt-4o-mini", "virtual_key": "openai-vk-190a60"}
+        "testing": {
+            "provider": "openai",
+            "model": "gpt-4o-mini",
+            "virtual_key": "openai-vk-190a60",
+        },
+        "debugger": {
+            "provider": "openai",
+            "model": "gpt-4o-mini",
+            "virtual_key": "openai-vk-190a60",
+        },
+        "refactorer": {
+            "provider": "openai",
+            "model": "gpt-4o-mini",
+            "virtual_key": "openai-vk-190a60",
+        },
     }
 
     # AGNO API Key
@@ -114,8 +137,8 @@ class SophiaAGNOTeam:
         # Create agents based on strategy with optimal routing
         agents_to_add = self._get_agents_for_strategy()
         self.agents = []
-        
-        for role in agents_to_add.keys():
+
+        for role in agents_to_add:
             # Get optimal model config for this role
             model_config = await self._get_optimal_model_for_role(role, 0.5)
             agent = await self._create_agent(role, model_config)
@@ -127,14 +150,14 @@ class SophiaAGNOTeam:
             name=self.config.name,
             description=f"AGNO Team using {self.config.strategy.value} strategy",
             instructions=f"This team operates in {self.config.strategy.value} mode. Collaborate effectively to achieve the given tasks.",
-            mode="collaborate"  # Default collaboration mode
+            mode="collaborate",  # Default collaboration mode
         )
 
         # Initialize memory if enabled
         if self.config.enable_memory:
             self.memory_client = EnhancedSwarmMemoryClient(
                 swarm_type=f"agno_{self.config.name}",
-                swarm_id=f"team_{self.config.name}_{hash(self.config.name)}"
+                swarm_id=f"team_{self.config.name}_{hash(self.config.name)}",
             )
 
         logger.info(f"Initialized AGNO Team: {self.config.name}")
@@ -149,7 +172,7 @@ class SophiaAGNOTeam:
             ExecutionStrategy.BALANCED: RoutingStrategy.BALANCED,
             ExecutionStrategy.QUALITY: RoutingStrategy.HIGHEST_QUALITY,
             ExecutionStrategy.DEBATE: RoutingStrategy.PERFORMANCE_FIRST,
-            ExecutionStrategy.CONSENSUS: RoutingStrategy.BALANCED
+            ExecutionStrategy.CONSENSUS: RoutingStrategy.BALANCED,
         }
         return strategy_mapping.get(self.config.strategy, RoutingStrategy.BALANCED)
 
@@ -170,9 +193,9 @@ class SophiaAGNOTeam:
                     model_name = await get_optimal_model_for_role(
                         agent_role=role,
                         execution_strategy=self.config.strategy,
-                        task_complexity=task_complexity
+                        task_complexity=task_complexity,
                     )
-                    
+
                     # Find matching config for the returned model
                     for model_config in self.APPROVED_MODELS.values():
                         if model_config["model"] in model_name:
@@ -181,15 +204,15 @@ class SophiaAGNOTeam:
                     # No event loop running, fall back to default
                     logger.debug(f"No event loop available for model optimization for {role}")
                     return self.APPROVED_MODELS.get(role, self.APPROVED_MODELS["generator"])
-                    
+
             except RuntimeError:
                 # No event loop available
                 logger.debug(f"No event loop available for model optimization for {role}")
                 return self.APPROVED_MODELS.get(role, self.APPROVED_MODELS["generator"])
-            
+
             # Fallback to approved model config
             return self.APPROVED_MODELS.get(role, self.APPROVED_MODELS["generator"])
-            
+
         except Exception as e:
             logger.warning(f"Failed to get optimal model for {role}: {e}")
             # Fallback to approved model config
@@ -201,7 +224,7 @@ class SophiaAGNOTeam:
         if self.config.strategy == ExecutionStrategy.LITE:
             return {
                 "runner": self.APPROVED_MODELS["runner"],
-                "critic": self.APPROVED_MODELS["critic"]
+                "critic": self.APPROVED_MODELS["critic"],
             }
         elif self.config.strategy == ExecutionStrategy.QUALITY:
             return {
@@ -209,19 +232,19 @@ class SophiaAGNOTeam:
                 "generator": self.APPROVED_MODELS["generator"],
                 "critic": self.APPROVED_MODELS["critic"],
                 "judge": self.APPROVED_MODELS["judge"],
-                "testing": self.APPROVED_MODELS["testing"]
+                "testing": self.APPROVED_MODELS["testing"],
             }
         elif self.config.strategy == ExecutionStrategy.DEBATE:
             return {
                 "generator": self.APPROVED_MODELS["generator"],
                 "critic": self.APPROVED_MODELS["critic"],
-                "judge": self.APPROVED_MODELS["judge"]
+                "judge": self.APPROVED_MODELS["judge"],
             }
         else:  # BALANCED or default
             return {
                 "planner": self.APPROVED_MODELS["planner"],
                 "generator": self.APPROVED_MODELS["generator"],
-                "critic": self.APPROVED_MODELS["critic"]
+                "critic": self.APPROVED_MODELS["critic"],
             }
 
     async def _create_agent(self, role: str, model_config: dict) -> Agent:
@@ -234,7 +257,7 @@ class SophiaAGNOTeam:
             "critic": 0.1,
             "judge": 0.2,
             "testing": 0.4,
-            "debugger": 0.1
+            "debugger": 0.1,
         }
 
         # Create AGNO Portkey model with virtual key
@@ -244,7 +267,7 @@ class SophiaAGNOTeam:
             portkey_api_key="hPxFZGd8AN269n4bznDf2/Onbi8I",
             virtual_key=model_config["virtual_key"],
             temperature=temperatures.get(role, 0.5),
-            max_tokens=4096
+            max_tokens=4096,
         )
 
         # Create agent with AGNO framework
@@ -260,8 +283,8 @@ class SophiaAGNOTeam:
                 "strategy": self.config.strategy.value,
                 "provider": model_config["provider"],
                 "model": model_config["model"],
-                "virtual_key": model_config["virtual_key"]
-            }
+                "virtual_key": model_config["virtual_key"],
+            },
         )
 
         return agent
@@ -271,11 +294,11 @@ class SophiaAGNOTeam:
         self,
         task_description: str,
         context: dict[str, Any],
-        model_overrides: Optional[dict[str, str]] = None
+        model_overrides: Optional[dict[str, str]] = None,
     ) -> dict[str, Any]:
         """
         Execute task with AGNO Team
-        
+
         Args:
             task_description: Task to execute
             context: Execution context for auto-tagging
@@ -296,31 +319,31 @@ class SophiaAGNOTeam:
                 self.memory_client,
                 content=f"Task initiated: {task_description}",
                 topic="Task Execution",
-                execution_context=context
+                execution_context=context,
             )
 
         # Execute using AGNO Team
         start_time = asyncio.get_event_loop().time()
-        
+
         try:
             # Use AGNO Team.run() method - this handles the coordination automatically
             response = self.team.run(task_description)
-            
+
             result = {
                 "success": True,
-                "result": response.content if hasattr(response, 'content') else str(response),
+                "result": response.content if hasattr(response, "content") else str(response),
                 "execution_time": asyncio.get_event_loop().time() - start_time,
                 "strategy": self.config.strategy.value,
-                "agents_used": [agent.name for agent in self.agents]
+                "agents_used": [agent.name for agent in self.agents],
             }
-            
+
         except Exception as e:
             logger.error(f"Task execution failed: {e}")
             result = {
                 "success": False,
                 "error": str(e),
                 "execution_time": asyncio.get_event_loop().time() - start_time,
-                "strategy": self.config.strategy.value
+                "strategy": self.config.strategy.value,
             }
 
         # Store result in memory
@@ -332,40 +355,44 @@ class SophiaAGNOTeam:
                 execution_context={
                     **context,
                     "success": result.get("success", False),
-                    "execution_time": result.get("execution_time", 0)
-                }
+                    "execution_time": result.get("execution_time", 0),
+                },
             )
 
         # Track execution history
-        self.execution_history.append({
-            "task": task_description,
-            "result": result,
-            "timestamp": asyncio.get_event_loop().time()
-        })
+        self.execution_history.append(
+            {
+                "task": task_description,
+                "result": result,
+                "timestamp": asyncio.get_event_loop().time(),
+            }
+        )
 
         return result
 
-    async def _create_specialized_agent(self, role: str, config: Dict[str, Any]) -> Agent:
+    async def _create_specialized_agent(self, role: str, config: dict[str, Any]) -> Agent:
         """Create specialized agent with base configuration - override in subclasses for personality"""
-        
+
         agent = Agent(
-            name=config['role'],
-            model=config['model'],
-            instructions=config['instructions'],
+            name=config["role"],
+            model=config["model"],
+            instructions=config["instructions"],
             extra_data={
-                "role": config['role'],
+                "role": config["role"],
                 "team": self.config.name,
-                "domain": getattr(self, 'domain', {}).get('value', 'general_operations') if hasattr(getattr(self, 'domain', {}), 'get') else str(getattr(self, 'domain', 'general_operations')),
+                "domain": getattr(self, "domain", {}).get("value", "general_operations")
+                if hasattr(getattr(self, "domain", {}), "get")
+                else str(getattr(self, "domain", "general_operations")),
                 "personality_type": "base",
-                "temperature": config.get('temperature', 0.5),
-                "created_at": asyncio.get_event_loop().time() if hasattr(asyncio, 'get_event_loop') else 0
-            }
+                "temperature": config.get("temperature", 0.5),
+                "created_at": asyncio.get_event_loop().time()
+                if hasattr(asyncio, "get_event_loop")
+                else 0,
+            },
         )
-        
+
         return agent
 
-    # Note: The old execution methods (_execute_standard, _execute_debate, _execute_consensus) 
+    # Note: The old execution methods (_execute_standard, _execute_debate, _execute_consensus)
     # have been replaced with direct AGNO Team.run() calls above.
     # AGNO handles team coordination automatically based on the team mode.
-
-

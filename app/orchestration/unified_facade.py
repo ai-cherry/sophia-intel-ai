@@ -22,22 +22,28 @@ from app.swarms.swarm_optimizer import SwarmOptimizer
 
 logger = logging.getLogger(__name__)
 
+
 class SwarmType(Enum):
     """Available swarm types"""
+
     CODING_DEBATE = "coding-debate"
     IMPROVED_SOLVE = "improved-solve"
     SIMPLE_AGENTS = "simple-agents"
     MCP_COORDINATED = "mcp-coordinated"
 
+
 class OptimizationMode(Enum):
     """Normalized optimization modes"""
+
     LITE = "lite"  # Fast, minimal processing
     BALANCED = "balanced"  # Default, balanced approach
     QUALITY = "quality"  # High quality, thorough processing
 
+
 @dataclass
 class SwarmRequest:
     """Unified swarm execution request"""
+
     swarm_type: SwarmType
     task: str
     mode: OptimizationMode = OptimizationMode.BALANCED
@@ -49,13 +55,16 @@ class SwarmRequest:
     metadata: dict[str, Any] = None
     mcp_assistants: list[str] = None  # ["claude", "roo", "cline"]
 
+
 @dataclass
 class SwarmEvent:
     """Streaming event from swarm execution"""
+
     event_type: str  # started, step, critic, judge, completed, error
     swarm: str
     timestamp: str
     data: dict[str, Any]
+
 
 class UnifiedOrchestratorFacade:
     """
@@ -81,15 +90,11 @@ class UnifiedOrchestratorFacade:
         self.circuit_breakers = {
             "memory": self.optimizer.get_circuit_breaker("memory"),
             "llm": self.optimizer.get_circuit_breaker("llm"),
-            "mcp": self.optimizer.get_circuit_breaker("mcp")
+            "mcp": self.optimizer.get_circuit_breaker("mcp"),
         }
 
         # Performance metrics
-        self.metrics = {
-            "executions": 0,
-            "success_rate": 0.0,
-            "avg_duration": 0.0
-        }
+        self.metrics = {"executions": 0, "success_rate": 0.0, "avg_duration": 0.0}
 
     async def initialize(self):
         """Initialize all components"""
@@ -102,14 +107,11 @@ class UnifiedOrchestratorFacade:
         await self.memory_store.initialize()
 
         # Initialize swarms
-        self.coding_swarm = SwarmOrchestrator(config={
-            "use_memory": True,
-            "optimization": "balanced"
-        })
-
-        self.improved_swarm = ImprovedAgentSwarm(
-            config=self._load_swarm_config()
+        self.coding_swarm = SwarmOrchestrator(
+            config={"use_memory": True, "optimization": "balanced"}
         )
+
+        self.improved_swarm = ImprovedAgentSwarm(config=self._load_swarm_config())
 
         self.simple_agents = SimpleAgentOrchestrator()
 
@@ -129,7 +131,7 @@ class UnifiedOrchestratorFacade:
                 "optimization_modes": {
                     "lite": {"timeout": 30, "max_agents": 2},
                     "balanced": {"timeout": 120, "max_agents": 5},
-                    "quality": {"timeout": 300, "max_agents": 10}
+                    "quality": {"timeout": 300, "max_agents": 10},
                 }
             }
 
@@ -156,7 +158,7 @@ class UnifiedOrchestratorFacade:
             "balanced": OptimizationMode.BALANCED,
             "normal": OptimizationMode.BALANCED,
             "quality": OptimizationMode.QUALITY,
-            "thorough": OptimizationMode.QUALITY
+            "thorough": OptimizationMode.QUALITY,
         }
         return mode_map.get(mode.lower(), OptimizationMode.BALANCED)
 
@@ -189,15 +191,10 @@ class UnifiedOrchestratorFacade:
             cb = self.circuit_breakers["memory"]
             async with performance_monitoring(self.optimizer, "memory_search"):
                 results = await cb.call(
-                    self.memory_store.search_memory,
-                    query=request.task,
-                    limit=5
+                    self.memory_store.search_memory, query=request.task, limit=5
                 )
 
-            return {
-                "memory_context": results,
-                "context_count": len(results)
-            }
+            return {"memory_context": results, "context_count": len(results)}
         except Exception as e:
             logger.warning(f"Failed to inject memory context: {e}")
             # Apply degradation strategy
@@ -223,16 +220,13 @@ class UnifiedOrchestratorFacade:
                         "mode": request.mode.value,
                         "task": request.task[:100],
                         "session_id": request.session_id,
-                        "timestamp": datetime.utcnow().isoformat()
-                    }
+                        "timestamp": datetime.utcnow().isoformat(),
+                    },
                 )
         except Exception as e:
             logger.warning(f"Failed to store results: {e}")
 
-    async def execute(
-        self,
-        request: SwarmRequest
-    ) -> AsyncGenerator[SwarmEvent, None]:
+    async def execute(self, request: SwarmRequest) -> AsyncGenerator[SwarmEvent, None]:
         """
         Execute swarm request with streaming events
         """
@@ -247,8 +241,8 @@ class UnifiedOrchestratorFacade:
             data={
                 "session_id": request.session_id,
                 "mode": request.mode.value,
-                "task_preview": request.task[:100]
-            }
+                "task_preview": request.task[:100],
+            },
         )
 
         try:
@@ -279,17 +273,12 @@ class UnifiedOrchestratorFacade:
                 event_type="completed",
                 swarm=request.swarm_type.value,
                 timestamp=datetime.utcnow().isoformat(),
-                data={
-                    "result": result,
-                    "duration": duration,
-                    "mode": config["mode"]
-                }
+                data={"result": result, "duration": duration, "mode": config["mode"]},
             )
 
             # Update metrics
             self.metrics["success_rate"] = (
-                self.metrics["success_rate"] * (self.metrics["executions"] - 1) +
-                1.0
+                self.metrics["success_rate"] * (self.metrics["executions"] - 1) + 1.0
             ) / self.metrics["executions"]
 
         except Exception as e:
@@ -305,10 +294,7 @@ class UnifiedOrchestratorFacade:
                 event_type="error",
                 swarm=request.swarm_type.value,
                 timestamp=datetime.utcnow().isoformat(),
-                data={
-                    "error": str(e),
-                    "degradation_strategy": strategy
-                }
+                data={"error": str(e), "degradation_strategy": strategy},
             )
 
             # Update failure metrics
@@ -317,10 +303,7 @@ class UnifiedOrchestratorFacade:
             ) / self.metrics["executions"]
 
     async def _execute_coding_swarm(
-        self,
-        request: SwarmRequest,
-        config: dict,
-        context: dict
+        self, request: SwarmRequest, config: dict, context: dict
     ) -> dict:
         """Execute coding debate swarm"""
         cb = self.circuit_breakers["llm"]
@@ -335,16 +318,13 @@ class UnifiedOrchestratorFacade:
                 self.coding_swarm.run_debate,
                 task=request.task,
                 max_rounds=config.get("max_rounds", 3),
-                timeout=config.get("timeout", 120)
+                timeout=config.get("timeout", 120),
             )
 
             return result
 
     async def _execute_improved_swarm(
-        self,
-        request: SwarmRequest,
-        config: dict,
-        context: dict
+        self, request: SwarmRequest, config: dict, context: dict
     ) -> dict:
         """Execute improved pattern-based swarm"""
         cb = self.circuit_breakers["llm"]
@@ -360,7 +340,7 @@ class UnifiedOrchestratorFacade:
                 self.improved_swarm.enabled_patterns = [
                     "safety_boundaries",
                     "dynamic_role_assignment",
-                    "quality_gates"
+                    "quality_gates",
                 ]
             else:  # quality
                 self.improved_swarm.enabled_patterns = [
@@ -369,23 +349,18 @@ class UnifiedOrchestratorFacade:
                     "adversarial_debate",
                     "quality_gates",
                     "consensus_mechanisms",
-                    "strategy_archive"
+                    "strategy_archive",
                 ]
 
             # Execute
             result = await cb.call(
-                self.improved_swarm.solve_with_improvements,
-                problem=request.task,
-                context=context
+                self.improved_swarm.solve_with_improvements, problem=request.task, context=context
             )
 
             return result
 
     async def _execute_simple_agents(
-        self,
-        request: SwarmRequest,
-        config: dict,
-        context: dict
+        self, request: SwarmRequest, config: dict, context: dict
     ) -> dict:
         """Execute simple sequential agents"""
         cb = self.circuit_breakers["llm"]
@@ -396,16 +371,13 @@ class UnifiedOrchestratorFacade:
                 workflow_id="sequential",
                 task=request.task,
                 context=context,
-                config=config
+                config=config,
             )
 
             return result
 
     async def _execute_mcp_coordinated(
-        self,
-        request: SwarmRequest,
-        config: dict,
-        context: dict
+        self, request: SwarmRequest, config: dict, context: dict
     ) -> dict:
         """Execute task with MCP assistant coordination"""
         cb = self.circuit_breakers["mcp"]
@@ -416,9 +388,7 @@ class UnifiedOrchestratorFacade:
 
             # Create coordination plan
             plan = await self._create_mcp_coordination_plan(
-                request.task,
-                assistants,
-                config["mode"]
+                request.task, assistants, config["mode"]
             )
 
             # Execute plan with assistants
@@ -431,7 +401,7 @@ class UnifiedOrchestratorFacade:
                     result = await cb.call(
                         coordinator.execute_task,
                         task=step["task"],
-                        context={**context, "previous_results": results}
+                        context={**context, "previous_results": results},
                     )
 
                     results[assistant] = result
@@ -442,63 +412,58 @@ class UnifiedOrchestratorFacade:
             return {
                 "plan": plan,
                 "results": results,
-                "synthesis": await self._synthesize_mcp_results(results)
+                "synthesis": await self._synthesize_mcp_results(results),
             }
 
     async def _create_mcp_coordination_plan(
-        self,
-        task: str,
-        assistants: list[str],
-        mode: str
+        self, task: str, assistants: list[str], mode: str
     ) -> dict:
         """Create execution plan for MCP assistants"""
-        plan = {
-            "task": task,
-            "mode": mode,
-            "steps": []
-        }
+        plan = {"task": task, "mode": mode, "steps": []}
 
         # Analyze task to determine assistant roles
         if "code" in task.lower() or "implement" in task.lower():
             # Code-heavy task
-            plan["steps"].append({
-                "assistant": "roo",
-                "task": f"Analyze codebase and patterns for: {task}",
-                "role": "code_analysis"
-            })
-            plan["steps"].append({
-                "assistant": "cline",
-                "task": f"Create implementation plan for: {task}",
-                "role": "planning"
-            })
-            plan["steps"].append({
-                "assistant": "claude",
-                "task": f"Review and synthesize approach for: {task}",
-                "role": "synthesis"
-            })
+            plan["steps"].append(
+                {
+                    "assistant": "roo",
+                    "task": f"Analyze codebase and patterns for: {task}",
+                    "role": "code_analysis",
+                }
+            )
+            plan["steps"].append(
+                {
+                    "assistant": "cline",
+                    "task": f"Create implementation plan for: {task}",
+                    "role": "planning",
+                }
+            )
+            plan["steps"].append(
+                {
+                    "assistant": "claude",
+                    "task": f"Review and synthesize approach for: {task}",
+                    "role": "synthesis",
+                }
+            )
         else:
             # General task
-            plan["steps"].append({
-                "assistant": "claude",
-                "task": f"Initial analysis of: {task}",
-                "role": "analysis"
-            })
+            plan["steps"].append(
+                {"assistant": "claude", "task": f"Initial analysis of: {task}", "role": "analysis"}
+            )
             if mode != "lite":
-                plan["steps"].append({
-                    "assistant": "cline",
-                    "task": f"Execute task autonomously: {task}",
-                    "role": "execution"
-                })
+                plan["steps"].append(
+                    {
+                        "assistant": "cline",
+                        "task": f"Execute task autonomously: {task}",
+                        "role": "execution",
+                    }
+                )
 
         return plan
 
     async def _synthesize_mcp_results(self, results: dict) -> dict:
         """Synthesize results from multiple MCP assistants"""
-        synthesis = {
-            "consensus": None,
-            "conflicts": [],
-            "recommendations": []
-        }
+        synthesis = {"consensus": None, "conflicts": [], "recommendations": []}
 
         # Analyze results for consensus and conflicts
         # (Implementation would analyze actual results)
@@ -510,11 +475,10 @@ class UnifiedOrchestratorFacade:
         return {
             **self.metrics,
             "circuit_breakers": {
-                name: cb.get_state()
-                for name, cb in self.circuit_breakers.items()
+                name: cb.get_state() for name, cb in self.circuit_breakers.items()
             },
             "optimizer_health": self.optimizer.get_system_health(),
-            "mcp_coordinators": list(self.mcp_coordinators.keys())
+            "mcp_coordinators": list(self.mcp_coordinators.keys()),
         }
 
 
@@ -536,5 +500,5 @@ class MCPAssistantCoordinator:
             "assistant": self.assistant_id,
             "task": task,
             "result": f"Executed by {self.assistant_id}",
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }

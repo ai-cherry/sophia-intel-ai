@@ -20,7 +20,7 @@ const allowed = (j: any): boolean => {
 
 export function JudgeReport({ data }: JudgeReportProps) {
   const [collapsed, setCollapsed] = useState(false);
-  
+
   if (!data) return null;
 
   const judge = typeof data === 'string' ? safe(data) : data;

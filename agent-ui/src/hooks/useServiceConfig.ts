@@ -86,20 +86,20 @@ export const useServiceConfig = () => {
   const [manifest, setManifest] = useState<ServiceManifest | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   const selectedEndpoint = usePlaygroundStore((state) => state.selectedEndpoint);
   const setSelectedEndpoint = usePlaygroundStore((state) => state.setSelectedEndpoint);
-  
+
   useEffect(() => {
     const fetchManifest = async () => {
       try {
         setLoading(true);
         setError(null);
-        
+
         // Try to fetch config from the current endpoint
         const configUrl = APIRoutes.GetConfig(selectedEndpoint);
         const response = await fetch(configUrl);
-        
+
         if (!response.ok) {
           // If config endpoint fails, try to determine correct URL
           if (response.status === 404 || response.status === 403) {
@@ -108,10 +108,10 @@ export const useServiceConfig = () => {
           }
           throw new Error(`Failed to fetch config: ${response.status}`);
         }
-        
+
         const data: ServiceManifest = await response.json();
         setManifest(data);
-        
+
         // Auto-update endpoint if manifest suggests a different one
         if (data.services?.unified_api?.url) {
           const manifestUrl = data.services.unified_api.url;
@@ -120,7 +120,7 @@ export const useServiceConfig = () => {
             setSelectedEndpoint(manifestUrl);
           }
         }
-        
+
         // Log discovered services
         console.log('Service Manifest Loaded:', {
           environment: data.environment?.name,
@@ -131,11 +131,11 @@ export const useServiceConfig = () => {
           },
           features: data.features
         });
-        
+
       } catch (err) {
         console.error('Failed to load service manifest:', err);
         setError(err instanceof Error ? err.message : 'Unknown error');
-        
+
         // Set default manifest on error
         setManifest({
           environment: {
@@ -231,24 +231,24 @@ export const useServiceConfig = () => {
         setLoading(false);
       }
     };
-    
+
     // Fetch manifest on mount and when endpoint changes
     fetchManifest();
-    
+
     // Refresh manifest every 5 minutes
     const interval = setInterval(fetchManifest, 5 * 60 * 1000);
-    
+
     return () => clearInterval(interval);
   }, [selectedEndpoint, setSelectedEndpoint]);
-  
+
   return {
     manifest,
     loading,
     error,
     isOrchestratorModel: (model: string) => manifest?.models?.orchestrator?.model === model,
-    isAllowedSwarmModel: (model: string) => 
+    isAllowedSwarmModel: (model: string) =>
       manifest?.models?.agent_swarm?.allowed_models?.includes(model) ?? false,
-    getServiceUrl: (service: keyof ServiceManifest['services']) => 
+    getServiceUrl: (service: keyof ServiceManifest['services']) =>
       manifest?.services?.[service] ?? null,
     isFeatureEnabled: (feature: keyof ServiceManifest['features']) =>
       manifest?.features?.[feature] ?? false

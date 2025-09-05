@@ -24,9 +24,9 @@ check_service() {
     local port=$1
     local name=$2
     local endpoint=${3:-/health}
-    
+
     printf "%-30s [Port %5s]: " "$name" "$port"
-    
+
     # Try to connect to the service
     if timeout 2 curl -s "http://localhost:$port$endpoint" > /dev/null 2>&1; then
         echo "✅ Online"
@@ -49,9 +49,9 @@ test_api() {
     local method=${3:-GET}
     local data=${4:-}
     local name=$5
-    
+
     printf "  %-28s: " "$name"
-    
+
     if [ "$method" = "POST" ]; then
         response=$(curl -s -X POST "http://localhost:$port$endpoint" \
             -H "Content-Type: application/json" \
@@ -59,7 +59,7 @@ test_api() {
     else
         response=$(curl -s "http://localhost:$port$endpoint" 2>/dev/null)
     fi
-    
+
     if [ ! -z "$response" ] && [ "$response" != "null" ]; then
         # Check for error in response
         if echo "$response" | grep -q "error\|Error\|failed\|Failed"; then
@@ -100,7 +100,7 @@ echo "MCP Server Endpoints:"
 test_api $MCP_PORT "/docs" "GET" "" "API Documentation"
 test_api $MCP_PORT "/api/swarms/status" "GET" "" "Swarms Status"
 
-# Test API Server endpoints  
+# Test API Server endpoints
 echo ""
 echo "API Server Endpoints:"
 test_api $API_PORT "/health" "GET" "" "Health Check"

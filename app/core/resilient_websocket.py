@@ -4,20 +4,18 @@ Implements automatic reconnection, circuit breakers, and error recovery
 """
 
 import asyncio
+import builtins
+import contextlib
 import json
 import logging
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional, Union
+from typing import Any, Optional
 
 import websockets
-from websockets.exceptions import (
-    ConnectionClosed,
-    ConnectionClosedError,
-    WebSocketException,
-)
+from websockets.exceptions import ConnectionClosed, ConnectionClosedError, WebSocketException
 
 from app.core.circuit_breaker import with_circuit_breaker
 from app.core.websocket_manager import WebSocketManager
@@ -27,6 +25,7 @@ logger = logging.getLogger(__name__)
 
 class ConnectionState(Enum):
     """WebSocket connection states"""
+
     DISCONNECTED = "disconnected"
     CONNECTING = "connecting"
     CONNECTED = "connected"
@@ -38,6 +37,7 @@ class ConnectionState(Enum):
 @dataclass
 class ReconnectionConfig:
     """Configuration for reconnection behavior"""
+
     max_attempts: int = 10
     initial_delay: float = 1.0
     max_delay: float = 60.0
@@ -49,6 +49,7 @@ class ReconnectionConfig:
 @dataclass
 class ConnectionMetrics:
     """Connection health metrics"""
+
     total_connections: int = 0
     successful_connections: int = 0
     failed_connections: int = 0
@@ -64,6 +65,7 @@ class ConnectionMetrics:
 @dataclass
 class MCPMessage:
     """MCP protocol message"""
+
     id: str
     method: str
     params: dict[str, Any] = field(default_factory=dict)
@@ -82,7 +84,7 @@ class ResilientWebSocketClient:
         self,
         url: str,
         reconnect_config: Optional[ReconnectionConfig] = None,
-        message_handlers: Optional[dict[str, Callable]] = None
+        message_handlers: Optional[dict[str, Callable]] = None,
     ):
         self.url = url
         self.reconnect_config = reconnect_config or ReconnectionConfig()
@@ -119,10 +121,10 @@ class ResilientWebSocketClient:
     async def connect(self, timeout: float = 10.0) -> bool:
         """
         Establish WebSocket connection with timeout and retries
-        
+
         Args:
             timeout: Connection timeout in seconds
-            
+
         Returns:
             True if connected successfully
         """
@@ -130,7 +132,9 @@ class ResilientWebSocketClient:
             return True
 
         if self.circuit_breaker_open:
-            if (datetime.now() - self.circuit_breaker_open_time).seconds < self.reconnect_config.circuit_breaker_timeout:
+            if (
+                datetime.now() - self.circuit_breaker_open_time
+            ).seconds < self.reconnect_config.circuit_breaker_timeout:
                 logger.warning(f"Circuit breaker open for {self.url}")
                 return False
             else:
@@ -144,10 +148,7 @@ class ResilientWebSocketClient:
             logger.info(f"Connecting to MCP WebSocket: {self.url}")
 
             # Configure WebSocket with timeouts and headers
-            extra_headers = {
-                "User-Agent": "Sophia-Intel-AI/1.0",
-                "X-Client-Type": "MCP-Client"
-            }
+            extra_headers = {"User-Agent": "Sophia-Intel-AI/1.0", "X-Client-Type": "MCP-Client"}
 
             self.websocket = await websockets.connect(
                 self.url,
@@ -155,7 +156,7 @@ class ResilientWebSocketClient:
                 extra_headers=extra_headers,
                 ping_interval=20,
                 ping_timeout=10,
-                close_timeout=10
+                close_timeout=10,
             )
 
             self.state = ConnectionState.CONNECTED
@@ -196,7 +197,7 @@ class ResilientWebSocketClient:
     async def disconnect(self, code: int = 1000, reason: str = "Normal closure"):
         """
         Gracefully disconnect WebSocket
-        
+
         Args:
             code: WebSocket close code
             reason: Close reason
@@ -211,10 +212,8 @@ class ResilientWebSocketClient:
         # Cancel connection task
         if self.connection_task and not self.connection_task.done():
             self.connection_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self.connection_task
-            except asyncio.CancelledError:
-                pass
 
         # Close WebSocket
         if self.websocket and not self.websocket.closed:
@@ -225,7 +224,9 @@ class ResilientWebSocketClient:
 
         # Update metrics
         if self.connection_start_time:
-            self.metrics.connection_duration += (datetime.now() - self.connection_start_time).total_seconds()
+            self.metrics.connection_duration += (
+                datetime.now() - self.connection_start_time
+            ).total_seconds()
 
         # Clear state
         self.websocket = None
@@ -242,29 +243,25 @@ class ResilientWebSocketClient:
         params: dict[str, Any] = None,
         message_id: Optional[str] = None,
         expect_response: bool = True,
-        timeout: float = 30.0
+        timeout: float = 30.0,
     ) -> Optional[dict[str, Any]]:
         """
         Send MCP message with automatic retry and response handling
-        
+
         Args:
             method: MCP method name
             params: Message parameters
             message_id: Optional message ID
             expect_response: Whether to wait for response
             timeout: Response timeout
-            
+
         Returns:
             Response message if expect_response is True
         """
         if not message_id:
             message_id = f"msg_{int(datetime.now().timestamp() * 1000000)}"
 
-        message = MCPMessage(
-            id=message_id,
-            method=method,
-            params=params or {}
-        )
+        message = MCPMessage(id=message_id, method=method, params=params or {})
 
         # Queue message if not connected
         if self.state != ConnectionState.CONNECTED:
@@ -280,12 +277,7 @@ class ResilientWebSocketClient:
 
         try:
             # Prepare message payload
-            payload = {
-                "jsonrpc": "2.0",
-                "id": message.id,
-                "method": method,
-                "params": params or {}
-            }
+            payload = {"jsonrpc": "2.0", "id": message.id, "method": method, "params": params or {}}
 
             # Send message
             await self.websocket.send(json.dumps(payload))
@@ -335,8 +327,7 @@ class ResilientWebSocketClient:
                 try:
                     # Receive message with timeout
                     raw_message = await asyncio.wait_for(
-                        self.websocket.recv(),
-                        timeout=60.0  # 1 minute timeout
+                        self.websocket.recv(), timeout=60.0  # 1 minute timeout
                     )
 
                     self.metrics.messages_received += 1
@@ -400,11 +391,7 @@ class ResilientWebSocketClient:
 
                     # Send response if message has ID
                     if message_id:
-                        response_payload = {
-                            "jsonrpc": "2.0",
-                            "id": message_id,
-                            "result": response
-                        }
+                        response_payload = {"jsonrpc": "2.0", "id": message_id, "result": response}
                         await self.websocket.send(json.dumps(response_payload))
 
                 except Exception as e:
@@ -415,10 +402,7 @@ class ResilientWebSocketClient:
                         error_payload = {
                             "jsonrpc": "2.0",
                             "id": message_id,
-                            "error": {
-                                "code": -32603,
-                                "message": str(e)
-                            }
+                            "error": {"code": -32603, "message": str(e)},
                         }
                         await self.websocket.send(json.dumps(error_payload))
             else:
@@ -440,20 +424,21 @@ class ResilientWebSocketClient:
 
         # Close current connection
         if self.websocket and not self.websocket.closed:
-            try:
+            with contextlib.suppress(builtins.BaseException):
                 await self.websocket.close()
-            except:
-                pass
 
         # Attempt reconnection with exponential backoff
         delay = self.reconnect_config.initial_delay
 
-        while (self.reconnect_attempts < self.reconnect_config.max_attempts and
-               self.state == ConnectionState.RECONNECTING):
-
+        while (
+            self.reconnect_attempts < self.reconnect_config.max_attempts
+            and self.state == ConnectionState.RECONNECTING
+        ):
             self.reconnect_attempts += 1
 
-            logger.info(f"Reconnection attempt {self.reconnect_attempts}/{self.reconnect_config.max_attempts} in {delay:.1f}s")
+            logger.info(
+                f"Reconnection attempt {self.reconnect_attempts}/{self.reconnect_config.max_attempts} in {delay:.1f}s"
+            )
 
             await asyncio.sleep(delay)
 
@@ -463,13 +448,16 @@ class ResilientWebSocketClient:
 
             # Exponential backoff with jitter
             delay = min(
-                delay * self.reconnect_config.backoff_factor,
-                self.reconnect_config.max_delay
+                delay * self.reconnect_config.backoff_factor, self.reconnect_config.max_delay
             )
-            delay += delay * self.reconnect_config.jitter * (0.5 - asyncio.get_event_loop().time() % 1)
+            delay += (
+                delay * self.reconnect_config.jitter * (0.5 - asyncio.get_event_loop().time() % 1)
+            )
 
         # Exhausted reconnection attempts
-        logger.error(f"Failed to reconnect to MCP WebSocket after {self.reconnect_attempts} attempts")
+        logger.error(
+            f"Failed to reconnect to MCP WebSocket after {self.reconnect_attempts} attempts"
+        )
         self.state = ConnectionState.FAILED
 
         # Open circuit breaker
@@ -490,7 +478,7 @@ class ResilientWebSocketClient:
                     method=message.method,
                     params=message.params,
                     message_id=message.id,
-                    expect_response=False
+                    expect_response=False,
                 )
                 self.message_queue.remove(message)
 
@@ -516,7 +504,9 @@ class ResilientWebSocketClient:
             "circuit_breaker_open": self.circuit_breaker_open,
             "pending_messages": len(self.pending_messages),
             "queued_messages": len(self.message_queue),
-            "last_connection": self.last_connection_time.isoformat() if self.last_connection_time else None,
+            "last_connection": self.last_connection_time.isoformat()
+            if self.last_connection_time
+            else None,
             "metrics": {
                 "total_connections": self.metrics.total_connections,
                 "successful_connections": self.metrics.successful_connections,
@@ -524,24 +514,20 @@ class ResilientWebSocketClient:
                 "messages_sent": self.metrics.messages_sent,
                 "messages_received": self.metrics.messages_received,
                 "error_count": self.metrics.error_count,
-                "circuit_breaker_trips": self.metrics.circuit_breaker_trips
-            }
+                "circuit_breaker_trips": self.metrics.circuit_breaker_trips,
+            },
         }
 
     async def health_check(self) -> dict[str, Any]:
         """Perform health check by pinging MCP server"""
         try:
-            response = await self.send_mcp_message(
-                method="ping",
-                expect_response=True,
-                timeout=5.0
-            )
+            response = await self.send_mcp_message(method="ping", expect_response=True, timeout=5.0)
 
             return {
                 "healthy": response is not None,
                 "response": response,
                 "state": self.state.value,
-                "metrics": self.get_metrics()
+                "metrics": self.get_metrics(),
             }
 
         except Exception as e:
@@ -549,7 +535,7 @@ class ResilientWebSocketClient:
                 "healthy": False,
                 "error": str(e),
                 "state": self.state.value,
-                "metrics": self.get_metrics()
+                "metrics": self.get_metrics(),
             }
 
 
@@ -565,7 +551,7 @@ class MCPWebSocketManager(WebSocketManager):
         self.mcp_servers = {
             "main": "ws://localhost:8003/mcp/ws",
             "memory": "ws://localhost:8003/memory/ws",
-            "tools": "ws://localhost:8003/tools/ws"
+            "tools": "ws://localhost:8003/tools/ws",
         }
 
     async def initialize(self):
@@ -579,8 +565,8 @@ class MCPWebSocketManager(WebSocketManager):
                 message_handlers={
                     "memory_update": self._handle_memory_update,
                     "tool_result": self._handle_tool_result,
-                    "status_update": self._handle_status_update
-                }
+                    "status_update": self._handle_status_update,
+                },
             )
 
             # Set up callbacks
@@ -594,11 +580,7 @@ class MCPWebSocketManager(WebSocketManager):
             await client.connect()
 
     async def send_to_mcp_server(
-        self,
-        server: str,
-        method: str,
-        params: dict[str, Any] = None,
-        expect_response: bool = True
+        self, server: str, method: str, params: dict[str, Any] = None, expect_response: bool = True
     ) -> Optional[dict[str, Any]]:
         """Send message to specific MCP server"""
         client = self.mcp_clients.get(server)
@@ -607,62 +589,43 @@ class MCPWebSocketManager(WebSocketManager):
             return None
 
         return await client.send_mcp_message(
-            method=method,
-            params=params,
-            expect_response=expect_response
+            method=method, params=params, expect_response=expect_response
         )
 
     async def _handle_memory_update(self, params: dict[str, Any]) -> dict[str, Any]:
         """Handle memory update from MCP server"""
         # Broadcast to WebSocket clients
-        await self.broadcast("memory_updates", {
-            "type": "mcp_memory_update",
-            "data": params
-        })
+        await self.broadcast("memory_updates", {"type": "mcp_memory_update", "data": params})
         return {"status": "received"}
 
     async def _handle_tool_result(self, params: dict[str, Any]) -> dict[str, Any]:
         """Handle tool execution result from MCP server"""
         # Broadcast to WebSocket clients
-        await self.broadcast("tool_results", {
-            "type": "mcp_tool_result",
-            "data": params
-        })
+        await self.broadcast("tool_results", {"type": "mcp_tool_result", "data": params})
         return {"status": "received"}
 
     async def _handle_status_update(self, params: dict[str, Any]) -> dict[str, Any]:
         """Handle status update from MCP server"""
         # Broadcast to WebSocket clients
-        await self.broadcast("status_updates", {
-            "type": "mcp_status_update",
-            "data": params
-        })
+        await self.broadcast("status_updates", {"type": "mcp_status_update", "data": params})
         return {"status": "received"}
 
     async def _on_mcp_connected(self, server_name: str):
         """Handle MCP client connection"""
         logger.info(f"MCP client connected: {server_name}")
-        await self.broadcast("mcp_status", {
-            "type": "mcp_connected",
-            "server": server_name
-        })
+        await self.broadcast("mcp_status", {"type": "mcp_connected", "server": server_name})
 
     async def _on_mcp_disconnected(self, server_name: str):
         """Handle MCP client disconnection"""
         logger.warning(f"MCP client disconnected: {server_name}")
-        await self.broadcast("mcp_status", {
-            "type": "mcp_disconnected",
-            "server": server_name
-        })
+        await self.broadcast("mcp_status", {"type": "mcp_disconnected", "server": server_name})
 
     async def _on_mcp_error(self, server_name: str, error: Exception):
         """Handle MCP client error"""
         logger.error(f"MCP client error on {server_name}: {error}")
-        await self.broadcast("mcp_status", {
-            "type": "mcp_error",
-            "server": server_name,
-            "error": str(error)
-        })
+        await self.broadcast(
+            "mcp_status", {"type": "mcp_error", "server": server_name, "error": str(error)}
+        )
 
     async def get_mcp_health(self) -> dict[str, Any]:
         """Get health status of all MCP connections"""
@@ -673,10 +636,8 @@ class MCPWebSocketManager(WebSocketManager):
 
         return {
             "servers": health_status,
-            "overall_healthy": all(
-                status["healthy"] for status in health_status.values()
-            ),
-            "timestamp": datetime.now().isoformat()
+            "overall_healthy": all(status["healthy"] for status in health_status.values()),
+            "timestamp": datetime.now().isoformat(),
         }
 
 

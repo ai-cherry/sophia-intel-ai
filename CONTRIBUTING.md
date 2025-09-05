@@ -56,6 +56,7 @@ make frontend    # In terminal 2
 ### Available Commands
 
 **Python Development Script:**
+
 ```bash
 python3 dev.py help      # Show all commands
 python3 dev.py setup     # Setup development environment
@@ -69,6 +70,7 @@ python3 dev.py logs      # Show logs
 ```
 
 **Make Commands:**
+
 ```bash
 make help               # Show all commands
 make dev                # Start development servers
@@ -82,17 +84,15 @@ make info               # Show project info
 
 ### Key Services
 
-- **API Server**: http://localhost:8003
+- **API Server**: <http://localhost:8003>
   - Health: `/healthz`
   - Docs: `/docs`
   - Config: `/config`
   - Cost Tracking: `/costs/summary`
   - Embeddings: `/embeddings`
-  
-- **Frontend**: http://localhost:3000
+- **Frontend**: <http://localhost:3000>
   - Cost Dashboard available in UI
   - Swarm execution interface
-  
 - **Features**:
   - 🔍 **Trace Middleware**: All requests tracked with trace IDs
   - 💰 **Cost Tracking**: LLM usage analytics and dashboards
@@ -196,13 +196,15 @@ python3 dev.py status
 ### Cost Tracking
 
 All LLM and embedding operations are automatically tracked. View analytics at:
-- API: http://localhost:8003/costs/summary
+
+- API: <http://localhost:8003/costs/summary>
 - Dashboard: Available in frontend UI
 - Data: Stored in `data/cost_tracking/`
 
 ### Trace IDs
 
 Every request gets a trace ID for debugging:
+
 - Automatically generated for each request
 - Propagated through all services
 - Visible in logs and response headers
@@ -211,6 +213,7 @@ Every request gets a trace ID for debugging:
 ## Environment Variables
 
 Required in `.env.local`:
+
 ```bash
 # API Keys
 OPENROUTER_API_KEY=your_openrouter_key
@@ -262,6 +265,6 @@ See detailed guide in docs/development.md
 
 ## Support
 
-- Issues: https://github.com/ai-cherry/sophia-intel-ai/issues
+- Issues: <https://github.com/ai-cherry/sophia-intel-ai/issues>
 - Discord: Join our community server
-- Email: team@sophia-intel.ai
+- Email: <team@sophia-intel.ai>

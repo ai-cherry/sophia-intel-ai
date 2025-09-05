@@ -1,10 +1,13 @@
 # ADR-004: Agno AgentOS Embedding Integration
 
 ## Status
+
 Accepted
 
 ## Context
+
 The existing embedding infrastructure had several limitations:
+
 - Multiple inconsistent embedding implementations
 - No unified gateway for providers
 - Lack of model selection intelligence
@@ -12,7 +15,9 @@ The existing embedding infrastructure had several limitations:
 - No support for Together AI's best models
 
 ## Decision
+
 Implement a production-ready embedding service following Agno AgentOS patterns with:
+
 1. **Unified Portkey Gateway**: Single interface for all providers
 2. **Virtual Key Management**: Secure API key handling
 3. **Intelligent Model Selection**: Auto-select best model for use case
@@ -25,6 +30,7 @@ Implement a production-ready embedding service following Agno AgentOS patterns w
 ### Components
 
 #### 1. AgnoEmbeddingService
+
 - Core service implementing Agno patterns
 - Model registry with specifications
 - Intelligent model selection
@@ -32,6 +38,7 @@ Implement a production-ready embedding service following Agno AgentOS patterns w
 - Agent/swarm integration
 
 #### 2. PortkeyGateway
+
 - Unified gateway for all providers
 - Virtual key management
 - Request/response wrapping
@@ -39,6 +46,7 @@ Implement a production-ready embedding service following Agno AgentOS patterns w
 - Cost tracking
 
 #### 3. Embedding API
+
 - REST endpoints for embedding operations
 - WebSocket support for streaming
 - Batch processing
@@ -47,13 +55,13 @@ Implement a production-ready embedding service following Agno AgentOS patterns w
 
 ### Model Selection Strategy
 
-| Use Case | Model Selection | Rationale |
-|----------|----------------|-----------|
-| RAG | BAAI/bge-large-en-v1.5 | MTEB 64.23, optimized for retrieval |
-| Long Context | Alibaba-NLP/gte-modernbert-base | 8K tokens, code retrieval |
-| Ultra-Long | togethercomputer/m2-bert-32k | 32K tokens for books/legal |
-| Multilingual | intfloat/e5-large-instruct | 100+ languages, instruct mode |
-| Fast Search | BAAI/bge-base-en-v1.5 | Lower latency, good accuracy |
+| Use Case     | Model Selection                 | Rationale                           |
+| ------------ | ------------------------------- | ----------------------------------- |
+| RAG          | BAAI/bge-large-en-v1.5          | MTEB 64.23, optimized for retrieval |
+| Long Context | Alibaba-NLP/gte-modernbert-base | 8K tokens, code retrieval           |
+| Ultra-Long   | togethercomputer/m2-bert-32k    | 32K tokens for books/legal          |
+| Multilingual | intfloat/e5-large-instruct      | 100+ languages, instruct mode       |
+| Fast Search  | BAAI/bge-base-en-v1.5           | Lower latency, good accuracy        |
 
 ### Best Practices Implementation
 
@@ -91,6 +99,7 @@ agent = Agent(
 ## Performance Characteristics
 
 ### Model Benchmarks (MTEB Scores)
+
 - **intfloat/e5-large-instruct**: 68.32 (multilingual)
 - **Alibaba-NLP/gte-modernbert**: 64.38 (general)
 - **BAAI/bge-large-en-v1.5**: 64.23 (English)
@@ -98,12 +107,14 @@ agent = Agent(
 - **togethercomputer/m2-bert**: 60.0 (long context)
 
 ### Cost Analysis
+
 - Together AI: ~$0.0001/1K tokens
-- OpenAI: ~$0.00013/1K tokens  
+- OpenAI: ~$0.00013/1K tokens
 - Voyage: ~$0.00015/1K tokens
 - Cost savings: 30-50% using Together AI
 
 ### Latency Targets
+
 - Cache hit: <5ms
 - Together AI: <50ms
 - OpenAI: <100ms
@@ -112,6 +123,7 @@ agent = Agent(
 ## Integration Points
 
 ### 1. Memory System
+
 ```python
 # app/memory/unified_memory_store.py
 response = await embedding_service.create_agent_embeddings(
@@ -122,6 +134,7 @@ response = await embedding_service.create_agent_embeddings(
 ```
 
 ### 2. RAG Pipeline
+
 ```python
 # app/infrastructure/langgraph/rag_pipeline.py
 response = await embedding_service.create_swarm_embeddings(
@@ -132,6 +145,7 @@ response = await embedding_service.create_swarm_embeddings(
 ```
 
 ### 3. Vector Search
+
 ```python
 # app/weaviate/weaviate_client.py
 embeddings = await embedding_service.embed(
@@ -145,17 +159,20 @@ embeddings = await embedding_service.embed(
 ## Migration Strategy
 
 ### Phase 1: Add New Service (Complete)
+
 - ✅ Create AgnoEmbeddingService
 - ✅ Implement PortkeyGateway
 - ✅ Add API endpoints
 
 ### Phase 2: Update Existing Code
+
 - [ ] Update memory systems to use new service
 - [ ] Migrate RAG pipeline
 - [ ] Update vector search implementations
 - [ ] Add feature flags for gradual rollout
 
 ### Phase 3: Deprecate Old Code
+
 - [ ] Remove dual_tier_embeddings.py
 - [ ] Remove embedding_pipeline.py (keep utilities)
 - [ ] Clean up duplicate implementations
@@ -163,6 +180,7 @@ embeddings = await embedding_service.embed(
 ## Monitoring
 
 ### Metrics to Track
+
 - Embedding generation latency
 - Cache hit rate
 - Model usage distribution
@@ -170,6 +188,7 @@ embeddings = await embedding_service.embed(
 - Provider availability
 
 ### Alerts
+
 - Latency > 200ms (P95)
 - Cache hit rate < 50%
 - Provider failures > 1%
@@ -186,6 +205,7 @@ embeddings = await embedding_service.embed(
 ## Consequences
 
 ### Positive
+
 - Unified embedding interface
 - 30-50% cost reduction
 - Better model selection
@@ -193,12 +213,14 @@ embeddings = await embedding_service.embed(
 - Agno ecosystem compatibility
 
 ### Negative
+
 - Additional complexity
 - Dependency on Portkey
 - Migration effort required
 - Learning curve for team
 
 ## References
+
 - [Agno AgentOS Documentation](https://docs.agno.dev)
 - [Portkey AI Gateway](https://portkey.ai)
 - [Together AI Models](https://together.ai/models)

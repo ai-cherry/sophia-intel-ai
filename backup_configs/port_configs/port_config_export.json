@@ -1,0 +1,123 @@
+{
+  "version": "1.0.0",
+  "timestamp": "",
+  "services": {
+    "nextjs_ui": {
+      "port": 3000,
+      "type": "frontend",
+      "description": "Next.js UI",
+      "health": "/",
+      "websockets": [],
+      "required": true,
+      "url": "http://localhost:3000"
+    },
+    "redis": {
+      "port": 6379,
+      "type": "database",
+      "description": "Redis Server",
+      "health": null,
+      "websockets": [],
+      "required": true,
+      "url": "redis://localhost:6379"
+    },
+    "mcp_memory_alt": {
+      "port": 8000,
+      "type": "mcp",
+      "description": "MCP Memory Alternative",
+      "health": "/health",
+      "websockets": [],
+      "required": false,
+      "url": "http://localhost:8000"
+    },
+    "mcp_memory": {
+      "port": 8001,
+      "type": "mcp",
+      "description": "MCP Memory Server",
+      "health": "/health",
+      "websockets": [],
+      "required": true,
+      "url": "http://localhost:8001"
+    },
+    "monitoring": {
+      "port": 8002,
+      "type": "monitoring",
+      "description": "Monitoring Dashboard",
+      "health": "/",
+      "websockets": [],
+      "required": true,
+      "url": "http://localhost:8002"
+    },
+    "mcp_code_review": {
+      "port": 8003,
+      "type": "mcp",
+      "description": "MCP Code Review Server",
+      "health": "/health",
+      "websockets": [],
+      "required": true,
+      "url": "http://localhost:8003"
+    },
+    "vector_store": {
+      "port": 8004,
+      "type": "storage",
+      "description": "Vector Store Service",
+      "health": "/health",
+      "websockets": [],
+      "required": false,
+      "url": "http://localhost:8004"
+    },
+    "unified_api": {
+      "port": 8005,
+      "type": "api",
+      "description": "Unified API Server",
+      "health": "/",
+      "websockets": ["/ws/bus", "/ws/swarm", "/ws/teams"],
+      "required": true,
+      "url": "http://localhost:8005"
+    },
+    "backup_test": {
+      "port": 8006,
+      "type": "dev",
+      "description": "Backup/Testing",
+      "health": "/health",
+      "websockets": [],
+      "required": false,
+      "url": "http://localhost:8006"
+    },
+    "dev1": {
+      "port": 8007,
+      "type": "dev",
+      "description": "Development 1",
+      "health": "/health",
+      "websockets": [],
+      "required": false,
+      "url": "http://localhost:8007"
+    },
+    "dev2": {
+      "port": 8008,
+      "type": "dev",
+      "description": "Development 2",
+      "health": "/health",
+      "websockets": [],
+      "required": false,
+      "url": "http://localhost:8008"
+    },
+    "weaviate": {
+      "port": 8080,
+      "type": "database",
+      "description": "Weaviate Vector DB",
+      "health": "/v1",
+      "websockets": [],
+      "required": false,
+      "url": "http://localhost:8080"
+    },
+    "streamlit": {
+      "port": 8501,
+      "type": "alt_ui",
+      "description": "Streamlit UI",
+      "health": "/",
+      "websockets": [],
+      "required": true,
+      "url": "http://localhost:8501"
+    }
+  }
+}

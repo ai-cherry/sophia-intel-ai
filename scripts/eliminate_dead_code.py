@@ -33,7 +33,7 @@ ORPHANED_FILES = [
 DUPLICATE_FILES = [
     "app/memory/embed_together.py",  # Duplicate of embedding_pipeline.py
     "app/memory/weaviate_store.py",  # Duplicate of hybrid_search.py
-    "app/api/memory_endpoints.py",   # Merged into unified_server.py
+    "app/api/memory_endpoints.py",  # Merged into unified_server.py
 ]
 
 # Files with highest unused import counts
@@ -121,12 +121,9 @@ class DeadCodeEliminator:
                 # Remove the file
                 file_path.unlink()
 
-            self.removed_files.append({
-                "path": filepath,
-                "reason": reason,
-                "lines": line_count,
-                "size": file_size
-            })
+            self.removed_files.append(
+                {"path": filepath, "reason": reason, "lines": line_count, "size": file_size}
+            )
 
             logger.info(f"  ✅ Removed {filepath} ({line_count} lines, {reason})")
 
@@ -138,11 +135,7 @@ class DeadCodeEliminator:
         """Clean unused imports using autoflake."""
         try:
             # Check if autoflake is installed
-            result = subprocess.run(
-                ["which", "autoflake"],
-                capture_output=True,
-                text=True
-            )
+            result = subprocess.run(["which", "autoflake"], capture_output=True, text=True)
 
             if result.returncode != 0:
                 logger.info("  ⚠️  autoflake not installed. Install with: pip install autoflake")
@@ -162,7 +155,7 @@ class DeadCodeEliminator:
                     "--remove-unused-variables",
                     "--in-place",
                     "--recursive",
-                    "app/"
+                    "app/",
                 ]
 
                 result = subprocess.run(cmd, capture_output=True, text=True)
@@ -185,7 +178,7 @@ class DeadCodeEliminator:
                 "--remove-all-unused-imports",
                 "--remove-unused-variables",
                 "--in-place",
-                filepath
+                filepath,
             ]
 
             result = subprocess.run(cmd, capture_output=True, text=True)
@@ -207,8 +200,8 @@ class DeadCodeEliminator:
                 "files_removed": len(self.removed_files),
                 "total_lines_removed": sum(f["lines"] for f in self.removed_files),
                 "total_bytes_removed": sum(f["size"] for f in self.removed_files),
-                "imports_cleaned": len(self.cleaned_imports)
-            }
+                "imports_cleaned": len(self.cleaned_imports),
+            },
         }
 
         # Save report
@@ -244,20 +237,10 @@ def main():
         description="Eliminate dead code from Sophia Intel AI codebase"
     )
     parser.add_argument(
-        "--live",
-        action="store_true",
-        help="Run in live mode (actually remove files)"
+        "--live", action="store_true", help="Run in live mode (actually remove files)"
     )
-    parser.add_argument(
-        "--no-imports",
-        action="store_true",
-        help="Skip import cleaning"
-    )
-    parser.add_argument(
-        "--force",
-        action="store_true",
-        help="Skip confirmation prompt"
-    )
+    parser.add_argument("--no-imports", action="store_true", help="Skip import cleaning")
+    parser.add_argument("--force", action="store_true", help="Skip confirmation prompt")
 
     args = parser.parse_args()
 

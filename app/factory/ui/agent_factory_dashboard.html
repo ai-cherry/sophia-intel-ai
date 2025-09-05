@@ -83,10 +83,10 @@
 
     <script type="text/babel">
         const { useState, useEffect, useCallback } = React;
-        
+
         // API Configuration
         const API_BASE = '/api/factory';
-        
+
         // Utility Functions
         const showNotification = (message, type = 'info') => {
             const notification = document.createElement('div');
@@ -98,7 +98,7 @@
                 </div>
             `;
             document.body.appendChild(notification);
-            
+
             setTimeout(() => notification.classList.add('show'), 100);
             setTimeout(() => {
                 notification.classList.remove('show');
@@ -143,7 +143,7 @@
                         </div>
                         <div className="flex items-center space-x-2">
                             <span className="text-sm text-gray-500">v{agent.metadata.version}</span>
-                            <button 
+                            <button
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     onViewDetails(agent);
@@ -154,9 +154,9 @@
                             </button>
                         </div>
                     </div>
-                    
+
                     <p className="text-gray-600 text-sm mb-4 line-clamp-2">{agent.metadata.description}</p>
-                    
+
                     <div className="mb-4">
                         <div className="flex flex-wrap gap-1 mb-2">
                             {agent.capabilities.slice(0, 3).map(cap => (
@@ -171,7 +171,7 @@
                             )}
                         </div>
                     </div>
-                    
+
                     <div className="flex items-center justify-between text-sm">
                         <div className="flex items-center">
                             <div className="flex items-center mr-4">
@@ -215,7 +215,7 @@
                                 <span className="text-sm text-gray-500">{template.type} • {template.execution_mode}</span>
                             </div>
                         </div>
-                        <button 
+                        <button
                             onClick={(e) => {
                                 e.stopPropagation();
                                 onViewDetails(template);
@@ -225,9 +225,9 @@
                             <i className="fas fa-info-circle"></i>
                         </button>
                     </div>
-                    
+
                     <p className="text-gray-600 text-sm mb-4">{template.description}</p>
-                    
+
                     <div className="mb-4">
                         <div className="text-sm text-gray-700 mb-2">Required Specialties:</div>
                         <div className="flex flex-wrap gap-1">
@@ -238,7 +238,7 @@
                             ))}
                         </div>
                     </div>
-                    
+
                     <div className="flex items-center justify-between text-sm">
                         <div className="flex items-center space-x-4">
                             <span className="flex items-center">
@@ -367,7 +367,7 @@
                     });
 
                     const data = await response.json();
-                    
+
                     if (data.success) {
                         showNotification(`Swarm created successfully: ${data.swarm_id}`, 'success');
                         setSelectedAgents([]);
@@ -394,7 +394,7 @@
                     });
 
                     const data = await response.json();
-                    
+
                     if (data.success) {
                         showNotification(`Swarm created from template: ${data.swarm_id}`, 'success');
                     } else {
@@ -410,15 +410,15 @@
 
             // Filter agents based on search and filters
             const filteredAgents = agents.filter(agent => {
-                const matchesSearch = !searchTerm || 
+                const matchesSearch = !searchTerm ||
                     agent.metadata.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                     agent.metadata.description.toLowerCase().includes(searchTerm.toLowerCase());
-                
+
                 const matchesSpecialty = !filterSpecialty || agent.specialty === filterSpecialty;
-                
-                const matchesCapability = !filterCapability || 
+
+                const matchesCapability = !filterCapability ||
                     agent.capabilities.some(cap => cap === filterCapability);
-                
+
                 return matchesSearch && matchesSpecialty && matchesCapability;
             });
 

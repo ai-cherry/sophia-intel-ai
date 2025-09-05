@@ -2,12 +2,7 @@
   "startup_time": 2.5,
   "memory_usage": 450,
   "cpu_usage": 60,
-  "response_times": [
-    10,
-    150,
-    200,
-    250
-  ],
+  "response_times": [10, 150, 200, 250],
   "cost_estimate": 8.751972,
   "errors": []
 }

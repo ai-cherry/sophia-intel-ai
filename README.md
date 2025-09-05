@@ -19,24 +19,28 @@ A fully functional AI-powered coding platform with real LLM integration, advance
 ## 🚀 Features
 
 ### Real AI Integration
+
 - **Real LLM Execution**: Direct integration with OpenAI, Anthropic, and other providers via Portkey gateway
 - **Multi-Model Support**: Fast, balanced, and heavy model pools for different use cases
 - **Streaming Responses**: Real-time token streaming to the UI with progress indicators
 - **Role-Based Models**: Specialized model selection for planners, generators, critics, judges, and runners
 
 ### Advanced Memory System
+
 - **Hybrid Search**: Combines vector similarity (Weaviate) with full-text search (SQLite FTS5)
 - **Smart Caching**: Redis-based caching with intelligent invalidation
 - **Memory Types**: Episodic, semantic, and procedural memory classification
 - **Deduplication**: Automatic content deduplication with hash-based identification
 
 ### AI Swarms
+
 - **Collaborative Agents**: Multi-agent systems with specialized roles
-- **Debate-Driven Development**: Structured proposal, review, and decision cycles  
+- **Debate-Driven Development**: Structured proposal, review, and decision cycles
 - **Quality Gates**: Configurable evaluation thresholds and approval workflows
 - **Parallel Execution**: Concurrent agent processing for improved performance
 
 ### Production Features
+
 - **Comprehensive Error Handling**: Structured error reporting with fallback mechanisms
 - **Performance Monitoring**: Built-in observability with Prometheus metrics
 - **API Documentation**: Full OpenAPI specification with interactive docs
@@ -54,12 +58,14 @@ A fully functional AI-powered coding platform with real LLM integration, advance
 ### Environment Setup
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/yourusername/sophia-intel-ai.git
 cd sophia-intel-ai
 ```
 
 2. Set up environment variables:
+
 ```bash
 # Copy and edit the environment file
 cp .env.example .env
@@ -74,11 +80,13 @@ REDIS_URL=redis://localhost:6379/1
 ```
 
 3. Install Python dependencies:
+
 ```bash
 pip3 install -r requirements.txt
 ```
 
 4. Install Node.js dependencies (for UI):
+
 ```bash
 cd ui && npm install
 cd ../agent-ui && npm install
@@ -87,23 +95,26 @@ cd ../agent-ui && npm install
 ### Quick Start
 
 1. Start the main API server:
+
 ```bash
 python3 -m app.api.unified_server
 ```
 
 2. Start the UI development servers:
+
 ```bash
 # Main UI (port 3000)
 cd ui && npm run dev
 
-# Agent UI (port 3002) 
+# Agent UI (port 3002)
 cd agent-ui && npm run dev
 ```
 
 3. Access the applications:
-- Main UI: http://localhost:3000
-- Agent UI: http://localhost:3002
-- API Documentation: http://localhost:8000/docs
+
+- Main UI: <http://localhost:3000>
+- Agent UI: <http://localhost:3002>
+- API Documentation: <http://localhost:8000/docs>
 
 ## 📋 Usage
 
@@ -222,7 +233,7 @@ PYTHONPATH=. python3 -m pytest tests/ -v
 # Enhanced system tests
 PYTHONPATH=. python3 tests/test_enhanced_system.py
 
-# Swarm components tests  
+# Swarm components tests
 PYTHONPATH=. python3 tests/test_swarm_components.py
 
 # With coverage
@@ -332,6 +343,7 @@ This project is licensed under the MIT License.
 ## 🆕 Recent Updates
 
 ### v2.0.0 - Production-Ready Release
+
 - ✅ **Real LLM Integration**: Replaced all mock responses with actual AI calls
 - ✅ **Enhanced Memory System**: Weaviate + SQLite hybrid search with caching
 - ✅ **Streaming AI Responses**: Real-time token streaming to UI
@@ -341,6 +353,7 @@ This project is licensed under the MIT License.
 - ✅ **Performance Optimization**: Caching, connection pooling, async processing
 
 ### Key Improvements
+
 - Eliminated all technical debt and mock implementations
 - Added type safety with Pydantic models throughout
 - Implemented configurable evaluation gates
@@ -361,6 +374,7 @@ Advanced AI Agent Orchestration System with unified API, multi-tiered memory, in
 ## 🚀 Architecture Overview
 
 Sophia Intel AI is a sophisticated AI agent orchestration framework that combines:
+
 - **Unified API Gateway** through FastAPI with SSE streaming
 - **Portkey → OpenRouter** for 499+ LLM models (August 2025)
 - **Latest Models**: GPT-5, Claude-4, Gemini 2.5, DeepSeek V3.1, X.AI Grok
@@ -417,22 +431,22 @@ graph TB
     UI --> FASTAPI
     CLI --> FASTAPI
     API_CLIENT --> FASTAPI
-    
+
     FASTAPI --> ORCH
     ORCH --> SWARM
     ORCH --> GATES
-    
+
     SWARM --> SUPERMEM
     SWARM --> HYBRID
     SWARM --> GRAPH
-    
+
     HYBRID --> EMBED
     GRAPH --> EMBED
-    
+
     EMBED --> PORTKEY
     PORTKEY --> OPENROUTER
     PORTKEY --> TOGETHER
-    
+
     SUPERMEM --> WEAVIATE
     GRAPH --> POSTGRES
 ```
@@ -440,6 +454,7 @@ graph TB
 ## 📦 Key Features
 
 ### 1. Unified API (`/api/unified_server.py`)
+
 - **Health Check**: `/health` - System status
 - **Teams API**: `/teams/execute` - Execute agent teams with evaluation gates
 - **Workflows**: `/workflows/execute` - Run complex workflows
@@ -449,6 +464,7 @@ graph TB
 - **Streaming**: Real-time response streaming support
 
 ### 2. Advanced Swarm Patterns (`/swarms/improved_swarm.py`)
+
 - **Multi-agent Debate**: Consensus through structured argumentation
 - **Quality Gates**: Critic/Judge evaluation pipeline
 - **Strategy Archives**: Historical decision tracking
@@ -459,14 +475,16 @@ graph TB
 - **Knowledge Transfer**: Cross-swarm learning
 
 ### 3. Memory Systems
+
 - **Supermemory Store**: Full-text search with deduplication
-- **Dual-tier Embeddings**: 
+- **Dual-tier Embeddings**:
   - Tier-A: High-quality for critical content
   - Tier-B: Fast embeddings for bulk processing
 - **HybridSearch**: Weighted combination of semantic and keyword search
 - **GraphRAG**: Knowledge graph-enhanced retrieval
 
 ### 4. Model Integration
+
 - **300+ LLM Models** via OpenRouter:
   - GPT-4o, Claude 3.5 Sonnet
   - Qwen 2.5 Coder, DeepSeek Coder
@@ -479,6 +497,7 @@ graph TB
 ## 🛠️ Installation
 
 ### Prerequisites
+
 - Python 3.11+
 - Docker & Docker Compose
 - Node.js 18+ (for UI)
@@ -504,6 +523,7 @@ cp .env.example .env
 ```
 
 Edit `.env` with your API keys:
+
 ```env
 # Primary API Keys
 OPENROUTER_API_KEY=sk-or-v1-xxx
@@ -542,6 +562,7 @@ python scripts/monitor_portkey_system.py --monitor
 ## 🔧 Configuration
 
 ### Model Configuration (`app/config/models_config.json`)
+
 ```json
 {
   "role_models": {
@@ -558,6 +579,7 @@ python scripts/monitor_portkey_system.py --monitor
 ```
 
 ### Evaluation Gates (`app/config/gates_config.yaml`)
+
 ```yaml
 thresholds:
   accuracy: 0.85
@@ -638,21 +660,25 @@ GET /memory/retrieve?key=project_context
 ## 🧪 Testing
 
 ### Run Unit Tests
+
 ```bash
 pytest tests/unit/
 ```
 
 ### Run Integration Tests
+
 ```bash
 pytest tests/integration/
 ```
 
 ### Run Property-based Tests
+
 ```bash
 pytest tests/property/ --hypothesis-show-statistics
 ```
 
 ### Manual Testing
+
 ```bash
 # Test endpoints
 curl http://localhost:8003/health
@@ -662,6 +688,7 @@ curl -X POST http://localhost:8003/teams/execute -d '{"team_id": "SIMPLEX"}'
 ## 🚀 Development
 
 ### Project Structure
+
 ```
 sophia-intel-ai/
 ├── app/
@@ -705,6 +732,7 @@ sophia-intel-ai/
 ### Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for:
+
 - Branch naming conventions
 - Commit message format
 - Code review process
@@ -721,11 +749,13 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for:
 ## 📊 Monitoring
 
 ### System Health
+
 ```bash
 python scripts/monitor_portkey_system.py
 ```
 
 ### Metrics Collection
+
 - Request latency
 - Token usage
 - Gate evaluation scores
@@ -737,11 +767,13 @@ python scripts/monitor_portkey_system.py
 ### Common Issues
 
 1. **Weaviate Connection Error**
+
    ```bash
    docker compose -f docker-compose.weaviate.yml restart
    ```
 
 2. **Model Not Available**
+
    ```bash
    python scripts/create_model_catalog.py
    ```

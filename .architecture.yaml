@@ -6,13 +6,13 @@ last_updated: 2025-01-03
 
 # Component limits to prevent proliferation
 max_components:
-  orchestrators: 4        # Max number of orchestrator classes
-  agents: 9              # Max number of agent types
-  managers: 3            # Max number of manager classes
-  ui_components: 15      # Max React components per feature
-  docker_files: 1        # Single unified Dockerfile
-  api_routers: 10        # Max number of API router files
-  test_files_per_module: 5  # Max test files per module
+  orchestrators: 4 # Max number of orchestrator classes
+  agents: 9 # Max number of agent types
+  managers: 3 # Max number of manager classes
+  ui_components: 15 # Max React components per feature
+  docker_files: 1 # Single unified Dockerfile
+  api_routers: 10 # Max number of API router files
+  test_files_per_module: 5 # Max test files per module
 
 # Naming conventions
 naming_conventions:
@@ -26,14 +26,14 @@ naming_conventions:
 
 # Forbidden patterns that indicate poor practices
 forbidden_patterns:
-  - "exec("              # Security risk
-  - "eval("              # Security risk
-  - "__import__"         # Dynamic imports can hide dependencies
-  - "os.system("         # Use subprocess instead
-  - "import *"           # Wildcard imports
-  - "# TODO: fix later"  # Unaddressed TODOs
-  - "console.log("       # Debug statements in production
-  - "print("             # Use logging instead (except in CLI tools)
+  - "exec(" # Security risk
+  - "eval(" # Security risk
+  - "__import__" # Dynamic imports can hide dependencies
+  - "os.system(" # Use subprocess instead
+  - "import *" # Wildcard imports
+  - "# TODO: fix later" # Unaddressed TODOs
+  - "console.log(" # Debug statements in production
+  - "print(" # Use logging instead (except in CLI tools)
 
 # Required patterns for specific file types
 required_patterns:
@@ -57,8 +57,8 @@ dependency_rules:
   max_depth_inheritance: 3
   circular_import_check: true
   forbidden_imports:
-    - "*"                # No wildcard imports
-    - "from . import *"  # No relative wildcards
+    - "*" # No wildcard imports
+    - "from . import *" # No relative wildcards
   required_imports:
     test_files:
       - "pytest"
@@ -238,7 +238,7 @@ monitoring_rules:
 # Enforcement levels
 enforcement:
   violations:
-    action: block  # block, warn, or ignore
+    action: block # block, warn, or ignore
     report: true
   warnings:
     action: warn
@@ -246,7 +246,7 @@ enforcement:
   auto_fix:
     enabled: true
     tools:
-      - black       # Python formatting
-      - ruff        # Python linting
-      - prettier    # JS/TS formatting
-      - eslint      # JS/TS linting
+      - black # Python formatting
+      - ruff # Python linting
+      - prettier # JS/TS formatting
+      - eslint # JS/TS linting

@@ -106,29 +106,29 @@ const UnifiedSuperDashboard: React.FC = () => {
   const [connected, setConnected] = useState(false);
   const [systems, setSystems] = useState<UnifiedSystem[]>([]);
   const [selectedSystem, setSelectedSystem] = useState<UnifiedSystem | null>(null);
-  
+
   // Natural Language
   const [commandInput, setCommandInput] = useState('');
   const [commandHistory, setCommandHistory] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  
+
   // Metrics & Analytics
   const [costMetrics, setCostMetrics] = useState<CostMetrics | null>(null);
   const [models, setModels] = useState<ModelInfo[]>([]);
   const [infrastructure, setInfrastructure] = useState<InfrastructureMetrics | null>(null);
   const [healthScore, setHealthScore] = useState(100);
-  
+
   // UI State
   const [activeTab, setActiveTab] = useState('overview');
   const [alerts, setAlerts] = useState<any[]>([]);
   const [activities, setActivities] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  
+
   const ws = useRef<WebSocket | null>(null);
   const reconnectTimeout = useRef<NodeJS.Timeout | null>(null);
 
   // ==================== WEBSOCKET CONNECTION ====================
-  
+
   useEffect(() => {
     connectWebSocket();
     return () => {
@@ -139,7 +139,7 @@ const UnifiedSuperDashboard: React.FC = () => {
 
   const connectWebSocket = () => {
     ws.current = new WebSocket(wsBaseUrl);
-    
+
     ws.current.onopen = () => {
       setConnected(true);
       sendCommand({ type: 'subscribe_all' }); // Subscribe to everything
@@ -186,7 +186,7 @@ const UnifiedSuperDashboard: React.FC = () => {
 
   const executeNaturalLanguage = async () => {
     if (!commandInput.trim()) return;
-    
+
     setLoading(true);
     const command = {
       type: 'natural_language',
@@ -197,14 +197,14 @@ const UnifiedSuperDashboard: React.FC = () => {
         search_query: searchQuery
       }
     };
-    
+
     sendCommand(command);
     addToHistory({
       type: 'command',
       text: commandInput,
       timestamp: new Date().toISOString()
     });
-    
+
     setCommandInput('');
   };
 
@@ -272,11 +272,11 @@ const UnifiedSuperDashboard: React.FC = () => {
       setHealthScore(100);
       return;
     }
-    
-    const healthy = systems.filter(s => 
+
+    const healthy = systems.filter(s =>
       s.status === 'active' || s.status === 'idle'
     ).length;
-    
+
     const score = (healthy / total) * 100;
     setHealthScore(Math.round(score));
   };
@@ -364,13 +364,13 @@ const UnifiedSuperDashboard: React.FC = () => {
                 </p>
               </div>
             </div>
-            
+
             <div className="flex items-center space-x-4">
               {/* Connection Status */}
               <Badge variant={connected ? 'default' : 'destructive'} className={connected ? 'bg-green-500 text-white' : ''}>
                 {connected ? 'Connected' : 'Disconnected'}
               </Badge>
-              
+
               {/* Health Score */}
               <div className="flex items-center space-x-2">
                 <Gauge className="w-5 h-5 text-gray-500" />
@@ -385,7 +385,7 @@ const UnifiedSuperDashboard: React.FC = () => {
                   </span>
                 </div>
               </div>
-              
+
               {/* Quick Stats */}
               <div className="flex space-x-4 text-sm">
                 <div>
@@ -426,7 +426,7 @@ const UnifiedSuperDashboard: React.FC = () => {
                   className="flex-1 text-lg"
                   disabled={loading}
                 />
-                <Button 
+                <Button
                   onClick={executeNaturalLanguage}
                   disabled={loading || !connected}
                   size="lg"
@@ -439,7 +439,7 @@ const UnifiedSuperDashboard: React.FC = () => {
                   Execute
                 </Button>
               </div>
-              
+
               {/* Quick Actions */}
               <div className="flex items-center space-x-2">
                 <span className="text-sm text-gray-500">Quick Actions:</span>
@@ -512,7 +512,7 @@ const UnifiedSuperDashboard: React.FC = () => {
                   <Progress value={100} className="mt-2" />
                 </CardContent>
               </Card>
-              
+
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm">Active Now</CardTitle>
@@ -521,13 +521,13 @@ const UnifiedSuperDashboard: React.FC = () => {
                   <div className="text-3xl font-bold text-green-600">
                     {systems.filter(s => s.status === 'active').length}
                   </div>
-                  <Progress 
-                    value={(systems.filter(s => s.status === 'active').length / Math.max(systems.length, 1)) * 100} 
+                  <Progress
+                    value={(systems.filter(s => s.status === 'active').length / Math.max(systems.length, 1)) * 100}
                     className="mt-2"
                   />
                 </CardContent>
               </Card>
-              
+
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm">Today's Cost</CardTitle>
@@ -541,7 +541,7 @@ const UnifiedSuperDashboard: React.FC = () => {
                   </div>
                 </CardContent>
               </Card>
-              
+
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm">Health Score</CardTitle>
@@ -581,7 +581,7 @@ const UnifiedSuperDashboard: React.FC = () => {
                   </ScrollArea>
                 </CardContent>
               </Card>
-              
+
               <Card>
                 <CardHeader>
                   <CardTitle>Alerts</CardTitle>
@@ -623,7 +623,7 @@ const UnifiedSuperDashboard: React.FC = () => {
                 <ScrollArea className="h-[600px]">
                   <div className="grid grid-cols-2 gap-4">
                     {filteredSystems.map((system) => (
-                      <Card 
+                      <Card
                         key={system.id}
                         className={`cursor-pointer transition-all hover:shadow-lg ${
                           selectedSystem?.id === system.id ? 'ring-2 ring-blue-500' : ''
@@ -702,7 +702,7 @@ const UnifiedSuperDashboard: React.FC = () => {
                         {systems.find(s => s.type === 'MICRO_SWARM' && s.metadata?.swarm_type === swarmType)?.status || 'Not Spawned'}
                       </Badge>
                     </div>
-                    <Button 
+                    <Button
                       className="w-full"
                       onClick={() => spawnSwarm(swarmType)}
                     >
@@ -738,7 +738,7 @@ const UnifiedSuperDashboard: React.FC = () => {
                   </div>
                 </CardContent>
               </Card>
-              
+
               <Card>
                 <CardHeader>
                   <CardTitle>Cost by Model</CardTitle>
@@ -754,7 +754,7 @@ const UnifiedSuperDashboard: React.FC = () => {
                   </div>
                 </CardContent>
               </Card>
-              
+
               <Card>
                 <CardHeader>
                   <CardTitle>Cost by Provider</CardTitle>
@@ -771,7 +771,7 @@ const UnifiedSuperDashboard: React.FC = () => {
                 </CardContent>
               </Card>
             </div>
-            
+
             {/* Cost Trend Chart would go here */}
             <Card>
               <CardHeader>
@@ -838,7 +838,7 @@ const UnifiedSuperDashboard: React.FC = () => {
                   </div>
                 </CardContent>
               </Card>
-              
+
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm">Containers</CardTitle>
@@ -849,7 +849,7 @@ const UnifiedSuperDashboard: React.FC = () => {
                   </div>
                 </CardContent>
               </Card>
-              
+
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm">Services</CardTitle>
@@ -860,7 +860,7 @@ const UnifiedSuperDashboard: React.FC = () => {
                   </div>
                 </CardContent>
               </Card>
-              
+
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm">Infra Health</CardTitle>
@@ -872,7 +872,7 @@ const UnifiedSuperDashboard: React.FC = () => {
                 </CardContent>
               </Card>
             </div>
-            
+
             {/* Server List */}
             <Card>
               <CardHeader>
@@ -951,7 +951,7 @@ const UnifiedSuperDashboard: React.FC = () => {
                   </div>
                 </CardContent>
               </Card>
-              
+
               <Card>
                 <CardHeader>
                   <CardTitle>Recent Alerts</CardTitle>
@@ -1033,16 +1033,16 @@ const UnifiedSuperDashboard: React.FC = () => {
               <XCircle className="w-4 h-4" />
             </Button>
           </div>
-          
+
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
               {getSystemIcon(selectedSystem.type)}
               <span className="font-medium">{selectedSystem.name}</span>
               {getStatusIcon(selectedSystem.status)}
             </div>
-            
+
             <Separator />
-            
+
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-gray-500">ID:</span>
@@ -1063,9 +1063,9 @@ const UnifiedSuperDashboard: React.FC = () => {
                 <span>{selectedSystem.error_count}</span>
               </div>
             </div>
-            
+
             <Separator />
-            
+
             <div>
               <h4 className="font-medium mb-2">Capabilities</h4>
               <div className="flex flex-wrap gap-1">
@@ -1076,9 +1076,9 @@ const UnifiedSuperDashboard: React.FC = () => {
                 ))}
               </div>
             </div>
-            
+
             <Separator />
-            
+
             <div className="space-y-2">
               <Button className="w-full" size="sm">
                 <RefreshCw className="w-4 h-4 mr-2" />

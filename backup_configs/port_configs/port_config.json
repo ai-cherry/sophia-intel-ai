@@ -1,0 +1,266 @@
+{
+  "ports": {
+    "3000": {
+      "name": "Next.js UI",
+      "type": "frontend",
+      "protocol": "http",
+      "required": true
+    },
+    "6379": {
+      "name": "Redis",
+      "type": "database",
+      "protocol": "tcp",
+      "required": true
+    },
+    "8000": {
+      "name": "MCP Memory Alt",
+      "type": "mcp",
+      "protocol": "http",
+      "required": false
+    },
+    "8001": {
+      "name": "MCP Memory Server",
+      "type": "mcp",
+      "protocol": "http",
+      "required": true
+    },
+    "8002": {
+      "name": "Monitoring Dashboard",
+      "type": "monitoring",
+      "protocol": "http",
+      "required": true
+    },
+    "8003": {
+      "name": "Unified API Server",
+      "type": "api",
+      "protocol": "http",
+      "required": true
+    },
+    "8004": {
+      "name": "MCP Server",
+      "type": "mcp",
+      "protocol": "http",
+      "required": true
+    },
+    "8005": {
+      "name": "Vector Store",
+      "type": "storage",
+      "protocol": "http",
+      "required": true
+    },
+    "8006": {
+      "name": "Backup/Testing",
+      "type": "dev",
+      "protocol": "http",
+      "required": false
+    },
+    "8007": {
+      "name": "Development",
+      "type": "dev",
+      "protocol": "http",
+      "required": false
+    },
+    "8008": {
+      "name": "Development",
+      "type": "dev",
+      "protocol": "http",
+      "required": false
+    },
+    "8080": {
+      "name": "Weaviate Vector DB",
+      "type": "database",
+      "protocol": "http",
+      "required": false
+    },
+    "8501": {
+      "name": "Streamlit UI",
+      "type": "frontend",
+      "protocol": "http",
+      "required": true
+    }
+  },
+  "health_endpoints": {
+    "3000": "/",
+    "8001": "/health",
+    "8002": "/",
+    "8003": "/healthz",
+    "8004": "/health",
+    "8005": "/health",
+    "8501": "/"
+  },
+  "websocket_endpoints": {
+    "8005": ["/ws/bus", "/ws/swarm", "/ws/teams"]
+  },
+  "current_status": {
+    "3000": {
+      "status": "error",
+      "active": false,
+      "info": {
+        "status": "\u274c Error: ",
+        "service": "Next.js UI"
+      }
+    },
+    "6379": {
+      "status": "active",
+      "active": true,
+      "info": {
+        "status": "\u2705 Active",
+        "service": "Redis",
+        "info": {
+          "version": "7.2.7",
+          "clients": 1,
+          "memory": "1.20M"
+        }
+      }
+    },
+    "8000": {
+      "status": "error",
+      "active": false,
+      "info": {
+        "status": "\u26a0\ufe0f Error 404",
+        "service": "MCP Memory Alt"
+      }
+    },
+    "8001": {
+      "status": "active",
+      "active": true,
+      "info": {
+        "status": "\u2705 Active",
+        "code": 200,
+        "service": "MCP Memory Server",
+        "health": "healthy",
+        "info": {
+          "status": "healthy",
+          "version": "2.0.0",
+          "timestamp": "2025-09-02T15:28:40.674188",
+          "active_sessions": 0
+        }
+      }
+    },
+    "8002": {
+      "status": "active",
+      "active": true,
+      "info": {
+        "status": "\u2705 Active",
+        "code": 200,
+        "service": "Monitoring Dashboard",
+        "health": "healthy",
+        "info": {
+          "status": "active",
+          "port": 8002,
+          "components": {
+            "prometheus": "active",
+            "grafana": "active",
+            "alerting": "active"
+          }
+        }
+      }
+    },
+    "8003": {
+      "status": "active",
+      "active": true,
+      "info": {
+        "status": "\u2705 Active",
+        "code": 200,
+        "service": "Unified API Server",
+        "health": "healthy",
+        "info": {
+          "status": "healthy",
+          "service": "Unified API Server"
+        }
+      }
+    },
+    "8004": {
+      "status": "active",
+      "active": true,
+      "info": {
+        "status": "\u2705 Active",
+        "code": 200,
+        "service": "MCP Server",
+        "health": "healthy",
+        "info": {
+          "status": "healthy",
+          "service": "MCP Server"
+        }
+      }
+    },
+    "8005": {
+      "status": "active",
+      "active": true,
+      "info": {
+        "status": "\u2705 Active",
+        "code": 200,
+        "service": "Unified API Server",
+        "health": "healthy",
+        "info": {
+          "status": "operational",
+          "version": "5.1.0",
+          "phase": "Production Ready",
+          "models": {
+            "active": "Portkey Load Balanced",
+            "favorites": ["x-ai/grok-5", "qwen/qwen3-30b-a3b-thinking-2507"],
+            "strategy": "intelligent_routing"
+          },
+          "endpoints": {
+            "teams": "/teams/run",
+            "swarms": "/swarms/multi",
+            "websocket": "/ws/bus",
+            "metrics": "/metrics"
+          }
+        }
+      }
+    },
+    "8006": {
+      "status": "available",
+      "active": false,
+      "info": {
+        "status": "\ud83d\udfe2 Available",
+        "service": "Backup/Testing"
+      }
+    },
+    "8007": {
+      "status": "available",
+      "active": false,
+      "info": {
+        "status": "\ud83d\udfe2 Available",
+        "service": "Development"
+      }
+    },
+    "8008": {
+      "status": "available",
+      "active": false,
+      "info": {
+        "status": "\ud83d\udfe2 Available",
+        "service": "Development"
+      }
+    },
+    "8080": {
+      "status": "active",
+      "active": true,
+      "info": {
+        "status": "\u2705 Active",
+        "code": 301,
+        "service": "Weaviate Vector DB",
+        "health": "warning",
+        "info": {
+          "links": {
+            "href": "/v1",
+            "name": "api v1",
+            "documentationHref": "https://weaviate.io/developers/weaviate/current/"
+          }
+        }
+      }
+    },
+    "8501": {
+      "status": "active",
+      "active": true,
+      "info": {
+        "status": "\u2705 Active",
+        "code": 200,
+        "service": "Streamlit UI",
+        "health": "healthy",
+        "info": "<!--\n Copyright (c) Streamlit Inc. (2018-2022) Snowflake Inc. (2022-2025)\n\n Licensed under the Apach"
+      }
+    }
+  }
+}

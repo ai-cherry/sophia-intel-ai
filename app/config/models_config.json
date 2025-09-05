@@ -26,16 +26,8 @@
       "deepseek/deepseek-chat-v3.1",
       "qwen/qwen3-30b-a3b"
     ],
-    "heavy": [
-      "openai/gpt-5",
-      "x-ai/grok-4",
-      "anthropic/claude-sonnet-4"
-    ],
-    "premium": [
-      "openai/gpt-5",
-      "x-ai/grok-4",
-      "anthropic/claude-sonnet-4"
-    ],
+    "heavy": ["openai/gpt-5", "x-ai/grok-4", "anthropic/claude-sonnet-4"],
+    "premium": ["openai/gpt-5", "x-ai/grok-4", "anthropic/claude-sonnet-4"],
     "economy": [
       "z-ai/glm-4.5-air",
       "google/gemini-2.5-flash",

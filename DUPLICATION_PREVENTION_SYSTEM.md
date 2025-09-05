@@ -3,6 +3,7 @@
 ## 🔴 The Problem: Why This Keeps Happening
 
 ### Root Causes Identified
+
 1. **No automated checks** - Manual reviews miss duplicates
 2. **Organic growth** - Features added without architectural review
 3. **Multiple contributors** - Lack of coordination
@@ -17,6 +18,7 @@
 ### 1. Pre-Commit Hooks (Immediate Detection)
 
 #### A. Install Duplication Detection
+
 ```bash
 # .pre-commit-config.yaml
 repos:
@@ -28,13 +30,13 @@ repos:
         entry: python scripts/check_duplicates.py
         language: python
         files: \.(py|tsx?|jsx?)$
-        
+
       - id: check-naming-conflicts
         name: Check for naming conflicts
         entry: python scripts/check_naming.py
         language: python
         files: \.(py|tsx?|jsx?)$
-        
+
       - id: architecture-compliance
         name: Verify architecture compliance
         entry: python scripts/check_architecture.py
@@ -46,13 +48,13 @@ repos:
     rev: 23.12.0
     hooks:
       - id: black
-        
+
   - repo: https://github.com/PyCQA/pylint
     rev: v3.0.3
     hooks:
       - id: pylint
         args: [--disable=C0114,C0115,C0116]
-        
+
   # TypeScript/React quality
   - repo: https://github.com/pre-commit/mirrors-eslint
     rev: v8.56.0
@@ -60,7 +62,7 @@ repos:
       - id: eslint
         files: \.[jt]sx?$
         types: [file]
-        
+
   # Prevent large files
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
@@ -72,6 +74,7 @@ repos:
 ```
 
 #### B. Duplicate Detection Script
+
 ```python
 # scripts/check_duplicates.py
 #!/usr/bin/env python3
@@ -93,13 +96,13 @@ class DuplicateDetector:
         self.functions = defaultdict(list)
         self.components = defaultdict(list)
         self.errors = []
-        
+
     def scan_python_file(self, filepath):
         """Scan Python file for duplicate classes/functions"""
         try:
             with open(filepath, 'r') as f:
                 tree = ast.parse(f.read())
-                
+
             for node in ast.walk(tree):
                 if isinstance(node, ast.ClassDef):
                     self.classes[node.name].append(filepath)
@@ -109,26 +112,26 @@ class DuplicateDetector:
                         self.functions[node.name].append(filepath)
         except:
             pass
-            
+
     def scan_typescript_file(self, filepath):
         """Scan TypeScript/React file for duplicate components"""
         try:
             with open(filepath, 'r') as f:
                 content = f.read()
-                
+
             # Find exported components/classes
             patterns = [
                 r'export\s+(?:default\s+)?(?:class|function|const)\s+(\w+)',
                 r'export\s+{\s*(\w+)',
             ]
-            
+
             for pattern in patterns:
                 matches = re.findall(pattern, content)
                 for match in matches:
                     self.components[match].append(filepath)
         except:
             pass
-            
+
     def check_for_duplicates(self):
         """Check for duplicate definitions"""
         # Check Python classes
@@ -141,7 +144,7 @@ class DuplicateDetector:
                         f"❌ Duplicate class '{class_name}' found in:\n" +
                         "\n".join(f"   - {loc}" for loc in non_test)
                     )
-                    
+
         # Check React components
         for comp_name, locations in self.components.items():
             if len(locations) > 1:
@@ -151,22 +154,22 @@ class DuplicateDetector:
                         f"❌ Duplicate component '{comp_name}' found in:\n" +
                         "\n".join(f"   - {loc}" for loc in non_test)
                     )
-                    
+
     def run(self):
         """Run duplicate detection"""
         # Scan all Python files
         for py_file in Path('.').rglob('*.py'):
             if '.venv' not in str(py_file) and 'node_modules' not in str(py_file):
                 self.scan_python_file(py_file)
-                
+
         # Scan all TypeScript files
         for ts_file in Path('.').rglob('*.ts*'):
             if 'node_modules' not in str(ts_file) and '.next' not in str(ts_file):
                 self.scan_typescript_file(ts_file)
-                
+
         # Check for duplicates
         self.check_for_duplicates()
-        
+
         if self.errors:
             print("\n🚨 DUPLICATE DETECTION FAILED!\n")
             for error in self.errors:
@@ -185,6 +188,7 @@ if __name__ == "__main__":
 ### 2. Architecture Compliance Rules
 
 #### A. Architecture Definition File
+
 ```yaml
 # .architecture.yaml
 # Enforced architecture rules
@@ -210,54 +214,55 @@ structure:
         - interfaces/*.py
         - constants.py
       forbidden:
-        - "*_orchestrator.py"  # Orchestrators go in app/orchestration
-        - "*_agent.py"         # Agents go in app/agents
-        
+        - "*_orchestrator.py" # Orchestrators go in app/orchestration
+        - "*_agent.py" # Agents go in app/agents
+
     app/orchestration:
       description: "Orchestration layer"
-      max_files: 10  # Prevent proliferation
+      max_files: 10 # Prevent proliferation
       required_base: "base_orchestrator.py"
-      
+
     app/agents:
       description: "Agent implementations"
       max_files: 15
       required_base: "base/base_agent.py"
-      
+
     agent-ui/src/components:
       description: "React components"
       required_structure:
-        - core/     # Base components
+        - core/ # Base components
         - features/ # Feature components
-        - layouts/  # Layout components
+        - layouts/ # Layout components
 
 naming_conventions:
   python:
     classes:
       pattern: "^[A-Z][a-zA-Z0-9]*$"
       forbidden_suffixes:
-        - "Manager"  # Too generic
-        - "Handler"  # Too generic
-        - "Service"  # Use specific names
-        
+        - "Manager" # Too generic
+        - "Handler" # Too generic
+        - "Service" # Use specific names
+
     files:
       pattern: "^[a-z_]+\\.py$"
       max_length: 30
-      
+
   typescript:
     components:
       pattern: "^[A-Z][a-zA-Z0-9]*$"
       required_suffix_for_components: ".tsx"
-      
+
     files:
       pattern: "^[A-Z][a-zA-Z0-9]*\\.(tsx?|ts)$"
 
 duplication_rules:
-  max_similar_files: 2  # No more than 2 files with 80%+ similarity
-  max_similar_classes: 1  # Each class name must be unique
-  max_similar_functions: 3  # Limited function name reuse
+  max_similar_files: 2 # No more than 2 files with 80%+ similarity
+  max_similar_classes: 1 # Each class name must be unique
+  max_similar_functions: 3 # Limited function name reuse
 ```
 
 #### B. Architecture Compliance Checker
+
 ```python
 # scripts/check_architecture.py
 #!/usr/bin/env python3
@@ -276,7 +281,7 @@ class ArchitectureChecker:
         with open('.architecture.yaml', 'r') as f:
             self.rules = yaml.safe_load(f)
         self.violations = []
-        
+
     def check_structure(self):
         """Check directory structure compliance"""
         # Check for forbidden directories
@@ -286,18 +291,18 @@ class ArchitectureChecker:
                     self.violations.append(
                         f"❌ Forbidden directory: {item}"
                     )
-                    
+
         # Check module rules
         for module, rules in self.rules['structure']['modules'].items():
             if os.path.exists(module):
                 files = list(Path(module).rglob('*.py'))
-                
+
                 # Check max files
                 if 'max_files' in rules and len(files) > rules['max_files']:
                     self.violations.append(
                         f"❌ {module} has {len(files)} files (max: {rules['max_files']})"
                     )
-                    
+
                 # Check required base
                 if 'required_base' in rules:
                     base_path = Path(module) / rules['required_base']
@@ -305,7 +310,7 @@ class ArchitectureChecker:
                         self.violations.append(
                             f"❌ Missing required file: {base_path}"
                         )
-                        
+
     def check_naming(self):
         """Check naming conventions"""
         for py_file in Path('.').rglob('*.py'):
@@ -317,12 +322,12 @@ class ArchitectureChecker:
                     self.violations.append(
                         f"❌ Invalid filename: {py_file} (should match {pattern})"
                     )
-                    
+
     def run(self):
         """Run all checks"""
         self.check_structure()
         self.check_naming()
-        
+
         if self.violations:
             print("\n🚨 ARCHITECTURE VIOLATIONS!\n")
             for violation in self.violations:
@@ -341,6 +346,7 @@ if __name__ == "__main__":
 ### 3. CI/CD Quality Gates
 
 #### A. GitHub Actions Workflow
+
 ```yaml
 # .github/workflows/quality-gates.yml
 name: Code Quality Gates
@@ -355,21 +361,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Full history for comparison
-          
+          fetch-depth: 0 # Full history for comparison
+
       - name: Check for duplicates
         run: |
           python scripts/check_duplicates.py
-          
+
       - name: Architecture compliance
         run: |
           python scripts/check_architecture.py
-          
+
       - name: Complexity analysis
         run: |
           pip install radon
           radon cc app/ --min B --show-complexity
-          
+
       - name: Duplicate code detection (jscpd)
         run: |
           npx jscpd . \
@@ -377,11 +383,11 @@ jobs:
             --min-lines 10 \
             --min-tokens 50 \
             --threshold 5
-            
+
       - name: Component count check
         run: |
           python scripts/check_growth.py
-          
+
       - name: Post PR comment
         if: failure()
         uses: actions/github-script@v7
@@ -396,6 +402,7 @@ jobs:
 ```
 
 #### B. Growth Monitor
+
 ```python
 # scripts/check_growth.py
 #!/usr/bin/env python3
@@ -416,7 +423,7 @@ class GrowthMonitor:
             'max_dashboards': 3,
             'max_deployment_files': 3
         }
-        
+
     def count_components(self):
         """Count various component types"""
         counts = {
@@ -424,11 +431,11 @@ class GrowthMonitor:
             'agents': len(list(Path('.').rglob('*agent*.py'))),
             'managers': len(list(Path('.').rglob('*manager*.py'))),
             'dashboards': len(list(Path('.').rglob('*[Dd]ashboard*.tsx'))),
-            'deployment_files': len(list(Path('.').glob('Dockerfile*'))) + 
+            'deployment_files': len(list(Path('.').glob('Dockerfile*'))) +
                                len(list(Path('.').glob('docker-compose*.yml')))
         }
         return counts
-        
+
     def check_thresholds(self, counts):
         """Check if counts exceed thresholds"""
         violations = []
@@ -439,16 +446,16 @@ class GrowthMonitor:
                     f"❌ Too many {key.replace('max_', '')}: {actual} (max: {threshold})"
                 )
         return violations
-        
+
     def generate_report(self):
         """Generate growth report"""
         counts = self.count_components()
         violations = self.check_thresholds(counts)
-        
+
         # Save metrics for tracking
         with open('.metrics/component_counts.json', 'w') as f:
             json.dump(counts, f, indent=2)
-            
+
         if violations:
             print("\n🚨 COMPONENT GROWTH VIOLATIONS!\n")
             for v in violations:
@@ -467,6 +474,7 @@ if __name__ == "__main__":
 ### 4. Development Governance Rules
 
 #### A. CODEOWNERS File
+
 ```
 # CODEOWNERS
 # Require review for critical paths
@@ -493,8 +501,10 @@ if __name__ == "__main__":
 ```
 
 #### B. Pull Request Template
+
 ```markdown
 <!-- .github/pull_request_template.md -->
+
 ## PR Checklist
 
 ### Before submitting this PR, confirm:
@@ -514,25 +524,31 @@ if __name__ == "__main__":
 - [ ] **Consolidation plan** - Provided plan to consolidate with existing code
 
 ### Component Count Check:
+
 <!-- Run: python scripts/check_growth.py -->
-- Orchestrators: ___ (max 5)
-- Agents: ___ (max 10)
-- Managers: ___ (max 5)
-- Dashboards: ___ (max 3)
+
+- Orchestrators: \_\_\_ (max 5)
+- Agents: \_\_\_ (max 10)
+- Managers: \_\_\_ (max 5)
+- Dashboards: \_\_\_ (max 3)
 
 ### Duplication Check:
+
 <!-- Run: python scripts/check_duplicates.py -->
+
 - [ ] No duplicate classes found
 - [ ] No duplicate components found
 - [ ] No similar code blocks >10 lines
 
 ---
+
 **Reviewer: DO NOT APPROVE if any checkbox is unchecked without justification**
 ```
 
 ### 5. Monitoring Dashboard
 
 #### A. Architecture Health Dashboard
+
 ```python
 # scripts/architecture_dashboard.py
 #!/usr/bin/env python3
@@ -550,7 +566,7 @@ import pandas as pd
 class ArchitectureDashboard:
     def __init__(self):
         self.metrics_file = '.metrics/architecture_health.json'
-        
+
     def collect_metrics(self):
         """Collect current metrics"""
         metrics = {
@@ -567,7 +583,7 @@ class ArchitectureDashboard:
             'test_coverage': self.get_test_coverage(),
         }
         return metrics
-        
+
     def count_duplicates(self):
         """Count duplicate definitions"""
         # Run duplicate detector and parse results
@@ -575,7 +591,7 @@ class ArchitectureDashboard:
         detector = DuplicateDetector()
         detector.run()
         return len(detector.errors)
-        
+
     def calculate_complexity(self):
         """Calculate average cyclomatic complexity"""
         # Use radon for Python complexity
@@ -587,7 +603,7 @@ class ArchitectureDashboard:
         )
         # Parse and average complexity
         return 5.2  # Placeholder
-        
+
     def get_test_coverage(self):
         """Get test coverage percentage"""
         # Parse coverage report
@@ -597,50 +613,50 @@ class ArchitectureDashboard:
                 return coverage.get('percent_covered', 0)
         except:
             return 0
-            
+
     def generate_report(self):
         """Generate visual report"""
         metrics = self.collect_metrics()
-        
+
         # Create dashboard plot
         fig, axes = plt.subplots(2, 2, figsize=(12, 8))
-        
+
         # Component counts
         ax1 = axes[0, 0]
         components = metrics['components']
         ax1.bar(components.keys(), components.values())
         ax1.set_title('Component Counts')
         ax1.axhline(y=10, color='r', linestyle='--', label='Threshold')
-        
+
         # Complexity trend
         ax2 = axes[0, 1]
         ax2.plot([1, 2, 3, 4, 5], [8.2, 7.5, 6.8, 5.9, 5.2])
         ax2.set_title('Complexity Trend')
         ax2.set_ylabel('Cyclomatic Complexity')
-        
+
         # Duplicate count
         ax3 = axes[1, 0]
         ax3.bar(['Duplicates'], [metrics['duplicates']])
         ax3.set_title('Duplicate Definitions')
         ax3.set_ylim(0, 10)
-        
+
         # Test coverage
         ax4 = axes[1, 1]
         ax4.pie([metrics['test_coverage'], 100 - metrics['test_coverage']],
                 labels=['Covered', 'Uncovered'],
                 autopct='%1.1f%%')
         ax4.set_title('Test Coverage')
-        
+
         plt.suptitle(f"Architecture Health Dashboard - {datetime.now().date()}")
         plt.tight_layout()
         plt.savefig('.metrics/architecture_dashboard.png')
-        
+
         # Save metrics history
         self.save_metrics(metrics)
-        
+
         # Generate alert if thresholds exceeded
         self.check_alerts(metrics)
-        
+
     def save_metrics(self, metrics):
         """Save metrics to history"""
         history = []
@@ -650,30 +666,30 @@ class ArchitectureDashboard:
         history.append(metrics)
         with open(self.metrics_file, 'w') as f:
             json.dump(history, f, indent=2)
-            
+
     def check_alerts(self, metrics):
         """Check for threshold violations and alert"""
         alerts = []
-        
+
         if metrics['duplicates'] > 0:
             alerts.append(f"🚨 {metrics['duplicates']} duplicate definitions found!")
-            
+
         if metrics['components']['orchestrators'] > 5:
             alerts.append(f"🚨 Too many orchestrators: {metrics['components']['orchestrators']}")
-            
+
         if metrics['complexity'] > 10:
             alerts.append(f"🚨 High complexity: {metrics['complexity']}")
-            
+
         if metrics['test_coverage'] < 80:
             alerts.append(f"⚠️ Low test coverage: {metrics['test_coverage']}%")
-            
+
         if alerts:
             print("\n🚨 ARCHITECTURE HEALTH ALERTS!\n")
             for alert in alerts:
                 print(alert)
             # Send to Slack/Discord
             self.send_alerts(alerts)
-            
+
     def send_alerts(self, alerts):
         """Send alerts to team"""
         # Implement Slack/Discord webhook
@@ -687,6 +703,7 @@ if __name__ == "__main__":
 ### 6. Automated Refactoring Tools
 
 #### A. Consolidation Script
+
 ```python
 # scripts/auto_consolidate.py
 #!/usr/bin/env python3
@@ -707,12 +724,12 @@ class AutoConsolidator:
         # 4. Update all imports
         # 5. Delete duplicates
         pass
-        
+
     def consolidate_components(self):
         """Consolidate React components"""
         # Similar process for TypeScript/React
         pass
-        
+
     def generate_consolidation_pr(self):
         """Create PR with consolidation changes"""
         # 1. Create branch
@@ -727,6 +744,7 @@ class AutoConsolidator:
 ## 🎯 Implementation Checklist
 
 ### Immediate Actions (Today)
+
 - [ ] Install pre-commit hooks
 - [ ] Create .architecture.yaml
 - [ ] Add CODEOWNERS file
@@ -734,6 +752,7 @@ class AutoConsolidator:
 - [ ] Update PR template
 
 ### Week 1
+
 - [ ] Implement all checking scripts
 - [ ] Setup CI/CD quality gates
 - [ ] Create architecture dashboard
@@ -741,6 +760,7 @@ class AutoConsolidator:
 - [ ] Run initial consolidation
 
 ### Ongoing
+
 - [ ] Weekly architecture health reviews
 - [ ] Monthly consolidation sprints
 - [ ] Quarterly architecture audits
@@ -751,6 +771,7 @@ class AutoConsolidator:
 ## 🚀 Expected Outcomes
 
 ### Before Prevention System
+
 - 45+ duplicate classes
 - No automatic detection
 - Organic sprawl
@@ -758,6 +779,7 @@ class AutoConsolidator:
 - Technical debt accumulates
 
 ### After Prevention System
+
 - 0 duplicates (automatically blocked)
 - Real-time detection
 - Enforced architecture
@@ -778,4 +800,4 @@ All team members must agree to:
 
 ---
 
-*This prevention system ensures duplicates and conflicts are caught before they enter the codebase, maintaining a clean architecture permanently.*
+_This prevention system ensures duplicates and conflicts are caught before they enter the codebase, maintaining a clean architecture permanently._

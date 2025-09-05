@@ -14,15 +14,15 @@ class RunTests(Tool):
             "test_path": {
                 "type": "string",
                 "description": "Path to specific test file or directory",
-                "default": "tests"
+                "default": "tests",
             },
             "verbose": {
                 "type": "boolean",
                 "description": "Run tests in verbose mode",
-                "default": False
-            }
+                "default": False,
+            },
         },
-        "required": []
+        "required": [],
     }
 
     async def run(self, test_path: str = "tests", verbose: bool = False) -> str:
@@ -30,9 +30,7 @@ class RunTests(Tool):
         try:
             # Check if pytest is available
             pytest_check = subprocess.run(
-                ["python", "-m", "pytest", "--version"],
-                capture_output=True,
-                text=True
+                ["python", "-m", "pytest", "--version"], capture_output=True, text=True
             )
 
             if pytest_check.returncode != 0:
@@ -43,11 +41,7 @@ class RunTests(Tool):
             if verbose:
                 cmd.append("-v")
 
-            result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True
-            )
+            result = subprocess.run(cmd, capture_output=True, text=True)
 
             output = result.stdout
             if result.stderr:
@@ -66,13 +60,9 @@ class RunTypeCheck(Tool):
     parameters = {
         "type": "object",
         "properties": {
-            "path": {
-                "type": "string",
-                "description": "Path to check",
-                "default": "app"
-            }
+            "path": {"type": "string", "description": "Path to check", "default": "app"}
         },
-        "required": []
+        "required": [],
     }
 
     async def run(self, path: str = "app") -> str:
@@ -80,20 +70,14 @@ class RunTypeCheck(Tool):
         try:
             # Check if mypy is available
             mypy_check = subprocess.run(
-                ["python", "-m", "mypy", "--version"],
-                capture_output=True,
-                text=True
+                ["python", "-m", "mypy", "--version"], capture_output=True, text=True
             )
 
             if mypy_check.returncode != 0:
                 return "mypy is not installed. Install it with: pip install mypy"
 
             # Run type checking
-            result = subprocess.run(
-                ["python", "-m", "mypy", path],
-                capture_output=True,
-                text=True
-            )
+            result = subprocess.run(["python", "-m", "mypy", path], capture_output=True, text=True)
 
             if result.returncode == 0:
                 return f"Type checking passed for {path}"

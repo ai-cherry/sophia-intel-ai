@@ -9,15 +9,16 @@ This strategy addresses the current documentation chaos (38 root-level docs, 28 
 ### Documentation Issues Identified
 
 #### 1. **Massive Duplication**
+
 - **8 deployment documents** with overlapping content:
   - DEPLOYMENT.md, DEPLOYMENT_PLAN.md, DEPLOYMENT_SIMPLIFIED.md, DEPLOYMENT_SUMMARY.md
   - FLY_DEPLOYMENT_SUMMARY.md, PULUMI_2025_DEPLOYMENT_GUIDE.md
   - SOPHIA_INTEL_AI_DEPLOYMENT_PLAN.md, SOPHIA_INTEL_AI_INFRASTRUCTURE_DEPLOYMENT_REPORT.md
-  
 - **4 Portkey documents** that could be one:
   - PORTKEY_SETUP.md, PORTKEY_EXACT_SETUP.md, PORTKEY_VIRTUAL_KEYS_SETUP.md, PORTKEY_USAGE_EXAMPLES.md
 
 #### 2. **One-Time/Outdated Documents**
+
 - AGNO_UPGRADE_SUMMARY.md (historical, completed)
 - UI_IMPLEMENTATION_REPORT.md (August 30, superseded)
 - UNIFIED_SYSTEM_REPORT.md (August 30, superseded)
@@ -27,12 +28,14 @@ This strategy addresses the current documentation chaos (38 root-level docs, 28 
 - UPGRADE_Q3_2025.md (future speculation)
 
 #### 3. **Poor Organization**
+
 - 38 markdown files in root directory (should be < 5)
 - No clear hierarchy or categorization
 - Mixed concerns (plans, reports, guides, summaries)
 - No versioning or lifecycle management
 
 #### 4. **AI Swarm Challenges**
+
 - No structured metadata for AI parsing
 - Inconsistent formatting making extraction difficult
 - No clear "source of truth" indicators
@@ -109,21 +112,27 @@ Use consistent section markers for AI parsing:
 
 ```markdown
 ## 🎯 Purpose
+
 [Why this document exists]
 
 ## 📋 Prerequisites
+
 [Required knowledge/setup]
 
 ## 🔧 Implementation
+
 [Step-by-step instructions]
 
 ## ✅ Validation
+
 [How to verify success]
 
 ## 🚨 Common Issues
+
 [Troubleshooting]
 
 ## 📚 Related
+
 [Links to related docs]
 ```
 
@@ -131,13 +140,15 @@ Use consistent section markers for AI parsing:
 
 Label all code blocks for AI understanding:
 
-```markdown
+````markdown
 ```python:app/api/server.py:L45-L67
 # This code handles authentication
 def authenticate():
     pass
 ```
-```
+````
+
+````
 
 ### 4. **Living Documents**
 
@@ -170,7 +181,7 @@ cat DEPLOYMENT*.md FLY_DEPLOYMENT*.md PULUMI*.md > docs/guides/deployment/README
 # Consolidate Portkey docs
 cat PORTKEY*.md > docs/guides/integrations/portkey.md
 # Then remove originals
-```
+````
 
 ### Phase 2: Restructure Active Docs (Week 1)
 
@@ -212,6 +223,7 @@ graph LR
 ### 3. **Review Triggers**
 
 Documents MUST be reviewed when:
+
 - Code changes affect documented behavior
 - 30 days since last review (active docs)
 - Major version release
@@ -330,6 +342,7 @@ tags: []
 # ADR-XXX: [Title]
 
 ## Status
+
 [Proposed | Accepted | Deprecated | Superseded]
 
 ## Context

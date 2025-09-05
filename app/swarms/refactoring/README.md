@@ -11,7 +11,7 @@ The Code Refactoring Swarm leverages the Artemis agent factory framework to orch
 ### Key Features
 
 - **🤖 Multi-Agent Intelligence**: 10 specialized agents working in concert
-- **🛡️ Enterprise Safety**: 7 safety gates with rollback capabilities  
+- **🛡️ Enterprise Safety**: 7 safety gates with rollback capabilities
 - **🎯 13-Phase Pipeline**: Comprehensive discovery → validation → execution
 - **⚖️ Debate-Driven Quality**: Multi-agent consensus before any changes
 - **📊 Production Monitoring**: Full observability and metrics
@@ -31,11 +31,11 @@ The Code Refactoring Swarm leverages the Artemis agent factory framework to orch
 
 ### Agent Roles
 
-| Team | Agents | Responsibility |
-|------|---------|----------------|
-| **Analysis** | CodeScanner, ArchitecturalAnalyzer, PerformanceProfiler, SecurityAuditor | Identify refactoring opportunities |
-| **Planning** | RefactoringPlanner, RiskAssessor, ImpactAnalyzer, QualityValidator | Validate and plan changes |
-| **Execution** | CodeTransformer, DocumentationUpdater | Execute approved transformations |
+| Team          | Agents                                                                   | Responsibility                     |
+| ------------- | ------------------------------------------------------------------------ | ---------------------------------- |
+| **Analysis**  | CodeScanner, ArchitecturalAnalyzer, PerformanceProfiler, SecurityAuditor | Identify refactoring opportunities |
+| **Planning**  | RefactoringPlanner, RiskAssessor, ImpactAnalyzer, QualityValidator       | Validate and plan changes          |
+| **Execution** | CodeTransformer, DocumentationUpdater                                    | Execute approved transformations   |
 
 ### Execution Pipeline
 
@@ -95,12 +95,12 @@ if not result.success and result.rollback_available:
 
 ### Environment Configurations
 
-| Environment | Safety Level | Agents | Max Files | Risk Tolerance |
-|------------|-------------|--------|-----------|----------------|
-| **Development** | Basic | 5 | 20 | Critical only |
-| **Staging** | Standard | 8 | 35 | High + Critical |
-| **Production** | Maximum | 10 | 50 | High + Critical |
-| **Enterprise** | Maximum | 20 | 100 | Medium + High + Critical |
+| Environment     | Safety Level | Agents | Max Files | Risk Tolerance           |
+| --------------- | ------------ | ------ | --------- | ------------------------ |
+| **Development** | Basic        | 5      | 20        | Critical only            |
+| **Staging**     | Standard     | 8      | 35        | High + Critical          |
+| **Production**  | Maximum      | 10     | 50        | High + Critical          |
+| **Enterprise**  | Maximum      | 20     | 100       | Medium + High + Critical |
 
 ### Custom Configuration
 
@@ -111,7 +111,7 @@ config = RefactoringSwarmConfiguration(
     environment=DeploymentEnvironment.PRODUCTION,
     enabled_refactoring_types=[RefactoringType.SECURITY, RefactoringType.PERFORMANCE],
     default_risk_tolerance=RefactoringRisk.LOW,
-    
+
     # Safety settings
     safety=SafetyConfiguration(
         max_files_per_session=25,
@@ -119,14 +119,14 @@ config = RefactoringSwarmConfiguration(
         require_tests=True,
         forbidden_paths=["/config/", "/secrets/"]
     ),
-    
-    # Resource limits  
+
+    # Resource limits
     resources=ResourceConfiguration(
         max_concurrent_agents=10,
         max_execution_time_minutes=60,
         circuit_breaker_threshold=3
     ),
-    
+
     # Monitoring
     monitoring=MonitoringConfiguration(
         level=MonitoringLevel.COMPREHENSIVE,
@@ -141,7 +141,7 @@ config = RefactoringSwarmConfiguration(
 ### Safety Gates
 
 1. **Opportunity Gate**: Validates refactoring candidates
-2. **Architecture Gate**: Ensures structural soundness  
+2. **Architecture Gate**: Ensures structural soundness
 3. **Risk Gate**: Assesses change safety levels
 4. **Impact Gate**: Verifies acceptable consequences
 5. **Consensus Gate**: Requires agent agreement
@@ -152,7 +152,7 @@ config = RefactoringSwarmConfiguration(
 
 - **Low Risk**: Simple formatting, documentation
 - **Medium Risk**: Function signatures, minor logic
-- **High Risk**: Architecture changes, data structures  
+- **High Risk**: Architecture changes, data structures
 - **Critical Risk**: Core systems, security-sensitive code
 
 ### Rollback Capabilities
@@ -162,11 +162,11 @@ config = RefactoringSwarmConfiguration(
 if result.rollback_available:
     # Restore previous state
     success = await swarm.rollback_changes(result.plan_id)
-    
+
 # Create backup before changes
 backup_path = await manager.create_backup()
 
-# Restore from backup if needed  
+# Restore from backup if needed
 await manager.restore_from_backup(backup_path)
 ```
 
@@ -205,7 +205,7 @@ print(f"Technical debt reduction: {metrics['technical_debt_reduction']*100:.1f}%
 The swarm exports metrics to Prometheus when enabled:
 
 - `refactoring_sessions_total`: Total refactoring sessions
-- `refactoring_opportunities_found`: Opportunities identified  
+- `refactoring_opportunities_found`: Opportunities identified
 - `refactoring_success_rate`: Success rate percentage
 - `refactoring_execution_time_seconds`: Session duration
 - `refactoring_quality_improvement`: Quality metrics
@@ -231,7 +231,7 @@ python app/swarms/refactoring/example_integration.py all
     python -c "
     import asyncio
     from app.swarms.refactoring.deployment_utils import deploy_development_swarm
-    
+
     async def analyze():
         manager = await deploy_development_swarm()
         result = await manager.swarm.execute_refactoring_session(
@@ -240,7 +240,7 @@ python app/swarms/refactoring/example_integration.py all
         )
         print(f'Found {len(result.executed_opportunities)} opportunities')
         await manager.shutdown()
-    
+
     asyncio.run(analyze())
     "
 ```
@@ -257,17 +257,17 @@ swarm_manager = None
 @app.post("/refactor")
 async def refactor_code(request: RefactorRequest):
     global swarm_manager
-    
+
     if not swarm_manager:
         swarm_manager = await deploy_production_swarm()
-    
+
     result = await swarm_manager.swarm.execute_refactoring_session(
         codebase_path=request.codebase_path,
         refactoring_types=request.refactoring_types,
         risk_tolerance=request.risk_tolerance,
         dry_run=request.dry_run
     )
-    
+
     return {
         "session_id": result.plan_id,
         "success": result.success,
@@ -295,7 +295,7 @@ config.agent_model_overrides = {
 dev_manager = await deploy_development_swarm()
 dev_result = await dev_manager.swarm.execute_refactoring_session(...)
 
-# If successful, promote to staging  
+# If successful, promote to staging
 if dev_result.success:
     staging_config = RefactoringSwarmConfiguration.for_environment(
         DeploymentEnvironment.STAGING
@@ -329,6 +329,7 @@ success_rate = sum(1 for r in results.values() if r.success) / len(results)
 ### Common Issues
 
 **Deployment Fails**
+
 ```python
 # Check configuration validation
 config = RefactoringSwarmConfiguration.for_environment(env)
@@ -338,6 +339,7 @@ if issues:
 ```
 
 **Low Memory Warning**
+
 ```python
 # Reduce concurrent agents
 config.resources.max_concurrent_agents = 5
@@ -345,6 +347,7 @@ config.resources.max_memory_per_agent_mb = 256
 ```
 
 **Agent Initialization Errors**
+
 ```python
 # Check agent connectivity
 health = await manager.health_check()
@@ -363,18 +366,21 @@ if not health['healthy']:
 ## 📈 Best Practices
 
 ### Safety First
+
 - Always test with `dry_run=True` first
 - Use appropriate risk tolerance for environment
 - Monitor health status regularly
 - Keep backups of critical changes
 
-### Performance Optimization  
+### Performance Optimization
+
 - Configure resource limits appropriately
 - Use specialized models for specific tasks
 - Enable caching for repeated operations
 - Monitor execution metrics
 
 ### Production Deployment
+
 - Run production readiness checklist
 - Enable comprehensive monitoring
 - Set up alerting for failures
@@ -410,7 +416,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Documentation**: [Internal Wiki](wiki/refactoring-swarm)
 - **Issues**: [GitHub Issues](https://github.com/your-org/sophia-intel-ai/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/your-org/sophia-intel-ai/discussions)
-- **Email**: refactoring-swarm-support@your-org.com
+- **Email**: <refactoring-swarm-support@your-org.com>
 
 ---
 

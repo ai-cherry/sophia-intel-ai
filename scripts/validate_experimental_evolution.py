@@ -16,13 +16,14 @@ from app.core.ai_logger import logger
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 async def main():
     """Main validation function."""
 
-    logger.info("🧪 " + "="*60)
+    logger.info("🧪 " + "=" * 60)
     logger.info("🧪 EXPERIMENTAL EVOLUTION ENGINE VALIDATION")
     logger.info("🧪 ADR-002 Implementation Validation Script")
-    logger.info("🧪 " + "="*60)
+    logger.info("🧪 " + "=" * 60)
 
     try:
         # Import components
@@ -51,7 +52,7 @@ async def main():
         # 2. Test safe defaults (should be disabled)
         logger.info("\n🧪 2. Testing Safe Defaults")
         safe_engine = create_experimental_evolution_engine()
-        assert safe_engine.config.enabled == False
+        assert not safe_engine.config.enabled
         assert safe_engine.config.mode == ExperimentalMode.DISABLED
         logger.info("✅ Safe defaults validated - evolution disabled by default")
 
@@ -59,8 +60,7 @@ async def main():
         logger.info("\n🧪 3. Testing Acknowledgment Requirement")
         try:
             create_experimental_evolution_engine(
-                enable_experimental=True,
-                acknowledge_experimental=False
+                enable_experimental=True, acknowledge_experimental=False
             )
             logger.info("❌ Should have required acknowledgment!")
             return False
@@ -77,10 +77,10 @@ async def main():
             mode=ExperimentalMode.CAUTIOUS,
             enable_experimental=True,
             acknowledge_experimental=True,
-            dry_run_mode=True
+            dry_run_mode=True,
         )
-        assert experimental_engine.config.enabled == True
-        assert experimental_engine.config.experimental_features_acknowledged == True
+        assert experimental_engine.config.enabled
+        assert experimental_engine.config.experimental_features_acknowledged
         logger.info("✅ Valid experimental configuration created")
 
         # 5. Test chromosome creation and validation
@@ -92,7 +92,7 @@ async def main():
             agent_roles=["agent_1", "agent_2"],
             agent_parameters={
                 "agent_1": {"creativity": 0.7, "focus": 0.8},
-                "agent_2": {"creativity": 0.6, "focus": 0.7}
+                "agent_2": {"creativity": 0.6, "focus": 0.7},
             },
             coordination_style="peer_to_peer",
             communication_pattern="adaptive",
@@ -102,7 +102,7 @@ async def main():
             risk_tolerance=0.3,
             learning_rate=0.5,
             memory_utilization=0.7,
-            pattern_recognition_sensitivity=0.6
+            pattern_recognition_sensitivity=0.6,
         )
 
         # Test mutation
@@ -120,11 +120,9 @@ async def main():
         # 6. Test population initialization
         logger.info("\n🧪 6. Testing Population Initialization")
         success = await experimental_engine.initialize_experimental_population(
-            swarm_type="validation_swarm",
-            base_chromosome=base_chromosome,
-            population_size=3
+            swarm_type="validation_swarm", base_chromosome=base_chromosome, population_size=3
         )
-        assert success == True
+        assert success
         assert len(experimental_engine.populations["validation_swarm"]) == 3
         logger.info("✅ Population initialization successful")
 
@@ -135,18 +133,18 @@ async def main():
             enable_evolution=True,
             experimental_mode=ExperimentalMode.CAUTIOUS,
             acknowledge_experimental=True,
-            dry_run_mode=True
+            dry_run_mode=True,
         )
 
         base_config = {
-            'agents': ['agent_1', 'agent_2'],
-            'coordination_style': 'peer_to_peer',
-            'quality_threshold': 0.8
+            "agents": ["agent_1", "agent_2"],
+            "coordination_style": "peer_to_peer",
+            "quality_threshold": 0.8,
         }
 
         adapter_success = await adapter.initialize_evolution(base_config)
-        assert adapter_success == True
-        assert adapter.evolution_initialized == True
+        assert adapter_success
+        assert adapter.evolution_initialized
         logger.info("✅ Integration adapter working correctly")
 
         # 8. Test monitoring system
@@ -156,9 +154,9 @@ async def main():
         monitor.register_adapter("validation_adapter", adapter)
 
         summary = monitor.get_monitoring_summary()
-        assert summary['total_tracked_systems'] == 2
-        assert summary['tracked_engines'] == 1
-        assert summary['tracked_adapters'] == 1
+        assert summary["total_tracked_systems"] == 2
+        assert summary["tracked_engines"] == 1
+        assert summary["tracked_adapters"] == 1
         logger.info("✅ Monitoring system working correctly")
 
         # 9. Test safety controls
@@ -168,7 +166,7 @@ async def main():
             enabled=True,
             experimental_features_acknowledged=True,
             mutation_rate=0.5,  # Too high - should be caught
-            dry_run_mode=True
+            dry_run_mode=True,
         )
 
         issues = config_with_validation.validate()
@@ -178,14 +176,14 @@ async def main():
         # 10. Test performance tracking
         logger.info("\n🧪 10. Testing Performance Tracking")
         execution_result = {
-            'execution_id': 'validation_test',
-            'quality_score': 0.85,
-            'speed_score': 0.7,
-            'efficiency_score': 0.8,
-            'reliability_score': 0.9,
-            'success': True,
-            'execution_time': 10.0,
-            'errors': []
+            "execution_id": "validation_test",
+            "quality_score": 0.85,
+            "speed_score": 0.7,
+            "efficiency_score": 0.8,
+            "reliability_score": 0.9,
+            "success": True,
+            "execution_time": 10.0,
+            "errors": [],
         }
 
         await adapter.record_execution_performance(execution_result)
@@ -193,15 +191,15 @@ async def main():
         assert len(adapter.performance_history) == 1
 
         performance_summary = adapter.get_performance_summary()
-        assert performance_summary['total_executions'] == 1
+        assert performance_summary["total_executions"] == 1
         logger.info("✅ Performance tracking working correctly")
 
         # 11. Test dashboard data
         logger.info("\n🧪 11. Testing Dashboard Data")
         dashboard_data = monitor.get_dashboard_data()
-        assert 'summary' in dashboard_data
-        assert 'metrics' in dashboard_data
-        assert 'alerts' in dashboard_data
+        assert "summary" in dashboard_data
+        assert "metrics" in dashboard_data
+        assert "alerts" in dashboard_data
         logger.info("✅ Dashboard data generation working correctly")
 
         # 12. Final validation summary
@@ -213,15 +211,19 @@ async def main():
 
         # Adapter status
         adapter_status = adapter.get_evolution_status()
-        logger.info(f"   Adapter Evolution Status: Enabled={adapter_status['evolution_enabled']}, Mode={adapter_status['experimental_mode']}")
+        logger.info(
+            f"   Adapter Evolution Status: Enabled={adapter_status['evolution_enabled']}, Mode={adapter_status['experimental_mode']}"
+        )
 
         # Monitor status
         monitor_summary = monitor.get_monitoring_summary()
-        logger.info(f"   Monitor Status: Systems={monitor_summary['total_tracked_systems']}, Health={monitor_summary['system_health']}")
+        logger.info(
+            f"   Monitor Status: Systems={monitor_summary['total_tracked_systems']}, Health={monitor_summary['system_health']}"
+        )
 
-        logger.info("\n🧪 " + "="*60)
+        logger.info("\n🧪 " + "=" * 60)
         logger.info("🧪 ✅ ALL EXPERIMENTAL EVOLUTION VALIDATIONS PASSED")
-        logger.info("🧪 " + "="*60)
+        logger.info("🧪 " + "=" * 60)
         logger.info("\n🧪 SUMMARY:")
         logger.info("🧪 • Experimental Evolution Engine: ✅ Working")
         logger.info("🧪 • Safety Controls: ✅ Active")
@@ -247,6 +249,7 @@ async def main():
         logger.info(f"❌ Validation failed with error: {e}")
         logger.exception("Validation error details:")
         return False
+
 
 if __name__ == "__main__":
     success = asyncio.run(main())

@@ -17,9 +17,9 @@ import httpx
 # Add parent to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-# Import our environment loader
-from app.config.env_loader import get_env_config
 from app.core.ai_logger import logger
+
+# Import our environment loader
 
 
 class TechStackAnalyzer:
@@ -32,7 +32,7 @@ class TechStackAnalyzer:
             "versions": {},
             "api_keys": {},
             "gaps": [],
-            "recommendations": []
+            "recommendations": [],
         }
 
     def check_python_packages(self) -> dict[str, Any]:
@@ -56,19 +56,16 @@ class TechStackAnalyzer:
         for pkg, latest in packages.items():
             try:
                 result = subprocess.run(
-                    ["pip3", "show", pkg],
-                    capture_output=True,
-                    text=True,
-                    timeout=5
+                    ["pip3", "show", pkg], capture_output=True, text=True, timeout=5
                 )
                 if result.returncode == 0:
-                    for line in result.stdout.split('\n'):
-                        if line.startswith('Version:'):
-                            current = line.split(':')[1].strip()
+                    for line in result.stdout.split("\n"):
+                        if line.startswith("Version:"):
+                            current = line.split(":")[1].strip()
                             installed[pkg] = {
                                 "current": current,
                                 "latest": latest,
-                                "status": "✅" if not latest or current == latest else "⚠️"
+                                "status": "✅" if not latest or current == latest else "⚠️",
                             }
                             break
                 else:
@@ -98,43 +95,23 @@ class TechStackAnalyzer:
         logger.info("\n🛠️ Checking System Tool Versions...")
 
         tools = {
-            "pulumi": {
-                "command": ["pulumi", "version"],
-                "latest": "v3.192.0"
-            },
-            "esc": {
-                "command": ["esc", "version"],
-                "latest": "v0.17.0"
-            },
-            "docker": {
-                "command": ["docker", "--version"],
-                "latest": None
-            },
-            "node": {
-                "command": ["node", "--version"],
-                "latest": None
-            },
-            "postgresql": {
-                "command": ["psql", "--version"],
-                "latest": "17.5"
-            }
+            "pulumi": {"command": ["pulumi", "version"], "latest": "v3.192.0"},
+            "esc": {"command": ["esc", "version"], "latest": "v0.17.0"},
+            "docker": {"command": ["docker", "--version"], "latest": None},
+            "node": {"command": ["node", "--version"], "latest": None},
+            "postgresql": {"command": ["psql", "--version"], "latest": "17.5"},
         }
 
         installed = {}
         for tool, info in tools.items():
             try:
-                result = subprocess.run(
-                    info["command"],
-                    capture_output=True,
-                    text=True,
-                    timeout=5
-                )
+                result = subprocess.run(info["command"], capture_output=True, text=True, timeout=5)
                 if result.returncode == 0:
                     version_str = result.stdout.strip()
                     installed[tool] = {
                         "current": version_str,
                         "latest": info["latest"],
-                        "status": "✅"
+                        "status": "✅",
                     }
                     logger.info(f"  ✅ {tool}: {version_str}")
                 else:
@@ -155,36 +132,36 @@ class TechStackAnalyzer:
             "portkey": {
                 "key": self.config.portkey_api_key,
                 "test_url": "https://api.portkey.ai/v1/models",
-                "headers": {"Authorization": f"Bearer {self.config.portkey_api_key}"}
+                "headers": {"Authorization": f"Bearer {self.config.portkey_api_key}"},
             },
             "openrouter": {
                 "key": self.config.openrouter_api_key,
                 "test_url": "https://openrouter.ai/api/v1/models",
-                "headers": {"Authorization": f"Bearer {self.config.openrouter_api_key}"}
+                "headers": {"Authorization": f"Bearer {self.config.openrouter_api_key}"},
             },
             "anthropic": {
                 "key": self.config.anthropic_api_key,
                 "test_url": "https://api.anthropic.com/v1/messages",
                 "headers": {
                     "x-api-key": self.config.anthropic_api_key,
-                    "anthropic-version": "2023-06-01"
-                }
+                    "anthropic-version": "2023-06-01",
+                },
             },
             "openai": {
                 "key": self.config.openai_native_api_key,
                 "test_url": "https://api.openai.com/v1/models",
-                "headers": {"Authorization": f"Bearer {self.config.openai_native_api_key}"}
+                "headers": {"Authorization": f"Bearer {self.config.openai_native_api_key}"},
             },
             "groq": {
                 "key": self.config.groq_api_key,
                 "test_url": "https://api.groq.com/openai/v1/models",
-                "headers": {"Authorization": f"Bearer {self.config.groq_api_key}"}
+                "headers": {"Authorization": f"Bearer {self.config.groq_api_key}"},
             },
             "together": {
                 "key": self.config.together_api_key,
                 "test_url": "https://api.together.xyz/v1/models",
-                "headers": {"Authorization": f"Bearer {self.config.together_api_key}"}
-            }
+                "headers": {"Authorization": f"Bearer {self.config.together_api_key}"},
+            },
         }
 
         results = {}
@@ -195,10 +172,7 @@ class TechStackAnalyzer:
                     logger.info(f"  ❌ {provider}: Not configured")
                 else:
                     try:
-                        response = await client.get(
-                            info["test_url"],
-                            headers=info["headers"]
-                        )
+                        response = await client.get(info["test_url"], headers=info["headers"])
                         if response.status_code in [200, 201]:
                             results[provider] = {"status": "✅", "valid": True}
                             logger.info(f"  ✅ {provider}: Valid")
@@ -208,7 +182,7 @@ class TechStackAnalyzer:
                         else:
                             results[provider] = {
                                 "status": "⚠️",
-                                "error": f"Status {response.status_code}"
+                                "error": f"Status {response.status_code}",
                             }
                             logger.info(f"  ⚠️ {provider}: Status {response.status_code}")
                     except Exception as e:
@@ -231,18 +205,14 @@ class TechStackAnalyzer:
             {
                 "name": "openrouter_vk",
                 "model": "openrouter/qwen/qwen-2.5-coder-32b-instruct",
-                "provider": "openrouter"
+                "provider": "openrouter",
             },
             {
                 "name": "together_vk",
                 "model": "togethercomputer/m2-bert-80M-8k-retrieval",
-                "provider": "together"
+                "provider": "together",
             },
-            {
-                "name": "anthropic_vk",
-                "model": "claude-3-haiku-20240307",
-                "provider": "anthropic"
-            }
+            {"name": "anthropic_vk", "model": "claude-3-haiku-20240307", "provider": "anthropic"},
         ]
 
         results = {}
@@ -254,13 +224,13 @@ class TechStackAnalyzer:
                         "https://api.portkey.ai/v1/chat/completions",
                         headers={
                             "Authorization": f"Bearer {self.config.portkey_api_key}",
-                            "Content-Type": "application/json"
+                            "Content-Type": "application/json",
                         },
                         json={
                             "model": vk_test["model"],
                             "messages": [{"role": "user", "content": "Hi"}],
-                            "max_tokens": 5
-                        }
+                            "max_tokens": 5,
+                        },
                     )
 
                     if response.status_code == 200:
@@ -269,7 +239,7 @@ class TechStackAnalyzer:
                     else:
                         results[vk_test["name"]] = {
                             "status": "❌",
-                            "error": f"Status {response.status_code}"
+                            "error": f"Status {response.status_code}",
                         }
                         logger.info(f"  ❌ {vk_test['name']}: Failed ({response.status_code})")
                 except Exception as e:
@@ -285,10 +255,12 @@ class TechStackAnalyzer:
 
         try:
             import weaviate
+
             client = weaviate.Client(
                 url=self.config.weaviate_url or "http://localhost:8080",
                 auth_client_secret=weaviate.AuthApiKey(api_key=self.config.weaviate_api_key)
-                if self.config.weaviate_api_key else None
+                if self.config.weaviate_api_key
+                else None,
             )
 
             # Get server version
@@ -299,7 +271,9 @@ class TechStackAnalyzer:
                 "status": "✅",
                 "server_version": server_version,
                 "latest_version": "1.32.0",
-                "client_version": weaviate.__version__ if hasattr(weaviate, "__version__") else "Unknown"
+                "client_version": weaviate.__version__
+                if hasattr(weaviate, "__version__")
+                else "Unknown",
             }
 
             logger.info(f"  ✅ Server: {server_version} (latest: 1.32.0)")
@@ -321,53 +295,63 @@ class TechStackAnalyzer:
         # Check Python packages
         for pkg, info in self.results["versions"].get("python_packages", {}).items():
             if info["status"] == "❌":
-                gaps.append({
-                    "type": "missing_package",
-                    "package": pkg,
-                    "severity": "high" if pkg in ["agno", "weaviate-client"] else "medium",
-                    "action": f"pip install {pkg}"
-                })
+                gaps.append(
+                    {
+                        "type": "missing_package",
+                        "package": pkg,
+                        "severity": "high" if pkg in ["agno", "weaviate-client"] else "medium",
+                        "action": f"pip install {pkg}",
+                    }
+                )
             elif info["status"] == "⚠️":
-                gaps.append({
-                    "type": "outdated_package",
-                    "package": pkg,
-                    "current": info["current"],
-                    "latest": info["latest"],
-                    "severity": "medium",
-                    "action": f"pip install -U {pkg}=={info['latest']}"
-                })
+                gaps.append(
+                    {
+                        "type": "outdated_package",
+                        "package": pkg,
+                        "current": info["current"],
+                        "latest": info["latest"],
+                        "severity": "medium",
+                        "action": f"pip install -U {pkg}=={info['latest']}",
+                    }
+                )
 
         # Check API keys
         for provider, info in self.results.get("api_keys", {}).items():
             if info["status"] == "❌":
-                gaps.append({
-                    "type": "missing_api_key",
-                    "provider": provider,
-                    "severity": "high" if provider in ["portkey", "openai"] else "medium",
-                    "action": f"Configure {provider.upper()}_API_KEY in .env"
-                })
+                gaps.append(
+                    {
+                        "type": "missing_api_key",
+                        "provider": provider,
+                        "severity": "high" if provider in ["portkey", "openai"] else "medium",
+                        "action": f"Configure {provider.upper()}_API_KEY in .env",
+                    }
+                )
 
         # Check Weaviate
         weaviate_info = self.results["versions"].get("weaviate", {})
         if weaviate_info.get("status") == "❌":
-            gaps.append({
-                "type": "service_down",
-                "service": "weaviate",
-                "severity": "high",
-                "action": "Start Weaviate with docker-compose"
-            })
+            gaps.append(
+                {
+                    "type": "service_down",
+                    "service": "weaviate",
+                    "severity": "high",
+                    "action": "Start Weaviate with docker-compose",
+                }
+            )
         elif weaviate_info.get("server_version"):
             current = weaviate_info["server_version"]
             latest = "1.32.0"
             if current < latest:
-                gaps.append({
-                    "type": "outdated_service",
-                    "service": "weaviate",
-                    "current": current,
-                    "latest": latest,
-                    "severity": "medium",
-                    "action": "Update Weaviate docker image to 1.32.0"
-                })
+                gaps.append(
+                    {
+                        "type": "outdated_service",
+                        "service": "weaviate",
+                        "current": current,
+                        "latest": latest,
+                        "severity": "medium",
+                        "action": "Update Weaviate docker image to 1.32.0",
+                    }
+                )
 
         self.results["gaps"] = gaps
 
@@ -381,15 +365,21 @@ class TechStackAnalyzer:
             if high_severity:
                 logger.info(f"\n  🔴 High Severity ({len(high_severity)}):")
                 for gap in high_severity:
-                    logger.info(f"    • {gap['type']}: {gap.get('package') or gap.get('provider') or gap.get('service')}")
+                    logger.info(
+                        f"    • {gap['type']}: {gap.get('package') or gap.get('provider') or gap.get('service')}"
+                    )
                     logger.info(f"      Action: {gap['action']}")
 
             if medium_severity:
                 logger.info(f"\n  🟡 Medium Severity ({len(medium_severity)}):")
                 for gap in medium_severity:
-                    logger.info(f"    • {gap['type']}: {gap.get('package') or gap.get('provider') or gap.get('service')}")
+                    logger.info(
+                        f"    • {gap['type']}: {gap.get('package') or gap.get('provider') or gap.get('service')}"
+                    )
                     if gap.get("current"):
-                        logger.info(f"      Current: {gap['current']} → Latest: {gap.get('latest')}")
+                        logger.info(
+                            f"      Current: {gap['current']} → Latest: {gap.get('latest')}"
+                        )
                     logger.info(f"      Action: {gap['action']}")
         else:
             logger.info("  ✅ No critical gaps found!")
@@ -407,35 +397,36 @@ class TechStackAnalyzer:
             "PostgreSQL": {
                 "current": None,  # Check if using Neon
                 "latest": "17.5",
-                "benefit": "Performance improvements, native JSON operations"
+                "benefit": "Performance improvements, native JSON operations",
             },
             "Weaviate": {
                 "current": self.results["versions"].get("weaviate", {}).get("server_version"),
                 "latest": "1.32.0",
-                "benefit": "Collection aliases, RQ, compressed HNSW"
+                "benefit": "Collection aliases, RQ, compressed HNSW",
             },
             "Pulumi": {
-                "current": self.results["versions"].get("system_tools", {}).get("pulumi", {}).get("current"),
+                "current": self.results["versions"]
+                .get("system_tools", {})
+                .get("pulumi", {})
+                .get("current"),
                 "latest": "v3.192.0",
-                "benefit": "Vigilant mode, better secrets management"
+                "benefit": "Vigilant mode, better secrets management",
             },
             "Lambda Stack": {
                 "current": None,
                 "latest": "CUDA 12.8, PyTorch 2.7.0",
-                "benefit": "GPU acceleration for AI workloads"
+                "benefit": "GPU acceleration for AI workloads",
             },
             "Airbyte": {
                 "current": None,
                 "latest": "v1.8",
-                "benefit": "Iceberg support, AI sync diagnosis"
-            }
+                "benefit": "Iceberg support, AI sync diagnosis",
+            },
         }
 
         for tech, info in tech_updates.items():
             if not info["current"] or (info["current"] and info["current"] < info["latest"]):
-                recommendations.append(
-                    f"Upgrade {tech} to {info['latest']}: {info['benefit']}"
-                )
+                recommendations.append(f"Upgrade {tech} to {info['latest']}: {info['benefit']}")
 
         # Specific recommendations for our stack
         if not self.config.portkey_api_key or self.config.portkey_api_key.startswith("YOUR_"):
@@ -443,18 +434,18 @@ class TechStackAnalyzer:
                 "Configure Portkey for unified LLM gateway - reduces complexity and adds failover"
             )
 
-        if not self.results.get("api_keys", {}).get("openrouter", {}).get("status") == "✅":
-            recommendations.append(
-                "Set up OpenRouter for access to 100+ models with single API"
-            )
+        if self.results.get("api_keys", {}).get("openrouter", {}).get("status") != "✅":
+            recommendations.append("Set up OpenRouter for access to 100+ models with single API")
 
         # Infrastructure recommendations
-        recommendations.extend([
-            "Consider Neon PostgreSQL for serverless database with autoscaling",
-            "Implement Pulumi ESC for centralized secrets management",
-            "Add Airbyte for data pipeline automation if needed",
-            "Enable Weaviate's new RQ feature for 3x memory efficiency"
-        ])
+        recommendations.extend(
+            [
+                "Consider Neon PostgreSQL for serverless database with autoscaling",
+                "Implement Pulumi ESC for centralized secrets management",
+                "Add Airbyte for data pipeline automation if needed",
+                "Enable Weaviate's new RQ feature for 3x memory efficiency",
+            ]
+        )
 
         self.results["recommendations"] = recommendations
 
@@ -466,9 +457,9 @@ class TechStackAnalyzer:
 
     async def run_full_analysis(self):
         """Run complete environment analysis."""
-        logger.info("\n" + "="*60)
+        logger.info("\n" + "=" * 60)
         logger.info("🔬 COMPREHENSIVE ENVIRONMENT ANALYSIS")
-        logger.info("="*60)
+        logger.info("=" * 60)
 
         # Check versions
         self.check_python_packages()
@@ -488,9 +479,9 @@ class TechStackAnalyzer:
 
     def generate_report(self):
         """Generate comprehensive report."""
-        logger.info("\n" + "="*60)
+        logger.info("\n" + "=" * 60)
         logger.info("📋 ENVIRONMENT REPORT SUMMARY")
-        logger.info("="*60)
+        logger.info("=" * 60)
 
         # Count statuses
         packages = self.results["versions"].get("python_packages", {})
@@ -514,8 +505,12 @@ class TechStackAnalyzer:
         gaps = self.results.get("gaps", [])
         if gaps:
             logger.info(f"\n⚠️  Total Gaps: {len(gaps)}")
-            logger.info(f"  🔴 High severity: {len([g for g in gaps if g.get('severity') == 'high'])}")
-            logger.info(f"  🟡 Medium severity: {len([g for g in gaps if g.get('severity') == 'medium'])}")
+            logger.info(
+                f"  🔴 High severity: {len([g for g in gaps if g.get('severity') == 'high'])}"
+            )
+            logger.info(
+                f"  🟡 Medium severity: {len([g for g in gaps if g.get('severity') == 'medium'])}"
+            )
         else:
             logger.info("\n✅ No critical gaps!")
 

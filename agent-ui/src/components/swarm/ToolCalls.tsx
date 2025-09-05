@@ -56,7 +56,7 @@ export function ToolCalls({ calls = [] }: ToolCallsProps) {
                 )}
               />
             </div>
-            
+
             {expanded.has(i) && call.args && (
               <div className="mt-2 pt-2 border-t">
                 <pre className="text-xs bg-white p-2 rounded overflow-x-auto">
@@ -64,7 +64,7 @@ export function ToolCalls({ calls = [] }: ToolCallsProps) {
                 </pre>
               </div>
             )}
-            
+
             {expanded.has(i) && call.result && (
               <div className="mt-2">
                 <div className="text-xs text-gray-600 mb-1">Result:</div>

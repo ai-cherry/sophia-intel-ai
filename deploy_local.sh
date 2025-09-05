@@ -31,7 +31,7 @@ wait_for_service() {
     local name=$2
     local max_attempts=30
     local attempt=0
-    
+
     echo -n "  Waiting for $name"
     while [ $attempt -lt $max_attempts ]; do
         if curl -s "$url" > /dev/null 2>&1; then
@@ -93,7 +93,7 @@ if command -v docker &> /dev/null; then
             -e CLUSTER_HOSTNAME=node1 \
             --restart unless-stopped \
             semitechnologies/weaviate:1.32.1 > /dev/null 2>&1 || true
-        
+
         if wait_for_service "http://localhost:8080/v1/.well-known/ready" "Weaviate"; then
             echo -e "${GREEN}  ✓ Weaviate running on port 8080${NC}"
         else
@@ -128,19 +128,19 @@ if ! check_port 8003; then
     REPO_ROOT="$SCRIPT_DIR"
     mkdir -p "$REPO_ROOT/logs"
     cd "$REPO_ROOT"
-    
+
     # Export environment variables
     export LOCAL_DEV_MODE=true
     export AGENT_API_PORT=8003
     export MCP_FILESYSTEM=true
     export MCP_GIT=true
     export MCP_SUPERMEMORY=true
-    
+
     # Start API server in background
     nohup python3 -m app.api.unified_server > "$REPO_ROOT/logs/api_server.log" 2>&1 &
     API_PID=$!
     echo "  API Server PID: $API_PID"
-    
+
     if wait_for_service "http://localhost:8003/healthz" "API Server"; then
         echo -e "${GREEN}  ✓ API Server running on port 8003${NC}"
         echo -e "${GREEN}  ✓ MCP Filesystem server active${NC}"
@@ -160,20 +160,20 @@ echo -e "\n${BLUE}5. Starting UI Dashboard...${NC}"
 if ! check_port 3001 && ! check_port 3000; then
     echo "  Starting Next.js UI..."
     cd "$REPO_ROOT/agent-ui"
-    
+
     # Install dependencies if needed
     if [ ! -d "node_modules" ]; then
         echo "  Installing UI dependencies..."
         npm install --silent
     fi
-    
+
     # Start UI in background
     nohup npm run dev > "$REPO_ROOT/logs/ui.log" 2>&1 &
     UI_PID=$!
     echo "  UI Dashboard PID: $UI_PID"
-    
+
     sleep 3  # Give Next.js time to start
-    
+
     if check_port 3001 || check_port 3000; then
         PORT=$(check_port 3001 && echo "3001" || echo "3000")
         echo -e "${GREEN}  ✓ UI Dashboard running on port $PORT${NC}"

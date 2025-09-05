@@ -9,20 +9,20 @@ graph TB
         API[API Client]
         SDK[SDK Client]
     end
-    
+
     subgraph "Gateway Layer"
         LB[Load Balancer]
         AG[API Gateway]
         WS[WebSocket Gateway]
     end
-    
+
     subgraph "Application Layer"
         DI[DI Container]
         CO[Chat Orchestrator]
         SM[Session Manager]
         CP[Connection Pool]
     end
-    
+
     subgraph "Service Layer"
         UO[Unified Orchestrator]
         AT[AGNO Teams]
@@ -30,20 +30,20 @@ graph TB
         MS[Memory System]
         SI[Swarm Intelligence]
     end
-    
+
     subgraph "Infrastructure Layer"
         CB[Circuit Breakers]
         LOG[Structured Logger]
         TRACE[Tracer]
         METRICS[Metrics Collector]
     end
-    
+
     subgraph "Data Layer"
         CACHE[Redis Cache]
         DB[PostgreSQL]
         VDB[Vector DB]
     end
-    
+
     WEB --> LB
     API --> LB
     SDK --> LB
@@ -80,14 +80,14 @@ sequenceDiagram
     participant UO as Unified Orchestrator
     participant CD as Command Dispatcher
     participant MS as Memory System
-    
+
     C->>AG: POST /chat/v2/chat
     AG->>AG: Validate Request
     AG->>DI: Resolve Services
     DI->>CO: Get Orchestrator Instance
     CO->>CO: Generate Correlation ID
     CO->>CO: Start Trace Span
-    
+
     alt Circuit Open
         CO->>CB: Check Circuit State
         CB-->>CO: Circuit Open Error
@@ -97,18 +97,18 @@ sequenceDiagram
         CB->>UO: Process Message
         UO-->>CB: Orchestrator Result
         CB-->>CO: Success Response
-        
+
         CO->>CB: Execute Command
         CB->>CD: Dispatch Command
         CD-->>CB: Command Result
         CB-->>CO: Command Response
-        
+
         CO->>CB: Query Memory
         CB->>MS: Retrieve Context
         MS-->>CB: Memory Results
         CB-->>CO: Context Data
     end
-    
+
     CO->>CO: Aggregate Results
     CO->>CO: End Trace Span
     CO->>AG: Return Response
@@ -125,10 +125,10 @@ sequenceDiagram
     participant SM as Session Manager
     participant CO as Chat Orchestrator
     participant TM as Timeout Manager
-    
+
     C->>WS: WS Connect /chat/ws/{client_id}/{session_id}
     WS->>CP: Check Connection Limit
-    
+
     alt Limit Exceeded
         CP-->>WS: Reject Connection
         WS-->>C: Close with Error
@@ -140,7 +140,7 @@ sequenceDiagram
         WS->>CO: Initialize Handler
         CO->>TM: Register Connection
         WS-->>C: Connection Established
-        
+
         loop Message Exchange
             C->>WS: Send Message
             WS->>CO: Process Message
@@ -149,7 +149,7 @@ sequenceDiagram
             WS-->>C: Send Response
             TM->>TM: Update Last Activity
         end
-        
+
         alt Idle Timeout
             TM->>CO: Timeout Detected
             CO->>WS: Close Connection
@@ -169,28 +169,28 @@ sequenceDiagram
 ```mermaid
 stateDiagram-v2
     [*] --> CLOSED: Initial State
-    
+
     CLOSED --> CLOSED: Success
     CLOSED --> OPEN: Failure Threshold Reached
-    
+
     OPEN --> HALF_OPEN: Timeout Expired
     OPEN --> OPEN: Request (Fail Fast)
-    
+
     HALF_OPEN --> CLOSED: Success Threshold Reached
     HALF_OPEN --> OPEN: Failure
-    
+
     note right of CLOSED
         Normal operation
         All requests pass through
         Count failures
     end note
-    
+
     note right of OPEN
         Service is failing
         Requests fail immediately
         Wait for timeout
     end note
-    
+
     note right of HALF_OPEN
         Testing recovery
         Limited requests allowed
@@ -209,17 +209,17 @@ graph LR
         EMERGENCY[Emergency<br/>Minimal]
         MAINTENANCE[Maintenance<br/>Read Only]
     end
-    
+
     NORMAL -->|Health < 80%| LIMITED
     LIMITED -->|Health < 60%| ESSENTIAL
     ESSENTIAL -->|Health < 40%| EMERGENCY
     EMERGENCY -->|Health < 20%| MAINTENANCE
-    
+
     MAINTENANCE -->|Health > 20%| EMERGENCY
     EMERGENCY -->|Health > 40%| ESSENTIAL
     ESSENTIAL -->|Health > 60%| LIMITED
     LIMITED -->|Health > 80%| NORMAL
-    
+
     subgraph "Disabled Features by Level"
         L1[Limited: Analytics, Collaboration]
         L2[Essential: +Swarm, Memory, Streaming]
@@ -242,14 +242,14 @@ classDiagram
         +resolve()
         +create_scope()
     }
-    
+
     class ServiceLifecycle {
         <<enumeration>>
         TRANSIENT
         SINGLETON
         SCOPED
     }
-    
+
     class ServiceConfig {
         +service_type: Type
         +implementation: Type
@@ -257,14 +257,14 @@ classDiagram
         +factory: Callable
         +dependencies: List
     }
-    
+
     class ServiceScope {
         -container: DIContainer
         -instances: Dict
         +resolve()
         +dispose()
     }
-    
+
     class ChatOrchestrator {
         -command_dispatcher: ICommandDispatcher
         -orchestra_manager: IOrchestraManager
@@ -272,7 +272,7 @@ classDiagram
         +handle_chat()
         +websocket_endpoint()
     }
-    
+
     DIContainer --> ServiceConfig
     DIContainer --> ServiceLifecycle
     DIContainer --> ServiceScope
@@ -295,7 +295,7 @@ flowchart TB
     METRICS[Update Metrics]
     ERROR_RESPONSE[Error Response]
     SUCCESS_RESPONSE[Success Response]
-    
+
     REQUEST --> VALIDATE
     VALIDATE -->|Invalid| ERROR_RESPONSE
     VALIDATE -->|Valid| ERROR_BOUNDARY
@@ -323,21 +323,21 @@ graph TB
         PERSIST[Persist to Cache]
         RESTORE[Restore from Cache]
     end
-    
+
     subgraph "Session Components"
         HISTORY[Message History]
         CONTEXT[User Context]
         METADATA[Session Metadata]
         TOKENS[Token Count]
     end
-    
+
     subgraph "Limits"
         MAX_HISTORY[Max 100 Messages]
         MAX_TOKENS[Max 100K Tokens]
         MAX_SIZE[Max 1MB]
         TTL[TTL 24 Hours]
     end
-    
+
     CREATE --> ACTIVE
     ACTIVE --> IDLE
     IDLE --> ACTIVE
@@ -345,12 +345,12 @@ graph TB
     ACTIVE --> PERSIST
     PERSIST --> RESTORE
     RESTORE --> ACTIVE
-    
+
     ACTIVE --> HISTORY
     ACTIVE --> CONTEXT
     ACTIVE --> METADATA
     ACTIVE --> TOKENS
-    
+
     HISTORY --> MAX_HISTORY
     TOKENS --> MAX_TOKENS
     METADATA --> MAX_SIZE
@@ -367,47 +367,47 @@ graph LR
         TRACE[Traces]
         METRIC[Metrics]
     end
-    
+
     subgraph "Collection"
         FLUENTD[Fluentd]
         OTEL[OpenTelemetry]
         PROM[Prometheus]
     end
-    
+
     subgraph "Storage"
         ES[Elasticsearch]
         JAEGER[Jaeger]
         PROMDB[Prometheus DB]
     end
-    
+
     subgraph "Visualization"
         KIBANA[Kibana]
         JAEGERUI[Jaeger UI]
         GRAFANA[Grafana]
     end
-    
+
     subgraph "Alerting"
         ALERT[Alert Manager]
         PAGER[PagerDuty]
         SLACK[Slack]
     end
-    
+
     APP --> LOG
     APP --> TRACE
     APP --> METRIC
-    
+
     LOG --> FLUENTD
     TRACE --> OTEL
     METRIC --> PROM
-    
+
     FLUENTD --> ES
     OTEL --> JAEGER
     PROM --> PROMDB
-    
+
     ES --> KIBANA
     JAEGER --> JAEGERUI
     PROMDB --> GRAFANA
-    
+
     GRAFANA --> ALERT
     ALERT --> PAGER
     ALERT --> SLACK
@@ -426,17 +426,17 @@ flowchart TB
     RESPONSE[Format Response]
     V1_RESPONSE[V1 Response Format]
     V2_RESPONSE[V2 Response Format]
-    
+
     REQUEST --> DETECT
     DETECT -->|Has api_version=v1| V1
     DETECT -->|Has api_version=v2| V2
     DETECT -->|Auto-detect V1| V1
     DETECT -->|Auto-detect V2| V2
-    
+
     V1 --> ADAPTER
     ADAPTER --> PROCESS
     V2 --> PROCESS
-    
+
     PROCESS --> RESPONSE
     RESPONSE -->|V1 Client| V1_RESPONSE
     RESPONSE -->|V2 Client| V2_RESPONSE
@@ -453,14 +453,14 @@ graph TB
             APP2[App Instance 2]
             APP3[App Instance 3]
         end
-        
+
         subgraph "Region 2"
             LB2[Load Balancer]
             APP4[App Instance 4]
             APP5[App Instance 5]
             APP6[App Instance 6]
         end
-        
+
         subgraph "Shared Services"
             CACHE[Redis Cluster]
             DB[PostgreSQL Primary]
@@ -468,15 +468,15 @@ graph TB
             VDB[Vector DB Cluster]
         end
     end
-    
+
     subgraph "CDN"
         CF[CloudFlare]
     end
-    
+
     subgraph "Monitoring"
         MON[Monitoring Stack]
     end
-    
+
     CF --> LB1
     CF --> LB2
     LB1 --> APP1
@@ -485,28 +485,28 @@ graph TB
     LB2 --> APP4
     LB2 --> APP5
     LB2 --> APP6
-    
+
     APP1 --> CACHE
     APP2 --> CACHE
     APP3 --> CACHE
     APP4 --> CACHE
     APP5 --> CACHE
     APP6 --> CACHE
-    
+
     APP1 --> DB
     APP2 --> DBREAD
     APP3 --> DBREAD
     APP4 --> DB
     APP5 --> DBREAD
     APP6 --> DBREAD
-    
+
     APP1 --> VDB
     APP2 --> VDB
     APP3 --> VDB
     APP4 --> VDB
     APP5 --> VDB
     APP6 --> VDB
-    
+
     APP1 -.-> MON
     APP2 -.-> MON
     APP3 -.-> MON
@@ -525,28 +525,28 @@ graph TD
         E2E[E2E Tests<br/>Critical Paths]
         SMOKE[Smoke Tests<br/>Post-Deploy]
     end
-    
+
     subgraph "Test Types"
         FUNC[Functional Tests]
         PERF[Performance Tests]
         SEC[Security Tests]
         CHAOS[Chaos Engineering]
     end
-    
+
     subgraph "Test Environments"
         LOCAL[Local Dev]
         CI[CI Pipeline]
         STAGING[Staging]
         PROD[Production]
     end
-    
+
     UNIT --> LOCAL
     UNIT --> CI
     INTEGRATION --> CI
     INTEGRATION --> STAGING
     E2E --> STAGING
     SMOKE --> PROD
-    
+
     FUNC --> UNIT
     FUNC --> INTEGRATION
     PERF --> STAGING
@@ -563,7 +563,7 @@ flowchart LR
         CONTEXT[Session Context]
         CONFIG[Configuration]
     end
-    
+
     subgraph "Processing"
         VALIDATE[Validation]
         ENRICH[Enrichment]
@@ -571,32 +571,32 @@ flowchart LR
         EXECUTE[Execution]
         AGGREGATE[Aggregation]
     end
-    
+
     subgraph "Storage"
         CACHE_WRITE[Cache Write]
         DB_WRITE[DB Write]
         VECTOR_WRITE[Vector Write]
     end
-    
+
     subgraph "Output"
         RESPONSE[Response]
         STREAM[Stream]
         WEBHOOK[Webhook]
     end
-    
+
     USER --> VALIDATE
     CONTEXT --> VALIDATE
     CONFIG --> VALIDATE
-    
+
     VALIDATE --> ENRICH
     ENRICH --> ROUTE
     ROUTE --> EXECUTE
     EXECUTE --> AGGREGATE
-    
+
     AGGREGATE --> CACHE_WRITE
     AGGREGATE --> DB_WRITE
     AGGREGATE --> VECTOR_WRITE
-    
+
     AGGREGATE --> RESPONSE
     AGGREGATE --> STREAM
     AGGREGATE --> WEBHOOK
@@ -614,7 +614,7 @@ graph TB
         VALIDATION[Input Validation]
         ENCRYPTION[Encryption]
     end
-    
+
     subgraph "Security Controls"
         TOKEN[JWT Tokens]
         APIKEY[API Keys]
@@ -622,14 +622,14 @@ graph TB
         AUDIT[Audit Logging]
         SECRETS[Secrets Management]
     end
-    
+
     subgraph "Threat Protection"
         DDOS[DDoS Protection]
         INJECTION[Injection Prevention]
         XSS[XSS Prevention]
         CSRF[CSRF Protection]
     end
-    
+
     REQUEST[Request] --> WAF
     WAF --> RATELIMIT
     RATELIMIT --> AUTH

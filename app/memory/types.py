@@ -2,23 +2,24 @@
 Memory system type definitions.
 Shared types for memory entries and operations.
 """
-from typing import Optional
-
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
+from typing import Optional
 
 
 class MemoryType(Enum):
     """Types of memory entries."""
-    EPISODIC = "episodic"      # Per-task notes, recent decisions
-    SEMANTIC = "semantic"      # Patterns, conventions, architectural idioms
+
+    EPISODIC = "episodic"  # Per-task notes, recent decisions
+    SEMANTIC = "semantic"  # Patterns, conventions, architectural idioms
     PROCEDURAL = "procedural"  # Step checklists, fix recipes
 
 
 @dataclass
 class MemoryEntry:
     """Structured memory entry with deduplication."""
+
     topic: str
     content: str
     source: str
@@ -32,6 +33,7 @@ class MemoryEntry:
         """Generate hash ID for deduplication."""
         if not self.hash_id:
             import hashlib
+
             content_hash = hashlib.sha256(
                 f"{self.topic}:{self.content}:{self.source}".encode()
             ).hexdigest()[:16]

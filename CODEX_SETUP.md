@@ -1,6 +1,7 @@
 # Codex CLI Setup for Sophia Intel AI
 
 ## ✅ Current Status
+
 - **Logged in**: API key authentication (preferred over ChatGPT login)
 - **Repository**: Connected to /Users/lynnmusil/sophia-intel-ai
 - **Model**: Using GPT-4o (works with your API key)
@@ -9,17 +10,20 @@
 ## 🚀 Basic Usage
 
 ### Interactive Mode
+
 ```bash
 codex
 ```
 
 ### Execute Single Commands
+
 ```bash
 codex exec "your prompt here"
 codex exec --model gpt-4o "analyze the swarms architecture"
 ```
 
 ### Repository-Specific Queries
+
 ```bash
 # Analyze codebase structure
 codex exec "What are the main components of this AI system?"
@@ -37,6 +41,7 @@ codex exec "Help me add a new agent to the coding swarm"
 ## 🔧 Configuration
 
 ### API Key (Already Set)
+
 ```bash
 # Environment variable (persistent in ~/.zshrc)
 export OPENAI_API_KEY="sk-svcacct-..."
@@ -46,6 +51,7 @@ codex login status  # Shows: "Logged in using an API key"
 ```
 
 ### Model Selection
+
 ```bash
 # Default: GPT-5 (may not work with your account type)
 # Recommended: GPT-4o (works with your API key)
@@ -60,12 +66,14 @@ codex exec --model gpt-4o "your prompt"
 ## 📁 Repository Context
 
 Codex automatically understands:
+
 - **Repository Structure**: All directories and files
 - **Git Status**: Current changes and branch
 - **File Contents**: Can read and analyze code
 - **Architecture**: Understands the AI swarms, MCP server, etc.
 
-### Example Context-Aware Queries:
+### Example Context-Aware Queries
+
 ```bash
 # Swarms Analysis
 codex exec "Explain the swarm patterns implemented in app/swarms/"
@@ -90,18 +98,21 @@ codex exec "Explain the Sophia business intelligence components"
 
 ## 🔍 Troubleshooting
 
-### If you get 401 Unauthorized:
+### If you get 401 Unauthorized
+
 ```bash
 # Re-login with API key
 codex logout
 codex login --api-key "your-key-here"
 ```
 
-### Model Access Issues:
+### Model Access Issues
+
 - Use `--model gpt-4o` instead of default GPT-5
 - Your OpenAI account may not have access to newer models
 
-### Environment Issues:
+### Environment Issues
+
 ```bash
 # Verify API key is set
 echo $OPENAI_API_KEY
@@ -110,9 +121,10 @@ echo $OPENAI_API_KEY
 codex login status
 ```
 
-## 🎯 Ready to Use!
+## 🎯 Ready to Use
 
 Codex is now properly connected to your sophia-intel-ai repository and can:
+
 - Analyze your swarms architecture
 - Help with MCP server development
 - Assist with agent factory implementation

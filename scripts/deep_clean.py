@@ -15,6 +15,7 @@ class Logger:
     def info(self, msg):
         print(msg)
 
+
 logger = Logger()
 
 
@@ -57,10 +58,7 @@ class DeepCleaner:
 
         logger.info("\n🗑️  Removing backup directories...")
 
-        backup_dirs = [
-            "backup_before_clean_slate",
-            "docs/archive"
-        ]
+        backup_dirs = ["backup_before_clean_slate", "docs/archive"]
 
         for dir_path in backup_dirs:
             path = Path(dir_path)
@@ -78,7 +76,7 @@ class DeepCleaner:
         # Files to check for orchestrator classes
         files_to_check = [
             "app/swarms/agno_teams.py",  # Contains AgnoOrchestrator
-            "app/orchestration/unified_facade.py"  # Contains UnifiedOrchestratorFacade
+            "app/orchestration/unified_facade.py",  # Contains UnifiedOrchestratorFacade
         ]
 
         for file_path in files_to_check:
@@ -89,11 +87,13 @@ class DeepCleaner:
                     content = f.read()
 
                 if "Orchestrator" in content and "SuperOrchestrator" not in content:
-                    self.findings.append({
-                        "file": str(path),
-                        "issue": "Contains orchestrator class (not SuperOrchestrator)",
-                        "recommendation": "Consider removing or refactoring to use SuperOrchestrator"
-                    })
+                    self.findings.append(
+                        {
+                            "file": str(path),
+                            "issue": "Contains orchestrator class (not SuperOrchestrator)",
+                            "recommendation": "Consider removing or refactoring to use SuperOrchestrator",
+                        }
+                    )
 
                     # For aggressive cleaning, we could delete these
                     # if not self.dry_run:
@@ -124,20 +124,20 @@ class DeepCleaner:
         # Managers that are OK (specialized purposes)
         allowed_managers = [
             "EmbeddedMemoryManager",  # Part of SuperOrchestrator
-            "EmbeddedStateManager",   # Part of SuperOrchestrator
-            "EmbeddedTaskManager",    # Part of SuperOrchestrator
-            "AISystemMonitor",        # Part of SuperOrchestrator
+            "EmbeddedStateManager",  # Part of SuperOrchestrator
+            "EmbeddedTaskManager",  # Part of SuperOrchestrator
+            "AISystemMonitor",  # Part of SuperOrchestrator
             "CircuitBreakerManager",  # Infrastructure
-            "WebSocketManager",       # Infrastructure
-            "MCPWebSocketManager",    # MCP specific
-            "FeatureFlagManager",     # Feature flags
+            "WebSocketManager",  # Infrastructure
+            "MCPWebSocketManager",  # MCP specific
+            "FeatureFlagManager",  # Feature flags
             "PortkeyVirtualKeyManager",  # Portkey integration
             "EvaluationGateManager",  # Evaluation system
             "GracefulDegradationManager",  # Resilience
-            "MCPSecurityManager",     # Security
+            "MCPSecurityManager",  # Security
             "KnowledgeGraphManager",  # Knowledge graph
-            "IndexingManager",        # Indexing
-            "EnhancedSwarmManager",   # Swarm management
+            "IndexingManager",  # Indexing
+            "EnhancedSwarmManager",  # Swarm management
         ]
 
         # Find potentially conflicting managers
@@ -148,16 +148,19 @@ class DeepCleaner:
                         content = f.read()
 
                     import re
-                    manager_classes = re.findall(r'^class\s+(\w*Manager)', content, re.MULTILINE)
+
+                    manager_classes = re.findall(r"^class\s+(\w*Manager)", content, re.MULTILINE)
 
                     for manager_class in manager_classes:
                         if manager_class not in allowed_managers:
-                            self.findings.append({
-                                "file": str(py_file),
-                                "class": manager_class,
-                                "issue": "Manager class not in allowed list",
-                                "recommendation": f"Consider if {manager_class} should be embedded in SuperOrchestrator"
-                            })
+                            self.findings.append(
+                                {
+                                    "file": str(py_file),
+                                    "class": manager_class,
+                                    "issue": "Manager class not in allowed list",
+                                    "recommendation": f"Consider if {manager_class} should be embedded in SuperOrchestrator",
+                                }
+                            )
 
                 except Exception:
                     pass
@@ -183,25 +186,26 @@ class DeepCleaner:
                         "swarm_orchestrator",
                         "unified_enhanced_orchestrator",
                         "integrated_manager",
-                        "hybrid_vector_manager"
+                        "hybrid_vector_manager",
                     ]
 
                     for ref in old_refs:
                         if ref in content.lower():
-                            docs_to_update.append({
-                                "file": str(md_file),
-                                "reference": ref,
-                                "recommendation": "Update to reference SuperOrchestrator"
-                            })
+                            docs_to_update.append(
+                                {
+                                    "file": str(md_file),
+                                    "reference": ref,
+                                    "recommendation": "Update to reference SuperOrchestrator",
+                                }
+                            )
 
                 except Exception:
                     pass
 
         if docs_to_update:
-            self.findings.append({
-                "category": "Documentation",
-                "files_needing_update": docs_to_update
-            })
+            self.findings.append(
+                {"category": "Documentation", "files_needing_update": docs_to_update}
+            )
 
     def generate_report(self):
         """Generate deep clean report"""
@@ -216,13 +220,13 @@ class DeepCleaner:
             "findings": self.findings,
             "statistics": {
                 "items_deleted": len(self.deleted_items),
-                "issues_found": len(self.findings)
-            }
+                "issues_found": len(self.findings),
+            },
         }
 
         # Save report
         report_path = "deep_clean_report.json"
-        with open(report_path, 'w') as f:
+        with open(report_path, "w") as f:
             json.dump(report, f, indent=2)
 
         # Print summary
@@ -344,7 +348,7 @@ The following have been consolidated into SuperOrchestrator:
 """
 
         doc_path = self.root / "SYSTEM_ARCHITECTURE.md"
-        with open(doc_path, 'w') as f:
+        with open(doc_path, "w") as f:
             f.write(content)
 
         self.updates_made.append(str(doc_path))
@@ -435,7 +439,7 @@ Real-time connection for monitoring and updates.
         api_doc_path = self.root / "docs" / "API_REFERENCE.md"
         api_doc_path.parent.mkdir(exist_ok=True)
 
-        with open(api_doc_path, 'w') as f:
+        with open(api_doc_path, "w") as f:
             f.write(content)
 
         self.updates_made.append(str(api_doc_path))
@@ -448,7 +452,9 @@ def main():
     parser = argparse.ArgumentParser(description="Deep clean the codebase")
     parser.add_argument("--dry-run", action="store_true", help="Perform dry run")
     parser.add_argument("--update-docs", action="store_true", help="Update documentation")
-    parser.add_argument("--aggressive", action="store_true", help="Aggressive cleaning (delete more)")
+    parser.add_argument(
+        "--aggressive", action="store_true", help="Aggressive cleaning (delete more)"
+    )
 
     args = parser.parse_args()
 

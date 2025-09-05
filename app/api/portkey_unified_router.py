@@ -11,7 +11,7 @@ import os
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Optional, Union
+from typing import Any, Optional
 
 import aiohttp
 from fastapi import HTTPException
@@ -23,17 +23,20 @@ from app.elite_portkey_config import EliteAgentConfig, EliteOptimizations, Elite
 # Import ExecutionStrategy locally to avoid circular import
 class ExecutionStrategy(Enum):
     """Swarm execution strategies"""
+
     LITE = "lite"
     BALANCED = "balanced"
     QUALITY = "quality"
     DEBATE = "debate"
     CONSENSUS = "consensus"
 
+
 logger = logging.getLogger(__name__)
 
 
 class RoutingStrategy(Enum):
     """Routing strategies for model selection"""
+
     COST_OPTIMIZED = "cost_optimized"
     PERFORMANCE_FIRST = "performance_first"
     BALANCED = "balanced"
@@ -43,15 +46,17 @@ class RoutingStrategy(Enum):
 
 class ModelTier(Enum):
     """Model cost tiers"""
-    PREMIUM = "premium"      # GPT-5, Claude Sonnet 4
-    STANDARD = "standard"    # Grok-4, Gemini Pro
-    ECONOMY = "economy"      # Flash models, Mini variants
-    FREE = "free"           # Free tier models
+
+    PREMIUM = "premium"  # GPT-5, Claude Sonnet 4
+    STANDARD = "standard"  # Grok-4, Gemini Pro
+    ECONOMY = "economy"  # Flash models, Mini variants
+    FREE = "free"  # Free tier models
 
 
 @dataclass
 class RouteConfig:
     """Configuration for routing decisions"""
+
     strategy: RoutingStrategy = RoutingStrategy.BALANCED
     max_cost_per_request: float = 0.05
     max_latency_ms: int = 10000
@@ -63,6 +68,7 @@ class RouteConfig:
 @dataclass
 class ModelMetrics:
     """Real-time model performance metrics"""
+
     model: str
     avg_latency_ms: float
     success_rate: float
@@ -83,7 +89,7 @@ class PortkeyUnifiedRouter:
         "OPENAI": "openai-vk-190a60",
         "XAI": "xai-vk-e65d0f",
         "OPENROUTER": "vkj-openrouter-cc4151",
-        "TOGETHER": "together-ai-670469"
+        "TOGETHER": "together-ai-670469",
     }
 
     def __init__(self):
@@ -128,8 +134,8 @@ class PortkeyUnifiedRouter:
             default_headers={
                 "x-portkey-virtual-key": self.VIRTUAL_KEYS["OPENROUTER"],
                 "x-portkey-mode": "proxy",
-                "x-portkey-provider": "openrouter"
-            }
+                "x-portkey-provider": "openrouter",
+            },
         )
 
         # Together AI client
@@ -139,15 +145,15 @@ class PortkeyUnifiedRouter:
             default_headers={
                 "x-portkey-virtual-key": self.VIRTUAL_KEYS["TOGETHER"],
                 "x-portkey-mode": "proxy",
-                "x-portkey-provider": "together"
-            }
+                "x-portkey-provider": "together",
+            },
         )
 
         logger.info(f"Initialized {len(self.portkey_clients)} Portkey clients")
 
     async def _initialize_model_metrics(self):
         """Initialize metrics for all approved models"""
-        for role, model in self.agent_config.MODELS.items():
+        for _role, model in self.agent_config.MODELS.items():
             self.model_registry[model] = ModelMetrics(
                 model=model,
                 avg_latency_ms=1000.0,
@@ -155,7 +161,7 @@ class PortkeyUnifiedRouter:
                 cost_per_token=0.002,
                 requests_per_minute=0,
                 error_count=0,
-                last_success=datetime.now()
+                last_success=datetime.now(),
             )
 
     async def _load_routing_cache(self):
@@ -172,7 +178,7 @@ class PortkeyUnifiedRouter:
         """Save routing decisions to cache"""
         try:
             cache_file = "/tmp/portkey_routing_cache.json"
-            with open(cache_file, 'w') as f:
+            with open(cache_file, "w") as f:
                 json.dump(self.routing_cache, f, default=str)
         except Exception as e:
             logger.warning(f"Failed to save routing cache: {e}")
@@ -191,11 +197,7 @@ class PortkeyUnifiedRouter:
         return tier_mapping.get(model, ModelTier.STANDARD)
 
     def _calculate_routing_score(
-        self,
-        model: str,
-        strategy: RoutingStrategy,
-        task_complexity: float,
-        max_cost: float
+        self, model: str, strategy: RoutingStrategy, task_complexity: float, max_cost: float
     ) -> float:
         """Calculate routing score for model selection"""
 
@@ -224,7 +226,9 @@ class PortkeyUnifiedRouter:
         elif strategy == RoutingStrategy.HIGHEST_QUALITY:
             # Prefer premium models for high complexity
             tier_bonus = 0.3 if tier == ModelTier.PREMIUM and task_complexity > 0.7 else 0.0
-            return 0.5 * performance_score + 0.3 * availability_score + 0.2 * cost_score + tier_bonus
+            return (
+                0.5 * performance_score + 0.3 * availability_score + 0.2 * cost_score + tier_bonus
+            )
 
         else:  # BALANCED
             return 0.4 * performance_score + 0.3 * cost_score + 0.3 * availability_score
@@ -235,17 +239,17 @@ class PortkeyUnifiedRouter:
         agent_role: str,
         task_complexity: float,
         execution_strategy: ExecutionStrategy,
-        route_config: Optional[RouteConfig] = None
+        route_config: Optional[RouteConfig] = None,
     ) -> dict[str, Any]:
         """
         Select optimal model based on role, complexity, and strategy
-        
+
         Args:
             agent_role: AGNO agent role (planner, generator, critic, etc.)
-            task_complexity: Task complexity score (0.0 - 1.0)  
+            task_complexity: Task complexity score (0.0 - 1.0)
             execution_strategy: AGNO execution strategy
             route_config: Routing configuration
-            
+
         Returns:
             Dictionary with selected model and routing metadata
         """
@@ -260,9 +264,9 @@ class PortkeyUnifiedRouter:
         # Check cache first
         if config.cache_enabled and cache_key in self.routing_cache:
             cached = self.routing_cache[cache_key]
-            if datetime.fromisoformat(cached['timestamp']) > datetime.now() - timedelta(minutes=10):
+            if datetime.fromisoformat(cached["timestamp"]) > datetime.now() - timedelta(minutes=10):
                 logger.info(f"Using cached routing decision for {agent_role}")
-                return cached['result']
+                return cached["result"]
 
         # Get candidate models for role
         primary_model = self.agent_config.MODELS.get(agent_role)
@@ -300,22 +304,26 @@ class PortkeyUnifiedRouter:
                 "selection_score": model_scores.get(selected_model, 0.0),
                 "candidate_count": len(candidate_models),
                 "cache_used": False,
-                "timestamp": datetime.now().isoformat()
-            }
+                "timestamp": datetime.now().isoformat(),
+            },
         }
 
         # Cache result
         if config.cache_enabled:
             self.routing_cache[cache_key] = {
                 "result": result,
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             }
             asyncio.create_task(self._save_routing_cache())
 
-        logger.info(f"Selected {selected_model} for {agent_role} (score: {model_scores.get(selected_model, 0.0):.3f})")
+        logger.info(
+            f"Selected {selected_model} for {agent_role} (score: {model_scores.get(selected_model, 0.0):.3f})"
+        )
         return result
 
-    def _get_candidate_models(self, agent_role: str, execution_strategy: ExecutionStrategy) -> list[str]:
+    def _get_candidate_models(
+        self, agent_role: str, execution_strategy: ExecutionStrategy
+    ) -> list[str]:
         """Get candidate models based on role and strategy"""
 
         primary = self.agent_config.MODELS.get(agent_role)
@@ -324,35 +332,21 @@ class PortkeyUnifiedRouter:
         # Add strategy-specific models
         if execution_strategy == ExecutionStrategy.LITE:
             # Prefer fast, cheap models
-            candidates.extend([
-                "google/gemini-2.5-flash",
-                "openai/gpt-5-mini",
-                "x-ai/grok-code-fast-1"
-            ])
+            candidates.extend(
+                ["google/gemini-2.5-flash", "openai/gpt-5-mini", "x-ai/grok-code-fast-1"]
+            )
 
         elif execution_strategy == ExecutionStrategy.QUALITY:
             # Prefer premium models
-            candidates.extend([
-                "openai/gpt-5",
-                "anthropic/claude-sonnet-4",
-                "x-ai/grok-4"
-            ])
+            candidates.extend(["openai/gpt-5", "anthropic/claude-sonnet-4", "x-ai/grok-4"])
 
         elif execution_strategy == ExecutionStrategy.DEBATE:
             # Need diverse perspectives
-            candidates.extend([
-                "x-ai/grok-4",
-                "anthropic/claude-sonnet-4",
-                "openai/gpt-5"
-            ])
+            candidates.extend(["x-ai/grok-4", "anthropic/claude-sonnet-4", "openai/gpt-5"])
 
         else:  # BALANCED, CONSENSUS
             # Use balanced selection
-            candidates.extend([
-                "x-ai/grok-4",
-                "google/gemini-2.5-pro",
-                "qwen/qwen3-30b-a3b"
-            ])
+            candidates.extend(["x-ai/grok-4", "google/gemini-2.5-pro", "qwen/qwen3-30b-a3b"])
 
         # Remove duplicates while preserving order
         seen = set()
@@ -372,11 +366,11 @@ class PortkeyUnifiedRouter:
         task_complexity: float = 0.5,
         execution_strategy: ExecutionStrategy = ExecutionStrategy.BALANCED,
         route_config: Optional[RouteConfig] = None,
-        **kwargs
+        **kwargs,
     ) -> dict[str, Any]:
         """
         Route completion request through optimal model
-        
+
         Args:
             messages: Chat messages
             agent_role: AGNO agent role
@@ -384,7 +378,7 @@ class PortkeyUnifiedRouter:
             execution_strategy: AGNO execution strategy
             route_config: Routing configuration
             **kwargs: Additional completion parameters
-            
+
         Returns:
             Completion response with routing metadata
         """
@@ -403,13 +397,19 @@ class PortkeyUnifiedRouter:
             "messages": messages,
             "temperature": self.agent_config.TEMPERATURES.get(agent_role, 0.7),
             "max_tokens": self.agent_config.MAX_TOKENS.get(agent_role, 4000),
-            **kwargs
+            **kwargs,
         }
 
         # Attempt completion with retries and fallbacks
         last_error = None
         for attempt in range(route_config.retry_attempts if route_config else 3):
-            current_model = selected_model if attempt == 0 else fallback_models[min(attempt-1, len(fallback_models)-1)] if fallback_models else selected_model
+            current_model = (
+                selected_model
+                if attempt == 0
+                else fallback_models[min(attempt - 1, len(fallback_models) - 1)]
+                if fallback_models
+                else selected_model
+            )
 
             completion_params["model"] = current_model
 
@@ -421,7 +421,7 @@ class PortkeyUnifiedRouter:
                     role=agent_role,
                     messages=messages,
                     task_complexity=task_complexity,
-                    **completion_params
+                    **completion_params,
                 )
 
                 completion_time = (datetime.now() - start_time).total_seconds() * 1000
@@ -430,7 +430,9 @@ class PortkeyUnifiedRouter:
                 await self._update_model_metrics(current_model, completion_time, True)
 
                 # Track costs
-                await self._track_request_cost(current_model, len(str(messages)) + len(response_content))
+                await self._track_request_cost(
+                    current_model, len(str(messages)) + len(response_content)
+                )
 
                 return {
                     "content": response_content,
@@ -438,7 +440,7 @@ class PortkeyUnifiedRouter:
                     "completion_time_ms": completion_time,
                     "attempt": attempt + 1,
                     "routing_decision": routing_decision,
-                    "success": True
+                    "success": True,
                 }
 
             except Exception as e:
@@ -455,8 +457,7 @@ class PortkeyUnifiedRouter:
         # All attempts failed
         logger.error(f"All completion attempts failed for {agent_role}: {last_error}")
         raise HTTPException(
-            status_code=503,
-            detail=f"Model completion failed after retries: {str(last_error)}"
+            status_code=503, detail=f"Model completion failed after retries: {str(last_error)}"
         )
 
     async def _update_model_metrics(self, model: str, latency_ms: float, success: bool):
@@ -514,7 +515,7 @@ class PortkeyUnifiedRouter:
                 "success_rate": metrics.success_rate,
                 "error_count": metrics.error_count,
                 "cost_per_token": metrics.cost_per_token,
-                "tier": self._get_model_tier(model).value
+                "tier": self._get_model_tier(model).value,
             }
 
         return {
@@ -523,7 +524,7 @@ class PortkeyUnifiedRouter:
             "cache_hit_rate": len(self.routing_cache) / max(1, sum(self.request_counts.values())),
             "model_statistics": model_stats,
             "routing_cache_size": len(self.routing_cache),
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
     async def cleanup(self):
@@ -542,7 +543,7 @@ async def route_agno_completion(
     messages: list[dict[str, str]],
     execution_strategy: ExecutionStrategy = ExecutionStrategy.BALANCED,
     task_complexity: float = 0.5,
-    **kwargs
+    **kwargs,
 ) -> dict[str, Any]:
     """Route AGNO agent completion through unified router"""
 
@@ -554,14 +555,14 @@ async def route_agno_completion(
         agent_role=agent_role,
         task_complexity=task_complexity,
         execution_strategy=execution_strategy,
-        **kwargs
+        **kwargs,
     )
 
 
 async def get_optimal_model_for_role(
     agent_role: str,
     execution_strategy: ExecutionStrategy = ExecutionStrategy.BALANCED,
-    task_complexity: float = 0.5
+    task_complexity: float = 0.5,
 ) -> str:
     """Get optimal model for AGNO agent role"""
 
@@ -571,7 +572,7 @@ async def get_optimal_model_for_role(
     routing_decision = await unified_router.select_optimal_model(
         agent_role=agent_role,
         task_complexity=task_complexity,
-        execution_strategy=execution_strategy
+        execution_strategy=execution_strategy,
     )
 
     return routing_decision["selected_model"]

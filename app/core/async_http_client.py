@@ -23,14 +23,16 @@ logger = logging.getLogger(__name__)
 
 class CircuitState(Enum):
     """Circuit breaker states"""
-    CLOSED = "closed"      # Normal operation
-    OPEN = "open"          # Blocking all requests
+
+    CLOSED = "closed"  # Normal operation
+    OPEN = "open"  # Blocking all requests
     HALF_OPEN = "half_open"  # Testing recovery
 
 
 @dataclass
 class CircuitBreakerConfig:
     """Configuration for circuit breaker"""
+
     failure_threshold: int = 5
     recovery_timeout: float = 60.0
     expected_exception: type = httpx.HTTPError
@@ -44,6 +46,7 @@ class CircuitBreaker:
     Circuit breaker implementation for fault tolerance
     Prevents cascading failures in distributed systems
     """
+
     name: str
     config: CircuitBreakerConfig = field(default_factory=CircuitBreakerConfig)
     state: CircuitState = CircuitState.CLOSED
@@ -92,7 +95,9 @@ class CircuitBreaker:
 
             if self.failure_count >= self.config.failure_threshold:
                 self.state = CircuitState.OPEN
-                logger.warning(f"Circuit {self.name} tripped to OPEN state after {self.failure_count} failures")
+                logger.warning(
+                    f"Circuit {self.name} tripped to OPEN state after {self.failure_count} failures"
+                )
 
     def _should_attempt_reset(self) -> bool:
         """Check if circuit should attempt reset"""
@@ -107,7 +112,7 @@ class CircuitBreaker:
             "state": self.state.value,
             "failure_count": self.failure_count,
             "success_count": self.success_count,
-            "last_failure": self.last_failure_time
+            "last_failure": self.last_failure_time,
         }
 
 
@@ -123,7 +128,7 @@ class AsyncHTTPClient:
         timeout: float = 30.0,
         max_connections: int = 100,
         max_keepalive_connections: int = 20,
-        enable_circuit_breaker: bool = True
+        enable_circuit_breaker: bool = True,
     ):
         self.base_url = base_url
         self.timeout = timeout
@@ -132,7 +137,7 @@ class AsyncHTTPClient:
         limits = httpx.Limits(
             max_connections=max_connections,
             max_keepalive_connections=max_keepalive_connections,
-            keepalive_expiry=30.0
+            keepalive_expiry=30.0,
         )
 
         # HTTP/2 support for better performance
@@ -141,7 +146,7 @@ class AsyncHTTPClient:
             timeout=httpx.Timeout(timeout),
             limits=limits,
             http2=True,
-            follow_redirects=True
+            follow_redirects=True,
         )
 
         # Circuit breakers for different services
@@ -153,7 +158,7 @@ class AsyncHTTPClient:
             "total_requests": 0,
             "failed_requests": 0,
             "avg_latency_ms": 0.0,
-            "circuit_trips": 0
+            "circuit_trips": 0,
         }
 
     def _get_circuit_breaker(self, service_name: str) -> CircuitBreaker:
@@ -162,10 +167,8 @@ class AsyncHTTPClient:
             self.circuit_breakers[service_name] = CircuitBreaker(
                 name=service_name,
                 config=CircuitBreakerConfig(
-                    failure_threshold=5,
-                    recovery_timeout=60.0,
-                    timeout=self.timeout
-                )
+                    failure_threshold=5, recovery_timeout=60.0, timeout=self.timeout
+                ),
             )
         return self.circuit_breakers[service_name]
 
@@ -175,7 +178,7 @@ class AsyncHTTPClient:
         params: Optional[dict[str, Any]] = None,
         headers: Optional[dict[str, str]] = None,
         service_name: str = "default",
-        **kwargs
+        **kwargs,
     ) -> httpx.Response:
         """
         Async GET request with circuit breaker
@@ -212,7 +215,7 @@ class AsyncHTTPClient:
         data: Optional[Any] = None,
         headers: Optional[dict[str, str]] = None,
         service_name: str = "default",
-        **kwargs
+        **kwargs,
     ) -> httpx.Response:
         """
         Async POST request with circuit breaker
@@ -221,9 +224,7 @@ class AsyncHTTPClient:
         start = time.perf_counter()
 
         async def _make_request():
-            return await self.client.post(
-                url, json=json, data=data, headers=headers, **kwargs
-            )
+            return await self.client.post(url, json=json, data=data, headers=headers, **kwargs)
 
         try:
             if self.enable_circuit_breaker:
@@ -245,11 +246,7 @@ class AsyncHTTPClient:
             raise
 
     async def stream(
-        self,
-        method: str,
-        url: str,
-        service_name: str = "default",
-        **kwargs
+        self, method: str, url: str, service_name: str = "default", **kwargs
     ) -> AsyncIterator[bytes]:
         """
         Stream response for large payloads
@@ -261,9 +258,7 @@ class AsyncHTTPClient:
                 yield chunk
 
     async def batch_request(
-        self,
-        requests: list[dict[str, Any]],
-        max_concurrent: int = 10
+        self, requests: list[dict[str, Any]], max_concurrent: int = 10
     ) -> list[httpx.Response]:
         """
         Execute multiple requests concurrently with rate limiting
@@ -302,9 +297,8 @@ class AsyncHTTPClient:
         return {
             **self.metrics,
             "circuit_breakers": {
-                name: breaker.get_status()
-                for name, breaker in self.circuit_breakers.items()
-            }
+                name: breaker.get_status() for name, breaker in self.circuit_breakers.items()
+            },
         }
 
     async def close(self):
@@ -324,18 +318,12 @@ class APIClientPool:
 
     @asynccontextmanager
     async def get_client(
-        self,
-        service: str,
-        base_url: Optional[str] = None,
-        **kwargs
+        self, service: str, base_url: Optional[str] = None, **kwargs
     ) -> AsyncIterator[AsyncHTTPClient]:
         """Get or create client for service"""
         async with self._lock:
             if service not in self.clients:
-                self.clients[service] = AsyncHTTPClient(
-                    base_url=base_url,
-                    **kwargs
-                )
+                self.clients[service] = AsyncHTTPClient(base_url=base_url, **kwargs)
 
         try:
             yield self.clients[service]
@@ -354,8 +342,7 @@ _client_pool = APIClientPool()
 
 
 async def get_http_client(
-    service: str = "default",
-    base_url: Optional[str] = None
+    service: str = "default", base_url: Optional[str] = None
 ) -> AsyncHTTPClient:
     """Get HTTP client for service"""
     async with _client_pool.get_client(service, base_url) as client:
@@ -383,6 +370,7 @@ async def async_post(url: str, **kwargs) -> httpx.Response:
 
 # Example usage showing migration from requests to httpx
 if __name__ == "__main__":
+
     async def example_migration():
         # Old way with requests (blocking):
         # response = requests.get("https://api.example.com/data")
@@ -393,7 +381,7 @@ if __name__ == "__main__":
 
         # Single request
         response = await client.get("https://api.example.com/data")
-        data = response.json()
+        response.json()
 
         # Batch requests with concurrency control
         batch_requests = [
@@ -401,7 +389,7 @@ if __name__ == "__main__":
             {"url": "https://api.example.com/item/2"},
             {"url": "https://api.example.com/item/3"},
         ]
-        responses = await client.batch_request(batch_requests, max_concurrent=2)
+        await client.batch_request(batch_requests, max_concurrent=2)
 
         # Check metrics and circuit breaker status
         logger.info(client.get_metrics())

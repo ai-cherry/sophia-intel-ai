@@ -8,7 +8,7 @@ import re
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Union
+from typing import Any
 
 from app.contracts.json_schemas import CriticOutput, GeneratorProposal, JudgeOutput, PlannerOutput
 from app.core.ai_logger import logger
@@ -17,28 +17,35 @@ from app.core.ai_logger import logger
 # Gate Types
 # ============================================
 
+
 class GateStatus(Enum):
     """Status of an evaluation gate."""
+
     PASSED = "passed"
     FAILED = "failed"
     SKIPPED = "skipped"
     WARNING = "warning"
 
+
 class GateType(Enum):
     """Types of evaluation gates."""
+
     ACCURACY = "accuracy"
     RELIABILITY = "reliability"
     SAFETY = "safety"
     PERFORMANCE = "performance"
     COMPLIANCE = "compliance"
 
+
 # ============================================
 # Evaluation Results
 # ============================================
 
+
 @dataclass
 class EvaluationResult:
     """Result from an evaluation gate."""
+
     gate_type: GateType
     status: GateStatus
     score: float
@@ -56,9 +63,11 @@ class EvaluationResult:
             return 0.0
         return (self.score / self.max_score) * 100
 
+
 # ============================================
 # Accuracy Evaluation Gate
 # ============================================
+
 
 class AccuracyEval:
     """
@@ -71,17 +80,15 @@ class AccuracyEval:
         self.max_score = max_score
 
     def evaluate_plan_accuracy(
-        self,
-        plan: PlannerOutput,
-        requirements: list[str]
+        self, plan: PlannerOutput, requirements: list[str]
     ) -> EvaluationResult:
         """
         Evaluate plan accuracy against requirements.
-        
+
         Args:
             plan: Planner output to evaluate
             requirements: List of requirements to check
-        
+
         Returns:
             Evaluation result
         """
@@ -164,23 +171,23 @@ class AccuracyEval:
             passed=passed,
             details=details,
             failures=failures,
-            warnings=warnings
+            warnings=warnings,
         )
 
     def evaluate_implementation_accuracy(
         self,
         proposal: GeneratorProposal,
         acceptance_criteria: list[str],
-        critic_output: Optional[CriticOutput] = None
+        critic_output: Optional[CriticOutput] = None,
     ) -> EvaluationResult:
         """
         Evaluate implementation accuracy.
-        
+
         Args:
             proposal: Generator proposal
             acceptance_criteria: Acceptance criteria to check
             critic_output: Optional critic review
-        
+
         Returns:
             Evaluation result
         """
@@ -247,17 +254,14 @@ class AccuracyEval:
         criteria_keywords = set()
         for criterion in acceptance_criteria:
             # Extract key words from criteria
-            words = re.findall(r'\b\w+\b', criterion.lower())
+            words = re.findall(r"\b\w+\b", criterion.lower())
             criteria_keywords.update(words)
 
         plan_text = " ".join(proposal.implementation_plan).lower()
         test_text = " ".join(proposal.test_plan).lower()
         combined_text = f"{plan_text} {test_text}"
 
-        covered_keywords = sum(
-            1 for keyword in criteria_keywords
-            if keyword in combined_text
-        )
+        covered_keywords = sum(1 for keyword in criteria_keywords if keyword in combined_text)
 
         if criteria_keywords:
             coverage = covered_keywords / len(criteria_keywords)
@@ -276,14 +280,10 @@ class AccuracyEval:
             passed=passed,
             details=details,
             failures=failures,
-            warnings=warnings
+            warnings=warnings,
         )
 
-    def _check_requirement_coverage(
-        self,
-        plan: PlannerOutput,
-        requirements: list[str]
-    ) -> float:
+    def _check_requirement_coverage(self, plan: PlannerOutput, requirements: list[str]) -> float:
         """Check how well the plan covers requirements."""
         if not requirements:
             return 1.0
@@ -305,7 +305,7 @@ class AccuracyEval:
         # Check requirement coverage
         covered = 0
         for req in requirements:
-            req_words = re.findall(r'\b\w+\b', req.lower())
+            req_words = re.findall(r"\b\w+\b", req.lower())
             if len(req_words) > 0:
                 matches = sum(1 for word in req_words if word in combined_text)
                 if matches / len(req_words) > 0.5:
@@ -313,9 +313,11 @@ class AccuracyEval:
 
         return covered / len(requirements) if requirements else 0.0
 
+
 # ============================================
 # Reliability Evaluation Gate
 # ============================================
+
 
 class ReliabilityEval:
     """
@@ -328,14 +330,10 @@ class ReliabilityEval:
         self.prohibited_tools = set()
         self.actual_tools = []
 
-    def set_expectations(
-        self,
-        expected: list[str],
-        prohibited: list[str]
-    ):
+    def set_expectations(self, expected: list[str], prohibited: list[str]):
         """
         Set tool call expectations.
-        
+
         Args:
             expected: List of expected tool patterns
             prohibited: List of prohibited tool patterns
@@ -343,34 +341,23 @@ class ReliabilityEval:
         self.expected_tools = set(expected)
         self.prohibited_tools = set(prohibited)
 
-    def record_tool_call(
-        self,
-        tool_name: str,
-        args: dict[str, Any]
-    ):
+    def record_tool_call(self, tool_name: str, args: dict[str, Any]):
         """
         Record an actual tool call.
-        
+
         Args:
             tool_name: Name of the tool called
             args: Arguments passed to the tool
         """
-        self.actual_tools.append({
-            "name": tool_name,
-            "args": args,
-            "timestamp": datetime.now()
-        })
+        self.actual_tools.append({"name": tool_name, "args": args, "timestamp": datetime.now()})
 
-    def evaluate(
-        self,
-        judge_output: Optional[JudgeOutput] = None
-    ) -> EvaluationResult:
+    def evaluate(self, judge_output: Optional[JudgeOutput] = None) -> EvaluationResult:
         """
         Evaluate reliability based on tool calls.
-        
+
         Args:
             judge_output: Optional judge decision
-        
+
         Returns:
             Evaluation result
         """
@@ -381,7 +368,7 @@ class ReliabilityEval:
         details = {
             "total_tool_calls": len(self.actual_tools),
             "expected_tools": list(self.expected_tools),
-            "prohibited_tools": list(self.prohibited_tools)
+            "prohibited_tools": list(self.prohibited_tools),
         }
 
         # Check expected tools were called
@@ -439,7 +426,7 @@ class ReliabilityEval:
             "rm -rf": "Dangerous file deletion",
             "sudo": "Elevated privileges",
             "eval": "Code evaluation",
-            "exec": "Code execution"
+            "exec": "Code execution",
         }
 
         for tool in self.actual_tools:
@@ -460,12 +447,14 @@ class ReliabilityEval:
             passed=passed,
             details=details,
             failures=failures,
-            warnings=warnings
+            warnings=warnings,
         )
+
 
 # ============================================
 # Safety Evaluation Gate
 # ============================================
+
 
 class SafetyEval:
     """
@@ -478,49 +467,38 @@ class SafetyEval:
             # SQL Injection
             r"f['\"].*SELECT.*WHERE.*{": "Potential SQL injection",
             r"\.format\(.*SELECT.*WHERE": "Potential SQL injection",
-
             # Command Injection
             r"os\.system\(": "Direct system call",
             r"subprocess\.call\([^[]": "Unsafe subprocess call",
             r"eval\(": "Code evaluation",
             r"exec\(": "Code execution",
-
             # Path Traversal
             r"\.\.\/": "Path traversal attempt",
             r"\.\.\\": "Path traversal attempt",
-
             # Hardcoded Secrets
             r"api_key\s*=\s*['\"][^'\"]+['\"]": "Potential hardcoded API key",
             r"password\s*=\s*['\"][^'\"]+['\"]": "Potential hardcoded password",
             r"token\s*=\s*['\"][^'\"]+['\"]": "Potential hardcoded token",
-
             # Weak Crypto
             r"md5\(": "Weak hashing algorithm",
             r"sha1\(": "Weak hashing algorithm",
         }
 
-    def evaluate_code_safety(
-        self,
-        code: str,
-        language: str = "python"
-    ) -> EvaluationResult:
+    def evaluate_code_safety(self, code: str, language: str = "python") -> EvaluationResult:
         """
         Evaluate code for safety issues.
-        
+
         Args:
             code: Code to evaluate
             language: Programming language
-        
+
         Returns:
             Evaluation result
         """
         score = 10.0  # Start with perfect score
         failures = []
         warnings = []
-        details = {
-            "language": language,
-            "lines_of_code": len(code.splitlines())
-        }
+        details = {"language": language, "lines_of_code": len(code.splitlines())}
 
         # Check for unsafe patterns
         found_issues = []
@@ -537,7 +515,9 @@ class SafetyEval:
         # Check for proper input validation
         if language == "python":
             # Check for raw input without validation
-            if "input(" in code and not re.search(r"validate|Union[check, verify]", code, re.IGNORECASE):
+            if "input(" in code and not re.search(
+                r"validate|Union[check, verify]", code, re.IGNORECASE
+            ):
                 warnings.append("User input without apparent validation")
                 score -= 1.0
 
@@ -569,12 +549,14 @@ class SafetyEval:
             passed=passed,
             details=details,
             failures=failures,
-            warnings=warnings
+            warnings=warnings,
         )
+
 
 # ============================================
 # Gate Manager
 # ============================================
+
 
 class EvaluationGateManager:
     """
@@ -593,18 +575,18 @@ class EvaluationGateManager:
         judge_output: Optional[JudgeOutput] = None,
         code: Optional[str] = None,
         requirements: Optional[list[str]] = None,
-        acceptance_criteria: Optional[list[str]] = None
+        acceptance_criteria: Optional[list[str]] = None,
     ) -> dict[str, Any]:
         """
         Run all applicable evaluation gates.
-        
+
         Args:
             critic_output: Critic review output
             judge_output: Judge decision output
             code: Generated code to evaluate
             requirements: Project requirements
             acceptance_criteria: Acceptance criteria
-        
+
         Returns:
             Combined evaluation results
         """
@@ -613,19 +595,18 @@ class EvaluationGateManager:
         # Run accuracy evaluation if we have criteria
         if acceptance_criteria and critic_output:
             from app.contracts.json_schemas import GeneratorProposal
+
             # Create a mock proposal for evaluation (in real use, this would come from generator)
             mock_proposal = GeneratorProposal(
                 approach="Implementation based on requirements",
                 implementation_plan=["Step 1", "Step 2", "Step 3"],
                 test_plan=["Test 1", "Test 2"],
                 risk_level="medium",
-                estimated_loc=100
+                estimated_loc=100,
             )
 
             accuracy_result = self.accuracy_eval.evaluate_implementation_accuracy(
-                mock_proposal,
-                acceptance_criteria,
-                critic_output
+                mock_proposal, acceptance_criteria, critic_output
             )
             results.append(accuracy_result)
 
@@ -664,17 +645,19 @@ class EvaluationGateManager:
                     "max_score": r.max_score,
                     "failures": r.failures,
                     "warnings": r.warnings,
-                    "details": r.details
+                    "details": r.details,
                 }
                 for r in results
             ],
             "runner_allowed": all_passed and not any_failed,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
+
 
 # ============================================
 # CLI Interface
 # ============================================
+
 
 def main():
     """CLI for testing evaluation gates."""
@@ -694,18 +677,17 @@ def main():
         logger.info("\n📊 Testing Accuracy Gate:")
         # Mock data for testing
         from app.contracts.json_schemas import GeneratorProposal
+
         proposal = GeneratorProposal(
             approach="Implement feature X using pattern Y",
             implementation_plan=["Setup", "Implementation", "Testing"],
             test_plan=["Unit tests", "Integration tests"],
             risk_level="low",
-            estimated_loc=150
+            estimated_loc=150,
         )
 
         result = manager.accuracy_eval.evaluate_implementation_accuracy(
-            proposal,
-            ["Feature X must work", "Must have tests"],
-            None
+            proposal, ["Feature X must work", "Must have tests"], None
         )
 
         logger.info(f"  Status: {result.status.value}")
@@ -717,8 +699,7 @@ def main():
     if args.test_reliability:
         logger.info("\n🔧 Testing Reliability Gate:")
         manager.reliability_eval.set_expectations(
-            expected=["code_search", "fs.read"],
-            prohibited=["rm", "sudo"]
+            expected=["code_search", "fs.read"], prohibited=["rm", "sudo"]
         )
         manager.reliability_eval.record_tool_call("code_search", {"query": "test"})
         manager.reliability_eval.record_tool_call("fs.read", {"path": "test.py"})
@@ -751,6 +732,7 @@ def get_user(user_id):
         logger.info(f"  Passed: {result.passed}")
         if result.failures:
             logger.info(f"  Issues: {result.failures}")
+
 
 if __name__ == "__main__":
     main()

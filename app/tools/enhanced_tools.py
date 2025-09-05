@@ -8,7 +8,7 @@ import subprocess
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional, Union
+from typing import Any, Optional
 
 from app.core.ai_logger import logger
 
@@ -16,42 +16,40 @@ from app.core.ai_logger import logger
 # Base Tool class
 class Tool:
     """Base tool class."""
+
     def __init__(self, name="", description="", inputs=None, output=None):
         self.name = name
         self.description = description
         self.inputs = inputs or {}
         self.output = output
 
+
 logger = logging.getLogger(__name__)
+
 
 @dataclass
 class ToolValidation:
     """Validation rules for tool inputs."""
+
     max_file_size: int = 10 * 1024 * 1024  # 10MB
     allowed_extensions: list[str] = None
     forbidden_paths: list[str] = None
     require_confirmation: bool = False
 
+
 class SafetyChecker:
     """Safety validation for tool operations."""
 
     DANGEROUS_PATTERNS = [
-        r'rm\s+-rf\s+/',
-        r'sudo\s+rm',
-        r'format\s+c:',
-        r'del\s+/s\s+/q',
-        r'DROP\s+DATABASE',
-        r'DELETE\s+FROM.*WHERE\s+1=1'
+        r"rm\s+-rf\s+/",
+        r"sudo\s+rm",
+        r"format\s+c:",
+        r"del\s+/s\s+/q",
+        r"DROP\s+DATABASE",
+        r"DELETE\s+FROM.*WHERE\s+1=1",
     ]
 
-    SENSITIVE_FILES = [
-        '.env',
-        '.aws',
-        '.ssh',
-        'credentials',
-        'secrets',
-        'private_key'
-    ]
+    SENSITIVE_FILES = [".env", ".aws", ".ssh", "credentials", "secrets", "private_key"]
 
     @staticmethod
     def is_safe_path(path: Path) -> bool:
@@ -90,6 +88,7 @@ class SafetyChecker:
 
         return True
 
+
 class EnhancedReadFile(Tool):
     """Enhanced file reading with validation and caching."""
 
@@ -98,7 +97,7 @@ class EnhancedReadFile(Tool):
             name="enhanced_read_file",
             description="Read file with validation and caching",
             inputs={"filepath": str, "encoding": str},
-            output=str
+            output=str,
         )
         self._cache = {}
         self._validation = ToolValidation()
@@ -118,7 +117,9 @@ class EnhancedReadFile(Tool):
         # Check file size
         file_size = path.stat().st_size
         if file_size > self._validation.max_file_size:
-            raise ValueError(f"File too large: {file_size} bytes (max: {self._validation.max_file_size})")
+            raise ValueError(
+                f"File too large: {file_size} bytes (max: {self._validation.max_file_size})"
+            )
 
         # Check cache
         cache_key = f"{filepath}:{path.stat().st_mtime}"
@@ -146,6 +147,7 @@ class EnhancedReadFile(Tool):
             logger.error(f"Failed to read {filepath}: {e}")
             raise
 
+
 class EnhancedWriteFile(Tool):
     """Enhanced file writing with backup and validation."""
 
@@ -154,16 +156,12 @@ class EnhancedWriteFile(Tool):
             name="enhanced_write_file",
             description="Write file with backup and validation",
             inputs={"filepath": str, "content": str, "encoding": str, "backup": bool},
-            output=dict[str, Any]
+            output=dict[str, Any],
         )
         self._validation = ToolValidation()
 
     async def run(
-        self,
-        filepath: str,
-        content: str,
-        encoding: str = "utf-8",
-        backup: bool = True
+        self, filepath: str, content: str, encoding: str = "utf-8", backup: bool = True
     ) -> dict[str, Any]:
         """Write file with enhanced safety and backup."""
         path = Path(filepath)
@@ -175,7 +173,9 @@ class EnhancedWriteFile(Tool):
         # Create backup if file exists
         backup_path = None
         if backup and path.exists():
-            backup_path = path.with_suffix(f"{path.suffix}.backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
+            backup_path = path.with_suffix(
+                f"{path.suffix}.backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            )
             try:
                 backup_path.write_text(path.read_text(encoding=encoding), encoding=encoding)
                 logger.info(f"Created backup: {backup_path}")
@@ -194,7 +194,7 @@ class EnhancedWriteFile(Tool):
                 "filepath": str(path),
                 "size": len(content),
                 "backup": str(backup_path) if backup_path else None,
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             }
 
         except Exception as e:
@@ -210,6 +210,7 @@ class EnhancedWriteFile(Tool):
 
             raise
 
+
 class EnhancedCodeSearch(Tool):
     """Enhanced code search with intelligent ranking."""
 
@@ -218,16 +219,12 @@ class EnhancedCodeSearch(Tool):
             name="enhanced_code_search",
             description="Search code with advanced patterns and ranking",
             inputs={"query": str, "path": str, "file_type": str, "context_lines": int},
-            output=list[dict[str, Any]]
+            output=list[dict[str, Any]],
         )
         self._result_cache = {}
 
     async def run(
-        self,
-        query: str,
-        path: str = ".",
-        file_type: Optional[str] = None,
-        context_lines: int = 2
+        self, query: str, path: str = ".", file_type: Optional[str] = None, context_lines: int = 2
     ) -> list[dict[str, Any]]:
         """Search code with enhanced features."""
         search_path = Path(path)
@@ -256,7 +253,7 @@ class EnhancedCodeSearch(Tool):
 
             # Parse results
             matches = []
-            for line in result.stdout.strip().split('\n'):
+            for line in result.stdout.strip().split("\n"):
                 if line:
                     try:
                         data = json.loads(line)
@@ -265,7 +262,7 @@ class EnhancedCodeSearch(Tool):
                                 "file": data["data"]["path"]["text"],
                                 "line": data["data"]["line_number"],
                                 "text": data["data"]["lines"]["text"],
-                                "score": self._calculate_relevance(query, data)
+                                "score": self._calculate_relevance(query, data),
                             }
                             matches.append(match_info)
                     except json.JSONDecodeError:
@@ -277,15 +274,12 @@ class EnhancedCodeSearch(Tool):
             # Cache results
             self._result_cache[cache_key] = {
                 "results": matches[:50],  # Limit to top 50
-                "timestamp": datetime.now()
+                "timestamp": datetime.now(),
             }
 
             # Clean old cache entries
             if len(self._result_cache) > 100:
-                oldest = sorted(
-                    self._result_cache.items(),
-                    key=lambda x: x[1]["timestamp"]
-                )[:50]
+                oldest = sorted(self._result_cache.items(), key=lambda x: x[1]["timestamp"])[:50]
                 for key, _ in oldest:
                     del self._result_cache[key]
 
@@ -318,6 +312,7 @@ class EnhancedCodeSearch(Tool):
 
         return score
 
+
 class EnhancedGitOps(Tool):
     """Enhanced Git operations with safety and validation."""
 
@@ -326,7 +321,7 @@ class EnhancedGitOps(Tool):
             name="enhanced_git_ops",
             description="Safe Git operations with validation",
             inputs={"operation": str, "args": dict[str, Any]},
-            output=dict[str, Any]
+            output=dict[str, Any],
         )
 
     async def run(self, operation: str, args: dict[str, Any] = None) -> dict[str, Any]:
@@ -363,22 +358,14 @@ class EnhancedGitOps(Tool):
     async def _git_status(self) -> dict[str, Any]:
         """Get git status."""
         result = subprocess.run(
-            ["git", "status", "--porcelain", "-b"],
-            capture_output=True,
-            text=True,
-            timeout=10
+            ["git", "status", "--porcelain", "-b"], capture_output=True, text=True, timeout=10
         )
 
         # Parse status
-        lines = result.stdout.strip().split('\n')
+        lines = result.stdout.strip().split("\n")
         branch = lines[0].replace("## ", "") if lines else "unknown"
 
-        files = {
-            "modified": [],
-            "added": [],
-            "deleted": [],
-            "untracked": []
-        }
+        files = {"modified": [], "added": [], "deleted": [], "untracked": []}
 
         for line in lines[1:]:
             if line.startswith(" M"):
@@ -390,11 +377,7 @@ class EnhancedGitOps(Tool):
             elif line.startswith("??"):
                 files["untracked"].append(line[3:])
 
-        return {
-            "branch": branch,
-            "files": files,
-            "clean": not any(files.values())
-        }
+        return {"branch": branch, "files": files, "clean": not any(files.values())}
 
     async def _git_diff(self, cached: bool = False) -> dict[str, Any]:
         """Get git diff."""
@@ -404,10 +387,7 @@ class EnhancedGitOps(Tool):
 
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
 
-        return {
-            "stats": result.stdout,
-            "cached": cached
-        }
+        return {"stats": result.stdout, "cached": cached}
 
     async def _git_add(self, files: list[str]) -> dict[str, Any]:
         """Add files to git."""
@@ -420,20 +400,12 @@ class EnhancedGitOps(Tool):
             if not SafetyChecker.is_safe_path(path):
                 raise ValueError(f"Unsafe path: {filepath}")
 
-        result = subprocess.run(
-            ["git", "add"] + files,
-            capture_output=True,
-            text=True,
-            timeout=10
-        )
+        result = subprocess.run(["git", "add"] + files, capture_output=True, text=True, timeout=10)
 
         if result.returncode != 0:
             raise RuntimeError(f"Git add failed: {result.stderr}")
 
-        return {
-            "added": files,
-            "success": True
-        }
+        return {"added": files, "success": True}
 
     async def _git_commit(self, message: str) -> dict[str, Any]:
         """Create git commit."""
@@ -447,10 +419,7 @@ class EnhancedGitOps(Tool):
             raise ValueError("Commit message too long")
 
         result = subprocess.run(
-            ["git", "commit", "-m", message],
-            capture_output=True,
-            text=True,
-            timeout=10
+            ["git", "commit", "-m", message], capture_output=True, text=True, timeout=10
         )
 
         if result.returncode != 0:
@@ -458,14 +427,11 @@ class EnhancedGitOps(Tool):
 
         # Extract commit hash
         import re
-        match = re.search(r'\[[\w\s]+\s+([\w]+)\]', result.stdout)
+
+        match = re.search(r"\[[\w\s]+\s+([\w]+)\]", result.stdout)
         commit_hash = match.group(1) if match else "unknown"
 
-        return {
-            "commit": commit_hash,
-            "message": message,
-            "output": result.stdout
-        }
+        return {"commit": commit_hash, "message": message, "output": result.stdout}
 
     async def _git_log(self, limit: int = 10) -> dict[str, Any]:
         """Get git log."""
@@ -473,32 +439,24 @@ class EnhancedGitOps(Tool):
             ["git", "log", f"--max-count={limit}", "--oneline"],
             capture_output=True,
             text=True,
-            timeout=10
+            timeout=10,
         )
 
         commits = []
-        for line in result.stdout.strip().split('\n'):
+        for line in result.stdout.strip().split("\n"):
             if line:
-                parts = line.split(' ', 1)
-                commits.append({
-                    "hash": parts[0],
-                    "message": parts[1] if len(parts) > 1 else ""
-                })
+                parts = line.split(" ", 1)
+                commits.append({"hash": parts[0], "message": parts[1] if len(parts) > 1 else ""})
 
         return {"commits": commits, "count": len(commits)}
 
     async def _git_branch(self) -> dict[str, Any]:
         """List git branches."""
-        result = subprocess.run(
-            ["git", "branch", "-a"],
-            capture_output=True,
-            text=True,
-            timeout=10
-        )
+        result = subprocess.run(["git", "branch", "-a"], capture_output=True, text=True, timeout=10)
 
         branches = {"local": [], "remote": [], "current": None}
 
-        for line in result.stdout.strip().split('\n'):
+        for line in result.stdout.strip().split("\n"):
             if line.startswith("* "):
                 branches["current"] = line[2:].strip()
                 branches["local"].append(line[2:].strip())
@@ -515,23 +473,18 @@ class EnhancedGitOps(Tool):
             raise ValueError("Branch name required")
 
         # Validate branch name
-        if not re.match(r'^[\w\-\./_]+$', branch):
+        if not re.match(r"^[\w\-\./_]+$", branch):
             raise ValueError(f"Invalid branch name: {branch}")
 
         result = subprocess.run(
-            ["git", "checkout", branch],
-            capture_output=True,
-            text=True,
-            timeout=10
+            ["git", "checkout", branch], capture_output=True, text=True, timeout=10
         )
 
         if result.returncode != 0:
             raise RuntimeError(f"Git checkout failed: {result.stderr}")
 
-        return {
-            "branch": branch,
-            "output": result.stdout
-        }
+        return {"branch": branch, "output": result.stdout}
+
 
 class EnhancedTestRunner(Tool):
     """Enhanced test runner with detailed reporting."""
@@ -541,14 +494,11 @@ class EnhancedTestRunner(Tool):
             name="enhanced_test_runner",
             description="Run tests with detailed reporting",
             inputs={"path": str, "pattern": str, "verbose": bool},
-            output=dict[str, Any]
+            output=dict[str, Any],
         )
 
     async def run(
-        self,
-        path: str = ".",
-        pattern: str = None,
-        verbose: bool = False
+        self, path: str = ".", pattern: str = None, verbose: bool = False
     ) -> dict[str, Any]:
         """Run tests with enhanced reporting."""
         test_path = Path(path)
@@ -581,13 +531,17 @@ class EnhancedTestRunner(Tool):
         return None
 
     async def _run_pytest(
-        self,
-        path: Path,
-        pattern: Optional[str],
-        verbose: bool
+        self, path: Path, pattern: Optional[str], verbose: bool
     ) -> dict[str, Any]:
         """Run pytest tests."""
-        cmd = ["python", "-m", "pytest", str(path), "--json-report", "--json-report-file=/tmp/pytest_report.json"]
+        cmd = [
+            "python",
+            "-m",
+            "pytest",
+            str(path),
+            "--json-report",
+            "--json-report-file=/tmp/pytest_report.json",
+        ]
 
         if pattern:
             cmd.extend(["-k", pattern])
@@ -612,7 +566,7 @@ class EnhancedTestRunner(Tool):
                 "skipped": report["summary"].get("skipped", 0),
                 "duration": duration,
                 "output": result.stdout,
-                "success": result.returncode == 0
+                "success": result.returncode == 0,
             }
         else:
             # Fallback to parsing output
@@ -621,14 +575,11 @@ class EnhancedTestRunner(Tool):
                 "output": result.stdout,
                 "errors": result.stderr,
                 "duration": duration,
-                "success": result.returncode == 0
+                "success": result.returncode == 0,
             }
 
     async def _run_unittest(
-        self,
-        path: Path,
-        pattern: Optional[str],
-        verbose: bool
+        self, path: Path, pattern: Optional[str], verbose: bool
     ) -> dict[str, Any]:
         """Run unittest tests."""
         cmd = ["python", "-m", "unittest", "discover", "-s", str(path)]
@@ -645,11 +596,9 @@ class EnhancedTestRunner(Tool):
 
         # Parse output for results
         import re
-        match = re.search(r'Ran (\d+) tests? in ([\d.]+)s', result.stderr)
-        if match:
-            test_count = int(match.group(1))
-        else:
-            test_count = 0
+
+        match = re.search(r"Ran (\d+) tests? in ([\d.]+)s", result.stderr)
+        test_count = int(match.group(1)) if match else 0
 
         return {
             "framework": "unittest",
@@ -657,8 +606,9 @@ class EnhancedTestRunner(Tool):
             "output": result.stdout,
             "errors": result.stderr,
             "duration": duration,
-            "success": result.returncode == 0
+            "success": result.returncode == 0,
         }
+
 
 # Tool registry
 ENHANCED_TOOLS = {
@@ -666,8 +616,9 @@ ENHANCED_TOOLS = {
     "write_file": EnhancedWriteFile(),
     "code_search": EnhancedCodeSearch(),
     "git_ops": EnhancedGitOps(),
-    "test_runner": EnhancedTestRunner()
+    "test_runner": EnhancedTestRunner(),
 }
+
 
 async def main():
     """Test enhanced tools."""
@@ -685,6 +636,7 @@ async def main():
     git = EnhancedGitOps()
     status = await git.run("status")
     logger.info(f"Git status: {status}")
+
 
 if __name__ == "__main__":
     asyncio.run(main())

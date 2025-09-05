@@ -47,7 +47,7 @@ class AgentMessage:
     correlation_id: str       # Request tracking ID
     priority: int            # 0-10, higher = more urgent
     context: Dict[str, Any]  # Shared context
-    
+
     def to_json(self) -> str:
         """Serialize for transport"""
         return json.dumps({
@@ -69,16 +69,16 @@ class AgentMessage:
 ```python
 class HandoffProtocol:
     """Manages agent handoffs following OpenAI Swarm patterns"""
-    
+
     async def handoff(
-        self, 
-        from_agent: Agent, 
-        to_agent: Agent, 
+        self,
+        from_agent: Agent,
+        to_agent: Agent,
         context: Dict[str, Any]
     ) -> HandoffResult:
         """
         Execute a clean handoff between agents
-        
+
         Steps:
         1. Validate to_agent can handle task
         2. Package context for transfer
@@ -89,7 +89,7 @@ class HandoffProtocol:
         # Step 1: Validate capability
         if not to_agent.can_handle(context['task']):
             raise HandoffError(f"{to_agent.id} cannot handle task")
-        
+
         # Step 2: Package context
         handoff_package = {
             "task": context['task'],
@@ -101,18 +101,18 @@ class HandoffProtocol:
                 "reason": context.get('handoff_reason', 'task_completion')
             }
         }
-        
+
         # Step 3: Transfer
         await to_agent.receive_context(handoff_package)
-        
+
         # Step 4: Confirm
         confirmation = await to_agent.confirm_handoff()
         if not confirmation.success:
             raise HandoffError(f"Handoff failed: {confirmation.error}")
-        
+
         # Step 5: Cleanup
         await from_agent.cleanup()
-        
+
         return HandoffResult(
             success=True,
             from_agent=from_agent.id,
@@ -156,7 +156,7 @@ if error_occurred and not recoverable:
 ```python
 class BroadcastProtocol:
     """Manages broadcasting to multiple agents"""
-    
+
     async def broadcast(
         self,
         sender: Agent,
@@ -166,7 +166,7 @@ class BroadcastProtocol:
     ) -> BroadcastResult:
         """
         Broadcast message to multiple agents
-        
+
         Patterns:
         - fanout: All agents receive simultaneously
         - cascade: Sequential delivery with acknowledgment
@@ -174,7 +174,7 @@ class BroadcastProtocol:
         """
         if pattern == "fanout":
             results = await asyncio.gather(*[
-                agent.receive_message(message) 
+                agent.receive_message(message)
                 for agent in recipients
             ])
         elif pattern == "cascade":
@@ -187,10 +187,10 @@ class BroadcastProtocol:
         elif pattern == "selective":
             eligible = [a for a in recipients if a.matches_criteria(message)]
             results = await asyncio.gather(*[
-                agent.receive_message(message) 
+                agent.receive_message(message)
                 for agent in eligible
             ])
-        
+
         return BroadcastResult(
             sender=sender.id,
             recipients=[a.id for a in recipients],
@@ -206,7 +206,7 @@ class BroadcastProtocol:
 ```python
 class ConsensusProtocol:
     """Manages consensus building among agents"""
-    
+
     async def build_consensus(
         self,
         agents: List[Agent],
@@ -215,7 +215,7 @@ class ConsensusProtocol:
     ) -> ConsensusResult:
         """
         Build consensus among agents
-        
+
         Voting mechanisms:
         - Simple majority (>50%)
         - Super majority (>66%)
@@ -227,20 +227,20 @@ class ConsensusProtocol:
             agent.vote_on_proposal(proposal)
             for agent in agents
         ])
-        
+
         # Calculate consensus
         agree_count = sum(1 for v in votes if v.agrees)
         consensus_ratio = agree_count / len(votes)
-        
+
         # Apply weighted voting if configured
         if self.use_weighted_voting:
             weighted_score = sum(
-                v.confidence * v.expertise_weight 
+                v.confidence * v.expertise_weight
                 for v in votes if v.agrees
             )
             total_weight = sum(v.expertise_weight for v in votes)
             consensus_ratio = weighted_score / total_weight
-        
+
         return ConsensusResult(
             achieved=consensus_ratio >= threshold,
             ratio=consensus_ratio,
@@ -257,7 +257,7 @@ class ConsensusProtocol:
 ```python
 class StateSyncProtocol:
     """Manages state synchronization across agents"""
-    
+
     async def sync_state(
         self,
         agents: List[Agent],
@@ -265,7 +265,7 @@ class StateSyncProtocol:
     ) -> SyncResult:
         """
         Synchronize state across agents
-        
+
         Types:
         - full: Complete state synchronization
         - incremental: Only changes since last sync
@@ -274,23 +274,23 @@ class StateSyncProtocol:
         if state_type == "full":
             # Get canonical state
             canonical_state = await self.get_canonical_state()
-            
+
             # Distribute to all agents
             results = await asyncio.gather(*[
                 agent.update_state(canonical_state)
                 for agent in agents
             ])
-            
+
         elif state_type == "incremental":
             # Get state changes
             changes = await self.get_state_changes()
-            
+
             # Apply changes to agents
             results = await asyncio.gather(*[
                 agent.apply_state_changes(changes)
                 for agent in agents
             ])
-            
+
         return SyncResult(
             success=all(r.success for r in results),
             synced_agents=[a.id for a in agents],
@@ -306,7 +306,7 @@ class StateSyncProtocol:
 ```python
 class ProtocolMetrics:
     """Track protocol performance"""
-    
+
     def __init__(self):
         self.metrics = {
             "message_count": 0,
@@ -319,13 +319,13 @@ class ProtocolMetrics:
             "avg_consensus_time": 0,
             "state_sync_count": 0
         }
-    
+
     async def track_handoff(self, duration: float, success: bool):
         """Track handoff metrics"""
         self.metrics["handoff_count"] += 1
         if not success:
             self.metrics["handoff_failures"] += 1
-        
+
         # Update rolling average
         current_avg = self.metrics["avg_handoff_time"]
         count = self.metrics["handoff_count"]
@@ -341,7 +341,7 @@ class ProtocolMetrics:
 ```python
 class ProtocolErrorHandler:
     """Handle protocol-level errors"""
-    
+
     async def handle_error(
         self,
         error: Exception,
@@ -358,15 +358,15 @@ class ProtocolErrorHandler:
             )
             if alternative:
                 return await self.retry_handoff(alternative, context)
-                
+
         elif isinstance(error, ConsensusTimeout):
             # Use fallback decision mechanism
             return await self.fallback_decision(context)
-            
+
         elif isinstance(error, BroadcastFailure):
             # Retry with exponential backoff
             return await self.retry_broadcast_with_backoff(context)
-            
+
         # Default: escalate to human
         return ErrorRecoveryResult(
             recovered=False,

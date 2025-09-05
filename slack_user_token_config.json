@@ -1,0 +1,25 @@
+{
+  "slack_user_token": {
+    "enabled": true,
+    "integration_type": "user_token",
+    "user_token": "REPLACE_WITH_YOUR_USER_TOKEN",
+    "workspace": "Pay Ready",
+    "access_level": "maximum",
+    "permissions": "YOUR_COMPLETE_PERMISSIONS",
+    "capabilities": [
+      "\u2705 Read ALL channels (public + private)",
+      "\u2705 Write to ALL channels",
+      "\u2705 Create new channels",
+      "\u2705 Invite/remove users",
+      "\u2705 Upload/download files",
+      "\u2705 Admin functions (if you're admin)",
+      "\u2705 Workspace settings (if you're admin)",
+      "\u2705 Delete messages (if you can)",
+      "\u2705 Pin messages",
+      "\u2705 Set channel topics",
+      "\u2705 Everything YOU can do"
+    ],
+    "setup_time": "60 seconds",
+    "security_note": "Sophia acts as YOUR user account"
+  }
+}

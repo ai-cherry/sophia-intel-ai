@@ -232,7 +232,7 @@ global_config:
     unified_facade: required
     circuit_breakers: enabled
     performance_monitoring: enabled
-  
+
   safety:
     boundaries:
       - no_code_execution
@@ -240,7 +240,7 @@ global_config:
       - no_sensitive_data_exposure
       - rate_limiting
       - output_validation
-  
+
   monitoring:
     metrics:
       - execution_time
@@ -248,12 +248,12 @@ global_config:
       - error_rates
       - handoff_counts
       - quality_scores
-    
+
     logging:
       format: structured
       level: INFO
       include_trace: true
-  
+
   scaling:
     max_concurrent_agents: 50
     max_memory_per_agent: 512MB

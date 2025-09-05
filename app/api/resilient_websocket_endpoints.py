@@ -52,10 +52,7 @@ async def get_ws_manager():
 
 @router.websocket("/connect/{client_id}/{session_id}")
 async def websocket_endpoint(
-    websocket: WebSocket,
-    client_id: str,
-    session_id: str,
-    ws_manager = Depends(get_ws_manager)
+    websocket: WebSocket, client_id: str, session_id: str, ws_manager=Depends(get_ws_manager)
 ):
     """
     Main WebSocket endpoint for client connections
@@ -65,10 +62,7 @@ async def websocket_endpoint(
 
 
 @router.post("/mcp/send")
-async def send_mcp_message(
-    request: MCPMessageRequest,
-    ws_manager = Depends(get_ws_manager)
-):
+async def send_mcp_message(request: MCPMessageRequest, ws_manager=Depends(get_ws_manager)):
     """
     Send message to MCP server and optionally wait for response
     """
@@ -77,32 +71,28 @@ async def send_mcp_message(
             server=request.server,
             method=request.method,
             params=request.params,
-            expect_response=request.expect_response
+            expect_response=request.expect_response,
         )
 
         if response is None and request.expect_response:
             raise HTTPException(
-                status_code=503,
-                detail=f"No response from MCP server '{request.server}'"
+                status_code=503, detail=f"No response from MCP server '{request.server}'"
             )
 
         return {
             "success": True,
             "response": response,
             "server": request.server,
-            "method": request.method
+            "method": request.method,
         }
 
     except Exception as e:
         logger.error(f"Failed to send MCP message: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"MCP message failed: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"MCP message failed: {str(e)}")
 
 
 @router.get("/mcp/health")
-async def get_mcp_health(ws_manager = Depends(get_ws_manager)):
+async def get_mcp_health(ws_manager=Depends(get_ws_manager)):
     """
     Get health status of all MCP server connections
     """
@@ -112,14 +102,11 @@ async def get_mcp_health(ws_manager = Depends(get_ws_manager)):
 
     except Exception as e:
         logger.error(f"Failed to get MCP health: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Health check failed: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Health check failed: {str(e)}")
 
 
 @router.get("/mcp/metrics")
-async def get_mcp_metrics(ws_manager = Depends(get_ws_manager)):
+async def get_mcp_metrics(ws_manager=Depends(get_ws_manager)):
     """
     Get detailed metrics for all MCP connections
     """
@@ -137,34 +124,28 @@ async def get_mcp_metrics(ws_manager = Depends(get_ws_manager)):
             "summary": {
                 "total_servers": len(ws_manager.mcp_clients),
                 "connected_servers": sum(
-                    1 for client in ws_manager.mcp_clients.values()
+                    1
+                    for client in ws_manager.mcp_clients.values()
                     if client.state.value == "connected"
                 ),
-                "active_websocket_connections": ws_manager.metrics["active_connections"]
-            }
+                "active_websocket_connections": ws_manager.metrics["active_connections"],
+            },
         }
 
     except Exception as e:
         logger.error(f"Failed to get MCP metrics: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Metrics retrieval failed: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Metrics retrieval failed: {str(e)}")
 
 
 @router.post("/mcp/server/add")
-async def add_mcp_server(
-    config: MCPServerConfig,
-    ws_manager = Depends(get_ws_manager)
-):
+async def add_mcp_server(config: MCPServerConfig, ws_manager=Depends(get_ws_manager)):
     """
     Add new MCP server connection
     """
     try:
         if config.name in ws_manager.mcp_clients:
             raise HTTPException(
-                status_code=409,
-                detail=f"MCP server '{config.name}' already exists"
+                status_code=409, detail=f"MCP server '{config.name}' already exists"
             )
 
         # Build reconnection config
@@ -179,8 +160,8 @@ async def add_mcp_server(
             message_handlers={
                 "memory_update": ws_manager._handle_memory_update,
                 "tool_result": ws_manager._handle_tool_result,
-                "status_update": ws_manager._handle_status_update
-            }
+                "status_update": ws_manager._handle_status_update,
+            },
         )
 
         # Set up callbacks
@@ -200,33 +181,24 @@ async def add_mcp_server(
             "server": config.name,
             "url": config.url,
             "connected": connected,
-            "message": f"MCP server '{config.name}' added successfully"
+            "message": f"MCP server '{config.name}' added successfully",
         }
 
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Failed to add MCP server: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to add server: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to add server: {str(e)}")
 
 
 @router.delete("/mcp/server/{server_name}")
-async def remove_mcp_server(
-    server_name: str,
-    ws_manager = Depends(get_ws_manager)
-):
+async def remove_mcp_server(server_name: str, ws_manager=Depends(get_ws_manager)):
     """
     Remove MCP server connection
     """
     try:
         if server_name not in ws_manager.mcp_clients:
-            raise HTTPException(
-                status_code=404,
-                detail=f"MCP server '{server_name}' not found"
-            )
+            raise HTTPException(status_code=404, detail=f"MCP server '{server_name}' not found")
 
         # Disconnect and remove client
         client = ws_manager.mcp_clients[server_name]
@@ -235,35 +207,23 @@ async def remove_mcp_server(
         del ws_manager.mcp_clients[server_name]
         ws_manager.mcp_servers.pop(server_name, None)
 
-        return {
-            "success": True,
-            "message": f"MCP server '{server_name}' removed successfully"
-        }
+        return {"success": True, "message": f"MCP server '{server_name}' removed successfully"}
 
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Failed to remove MCP server: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to remove server: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to remove server: {str(e)}")
 
 
 @router.post("/mcp/server/{server_name}/reconnect")
-async def reconnect_mcp_server(
-    server_name: str,
-    ws_manager = Depends(get_ws_manager)
-):
+async def reconnect_mcp_server(server_name: str, ws_manager=Depends(get_ws_manager)):
     """
     Force reconnection to MCP server
     """
     try:
         if server_name not in ws_manager.mcp_clients:
-            raise HTTPException(
-                status_code=404,
-                detail=f"MCP server '{server_name}' not found"
-            )
+            raise HTTPException(status_code=404, detail=f"MCP server '{server_name}' not found")
 
         client = ws_manager.mcp_clients[server_name]
 
@@ -282,21 +242,18 @@ async def reconnect_mcp_server(
             "success": True,
             "server": server_name,
             "connected": connected,
-            "message": f"Reconnection attempt for '{server_name}' completed"
+            "message": f"Reconnection attempt for '{server_name}' completed",
         }
 
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Failed to reconnect MCP server: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Reconnection failed: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Reconnection failed: {str(e)}")
 
 
 @router.get("/mcp/servers")
-async def list_mcp_servers(ws_manager = Depends(get_ws_manager)):
+async def list_mcp_servers(ws_manager=Depends(get_ws_manager)):
     """
     List all configured MCP servers
     """
@@ -308,23 +265,23 @@ async def list_mcp_servers(ws_manager = Depends(get_ws_manager)):
             "url": client.url,
             "state": client.state.value,
             "connected": client.state.value == "connected",
-            "last_connection": client.last_connection_time.isoformat() if client.last_connection_time else None,
+            "last_connection": client.last_connection_time.isoformat()
+            if client.last_connection_time
+            else None,
             "reconnect_attempts": client.reconnect_attempts,
-            "circuit_breaker_open": client.circuit_breaker_open
+            "circuit_breaker_open": client.circuit_breaker_open,
         }
 
     return {
         "servers": servers,
         "total": len(servers),
-        "connected": sum(1 for s in servers.values() if s["connected"])
+        "connected": sum(1 for s in servers.values() if s["connected"]),
     }
 
 
 @router.post("/mcp/broadcast")
 async def broadcast_to_websocket_clients(
-    channel: str,
-    message: dict[str, Any],
-    ws_manager = Depends(get_ws_manager)
+    channel: str, message: dict[str, Any], ws_manager=Depends(get_ws_manager)
 ):
     """
     Broadcast message to WebSocket clients on specific channel
@@ -338,19 +295,16 @@ async def broadcast_to_websocket_clients(
             "success": True,
             "channel": channel,
             "subscribers": subscriber_count,
-            "message": "Broadcast sent successfully"
+            "message": "Broadcast sent successfully",
         }
 
     except Exception as e:
         logger.error(f"Failed to broadcast message: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Broadcast failed: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Broadcast failed: {str(e)}")
 
 
 @router.get("/channels")
-async def list_websocket_channels(ws_manager = Depends(get_ws_manager)):
+async def list_websocket_channels(ws_manager=Depends(get_ws_manager)):
     """
     List all active WebSocket channels and their subscribers
     """
@@ -360,18 +314,18 @@ async def list_websocket_channels(ws_manager = Depends(get_ws_manager)):
         channels[channel_name] = {
             "name": channel_name,
             "subscribers": len(subscribers),
-            "subscriber_ids": list(subscribers)
+            "subscriber_ids": list(subscribers),
         }
 
     return {
         "channels": channels,
         "total_channels": len(channels),
-        "total_subscribers": sum(len(subs) for subs in ws_manager.channels.values())
+        "total_subscribers": sum(len(subs) for subs in ws_manager.channels.values()),
     }
 
 
 @router.get("/status")
-async def get_websocket_status(ws_manager = Depends(get_ws_manager)):
+async def get_websocket_status(ws_manager=Depends(get_ws_manager)):
     """
     Get overall WebSocket system status
     """
@@ -384,14 +338,14 @@ async def get_websocket_status(ws_manager = Depends(get_ws_manager)):
             "total_connections": ws_metrics["total_connections"],
             "messages_sent": ws_metrics["messages_sent"],
             "messages_failed": ws_metrics["messages_failed"],
-            "channels": len(ws_manager.channels)
+            "channels": len(ws_manager.channels),
         },
         "mcp_servers": {
             "total": len(ws_manager.mcp_clients),
             "healthy": sum(1 for status in mcp_health["servers"].values() if status["healthy"]),
-            "overall_healthy": mcp_health["overall_healthy"]
+            "overall_healthy": mcp_health["overall_healthy"],
         },
-        "system_healthy": mcp_health["overall_healthy"] and ws_metrics["active_connections"] >= 0
+        "system_healthy": mcp_health["overall_healthy"] and ws_metrics["active_connections"] >= 0,
     }
 
 
@@ -408,12 +362,9 @@ async def health_check():
         return {
             "status": "healthy",
             "service": "resilient-websocket",
-            "mcp_servers": len(mcp_ws_manager.mcp_clients)
+            "mcp_servers": len(mcp_ws_manager.mcp_clients),
         }
 
     except Exception as e:
         logger.error(f"Health check failed: {e}")
-        return {
-            "status": "unhealthy",
-            "error": str(e)
-        }
+        return {"status": "unhealthy", "error": str(e)}

@@ -20,9 +20,9 @@ check_service() {
     local service=$1
     local port=$2
     local url=$3
-    
+
     echo -e "${YELLOW}Checking ${service}...${NC}"
-    
+
     if curl -s ${url} > /dev/null 2>&1; then
         echo -e "${GREEN}✓ ${service} is running on port ${port}${NC}"
         return 0
@@ -38,9 +38,9 @@ wait_for_service() {
     local url=$2
     local max_attempts=30
     local attempt=0
-    
+
     echo -e "${YELLOW}Waiting for ${service} to be ready...${NC}"
-    
+
     while [ $attempt -lt $max_attempts ]; do
         if curl -s ${url} > /dev/null 2>&1; then
             echo -e "${GREEN}✓ ${service} is ready${NC}"
@@ -49,7 +49,7 @@ wait_for_service() {
         attempt=$((attempt + 1))
         sleep 1
     done
-    
+
     echo -e "${RED}✗ ${service} failed to start${NC}"
     return 1
 }
@@ -77,7 +77,7 @@ if ! check_service "Weaviate" 8080 "http://localhost:8080/v1/.well-known/ready";
         -e TRANSFORMERS_INFERENCE_API=http://t2v-transformers:8080 \
         --restart unless-stopped \
         semitechnologies/weaviate:latest
-    
+
     wait_for_service "Weaviate" "http://localhost:8080/v1/.well-known/ready"
 fi
 

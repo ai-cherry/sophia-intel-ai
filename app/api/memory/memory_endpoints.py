@@ -1,4 +1,3 @@
-
 from fastapi import APIRouter
 
 from app.mcp.memory_adapter import UnifiedMemoryAdapter
@@ -7,25 +6,18 @@ router = APIRouter(prefix="/api/memory", tags=["memory"])
 
 memory_adapter = UnifiedMemoryAdapter()
 
+
 @router.post("/store")
-async def store_memory(
-    session_id: str,
-    messages: list[dict],
-    metadata: dict = {}
-):
-    result = await memory_adapter.store_conversation(
-        session_id, messages, metadata
-    )
+async def store_memory(session_id: str, messages: list[dict], metadata: dict = None):
+    if metadata is None:
+        metadata = {}
+    result = await memory_adapter.store_conversation(session_id, messages, metadata)
     return result
 
+
 @router.get("/retrieve/{session_id}")
-async def retrieve_memory(
-    session_id: str,
-    last_n: int = 10,
-    include_system: bool = False
-):
-    return await memory_adapter.retrieve_context(
-        session_id, last_n, include_system
-    )
+async def retrieve_memory(session_id: str, last_n: int = 10, include_system: bool = False):
+    return await memory_adapter.retrieve_context(session_id, last_n, include_system)
+
 
 # Additional endpoints as per ROO PROMPT (search, export, delete, stats)

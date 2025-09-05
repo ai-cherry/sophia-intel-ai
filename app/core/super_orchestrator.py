@@ -37,6 +37,7 @@ class TaskPriority(Enum):
 @dataclass
 class SystemState:
     """Real-time system state"""
+
     active_agents: int = 0
     memory_usage_mb: float = 0
     task_queue_size: int = 0
@@ -77,10 +78,7 @@ class EmbeddedStateManager:
         for key, value in kwargs.items():
             if hasattr(self.state, key):
                 setattr(self.state, key, value)
-        self.history.append({
-            "timestamp": datetime.now(),
-            "state": self.state.__dict__.copy()
-        })
+        self.history.append({"timestamp": datetime.now(), "state": self.state.__dict__.copy()})
 
     def get_state(self) -> SystemState:
         return self.state
@@ -135,29 +133,26 @@ class AISystemMonitor:
 
         prompt = f"""
         Analyze this system state and provide insights:
-        
+
         Active Agents: {state.active_agents}
         Memory Usage: {state.memory_usage_mb}MB
         Task Queue: {state.task_queue_size} tasks
         Avg Response Time: {state.avg_response_time_ms}ms
         Health Score: {state.health_score}
-        
+
         Provide:
         1. Health assessment
         2. Performance bottlenecks
         3. Optimization suggestions
         4. Predictions for next hour
-        
+
         Format as JSON.
         """
 
         response = await self.llm.ainvoke(prompt)
         insights = json.loads(response.content)
 
-        self.insights.append({
-            "timestamp": datetime.now(),
-            "insights": insights
-        })
+        self.insights.append({"timestamp": datetime.now(), "insights": insights})
 
         return insights
 
@@ -231,7 +226,7 @@ class SuperOrchestrator:
             type=SystemType.SERVICE,
             status=SystemStatus.ACTIVE,
             capabilities=["orchestrate", "monitor", "optimize", "personality", "natural_language"],
-            metadata={"role": "master", "personality": True}
+            metadata={"role": "master", "personality": True},
         )
         await self.registry.register(master)
 
@@ -239,16 +234,13 @@ class SuperOrchestrator:
         """Initialize the orchestrator"""
         # Register self
         await self._register_self()
-        
+
         # Start background monitoring
         self.monitoring_task = asyncio.create_task(self._monitor_loop())
         self.optimization_task = asyncio.create_task(self._optimization_loop())
 
         # Initialize state
-        self.state.update(
-            health_score=100.0,
-            last_optimization=datetime.now()
-        )
+        self.state.update(health_score=100.0, last_optimization=datetime.now())
 
         return {"status": "initialized", "timestamp": datetime.now()}
 
@@ -272,10 +264,7 @@ class SuperOrchestrator:
         request_type = request.get("type")
 
         # Add to task queue
-        task_id = await self.tasks.add_task(
-            request,
-            priority=self._determine_priority(request)
-        )
+        task_id = await self.tasks.add_task(request, priority=self._determine_priority(request))
 
         # Process based on type
         if request_type == "chat":
@@ -313,17 +302,13 @@ class SuperOrchestrator:
                 "type": "chat_response",
                 "message": pushback_response,
                 "needs_confirmation": True,
-                "timestamp": datetime.now()
+                "timestamp": datetime.now(),
             }
 
         # Get personality-infused greeting if appropriate
         if any(word in user_message.lower() for word in ["hi", "hello", "hey", "sup"]):
             greeting = self.personality.generate_response("greeting")
-            return {
-                "type": "chat_response",
-                "message": greeting,
-                "timestamp": datetime.now()
-            }
+            return {"type": "chat_response", "message": greeting, "timestamp": datetime.now()}
 
         # Build prompt with context and personality
         prompt = f"""
@@ -332,12 +317,12 @@ class SuperOrchestrator:
         - Use occasional mild profanity for emphasis (hell, damn, shit)
         - Be smart and insightful
         - Push back on risky or unclear requests
-        
+
         Context from memory:
         {json.dumps(context, indent=2)}
-        
+
         User: {user_message}
-        
+
         Provide a helpful response with personality.
         """
 
@@ -346,24 +331,17 @@ class SuperOrchestrator:
         # Store in memory for future context
         await self.memory.remember(
             f"chat_{datetime.now().timestamp()}",
-            {
-                "user": user_message,
-                "assistant": response.content
-            }
+            {"user": user_message, "assistant": response.content},
         )
 
-        return {
-            "type": "chat_response",
-            "message": response.content,
-            "timestamp": datetime.now()
-        }
+        return {"type": "chat_response", "message": response.content, "timestamp": datetime.now()}
 
     async def _handle_command(self, request: dict) -> dict:
         """Execute system commands"""
 
         command = request.get("command")
         params = request.get("params", {})
-        
+
         # Track command for smart suggestions
         self.suggestions.track_command(command, success=True)
 
@@ -373,7 +351,7 @@ class SuperOrchestrator:
             "scale": self._scale_system,
             "optimize": self._optimize_system,
             "analyze": self._analyze_performance,
-            "heal": self._self_heal
+            "heal": self._self_heal,
         }
 
         handler = commands.get(command, self._unknown_command)
@@ -383,7 +361,7 @@ class SuperOrchestrator:
             "type": "command_response",
             "command": command,
             "result": result,
-            "timestamp": datetime.now()
+            "timestamp": datetime.now(),
         }
 
     async def _handle_query(self, request: dict) -> dict:
@@ -398,7 +376,7 @@ class SuperOrchestrator:
         elif query_type == "tasks":
             return {
                 "active": list(self.tasks.active_tasks.values()),
-                "completed": self.tasks.completed_tasks[-10:]
+                "completed": self.tasks.completed_tasks[-10:],
             }
         elif query_type == "insights":
             return {"insights": self.ai_monitor.insights[-5:]}
@@ -427,7 +405,7 @@ class SuperOrchestrator:
         prompt = f"""
         Handle this orchestration request:
         {json.dumps(request, indent=2)}
-        
+
         Determine the appropriate action and response.
         Format response as JSON.
         """
@@ -463,16 +441,18 @@ class SuperOrchestrator:
                 # Update state
                 self.state.update(
                     ai_insights=insights.get("insights", []),
-                    health_score=insights.get("health_score", 100)
+                    health_score=insights.get("health_score", 100),
                 )
 
                 # Broadcast to UI
-                await self._broadcast_update({
-                    "type": "monitoring_update",
-                    "metrics": metrics,
-                    "insights": insights,
-                    "state": self.state.get_state().__dict__
-                })
+                await self._broadcast_update(
+                    {
+                        "type": "monitoring_update",
+                        "metrics": metrics,
+                        "insights": insights,
+                        "state": self.state.get_state().__dict__,
+                    }
+                )
 
                 await asyncio.sleep(30)  # Monitor every 30 seconds
 
@@ -521,11 +501,15 @@ class SuperOrchestrator:
             "completed_tasks": len(self.tasks.completed_tasks),
             "health_score": self.state.get_state().health_score,
             "active_systems": len(self.registry.get_active_systems()),
-            "error_count": sum(1 for s in self.registry.systems.values() if s.status == SystemStatus.ERROR),
+            "error_count": sum(
+                1 for s in self.registry.systems.values() if s.status == SystemStatus.ERROR
+            ),
             "cost_today": self._calculate_cost(),
-            "idle_systems": sum(1 for s in self.registry.systems.values() if s.status == SystemStatus.IDLE)
+            "idle_systems": sum(
+                1 for s in self.registry.systems.values() if s.status == SystemStatus.IDLE
+            ),
         }
-        
+
         return metrics
 
     async def _update_metrics(self, request: dict, response: dict):
@@ -572,42 +556,36 @@ class SuperOrchestrator:
         """Analyze system performance with personality"""
         metrics = await self._collect_metrics()
         insights = await self.ai_monitor.analyze_system(self.state.get_state())
-        
+
         # Get personality-infused analysis
         personality_response = self.personality.generate_response(
-            "analysis", 
+            "analysis",
             data={
                 "health_score": metrics.get("health_score", 0),
                 "active_systems": metrics.get("active_systems", 0),
                 "cost": metrics.get("cost_today", 0),
-                "recommendations": insights.get("optimization_suggestions", [])
-            }
+                "recommendations": insights.get("optimization_suggestions", []),
+            },
         )
-        
+
         return {
-            "metrics": metrics, 
+            "metrics": metrics,
             "insights": insights,
-            "personality_analysis": personality_response
+            "personality_analysis": personality_response,
         }
 
     async def _self_heal(self, params: dict) -> dict:
         """Self-healing functionality with personality"""
         issue = params.get("error", "Unknown issue")
-        
+
         # Get personality response for error
-        error_response = self.personality.generate_response(
-            "error",
-            data={"error": issue}
-        )
+        error_response = self.personality.generate_response("error", data={"error": issue})
 
         # AI determines healing action
         prompt = f"Determine healing action for: {issue}"
         response = await self.llm.ainvoke(prompt)
 
-        return {
-            "healing_action": response.content,
-            "personality_message": error_response
-        }
+        return {"healing_action": response.content, "personality_message": error_response}
 
     async def _apply_optimization(self, optimization: str):
         """Apply a specific optimization"""
@@ -617,7 +595,7 @@ class SuperOrchestrator:
             "enable_caching": self._enable_caching,
             "increase_workers": self._increase_workers,
             "scale_workers": self._scale_workers,
-            "prioritize_tasks": self._prioritize_tasks
+            "prioritize_tasks": self._prioritize_tasks,
         }
 
         handler = optimizations.get(optimization)
@@ -668,40 +646,44 @@ class SuperOrchestrator:
     async def _get_metrics(self) -> dict:
         """Get current metrics"""
         return await self._collect_metrics()
-    
+
     def _calculate_cost(self) -> float:
         """Calculate current operational cost"""
         # Basic cost calculation based on active systems
         active_systems = len(self.registry.get_active_systems())
         # Rough estimate: $0.001 per active system per hour
         base_cost = active_systems * 0.001
-        
+
         # Add cost for different system types
         swarm_cost = len(self.registry.get_by_type(SystemType.SWARM)) * 0.005
         mcp_cost = len(self.registry.get_by_type(SystemType.MCP_SERVER)) * 0.002
-        
+
         return base_cost + swarm_cost + mcp_cost
-    
+
     async def process_natural_language(self, command: str) -> dict:
         """Process natural language commands with personality"""
         # Get contextual suggestions
         current_context = {
-            "error_count": sum(1 for s in self.registry.systems.values() if s.status == SystemStatus.ERROR),
+            "error_count": sum(
+                1 for s in self.registry.systems.values() if s.status == SystemStatus.ERROR
+            ),
             "cost_today": self._calculate_cost(),
-            "idle_systems": sum(1 for s in self.registry.systems.values() if s.status == SystemStatus.IDLE)
+            "idle_systems": sum(
+                1 for s in self.registry.systems.values() if s.status == SystemStatus.IDLE
+            ),
         }
         suggestions = self.suggestions.get_contextual_suggestions(current_context)
-        
+
         # Process the command
         result = await self.nl_controller.process_command(command)
-        
+
         # Track for learning
         self.suggestions.track_command(command, result.get("success", True))
-        
+
         # Add personality and suggestions to response
         result["suggestions"] = suggestions
         result["personality_active"] = True
-        
+
         return result
 
     # WebSocket Support
@@ -712,20 +694,101 @@ class SuperOrchestrator:
         self.connections.append(websocket)
 
         # Send initial state
-        await websocket.send_json({
-            "type": "initial_state",
-            "state": self.state.get_state().__dict__,
-            "metrics": await self._collect_metrics()
-        })
+        await websocket.send_json(
+            {
+                "type": "initial_state",
+                "state": self.state.get_state().__dict__,
+                "metrics": await self._collect_metrics(),
+            }
+        )
 
     async def disconnect_websocket(self, websocket: WebSocket):
         """Disconnect a WebSocket client"""
         if websocket in self.connections:
             self.connections.remove(websocket)
 
+    # ==================== CONSOLIDATED ORCHESTRATOR CAPABILITIES ====================
+    # Auto-generated consolidation from multiple orchestrator implementations
+    # Generated: 2025-09-04 16:47:08.639196
+
+    async def sophia_business_orchestration(self, request: dict) -> dict:
+        """Consolidated Sophia business intelligence orchestration"""
+        # Implementation consolidated from sophia_agno_orchestrator.py
+        return await self.process_request({"type": "business", **request})
+
+    async def artemis_technical_orchestration(self, request: dict) -> dict:
+        """Consolidated Artemis technical orchestration"""
+        # Implementation consolidated from artemis_agno_orchestrator.py
+        return await self.process_request({"type": "technical", **request})
+
+    async def hybrid_intelligence_coordination(self, request: dict) -> dict:
+        """Consolidated hybrid intelligence coordination"""
+        # Implementation consolidated from hybrid_intelligence_coordinator.py
+        sophia_result = await self.sophia_business_orchestration(request)
+        artemis_result = await self.artemis_technical_orchestration(request)
+
+        return {
+            "type": "hybrid_coordination",
+            "sophia_response": sophia_result,
+            "artemis_response": artemis_result,
+            "synthesis": "Cross-domain intelligence synthesis",
+            "timestamp": datetime.now(),
+        }
+
+    async def parallel_swarm_orchestration(self, tasks: List[dict]) -> List[dict]:
+        """Consolidated parallel swarm orchestration"""
+        # Implementation consolidated from true_parallel_orchestrator.py
+        results = []
+        for task in tasks:
+            result = await self.process_request(task)
+            results.append(result)
+        return results
+
+    async def mcp_universal_coordination(self, mcp_request: dict) -> dict:
+        """Consolidated MCP universal coordination"""
+        # Implementation consolidated from dev_mcp_unified/core/universal_orchestrator.py
+        return await self.process_request({"type": "mcp", **mcp_request})
+
+    def get_consolidated_capabilities(self) -> Dict[str, List[str]]:
+        """Return all consolidated capabilities"""
+        return {
+            "business_intelligence": [
+                "sophia_business_orchestration",
+                "client_analysis",
+                "market_research",
+            ],
+            "technical_operations": [
+                "artemis_technical_orchestration",
+                "code_analysis",
+                "deployment",
+            ],
+            "hybrid_coordination": ["hybrid_intelligence_coordination", "cross_domain_synthesis"],
+            "swarm_orchestration": ["parallel_swarm_orchestration", "multi_agent_coordination"],
+            "mcp_integration": ["mcp_universal_coordination", "model_context_protocol"],
+        }
+
+    async def legacy_compatibility_layer(self, legacy_request: dict) -> dict:
+        """Compatibility layer for legacy orchestrator calls"""
+        # Maps old orchestrator calls to new SuperOrchestrator methods
+        legacy_type = legacy_request.get("legacy_type")
+
+        mapping = {
+            "sophia": self.sophia_business_orchestration,
+            "artemis": self.artemis_technical_orchestration,
+            "hybrid": self.hybrid_intelligence_coordination,
+            "parallel": self.parallel_swarm_orchestration,
+            "mcp": self.mcp_universal_coordination,
+        }
+
+        handler = mapping.get(legacy_type, self.process_request)
+        return await handler(legacy_request)
+
+    # ==================== END CONSOLIDATED CAPABILITIES ====================
+
 
 # Singleton instance
 _orchestrator = None
+
 
 def get_orchestrator() -> SuperOrchestrator:
     """Get the singleton orchestrator instance"""

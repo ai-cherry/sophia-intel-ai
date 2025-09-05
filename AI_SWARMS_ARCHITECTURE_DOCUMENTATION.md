@@ -9,11 +9,14 @@ The Sophia Intel AI system implements a sophisticated multi-agent swarm architec
 ## 1. Core Swarm Types
 
 ### 1.1 Coding Team Swarm
+
 **Purpose**: General coding tasks with balanced quality/speed
 **Configuration**: `app/swarms/memory_enhanced_swarm.py:947-981`
 
-#### Agent Composition:
+#### Agent Composition
+
 - **Lead Engineer** (Coordinator)
+
   - Model: GPT-4 (`ROLE_MODELS["planner"]`)
   - Temperature: 0.3
   - Max Tokens: 2000
@@ -21,12 +24,14 @@ The Sophia Intel AI system implements a sophisticated multi-agent swarm architec
   - Role: "Coordinate debate; enforce constraints; route tasks"
 
 - **Generator Agents** (2-4 agents)
+
   - Coder-A: GPT-4, specialized in comprehensive implementations
   - Coder-B: GPT-4, specialized in minimal changes
   - Additional generators from selected pool
   - Tools: CodeSearch, ReadFile, ListDirectory, RunTests, RunTypeCheck
 
 - **Critic Agent**
+
   - Model: GPT-4 (`ROLE_MODELS["critic"]`)
   - Temperature: 0.1
   - Max Tokens: 1500
@@ -34,6 +39,7 @@ The Sophia Intel AI system implements a sophisticated multi-agent swarm architec
   - Role: "Structured review across security/data/logic/perf/UX"
 
 - **Judge Agent**
+
   - Model: GPT-4 (`ROLE_MODELS["judge"]`)
   - Temperature: 0.2
   - Max Tokens: 1500
@@ -47,7 +53,8 @@ The Sophia Intel AI system implements a sophisticated multi-agent swarm architec
   - Tools: ReadFile, WriteFile, GitAdd, GitCommit, RunTests, RunLint, FormatCode
   - Role: "Execute approved changes with write permissions"
 
-#### Memory Configuration:
+#### Memory Configuration
+
 ```python
 max_context_patterns: 3
 max_context_learnings: 5
@@ -57,10 +64,12 @@ min_quality_for_pattern_storage: 0.75
 ---
 
 ### 1.2 Coding Swarm (Advanced)
+
 **Purpose**: Complex projects requiring deeper analysis
 **Configuration**: `app/swarms/memory_enhanced_swarm.py:984-995`
 
-#### Enhanced Features:
+#### Enhanced Features
+
 - Increased context patterns: 7
 - Extended learnings capacity: 15
 - Higher quality threshold: 0.8
@@ -70,10 +79,12 @@ min_quality_for_pattern_storage: 0.75
 ---
 
 ### 1.3 Fast Swarm
+
 **Purpose**: Rapid prototyping and quick fixes
 **Configuration**: `app/swarms/memory_enhanced_swarm.py:997-1009`
 
-#### Optimizations:
+#### Optimizations
+
 - Reduced context patterns: 2
 - Limited learnings: 3
 - Skip initial context load for speed
@@ -83,10 +94,12 @@ min_quality_for_pattern_storage: 0.75
 ---
 
 ### 1.4 GENESIS Swarm
+
 **Purpose**: Advanced AI evolution and consciousness tracking
 **Configuration**: `app/swarms/memory_enhanced_swarm.py:1011-1095`
 
-#### Unique Capabilities:
+#### Unique Capabilities
+
 - Maximum context patterns: 10
 - Extended learnings: 20
 - Full history tracking: 50 entries
@@ -99,6 +112,7 @@ min_quality_for_pattern_storage: 0.75
 ## 2. Agent Personas and Instructions
 
 ### 2.1 Planner Agent (Lead)
+
 ```python
 PLANNER_SYS = """
 You are the Planner. Convert vague goals into an executable plan.
@@ -114,6 +128,7 @@ Focus on:
 ```
 
 ### 2.2 Generator Agents
+
 ```python
 GENERATOR_SYS = """
 You are a Code Generator. Create implementation plans with tests.
@@ -126,6 +141,7 @@ Focus on:
 ```
 
 ### 2.3 Critic Agent
+
 ```python
 CRITIC_SYS = """
 You are the Critic. Provide a structured review of all proposals.
@@ -140,6 +156,7 @@ Review across these dimensions:
 ```
 
 ### 2.4 Judge Agent
+
 ```python
 JUDGE_SYS = """
 You are the Judge. Compare and merge proposals using the quality rubric.
@@ -158,23 +175,27 @@ Always include concrete runner_instructions for implementation.
 ### 3.1 Model Pools
 
 **Fast Pool** (Low-latency ideation):
+
 - google/gemini-2.0-flash-exp:free
 - openai/gpt-4o-mini
 
 **Heavy Pool** (Deep reasoning):
+
 - deepseek/deepseek-coder
 - qwen/qwen-2.5-coder-32b-instruct
 - x-ai/grok-2-1212
 
 **Balanced Pool** (Production default):
+
 - openai/gpt-4o
 - anthropic/claude-3.5-sonnet-20241022
 
 ### 3.2 Role-Model Mappings
+
 ```python
 ROLE_MODELS = {
     "planner": "gpt-4",
-    "critic": "gpt-4", 
+    "critic": "gpt-4",
     "judge": "gpt-4",
     "coderA": "gpt-4",
     "coderB": "gpt-4",
@@ -190,6 +211,7 @@ ROLE_MODELS = {
 ## 4. Swarm Orchestration Patterns
 
 ### 4.1 Debate Cycle Flow
+
 ```mermaid
 graph TD
     A[Task Input] --> B[Lead Analyzes]
@@ -219,15 +241,18 @@ graph TD
 ## 5. MCP Server Connections
 
 ### 5.1 SupermemoryMCP Integration
+
 **URL**: `http://localhost:8004`
 **Purpose**: Persistent memory storage and retrieval
 
-#### Memory Types:
+#### Memory Types
+
 - EPISODIC: Task executions and outcomes
 - SEMANTIC: Learned patterns and strategies
 - PROCEDURAL: Successful implementation approaches
 
-#### Operations:
+#### Operations
+
 ```python
 # Store execution pattern
 await memory_client.store_pattern(
@@ -249,6 +274,7 @@ patterns = await memory_client.retrieve_patterns(
 ```
 
 ### 5.2 Inter-Swarm Communication
+
 ```python
 # Knowledge transfer between swarms
 await memory_client.send_message_to_swarm(
@@ -271,24 +297,29 @@ await memory_client.send_message_to_swarm(
 ### 6.1 Dual-Tier Embedding System
 
 **Tier A (High Quality)**:
+
 - Model: text-embedding-3-large (3072 dimensions)
 - Use Cases: Complex reasoning, permanent storage
 - Latency: ~400ms
 
 **Tier B (Performance)**:
-- Model: text-embedding-3-small (1536 dimensions)  
+
+- Model: text-embedding-3-small (1536 dimensions)
 - Use Cases: Quick searches, temporary context
 - Latency: ~100ms
 
 ### 6.2 Weaviate Vector Database
+
 **URL**: `http://localhost:8080`
 **Collections**:
+
 - CodeChunk_A: High-quality code embeddings
 - CodeChunk_B: Fast-access code snippets
 - SwarmPatterns: Successful execution patterns
 - AgentMemories: Agent-specific learnings
 
 ### 6.3 Embedding Coordinator
+
 ```python
 # Unified embedding generation
 coordinator = UnifiedEmbeddingCoordinator()
@@ -305,6 +336,7 @@ dimension = result["dimension"]
 ## 7. Configuration Management
 
 ### 7.1 Swarm Configuration Schema
+
 ```python
 class SwarmConfiguration(BaseModel):
     # Team composition
@@ -313,22 +345,22 @@ class SwarmConfiguration(BaseModel):
     include_default_pair: bool = True
     include_runner: bool = False
     max_generators: int = 4
-    
+
     # Execution settings
     max_rounds: int = 3
     stream_responses: bool = False
     timeout_seconds: int = 300
-    
+
     # Evaluation gates
     accuracy_threshold: float = 7.0
     reliability_checks_enabled: bool = True
     auto_approve_low_risk: bool = False
-    
+
     # Memory integration
     use_memory: bool = True
     memory_search_limit: int = 5
     store_results: bool = True
-    
+
     # Tool access
     enable_file_write: bool = False
     enable_test_execution: bool = True
@@ -336,19 +368,23 @@ class SwarmConfiguration(BaseModel):
 ```
 
 ### 7.2 Optimization Modes
+
 **From `app/swarms/swarm_optimization_config.json`**:
 
 **Lite Mode**:
+
 - Max patterns: 3
 - Timeout: 30s
 - Quality threshold: 0.7
 
 **Balanced Mode**:
+
 - Max patterns: 5
 - Timeout: 60s
 - Quality threshold: 0.8
 
 **Quality Mode**:
+
 - Max patterns: 8
 - Timeout: 120s
 - Quality threshold: 0.9
@@ -358,6 +394,7 @@ class SwarmConfiguration(BaseModel):
 ## 8. Circuit Breaker Protection
 
 All swarm operations are protected by circuit breakers:
+
 - LLM calls: 10 failures → 30s cooldown
 - Database operations: 5 failures → 60s cooldown
 - MCP server calls: 5 failures → 30s cooldown
@@ -368,12 +405,14 @@ All swarm operations are protected by circuit breakers:
 ## 9. Performance Metrics
 
 ### 9.1 Swarm Execution Metrics
+
 - Average execution time: 15-45 seconds
 - Quality score range: 0.7-0.95
 - Memory pattern hit rate: 65%
 - Inter-swarm message throughput: 100 msg/min
 
 ### 9.2 Resource Utilization
+
 - Memory per swarm: 200-500 MB
 - Concurrent swarms supported: 10-20
 - Token usage per task: 5,000-15,000
@@ -394,6 +433,7 @@ All swarm operations are protected by circuit breakers:
 ## Conclusion
 
 The Sophia Intel AI swarm architecture represents a sophisticated multi-agent system with:
+
 - 4 specialized swarm types
 - 8 enhancement patterns
 - Comprehensive memory integration

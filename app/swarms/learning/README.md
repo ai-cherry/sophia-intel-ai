@@ -36,10 +36,10 @@ async def create_learning_enhanced_swarm():
     memory_store = get_memory_store()
     message_bus = MessageBus()
     await message_bus.initialize()
-    
+
     # Create learning system
     learning_system = await create_learning_system(memory_store, message_bus)
-    
+
     # Create your swarm (using existing patterns)
     swarm_config = SwarmConfig(
         swarm_id="my-learning-swarm",
@@ -48,13 +48,13 @@ async def create_learning_enhanced_swarm():
     )
     swarm = YourExistingSwarmClass(swarm_config)
     await swarm.initialize()
-    
+
     # Create and inject learning middleware
     middleware_factory = LearningMiddlewareFactory(learning_system)
     middleware_chain = middleware_factory.create_standard_middleware_chain()
-    
+
     learning_enhanced_swarm = await inject_learning_middleware(swarm, middleware_chain)
-    
+
     return learning_enhanced_swarm
 ```
 
@@ -73,17 +73,17 @@ async def create_memory_enhanced_swarm():
             'knowledge_graph_max_nodes': 10000
         }
     )
-    
+
     # Create middleware with memory integration
     middleware_factory = LearningMiddlewareFactory(learning_system, memory_learning_system)
     middleware_chain = middleware_factory.create_standard_middleware_chain(
         include_real_time=True,
         include_cross_modal=True
     )
-    
+
     # Inject into existing swarm
     enhanced_swarm = await inject_learning_middleware(swarm, middleware_chain)
-    
+
     return enhanced_swarm
 ```
 
@@ -95,17 +95,17 @@ from app.swarms.learning.learning_enhanced_modes import integrate_learning_with_
 async def create_fully_learning_swarm():
     # Create learning system
     learning_system = await create_learning_system(memory_store, message_bus)
-    
+
     # Integrate learning directly with swarm execution
     learning_swarm = await integrate_learning_with_swarm(swarm, learning_system)
-    
+
     # Now all execution modes use learning enhancement
     problem = {
         'type': 'coding',
         'description': 'Optimize database queries',
         'complexity': 'medium'
     }
-    
+
     result = await learning_swarm.solve_problem(problem)
     return result
 ```
@@ -121,7 +121,7 @@ async def create_fully_learning_swarm():
 ### 2. Cross-Modal Knowledge Transfer
 
 - Sequential → Parallel learning transfer
-- Debate → Consensus knowledge synthesis  
+- Debate → Consensus knowledge synthesis
 - Hierarchical → Distributed learning propagation
 
 ### 3. Memory Integration
@@ -140,13 +140,15 @@ async def create_fully_learning_swarm():
 ## Execution Mode Enhancements
 
 ### Parallel Execution Learning
+
 ```python
 # Learns coordination patterns between agents
 # Optimizes agent synchronization
 # Shares knowledge across parallel agents
 ```
 
-### Sequential Execution Learning  
+### Sequential Execution Learning
+
 ```python
 # Progressive knowledge building
 # Agent-to-agent knowledge transfer
@@ -154,6 +156,7 @@ async def create_fully_learning_swarm():
 ```
 
 ### Debate Execution Learning
+
 ```python
 # Adversarial learning patterns
 # Consensus mechanism optimization
@@ -161,6 +164,7 @@ async def create_fully_learning_swarm():
 ```
 
 ### Hierarchical Execution Learning
+
 ```python
 # Knowledge distillation from coordinator to workers
 # Delegation strategy optimization
@@ -170,12 +174,14 @@ async def create_fully_learning_swarm():
 ## Performance Considerations
 
 ### Minimal Overhead Design
+
 - Sub-second learning updates
 - Asynchronous learning processing
 - Efficient vector operations
 - Memory-conscious design
 
 ### Scalability Features
+
 - Supports 10-10,000+ agents
 - Distributed learning coordination
 - Efficient memory management
@@ -184,6 +190,7 @@ async def create_fully_learning_swarm():
 ## Configuration Options
 
 ### Learning System Configuration
+
 ```python
 learning_config = {
     'learning_rate': 0.1,
@@ -195,6 +202,7 @@ learning_config = {
 ```
 
 ### Middleware Configuration
+
 ```python
 # Lightweight for production
 lightweight_chain = factory.create_lightweight_middleware_chain()
@@ -211,6 +219,7 @@ custom_chain.add_middleware(ExperienceCaptureMiddleware(learning_system, memory_
 ## Monitoring and Insights
 
 ### Learning Metrics
+
 ```python
 insights = await learning_system.get_learning_insights()
 print(f"Knowledge base size: {insights['knowledge_base_size']}")
@@ -219,6 +228,7 @@ print(f"Experiences collected: {insights['metrics']['experiences_collected']}")
 ```
 
 ### Memory System Insights
+
 ```python
 memory_insights = await memory_system.get_memory_insights()
 print(f"Knowledge graph size: {memory_insights['knowledge_graph_size']}")
@@ -237,7 +247,7 @@ class CustomLearningAlgorithm(LearningAlgorithm):
     async def learn_from_experience(self, experience, context):
         # Implement custom learning logic
         pass
-    
+
     async def learn_from_batch(self, experiences, context):
         # Implement batch learning logic
         pass
@@ -255,11 +265,11 @@ class CustomLearningMiddleware(LearningMiddleware):
     async def before_execution(self, swarm, problem, context):
         # Custom pre-execution logic
         return {'custom_enhancement': 'value'}
-    
+
     async def during_execution(self, swarm, problem, context, partial_results):
         # Custom during-execution logic
         return {'real_time_adjustment': 'value'}
-    
+
     async def after_execution(self, swarm, problem, context, results, execution_metadata):
         # Custom post-execution logic
         return {'custom_insights': 'value'}
@@ -280,7 +290,7 @@ bi_learning_system = await create_learning_system(
     }
 )
 
-# Code generation learning algorithms  
+# Code generation learning algorithms
 code_learning_system = await create_learning_system(
     memory_store, message_bus,
     config={
@@ -293,25 +303,27 @@ code_learning_system = await create_learning_system(
 ## Integration with Existing Patterns
 
 ### Quality Gates Enhancement
+
 ```python
 # Learning enhances existing quality gates
 class LearningEnhancedQualityGates(QualityGatesPattern):
     def __init__(self, learning_system):
         super().__init__()
         self.learning_system = learning_system
-    
+
     async def apply(self, problem, context):
         # Get learned quality criteria
         quality_knowledge = await self.learning_system.get_applicable_knowledge({
             'knowledge_type': KnowledgeType.QUALITY_CRITERIA,
             'problem_type': problem.get('type', 'general')
         })
-        
+
         # Apply enhanced quality gates
         return await super().apply(problem, context)
 ```
 
 ### Consensus Mechanism Learning
+
 ```python
 # Learning improves consensus mechanisms
 class LearningEnhancedConsensus(ConsensusPattern):
@@ -320,7 +332,7 @@ class LearningEnhancedConsensus(ConsensusPattern):
         consensus_knowledge = await self.learning_system.get_applicable_knowledge({
             'knowledge_type': KnowledgeType.CONSENSUS_MECHANISM
         })
-        
+
         # Apply learned consensus strategies
         return await super().apply(problem, context)
 ```
@@ -328,6 +340,7 @@ class LearningEnhancedConsensus(ConsensusPattern):
 ## Best Practices
 
 ### 1. Start Simple
+
 ```python
 # Begin with lightweight middleware
 lightweight_chain = factory.create_lightweight_middleware_chain()
@@ -335,6 +348,7 @@ enhanced_swarm = await inject_learning_middleware(swarm, lightweight_chain)
 ```
 
 ### 2. Monitor Performance
+
 ```python
 # Regular monitoring
 insights = await learning_system.get_learning_insights()
@@ -344,6 +358,7 @@ if insights['metrics']['learning_effectiveness'] < 0.5:
 ```
 
 ### 3. Clean Up Resources
+
 ```python
 # Always clean up learning systems
 try:
@@ -356,6 +371,7 @@ finally:
 ```
 
 ### 4. Production Deployment
+
 ```python
 # Production configuration
 production_config = {
@@ -375,11 +391,13 @@ learning_system = await create_learning_system(
 ### Common Issues
 
 1. **High Memory Usage**
+
    - Reduce `experience_buffer_size`
-   - Lower `vector_dimension` 
+   - Lower `vector_dimension`
    - Decrease `max_working_memory_size`
 
 2. **Slow Learning Updates**
+
    - Increase `learning_rate`
    - Use lightweight middleware chain
    - Reduce number of knowledge items applied
@@ -390,6 +408,7 @@ learning_system = await create_learning_system(
    - Ensure sufficient training examples
 
 ### Debug Mode
+
 ```python
 # Enable debug logging
 import logging
@@ -405,7 +424,7 @@ memory_insights = await memory_system.get_memory_insights()
 See the `__main__` sections in each module for working examples:
 
 - `adaptive_learning_system.py` - Basic learning system demo
-- `learning_enhanced_modes.py` - Execution mode enhancement demo  
+- `learning_enhanced_modes.py` - Execution mode enhancement demo
 - `memory_integrated_learning.py` - Memory system demo
 - `learning_middleware.py` - Middleware integration demo
 

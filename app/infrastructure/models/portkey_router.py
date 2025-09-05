@@ -3,7 +3,7 @@ Portkey Model Router with Fallback Support
 
 Integrates Portkey virtual keys for intelligent model routing:
 - Primary: GPT-5 via OpenAI Portkey virtual key
-- Fallback: Grok-4 via xAI Portkey virtual key  
+- Fallback: Grok-4 via xAI Portkey virtual key
 - Emergency: Direct OpenRouter access
 """
 
@@ -28,10 +28,19 @@ except ImportError:
             return DummySpan()
 
     class DummySpan:
-        def __enter__(self): return self
-        def __exit__(self, *args): pass
-        def set_attribute(self, *args): pass
-        def add_event(self, *args): pass
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            pass
+
+        def set_attribute(self, *args):
+            pass
+
+        def add_event(self, *args):
+            pass
+
+
 from app.elite_portkey_config import PORTKEY_VIRTUAL_KEYS
 
 logger = logging.getLogger(__name__)
@@ -40,18 +49,20 @@ tracer = get_tracer(__name__)
 
 class ModelError(Exception):
     """Base exception for model routing errors"""
+
     pass
 
 
 class AllModelsFailedException(ModelError):
     """Raised when all fallback models have failed"""
+
     pass
 
 
 class PortkeyRouterModel:
     """
     Advanced model router with Portkey integration and intelligent fallback.
-    
+
     Features:
     - GPT-5 as primary model via Portkey OpenAI virtual key
     - Grok-4 as fallback via Portkey xAI virtual key
@@ -68,7 +79,7 @@ class PortkeyRouterModel:
         enable_emergency_fallback: bool = True,
         max_retries: int = 3,
         timeout_seconds: int = 60,
-        cost_limit_per_request: float = 0.50  # $0.50 max per request
+        cost_limit_per_request: float = 0.50,  # $0.50 max per request
     ):
         self.id = "portkey_router_gpt5_grok4"
         self.provider = "portkey_multi"
@@ -100,11 +111,7 @@ class PortkeyRouterModel:
             self.primary_client = Portkey(
                 api_key=os.getenv("PORTKEY_API_KEY"),
                 virtual_key=PORTKEY_VIRTUAL_KEYS["OPENAI"],
-                config={
-                    "retry_count": 2,
-                    "retry_delay": 1,
-                    "timeout": self.timeout_seconds
-                }
+                config={"retry_count": 2, "retry_delay": 1, "timeout": self.timeout_seconds},
             )
 
             # Fallback: Grok-4 via xAI virtual key
@@ -112,10 +119,7 @@ class PortkeyRouterModel:
                 self.fallback_client = Portkey(
                     api_key=os.getenv("PORTKEY_API_KEY"),
                     virtual_key=PORTKEY_VIRTUAL_KEYS["XAI"],
-                    config={
-                        "retry_count": 1,
-                        "timeout": self.timeout_seconds - 10
-                    }
+                    config={"retry_count": 1, "timeout": self.timeout_seconds - 10},
                 )
 
             logger.info("✅ Portkey clients configured successfully")
@@ -159,7 +163,7 @@ class PortkeyRouterModel:
                     messages=messages,
                     temperature=kwargs.get("temperature", 0.7),
                     max_tokens=kwargs.get("max_tokens", 4096),
-                    **kwargs
+                    **kwargs,
                 )
 
                 # Track usage
@@ -170,7 +174,7 @@ class PortkeyRouterModel:
                     "content": response.choices[0].message.content,
                     "model_used": "gpt-5",
                     "provider": "openai_portkey",
-                    "usage": response.usage.model_dump() if response.usage else None
+                    "usage": response.usage.model_dump() if response.usage else None,
                 }
 
             except Exception as e:
@@ -180,7 +184,9 @@ class PortkeyRouterModel:
                 raise
 
     @with_circuit_breaker(name="portkey_fallback_model")
-    async def _call_fallback_model(self, messages: list[dict[str, str]], **kwargs) -> dict[str, Any]:
+    async def _call_fallback_model(
+        self, messages: list[dict[str, str]], **kwargs
+    ) -> dict[str, Any]:
         """Call Grok-4 via Portkey xAI virtual key"""
 
         if not self.enable_fallback:
@@ -196,7 +202,7 @@ class PortkeyRouterModel:
                     messages=messages,
                     temperature=kwargs.get("temperature", 0.7),
                     max_tokens=kwargs.get("max_tokens", 4096),
-                    **kwargs
+                    **kwargs,
                 )
 
                 # Track usage
@@ -207,7 +213,7 @@ class PortkeyRouterModel:
                     "content": response.choices[0].message.content,
                     "model_used": "grok-4",
                     "provider": "xai_portkey",
-                    "usage": response.usage.model_dump() if response.usage else None
+                    "usage": response.usage.model_dump() if response.usage else None,
                 }
 
             except Exception as e:
@@ -216,7 +222,9 @@ class PortkeyRouterModel:
                 logger.warning(f"Grok-4 fallback model failed: {e}")
                 raise
 
-    async def _call_emergency_fallback(self, messages: list[dict[str, str]], **kwargs) -> dict[str, Any]:
+    async def _call_emergency_fallback(
+        self, messages: list[dict[str, str]], **kwargs
+    ) -> dict[str, Any]:
         """Direct OpenRouter call as last resort"""
 
         if not self.enable_emergency_fallback:
@@ -234,14 +242,14 @@ class PortkeyRouterModel:
                             "Authorization": f"Bearer {self.openrouter_api_key}",
                             "Content-Type": "application/json",
                             "HTTP-Referer": "https://sophia-intel-ai.com",
-                            "X-Title": "Sophia Intel AI Agent"
+                            "X-Title": "Sophia Intel AI Agent",
                         },
                         json={
                             "model": "xai/grok-4",
                             "messages": messages,
                             "temperature": kwargs.get("temperature", 0.7),
-                            "max_tokens": kwargs.get("max_tokens", 4096)
-                        }
+                            "max_tokens": kwargs.get("max_tokens", 4096),
+                        },
                     )
 
                     if response.status_code == 200:
@@ -255,7 +263,7 @@ class PortkeyRouterModel:
                             "content": data["choices"][0]["message"]["content"],
                             "model_used": "grok-4",
                             "provider": "openrouter_direct",
-                            "usage": data.get("usage")
+                            "usage": data.get("usage"),
                         }
                     else:
                         raise ModelError(f"OpenRouter API error: {response.status_code}")
@@ -267,19 +275,16 @@ class PortkeyRouterModel:
                 raise
 
     async def __call__(
-        self,
-        messages: list[dict[str, str]],
-        stream: bool = False,
-        **kwargs
+        self, messages: list[dict[str, str]], stream: bool = False, **kwargs
     ) -> Union[str, dict][str, Any]:
         """
         Main model calling interface with intelligent fallback routing.
-        
+
         Args:
             messages: List of chat messages in OpenAI format
             stream: Whether to stream responses (not implemented yet)
             **kwargs: Additional parameters for model calls
-            
+
         Returns:
             String response or detailed response dict
         """
@@ -323,12 +328,16 @@ class PortkeyRouterModel:
                                 logger.info("🆘 Attempting emergency fallback (OpenRouter)")
                                 result = await self._call_emergency_fallback(messages, **kwargs)
                                 span.set_attribute("final_model", "grok-4-openrouter")
-                                logger.info(f"✅ Emergency fallback success: {len(result['content'])} chars")
+                                logger.info(
+                                    f"✅ Emergency fallback success: {len(result['content'])} chars"
+                                )
                                 return result
 
                             except Exception as emergency_error:
                                 logger.error(f"❌ Emergency fallback failed: {emergency_error}")
-                                span.add_event("emergency_fallback_failed", {"error": str(emergency_error)})
+                                span.add_event(
+                                    "emergency_fallback_failed", {"error": str(emergency_error)}
+                                )
 
                                 # All models failed
                                 error_msg = (
@@ -355,14 +364,14 @@ class PortkeyRouterModel:
                     "requests": 0,
                     "tokens": 0,
                     "cost": 0.0,
-                    "errors": 0
+                    "errors": 0,
                 }
 
             # Update stats
             self.model_usage_stats[model]["requests"] += 1
 
             # Extract token usage
-            if hasattr(response, 'usage') and response.usage:
+            if hasattr(response, "usage") and response.usage:
                 tokens = response.usage.total_tokens
                 self.model_usage_stats[model]["tokens"] += tokens
 
@@ -370,7 +379,7 @@ class PortkeyRouterModel:
                 cost_per_token = {
                     "gpt-5": 0.00005,  # $0.05/1K tokens (estimated)
                     "grok-4": 0.00003,  # $0.03/1K tokens (estimated)
-                    "grok-4-openrouter": 0.00003
+                    "grok-4-openrouter": 0.00003,
                 }.get(model, 0.00002)
 
                 request_cost = tokens * cost_per_token
@@ -379,7 +388,9 @@ class PortkeyRouterModel:
 
                 # Check cost limit
                 if request_cost > self.cost_limit_per_request:
-                    logger.warning(f"Request cost ${request_cost:.4f} exceeds limit ${self.cost_limit_per_request}")
+                    logger.warning(
+                        f"Request cost ${request_cost:.4f} exceeds limit ${self.cost_limit_per_request}"
+                    )
 
         except Exception as e:
             logger.error(f"Failed to track usage: {e}")
@@ -395,8 +406,8 @@ class PortkeyRouterModel:
             "configuration": {
                 "fallback_enabled": self.enable_fallback,
                 "emergency_fallback_enabled": self.enable_emergency_fallback,
-                "cost_limit_per_request": self.cost_limit_per_request
-            }
+                "cost_limit_per_request": self.cost_limit_per_request,
+            },
         }
 
     def reset_stats(self):

@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { 
-  Shield, 
-  Server, 
-  Database, 
-  GitBranch, 
-  Activity, 
+import {
+  Shield,
+  Server,
+  Database,
+  GitBranch,
+  Activity,
   RefreshCw,
   AlertTriangle,
   CheckCircle,
@@ -200,15 +200,15 @@ export const InfraDashboard: React.FC = () => {
               </div>
               <div className="text-sm text-gray-500">Health Score</div>
             </div>
-            
+
             {/* Time Range Selector */}
             <div className="flex space-x-2">
               {['1h', '24h', '7d', '30d'].map((range) => (
                 <button
                   key={range}
                   className={`px-3 py-1 rounded ${
-                    selectedTimeRange === range 
-                      ? 'bg-blue-500 text-white' 
+                    selectedTimeRange === range
+                      ? 'bg-blue-500 text-white'
                       : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                   }`}
                   onClick={() => setSelectedTimeRange(range)}
@@ -217,7 +217,7 @@ export const InfraDashboard: React.FC = () => {
                 </button>
               ))}
             </div>
-            
+
             {/* Refresh Button */}
             <button
               onClick={() => refetch()}
@@ -232,8 +232,8 @@ export const InfraDashboard: React.FC = () => {
       {/* Service Health Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {metrics?.services.map((service) => (
-          <div 
-            key={service.name} 
+          <div
+            key={service.name}
             className="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow cursor-pointer"
             onClick={() => setSelectedService(service.name)}
           >
@@ -244,7 +244,7 @@ export const InfraDashboard: React.FC = () => {
               </div>
               {getHealthIcon(service.health)}
             </div>
-            
+
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-gray-500">Status</span>
@@ -260,14 +260,14 @@ export const InfraDashboard: React.FC = () => {
                   {new Date(service.last_check).toLocaleTimeString()}
                 </span>
               </div>
-              
+
               {service.health !== 'healthy' && (
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    emergencyRotation.mutate({ 
-                      service: service.name, 
-                      reason: 'Service degradation detected' 
+                    emergencyRotation.mutate({
+                      service: service.name,
+                      reason: 'Service degradation detected'
                     });
                   }}
                   className="w-full mt-2 px-3 py-1 bg-orange-500 text-white rounded hover:bg-orange-600 text-sm"
@@ -286,7 +286,7 @@ export const InfraDashboard: React.FC = () => {
           <Lock className="h-5 w-5 text-gray-700 mr-2" />
           <h2 className="text-xl font-semibold">Secret Rotation Schedule</h2>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {metrics?.secret_rotations.map((rotation) => (
             <div key={rotation.service} className="border rounded-lg p-4">
@@ -300,7 +300,7 @@ export const InfraDashboard: React.FC = () => {
                   {rotation.status}
                 </span>
               </div>
-              
+
               <div className="space-y-1 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-500">Age</span>
@@ -330,7 +330,7 @@ export const InfraDashboard: React.FC = () => {
           <Terminal className="h-5 w-5 text-gray-700 mr-2" />
           <h2 className="text-xl font-semibold">InfraOps Swarm Agents</h2>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
           {metrics?.swarm_agents.map((agent) => (
             <div key={agent.name} className="border rounded-lg p-3">
@@ -355,7 +355,7 @@ export const InfraDashboard: React.FC = () => {
             </div>
           ))}
         </div>
-        
+
         {/* Swarm Task Executor */}
         <div className="mt-4 flex space-x-2">
           <button
@@ -397,7 +397,7 @@ export const InfraDashboard: React.FC = () => {
           <Server className="h-5 w-5 text-gray-700 mr-2" />
           <h2 className="text-xl font-semibold">Pulumi Stack Operations</h2>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {metrics?.pulumi_stacks.map((stack) => (
             <div key={stack.name} className="border rounded-lg p-4">
@@ -407,7 +407,7 @@ export const InfraDashboard: React.FC = () => {
                   {stack.status}
                 </span>
               </div>
-              
+
               <div className="space-y-1 text-sm mb-3">
                 <div className="flex justify-between">
                   <span className="text-gray-500">Resources</span>
@@ -418,7 +418,7 @@ export const InfraDashboard: React.FC = () => {
                   <span>{new Date(stack.last_update).toLocaleString()}</span>
                 </div>
               </div>
-              
+
               <div className="flex space-x-2">
                 <button
                   onClick={() => stackOperation.mutate({ stack: stack.name, operation: 'preview' })}

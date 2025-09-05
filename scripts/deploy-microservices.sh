@@ -60,7 +60,7 @@ APPS=(
 for app_info in "${APPS[@]}"; do
     IFS=':' read -r app_name app_description <<< "$app_info"
     echo -e "${BLUE}🔨 Creating ${app_name} (${app_description})...${NC}"
-    
+
     # Create app if it doesn't exist
     if ! fly apps list | grep -q "$app_name"; then
         fly apps create "$app_name" --org "$FLY_ORG"
@@ -177,7 +177,7 @@ echo -e "${BLUE}🔍 Testing service endpoints...${NC}"
 for endpoint_info in "${ENDPOINTS[@]}"; do
     IFS=':' read -r endpoint service_name <<< "$endpoint_info"
     echo -e "${BLUE}Testing ${service_name}...${NC}"
-    
+
     if curl -f -s "$endpoint" > /dev/null; then
         echo -e "${GREEN}✅ ${service_name} is healthy${NC}"
     else
@@ -199,7 +199,7 @@ echo -e "${BLUE}🔄 Running PostgreSQL schema migration to Neon...${NC}"
 echo -e "\n${PURPLE}🎉 Sophia Intel AI Microservices Deployment Complete!${NC}"
 echo -e "\n${GREEN}📊 Deployment Summary:${NC}"
 echo -e "  🗄️ Weaviate v1.32+: https://sophia-weaviate.fly.dev"
-echo -e "  🧠 MCP Server: https://sophia-mcp.fly.dev"  
+echo -e "  🧠 MCP Server: https://sophia-mcp.fly.dev"
 echo -e "  🔍 Vector Store: https://sophia-vector.fly.dev"
 echo -e "  🚀 Unified API: https://sophia-api.fly.dev"
 echo -e "  🌉 Agno Bridge: https://sophia-bridge.fly.dev"

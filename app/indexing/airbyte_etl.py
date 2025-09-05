@@ -33,7 +33,7 @@ def run_airbyte_etl():
             "password": os.environ["NEON_DB_PASSWORD"],
             "database": os.environ["NEON_DB_NAME"],
             "schema": "public",
-            "output_directory": tempfile.mkdtemp()  # Temporary directory for extraction
+            "output_directory": tempfile.mkdtemp(),  # Temporary directory for extraction
         }
     except KeyError as exc:
         raise RuntimeError(f"Missing DB configuration: {exc}") from exc
@@ -55,6 +55,7 @@ def run_airbyte_etl():
         # Cleanup temporary directory
         shutil.rmtree(config["output_directory"], ignore_errors=True)
 
+
 def process_file(file_path: str):
     """Process a single file through chunker and indexer with metadata"""
     try:
@@ -70,15 +71,12 @@ def process_file(file_path: str):
         for i, chunk in enumerate(chunks):
             # Create metadata for this chunk
             metadata = MemoryMetadata(
-                type="doc",
-                source=file_path,
-                timestamp=datetime.utcnow(),
-                tags=["etl", "processed"]
+                type="doc", source=file_path, timestamp=datetime.utcnow(), tags=["etl", "processed"]
             )
 
             # Create temporary file for indexing
             temp_file = f"{file_path}.chunk_{i}"
-            with open(temp_file, 'w') as f_chunk:
+            with open(temp_file, "w") as f_chunk:
                 f_chunk.write(chunk)
 
             # Index the chunk
@@ -89,6 +87,7 @@ def process_file(file_path: str):
     except Exception as e:
         logging.error(f"Failed to process file {file_path}: {str(e)}")
         raise
+
 
 if __name__ == "__main__":
     run_airbyte_etl()

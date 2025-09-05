@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class VectorSearchResult:
     """Vector search result"""
+
     id: str
     content: str
     metadata: dict[str, Any]
@@ -47,10 +48,7 @@ class WeaviateClient:
             return False
 
     async def create_collection(
-        self,
-        name: str,
-        properties: list[dict[str, Any]],
-        vectorizer: str = "text2vec-openai"
+        self, name: str, properties: list[dict[str, Any]], vectorizer: str = "text2vec-openai"
     ) -> bool:
         """Create a new collection with schema"""
         try:
@@ -62,10 +60,7 @@ class WeaviateClient:
             return False
 
     async def add_object(
-        self,
-        collection: str,
-        data: dict[str, Any],
-        vector: Optional[list[float]] = None
+        self, collection: str, data: dict[str, Any], vector: Optional[list[float]] = None
     ) -> str:
         """Add object to collection with optional vector"""
         try:
@@ -82,42 +77,43 @@ class WeaviateClient:
         collection: str,
         query: str,
         limit: int = 10,
-        where_filter: Optional[dict[str, Any]] = None
+        where_filter: Optional[dict[str, Any]] = None,
     ) -> list[VectorSearchResult]:
         """Hybrid search combining vector and keyword search"""
         try:
             # Mock search results
             results = []
             for i in range(min(3, limit)):
-                results.append(VectorSearchResult(
-                    id=f"mock_{i}",
-                    content=f"Mock result {i} for query: {query}",
-                    metadata={"collection": collection, "index": i},
-                    score=0.95 - (i * 0.1)
-                ))
+                results.append(
+                    VectorSearchResult(
+                        id=f"mock_{i}",
+                        content=f"Mock result {i} for query: {query}",
+                        metadata={"collection": collection, "index": i},
+                        score=0.95 - (i * 0.1),
+                    )
+                )
             return results
         except Exception as e:
             logger.error(f"Search failed: {e}")
             return []
 
     async def vector_search(
-        self,
-        collection: str,
-        vector: list[float],
-        limit: int = 10
+        self, collection: str, vector: list[float], limit: int = 10
     ) -> list[VectorSearchResult]:
         """Pure vector similarity search"""
         try:
             # Mock vector search
             results = []
             for i in range(min(3, limit)):
-                results.append(VectorSearchResult(
-                    id=f"vector_{i}",
-                    content=f"Vector search result {i}",
-                    metadata={"collection": collection, "similarity": 0.95 - (i * 0.1)},
-                    score=0.95 - (i * 0.1),
-                    vector=vector[:10] if len(vector) > 10 else vector
-                ))
+                results.append(
+                    VectorSearchResult(
+                        id=f"vector_{i}",
+                        content=f"Vector search result {i}",
+                        metadata={"collection": collection, "similarity": 0.95 - (i * 0.1)},
+                        score=0.95 - (i * 0.1),
+                        vector=vector[:10] if len(vector) > 10 else vector,
+                    )
+                )
             return results
         except Exception as e:
             logger.error(f"Vector search failed: {e}")
@@ -132,12 +128,7 @@ class WeaviateClient:
             logger.error(f"Failed to delete object: {e}")
             return False
 
-    async def update_object(
-        self,
-        collection: str,
-        object_id: str,
-        data: dict[str, Any]
-    ) -> bool:
+    async def update_object(self, collection: str, object_id: str, data: dict[str, Any]) -> bool:
         """Update existing object"""
         try:
             logger.debug(f"Updated object {object_id} in {collection}")
@@ -150,7 +141,7 @@ class WeaviateClient:
         self,
         collection: str,
         objects: list[dict[str, Any]],
-        vectors: Optional[list[list[float]]] = None
+        vectors: Optional[list[list[float]]] = None,
     ) -> list[str]:
         """Batch add multiple objects"""
         try:
@@ -172,7 +163,7 @@ class WeaviateClient:
                 "collection": collection,
                 "object_count": 0,
                 "vector_dimensions": 1536,
-                "status": "mock"
+                "status": "mock",
             }
         except Exception as e:
             logger.error(f"Failed to get collection stats: {e}")
@@ -189,8 +180,7 @@ _weaviate_client: Optional[WeaviateClient] = None
 
 
 async def get_weaviate_client(
-    url: str = "http://localhost:8080",
-    api_key: Optional[str] = None
+    url: str = "http://localhost:8080", api_key: Optional[str] = None
 ) -> WeaviateClient:
     """Get or create Weaviate client singleton"""
     global _weaviate_client

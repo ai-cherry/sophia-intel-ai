@@ -1,10 +1,13 @@
 # ADR-003: WebSocket Connection Management Strategy
 
 ## Status
+
 Accepted
 
 ## Context
+
 The AI Orchestra system uses WebSocket connections for real-time communication with clients. Without proper management, this can lead to:
+
 - Memory leaks from abandoned connections
 - Resource exhaustion from unlimited connections
 - Security vulnerabilities from unmanaged sessions
@@ -12,7 +15,9 @@ The AI Orchestra system uses WebSocket connections for real-time communication w
 - Difficulty tracking active users and sessions
 
 ## Decision
+
 We will implement a comprehensive WebSocket connection management system with:
+
 1. **Connection Pooling**: Limit concurrent connections per client
 2. **Timeout Management**: Auto-disconnect idle connections
 3. **Session State**: Track and limit session history
@@ -20,6 +25,7 @@ We will implement a comprehensive WebSocket connection management system with:
 5. **Graceful Shutdown**: Clean connection termination
 
 ### Configuration
+
 ```yaml
 websocket:
   max_connections_per_client: 5
@@ -33,6 +39,7 @@ websocket:
 ## Consequences
 
 ### Positive
+
 - **Resource Control**: Prevents resource exhaustion
 - **Performance**: Maintains system responsiveness
 - **Security**: Limits attack surface
@@ -40,6 +47,7 @@ websocket:
 - **Reliability**: Automatic cleanup of dead connections
 
 ### Negative
+
 - **Complexity**: Additional connection state management
 - **Client Impact**: May disconnect legitimate idle clients
 - **Memory Overhead**: Connection tracking structures
@@ -47,24 +55,26 @@ websocket:
 ## Implementation
 
 ### Connection Pool Manager
+
 ```python
 class ConnectionPoolManager:
     def __init__(self, max_per_client: int = 5):
         self.pools: Dict[str, List[WebSocketConnection]] = {}
         self.max_per_client = max_per_client
-    
+
     async def add_connection(self, client_id: str, websocket):
         if client_id not in self.pools:
             self.pools[client_id] = []
-        
+
         # Evict oldest if at limit
         if len(self.pools[client_id]) >= self.max_per_client:
             await self._evict_oldest(client_id)
-        
+
         self.pools[client_id].append(websocket)
 ```
 
 ### Timeout Manager
+
 ```python
 class ConnectionTimeoutManager:
     async def monitor_connections(self):
@@ -77,6 +87,7 @@ class ConnectionTimeoutManager:
 ```
 
 ### Error Boundary
+
 ```python
 class WebSocketErrorBoundary:
     async def handle_connection(self, websocket):
@@ -90,7 +101,8 @@ class WebSocketErrorBoundary:
 ```
 
 ## Monitoring
-- **Metrics**: 
+
+- **Metrics**:
   - active_websocket_connections
   - websocket_connection_duration
   - websocket_message_rate
@@ -105,6 +117,7 @@ class WebSocketErrorBoundary:
   - Error rate trends
 
 ## Security Considerations
+
 - Rate limiting per connection
 - Message size validation
 - Origin verification
@@ -112,6 +125,7 @@ class WebSocketErrorBoundary:
 - Connection encryption (WSS)
 
 ## References
+
 - RFC 6455: The WebSocket Protocol
 - Socket.IO connection management
 - Phoenix Channels architecture

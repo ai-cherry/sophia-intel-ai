@@ -48,14 +48,14 @@ export function TeamWorkflowPanel() {
         fetchJSON<any[]>(buildEndpointUrl(selectedEndpoint, '/teams')),
         fetchJSON<Workflow[]>(buildEndpointUrl(selectedEndpoint, '/workflows')),
       ]);
-      
+
       // Transform teams data to match agent-ui format
       const formattedTeams = teamsData?.map(team => ({
         value: team.id || team.name,
         label: team.name || team.id,
         model: { provider: 'swarm' },
       })) || [];
-      
+
       setTeams(formattedTeams);
       setWorkflows(workflowsData || []);
     } catch (e) {
@@ -66,15 +66,15 @@ export function TeamWorkflowPanel() {
 
   const runTeam = async () => {
     if (!selectedTeam || !message.trim() || isStreaming) return;
-    
+
     setError(null);
     setStreamContent('');
     setLastResponse(null);
     setIsStreaming(true);
-    
+
     try {
       const parsedData = JSON.parse(additionalData);
-      
+
       await streamText(buildEndpointUrl(selectedEndpoint, '/teams/run'), {
         method: 'POST',
         headers: {
@@ -109,15 +109,15 @@ export function TeamWorkflowPanel() {
 
   const runWorkflow = async () => {
     if (!selectedWorkflow || !message.trim() || isStreaming) return;
-    
+
     setError(null);
     setStreamContent('');
     setLastResponse(null);
     setIsStreaming(true);
-    
+
     try {
       const parsedData = JSON.parse(additionalData);
-      
+
       await streamText(buildEndpointUrl(selectedEndpoint, '/workflows/run'), {
         method: 'POST',
         headers: {
@@ -263,7 +263,7 @@ export function TeamWorkflowPanel() {
             </SelectContent>
           </Select>
         </div>
-        
+
         <div className="flex-1">
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Priority

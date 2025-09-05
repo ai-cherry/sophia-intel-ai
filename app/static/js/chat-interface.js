@@ -23,9 +23,9 @@ class ChatInterface {
                     </div>
                 </div>
                 <div class="chat-input-container">
-                    <textarea 
-                        id="chat-input" 
-                        class="chat-input" 
+                    <textarea
+                        id="chat-input"
+                        class="chat-input"
                         placeholder="Type your message here..."
                         rows="3"
                     ></textarea>
@@ -47,7 +47,7 @@ class ChatInterface {
                 </div>
             </div>
         `;
-        
+
         this.messagesContainer = document.getElementById('chat-messages');
         this.inputField = document.getElementById('chat-input');
         this.sendButton = document.getElementById('send-button');
@@ -71,7 +71,7 @@ class ChatInterface {
 
         this.isProcessing = true;
         this.setStatus('Processing...');
-        
+
         // Add user message to chat
         this.addMessage(message, 'user');
         this.inputField.value = '';
@@ -101,23 +101,23 @@ class ChatInterface {
             }
 
             const data = await response.json();
-            
+
             if (data.choices && data.choices[0]) {
                 const assistantMessage = data.choices[0].message.content;
                 this.addMessage(assistantMessage, 'assistant');
-                
+
                 // Update conversation history
                 this.messages.push(
                     { role: 'user', content: message },
                     { role: 'assistant', content: assistantMessage }
                 );
-                
+
                 // Keep conversation history manageable
                 if (this.messages.length > 20) {
                     this.messages = this.messages.slice(-20);
                 }
             }
-            
+
             this.setStatus('Ready');
         } catch (error) {
             console.error('Chat error:', error);
@@ -131,14 +131,14 @@ class ChatInterface {
     addMessage(content, type) {
         const messageDiv = document.createElement('div');
         messageDiv.className = `chat-message ${type}`;
-        
+
         const contentDiv = document.createElement('div');
         contentDiv.className = 'message-content';
         contentDiv.textContent = content;
-        
+
         messageDiv.appendChild(contentDiv);
         this.messagesContainer.appendChild(messageDiv);
-        
+
         // Scroll to bottom
         this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
     }

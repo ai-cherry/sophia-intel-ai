@@ -7,6 +7,7 @@ You are a ruthless mock hunter. Your mission is to systematically eliminate EVER
 ## SEARCH AND DESTROY TARGETS
 
 ### Phase 1: RECONNAISSANCE
+
 Search the ENTIRE repository for these patterns and eliminate them:
 
 ```bash
@@ -34,19 +35,23 @@ grep -r "# Temporary" . --include="*.py"
 ### Phase 2: PRIORITY TARGETS TO ELIMINATE
 
 1. **MOCK RESPONSES IN API ENDPOINTS**
+
    - File: `app/api/unified_server.py`
    - Lines with: `"mock-response"`, `"Received:"`, fallback responses
    - FIX: Connect to REAL executor with REAL LLM calls
 
 2. **TEMPLATE/PLACEHOLDER SOLUTIONS**
+
    - Files: Any swarm files returning `"Solution for {query}"`
    - FIX: Make actual LLM API calls through Portkey gateway
 
 3. **MOCK EXECUTORS**
+
    - Files: `app/llm/mock_executor.py`, `app/api/mock_*`
    - FIX: DELETE these files entirely, use ONLY real_executor.py
 
 4. **FALLBACK STREAMING FUNCTIONS**
+
    - File: `app/api/unified_server.py` lines 75-79
    - FIX: Remove fallback functions, require real imports
 
@@ -57,6 +62,7 @@ grep -r "# Temporary" . --include="*.py"
 ## IMPLEMENTATION PLAN
 
 ### Step 1: Remove ALL Mock Files
+
 ```bash
 find . -name "*mock*.py" -delete
 find . -name "*fake*.py" -delete
@@ -65,6 +71,7 @@ find . -name "*stub*.py" -delete
 ```
 
 ### Step 2: Fix unified_server.py
+
 ```python
 # REMOVE THIS GARBAGE:
 if request.stream is False:
@@ -81,14 +88,14 @@ if request.stream is False:
 if request.stream is False:
     # Import and use REAL executor
     from app.llm.real_executor import real_executor
-    
+
     # Make REAL API call
     response = await real_executor.execute(
         prompt=request.message,
         model_pool=request.pool,
         stream=False
     )
-    
+
     # Return REAL response
     return JSONResponse({
         "content": response["content"],  # REAL AI RESPONSE
@@ -101,6 +108,7 @@ if request.stream is False:
 ```
 
 ### Step 3: Fix Swarm Execution
+
 ```python
 # In improved_swarm.py and memory_enhanced_swarm.py
 # REMOVE:
@@ -118,18 +126,21 @@ return {"solution": response.choices[0].message.content}  # REAL RESPONSE
 ```
 
 ### Step 4: Fix Circuit Breaker Issues
+
 ```python
 # Remove ALL @with_circuit_breaker decorators that cause asyncio.run() issues
 # Or fix them to work properly with async context
 ```
 
 ### Step 5: Connect REAL Services
+
 - Weaviate: Ensure REAL vector search, not mock results
 - Redis: Use REAL cache, not in-memory mock
 - PostgreSQL: REAL database queries, not fake data
 - MCP Servers: REAL memory operations, not placeholders
 
 ### Step 6: Verify REAL API Keys Work
+
 ```python
 # Test each service:
 - Portkey Gateway: Make test call with REAL prompt
@@ -141,6 +152,7 @@ return {"solution": response.choices[0].message.content}  # REAL RESPONSE
 ## VALIDATION CHECKLIST
 
 After elimination, verify:
+
 - [ ] Zero files with "mock" in the name
 - [ ] Zero placeholder responses like "Received: {message}"
 - [ ] Zero "Solution for {query}" patterns
@@ -182,6 +194,7 @@ curl -X POST http://localhost:8003/teams/run \
 ## FINAL VERIFICATION
 
 Run this to ensure NO mocks remain:
+
 ```bash
 # This should return ZERO results:
 grep -r "mock\|Mock\|fake\|Fake\|dummy\|stub\|placeholder" . \

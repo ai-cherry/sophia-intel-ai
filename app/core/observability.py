@@ -37,128 +37,79 @@ logger = logging.getLogger(__name__)
 
 # Request metrics
 http_requests_total = Counter(
-    'http_requests_total',
-    'Total HTTP requests',
-    ['method', 'endpoint', 'status']
+    "http_requests_total", "Total HTTP requests", ["method", "endpoint", "status"]
 )
 
 http_request_duration = Histogram(
-    'http_request_duration_seconds',
-    'HTTP request duration in seconds',
-    ['method', 'endpoint']
+    "http_request_duration_seconds", "HTTP request duration in seconds", ["method", "endpoint"]
 )
 
 # Memory system metrics
 memory_operations_total = Counter(
-    'memory_operations_total',
-    'Total memory operations',
-    ['operation', 'status']
+    "memory_operations_total", "Total memory operations", ["operation", "status"]
 )
 
 memory_operation_duration = Histogram(
-    'memory_operation_duration_seconds',
-    'Memory operation duration',
-    ['operation']
+    "memory_operation_duration_seconds", "Memory operation duration", ["operation"]
 )
 
-memory_entries_total = Gauge(
-    'memory_entries_total',
-    'Total number of memory entries'
-)
+memory_entries_total = Gauge("memory_entries_total", "Total number of memory entries")
 
-memory_cache_hits = Counter(
-    'memory_cache_hits_total',
-    'Memory cache hits'
-)
+memory_cache_hits = Counter("memory_cache_hits_total", "Memory cache hits")
 
-memory_cache_misses = Counter(
-    'memory_cache_misses_total',
-    'Memory cache misses'
-)
+memory_cache_misses = Counter("memory_cache_misses_total", "Memory cache misses")
 
 # Search metrics
 search_requests_total = Counter(
-    'search_requests_total',
-    'Total search requests',
-    ['mode', 'status']
+    "search_requests_total", "Total search requests", ["mode", "status"]
 )
 
-search_latency = Histogram(
-    'search_latency_seconds',
-    'Search request latency',
-    ['mode']
-)
+search_latency = Histogram("search_latency_seconds", "Search request latency", ["mode"])
 
 search_results_count = Histogram(
-    'search_results_count',
-    'Number of search results returned',
-    ['mode']
+    "search_results_count", "Number of search results returned", ["mode"]
 )
 
 # Embedding metrics
 embedding_requests_total = Counter(
-    'embedding_requests_total',
-    'Total embedding requests',
-    ['provider', 'status']
+    "embedding_requests_total", "Total embedding requests", ["provider", "status"]
 )
 
 embedding_latency = Histogram(
-    'embedding_latency_seconds',
-    'Embedding generation latency',
-    ['provider']
+    "embedding_latency_seconds", "Embedding generation latency", ["provider"]
 )
 
-embedding_cache_size = Gauge(
-    'embedding_cache_size',
-    'Current embedding cache size'
-)
+embedding_cache_size = Gauge("embedding_cache_size", "Current embedding cache size")
 
 # Swarm execution metrics
 swarm_executions_total = Counter(
-    'swarm_executions_total',
-    'Total swarm executions',
-    ['team_id', 'status']
+    "swarm_executions_total", "Total swarm executions", ["team_id", "status"]
 )
 
 swarm_execution_duration = Histogram(
-    'swarm_execution_duration_seconds',
-    'Swarm execution duration',
-    ['team_id']
+    "swarm_execution_duration_seconds", "Swarm execution duration", ["team_id"]
 )
 
-swarm_active_executions = Gauge(
-    'swarm_active_executions',
-    'Currently active swarm executions'
-)
+swarm_active_executions = Gauge("swarm_active_executions", "Currently active swarm executions")
 
 # Gate evaluation metrics
 gate_evaluations_total = Counter(
-    'gate_evaluations_total',
-    'Total gate evaluations',
-    ['gate_type', 'decision']
+    "gate_evaluations_total", "Total gate evaluations", ["gate_type", "decision"]
 )
 
 gate_evaluation_duration = Histogram(
-    'gate_evaluation_duration_seconds',
-    'Gate evaluation duration',
-    ['gate_type']
+    "gate_evaluation_duration_seconds", "Gate evaluation duration", ["gate_type"]
 )
 
 # System health metrics
-system_health = Gauge(
-    'system_health',
-    'Overall system health (0=unhealthy, 1=healthy)'
-)
+system_health = Gauge("system_health", "Overall system health (0=unhealthy, 1=healthy)")
 
-component_health = Gauge(
-    'component_health',
-    'Component health status',
-    ['component']
-)
+component_health = Gauge("component_health", "Component health status", ["component"])
 
 # ============================================
 # Tracing Setup
 # ============================================
+
 
 def setup_tracing(jaeger_endpoint: Optional[str] = None):
     """Initialize OpenTelemetry tracing with Jaeger."""
@@ -169,8 +120,8 @@ def setup_tracing(jaeger_endpoint: Optional[str] = None):
     try:
         # Create Jaeger exporter
         jaeger_exporter = JaegerExporter(
-            agent_host_name=jaeger_endpoint.split(':')[0],
-            agent_port=int(jaeger_endpoint.split(':')[1]) if ':' in jaeger_endpoint else 6831,
+            agent_host_name=jaeger_endpoint.split(":")[0],
+            agent_port=int(jaeger_endpoint.split(":")[1]) if ":" in jaeger_endpoint else 6831,
         )
 
         # Create tracer provider
@@ -188,9 +139,11 @@ def setup_tracing(jaeger_endpoint: Optional[str] = None):
         logger.error(f"Failed to setup tracing: {e}")
         return None
 
+
 # ============================================
 # Middleware
 # ============================================
+
 
 class MetricsMiddleware:
     """Middleware to collect request metrics."""
@@ -210,27 +163,27 @@ class MetricsMiddleware:
         duration = time.time() - start_time
 
         http_requests_total.labels(
-            method=request.method,
-            endpoint=request.url.path,
-            status=response.status_code
+            method=request.method, endpoint=request.url.path, status=response.status_code
         ).inc()
 
-        http_request_duration.labels(
-            method=request.method,
-            endpoint=request.url.path
-        ).observe(duration)
+        http_request_duration.labels(method=request.method, endpoint=request.url.path).observe(
+            duration
+        )
 
         # Add custom headers
         response.headers["X-Request-Duration"] = str(duration)
 
         return response
 
+
 # ============================================
 # Decorators
 # ============================================
 
+
 def track_memory_operation(operation: str):
     """Decorator to track memory operations."""
+
     def decorator(func: Callable) -> Callable:
         @wraps(func)
         async def async_wrapper(*args, **kwargs):
@@ -265,10 +218,13 @@ def track_memory_operation(operation: str):
                 memory_operation_duration.labels(operation=operation).observe(duration)
 
         return async_wrapper if asyncio.iscoroutinefunction(func) else sync_wrapper
+
     return decorator
+
 
 def track_search_operation(mode: str):
     """Decorator to track search operations."""
+
     def decorator(func: Callable) -> Callable:
         @wraps(func)
         async def wrapper(*args, **kwargs):
@@ -294,10 +250,13 @@ def track_search_operation(mode: str):
                     search_results_count.labels(mode=mode).observe(result_count)
 
         return wrapper
+
     return decorator
+
 
 def track_swarm_execution(team_id: str):
     """Decorator to track swarm executions."""
+
     def decorator(func: Callable) -> Callable:
         @wraps(func)
         async def wrapper(*args, **kwargs):
@@ -318,11 +277,14 @@ def track_swarm_execution(team_id: str):
                 swarm_execution_duration.labels(team_id=team_id).observe(duration)
 
         return wrapper
+
     return decorator
+
 
 # ============================================
 # Metrics Collection
 # ============================================
+
 
 class MetricsCollector:
     """Collects and exposes system metrics."""
@@ -354,7 +316,7 @@ class MetricsCollector:
                 "search_engine": state.search_engine is not None,
                 "graph_rag": state.graph_rag is not None,
                 "gate_manager": state.gate_manager is not None,
-                "orchestrator": state.orchestrator is not None
+                "orchestrator": state.orchestrator is not None,
             }
 
             for component, healthy in components.items():
@@ -369,30 +331,32 @@ class MetricsCollector:
 
     def get_metrics(self) -> str:
         """Generate Prometheus metrics output."""
-        return generate_latest().decode('utf-8')
+        return generate_latest().decode("utf-8")
+
 
 # ============================================
 # Endpoints
 # ============================================
 
+
 async def metrics_endpoint(request: Request) -> Response:
     """Prometheus metrics endpoint."""
     # Collect current metrics
     from app.api.unified_server import state
+
     collector = MetricsCollector()
     await collector.collect_system_metrics(state)
 
     # Generate metrics
     metrics = collector.get_metrics()
 
-    return PlainTextResponse(
-        content=metrics,
-        media_type=CONTENT_TYPE_LATEST
-    )
+    return PlainTextResponse(content=metrics, media_type=CONTENT_TYPE_LATEST)
+
 
 # ============================================
 # Instrumentation
 # ============================================
+
 
 def instrument_app(app):
     """Add instrumentation to FastAPI app."""
@@ -411,9 +375,11 @@ def instrument_app(app):
 
     logger.info("Observability instrumentation added")
 
+
 # ============================================
 # Health Checks
 # ============================================
+
 
 class HealthChecker:
     """Performs health checks on system components."""
@@ -431,7 +397,7 @@ class HealthChecker:
             return {
                 "healthy": True,
                 "entries": stats.get("total_entries", 0),
-                "cache_size": stats.get("embedding_cache_size", 0)
+                "cache_size": stats.get("embedding_cache_size", 0),
             }
         except Exception as e:
             return {"healthy": False, "reason": str(e)}
@@ -445,10 +411,7 @@ class HealthChecker:
                 return {"healthy": False, "reason": "Not initialized"}
 
             # Try a test query
-            results = await state.search_engine.hybrid_search(
-                query="test",
-                limit=1
-            )
+            await state.search_engine.hybrid_search(query="test", limit=1)
 
             return {"healthy": True, "responsive": True}
         except Exception as e:
@@ -460,19 +423,15 @@ class HealthChecker:
         checks = {
             "memory": await HealthChecker.check_memory_system(state),
             "search": await HealthChecker.check_search_system(state),
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
         all_healthy = all(
-            check.get("healthy", False)
-            for check in checks.values()
-            if isinstance(check, dict)
+            check.get("healthy", False) for check in checks.values() if isinstance(check, dict)
         )
 
-        return {
-            "healthy": all_healthy,
-            "checks": checks
-        }
+        return {"healthy": all_healthy, "checks": checks}
+
 
 # Export key components
 __all__ = [
@@ -483,5 +442,5 @@ __all__ = [
     "track_search_operation",
     "track_swarm_execution",
     "instrument_app",
-    "HealthChecker"
+    "HealthChecker",
 ]

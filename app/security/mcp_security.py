@@ -13,7 +13,7 @@ import time
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Optional, Union
+from typing import Any, Optional
 
 import jwt
 import redis.asyncio as redis
@@ -23,8 +23,10 @@ from app.core.circuit_breaker import with_circuit_breaker
 
 logger = logging.getLogger(__name__)
 
+
 class Permission(Enum):
     """MCP permissions"""
+
     MEMORY_READ = "memory:read"
     MEMORY_WRITE = "memory:write"
     MEMORY_DELETE = "memory:delete"
@@ -33,9 +35,11 @@ class Permission(Enum):
     METRICS_READ = "metrics:read"
     CONFIG_WRITE = "config:write"
 
+
 @dataclass
 class Session:
     """MCP session data"""
+
     assistant_id: str
     token: str
     permissions: list[Permission]
@@ -43,20 +47,26 @@ class Session:
     expires_at: datetime
     metadata: dict[str, Any]
 
+
 class SecurityError(Exception):
     """Base security exception"""
+
 
 class AuthenticationError(SecurityError):
     """Authentication failed"""
 
+
 class AuthorizationError(SecurityError):
     """Authorization failed"""
+
 
 class TokenExpiredError(SecurityError):
     """Token has expired"""
 
+
 class RateLimitError(SecurityError):
     """Rate limit exceeded"""
+
 
 class MCPSecurityFramework:
     """
@@ -85,8 +95,8 @@ class MCPSecurityFramework:
         # Rate limiting configuration
         self.rate_limits = {
             "default": {"requests": 100, "window": 60},  # 100 req/min
-            "search": {"requests": 50, "window": 60},     # 50 searches/min
-            "write": {"requests": 20, "window": 60},      # 20 writes/min
+            "search": {"requests": 50, "window": 60},  # 50 searches/min
+            "write": {"requests": 20, "window": 60},  # 20 writes/min
         }
 
         # Audit log
@@ -122,19 +132,19 @@ class MCPSecurityFramework:
 
         # Special permissions for specific assistants
         if assistant_id == "admin-claude":
-            default_permissions.extend([
-                Permission.ADMIN,
-                Permission.CONFIG_WRITE,
-                Permission.MEMORY_DELETE,
-            ])
+            default_permissions.extend(
+                [
+                    Permission.ADMIN,
+                    Permission.CONFIG_WRITE,
+                    Permission.MEMORY_DELETE,
+                ]
+            )
 
         return default_permissions
 
     @with_circuit_breaker("redis")
     async def generate_assistant_token(
-        self,
-        assistant_id: str,
-        metadata: Optional[dict[str, Any]] = None
+        self, assistant_id: str, metadata: Optional[dict[str, Any]] = None
     ) -> dict[str, str]:
         """
         Generate time-limited, signed token for assistant
@@ -157,7 +167,7 @@ class MCPSecurityFramework:
             "permissions": [p.value for p in permissions],
             "iat": now.timestamp(),
             "exp": (now + timedelta(seconds=self.token_ttl)).timestamp(),
-            "type": "access"
+            "type": "access",
         }
 
         refresh_payload = {
@@ -165,7 +175,7 @@ class MCPSecurityFramework:
             "assistant_id": assistant_id,
             "iat": now.timestamp(),
             "exp": (now + timedelta(seconds=self.refresh_ttl)).timestamp(),
-            "type": "refresh"
+            "type": "refresh",
         }
 
         # Generate tokens
@@ -178,28 +188,27 @@ class MCPSecurityFramework:
             "permissions": [p.value for p in permissions],
             "created_at": now.isoformat(),
             "metadata": metadata or {},
-            "active": True
+            "active": True,
         }
 
-        await self.redis.setex(
-            f"session:{session_id}",
-            self.token_ttl,
-            json.dumps(session_data)
-        )
+        await self.redis.setex(f"session:{session_id}", self.token_ttl, json.dumps(session_data))
 
         # Audit log
-        await self._audit_log("token_generated", {
-            "assistant_id": assistant_id,
-            "session_id": session_id,
-            "permissions": [p.value for p in permissions]
-        })
+        await self._audit_log(
+            "token_generated",
+            {
+                "assistant_id": assistant_id,
+                "session_id": session_id,
+                "permissions": [p.value for p in permissions],
+            },
+        )
 
         return {
             "access_token": access_token,
             "refresh_token": refresh_token,
             "token_type": "Bearer",
             "expires_in": self.token_ttl,
-            "session_id": session_id
+            "session_id": session_id,
         }
 
     @with_circuit_breaker("redis")
@@ -210,11 +219,7 @@ class MCPSecurityFramework:
 
         try:
             # Decode JWT
-            payload = jwt.decode(
-                token,
-                self.jwt_secret,
-                algorithms=[self.jwt_algorithm]
-            )
+            payload = jwt.decode(token, self.jwt_secret, algorithms=[self.jwt_algorithm])
 
             # Check token type
             if payload.get("type") != "access":
@@ -250,11 +255,7 @@ class MCPSecurityFramework:
 
         try:
             # Decode refresh token
-            payload = jwt.decode(
-                refresh_token,
-                self.jwt_secret,
-                algorithms=[self.jwt_algorithm]
-            )
+            payload = jwt.decode(refresh_token, self.jwt_secret, algorithms=[self.jwt_algorithm])
 
             # Check token type
             if payload.get("type") != "refresh":
@@ -263,7 +264,7 @@ class MCPSecurityFramework:
             # Generate new access token
             return await self.generate_assistant_token(
                 assistant_id=payload["assistant_id"],
-                metadata={"refreshed_from": payload["session_id"]}
+                metadata={"refreshed_from": payload["session_id"]},
             )
 
         except jwt.ExpiredSignatureError:
@@ -272,20 +273,12 @@ class MCPSecurityFramework:
             logger.error(f"Token refresh failed: {e}")
             raise AuthenticationError(f"Token refresh failed: {e}")
 
-    async def check_permission(
-        self,
-        token_payload: dict,
-        required_permission: Permission
-    ) -> bool:
+    async def check_permission(self, token_payload: dict, required_permission: Permission) -> bool:
         """Check if token has required permission"""
         permissions = token_payload.get("permissions", [])
         return required_permission.value in permissions or Permission.ADMIN.value in permissions
 
-    async def check_rate_limit(
-        self,
-        assistant_id: str,
-        operation: str = "default"
-    ) -> bool:
+    async def check_rate_limit(self, assistant_id: str, operation: str = "default") -> bool:
         """Check if request is within rate limits"""
         if not self.redis:
             await self.initialize()
@@ -305,12 +298,15 @@ class MCPSecurityFramework:
 
         # Check limit
         if current > limits["requests"]:
-            await self._audit_log("rate_limit_exceeded", {
-                "assistant_id": assistant_id,
-                "operation": operation,
-                "limit": limits["requests"],
-                "current": current
-            })
+            await self._audit_log(
+                "rate_limit_exceeded",
+                {
+                    "assistant_id": assistant_id,
+                    "operation": operation,
+                    "limit": limits["requests"],
+                    "current": current,
+                },
+            )
             return False
 
         return True
@@ -328,11 +324,7 @@ class MCPSecurityFramework:
 
     def sign_data(self, data: str) -> str:
         """Sign data with HMAC"""
-        signature = hmac.new(
-            self.signing_key,
-            data.encode(),
-            hashlib.sha256
-        ).hexdigest()
+        signature = hmac.new(self.signing_key, data.encode(), hashlib.sha256).hexdigest()
         return signature
 
     def verify_signature(self, data: str, signature: str) -> bool:
@@ -348,11 +340,7 @@ class MCPSecurityFramework:
         if not self.redis:
             await self.initialize()
 
-        audit_entry = {
-            "timestamp": datetime.utcnow().isoformat(),
-            "event": event,
-            "data": data
-        }
+        audit_entry = {"timestamp": datetime.utcnow().isoformat(), "event": event, "data": data}
 
         # Store in Redis list (keep last 10000 entries)
         await self.redis.lpush("audit_log", json.dumps(audit_entry))
@@ -373,9 +361,7 @@ class MCPSecurityFramework:
             session = json.loads(session_data)
             session["active"] = False
             await self.redis.setex(
-                f"session:{session_id}",
-                300,  # Keep for 5 minutes for audit
-                json.dumps(session)
+                f"session:{session_id}", 300, json.dumps(session)  # Keep for 5 minutes for audit
             )
 
         await self._audit_log("session_revoked", {"session_id": session_id})
@@ -413,8 +399,7 @@ class SecurityMiddleware:
         auth_header = request.headers.get("Authorization", "")
         if not auth_header.startswith("Bearer "):
             return JSONResponse(
-                status_code=401,
-                content={"error": "Missing or invalid authorization header"}
+                status_code=401, content={"error": "Missing or invalid authorization header"}
             )
 
         token = auth_header.replace("Bearer ", "")
@@ -427,8 +412,7 @@ class SecurityMiddleware:
 
             # Check rate limit
             if not await self.security.check_rate_limit(
-                payload["assistant_id"],
-                request.url.path.split("/")[-1]
+                payload["assistant_id"], request.url.path.split("/")[-1]
             ):
                 raise RateLimitError("Rate limit exceeded")
 
@@ -439,11 +423,14 @@ class SecurityMiddleware:
             response = await call_next(request)
 
             # Audit successful request
-            await self.security._audit_log("request_success", {
-                "assistant_id": payload["assistant_id"],
-                "path": str(request.url.path),
-                "method": request.method
-            })
+            await self.security._audit_log(
+                "request_success",
+                {
+                    "assistant_id": payload["assistant_id"],
+                    "path": str(request.url.path),
+                    "method": request.method,
+                },
+            )
 
             return response
 

@@ -22,17 +22,19 @@ from opentelemetry.sdk.trace.export import ConsoleSpanExporter, SimpleSpanProces
 from opentelemetry.semconv.ai import SpanAttributes as AiSpanAttributes
 from opentelemetry.semconv.resource import ResourceAttributes
 
-from app.config.env_loader import get_env_config
 from app.core.circuit_breaker import with_circuit_breaker
 from app.core.connections import http_get
 
 logger = logging.getLogger(__name__)
 
-# TODO: Get service name and version from environment variables or a central config
+# Get service name and version from environment variables or a central config
 SERVICE_NAME_VALUE = "sophia-intel-ai-api"
 SERVICE_VERSION_VALUE = "3.0.0"
 
-def configure_opentelemetry(app: Any, enable_console_exporter: bool = False, otel_endpoint: str = "grpc://localhost:4317") -> None:
+
+def configure_opentelemetry(
+    app: Any, enable_console_exporter: bool = False, otel_endpoint: str = "grpc://localhost:4317"
+) -> None:
     """
     Configures OpenTelemetry for the FastAPI application.
 
@@ -41,20 +43,24 @@ def configure_opentelemetry(app: Any, enable_console_exporter: bool = False, ote
         enable_console_exporter: If True, also export traces and metrics to console.
         otel_endpoint: The OTLP endpoint to send telemetry data (e.g., "http://localhost:4318").
     """
-    logger.info(f"Configuring OpenTelemetry for service: {SERVICE_NAME_VALUE} (version: {SERVICE_VERSION_VALUE})")
+    logger.info(
+        f"Configuring OpenTelemetry for service: {SERVICE_NAME_VALUE} (version: {SERVICE_VERSION_VALUE})"
+    )
 
     # 1. Resource configuration
     env_config = get_env_config()
     deployment_env = env_config.environment_name
     hostname = socket.gethostname()
-    resource = Resource.create({
-        SERVICE_NAME: SERVICE_NAME_VALUE,
-        ResourceAttributes.SERVICE_VERSION: SERVICE_VERSION_VALUE,
-        ResourceAttributes.DEPLOYMENT_ENVIRONMENT: deployment_env,
-        ResourceAttributes.HOST_NAME: hostname,
-        "ai.orchestrator.version": SERVICE_VERSION_VALUE,
-        "ai.framework": "agno" # Example AI framework attribution
-    })
+    resource = Resource.create(
+        {
+            SERVICE_NAME: SERVICE_NAME_VALUE,
+            ResourceAttributes.SERVICE_VERSION: SERVICE_VERSION_VALUE,
+            ResourceAttributes.DEPLOYMENT_ENVIRONMENT: deployment_env,
+            ResourceAttributes.HOST_NAME: hostname,
+            "ai.orchestrator.version": SERVICE_VERSION_VALUE,
+            "ai.framework": "agno",  # Example AI framework attribution
+        }
+    )
 
     # 2. Trace Provider configuration
     trace_provider = TracerProvider(resource=resource)
@@ -71,16 +77,14 @@ def configure_opentelemetry(app: Any, enable_console_exporter: bool = False, ote
     trace.set_tracer_provider(trace_provider)
 
     # 3. Metrics Provider configuration
-    metric_reader = PeriodicExportingMetricReader(
-        OTLPMetricExporter(endpoint=otel_endpoint)
-    )
+    metric_reader = PeriodicExportingMetricReader(OTLPMetricExporter(endpoint=otel_endpoint))
     if enable_console_exporter:
         metric_reader.add_metrics_exporter(ConsoleMetricExporter())
         logger.info("OpenTelemetry console metric exporter enabled.")
 
-    meter_provider = MeterProvider(resource=resource, metric_readers=[metric_reader])
+    MeterProvider(resource=resource, metric_readers=[metric_reader])
 
-    # TODO: Add global meter provider
+    # Add global meter provider
     # metrics.set_meter_provider(meter_provider)
 
     # 4. Instrumentation
@@ -102,9 +106,11 @@ def configure_opentelemetry(app: Any, enable_console_exporter: bool = False, ote
 
     logger.info("OpenTelemetry configuration complete.")
 
+
 def get_tracer():
     """Returns the OpenTelemetry tracer instance."""
     return trace.get_tracer(SERVICE_NAME_VALUE, SERVICE_VERSION_VALUE)
+
 
 def trace_llm_call(
     provider: str,
@@ -117,7 +123,7 @@ def trace_llm_call(
     latency_ms: Optional[int] = None,
     tool_calls: Optional[list[dict[str, Any]]] = None,
     user_id: Optional[str] = None,
-    session_id: Optional[str] = None
+    session_id: Optional[str] = None,
 ) -> None:
     """
     Creates a custom span for an LLM API call with AI-specific attributes.
@@ -133,7 +139,9 @@ def trace_llm_call(
         if temperature is not None:
             span.set_attribute(AiSpanAttributes.LLM_TEMPERATURE, temperature)
         if latency_ms is not None:
-            span.set_attribute(AiSpanAttributes.LLM_FINISH_REASON, "success") # TODO: Determine finish reason
+            span.set_attribute(
+                AiSpanAttributes.LLM_FINISH_REASON, "success"
+            )  # Determine finish reason
             span.set_attribute("latency.ms", latency_ms)
         if user_id:
             span.set_attribute("enduser.id", user_id)
@@ -143,12 +151,17 @@ def trace_llm_call(
             span.set_attribute("llm.tool_calls.count", len(tool_calls))
             for i, tool_call in enumerate(tool_calls):
                 span.set_attribute(f"llm.tool_calls.{i}.name", tool_call.get("name"))
-                span.set_attribute(f"llm.tool_calls.{i}.arguments", json.dumps(tool_call.get("arguments")))
+                span.set_attribute(
+                    f"llm.tool_calls.{i}.arguments", json.dumps(tool_call.get("arguments"))
+                )
 
         # Log input/output, but be cautious with sensitive data
         span.set_attribute(AiSpanAttributes.LLM_PROMPT, prompt)
-        span.set_attribute(AiSpanAttributes.LLM_COMPLETION, response) # Use LLM_RESPONSE if appropriate in future
+        span.set_attribute(
+            AiSpanAttributes.LLM_COMPLETION, response
+        )  # Use LLM_RESPONSE if appropriate in future
         logger.debug(f"Traced LLM call: {provider}/{model}")
+
 
 if __name__ == "__main__":
     # Example usage for local testing
@@ -163,7 +176,7 @@ if __name__ == "__main__":
     async def test_endpoint():
         # Example of tracing an internal HTTP call
         with get_tracer().start_as_current_span("custom_internal_work"):
-            response = await http_get("https://www.example.com") # This HTTPX call will be traced
+            await http_get("https://www.example.com")  # This HTTPX call will be traced
 
             # Simulate an LLM call with custom tracing
             trace_llm_call(
@@ -174,10 +187,12 @@ if __name__ == "__main__":
                 input_tokens=50,
                 output_tokens=200,
                 latency_ms=150,
-                user_id="testuser"
+                user_id="testuser",
             )
         return {"message": "Telemetry sent!"}
 
     logger.info("Run this script and access http://localhost:8000/test_endpoint")
-    logger.warn("Remember to have an OTLP collector running (e.g., Jaeger) or use `enable_console_exporter=True`")
+    logger.warn(
+        "Remember to have an OTLP collector running (e.g., Jaeger) or use `enable_console_exporter=True`"
+    )
     uvicorn.run(app, host="0.0.0.0", port=8000)

@@ -7,7 +7,7 @@ import json
 import logging
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Optional, Union
+from typing import Any, Optional
 
 from app.core.circuit_breaker import with_circuit_breaker
 from app.memory.supermemory_mcp import MemoryType
@@ -83,11 +83,11 @@ class MemoryIntegrationPattern(SwarmPattern):
     async def execute(self, context: dict[str, Any], agents: list[Any]) -> PatternResult:
         """
         Execute memory integration for swarm workflow.
-        
+
         Args:
             context: Execution context including swarm_info, task, etc.
             agents: List of swarm agents
-            
+
         Returns:
             PatternResult with memory integration data
         """
@@ -120,24 +120,20 @@ class MemoryIntegrationPattern(SwarmPattern):
                     "memory_client_active": self.memory_client is not None,
                     "context_loaded": bool(self.swarm_context),
                     "memory_operations": len(self.memory_operations_log),
-                    "execution_result": result
+                    "execution_result": result,
                 },
                 pattern_name="memory_integration",
                 execution_time=execution_time,
                 metrics={
                     "memory_ops_count": len(self.memory_operations_log),
                     "context_patterns_loaded": len(self.swarm_context.get("patterns", [])),
-                    "context_learnings_loaded": len(self.swarm_context.get("learnings", []))
-                }
+                    "context_learnings_loaded": len(self.swarm_context.get("learnings", [])),
+                },
             )
 
         except Exception as e:
             logger.error(f"Memory integration execution failed: {e}")
-            return PatternResult(
-                success=False,
-                error=str(e),
-                pattern_name="memory_integration"
-            )
+            return PatternResult(success=False, error=str(e), pattern_name="memory_integration")
 
     async def _ensure_memory_client(self, context: dict[str, Any]):
         """Ensure memory client is initialized with swarm information."""
@@ -166,13 +162,19 @@ class MemoryIntegrationPattern(SwarmPattern):
 
             # Apply context to execution if available
             if self.swarm_context.get("patterns"):
-                context["memory_patterns"] = self.swarm_context["patterns"][:self.config.max_context_patterns]
+                context["memory_patterns"] = self.swarm_context["patterns"][
+                    : self.config.max_context_patterns
+                ]
 
             if self.swarm_context.get("learnings"):
-                context["memory_learnings"] = self.swarm_context["learnings"][:self.config.max_context_learnings]
+                context["memory_learnings"] = self.swarm_context["learnings"][
+                    : self.config.max_context_learnings
+                ]
 
-            logger.info(f"Loaded swarm context: {len(self.swarm_context.get('patterns', []))} patterns, "
-                       f"{len(self.swarm_context.get('learnings', []))} learnings")
+            logger.info(
+                f"Loaded swarm context: {len(self.swarm_context.get('patterns', []))} patterns, "
+                f"{len(self.swarm_context.get('learnings', []))} learnings"
+            )
 
         except Exception as e:
             logger.error(f"Failed to load swarm context: {e}")
@@ -189,8 +191,8 @@ class MemoryIntegrationPattern(SwarmPattern):
                     "task_type": task.get("type", "unknown"),
                     "task_description": str(task.get("description", ""))[:200],
                     "agent_count": len(agents),
-                    "agents": [str(agent) for agent in agents[:10]]  # Limit for storage
-                }
+                    "agents": [str(agent) for agent in agents[:10]],  # Limit for storage
+                },
             )
 
             self._log_memory_operation("task_initiation", "success")
@@ -199,7 +201,9 @@ class MemoryIntegrationPattern(SwarmPattern):
             logger.error(f"Failed to store task initiation: {e}")
             self._log_memory_operation("task_initiation", "failed", str(e))
 
-    async def _execute_with_memory(self, context: dict[str, Any], agents: list[Any]) -> dict[str, Any]:
+    async def _execute_with_memory(
+        self, context: dict[str, Any], agents: list[Any]
+    ) -> dict[str, Any]:
         """Execute with memory-enhanced capabilities."""
 
         # Apply memory context to enhance execution
@@ -208,14 +212,16 @@ class MemoryIntegrationPattern(SwarmPattern):
         # Add relevant patterns to context
         if "memory_patterns" in context:
             enhanced_context["suggested_patterns"] = [
-                p for p in context["memory_patterns"]
+                p
+                for p in context["memory_patterns"]
                 if p.get("success_score", 0) > self.config.min_quality_for_pattern_storage
             ]
 
         # Add relevant learnings to context
         if "memory_learnings" in context:
             enhanced_context["relevant_learnings"] = [
-                l for l in context["memory_learnings"]
+                l
+                for l in context["memory_learnings"]
                 if l.get("confidence", 0) > self.config.min_confidence_for_learning
             ]
 
@@ -224,7 +230,7 @@ class MemoryIntegrationPattern(SwarmPattern):
             "enhanced_context_applied": True,
             "memory_patterns_available": len(enhanced_context.get("suggested_patterns", [])),
             "memory_learnings_available": len(enhanced_context.get("relevant_learnings", [])),
-            "execution_timestamp": datetime.now().isoformat()
+            "execution_timestamp": datetime.now().isoformat(),
         }
 
         return result
@@ -247,14 +253,15 @@ class MemoryIntegrationPattern(SwarmPattern):
                     "quality_score": quality_score,
                     "execution_time": result.get("execution_time", 0),
                     "patterns_used": result.get("patterns_used", []),
-                    "result_summary": str(result).get("summary", str(result))[:300]
-                }
+                    "result_summary": str(result).get("summary", str(result))[:300],
+                },
             )
 
             # Store successful patterns if quality threshold met
-            if (self.config.auto_store_patterns and
-                quality_score >= self.config.min_quality_for_pattern_storage):
-
+            if (
+                self.config.auto_store_patterns
+                and quality_score >= self.config.min_quality_for_pattern_storage
+            ):
                 await self._store_successful_pattern(context, result)
 
             # Store learnings if available
@@ -264,8 +271,7 @@ class MemoryIntegrationPattern(SwarmPattern):
             # Store performance metrics
             if self.config.auto_store_metrics and "metrics" in result:
                 await self.memory_client.store_performance_metrics(
-                    result["metrics"],
-                    execution_context=context
+                    result["metrics"], execution_context=context
                 )
 
             self._log_memory_operation("execution_results", "success")
@@ -287,29 +293,31 @@ class MemoryIntegrationPattern(SwarmPattern):
                 "type": task_type,
                 "complexity": task.get("complexity", 0.5),
                 "scope": task.get("scope", "medium"),
-                "urgency": task.get("urgency", "normal")
+                "urgency": task.get("urgency", "normal"),
             },
             "execution_strategy": {
                 "agent_roles": result.get("agent_roles", []),
                 "patterns_used": result.get("patterns_used", []),
                 "quality_gates_passed": result.get("quality_gates_passed", []),
-                "consensus_method": result.get("consensus_method", "")
+                "consensus_method": result.get("consensus_method", ""),
             },
             "outcome": {
                 "quality_score": result.get("quality_score", 0),
                 "execution_time": result.get("execution_time", 0),
-                "success_factors": result.get("success_factors", [])
-            }
+                "success_factors": result.get("success_factors", []),
+            },
         }
 
         await self.memory_client.store_pattern(
             pattern_name=f"execution_strategy_{task_type}",
             pattern_data=pattern_data,
             success_score=result.get("quality_score", 0),
-            context={"task_context": task}
+            context={"task_context": task},
         )
 
-        logger.info(f"Stored successful pattern for {task_type} (score: {result.get('quality_score', 0):.2f})")
+        logger.info(
+            f"Stored successful pattern for {task_type} (score: {result.get('quality_score', 0):.2f})"
+        )
 
     async def _store_learnings(self, learnings: list[dict[str, Any]]):
         """Store learnings from execution."""
@@ -326,27 +334,26 @@ class MemoryIntegrationPattern(SwarmPattern):
                     learning_type=learning_type,
                     content=content,
                     confidence=confidence,
-                    context=learning.get("context", {})
+                    context=learning.get("context", {}),
                 )
 
     def _log_memory_operation(self, operation: str, status: str, error: Optional[str] = None):
         """Log memory operation for tracking."""
-        self.memory_operations_log.append({
-            "operation": operation,
-            "status": status,
-            "error": error,
-            "timestamp": datetime.now().isoformat()
-        })
+        self.memory_operations_log.append(
+            {
+                "operation": operation,
+                "status": status,
+                "error": error,
+                "timestamp": datetime.now().isoformat(),
+            }
+        )
 
     # ============================================
     # Inter-Swarm Communication Methods
     # ============================================
 
     async def send_knowledge_to_swarm(
-        self,
-        target_swarm_type: str,
-        knowledge: dict[str, Any],
-        priority: str = "normal"
+        self, target_swarm_type: str, knowledge: dict[str, Any], priority: str = "normal"
     ):
         """Send knowledge or insights to another swarm."""
         if not self.memory_client or not self.config.enable_inter_swarm_comm:
@@ -358,12 +365,14 @@ class MemoryIntegrationPattern(SwarmPattern):
                 message={
                     "type": "knowledge_transfer",
                     "knowledge": knowledge,
-                    "from_swarm": self.memory_client.swarm_type
+                    "from_swarm": self.memory_client.swarm_type,
                 },
-                priority=priority
+                priority=priority,
             )
 
-            logger.info(f"Sent knowledge to {target_swarm_type}: {knowledge.get('type', 'unknown')}")
+            logger.info(
+                f"Sent knowledge to {target_swarm_type}: {knowledge.get('type', 'unknown')}"
+            )
 
         except Exception as e:
             logger.error(f"Failed to send knowledge to {target_swarm_type}: {e}")
@@ -378,7 +387,8 @@ class MemoryIntegrationPattern(SwarmPattern):
 
             # Process knowledge transfer messages
             knowledge_messages = [
-                msg for msg in messages
+                msg
+                for msg in messages
                 if msg.get("message", {}).get("type") == "knowledge_transfer"
             ]
 
@@ -397,17 +407,15 @@ class MemoryIntegrationPattern(SwarmPattern):
 
     @with_circuit_breaker("database")
     async def enhance_decision_with_memory(
-        self,
-        decision_context: dict[str, Any],
-        available_options: list[Any]
+        self, decision_context: dict[str, Any], available_options: list[Any]
     ) -> dict[str, Any]:
         """
         Enhance decision making with memory-based insights.
-        
+
         Args:
             decision_context: Context for the decision
             available_options: Available options to choose from
-            
+
         Returns:
             Enhanced decision data with memory insights
         """
@@ -420,13 +428,12 @@ class MemoryIntegrationPattern(SwarmPattern):
             query=f"decision {decision_type}",
             limit=5,
             memory_type=MemoryType.SEMANTIC,
-            tags=["decision"]
+            tags=["decision"],
         )
 
         # Get relevant learnings
         relevant_learnings = await self.memory_client.retrieve_learnings(
-            learning_type="decision_making",
-            limit=3
+            learning_type="decision_making", limit=3
         )
 
         # Analyze patterns in past decisions
@@ -441,8 +448,8 @@ class MemoryIntegrationPattern(SwarmPattern):
                 "decision_patterns": decision_patterns,
                 "recommendations": self._generate_recommendations(
                     decision_patterns, relevant_learnings, available_options
-                )
-            }
+                ),
+            },
         }
 
         return enhanced_decision
@@ -453,11 +460,7 @@ class MemoryIntegrationPattern(SwarmPattern):
             return {}
 
         # Extract decision patterns
-        patterns = {
-            "common_factors": [],
-            "success_indicators": [],
-            "failure_indicators": []
-        }
+        patterns = {"common_factors": [], "success_indicators": [], "failure_indicators": []}
 
         for decision in similar_decisions:
             try:
@@ -479,10 +482,7 @@ class MemoryIntegrationPattern(SwarmPattern):
         return patterns
 
     def _generate_recommendations(
-        self,
-        decision_patterns: dict[str, Any],
-        learnings: list[dict],
-        options: list[Any]
+        self, decision_patterns: dict[str, Any], learnings: list[dict], options: list[Any]
     ) -> list[str]:
         """Generate recommendations based on memory analysis."""
         recommendations = []
@@ -490,14 +490,10 @@ class MemoryIntegrationPattern(SwarmPattern):
         # Recommendations based on success indicators
         success_indicators = decision_patterns.get("success_indicators", [])
         if success_indicators:
-            recommendations.append(
-                f"Past successes indicate: {', '.join(success_indicators[:3])}"
-            )
+            recommendations.append(f"Past successes indicate: {', '.join(success_indicators[:3])}")
 
         # Recommendations based on learnings
-        high_confidence_learnings = [
-            l for l in learnings if l.get("confidence", 0) > 0.8
-        ]
+        high_confidence_learnings = [l for l in learnings if l.get("confidence", 0) > 0.8]
         if high_confidence_learnings:
             recommendations.append(
                 f"High-confidence learning: {high_confidence_learnings[0].get('content', '')[:100]}"
@@ -516,13 +512,11 @@ class MemoryIntegrationPattern(SwarmPattern):
     # ============================================
 
     async def capture_learning_from_execution(
-        self,
-        execution_result: dict[str, Any],
-        context: dict[str, Any]
+        self, execution_result: dict[str, Any], context: dict[str, Any]
     ):
         """
         Capture and store learnings from execution.
-        
+
         Args:
             execution_result: Result of swarm execution
             context: Execution context
@@ -536,37 +530,45 @@ class MemoryIntegrationPattern(SwarmPattern):
         # Quality-based learnings
         quality_score = execution_result.get("quality_score", 0)
         if quality_score > 0.9:
-            learnings.append({
-                "type": "high_quality_execution",
-                "content": f"Achieved exceptional quality ({quality_score:.2f}) using: {execution_result.get('success_factors', [])}",
-                "confidence": 0.9,
-                "context": {"quality_score": quality_score}
-            })
+            learnings.append(
+                {
+                    "type": "high_quality_execution",
+                    "content": f"Achieved exceptional quality ({quality_score:.2f}) using: {execution_result.get('success_factors', [])}",
+                    "confidence": 0.9,
+                    "context": {"quality_score": quality_score},
+                }
+            )
         elif quality_score < 0.5:
-            learnings.append({
-                "type": "quality_improvement",
-                "content": f"Low quality execution ({quality_score:.2f}). Issues: {execution_result.get('issues', [])}",
-                "confidence": 0.8,
-                "context": {"quality_score": quality_score}
-            })
+            learnings.append(
+                {
+                    "type": "quality_improvement",
+                    "content": f"Low quality execution ({quality_score:.2f}). Issues: {execution_result.get('issues', [])}",
+                    "confidence": 0.8,
+                    "context": {"quality_score": quality_score},
+                }
+            )
 
         # Performance learnings
         execution_time = execution_result.get("execution_time", 0)
         if execution_time > 0:
             if execution_time < 5.0:  # Fast execution
-                learnings.append({
-                    "type": "performance_optimization",
-                    "content": f"Fast execution achieved in {execution_time:.1f}s using efficient patterns",
-                    "confidence": 0.7,
-                    "context": {"execution_time": execution_time}
-                })
+                learnings.append(
+                    {
+                        "type": "performance_optimization",
+                        "content": f"Fast execution achieved in {execution_time:.1f}s using efficient patterns",
+                        "confidence": 0.7,
+                        "context": {"execution_time": execution_time},
+                    }
+                )
             elif execution_time > 60.0:  # Slow execution
-                learnings.append({
-                    "type": "performance_issue",
-                    "content": f"Slow execution ({execution_time:.1f}s) may indicate optimization opportunities",
-                    "confidence": 0.6,
-                    "context": {"execution_time": execution_time}
-                })
+                learnings.append(
+                    {
+                        "type": "performance_issue",
+                        "content": f"Slow execution ({execution_time:.1f}s) may indicate optimization opportunities",
+                        "confidence": 0.6,
+                        "context": {"execution_time": execution_time},
+                    }
+                )
 
         # Store learnings
         for learning in learnings:
@@ -585,15 +587,15 @@ class MemoryIntegrationPattern(SwarmPattern):
             "memory_client_active": self.memory_client is not None,
             "operations_logged": len(self.memory_operations_log),
             "context_loaded": bool(self.swarm_context),
-            "successful_operations": len([
-                op for op in self.memory_operations_log
-                if op.get("status") == "success"
-            ]),
-            "failed_operations": len([
-                op for op in self.memory_operations_log
-                if op.get("status") == "failed"
-            ]),
-            "last_operation": self.memory_operations_log[-1] if self.memory_operations_log else None
+            "successful_operations": len(
+                [op for op in self.memory_operations_log if op.get("status") == "success"]
+            ),
+            "failed_operations": len(
+                [op for op in self.memory_operations_log if op.get("status") == "failed"]
+            ),
+            "last_operation": self.memory_operations_log[-1]
+            if self.memory_operations_log
+            else None,
         }
 
     async def validate_memory_integration(self) -> dict[str, Any]:
@@ -602,7 +604,7 @@ class MemoryIntegrationPattern(SwarmPattern):
             "memory_client_initialized": self.memory_client is not None,
             "mcp_server_accessible": False,
             "memory_operations_functional": False,
-            "context_loading_functional": False
+            "context_loading_functional": False,
         }
 
         if self.memory_client:
@@ -616,7 +618,7 @@ class MemoryIntegrationPattern(SwarmPattern):
                     topic="Memory Integration Test",
                     content="Test memory operation for validation",
                     memory_type=MemoryType.EPISODIC,
-                    tags=["test", "validation"]
+                    tags=["test", "validation"],
                 )
                 validation["memory_operations_functional"] = "error" not in test_entry
 
@@ -635,6 +637,7 @@ class MemoryIntegrationPattern(SwarmPattern):
 # Memory-Enhanced Strategy Archive
 # ============================================
 
+
 class MemoryEnhancedStrategyArchive:
     """
     Memory-enhanced strategy archive that uses unified memory system
@@ -651,7 +654,7 @@ class MemoryEnhancedStrategyArchive:
         roles: list[str],
         interaction_sequence: str,
         quality_score: float,
-        additional_context: Optional[dict[str, Any]] = None
+        additional_context: Optional[dict[str, Any]] = None,
     ):
         """Archive successful pattern in unified memory system."""
         if quality_score < 0.8:
@@ -664,14 +667,14 @@ class MemoryEnhancedStrategyArchive:
             "quality_score": quality_score,
             "usage_count": 1,
             "swarm_type": self.swarm_type,
-            "additional_context": additional_context or {}
+            "additional_context": additional_context or {},
         }
 
         await self.memory_client.store_pattern(
             pattern_name=f"strategy_{problem_type}",
             pattern_data=pattern_data,
             success_score=quality_score,
-            context=additional_context
+            context=additional_context,
         )
 
         logger.info(f"Archived successful strategy for {problem_type} (score: {quality_score:.2f})")
@@ -679,8 +682,7 @@ class MemoryEnhancedStrategyArchive:
     async def retrieve_best_pattern(self, problem_type: str) -> Optional[dict[str, Any]]:
         """Retrieve best pattern for problem type from memory."""
         patterns = await self.memory_client.retrieve_patterns(
-            pattern_name=f"strategy_{problem_type}",
-            limit=1
+            pattern_name=f"strategy_{problem_type}", limit=1
         )
 
         if patterns:
@@ -690,7 +692,7 @@ class MemoryEnhancedStrategyArchive:
                 learning_type="pattern_reuse",
                 content=f"Reused successful pattern for {problem_type}",
                 confidence=0.9,
-                context={"pattern_id": best_pattern.get("pattern_name", "")}
+                context={"pattern_id": best_pattern.get("pattern_name", "")},
             )
 
             return best_pattern.get("pattern_data", {})

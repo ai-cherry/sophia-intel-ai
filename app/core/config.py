@@ -2,9 +2,8 @@
 Unified Configuration System for Sophia Intel AI
 Single source of truth for all configuration values.
 """
-from typing import Optional
-
 from pathlib import Path
+from typing import Optional
 
 from pydantic import Field, SecretStr, validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -20,10 +19,7 @@ class AppSettings(BaseSettings):
     """
 
     model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        case_sensitive=False,
-        extra="ignore"
+        env_file=".env", env_file_encoding="utf-8", case_sensitive=False, extra="ignore"
     )
 
     # ============================================
@@ -95,16 +91,13 @@ class AppSettings(BaseSettings):
 
     # Model Pools
     premium_models: list[str] = Field(
-        default=["gpt-4o", "claude-3-opus", "gemini-1.5-pro"],
-        env="PREMIUM_MODELS"
+        default=["gpt-4o", "claude-3-opus", "gemini-1.5-pro"], env="PREMIUM_MODELS"
     )
     balanced_models: list[str] = Field(
-        default=["gpt-4o-mini", "claude-3-sonnet", "gemini-1.5-flash"],
-        env="BALANCED_MODELS"
+        default=["gpt-4o-mini", "claude-3-sonnet", "gemini-1.5-flash"], env="BALANCED_MODELS"
     )
     fast_models: list[str] = Field(
-        default=["gpt-3.5-turbo", "claude-3-haiku", "llama-3-70b"],
-        env="FAST_MODELS"
+        default=["gpt-3.5-turbo", "claude-3-haiku", "llama-3-70b"], env="FAST_MODELS"
     )
 
     # ============================================
@@ -148,9 +141,9 @@ class AppSettings(BaseSettings):
             "http://localhost:3000",
             "http://localhost:3001",
             "http://localhost:3002",
-            "http://localhost:7777"
+            "http://localhost:7777",
         ],
-        env="CORS_ORIGINS"
+        env="CORS_ORIGINS",
     )
 
     # ============================================
@@ -227,14 +220,14 @@ class AppSettings(BaseSettings):
             "metrics": self.metrics_enabled,
             "tracing": self.tracing_enabled,
             "rate_limiting": self.rate_limit_enabled,
-            "ui": self.ui_enabled
+            "ui": self.ui_enabled,
         }
 
     def print_config(self):
         """Print current configuration (hiding secrets)."""
-        logger.info("\n" + "="*60)
+        logger.info("\n" + "=" * 60)
         logger.info("SOPHIA INTEL AI - CONFIGURATION")
-        logger.info("="*60)
+        logger.info("=" * 60)
 
         logger.info(f"\n🔧 Environment: {self.environment}")
         logger.info(f"📍 API Server: {self.api_host}:{self.api_port}")
@@ -260,7 +253,8 @@ class AppSettings(BaseSettings):
             status = "✓" if valid else "✗"
             logger.info(f"  {status} {service}")
 
-        logger.info("="*60 + "\n")
+        logger.info("=" * 60 + "\n")
+
 
 # Singleton instance
 settings = AppSettings()

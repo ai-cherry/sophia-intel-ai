@@ -7,7 +7,7 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Optional, Union
+from typing import Any, Optional
 
 import httpx
 
@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 
 class ModelTier(Enum):
     """Model pricing tiers."""
+
     PREMIUM = "premium"  # High-cost, highest capability
     BALANCED = "balanced"  # Medium cost-performance ratio
     FREE = "free"  # Free tier models
@@ -23,6 +24,7 @@ class ModelTier(Enum):
 
 class TaskType(Enum):
     """Task categories for model selection."""
+
     REASONING = "reasoning"
     CODING = "coding"
     CREATIVE = "creative"
@@ -34,6 +36,7 @@ class TaskType(Enum):
 @dataclass
 class ModelInfo:
     """Model information from OpenRouter."""
+
     id: str
     name: str
     context_length: int
@@ -66,45 +69,41 @@ class OpenRouterLatest:
         "openai/gpt-5-nano": {"tier": ModelTier.BALANCED, "context": 400000},
         "openai/o3-pro": {"tier": ModelTier.PREMIUM, "context": 128000},
         "openai/o3": {"tier": ModelTier.PREMIUM, "context": 128000},
-
         # Anthropic Claude 4 Series
         "anthropic/claude-opus-4": {"tier": ModelTier.PREMIUM, "context": 200000},
         "anthropic/claude-sonnet-4": {"tier": ModelTier.PREMIUM, "context": 1000000},
         "anthropic/claude-3.7-sonnet": {"tier": ModelTier.BALANCED, "context": 200000},
         "anthropic/claude-3.7-sonnet:thinking": {"tier": ModelTier.BALANCED, "context": 200000},
-
         # Google Gemini 2.5 Series
         "google/gemini-2.5-pro": {"tier": ModelTier.BALANCED, "context": 1000000},
         "google/gemini-2.5-flash": {"tier": ModelTier.BALANCED, "context": 1000000},
         "google/gemini-2.5-flash-image-preview": {"tier": ModelTier.BALANCED, "context": 1000000},
         "google/gemini-2.0-flash-001": {"tier": ModelTier.BALANCED, "context": 1000000},
-
         # DeepSeek V3.1 Series
         "deepseek/deepseek-chat-v3.1": {"tier": ModelTier.BALANCED, "context": 164000},
         "deepseek/deepseek-chat-v3.1:free": {"tier": ModelTier.FREE, "context": 164000},
         "deepseek/deepseek-r1": {"tier": ModelTier.BALANCED, "context": 128000},
         "deepseek/deepseek-r1:free": {"tier": ModelTier.FREE, "context": 128000},
-
         # X.AI Grok Series
         "x-ai/grok-code-fast-1": {"tier": ModelTier.BALANCED, "context": 128000},
         "x-ai/grok-3": {"tier": ModelTier.PREMIUM, "context": 128000},
         "x-ai/grok-3-mini": {"tier": ModelTier.BALANCED, "context": 128000},
-
         # Meta Llama Latest
         "meta-llama/llama-4-maverick": {"tier": ModelTier.BALANCED, "context": 128000},
         "meta-llama/llama-4-maverick:free": {"tier": ModelTier.FREE, "context": 128000},
         "meta-llama/llama-3.3-70b-instruct": {"tier": ModelTier.BALANCED, "context": 128000},
         "meta-llama/llama-3.3-70b-instruct:free": {"tier": ModelTier.FREE, "context": 128000},
-
         # Qwen Latest
         "qwen/qwen3-coder": {"tier": ModelTier.BALANCED, "context": 32768},
         "qwen/qwen3-235b-a22b": {"tier": ModelTier.PREMIUM, "context": 32768},
         "qwen/qwen3-235b-a22b:free": {"tier": ModelTier.FREE, "context": 32768},
-
         # Mistral Latest
         "mistralai/mistral-medium-3.1": {"tier": ModelTier.BALANCED, "context": 128000},
         "mistralai/codestral-2501": {"tier": ModelTier.BALANCED, "context": 128000},
-        "mistralai/mistral-small-3.2-24b-instruct:free": {"tier": ModelTier.FREE, "context": 128000},
+        "mistralai/mistral-small-3.2-24b-instruct:free": {
+            "tier": ModelTier.FREE,
+            "context": 128000,
+        },
     }
 
     # Task-optimized model recommendations
@@ -112,31 +111,43 @@ class OpenRouterLatest:
         TaskType.REASONING: {
             ModelTier.PREMIUM: ["openai/gpt-5", "deepseek/deepseek-r1", "openai/o3-pro"],
             ModelTier.BALANCED: ["deepseek/deepseek-r1", "anthropic/claude-3.7-sonnet:thinking"],
-            ModelTier.FREE: ["deepseek/deepseek-r1:free", "deepseek/deepseek-chat-v3.1:free"]
+            ModelTier.FREE: ["deepseek/deepseek-r1:free", "deepseek/deepseek-chat-v3.1:free"],
         },
         TaskType.CODING: {
             ModelTier.PREMIUM: ["openai/gpt-5", "x-ai/grok-code-fast-1", "anthropic/claude-opus-4"],
-            ModelTier.BALANCED: ["x-ai/grok-code-fast-1", "qwen/qwen3-coder", "mistralai/codestral-2501"],
-            ModelTier.FREE: ["deepseek/deepseek-chat-v3.1:free", "qwen/qwen3-235b-a22b:free"]
+            ModelTier.BALANCED: [
+                "x-ai/grok-code-fast-1",
+                "qwen/qwen3-coder",
+                "mistralai/codestral-2501",
+            ],
+            ModelTier.FREE: ["deepseek/deepseek-chat-v3.1:free", "qwen/qwen3-235b-a22b:free"],
         },
         TaskType.CREATIVE: {
             ModelTier.PREMIUM: ["anthropic/claude-opus-4", "openai/gpt-5"],
             ModelTier.BALANCED: ["anthropic/claude-3.7-sonnet", "google/gemini-2.5-pro"],
-            ModelTier.FREE: ["meta-llama/llama-4-maverick:free", "google/gemini-2.5-flash:free"]
+            ModelTier.FREE: ["meta-llama/llama-4-maverick:free", "google/gemini-2.5-flash:free"],
         },
         TaskType.GENERAL: {
             ModelTier.PREMIUM: ["openai/gpt-5", "anthropic/claude-sonnet-4"],
             ModelTier.BALANCED: ["google/gemini-2.5-pro", "deepseek/deepseek-chat-v3.1"],
-            ModelTier.FREE: ["meta-llama/llama-4-maverick:free", "mistralai/mistral-small-3.2-24b-instruct:free"]
+            ModelTier.FREE: [
+                "meta-llama/llama-4-maverick:free",
+                "mistralai/mistral-small-3.2-24b-instruct:free",
+            ],
         },
         TaskType.VISION: {
             ModelTier.PREMIUM: ["openai/gpt-5", "anthropic/claude-opus-4"],
             ModelTier.BALANCED: ["google/gemini-2.5-flash-image-preview", "google/gemini-2.5-pro"],
-            ModelTier.FREE: ["google/gemini-2.5-flash-image-preview:free"]
-        }
+            ModelTier.FREE: ["google/gemini-2.5-flash-image-preview:free"],
+        },
     }
 
-    def __init__(self, api_key: str, referer: str = "http://localhost:3000", app_name: str = "Sophia-Intel-AI"):
+    def __init__(
+        self,
+        api_key: str,
+        referer: str = "http://localhost:3000",
+        app_name: str = "Sophia-Intel-AI",
+    ):
         """Initialize OpenRouter client with latest configuration."""
         self.api_key = api_key
         self.base_url = "https://openrouter.ai/api/v1"
@@ -144,7 +155,7 @@ class OpenRouterLatest:
             "Authorization": f"Bearer {api_key}",
             "HTTP-Referer": referer,
             "X-Title": app_name,
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
         }
 
         # Model cache
@@ -162,33 +173,40 @@ class OpenRouterLatest:
             # GPT-5 fallbacks
             "openai/gpt-5": ["openai/gpt-5-mini", "openai/gpt-4o", "openai/gpt-4o-mini"],
             "openai/gpt-5-mini": ["openai/gpt-5-nano", "openai/gpt-4o-mini"],
-
             # Claude-4 fallbacks
-            "anthropic/claude-opus-4": ["anthropic/claude-sonnet-4", "anthropic/claude-3.7-sonnet", "anthropic/claude-3.5-sonnet"],
-            "anthropic/claude-3.7-sonnet:thinking": ["anthropic/claude-3.7-sonnet", "anthropic/claude-3.5-sonnet"],
-
+            "anthropic/claude-opus-4": [
+                "anthropic/claude-sonnet-4",
+                "anthropic/claude-3.7-sonnet",
+                "anthropic/claude-3.5-sonnet",
+            ],
+            "anthropic/claude-3.7-sonnet:thinking": [
+                "anthropic/claude-3.7-sonnet",
+                "anthropic/claude-3.5-sonnet",
+            ],
             # DeepSeek fallbacks
             "deepseek/deepseek-r1": ["deepseek/deepseek-chat-v3.1", "deepseek/deepseek-r1:free"],
             "deepseek/deepseek-chat-v3.1": ["deepseek/deepseek-chat-v3.1:free", "qwen/qwen3-coder"],
-
             # Gemini fallbacks
             "google/gemini-2.5-pro": ["google/gemini-2.5-flash", "google/gemini-2.0-flash-001"],
-
             # X.AI fallbacks
-            "x-ai/grok-code-fast-1": ["qwen/qwen3-coder", "mistralai/codestral-2501", "deepseek/deepseek-chat-v3.1"],
-
+            "x-ai/grok-code-fast-1": [
+                "qwen/qwen3-coder",
+                "mistralai/codestral-2501",
+                "deepseek/deepseek-chat-v3.1",
+            ],
             # Generic fallback for unknown models
-            "default": ["openai/gpt-4o-mini", "deepseek/deepseek-chat-v3.1:free", "meta-llama/llama-3.3-70b-instruct:free"]
+            "default": [
+                "openai/gpt-4o-mini",
+                "deepseek/deepseek-chat-v3.1:free",
+                "meta-llama/llama-3.3-70b-instruct:free",
+            ],
         }
 
     async def refresh_model_cache(self) -> dict[str, ModelInfo]:
         """Fetch and cache the latest model list from OpenRouter."""
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
-                response = await client.get(
-                    f"{self.base_url}/models",
-                    headers=self.headers
-                )
+                response = await client.get(f"{self.base_url}/models", headers=self.headers)
 
                 if response.status_code == 200:
                     data = response.json()
@@ -202,13 +220,18 @@ class OpenRouterLatest:
                                 id=model_id,
                                 name=model_data.get("name", model_id),
                                 context_length=model_data.get("context_length", 4096),
-                                pricing_prompt=float(pricing.get("prompt", 0)) if pricing.get("prompt") else 0,
-                                pricing_completion=float(pricing.get("completion", 0)) if pricing.get("completion") else 0,
+                                pricing_prompt=float(pricing.get("prompt", 0))
+                                if pricing.get("prompt")
+                                else 0,
+                                pricing_completion=float(pricing.get("completion", 0))
+                                if pricing.get("completion")
+                                else 0,
                                 supports_functions=model_data.get("supports_functions", False),
-                                supports_vision="vision" in model_data.get("description", "").lower(),
+                                supports_vision="vision"
+                                in model_data.get("description", "").lower(),
                                 supports_audio="audio" in model_id.lower(),
                                 is_free=":free" in model_id,
-                                provider=model_id.split("/")[0] if "/" in model_id else ""
+                                provider=model_id.split("/")[0] if "/" in model_id else "",
                             )
 
                     self.cache_timestamp = datetime.now()
@@ -225,22 +248,24 @@ class OpenRouterLatest:
             return True
         return datetime.now() - self.cache_timestamp > self.cache_ttl
 
-    async def get_best_model(self,
-                            task: TaskType = TaskType.GENERAL,
-                            tier: ModelTier = ModelTier.BALANCED,
-                            require_vision: bool = False,
-                            require_functions: bool = False,
-                            max_cost_per_1m: Optional[float] = None) -> str:
+    async def get_best_model(
+        self,
+        task: TaskType = TaskType.GENERAL,
+        tier: ModelTier = ModelTier.BALANCED,
+        require_vision: bool = False,
+        require_functions: bool = False,
+        max_cost_per_1m: Optional[float] = None,
+    ) -> str:
         """
         Get the best available model for the task and requirements.
-        
+
         Args:
             task: Type of task (reasoning, coding, creative, etc.)
             tier: Pricing tier preference
             require_vision: If True, only return vision-capable models
             require_functions: If True, only return function-calling capable models
             max_cost_per_1m: Maximum cost per 1M tokens (prompt + completion)
-            
+
         Returns:
             Model ID string (e.g., "openai/gpt-5")
         """
@@ -274,7 +299,7 @@ class OpenRouterLatest:
         fallback_order = [
             "openai/gpt-4o-mini",
             "deepseek/deepseek-chat-v3.1:free",
-            "meta-llama/llama-3.3-70b-instruct:free"
+            "meta-llama/llama-3.3-70b-instruct:free",
         ]
 
         for model_id in fallback_order:
@@ -305,15 +330,17 @@ class OpenRouterLatest:
                         "model": model_id,
                         "messages": [{"role": "user", "content": "test"}],
                         "max_tokens": 1,
-                        "temperature": 0
-                    }
+                        "temperature": 0,
+                    },
                 )
 
                 available = response.status_code == 200
                 self.model_health[model_id] = {
                     "available": available,
                     "checked_at": datetime.now(),
-                    "response_time": response.elapsed.total_seconds() if hasattr(response, 'elapsed') else None
+                    "response_time": response.elapsed.total_seconds()
+                    if hasattr(response, "elapsed")
+                    else None,
                 }
 
                 return available
@@ -323,26 +350,28 @@ class OpenRouterLatest:
             self.model_health[model_id] = {
                 "available": False,
                 "checked_at": datetime.now(),
-                "error": str(e)
+                "error": str(e),
             }
             return False
 
-    async def create_completion_with_fallback(self,
-                                             messages: list[dict[str, str]],
-                                             model: Optional[str] = None,
-                                             task: TaskType = TaskType.GENERAL,
-                                             tier: ModelTier = ModelTier.BALANCED,
-                                             **kwargs) -> dict[str, Any]:
+    async def create_completion_with_fallback(
+        self,
+        messages: list[dict[str, str]],
+        model: Optional[str] = None,
+        task: TaskType = TaskType.GENERAL,
+        tier: ModelTier = ModelTier.BALANCED,
+        **kwargs,
+    ) -> dict[str, Any]:
         """
         Create completion with automatic fallback on failure.
-        
+
         Args:
             messages: Chat messages
             model: Specific model to use (optional)
             task: Task type if model not specified
             tier: Tier preference if model not specified
             **kwargs: Additional OpenAI API parameters
-            
+
         Returns:
             API response dict
         """
@@ -360,11 +389,7 @@ class OpenRouterLatest:
                     response = await client.post(
                         f"{self.base_url}/chat/completions",
                         headers=self.headers,
-                        json={
-                            "model": attempt_model,
-                            "messages": messages,
-                            **kwargs
-                        }
+                        json={"model": attempt_model, "messages": messages, **kwargs},
                     )
 
                     if response.status_code == 200:
@@ -387,10 +412,12 @@ class OpenRouterLatest:
         """Get cached information about a specific model."""
         return self.model_cache.get(model_id)
 
-    def get_available_models(self,
-                           tier: Optional[ModelTier] = None,
-                           max_cost: Optional[float] = None,
-                           require_vision: bool = False) -> list[str]:
+    def get_available_models(
+        self,
+        tier: Optional[ModelTier] = None,
+        max_cost: Optional[float] = None,
+        require_vision: bool = False,
+    ) -> list[str]:
         """Get list of available models matching criteria."""
         models = []
 

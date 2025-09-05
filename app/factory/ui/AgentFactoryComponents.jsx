@@ -1,6 +1,6 @@
 /**
  * Agent Factory UI Components for React Applications
- * 
+ *
  * Production-ready React components for agent selection and swarm building
  * Can be integrated into existing React applications
  */
@@ -23,7 +23,7 @@ export const showNotification = (message, type = 'info', duration = 3000) => {
     </div>
   `;
   document.body.appendChild(notification);
-  
+
   setTimeout(() => notification.classList.add('show'), 100);
   setTimeout(() => {
     notification.classList.remove('show');
@@ -36,13 +36,13 @@ export const showNotification = (message, type = 'info', duration = 3000) => {
 };
 
 // Agent Card Component
-export const AgentCard = ({ 
-  agent, 
-  selected = false, 
-  onSelect, 
-  onViewDetails, 
+export const AgentCard = ({
+  agent,
+  selected = false,
+  onSelect,
+  onViewDetails,
   showSelectButton = true,
-  className = '' 
+  className = ''
 }) => {
   const getSpecialtyIcon = (specialty) => {
     const icons = {
@@ -73,7 +73,7 @@ export const AgentCard = ({
   };
 
   return (
-    <div 
+    <div
       className={`agent-card ${selected ? 'selected' : ''} ${className}`}
       onClick={handleCardClick}
     >
@@ -92,7 +92,7 @@ export const AgentCard = ({
         <div className="agent-actions">
           <span className="agent-version">v{agent.metadata?.version || '1.0'}</span>
           {onViewDetails && (
-            <button 
+            <button
               onClick={(e) => {
                 e.stopPropagation();
                 onViewDetails(agent);
@@ -105,11 +105,11 @@ export const AgentCard = ({
           )}
         </div>
       </div>
-      
+
       <p className="agent-description">
         {agent.metadata?.description || agent.description || 'No description available'}
       </p>
-      
+
       <div className="capabilities-section">
         <div className="capability-tags">
           {(agent.capabilities || []).slice(0, 3).map((cap, index) => (
@@ -124,7 +124,7 @@ export const AgentCard = ({
           )}
         </div>
       </div>
-      
+
       <div className="agent-stats">
         <div className="stat-group">
           <div className="stat-item">
@@ -153,11 +153,11 @@ export const AgentCard = ({
 };
 
 // Swarm Template Card Component
-export const SwarmTemplateCard = ({ 
-  template, 
-  onSelect, 
-  onViewDetails, 
-  className = '' 
+export const SwarmTemplateCard = ({
+  template,
+  onSelect,
+  onViewDetails,
+  className = ''
 }) => {
   const getTypeIcon = (type) => {
     const icons = {
@@ -186,7 +186,7 @@ export const SwarmTemplateCard = ({
           </div>
         </div>
         {onViewDetails && (
-          <button 
+          <button
             onClick={(e) => {
               e.stopPropagation();
               onViewDetails(template);
@@ -198,9 +198,9 @@ export const SwarmTemplateCard = ({
           </button>
         )}
       </div>
-      
+
       <p className="template-description">{template.description}</p>
-      
+
       <div className="template-requirements">
         <div className="requirements-label">Required Specialties:</div>
         <div className="specialty-tags">
@@ -211,7 +211,7 @@ export const SwarmTemplateCard = ({
           ))}
         </div>
       </div>
-      
+
       <div className="template-footer">
         <div className="template-stats">
           <span className="stat-item">
@@ -225,7 +225,7 @@ export const SwarmTemplateCard = ({
             </span>
           )}
         </div>
-        <button 
+        <button
           onClick={() => onSelect && onSelect(template)}
           className="use-template-button"
           disabled={template.can_create === false}
@@ -263,7 +263,7 @@ export const AgentFilters = ({
             className="filter-input"
           />
         </div>
-        
+
         <div className="filter-group">
           <label className="filter-label">Specialty</label>
           <select
@@ -277,7 +277,7 @@ export const AgentFilters = ({
             ))}
           </select>
         </div>
-        
+
         <div className="filter-group">
           <label className="filter-label">Capability</label>
           <select
@@ -291,7 +291,7 @@ export const AgentFilters = ({
             ))}
           </select>
         </div>
-        
+
         <div className="filter-group">
           <button
             onClick={onClearFilters}
@@ -344,7 +344,7 @@ export const SelectedAgentsPanel = ({
           </button>
         </div>
       </div>
-      
+
       <div className="selected-agents-list">
         {selectedAgents.map(agent => (
           <span key={agent.id} className="selected-agent-tag">
@@ -373,11 +373,11 @@ export const LoadingSpinner = ({ message = 'Loading...', className = '' }) => {
 };
 
 // Empty State Component
-export const EmptyState = ({ 
-  icon = 'fa-search', 
-  title = 'No results found', 
-  message = 'Try adjusting your criteria', 
-  className = '' 
+export const EmptyState = ({
+  icon = 'fa-search',
+  title = 'No results found',
+  message = 'Try adjusting your criteria',
+  className = ''
 }) => {
   return (
     <div className={`empty-state ${className}`}>
@@ -404,7 +404,7 @@ export const AgentGrid = ({
 
   if (agents.length === 0) {
     return (
-      <EmptyState 
+      <EmptyState
         icon="fa-users"
         title="No agents found"
         message={emptyMessage}
@@ -443,7 +443,7 @@ export const SwarmTemplateGrid = ({
 
   if (templates.length === 0) {
     return (
-      <EmptyState 
+      <EmptyState
         icon="fa-layer-group"
         title="No templates found"
         message={emptyMessage}
@@ -485,11 +485,11 @@ export const useAgentFactory = () => {
         },
         ...options
       });
-      
+
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-      
+
       return await response.json();
     } catch (err) {
       console.error(`API call failed: ${endpoint}`, err);
@@ -507,7 +507,7 @@ export const useAgentFactory = () => {
       if (filters.capabilities) params.append('capabilities', filters.capabilities.join(','));
       if (filters.tags) params.append('tags', filters.tags.join(','));
       if (filters.search) params.append('search', filters.search);
-      
+
       const data = await apiCall(`/inventory/agents?${params.toString()}`);
       setAgents(data.agents || []);
       return data;
@@ -620,7 +620,7 @@ export const useAgentFactory = () => {
     stats,
     loading,
     error,
-    
+
     // Actions
     loadAgents,
     loadSwarmTemplates,
@@ -631,14 +631,14 @@ export const useAgentFactory = () => {
     createSwarmFromTemplate,
     searchAgents,
     recommendAgents,
-    
+
     // Utilities
     apiCall
   };
 };
 
 // Complete Agent Factory Dashboard Component
-export const AgentFactoryDashboard = ({ 
+export const AgentFactoryDashboard = ({
   className = '',
   defaultTab = 'inventory',
   onSwarmCreated,
@@ -683,28 +683,28 @@ export const AgentFactoryDashboard = ({
 
   // Filter agents based on search and filters
   const filteredAgents = agents.filter(agent => {
-    const matchesSearch = !searchTerm || 
+    const matchesSearch = !searchTerm ||
       (agent.metadata?.name || agent.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       (agent.metadata?.description || agent.description || '').toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     const matchesSpecialty = !filterSpecialty || agent.specialty === filterSpecialty;
-    
-    const matchesCapability = !filterCapability || 
+
+    const matchesCapability = !filterCapability ||
       (agent.capabilities || []).some(cap => cap === filterCapability);
-    
+
     return matchesSearch && matchesSpecialty && matchesCapability;
   });
 
   const handleAgentSelect = (agent) => {
     const isSelected = selectedAgents.find(a => a.id === agent.id);
     let newSelection;
-    
+
     if (isSelected) {
       newSelection = selectedAgents.filter(a => a.id !== agent.id);
     } else {
       newSelection = [...selectedAgents, agent];
     }
-    
+
     setSelectedAgents(newSelection);
     onAgentSelected?.(agent, !isSelected);
   };
@@ -871,7 +871,7 @@ export const AgentFactoryDashboard = ({
               <p className="section-subtitle">Build your own swarm configuration from scratch</p>
             </div>
 
-            <EmptyState 
+            <EmptyState
               icon="fa-cogs"
               title="Custom Swarm Builder"
               message="Advanced swarm configuration interface coming soon. For now, use the Agent Inventory to select agents and create custom swarms."

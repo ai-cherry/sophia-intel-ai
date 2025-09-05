@@ -188,7 +188,7 @@ from app.plugins.base import Plugin, PluginMetadata
 
 class CustomPlugin(Plugin):
     """Custom plugin implementation."""
-    
+
     def __init__(self):
         self.metadata = PluginMetadata(
             name="custom-plugin",
@@ -196,17 +196,17 @@ class CustomPlugin(Plugin):
             description="Custom functionality",
             author="Your Name"
         )
-    
+
     async def initialize(self, config: dict):
         """Initialize plugin with configuration."""
         self.config = config
         # Setup resources
-    
+
     async def execute(self, context: dict) -> dict:
         """Execute plugin functionality."""
         # Plugin logic here
         return {"status": "success"}
-    
+
     async def cleanup(self):
         """Cleanup plugin resources."""
         # Cleanup logic
@@ -246,7 +246,7 @@ from app.swarms.base import Agent, AgentRole
 
 class CustomAgent(Agent):
     """Custom agent implementation."""
-    
+
     def __init__(self):
         super().__init__(
             agent_id="custom_agent_001",
@@ -256,28 +256,28 @@ class CustomAgent(Agent):
             model="claude-3-opus",
             temperature=0.7
         )
-    
+
     async def process_task(self, task: str, context: dict) -> str:
         """Process assigned task."""
         # Build prompt
         prompt = self.build_prompt(task, context)
-        
+
         # Get LLM response
         response = await self.llm.complete(prompt)
-        
+
         # Process and return
         return self.format_response(response)
-    
+
     def build_prompt(self, task: str, context: dict) -> str:
         """Build agent-specific prompt."""
         return f"""
         You are a {self.name} with expertise in {', '.join(self.capabilities)}.
-        
+
         Task: {task}
-        
+
         Context:
         {json.dumps(context, indent=2)}
-        
+
         Provide a detailed response:
         """
 ```
@@ -300,9 +300,7 @@ class CustomAgent(Agent):
     },
     "prompts": {
       "system": "You are an expert analyst...",
-      "examples": [
-        {"input": "...", "output": "..."}
-      ]
+      "examples": [{ "input": "...", "output": "..." }]
     }
   }
 }
@@ -325,7 +323,7 @@ async def process_custom(request: CustomRequest):
     try:
         # Process request
         result = await process_logic(request)
-        
+
         return CustomResponse(
             status="success",
             data=result
@@ -349,12 +347,12 @@ import time
 class TimingMiddleware:
     async def __call__(self, request: Request, call_next):
         start_time = time.time()
-        
+
         response = await call_next(request)
-        
+
         process_time = time.time() - start_time
         response.headers["X-Process-Time"] = str(process_time)
-        
+
         return response
 
 # Register middleware
@@ -384,12 +382,12 @@ def mock_agent():
 @pytest.mark.asyncio
 async def test_execute_task(orchestrator, mock_agent):
     orchestrator.register_agent(mock_agent)
-    
+
     result = await orchestrator.execute_task(
         task="Test task",
         agent_id=mock_agent.agent_id
     )
-    
+
     assert result == "Result"
     mock_agent.process_task.assert_called_once()
 ```
@@ -413,7 +411,7 @@ async def test_team_execution():
                 "team_id": "test_team"
             }
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         assert data["status"] == "success"
@@ -432,21 +430,21 @@ async def test_complete_workflow():
     async with async_playwright() as p:
         browser = await p.chromium.launch()
         page = await browser.new_page()
-        
+
         # Navigate to UI
         await page.goto("http://localhost:3001")
-        
+
         # Interact with UI
         await page.fill("#prompt", "Analyze this code")
         await page.click("#submit")
-        
+
         # Wait for response
         await page.wait_for_selector(".response")
-        
+
         # Verify result
         content = await page.text_content(".response")
         assert "Analysis complete" in content
-        
+
         await browser.close()
 ```
 
@@ -455,6 +453,7 @@ async def test_complete_workflow():
 ### VS Code Configuration
 
 **.vscode/launch.json:**
+
 ```json
 {
   "version": "0.2.0",
@@ -522,10 +521,10 @@ import pstats
 def profile_function():
     profiler = cProfile.Profile()
     profiler.enable()
-    
+
     # Code to profile
     expensive_operation()
-    
+
     profiler.disable()
     stats = pstats.Stats(profiler)
     stats.sort_stats('cumulative')
@@ -553,7 +552,7 @@ from dataclasses import dataclass
 @dataclass
 class AgentConfig:
     """Configuration for an agent.
-    
+
     Attributes:
         agent_id: Unique identifier
         name: Human-readable name
@@ -563,16 +562,16 @@ class AgentConfig:
     name: str
     model: str
     temperature: float = 0.7
-    
+
     def validate(self) -> bool:
         """Validate configuration.
-        
+
         Returns:
             True if valid, False otherwise
         """
         return (
-            self.agent_id 
-            and self.name 
+            self.agent_id
+            and self.name
             and 0.0 <= self.temperature <= 1.0
         )
 
@@ -581,29 +580,29 @@ async def process_request(
     config: Optional[AgentConfig] = None
 ) -> Dict[str, Any]:
     """Process incoming request.
-    
+
     Args:
         request: The request data
         config: Optional configuration
-    
+
     Returns:
         Processed response
-    
+
     Raises:
         ValueError: If request is invalid
     """
     if not request:
         raise ValueError("Request cannot be empty")
-    
+
     config = config or AgentConfig(
         agent_id="default",
         name="Default Agent",
         model="gpt-4"
     )
-    
+
     # Process request
     result = await execute_with_config(request, config)
-    
+
     return {
         "status": "success",
         "data": result
@@ -623,32 +622,32 @@ interface AgentConfig {
 
 class AgentOrchestrator {
   private agents: Map<string, Agent>;
-  
+
   constructor(private config: AgentConfig) {
     this.agents = new Map();
   }
-  
+
   async executeTask(
     task: string,
-    context?: Record<string, unknown>
+    context?: Record<string, unknown>,
   ): Promise<AgentResponse> {
     try {
       const agent = this.selectAgent(task);
       const response = await agent.process(task, context);
-      
+
       return {
-        status: 'success',
+        status: "success",
         data: response,
       };
     } catch (error) {
-      console.error('Task execution failed:', error);
+      console.error("Task execution failed:", error);
       throw new Error(`Failed to execute task: ${error.message}`);
     }
   }
-  
+
   private selectAgent(task: string): Agent {
     // Agent selection logic
-    return this.agents.get('default') ?? new DefaultAgent();
+    return this.agents.get("default") ?? new DefaultAgent();
   }
 }
 ```
@@ -664,31 +663,31 @@ def complex_function(
     **kwargs: Any
 ) -> Dict[str, Any]:
     """Brief description of function.
-    
+
     Longer description explaining what the function does,
     any important details, and usage examples.
-    
+
     Args:
         param1: Description of param1
         param2: Description of param2 (default: None)
         **kwargs: Additional keyword arguments:
             - option1: Description
             - option2: Description
-    
+
     Returns:
         Dictionary containing:
             - key1: Description
             - key2: Description
-    
+
     Raises:
         ValueError: When param1 is empty
         TypeError: When param2 is not an integer
-    
+
     Examples:
         >>> result = complex_function("test", param2=42)
         >>> print(result["status"])
         'success'
-    
+
     Note:
         This function is thread-safe.
     """
@@ -713,20 +712,24 @@ def complex_function(
 
 ```markdown
 ## Description
+
 Brief description of changes
 
 ## Type of Change
+
 - [ ] Bug fix
 - [ ] New feature
 - [ ] Breaking change
 - [ ] Documentation update
 
 ## Testing
+
 - [ ] Unit tests pass
 - [ ] Integration tests pass
 - [ ] Manual testing completed
 
 ## Checklist
+
 - [ ] Code follows style guidelines
 - [ ] Self-review completed
 - [ ] Documentation updated
@@ -737,17 +740,20 @@ Brief description of changes
 ## Resources
 
 ### Internal Documentation
+
 - [Architecture Guide](../architecture/README.md)
 - [API Reference](../api/README.md)
 - [Deployment Guide](../deployment/README.md)
 
 ### External Resources
+
 - [FastAPI Documentation](https://fastapi.tiangolo.com)
 - [Pydantic Documentation](https://docs.pydantic.dev)
 - [Celery Documentation](https://docs.celeryq.dev)
 - [Weaviate Documentation](https://weaviate.io/developers/weaviate)
 
 ### Community
+
 - GitHub Discussions: [github.com/ai-cherry/sophia-intel-ai/discussions](https://github.com/ai-cherry/sophia-intel-ai/discussions)
 - Discord: [discord.gg/sophia-intel](https://discord.gg/sophia-intel)
-- Email: dev@sophia-intel.ai
+- Email: <dev@sophia-intel.ai>

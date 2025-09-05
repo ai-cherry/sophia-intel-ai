@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS memory_entries (
 -- Full text search index
 CREATE INDEX IF NOT EXISTS memory_entries_fts_idx ON memory_entries USING GIN(to_tsvector('english', content));
 
--- Vector similarity index  
+-- Vector similarity index
 CREATE INDEX IF NOT EXISTS memory_entries_embedding_idx ON memory_entries USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
 
 -- Metadata index
@@ -219,9 +219,9 @@ CREATE TRIGGER update_session_last_activity AFTER INSERT ON messages FOR EACH RO
 -- ==============================================
 
 -- Insert default agents
-INSERT INTO agents (agent_id, name, description, config, model_config, tools) VALUES 
-('strategic-planner', 'Strategic Planner', 'High-level strategy and architecture planning', 
- '{"role": "planner", "priority": 10}', 
+INSERT INTO agents (agent_id, name, description, config, model_config, tools) VALUES
+('strategic-planner', 'Strategic Planner', 'High-level strategy and architecture planning',
+ '{"role": "planner", "priority": 10}',
  '{"provider": "openai", "model": "gpt-4", "temperature": 0.3, "max_tokens": 2000}',
  '["analysis", "planning", "documentation"]'),
 ('code-developer', 'Code Developer', 'Core development and implementation',
@@ -236,11 +236,11 @@ ON CONFLICT (agent_id) DO NOTHING;
 
 -- Insert default teams
 INSERT INTO teams (team_id, name, description, members, config) VALUES
-('development-swarm', 'Development Swarm', 'Full-stack development team', 
+('development-swarm', 'Development Swarm', 'Full-stack development team',
  '["strategic-planner", "code-developer", "quality-critic"]',
  '{"model_pool": "balanced", "max_iterations": 5}'),
 ('strategic-swarm', 'Strategic Swarm', 'High-level planning and architecture',
- '["strategic-planner", "quality-critic"]', 
+ '["strategic-planner", "quality-critic"]',
  '{"model_pool": "heavy", "max_iterations": 3}')
 ON CONFLICT (team_id) DO NOTHING;
 
@@ -274,7 +274,7 @@ ANALYZE;
 DO $$
 BEGIN
     RAISE NOTICE '✅ Sophia Intel AI PostgreSQL schema initialized successfully';
-    RAISE NOTICE '📊 Tables created: %, %, %, %, %, %, %, %', 
+    RAISE NOTICE '📊 Tables created: %, %, %, %, %, %, %, %',
         'memory_entries', 'sessions', 'messages', 'agents', 'teams', 'executions', 'api_calls', 'vector_sync';
     RAISE NOTICE '🔧 Extensions enabled: uuid-ossp, vector, pg_trgm';
     RAISE NOTICE '👥 Users: sophia (admin), sophia_readonly (monitoring)';

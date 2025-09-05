@@ -13,11 +13,12 @@ import aiohttp
 from app.core.ai_logger import logger
 
 # ANSI colors for output
-GREEN = '\033[92m'
-RED = '\033[91m'
-YELLOW = '\033[93m'
-BLUE = '\033[94m'
-RESET = '\033[0m'
+GREEN = "\033[92m"
+RED = "\033[91m"
+YELLOW = "\033[93m"
+BLUE = "\033[94m"
+RESET = "\033[0m"
+
 
 class UpgradeTestSuite:
     """Test all major upgrades."""
@@ -55,8 +56,9 @@ class UpgradeTestSuite:
 
         test_texts = [
             "Short text for Tier-B routing",
-            "Critical security analysis for production deployment requiring high-quality embeddings" * 10,
-            "Multi-lingual test: Hello, Bonjour, Hola, 你好, こんにちは"
+            "Critical security analysis for production deployment requiring high-quality embeddings"
+            * 10,
+            "Multi-lingual test: Hello, Bonjour, Hola, 你好, こんにちは",
         ]
 
         async with aiohttp.ClientSession() as session:
@@ -65,16 +67,15 @@ class UpgradeTestSuite:
                 payload = {
                     "topic": f"modernbert_test_{i}",
                     "content": text,
-                    "source": "upgrade_test"
+                    "source": "upgrade_test",
                 }
 
-                async with session.post(
-                    f"{self.base_url}/memory/add",
-                    json=payload
-                ) as response:
+                async with session.post(f"{self.base_url}/memory/add", json=payload) as response:
                     if response.status == 200:
                         data = await response.json()
-                        logger.info(f"  ✅ Test {i}: Embedded and stored (hash: {data.get('hash_id', 'N/A')[:8]}...)")
+                        logger.info(
+                            f"  ✅ Test {i}: Embedded and stored (hash: {data.get('hash_id', 'N/A')[:8]}...)"
+                        )
                     else:
                         logger.info(f"  ❌ Test {i}: Failed to embed")
                         return False
@@ -82,8 +83,7 @@ class UpgradeTestSuite:
             # Test embedding search
             search_payload = {"query": "security production", "limit": 3}
             async with session.post(
-                f"{self.base_url}/memory/search",
-                json=search_payload
+                f"{self.base_url}/memory/search", json=search_payload
             ) as response:
                 if response.status == 200:
                     data = await response.json()
@@ -101,41 +101,41 @@ class UpgradeTestSuite:
             {
                 "team_id": "strategic-swarm",
                 "message": "Design a microservices architecture",
-                "expected": "coding_team"
+                "expected": "coding_team",
             },
             {
                 "team_id": "development-swarm",
                 "message": "Implement user authentication",
-                "expected": "coding_swarm"
+                "expected": "coding_swarm",
             },
             {
                 "team_id": "security-swarm",
                 "message": "Audit for vulnerabilities",
-                "expected": "coding_team"
+                "expected": "coding_team",
             },
             {
                 "team_id": "research-swarm",
                 "message": "Research quantum computing",
-                "expected": "coding_swarm_fast"
-            }
+                "expected": "coding_swarm_fast",
+            },
         ]
 
         async with aiohttp.ClientSession() as session:
             for test in test_cases:
                 logger.info(f"  Testing {test['team_id']}...")
 
-                async with session.post(
-                    f"{self.base_url}/teams/run",
-                    json=test
-                ) as response:
+                async with session.post(f"{self.base_url}/teams/run", json=test) as response:
                     if response.status == 200:
                         # Read streaming response
                         full_response = ""
                         async for line in response.content:
-                            full_response += line.decode('utf-8')
+                            full_response += line.decode("utf-8")
 
                         # Check for real execution markers
-                        if "real_execution" in full_response and "mock" not in full_response.lower():
+                        if (
+                            "real_execution" in full_response
+                            and "mock" not in full_response.lower()
+                        ):
                             logger.info("    ✅ Real execution confirmed")
 
                             # Verify expected swarm was used
@@ -158,9 +158,21 @@ class UpgradeTestSuite:
 
         # Add test data
         test_data = [
-            {"topic": "python_async", "content": "Async programming with Python asyncio", "source": "docs"},
-            {"topic": "rust_memory", "content": "Rust memory safety and ownership", "source": "tutorial"},
-            {"topic": "kubernetes", "content": "Container orchestration with Kubernetes", "source": "guide"}
+            {
+                "topic": "python_async",
+                "content": "Async programming with Python asyncio",
+                "source": "docs",
+            },
+            {
+                "topic": "rust_memory",
+                "content": "Rust memory safety and ownership",
+                "source": "tutorial",
+            },
+            {
+                "topic": "kubernetes",
+                "content": "Container orchestration with Kubernetes",
+                "source": "guide",
+            },
         ]
 
         async with aiohttp.ClientSession() as session:
@@ -170,10 +182,7 @@ class UpgradeTestSuite:
 
             # Test search
             search_payload = {"query": "memory safety programming", "limit": 5}
-            async with session.post(
-                f"{self.base_url}/search",
-                json=search_payload
-            ) as response:
+            async with session.post(f"{self.base_url}/search", json=search_payload) as response:
                 if response.status == 200:
                     data = await response.json()
                     results = data.get("results", [])
@@ -200,17 +209,14 @@ class UpgradeTestSuite:
             payload = {
                 "team_id": "research-swarm",
                 "message": "Quick performance test",
-                "use_memory": False
+                "use_memory": False,
             }
 
             chunks_received = 0
             first_chunk_time = None
 
-            async with session.post(
-                f"{self.base_url}/teams/run",
-                json=payload
-            ) as response:
-                async for chunk in response.content.iter_chunked(1024):
+            async with session.post(f"{self.base_url}/teams/run", json=payload) as response:
+                async for _chunk in response.content.iter_chunked(1024):
                     if chunks_received == 0:
                         first_chunk_time = time.time() - start
                     chunks_received += 1
@@ -234,13 +240,10 @@ class UpgradeTestSuite:
             test_payload = {
                 "topic": "mcp_test",
                 "content": "Testing MCP supermemory integration",
-                "source": "test_suite"
+                "source": "test_suite",
             }
 
-            async with session.post(
-                f"{self.base_url}/memory/add",
-                json=test_payload
-            ) as response:
+            async with session.post(f"{self.base_url}/memory/add", json=test_payload) as response:
                 if response.status == 200:
                     logger.info("  ✅ MCP Supermemory: Working")
                 else:
@@ -273,7 +276,7 @@ class UpgradeTestSuite:
             ("Real Orchestrator", self.test_real_orchestrator),
             ("Hybrid Search", self.test_hybrid_search),
             ("Streaming Performance", self.test_streaming_performance),
-            ("MCP Integration", self.test_mcp_integration)
+            ("MCP Integration", self.test_mcp_integration),
         ]
 
         passed = 0
@@ -315,11 +318,13 @@ class UpgradeTestSuite:
             logger.info(f"{RED}⚠️  {failed} tests failed. Please review and fix.{RESET}")
             return False
 
+
 async def main():
     """Run the test suite."""
     suite = UpgradeTestSuite()
     success = await suite.run_all_tests()
     return 0 if success else 1
+
 
 if __name__ == "__main__":
     exit_code = asyncio.run(main())

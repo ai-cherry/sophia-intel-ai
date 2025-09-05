@@ -1,0 +1,2184 @@
+{
+  "user_info": {
+    "gid": "1202141391816423",
+    "email": "lynn@payready.com",
+    "name": "Lynn Musil",
+    "photo": null,
+    "resource_type": "user",
+    "workspaces": [
+      {
+        "gid": "302065578116318",
+        "name": "Multi-Family",
+        "resource_type": "workspace"
+      },
+      {
+        "gid": "1202594422676289",
+        "name": "payready.com",
+        "resource_type": "workspace"
+      }
+    ]
+  },
+  "workspaces": [
+    {
+      "gid": "302065578116318",
+      "resource_type": "workspace",
+      "name": "Multi-Family"
+    },
+    {
+      "gid": "1202594422676289",
+      "resource_type": "workspace",
+      "name": "payready.com"
+    }
+  ],
+  "workspace_results": {
+    "302065578116318": {
+      "standard": [],
+      "archived": [],
+      "active": [],
+      "team_based": [],
+      "user_projects": [],
+      "search": []
+    },
+    "1202594422676289": {
+      "standard": [
+        {
+          "gid": "1210369700096944",
+          "archived": false,
+          "created_at": "2025-05-23T19:51:10.543Z",
+          "current_status": null,
+          "modified_at": "2025-07-28T18:02:18.601Z",
+          "name": "Automate Offboarding",
+          "owner": {
+            "gid": "1210368169635934",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": null
+        },
+        {
+          "gid": "1210479473913127",
+          "archived": false,
+          "created_at": "2025-06-06T14:53:44.029Z",
+          "current_status": null,
+          "modified_at": "2025-07-08T01:03:23.688Z",
+          "name": "Payments & Compliance Strategic Alignment",
+          "owner": {
+            "gid": "1207141564349878",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210368040157598",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210486409738387",
+          "archived": false,
+          "created_at": "2025-06-06T22:41:09.035Z",
+          "current_status": null,
+          "modified_at": "2025-07-08T01:03:23.803Z",
+          "name": "Scoring Model/Marketplace Enhancements",
+          "owner": {
+            "gid": "1208264575492004",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210389919886895",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210486409738392",
+          "archived": false,
+          "created_at": "2025-06-06T23:38:18.094Z",
+          "current_status": null,
+          "modified_at": "2025-08-26T18:12:55.134Z",
+          "name": "Disputes/Agency Requests",
+          "owner": {
+            "gid": "1210347201937411",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210389919886895",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210486409738396",
+          "archived": false,
+          "created_at": "2025-06-07T00:14:24.446Z",
+          "current_status": null,
+          "modified_at": "2025-07-08T01:03:23.900Z",
+          "name": "Deposit Alternatives",
+          "owner": {
+            "gid": "1210368166041685",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210389919886895",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210486409738399",
+          "archived": false,
+          "created_at": "2025-06-07T00:22:28.013Z",
+          "current_status": null,
+          "modified_at": "2025-09-03T23:09:59.629Z",
+          "name": "Settlement Campaigns and Bulk Jobs",
+          "owner": {
+            "gid": "1210347201937411",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210389919886895",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210486409738405",
+          "archived": false,
+          "created_at": "2025-06-07T00:28:11.776Z",
+          "current_status": null,
+          "modified_at": "2025-09-03T15:56:51.723Z",
+          "name": "Contract/Fees/Pricing/Legal (Text/AI)",
+          "owner": {
+            "gid": "1202141391816423",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210389919886895",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210495144915496",
+          "archived": false,
+          "created_at": "2025-06-09T16:32:20.535Z",
+          "current_status": null,
+          "modified_at": "2025-07-08T01:03:24.326Z",
+          "name": "Learning and Development",
+          "owner": {
+            "gid": "1202989197989950",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210389919886895",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210506162368332",
+          "archived": false,
+          "created_at": "2025-06-10T18:01:35.179Z",
+          "current_status": null,
+          "modified_at": "2025-07-08T01:03:24.568Z",
+          "name": "Omni-Channel Communications/Buzz",
+          "owner": {
+            "gid": "1202989197989950",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210389919886895",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210506162368340",
+          "archived": false,
+          "created_at": "2025-06-10T18:07:14.993Z",
+          "current_status": null,
+          "modified_at": "2025-07-08T01:03:24.621Z",
+          "name": "Reporting/Dashboards",
+          "owner": {
+            "gid": "1208264575492004",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210389919886895",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210536258398295",
+          "archived": false,
+          "created_at": "2025-06-12T18:48:28.891Z",
+          "current_status": {
+            "gid": "1210548384108810",
+            "author": {
+              "gid": "1210347201937411",
+              "resource_type": "user"
+            },
+            "color": "green",
+            "created_at": "2025-06-13T23:31:39.326Z",
+            "created_by": {
+              "gid": "1210347201937411",
+              "resource_type": "user"
+            },
+            "modified_at": "2025-06-13T23:31:39.326Z",
+            "resource_type": "project_status",
+            "text": "Summary\n\nNext steps\n",
+            "title": "PR New CRM - Jun 13"
+          },
+          "modified_at": "2025-08-18T23:57:39.755Z",
+          "name": "Replace Salesforce",
+          "owner": {
+            "gid": "1210347201937411",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210358113729406",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210582969448439",
+          "archived": false,
+          "created_at": "2025-06-18T16:01:13.030Z",
+          "current_status": null,
+          "modified_at": "2025-08-15T20:20:22.703Z",
+          "name": "Email Routing / Domain Compliance",
+          "owner": {
+            "gid": "1208264575492004",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210368037093570",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210630495644147",
+          "archived": false,
+          "created_at": "2025-06-24T18:15:40.704Z",
+          "current_status": null,
+          "modified_at": "2025-06-24T18:15:41.637Z",
+          "name": "Stuck Accounts ",
+          "owner": {
+            "gid": "1208264575492004",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210512208397637",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210650720363470",
+          "archived": false,
+          "created_at": "2025-06-26T18:04:21.088Z",
+          "current_status": null,
+          "modified_at": "2025-09-02T23:31:30.436Z",
+          "name": "Product Enhancements (not included in other projects)",
+          "owner": {
+            "gid": "1207141564349878",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210389919886895",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210650720363602",
+          "archived": false,
+          "created_at": "2025-06-27T17:11:34.003Z",
+          "current_status": null,
+          "modified_at": "2025-06-27T18:16:45.329Z",
+          "name": "GS: User Access Roles/Permissions",
+          "owner": {
+            "gid": "1210347201937411",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210389919886895",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210662600850082",
+          "archived": false,
+          "created_at": "2025-06-27T18:19:26.482Z",
+          "current_status": null,
+          "modified_at": "2025-09-03T23:13:53.620Z",
+          "name": "2025 Product Development Projects",
+          "owner": {
+            "gid": "1207141564349878",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210389919886895",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210688932345321",
+          "archived": false,
+          "created_at": "2025-07-01T16:40:48.496Z",
+          "current_status": null,
+          "modified_at": "2025-07-01T16:40:49.848Z",
+          "name": "Unit Counts",
+          "owner": {
+            "gid": "1207141564349878",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210368037093574",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210731978464518",
+          "archived": true,
+          "created_at": "2025-07-07T16:29:11.208Z",
+          "current_status": null,
+          "modified_at": "2025-08-21T00:02:52.970Z",
+          "name": "Payment Issues 7.7.25",
+          "owner": {
+            "gid": "1207141564349878",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210389919886895",
+            "resource_type": "team"
+          }
+        }
+      ],
+      "archived": [
+        {
+          "gid": "1210731978464518",
+          "archived": true,
+          "created_at": "2025-07-07T16:29:11.208Z",
+          "current_status": null,
+          "modified_at": "2025-08-21T00:02:52.970Z",
+          "name": "Payment Issues 7.7.25",
+          "owner": {
+            "gid": "1207141564349878",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210389919886895",
+            "resource_type": "team"
+          }
+        }
+      ],
+      "active": [
+        {
+          "gid": "1210369700096944",
+          "archived": false,
+          "created_at": "2025-05-23T19:51:10.543Z",
+          "current_status": null,
+          "modified_at": "2025-07-28T18:02:18.601Z",
+          "name": "Automate Offboarding",
+          "owner": {
+            "gid": "1210368169635934",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": null
+        },
+        {
+          "gid": "1210479473913127",
+          "archived": false,
+          "created_at": "2025-06-06T14:53:44.029Z",
+          "current_status": null,
+          "modified_at": "2025-07-08T01:03:23.688Z",
+          "name": "Payments & Compliance Strategic Alignment",
+          "owner": {
+            "gid": "1207141564349878",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210368040157598",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210486409738387",
+          "archived": false,
+          "created_at": "2025-06-06T22:41:09.035Z",
+          "current_status": null,
+          "modified_at": "2025-07-08T01:03:23.803Z",
+          "name": "Scoring Model/Marketplace Enhancements",
+          "owner": {
+            "gid": "1208264575492004",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210389919886895",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210486409738392",
+          "archived": false,
+          "created_at": "2025-06-06T23:38:18.094Z",
+          "current_status": null,
+          "modified_at": "2025-08-26T18:12:55.134Z",
+          "name": "Disputes/Agency Requests",
+          "owner": {
+            "gid": "1210347201937411",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210389919886895",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210486409738396",
+          "archived": false,
+          "created_at": "2025-06-07T00:14:24.446Z",
+          "current_status": null,
+          "modified_at": "2025-07-08T01:03:23.900Z",
+          "name": "Deposit Alternatives",
+          "owner": {
+            "gid": "1210368166041685",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210389919886895",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210486409738399",
+          "archived": false,
+          "created_at": "2025-06-07T00:22:28.013Z",
+          "current_status": null,
+          "modified_at": "2025-09-03T23:09:59.629Z",
+          "name": "Settlement Campaigns and Bulk Jobs",
+          "owner": {
+            "gid": "1210347201937411",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210389919886895",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210486409738405",
+          "archived": false,
+          "created_at": "2025-06-07T00:28:11.776Z",
+          "current_status": null,
+          "modified_at": "2025-09-03T15:56:51.723Z",
+          "name": "Contract/Fees/Pricing/Legal (Text/AI)",
+          "owner": {
+            "gid": "1202141391816423",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210389919886895",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210495144915496",
+          "archived": false,
+          "created_at": "2025-06-09T16:32:20.535Z",
+          "current_status": null,
+          "modified_at": "2025-07-08T01:03:24.326Z",
+          "name": "Learning and Development",
+          "owner": {
+            "gid": "1202989197989950",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210389919886895",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210506162368332",
+          "archived": false,
+          "created_at": "2025-06-10T18:01:35.179Z",
+          "current_status": null,
+          "modified_at": "2025-07-08T01:03:24.568Z",
+          "name": "Omni-Channel Communications/Buzz",
+          "owner": {
+            "gid": "1202989197989950",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210389919886895",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210506162368340",
+          "archived": false,
+          "created_at": "2025-06-10T18:07:14.993Z",
+          "current_status": null,
+          "modified_at": "2025-07-08T01:03:24.621Z",
+          "name": "Reporting/Dashboards",
+          "owner": {
+            "gid": "1208264575492004",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210389919886895",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210536258398295",
+          "archived": false,
+          "created_at": "2025-06-12T18:48:28.891Z",
+          "current_status": {
+            "gid": "1210548384108810",
+            "author": {
+              "gid": "1210347201937411",
+              "resource_type": "user"
+            },
+            "color": "green",
+            "created_at": "2025-06-13T23:31:39.326Z",
+            "created_by": {
+              "gid": "1210347201937411",
+              "resource_type": "user"
+            },
+            "modified_at": "2025-06-13T23:31:39.326Z",
+            "resource_type": "project_status",
+            "text": "Summary\n\nNext steps\n",
+            "title": "PR New CRM - Jun 13"
+          },
+          "modified_at": "2025-08-18T23:57:39.755Z",
+          "name": "Replace Salesforce",
+          "owner": {
+            "gid": "1210347201937411",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210358113729406",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210582969448439",
+          "archived": false,
+          "created_at": "2025-06-18T16:01:13.030Z",
+          "current_status": null,
+          "modified_at": "2025-08-15T20:20:22.703Z",
+          "name": "Email Routing / Domain Compliance",
+          "owner": {
+            "gid": "1208264575492004",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210368037093570",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210630495644147",
+          "archived": false,
+          "created_at": "2025-06-24T18:15:40.704Z",
+          "current_status": null,
+          "modified_at": "2025-06-24T18:15:41.637Z",
+          "name": "Stuck Accounts ",
+          "owner": {
+            "gid": "1208264575492004",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210512208397637",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210650720363470",
+          "archived": false,
+          "created_at": "2025-06-26T18:04:21.088Z",
+          "current_status": null,
+          "modified_at": "2025-09-02T23:31:30.436Z",
+          "name": "Product Enhancements (not included in other projects)",
+          "owner": {
+            "gid": "1207141564349878",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210389919886895",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210650720363602",
+          "archived": false,
+          "created_at": "2025-06-27T17:11:34.003Z",
+          "current_status": null,
+          "modified_at": "2025-06-27T18:16:45.329Z",
+          "name": "GS: User Access Roles/Permissions",
+          "owner": {
+            "gid": "1210347201937411",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210389919886895",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210662600850082",
+          "archived": false,
+          "created_at": "2025-06-27T18:19:26.482Z",
+          "current_status": null,
+          "modified_at": "2025-09-03T23:13:53.620Z",
+          "name": "2025 Product Development Projects",
+          "owner": {
+            "gid": "1207141564349878",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210389919886895",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210688932345321",
+          "archived": false,
+          "created_at": "2025-07-01T16:40:48.496Z",
+          "current_status": null,
+          "modified_at": "2025-07-01T16:40:49.848Z",
+          "name": "Unit Counts",
+          "owner": {
+            "gid": "1207141564349878",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210368037093574",
+            "resource_type": "team"
+          }
+        }
+      ],
+      "team_based": [
+        {
+          "gid": "1210630495644147",
+          "archived": false,
+          "created_at": "2025-06-24T18:15:40.704Z",
+          "current_status": null,
+          "modified_at": "2025-06-24T18:15:41.637Z",
+          "name": "Stuck Accounts ",
+          "owner": {
+            "gid": "1208264575492004",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210512208397637",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210536258398295",
+          "archived": false,
+          "created_at": "2025-06-12T18:48:28.891Z",
+          "current_status": {
+            "gid": "1210548384108810",
+            "author": {
+              "gid": "1210347201937411",
+              "resource_type": "user"
+            },
+            "color": "green",
+            "created_at": "2025-06-13T23:31:39.326Z",
+            "created_by": {
+              "gid": "1210347201937411",
+              "resource_type": "user"
+            },
+            "modified_at": "2025-06-13T23:31:39.326Z",
+            "resource_type": "project_status",
+            "text": "Summary\n\nNext steps\n",
+            "title": "PR New CRM - Jun 13"
+          },
+          "modified_at": "2025-08-18T23:57:39.755Z",
+          "name": "Replace Salesforce",
+          "owner": {
+            "gid": "1210347201937411",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210358113729406",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210479473913127",
+          "archived": false,
+          "created_at": "2025-06-06T14:53:44.029Z",
+          "current_status": null,
+          "modified_at": "2025-07-08T01:03:23.688Z",
+          "name": "Payments & Compliance Strategic Alignment",
+          "owner": {
+            "gid": "1207141564349878",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210368040157598",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210486409738387",
+          "archived": false,
+          "created_at": "2025-06-06T22:41:09.035Z",
+          "current_status": null,
+          "modified_at": "2025-07-08T01:03:23.803Z",
+          "name": "Scoring Model/Marketplace Enhancements",
+          "owner": {
+            "gid": "1208264575492004",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210389919886895",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210486409738392",
+          "archived": false,
+          "created_at": "2025-06-06T23:38:18.094Z",
+          "current_status": null,
+          "modified_at": "2025-08-26T18:12:55.134Z",
+          "name": "Disputes/Agency Requests",
+          "owner": {
+            "gid": "1210347201937411",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210389919886895",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210486409738396",
+          "archived": false,
+          "created_at": "2025-06-07T00:14:24.446Z",
+          "current_status": null,
+          "modified_at": "2025-07-08T01:03:23.900Z",
+          "name": "Deposit Alternatives",
+          "owner": {
+            "gid": "1210368166041685",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210389919886895",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210486409738399",
+          "archived": false,
+          "created_at": "2025-06-07T00:22:28.013Z",
+          "current_status": null,
+          "modified_at": "2025-09-03T23:09:59.629Z",
+          "name": "Settlement Campaigns and Bulk Jobs",
+          "owner": {
+            "gid": "1210347201937411",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210389919886895",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210486409738405",
+          "archived": false,
+          "created_at": "2025-06-07T00:28:11.776Z",
+          "current_status": null,
+          "modified_at": "2025-09-03T15:56:51.723Z",
+          "name": "Contract/Fees/Pricing/Legal (Text/AI)",
+          "owner": {
+            "gid": "1202141391816423",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210389919886895",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210495144915496",
+          "archived": false,
+          "created_at": "2025-06-09T16:32:20.535Z",
+          "current_status": null,
+          "modified_at": "2025-07-08T01:03:24.326Z",
+          "name": "Learning and Development",
+          "owner": {
+            "gid": "1202989197989950",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210389919886895",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210506162368332",
+          "archived": false,
+          "created_at": "2025-06-10T18:01:35.179Z",
+          "current_status": null,
+          "modified_at": "2025-07-08T01:03:24.568Z",
+          "name": "Omni-Channel Communications/Buzz",
+          "owner": {
+            "gid": "1202989197989950",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210389919886895",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210506162368340",
+          "archived": false,
+          "created_at": "2025-06-10T18:07:14.993Z",
+          "current_status": null,
+          "modified_at": "2025-07-08T01:03:24.621Z",
+          "name": "Reporting/Dashboards",
+          "owner": {
+            "gid": "1208264575492004",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210389919886895",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210650720363470",
+          "archived": false,
+          "created_at": "2025-06-26T18:04:21.088Z",
+          "current_status": null,
+          "modified_at": "2025-09-02T23:31:30.436Z",
+          "name": "Product Enhancements (not included in other projects)",
+          "owner": {
+            "gid": "1207141564349878",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210389919886895",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210650720363602",
+          "archived": false,
+          "created_at": "2025-06-27T17:11:34.003Z",
+          "current_status": null,
+          "modified_at": "2025-06-27T18:16:45.329Z",
+          "name": "GS: User Access Roles/Permissions",
+          "owner": {
+            "gid": "1210347201937411",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210389919886895",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210662600850082",
+          "archived": false,
+          "created_at": "2025-06-27T18:19:26.482Z",
+          "current_status": null,
+          "modified_at": "2025-09-03T23:13:53.620Z",
+          "name": "2025 Product Development Projects",
+          "owner": {
+            "gid": "1207141564349878",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210389919886895",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210731978464518",
+          "archived": true,
+          "created_at": "2025-07-07T16:29:11.208Z",
+          "current_status": null,
+          "modified_at": "2025-08-21T00:02:52.970Z",
+          "name": "Payment Issues 7.7.25",
+          "owner": {
+            "gid": "1207141564349878",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210389919886895",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210582969448439",
+          "archived": false,
+          "created_at": "2025-06-18T16:01:13.030Z",
+          "current_status": null,
+          "modified_at": "2025-08-15T20:20:22.703Z",
+          "name": "Email Routing / Domain Compliance",
+          "owner": {
+            "gid": "1208264575492004",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210368037093570",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210688932345321",
+          "archived": false,
+          "created_at": "2025-07-01T16:40:48.496Z",
+          "current_status": null,
+          "modified_at": "2025-07-01T16:40:49.848Z",
+          "name": "Unit Counts",
+          "owner": {
+            "gid": "1207141564349878",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210368037093574",
+            "resource_type": "team"
+          }
+        }
+      ],
+      "user_projects": [
+        {
+          "gid": "1210369700096944",
+          "archived": false,
+          "created_at": "2025-05-23T19:51:10.543Z",
+          "current_status": null,
+          "members": [
+            {
+              "gid": "1207141564349878",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1202989197989950",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210368169635934",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210368130835133",
+              "resource_type": "user"
+            }
+          ],
+          "modified_at": "2025-07-28T18:02:18.601Z",
+          "name": "Automate Offboarding",
+          "owner": {
+            "gid": "1210368169635934",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": null
+        },
+        {
+          "gid": "1210479473913127",
+          "archived": false,
+          "created_at": "2025-06-06T14:53:44.029Z",
+          "current_status": null,
+          "members": [
+            {
+              "gid": "1207141564349878",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210368369211313",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1202141391816423",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210515053343992",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210550650060118",
+              "resource_type": "user"
+            }
+          ],
+          "modified_at": "2025-07-08T01:03:23.688Z",
+          "name": "Payments & Compliance Strategic Alignment",
+          "owner": {
+            "gid": "1207141564349878",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210368040157598",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210486409738387",
+          "archived": false,
+          "created_at": "2025-06-06T22:41:09.035Z",
+          "current_status": null,
+          "members": [
+            {
+              "gid": "1202989197989950",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1207141564349878",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1208264575492004",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210347201937411",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210368304640665",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1202141391816423",
+              "resource_type": "user"
+            }
+          ],
+          "modified_at": "2025-07-08T01:03:23.803Z",
+          "name": "Scoring Model/Marketplace Enhancements",
+          "owner": {
+            "gid": "1208264575492004",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210389919886895",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210486409738392",
+          "archived": false,
+          "created_at": "2025-06-06T23:38:18.094Z",
+          "current_status": null,
+          "members": [
+            {
+              "gid": "1202989197989950",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210347201937411",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1207141564349878",
+              "resource_type": "user"
+            }
+          ],
+          "modified_at": "2025-08-26T18:12:55.134Z",
+          "name": "Disputes/Agency Requests",
+          "owner": {
+            "gid": "1210347201937411",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210389919886895",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210486409738396",
+          "archived": false,
+          "created_at": "2025-06-07T00:14:24.446Z",
+          "current_status": null,
+          "members": [
+            {
+              "gid": "1202989197989950",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210368166041685",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1207141564349878",
+              "resource_type": "user"
+            }
+          ],
+          "modified_at": "2025-07-08T01:03:23.900Z",
+          "name": "Deposit Alternatives",
+          "owner": {
+            "gid": "1210368166041685",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210389919886895",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210486409738399",
+          "archived": false,
+          "created_at": "2025-06-07T00:22:28.013Z",
+          "current_status": null,
+          "members": [
+            {
+              "gid": "1202989197989950",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1207141564349878",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210347201937411",
+              "resource_type": "user"
+            }
+          ],
+          "modified_at": "2025-09-03T23:09:59.629Z",
+          "name": "Settlement Campaigns and Bulk Jobs",
+          "owner": {
+            "gid": "1210347201937411",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210389919886895",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210486409738405",
+          "archived": false,
+          "created_at": "2025-06-07T00:28:11.776Z",
+          "current_status": null,
+          "members": [
+            {
+              "gid": "1202989197989950",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1202141391816423",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1207141564349878",
+              "resource_type": "user"
+            }
+          ],
+          "modified_at": "2025-09-03T15:56:51.723Z",
+          "name": "Contract/Fees/Pricing/Legal (Text/AI)",
+          "owner": {
+            "gid": "1202141391816423",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210389919886895",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210495144915496",
+          "archived": false,
+          "created_at": "2025-06-09T16:32:20.535Z",
+          "current_status": null,
+          "members": [
+            {
+              "gid": "1202989197989950",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1207141564349878",
+              "resource_type": "user"
+            }
+          ],
+          "modified_at": "2025-07-08T01:03:24.326Z",
+          "name": "Learning and Development",
+          "owner": {
+            "gid": "1202989197989950",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210389919886895",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210506162368332",
+          "archived": false,
+          "created_at": "2025-06-10T18:01:35.179Z",
+          "current_status": null,
+          "members": [
+            {
+              "gid": "1202989197989950",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210514666168383",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1207141564349878",
+              "resource_type": "user"
+            }
+          ],
+          "modified_at": "2025-07-08T01:03:24.568Z",
+          "name": "Omni-Channel Communications/Buzz",
+          "owner": {
+            "gid": "1202989197989950",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210389919886895",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210506162368340",
+          "archived": false,
+          "created_at": "2025-06-10T18:07:14.993Z",
+          "current_status": null,
+          "members": [
+            {
+              "gid": "1202989197989950",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1208264575492004",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1207141564349878",
+              "resource_type": "user"
+            }
+          ],
+          "modified_at": "2025-07-08T01:03:24.621Z",
+          "name": "Reporting/Dashboards",
+          "owner": {
+            "gid": "1208264575492004",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210389919886895",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210536258398295",
+          "archived": false,
+          "created_at": "2025-06-12T18:48:28.891Z",
+          "current_status": {
+            "gid": "1210548384108810",
+            "author": {
+              "gid": "1210347201937411",
+              "resource_type": "user"
+            },
+            "color": "green",
+            "created_at": "2025-06-13T23:31:39.326Z",
+            "created_by": {
+              "gid": "1210347201937411",
+              "resource_type": "user"
+            },
+            "modified_at": "2025-06-13T23:31:39.326Z",
+            "resource_type": "project_status",
+            "text": "Summary\n\nNext steps\n",
+            "title": "PR New CRM - Jun 13"
+          },
+          "members": [
+            {
+              "gid": "1210347201937411",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1207141564349878",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1208264575492004",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210512271974445",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210537697697281",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210537842928581",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210368304640665",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210550650060118",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210514666168383",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1202141391816423",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210368130835133",
+              "resource_type": "user"
+            }
+          ],
+          "modified_at": "2025-08-18T23:57:39.755Z",
+          "name": "Replace Salesforce",
+          "owner": {
+            "gid": "1210347201937411",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210358113729406",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210582969448439",
+          "archived": false,
+          "created_at": "2025-06-18T16:01:13.030Z",
+          "current_status": null,
+          "members": [
+            {
+              "gid": "1207141564349878",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1208264575492004",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210368304640665",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210489987284602",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210347201937411",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1202141391816423",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210515053343992",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210368166041685",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210368108783871",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210550650060118",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210537842928581",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210537697697281",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210368169635934",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1202989197989950",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210582969448460",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210602088517073",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210368130835133",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210368369211313",
+              "resource_type": "user"
+            }
+          ],
+          "modified_at": "2025-08-15T20:20:22.703Z",
+          "name": "Email Routing / Domain Compliance",
+          "owner": {
+            "gid": "1208264575492004",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210368037093570",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210630495644147",
+          "archived": false,
+          "created_at": "2025-06-24T18:15:40.704Z",
+          "current_status": null,
+          "members": [
+            {
+              "gid": "1207141564349878",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1208264575492004",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210515053343992",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210368304640665",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1202141391816423",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210550650060118",
+              "resource_type": "user"
+            }
+          ],
+          "modified_at": "2025-06-24T18:15:41.637Z",
+          "name": "Stuck Accounts ",
+          "owner": {
+            "gid": "1208264575492004",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210512208397637",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210650720363470",
+          "archived": false,
+          "created_at": "2025-06-26T18:04:21.088Z",
+          "current_status": null,
+          "members": [
+            {
+              "gid": "1207141564349878",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1202989197989950",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210701893757223",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210701893757226",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210953633562851",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210929330418288",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210929643700598",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210953643637021",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210953642401517",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210953642429221",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210929501955749",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210929513302614",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1211093012823363",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210929600778983",
+              "resource_type": "user"
+            }
+          ],
+          "modified_at": "2025-09-02T23:31:30.436Z",
+          "name": "Product Enhancements (not included in other projects)",
+          "owner": {
+            "gid": "1207141564349878",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210389919886895",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210650720363602",
+          "archived": false,
+          "created_at": "2025-06-27T17:11:34.003Z",
+          "current_status": null,
+          "members": [
+            {
+              "gid": "1207141564349878",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210347201937411",
+              "resource_type": "user"
+            }
+          ],
+          "modified_at": "2025-06-27T18:16:45.329Z",
+          "name": "GS: User Access Roles/Permissions",
+          "owner": {
+            "gid": "1210347201937411",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210389919886895",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210662600850082",
+          "archived": false,
+          "created_at": "2025-06-27T18:19:26.482Z",
+          "current_status": null,
+          "members": [
+            {
+              "gid": "1207141564349878",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210347201937411",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210562667075996",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210368169635934",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1202989197989950",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210701893757223",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210701893757226",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1207806779181107",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1208264575492004",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210368166041685",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1202141391816423",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210514666168383",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210929330418288",
+              "resource_type": "user"
+            }
+          ],
+          "modified_at": "2025-09-03T23:13:53.620Z",
+          "name": "2025 Product Development Projects",
+          "owner": {
+            "gid": "1207141564349878",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210389919886895",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210688932345321",
+          "archived": false,
+          "created_at": "2025-07-01T16:40:48.496Z",
+          "current_status": null,
+          "members": [
+            {
+              "gid": "1207141564349878",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1208264575492004",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210368304640665",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210515053343992",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1202141391816423",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210368130835133",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210582969448460",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210550650060118",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210368369211313",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1210368169635934",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1202989197989950",
+              "resource_type": "user"
+            }
+          ],
+          "modified_at": "2025-07-01T16:40:49.848Z",
+          "name": "Unit Counts",
+          "owner": {
+            "gid": "1207141564349878",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210368037093574",
+            "resource_type": "team"
+          }
+        },
+        {
+          "gid": "1210731978464518",
+          "archived": true,
+          "created_at": "2025-07-07T16:29:11.208Z",
+          "current_status": null,
+          "members": [
+            {
+              "gid": "1202989197989950",
+              "resource_type": "user"
+            },
+            {
+              "gid": "1207141564349878",
+              "resource_type": "user"
+            }
+          ],
+          "modified_at": "2025-08-21T00:02:52.970Z",
+          "name": "Payment Issues 7.7.25",
+          "owner": {
+            "gid": "1207141564349878",
+            "resource_type": "user"
+          },
+          "privacy_setting": "private",
+          "public": false,
+          "team": {
+            "gid": "1210389919886895",
+            "resource_type": "team"
+          }
+        }
+      ],
+      "search": [
+        {
+          "gid": "1210662600850082",
+          "name": "2025 Product Development Projects",
+          "resource_type": "project"
+        },
+        {
+          "gid": "1210688932345321",
+          "name": "Unit Counts",
+          "resource_type": "project"
+        },
+        {
+          "gid": "1210486409738405",
+          "name": "Contract/Fees/Pricing/Legal (Text/AI)",
+          "resource_type": "project"
+        },
+        {
+          "gid": "1210630495644147",
+          "name": "Stuck Accounts ",
+          "resource_type": "project"
+        },
+        {
+          "gid": "1210536258398295",
+          "name": "Replace Salesforce",
+          "resource_type": "project"
+        },
+        {
+          "gid": "1210582969448439",
+          "name": "Email Routing / Domain Compliance",
+          "resource_type": "project"
+        },
+        {
+          "gid": "1210479473913127",
+          "name": "Payments & Compliance Strategic Alignment",
+          "resource_type": "project"
+        },
+        {
+          "gid": "1210486409738387",
+          "name": "Scoring Model/Marketplace Enhancements",
+          "resource_type": "project"
+        }
+      ]
+    }
+  },
+  "unique_projects": [
+    {
+      "gid": "1210369700096944",
+      "name": "Automate Offboarding",
+      "workspace": "Unknown",
+      "team": null,
+      "archived": false,
+      "public": false,
+      "current_status": null,
+      "owner": null,
+      "created_at": "2025-05-23T19:51:10.543Z",
+      "modified_at": "2025-07-28T18:02:18.601Z",
+      "members_count": 0,
+      "privacy_setting": "private"
+    },
+    {
+      "gid": "1210479473913127",
+      "name": "Payments & Compliance Strategic Alignment",
+      "workspace": "Unknown",
+      "team": null,
+      "archived": false,
+      "public": false,
+      "current_status": null,
+      "owner": null,
+      "created_at": "2025-06-06T14:53:44.029Z",
+      "modified_at": "2025-07-08T01:03:23.688Z",
+      "members_count": 0,
+      "privacy_setting": "private"
+    },
+    {
+      "gid": "1210486409738387",
+      "name": "Scoring Model/Marketplace Enhancements",
+      "workspace": "Unknown",
+      "team": null,
+      "archived": false,
+      "public": false,
+      "current_status": null,
+      "owner": null,
+      "created_at": "2025-06-06T22:41:09.035Z",
+      "modified_at": "2025-07-08T01:03:23.803Z",
+      "members_count": 0,
+      "privacy_setting": "private"
+    },
+    {
+      "gid": "1210486409738392",
+      "name": "Disputes/Agency Requests",
+      "workspace": "Unknown",
+      "team": null,
+      "archived": false,
+      "public": false,
+      "current_status": null,
+      "owner": null,
+      "created_at": "2025-06-06T23:38:18.094Z",
+      "modified_at": "2025-08-26T18:12:55.134Z",
+      "members_count": 0,
+      "privacy_setting": "private"
+    },
+    {
+      "gid": "1210486409738396",
+      "name": "Deposit Alternatives",
+      "workspace": "Unknown",
+      "team": null,
+      "archived": false,
+      "public": false,
+      "current_status": null,
+      "owner": null,
+      "created_at": "2025-06-07T00:14:24.446Z",
+      "modified_at": "2025-07-08T01:03:23.900Z",
+      "members_count": 0,
+      "privacy_setting": "private"
+    },
+    {
+      "gid": "1210486409738399",
+      "name": "Settlement Campaigns and Bulk Jobs",
+      "workspace": "Unknown",
+      "team": null,
+      "archived": false,
+      "public": false,
+      "current_status": null,
+      "owner": null,
+      "created_at": "2025-06-07T00:22:28.013Z",
+      "modified_at": "2025-09-03T23:09:59.629Z",
+      "members_count": 0,
+      "privacy_setting": "private"
+    },
+    {
+      "gid": "1210486409738405",
+      "name": "Contract/Fees/Pricing/Legal (Text/AI)",
+      "workspace": "Unknown",
+      "team": null,
+      "archived": false,
+      "public": false,
+      "current_status": null,
+      "owner": null,
+      "created_at": "2025-06-07T00:28:11.776Z",
+      "modified_at": "2025-09-03T15:56:51.723Z",
+      "members_count": 0,
+      "privacy_setting": "private"
+    },
+    {
+      "gid": "1210495144915496",
+      "name": "Learning and Development",
+      "workspace": "Unknown",
+      "team": null,
+      "archived": false,
+      "public": false,
+      "current_status": null,
+      "owner": null,
+      "created_at": "2025-06-09T16:32:20.535Z",
+      "modified_at": "2025-07-08T01:03:24.326Z",
+      "members_count": 0,
+      "privacy_setting": "private"
+    },
+    {
+      "gid": "1210506162368332",
+      "name": "Omni-Channel Communications/Buzz",
+      "workspace": "Unknown",
+      "team": null,
+      "archived": false,
+      "public": false,
+      "current_status": null,
+      "owner": null,
+      "created_at": "2025-06-10T18:01:35.179Z",
+      "modified_at": "2025-07-08T01:03:24.568Z",
+      "members_count": 0,
+      "privacy_setting": "private"
+    },
+    {
+      "gid": "1210506162368340",
+      "name": "Reporting/Dashboards",
+      "workspace": "Unknown",
+      "team": null,
+      "archived": false,
+      "public": false,
+      "current_status": null,
+      "owner": null,
+      "created_at": "2025-06-10T18:07:14.993Z",
+      "modified_at": "2025-07-08T01:03:24.621Z",
+      "members_count": 0,
+      "privacy_setting": "private"
+    },
+    {
+      "gid": "1210536258398295",
+      "name": "Replace Salesforce",
+      "workspace": "Unknown",
+      "team": null,
+      "archived": false,
+      "public": false,
+      "current_status": {
+        "gid": "1210548384108810",
+        "author": {
+          "gid": "1210347201937411",
+          "resource_type": "user"
+        },
+        "color": "green",
+        "created_at": "2025-06-13T23:31:39.326Z",
+        "created_by": {
+          "gid": "1210347201937411",
+          "resource_type": "user"
+        },
+        "modified_at": "2025-06-13T23:31:39.326Z",
+        "resource_type": "project_status",
+        "text": "Summary\n\nNext steps\n",
+        "title": "PR New CRM - Jun 13"
+      },
+      "owner": null,
+      "created_at": "2025-06-12T18:48:28.891Z",
+      "modified_at": "2025-08-18T23:57:39.755Z",
+      "members_count": 0,
+      "privacy_setting": "private"
+    },
+    {
+      "gid": "1210582969448439",
+      "name": "Email Routing / Domain Compliance",
+      "workspace": "Unknown",
+      "team": null,
+      "archived": false,
+      "public": false,
+      "current_status": null,
+      "owner": null,
+      "created_at": "2025-06-18T16:01:13.030Z",
+      "modified_at": "2025-08-15T20:20:22.703Z",
+      "members_count": 0,
+      "privacy_setting": "private"
+    },
+    {
+      "gid": "1210630495644147",
+      "name": "Stuck Accounts ",
+      "workspace": "Unknown",
+      "team": null,
+      "archived": false,
+      "public": false,
+      "current_status": null,
+      "owner": null,
+      "created_at": "2025-06-24T18:15:40.704Z",
+      "modified_at": "2025-06-24T18:15:41.637Z",
+      "members_count": 0,
+      "privacy_setting": "private"
+    },
+    {
+      "gid": "1210650720363470",
+      "name": "Product Enhancements (not included in other projects)",
+      "workspace": "Unknown",
+      "team": null,
+      "archived": false,
+      "public": false,
+      "current_status": null,
+      "owner": null,
+      "created_at": "2025-06-26T18:04:21.088Z",
+      "modified_at": "2025-09-02T23:31:30.436Z",
+      "members_count": 0,
+      "privacy_setting": "private"
+    },
+    {
+      "gid": "1210650720363602",
+      "name": "GS: User Access Roles/Permissions",
+      "workspace": "Unknown",
+      "team": null,
+      "archived": false,
+      "public": false,
+      "current_status": null,
+      "owner": null,
+      "created_at": "2025-06-27T17:11:34.003Z",
+      "modified_at": "2025-06-27T18:16:45.329Z",
+      "members_count": 0,
+      "privacy_setting": "private"
+    },
+    {
+      "gid": "1210662600850082",
+      "name": "2025 Product Development Projects",
+      "workspace": "Unknown",
+      "team": null,
+      "archived": false,
+      "public": false,
+      "current_status": null,
+      "owner": null,
+      "created_at": "2025-06-27T18:19:26.482Z",
+      "modified_at": "2025-09-03T23:13:53.620Z",
+      "members_count": 0,
+      "privacy_setting": "private"
+    },
+    {
+      "gid": "1210688932345321",
+      "name": "Unit Counts",
+      "workspace": "Unknown",
+      "team": null,
+      "archived": false,
+      "public": false,
+      "current_status": null,
+      "owner": null,
+      "created_at": "2025-07-01T16:40:48.496Z",
+      "modified_at": "2025-07-01T16:40:49.848Z",
+      "members_count": 0,
+      "privacy_setting": "private"
+    },
+    {
+      "gid": "1210731978464518",
+      "name": "Payment Issues 7.7.25",
+      "workspace": "Unknown",
+      "team": null,
+      "archived": true,
+      "public": false,
+      "current_status": null,
+      "owner": null,
+      "created_at": "2025-07-07T16:29:11.208Z",
+      "modified_at": "2025-08-21T00:02:52.970Z",
+      "members_count": 0,
+      "privacy_setting": "private"
+    }
+  ]
+}

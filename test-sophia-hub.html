@@ -147,7 +147,7 @@
 <body>
     <div class="container">
         <h1>💎 Sophia Enhanced API Test Interface</h1>
-        
+
         <div class="chat-container">
             <div class="messages" id="messages">
                 <div class="sophia-message message">
@@ -155,13 +155,13 @@
                     <div>Hello! I'm Sophia with enhanced API testing capabilities. Try testing my API connections!</div>
                 </div>
             </div>
-            
+
             <div class="input-container">
                 <input type="text" id="messageInput" placeholder="Try: 'test gong api connection' or 'check hubspot status'" />
                 <button id="sendBtn">Send</button>
             </div>
         </div>
-        
+
         <div class="test-buttons">
             <button class="test-btn" onclick="testCommand('test gong api connection')">Test Gong API</button>
             <button class="test-btn" onclick="testCommand('test hubspot api')">Test HubSpot API</button>
@@ -170,7 +170,7 @@
             <button class="test-btn" onclick="testCommand('gong api status')">Gong Status</button>
             <button class="test-btn" onclick="testCommand('test all api connections')">Test All APIs</button>
         </div>
-        
+
         <div id="status" class="status" style="display: none;"></div>
     </div>
 
@@ -179,20 +179,20 @@
         const messageInput = document.getElementById('messageInput');
         const sendBtn = document.getElementById('sendBtn');
         const statusDiv = document.getElementById('status');
-        
+
         async function sendMessage() {
             const message = messageInput.value.trim();
             if (!message) return;
-            
+
             // Add user message
             addMessage(message, 'user');
             messageInput.value = '';
             sendBtn.disabled = true;
-            
+
             // Show typing indicator
             const typingId = 'typing-' + Date.now();
             addMessage('Thinking...', 'sophia', typingId, true);
-            
+
             try {
                 const response = await fetch('http://localhost:9000/api/sophia/chat', {
                     method: 'POST',
@@ -205,46 +205,46 @@
                         include_voice: false
                     })
                 });
-                
+
                 const data = await response.json();
-                
+
                 // Remove typing indicator
                 document.getElementById(typingId)?.remove();
-                
+
                 // Format and display response
                 let responseText = data.response || data.content || 'No response';
                 responseText = formatResponse(responseText);
                 addMessage(responseText, 'sophia');
-                
+
                 // Show status
                 if (data.command_type) {
                     showStatus(`Command Type: ${data.command_type} | Success: ${data.success}`, data.success ? 'success' : 'error');
                 }
-                
+
             } catch (error) {
                 document.getElementById(typingId)?.remove();
                 addMessage(`Error: ${error.message}`, 'sophia');
                 showStatus('Connection error - ensure Sophia server is running on port 9000', 'error');
             }
-            
+
             sendBtn.disabled = false;
         }
-        
+
         function addMessage(text, sender, id = null, isTyping = false) {
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${sender}-message`;
             if (id) messageDiv.id = id;
             if (isTyping) messageDiv.classList.add('typing');
-            
+
             messageDiv.innerHTML = `
                 <div class="message-header">${sender === 'user' ? 'You' : 'Sophia'}</div>
                 <div>${text}</div>
             `;
-            
+
             messagesDiv.appendChild(messageDiv);
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
         }
-        
+
         function formatResponse(text) {
             // Convert markdown to HTML
             text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
@@ -255,7 +255,7 @@
             text = text.replace(/❌/g, '❌');
             return text;
         }
-        
+
         function showStatus(text, type) {
             statusDiv.textContent = text;
             statusDiv.className = `status ${type}`;
@@ -264,18 +264,18 @@
                 statusDiv.style.display = 'none';
             }, 5000);
         }
-        
+
         function testCommand(command) {
             messageInput.value = command;
             sendMessage();
         }
-        
+
         // Event listeners
         sendBtn.addEventListener('click', sendMessage);
         messageInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') sendMessage();
         });
-        
+
         // Focus input on load
         messageInput.focus();
     </script>

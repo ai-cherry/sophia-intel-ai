@@ -7,10 +7,10 @@ interface EnvironmentConfig {
   // API Configuration
   apiBaseUrl: string;
   wsBaseUrl: string;
-  
+
   // Feature flags
   debugMode: boolean;
-  
+
   // Deployment environment
   environment: 'development' | 'staging' | 'production';
 }
@@ -19,13 +19,13 @@ interface EnvironmentConfig {
 const getEnvVar = (key: string, defaultValue: string): string => {
   // In Next.js, public environment variables must be prefixed with NEXT_PUBLIC_
   const envKey = `NEXT_PUBLIC_${key}`;
-  
+
   // Check if running in browser
   if (typeof window !== 'undefined') {
     // @ts-ignore - process.env is available in Next.js
     return process.env[envKey] || defaultValue;
   }
-  
+
   // Server-side
   return process.env[envKey] || defaultValue;
 };
@@ -44,13 +44,13 @@ const buildWebSocketUrl = (): string => {
   const wsPort = getEnvVar('WS_PORT', '8000');
   const wsPath = getEnvVar('WS_PATH', '/ws/orchestrator');
   const wsProtocol = getEnvVar('WS_PROTOCOL', 'ws');
-  
+
   // Use configured URL if provided
   const configuredUrl = getEnvVar('WS_URL', '');
   if (configuredUrl) {
     return configuredUrl;
   }
-  
+
   // Build URL from components
   return `${wsProtocol}://${wsHost}:${wsPort}${wsPath}`;
 };
@@ -60,13 +60,13 @@ const buildApiBaseUrl = (): string => {
   const apiHost = getEnvVar('API_HOST', 'localhost');
   const apiPort = getEnvVar('API_PORT', '8000');
   const apiProtocol = getEnvVar('API_PROTOCOL', 'http');
-  
+
   // Use configured URL if provided
   const configuredUrl = getEnvVar('API_URL', '');
   if (configuredUrl) {
     return configuredUrl;
   }
-  
+
   // Build URL from components
   return `${apiProtocol}://${apiHost}:${apiPort}`;
 };

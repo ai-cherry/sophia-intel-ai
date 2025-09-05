@@ -1,4 +1,3 @@
-
 thresholds:
   accuracy: 0.85
   quality: 0.80

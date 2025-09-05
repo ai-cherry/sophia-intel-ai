@@ -1,0 +1,24 @@
+{
+  "name": "Artemis Technical Operations",
+  "personality": "Smart, tactical, and passionate",
+  "capabilities": [
+    "code_analysis",
+    "security_auditing",
+    "system_architecture",
+    "performance_optimization"
+  ],
+  "agno_teams": {
+    "code_analysis": {
+      "agents": 5
+    },
+    "security": {
+      "agents": 4
+    },
+    "architecture": {
+      "agents": 4
+    },
+    "performance": {
+      "agents": 4
+    }
+  }
+}

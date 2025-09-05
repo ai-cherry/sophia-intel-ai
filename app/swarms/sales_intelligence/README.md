@@ -38,14 +38,14 @@ The Sales Intelligence Swarm provides:
 
 ### Specialized Agents
 
-| Agent | Primary Function | Real-time Capability |
-|-------|-----------------|---------------------|
-| **TranscriptionAgent** | Audio-to-text conversion | High-frequency updates |
-| **SentimentAgent** | Emotion & tone analysis | Real-time mood tracking |
-| **CompetitiveAgent** | Competitor mention detection | Immediate notifications |
-| **RiskAssessmentAgent** | Deal risk evaluation | Continuous assessment |
-| **CoachingAgent** | Sales technique analysis | Instant feedback |
-| **SummaryAgent** | Call outcome synthesis | Post-call processing |
+| Agent                   | Primary Function             | Real-time Capability    |
+| ----------------------- | ---------------------------- | ----------------------- |
+| **TranscriptionAgent**  | Audio-to-text conversion     | High-frequency updates  |
+| **SentimentAgent**      | Emotion & tone analysis      | Real-time mood tracking |
+| **CompetitiveAgent**    | Competitor mention detection | Immediate notifications |
+| **RiskAssessmentAgent** | Deal risk evaluation         | Continuous assessment   |
+| **CoachingAgent**       | Sales technique analysis     | Instant feedback        |
+| **SummaryAgent**        | Call outcome synthesis       | Post-call processing    |
 
 ## 🚀 Quick Start
 
@@ -103,12 +103,12 @@ Access the live dashboard at: `http://localhost:3333/sales-dashboard`
 
 ### API Endpoints
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/sales/query` | POST | Process Sophia queries |
-| `/api/sales/start-monitoring` | POST | Start call monitoring |
-| `/api/sales/dashboard/call/{call_id}` | GET | Get call dashboard data |
-| `/api/sales/dashboard/team` | GET | Get team dashboard data |
+| Endpoint                              | Method | Description             |
+| ------------------------------------- | ------ | ----------------------- |
+| `/api/sales/query`                    | POST   | Process Sophia queries  |
+| `/api/sales/start-monitoring`         | POST   | Start call monitoring   |
+| `/api/sales/dashboard/call/{call_id}` | GET    | Get call dashboard data |
+| `/api/sales/dashboard/team`           | GET    | Get team dashboard data |
 
 ## 🤖 Sophia Integration
 
@@ -255,11 +255,11 @@ from app.swarms.sales_intelligence import SalesIntelligenceOrchestrator
 async def monitor_call():
     orchestrator = SalesIntelligenceOrchestrator()
     await orchestrator.initialize()
-    
+
     # Start monitoring
     result = await orchestrator.start_call_monitoring("call_123")
     print(f"Monitoring started: {result}")
-    
+
     # Query status
     status = await orchestrator.process_sophia_query(
         "What's the status of call call_123?"
@@ -318,10 +318,10 @@ The Sales Intelligence Swarm integrates seamlessly with:
 @app.post("/webhooks/gong")
 async def gong_webhook(request: dict):
     event_type = request.get("eventType")
-    
+
     if event_type == "callStarted":
         await orchestrator.start_call_monitoring(request["callId"])
-    
+
     return {"status": "processed"}
 ```
 
@@ -330,11 +330,13 @@ async def gong_webhook(request: dict):
 ### Common Issues
 
 1. **Gong Connection Failed**
+
    - Verify API credentials
    - Check network connectivity
    - Ensure WebSocket support
 
 2. **Agent Processing Slow**
+
    - Check system resources
    - Optimize agent configuration
    - Consider scaling horizontally

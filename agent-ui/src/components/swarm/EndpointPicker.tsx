@@ -7,15 +7,15 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 export function EndpointPicker() {
-  const { 
-    selectedEndpoint, 
-    setSelectedEndpoint, 
-    isEndpointActive, 
+  const {
+    selectedEndpoint,
+    setSelectedEndpoint,
+    isEndpointActive,
     setIsEndpointActive,
     isEndpointLoading,
-    setIsEndpointLoading 
+    setIsEndpointLoading
   } = usePlaygroundStore();
-  
+
   const [inputValue, setInputValue] = useState(selectedEndpoint);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,10 +26,10 @@ export function EndpointPicker() {
   const handleConnect = async () => {
     setIsEndpointLoading(true);
     setError(null);
-    
+
     try {
       const result = await testEndpoint(inputValue);
-      
+
       if (result.success) {
         setSelectedEndpoint(inputValue);
         setIsEndpointActive(true);
@@ -66,7 +66,7 @@ export function EndpointPicker() {
             disabled={isEndpointLoading}
           />
         </div>
-        
+
         <Button
           onClick={handleConnect}
           disabled={isEndpointLoading || !inputValue.trim()}
@@ -74,7 +74,7 @@ export function EndpointPicker() {
         >
           {isEndpointLoading ? 'Connecting...' : 'Connect'}
         </Button>
-        
+
         <div className="flex items-center gap-2">
           <span
             className={cn(
@@ -88,7 +88,7 @@ export function EndpointPicker() {
           )}
         </div>
       </div>
-      
+
       {error && (
         <div className="absolute top-full left-0 right-0 mt-2 p-2 bg-red-50 text-red-700 rounded-md text-sm border border-red-200">
           {error}

@@ -17,26 +17,26 @@ graph TB
         AGNO[Agno Agent UI<br/>:3000]
         N8N[n8n Workflows<br/>:5678]
     end
-    
+
     subgraph API Gateway Layer
         GW[Unified Gateway<br/>:8003]
         NL[NL Interface<br/>:8003/api/nl]
         SWARM_API[Swarm API<br/>:8003/api/swarms]
     end
-    
+
     subgraph Orchestration Layer
         UFO[UnifiedOrchestratorFacade]
         CMD[CommandDispatcher]
         SO[SimpleOrchestrator]
     end
-    
+
     subgraph Swarm Layer
         CS[Coding Swarm]
         IS[Improved Swarm]
         FS[Fast Swarm]
         GS[GENESIS Swarm]
     end
-    
+
     subgraph Agent Layer
         LEAD[Lead Agent]
         GEN[Generators 2-4]
@@ -44,13 +44,13 @@ graph TB
         JUDGE[Judge]
         RUN[Runner]
     end
-    
+
     subgraph Memory Layer
         MCP[SupermemoryMCP<br/>:8004]
         WEAV[Weaviate<br/>:8080]
         REDIS[Redis<br/>:6379]
     end
-    
+
     subgraph LLM Layer
         GPT4[GPT-4]
         GPT35[GPT-3.5]
@@ -60,30 +60,30 @@ graph TB
     UI --> GW
     AGNO --> GW
     N8N --> GW
-    
+
     GW --> NL
     GW --> SWARM_API
-    
+
     NL --> CMD
     SWARM_API --> UFO
     CMD --> UFO
     CMD --> SO
-    
+
     UFO --> CS
     UFO --> IS
     UFO --> FS
     UFO --> GS
-    
+
     CS --> LEAD
     LEAD --> GEN
     GEN --> CRIT
     CRIT --> JUDGE
     JUDGE --> RUN
-    
+
     CS --> MCP
     CS --> WEAV
     SO --> REDIS
-    
+
     GEN --> PORTKEY
     CRIT --> PORTKEY
     JUDGE --> PORTKEY
@@ -118,23 +118,23 @@ sequenceDiagram
     UFO->>Memory: Load context
     Memory-->>UFO: Relevant patterns
     UFO->>CS: Execute with config
-    
+
     CS->>Lead: Analyze task
     Lead->>Gen1: Generate solution A
     Lead->>Gen2: Generate solution B
-    
+
     par Parallel Generation
         Gen1->>Gen1: Create implementation
         Gen2->>Gen2: Create implementation
     end
-    
+
     Gen1-->>CS: Proposal A
     Gen2-->>CS: Proposal B
-    
+
     CS->>Critic: Review proposals
     Critic->>Critic: Evaluate quality
     Critic-->>CS: Structured critique
-    
+
     alt Revision Needed
         CS->>Gen1: Apply fixes
         CS->>Gen2: Apply fixes
@@ -142,17 +142,17 @@ sequenceDiagram
         Gen2-->>CS: Revised B
         CS->>Critic: Re-review
     end
-    
+
     CS->>Judge: Final decision
     Judge->>Judge: Compare & merge
     Judge-->>CS: Decision + instructions
-    
+
     opt Runner Enabled
         CS->>Runner: Execute changes
         Runner->>Runner: Apply code
         Runner-->>CS: Execution result
     end
-    
+
     CS->>Memory: Store pattern
     CS-->>UFO: DebateResult
     UFO-->>API: Response
@@ -167,25 +167,25 @@ graph LR
     subgraph User Input
         NL_CMD[Natural Language Command]
     end
-    
+
     subgraph NL Processing
         INTENT[Intent Recognition]
         ENTITY[Entity Extraction]
         COMPLEX[Complexity Analysis]
     end
-    
+
     subgraph Routing Decision
         SIMPLE{Simple?}
         MEDIUM{Medium?}
         COMPLEX_Q{Complex?}
     end
-    
+
     subgraph Execution Paths
         DIRECT[Direct Tool Call]
         AGENT[Agent Orchestrator]
         SWARM[Swarm Execution]
     end
-    
+
     subgraph Swarm Selection
         FAST_S[Fast Swarm<br/>2 patterns]
         BALANCED_S[Balanced Swarm<br/>5 patterns]
@@ -195,15 +195,15 @@ graph LR
     NL_CMD --> INTENT
     INTENT --> ENTITY
     ENTITY --> COMPLEX
-    
+
     COMPLEX --> SIMPLE
     COMPLEX --> MEDIUM
     COMPLEX --> COMPLEX_Q
-    
+
     SIMPLE -->|Yes| DIRECT
     MEDIUM -->|Yes| AGENT
     COMPLEX_Q -->|Yes| SWARM
-    
+
     SWARM --> FAST_S
     SWARM --> BALANCED_S
     SWARM --> QUALITY_S
@@ -214,30 +214,30 @@ graph LR
 ```mermaid
 stateDiagram-v2
     [*] --> TaskReceived
-    
+
     TaskReceived --> LoadContext: Use Memory
     TaskReceived --> DirectExecution: Skip Memory
-    
+
     LoadContext --> SearchPatterns
     SearchPatterns --> SearchLearnings
     SearchLearnings --> SearchHistory
     SearchHistory --> EnhanceTask
-    
+
     EnhanceTask --> SelectSwarm
     DirectExecution --> SelectSwarm
-    
+
     SelectSwarm --> ConfigureSwarm
     ConfigureSwarm --> ExecuteSwarm
-    
+
     ExecuteSwarm --> GenerateProposals
     GenerateProposals --> CriticReview
-    
+
     CriticReview --> PassedQuality: Quality > 0.8
     CriticReview --> NeedsRevision: Quality < 0.8
-    
+
     NeedsRevision --> GenerateProposals
     PassedQuality --> JudgeDecision
-    
+
     JudgeDecision --> StoreResults
     StoreResults --> UpdatePatterns
     UpdatePatterns --> CaptureLearnings
@@ -250,24 +250,24 @@ stateDiagram-v2
 
 ### 3.1 Swarm Management API
 
-| Endpoint | Method | Description | Request Body | Response |
-|----------|---------|-------------|--------------|----------|
-| `/api/swarms/coding/execute` | POST | Execute coding swarm | SwarmRequest | DebateResult |
-| `/api/swarms/coding/stream` | POST | Stream execution | SwarmRequest | Event stream |
-| `/api/swarms/coding/pools` | GET | Get available pools | - | Pool info |
-| `/api/swarms/coding/configuration` | GET | Get default config | - | SwarmConfiguration |
-| `/api/swarms/coding/validate` | POST | Validate config | SwarmConfiguration | Validation result |
-| `/api/swarms/coding/history` | GET | Get execution history | Query params | List of results |
-| `/api/swarms/coding/quick` | POST | Quick execution | Query params | DebateResult |
+| Endpoint                           | Method | Description           | Request Body       | Response           |
+| ---------------------------------- | ------ | --------------------- | ------------------ | ------------------ |
+| `/api/swarms/coding/execute`       | POST   | Execute coding swarm  | SwarmRequest       | DebateResult       |
+| `/api/swarms/coding/stream`        | POST   | Stream execution      | SwarmRequest       | Event stream       |
+| `/api/swarms/coding/pools`         | GET    | Get available pools   | -                  | Pool info          |
+| `/api/swarms/coding/configuration` | GET    | Get default config    | -                  | SwarmConfiguration |
+| `/api/swarms/coding/validate`      | POST   | Validate config       | SwarmConfiguration | Validation result  |
+| `/api/swarms/coding/history`       | GET    | Get execution history | Query params       | List of results    |
+| `/api/swarms/coding/quick`         | POST   | Quick execution       | Query params       | DebateResult       |
 
 ### 3.2 Natural Language Interface
 
-| Endpoint | Method | Description | Integration |
-|----------|---------|-------------|-------------|
-| `/api/nl/process` | POST | Process NL command | Routes to swarms |
-| `/api/nl/system/status` | GET | System status | All components |
-| `/api/nl/agents/status/{id}` | GET | Agent status | Agent orchestrator |
-| `/api/nl/intents` | GET | Available intents | Intent mapping |
+| Endpoint                     | Method | Description        | Integration        |
+| ---------------------------- | ------ | ------------------ | ------------------ |
+| `/api/nl/process`            | POST   | Process NL command | Routes to swarms   |
+| `/api/nl/system/status`      | GET    | System status      | All components     |
+| `/api/nl/agents/status/{id}` | GET    | Agent status       | Agent orchestrator |
+| `/api/nl/intents`            | GET    | Available intents  | Intent mapping     |
 
 ---
 
@@ -281,15 +281,15 @@ from app.swarms.memory_enhanced_swarm import MemoryEnhancedImprovedSwarm
 
 class CustomBusinessSwarm(MemoryEnhancedImprovedSwarm):
     """Custom swarm for business analysis tasks"""
-    
+
     def __init__(self, agents: List):
         super().__init__(agents, "swarm_config.json", "business_swarm")
-        
+
         # Customize memory configuration
         self.memory_pattern.config.max_context_patterns = 5
         self.memory_pattern.config.max_context_learnings = 10
         self.memory_pattern.config.min_quality_for_pattern_storage = 0.70
-        
+
         # Define custom agent roles
         self.custom_roles = [
             "market_analyst",
@@ -297,7 +297,7 @@ class CustomBusinessSwarm(MemoryEnhancedImprovedSwarm):
             "strategy_consultant",
             "risk_assessor"
         ]
-    
+
     async def execute_business_analysis(self, task: Dict) -> Dict:
         """Custom execution for business tasks"""
         # Implementation here
@@ -401,19 +401,19 @@ from app.swarms.base import BaseSwarm
 
 class SwarmRegistry:
     """Registry for custom swarm types"""
-    
+
     _registry: Dict[str, Type[BaseSwarm]] = {}
-    
+
     @classmethod
     def register(cls, name: str, swarm_class: Type[BaseSwarm]):
         """Register a custom swarm type"""
         cls._registry[name] = swarm_class
-    
+
     @classmethod
     def get(cls, name: str) -> Type[BaseSwarm]:
         """Get swarm class by name"""
         return cls._registry.get(name)
-    
+
     @classmethod
     def list_available(cls) -> List[str]:
         """List all registered swarm types"""
@@ -431,6 +431,7 @@ SwarmRegistry.register("business", CustomBusinessSwarm)
 ### 5.1 🚨 Critical Improvements (Priority 1)
 
 #### 1. **Consolidate Gateway Implementations**
+
 ```python
 # Current: 4 different gateways
 # Recommended: Single UnifiedGateway with adapters
@@ -443,13 +444,14 @@ class UnifiedGateway:
             'together': TogetherAdapter(),
             'anthropic': AnthropicAdapter()
         }
-    
+
     async def route(self, request: Request) -> Response:
         adapter = self.select_optimal_adapter(request)
         return await adapter.process(request)
 ```
 
 #### 2. **Implement Real WebSocket Streaming**
+
 ```python
 # Current: Pseudo-streaming with polling
 # Recommended: True WebSocket implementation
@@ -459,12 +461,13 @@ from fastapi import WebSocket
 @router.websocket("/ws/swarms/{session_id}")
 async def swarm_websocket(websocket: WebSocket, session_id: str):
     await websocket.accept()
-    
+
     async for event in swarm_orchestrator.stream_execution(session_id):
         await websocket.send_json(event.dict())
 ```
 
 #### 3. **Add Swarm Health Monitoring Dashboard**
+
 ```python
 # Recommended: Real-time swarm health monitoring
 class SwarmHealthMonitor:
@@ -485,28 +488,30 @@ class SwarmHealthMonitor:
 ### 5.2 🔧 Technical Improvements (Priority 2)
 
 #### 4. **Implement Swarm Versioning**
+
 ```python
 class SwarmVersion:
     """Version control for swarm configurations"""
-    
+
     def save_version(self, swarm_type: str, config: Dict) -> str:
         version_id = f"v{datetime.now().strftime('%Y%m%d_%H%M%S')}"
         # Store in version control
         return version_id
-    
+
     def rollback(self, swarm_type: str, version_id: str):
         # Rollback to previous version
         pass
 ```
 
 #### 5. **Add A/B Testing for Swarm Strategies**
+
 ```python
 class SwarmABTester:
     async def execute_with_ab_test(self, task: str) -> Dict:
         # Run task with two different configurations
         result_a = await self.run_variant_a(task)
         result_b = await self.run_variant_b(task)
-        
+
         # Compare and learn
         winner = self.compare_results(result_a, result_b)
         await self.store_ab_learning(winner)
@@ -514,6 +519,7 @@ class SwarmABTester:
 ```
 
 #### 6. **Implement Swarm Cost Tracking**
+
 ```python
 class SwarmCostMonitor:
     def track_execution_cost(self, swarm_type: str, execution: Dict):
@@ -529,16 +535,17 @@ class SwarmCostMonitor:
 ### 5.3 🎨 UX/UI Improvements (Priority 3)
 
 #### 7. **Enhanced Visual Swarm Builder**
+
 ```typescript
 // React component for visual swarm configuration
 const SwarmBuilder = () => {
     const [agents, setAgents] = useState([]);
     const [patterns, setPatterns] = useState([]);
-    
+
     return (
         <DragDropContext>
             <AgentPalette />
-            <SwarmCanvas 
+            <SwarmCanvas
                 agents={agents}
                 patterns={patterns}
                 onConnect={handleConnection}
@@ -550,6 +557,7 @@ const SwarmBuilder = () => {
 ```
 
 #### 8. **Real-time Execution Visualization**
+
 ```python
 # Stream execution events for visualization
 async def stream_execution_viz(session_id: str):
@@ -568,10 +576,11 @@ async def stream_execution_viz(session_id: str):
 ### 5.4 🔒 Security & Reliability (Priority 1)
 
 #### 9. **Implement Swarm Sandboxing**
+
 ```python
 class SwarmSandbox:
     """Isolate swarm execution environments"""
-    
+
     async def execute_sandboxed(self, swarm: BaseSwarm, task: str):
         container = await self.create_container(swarm.requirements)
         try:
@@ -582,6 +591,7 @@ class SwarmSandbox:
 ```
 
 #### 10. **Add Audit Logging**
+
 ```python
 class SwarmAuditLogger:
     async def log_execution(self, request: SwarmRequest, result: Dict):
@@ -599,16 +609,17 @@ class SwarmAuditLogger:
 ### 5.5 📊 Performance Optimizations (Priority 2)
 
 #### 11. **Implement Swarm Result Caching**
+
 ```python
 class SwarmResultCache:
     async def get_or_execute(self, task: str, config: Dict) -> Dict:
         cache_key = self.generate_cache_key(task, config)
-        
+
         # Check cache
         cached = await self.redis.get(cache_key)
         if cached and self.is_fresh(cached):
             return cached
-        
+
         # Execute and cache
         result = await self.execute_swarm(task, config)
         await self.redis.setex(cache_key, 3600, result)
@@ -616,12 +627,13 @@ class SwarmResultCache:
 ```
 
 #### 12. **Add Predictive Resource Allocation**
+
 ```python
 class PredictiveResourceAllocator:
     async def allocate_resources(self, task: str) -> Dict:
         # Predict resource needs
         complexity = self.predict_complexity(task)
-        
+
         return {
             "agent_count": self.calculate_agents(complexity),
             "timeout": self.calculate_timeout(complexity),
@@ -635,24 +647,28 @@ class PredictiveResourceAllocator:
 ## 6. Implementation Roadmap
 
 ### Phase 1: Foundation (Weeks 1-2)
+
 - [ ] Consolidate gateway implementations
 - [ ] Implement WebSocket streaming
 - [ ] Add swarm health monitoring
 - [ ] Enhance audit logging
 
 ### Phase 2: Intelligence (Weeks 3-4)
+
 - [ ] Implement A/B testing framework
 - [ ] Add predictive resource allocation
 - [ ] Enhance memory integration
 - [ ] Implement result caching
 
 ### Phase 3: User Experience (Weeks 5-6)
+
 - [ ] Build visual swarm builder
 - [ ] Create execution visualization
 - [ ] Enhance Streamlit UI
 - [ ] Add cost tracking dashboard
 
 ### Phase 4: Scale & Security (Weeks 7-8)
+
 - [ ] Implement sandboxing
 - [ ] Add swarm versioning
 - [ ] Enhance circuit breakers

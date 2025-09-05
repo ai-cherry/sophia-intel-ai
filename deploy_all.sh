@@ -69,7 +69,7 @@ wait_for_service() {
     local endpoint=${3:-/health}
     local max_attempts=30
     local attempt=0
-    
+
     echo -n "  Waiting for $name on port $port"
     while [ $attempt -lt $max_attempts ]; do
         if curl -s "http://localhost:$port$endpoint" > /dev/null 2>&1; then
@@ -194,7 +194,7 @@ if [ -f "persona_server_standalone.py" ]; then
     python3.12 persona_server_standalone.py \
         > logs/persona_server.log 2>&1 &
     PERSONA_PID=$!
-    
+
     wait_for_service ${PERSONA_PORT:-8085} "Persona Server"
 else
     echo "5️⃣  Persona Server (skipped - file not found)"
@@ -220,7 +220,7 @@ echo "
 🌐 Available Services:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📍 Sophia Intelligence Hub:  http://localhost:${MCP_PORT:-3333}/static/sophia-intelligence-hub.html
-📍 Artemis Command Center:   http://localhost:${ARTEMIS_PORT:-8001}/static/command-center.html  
+📍 Artemis Command Center:   http://localhost:${ARTEMIS_PORT:-8001}/static/command-center.html
 📍 API Documentation (MCP):  http://localhost:${MCP_PORT:-3333}/docs
 📍 API Documentation (Core): http://localhost:${API_PORT:-8006}/docs
 📍 Sophia Business Portal:   http://localhost:${SOPHIA_PORT:-9000}

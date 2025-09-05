@@ -1,6 +1,6 @@
 /**
  * Swarm Components - Migrated from ui/ to agent-ui/
- * 
+ *
  * Core swarm functionality components for autonomous AI teams,
  * workflows, streaming results, and enhanced visualizations.
  */

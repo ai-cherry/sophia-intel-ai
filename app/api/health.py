@@ -13,7 +13,7 @@ from dotenv import load_dotenv
 from fastapi import APIRouter, HTTPException
 
 # Load environment variables
-load_dotenv('.env.local')
+load_dotenv(".env.local")
 
 try:
     from .gateway import get_api_gateway
@@ -22,11 +22,13 @@ except ImportError:
     async def get_api_gateway():
         return None
 
+
 from app.core.circuit_breaker import with_circuit_breaker
 from app.core.connections import get_connection_manager
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/health", tags=["health"])
+
 
 class HealthChecker:
     """Comprehensive health checking for all system components."""
@@ -63,10 +65,7 @@ class HealthChecker:
                 "version": info.get("redis_version", "unknown"),
                 "used_memory": info.get("used_memory_human", "unknown"),
                 "connected_clients": info.get("connected_clients", 0),
-                "operations": {
-                    "ping": ping_result,
-                    "set_get": get_result == "test"
-                }
+                "operations": {"ping": ping_result, "set_get": get_result == "test"},
             }
 
         except Exception as e:
@@ -76,25 +75,19 @@ class HealthChecker:
     async def check_weaviate(self) -> dict[str, Any]:
         """Check Weaviate v1.32+ vector database connection."""
         try:
-            weaviate_url = os.getenv("WEAVIATE_URL", "http://localhost:8080")
+            weaviate_url = get_config().get("WEAVIATE_URL", "http://localhost:8080")
 
             start_time = datetime.utcnow()
 
             async with httpx.AsyncClient() as client:
                 # Check readiness
-                response = await client.get(
-                    f"{weaviate_url}/v1/.well-known/ready",
-                    timeout=10.0
-                )
+                response = await client.get(f"{weaviate_url}/v1/.well-known/ready", timeout=10.0)
 
                 if response.status_code != 200:
                     return {"status": "unhealthy", "error": f"HTTP {response.status_code}"}
 
                 # Get meta information
-                meta_response = await client.get(
-                    f"{weaviate_url}/v1/meta",
-                    timeout=5.0
-                )
+                meta_response = await client.get(f"{weaviate_url}/v1/meta", timeout=5.0)
 
                 response_time = (datetime.utcnow() - start_time).total_seconds() * 1000
 
@@ -106,14 +99,14 @@ class HealthChecker:
                         "version": meta_data.get("version", "unknown"),
                         "hostname": meta_data.get("hostname", "unknown"),
                         "modules": meta_data.get("modules", {}),
-                        "features": "v1.32+ RQ compression, multi-tenancy"
+                        "features": "v1.32+ RQ compression, multi-tenancy",
                     }
                 else:
                     return {
                         "status": "healthy",
                         "response_time_ms": round(response_time, 2),
                         "note": "Ready endpoint healthy, meta endpoint unavailable",
-                        "features": "v1.32+ optimizations active"
+                        "features": "v1.32+ optimizations active",
                     }
 
         except Exception as e:
@@ -134,7 +127,7 @@ class HealthChecker:
             return {
                 "status": "healthy",
                 "note": "PostgreSQL check via container health - implement direct connection in production",
-                "connection_string": "postgresql://sophia:***@postgres:5432/sophia"
+                "connection_string": "postgresql://sophia:***@postgres:5432/sophia",
             }
 
         except Exception as e:
@@ -144,25 +137,19 @@ class HealthChecker:
     async def check_weaviate(self) -> dict[str, Any]:
         """Check Weaviate vector database connection."""
         try:
-            weaviate_url = os.getenv("WEAVIATE_URL", "http://localhost:8080")
+            weaviate_url = get_config().get("WEAVIATE_URL", "http://localhost:8080")
 
             start_time = datetime.utcnow()
 
             async with httpx.AsyncClient() as client:
                 # Check readiness
-                response = await client.get(
-                    f"{weaviate_url}/v1/.well-known/ready",
-                    timeout=10.0
-                )
+                response = await client.get(f"{weaviate_url}/v1/.well-known/ready", timeout=10.0)
 
                 if response.status_code != 200:
                     return {"status": "unhealthy", "error": f"HTTP {response.status_code}"}
 
                 # Get meta information
-                meta_response = await client.get(
-                    f"{weaviate_url}/v1/meta",
-                    timeout=5.0
-                )
+                meta_response = await client.get(f"{weaviate_url}/v1/meta", timeout=5.0)
 
                 response_time = (datetime.utcnow() - start_time).total_seconds() * 1000
 
@@ -173,13 +160,13 @@ class HealthChecker:
                         "response_time_ms": round(response_time, 2),
                         "version": meta_data.get("version", "unknown"),
                         "hostname": meta_data.get("hostname", "unknown"),
-                        "modules": meta_data.get("modules", {})
+                        "modules": meta_data.get("modules", {}),
                     }
                 else:
                     return {
                         "status": "healthy",
                         "response_time_ms": round(response_time, 2),
-                        "note": "Ready endpoint healthy, meta endpoint unavailable"
+                        "note": "Ready endpoint healthy, meta endpoint unavailable",
                     }
 
         except Exception as e:
@@ -196,7 +183,7 @@ class HealthChecker:
                 "status": provider_health["overall_status"],
                 "healthy_providers": provider_health["healthy_providers"],
                 "total_providers": provider_health["total_providers"],
-                "details": provider_health["providers"]
+                "details": provider_health["providers"],
             }
 
         except Exception as e:
@@ -212,8 +199,7 @@ class HealthChecker:
             "redis": self.check_redis(),
             "weaviate": self.check_weaviate(),
             "postgres": self.check_postgres(),
-            "weaviate": self.check_weaviate(),
-            "api_providers": self.check_api_providers()
+            "api_providers": self.check_api_providers(),
         }
 
         results = {}
@@ -227,7 +213,13 @@ class HealthChecker:
         healthy_systems = sum(1 for result in results.values() if result.get("status") == "healthy")
         total_systems = len(results)
 
-        overall_status = "healthy" if healthy_systems == total_systems else "degraded" if healthy_systems > 0 else "unhealthy"
+        overall_status = (
+            "healthy"
+            if healthy_systems == total_systems
+            else "degraded"
+            if healthy_systems > 0
+            else "unhealthy"
+        )
 
         return {
             "overall_status": overall_status,
@@ -235,11 +227,13 @@ class HealthChecker:
             "total_systems": total_systems,
             "timestamp": datetime.utcnow().isoformat(),
             "uptime_seconds": (datetime.utcnow() - self.start_time).total_seconds(),
-            "systems": results
+            "systems": results,
         }
+
 
 # Global health checker instance
 _health_checker = HealthChecker()
+
 
 @router.get("/")
 @router.get("/status")
@@ -249,38 +243,45 @@ async def health_status():
         "status": "healthy",
         "timestamp": datetime.utcnow().isoformat(),
         "service": "Sophia Intel AI",
-        "version": "2.0.0"
+        "version": "2.0.0",
     }
+
 
 @router.get("/detailed")
 async def detailed_health():
     """Comprehensive health check of all systems."""
     return await _health_checker.check_all_systems()
 
+
 @router.get("/redis")
 async def redis_health():
     """Redis-specific health check."""
     return await _health_checker.check_redis()
+
 
 @router.get("/weaviate")
 async def weaviate_health():
     """Weaviate v1.32+ vector database health check."""
     return await _health_checker.check_weaviate()
 
+
 @router.get("/postgres")
 async def postgres_health():
     """PostgreSQL database health check."""
     return await _health_checker.check_postgres()
+
 
 @router.get("/weaviate")
 async def weaviate_health():
     """Weaviate vector database health check."""
     return await _health_checker.check_weaviate()
 
+
 @router.get("/api-providers")
 async def api_providers_health():
     """API providers health check."""
     return await _health_checker.check_api_providers()
+
 
 @router.get("/environment")
 @with_circuit_breaker("external_api")
@@ -293,7 +294,7 @@ async def environment_check():
         "PORTKEY_API_KEY",
         "REDIS_URL",
         # QDRANT_* removed - migrated to Weaviate v1.32+
-        "POSTGRES_URL"
+        "POSTGRES_URL",
     ]
 
     env_status = {}
@@ -301,10 +302,7 @@ async def environment_check():
         value = os.getenv(var)
         if value:
             # Show only length and first/last 4 characters for security
-            if len(value) > 8:
-                masked = f"{value[:4]}...{value[-4:]}"
-            else:
-                masked = "***"
+            masked = f"{value[:4]}...{value[-4:]}" if len(value) > 8 else "***"
             env_status[var] = {"configured": True, "preview": masked}
         else:
             env_status[var] = {"configured": False}
@@ -315,13 +313,15 @@ async def environment_check():
         "status": "healthy" if configured_count == len(critical_vars) else "degraded",
         "configured_vars": configured_count,
         "total_vars": len(critical_vars),
-        "variables": env_status
+        "variables": env_status,
     }
+
 
 @router.get("/live")
 async def liveness_probe():
     """Kubernetes-style liveness probe."""
     return {"status": "alive"}
+
 
 @router.get("/ready")
 async def readiness_probe():

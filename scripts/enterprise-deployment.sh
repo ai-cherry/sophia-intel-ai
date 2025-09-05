@@ -127,7 +127,7 @@ echo -e "${YELLOW}🏗️ Creating Fly.io applications...${NC}"
 for service_info in "${SERVICES[@]}"; do
     IFS=':' read -r app_name description config_file port <<< "$service_info"
     echo -e "${BLUE}🔨 Creating $app_name ($description)...${NC}"
-    
+
     # App creation will be handled during actual deployment
     echo -e "${GREEN}✅ $app_name configured for creation${NC}"
 done
@@ -198,7 +198,7 @@ cat > monitoring/grafana/dashboards/sophia-overview.json <<EOF
       },
       {
         "title": "API Response Times",
-        "type": "timeseries", 
+        "type": "timeseries",
         "targets": [{"expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))"}]
       },
       {
@@ -236,7 +236,7 @@ for service in "${FOUNDATION_SERVICES[@]}"; do
     echo -e "${GREEN}✅ $service deployment configured${NC}"
 done
 
-# Phase 4B: Processing services deployment  
+# Phase 4B: Processing services deployment
 echo -e "\n${CYAN}4B: Deploying Processing Services${NC}"
 PROCESSING_SERVICES=("sophia-mcp" "sophia-vector")
 
@@ -319,12 +319,12 @@ tests:
     target: https://sophia-api.fly.dev
     duration: 300s
     rate: 100/s
-    
+
   stress_test:
     target: https://sophia-api.fly.dev
     duration: 60s
     rate: 500/s
-    
+
   gpu_workload:
     target: https://sophia-api.fly.dev/api/gpu/execute
     duration: 120s
@@ -353,7 +353,7 @@ echo -e "   • Performance metrics configured"
 
 echo -e "${GREEN}✅ Enterprise Features:${NC}"
 echo -e "   • Lambda Labs GPU integration ready"
-echo -e "   • Consensus swarm architecture prepared"  
+echo -e "   • Consensus swarm architecture prepared"
 echo -e "   • Memory deduplication configured"
 echo -e "   • Auto-scaling policies defined"
 

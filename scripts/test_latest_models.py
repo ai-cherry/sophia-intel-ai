@@ -16,13 +16,12 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from dotenv import load_dotenv
 
-load_dotenv('.env.local', override=True)
+load_dotenv(".env.local", override=True)
 
 # Import our modules
 from app.core.ai_logger import logger
 from app.models.openrouter_latest import ModelTier, OpenRouterLatest, TaskType
 from app.models.portkey_dynamic_client import DynamicPortkeyClient
-from app.portkey_config import MODEL_RECOMMENDATIONS, PortkeyGateway, Role
 
 # Import ROLE_MODELS directly
 ROLE_MODELS = {
@@ -38,7 +37,7 @@ ROLE_MODELS = {
     "fast": "deepseek/deepseek-chat-v3.1:free",
     "research": "google/gemini-2.5-flash",
     "free": "meta-llama/llama-4-maverick:free",
-    "vision": "google/gemini-2.5-flash-image-preview"
+    "vision": "google/gemini-2.5-flash-image-preview",
 }
 
 
@@ -49,11 +48,7 @@ class ModelTestSuite:
         self.results = {
             "timestamp": datetime.now().isoformat(),
             "tests": [],
-            "summary": {
-                "total": 0,
-                "passed": 0,
-                "failed": 0
-            }
+            "summary": {"total": 0, "passed": 0, "failed": 0},
         }
 
         # Initialize clients
@@ -65,14 +60,11 @@ class ModelTestSuite:
 
     async def test_openrouter_latest(self):
         """Test OpenRouterLatest client with latest models."""
-        logger.info("\n" + "="*60)
+        logger.info("\n" + "=" * 60)
         logger.info("🧪 Testing OpenRouterLatest Client")
-        logger.info("="*60)
+        logger.info("=" * 60)
 
-        client = OpenRouterLatest(
-            api_key=self.openrouter_key,
-            app_name="Sophia-Intel-AI-Test"
-        )
+        client = OpenRouterLatest(api_key=self.openrouter_key, app_name="Sophia-Intel-AI-Test")
 
         # Test model cache refresh
         logger.info("\n1. Testing model cache refresh...")
@@ -90,7 +82,7 @@ class ModelTestSuite:
             (TaskType.REASONING, ModelTier.BALANCED),
             (TaskType.CODING, ModelTier.PREMIUM),
             (TaskType.GENERAL, ModelTier.FREE),
-            (TaskType.VISION, ModelTier.BALANCED)
+            (TaskType.VISION, ModelTier.BALANCED),
         ]
 
         for task, tier in test_cases:
@@ -107,7 +99,7 @@ class ModelTestSuite:
         test_prompts = [
             ("What is 2+2?", "openai/gpt-5-nano"),
             ("Write hello world in Python", "x-ai/grok-code-fast-1"),
-            ("Explain quantum computing", "deepseek/deepseek-r1")
+            ("Explain quantum computing", "deepseek/deepseek-r1"),
         ]
 
         for prompt, model in test_prompts:
@@ -116,7 +108,7 @@ class ModelTestSuite:
                     messages=[{"role": "user", "content": prompt}],
                     model=model,
                     max_tokens=50,
-                    temperature=0.7
+                    temperature=0.7,
                 )
                 model_used = response.get("_model_used", model)
                 logger.info(f"✅ {model}: Response received (used: {model_used})")
@@ -127,13 +119,12 @@ class ModelTestSuite:
 
     async def test_dynamic_portkey_client(self):
         """Test DynamicPortkeyClient with automatic model management."""
-        logger.info("\n" + "="*60)
+        logger.info("\n" + "=" * 60)
         logger.info("🧪 Testing Dynamic Portkey Client")
-        logger.info("="*60)
+        logger.info("=" * 60)
 
         client = DynamicPortkeyClient(
-            portkey_api_key=self.portkey_key,
-            openrouter_api_key=self.openrouter_key
+            portkey_api_key=self.portkey_key, openrouter_api_key=self.openrouter_key
         )
 
         # Test model refresh
@@ -163,15 +154,21 @@ class ModelTestSuite:
 
         # Test semantic model names
         logger.info("\n3. Testing semantic model names...")
-        semantic_names = ["latest-gpt", "latest-claude", "best-reasoning", "best-coding", "free-tier"]
+        semantic_names = [
+            "latest-gpt",
+            "latest-claude",
+            "best-reasoning",
+            "best-coding",
+            "free-tier",
+        ]
 
         for name in semantic_names:
             try:
-                response = await client.create_completion(
+                await client.create_completion(
                     messages=[{"role": "user", "content": "Say 'OK' in one word"}],
                     model=name,
                     max_tokens=5,
-                    temperature=0.1
+                    temperature=0.1,
                 )
                 logger.info(f"✅ {name}: Working")
                 self._record_test(f"Semantic name {name}", True, "OK")
@@ -181,9 +178,9 @@ class ModelTestSuite:
 
     async def test_router_models(self):
         """Test router.py model configurations."""
-        logger.info("\n" + "="*60)
+        logger.info("\n" + "=" * 60)
         logger.info("🧪 Testing Router Model Configurations")
-        logger.info("="*60)
+        logger.info("=" * 60)
 
         logger.info("\n1. Checking role model mappings...")
         for role, model_id in ROLE_MODELS.items():
@@ -197,11 +194,11 @@ class ModelTestSuite:
 
     async def test_portkey_gateway(self):
         """Test PortkeyGateway with role-based routing."""
-        logger.info("\n" + "="*60)
+        logger.info("\n" + "=" * 60)
         logger.info("🧪 Testing Portkey Gateway")
-        logger.info("="*60)
+        logger.info("=" * 60)
 
-        gateway = PortkeyGateway()
+        PortkeyGateway()
 
         logger.info("\n1. Testing role-based recommendations...")
         for role in [Role.PLANNER, Role.CRITIC, Role.JUDGE, Role.GENERATOR]:
@@ -217,9 +214,9 @@ class ModelTestSuite:
 
     async def test_free_models(self):
         """Test free tier models specifically."""
-        logger.info("\n" + "="*60)
+        logger.info("\n" + "=" * 60)
         logger.info("🧪 Testing Free Tier Models")
-        logger.info("="*60)
+        logger.info("=" * 60)
 
         free_models = [
             "deepseek/deepseek-chat-v3.1:free",
@@ -228,7 +225,7 @@ class ModelTestSuite:
             "meta-llama/llama-3.3-70b-instruct:free",
             "qwen/qwen3-235b-a22b:free",
             "mistralai/mistral-small-3.2-24b-instruct:free",
-            "google/gemini-2.5-flash-image-preview:free"
+            "google/gemini-2.5-flash-image-preview:free",
         ]
 
         client = OpenRouterLatest(api_key=self.openrouter_key)
@@ -249,12 +246,14 @@ class ModelTestSuite:
 
     def _record_test(self, name: str, success: bool, details: str = ""):
         """Record test result."""
-        self.results["tests"].append({
-            "name": name,
-            "success": success,
-            "details": details,
-            "timestamp": datetime.now().isoformat()
-        })
+        self.results["tests"].append(
+            {
+                "name": name,
+                "success": success,
+                "details": details,
+                "timestamp": datetime.now().isoformat(),
+            }
+        )
 
         self.results["summary"]["total"] += 1
         if success:
@@ -264,17 +263,17 @@ class ModelTestSuite:
 
     def print_summary(self):
         """Print test summary."""
-        logger.info("\n" + "="*60)
+        logger.info("\n" + "=" * 60)
         logger.info("📊 TEST SUMMARY")
-        logger.info("="*60)
+        logger.info("=" * 60)
 
         summary = self.results["summary"]
         logger.info(f"\nTotal Tests: {summary['total']}")
         logger.info(f"✅ Passed: {summary['passed']}")
         logger.info(f"❌ Failed: {summary['failed']}")
 
-        if summary['total'] > 0:
-            pass_rate = (summary['passed'] / summary['total']) * 100
+        if summary["total"] > 0:
+            pass_rate = (summary["passed"] / summary["total"]) * 100
             logger.info(f"Pass Rate: {pass_rate:.1f}%")
 
         # List failed tests
@@ -292,9 +291,9 @@ class ModelTestSuite:
 
     async def run_all_tests(self):
         """Run all test suites."""
-        logger.info("\n" + "="*60)
+        logger.info("\n" + "=" * 60)
         logger.info("🚀 TESTING LATEST OPENROUTER MODELS (August 2025)")
-        logger.info("="*60)
+        logger.info("=" * 60)
 
         # Run each test suite
         test_suites = [
@@ -302,7 +301,7 @@ class ModelTestSuite:
             ("Dynamic Portkey Client", self.test_dynamic_portkey_client),
             ("Router Models", self.test_router_models),
             ("Portkey Gateway", self.test_portkey_gateway),
-            ("Free Tier Models", self.test_free_models)
+            ("Free Tier Models", self.test_free_models),
         ]
 
         for name, test_func in test_suites:

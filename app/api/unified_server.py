@@ -8,7 +8,7 @@ from typing import Any, Optional
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse, JSONResponse, Response, FileResponse
+from fastapi.responses import FileResponse, JSONResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -28,6 +28,8 @@ portkey_balancer = None
 message_bus_instance = MessageBus()
 openrouter_gateway = OpenRouterGateway()
 
+# Persona agents router
+from app.agents.personas.api_routes import router as personas_router
 from app.api.auth import router as auth_router
 from app.api.cost_dashboard import router as cost_dashboard_router
 from app.api.embedding_endpoints import router as embedding_router
@@ -41,22 +43,23 @@ from app.api.memory.memory_endpoints import router as memory_router
 from app.api.portkey_router_endpoints import router as portkey_router
 from app.api.repository.repo_service import router as repo_router
 from app.api.resilient_websocket_endpoints import router as resilient_ws_router
+from app.api.routers.brain_training import router as brain_training_router
+from app.api.routers.integration_intelligence import router as integration_intelligence_router
+from app.api.routers.looker import router as looker_router
+from app.api.routers.slack_business_intelligence import router as slack_bi_router
 
 # from app.api.routers.memory import router as memory_api_router  # Module has import issues
 from app.api.routers.teams import router as teams_router
-from app.api.routers.looker import router as looker_router
+from app.api.routers.voice import router as voice_router
 from app.api.super_orchestrator_router import router as super_orchestrator_router
 from app.api.unified_gateway import router as unified_gateway_router
 from app.factory import router as factory_router
+
 # from app.ui.unified.chat_orchestrator import router as orchestrator_router  # Module deleted
 
-# Persona agents router
-from app.agents.personas.api_routes import router as personas_router
 
 app = FastAPI(
-    title="Sophia Intel AI API",
-    description="Sophia Intel AI Platform API",
-    version="1.0.0"
+    title="Sophia Intel AI API", description="Sophia Intel AI Platform API", version="1.0.0"
 )
 
 # Include all routers
@@ -77,7 +80,15 @@ app.include_router(infrastructure_router, prefix="/api/infrastructure")
 # app.include_router(orchestrator_router, prefix="/orchestrator")  # Module deleted
 app.include_router(super_orchestrator_router, prefix="/api/super")
 app.include_router(teams_router, prefix="/api/teams")
+app.include_router(
+    integration_intelligence_router
+)  # Integration Intelligence endpoints - includes /api/integration-intelligence prefix
 app.include_router(looker_router, prefix="/api")
+app.include_router(slack_bi_router)
+app.include_router(
+    brain_training_router
+)  # Brain Training endpoints - includes /api/brain-training prefix
+app.include_router(voice_router, prefix="/api")  # Voice endpoints - includes /api/voice prefix
 app.include_router(factory_router)  # Agent Factory endpoints
 app.include_router(personas_router)  # Persona agents endpoints - includes /api/personas prefix
 # app.include_router(memory_api_router, prefix="/api/memory-v2")  # Module has import issues
@@ -103,17 +114,20 @@ class SwarmRequest(BaseModel):
     temperature: float = 0.7
     max_tokens: int = 4096
 
+
 class MultiSwarmRequest(BaseModel):
     message: str
     teams: list[str]
     strategy: str = "parallel"  # parallel, sequential, consensus
 
+
 # Task routing for swarm types
 SWARM_TASK_MAPPING = {
     "strategic-swarm": "research_analysis",
     "coding-swarm": "code_generation",
-    "debate-swarm": "creative_tasks"
+    "debate-swarm": "creative_tasks",
 }
+
 
 @app.on_event("startup")
 async def startup_event():
@@ -129,43 +143,48 @@ async def startup_event():
         # Initialize message bus
         await message_bus_instance.initialize()
         logger.info("✅ Message bus initialized")
-        
+
         # Initialize persona agents
         from app.agents.personas.api_routes import persona_manager
+
         try:
             # Initialize the main personas
             await persona_manager.initialize_persona("marcus")
             logger.info("✅ Marcus (Sales Coach) initialized")
-            
+
             await persona_manager.initialize_persona("sarah")
             logger.info("✅ Sarah (Client Health) initialized")
-            
+
             logger.info("✅ AI Team Members ready for interaction")
         except Exception as e:
             logger.warning(f"⚠️ Persona initialization warning: {e}")
             # Don't fail startup if personas can't initialize
 
-        logger.info(f"""
+        logger.info(
+            f"""
         🚀 UNIFIED SERVER READY - REAL AI MODELS ACTIVE
         ================================================
         - Portkey Gateway: ACTIVE
         - OpenRouter: CONNECTED
         - Message Bus: OPERATIONAL
         - AI Team Members: Marcus & Sarah ONLINE
-        - Hub: http://localhost:{os.getenv('AGENT_API_PORT', '8003')}/hub
-        - WebSocket: ws://localhost:{os.getenv('AGENT_API_PORT', '8003')}/ws/bus
+        - Hub: http://localhost:{get_config().get('AGENT_API_PORT', '8003')}/hub
+        - WebSocket: ws://localhost:{get_config().get('AGENT_API_PORT', '8003')}/ws/bus
         - Models: Grok-5, Qwen3-30B, DeepSeek, Gemini
-        """)
+        """
+        )
 
     except Exception as e:
         logger.error(f"Startup error: {e}")
         raise
+
 
 @app.on_event("shutdown")
 async def shutdown_event():
     """Cleanup on shutdown"""
     await message_bus_instance.close()
     logger.info("Message bus closed")
+
 
 @app.get("/")
 async def root():
@@ -177,16 +196,17 @@ async def root():
         "models": {
             "active": "Portkey Load Balanced",
             "favorites": ["x-ai/grok-5", "qwen/qwen3-30b-a3b-thinking-2507"],
-            "strategy": "intelligent_routing"
+            "strategy": "intelligent_routing",
         },
         "endpoints": {
             "teams": "/teams/run",
             "swarms": "/swarms/multi",
             "hub": "/hub",
             "websocket": "/ws/bus",
-            "metrics": "/metrics"
-        }
+            "metrics": "/metrics",
+        },
     }
+
 
 @app.post("/teams/run")
 async def run_team(request: SwarmRequest):
@@ -200,7 +220,7 @@ async def run_team(request: SwarmRequest):
         # Prepare messages
         messages = [
             {"role": "system", "content": f"You are part of the {request.team_id} swarm."},
-            {"role": "user", "content": request.message}
+            {"role": "user", "content": request.message},
         ]
 
         # Track start time
@@ -216,24 +236,21 @@ async def run_team(request: SwarmRequest):
             try:
                 response = await openrouter_gateway.chat_completion(
                     messages=messages,
-                    role=request.team_id.replace('-swarm', ''),
+                    role=request.team_id.replace("-swarm", ""),
                     temperature=request.temperature,
                     max_tokens=request.max_tokens,
-                    stream=False
+                    stream=False,
                 )
 
                 # Format response
-                if response and 'choices' in response and response['choices']:
+                if response and "choices" in response and response["choices"]:
                     response = {
-                        "content": response['choices'][0]['message']['content'],
-                        "model": response.get('model'),
-                        "success": True
+                        "content": response["choices"][0]["message"]["content"],
+                        "model": response.get("model"),
+                        "success": True,
                     }
                 else:
-                    response = {
-                        "content": "No response generated",
-                        "success": False
-                    }
+                    response = {"content": "No response generated", "success": False}
             except Exception as e:
                 logger.warning(f"Direct OpenRouter failed: {e}, trying Portkey...")
                 # Fallback to Portkey
@@ -242,21 +259,24 @@ async def run_team(request: SwarmRequest):
                     task_type=task_type,
                     temperature=request.temperature,
                     max_tokens=request.max_tokens,
-                    stream=False
+                    stream=False,
                 )
 
             # Track real metrics using Prometheus
             duration = (datetime.now() - start_time).total_seconds()
             try:
                 from app.observability.prometheus_metrics import track_llm_request
+
                 track_llm_request(
                     provider="openrouter",
                     model=response.get("model", "unknown"),
                     duration=duration,
-                    tokens=response.get('usage', {}).get('total_tokens', 0)
+                    tokens=response.get("usage", {}).get("total_tokens", 0),
                 )
             except ImportError:
-                logger.info(f"Request completed in {duration}s using model: {response.get('model', 'unknown')}")
+                logger.info(
+                    f"Request completed in {duration}s using model: {response.get('model', 'unknown')}"
+                )
 
             # Try to publish to message bus (skip if error)
             try:
@@ -269,28 +289,31 @@ async def run_team(request: SwarmRequest):
                     sender_agent_id=request.team_id,
                     content={"text": response["content"], "model": response.get("model")},
                     thread_id=f"team-{request.team_id}",
-                    message_type=MessageType.RESULT
+                    message_type=MessageType.RESULT,
                 )
                 await message_bus_instance.publish(message)
             except Exception as e:
                 logger.warning(f"Could not publish to message bus: {e}")
 
-            return JSONResponse({
-                "success": True,
-                "team": request.team_id,
-                "responses": [response["content"]],
-                "model": response.get("model"),
-                "metadata": {
-                    "duration": duration,
-                    "task_type": task_type,
-                    "real_ai": True,
-                    "portkey_routed": True
+            return JSONResponse(
+                {
+                    "success": True,
+                    "team": request.team_id,
+                    "responses": [response["content"]],
+                    "model": response.get("model"),
+                    "metadata": {
+                        "duration": duration,
+                        "task_type": task_type,
+                        "real_ai": True,
+                        "portkey_routed": True,
+                    },
                 }
-            })
+            )
 
     except Exception as e:
         logger.error(f"Team execution error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 async def stream_swarm_response(messages, task_type, temperature, max_tokens):
     """Stream responses from swarm via Portkey"""
@@ -303,7 +326,7 @@ async def stream_swarm_response(messages, task_type, temperature, max_tokens):
                 task_type=task_type,
                 temperature=temperature,
                 max_tokens=max_tokens,
-                stream=True
+                stream=True,
             )
 
             # Stream tokens
@@ -312,7 +335,7 @@ async def stream_swarm_response(messages, task_type, temperature, max_tokens):
                     data = {
                         "content": chunk["token"],
                         "model": chunk.get("model", "unknown"),
-                        "done": False
+                        "done": False,
                     }
                     yield f"data: {json.dumps(data)}\n\n"
 
@@ -323,10 +346,8 @@ async def stream_swarm_response(messages, task_type, temperature, max_tokens):
             logger.error(f"Stream error: {e}")
             yield f"data: {json.dumps({'error': str(e)})}\n\n"
 
-    return StreamingResponse(
-        generate(),
-        media_type="text/event-stream"
-    )
+    return StreamingResponse(generate(), media_type="text/event-stream")
+
 
 @app.post("/swarms/multi")
 async def run_multiple_swarms(request: MultiSwarmRequest):
@@ -340,9 +361,7 @@ async def run_multiple_swarms(request: MultiSwarmRequest):
             # Run all swarms in parallel
             tasks = []
             for team_id in request.teams:
-                task = asyncio.create_task(
-                    execute_single_swarm(request.message, team_id)
-                )
+                task = asyncio.create_task(execute_single_swarm(request.message, team_id))
                 tasks.append((team_id, task))
 
             # Gather results
@@ -361,7 +380,9 @@ async def run_multiple_swarms(request: MultiSwarmRequest):
                 result = await execute_single_swarm(accumulated_context, team_id)
                 results[team_id] = result
                 # Add result to context for next swarm
-                accumulated_context += f"\n\nPrevious result from {team_id}:\n{result.get('content', '')}"
+                accumulated_context += (
+                    f"\n\nPrevious result from {team_id}:\n{result.get('content', '')}"
+                )
 
         elif request.strategy == "consensus":
             # Get responses from all, then synthesize
@@ -369,16 +390,13 @@ async def run_multiple_swarms(request: MultiSwarmRequest):
 
             for team_id in request.teams:
                 result = await execute_single_swarm(request.message, team_id)
-                all_responses.append({
-                    "team": team_id,
-                    "response": result.get("content", "")
-                })
+                all_responses.append({"team": team_id, "response": result.get("content", "")})
 
             # Synthesize consensus
             consensus_prompt = f"""
             Analyze these responses and provide a consensus:
             {json.dumps(all_responses, indent=2)}
-            
+
             Provide a unified answer that incorporates the best insights.
             """
 
@@ -386,20 +404,23 @@ async def run_multiple_swarms(request: MultiSwarmRequest):
             results["consensus"] = consensus
             results["individual_responses"] = all_responses
 
-        return JSONResponse({
-            "success": True,
-            "strategy": request.strategy,
-            "results": results,
-            "metadata": {
-                "teams_count": len(request.teams),
-                "real_ai": True,
-                "portkey_routed": True
+        return JSONResponse(
+            {
+                "success": True,
+                "strategy": request.strategy,
+                "results": results,
+                "metadata": {
+                    "teams_count": len(request.teams),
+                    "real_ai": True,
+                    "portkey_routed": True,
+                },
             }
-        })
+        )
 
     except Exception as e:
         logger.error(f"Multi-swarm error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 async def execute_single_swarm(message: str, team_id: str) -> dict[str, Any]:
     """Execute a single swarm and return result"""
@@ -407,22 +428,14 @@ async def execute_single_swarm(message: str, team_id: str) -> dict[str, Any]:
     task_type = SWARM_TASK_MAPPING.get(team_id, "general")
     messages = [
         {"role": "system", "content": f"You are part of the {team_id} swarm."},
-        {"role": "user", "content": message}
+        {"role": "user", "content": message},
     ]
 
     response = await portkey_balancer.execute_with_routing(
-        messages=messages,
-        task_type=task_type,
-        temperature=0.7,
-        max_tokens=4096,
-        stream=False
+        messages=messages, task_type=task_type, temperature=0.7, max_tokens=4096, stream=False
     )
 
-    return {
-        "content": response["content"],
-        "model": response.get("model"),
-        "team": team_id
-    }
+    return {"content": response["content"], "model": response.get("model"), "team": team_id}
 
 
 @app.get("/mcp/system-health")
@@ -434,41 +447,34 @@ async def system_health():
             "version": "v2.1",
             "port": 8000,
             "last_check": current_time,
-            "purpose": "Coordinates AI agents and memory across tools"
+            "purpose": "Coordinates AI agents and memory across tools",
         },
         "mcp_bridge": {
             "status": "connected",
             "version": "v1.2",
             "adapter": "roo",
             "last_check": current_time,
-            "purpose": "Connects IDEs to MCP server"
+            "purpose": "Connects IDEs to MCP server",
         },
-        "api_integration": {
-            "status": "connected",
-            "last_request": current_time,
-            "endpoints": 100
-        },
+        "api_integration": {"status": "connected", "last_request": current_time, "endpoints": 100},
         "sdk_integration": {
             "status": "active",
             "version": "sophia-mcp-sdk@2.0",
-            "last_sync": current_time
+            "last_sync": current_time,
         },
         "cli_integration": {
             "status": "running",
             "version": "dev.py v3.1",
-            "last_command": "dev start"
+            "last_command": "dev start",
         },
         "grafana_dashboard": {
             "status": "healthy",
             "last_sync": current_time,
-            "metrics_coverage": "95%"
+            "metrics_coverage": "95%",
         },
-        "cost_tracking": {
-            "status": "active",
-            "last_sync": current_time,
-            "budget_usage": "42%"
-        }
+        "cost_tracking": {"status": "active", "last_sync": current_time, "budget_usage": "42%"},
     }
+
 
 @app.post("/mcp/embeddings")
 async def generate_embeddings_endpoint(request: dict[str, Any]):
@@ -481,46 +487,40 @@ async def generate_embeddings_endpoint(request: dict[str, Any]):
     try:
         # Use real Together AI embeddings
         from app.embeddings.together_embeddings import TogetherEmbeddings
+
         together_embeddings = TogetherEmbeddings()
         response = await together_embeddings.generate_embeddings(
-            texts=[text],
-            model="togethercomputer/m2-bert-80M-8k-retrieval"
+            texts=[text], model="togethercomputer/m2-bert-80M-8k-retrieval"
         )
         return response
     except ImportError:
         # Use real OpenAI embeddings as alternative
         try:
             import openai
+
             openai.api_key = os.getenv("OPENAI_API_KEY")
-            response = await openai.Embedding.acreate(
-                model="text-embedding-ada-002",
-                input=text
-            )
+            response = await openai.Embedding.acreate(model="text-embedding-ada-002", input=text)
             return {
-                "embeddings": response['data'][0]['embedding'],
+                "embeddings": response["data"][0]["embedding"],
                 "model": "text-embedding-ada-002",
-                "cached": False
+                "cached": False,
             }
         except Exception as e:
             logger.error(f"Real embedding generation failed: {e}")
-            raise HTTPException(
-                status_code=503,
-                detail=f"Embedding service unavailable: {str(e)}"
-            )
+            raise HTTPException(status_code=503, detail=f"Embedding service unavailable: {str(e)}")
+
 
 @app.get("/agents/factory-dashboard.html")
 async def agent_factory_dashboard():
     """Serve the Agent Factory dashboard"""
     return FileResponse("app/agents/ui/agent_factory_dashboard.html")
 
+
 @app.get("/models")
 async def list_models():
     """List available models via Portkey"""
     return {
-        "favorites": [
-            "x-ai/grok-5",
-            "qwen/qwen3-30b-a3b-thinking-2507"
-        ],
+        "favorites": ["x-ai/grok-5", "qwen/qwen3-30b-a3b-thinking-2507"],
         "available": [
             "x-ai/grok-code-fast-1",
             "google/gemini-2.5-flash",
@@ -531,14 +531,11 @@ async def list_models():
             "qwen/qwen-2.5-coder-32b-instruct",
             "openai/gpt-5",  # When available
             "google/gemini-2.0-flash-exp:free",
-            "openai/gpt-4o-mini"
+            "openai/gpt-4o-mini",
         ],
-        "routing": {
-            "strategy": "load_balanced",
-            "gateway": "portkey",
-            "provider": "openrouter"
-        }
+        "routing": {"strategy": "load_balanced", "gateway": "portkey", "provider": "openrouter"},
     }
+
 
 @app.post("/mcp/swarm-config")
 async def swarm_config(data: dict):
@@ -551,12 +548,13 @@ async def swarm_config(data: dict):
 
     # Handle agent-specific models
     if "agent_models" in data:
-        for agent, model in data["agent_models"].items():
+        for _agent, _model in data["agent_models"].items():
             # Update model assignment for this agent
             # (Implementation would use existing MCP state management)
             pass
 
     return {"status": "success", "message": "Swarm configuration updated"}
+
 
 @app.post("/mcp/llm-assignment")
 async def llm_assignment(data: dict):
@@ -570,13 +568,14 @@ async def llm_assignment(data: dict):
 
     return {"status": "success", "message": f"Assigned {data['model']} to {data['agent']}"}
 
+
 @app.get("/health")
 async def health_check():
     """Comprehensive health check endpoint with component status"""
     return {
         "status": "healthy",
         "service": "Unified API Server",
-        "port": int(os.getenv("AGENT_API_PORT", "8003")),
+        "port": int(get_config().get("AGENT_API_PORT", "8003")),
         "timestamp": datetime.now().isoformat(),
         "version": "5.1.0",
         "components": {
@@ -586,14 +585,16 @@ async def health_check():
             "websocket": "active",
             "openrouter": "active",
             "portkey": "active",
-            "message_bus": "active" if message_bus_instance else "inactive"
-        }
+            "message_bus": "active" if message_bus_instance else "inactive",
+        },
     }
+
 
 # Kubernetes/Fly standard liveness endpoint
 @app.get("/healthz")
 async def healthz() -> JSONResponse:
     return JSONResponse({"status": "ok"})
+
 
 # Chat completions endpoint for OpenRouter
 class ChatCompletionRequest(BaseModel):
@@ -602,6 +603,7 @@ class ChatCompletionRequest(BaseModel):
     max_tokens: Optional[int] = 1000
     temperature: Optional[float] = 0.7
     stream: Optional[bool] = False
+
 
 @app.post("/chat/completions")
 async def chat_completions(request: ChatCompletionRequest):
@@ -615,18 +617,19 @@ async def chat_completions(request: ChatCompletionRequest):
             model=request.model,
             messages=request.messages,
             max_tokens=request.max_tokens,
-            temperature=request.temperature
+            temperature=request.temperature,
         )
 
         # Track real usage metrics
-        if hasattr(response, 'usage'):
+        if hasattr(response, "usage"):
             try:
                 from app.observability.prometheus_metrics import track_llm_request
+
                 track_llm_request(
                     provider="openrouter",
                     model=request.model,
                     duration=0,
-                    tokens=response.usage.get('total_tokens', 0)
+                    tokens=response.usage.get("total_tokens", 0),
                 )
             except ImportError:
                 logger.info(f"Model usage: {response.usage}")
@@ -646,11 +649,12 @@ async def chat_completions(request: ChatCompletionRequest):
                 model=fallback_model,
                 messages=request.messages,
                 max_tokens=request.max_tokens,
-                temperature=request.temperature
+                temperature=request.temperature,
             )
             return response
         except Exception as fallback_error:
             raise HTTPException(status_code=500, detail=f"All models failed: {str(fallback_error)}")
+
 
 @app.get("/metrics")
 async def get_metrics():
@@ -660,10 +664,10 @@ async def get_metrics():
     # Register cost metrics if not already registered
     try:
         model_cost_usd_today = Gauge(
-            'model_cost_usd_today',
-            'Total cost in USD for model usage today',
-            ['model'],
-            registry=REGISTRY
+            "model_cost_usd_today",
+            "Total cost in USD for model usage today",
+            ["model"],
+            registry=REGISTRY,
         )
 
         # Update with current costs (mock data for now)
@@ -672,7 +676,7 @@ async def get_metrics():
             "x-ai/grok-4": 2.30,
             "anthropic/claude-sonnet-4": 1.75,
             "google/gemini-2.5-pro": 0.95,
-            "google/gemini-2.5-flash": 0.45
+            "google/gemini-2.5-flash": 0.45,
         }
 
         for model, cost in model_costs.items():
@@ -685,14 +689,10 @@ async def get_metrics():
     metrics_output = generate_latest(REGISTRY)
     return Response(content=metrics_output, media_type="text/plain")
 
+
 if __name__ == "__main__":
     import uvicorn
 
-    port = int(os.getenv("AGENT_API_PORT", "8003"))
+    port = int(get_config().get("AGENT_API_PORT", "8003"))
 
-    uvicorn.run(
-        app,
-        host="0.0.0.0",
-        port=port,
-        log_level="info"
-    )
+    uvicorn.run(app, host="0.0.0.0", port=port, log_level="info")

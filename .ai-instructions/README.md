@@ -66,21 +66,27 @@ tags: [relevant, tags, here]
 
 ```markdown
 ## 🎯 Purpose
+
 [Why this exists - REQUIRED]
 
-## 📋 Prerequisites  
+## 📋 Prerequisites
+
 [What's needed before starting - REQUIRED]
 
 ## 🔧 Implementation
+
 [Step-by-step instructions - REQUIRED]
 
 ## ✅ Validation
+
 [How to verify success - REQUIRED]
 
 ## 🚨 Common Issues
+
 [Known problems and solutions - OPTIONAL]
 
 ## 📚 Related
+
 [Links to related docs - REQUIRED]
 ```
 
@@ -118,7 +124,7 @@ python3 scripts/doc_manager.py update-index
 ```python
 # ALWAYS follow this import order:
 1. Standard library imports
-2. Third-party imports  
+2. Third-party imports
 3. Local application imports
 
 # ALWAYS include type hints:
@@ -158,6 +164,7 @@ from app.swarms.swarm_optimizer import SwarmOptimizer
 ### When You Change Code
 
 1. **Update CURRENT_STATE.md**:
+
 ```python
 # Add your changes to:
 - Active Features (if new feature)
@@ -166,6 +173,7 @@ from app.swarms.swarm_optimizer import SwarmOptimizer
 ```
 
 2. **Update relevant guides**:
+
 ```bash
 # Find affected documentation:
 grep -r "your_changed_function" docs/
@@ -173,6 +181,7 @@ grep -r "your_changed_function" docs/
 ```
 
 3. **Run validation**:
+
 ```bash
 python3 scripts/doc_manager.py health
 ```
@@ -189,7 +198,8 @@ python3 scripts/doc_manager.py health
 
 ## 🚨 CRITICAL RULES - NEVER VIOLATE
 
-### DO NOT:
+### DO NOT
+
 - ❌ Create "FINAL", "LATEST", or "NEW" versions of files
 - ❌ Delete ADRs (Architecture Decision Records)
 - ❌ Modify archived documents
@@ -201,7 +211,8 @@ python3 scripts/doc_manager.py health
 - ❌ Bypass the orchestrator facade
 - ❌ Create standalone swarms
 
-### ALWAYS:
+### ALWAYS
+
 - ✅ Check for existing documentation before creating new
 - ✅ Use the mode normalizer for optimization modes
 - ✅ Include circuit breakers for external calls
@@ -302,6 +313,7 @@ python3 scripts/doc_manager.py update-index
 ## 🔗 RELATED INSTRUCTIONS
 
 Continue reading:
+
 - [Code Standards](.ai-instructions/code-standards.md)
 - [Documentation Rules](.ai-instructions/documentation-rules.md)
 - [Swarm Protocols](.ai-instructions/swarm-protocols.md)

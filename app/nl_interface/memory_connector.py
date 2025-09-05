@@ -8,7 +8,7 @@ import json
 import logging
 from dataclasses import asdict, dataclass
 from datetime import datetime
-from typing import Any, Optional, Union
+from typing import Any, Optional
 
 import aiohttp
 
@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class NLInteraction:
     """Represents a single NL interaction"""
+
     session_id: str
     timestamp: str
     user_input: str
@@ -42,11 +43,11 @@ class NLMemoryConnector:
         self,
         mcp_server_url: str = "http://localhost:8004",
         collection_name: str = "nl_interactions",
-        max_history_size: int = 1000
+        max_history_size: int = 1000,
     ):
         """
         Initialize NL Memory Connector
-        
+
         Args:
             mcp_server_url: URL of the MCP memory server
             collection_name: Name of the collection for NL interactions
@@ -93,10 +94,10 @@ class NLMemoryConnector:
     async def store_interaction(self, interaction: NLInteraction) -> bool:
         """
         Store an NL interaction in memory
-        
+
         Args:
             interaction: The NL interaction to store
-            
+
         Returns:
             True if stored successfully, False otherwise
         """
@@ -109,8 +110,9 @@ class NLMemoryConnector:
 
             # Trim cache if too large
             if len(self._memory_cache[interaction.session_id]) > self.max_history_size:
-                self._memory_cache[interaction.session_id] = \
-                    self._memory_cache[interaction.session_id][-self.max_history_size:]
+                self._memory_cache[interaction.session_id] = self._memory_cache[
+                    interaction.session_id
+                ][-self.max_history_size :]
 
             # Store in MCP if available
             if self.session:
@@ -127,13 +129,12 @@ class NLMemoryConnector:
                         "response": interaction.response,
                         "workflow_id": interaction.workflow_id,
                         "execution_result": interaction.execution_result,
-                        "metadata": interaction.metadata
-                    }
+                        "metadata": interaction.metadata,
+                    },
                 }
 
                 async with self.session.post(
-                    f"{self.mcp_server_url}/memory/store",
-                    json=data
+                    f"{self.mcp_server_url}/memory/store", json=data
                 ) as response:
                     if response.status == 200:
                         logger.debug(f"Stored interaction for session {interaction.session_id}")
@@ -148,17 +149,15 @@ class NLMemoryConnector:
             return False
 
     async def retrieve_session_history(
-        self,
-        session_id: str,
-        limit: int = 10
+        self, session_id: str, limit: int = 10
     ) -> list[dict[str, Any]]:
         """
         Retrieve conversation history for a session
-        
+
         Args:
             session_id: The session ID to retrieve history for
             limit: Maximum number of interactions to retrieve
-            
+
         Returns:
             List of interactions for the session
         """
@@ -173,12 +172,11 @@ class NLMemoryConnector:
                 params = {
                     "collection": self.collection_name,
                     "filter": json.dumps({"session_id": session_id}),
-                    "limit": limit
+                    "limit": limit,
                 }
 
                 async with self.session.get(
-                    f"{self.mcp_server_url}/memory/query",
-                    params=params
+                    f"{self.mcp_server_url}/memory/query", params=params
                 ) as response:
                     if response.status == 200:
                         data = await response.json()
@@ -197,18 +195,14 @@ class NLMemoryConnector:
             logger.error(f"Error retrieving session history: {e}")
             return []
 
-    async def retrieve_by_intent(
-        self,
-        intent: str,
-        limit: int = 10
-    ) -> list[dict[str, Any]]:
+    async def retrieve_by_intent(self, intent: str, limit: int = 10) -> list[dict[str, Any]]:
         """
         Retrieve interactions by intent type
-        
+
         Args:
             intent: The intent to filter by
             limit: Maximum number of interactions to retrieve
-            
+
         Returns:
             List of interactions with the specified intent
         """
@@ -227,12 +221,11 @@ class NLMemoryConnector:
                 params = {
                     "collection": self.collection_name,
                     "filter": json.dumps({"intent": intent}),
-                    "limit": limit
+                    "limit": limit,
                 }
 
                 async with self.session.get(
-                    f"{self.mcp_server_url}/memory/query",
-                    params=params
+                    f"{self.mcp_server_url}/memory/query", params=params
                 ) as response:
                     if response.status == 200:
                         data = await response.json()
@@ -244,18 +237,14 @@ class NLMemoryConnector:
             logger.error(f"Error retrieving by intent: {e}")
             return []
 
-    async def search_interactions(
-        self,
-        query: str,
-        limit: int = 10
-    ) -> list[dict[str, Any]]:
+    async def search_interactions(self, query: str, limit: int = 10) -> list[dict[str, Any]]:
         """
         Search interactions using semantic search
-        
+
         Args:
             query: The search query
             limit: Maximum number of results
-            
+
         Returns:
             List of matching interactions
         """
@@ -266,23 +255,20 @@ class NLMemoryConnector:
 
             for session_interactions in self._memory_cache.values():
                 for interaction in session_interactions:
-                    if (query_lower in interaction.get("user_input", "").lower() or
-                        query_lower in interaction.get("response", "").lower()):
+                    if (
+                        query_lower in interaction.get("user_input", "").lower()
+                        or query_lower in interaction.get("response", "").lower()
+                    ):
                         results.append(interaction)
                         if len(results) >= limit:
                             return results
 
             # Try semantic search via MCP
             if self.session:
-                data = {
-                    "collection": self.collection_name,
-                    "query": query,
-                    "limit": limit
-                }
+                data = {"collection": self.collection_name, "query": query, "limit": limit}
 
                 async with self.session.post(
-                    f"{self.mcp_server_url}/memory/search",
-                    json=data
+                    f"{self.mcp_server_url}/memory/search", json=data
                 ) as response:
                     if response.status == 200:
                         data = await response.json()
@@ -295,17 +281,15 @@ class NLMemoryConnector:
             return []
 
     async def get_context_summary(
-        self,
-        session_id: str,
-        max_interactions: int = 5
+        self, session_id: str, max_interactions: int = 5
     ) -> dict[str, Any]:
         """
         Get a summary of recent context for a session
-        
+
         Args:
             session_id: The session ID
             max_interactions: Maximum number of recent interactions to consider
-            
+
         Returns:
             Context summary including intents, entities, and key topics
         """
@@ -318,7 +302,7 @@ class NLMemoryConnector:
                     "interaction_count": 0,
                     "recent_intents": [],
                     "entities": {},
-                    "summary": "No previous interactions"
+                    "summary": "No previous interactions",
                 }
 
             # Extract summary information
@@ -350,7 +334,9 @@ class NLMemoryConnector:
                 "interaction_count": len(history),
                 "recent_intents": recent_intents,
                 "entities": all_entities,
-                "summary": ". ".join(summary_parts) if summary_parts else "Recent conversation context"
+                "summary": ". ".join(summary_parts)
+                if summary_parts
+                else "Recent conversation context",
             }
 
         except Exception as e:
@@ -360,16 +346,16 @@ class NLMemoryConnector:
                 "interaction_count": 0,
                 "recent_intents": [],
                 "entities": {},
-                "summary": "Error retrieving context"
+                "summary": "Error retrieving context",
             }
 
     async def clear_session(self, session_id: str) -> bool:
         """
         Clear all interactions for a session
-        
+
         Args:
             session_id: The session ID to clear
-            
+
         Returns:
             True if cleared successfully
         """
@@ -380,14 +366,10 @@ class NLMemoryConnector:
 
             # Clear from MCP if available
             if self.session:
-                data = {
-                    "collection": self.collection_name,
-                    "filter": {"session_id": session_id}
-                }
+                data = {"collection": self.collection_name, "filter": {"session_id": session_id}}
 
                 async with self.session.delete(
-                    f"{self.mcp_server_url}/memory/delete",
-                    json=data
+                    f"{self.mcp_server_url}/memory/delete", json=data
                 ) as response:
                     if response.status == 200:
                         logger.info(f"Cleared session {session_id} from memory")
@@ -401,18 +383,14 @@ class NLMemoryConnector:
             logger.error(f"Error clearing session: {e}")
             return False
 
-    async def export_session(
-        self,
-        session_id: str,
-        format: str = "json"
-    ) -> Optional[str]:
+    async def export_session(self, session_id: str, format: str = "json") -> Optional[str]:
         """
         Export session history in specified format
-        
+
         Args:
             session_id: The session ID to export
             format: Export format (json, csv, txt)
-            
+
         Returns:
             Exported data as string
         """
@@ -430,18 +408,20 @@ class NLMemoryConnector:
                 if history:
                     writer = csv.DictWriter(
                         output,
-                        fieldnames=["timestamp", "user_input", "intent", "confidence", "response"]
+                        fieldnames=["timestamp", "user_input", "intent", "confidence", "response"],
                     )
                     writer.writeheader()
 
                     for interaction in history:
-                        writer.writerow({
-                            "timestamp": interaction.get("timestamp", ""),
-                            "user_input": interaction.get("user_input", ""),
-                            "intent": interaction.get("intent", ""),
-                            "confidence": interaction.get("confidence", 0),
-                            "response": interaction.get("response", "")
-                        })
+                        writer.writerow(
+                            {
+                                "timestamp": interaction.get("timestamp", ""),
+                                "user_input": interaction.get("user_input", ""),
+                                "intent": interaction.get("intent", ""),
+                                "confidence": interaction.get("confidence", 0),
+                                "response": interaction.get("response", ""),
+                            }
+                        )
 
                 return output.getvalue()
 
@@ -450,7 +430,9 @@ class NLMemoryConnector:
                 for interaction in history:
                     lines.append(f"[{interaction.get('timestamp', '')}]")
                     lines.append(f"User: {interaction.get('user_input', '')}")
-                    lines.append(f"Intent: {interaction.get('intent', '')} (confidence: {interaction.get('confidence', 0):.2f})")
+                    lines.append(
+                        f"Intent: {interaction.get('intent', '')} (confidence: {interaction.get('confidence', 0):.2f})"
+                    )
                     lines.append(f"Response: {interaction.get('response', '')}")
                     lines.append("")
 
@@ -467,7 +449,7 @@ class NLMemoryConnector:
     def get_statistics(self) -> dict[str, Any]:
         """
         Get memory statistics
-        
+
         Returns:
             Statistics about stored interactions
         """
@@ -486,7 +468,7 @@ class NLMemoryConnector:
             "active_sessions": session_count,
             "intent_distribution": intent_counts,
             "cache_size": total_interactions,
-            "max_history_size": self.max_history_size
+            "max_history_size": self.max_history_size,
         }
 
 
@@ -504,7 +486,7 @@ async def example_usage():
             entities={},
             confidence=0.95,
             response="System is running normally",
-            workflow_id="system-status-workflow"
+            workflow_id="system-status-workflow",
         )
 
         await memory.store_interaction(interaction)

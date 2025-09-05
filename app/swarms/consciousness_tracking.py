@@ -31,6 +31,7 @@ logger = logging.getLogger(__name__)
 
 class ConsciousnessType(Enum):
     """Types of consciousness measurements."""
+
     COORDINATION_EFFECTIVENESS = "coordination_effectiveness"
     PATTERN_RECOGNITION = "pattern_recognition"
     ADAPTIVE_LEARNING = "adaptive_learning"
@@ -40,6 +41,7 @@ class ConsciousnessType(Enum):
 
 class EmergenceEventType(Enum):
     """Types of emergence events."""
+
     COORDINATION_SPIKE = "coordination_spike"
     PATTERN_BREAKTHROUGH = "pattern_breakthrough"
     COLLECTIVE_INSIGHT = "collective_insight"
@@ -51,6 +53,7 @@ class EmergenceEventType(Enum):
 @dataclass
 class ConsciousnessMeasurement:
     """Individual consciousness dimension measurement."""
+
     dimension: ConsciousnessType
     value: float
     confidence: float
@@ -68,13 +71,14 @@ class ConsciousnessMeasurement:
             "timestamp": self.timestamp.isoformat(),
             "context": self.context,
             "baseline_deviation": self.baseline_deviation,
-            "historical_trend": self.historical_trend
+            "historical_trend": self.historical_trend,
         }
 
 
 @dataclass
 class EmergenceEvent:
     """Emergence event record."""
+
     event_id: str
     event_type: EmergenceEventType
     swarm_id: str
@@ -102,13 +106,14 @@ class EmergenceEvent:
             "context": self.context,
             "significance_score": self.significance_score,
             "validation_score": self.validation_score,
-            "pattern_data": self.pattern_data
+            "pattern_data": self.pattern_data,
         }
 
 
 @dataclass
 class ConsciousnessProfile:
     """Comprehensive consciousness profile for a swarm."""
+
     swarm_id: str
     swarm_type: str
     current_level: float
@@ -138,12 +143,11 @@ class ConsciousnessProfile:
             ConsciousnessType.PATTERN_RECOGNITION: 0.25,
             ConsciousnessType.ADAPTIVE_LEARNING: 0.20,
             ConsciousnessType.EMERGENCE_DETECTION: 0.15,
-            ConsciousnessType.SELF_REFLECTION: 0.15
+            ConsciousnessType.SELF_REFLECTION: 0.15,
         }
 
         self.current_level = sum(
-            self.dimensions.get(dim, 0) * weight
-            for dim, weight in weights.items()
+            self.dimensions.get(dim, 0) * weight for dim, weight in weights.items()
         )
 
         # Update trajectory
@@ -179,26 +183,28 @@ class ConsciousnessProfile:
         growth = (recent[-1] - recent[0]) / len(recent) if recent[-1] != recent[0] else 0
         growth_factor = min(1.0, max(0, growth * 10 + 0.5))  # Positive growth bonus
 
-        return (stability * 0.6 + growth_factor * 0.4)
+        return stability * 0.6 + growth_factor * 0.4
 
 
 class ConsciousnessTracker:
     """
     Comprehensive consciousness tracking system implementing ADR-003.
-    
+
     Features:
     - 5-dimensional consciousness measurement
-    - Pattern breakthrough detection 
+    - Pattern breakthrough detection
     - Memory-consciousness correlation
     - Real-time monitoring and alerting
     - Collective consciousness measurement
     - Development tracking over time
     """
 
-    def __init__(self, swarm_type: str, swarm_id: str, memory_client: Optional[SwarmMemoryClient] = None):
+    def __init__(
+        self, swarm_type: str, swarm_id: str, memory_client: Optional[SwarmMemoryClient] = None
+    ):
         """
         Initialize consciousness tracker.
-        
+
         Args:
             swarm_type: Type of swarm being tracked
             swarm_id: Unique identifier for swarm instance
@@ -217,7 +223,7 @@ class ConsciousnessTracker:
             baseline_measurements={},
             development_stage="nascent",
             maturity_score=0.0,
-            collective_consciousness_contribution=0.0
+            collective_consciousness_contribution=0.0,
         )
 
         # Measurement history and baselines
@@ -234,7 +240,7 @@ class ConsciousnessTracker:
             EmergenceEventType.COLLECTIVE_INSIGHT: 0.7,
             EmergenceEventType.BEHAVIORAL_INNOVATION: 0.65,
             EmergenceEventType.CONSCIOUSNESS_LEAP: 0.85,
-            EmergenceEventType.SWARM_SYNCHRONIZATION: 0.9
+            EmergenceEventType.SWARM_SYNCHRONIZATION: 0.9,
         }
 
         # Pattern breakthrough detection
@@ -247,7 +253,7 @@ class ConsciousnessTracker:
         self.alert_thresholds = {
             "consciousness_drop": 0.1,
             "emergence_frequency": 5,  # Max 5 emergence events per hour
-            "pattern_breakthrough_significance": 0.8
+            "pattern_breakthrough_significance": 0.8,
         }
 
         # Collective consciousness integration
@@ -263,13 +269,15 @@ class ConsciousnessTracker:
     # Core Consciousness Measurement
     # ============================================
 
-    async def measure_consciousness(self, context: Optional[dict[str, Any]] = None) -> dict[ConsciousnessType, ConsciousnessMeasurement]:
+    async def measure_consciousness(
+        self, context: Optional[dict[str, Any]] = None
+    ) -> dict[ConsciousnessType, ConsciousnessMeasurement]:
         """
         Perform comprehensive 5-dimensional consciousness measurement.
-        
+
         Args:
             context: Optional context for measurements
-            
+
         Returns:
             Dictionary of consciousness measurements by dimension
         """
@@ -285,11 +293,21 @@ class ConsciousnessTracker:
                 await self._establish_baseline(context)
 
             # Measure each consciousness dimension
-            measurements[ConsciousnessType.COORDINATION_EFFECTIVENESS] = await self._measure_coordination_effectiveness(context)
-            measurements[ConsciousnessType.PATTERN_RECOGNITION] = await self._measure_pattern_recognition(context)
-            measurements[ConsciousnessType.ADAPTIVE_LEARNING] = await self._measure_adaptive_learning(context)
-            measurements[ConsciousnessType.EMERGENCE_DETECTION] = await self._measure_emergence_detection(context)
-            measurements[ConsciousnessType.SELF_REFLECTION] = await self._measure_self_reflection(context)
+            measurements[
+                ConsciousnessType.COORDINATION_EFFECTIVENESS
+            ] = await self._measure_coordination_effectiveness(context)
+            measurements[
+                ConsciousnessType.PATTERN_RECOGNITION
+            ] = await self._measure_pattern_recognition(context)
+            measurements[
+                ConsciousnessType.ADAPTIVE_LEARNING
+            ] = await self._measure_adaptive_learning(context)
+            measurements[
+                ConsciousnessType.EMERGENCE_DETECTION
+            ] = await self._measure_emergence_detection(context)
+            measurements[ConsciousnessType.SELF_REFLECTION] = await self._measure_self_reflection(
+                context
+            )
 
             # Update consciousness profile
             self.consciousness_profile.update_profile(measurements)
@@ -300,7 +318,7 @@ class ConsciousnessTracker:
                 "measurements": {k.value: v.to_dict() for k, v in measurements.items()},
                 "overall_level": self.consciousness_profile.current_level,
                 "development_stage": self.consciousness_profile.development_stage,
-                "context": context
+                "context": context,
             }
             self.measurement_history.append(measurement_record)
 
@@ -318,8 +336,10 @@ class ConsciousnessTracker:
             # Real-time monitoring and alerts
             await self._process_real_time_monitoring(measurements, context)
 
-            logger.debug(f"🧠 Consciousness measured: {self.consciousness_profile.current_level:.3f} "
-                        f"(stage: {self.consciousness_profile.development_stage})")
+            logger.debug(
+                f"🧠 Consciousness measured: {self.consciousness_profile.current_level:.3f} "
+                f"(stage: {self.consciousness_profile.development_stage})"
+            )
 
             return measurements
 
@@ -332,16 +352,26 @@ class ConsciousnessTracker:
         if len(self.baseline_samples) < self.baseline_required_samples:
             # Collect baseline sample
             sample = {}
-            sample[ConsciousnessType.COORDINATION_EFFECTIVENESS] = await self._measure_coordination_effectiveness(context, baseline_mode=True)
-            sample[ConsciousnessType.PATTERN_RECOGNITION] = await self._measure_pattern_recognition(context, baseline_mode=True)
-            sample[ConsciousnessType.ADAPTIVE_LEARNING] = await self._measure_adaptive_learning(context, baseline_mode=True)
+            sample[
+                ConsciousnessType.COORDINATION_EFFECTIVENESS
+            ] = await self._measure_coordination_effectiveness(context, baseline_mode=True)
+            sample[ConsciousnessType.PATTERN_RECOGNITION] = await self._measure_pattern_recognition(
+                context, baseline_mode=True
+            )
+            sample[ConsciousnessType.ADAPTIVE_LEARNING] = await self._measure_adaptive_learning(
+                context, baseline_mode=True
+            )
             sample[ConsciousnessType.EMERGENCE_DETECTION] = ConsciousnessMeasurement(
                 ConsciousnessType.EMERGENCE_DETECTION, 0.1, 0.8  # Low baseline for emergence
             )
-            sample[ConsciousnessType.SELF_REFLECTION] = await self._measure_self_reflection(context, baseline_mode=True)
+            sample[ConsciousnessType.SELF_REFLECTION] = await self._measure_self_reflection(
+                context, baseline_mode=True
+            )
 
             self.baseline_samples.append(sample)
-            logger.debug(f"🧠 Baseline sample {len(self.baseline_samples)}/{self.baseline_required_samples} collected")
+            logger.debug(
+                f"🧠 Baseline sample {len(self.baseline_samples)}/{self.baseline_required_samples} collected"
+            )
 
             # Check if we now have enough samples to establish baseline
             if len(self.baseline_samples) >= self.baseline_required_samples:
@@ -362,9 +392,11 @@ class ConsciousnessTracker:
                         SwarmMemoryEventType.CONSCIOUSNESS_MEASURED,
                         {
                             "event_type": "baseline_established",
-                            "baseline_measurements": {k.value: v for k, v in baseline_measurements.items()},
-                            "samples_collected": len(self.baseline_samples)
-                        }
+                            "baseline_measurements": {
+                                k.value: v for k, v in baseline_measurements.items()
+                            },
+                            "samples_collected": len(self.baseline_samples),
+                        },
                     )
             return
 
@@ -372,7 +404,9 @@ class ConsciousnessTracker:
     # Dimension-Specific Measurements
     # ============================================
 
-    async def _measure_coordination_effectiveness(self, context: dict[str, Any], baseline_mode: bool = False) -> ConsciousnessMeasurement:
+    async def _measure_coordination_effectiveness(
+        self, context: dict[str, Any], baseline_mode: bool = False
+    ) -> ConsciousnessMeasurement:
         """Measure how well agents coordinate with each other."""
         # Extract coordination indicators from context
         agent_count = context.get("agent_count", 1)
@@ -381,20 +415,31 @@ class ConsciousnessTracker:
         coordination_factors = {
             "response_synchronization": self._calculate_response_sync(execution_data),
             "task_distribution_efficiency": self._calculate_task_distribution(execution_data),
-            "communication_effectiveness": self._calculate_communication_effectiveness(execution_data),
+            "communication_effectiveness": self._calculate_communication_effectiveness(
+                execution_data
+            ),
             "role_adherence": self._calculate_role_adherence(execution_data),
-            "conflict_resolution": self._calculate_conflict_resolution(execution_data)
+            "conflict_resolution": self._calculate_conflict_resolution(execution_data),
         }
 
         # Weighted coordination score
-        weights = {"response_synchronization": 0.25, "task_distribution_efficiency": 0.25,
-                  "communication_effectiveness": 0.2, "role_adherence": 0.15, "conflict_resolution": 0.15}
+        weights = {
+            "response_synchronization": 0.25,
+            "task_distribution_efficiency": 0.25,
+            "communication_effectiveness": 0.2,
+            "role_adherence": 0.15,
+            "conflict_resolution": 0.15,
+        }
 
-        base_score = sum(coordination_factors[factor] * weights[factor] for factor in coordination_factors)
+        base_score = sum(
+            coordination_factors[factor] * weights[factor] for factor in coordination_factors
+        )
 
         # Agent count scaling (more agents = potential for better coordination, but also complexity)
         if agent_count > 1:
-            scale_factor = min(1.2, 1.0 + (agent_count - 1) * 0.02)  # Slight boost for larger swarms
+            scale_factor = min(
+                1.2, 1.0 + (agent_count - 1) * 0.02
+            )  # Slight boost for larger swarms
             base_score *= scale_factor
 
         coordination_score = max(0.0, min(1.0, base_score))
@@ -406,18 +451,24 @@ class ConsciousnessTracker:
             ConsciousnessType.COORDINATION_EFFECTIVENESS,
             coordination_score,
             confidence,
-            context={"factors": coordination_factors, "agent_count": agent_count}
+            context={"factors": coordination_factors, "agent_count": agent_count},
         )
 
         # Add baseline deviation if baseline exists
         if not baseline_mode and self.baseline_established:
-            baseline = self.consciousness_profile.baseline_measurements.get(ConsciousnessType.COORDINATION_EFFECTIVENESS, 0.5)
+            baseline = self.consciousness_profile.baseline_measurements.get(
+                ConsciousnessType.COORDINATION_EFFECTIVENESS, 0.5
+            )
             measurement.baseline_deviation = coordination_score - baseline
-            measurement.historical_trend = self._calculate_trend(ConsciousnessType.COORDINATION_EFFECTIVENESS)
+            measurement.historical_trend = self._calculate_trend(
+                ConsciousnessType.COORDINATION_EFFECTIVENESS
+            )
 
         return measurement
 
-    async def _measure_pattern_recognition(self, context: dict[str, Any], baseline_mode: bool = False) -> ConsciousnessMeasurement:
+    async def _measure_pattern_recognition(
+        self, context: dict[str, Any], baseline_mode: bool = False
+    ) -> ConsciousnessMeasurement:
         """Measure ability to identify and apply successful patterns."""
         execution_data = context.get("execution_data", {})
         memory_data = context.get("memory_data", {})
@@ -425,15 +476,23 @@ class ConsciousnessTracker:
         pattern_factors = {
             "pattern_archive_utilization": self._calculate_pattern_archive_usage(memory_data),
             "pattern_diversity_recognition": self._calculate_pattern_diversity(memory_data),
-            "pattern_application_success": self._calculate_pattern_application_success(execution_data),
-            "novel_pattern_identification": self._calculate_novel_pattern_identification(execution_data),
-            "pattern_generalization": self._calculate_pattern_generalization(memory_data)
+            "pattern_application_success": self._calculate_pattern_application_success(
+                execution_data
+            ),
+            "novel_pattern_identification": self._calculate_novel_pattern_identification(
+                execution_data
+            ),
+            "pattern_generalization": self._calculate_pattern_generalization(memory_data),
         }
 
         # Weighted pattern recognition score
-        weights = {"pattern_archive_utilization": 0.25, "pattern_diversity_recognition": 0.2,
-                  "pattern_application_success": 0.25, "novel_pattern_identification": 0.15,
-                  "pattern_generalization": 0.15}
+        weights = {
+            "pattern_archive_utilization": 0.25,
+            "pattern_diversity_recognition": 0.2,
+            "pattern_application_success": 0.25,
+            "novel_pattern_identification": 0.15,
+            "pattern_generalization": 0.15,
+        }
 
         pattern_score = sum(pattern_factors[factor] * weights[factor] for factor in pattern_factors)
         pattern_score = max(0.0, min(1.0, pattern_score))
@@ -444,17 +503,23 @@ class ConsciousnessTracker:
             ConsciousnessType.PATTERN_RECOGNITION,
             pattern_score,
             confidence,
-            context={"factors": pattern_factors}
+            context={"factors": pattern_factors},
         )
 
         if not baseline_mode and self.baseline_established:
-            baseline = self.consciousness_profile.baseline_measurements.get(ConsciousnessType.PATTERN_RECOGNITION, 0.5)
+            baseline = self.consciousness_profile.baseline_measurements.get(
+                ConsciousnessType.PATTERN_RECOGNITION, 0.5
+            )
             measurement.baseline_deviation = pattern_score - baseline
-            measurement.historical_trend = self._calculate_trend(ConsciousnessType.PATTERN_RECOGNITION)
+            measurement.historical_trend = self._calculate_trend(
+                ConsciousnessType.PATTERN_RECOGNITION
+            )
 
         return measurement
 
-    async def _measure_adaptive_learning(self, context: dict[str, Any], baseline_mode: bool = False) -> ConsciousnessMeasurement:
+    async def _measure_adaptive_learning(
+        self, context: dict[str, Any], baseline_mode: bool = False
+    ) -> ConsciousnessMeasurement:
         """Measure capacity to learn and improve from experience."""
         performance_data = context.get("performance_data", {})
         learning_data = context.get("learning_data", {})
@@ -464,14 +529,21 @@ class ConsciousnessTracker:
             "learning_rate": self._calculate_learning_rate(learning_data),
             "adaptation_speed": self._calculate_adaptation_speed(performance_data),
             "mistake_learning": self._calculate_mistake_learning(performance_data),
-            "parameter_optimization": self._calculate_parameter_optimization(performance_data)
+            "parameter_optimization": self._calculate_parameter_optimization(performance_data),
         }
 
         # Weighted adaptive learning score
-        weights = {"performance_improvement_trend": 0.3, "learning_rate": 0.25, "adaptation_speed": 0.2,
-                  "mistake_learning": 0.15, "parameter_optimization": 0.1}
+        weights = {
+            "performance_improvement_trend": 0.3,
+            "learning_rate": 0.25,
+            "adaptation_speed": 0.2,
+            "mistake_learning": 0.15,
+            "parameter_optimization": 0.1,
+        }
 
-        learning_score = sum(adaptation_factors[factor] * weights[factor] for factor in adaptation_factors)
+        learning_score = sum(
+            adaptation_factors[factor] * weights[factor] for factor in adaptation_factors
+        )
         learning_score = max(0.0, min(1.0, learning_score))
 
         confidence = self._calculate_measurement_confidence(performance_data, adaptation_factors)
@@ -480,34 +552,54 @@ class ConsciousnessTracker:
             ConsciousnessType.ADAPTIVE_LEARNING,
             learning_score,
             confidence,
-            context={"factors": adaptation_factors}
+            context={"factors": adaptation_factors},
         )
 
         if not baseline_mode and self.baseline_established:
-            baseline = self.consciousness_profile.baseline_measurements.get(ConsciousnessType.ADAPTIVE_LEARNING, 0.5)
+            baseline = self.consciousness_profile.baseline_measurements.get(
+                ConsciousnessType.ADAPTIVE_LEARNING, 0.5
+            )
             measurement.baseline_deviation = learning_score - baseline
-            measurement.historical_trend = self._calculate_trend(ConsciousnessType.ADAPTIVE_LEARNING)
+            measurement.historical_trend = self._calculate_trend(
+                ConsciousnessType.ADAPTIVE_LEARNING
+            )
 
         return measurement
 
-    async def _measure_emergence_detection(self, context: dict[str, Any], baseline_mode: bool = False) -> ConsciousnessMeasurement:
+    async def _measure_emergence_detection(
+        self, context: dict[str, Any], baseline_mode: bool = False
+    ) -> ConsciousnessMeasurement:
         """Measure recognition of emergent behaviors and novel solutions."""
-        recent_events = len([e for e in self.emergence_events
-                           if (datetime.now() - e.timestamp).total_seconds() < 3600])  # Last hour
+        recent_events = len(
+            [
+                e
+                for e in self.emergence_events
+                if (datetime.now() - e.timestamp).total_seconds() < 3600
+            ]
+        )  # Last hour
 
         emergence_factors = {
-            "recent_emergence_events": min(1.0, recent_events / 5.0),  # Normalize to max 5 events/hour
+            "recent_emergence_events": min(
+                1.0, recent_events / 5.0
+            ),  # Normalize to max 5 events/hour
             "emergence_pattern_diversity": self._calculate_emergence_diversity(),
             "novel_behavior_recognition": self._calculate_novel_behavior_recognition(context),
             "complexity_emergence": self._calculate_complexity_emergence(context),
-            "breakthrough_potential": self._calculate_breakthrough_potential()
+            "breakthrough_potential": self._calculate_breakthrough_potential(),
         }
 
         # Weighted emergence detection score
-        weights = {"recent_emergence_events": 0.3, "emergence_pattern_diversity": 0.2,
-                  "novel_behavior_recognition": 0.25, "complexity_emergence": 0.15, "breakthrough_potential": 0.1}
+        weights = {
+            "recent_emergence_events": 0.3,
+            "emergence_pattern_diversity": 0.2,
+            "novel_behavior_recognition": 0.25,
+            "complexity_emergence": 0.15,
+            "breakthrough_potential": 0.1,
+        }
 
-        emergence_score = sum(emergence_factors[factor] * weights[factor] for factor in emergence_factors)
+        emergence_score = sum(
+            emergence_factors[factor] * weights[factor] for factor in emergence_factors
+        )
         emergence_score = max(0.0, min(1.0, emergence_score))
 
         confidence = 0.8  # Base confidence for emergence detection
@@ -516,17 +608,23 @@ class ConsciousnessTracker:
             ConsciousnessType.EMERGENCE_DETECTION,
             emergence_score,
             confidence,
-            context={"factors": emergence_factors, "recent_events": recent_events}
+            context={"factors": emergence_factors, "recent_events": recent_events},
         )
 
         if not baseline_mode and self.baseline_established:
-            baseline = self.consciousness_profile.baseline_measurements.get(ConsciousnessType.EMERGENCE_DETECTION, 0.1)
+            baseline = self.consciousness_profile.baseline_measurements.get(
+                ConsciousnessType.EMERGENCE_DETECTION, 0.1
+            )
             measurement.baseline_deviation = emergence_score - baseline
-            measurement.historical_trend = self._calculate_trend(ConsciousnessType.EMERGENCE_DETECTION)
+            measurement.historical_trend = self._calculate_trend(
+                ConsciousnessType.EMERGENCE_DETECTION
+            )
 
         return measurement
 
-    async def _measure_self_reflection(self, context: dict[str, Any], baseline_mode: bool = False) -> ConsciousnessMeasurement:
+    async def _measure_self_reflection(
+        self, context: dict[str, Any], baseline_mode: bool = False
+    ) -> ConsciousnessMeasurement:
         """Measure awareness of own performance and capabilities."""
         performance_data = context.get("performance_data", {})
 
@@ -535,14 +633,21 @@ class ConsciousnessTracker:
             "capability_assessment": self._calculate_capability_assessment(context),
             "limitation_recognition": self._calculate_limitation_recognition(performance_data),
             "improvement_identification": self._calculate_improvement_identification(context),
-            "meta_cognitive_awareness": self._calculate_meta_cognitive_awareness(context)
+            "meta_cognitive_awareness": self._calculate_meta_cognitive_awareness(context),
         }
 
         # Weighted self-reflection score
-        weights = {"performance_awareness": 0.25, "capability_assessment": 0.2, "limitation_recognition": 0.2,
-                  "improvement_identification": 0.2, "meta_cognitive_awareness": 0.15}
+        weights = {
+            "performance_awareness": 0.25,
+            "capability_assessment": 0.2,
+            "limitation_recognition": 0.2,
+            "improvement_identification": 0.2,
+            "meta_cognitive_awareness": 0.15,
+        }
 
-        reflection_score = sum(reflection_factors[factor] * weights[factor] for factor in reflection_factors)
+        reflection_score = sum(
+            reflection_factors[factor] * weights[factor] for factor in reflection_factors
+        )
         reflection_score = max(0.0, min(1.0, reflection_score))
 
         confidence = self._calculate_measurement_confidence(performance_data, reflection_factors)
@@ -551,11 +656,13 @@ class ConsciousnessTracker:
             ConsciousnessType.SELF_REFLECTION,
             reflection_score,
             confidence,
-            context={"factors": reflection_factors}
+            context={"factors": reflection_factors},
         )
 
         if not baseline_mode and self.baseline_established:
-            baseline = self.consciousness_profile.baseline_measurements.get(ConsciousnessType.SELF_REFLECTION, 0.5)
+            baseline = self.consciousness_profile.baseline_measurements.get(
+                ConsciousnessType.SELF_REFLECTION, 0.5
+            )
             measurement.baseline_deviation = reflection_score - baseline
             measurement.historical_trend = self._calculate_trend(ConsciousnessType.SELF_REFLECTION)
 
@@ -605,7 +712,7 @@ class ConsciousnessTracker:
             "message_clarity": communication_data.get("clarity_score", 0.7),
             "response_relevance": communication_data.get("relevance_score", 0.6),
             "information_sharing": communication_data.get("info_sharing_score", 0.5),
-            "feedback_quality": communication_data.get("feedback_score", 0.6)
+            "feedback_quality": communication_data.get("feedback_score", 0.6),
         }
 
         return sum(factors.values()) / len(factors)
@@ -626,7 +733,9 @@ class ConsciousnessTracker:
         resolution_rate = resolved_conflicts / len(conflicts) if conflicts else 1.0
         return min(1.0, resolution_rate)
 
-    def _calculate_measurement_confidence(self, data: dict[str, Any], factors: dict[str, float]) -> float:
+    def _calculate_measurement_confidence(
+        self, data: dict[str, Any], factors: dict[str, float]
+    ) -> float:
         """Calculate confidence in measurement based on data quality."""
         data_completeness = len([v for v in data.values() if v is not None]) / max(len(data), 1)
         factor_consistency = 1.0 - np.std(list(factors.values())) if len(factors) > 1 else 0.8
@@ -702,7 +811,7 @@ class ConsciousnessTracker:
         if pattern_types and patterns_applied > 0:
             diversity_factor = len(set(pattern_types)) / max(len(pattern_types), 1)
             application_factor = min(1.0, patterns_applied / 10.0)
-            return (diversity_factor * 0.6 + application_factor * 0.4)
+            return diversity_factor * 0.6 + application_factor * 0.4
         return 0.4
 
     def _calculate_performance_trend(self, performance_data: dict[str, Any]) -> float:
@@ -763,8 +872,10 @@ class ConsciousnessTracker:
             return 0.2
 
         # Look for rapid improvement patterns
-        improvements = [recent_trajectory[i] - recent_trajectory[i-1]
-                       for i in range(1, len(recent_trajectory))]
+        improvements = [
+            recent_trajectory[i] - recent_trajectory[i - 1]
+            for i in range(1, len(recent_trajectory))
+        ]
         avg_improvement = sum(improvements) / len(improvements)
 
         # Higher potential if showing consistent improvement
@@ -815,7 +926,7 @@ class ConsciousnessTracker:
         # More agents and patterns suggest higher complexity handling
         agent_factor = min(1.0, agent_count / 10.0)  # Normalize to max 10 agents
         pattern_factor = min(1.0, len(patterns_used) / 5.0)  # Normalize to max 5 patterns
-        return (agent_factor * 0.5 + pattern_factor * 0.5)
+        return agent_factor * 0.5 + pattern_factor * 0.5
 
     def _calculate_performance_awareness(self, performance_data: dict[str, Any]) -> float:
         """Calculate performance awareness."""
@@ -888,20 +999,35 @@ class ConsciousnessTracker:
     # Emergence Detection
     # ============================================
 
-    async def _detect_emergence_events(self, measurements: dict[ConsciousnessType, ConsciousnessMeasurement],
-                                     context: dict[str, Any]):
+    async def _detect_emergence_events(
+        self,
+        measurements: dict[ConsciousnessType, ConsciousnessMeasurement],
+        context: dict[str, Any],
+    ):
         """Detect and record emergence events."""
         current_time = datetime.now()
         overall_consciousness = self.consciousness_profile.current_level
 
         # Check each emergence threshold
         emergence_checks = {
-            EmergenceEventType.COORDINATION_SPIKE: measurements.get(ConsciousnessType.COORDINATION_EFFECTIVENESS, ConsciousnessMeasurement(ConsciousnessType.COORDINATION_EFFECTIVENESS, 0, 0)).value,
-            EmergenceEventType.PATTERN_BREAKTHROUGH: measurements.get(ConsciousnessType.PATTERN_RECOGNITION, ConsciousnessMeasurement(ConsciousnessType.PATTERN_RECOGNITION, 0, 0)).value,
-            EmergenceEventType.BEHAVIORAL_INNOVATION: measurements.get(ConsciousnessType.ADAPTIVE_LEARNING, ConsciousnessMeasurement(ConsciousnessType.ADAPTIVE_LEARNING, 0, 0)).value,
+            EmergenceEventType.COORDINATION_SPIKE: measurements.get(
+                ConsciousnessType.COORDINATION_EFFECTIVENESS,
+                ConsciousnessMeasurement(ConsciousnessType.COORDINATION_EFFECTIVENESS, 0, 0),
+            ).value,
+            EmergenceEventType.PATTERN_BREAKTHROUGH: measurements.get(
+                ConsciousnessType.PATTERN_RECOGNITION,
+                ConsciousnessMeasurement(ConsciousnessType.PATTERN_RECOGNITION, 0, 0),
+            ).value,
+            EmergenceEventType.BEHAVIORAL_INNOVATION: measurements.get(
+                ConsciousnessType.ADAPTIVE_LEARNING,
+                ConsciousnessMeasurement(ConsciousnessType.ADAPTIVE_LEARNING, 0, 0),
+            ).value,
             EmergenceEventType.COLLECTIVE_INSIGHT: overall_consciousness,
             EmergenceEventType.CONSCIOUSNESS_LEAP: overall_consciousness,
-            EmergenceEventType.SWARM_SYNCHRONIZATION: measurements.get(ConsciousnessType.COORDINATION_EFFECTIVENESS, ConsciousnessMeasurement(ConsciousnessType.COORDINATION_EFFECTIVENESS, 0, 0)).value
+            EmergenceEventType.SWARM_SYNCHRONIZATION: measurements.get(
+                ConsciousnessType.COORDINATION_EFFECTIVENESS,
+                ConsciousnessMeasurement(ConsciousnessType.COORDINATION_EFFECTIVENESS, 0, 0),
+            ).value,
         }
 
         for event_type, trigger_value in emergence_checks.items():
@@ -910,21 +1036,28 @@ class ConsciousnessTracker:
             if trigger_value >= threshold:
                 # Check for recent duplicates
                 recent_similar = any(
-                    e.event_type == event_type and
-                    (current_time - e.timestamp).total_seconds() < 300  # 5 minutes
+                    e.event_type == event_type
+                    and (current_time - e.timestamp).total_seconds() < 300  # 5 minutes
                     for e in self.emergence_events[-10:]
                 )
 
                 if not recent_similar:
                     await self._record_emergence_event(
-                        event_type, trigger_value, threshold,
-                        overall_consciousness, context
+                        event_type, trigger_value, threshold, overall_consciousness, context
                     )
 
-    async def _record_emergence_event(self, event_type: EmergenceEventType, trigger_value: float,
-                                    threshold: float, consciousness_level: float, context: dict[str, Any]):
+    async def _record_emergence_event(
+        self,
+        event_type: EmergenceEventType,
+        trigger_value: float,
+        threshold: float,
+        consciousness_level: float,
+        context: dict[str, Any],
+    ):
         """Record an emergence event."""
-        event_id = f"emergence_{len(self.emergence_events) + 1}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        event_id = (
+            f"emergence_{len(self.emergence_events) + 1}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        )
 
         # Calculate significance score
         significance_score = min(1.0, (trigger_value - threshold) / threshold + 0.5)
@@ -939,7 +1072,7 @@ class ConsciousnessTracker:
             threshold=threshold,
             consciousness_level=consciousness_level,
             context=context,
-            significance_score=significance_score
+            significance_score=significance_score,
         )
 
         self.emergence_events.append(emergence_event)
@@ -949,22 +1082,24 @@ class ConsciousnessTracker:
         if self.memory_client:
             await self.memory_client.log_swarm_event(
                 SwarmMemoryEventType.CONSCIOUSNESS_MEASURED,
-                {
-                    "event_type": "emergence_detected",
-                    "emergence_data": emergence_event.to_dict()
-                }
+                {"event_type": "emergence_detected", "emergence_data": emergence_event.to_dict()},
             )
 
-        logger.info(f"🌟 EMERGENCE DETECTED: {event_type.value} - "
-                   f"Trigger: {trigger_value:.3f}, Threshold: {threshold:.3f}, "
-                   f"Consciousness: {consciousness_level:.3f}")
+        logger.info(
+            f"🌟 EMERGENCE DETECTED: {event_type.value} - "
+            f"Trigger: {trigger_value:.3f}, Threshold: {threshold:.3f}, "
+            f"Consciousness: {consciousness_level:.3f}"
+        )
 
     # ============================================
     # Pattern Breakthrough Detection
     # ============================================
 
-    async def _analyze_pattern_breakthroughs(self, measurements: dict[ConsciousnessType, ConsciousnessMeasurement],
-                                           context: dict[str, Any]):
+    async def _analyze_pattern_breakthroughs(
+        self,
+        measurements: dict[ConsciousnessType, ConsciousnessMeasurement],
+        context: dict[str, Any],
+    ):
         """Analyze for pattern breakthroughs."""
         if not self.pattern_detection_enabled:
             return
@@ -974,7 +1109,7 @@ class ConsciousnessTracker:
             "timestamp": datetime.now().isoformat(),
             "consciousness_level": self.consciousness_profile.current_level,
             "measurements": {k.value: v.value for k, v in measurements.items()},
-            "context": context
+            "context": context,
         }
 
         self.pattern_buffer.append(pattern_data)
@@ -995,7 +1130,7 @@ class ConsciousnessTracker:
             window_size = 5
             moving_avg = []
             for i in range(window_size, len(consciousness_levels)):
-                avg = sum(consciousness_levels[i-window_size:i]) / window_size
+                avg = sum(consciousness_levels[i - window_size : i]) / window_size
                 moving_avg.append(avg)
 
             if moving_avg:
@@ -1009,8 +1144,9 @@ class ConsciousnessTracker:
                         current_level, expected_level, recent_data[-1]
                     )
 
-    async def _record_pattern_breakthrough(self, current_level: float, expected_level: float,
-                                         recent_data: dict[str, Any]):
+    async def _record_pattern_breakthrough(
+        self, current_level: float, expected_level: float, recent_data: dict[str, Any]
+    ):
         """Record a pattern breakthrough."""
         breakthrough_id = f"breakthrough_{len(self.breakthrough_patterns) + 1}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
@@ -1023,7 +1159,7 @@ class ConsciousnessTracker:
             "context": recent_data.get("context", {}),
             "measurements": recent_data.get("measurements", {}),
             "swarm_id": self.swarm_id,
-            "swarm_type": self.swarm_type
+            "swarm_type": self.swarm_type,
         }
 
         self.breakthrough_patterns.append(breakthrough_data)
@@ -1035,18 +1171,23 @@ class ConsciousnessTracker:
                 pattern_name=f"consciousness_breakthrough_{self.swarm_type}",
                 pattern_data=breakthrough_data,
                 success_score=current_level,
-                context={"breakthrough": True, "consciousness_tracking": True}
+                context={"breakthrough": True, "consciousness_tracking": True},
             )
 
-        logger.info(f"🚀 PATTERN BREAKTHROUGH: {current_level:.3f} vs expected {expected_level:.3f} "
-                   f"(+{current_level - expected_level:.3f})")
+        logger.info(
+            f"🚀 PATTERN BREAKTHROUGH: {current_level:.3f} vs expected {expected_level:.3f} "
+            f"(+{current_level - expected_level:.3f})"
+        )
 
     # ============================================
     # Memory Integration and Storage
     # ============================================
 
-    async def _store_consciousness_data(self, measurements: dict[ConsciousnessType, ConsciousnessMeasurement],
-                                      context: dict[str, Any]):
+    async def _store_consciousness_data(
+        self,
+        measurements: dict[ConsciousnessType, ConsciousnessMeasurement],
+        context: dict[str, Any],
+    ):
         """Store consciousness data in memory system."""
         if not self.memory_client:
             return
@@ -1062,7 +1203,7 @@ class ConsciousnessTracker:
                 "measurements": {k.value: v.to_dict() for k, v in measurements.items()},
                 "measurement_count": self.consciousness_profile.measurement_count,
                 "emergence_events": len(self.emergence_events),
-                "breakthrough_patterns": len(self.breakthrough_patterns)
+                "breakthrough_patterns": len(self.breakthrough_patterns),
             }
 
             # Store as memory entry
@@ -1074,17 +1215,19 @@ class ConsciousnessTracker:
                 metadata={
                     "consciousness_level": self.consciousness_profile.current_level,
                     "development_stage": self.consciousness_profile.development_stage,
-                    "measurement_timestamp": datetime.now().isoformat()
-                }
+                    "measurement_timestamp": datetime.now().isoformat(),
+                },
             )
 
             await self.memory_client.log_swarm_event(
-                SwarmMemoryEventType.CONSCIOUSNESS_MEASURED,
-                consciousness_data
+                SwarmMemoryEventType.CONSCIOUSNESS_MEASURED, consciousness_data
             )
 
             # Store as learning if consciousness is improving
-            if self.consciousness_profile.consciousness_trajectory and len(self.consciousness_profile.consciousness_trajectory) > 1:
+            if (
+                self.consciousness_profile.consciousness_trajectory
+                and len(self.consciousness_profile.consciousness_trajectory) > 1
+            ):
                 previous_level = self.consciousness_profile.consciousness_trajectory[-2]
                 current_level = self.consciousness_profile.current_level
 
@@ -1092,13 +1235,13 @@ class ConsciousnessTracker:
                     await self.memory_client.store_learning(
                         learning_type="consciousness_development",
                         content=f"Consciousness improved from {previous_level:.3f} to {current_level:.3f} "
-                               f"(stage: {self.consciousness_profile.development_stage})",
+                        f"(stage: {self.consciousness_profile.development_stage})",
                         confidence=min(1.0, current_level + 0.1),
                         context={
                             "consciousness_tracking": True,
                             "improvement": current_level - previous_level,
-                            "swarm_type": self.swarm_type
-                        }
+                            "swarm_type": self.swarm_type,
+                        },
                     )
 
         except Exception as e:
@@ -1108,8 +1251,11 @@ class ConsciousnessTracker:
     # Real-time Monitoring and Alerts
     # ============================================
 
-    async def _process_real_time_monitoring(self, measurements: dict[ConsciousnessType, ConsciousnessMeasurement],
-                                          context: dict[str, Any]):
+    async def _process_real_time_monitoring(
+        self,
+        measurements: dict[ConsciousnessType, ConsciousnessMeasurement],
+        context: dict[str, Any],
+    ):
         """Process real-time monitoring and generate alerts."""
         if not self.monitoring_active:
             return
@@ -1117,33 +1263,53 @@ class ConsciousnessTracker:
         current_level = self.consciousness_profile.current_level
 
         # Check for consciousness drops
-        if (len(self.consciousness_profile.consciousness_trajectory) > 1 and
-            current_level < self.consciousness_profile.consciousness_trajectory[-2] - self.alert_thresholds["consciousness_drop"]):
-
-            logger.warning(f"🚨 Consciousness drop alert: {current_level:.3f} "
-                          f"(previous: {self.consciousness_profile.consciousness_trajectory[-2]:.3f})")
+        if (
+            len(self.consciousness_profile.consciousness_trajectory) > 1
+            and current_level
+            < self.consciousness_profile.consciousness_trajectory[-2]
+            - self.alert_thresholds["consciousness_drop"]
+        ):
+            logger.warning(
+                f"🚨 Consciousness drop alert: {current_level:.3f} "
+                f"(previous: {self.consciousness_profile.consciousness_trajectory[-2]:.3f})"
+            )
 
         # Check emergence event frequency
-        recent_events = len([e for e in self.emergence_events
-                           if (datetime.now() - e.timestamp).total_seconds() < 3600])
+        recent_events = len(
+            [
+                e
+                for e in self.emergence_events
+                if (datetime.now() - e.timestamp).total_seconds() < 3600
+            ]
+        )
 
         if recent_events > self.alert_thresholds["emergence_frequency"]:
             logger.warning(f"🚨 High emergence frequency alert: {recent_events} events in last hour")
 
         # Check for breakthrough significance
         if self.breakthrough_patterns:
-            recent_breakthroughs = [b for b in self.breakthrough_patterns
-                                  if (datetime.now() - datetime.fromisoformat(b["timestamp"])).total_seconds() < 3600]
+            recent_breakthroughs = [
+                b
+                for b in self.breakthrough_patterns
+                if (datetime.now() - datetime.fromisoformat(b["timestamp"])).total_seconds() < 3600
+            ]
 
             for breakthrough in recent_breakthroughs:
-                if breakthrough["improvement_magnitude"] > self.alert_thresholds["pattern_breakthrough_significance"]:
-                    logger.info(f"🎉 Significant breakthrough alert: +{breakthrough['improvement_magnitude']:.3f}")
+                if (
+                    breakthrough["improvement_magnitude"]
+                    > self.alert_thresholds["pattern_breakthrough_significance"]
+                ):
+                    logger.info(
+                        f"🎉 Significant breakthrough alert: +{breakthrough['improvement_magnitude']:.3f}"
+                    )
 
     # ============================================
     # Collective Consciousness
     # ============================================
 
-    async def correlate_with_collective_consciousness(self, global_consciousness_data: dict[str, Any]) -> dict[str, Any]:
+    async def correlate_with_collective_consciousness(
+        self, global_consciousness_data: dict[str, Any]
+    ) -> dict[str, Any]:
         """Correlate individual swarm consciousness with collective patterns."""
         correlation_data = {
             "timestamp": datetime.now().isoformat(),
@@ -1151,14 +1317,16 @@ class ConsciousnessTracker:
             "collective_average": global_consciousness_data.get("average_consciousness", 0.5),
             "relative_position": 0.0,
             "synchronization_score": 0.0,
-            "collective_contribution": 0.0
+            "collective_contribution": 0.0,
         }
 
         collective_average = global_consciousness_data.get("average_consciousness", 0.5)
 
         # Calculate relative position
         if collective_average > 0:
-            correlation_data["relative_position"] = self.consciousness_profile.current_level / collective_average
+            correlation_data["relative_position"] = (
+                self.consciousness_profile.current_level / collective_average
+            )
 
         # Calculate synchronization with collective patterns
         collective_trajectory = global_consciousness_data.get("collective_trajectory", [])
@@ -1169,7 +1337,9 @@ class ConsciousnessTracker:
             if len(individual_recent) == len(collective_recent):
                 # Calculate correlation coefficient
                 correlation = np.corrcoef(individual_recent, collective_recent)[0, 1]
-                correlation_data["synchronization_score"] = max(0.0, correlation) if not np.isnan(correlation) else 0.0
+                correlation_data["synchronization_score"] = (
+                    max(0.0, correlation) if not np.isnan(correlation) else 0.0
+                )
 
         # Calculate collective contribution (how much this swarm influences collective consciousness)
         swarm_count = global_consciousness_data.get("active_swarms", 1)
@@ -1180,7 +1350,9 @@ class ConsciousnessTracker:
         correlation_data["collective_contribution"] = base_contribution * performance_multiplier
 
         # Update profile
-        self.consciousness_profile.collective_consciousness_contribution = correlation_data["collective_contribution"]
+        self.consciousness_profile.collective_consciousness_contribution = correlation_data[
+            "collective_contribution"
+        ]
 
         # Store correlation data
         self.collective_data_buffer.append(correlation_data)
@@ -1191,14 +1363,16 @@ class ConsciousnessTracker:
     # Performance Correlation
     # ============================================
 
-    async def correlate_consciousness_with_performance(self, performance_data: dict[str, Any]) -> dict[str, Any]:
+    async def correlate_consciousness_with_performance(
+        self, performance_data: dict[str, Any]
+    ) -> dict[str, Any]:
         """Correlate consciousness metrics with performance outcomes."""
         correlation_analysis = {
             "timestamp": datetime.now().isoformat(),
             "consciousness_level": self.consciousness_profile.current_level,
             "performance_metrics": performance_data,
             "correlations": {},
-            "predictive_insights": {}
+            "predictive_insights": {},
         }
 
         # Analyze correlations for each consciousness dimension
@@ -1212,7 +1386,9 @@ class ConsciousnessTracker:
                 if dim_data and "value" in dim_data:
                     dimension_values.append(dim_data["value"])
                     # Extract corresponding performance data (simplified)
-                    perf_score = measurement["context"].get("performance_data", {}).get("quality_score", 0.5)
+                    perf_score = (
+                        measurement["context"].get("performance_data", {}).get("quality_score", 0.5)
+                    )
                     performance_values.append(perf_score)
 
             # Calculate correlation if we have enough data
@@ -1223,12 +1399,20 @@ class ConsciousnessTracker:
 
         # Predictive insights
         if self.consciousness_profile.consciousness_trajectory:
-            recent_trend = self._calculate_trend_slope(self.consciousness_profile.consciousness_trajectory[-10:])
+            recent_trend = self._calculate_trend_slope(
+                self.consciousness_profile.consciousness_trajectory[-10:]
+            )
 
             correlation_analysis["predictive_insights"] = {
-                "consciousness_trend": "improving" if recent_trend > 0.01 else "stable" if recent_trend > -0.01 else "declining",
+                "consciousness_trend": "improving"
+                if recent_trend > 0.01
+                else "stable"
+                if recent_trend > -0.01
+                else "declining",
                 "predicted_performance_impact": recent_trend * 2.0,  # Simplified prediction
-                "confidence": min(1.0, len(self.consciousness_profile.consciousness_trajectory) / 50.0)
+                "confidence": min(
+                    1.0, len(self.consciousness_profile.consciousness_trajectory) / 50.0
+                ),
             }
 
         # Store correlation data
@@ -1261,50 +1445,63 @@ class ConsciousnessTracker:
             "monitoring_status": {
                 "active": self.monitoring_active,
                 "baseline_established": self.baseline_established,
-                "pattern_detection_enabled": self.pattern_detection_enabled
+                "pattern_detection_enabled": self.pattern_detection_enabled,
             },
             "statistics": {
                 "total_measurements": len(self.measurement_history),
                 "total_emergence_events": len(self.emergence_events),
                 "total_breakthroughs": len(self.breakthrough_patterns),
-                "avg_consciousness_level": sum(self.consciousness_profile.consciousness_trajectory) / len(self.consciousness_profile.consciousness_trajectory) if self.consciousness_profile.consciousness_trajectory else 0
-            }
+                "avg_consciousness_level": sum(self.consciousness_profile.consciousness_trajectory)
+                / len(self.consciousness_profile.consciousness_trajectory)
+                if self.consciousness_profile.consciousness_trajectory
+                else 0,
+            },
         }
 
     async def generate_consciousness_report(self) -> dict[str, Any]:
         """Generate comprehensive consciousness tracking report."""
         report = {
             "report_timestamp": datetime.now().isoformat(),
-            "swarm_identity": {
-                "swarm_id": self.swarm_id,
-                "swarm_type": self.swarm_type
-            },
+            "swarm_identity": {"swarm_id": self.swarm_id, "swarm_type": self.swarm_type},
             "consciousness_profile": asdict(self.consciousness_profile),
             "performance_analysis": {
                 "current_level": self.consciousness_profile.current_level,
                 "development_stage": self.consciousness_profile.development_stage,
                 "maturity_score": self.consciousness_profile.maturity_score,
                 "trend_analysis": self._generate_trend_analysis(),
-                "dimension_breakdown": self._generate_dimension_breakdown()
+                "dimension_breakdown": self._generate_dimension_breakdown(),
             },
             "emergence_analysis": {
                 "total_events": len(self.emergence_events),
-                "recent_events": len([e for e in self.emergence_events
-                                    if (datetime.now() - e.timestamp).total_seconds() < 86400]),  # Last 24h
+                "recent_events": len(
+                    [
+                        e
+                        for e in self.emergence_events
+                        if (datetime.now() - e.timestamp).total_seconds() < 86400
+                    ]
+                ),  # Last 24h
                 "event_type_distribution": self._calculate_emergence_distribution(),
-                "significance_analysis": self._analyze_emergence_significance()
+                "significance_analysis": self._analyze_emergence_significance(),
             },
             "pattern_breakthrough_analysis": {
                 "total_breakthroughs": len(self.breakthrough_patterns),
-                "recent_breakthroughs": len([b for b in self.breakthrough_patterns
-                                           if (datetime.now() - datetime.fromisoformat(b["timestamp"])).total_seconds() < 86400]),
-                "breakthrough_magnitude_analysis": self._analyze_breakthrough_magnitudes()
+                "recent_breakthroughs": len(
+                    [
+                        b
+                        for b in self.breakthrough_patterns
+                        if (datetime.now() - datetime.fromisoformat(b["timestamp"])).total_seconds()
+                        < 86400
+                    ]
+                ),
+                "breakthrough_magnitude_analysis": self._analyze_breakthrough_magnitudes(),
             },
             "collective_consciousness": {
                 "contribution_score": self.consciousness_profile.collective_consciousness_contribution,
-                "synchronization_data": list(self.collective_data_buffer)[-10:] if self.collective_data_buffer else []
+                "synchronization_data": list(self.collective_data_buffer)[-10:]
+                if self.collective_data_buffer
+                else [],
             },
-            "recommendations": self._generate_recommendations()
+            "recommendations": self._generate_recommendations(),
         }
 
         return report
@@ -1322,7 +1519,7 @@ class ConsciousnessTracker:
             "volatility": np.std(recent) if len(recent) > 1 else 0,
             "growth_rate": (recent[-1] - recent[0]) / len(recent) if len(recent) > 1 else 0,
             "peak_consciousness": max(trajectory),
-            "average_consciousness": sum(trajectory) / len(trajectory)
+            "average_consciousness": sum(trajectory) / len(trajectory),
         }
 
     def _generate_dimension_breakdown(self) -> dict[str, Any]:
@@ -1334,7 +1531,7 @@ class ConsciousnessTracker:
                 "current_value": value,
                 "baseline_value": baseline,
                 "improvement": value - baseline,
-                "performance_category": self._categorize_dimension_performance(value)
+                "performance_category": self._categorize_dimension_performance(value),
             }
         return breakdown
 
@@ -1368,7 +1565,7 @@ class ConsciousnessTracker:
         return {
             "average_significance": sum(significances) / len(significances),
             "max_significance": max(significances),
-            "high_significance_events": len([s for s in significances if s > 0.8])
+            "high_significance_events": len([s for s in significances if s > 0.8]),
         }
 
     def _analyze_breakthrough_magnitudes(self) -> dict[str, float]:
@@ -1380,7 +1577,7 @@ class ConsciousnessTracker:
         return {
             "average_magnitude": sum(magnitudes) / len(magnitudes),
             "max_magnitude": max(magnitudes),
-            "significant_breakthroughs": len([m for m in magnitudes if m > 0.1])
+            "significant_breakthroughs": len([m for m in magnitudes if m > 0.1]),
         }
 
     def _generate_recommendations(self) -> list[str]:
@@ -1397,10 +1594,14 @@ class ConsciousnessTracker:
             recommendations.append("Establish more stable performance baselines")
 
         if len(self.emergence_events) == 0:
-            recommendations.append("Explore more diverse problem-solving approaches to trigger emergence")
+            recommendations.append(
+                "Explore more diverse problem-solving approaches to trigger emergence"
+            )
 
         if len(self.breakthrough_patterns) == 0:
-            recommendations.append("Focus on pattern analysis to identify breakthrough opportunities")
+            recommendations.append(
+                "Focus on pattern analysis to identify breakthrough opportunities"
+            )
 
         # Dimension-specific recommendations
         for dimension, value in self.consciousness_profile.dimensions.items():
@@ -1408,9 +1609,13 @@ class ConsciousnessTracker:
                 if dimension == ConsciousnessType.COORDINATION_EFFECTIVENESS:
                     recommendations.append("Improve agent communication and task distribution")
                 elif dimension == ConsciousnessType.PATTERN_RECOGNITION:
-                    recommendations.append("Enhance pattern archive usage and diversity recognition")
+                    recommendations.append(
+                        "Enhance pattern archive usage and diversity recognition"
+                    )
                 elif dimension == ConsciousnessType.ADAPTIVE_LEARNING:
-                    recommendations.append("Focus on learning from mistakes and parameter optimization")
+                    recommendations.append(
+                        "Focus on learning from mistakes and parameter optimization"
+                    )
 
         return recommendations[:10]  # Limit to top 10 recommendations
 
@@ -1457,11 +1662,13 @@ class ConsciousnessTracker:
                 "measurement_history_size": len(self.measurement_history),
                 "emergence_events_count": len(self.emergence_events),
                 "breakthrough_patterns_count": len(self.breakthrough_patterns),
-                "consciousness_trajectory_length": len(self.consciousness_profile.consciousness_trajectory)
+                "consciousness_trajectory_length": len(
+                    self.consciousness_profile.consciousness_trajectory
+                ),
             },
             "thresholds_configured": len(self.emergence_thresholds) == len(EmergenceEventType),
             "pattern_detection_active": self.pattern_detection_enabled,
-            "alerts_configured": len(self.alert_thresholds) > 0
+            "alerts_configured": len(self.alert_thresholds) > 0,
         }
 
         # Check data consistency
@@ -1471,7 +1678,7 @@ class ConsciousnessTracker:
             ),
             "emergence_events_count_matches": (
                 self.consciousness_profile.emergence_events_count == len(self.emergence_events)
-            )
+            ),
         }
 
         # Test memory integration
@@ -1500,8 +1707,8 @@ class ConsciousnessTracker:
                     context={
                         "final_report": True,
                         "consciousness_level": self.consciousness_profile.current_level,
-                        "total_measurements": len(self.measurement_history)
-                    }
+                        "total_measurements": len(self.measurement_history),
+                    },
                 )
             except Exception as e:
                 logger.error(f"Failed to store final consciousness data: {e}")

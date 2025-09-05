@@ -10,6 +10,7 @@ from typing import Any, Optional
 
 class QueryType(Enum):
     """Query type enumeration"""
+
     SEMANTIC = "semantic"
     KEYWORD = "keyword"
     HYBRID = "hybrid"
@@ -18,6 +19,7 @@ class QueryType(Enum):
 @dataclass
 class CollectionConfig:
     """Configuration for vector collection"""
+
     name: str = "default"
     dimension: int = 1536
     metric: str = "cosine"
@@ -27,6 +29,7 @@ class CollectionConfig:
 @dataclass
 class VectorSearchResult:
     """Result from vector search"""
+
     id: str
     score: float
     metadata: dict[str, Any]
@@ -49,11 +52,7 @@ class HybridVectorManager:
         return True
 
     async def search(
-        self,
-        collection: str,
-        query: str,
-        query_type: QueryType = QueryType.HYBRID,
-        limit: int = 10
+        self, collection: str, query: str, query_type: QueryType = QueryType.HYBRID, limit: int = 10
     ) -> list[VectorSearchResult]:
         """Perform search in collection"""
         # Stub implementation - returns empty results
@@ -65,7 +64,7 @@ class HybridVectorManager:
         id: str,
         vector: list[float],
         metadata: dict[str, Any],
-        content: Optional[str] = None
+        content: Optional[str] = None,
     ) -> bool:
         """Insert vector into collection"""
         # Stub implementation
@@ -82,5 +81,5 @@ class HybridVectorManager:
             "collection": collection,
             "count": 0,
             "dimension": self.config.dimension,
-            "metric": self.config.metric
+            "metric": self.config.metric,
         }

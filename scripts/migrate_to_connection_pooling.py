@@ -24,7 +24,7 @@ class ConnectionPoolingMigrator:
             "http_calls_migrated": 0,
             "redis_calls_migrated": 0,
             "skipped_files": [],
-            "errors": []
+            "errors": [],
         }
 
     def scan_directory(self, directory: Path) -> None:
@@ -45,17 +45,17 @@ class ConnectionPoolingMigrator:
                 changes_needed = []
 
                 # Check for requests library usage
-                if re.search(r'\brequests\.(get|post|put|delete|patch)\b', content):
+                if re.search(r"\brequests\.(get|post|put|delete|patch)\b", content):
                     changes_needed.append("http")
                     self.migration_report["http_calls_migrated"] += len(
-                        re.findall(r'\brequests\.(get|post|put|delete|patch)\b', content)
+                        re.findall(r"\brequests\.(get|post|put|delete|patch)\b", content)
                     )
 
                 # Check for synchronous Redis usage
-                if re.search(r'\bredis\.Redis\(|redis\.StrictRedis\(|redis\.from_url\(', content):
+                if re.search(r"\bredis\.Redis\(|redis\.StrictRedis\(|redis\.from_url\(", content):
                     changes_needed.append("redis")
                     self.migration_report["redis_calls_migrated"] += len(
-                        re.findall(r'\bredis\.(Redis|StrictRedis|from_url)\(', content)
+                        re.findall(r"\bredis\.(Redis|StrictRedis|from_url)\(", content)
                     )
 
                 if changes_needed:
@@ -86,8 +86,10 @@ class ConnectionPoolingMigrator:
             if "http" in changes:
                 # Find the right place to add import
                 if not import_added:
-                    content = self._add_import(content,
-                        "from app.core.connections import http_get, http_post, get_connection_manager")
+                    content = self._add_import(
+                        content,
+                        "from app.core.connections import http_get, http_post, get_connection_manager",
+                    )
                     import_added = True
 
                 # Replace requests calls
@@ -96,8 +98,10 @@ class ConnectionPoolingMigrator:
             if "redis" in changes:
                 # Add Redis imports if not already added
                 if not import_added:
-                    content = self._add_import(content,
-                        "from app.core.connections import redis_get, redis_set, get_connection_manager")
+                    content = self._add_import(
+                        content,
+                        "from app.core.connections import redis_get, redis_set, get_connection_manager",
+                    )
                     import_added = True
 
                 # Replace Redis initialization
@@ -107,12 +111,12 @@ class ConnectionPoolingMigrator:
             if content != original_content:
                 if not self.dry_run:
                     # Backup original file
-                    backup_path = file_path.with_suffix('.py.bak')
-                    with open(backup_path, 'w') as f:
+                    backup_path = file_path.with_suffix(".py.bak")
+                    with open(backup_path, "w") as f:
                         f.write(original_content)
 
                     # Write updated content
-                    with open(file_path, 'w') as f:
+                    with open(file_path, "w") as f:
                         f.write(content)
 
                     logger.info(f"    ✅ Updated {file_path.name}")
@@ -136,7 +140,7 @@ class ConnectionPoolingMigrator:
         # Find the last import line
         last_import_idx = 0
         for i, line in enumerate(lines):
-            if line.startswith(('import ', 'from ')) and not line.startswith('from __future__'):
+            if line.startswith(("import ", "from ")) and not line.startswith("from __future__"):
                 last_import_idx = i
 
         # Insert new import after last import
@@ -157,19 +161,19 @@ class ConnectionPoolingMigrator:
                 # Just add at the beginning
                 lines.insert(0, import_statement)
 
-        return '\n'.join(lines)
+        return "\n".join(lines)
 
     def _replace_http_calls(self, content: str) -> str:
         """Replace requests.get/post with async equivalents"""
         replacements = [
             # Simple GET requests
-            (r'requests\.get\((.*?)\)', r'await http_get(\1)'),
+            (r"requests\.get\((.*?)\)", r"await http_get(\1)"),
             # Simple POST requests
-            (r'requests\.post\((.*?)\)', r'await http_post(\1)'),
+            (r"requests\.post\((.*?)\)", r"await http_post(\1)"),
             # Response handling
-            (r'response = requests\.(get|post)', r'response = await http_\1'),
+            (r"response = requests\.(get|post)", r"response = await http_\1"),
             # JSON response
-            (r'\.json\(\)', ''),  # Our http_get/post already return JSON
+            (r"\.json\(\)", ""),  # Our http_get/post already return JSON
         ]
 
         for pattern, replacement in replacements:
@@ -184,11 +188,11 @@ class ConnectionPoolingMigrator:
         """Replace Redis client initialization and calls"""
         replacements = [
             # Redis client initialization
-            (r'redis\.Redis\([^)]*\)', 'await get_connection_manager().get_redis()'),
-            (r'redis\.from_url\([^)]*\)', 'await get_connection_manager().get_redis()'),
+            (r"redis\.Redis\([^)]*\)", "await get_connection_manager().get_redis()"),
+            (r"redis\.from_url\([^)]*\)", "await get_connection_manager().get_redis()"),
             # Redis operations
-            (r'redis_client\.get\((.*?)\)', r'await redis_get(\1)'),
-            (r'redis_client\.set\((.*?)\)', r'await redis_set(\1)'),
+            (r"redis_client\.get\((.*?)\)", r"await redis_get(\1)"),
+            (r"redis_client\.set\((.*?)\)", r"await redis_set(\1)"),
         ]
 
         for pattern, replacement in replacements:
@@ -206,30 +210,30 @@ class ConnectionPoolingMigrator:
 
         for i, line in enumerate(lines):
             # Check if this is a function definition
-            if re.match(r'^(\s*)def\s+\w+\(', line):
+            if re.match(r"^(\s*)def\s+\w+\(", line):
                 # Check if function body contains await
-                indent_level = len(re.match(r'^(\s*)', line).group(1))
+                indent_level = len(re.match(r"^(\s*)", line).group(1))
                 has_await = False
 
                 for j in range(i + 1, len(lines)):
                     next_line = lines[j]
-                    next_indent = len(re.match(r'^(\s*)', next_line).group(1))
+                    next_indent = len(re.match(r"^(\s*)", next_line).group(1))
 
                     # Stop if we've left the function
                     if next_indent <= indent_level and next_line.strip():
                         break
 
-                    if 'await ' in next_line:
+                    if "await " in next_line:
                         has_await = True
                         break
 
                 # Convert to async if needed
-                if has_await and not line.strip().startswith('async '):
-                    line = re.sub(r'^(\s*)def\s+', r'\1async def ', line)
+                if has_await and not line.strip().startswith("async "):
+                    line = re.sub(r"^(\s*)def\s+", r"\1async def ", line)
 
             updated_lines.append(line)
 
-        return '\n'.join(updated_lines)
+        return "\n".join(updated_lines)
 
     def generate_report(self) -> None:
         """Generate migration report"""
@@ -243,17 +247,19 @@ class ConnectionPoolingMigrator:
         logger.info(f"HTTP calls migrated: {self.migration_report['http_calls_migrated']}")
         logger.info(f"Redis calls migrated: {self.migration_report['redis_calls_migrated']}")
 
-        if self.migration_report['skipped_files']:
-            logger.info(f"\nSkipped files (already migrated): {len(self.migration_report['skipped_files'])}")
+        if self.migration_report["skipped_files"]:
+            logger.info(
+                f"\nSkipped files (already migrated): {len(self.migration_report['skipped_files'])}"
+            )
 
-        if self.migration_report['errors']:
+        if self.migration_report["errors"]:
             logger.info(f"\n⚠️  Errors encountered: {len(self.migration_report['errors'])}")
-            for error in self.migration_report['errors'][:5]:
+            for error in self.migration_report["errors"][:5]:
                 logger.info(f"  - {error}")
 
         # Save detailed report
         report_path = Path("connection_pooling_migration_report.json")
-        with open(report_path, 'w') as f:
+        with open(report_path, "w") as f:
             json.dump(self.migration_report, f, indent=2, default=str)
 
         logger.info(f"\n📄 Detailed report saved to: {report_path}")
@@ -285,15 +291,9 @@ def main():
     parser = argparse.ArgumentParser(
         description="Migrate synchronous calls to use ConnectionManager"
     )
+    parser.add_argument("--directory", default="app", help="Directory to scan (default: app)")
     parser.add_argument(
-        "--directory",
-        default="app",
-        help="Directory to scan (default: app)"
-    )
-    parser.add_argument(
-        "--live",
-        action="store_true",
-        help="Run in live mode (actually modify files)"
+        "--live", action="store_true", help="Run in live mode (actually modify files)"
     )
 
     args = parser.parse_args()

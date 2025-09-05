@@ -10,11 +10,11 @@ import time
 import traceback
 from abc import ABC, abstractmethod
 from collections.abc import Callable
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional, Union
+from typing import Any, Optional
 
 import psutil
 
@@ -24,8 +24,10 @@ logger = logging.getLogger(__name__)
 
 # ==================== Agent Status Enum ====================
 
+
 class AgentStatus(Enum):
     """Agent lifecycle states"""
+
     INITIALIZING = "initializing"
     READY = "ready"
     RUNNING = "running"
@@ -35,11 +37,14 @@ class AgentStatus(Enum):
     ERROR = "error"
     RECOVERING = "recovering"
 
+
 # ==================== Resource Metrics ====================
+
 
 @dataclass
 class ResourceMetrics:
     """Resource usage metrics for an agent"""
+
     cpu_percent: float = 0.0
     memory_mb: float = 0.0
     memory_percent: float = 0.0
@@ -61,14 +66,17 @@ class ResourceMetrics:
             "io_write_bytes": self.io_write_bytes,
             "network_sent_bytes": self.network_sent_bytes,
             "network_recv_bytes": self.network_recv_bytes,
-            "timestamp": self.timestamp.isoformat()
+            "timestamp": self.timestamp.isoformat(),
         }
 
+
 # ==================== Agent Event ====================
+
 
 @dataclass
 class AgentEvent:
     """Event emitted by an agent"""
+
     agent_id: str
     event_type: str
     data: dict[str, Any]
@@ -80,10 +88,12 @@ class AgentEvent:
             "agent_id": self.agent_id,
             "event_type": self.event_type,
             "data": self.data,
-            "timestamp": self.timestamp.isoformat()
+            "timestamp": self.timestamp.isoformat(),
         }
 
+
 # ==================== AGNO Agent Base Class ====================
+
 
 class AGNOAgent(ABC):
     """
@@ -98,11 +108,11 @@ class AGNOAgent(ABC):
         config: Optional[dict[str, Any]] = None,
         event_bus: Optional[MessageBus] = None,
         max_errors: int = 3,
-        recovery_delay: float = 5.0
+        recovery_delay: float = 5.0,
     ):
         """
         Initialize AGNO agent
-        
+
         Args:
             agent_id: Unique identifier for the agent
             agent_type: Type of agent (watcher, learner, executor, etc.)
@@ -186,10 +196,7 @@ class AGNOAgent(ABC):
         self._running = True
 
         # Emit start event
-        await self.emit_event("agent.start", {
-            "agent_type": self.agent_type,
-            "config": self.config
-        })
+        await self.emit_event("agent.start", {"agent_type": self.agent_type, "config": self.config})
 
         # Start execution and monitoring tasks
         self._task = asyncio.create_task(self._execution_loop())
@@ -212,29 +219,30 @@ class AGNOAgent(ABC):
         # Cancel tasks
         if self._task:
             self._task.cancel()
-            try:
+            with suppress(asyncio.CancelledError):
                 await self._task
-            except asyncio.CancelledError:
-                pass
 
         if self._monitor_task:
             self._monitor_task.cancel()
-            try:
+            with suppress(asyncio.CancelledError):
                 await self._monitor_task
-            except asyncio.CancelledError:
-                pass
 
         # Update status
         self.status = AgentStatus.STOPPED
         self.stop_time = datetime.utcnow()
 
         # Emit stop event
-        await self.emit_event("agent.stop", {
-            "runtime_seconds": (self.stop_time - self.start_time).total_seconds() if self.start_time else 0,
-            "execution_count": self.execution_count,
-            "success_count": self.success_count,
-            "failure_count": self.failure_count
-        })
+        await self.emit_event(
+            "agent.stop",
+            {
+                "runtime_seconds": (self.stop_time - self.start_time).total_seconds()
+                if self.start_time
+                else 0,
+                "execution_count": self.execution_count,
+                "success_count": self.success_count,
+                "failure_count": self.failure_count,
+            },
+        )
 
         logger.info(f"AGNO agent {self.agent_id} stopped")
 
@@ -280,11 +288,16 @@ class AGNOAgent(ABC):
                 self.total_execution_time += execution_time
 
                 # Emit execution event
-                await self.emit_event("agent.execution", {
-                    "success": True,
-                    "execution_time": execution_time,
-                    "result": result if isinstance(result, (dict, list, str, int, float, bool)) else str(result)
-                })
+                await self.emit_event(
+                    "agent.execution",
+                    {
+                        "success": True,
+                        "execution_time": execution_time,
+                        "result": result
+                        if isinstance(result, (dict, list, str, int, float, bool))
+                        else str(result),
+                    },
+                )
 
                 # Reset error count on success
                 self.error_count = 0
@@ -295,13 +308,18 @@ class AGNOAgent(ABC):
                 self.failure_count += 1
                 self.last_error = e
 
-                logger.error(f"Agent {self.agent_id} execution failed: {e}\n{traceback.format_exc()}")
+                logger.error(
+                    f"Agent {self.agent_id} execution failed: {e}\n{traceback.format_exc()}"
+                )
 
-                await self.emit_event("agent.error", {
-                    "error": str(e),
-                    "error_count": self.error_count,
-                    "traceback": traceback.format_exc()
-                })
+                await self.emit_event(
+                    "agent.error",
+                    {
+                        "error": str(e),
+                        "error_count": self.error_count,
+                        "traceback": traceback.format_exc(),
+                    },
+                )
 
                 # Check if max errors exceeded
                 if self.error_count >= self.max_errors:
@@ -318,10 +336,10 @@ class AGNOAgent(ABC):
         """Attempt to recover from errors"""
         self.status = AgentStatus.RECOVERING
 
-        await self.emit_event("agent.recovery.start", {
-            "error_count": self.error_count,
-            "last_error": str(self.last_error)
-        })
+        await self.emit_event(
+            "agent.recovery.start",
+            {"error_count": self.error_count, "last_error": str(self.last_error)},
+        )
 
         # Wait before recovery
         await asyncio.sleep(self.recovery_delay)
@@ -341,9 +359,7 @@ class AGNOAgent(ABC):
             # Recovery failed - stop agent
             logger.error(f"Agent {self.agent_id} recovery failed: {e}")
 
-            await self.emit_event("agent.recovery.failed", {
-                "error": str(e)
-            })
+            await self.emit_event("agent.recovery.failed", {"error": str(e)})
 
             self.status = AgentStatus.ERROR
             self._running = False
@@ -370,7 +386,9 @@ class AGNOAgent(ABC):
             with self.process.oneshot():
                 cpu_percent = self.process.cpu_percent()
                 memory_info = self.process.memory_info()
-                io_counters = self.process.io_counters() if hasattr(self.process, 'io_counters') else None
+                io_counters = (
+                    self.process.io_counters() if hasattr(self.process, "io_counters") else None
+                )
 
                 # Update metrics
                 self.resources = ResourceMetrics(
@@ -379,7 +397,7 @@ class AGNOAgent(ABC):
                     memory_percent=self.process.memory_percent(),
                     thread_count=self.process.num_threads(),
                     io_read_bytes=io_counters.read_bytes if io_counters else 0,
-                    io_write_bytes=io_counters.write_bytes if io_counters else 0
+                    io_write_bytes=io_counters.write_bytes if io_counters else 0,
                 )
 
                 # Add to history
@@ -401,23 +419,16 @@ class AGNOAgent(ABC):
     async def emit_event(self, event_type: str, data: dict[str, Any]) -> None:
         """
         Emit an event to the event bus
-        
+
         Args:
             event_type: Type of event
             data: Event data
         """
-        event = AgentEvent(
-            agent_id=self.agent_id,
-            event_type=event_type,
-            data=data
-        )
+        event = AgentEvent(agent_id=self.agent_id, event_type=event_type, data=data)
 
         # Emit to event bus
         if self.event_bus:
-            await self.event_bus.publish(
-                f"agno.{self.agent_type}.{event_type}",
-                event.to_dict()
-            )
+            await self.event_bus.publish(f"agno.{self.agent_type}.{event_type}", event.to_dict())
 
         # Call local handlers
         if event_type in self._event_handlers:
@@ -430,7 +441,7 @@ class AGNOAgent(ABC):
     def on_event(self, event_type: str, handler: Callable) -> None:
         """
         Register an event handler
-        
+
         Args:
             event_type: Type of event to handle
             handler: Handler function
@@ -461,8 +472,10 @@ class AGNOAgent(ABC):
             "execution_count": self.execution_count,
             "success_count": self.success_count,
             "failure_count": self.failure_count,
-            "avg_execution_time": self.total_execution_time / self.execution_count if self.execution_count > 0 else 0,
-            "resources": self.resources.to_dict()
+            "avg_execution_time": self.total_execution_time / self.execution_count
+            if self.execution_count > 0
+            else 0,
+            "resources": self.resources.to_dict(),
         }
 
     def get_metrics(self) -> dict[str, Any]:
@@ -471,11 +484,17 @@ class AGNOAgent(ABC):
             "execution_count": self.execution_count,
             "success_count": self.success_count,
             "failure_count": self.failure_count,
-            "success_rate": self.success_count / self.execution_count if self.execution_count > 0 else 0,
-            "avg_execution_time": self.total_execution_time / self.execution_count if self.execution_count > 0 else 0,
+            "success_rate": self.success_count / self.execution_count
+            if self.execution_count > 0
+            else 0,
+            "avg_execution_time": self.total_execution_time / self.execution_count
+            if self.execution_count > 0
+            else 0,
             "total_execution_time": self.total_execution_time,
             "error_count": self.error_count,
-            "resource_history": [m.to_dict() for m in self.resource_history[-10:]]  # Last 10 samples
+            "resource_history": [
+                m.to_dict() for m in self.resource_history[-10:]
+            ],  # Last 10 samples
         }
 
     # ==================== Context Manager ====================
@@ -491,6 +510,7 @@ class AGNOAgent(ABC):
 
 
 # ==================== Example Agent Implementations ====================
+
 
 class WatcherAgent(AGNOAgent):
     """Example watcher agent that monitors for specific conditions"""
@@ -512,7 +532,7 @@ class WatcherAgent(AGNOAgent):
         return {
             "target": self.watch_target,
             "observation": "normal",
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
 
@@ -540,7 +560,7 @@ class LearnerAgent(AGNOAgent):
         return {
             "learned": new_knowledge,
             "knowledge_size": len(self.knowledge_base),
-            "learning_rate": self.learning_rate
+            "learning_rate": self.learning_rate,
         }
 
 
@@ -563,5 +583,5 @@ class ExecutorAgent(AGNOAgent):
         return {
             "action": self.action_type,
             "status": "completed",
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }

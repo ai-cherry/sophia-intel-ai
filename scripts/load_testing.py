@@ -10,7 +10,7 @@ import logging
 import statistics
 import time
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
 import aiohttp
@@ -282,6 +282,112 @@ class LoadTester:
 
         return combined_results
 
+    async def run_endurance_test(self, duration_minutes: int = 60) -> LoadTestResults:
+        """Run endurance test with sustained load"""
+        logger.info(f"Running endurance test for {duration_minutes} minutes")
+
+        results = LoadTestResults(config=self.config)
+        results.start_time = datetime.utcnow()
+
+        # Configure for endurance
+        endurance_config = LoadTestConfig(
+            base_url=self.config.base_url,
+            concurrent_users=max(1, self.config.concurrent_users // 2),
+            requests_per_user=duration_minutes * 10,  # Sustained requests
+            ramp_up_time=60,  # Gradual ramp up
+            api_key=self.config.api_key,
+            endpoints_to_test=self.config.endpoints_to_test,
+        )
+
+        end_time = datetime.utcnow() + timedelta(minutes=duration_minutes)
+
+        while datetime.utcnow() < end_time:
+            batch_results = await LoadTester(endurance_config).run_load_test()
+            results.results.extend(batch_results.results)
+
+            # Brief pause between batches
+            await asyncio.sleep(30)
+
+        results.end_time = datetime.utcnow()
+        return results
+
+    async def run_scalability_test(
+        self, max_users: int = 100, step_size: int = 10, step_duration: int = 60
+    ) -> List[LoadTestResults]:
+        """Run scalability test with increasing user loads"""
+        logger.info(f"Running scalability test up to {max_users} users")
+
+        scalability_results = []
+
+        for user_count in range(step_size, max_users + 1, step_size):
+            logger.info(f"Testing with {user_count} concurrent users")
+
+            scale_config = LoadTestConfig(
+                base_url=self.config.base_url,
+                concurrent_users=user_count,
+                requests_per_user=min(50, step_duration),
+                ramp_up_time=30,
+                test_duration=step_duration,
+                api_key=self.config.api_key,
+                endpoints_to_test=self.config.endpoints_to_test,
+            )
+
+            scale_result = await LoadTester(scale_config).run_load_test()
+            scalability_results.append(scale_result)
+
+            # Log key metrics for this scale
+            logger.info(
+                f"Scale {user_count}: {scale_result.avg_response_time*1000:.1f}ms avg, "
+                f"{scale_result.success_rate:.1f}% success, "
+                f"{scale_result.requests_per_second:.1f} RPS"
+            )
+
+            # Brief cooldown
+            await asyncio.sleep(10)
+
+        return scalability_results
+
+    async def run_chaos_test(self, chaos_duration: int = 300) -> LoadTestResults:
+        """Run chaos test with random load patterns"""
+        import random
+
+        logger.info(f"Running chaos test for {chaos_duration} seconds")
+
+        results = LoadTestResults(config=self.config)
+        results.start_time = datetime.utcnow()
+        end_time = datetime.utcnow() + timedelta(seconds=chaos_duration)
+
+        while datetime.utcnow() < end_time:
+            # Random chaos parameters
+            chaos_users = random.randint(1, self.config.concurrent_users * 3)
+            chaos_requests = random.randint(10, 100)
+            chaos_endpoints = random.sample(
+                self.config.endpoints_to_test, random.randint(1, len(self.config.endpoints_to_test))
+            )
+
+            chaos_config = LoadTestConfig(
+                base_url=self.config.base_url,
+                concurrent_users=chaos_users,
+                requests_per_user=chaos_requests,
+                ramp_up_time=random.randint(5, 30),
+                api_key=self.config.api_key,
+                endpoints_to_test=chaos_endpoints,
+            )
+
+            logger.info(
+                f"Chaos burst: {chaos_users} users, {chaos_requests} requests, "
+                f"{len(chaos_endpoints)} endpoints"
+            )
+
+            chaos_results = await LoadTester(chaos_config).run_load_test()
+            results.results.extend(chaos_results.results)
+
+            # Random pause between chaos events
+            await asyncio.sleep(random.randint(10, 60))
+
+        results.end_time = datetime.utcnow()
+        return results
+
 
 def print_results(results: LoadTestResults):
     """Print formatted test results"""
@@ -344,7 +450,25 @@ async def main():
     parser.add_argument("--users", type=int, default=10, help="Concurrent users")
     parser.add_argument("--requests", type=int, default=100, help="Requests per user")
     parser.add_argument("--api-key", help="API key for authentication")
-    parser.add_argument("--test-type", choices=["load", "spike"], default="load", help="Test type")
+    parser.add_argument(
+        "--test-type",
+        choices=["load", "spike", "endurance", "scalability", "chaos"],
+        default="load",
+        help="Test type",
+    )
+    parser.add_argument(
+        "--duration",
+        type=int,
+        default=60,
+        help="Test duration in minutes (for endurance) or seconds (for chaos)",
+    )
+    parser.add_argument(
+        "--max-users", type=int, default=100, help="Maximum users for scalability test"
+    )
+    parser.add_argument(
+        "--step-size", type=int, default=10, help="User increment step for scalability test"
+    )
+    parser.add_argument("--output", help="Output file for results (JSON format)")
 
     args = parser.parse_args()
 
@@ -358,10 +482,103 @@ async def main():
     async with LoadTester(config) as tester:
         if args.test_type == "spike":
             results = await tester.run_spike_test()
+            print_results(results)
+        elif args.test_type == "endurance":
+            results = await tester.run_endurance_test(duration_minutes=args.duration)
+            print_results(results)
+        elif args.test_type == "scalability":
+            scalability_results = await tester.run_scalability_test(
+                max_users=args.max_users, step_size=args.step_size
+            )
+            print_scalability_results(scalability_results)
+        elif args.test_type == "chaos":
+            results = await tester.run_chaos_test(chaos_duration=args.duration * 60)
+            print_results(results)
         else:
             results = await tester.run_load_test()
+            print_results(results)
 
-        print_results(results)
+        # Save results if output file specified
+        if args.output:
+            if args.test_type == "scalability":
+                save_scalability_results(scalability_results, args.output)
+            else:
+                save_results(results, args.output)
+
+
+def print_scalability_results(results_list: List[LoadTestResults]):
+    """Print scalability test results"""
+    print("\n" + "=" * 60)
+    print("SCALABILITY TEST RESULTS")
+    print("=" * 60)
+
+    print(f"{'Users':<8} {'RPS':<8} {'Avg(ms)':<10} {'P95(ms)':<10} {'Success%':<10} {'Errors':<8}")
+    print("-" * 60)
+
+    for result in results_list:
+        users = result.config.concurrent_users
+        rps = result.requests_per_second
+        avg_ms = result.avg_response_time * 1000
+        p95_ms = result.p95_response_time * 1000
+        success_rate = result.success_rate
+        errors = result.failed_requests
+
+        print(
+            f"{users:<8} {rps:<8.1f} {avg_ms:<10.1f} {p95_ms:<10.1f} {success_rate:<10.1f} {errors:<8}"
+        )
+
+
+def save_results(results: LoadTestResults, filename: str):
+    """Save test results to JSON file"""
+    output_data = {
+        "test_type": "load_test",
+        "config": {
+            "base_url": results.config.base_url,
+            "concurrent_users": results.config.concurrent_users,
+            "requests_per_user": results.config.requests_per_user,
+            "test_duration": results.config.test_duration,
+        },
+        "summary": {
+            "total_requests": results.total_requests,
+            "successful_requests": results.successful_requests,
+            "failed_requests": results.failed_requests,
+            "success_rate": results.success_rate,
+            "avg_response_time_ms": results.avg_response_time * 1000,
+            "p95_response_time_ms": results.p95_response_time * 1000,
+            "requests_per_second": results.requests_per_second,
+        },
+        "timestamp": datetime.utcnow().isoformat(),
+        "start_time": results.start_time.isoformat() if results.start_time else None,
+        "end_time": results.end_time.isoformat() if results.end_time else None,
+    }
+
+    with open(filename, "w") as f:
+        json.dump(output_data, f, indent=2)
+
+    print(f"\nResults saved to {filename}")
+
+
+def save_scalability_results(results_list: List[LoadTestResults], filename: str):
+    """Save scalability test results to JSON file"""
+    output_data = {"test_type": "scalability_test", "results": []}
+
+    for result in results_list:
+        result_data = {
+            "concurrent_users": result.config.concurrent_users,
+            "total_requests": result.total_requests,
+            "success_rate": result.success_rate,
+            "avg_response_time_ms": result.avg_response_time * 1000,
+            "p95_response_time_ms": result.p95_response_time * 1000,
+            "requests_per_second": result.requests_per_second,
+        }
+        output_data["results"].append(result_data)
+
+    output_data["timestamp"] = datetime.utcnow().isoformat()
+
+    with open(filename, "w") as f:
+        json.dump(output_data, f, indent=2)
+
+    print(f"\nScalability results saved to {filename}")
 
 
 if __name__ == "__main__":

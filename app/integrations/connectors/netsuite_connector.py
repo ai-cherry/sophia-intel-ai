@@ -138,6 +138,8 @@ class NetSuiteConnector(BaseConnector):
         timestamp = str(int(time.time()))
         nonce = str(random.getrandbits(64))
 
+        logger.debug(f"Generating TBA header for {method} {path}")
+
         # OAuth parameters
         oauth_params = {
             "oauth_consumer_key": self.config.consumer_key,

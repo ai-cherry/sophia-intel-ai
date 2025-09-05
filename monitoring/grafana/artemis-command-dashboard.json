@@ -1,0 +1,355 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "ARTEMIS Command Center - Operational Intelligence",
+    "tags": ["artemis", "command-center", "military", "operations"],
+    "style": "dark",
+    "timezone": "UTC",
+    "refresh": "5s",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "timepicker": {
+      "refresh_intervals": ["5s", "10s", "30s", "1m", "5m"],
+      "time_options": ["5m", "15m", "1h", "6h", "12h", "24h", "2d", "7d"]
+    },
+    "templating": {
+      "list": [
+        {
+          "name": "environment",
+          "type": "query",
+          "query": "label_values(up{job=\"sophia-intel-ai\"}, kubernetes_namespace)",
+          "refresh": 1,
+          "options": [],
+          "current": {
+            "text": "production",
+            "value": "production"
+          }
+        },
+        {
+          "name": "instance",
+          "type": "query",
+          "query": "label_values(up{job=\"sophia-intel-ai\", kubernetes_namespace=\"$environment\"}, kubernetes_pod_name)",
+          "refresh": 2,
+          "multi": true,
+          "includeAll": true
+        }
+      ]
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "🎯 MISSION STATUS OVERVIEW",
+        "type": "stat",
+        "gridPos": { "h": 8, "w": 24, "x": 0, "y": 0 },
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "steps": [
+                { "color": "#d73027", "value": 0 },
+                { "color": "#f46d43", "value": 80 },
+                { "color": "#a6d96a", "value": 95 },
+                { "color": "#1a9641", "value": 99 }
+              ]
+            },
+            "unit": "percent",
+            "min": 0,
+            "max": 100
+          }
+        },
+        "options": {
+          "orientation": "horizontal",
+          "reduceOptions": {
+            "calcs": ["lastNotNull"]
+          },
+          "textMode": "value_and_name",
+          "colorMode": "background"
+        },
+        "targets": [
+          {
+            "expr": "artemis:service_availability_percent{kubernetes_namespace=\"$environment\"}",
+            "legendFormat": "OPERATIONAL STATUS",
+            "refId": "A"
+          },
+          {
+            "expr": "100 - artemis:error_rate_percent{kubernetes_namespace=\"$environment\"}",
+            "legendFormat": "MISSION SUCCESS RATE",
+            "refId": "B"
+          },
+          {
+            "expr": "100 - artemis:anomaly_score{kubernetes_namespace=\"$environment\"}",
+            "legendFormat": "THREAT LEVEL (INVERSE)",
+            "refId": "C"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "⚡ SYSTEM VITALS - Command Console",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+        "fieldConfig": {
+          "defaults": {
+            "color": { "mode": "palette-classic" },
+            "thresholds": {
+              "steps": [
+                { "color": "green", "value": null },
+                { "color": "yellow", "value": 70 },
+                { "color": "red", "value": 90 }
+              ]
+            },
+            "unit": "percent",
+            "min": 0,
+            "max": 100
+          }
+        },
+        "options": {
+          "tooltip": { "mode": "multi" },
+          "legend": { "displayMode": "table", "placement": "right", "values": ["current", "max"] }
+        },
+        "targets": [
+          {
+            "expr": "artemis:system_cpu_usage_percent{kubernetes_namespace=\"$environment\"}",
+            "legendFormat": "CPU Utilization - {{instance}}",
+            "refId": "A"
+          },
+          {
+            "expr": "artemis:system_memory_usage_percent{kubernetes_namespace=\"$environment\"}",
+            "legendFormat": "Memory Utilization - {{instance}}",
+            "refId": "B"
+          },
+          {
+            "expr": "artemis:system_disk_usage_percent{kubernetes_namespace=\"$environment\"}",
+            "legendFormat": "Disk Utilization - {{instance}}",
+            "refId": "C"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "🔍 THREAT DETECTION RADAR",
+        "type": "gauge",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "color": "#1a9641", "value": 0 },
+                { "color": "#a6d96a", "value": 20 },
+                { "color": "#f46d43", "value": 50 },
+                { "color": "#d73027", "value": 80 }
+              ]
+            },
+            "unit": "short",
+            "min": 0,
+            "max": 100
+          }
+        },
+        "options": {
+          "reduceOptions": {
+            "calcs": ["lastNotNull"]
+          },
+          "orientation": "auto",
+          "showThresholdLabels": false,
+          "showThresholdMarkers": true
+        },
+        "targets": [
+          {
+            "expr": "artemis:anomaly_score{kubernetes_namespace=\"$environment\"}",
+            "legendFormat": "Anomaly Score",
+            "refId": "A"
+          },
+          {
+            "expr": "artemis:security_events_per_minute{kubernetes_namespace=\"$environment\"}",
+            "legendFormat": "Security Events/min",
+            "refId": "B"
+          },
+          {
+            "expr": "artemis:failed_auth_attempts_per_minute{kubernetes_namespace=\"$environment\"}",
+            "legendFormat": "Failed Auth/min",
+            "refId": "C"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "🏹 OPERATIONAL READINESS METRICS",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 8, "x": 0, "y": 16 },
+        "fieldConfig": {
+          "defaults": {
+            "color": { "mode": "palette-classic" },
+            "unit": "ms"
+          }
+        },
+        "targets": [
+          {
+            "expr": "artemis:response_time_p95_ms{kubernetes_namespace=\"$environment\"}",
+            "legendFormat": "Response Time P95",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "💥 THROUGHPUT - Rounds Per Second",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 8, "x": 8, "y": 16 },
+        "fieldConfig": {
+          "defaults": {
+            "color": { "mode": "palette-classic" },
+            "unit": "reqps"
+          }
+        },
+        "targets": [
+          {
+            "expr": "artemis:throughput_rps{kubernetes_namespace=\"$environment\"}",
+            "legendFormat": "Requests/sec - {{instance}}",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "❌ ERROR RATE - Mission Failures",
+        "type": "stat",
+        "gridPos": { "h": 8, "w": 8, "x": 16, "y": 16 },
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "steps": [
+                { "color": "#1a9641", "value": 0 },
+                { "color": "#a6d96a", "value": 1 },
+                { "color": "#f46d43", "value": 3 },
+                { "color": "#d73027", "value": 5 }
+              ]
+            },
+            "unit": "percent",
+            "decimals": 2
+          }
+        },
+        "options": {
+          "colorMode": "background",
+          "graphMode": "area"
+        },
+        "targets": [
+          {
+            "expr": "artemis:error_rate_percent{kubernetes_namespace=\"$environment\"}",
+            "legendFormat": "Error Rate",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "🔗 RESOURCE DEPLOYMENT STATUS",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
+        "fieldConfig": {
+          "defaults": {
+            "color": { "mode": "palette-classic" },
+            "unit": "short"
+          }
+        },
+        "targets": [
+          {
+            "expr": "artemis:active_connections{kubernetes_namespace=\"$environment\"}",
+            "legendFormat": "Active Connections - {{type}}",
+            "refId": "A"
+          },
+          {
+            "expr": "artemis:redis_operations_per_second{kubernetes_namespace=\"$environment\"}",
+            "legendFormat": "Redis Ops/sec",
+            "refId": "B"
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "🎖️ CONNECTION POOL UTILIZATION",
+        "type": "bargauge",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 },
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "steps": [
+                { "color": "#1a9641", "value": 0 },
+                { "color": "#a6d96a", "value": 60 },
+                { "color": "#f46d43", "value": 80 },
+                { "color": "#d73027", "value": 90 }
+              ]
+            },
+            "unit": "percent",
+            "min": 0,
+            "max": 100
+          }
+        },
+        "options": {
+          "orientation": "horizontal",
+          "displayMode": "lcd"
+        },
+        "targets": [
+          {
+            "expr": "artemis:connection_pool_utilization_percent{kubernetes_namespace=\"$environment\"}",
+            "legendFormat": "Connection Pool - {{type}}",
+            "refId": "A"
+          },
+          {
+            "expr": "artemis:database_connection_utilization{kubernetes_namespace=\"$environment\"}",
+            "legendFormat": "Database Connections",
+            "refId": "B"
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "📊 TACTICAL INTELLIGENCE LOG",
+        "type": "logs",
+        "gridPos": { "h": 8, "w": 24, "x": 0, "y": 32 },
+        "targets": [
+          {
+            "expr": "{kubernetes_namespace=\"$environment\", kubernetes_pod_name=~\"sophia-intel-ai.*\"} |= \"INFO\" | json",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "showTime": true,
+          "showLabels": false,
+          "showCommonLabels": true,
+          "wrapLogMessage": false,
+          "prettifyLogMessage": false,
+          "enableLogDetails": true,
+          "dedupStrategy": "none",
+          "sortOrder": "Descending"
+        }
+      }
+    ],
+    "annotations": {
+      "list": [
+        {
+          "name": "Deployments",
+          "datasource": "prometheus",
+          "enable": true,
+          "expr": "increase(kube_deployment_status_replicas_updated{deployment=\"sophia-intel-ai\", namespace=\"$environment\"}[1m]) > 0",
+          "iconColor": "green",
+          "titleFormat": "🚀 DEPLOYMENT",
+          "textFormat": "New deployment detected in {{namespace}}"
+        },
+        {
+          "name": "Alerts",
+          "datasource": "prometheus",
+          "enable": true,
+          "expr": "ALERTS{alertname!=\"Watchdog\", kubernetes_namespace=\"$environment\"}",
+          "iconColor": "red",
+          "titleFormat": "🚨 ALERT: {{alertname}}",
+          "textFormat": "{{description}}"
+        }
+      ]
+    }
+  },
+  "overwrite": true,
+  "folderId": 0,
+  "folderTitle": "Artemis Command Center"
+}

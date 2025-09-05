@@ -5,6 +5,8 @@ Military-themed interface with professional tactical styling
 
 import React, { useState, useEffect } from 'react';
 import { AlertCircle, Activity, Shield, Target, Radio, CheckCircle, XCircle } from 'lucide-react';
+import { SystemVitalsPanel } from './components/SystemVitalsPanel';
+import { OperationalReadinessPanel } from './components/OperationalReadinessPanel';
 
 // TypeScript interfaces
 interface Unit {
@@ -285,29 +287,15 @@ export const ArtemisCommandCenter: React.FC = () => {
           </div>
         </div>
 
-        {/* Right Sidebar - Intelligence Feed */}
+        {/* Right Sidebar - Intelligence Feed and System Monitoring */}
         <div className="col-span-3 space-y-4">
-          <h2 className="text-sm font-bold text-gray-400 font-mono">OPERATIONAL DATA</h2>
+          <h2 className="text-sm font-bold text-gray-400 font-mono">OPERATIONAL INTELLIGENCE</h2>
 
-          {/* Quick Stats */}
-          <div className="bg-gray-900 border border-gray-700 rounded-lg p-4 space-y-3">
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-400">Issues Detected</span>
-              <span className="text-yellow-400 font-mono">23</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-400">Issues Resolved</span>
-              <span className="text-green-400 font-mono">18</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-400">Coverage</span>
-              <span className="text-blue-400 font-mono">94.2%</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-400">Quality Score</span>
-              <span className="text-green-400 font-mono">97.5</span>
-            </div>
-          </div>
+          {/* System Vitals Panel */}
+          <SystemVitalsPanel refreshInterval={5000} />
+
+          {/* Operational Readiness Panel */}
+          <OperationalReadinessPanel refreshInterval={10000} />
 
           <IntelligenceFeed messages={intelMessages} />
 

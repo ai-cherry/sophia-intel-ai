@@ -1,0 +1,35 @@
+# Pulumi ESC (Environment Secrets & Configuration) Setup
+# Centralized secret management for NetSuite and other integrations
+
+environments:
+  sophia-intel-ai:
+    values:
+      # NetSuite ERP Integration
+      netsuite:
+        auth_method: "token_based"
+        account_id: "7616750-SB1"
+        application_id: "82329689-C871-456F-8AA0-96DBDF5B0275"
+        consumer_key:
+          fn::secret: "2efc7f03ed9d1f116bdadc09431f654514dcaefacd6caaa425ed531047f7a7bc"
+        consumer_secret:
+          fn::secret: "5101e016ad316307c7538b678848bbb2d89766006cda96773eee72299c9a24df"
+        token_id:
+          fn::secret: "40a5c628659b35e2b30fcbcaf0c582a2b1fc58d3f29d692fd0c567bc6b1cac3a"
+        token_secret:
+          fn::secret: "d30e6fa39c3d108fe0a5468012b8e79dd601f1e3cee74fb5635562c4efe5d033"
+
+      # Portkey Configuration
+      portkey:
+        api_key:
+          fn::secret: "nYraiE8dOR9A1gDwaRNpSSXRkXBc"
+
+      # Environment exports for applications
+      environmentVariables:
+        NETSUITE_AUTH_METHOD: ${netsuite.auth_method}
+        NETSUITE_ACCOUNT_ID: ${netsuite.account_id}
+        NETSUITE_APPLICATION_ID: ${netsuite.application_id}
+        NETSUITE_CONSUMER_KEY: ${netsuite.consumer_key}
+        NETSUITE_CONSUMER_SECRET: ${netsuite.consumer_secret}
+        NETSUITE_TOKEN_ID: ${netsuite.token_id}
+        NETSUITE_TOKEN_SECRET: ${netsuite.token_secret}
+        PORTKEY_API_KEY: ${portkey.api_key}

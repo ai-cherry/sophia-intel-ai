@@ -372,21 +372,120 @@ class PooledStorageAdapter:
     # These would delegate to the pooled implementation
 
     async def create_knowledge(self, entity: KnowledgeEntity) -> KnowledgeEntity:
-        """Create knowledge entity (delegated to pooled implementation)"""
-        # Implementation would be similar to original but using pooled connections
-        pass
+        """Create knowledge entity using pooled connections"""
+        try:
+            query = """
+            INSERT INTO knowledge_entities (
+                id, name, category, classification, priority, content, 
+                metadata, source_uri, is_active, created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """
+            
+            params = (
+                entity.id,
+                entity.name,
+                entity.category,
+                entity.classification,
+                entity.priority,
+                json.dumps(entity.content) if entity.content else None,
+                json.dumps(entity.metadata) if entity.metadata else None,
+                entity.source_uri,
+                entity.is_active,
+                entity.created_at.isoformat() if entity.created_at else datetime.utcnow().isoformat(),
+                entity.updated_at.isoformat() if entity.updated_at else datetime.utcnow().isoformat(),
+            )
+            
+            self._execute(query, params)
+            logger.info(f"Created knowledge entity: {entity.id}")
+            return entity
+            
+        except Exception as e:
+            logger.error(f"Failed to create knowledge entity {entity.id}: {e}")
+            raise
 
     async def get_knowledge(self, entity_id: str) -> Optional[KnowledgeEntity]:
-        """Get knowledge entity (delegated to pooled implementation)"""
-        pass
+        """Get knowledge entity using pooled connections"""
+        try:
+            query = "SELECT * FROM knowledge_entities WHERE id = ? AND is_active = true"
+            row = self._fetchone(query, (entity_id,))
+            
+            if row:
+                return KnowledgeEntity(
+                    id=row['id'],
+                    name=row['name'],
+                    category=row['category'],
+                    classification=row['classification'],
+                    priority=row['priority'],
+                    content=json.loads(row['content']) if row['content'] else {},
+                    metadata=json.loads(row['metadata']) if row['metadata'] else {},
+                    source_uri=row['source_uri'],
+                    is_active=row['is_active'],
+                    created_at=datetime.fromisoformat(row['created_at']),
+                    updated_at=datetime.fromisoformat(row['updated_at'])
+                )
+            return None
+            
+        except Exception as e:
+            logger.error(f"Failed to get knowledge entity {entity_id}: {e}")
+            return None
 
     async def update_knowledge(self, entity: KnowledgeEntity) -> KnowledgeEntity:
-        """Update knowledge entity (delegated to pooled implementation)"""
-        pass
+        """Update knowledge entity using pooled connections"""
+        try:
+            entity.updated_at = datetime.utcnow()
+            
+            query = """
+            UPDATE knowledge_entities 
+            SET name = ?, category = ?, classification = ?, priority = ?, 
+                content = ?, metadata = ?, source_uri = ?, is_active = ?, 
+                updated_at = ?
+            WHERE id = ?
+            """
+            
+            params = (
+                entity.name,
+                entity.category,
+                entity.classification,
+                entity.priority,
+                json.dumps(entity.content) if entity.content else None,
+                json.dumps(entity.metadata) if entity.metadata else None,
+                entity.source_uri,
+                entity.is_active,
+                entity.updated_at.isoformat(),
+                entity.id
+            )
+            
+            cursor = self._execute(query, params)
+            if hasattr(cursor, 'rowcount') and cursor.rowcount == 0:
+                logger.warning(f"No rows updated for entity {entity.id}")
+            else:
+                logger.info(f"Updated knowledge entity: {entity.id}")
+                
+            return entity
+            
+        except Exception as e:
+            logger.error(f"Failed to update knowledge entity {entity.id}: {e}")
+            raise
 
     async def delete_knowledge(self, entity_id: str) -> bool:
-        """Delete knowledge entity (delegated to pooled implementation)"""
-        pass
+        """Delete knowledge entity using pooled connections (soft delete)"""
+        try:
+            query = "UPDATE knowledge_entities SET is_active = false, updated_at = ? WHERE id = ?"
+            params = (datetime.utcnow().isoformat(), entity_id)
+            
+            cursor = self._execute(query, params)
+            success = hasattr(cursor, 'rowcount') and cursor.rowcount > 0
+            
+            if success:
+                logger.info(f"Deleted knowledge entity: {entity_id}")
+            else:
+                logger.warning(f"Entity not found for deletion: {entity_id}")
+                
+            return success
+            
+        except Exception as e:
+            logger.error(f"Failed to delete knowledge entity {entity_id}: {e}")
+            return False
 
     async def list_knowledge(
         self,
@@ -396,8 +495,47 @@ class PooledStorageAdapter:
         limit: int = 100,
         offset: int = 0,
     ) -> List[KnowledgeEntity]:
-        """List knowledge entities (delegated to pooled implementation)"""
-        pass
+        """List knowledge entities using pooled connections with filtering"""
+        try:
+            # Build dynamic query based on filters
+            query = "SELECT * FROM knowledge_entities WHERE is_active = ?"
+            params = [is_active]
+            
+            if classification:
+                query += " AND classification = ?"
+                params.append(classification)
+                
+            if category:
+                query += " AND category = ?"
+                params.append(category)
+                
+            query += " ORDER BY updated_at DESC LIMIT ? OFFSET ?"
+            params.extend([limit, offset])
+            
+            rows = self._fetchall(query, tuple(params))
+            
+            entities = []
+            for row in rows:
+                entities.append(KnowledgeEntity(
+                    id=row['id'],
+                    name=row['name'],
+                    category=row['category'],
+                    classification=row['classification'],
+                    priority=row['priority'],
+                    content=json.loads(row['content']) if row['content'] else {},
+                    metadata=json.loads(row['metadata']) if row['metadata'] else {},
+                    source_uri=row['source_uri'],
+                    is_active=row['is_active'],
+                    created_at=datetime.fromisoformat(row['created_at']),
+                    updated_at=datetime.fromisoformat(row['updated_at'])
+                ))
+                
+            logger.info(f"Listed {len(entities)} knowledge entities")
+            return entities
+            
+        except Exception as e:
+            logger.error(f"Failed to list knowledge entities: {e}")
+            return []
 
 
 # Export enhanced adapter as default if available

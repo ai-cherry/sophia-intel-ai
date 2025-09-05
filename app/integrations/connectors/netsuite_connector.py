@@ -215,6 +215,103 @@ class NetSuiteConnector(BaseConnector):
                 return await self._get_oauth2_token()
         return True
 
+    async def make_request(
+        self, 
+        method: str, 
+        endpoint: str, 
+        params: Optional[dict] = None,
+        json_data: Optional[dict] = None,
+        headers: Optional[dict] = None
+    ) -> dict[str, Any]:
+        """
+        Make authenticated request to NetSuite API
+        
+        Args:
+            method: HTTP method
+            endpoint: API endpoint
+            params: Query parameters
+            json_data: JSON payload
+            headers: Additional headers
+            
+        Returns:
+            API response data
+        """
+        if not await self._ensure_authenticated():
+            raise Exception("Failed to authenticate with NetSuite")
+        
+        url = f"{self.config.base_url}/{endpoint}"
+        
+        # Prepare headers
+        request_headers = {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+        }
+        
+        if self.config.auth_method == NetSuiteAuthMethod.OAUTH2:
+            request_headers["Authorization"] = f"Bearer {self.access_token}"
+        elif self.config.auth_method == NetSuiteAuthMethod.TOKEN_BASED:
+            # Add TBA signature headers
+            request_headers.update(self._generate_tba_headers(method, url))
+        
+        if headers:
+            request_headers.update(headers)
+        
+        async with aiohttp.ClientSession() as session:
+            async with session.request(
+                method=method,
+                url=url,
+                params=params,
+                json=json_data,
+                headers=request_headers,
+                timeout=aiohttp.ClientTimeout(total=self.config.timeout_seconds)
+            ) as response:
+                
+                if response.status == 200:
+                    return await response.json()
+                else:
+                    error_text = await response.text()
+                    logger.error(f"NetSuite API error {response.status}: {error_text}")
+                    raise Exception(f"NetSuite API error: {response.status} - {error_text}")
+
+    def _generate_tba_headers(self, method: str, url: str) -> dict[str, str]:
+        """Generate Token-Based Authentication headers"""
+        
+        # OAuth 1.0 signature generation for NetSuite TBA
+        oauth_nonce = str(random.randint(100000000000000000000, 999999999999999999999))
+        oauth_timestamp = str(int(time.time()))
+        
+        oauth_params = {
+            'oauth_consumer_key': self.config.consumer_key,
+            'oauth_nonce': oauth_nonce,
+            'oauth_signature_method': 'HMAC-SHA256',
+            'oauth_timestamp': oauth_timestamp,
+            'oauth_token': self.config.token_id,
+            'oauth_version': '1.0'
+        }
+        
+        # Create signature base string
+        params_string = '&'.join([f"{k}={urllib.parse.quote(str(v))}" 
+                                for k, v in sorted(oauth_params.items())])
+        
+        base_string = f"{method.upper()}&{urllib.parse.quote(url)}&{urllib.parse.quote(params_string)}"
+        
+        # Create signing key
+        signing_key = f"{urllib.parse.quote(self.config.consumer_secret)}&{urllib.parse.quote(self.config.token_secret)}"
+        
+        # Generate signature
+        signature = base64.b64encode(
+            hmac.new(signing_key.encode(), base_string.encode(), hashlib.sha256).digest()
+        ).decode()
+        
+        oauth_params['oauth_signature'] = signature
+        
+        # Create authorization header
+        auth_header = 'OAuth ' + ', '.join([f'{k}="{v}"' for k, v in oauth_params.items()])
+        
+        return {
+            'Authorization': auth_header
+        }
+
     async def test_connection(self) -> bool:
         """Test NetSuite connection"""
         try:

@@ -15,6 +15,78 @@ interface EnvironmentConfig {
   environment: 'development' | 'staging' | 'production';
 }
 
+interface DashboardConfig {
+  wsEndpoints: {
+    sales: string;
+    clientHealth: string;
+    projectMgmt: string;
+    unifiedChat: string;
+    general: string;
+  };
+  apiEndpoints: {
+    sales: {
+      reps: string;
+      gongCalls: string;
+      teamMetrics: string;
+      coaching: string;
+    };
+    clients: {
+      health: string;
+      recoveryPlans: string;
+      metrics: string;
+      healthCheck: (id: string) => string;
+      recoveryPlan: (id: string) => string;
+    };
+    projects: {
+      list: string;
+      syncStatus: string;
+      syncAll: string;
+      communicationMetrics: string;
+      blockerResolve: (projectId: string, blockerId: string) => string;
+    };
+    team: {
+      members: string;
+    };
+    voice: {
+      process: string;
+    };
+    agents: {
+      available: string;
+      recommend: string;
+    };
+  };
+  themes: {
+    hermes: {
+      primaryColor: string;
+      secondaryColor: string;
+      gradientFrom: string;
+      gradientTo: string;
+      iconColor: string;
+    };
+    asclepius: {
+      primaryColor: string;
+      secondaryColor: string;
+      gradientFrom: string;
+      gradientTo: string;
+      iconColor: string;
+    };
+    athena: {
+      primaryColor: string;
+      secondaryColor: string;
+      gradientFrom: string;
+      gradientTo: string;
+      iconColor: string;
+    };
+    unified: {
+      primaryColor: string;
+      secondaryColor: string;
+      gradientFrom: string;
+      gradientTo: string;
+      iconColor: string;
+    };
+  };
+}
+
 // Helper to safely get environment variables
 const getEnvVar = (key: string, defaultValue: string): string => {
   // In Next.js, public environment variables must be prefixed with NEXT_PUBLIC_
@@ -82,6 +154,112 @@ export const config: EnvironmentConfig = {
 // Export individual config values for convenience
 export const { apiBaseUrl, wsBaseUrl, debugMode, environment } = config;
 
+// Dashboard-specific configuration
+export const dashboardConfig: DashboardConfig = {
+  wsEndpoints: {
+    sales: `${wsBaseUrl}/sales-hermes`,
+    clientHealth: `${wsBaseUrl}/client-health-asclepius`,
+    projectMgmt: `${wsBaseUrl}/project-mgmt-athena`,
+    unifiedChat: `${wsBaseUrl}/unified-chat`,
+    general: `${wsBaseUrl}/general`
+  },
+  apiEndpoints: {
+    sales: {
+      reps: `${apiBaseUrl}/api/sales/reps`,
+      gongCalls: `${apiBaseUrl}/api/sales/gong-calls`,
+      teamMetrics: `${apiBaseUrl}/api/sales/team-metrics`,
+      coaching: `${apiBaseUrl}/api/sales/coaching`
+    },
+    clients: {
+      health: `${apiBaseUrl}/api/clients/health`,
+      recoveryPlans: `${apiBaseUrl}/api/clients/recovery-plans`,
+      metrics: `${apiBaseUrl}/api/clients/metrics`,
+      healthCheck: (id: string) => `${apiBaseUrl}/api/clients/${id}/health-check`,
+      recoveryPlan: (id: string) => `${apiBaseUrl}/api/clients/${id}/recovery-plan`
+    },
+    projects: {
+      list: `${apiBaseUrl}/api/projects`,
+      syncStatus: `${apiBaseUrl}/api/projects/sync-status`,
+      syncAll: `${apiBaseUrl}/api/projects/sync-all`,
+      communicationMetrics: `${apiBaseUrl}/api/projects/communication-metrics`,
+      blockerResolve: (projectId: string, blockerId: string) =>
+        `${apiBaseUrl}/api/projects/${projectId}/blockers/${blockerId}/resolve`
+    },
+    team: {
+      members: `${apiBaseUrl}/api/team/members`
+    },
+    voice: {
+      process: `${apiBaseUrl}/api/voice/process`
+    },
+    agents: {
+      available: `${apiBaseUrl}/api/agents/available`,
+      recommend: `${apiBaseUrl}/api/agents/recommend`
+    }
+  },
+  themes: {
+    hermes: {
+      primaryColor: '#3B82F6',
+      secondaryColor: '#8B5CF6',
+      gradientFrom: 'from-blue-50',
+      gradientTo: 'to-indigo-100',
+      iconColor: 'text-blue-600'
+    },
+    asclepius: {
+      primaryColor: '#10B981',
+      secondaryColor: '#14B8A6',
+      gradientFrom: 'from-emerald-50',
+      gradientTo: 'to-teal-100',
+      iconColor: 'text-emerald-600'
+    },
+    athena: {
+      primaryColor: '#8B5CF6',
+      secondaryColor: '#EC4899',
+      gradientFrom: 'from-purple-50',
+      gradientTo: 'to-pink-100',
+      iconColor: 'text-purple-600'
+    },
+    unified: {
+      primaryColor: '#6366F1',
+      secondaryColor: '#8B5CF6',
+      gradientFrom: 'from-indigo-50',
+      gradientTo: 'to-purple-100',
+      iconColor: 'text-indigo-600'
+    }
+  }
+};
+
+// Feature flags for dashboards
+export const featureFlags = {
+  voiceEnabled: getEnvVar('VOICE_ENABLED', 'true') === 'true',
+  realtimeUpdates: getEnvVar('REALTIME_UPDATES', 'true') === 'true',
+  crossPlatformSync: getEnvVar('CROSS_PLATFORM_SYNC', 'true') === 'true',
+  advancedAnalytics: getEnvVar('ADVANCED_ANALYTICS', 'true') === 'true',
+  experimentalFeatures: environment === 'development'
+};
+
+// Update intervals
+export const updateIntervals = {
+  realtime: 1000,     // 1 second
+  frequent: 5000,     // 5 seconds
+  normal: 30000,      // 30 seconds
+  slow: 60000         // 1 minute
+};
+
+// Voice configuration
+export const voiceConfig = {
+  elevenLabs: {
+    apiKey: getEnvVar('ELEVENLABS_API_KEY', ''),
+    defaultVoiceId: getEnvVar('ELEVENLABS_DEFAULT_VOICE_ID', 'rachel'),
+    baseUrl: 'https://api.elevenlabs.io/v1'
+  },
+  settings: {
+    sampleRate: 22050,
+    channels: 1,
+    bitDepth: 16,
+    format: 'mp3'
+  }
+};
+
 // Log configuration in debug mode (but not sensitive data)
 if (config.debugMode && typeof window !== 'undefined') {
   console.log('Environment Configuration:', {
@@ -89,6 +267,7 @@ if (config.debugMode && typeof window !== 'undefined') {
     apiBaseUrl: config.apiBaseUrl,
     wsBaseUrl: config.wsBaseUrl,
     debugMode: config.debugMode,
+    featureFlags,
   });
 }
 

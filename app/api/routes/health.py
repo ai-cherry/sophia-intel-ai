@@ -14,7 +14,6 @@ from fastapi import APIRouter, Depends
 from app.api.middleware.auth import get_current_user
 from app.core.ai_logger import logger
 from app.core.config import settings
-from app.knowledge.foundational_manager import FoundationalKnowledgeManager
 
 router = APIRouter(prefix="/health", tags=["health"])
 
@@ -54,6 +53,8 @@ async def detailed_health_check(user: str = Depends(get_current_user)):
 
     # Check database connectivity
     try:
+        from app.knowledge.foundational_manager import FoundationalKnowledgeManager
+
         manager = FoundationalKnowledgeManager()
         stats = await manager.get_statistics()
         health_status["components"]["database"] = {
@@ -172,6 +173,8 @@ async def readiness_check():
     """
     try:
         # Quick database check
+        from app.knowledge.foundational_manager import FoundationalKnowledgeManager
+
         manager = FoundationalKnowledgeManager()
         await manager.storage.list_knowledge(limit=1)
 

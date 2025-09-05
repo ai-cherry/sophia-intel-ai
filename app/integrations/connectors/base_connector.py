@@ -2,6 +2,7 @@
 Base Connector Pattern for Enterprise Integrations
 Foundation for all external service connectors
 """
+
 import asyncio
 import json
 import logging
@@ -148,9 +149,12 @@ class BaseConnector(ABC):
         )
 
         # Circuit breaker for fault tolerance
-        self.circuit_breaker = CircuitBreaker(
-            failure_threshold=5, recovery_timeout=60, expected_exception=aiohttp.ClientError
+        from app.core.circuit_breaker import CircuitBreakerConfig
+
+        breaker_config = CircuitBreakerConfig(
+            failure_threshold=5, timeout=60, expected_exception=aiohttp.ClientError
         )
+        self.circuit_breaker = CircuitBreaker(name=f"{self.name}_breaker", config=breaker_config)
 
         # Memory router for caching and storage
         self.memory = get_memory_router()

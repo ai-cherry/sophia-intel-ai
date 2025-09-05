@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
-from app.api.middleware.auth import get_current_user, require_admin, require_authentication
+from app.api.middleware.auth import get_current_user, verify_admin_access, verify_api_key
 from app.api.middleware.rate_limit import rate_limit
 from app.core.ai_logger import logger
 from app.knowledge.foundational_manager import FoundationalKnowledgeManager
@@ -23,6 +23,17 @@ from app.knowledge.models import (
 from app.sync.airtable_sync import AirtableSync
 
 router = APIRouter(prefix="/api/knowledge", tags=["foundational-knowledge"])
+
+
+# Create helper dependencies
+async def require_authentication(user: str = Depends(verify_api_key)) -> dict:
+    """Require authentication for endpoints"""
+    return {"user": user}
+
+
+async def require_admin(user: str = Depends(verify_admin_access)) -> dict:
+    """Require admin access for endpoints"""
+    return {"user": user}
 
 
 # Request/Response models
@@ -77,9 +88,25 @@ class SyncStatusResponse(BaseModel):
     conflicts_detected: int
 
 
-# Initialize managers
-manager = FoundationalKnowledgeManager()
-sync_service = AirtableSync()
+# Lazy-load managers to avoid initialization at import time
+_manager = None
+_sync_service = None
+
+
+def get_manager():
+    """Get or create FoundationalKnowledgeManager instance"""
+    global _manager
+    if _manager is None:
+        _manager = FoundationalKnowledgeManager()
+    return _manager
+
+
+def get_sync_service():
+    """Get or create AirtableSync instance"""
+    global _sync_service
+    if _sync_service is None:
+        _sync_service = AirtableSync()
+    return _sync_service
 
 
 # ========== CRUD Endpoints ==========
@@ -109,7 +136,7 @@ async def create_knowledge(
             entity.priority = KnowledgePriority(request.priority)
 
         # Create in manager
-        created = await manager.create(entity)
+        created = await get_manager().create(entity)
 
         return KnowledgeResponse(
             id=created.id,
@@ -134,7 +161,7 @@ async def create_knowledge(
 @rate_limit(limit=60)  # Allow 60 reads per minute
 async def get_knowledge(knowledge_id: str, user: Optional[dict] = Depends(get_current_user)):
     """Get knowledge entity by ID"""
-    entity = await manager.get(knowledge_id)
+    entity = await get_manager().get(knowledge_id)
 
     if not entity:
         raise HTTPException(status_code=404, detail="Knowledge not found")
@@ -161,7 +188,7 @@ async def update_knowledge(
 ):
     """Update existing knowledge entity"""
     # Get existing entity
-    entity = await manager.get(knowledge_id)
+    entity = await get_manager().get(knowledge_id)
     if not entity:
         raise HTTPException(status_code=404, detail="Knowledge not found")
 
@@ -182,7 +209,7 @@ async def update_knowledge(
         entity.is_active = request.is_active
 
     # Update via manager
-    updated = await manager.update(entity)
+    updated = await get_manager().update(entity)
 
     return KnowledgeResponse(
         id=updated.id,
@@ -205,7 +232,7 @@ async def delete_knowledge(
     knowledge_id: str, user: dict = Depends(require_admin)  # Only admins can delete
 ):
     """Delete knowledge entity"""
-    result = await manager.delete(knowledge_id)
+    result = await get_manager().delete(knowledge_id)
 
     if not result:
         raise HTTPException(status_code=404, detail="Knowledge not found")
@@ -227,7 +254,7 @@ async def list_knowledge(
     user: Optional[dict] = Depends(get_current_user),
 ):
     """List knowledge entities with filters"""
-    entities = await manager.storage.list_knowledge(
+    entities = await get_manager().storage.list_knowledge(
         classification=classification,
         category=category,
         is_active=is_active,
@@ -261,7 +288,7 @@ async def search_knowledge(
     user: Optional[dict] = Depends(get_current_user),
 ):
     """Search knowledge entities"""
-    results = await manager.search(query, include_operational)
+    results = await get_manager().search(query, include_operational)
 
     return [
         KnowledgeResponse(
@@ -285,7 +312,7 @@ async def search_knowledge(
 @rate_limit(limit=60)  # Allow 60 foundational list requests per minute
 async def list_foundational(user: Optional[dict] = Depends(get_current_user)):
     """List all foundational knowledge"""
-    entities = await manager.list_foundational()
+    entities = await get_manager().list_foundational()
 
     return [
         KnowledgeResponse(
@@ -312,7 +339,7 @@ async def list_foundational(user: Optional[dict] = Depends(get_current_user)):
 @rate_limit(limit=10)  # Very limited for context operations
 async def get_pay_ready_context(user: dict = Depends(require_authentication)):
     """Get comprehensive Pay-Ready context"""
-    return await manager.get_pay_ready_context()
+    return await get_manager().get_pay_ready_context()
 
 
 # ========== Version Endpoints ==========
@@ -322,7 +349,7 @@ async def get_pay_ready_context(user: dict = Depends(require_authentication)):
 @rate_limit(limit=30)  # Allow 30 version history requests per minute
 async def get_version_history(knowledge_id: str, user: Optional[dict] = Depends(get_current_user)):
     """Get version history for knowledge entity"""
-    versions = await manager.get_version_history(knowledge_id)
+    versions = await get_manager().get_version_history(knowledge_id)
 
     return [
         {
@@ -345,7 +372,7 @@ async def restore_version(
 ):
     """Restore knowledge to specific version"""
     try:
-        restored = await manager.rollback_to_version(knowledge_id, version_number)
+        restored = await get_manager().rollback_to_version(knowledge_id, version_number)
 
         return KnowledgeResponse(
             id=restored.id,
@@ -375,7 +402,7 @@ async def compare_versions(
 ):
     """Compare two versions of knowledge"""
     try:
-        comparison = await manager.compare_versions(knowledge_id, v1, v2)
+        comparison = await get_manager().compare_versions(knowledge_id, v1, v2)
         return comparison
 
     except ValueError as e:
@@ -396,9 +423,9 @@ async def trigger_sync(
 
     async def run_sync():
         if sync_type == "full":
-            await sync_service.full_sync()
+            await get_sync_service().full_sync()
         else:
-            await sync_service.incremental_sync()
+            await get_sync_service().incremental_sync()
 
     # Run sync in background
     background_tasks.add_task(run_sync)
@@ -418,13 +445,182 @@ async def trigger_sync(
 @router.get("/sync/status")
 @rate_limit(limit=30)  # Allow 30 sync status requests per minute
 async def get_sync_status(user: dict = Depends(require_authentication)):
-    """Get current sync status"""
-    # Get latest sync operations from storage
-    # This is a simplified version
+    """Get current sync status with scheduler information"""
+    from app.sync.sync_scheduler import get_sync_scheduler
+
+    scheduler = get_sync_scheduler()
+    return scheduler.get_status()
+
+
+@router.get("/sync/history")
+@rate_limit(limit=30)  # Allow 30 history requests per minute
+async def get_sync_history(
+    limit: int = Query(10, ge=1, le=100), user: dict = Depends(require_authentication)
+):
+    """Get sync operation history"""
+    from app.sync.sync_scheduler import get_sync_scheduler
+
+    scheduler = get_sync_scheduler()
+    return scheduler.get_history(limit=limit)
+
+
+@router.post("/sync/trigger")
+@rate_limit(limit=5)  # Very limited for manual sync triggers
+async def trigger_manual_sync(
+    sync_type: str = Query("incremental", regex="^(full|incremental)$"),
+    user: dict = Depends(require_admin),  # Only admins can trigger manual sync
+):
+    """Manually trigger a sync operation"""
+    from app.sync.sync_scheduler import get_sync_scheduler
+
+    scheduler = get_sync_scheduler()
+    result = await scheduler.trigger_manual_sync(sync_type)
+
+    return {"message": f"Manual {sync_type} sync triggered", "result": result}
+
+
+@router.post("/sync/resume")
+@rate_limit(limit=5)  # Very limited for resume operations
+async def resume_sync_scheduler(
+    user: dict = Depends(require_admin),  # Only admins can resume scheduler
+):
+    """Resume sync scheduler after critical failure"""
+    from app.sync.sync_scheduler import get_sync_scheduler
+
+    scheduler = get_sync_scheduler()
+    await scheduler.resume_scheduler()
+
+    return {"message": "Sync scheduler resumed successfully"}
+
+
+# ========== Batch Operations ==========
+
+
+@router.post("/batch/create")
+@rate_limit(limit=10)  # Lower limit for batch operations
+async def batch_create_knowledge(
+    requests: List[KnowledgeCreateRequest], user: dict = Depends(require_authentication)
+):
+    """Create multiple knowledge entities in a batch"""
+    if len(requests) > 100:
+        raise HTTPException(status_code=400, detail="Maximum 100 entities per batch")
+
+    results = {"success": [], "failed": []}
+
+    manager = get_manager()
+
+    for idx, request in enumerate(requests):
+        try:
+            entity = KnowledgeEntity(
+                name=request.name,
+                category=request.category,
+                content=request.content,
+                metadata=request.metadata or {},
+            )
+
+            if request.classification:
+                entity.classification = KnowledgeClassification(request.classification)
+            if request.priority:
+                entity.priority = KnowledgePriority(request.priority)
+
+            created = await manager.create(entity)
+            results["success"].append({"index": idx, "id": created.id, "name": created.name})
+
+        except Exception as e:
+            logger.error(f"Failed to create entity {request.name}: {e}")
+            results["failed"].append({"index": idx, "name": request.name, "error": str(e)})
+
     return {
-        "last_sync": datetime.utcnow().isoformat(),
-        "status": "idle",
-        "pending_conflicts": 0,
+        "total": len(requests),
+        "succeeded": len(results["success"]),
+        "failed": len(results["failed"]),
+        "results": results,
+    }
+
+
+@router.put("/batch/update")
+@rate_limit(limit=10)  # Lower limit for batch operations
+async def batch_update_knowledge(
+    updates: List[Dict[str, Any]], user: dict = Depends(require_authentication)
+):
+    """Update multiple knowledge entities in a batch"""
+    if len(updates) > 100:
+        raise HTTPException(status_code=400, detail="Maximum 100 entities per batch")
+
+    results = {"success": [], "failed": []}
+
+    manager = get_manager()
+
+    for idx, update in enumerate(updates):
+        try:
+            entity_id = update.get("id")
+            if not entity_id:
+                raise ValueError("Entity ID is required")
+
+            entity = await manager.get(entity_id)
+            if not entity:
+                raise ValueError(f"Entity {entity_id} not found")
+
+            # Update fields
+            if "name" in update:
+                entity.name = update["name"]
+            if "category" in update:
+                entity.category = update["category"]
+            if "classification" in update:
+                entity.classification = KnowledgeClassification(update["classification"])
+            if "priority" in update:
+                entity.priority = KnowledgePriority(update["priority"])
+            if "content" in update:
+                entity.content = update["content"]
+            if "metadata" in update:
+                entity.metadata.update(update["metadata"])
+            if "is_active" in update:
+                entity.is_active = update["is_active"]
+
+            updated = await manager.update(entity)
+            results["success"].append({"index": idx, "id": updated.id, "name": updated.name})
+
+        except Exception as e:
+            logger.error(f"Failed to update entity {update.get('id')}: {e}")
+            results["failed"].append({"index": idx, "id": update.get("id"), "error": str(e)})
+
+    return {
+        "total": len(updates),
+        "succeeded": len(results["success"]),
+        "failed": len(results["failed"]),
+        "results": results,
+    }
+
+
+@router.post("/batch/delete")
+@rate_limit(limit=5)  # Very limited for batch deletes
+async def batch_delete_knowledge(
+    entity_ids: List[str], user: dict = Depends(require_admin)  # Only admins can batch delete
+):
+    """Delete multiple knowledge entities in a batch"""
+    if len(entity_ids) > 50:
+        raise HTTPException(status_code=400, detail="Maximum 50 entities per batch delete")
+
+    results = {"success": [], "failed": []}
+
+    manager = get_manager()
+
+    for entity_id in entity_ids:
+        try:
+            deleted = await manager.delete(entity_id)
+            if deleted:
+                results["success"].append(entity_id)
+            else:
+                results["failed"].append({"id": entity_id, "error": "Entity not found"})
+        except Exception as e:
+            logger.error(f"Failed to delete entity {entity_id}: {e}")
+            results["failed"].append({"id": entity_id, "error": str(e)})
+
+    return {
+        "total": len(entity_ids),
+        "succeeded": len(results["success"]),
+        "failed": len(results["failed"]),
+        "results": results,
     }
 
 
@@ -435,4 +631,4 @@ async def get_sync_status(user: dict = Depends(require_authentication)):
 @rate_limit(limit=30)  # Allow 30 statistics requests per minute
 async def get_statistics(user: Optional[dict] = Depends(get_current_user)):
     """Get knowledge base statistics"""
-    return await manager.get_statistics()
+    return await get_manager().get_statistics()

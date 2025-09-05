@@ -29,7 +29,7 @@ components:
     weaviate_timeout: 30
 
     # L3: Neon Structured Data (< 100ms)
-    neon_connection: "postgresql://user:pass@localhost/sophia_db"  # pragma: allowlist secret
+    neon_connection: "postgresql://user:pass@localhost/sophia_db" # pragma: allowlist secret
     neon_pool_size: 10
     neon_timeout: 60
 
@@ -206,7 +206,7 @@ environments:
     components:
       memory_system:
         redis_url: "redis://localhost:6379"
-        neon_connection: "postgresql://user:pass@localhost/sophia_dev"  # pragma: allowlist secret
+        neon_connection: "postgresql://user:pass@localhost/sophia_dev" # pragma: allowlist secret
 
   staging:
     system:
@@ -214,7 +214,7 @@ environments:
     components:
       memory_system:
         redis_url: "redis://staging-redis:6379"
-        neon_connection: "postgresql://user:pass@staging-db/sophia_staging"  # pragma: allowlist secret
+        neon_connection: "postgresql://user:pass@staging-db/sophia_staging" # pragma: allowlist secret
 
   production:
     system:
@@ -223,7 +223,7 @@ environments:
     components:
       memory_system:
         redis_url: "redis://prod-redis:6379"
-        neon_connection: "postgresql://user:pass@prod-db/sophia_prod"  # pragma: allowlist secret
+        neon_connection: "postgresql://user:pass@prod-db/sophia_prod" # pragma: allowlist secret
         redis_max_connections: 50
         neon_pool_size: 20
 

@@ -39,6 +39,7 @@ from app.api.graph_endpoints import router as graph_router
 from app.api.health import router as health_router
 from app.api.hub.hub_controller import router as hub_router
 from app.api.infrastructure_router import router as infrastructure_router
+from app.api.coordination_metrics import router as metrics_router
 from app.api.memory.memory_endpoints import router as memory_router
 from app.api.portkey_router_endpoints import router as portkey_router
 from app.api.repository.repo_service import router as repo_router
@@ -75,6 +76,7 @@ app.include_router(auth_router, prefix="/auth")
 app.include_router(portkey_router, prefix="/api/portkey-routing")
 app.include_router(resilient_ws_router, prefix="/api/ws")
 app.include_router(infrastructure_router, prefix="/api/infrastructure")
+app.include_router(metrics_router)
 
 # New unified orchestrator routers
 # app.include_router(orchestrator_router, prefix="/orchestrator")  # Module deleted

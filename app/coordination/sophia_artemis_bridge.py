@@ -201,14 +201,17 @@ class SophiaArtemisCoordinationBridge:
             ) / self.metrics["total_coordinations"]
 
             # Log decision tree for hybrid tasks
-            if context.coordination_pattern in [CoordinationPattern.COLLABORATIVE, CoordinationPattern.PARALLEL_WITH_SYNC]:
+            if context.coordination_pattern in [
+                CoordinationPattern.COLLABORATIVE,
+                CoordinationPattern.PARALLEL_WITH_SYNC,
+            ]:
                 decision_tree = {
                     "session_id": context.session_id,
                     "sophia_decisions": context.business_context.get("decisions", []),
                     "artemis_decisions": context.technical_context.get("decisions", []),
                     "combined_reasoning": final_result.get("reasoning", ""),
                     "pattern": context.coordination_pattern.value,
-                    "timestamp": datetime.now().isoformat()
+                    "timestamp": datetime.now().isoformat(),
                 }
                 logger.info(f"HYBRID_DECISION_TREE: {json.dumps(decision_tree)}")
 

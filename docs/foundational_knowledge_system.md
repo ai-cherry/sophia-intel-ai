@@ -11,7 +11,7 @@ The Foundational Knowledge System is a comprehensive infrastructure for managing
 #### 1. Knowledge Models (`app/knowledge/models.py`)
 - **KnowledgeEntity**: Core data model for knowledge items
 - **KnowledgeVersion**: Version tracking for historical changes
-- **PayReadyContext**: Business context for Pay.com integration
+- **PayReadyContext**: Business context for Pay Ready integration
 - **SyncConflict**: Conflict resolution for Airtable sync
 
 #### 2. Foundational Manager (`app/knowledge/foundational_manager.py`)
@@ -322,7 +322,7 @@ embeddings = await integration.embed_all_foundational(
 
 # Semantic search
 results = await integration.semantic_search(
-    query="How much rent has Pay.com processed?",
+    query="How much rent has Pay Ready processed?",
     top_k=5,
     classification_filter=KnowledgeClassification.BUSINESS_METRICS
 )

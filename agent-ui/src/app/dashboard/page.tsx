@@ -136,7 +136,7 @@ export default function DashboardPage() {
       {/* Footer */}
       <footer className="border-t border-white/10 bg-white/5 backdrop-blur-md py-4">
         <div className="container mx-auto px-4 flex items-center justify-between text-sm text-white/70">
-          <span>© 2024 AI Orchestra Initiative</span>
+          <span>© 2024 Pay Ready</span>
           <div className="flex gap-4">
             <a href="/docs" className="hover:text-[#00e0ff] transition-colors">Docs</a>
             <a href="https://github.com/your-repo" className="hover:text-[#00e0ff] transition-colors">GitHub</a>

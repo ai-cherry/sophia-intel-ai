@@ -189,7 +189,7 @@ class UnifiedMCPOrchestrator:
             "average_execution_time": 0.0,
             "server_health_checks": 0,
         }
-        
+
         # Scaling configuration for horizontal distribution
         self.scaling_config = {
             "max_concurrent_tasks": self.config.get("max_concurrent_tasks", 10),
@@ -422,16 +422,18 @@ class UnifiedMCPOrchestrator:
         """Get basic horizontal scaling recommendations"""
         current_load = len(self.active_plans)
         max_concurrent = self.scaling_config["max_concurrent_tasks"]
-        
+
         utilization = current_load / max_concurrent if max_concurrent > 0 else 0
-        
+
         recommendation = {
             "current_utilization": utilization,
             "scale_out_needed": utilization > self.scaling_config["scale_out_threshold"],
-            "recommended_workers": max(1, int(utilization * self.scaling_config["worker_pool_size"])),
+            "recommended_workers": max(
+                1, int(utilization * self.scaling_config["worker_pool_size"])
+            ),
             "current_active_plans": current_load,
         }
-        
+
         logger.info(f"Scaling recommendation: {recommendation}")
         return recommendation
 

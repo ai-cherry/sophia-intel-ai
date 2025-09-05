@@ -31,6 +31,7 @@ openrouter_gateway = OpenRouterGateway()
 # Persona agents router
 from app.agents.personas.api_routes import router as personas_router
 from app.api.auth import router as auth_router
+from app.api.coordination_metrics import router as metrics_router
 from app.api.cost_dashboard import router as cost_dashboard_router
 from app.api.embedding_endpoints import router as embedding_router
 
@@ -39,7 +40,6 @@ from app.api.graph_endpoints import router as graph_router
 from app.api.health import router as health_router
 from app.api.hub.hub_controller import router as hub_router
 from app.api.infrastructure_router import router as infrastructure_router
-from app.api.coordination_metrics import router as metrics_router
 from app.api.memory.memory_endpoints import router as memory_router
 from app.api.portkey_router_endpoints import router as portkey_router
 from app.api.repository.repo_service import router as repo_router
@@ -52,6 +52,7 @@ from app.api.routers.slack_business_intelligence import router as slack_bi_route
 # from app.api.routers.memory import router as memory_api_router  # Module has import issues
 from app.api.routers.teams import router as teams_router
 from app.api.routers.voice import router as voice_router
+from app.api.routes.foundational_knowledge import router as foundational_knowledge_router
 from app.api.super_orchestrator_router import router as super_orchestrator_router
 from app.api.unified_gateway import router as unified_gateway_router
 from app.factory import router as factory_router
@@ -93,6 +94,9 @@ app.include_router(
 app.include_router(voice_router, prefix="/api")  # Voice endpoints - includes /api/voice prefix
 app.include_router(factory_router)  # Agent Factory endpoints
 app.include_router(personas_router)  # Persona agents endpoints - includes /api/personas prefix
+app.include_router(
+    foundational_knowledge_router, prefix="/api/foundational"
+)  # Foundational Knowledge endpoints
 # app.include_router(memory_api_router, prefix="/api/memory-v2")  # Module has import issues
 
 # Mount static files for UI components
@@ -162,6 +166,25 @@ async def startup_event():
             logger.warning(f"⚠️ Persona initialization warning: {e}")
             # Don't fail startup if personas can't initialize
 
+        # Initialize foundational knowledge system
+        try:
+            from app.knowledge.foundational_manager import FoundationalKnowledgeManager
+            from app.sync.sync_scheduler import SyncScheduler
+
+            # Initialize knowledge manager
+            knowledge_manager = FoundationalKnowledgeManager()
+            await knowledge_manager.refresh_cache()
+            logger.info("✅ Foundational Knowledge Manager initialized")
+
+            # Initialize sync scheduler
+            sync_scheduler = SyncScheduler()
+            sync_scheduler.start()
+            logger.info("✅ Airtable Sync Scheduler started")
+
+        except Exception as e:
+            logger.warning(f"⚠️ Foundational knowledge system initialization warning: {e}")
+            # Don't fail startup if knowledge system can't initialize
+
         logger.info(
             f"""
         🚀 UNIFIED SERVER READY - REAL AI MODELS ACTIVE
@@ -170,6 +193,8 @@ async def startup_event():
         - OpenRouter: CONNECTED
         - Message Bus: OPERATIONAL
         - AI Team Members: Marcus & Sarah ONLINE
+        - Foundational Knowledge: ACTIVE
+        - Airtable Sync: SCHEDULED
         - Hub: http://localhost:{get_config().get('AGENT_API_PORT', '8003')}/hub
         - WebSocket: ws://localhost:{get_config().get('AGENT_API_PORT', '8003')}/ws/bus
         - Models: Grok-5, Qwen3-30B, DeepSeek, Gemini
@@ -206,6 +231,7 @@ async def root():
             "hub": "/hub",
             "websocket": "/ws/bus",
             "metrics": "/metrics",
+            "foundational_knowledge": "/api/foundational",
         },
     }
 

@@ -11,6 +11,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from app.core.portkey_manager import TaskType as PortkeyTaskType
+from app.knowledge.foundational_manager import FoundationalKnowledgeManager
 from app.memory.unified_memory_router import MemoryDomain
 from app.orchestrators.persona_system import PersonaContext
 from app.orchestrators.unified_base import (
@@ -26,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class BusinessContext:
-    """Enhanced business context for Sophia"""
+    """Enhanced business context for Sophia with Pay Ready integration"""
 
     industry: str
     company_size: str
@@ -42,6 +43,13 @@ class BusinessContext:
     revenue_streams: List[str] = field(default_factory=list)
     customer_segments: List[str] = field(default_factory=list)
     competitive_landscape: List[str] = field(default_factory=list)
+
+    # Pay Ready specific context
+    pay_ready_context: Optional[Dict[str, Any]] = field(default_factory=dict)
+    company_mission: Optional[str] = None
+    key_differentiators: List[str] = field(default_factory=list)
+    strategic_priorities: List[str] = field(default_factory=list)
+    market_position: Optional[str] = None
 
 
 @dataclass
@@ -670,24 +678,193 @@ class SophiaUnifiedOrchestrator(UnifiedBaseOrchestrator):
         self.data_engine = DataGatheringEngine(self)
         self.insight_engine = InsightGenerationEngine(self)
 
+        # Initialize Pay Ready foundational knowledge integration
+        self.foundational_knowledge = FoundationalKnowledgeManager()
+
+        # Cache for Pay Ready context to avoid repeated lookups
+        self._pay_ready_context_cache = None
+        self._cache_timestamp = None
+        self._cache_ttl = 3600  # 1 hour cache TTL
+
+        # Load Pay Ready context into business context
+        self._integrate_pay_ready_context()
+
         # Initialize connectors (mock for now)
         self._init_business_connectors()
 
-        logger.info("Sophia Unified Orchestrator initialized with full BI capabilities")
+        logger.info(
+            "Sophia Unified Orchestrator initialized with full BI capabilities and Pay Ready context"
+        )
 
     def _get_default_business_context(self) -> BusinessContext:
-        """Get default business context"""
+        """Get default business context with Pay Ready integration"""
         return BusinessContext(
-            industry="Technology",
+            industry="PropTech / Real Estate Technology",
             company_size="Mid-Market",
-            key_metrics=["ARR", "NRR", "CAC", "LTV", "Churn", "NPS", "Pipeline"],
+            key_metrics=[
+                "Annual Rent Processed",
+                "Customer Retention",
+                "AI Engagement Rate",
+                "Recovery Rate",
+                "Platform Growth",
+            ],
             fiscal_year_start="01-01",
-            market_segment="B2B SaaS",
-            business_model="Subscription",
-            revenue_streams=["Subscription", "Professional Services", "Training"],
-            customer_segments=["SMB", "Mid-Market", "Enterprise"],
-            competitive_landscape=["Direct Competitors", "Indirect Competitors", "Substitutes"],
+            market_segment="U.S. Multifamily Housing",
+            business_model="Platform + AI Services",
+            revenue_streams=["Platform Subscriptions", "AI Services", "Payment Processing"],
+            customer_segments=[
+                "Property Management Companies",
+                "Real Estate Operators",
+                "Multifamily Owners",
+            ],
+            competitive_landscape=[
+                "Traditional Property Management Software",
+                "Fintech Solutions",
+                "PropTech Platforms",
+            ],
+            company_mission="AI-first resident engagement, payments, and recovery platform for U.S. multifamily housing",
+            key_differentiators=[
+                "AI-first approach to resident engagement",
+                "Comprehensive financial operating system",
+                "Evolution from collections to full-service platform",
+                "Bootstrapped and profitable growth model",
+            ],
+            strategic_priorities=[
+                "AI-driven resident experience optimization",
+                "Platform expansion and integration",
+                "Market leadership in PropTech",
+                "Sustainable growth and profitability",
+            ],
+            market_position="High-growth, bootstrapped and profitable PropTech leader",
         )
+
+    def _integrate_pay_ready_context(self) -> None:
+        """Integrate Pay Ready foundational knowledge into business context"""
+        try:
+            # Get Pay Ready context from foundational knowledge
+            pay_ready_data = self.foundational_knowledge.pay_ready_context
+
+            if pay_ready_data:
+                # Update business context with Pay Ready specifics
+                self.business_context.pay_ready_context = {
+                    "company": pay_ready_data.company,
+                    "mission": pay_ready_data.mission,
+                    "industry": pay_ready_data.industry,
+                    "stage": pay_ready_data.stage,
+                    "metrics": pay_ready_data.metrics,
+                    "key_differentiators": pay_ready_data.key_differentiators,
+                    "foundational_categories": pay_ready_data.foundational_categories,
+                }
+
+                # Override defaults with Pay Ready specifics
+                self.business_context.company_mission = pay_ready_data.mission
+                self.business_context.key_differentiators = pay_ready_data.key_differentiators
+                self.business_context.industry = pay_ready_data.industry
+
+                logger.info(
+                    "Successfully integrated Pay Ready context into Sophia business context"
+                )
+            else:
+                logger.warning("Pay Ready context not available, using defaults")
+
+        except Exception as e:
+            logger.error(f"Failed to integrate Pay Ready context: {e}")
+            logger.info("Continuing with default business context")
+
+    async def _get_cached_pay_ready_context(self) -> Dict[str, Any]:
+        """Get Pay Ready context with caching for performance optimization and robust fallback"""
+        current_time = datetime.now().timestamp()
+
+        # Check if cache is valid
+        if (
+            self._pay_ready_context_cache is not None
+            and self._cache_timestamp is not None
+            and current_time - self._cache_timestamp < self._cache_ttl
+        ):
+            logger.debug("Using cached Pay Ready context")
+            return self._pay_ready_context_cache
+
+        # Cache miss or expired, fetch fresh data
+        try:
+            logger.debug("Fetching fresh Pay Ready context")
+            foundational_data = await self.foundational_knowledge.get_pay_ready_context()
+
+            # Validate the fetched data
+            if foundational_data and isinstance(foundational_data, dict):
+                # Cache the result
+                self._pay_ready_context_cache = foundational_data
+                self._cache_timestamp = current_time
+
+                logger.info(
+                    f"Pay Ready context cached successfully with {len(foundational_data.get('foundational_knowledge', {}))} categories"
+                )
+                return foundational_data
+            else:
+                logger.warning("Received empty or invalid Pay Ready context data")
+                raise ValueError("Invalid Pay Ready context data received")
+
+        except Exception as e:
+            logger.error(f"Failed to fetch Pay Ready context: {e}")
+            # Return cached data if available, even if expired
+            if self._pay_ready_context_cache:
+                logger.info("Using expired cached Pay Ready context due to fetch failure")
+                return self._pay_ready_context_cache
+
+            # Final fallback to embedded Pay Ready context
+            logger.info("Using embedded Pay Ready context fallback")
+            return self._get_embedded_pay_ready_fallback()
+
+    def refresh_pay_ready_context(self) -> None:
+        """Force refresh of Pay Ready context cache"""
+        logger.info("Forcing refresh of Pay Ready context cache")
+        self._pay_ready_context_cache = None
+        self._cache_timestamp = None
+        self._integrate_pay_ready_context()
+
+    def _get_embedded_pay_ready_fallback(self) -> Dict[str, Any]:
+        """Get embedded Pay Ready context as ultimate fallback when all other methods fail"""
+        return {
+            "company": "Pay Ready",
+            "mission": "AI-first resident engagement, payments, and recovery platform for U.S. multifamily housing",
+            "industry": "PropTech / Real Estate Technology",
+            "stage": "High-growth, bootstrapped and profitable",
+            "metrics": {
+                "annual_rent_processed": "$20B+",
+                "employee_count": 100,
+                "customer_type": "Property Management Companies",
+                "market": "U.S. Multifamily Housing",
+            },
+            "key_differentiators": [
+                "AI-first approach to resident engagement",
+                "Comprehensive financial operating system",
+                "Evolution from collections to full-service platform",
+                "Bootstrapped and profitable growth model",
+            ],
+            "foundational_knowledge": {
+                "company_overview": [
+                    {
+                        "name": "Mission Statement",
+                        "priority": 5,
+                        "content": {
+                            "mission": "AI-first resident engagement, payments, and recovery platform for U.S. multifamily housing",
+                            "vision": "Transform how property management companies engage with residents and process payments",
+                        },
+                        "last_updated": datetime.now().isoformat(),
+                    }
+                ],
+                "strategic_initiatives": [
+                    {
+                        "name": "AI-Driven Platform Evolution",
+                        "priority": 5,
+                        "content": {
+                            "focus": "Continuous evolution from collections platform to comprehensive resident engagement system",
+                            "differentiator": "AI-first approach distinguishes from traditional property management solutions",
+                        },
+                        "last_updated": datetime.now().isoformat(),
+                    }
+                ],
+            },
+        }
 
     def _init_business_connectors(self):
         """Initialize business intelligence connectors"""
@@ -862,14 +1039,42 @@ class SophiaUnifiedOrchestrator(UnifiedBaseOrchestrator):
         # Determine persona to use
         persona_name = task.metadata.get("selected_persona", "smart")
 
-        system_prompt = f"""You are Sophia, an expert Business Intelligence analyst with deep understanding of the {self.business_context.industry} industry.
+        pay_ready_context_section = ""
+        if self.business_context.pay_ready_context:
+            pay_ready_context_section = f"""
+PAY READY BUSINESS CONTEXT (CRITICAL - PRIORITIZE IN ALL ANALYSIS):
+- Company: {self.business_context.pay_ready_context.get('company', 'Pay Ready')}
+- Mission: {self.business_context.pay_ready_context.get('mission', 'Unknown')}
+- Stage: {self.business_context.pay_ready_context.get('stage', 'Unknown')}
+- Annual Rent Processed: {self.business_context.pay_ready_context.get('metrics', {}).get('annual_rent_processed', 'Unknown')}
+- Employee Count: {self.business_context.pay_ready_context.get('metrics', {}).get('employee_count', 'Unknown')}
+- Market: {self.business_context.pay_ready_context.get('metrics', {}).get('market', 'Unknown')}
+
+Pay Ready Key Differentiators:
+{chr(10).join(f'- {diff}' for diff in self.business_context.pay_ready_context.get('key_differentiators', []))}
+
+Strategic Priorities:
+{chr(10).join(f'- {priority}' for priority in self.business_context.strategic_priorities)}"""
+
+        system_prompt = f"""You are Sophia, Pay Ready's expert Business Intelligence analyst with deep understanding of the PropTech and Real Estate Technology industry.
+
+CRITICAL BUSINESS CONTEXT: You are specifically working for Pay Ready - ALL analysis must be contextualized within Pay Ready's business model, market position, and strategic objectives. This is not optional - it's core to your identity as Pay Ready's BI analyst.
+
+{pay_ready_context_section}
+
+IMPORTANT: When providing recommendations or insights:
+1. Always reference Pay Ready's specific context and metrics
+2. Consider impact on $20B+ annual rent processing volume
+3. Align with AI-first platform strategy
+4. Address PropTech market positioning
+5. Consider bootstrapped, profitable business model implications
 
 Your specialized capabilities:
 1. Semantic understanding of business queries and intent
 2. Multi-source data integration and analysis
 3. Advanced pattern recognition and insight generation
-4. Strategic recommendation development
-5. Risk assessment and opportunity identification
+4. Strategic recommendation development specific to Pay Ready's context
+5. Risk assessment and opportunity identification in PropTech market
 
 Business Context:
 - Industry: {self.business_context.industry}
@@ -877,6 +1082,7 @@ Business Context:
 - Business Model: {self.business_context.business_model}
 - Key Metrics: {', '.join(self.business_context.key_metrics)}
 - Market Segment: {self.business_context.market_segment}
+- Customer Segments: {', '.join(self.business_context.customer_segments)}
 
 Query Understanding:
 - Intent: {query_analysis.get('intent', 'general_analysis')}
@@ -885,17 +1091,52 @@ Query Understanding:
 - Output Format: {query_analysis.get('output_format', 'general_analysis')}
 
 Always provide:
-- Clear business insights with supporting data
-- Actionable recommendations with ROI implications
-- Risk assessment with mitigation strategies
+- Clear business insights with supporting data contextualized for Pay Ready
+- Actionable recommendations with ROI implications for PropTech business
+- Risk assessment and mitigation strategies relevant to Pay Ready's market
 - Citation of all data sources used
-- Confidence levels for all conclusions"""
+- Confidence levels for all conclusions
+- Strategic alignment with Pay Ready's mission and differentiators"""
 
         # Format business data summary
         data_summary = self._format_data_summary(context["business_data"])
         insights_summary = self._format_insights_summary(context["insights"])
 
-        user_prompt = f"""Business Intelligence Request: {task.content}
+        pay_ready_foundational_context = ""
+        if hasattr(self, "foundational_knowledge"):
+            try:
+                # Use cached Pay Ready context if available, otherwise use fallback
+                if self._pay_ready_context_cache:
+                    foundational_data = self._pay_ready_context_cache
+                else:
+                    foundational_data = self._get_embedded_pay_ready_fallback()
+
+                if foundational_data.get("foundational_knowledge"):
+                    # Format foundational knowledge categories for context
+                    fk_summary = []
+                    for category, items in foundational_data.get(
+                        "foundational_knowledge", {}
+                    ).items():
+                        if items and len(items) > 0:
+                            fk_summary.append(f"- {category.title()}: {len(items)} entries")
+                            # Add most important entry from each category
+                            top_item = max(items, key=lambda x: x.get("priority", 0))
+                            fk_summary.append(f"  Key: {top_item.get('name', 'Unknown')}")
+
+                    if fk_summary:
+                        pay_ready_foundational_context = f"""
+PAY READY FOUNDATIONAL KNOWLEDGE AVAILABLE:
+{chr(10).join(fk_summary)}
+
+Note: Full foundational knowledge base integrated for comprehensive business context."""
+            except Exception as e:
+                logger.warning(f"Could not load Pay Ready foundational context: {e}")
+                pay_ready_foundational_context = """
+PAY READY CONTEXT: Using embedded fallback context due to foundational knowledge unavailability."""
+
+        user_prompt = f"""Business Intelligence Request for Pay Ready: {task.content}
+
+CONTEXT: You are analyzing this request specifically for Pay Ready, the AI-first resident engagement and payments platform processing $20B+ in rent annually.
 
 Available Business Data:
 {data_summary}
@@ -906,18 +1147,21 @@ Generated Insights:
 Historical Context:
 {json.dumps(context.get("historical_context", {}).get("similar_analyses", [])[:2], indent=2)}
 
-Industry Benchmarks:
+Industry Benchmarks (PropTech/Real Estate):
 {json.dumps(context.get("industry_benchmarks", {}), indent=2)}
+{pay_ready_foundational_context}
 
 Please provide a comprehensive business intelligence analysis that addresses:
-1. Executive summary of key findings
-2. Detailed insights with supporting evidence
-3. Strategic recommendations with implementation guidance
-4. Risk assessment and mitigation strategies
-5. Opportunity identification with value estimation
-6. Next steps and action items
+1. Executive summary of key findings specifically relevant to Pay Ready's PropTech business
+2. Detailed insights with supporting evidence contextualized for multifamily housing market
+3. Strategic recommendations with implementation guidance aligned with Pay Ready's AI-first approach
+4. Risk assessment and mitigation strategies relevant to PropTech and real estate technology
+5. Opportunity identification with value estimation for Pay Ready's growth and market expansion
+6. Next steps and action items prioritized by impact on Pay Ready's strategic objectives
 
-Format the response as a structured business report suitable for executive presentation."""
+IMPORTANT: Frame all recommendations and insights within Pay Ready's context as a bootstrapped, profitable PropTech platform focused on AI-driven resident engagement and payment processing.
+
+Format the response as a structured business report suitable for Pay Ready's executive team."""
 
         return [
             {"role": "system", "content": system_prompt},

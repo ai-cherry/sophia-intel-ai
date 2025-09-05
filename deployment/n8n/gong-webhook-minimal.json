@@ -1,0 +1,41 @@
+{
+  "name": "Gong Webhook - Minimal",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "gong-webhook",
+        "responseMode": "onReceived",
+        "responseData": "allEntries"
+      },
+      "id": "webhook-node",
+      "name": "Gong Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Simple Gong webhook processor\nconst input = $input.first().json;\nconst timestamp = new Date().toISOString();\n\nconst eventType = input.eventType || 'unknown';\nconst callId = input.callId || 'no-id';\n\nconsole.log(`[${timestamp}] Gong ${eventType} for call ${callId}`);\n\nreturn {\n  eventType,\n  callId,\n  timestamp,\n  processed: true,\n  data: input\n};"
+      },
+      "id": "process-node",
+      "name": "Process Event",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [440, 300]
+    }
+  ],
+  "connections": {
+    "Gong Webhook": {
+      "main": [
+        [
+          {
+            "node": "Process Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

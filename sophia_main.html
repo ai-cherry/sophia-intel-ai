@@ -1462,7 +1462,7 @@
                         <div style="display: grid; gap: var(--spacing-sm);">
                             <label>
                                 <span style="display: block; margin-bottom: var(--spacing-xs); color: var(--text-secondary);">Server URL</span>
-                                <input type="text" id="serverUrl" value="http://localhost:9000"
+                                <input type="text" id="serverUrl" value="http://localhost:8000"
                                        style="width: 100%; padding: var(--spacing-sm); background: var(--bg-input); border: 1px solid var(--border-secondary); border-radius: var(--border-radius); color: var(--text-primary);">
                             </label>
                             <button class="btn btn-primary" onclick="testConnection()">
@@ -1508,7 +1508,7 @@
     <script>
         // Global state
         let isOnline = false;
-        let serverUrl = 'http://localhost:9000';
+        let serverUrl = 'http://localhost:8000';
         let currentModel = 'sophia-universal';
 
         // Connection management

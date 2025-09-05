@@ -2,10 +2,8 @@
 API endpoints for Foundational Knowledge management
 """
 
-from __future__ import annotations
-
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
@@ -44,8 +42,8 @@ class KnowledgeCreateRequest(BaseModel):
     category: str = Field(..., min_length=1, max_length=100)
     classification: Optional[str] = None
     priority: Optional[int] = Field(None, ge=1, le=5)
-    content: Dict[str, Any]
-    metadata: Optional[Dict[str, Any]] = None
+    content: dict[str, Any]
+    metadata: Optional[dict[str, Any]] = None
 
 
 class KnowledgeUpdateRequest(BaseModel):
@@ -55,8 +53,8 @@ class KnowledgeUpdateRequest(BaseModel):
     category: Optional[str] = None
     classification: Optional[str] = None
     priority: Optional[int] = Field(None, ge=1, le=5)
-    content: Optional[Dict[str, Any]] = None
-    metadata: Optional[Dict[str, Any]] = None
+    content: Optional[dict[str, Any]] = None
+    metadata: Optional[dict[str, Any]] = None
     is_active: Optional[bool] = None
 
 
@@ -68,7 +66,7 @@ class KnowledgeResponse(BaseModel):
     category: str
     classification: str
     priority: int
-    content: Dict[str, Any]
+    content: dict[str, Any]
     is_foundational: bool
     version: int
     created_at: datetime
@@ -115,7 +113,7 @@ def get_sync_service():
 @router.post("/", response_model=KnowledgeResponse)
 @rate_limit(limit=30)  # Allow 30 creates per minute
 async def create_knowledge(
-    request: KnowledgeCreateRequest, user: dict = Depends(require_authentication)
+    request: KnowledgeCreateRequest, __user: dict = Depends(require_authentication)
 ):
     """Create new foundational knowledge entry"""
     try:
@@ -154,12 +152,12 @@ async def create_knowledge(
 
     except Exception as e:
         logger.error(f"Failed to create knowledge: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.get("/{knowledge_id}", response_model=KnowledgeResponse)
 @rate_limit(limit=60)  # Allow 60 reads per minute
-async def get_knowledge(knowledge_id: str, user: Optional[dict] = Depends(get_current_user)):
+async def get_knowledge(knowledge_id: str, _user: Optional[dict] = Depends(get_current_user)):
     """Get knowledge entity by ID"""
     entity = await get_manager().get(knowledge_id)
 
@@ -184,7 +182,9 @@ async def get_knowledge(knowledge_id: str, user: Optional[dict] = Depends(get_cu
 @router.put("/{knowledge_id}", response_model=KnowledgeResponse)
 @rate_limit(limit=30)  # Allow 30 updates per minute
 async def update_knowledge(
-    knowledge_id: str, request: KnowledgeUpdateRequest, user: dict = Depends(require_authentication)
+    knowledge_id: str,
+    request: KnowledgeUpdateRequest,
+    _user: dict = Depends(require_authentication),
 ):
     """Update existing knowledge entity"""
     # Get existing entity
@@ -229,7 +229,7 @@ async def update_knowledge(
 @router.delete("/{knowledge_id}")
 @rate_limit(limit=20)  # Allow 20 deletes per minute
 async def delete_knowledge(
-    knowledge_id: str, user: dict = Depends(require_admin)  # Only admins can delete
+    knowledge_id: str, _user: dict = Depends(require_admin)  # Only admins can delete
 ):
     """Delete knowledge entity"""
     result = await get_manager().delete(knowledge_id)
@@ -243,7 +243,7 @@ async def delete_knowledge(
 # ========== Search & List Endpoints ==========
 
 
-@router.get("/", response_model=List[KnowledgeResponse])
+@router.get("/", response_model=list[KnowledgeResponse])
 @rate_limit(limit=60)  # Allow 60 list requests per minute
 async def list_knowledge(
     classification: Optional[str] = Query(None),
@@ -251,7 +251,7 @@ async def list_knowledge(
     is_active: bool = Query(True),
     limit: int = Query(100, ge=1, le=1000),
     offset: int = Query(0, ge=0),
-    user: Optional[dict] = Depends(get_current_user),
+    _user: Optional[dict] = Depends(get_current_user),
 ):
     """List knowledge entities with filters"""
     entities = await get_manager().storage.list_knowledge(
@@ -280,12 +280,12 @@ async def list_knowledge(
     ]
 
 
-@router.get("/search", response_model=List[KnowledgeResponse])
+@router.get("/search", response_model=list[KnowledgeResponse])
 @rate_limit(limit=30)  # Lower limit for search operations
 async def search_knowledge(
     query: str = Query(..., min_length=1),
     include_operational: bool = Query(False),
-    user: Optional[dict] = Depends(get_current_user),
+    _user: Optional[dict] = Depends(get_current_user),
 ):
     """Search knowledge entities"""
     results = await get_manager().search(query, include_operational)
@@ -308,9 +308,9 @@ async def search_knowledge(
     ]
 
 
-@router.get("/foundational", response_model=List[KnowledgeResponse])
+@router.get("/foundational", response_model=list[KnowledgeResponse])
 @rate_limit(limit=60)  # Allow 60 foundational list requests per minute
-async def list_foundational(user: Optional[dict] = Depends(get_current_user)):
+async def list_foundational(_user: Optional[dict] = Depends(get_current_user)):
     """List all foundational knowledge"""
     entities = await get_manager().list_foundational()
 
@@ -337,7 +337,7 @@ async def list_foundational(user: Optional[dict] = Depends(get_current_user)):
 
 @router.get("/context/pay-ready")
 @rate_limit(limit=10)  # Very limited for context operations
-async def get_pay_ready_context(user: dict = Depends(require_authentication)):
+async def get_pay_ready_context(_user: dict = Depends(require_authentication)):
     """Get comprehensive Pay-Ready context"""
     return await get_manager().get_pay_ready_context()
 
@@ -347,7 +347,7 @@ async def get_pay_ready_context(user: dict = Depends(require_authentication)):
 
 @router.get("/{knowledge_id}/versions")
 @rate_limit(limit=30)  # Allow 30 version history requests per minute
-async def get_version_history(knowledge_id: str, user: Optional[dict] = Depends(get_current_user)):
+async def get_version_history(knowledge_id: str, _user: Optional[dict] = Depends(get_current_user)):
     """Get version history for knowledge entity"""
     versions = await get_manager().get_version_history(knowledge_id)
 
@@ -368,7 +368,7 @@ async def get_version_history(knowledge_id: str, user: Optional[dict] = Depends(
 async def restore_version(
     knowledge_id: str,
     version_number: int,
-    user: dict = Depends(require_admin),  # Only admins can restore
+    _user: dict = Depends(require_admin),  # Only admins can restore
 ):
     """Restore knowledge to specific version"""
     try:
@@ -389,7 +389,7 @@ async def restore_version(
         )
 
     except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=404, detail=str(e)) from e
 
 
 @router.get("/{knowledge_id}/compare")
@@ -398,7 +398,7 @@ async def compare_versions(
     knowledge_id: str,
     v1: int = Query(...),
     v2: int = Query(...),
-    user: Optional[dict] = Depends(get_current_user),
+    _user: Optional[dict] = Depends(get_current_user),
 ):
     """Compare two versions of knowledge"""
     try:
@@ -406,7 +406,7 @@ async def compare_versions(
         return comparison
 
     except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=404, detail=str(e)) from e
 
 
 # ========== Sync Endpoints ==========
@@ -417,7 +417,7 @@ async def compare_versions(
 async def trigger_sync(
     background_tasks: BackgroundTasks,
     sync_type: str = Query("incremental", regex="^(full|incremental)$"),
-    user: dict = Depends(require_admin),  # Only admins can trigger sync
+    _user: dict = Depends(require_admin),  # Only admins can trigger sync
 ):
     """Trigger Airtable synchronization"""
 
@@ -444,7 +444,7 @@ async def trigger_sync(
 
 @router.get("/sync/status")
 @rate_limit(limit=30)  # Allow 30 sync status requests per minute
-async def get_sync_status(user: dict = Depends(require_authentication)):
+async def get_sync_status(_user: dict = Depends(require_authentication)):
     """Get current sync status with scheduler information"""
     from app.sync.sync_scheduler import get_sync_scheduler
 
@@ -455,7 +455,7 @@ async def get_sync_status(user: dict = Depends(require_authentication)):
 @router.get("/sync/history")
 @rate_limit(limit=30)  # Allow 30 history requests per minute
 async def get_sync_history(
-    limit: int = Query(10, ge=1, le=100), user: dict = Depends(require_authentication)
+    limit: int = Query(10, ge=1, le=100), _user: dict = Depends(require_authentication)
 ):
     """Get sync operation history"""
     from app.sync.sync_scheduler import get_sync_scheduler
@@ -468,7 +468,7 @@ async def get_sync_history(
 @rate_limit(limit=5)  # Very limited for manual sync triggers
 async def trigger_manual_sync(
     sync_type: str = Query("incremental", regex="^(full|incremental)$"),
-    user: dict = Depends(require_admin),  # Only admins can trigger manual sync
+    _user: dict = Depends(require_admin),  # Only admins can trigger manual sync
 ):
     """Manually trigger a sync operation"""
     from app.sync.sync_scheduler import get_sync_scheduler
@@ -482,7 +482,7 @@ async def trigger_manual_sync(
 @router.post("/sync/resume")
 @rate_limit(limit=5)  # Very limited for resume operations
 async def resume_sync_scheduler(
-    user: dict = Depends(require_admin),  # Only admins can resume scheduler
+    _user: dict = Depends(require_admin),  # Only admins can resume scheduler
 ):
     """Resume sync scheduler after critical failure"""
     from app.sync.sync_scheduler import get_sync_scheduler
@@ -499,7 +499,7 @@ async def resume_sync_scheduler(
 @router.post("/batch/create")
 @rate_limit(limit=10)  # Lower limit for batch operations
 async def batch_create_knowledge(
-    requests: List[KnowledgeCreateRequest], user: dict = Depends(require_authentication)
+    requests: list[KnowledgeCreateRequest], _user: dict = Depends(require_authentication)
 ):
     """Create multiple knowledge entities in a batch"""
     if len(requests) > 100:
@@ -541,7 +541,7 @@ async def batch_create_knowledge(
 @router.put("/batch/update")
 @rate_limit(limit=10)  # Lower limit for batch operations
 async def batch_update_knowledge(
-    updates: List[Dict[str, Any]], user: dict = Depends(require_authentication)
+    updates: list[dict[str, Any]], _user: dict = Depends(require_authentication)
 ):
     """Update multiple knowledge entities in a batch"""
     if len(updates) > 100:
@@ -595,7 +595,7 @@ async def batch_update_knowledge(
 @router.post("/batch/delete")
 @rate_limit(limit=5)  # Very limited for batch deletes
 async def batch_delete_knowledge(
-    entity_ids: List[str], user: dict = Depends(require_admin)  # Only admins can batch delete
+    entity_ids: list[str], _user: dict = Depends(require_admin)  # Only admins can batch delete
 ):
     """Delete multiple knowledge entities in a batch"""
     if len(entity_ids) > 50:
@@ -629,6 +629,6 @@ async def batch_delete_knowledge(
 
 @router.get("/statistics")
 @rate_limit(limit=30)  # Allow 30 statistics requests per minute
-async def get_statistics(user: Optional[dict] = Depends(get_current_user)):
+async def get_statistics(_user: Optional[dict] = Depends(get_current_user)):
     """Get knowledge base statistics"""
     return await get_manager().get_statistics()

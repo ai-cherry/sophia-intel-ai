@@ -1,0 +1,285 @@
+{{- if .Values.services.unifiedApi.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "sophia-intel-ai.fullname" . }}-unified-api
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "sophia-intel-ai.labels" . | nindent 4 }}
+    app.kubernetes.io/component: unified-api
+    app.kubernetes.io/part-of: application
+    tier: "2"
+spec:
+  {{- if not .Values.services.unifiedApi.autoscaling.enabled }}
+  replicas: {{ .Values.services.unifiedApi.replicaCount }}
+  {{- end }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      {{- include "sophia-intel-ai.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: unified-api
+  template:
+    metadata:
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+      labels:
+        {{- include "sophia-intel-ai.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: unified-api
+        app.kubernetes.io/part-of: application
+        tier: "2"
+    spec:
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "sophia-intel-ai.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      initContainers:
+      - name: wait-for-dependencies
+        image: busybox:1.35
+        command: ['sh', '-c']
+        args:
+        - |
+          echo "Waiting for Redis..."
+          until nc -z {{ include "sophia-intel-ai.fullname" . }}-redis-master 6379; do
+            echo "Redis not ready, sleeping..."
+            sleep 5
+          done
+          echo "Waiting for PostgreSQL..."
+          until nc -z {{ include "sophia-intel-ai.fullname" . }}-postgresql 5432; do
+            echo "PostgreSQL not ready, sleeping..."
+            sleep 5
+          done
+          {{- if .Values.infrastructure.weaviate.enabled }}
+          echo "Waiting for Weaviate..."
+          until nc -z {{ include "sophia-intel-ai.fullname" . }}-weaviate 8080; do
+            echo "Weaviate not ready, sleeping..."
+            sleep 5
+          done
+          {{- end }}
+          echo "All dependencies ready!"
+      containers:
+      - name: unified-api
+        securityContext:
+          {{- toYaml .Values.securityContext | nindent 12 }}
+        image: "{{ .Values.services.unifiedApi.image.repository }}:{{ .Values.services.unifiedApi.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.services.unifiedApi.image.pullPolicy }}
+        ports:
+        - name: http
+          containerPort: 8000
+          protocol: TCP
+        env:
+        - name: SOPHIA_ENVIRONMENT
+          value: {{ .Values.global.environment }}
+        - name: LOG_LEVEL
+          value: {{ .Values.app.logLevel }}
+        - name: PYTHONPATH
+          value: "/app"
+        - name: REDIS_URL
+          value: "redis://{{ include "sophia-intel-ai.fullname" . }}-redis-master:6379"
+        - name: POSTGRES_URL
+          value: "postgresql://{{ .Values.infrastructure.postgresql.auth.username }}:$(POSTGRES_PASSWORD)@{{ include "sophia-intel-ai.fullname" . }}-postgresql:5432/{{ .Values.infrastructure.postgresql.auth.database }}"
+        {{- if .Values.infrastructure.weaviate.enabled }}
+        - name: WEAVIATE_URL
+          value: "http://{{ include "sophia-intel-ai.fullname" . }}-weaviate:8080"
+        {{- end }}
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "sophia-intel-ai.fullname" . }}-secrets
+              key: postgres-password
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "sophia-intel-ai.fullname" . }}-secrets
+              key: redis-password
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: http
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 5
+          timeoutSeconds: 5
+          failureThreshold: 3
+        startupProbe:
+          httpGet:
+            path: /healthz
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 10
+          failureThreshold: 10
+        resources:
+          {{- toYaml .Values.services.unifiedApi.resources | nindent 12 }}
+        volumeMounts:
+        - name: app-logs
+          mountPath: /app/logs
+      volumes:
+      - name: app-logs
+        emptyDir: {}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}
+
+---
+
+{{- if .Values.services.sophiaOrchestrator.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "sophia-intel-ai.fullname" . }}-sophia-orchestrator
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "sophia-intel-ai.labels" . | nindent 4 }}
+    app.kubernetes.io/component: sophia-orchestrator
+    app.kubernetes.io/part-of: application
+    tier: "2"
+spec:
+  {{- if not .Values.services.sophiaOrchestrator.autoscaling.enabled }}
+  replicas: {{ .Values.services.sophiaOrchestrator.replicaCount }}
+  {{- end }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      {{- include "sophia-intel-ai.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: sophia-orchestrator
+  template:
+    metadata:
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+      labels:
+        {{- include "sophia-intel-ai.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: sophia-orchestrator
+        app.kubernetes.io/part-of: application
+        tier: "2"
+    spec:
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "sophia-intel-ai.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      initContainers:
+      - name: wait-for-unified-api
+        image: busybox:1.35
+        command: ['sh', '-c']
+        args:
+        - |
+          echo "Waiting for Unified API..."
+          until nc -z {{ include "sophia-intel-ai.fullname" . }}-unified-api 8000; do
+            echo "Unified API not ready, sleeping..."
+            sleep 5
+          done
+          echo "Unified API ready!"
+      containers:
+      - name: sophia-orchestrator
+        securityContext:
+          {{- toYaml .Values.securityContext | nindent 12 }}
+        image: "{{ .Values.services.sophiaOrchestrator.image.repository }}:{{ .Values.services.sophiaOrchestrator.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.services.sophiaOrchestrator.image.pullPolicy }}
+        ports:
+        - name: http
+          containerPort: 8000
+          protocol: TCP
+        env:
+        - name: SOPHIA_ENVIRONMENT
+          value: {{ .Values.global.environment }}
+        - name: LOG_LEVEL
+          value: {{ .Values.app.logLevel }}
+        - name: PYTHONPATH
+          value: "/app"
+        - name: REDIS_URL
+          value: "redis://{{ include "sophia-intel-ai.fullname" . }}-redis-master:6379"
+        - name: POSTGRES_URL
+          value: "postgresql://{{ .Values.infrastructure.postgresql.auth.username }}:$(POSTGRES_PASSWORD)@{{ include "sophia-intel-ai.fullname" . }}-postgresql:5432/{{ .Values.infrastructure.postgresql.auth.database }}"
+        - name: UNIFIED_API_URL
+          value: "http://{{ include "sophia-intel-ai.fullname" . }}-unified-api:8000"
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "sophia-intel-ai.fullname" . }}-secrets
+              key: postgres-password
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "sophia-intel-ai.fullname" . }}-secrets
+              key: redis-password
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 5
+          timeoutSeconds: 5
+          failureThreshold: 3
+        startupProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 10
+          failureThreshold: 10
+        resources:
+          {{- toYaml .Values.services.sophiaOrchestrator.resources | nindent 12 }}
+        volumeMounts:
+        - name: app-logs
+          mountPath: /app/logs
+      volumes:
+      - name: app-logs
+        emptyDir: {}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}

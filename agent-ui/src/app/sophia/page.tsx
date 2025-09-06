@@ -15,7 +15,7 @@ import { dashboardConfig, featureFlags } from '@/config/environment';
 import {
   Zap, Heart, Brain, MessageCircle, Activity, TrendingUp,
   Users, Target, AlertTriangle, CheckCircle, Eye, Settings,
-  Crown, Briefcase, UserCheck, ExternalLink
+  Crown, Briefcase, UserCheck, ExternalLink, Server
 } from 'lucide-react';
 
 // ==================== SOPHIA INTELLIGENCE HUB ====================
@@ -481,7 +481,7 @@ const SophiaIntelligencePage: React.FC = () => {
 
           <TabsContent value="mcp" className="space-y-6">
             {/* Mythology Agent Widgets */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
               <MythologyAgentWidget
                 agent={{
                   id: 'hermes',
@@ -574,6 +574,96 @@ const SophiaIntelligencePage: React.FC = () => {
                   ]
                 }}
               />
+
+              <MythologyAgentWidget
+                agent={{
+                  id: 'minerva',
+                  name: 'Minerva',
+                  title: 'Cross-Domain Analytics',
+                  domain: 'sophia',
+                  assigned_mcp_servers: ['sophia_business_analytics', 'shared_database'],
+                  context: 'Advanced analytics bridging Sophia business intelligence with Artemis technical metrics',
+                  widget_type: 'cross_domain_analytics',
+                  icon_type: 'minerva'
+                }}
+                metrics={{
+                  primary_metric: {
+                    label: 'Insight Score',
+                    value: '92%',
+                    trend: 'up'
+                  },
+                  secondary_metrics: [
+                    { label: 'Data Correlations', value: '847', status: 'good' },
+                    { label: 'Predictive Models', value: '6 Active', status: 'good' },
+                    { label: 'Anomaly Detection', value: '2 New', status: 'warning' },
+                    { label: 'Cross-Domain Sync', value: '98%', status: 'good' }
+                  ],
+                  server_status: [
+                    { server_name: 'sophia_business_analytics', status: 'operational', last_activity: '2 min ago' },
+                    { server_name: 'shared_database', status: 'operational', last_activity: '1 min ago' }
+                  ]
+                }}
+              />
+
+              <MythologyAgentWidget
+                agent={{
+                  id: 'dionysus',
+                  name: 'Dionysus',
+                  title: 'Creative Market Intelligence',
+                  domain: 'sophia',
+                  assigned_mcp_servers: ['sophia_web_search', 'sophia_business_memory'],
+                  context: 'Creative insights for market trends, competitor analysis, and innovative business opportunities',
+                  widget_type: 'creative_market_intelligence',
+                  icon_type: 'dionysus'
+                }}
+                metrics={{
+                  primary_metric: {
+                    label: 'Market Innovation Score',
+                    value: '87%',
+                    trend: 'up'
+                  },
+                  secondary_metrics: [
+                    { label: 'Trend Signals', value: '23 New', status: 'good' },
+                    { label: 'Competitor Moves', value: '5 Tracked', status: 'warning' },
+                    { label: 'Innovation Opps', value: '12 Identified', status: 'good' },
+                    { label: 'Creative Insights', value: '8 Generated', status: 'good' }
+                  ],
+                  server_status: [
+                    { server_name: 'sophia_web_search', status: 'operational', last_activity: '3 min ago' },
+                    { server_name: 'sophia_business_memory', status: 'operational', last_activity: '2 min ago' }
+                  ]
+                }}
+              />
+
+              <MythologyAgentWidget
+                agent={{
+                  id: 'oracle',
+                  name: 'Oracle',
+                  title: 'Natural Language Intelligence',
+                  domain: 'sophia',
+                  assigned_mcp_servers: ['shared_knowledge_base', 'sophia_business_memory'],
+                  context: 'Voice-enabled natural language interface for business queries and conversational intelligence',
+                  widget_type: 'natural_language_interface',
+                  icon_type: 'oracle'
+                }}
+                metrics={{
+                  primary_metric: {
+                    label: 'Query Accuracy',
+                    value: '96.4%',
+                    trend: 'stable'
+                  },
+                  secondary_metrics: [
+                    { label: 'Response Time', value: '0.6s', status: 'good' },
+                    { label: 'Voice Queries', value: '127 Today', status: 'good' },
+                    { label: 'Context Retention', value: '94%', status: 'good' },
+                    { label: 'Language Models', value: '4 Active', status: 'good' }
+                  ],
+                  server_status: [
+                    { server_name: 'shared_knowledge_base', status: 'operational', last_activity: '1 min ago' },
+                    { server_name: 'sophia_business_memory', status: 'operational', last_activity: '2 min ago' }
+                  ]
+                }}
+              />
             </div>
 
             {/* MCP Server Grid */}
@@ -632,6 +722,23 @@ const SophiaIntelligencePage: React.FC = () => {
                   business_context: 'property_sales_optimization'
                 },
                 {
+                  server_name: 'sophia_business_memory',
+                  server_type: 'business_memory',
+                  status: 'operational',
+                  domain: 'sophia',
+                  access_level: 'exclusive',
+                  connections: { active: 6, max: 12, utilization: 0.5 },
+                  capabilities: ['context_memory', 'business_knowledge', 'historical_data', 'pattern_recognition'],
+                  last_activity: '3 minutes ago',
+                  performance_metrics: {
+                    response_time_ms: 95,
+                    throughput_ops_per_sec: 200,
+                    error_rate: 0.003,
+                    uptime_percentage: 99.6
+                  },
+                  business_context: 'pay_ready_business_memory'
+                },
+                {
                   server_name: 'shared_database',
                   server_type: 'database',
                   status: 'operational',
@@ -660,6 +767,30 @@ const SophiaIntelligencePage: React.FC = () => {
                   assigned_mcp_servers: ['sophia_business_analytics', 'sophia_business_memory'],
                   context: 'Customer health and portfolio management',
                   widget_type: 'client_health_monitor'
+                },
+                {
+                  name: 'Athena - Strategic Operations',
+                  assigned_mcp_servers: ['sophia_business_analytics', 'shared_knowledge_base'],
+                  context: 'Strategic initiatives and executive decision support',
+                  widget_type: 'strategic_operations_command'
+                },
+                {
+                  name: 'Minerva - Cross-Domain Analytics',
+                  assigned_mcp_servers: ['sophia_business_analytics', 'shared_database'],
+                  context: 'Advanced analytics bridging business and technical domains',
+                  widget_type: 'cross_domain_analytics'
+                },
+                {
+                  name: 'Dionysus - Creative Intelligence',
+                  assigned_mcp_servers: ['sophia_web_search', 'sophia_business_memory'],
+                  context: 'Creative market insights and innovation opportunities',
+                  widget_type: 'creative_market_intelligence'
+                },
+                {
+                  name: 'Oracle - Natural Language Interface',
+                  assigned_mcp_servers: ['shared_knowledge_base', 'sophia_business_memory'],
+                  context: 'Voice-enabled conversational business intelligence',
+                  widget_type: 'natural_language_interface'
                 }
               ]}
             />

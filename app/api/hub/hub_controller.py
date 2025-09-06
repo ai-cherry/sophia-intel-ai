@@ -8,7 +8,7 @@ from fastapi.templating import Jinja2Templates
 
 from app.core.ai_logger import logger
 
-router = APIRouter(prefix="/hub", tags=["hub"])
+router = APIRouter(tags=["hub"])
 templates = Jinja2Templates(directory="app/templates")
 
 # Service registry

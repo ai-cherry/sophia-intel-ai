@@ -1,0 +1,372 @@
+version: "3.8"
+
+services:
+  # ==============================================
+  # INFRASTRUCTURE SERVICES (Tier 1)
+  # ==============================================
+  
+  # Redis for L1 cache and ephemeral storage
+  redis:
+    image: redis:7-alpine
+    container_name: sophia-redis
+    ports:
+      - "${REDIS_PORT:-6380}:6379"
+    volumes:
+      - redis-data:/data
+      - ./automation/config/redis.conf:/usr/local/etc/redis/redis.conf:ro
+    command: redis-server /usr/local/etc/redis/redis.conf
+    restart: unless-stopped
+    networks:
+      - sophia-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-sophia_redis_2024}", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-sophia_redis_2024}
+    sysctls:
+      - net.core.somaxconn=1024
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+
+  # PostgreSQL for L3 structured storage
+  postgres:
+    image: postgres:15-alpine
+    container_name: sophia-postgres
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./automation/scripts/init-db.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+      - ./automation/scripts/init-extensions.sql:/docker-entrypoint-initdb.d/02-extensions.sql:ro
+      - ./automation/config/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+    environment:
+      POSTGRES_DB: sophia
+      POSTGRES_USER: sophia
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sophia_secure_password_2024}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    restart: unless-stopped
+    networks:
+      - sophia-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sophia -d sophia -h localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.0'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
+
+  # Weaviate for L2 vector storage
+  weaviate:
+    image: semitechnologies/weaviate:latest
+    container_name: sophia-weaviate
+    ports:
+      - "${WEAVIATE_PORT:-8081}:8080"
+    volumes:
+      - weaviate-data:/var/lib/weaviate
+    environment:
+      QUERY_DEFAULTS_LIMIT: 25
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
+      PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
+      DEFAULT_VECTORIZER_MODULE: 'text2vec-openai'
+      ENABLE_MODULES: 'text2vec-openai,generative-openai,backup-filesystem'
+      BACKUP_FILESYSTEM_PATH: '/var/lib/weaviate/backups'
+      CLUSTER_HOSTNAME: 'node1'
+      LOG_LEVEL: 'info'
+    restart: unless-stopped
+    networks:
+      - sophia-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/v1/.well-known/ready"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
+        reservations:
+          memory: 1G
+          cpus: '0.5'
+
+  # ==============================================
+  # APPLICATION SERVICES (Tier 2)
+  # ==============================================
+
+  # Unified API Server
+  unified-api:
+    build:
+      context: .
+      dockerfile: automation/docker/Dockerfile.unified-api
+      args:
+        BUILD_ENV: ${BUILD_ENV:-development}
+    container_name: sophia-unified-api
+    ports:
+      - "${UNIFIED_API_PORT:-8003}:8000"
+    volumes:
+      - ./logs:/app/logs
+      - ./.env:/app/.env:ro
+    environment:
+      - SOPHIA_ENVIRONMENT=${SOPHIA_ENVIRONMENT:-development}
+      - REDIS_URL=redis://redis:6379
+      - POSTGRES_URL=postgresql://sophia:${POSTGRES_PASSWORD:-sophia_secure_password_2024}@postgres:5432/sophia
+      - WEAVIATE_URL=http://weaviate:8080
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - PYTHONPATH=/app
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      weaviate:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - sophia-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.5'
+        reservations:
+          memory: 1G
+          cpus: '0.75'
+
+  # Sophia Orchestrator
+  sophia-orchestrator:
+    build:
+      context: .
+      dockerfile: automation/docker/Dockerfile.sophia
+      args:
+        BUILD_ENV: ${BUILD_ENV:-development}
+    container_name: sophia-orchestrator
+    ports:
+      - "${SOPHIA_PORT:-8006}:8000"
+    volumes:
+      - ./logs:/app/logs
+      - ./.env:/app/.env:ro
+    environment:
+      - SOPHIA_ENVIRONMENT=${SOPHIA_ENVIRONMENT:-development}
+      - REDIS_URL=redis://redis:6379
+      - POSTGRES_URL=postgresql://sophia:${POSTGRES_PASSWORD:-sophia_secure_password_2024}@postgres:5432/sophia
+      - UNIFIED_API_URL=http://unified-api:8000
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    depends_on:
+      unified-api:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - sophia-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.0'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
+
+  # Artemis Orchestrator  
+  artemis-orchestrator:
+    build:
+      context: .
+      dockerfile: automation/docker/Dockerfile.artemis
+      args:
+        BUILD_ENV: ${BUILD_ENV:-development}
+    container_name: artemis-orchestrator
+    ports:
+      - "${ARTEMIS_PORT:-8007}:8000"
+    volumes:
+      - ./logs:/app/logs
+      - ./.env:/app/.env:ro
+    environment:
+      - SOPHIA_ENVIRONMENT=${SOPHIA_ENVIRONMENT:-development}
+      - REDIS_URL=redis://redis:6379
+      - POSTGRES_URL=postgresql://sophia:${POSTGRES_PASSWORD:-sophia_secure_password_2024}@postgres:5432/sophia
+      - UNIFIED_API_URL=http://unified-api:8000
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    depends_on:
+      unified-api:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - sophia-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.0'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
+
+  # ==============================================
+  # MONITORING SERVICES (Tier 3)
+  # ==============================================
+
+  # Prometheus for metrics collection
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: sophia-prometheus
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    volumes:
+      - ./automation/monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./automation/monitoring/prometheus/rules:/etc/prometheus/rules:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=15d'
+      - '--web.enable-lifecycle'
+      - '--web.enable-admin-api'
+    restart: unless-stopped
+    networks:
+      - sophia-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+
+  # Grafana for visualization
+  grafana:
+    image: grafana/grafana:latest
+    container_name: sophia-grafana
+    ports:
+      - "${GRAFANA_PORT:-3001}:3000"
+    volumes:
+      - ./automation/monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./automation/monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+      - grafana-data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-sophia_admin_2024}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_INSTALL_PLUGINS=redis-datasource
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+    networks:
+      - sophia-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+
+  # ==============================================
+  # UTILITY SERVICES (Tier 4)
+  # ==============================================
+
+  # Health Check Service
+  health-monitor:
+    build:
+      context: .
+      dockerfile: automation/docker/Dockerfile.health-monitor
+    container_name: sophia-health-monitor
+    ports:
+      - "${HEALTH_MONITOR_PORT:-8888}:8000"
+    volumes:
+      - ./logs:/app/logs
+    environment:
+      - SOPHIA_ENVIRONMENT=${SOPHIA_ENVIRONMENT:-development}
+      - SERVICES_TO_MONITOR=redis,postgres,weaviate,unified-api,sophia-orchestrator,artemis-orchestrator
+      - CHECK_INTERVAL=30
+    depends_on:
+      - redis
+      - postgres
+      - weaviate
+    restart: unless-stopped
+    networks:
+      - sophia-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+# ==============================================
+# VOLUMES & NETWORKS
+# ==============================================
+
+volumes:
+  redis-data:
+    driver: local
+  postgres-data:
+    driver: local
+  weaviate-data:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local
+
+networks:
+  sophia-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+    driver_opts:
+      com.docker.network.bridge.name: sophia-br0
+      com.docker.network.driver.mtu: 1500

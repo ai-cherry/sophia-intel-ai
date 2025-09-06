@@ -86,10 +86,15 @@ const ArtemisCommandCenter: React.FC = () => {
 
   const [connected, setConnected] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
+  const [currentTime, setCurrentTime] = useState('');
 
   // Real-time updates simulation
   useEffect(() => {
+    // Set initial time
+    setCurrentTime(new Date().toLocaleString());
+    
     const interval = setInterval(() => {
+      setCurrentTime(new Date().toLocaleString());
       setSystemMetrics(prev => prev.map(metric => ({
         ...metric,
         value: metric.name === 'CPU Usage'
@@ -702,7 +707,7 @@ const ArtemisCommandCenter: React.FC = () => {
             <div className="flex space-x-6">
               <span>UPTIME: 99.98%</span>
               <span>LATENCY: 12ms</span>
-              <span>{new Date().toLocaleString()}</span>
+              <span>{currentTime}</span>
             </div>
           </div>
         </div>

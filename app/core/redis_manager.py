@@ -188,7 +188,7 @@ class RedisManager:
                     retry_on_timeout=self.config.pool.retry_on_timeout,
                     socket_keepalive=self.config.pool.socket_keepalive,
                     socket_keepalive_options=self.config.pool.socket_keepalive_options,
-                    connection_timeout=self.config.pool.connection_timeout,
+                    socket_connect_timeout=self.config.pool.connection_timeout,
                     socket_timeout=self.config.pool.socket_timeout,
                     decode_responses=False,  # Handle binary data properly
                 )

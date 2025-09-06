@@ -1,0 +1,70 @@
+# Multi-stage build for Sophia Intel AI Unified API
+FROM python:3.11-slim as builder
+
+# Build arguments
+ARG BUILD_ENV=development
+
+# Install system dependencies for building
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    curl \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create app directory
+WORKDIR /app
+
+# Copy requirements first for better caching
+COPY requirements.txt requirements-2025.txt ./
+RUN pip install --no-cache-dir --user -r requirements.txt
+RUN pip install --no-cache-dir --user -r requirements-2025.txt
+
+# Production stage
+FROM python:3.11-slim as production
+
+# Install runtime dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    netcat-traditional \
+    procps \
+    && rm -rf /var/lib/apt/lists/* \
+    && groupadd -r sophia && useradd -r -g sophia sophia
+
+# Copy Python packages from builder
+COPY --from=builder /root/.local /root/.local
+
+# Set working directory
+WORKDIR /app
+
+# Copy application code
+COPY ./app ./app
+COPY ./automation/scripts/health-check.py ./health-check.py
+COPY ./automation/scripts/entrypoint.sh ./entrypoint.sh
+
+# Create logs directory
+RUN mkdir -p logs && chown -R sophia:sophia logs
+
+# Make scripts executable
+RUN chmod +x entrypoint.sh
+
+# Set environment variables
+ENV PYTHONPATH=/app
+ENV PYTHONUNBUFFERED=1
+ENV PATH=/root/.local/bin:$PATH
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD python health-check.py --service=unified-api --port=8000
+
+# Switch to non-root user
+USER sophia
+
+# Expose port
+EXPOSE 8000
+
+# Use entrypoint script
+ENTRYPOINT ["./entrypoint.sh"]
+
+# Default command
+CMD ["python", "-m", "uvicorn", "app.api.unified_server:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]

@@ -12,7 +12,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app.artemis.artemis_orchestrator import ArtemisOrchestrator
-from app.core.shared_services import get_shared_services
+from app.core.shared_services import shared_services
 from app.mcp.enhanced_registry import MCPServerRegistry, MemoryDomain
 from app.mcp.router_config import MCPServerType
 from app.sophia.sophia_orchestrator import SophiaOrchestrator
@@ -30,7 +30,7 @@ class MCPStatusAPI:
         self.registry = mcp_registry
         self.sophia = None
         self.artemis = None
-        self.shared_services = get_shared_services()
+        self.shared_services = shared_services
 
     async def initialize_orchestrators(self):
         """Initialize orchestrators if not already done"""
@@ -50,7 +50,7 @@ class MCPStatusAPI:
         elif domain == "shared":
             return await self._get_shared_status()
         else:
-            raise HTTPException(status_code=400, f"Invalid domain: {domain}")
+            raise HTTPException(status_code=400, detail=f"Invalid domain: {domain}")
 
     async def _get_artemis_status(self) -> Dict[str, Any]:
         """Get Artemis domain server status"""

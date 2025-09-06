@@ -1,0 +1,341 @@
+# Default values for sophia-intel-ai.
+# This is a YAML-formatted file.
+
+global:
+  # Global configuration
+  environment: production
+  namespace: sophia-intel-ai
+  imageRegistry: ""
+  imagePullSecrets: []
+  
+  # Resource quotas
+  resourceQuota:
+    enabled: true
+    requests:
+      cpu: "10"
+      memory: "20Gi"
+      storage: "500Gi"
+    limits:
+      cpu: "20"
+      memory: "40Gi"
+
+# Application configuration
+app:
+  name: sophia-intel-ai
+  version: "1.0.0"
+  logLevel: INFO
+  
+  # Auto-scaling configuration
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+
+# Infrastructure services
+infrastructure:
+  # Redis configuration
+  redis:
+    enabled: true
+    architecture: standalone
+    auth:
+      enabled: true
+      password: ""  # Will use secret
+    master:
+      persistence:
+        enabled: true
+        size: 10Gi
+        storageClass: ""
+      resources:
+        requests:
+          cpu: 250m
+          memory: 256Mi
+        limits:
+          cpu: 500m
+          memory: 512Mi
+    metrics:
+      enabled: true
+      serviceMonitor:
+        enabled: true
+  
+  # PostgreSQL configuration
+  postgresql:
+    enabled: true
+    auth:
+      postgresPassword: ""  # Will use secret
+      username: sophia
+      password: ""  # Will use secret
+      database: sophia
+    primary:
+      persistence:
+        enabled: true
+        size: 50Gi
+        storageClass: ""
+      resources:
+        requests:
+          cpu: 500m
+          memory: 512Mi
+        limits:
+          cpu: 1000m
+          memory: 1Gi
+    metrics:
+      enabled: true
+      serviceMonitor:
+        enabled: true
+  
+  # Weaviate vector database
+  weaviate:
+    enabled: true
+    image:
+      repository: semitechnologies/weaviate
+      tag: latest
+      pullPolicy: Always
+    resources:
+      requests:
+        cpu: 500m
+        memory: 1Gi
+      limits:
+        cpu: 1000m
+        memory: 2Gi
+    persistence:
+      enabled: true
+      size: 100Gi
+      storageClass: ""
+    config:
+      authentication:
+        anonymous_access: true
+      vectorizer:
+        default: text2vec-openai
+      modules:
+        - text2vec-openai
+        - generative-openai
+        - backup-filesystem
+
+# Application services
+services:
+  # Unified API
+  unifiedApi:
+    enabled: true
+    replicaCount: 3
+    image:
+      repository: sophia-intel-ai/unified-api
+      tag: latest
+      pullPolicy: Always
+    service:
+      type: ClusterIP
+      port: 8000
+    resources:
+      requests:
+        cpu: 750m
+        memory: 1Gi
+      limits:
+        cpu: 1500m
+        memory: 2Gi
+    autoscaling:
+      enabled: true
+      minReplicas: 3
+      maxReplicas: 10
+  
+  # Sophia Orchestrator
+  sophiaOrchestrator:
+    enabled: true
+    replicaCount: 2
+    image:
+      repository: sophia-intel-ai/sophia-orchestrator
+      tag: latest
+      pullPolicy: Always
+    service:
+      type: ClusterIP
+      port: 8000
+    resources:
+      requests:
+        cpu: 500m
+        memory: 512Mi
+      limits:
+        cpu: 1000m
+        memory: 1Gi
+    autoscaling:
+      enabled: true
+      minReplicas: 2
+      maxReplicas: 8
+  
+  # Artemis Orchestrator
+  artemisOrchestrator:
+    enabled: true
+    replicaCount: 2
+    image:
+      repository: sophia-intel-ai/artemis-orchestrator
+      tag: latest
+      pullPolicy: Always
+    service:
+      type: ClusterIP
+      port: 8000
+    resources:
+      requests:
+        cpu: 500m
+        memory: 512Mi
+      limits:
+        cpu: 1000m
+        memory: 1Gi
+    autoscaling:
+      enabled: true
+      minReplicas: 2
+      maxReplicas: 8
+
+# Monitoring and observability
+monitoring:
+  # Prometheus
+  prometheus:
+    enabled: true
+    server:
+      retention: "15d"
+      resources:
+        requests:
+          cpu: 250m
+          memory: 256Mi
+        limits:
+          cpu: 500m
+          memory: 512Mi
+      persistentVolume:
+        enabled: true
+        size: 20Gi
+        storageClass: ""
+  
+  # Grafana
+  grafana:
+    enabled: true
+    adminPassword: ""  # Will use secret
+    persistence:
+      enabled: true
+      size: 5Gi
+      storageClass: ""
+    resources:
+      requests:
+        cpu: 250m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+    
+    # Pre-configured dashboards
+    dashboards:
+      default:
+        sophia-overview:
+          json: |
+            # Grafana dashboard JSON would go here
+        infrastructure-health:
+          json: |
+            # Infrastructure health dashboard JSON
+
+# Security configuration
+security:
+  # Pod Security Standards
+  podSecurityStandards:
+    enforced: restricted
+    
+  # Network policies
+  networkPolicies:
+    enabled: true
+    
+  # Service mesh (Istio)
+  serviceMesh:
+    enabled: false
+    
+  # TLS configuration
+  tls:
+    enabled: true
+    certManager:
+      enabled: false
+      issuer: ""
+
+# Storage configuration
+storage:
+  # Storage class for persistent volumes
+  storageClass: ""
+  
+  # Backup configuration
+  backup:
+    enabled: true
+    schedule: "0 2 * * *"  # Daily at 2 AM
+    retention: "30d"
+
+# Ingress configuration
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  hosts:
+    - host: api.sophia-intel-ai.com
+      paths:
+        - path: /
+          pathType: Prefix
+          service: unified-api
+    - host: sophia.sophia-intel-ai.com
+      paths:
+        - path: /
+          pathType: Prefix
+          service: sophia-orchestrator
+    - host: artemis.sophia-intel-ai.com
+      paths:
+        - path: /
+          pathType: Prefix
+          service: artemis-orchestrator
+  tls:
+    - secretName: sophia-intel-ai-tls
+      hosts:
+        - api.sophia-intel-ai.com
+        - sophia.sophia-intel-ai.com
+        - artemis.sophia-intel-ai.com
+
+# Environment-specific configurations
+environments:
+  development:
+    replicaCounts:
+      unifiedApi: 1
+      sophiaOrchestrator: 1
+      artemisOrchestrator: 1
+    resources:
+      requests:
+        cpu: "2"
+        memory: "4Gi"
+      limits:
+        cpu: "4"
+        memory: "8Gi"
+    autoscaling:
+      enabled: false
+  
+  staging:
+    replicaCounts:
+      unifiedApi: 2
+      sophiaOrchestrator: 1
+      artemisOrchestrator: 1
+    resources:
+      requests:
+        cpu: "4"
+        memory: "8Gi"
+      limits:
+        cpu: "8"
+        memory: "16Gi"
+    autoscaling:
+      enabled: true
+      moderate: true
+  
+  production:
+    replicaCounts:
+      unifiedApi: 3
+      sophiaOrchestrator: 2
+      artemisOrchestrator: 2
+    resources:
+      requests:
+        cpu: "10"
+        memory: "20Gi"
+      limits:
+        cpu: "20"
+        memory: "40Gi"
+    autoscaling:
+      enabled: true
+      aggressive: true

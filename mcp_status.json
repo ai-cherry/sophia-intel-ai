@@ -1,5 +1,5 @@
 {
-  "timestamp": "2025-09-06T08:39:56.264164",
+  "timestamp": "2025-09-06T09:46:41.754271",
   "servers": {
     "redis": true,
     "filesystem": false,
@@ -9,5 +9,5 @@
     "unified_api": false,
     "websocket": false
   },
-  "log_file": "/Users/lynnmusil/sophia-intel-ai/logs/mcp_startup_20250906_083938.log"
+  "log_file": "/Users/lynnmusil/sophia-intel-ai/logs/mcp_startup_20250906_094623.log"
 }

@@ -52,13 +52,15 @@ from app.api.routers.slack_business_intelligence import router as slack_bi_route
 
 # from app.api.routers.memory import router as memory_api_router  # Module has import issues
 from app.api.routers.teams import router as teams_router
+
 # from app.api.routers.voice import router as voice_router  # Requires ELEVENLABS_API_KEY
 from app.api.routes.foundational_knowledge import router as foundational_knowledge_router
 from app.api.routes.prompt_library import router as prompt_library_router
 from app.api.routes.redis_health import router as redis_health_router
 from app.api.super_orchestrator_router import router as super_orchestrator_router
 from app.api.unified_gateway import router as unified_gateway_router
-from app.factory import router as factory_router
+# from app.factory import router as factory_router  # Has SlackIntegration import issues
+from app.api.mcp.status import router as mcp_status_router
 
 # from app.ui.unified.chat_orchestrator import router as orchestrator_router  # Module deleted
 
@@ -94,8 +96,8 @@ app.include_router(slack_bi_router)
 # app.include_router(
 #     brain_training_router
 # )  # Brain Training endpoints - includes /api/brain-training prefix - Missing docx dependency
-app.include_router(voice_router, prefix="/api")  # Voice endpoints - includes /api/voice prefix
-app.include_router(factory_router)  # Agent Factory endpoints
+# app.include_router(voice_router, prefix="/api")  # Voice endpoints - Requires ELEVENLABS_API_KEY
+# app.include_router(factory_router)  # Agent Factory endpoints - Has SlackIntegration import issues
 app.include_router(personas_router)  # Persona agents endpoints - includes /api/personas prefix
 app.include_router(
     foundational_knowledge_router, prefix="/api/foundational"
@@ -104,6 +106,7 @@ app.include_router(redis_health_router, prefix="/api")  # Redis health monitorin
 app.include_router(
     prompt_library_router
 )  # Prompt Library endpoints - includes /api/v1/prompts prefix
+app.include_router(mcp_status_router)  # MCP server status monitoring
 # app.include_router(memory_api_router, prefix="/api/memory-v2")  # Module has import issues
 
 # Mount static files for UI components

@@ -6,7 +6,7 @@
       "env": {
         "UNIFIED_API_URL": "http://localhost:8000",
         "WEAVIATE_URL": "http://localhost:8080",
-        "REDIS_URL": "redis://localhost:6380",
+        "REDIS_URL": "redis://localhost:6379",
         "POSTGRES_URL": "postgresql://sophia:sophia_password@localhost:5432/sophia_db"
       }
     }

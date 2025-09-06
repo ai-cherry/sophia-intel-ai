@@ -1,0 +1,163 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sophia-config
+  namespace: sophia-intel-ai
+  labels:
+    app.kubernetes.io/name: sophia-intel-ai
+    app.kubernetes.io/component: config
+data:
+  # Application Configuration
+  SOPHIA_ENVIRONMENT: "production"
+  LOG_LEVEL: "INFO"
+  PYTHONPATH: "/app"
+  
+  # Service Endpoints
+  REDIS_URL: "redis://redis-service:6379"
+  POSTGRES_URL: "postgresql://sophia:$(POSTGRES_PASSWORD)@postgres-service:5432/sophia"
+  WEAVIATE_URL: "http://weaviate-service:8080"
+  
+  # Health Check Configuration
+  HEALTH_CHECK_INTERVAL: "30"
+  STARTUP_TIMEOUT: "300"
+  
+  # Resource Configuration
+  WORKERS: "4"
+  MAX_CONNECTIONS: "100"
+  POOL_SIZE: "20"
+  
+  # Redis Configuration
+  redis.conf: |
+    # Redis configuration for Kubernetes deployment
+    bind 0.0.0.0
+    port 6379
+    timeout 0
+    tcp-keepalive 300
+    
+    # Persistence
+    save 900 1
+    save 300 10
+    save 60 10000
+    
+    # Memory management
+    maxmemory 256mb
+    maxmemory-policy allkeys-lru
+    
+    # Logging
+    loglevel notice
+    logfile ""
+    
+    # Security
+    requirepass $(REDIS_PASSWORD)
+  
+  # PostgreSQL Configuration  
+  postgresql.conf: |
+    # PostgreSQL configuration for Kubernetes deployment
+    listen_addresses = '*'
+    port = 5432
+    max_connections = 100
+    shared_buffers = 256MB
+    effective_cache_size = 1GB
+    maintenance_work_mem = 64MB
+    checkpoint_completion_target = 0.9
+    wal_buffers = 16MB
+    default_statistics_target = 100
+    random_page_cost = 1.1
+    effective_io_concurrency = 200
+    
+    # Logging
+    log_statement = 'all'
+    log_duration = on
+    log_line_prefix = '%t [%p]: [%l-1] user=%u,db=%d,app=%a,client=%h '
+    
+    # Replication
+    wal_level = replica
+    max_wal_senders = 3
+    wal_keep_segments = 8
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: sophia-intel-ai
+  labels:
+    app.kubernetes.io/name: sophia-intel-ai
+    app.kubernetes.io/component: prometheus
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+      
+    rule_files:
+      - "/etc/prometheus/rules/*.yml"
+      
+    alerting:
+      alertmanagers:
+        - static_configs:
+            - targets:
+              - alertmanager:9093
+              
+    scrape_configs:
+      - job_name: 'prometheus'
+        static_configs:
+          - targets: ['localhost:9090']
+          
+      - job_name: 'sophia-services'
+        kubernetes_sd_configs:
+          - role: pod
+            namespaces:
+              names:
+                - sophia-intel-ai
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+            action: keep
+            regex: true
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+            action: replace
+            target_label: __metrics_path__
+            regex: (.+)
+          - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+            action: replace
+            regex: ([^:]+)(?::\d+)?;(\d+)
+            replacement: $1:$2
+            target_label: __address__
+          - action: labelmap
+            regex: __meta_kubernetes_pod_label_(.+)
+          - source_labels: [__meta_kubernetes_namespace]
+            action: replace
+            target_label: kubernetes_namespace
+          - source_labels: [__meta_kubernetes_pod_name]
+            action: replace
+            target_label: kubernetes_pod_name
+            
+  alert_rules.yml: |
+    groups:
+      - name: sophia-alerts
+        rules:
+          - alert: ServiceDown
+            expr: up == 0
+            for: 1m
+            labels:
+              severity: critical
+            annotations:
+              summary: "Service {{ $labels.instance }} is down"
+              description: "{{ $labels.instance }} has been down for more than 1 minute."
+              
+          - alert: HighMemoryUsage
+            expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes > 0.8
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "High memory usage on {{ $labels.instance }}"
+              description: "Memory usage is above 80% for more than 5 minutes."
+              
+          - alert: HighCPUUsage
+            expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "High CPU usage on {{ $labels.instance }}"
+              description: "CPU usage is above 80% for more than 5 minutes."

@@ -112,8 +112,17 @@ class MCPRouterConfiguration:
         # Initialize server configurations
         self._initialize_server_configs()
 
-        # Start health monitoring
-        asyncio.create_task(self._health_monitor_loop())
+        # Health monitoring will be started later when event loop is available
+        self._health_monitoring_task = None
+
+    async def start_health_monitoring(self):
+        """Start health monitoring if not already started"""
+        if self._health_monitoring_task is None:
+            try:
+                self._health_monitoring_task = asyncio.create_task(self._health_monitor_loop())
+                logger.info("MCP health monitoring started")
+            except Exception as e:
+                logger.error(f"Failed to start MCP health monitoring: {e}")
 
     def _initialize_routing_rules(self):
         """Initialize routing rules for each MCP server type"""

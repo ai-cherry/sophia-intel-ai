@@ -20,7 +20,7 @@ class RedisPoolConfig(BaseModel):
     retry_on_timeout: bool = Field(default=True, description="Retry on connection timeout")
     socket_keepalive: bool = Field(default=True, description="Enable socket keepalive")
     socket_keepalive_options: Dict[str, int] = Field(
-        default_factory=lambda: {"TCP_KEEPIDLE": 1, "TCP_KEEPINTVL": 3, "TCP_KEEPCNT": 5}
+        default_factory=lambda: {}  # Let Redis handle platform-specific keepalive options
     )
     connection_timeout: float = Field(default=5.0, description="Connection timeout in seconds")
     socket_timeout: float = Field(default=30.0, description="Socket timeout in seconds")
@@ -116,7 +116,7 @@ class RedisConfig(BaseModel):
     """Complete Redis configuration"""
 
     # Connection details
-    url: str = Field(default="redis://localhost:6380", description="Redis connection URL")
+    url: str = Field(default="redis://localhost:6379", description="Redis connection URL")
     db: int = Field(default=0, description="Redis database number")
 
     # Configuration sections
@@ -135,7 +135,7 @@ class RedisConfig(BaseModel):
         """Create config from environment variables"""
 
         # Get base URL from environment
-        redis_url = os.getenv("REDIS_URL", "redis://localhost:6380")
+        redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
 
         # Override with environment-specific settings
         config = cls(url=redis_url)

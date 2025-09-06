@@ -40,7 +40,7 @@ interface MythologyAgent {
   assigned_mcp_servers: string[];
   context: string;
   widget_type: string;
-  icon_type: 'hermes' | 'asclepius' | 'athena' | 'odin' | 'minerva';
+  icon_type: 'hermes' | 'asclepius' | 'athena' | 'odin' | 'minerva' | 'dionysus' | 'oracle';
   pay_ready_context?: string;
 }
 
@@ -84,7 +84,9 @@ export const MythologyAgentWidget: React.FC<MythologyAgentWidgetProps> = ({
       asclepius: <Heart className="w-6 h-6" />,
       athena: <Target className="w-6 h-6" />,
       odin: <Shield className="w-6 h-6" />,
-      minerva: <Brain className="w-6 h-6" />
+      minerva: <Brain className="w-6 h-6" />,
+      dionysus: <Eye className="w-6 h-6" />,
+      oracle: <MessageCircle className="w-6 h-6" />
     };
     return iconMap[iconType as keyof typeof iconMap] || <Activity className="w-6 h-6" />;
   };
@@ -106,7 +108,9 @@ export const MythologyAgentWidget: React.FC<MythologyAgentWidgetProps> = ({
         hermes: 'from-blue-500 to-purple-500',
         asclepius: 'from-emerald-500 to-teal-500',
         athena: 'from-indigo-500 to-purple-500',
-        minerva: 'from-cyan-500 to-blue-500'
+        minerva: 'from-cyan-500 to-blue-500',
+        dionysus: 'from-orange-500 to-red-500',
+        oracle: 'from-violet-500 to-purple-500'
       };
       return {
         gradient: gradientMap[iconType as keyof typeof gradientMap] || 'from-blue-500 to-purple-500',
@@ -280,6 +284,9 @@ export const MythologyAgentWidget: React.FC<MythologyAgentWidgetProps> = ({
       case 'asclepius': return renderAsclepiusWidget();
       case 'odin': return renderOdinWidget();
       case 'minerva': return renderMinervaWidget();
+      case 'dionysus': return renderHermesWidget(); // Use Hermes style for creative intelligence
+      case 'oracle': return renderMinervaWidget(); // Use Minerva style for conversational AI
+      case 'athena': return renderMinervaWidget(); // Use Minerva style for strategic operations
       default: return renderHermesWidget();
     }
   };

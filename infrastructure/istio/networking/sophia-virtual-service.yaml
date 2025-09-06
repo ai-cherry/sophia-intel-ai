@@ -1,0 +1,204 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: sophia-orchestrator
+  namespace: sophia
+  labels:
+    app: sophia
+    system: sophia-artemis
+    mesh: istio
+spec:
+  hosts:
+    - sophia.sophia-artemis.local
+    - sophia-orchestrator
+    - sophia-orchestrator.sophia.svc.cluster.local
+  gateways:
+    - mesh
+    - istio-system/sophia-gateway
+  http:
+    - name: "sophia-ab-testing"
+      match:
+        - headers:
+            x-user-group:
+              exact: "test-group-a"
+      route:
+        - destination:
+            host: sophia-orchestrator
+            subset: version-a
+          weight: 100
+      timeout: 30s
+      retries:
+        attempts: 3
+        perTryTimeout: 10s
+        retryOn: "5xx,reset,connect-failure,refused-stream"
+        retryRemoteLocalities: true
+    - name: "sophia-ab-testing-b"
+      match:
+        - headers:
+            x-user-group:
+              exact: "test-group-b"
+      route:
+        - destination:
+            host: sophia-orchestrator
+            subset: version-b
+          weight: 100
+      timeout: 30s
+      retries:
+        attempts: 3
+        perTryTimeout: 10s
+        retryOn: "5xx,reset,connect-failure,refused-stream"
+        retryRemoteLocalities: true
+    - name: "sophia-production"
+      match:
+        - uri:
+            prefix: "/api/v1/sophia"
+        - uri:
+            prefix: "/sophia"
+      route:
+        - destination:
+            host: sophia-orchestrator
+            subset: stable
+          weight: 80
+        - destination:
+            host: sophia-orchestrator
+            subset: version-a
+          weight: 15
+        - destination:
+            host: sophia-orchestrator
+            subset: version-b
+          weight: 5
+      timeout: 30s
+      retries:
+        attempts: 3
+        perTryTimeout: 10s
+        retryOn: "5xx,reset,connect-failure,refused-stream"
+        retryRemoteLocalities: true
+      fault:
+        delay:
+          percentage:
+            value: 0.1
+          fixedDelay: 3s
+      corsPolicy:
+        allowOrigins:
+          - exact: "https://sophia.sophia-artemis.local"
+          - exact: "https://artemis.sophia-artemis.local"
+          - regex: "^https://.*\\.sophia-artemis\\.local$"
+        allowMethods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - OPTIONS
+          - PATCH
+        allowHeaders:
+          - authorization
+          - content-type
+          - x-request-id
+          - x-trace-id
+          - x-b3-traceid
+          - x-b3-spanid
+          - x-b3-parentspanid
+          - x-b3-sampled
+          - x-b3-flags
+          - x-ot-span-context
+          - x-user-group
+          - x-experiment-id
+        exposeHeaders:
+          - x-request-id
+          - x-trace-id
+          - x-experiment-id
+        maxAge: "24h"
+        allowCredentials: true
+    - name: "sophia-health"
+      match:
+        - uri:
+            exact: "/health"
+        - uri:
+            exact: "/healthz"
+        - uri:
+            exact: "/ready"
+        - uri:
+            exact: "/metrics"
+      route:
+        - destination:
+            host: sophia-orchestrator
+            subset: stable
+      timeout: 5s
+      retries:
+        attempts: 2
+        perTryTimeout: 2s
+        retryOn: "5xx,reset,connect-failure,refused-stream"
+    - name: "sophia-websocket"
+      match:
+        - headers:
+            upgrade:
+              exact: "websocket"
+      route:
+        - destination:
+            host: sophia-orchestrator
+            subset: stable
+      timeout: 0s # No timeout for WebSocket connections
+    - name: "sophia-ai-endpoint"
+      match:
+        - uri:
+            prefix: "/ai"
+        - uri:
+            prefix: "/ml"
+      route:
+        - destination:
+            host: sophia-orchestrator
+            subset: stable
+          weight: 100
+      timeout: 60s # Longer timeout for AI/ML operations
+      retries:
+        attempts: 2
+        perTryTimeout: 30s
+        retryOn: "5xx,reset,connect-failure,refused-stream"
+    - name: "sophia-default"
+      route:
+        - destination:
+            host: sophia-orchestrator
+            subset: stable
+          weight: 100
+      timeout: 30s
+      retries:
+        attempts: 3
+        perTryTimeout: 10s
+        retryOn: "5xx,reset,connect-failure,refused-stream"
+        retryRemoteLocalities: true
+---
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: sophia-gateway
+  namespace: istio-system
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+        - sophia.sophia-artemis.local
+      tls:
+        httpsRedirect: true
+    - port:
+        number: 443
+        name: https
+        protocol: HTTPS
+      hosts:
+        - sophia.sophia-artemis.local
+      tls:
+        mode: SIMPLE
+        credentialName: sophia-tls-cert
+    - port:
+        number: 8443
+        name: https-ai
+        protocol: HTTPS
+      hosts:
+        - ai.sophia.sophia-artemis.local
+      tls:
+        mode: SIMPLE
+        credentialName: sophia-ai-tls-cert

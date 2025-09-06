@@ -1,0 +1,44 @@
+{
+  "provider_system": "hybrid",
+  "providers": {
+    "direct_api": ["openai", "anthropic"],
+    "portkey": ["groq", "deepseek", "together", "mistral", "cohere"]
+  },
+  "performance": {
+    "openai": {
+      "method": "direct",
+      "avg_latency_ms": 450
+    },
+    "anthropic": {
+      "method": "direct",
+      "avg_latency_ms": 410
+    },
+    "groq": {
+      "method": "portkey",
+      "avg_latency_ms": 425
+    },
+    "deepseek": {
+      "method": "portkey",
+      "avg_latency_ms": 3691
+    },
+    "together": {
+      "method": "portkey",
+      "avg_latency_ms": 627
+    },
+    "mistral": {
+      "method": "portkey",
+      "avg_latency_ms": 546
+    },
+    "cohere": {
+      "method": "portkey",
+      "avg_latency_ms": 756
+    }
+  },
+  "routing": {
+    "realtime": "groq",
+    "complex": "anthropic",
+    "cheap": "deepseek",
+    "reliable": "openai",
+    "default": "openai"
+  }
+}

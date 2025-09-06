@@ -1,6 +1,7 @@
 """
 Sophia Business Intelligence Orchestrator
 Specialized for enterprise BI, analytics, and strategic insights
+With enhanced MCP server integration for domain-aware routing
 """
 
 import asyncio
@@ -10,8 +11,15 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Optional
 
+from app.core.domain_enforcer import OperationType, UserRole, domain_enforcer
 from app.core.portkey_manager import TaskType as PortkeyTaskType
+from app.core.shared_services import shared_services
 from app.integrations.connectors.base_connector import BaseConnector
+from app.mcp.connection_manager import MCPConnectionManager
+from app.mcp.enhanced_registry import MCPServerRegistry
+
+# Import MCP components for enhanced routing
+from app.mcp.router_config import MCPRouterConfiguration, MCPServerType
 from app.memory.unified_memory_router import MemoryDomain
 from app.orchestrators.base_orchestrator import (
     BaseOrchestrator,
@@ -21,6 +29,9 @@ from app.orchestrators.base_orchestrator import (
     Task,
     TaskType,
 )
+
+# Import unified factory and domain enforcer
+from app.sophia.unified_factory import sophia_unified_factory
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +80,7 @@ class SophiaOrchestrator(BaseOrchestrator):
 
     def __init__(self, business_context: Optional[BusinessContext] = None):
         """
-        Initialize Sophia orchestrator
+        Initialize Sophia orchestrator with unified factory and MCP integration
 
         Args:
             business_context: Optional business-specific context
@@ -78,7 +89,7 @@ class SophiaOrchestrator(BaseOrchestrator):
             domain=MemoryDomain.SOPHIA,
             name="Sophia Business Intelligence",
             description="Enterprise BI and strategic insights orchestrator",
-            max_concurrent_tasks=5,
+            max_concurrent_tasks=8,  # Updated to match architecture spec
             default_timeout_s=180,
             enable_caching=True,
             enable_monitoring=True,
@@ -96,6 +107,20 @@ class SophiaOrchestrator(BaseOrchestrator):
         self.connectors = {}
         self._init_connectors()
 
+        # Use unified factory for agent/swarm creation
+        self.factory = sophia_unified_factory
+
+        # Use shared services
+        self.shared_services = shared_services
+
+        # Domain enforcer for access control
+        self.domain_enforcer = domain_enforcer
+
+        # Initialize MCP components for enhanced routing
+        self.mcp_router = MCPRouterConfiguration()
+        self.mcp_registry = MCPServerRegistry()
+        self.mcp_connection_manager = MCPConnectionManager()
+
         # Specialized components
         self.insight_engine = InsightEngine(self)
         self.forecast_engine = ForecastEngine(self)
@@ -111,7 +136,7 @@ class SophiaOrchestrator(BaseOrchestrator):
             logger.warning(f"Foundational Knowledge not available: {e}")
             self.foundational_knowledge = None
 
-        logger.info("Sophia BI Orchestrator initialized")
+        logger.info("Sophia BI Orchestrator initialized with unified factory and MCP routing")
 
     def _get_default_context(self) -> BusinessContext:
         """Get default business context"""
@@ -159,7 +184,7 @@ class SophiaOrchestrator(BaseOrchestrator):
 
     async def _execute_core(self, task: Task, routing: Any) -> Result:
         """
-        Execute Sophia-specific business intelligence task
+        Execute Sophia-specific business intelligence task with domain validation
 
         Args:
             task: Task to execute
@@ -171,6 +196,34 @@ class SophiaOrchestrator(BaseOrchestrator):
         result = Result(success=False, content=None)
 
         try:
+            # Validate domain access
+            from app.core.domain_enforcer import DomainRequest
+
+            operation_type = self._map_task_to_operation(task.type)
+            validation_request = DomainRequest(
+                id=task.id,
+                user_id=task.metadata.get("user_id", "system"),
+                user_role=UserRole.BUSINESS_ANALYST,  # Default for Sophia
+                target_domain=MemoryDomain.SOPHIA,
+                operation_type=operation_type,
+                resource_path=task.metadata.get("resource_path"),
+                metadata=task.metadata,
+            )
+            validation = self.domain_enforcer.validate_request(validation_request)
+
+            if not validation.allowed:
+                result.errors.append(f"Domain access denied: {validation.reason}")
+                return result
+
+            # Log to shared services
+            if self.shared_services.get_logging_service():
+                await self.shared_services.get_logging_service().log(
+                    "info",
+                    f"Executing Sophia task: {task.id}",
+                    MemoryDomain.SOPHIA,
+                    {"task_type": task.type, "operation": operation_type},
+                )
+
             # Gather business data from connectors
             business_data = await self._gather_business_data(task)
 
@@ -210,15 +263,35 @@ class SophiaOrchestrator(BaseOrchestrator):
                 result.tokens_used = response.usage.total_tokens
                 result.cost = self.portkey._estimate_cost(routing.model, result.tokens_used)
 
+            # Record metrics to shared services
+            if self.shared_services.get_monitoring_service():
+                await self.shared_services.get_monitoring_service().record_metric(
+                    "sophia_task_execution", 1.0, {"task_type": task.type, "success": "true"}
+                )
+
         except Exception as e:
             logger.error(f"Sophia execution failed: {e}")
             result.errors.append(str(e))
 
+            # Record failure metric
+            if self.shared_services.get_monitoring_service():
+                await self.shared_services.get_monitoring_service().record_metric(
+                    "sophia_task_execution", 1.0, {"task_type": task.type, "success": "false"}
+                )
+
         return result
+
+    def _map_task_to_operation(self, task_type: TaskType) -> OperationType:
+        """Map task type to operation type for domain validation"""
+        mapping = {
+            TaskType.ORCHESTRATION: OperationType.BUSINESS_ANALYSIS,
+            TaskType.WEB_RESEARCH: OperationType.MARKET_RESEARCH,
+        }
+        return mapping.get(task_type, OperationType.BUSINESS_ANALYSIS)
 
     async def _gather_business_data(self, task: Task) -> dict[str, Any]:
         """
-        Gather relevant business data from all connectors
+        Gather relevant business data from all connectors using MCP servers
 
         Args:
             task: Current task
@@ -227,6 +300,35 @@ class SophiaOrchestrator(BaseOrchestrator):
             Dictionary of gathered data by source
         """
         data = {}
+
+        # Use MCP web search server for market research
+        web_search_connection = await self._get_mcp_connection(MCPServerType.WEB_SEARCH)
+
+        if web_search_connection:
+            try:
+                # Perform web search via MCP
+                market_data = await self._search_market_data_mcp(
+                    task.content, web_search_connection
+                )
+                data["market_research"] = market_data
+            finally:
+                await self.mcp_connection_manager.release_connection(
+                    web_search_connection, "sophia"
+                )
+
+        # Use MCP business analytics server
+        analytics_connection = await self._get_mcp_connection(MCPServerType.BUSINESS_ANALYTICS)
+
+        if analytics_connection:
+            try:
+                # Get business metrics via MCP
+                metrics = await self._get_business_metrics_mcp(
+                    task.metadata.get("metrics", self.business_context.key_metrics),
+                    analytics_connection,
+                )
+                data["business_metrics"] = metrics
+            finally:
+                await self.mcp_connection_manager.release_connection(analytics_connection, "sophia")
 
         # First, get foundational knowledge if available
         if self.foundational_knowledge:
@@ -317,7 +419,7 @@ class SophiaOrchestrator(BaseOrchestrator):
 
     async def _enrich_context(self, task: Task, business_data: dict[str, Any]) -> dict[str, Any]:
         """
-        Enrich context with historical data and patterns
+        Enrich context with historical data and patterns using MCP servers
 
         Args:
             task: Current task
@@ -335,9 +437,23 @@ class SophiaOrchestrator(BaseOrchestrator):
             "benchmarks": {},
         }
 
-        # Add historical context from memory
-        if self.memory:
-            # Search for similar past analyses
+        # Use MCP indexing server for historical search
+        indexing_connection = await self._get_mcp_connection(MCPServerType.INDEXING)
+
+        if indexing_connection:
+            try:
+                # Search for similar analyses via MCP
+                similar_analyses = await self._search_business_history_mcp(
+                    task.content,
+                    indexing_connection,
+                    filters={"type": "analysis", "domain": "sophia"},
+                )
+
+                context["historical_context"]["similar_analyses"] = similar_analyses
+            finally:
+                await self.mcp_connection_manager.release_connection(indexing_connection, "sophia")
+        elif self.memory:
+            # Fallback to direct memory search
             similar = await self.memory.search(query=task.content, domain=MemoryDomain.SOPHIA, k=5)
 
             context["historical_context"] = {
@@ -353,11 +469,22 @@ class SophiaOrchestrator(BaseOrchestrator):
             )
             context["historical_context"]["recent_facts"] = recent_facts
 
+        # Use MCP embedding server for pattern matching
+        embedding_connection = await self._get_mcp_connection(MCPServerType.EMBEDDING)
+
+        if embedding_connection:
+            try:
+                # Enhance patterns with semantic analysis
+                patterns = await self._identify_patterns_mcp(business_data, embedding_connection)
+                context["patterns"] = patterns
+            finally:
+                await self.mcp_connection_manager.release_connection(embedding_connection, "sophia")
+        else:
+            # Fallback to local pattern identification
+            context["patterns"] = await self._identify_patterns(business_data)
+
         # Add industry benchmarks
         context["benchmarks"] = self._get_industry_benchmarks()
-
-        # Identify patterns
-        context["patterns"] = await self._identify_patterns(business_data)
 
         return context
 
@@ -491,15 +618,28 @@ Please provide a comprehensive analysis with:
     # ========== Specialized Sophia Methods ==========
 
     async def generate_sales_forecast(
-        self, period: str = "quarter", confidence_intervals: bool = True
+        self,
+        period: str = "quarter",
+        confidence_intervals: bool = True,
+        user_id: str = "system",
+        user_role: UserRole = UserRole.BUSINESS_ANALYST,
     ) -> InsightReport:
-        """Generate sales forecast"""
+        """Generate sales forecast with unified factory support"""
+        # Create a business team for forecasting
+        team_id = await self.factory.create_business_team("sales_intelligence")
+
         task = Task(
             id=f"forecast_{datetime.now().timestamp()}",
             type=TaskType.ORCHESTRATION,
             content=f"Generate {period} sales forecast with pipeline analysis",
             priority=ExecutionPriority.HIGH,
-            metadata={"forecast_type": "sales", "period": period},
+            metadata={
+                "forecast_type": "sales",
+                "period": period,
+                "team_id": team_id,
+                "user_id": user_id,
+                "user_role": user_role.value,
+            },
         )
 
         result = await self.execute(task)
@@ -513,15 +653,28 @@ Please provide a comprehensive analysis with:
         return None
 
     async def analyze_customer_health(
-        self, account_ids: Optional[list[str]] = None, include_recommendations: bool = True
+        self,
+        account_ids: Optional[list[str]] = None,
+        include_recommendations: bool = True,
+        user_id: str = "system",
+        user_role: UserRole = UserRole.CUSTOMER_SUCCESS,
     ) -> InsightReport:
-        """Analyze customer health and churn risk"""
+        """Analyze customer health and churn risk with unified factory support"""
+        # Create a mythology agent for wisdom-based analysis
+        agent_id = await self.factory.create_mythology_agent("asclepius")
+
         task = Task(
             id=f"customer_health_{datetime.now().timestamp()}",
             type=TaskType.ORCHESTRATION,
             content="Analyze customer health scores and identify at-risk accounts",
             priority=ExecutionPriority.HIGH,
-            metadata={"account_ids": account_ids, "analysis_type": "customer_health"},
+            metadata={
+                "account_ids": account_ids,
+                "analysis_type": "customer_health",
+                "agent_id": agent_id,
+                "user_id": user_id,
+                "user_role": user_role.value,
+            },
         )
 
         result = await self.execute(task)
@@ -532,18 +685,35 @@ Please provide a comprehensive analysis with:
         return None
 
     async def competitive_analysis(
-        self, competitors: list[str], focus_areas: list[str] = None
+        self,
+        competitors: list[str],
+        focus_areas: list[str] = None,
+        user_id: str = "system",
+        user_role: UserRole = UserRole.BUSINESS_ANALYST,
     ) -> InsightReport:
-        """Perform competitive analysis"""
+        """Perform competitive analysis with unified factory support"""
         if not focus_areas:
             focus_areas = ["pricing", "features", "market_position", "strategy"]
+
+        # Create a market research swarm
+        from app.sophia.unified_factory import SwarmType
+
+        swarm_id = await self.factory.create_analytical_swarm(
+            SwarmType.MARKET_RESEARCH, {"focus": "competitive_analysis"}
+        )
 
         task = Task(
             id=f"competitive_{datetime.now().timestamp()}",
             type=TaskType.WEB_RESEARCH,
             content=f"Analyze competitors {', '.join(competitors)} focusing on {', '.join(focus_areas)}",
             priority=ExecutionPriority.NORMAL,
-            metadata={"competitors": competitors, "focus_areas": focus_areas},
+            metadata={
+                "competitors": competitors,
+                "focus_areas": focus_areas,
+                "swarm_id": swarm_id,
+                "user_id": user_id,
+                "user_role": user_role.value,
+            },
         )
 
         result = await self.execute(task)
@@ -635,3 +805,58 @@ class CompetitiveIntelligence:
             confidence_level=0.70,
             data_sources=["web_research", "market_data"],
         )
+
+    # ========== MCP Integration Methods ==========
+
+    async def _get_mcp_connection(self, server_type: MCPServerType):
+        """
+        Get MCP connection for Sophia domain
+
+        Args:
+            server_type: Type of MCP server needed
+
+        Returns:
+            Connection object or None
+        """
+        try:
+            # Route request through MCP router
+            server_name = await self.mcp_router.route_request(
+                server_type, MemoryDomain.SOPHIA, {"operation": "sophia_business_task"}
+            )
+
+            if server_name:
+                # Get connection from manager
+                connection = await self.mcp_connection_manager.get_connection(server_name, "sophia")
+                return connection
+
+        except Exception as e:
+            logger.error(f"Failed to get MCP connection for {server_type}: {e}")
+
+        return None
+
+    async def _search_market_data_mcp(self, query: str, connection) -> dict[str, Any]:
+        """Search market data using MCP web search server"""
+        # Implementation would use MCP web search server
+        return {"search_results": [], "timestamp": datetime.now().isoformat()}
+
+    async def _get_business_metrics_mcp(self, metrics: list[str], connection) -> dict[str, Any]:
+        """Get business metrics using MCP analytics server"""
+        # Implementation would use MCP business analytics server
+        return {
+            "metrics": dict.fromkeys(metrics, 0),
+            "timestamp": datetime.now().isoformat(),
+        }
+
+    async def _search_business_history_mcp(
+        self, query: str, connection, filters: dict = None
+    ) -> list[dict]:
+        """Search business history using MCP indexing server"""
+        # Implementation would use MCP indexing server
+        return []
+
+    async def _identify_patterns_mcp(
+        self, business_data: dict[str, Any], connection
+    ) -> dict[str, Any]:
+        """Identify patterns using MCP embedding server"""
+        # Implementation would use MCP embedding server
+        return {"trends": [], "anomalies": [], "correlations": []}

@@ -1,0 +1,172 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alertmanager-teams-templates
+  namespace: monitoring
+  labels:
+    app: alertmanager
+    component: templates
+data:
+  teams.tmpl: |
+    {{ define "teams.card" -}}
+    {
+      "@type": "MessageCard",
+      "@context": "https://schema.org/extensions",
+      "summary": "{{ .GroupLabels.alertname }} - {{ .GroupLabels.namespace }}",
+      "title": "{{ if eq .Status "firing" }}🔥{{ else }}✅{{ end }} {{ .Status | toUpper }}: {{ .GroupLabels.alertname }}",
+      "themeColor": "{{ if eq .Status "resolved" }}00FF00{{ else if eq .GroupLabels.severity "CRITICAL" }}FF0000{{ else if eq .GroupLabels.severity "WARNING" }}FFA500{{ else }}0076D7{{ end }}",
+      "sections": [
+        {
+          "activityTitle": "Alert Details",
+          "activitySubtitle": "{{ .GroupLabels.domain | default "Platform" }} Domain",
+          "activityImage": "https://cdn.sophia-artemis.ai/icons/{{ if eq .GroupLabels.domain "artemis" }}artemis{{ else if eq .GroupLabels.domain "sophia" }}sophia{{ else }}infrastructure{{ end }}.png",
+          "facts": [
+            {
+              "name": "Status",
+              "value": "{{ .Status | title }}"
+            },
+            {
+              "name": "Severity",
+              "value": "{{ .GroupLabels.severity | default "INFO" }}"
+            },
+            {
+              "name": "Environment",
+              "value": "{{ .GroupLabels.cluster | default "production" }}"
+            },
+            {
+              "name": "Namespace",
+              "value": "{{ .GroupLabels.namespace }}"
+            },
+            {{- if .GroupLabels.service }}
+            {
+              "name": "Service",
+              "value": "{{ .GroupLabels.service }}"
+            },
+            {{- end }}
+            {
+              "name": "Alert Count",
+              "value": "{{ if eq .Status "firing" }}{{ .Alerts.Firing | len }} firing{{ else }}{{ .Alerts.Resolved | len }} resolved{{ end }}"
+            },
+            {
+              "name": "Started",
+              "value": "{{ (index .Alerts 0).StartsAt.Format "2006-01-02 15:04:05 MST" }}"
+            }
+          ]
+        },
+        {{- range .Alerts }}
+        {
+          "title": "{{ if eq .Status "firing" }}🔴{{ else }}🟢{{ end }} {{ .Labels.alertname }}",
+          "text": "{{ .Annotations.description | default "No description available" }}",
+          "facts": [
+            {{- if .Annotations.value }}
+            {
+              "name": "Current Value",
+              "value": "{{ .Annotations.value }}"
+            },
+            {{- end }}
+            {{- if .Labels.pod }}
+            {
+              "name": "Pod",
+              "value": "{{ .Labels.pod }}"
+            },
+            {{- end }}
+            {{- if .Labels.node }}
+            {
+              "name": "Node",
+              "value": "{{ .Labels.node }}"
+            },
+            {{- end }}
+            {{- if .Labels.gpu_node }}
+            {
+              "name": "GPU Node",
+              "value": "{{ .Labels.gpu_node }}"
+            },
+            {{- end }}
+            {{- if .Labels.model_name }}
+            {
+              "name": "AI Model",
+              "value": "{{ .Labels.model_name }}"
+            },
+            {{- end }}
+            {
+              "name": "{{ if eq .Status "firing" }}Started{{ else }}Ended{{ end }}",
+              "value": "{{ if eq .Status "firing" }}{{ .StartsAt.Format "15:04:05" }}{{ else }}{{ .EndsAt.Format "15:04:05" }}{{ end }}"
+            }
+          ],
+          "markdown": true
+        },
+        {{- end }}
+        {
+          "title": "Actions",
+          "potentialAction": [
+            {
+              "@type": "OpenUri",
+              "name": "View in AlertManager",
+              "targets": [
+                {
+                  "os": "default",
+                  "uri": "{{ .ExternalURL }}/#/alerts?receiver={{ .Receiver | urlquery }}"
+                }
+              ]
+            },
+            {{- if .GroupLabels.alertname }}
+            {
+              "@type": "OpenUri",
+              "name": "View Runbook",
+              "targets": [
+                {
+                  "os": "default",
+                  "uri": "https://docs.sophia-artemis.ai/runbooks/{{ .GroupLabels.alertname }}"
+                }
+              ]
+            },
+            {{- end }}
+            {{- if .GroupLabels.domain }}
+            {
+              "@type": "OpenUri",
+              "name": "View Dashboard",
+              "targets": [
+                {
+                  "os": "default",
+                  "uri": "https://grafana.sophia-artemis.ai/d/{{ .GroupLabels.domain }}"
+                }
+              ]
+            },
+            {{- end }}
+            {{- if eq .Status "firing" }}
+            {
+              "@type": "OpenUri",
+              "name": "Silence Alert",
+              "targets": [
+                {
+                  "os": "default",
+                  "uri": "{{ .ExternalURL }}/#/silences/new?filter={alertname%3D%22{{ .GroupLabels.alertname }}%22}"
+                }
+              ]
+            }
+            {{- end }}
+          ]
+        }
+      ]
+    }
+    {{- end }}
+
+    {{ define "teams.text" -}}
+    {{ if eq .Status "firing" -}}
+    **FIRING:** {{ .GroupLabels.alertname }} in {{ .GroupLabels.namespace }}
+
+    **Severity:** {{ .GroupLabels.severity }}
+    **Domain:** {{ .GroupLabels.domain }}
+    **Alerts:** {{ .Alerts.Firing | len }} firing
+
+    {{ range .Alerts.Firing -}}
+    • {{ .Annotations.description }}
+    {{ if .Annotations.value }}  Value: {{ .Annotations.value }}{{ end }}
+    {{ end -}}
+    {{ else -}}
+    **RESOLVED:** {{ .GroupLabels.alertname }} in {{ .GroupLabels.namespace }}
+
+    All alerts have been resolved.
+    **Resolved Count:** {{ .Alerts.Resolved | len }}
+    {{ end -}}
+    {{- end }}

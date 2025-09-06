@@ -8,6 +8,7 @@ Each key routes to a DIFFERENT provider for TRUE parallel execution.
 RULE: Every agent MUST use a different virtual key from this list.
 """
 
+import os
 from enum import Enum
 from typing import Any, Optional
 
@@ -38,19 +39,19 @@ class PortkeyProvider(Enum):
 
 PORTKEY_VIRTUAL_KEYS = {
     # Primary LLM Providers
-    "DEEPSEEK": get_config().get("PORTKEY_VK_DEEPSEEK", "deepseek-vk-24102f"),
-    "OPENAI": get_config().get("PORTKEY_VK_OPENAI", "openai-vk-190a60"),
-    "ANTHROPIC": get_config().get("PORTKEY_VK_ANTHROPIC", "anthropic-vk-b42804"),
-    "OPENROUTER": get_config().get("PORTKEY_VK_OPENROUTER", "vkj-openrouter-cc4151"),
-    "PERPLEXITY": get_config().get("PORTKEY_VK_PERPLEXITY", "perplexity-vk-56c172"),
-    "GROQ": get_config().get("PORTKEY_VK_GROQ", "groq-vk-6b9b52"),
-    "MISTRAL": get_config().get("PORTKEY_VK_MISTRAL", "mistral-vk-f92861"),
-    "XAI": get_config().get("PORTKEY_VK_XAI", "xai-vk-e65d0f"),
-    "TOGETHER": get_config().get("PORTKEY_VK_TOGETHER", "together-ai-670469"),
-    "COHERE": get_config().get("PORTKEY_VK_COHERE", "cohere-vk-496fa9"),
+    "DEEPSEEK": os.getenv("PORTKEY_VK_DEEPSEEK", "deepseek-vk-24102f"),
+    "OPENAI": os.getenv("PORTKEY_VK_OPENAI", "openai-vk-190a60"),
+    "ANTHROPIC": os.getenv("PORTKEY_VK_ANTHROPIC", "anthropic-vk-b42804"),
+    "OPENROUTER": os.getenv("PORTKEY_VK_OPENROUTER", "vkj-openrouter-cc4151"),
+    "PERPLEXITY": os.getenv("PORTKEY_VK_PERPLEXITY", "perplexity-vk-56c172"),
+    "GROQ": os.getenv("PORTKEY_VK_GROQ", "groq-vk-6b9b52"),
+    "MISTRAL": os.getenv("PORTKEY_VK_MISTRAL", "mistral-vk-f92861"),
+    "XAI": os.getenv("PORTKEY_VK_XAI", "xai-vk-e65d0f"),
+    "TOGETHER": os.getenv("PORTKEY_VK_TOGETHER", "together-ai-670469"),
+    "COHERE": os.getenv("PORTKEY_VK_COHERE", "cohere-vk-496fa9"),
     # Vector Database Keys
-    "MILVUS": get_config().get("PORTKEY_VK_MILVUS", "milvus-vk-34fa02"),
-    "QDRANT": get_config().get("PORTKEY_VK_QDRANT", "qdrant-vk-d2b62a"),
+    "MILVUS": os.getenv("PORTKEY_VK_MILVUS", "milvus-vk-34fa02"),
+    "QDRANT": os.getenv("PORTKEY_VK_QDRANT", "qdrant-vk-d2b62a"),
 }
 
 

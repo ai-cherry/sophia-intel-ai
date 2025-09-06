@@ -1,0 +1,399 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: artemis-dashboard
+  namespace: istio-system
+  labels:
+    grafana_dashboard: "1"
+data:
+  artemis-performance.json: |
+    {
+      "dashboard": {
+        "title": "Artemis Performance Dashboard",
+        "uid": "artemis-perf",
+        "timezone": "browser",
+        "panels": [
+          {
+            "id": 1,
+            "title": "Request Rate",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "sum(rate(istio_request_total{destination_service_namespace=\"artemis-mesh\"}[5m])) by (destination_service_name)"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+          },
+          {
+            "id": 2,
+            "title": "Success Rate",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "sum(rate(istio_request_total{destination_service_namespace=\"artemis-mesh\",response_code!~\"5..\"}[5m])) / sum(rate(istio_request_total{destination_service_namespace=\"artemis-mesh\"}[5m]))"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+          },
+          {
+            "id": 3,
+            "title": "P50 Latency",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.50, sum(rate(istio_request_duration_milliseconds_bucket{destination_service_namespace=\"artemis-mesh\"}[5m])) by (destination_service_name, le))"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 8, "x": 0, "y": 8}
+          },
+          {
+            "id": 4,
+            "title": "P95 Latency",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, sum(rate(istio_request_duration_milliseconds_bucket{destination_service_namespace=\"artemis-mesh\"}[5m])) by (destination_service_name, le))"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 8, "x": 8, "y": 8}
+          },
+          {
+            "id": 5,
+            "title": "P99 Latency",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.99, sum(rate(istio_request_duration_milliseconds_bucket{destination_service_namespace=\"artemis-mesh\"}[5m])) by (destination_service_name, le))"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 8, "x": 16, "y": 8}
+          },
+          {
+            "id": 6,
+            "title": "Concurrent Tasks",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "concurrent_tasks_active{domain=\"artemis\"}"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
+            "alert": {
+              "conditions": [
+                {
+                  "evaluator": {
+                    "params": [8],
+                    "type": "gt"
+                  },
+                  "query": {
+                    "params": ["A", "5m", "now"]
+                  },
+                  "reducer": {
+                    "params": [],
+                    "type": "max"
+                  },
+                  "type": "query"
+                }
+              ]
+            }
+          },
+          {
+            "id": 7,
+            "title": "Agent Type Distribution",
+            "type": "piechart",
+            "targets": [
+              {
+                "expr": "sum(rate(istio_request_total{destination_service_namespace=\"artemis-mesh\"}[5m])) by (agent_type)"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16}
+          },
+          {
+            "id": 8,
+            "title": "MCP Server Calls",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "sum(rate(istio_request_total{source_workload=\"artemis-orchestrator\",destination_labels_mcp_type=~\".+\"}[5m])) by (destination_labels_mcp_type)"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 24, "x": 0, "y": 24}
+          }
+        ]
+      }
+    }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sophia-dashboard
+  namespace: istio-system
+  labels:
+    grafana_dashboard: "1"
+data:
+  sophia-business-metrics.json: |
+    {
+      "dashboard": {
+        "title": "Sophia Business Metrics Dashboard",
+        "uid": "sophia-biz",
+        "timezone": "browser",
+        "panels": [
+          {
+            "id": 1,
+            "title": "Business Logic Request Rate",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "sum(rate(istio_request_total{destination_service_name=\"business-logic\"}[5m])) by (service_type)"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+          },
+          {
+            "id": 2,
+            "title": "Data Pipeline Throughput",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "sum(rate(data_pipeline_processed_total{domain=\"sophia\"}[5m])) by (pipeline_type)"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+          },
+          {
+            "id": 3,
+            "title": "Financial Processing Latency",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, sum(rate(istio_request_duration_milliseconds_bucket{destination_service_name=\"business-logic\",service_type=\"financial\"}[5m])) by (le))"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 8, "x": 0, "y": 8}
+          },
+          {
+            "id": 4,
+            "title": "Analytics Processing Time",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, sum(rate(istio_request_duration_milliseconds_bucket{destination_service_name=\"business-logic\",service_type=\"analytics\"}[5m])) by (le))"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 8, "x": 8, "y": 8}
+          },
+          {
+            "id": 5,
+            "title": "Report Generation Time",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, sum(rate(istio_request_duration_milliseconds_bucket{destination_service_name=\"business-logic\",service_type=\"reporting\"}[5m])) by (le))"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 8, "x": 16, "y": 8}
+          },
+          {
+            "id": 6,
+            "title": "Concurrent Tasks",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "concurrent_tasks_active{domain=\"sophia\"}"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
+            "alert": {
+              "conditions": [
+                {
+                  "evaluator": {
+                    "params": [8],
+                    "type": "gt"
+                  },
+                  "query": {
+                    "params": ["A", "5m", "now"]
+                  },
+                  "reducer": {
+                    "params": [],
+                    "type": "max"
+                  },
+                  "type": "query"
+                }
+              ]
+            }
+          },
+          {
+            "id": 7,
+            "title": "Business Unit Distribution",
+            "type": "piechart",
+            "targets": [
+              {
+                "expr": "sum(rate(istio_request_total{destination_service_namespace=\"sophia-mesh\"}[5m])) by (business_unit)"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16}
+          },
+          {
+            "id": 8,
+            "title": "Integration Hub Activity",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "sum(rate(istio_request_total{destination_service_name=\"integration-hub\"}[5m])) by (integration_type)"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 24, "x": 0, "y": 24}
+          }
+        ]
+      }
+    }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cross-domain-dashboard
+  namespace: istio-system
+  labels:
+    grafana_dashboard: "1"
+data:
+  cross-domain-flow.json: |
+    {
+      "dashboard": {
+        "title": "Cross-Domain Flow Dashboard",
+        "uid": "cross-domain",
+        "timezone": "browser",
+        "panels": [
+          {
+            "id": 1,
+            "title": "Cross-Domain Request Rate",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "sum(rate(istio_request_total{source_labels_domain=\"artemis\",destination_labels_domain=\"sophia\"}[5m]))",
+                "legendFormat": "Artemis → Sophia"
+              },
+              {
+                "expr": "sum(rate(istio_request_total{source_labels_domain=\"sophia\",destination_labels_domain=\"artemis\"}[5m]))",
+                "legendFormat": "Sophia → Artemis"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+          },
+          {
+            "id": 2,
+            "title": "Cross-Domain Success Rate",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "sum(rate(istio_request_total{source_labels_domain!=\"\",destination_labels_domain!=\"\",source_labels_domain!=destination_labels_domain,response_code!~\"5..\"}[5m])) / sum(rate(istio_request_total{source_labels_domain!=\"\",destination_labels_domain!=\"\",source_labels_domain!=destination_labels_domain}[5m]))"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+          },
+          {
+            "id": 3,
+            "title": "Shared Services Usage",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "sum(rate(istio_request_total{destination_service_namespace=\"shared-services\"}[5m])) by (source_labels_domain, destination_service_name)"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 24, "x": 0, "y": 8}
+          },
+          {
+            "id": 4,
+            "title": "mTLS Connection Status",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "sum(istio_tcp_connections_opened_total{security_policy=\"mutual_tls\"}) / sum(istio_tcp_connections_opened_total)"
+              }
+            ],
+            "gridPos": {"h": 4, "w": 6, "x": 0, "y": 16},
+            "fieldConfig": {
+              "defaults": {
+                "unit": "percentunit",
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {"color": "red", "value": 0},
+                    {"color": "yellow", "value": 0.95},
+                    {"color": "green", "value": 0.99}
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "id": 5,
+            "title": "Circuit Breaker Status",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "sum(envoy_cluster_circuit_breakers_state{state=\"open\"})"
+              }
+            ],
+            "gridPos": {"h": 4, "w": 6, "x": 6, "y": 16},
+            "fieldConfig": {
+              "defaults": {
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {"color": "green", "value": 0},
+                    {"color": "yellow", "value": 1},
+                    {"color": "red", "value": 5}
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "id": 6,
+            "title": "Rate Limited Requests",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "sum(rate(envoy_http_ratelimit_rate_limited_total[5m]))"
+              }
+            ],
+            "gridPos": {"h": 4, "w": 6, "x": 12, "y": 16}
+          },
+          {
+            "id": 7,
+            "title": "Active Concurrent Tasks",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "sum(concurrent_tasks_active)"
+              }
+            ],
+            "gridPos": {"h": 4, "w": 6, "x": 18, "y": 16},
+            "fieldConfig": {
+              "defaults": {
+                "max": 16,
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {"color": "green", "value": 0},
+                    {"color": "yellow", "value": 12},
+                    {"color": "red", "value": 16}
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "id": 8,
+            "title": "Service Mesh Topology",
+            "type": "nodeGraph",
+            "targets": [
+              {
+                "expr": "sum by (source_workload, destination_service_name) (rate(istio_request_total[5m]))"
+              }
+            ],
+            "gridPos": {"h": 12, "w": 24, "x": 0, "y": 20}
+          }
+        ]
+      }
+    }

@@ -1,0 +1,13 @@
+{
+  "timestamp": "2025-09-06T08:39:56.264164",
+  "servers": {
+    "redis": true,
+    "filesystem": false,
+    "git": false,
+    "memory": false,
+    "embeddings": false,
+    "unified_api": false,
+    "websocket": false
+  },
+  "log_file": "/Users/lynnmusil/sophia-intel-ai/logs/mcp_startup_20250906_083938.log"
+}

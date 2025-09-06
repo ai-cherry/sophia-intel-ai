@@ -504,9 +504,9 @@ class ResilientWebSocketClient:
             "circuit_breaker_open": self.circuit_breaker_open,
             "pending_messages": len(self.pending_messages),
             "queued_messages": len(self.message_queue),
-            "last_connection": self.last_connection_time.isoformat()
-            if self.last_connection_time
-            else None,
+            "last_connection": (
+                self.last_connection_time.isoformat() if self.last_connection_time else None
+            ),
             "metrics": {
                 "total_connections": self.metrics.total_connections,
                 "successful_connections": self.metrics.successful_connections,
@@ -546,7 +546,11 @@ class MCPWebSocketManager(WebSocketManager):
     """
 
     def __init__(self):
-        super().__init__()
+        # Get secret key from environment or use default
+        import os
+
+        secret_key = os.getenv("JWT_SECRET_KEY", "default-secret-key-change-in-production")
+        super().__init__(secret_key)
         self.mcp_clients: dict[str, ResilientWebSocketClient] = {}
         self.mcp_servers = {
             "main": "ws://localhost:8003/mcp/ws",

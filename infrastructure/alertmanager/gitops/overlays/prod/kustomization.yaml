@@ -1,0 +1,282 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: monitoring
+
+bases:
+  - ../../
+
+namePrefix: ""
+nameSuffix: ""
+
+commonLabels:
+  environment: production
+  tier: monitoring
+  criticality: high
+
+commonAnnotations:
+  environment: production
+  managed-by: kustomize
+  sla: "99.9"
+
+# Production-specific patches
+patchesStrategicMerge:
+  - |-
+    apiVersion: apps/v1
+    kind: StatefulSet
+    metadata:
+      name: alertmanager
+      namespace: monitoring
+    spec:
+      replicas: 3  # Full HA cluster for production
+      template:
+        metadata:
+          annotations:
+            prometheus.io/scrape: "true"
+            prometheus.io/port: "9093"
+        spec:
+          affinity:
+            podAntiAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+              - labelSelector:
+                  matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                    - alertmanager
+                topologyKey: topology.kubernetes.io/zone
+          containers:
+          - name: alertmanager
+            env:
+            - name: ENVIRONMENT
+              value: "production"
+            - name: LOG_LEVEL
+              value: "warn"
+            resources:
+              requests:
+                memory: "1Gi"
+                cpu: "500m"
+              limits:
+                memory: "2Gi"
+                cpu: "2"
+            args:
+            - '--config.file=/etc/alertmanager/alertmanager.yml'
+            - '--storage.path=/alertmanager'
+            - '--log.level=warn'
+            - '--cluster.listen-address=0.0.0.0:9094'
+            - '--cluster.peer=alertmanager-0.alertmanager-headless:9094'
+            - '--cluster.peer=alertmanager-1.alertmanager-headless:9094'
+            - '--cluster.peer=alertmanager-2.alertmanager-headless:9094'
+            - '--cluster.reconnect-timeout=5m'
+            - '--web.route-prefix=/'
+            livenessProbe:
+              httpGet:
+                path: /-/healthy
+                port: 9093
+              initialDelaySeconds: 30
+              periodSeconds: 10
+              timeoutSeconds: 3
+              failureThreshold: 3
+            readinessProbe:
+              httpGet:
+                path: /-/ready
+                port: 9093
+              initialDelaySeconds: 5
+              periodSeconds: 5
+              timeoutSeconds: 3
+              failureThreshold: 3
+          - name: oauth2-proxy
+            env:
+            - name: OAUTH2_PROXY_COOKIE_SECURE
+              value: "true"
+            - name: OAUTH2_PROXY_COOKIE_HTTPONLY
+              value: "true"
+            resources:
+              requests:
+                memory: "128Mi"
+                cpu: "100m"
+              limits:
+                memory: "256Mi"
+                cpu: "200m"
+  - |-
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: alertmanager
+      namespace: monitoring
+      annotations:
+        service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+        service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
+    spec:
+      type: LoadBalancer
+      sessionAffinity: ClientIP
+      sessionAffinityConfig:
+        clientIP:
+          timeoutSeconds: 10800
+  - |-
+    apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    metadata:
+      name: alertmanager
+      namespace: monitoring
+    spec:
+      policyTypes:
+      - Ingress
+      - Egress
+      ingress:
+      - from:
+        - namespaceSelector:
+            matchLabels:
+              name: prometheus
+        - namespaceSelector:
+            matchLabels:
+              name: ingress-nginx
+        - podSelector:
+            matchLabels:
+              app: alertmanager  # Allow cluster communication
+      egress:
+      - to:
+        - namespaceSelector: {}  # Allow all namespaces for notification delivery
+        ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 587  # SMTP
+
+configMapGenerator:
+  - name: alertmanager-config
+    behavior: replace
+    files:
+      - alertmanager-prod.yml
+  - name: prod-env-config
+    literals:
+      - SLACK_WEBHOOK_URL=https://hooks.slack.com/services/PROD/WEBHOOK
+      - PAGERDUTY_KEY=prod-integration-key
+      - EMAIL_SMTP_HOST=smtp.example.com
+      - TEAMS_WEBHOOK_URL=https://outlook.office.com/webhook/prod
+
+# Additional production-specific resources
+resources:
+  - |-
+    apiVersion: v1
+    kind: ResourceQuota
+    metadata:
+      name: alertmanager-quota
+      namespace: monitoring
+    spec:
+      hard:
+        requests.cpu: "8"
+        requests.memory: 8Gi
+        limits.cpu: "16"
+        limits.memory: 16Gi
+        persistentvolumeclaims: "10"
+  - |-
+    apiVersion: networking.k8s.io/v1
+    kind: Ingress
+    metadata:
+      name: alertmanager
+      namespace: monitoring
+      annotations:
+        kubernetes.io/ingress.class: nginx
+        cert-manager.io/cluster-issuer: letsencrypt-prod
+        nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"
+        nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$escaped_request_uri"
+        nginx.ingress.kubernetes.io/ssl-redirect: "true"
+        nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    spec:
+      tls:
+      - hosts:
+        - alertmanager.sophia-intel-ai.com
+        secretName: alertmanager-tls
+      rules:
+      - host: alertmanager.sophia-intel-ai.com
+        http:
+          paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: alertmanager
+                port:
+                  number: 9093
+  - |-
+    apiVersion: external-secrets.io/v1beta1
+    kind: ExternalSecret
+    metadata:
+      name: alertmanager-secrets
+      namespace: monitoring
+    spec:
+      refreshInterval: 30m
+      secretStoreRef:
+        name: vault-backend
+        kind: SecretStore
+      target:
+        name: alertmanager-secrets
+        creationPolicy: Owner
+      data:
+        - secretKey: slack-webhook
+          remoteRef:
+            key: prod/alertmanager/slack
+            property: webhook
+        - secretKey: pagerduty-key
+          remoteRef:
+            key: prod/alertmanager/pagerduty
+            property: key
+        - secretKey: email-password
+          remoteRef:
+            key: prod/alertmanager/email
+            property: password
+        - secretKey: teams-webhook
+          remoteRef:
+            key: prod/alertmanager/teams
+            property: webhook
+  - |-
+    apiVersion: policy/v1
+    kind: PodDisruptionBudget
+    metadata:
+      name: alertmanager-pdb
+      namespace: monitoring
+    spec:
+      minAvailable: 2
+      selector:
+        matchLabels:
+          app: alertmanager
+  - |-
+    apiVersion: autoscaling/v2
+    kind: HorizontalPodAutoscaler
+    metadata:
+      name: alertmanager-hpa
+      namespace: monitoring
+    spec:
+      scaleTargetRef:
+        apiVersion: apps/v1
+        kind: StatefulSet
+        name: alertmanager
+      minReplicas: 3
+      maxReplicas: 5
+      metrics:
+      - type: Resource
+        resource:
+          name: cpu
+          target:
+            type: Utilization
+            averageUtilization: 70
+      - type: Resource
+        resource:
+          name: memory
+          target:
+            type: Utilization
+            averageUtilization: 80
+      behavior:
+        scaleDown:
+          stabilizationWindowSeconds: 300
+          policies:
+          - type: Percent
+            value: 10
+            periodSeconds: 60
+        scaleUp:
+          stabilizationWindowSeconds: 60
+          policies:
+          - type: Percent
+            value: 50
+            periodSeconds: 60

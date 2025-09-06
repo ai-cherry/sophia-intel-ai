@@ -9,16 +9,20 @@ import SalesPerformanceDashboard from '@/components/dashboards/SalesPerformanceD
 import ClientHealthDashboard from '@/components/dashboards/ClientHealthDashboard';
 import ProjectManagementDashboard from '@/components/dashboards/ProjectManagementDashboard';
 import UnifiedChatOrchestration from '@/components/dashboards/UnifiedChatOrchestration';
+import MCPServerGrid from '@/components/mcp/MCPServerGrid';
+import MythologyAgentWidget from '@/components/mythology/MythologyAgentWidget';
 import { dashboardConfig, featureFlags } from '@/config/environment';
 import {
   Zap, Heart, Brain, MessageCircle, Activity, TrendingUp,
-  Users, Target, AlertTriangle, CheckCircle, Eye, Settings
+  Users, Target, AlertTriangle, CheckCircle, Eye, Settings,
+  Crown, Briefcase, UserCheck, ExternalLink
 } from 'lucide-react';
 
 // ==================== SOPHIA INTELLIGENCE HUB ====================
 
 const SophiaIntelligencePage: React.FC = () => {
   const [activeModule, setActiveModule] = useState('overview');
+  const [currentRole, setCurrentRole] = useState<'executive' | 'project_manager' | 'team_lead'>('executive');
   const [systemHealth, setSystemHealth] = useState({
     overall: 95,
     sales: 92,
@@ -30,10 +34,35 @@ const SophiaIntelligencePage: React.FC = () => {
   const [quickStats, setQuickStats] = useState({
     totalActiveProjects: 12,
     atRiskClients: 3,
-    salesTeamPerformance: 87,
-    openBlockers: 5,
+    processingVolumeToday: 2100000000, // $2.1B
+    complianceScore: 97.2,
     unreadMessages: 7
   });
+
+  // Role definitions
+  const roles = [
+    {
+      id: 'executive',
+      name: 'Executive',
+      icon: <Crown className="w-4 h-4" />,
+      description: 'Strategic oversight and high-level KPIs',
+      color: 'from-amber-500 to-orange-500'
+    },
+    {
+      id: 'project_manager',
+      name: 'Project Manager',
+      icon: <Briefcase className="w-4 h-4" />,
+      description: 'Operational metrics and team coordination',
+      color: 'from-blue-500 to-indigo-500'
+    },
+    {
+      id: 'team_lead',
+      name: 'Team Lead',
+      icon: <UserCheck className="w-4 h-4" />,
+      description: 'Individual performance and development',
+      color: 'from-green-500 to-teal-500'
+    }
+  ];
 
   useEffect(() => {
     // Load initial system overview data
@@ -54,61 +83,66 @@ const SophiaIntelligencePage: React.FC = () => {
     }
   };
 
+  // Enhanced modules with Pay Ready business context
   const modules = [
     {
       id: 'hermes',
       name: 'Hermes',
-      subtitle: 'Sales Performance',
-      description: 'Real-time sales metrics, Gong call analysis, and coaching insights',
+      subtitle: 'Sales Performance & Market Intelligence',
+      description: 'Real-time sales metrics, market penetration, and Pay Ready competitive positioning',
       icon: <Zap className="w-6 h-6" />,
       color: 'from-blue-500 to-purple-500',
       health: systemHealth.sales,
+      payReadyContext: 'property_management_sales',
       stats: [
-        { label: 'Team Quota', value: `${systemHealth.sales}%` },
-        { label: 'Active Deals', value: '47' },
-        { label: 'This Week', value: '23 calls' }
+        { label: 'Processing Volume', value: '$2.1B' },
+        { label: 'Market Share', value: '47.3%' },
+        { label: 'New Properties', value: '127' }
       ]
     },
     {
       id: 'asclepius',
       name: 'Asclepius',
-      subtitle: 'Client Health',
-      description: 'Health scoring, churn prevention, and expansion opportunities',
+      subtitle: 'Client Health & Portfolio Management',
+      description: 'Tenant satisfaction, landlord retention, and portfolio health metrics',
       icon: <Heart className="w-6 h-6" />,
       color: 'from-emerald-500 to-teal-500',
       health: systemHealth.clients,
+      payReadyContext: 'tenant_landlord_satisfaction',
       stats: [
-        { label: 'Avg Health', value: `${systemHealth.clients}%` },
-        { label: 'At Risk', value: quickStats.atRiskClients.toString() },
-        { label: 'Renewals', value: '8 due' }
+        { label: 'Portfolio Health', value: `${systemHealth.clients}%` },
+        { label: 'At Risk Properties', value: quickStats.atRiskClients.toString() },
+        { label: 'Compliance Score', value: '97.2%' }
       ]
     },
     {
-      id: 'athena',
-      name: 'Athena',
-      subtitle: 'Project Intelligence',
-      description: 'Cross-platform sync, team alignment, and bottleneck detection',
+      id: 'artemis',
+      name: 'Artemis',
+      subtitle: 'Technical Command Center',
+      description: 'Dedicated technical operations dashboard for development teams and system monitoring',
       icon: <Brain className="w-6 h-6" />,
       color: 'from-purple-500 to-pink-500',
       health: systemHealth.projects,
+      payReadyContext: 'technical_operations',
       stats: [
-        { label: 'Active Projects', value: quickStats.totalActiveProjects.toString() },
-        { label: 'Team Health', value: `${systemHealth.projects}%` },
-        { label: 'Blockers', value: quickStats.openBlockers.toString() }
+        { label: 'System Health', value: '99.8%' },
+        { label: 'Code Quality', value: '94%' },
+        { label: 'Deployments', value: '3 Active' }
       ]
     },
     {
-      id: 'unified-chat',
-      name: 'Unified Chat',
-      subtitle: 'Voice & Text AI',
-      description: 'Natural language interface with voice integration and smart routing',
+      id: 'oracle',
+      name: 'Oracle',
+      subtitle: 'AI Assistant & Voice Intelligence',
+      description: 'Natural language interface with Pay Ready business context and voice integration',
       icon: <MessageCircle className="w-6 h-6" />,
       color: 'from-indigo-500 to-purple-500',
       health: systemHealth.communication,
+      payReadyContext: 'natural_language_interface',
       stats: [
-        { label: 'Response Time', value: '0.8s' },
-        { label: 'Accuracy', value: '94%' },
-        { label: 'Voice Ready', value: featureFlags.voiceEnabled ? 'Yes' : 'No' }
+        { label: 'Query Response', value: '0.6s' },
+        { label: 'Context Accuracy', value: '96.4%' },
+        { label: 'Voice Integration', value: featureFlags.voiceEnabled ? 'Active' : 'Ready' }
       ]
     }
   ];
@@ -131,7 +165,13 @@ const SophiaIntelligencePage: React.FC = () => {
       className={`cursor-pointer transition-all hover:shadow-xl hover:scale-105 ${
         activeModule === module.id ? 'ring-2 ring-blue-500 shadow-xl' : ''
       }`}
-      onClick={() => setActiveModule(module.id)}
+      onClick={() => {
+        if (module.id === 'artemis') {
+          window.location.href = '/artemis';
+        } else {
+          setActiveModule(module.id);
+        }
+      }}
     >
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
@@ -149,6 +189,9 @@ const SophiaIntelligencePage: React.FC = () => {
             <span className={`font-bold ${getHealthColor(module.health)}`}>
               {module.health}%
             </span>
+            {module.id === 'artemis' && (
+              <ExternalLink className="w-4 h-4 text-gray-500" />
+            )}
           </div>
         </div>
       </CardHeader>
@@ -174,6 +217,12 @@ const SophiaIntelligencePage: React.FC = () => {
         return <SalesPerformanceDashboard />;
       case 'asclepius':
         return <ClientHealthDashboard />;
+      case 'artemis':
+        // This should redirect to the dedicated Artemis Command Center
+        return null;
+      case 'oracle':
+        return <UnifiedChatOrchestration />;
+      // Legacy support
       case 'athena':
         return <ProjectManagementDashboard />;
       case 'unified-chat':
@@ -240,11 +289,27 @@ const SophiaIntelligencePage: React.FC = () => {
                 Sophia Intelligence Hub
               </h1>
               <p className="text-gray-600 dark:text-gray-400 mt-1">
-                AI-powered business intelligence with mythology-themed specialized agents
+                Pay Ready Business Intelligence - Managing $20B+ in rent processing with AI-powered insights
               </p>
             </div>
 
             <div className="flex items-center space-x-4">
+              {/* Role Selector */}
+              <div className="flex items-center space-x-2 px-3 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg">
+                <span className="text-sm font-medium">View as:</span>
+                <select
+                  value={currentRole}
+                  onChange={(e) => setCurrentRole(e.target.value as 'executive' | 'project_manager' | 'team_lead')}
+                  className="text-sm font-medium bg-transparent border-none focus:outline-none"
+                >
+                  {roles.map((role) => (
+                    <option key={role.id} value={role.id}>
+                      {role.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               {/* System Health Badge */}
               <div className="flex items-center space-x-2 px-3 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg">
                 <Activity className="w-4 h-4 text-blue-600" />
@@ -273,21 +338,23 @@ const SophiaIntelligencePage: React.FC = () => {
             </div>
             <div>
               <div className="text-2xl font-bold text-red-600">{quickStats.atRiskClients}</div>
-              <div className="text-xs text-gray-500">At-Risk Clients</div>
+              <div className="text-xs text-gray-500">At-Risk Properties</div>
             </div>
             <div>
-              <div className={`text-2xl font-bold ${getHealthColor(quickStats.salesTeamPerformance)}`}>
-                {quickStats.salesTeamPerformance}%
+              <div className="text-2xl font-bold text-green-600">
+                ${(quickStats.processingVolumeToday / 1000000000).toFixed(1)}B
               </div>
-              <div className="text-xs text-gray-500">Sales Performance</div>
+              <div className="text-xs text-gray-500">Processing Volume Today</div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-yellow-600">{quickStats.openBlockers}</div>
-              <div className="text-xs text-gray-500">Open Blockers</div>
+              <div className={`text-2xl font-bold ${getHealthColor(quickStats.complianceScore)}`}>
+                {quickStats.complianceScore}%
+              </div>
+              <div className="text-xs text-gray-500">Compliance Score</div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-green-600">{quickStats.unreadMessages}</div>
-              <div className="text-xs text-gray-500">New Messages</div>
+              <div className="text-2xl font-bold text-purple-600">{quickStats.unreadMessages}</div>
+              <div className="text-xs text-gray-500">Priority Alerts</div>
             </div>
           </div>
         </div>
@@ -296,14 +363,18 @@ const SophiaIntelligencePage: React.FC = () => {
       {/* Main Content */}
       <div className="container mx-auto px-6 py-8">
         <Tabs defaultValue="modules" className="space-y-6">
-          <TabsList className="grid grid-cols-2 w-96 mx-auto">
+          <TabsList className="grid grid-cols-3 w-full mx-auto">
             <TabsTrigger value="modules">
               <Eye className="w-4 h-4 mr-2" />
               Intelligence Modules
             </TabsTrigger>
+            <TabsTrigger value="mcp">
+              <Server className="w-4 h-4 mr-2" />
+              MCP Intelligence
+            </TabsTrigger>
             <TabsTrigger value="chat">
               <MessageCircle className="w-4 h-4 mr-2" />
-              Unified Chat
+              Oracle Assistant
             </TabsTrigger>
           </TabsList>
 
@@ -316,23 +387,23 @@ const SophiaIntelligencePage: React.FC = () => {
             {/* Feature Highlights */}
             <Card className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
               <CardContent className="p-6">
-                <h3 className="text-xl font-bold mb-4">Powered by Advanced AI</h3>
+                <h3 className="text-xl font-bold mb-4">Pay Ready Enterprise Intelligence</h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                   <div>
-                    <div className="font-semibold">Real-time Analytics</div>
-                    <div className="opacity-80">Live data streaming</div>
+                    <div className="font-semibold">$20B+ Processing</div>
+                    <div className="opacity-80">Real-time rent analytics</div>
                   </div>
                   <div>
-                    <div className="font-semibold">Voice Integration</div>
-                    <div className="opacity-80">ElevenLabs powered</div>
+                    <div className="font-semibold">AI Voice Assistant</div>
+                    <div className="opacity-80">Pay Ready context aware</div>
                   </div>
                   <div>
-                    <div className="font-semibold">Cross-platform Sync</div>
-                    <div className="opacity-80">Linear, Asana, Airtable</div>
+                    <div className="font-semibold">Cross-Platform Ops</div>
+                    <div className="opacity-80">Unified Asana, Linear, Slack</div>
                   </div>
                   <div>
-                    <div className="font-semibold">Smart Routing</div>
-                    <div className="opacity-80">Context-aware agents</div>
+                    <div className="font-semibold">Predictive Insights</div>
+                    <div className="opacity-80">Risk & opportunity detection</div>
                   </div>
                 </div>
               </CardContent>
@@ -406,6 +477,192 @@ const SophiaIntelligencePage: React.FC = () => {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          <TabsContent value="mcp" className="space-y-6">
+            {/* Mythology Agent Widgets */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <MythologyAgentWidget
+                agent={{
+                  id: 'hermes',
+                  name: 'Hermes',
+                  title: 'Sales Performance & Market Intelligence',
+                  domain: 'sophia',
+                  assigned_mcp_servers: ['sophia_web_search', 'sophia_sales_intelligence'],
+                  context: 'Real-time sales metrics, market penetration, and Pay Ready competitive positioning',
+                  widget_type: 'sales_performance_intelligence',
+                  icon_type: 'hermes',
+                  pay_ready_context: 'property_management_sales'
+                }}
+                metrics={{
+                  primary_metric: {
+                    label: 'Processing Volume',
+                    value: '$2.1B',
+                    trend: 'up',
+                    change_percentage: 12.3
+                  },
+                  secondary_metrics: [
+                    { label: 'Market Share', value: '47.3%', status: 'good' },
+                    { label: 'New Properties', value: '127', status: 'good' },
+                    { label: 'Market Signals', value: '23 new', status: 'warning' },
+                    { label: 'Response Time', value: '0.6s', status: 'good' }
+                  ],
+                  server_status: [
+                    { server_name: 'sophia_web_search', status: 'operational', last_activity: '2 min ago' },
+                    { server_name: 'sophia_sales_intelligence', status: 'operational', last_activity: '5 min ago' }
+                  ]
+                }}
+              />
+
+              <MythologyAgentWidget
+                agent={{
+                  id: 'asclepius',
+                  name: 'Asclepius',
+                  title: 'Client Health & Portfolio Management',
+                  domain: 'sophia',
+                  assigned_mcp_servers: ['sophia_business_analytics', 'sophia_business_memory'],
+                  context: 'Tenant satisfaction, landlord retention, and portfolio health metrics',
+                  widget_type: 'client_health_monitor',
+                  icon_type: 'asclepius',
+                  pay_ready_context: 'tenant_landlord_satisfaction'
+                }}
+                metrics={{
+                  primary_metric: {
+                    label: 'Portfolio Health',
+                    value: '88%',
+                    trend: 'stable'
+                  },
+                  secondary_metrics: [
+                    { label: 'At Risk Properties', value: '3', status: 'warning' },
+                    { label: 'Compliance Score', value: '97.2%', status: 'good' },
+                    { label: 'Tenant Satisfaction', value: '4.2/5', status: 'good' },
+                    { label: 'Retention Rate', value: '94%', status: 'good' }
+                  ],
+                  server_status: [
+                    { server_name: 'sophia_business_analytics', status: 'operational', last_activity: '1 min ago' },
+                    { server_name: 'sophia_business_memory', status: 'operational', last_activity: '3 min ago' }
+                  ]
+                }}
+              />
+
+              <MythologyAgentWidget
+                agent={{
+                  id: 'athena',
+                  name: 'Athena',
+                  title: 'Strategic Operations',
+                  domain: 'sophia',
+                  assigned_mcp_servers: ['sophia_business_analytics', 'shared_knowledge_base'],
+                  context: 'Strategic initiatives and executive decision support',
+                  widget_type: 'strategic_operations_command',
+                  icon_type: 'athena'
+                }}
+                metrics={{
+                  primary_metric: {
+                    label: 'Strategic KPIs',
+                    value: '94%',
+                    trend: 'up'
+                  },
+                  secondary_metrics: [
+                    { label: 'Active Projects', value: '12', status: 'good' },
+                    { label: 'On Track', value: '10', status: 'good' },
+                    { label: 'At Risk', value: '2', status: 'warning' },
+                    { label: 'Executive Alerts', value: '3', status: 'warning' }
+                  ],
+                  server_status: [
+                    { server_name: 'sophia_business_analytics', status: 'operational', last_activity: '1 min ago' },
+                    { server_name: 'shared_knowledge_base', status: 'operational', last_activity: '4 min ago' }
+                  ]
+                }}
+              />
+            </div>
+
+            {/* MCP Server Grid */}
+            <MCPServerGrid
+              domain="sophia"
+              servers={[
+                {
+                  server_name: 'sophia_web_search',
+                  server_type: 'web_search',
+                  status: 'operational',
+                  domain: 'sophia',
+                  access_level: 'exclusive',
+                  connections: { active: 4, max: 10, utilization: 0.4 },
+                  capabilities: ['web_search', 'web_scraping', 'trend_analysis', 'market_research'],
+                  last_activity: '2 minutes ago',
+                  performance_metrics: {
+                    response_time_ms: 650,
+                    throughput_ops_per_sec: 45,
+                    error_rate: 0.008,
+                    uptime_percentage: 99.2
+                  },
+                  business_context: 'market_intelligence_gathering'
+                },
+                {
+                  server_name: 'sophia_business_analytics',
+                  server_type: 'business_analytics',
+                  status: 'operational',
+                  domain: 'sophia',
+                  access_level: 'exclusive',
+                  connections: { active: 7, max: 10, utilization: 0.7 },
+                  capabilities: ['revenue_analytics', 'customer_analytics', 'sales_forecasting', 'churn_analysis'],
+                  last_activity: '1 minute ago',
+                  performance_metrics: {
+                    response_time_ms: 180,
+                    throughput_ops_per_sec: 125,
+                    error_rate: 0.002,
+                    uptime_percentage: 99.8
+                  },
+                  business_context: 'pay_ready_operations'
+                },
+                {
+                  server_name: 'sophia_sales_intelligence',
+                  server_type: 'sales_intelligence',
+                  status: 'operational',
+                  domain: 'sophia',
+                  access_level: 'exclusive',
+                  connections: { active: 3, max: 8, utilization: 0.375 },
+                  capabilities: ['deal_scoring', 'opportunity_analysis', 'account_intelligence', 'sales_signals_detection'],
+                  last_activity: '5 minutes ago',
+                  performance_metrics: {
+                    response_time_ms: 220,
+                    throughput_ops_per_sec: 85,
+                    error_rate: 0.005,
+                    uptime_percentage: 99.5
+                  },
+                  business_context: 'property_sales_optimization'
+                },
+                {
+                  server_name: 'shared_database',
+                  server_type: 'database',
+                  status: 'operational',
+                  domain: 'shared',
+                  access_level: 'shared',
+                  connections: { active: 15, max: 25, utilization: 0.6 },
+                  capabilities: ['query', 'insert', 'update', 'delete', 'transaction'],
+                  last_activity: '30 seconds ago',
+                  performance_metrics: {
+                    response_time_ms: 12,
+                    throughput_ops_per_sec: 450,
+                    error_rate: 0.001,
+                    uptime_percentage: 99.95
+                  }
+                }
+              ]}
+              mythology_agents={[
+                {
+                  name: 'Hermes - Sales Intelligence',
+                  assigned_mcp_servers: ['sophia_web_search', 'sophia_sales_intelligence'],
+                  context: 'Market intelligence and sales performance',
+                  widget_type: 'sales_performance_intelligence'
+                },
+                {
+                  name: 'Asclepius - Client Health',
+                  assigned_mcp_servers: ['sophia_business_analytics', 'sophia_business_memory'],
+                  context: 'Customer health and portfolio management',
+                  widget_type: 'client_health_monitor'
+                }
+              ]}
+            />
           </TabsContent>
 
           <TabsContent value="chat">

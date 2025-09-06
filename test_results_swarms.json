@@ -1,118 +1,88 @@
 {
-  "timestamp": "2025-08-30T16:58:37.508051",
+  "timestamp": "2025-09-05T14:18:17.083371",
   "tests": [
     {
       "name": "Health check",
-      "success": true,
-      "details": "{'status': 'ok', 'timestamp': '2025-08-30T16:58:37.541648', 'systems': {'supermemory': True, 'embedder': True, 'search': True, 'graphrag': True, 'gates': True}}",
-      "timestamp": "2025-08-30T16:58:37.542293"
+      "success": false,
+      "details": "All connection attempts failed",
+      "timestamp": "2025-09-05T14:18:17.093641"
     },
     {
       "name": "Get teams",
-      "success": true,
-      "details": "4 teams",
-      "timestamp": "2025-08-30T16:58:37.547169"
+      "success": false,
+      "details": "All connection attempts failed",
+      "timestamp": "2025-09-05T14:18:17.097389"
     },
     {
       "name": "Execute team SIMPLEX",
-      "success": true,
-      "details": "Streaming response received",
-      "timestamp": "2025-08-30T16:58:42.860271"
+      "success": false,
+      "details": "All connection attempts failed",
+      "timestamp": "2025-09-05T14:18:17.098154"
     },
     {
       "name": "Execute team CONSENSUS",
-      "success": true,
-      "details": "Streaming response received",
-      "timestamp": "2025-08-30T16:58:48.175326"
+      "success": false,
+      "details": "All connection attempts failed",
+      "timestamp": "2025-09-05T14:18:17.098880"
     },
     {
       "name": "Get workflows",
-      "success": true,
-      "details": "2 workflows",
-      "timestamp": "2025-08-30T16:58:48.181558"
+      "success": false,
+      "details": "All connection attempts failed",
+      "timestamp": "2025-09-05T14:18:17.102759"
     },
     {
       "name": "Execute workflow",
-      "success": true,
-      "details": "Streaming response received",
-      "timestamp": "2025-08-30T16:58:50.687197"
+      "success": false,
+      "details": "All connection attempts failed",
+      "timestamp": "2025-09-05T14:18:17.103451"
     },
     {
       "name": "Memory storage",
-      "success": true,
-      "details": "Success",
-      "timestamp": "2025-08-30T16:58:50.695576"
+      "success": false,
+      "details": "All connection attempts failed",
+      "timestamp": "2025-09-05T14:18:17.108148"
     },
     {
       "name": "Memory search",
-      "success": true,
-      "details": "1 results",
-      "timestamp": "2025-08-30T16:58:50.697757"
+      "success": false,
+      "details": "All connection attempts failed",
+      "timestamp": "2025-09-05T14:18:17.108863"
     },
     {
       "name": "Hybrid search",
-      "success": true,
-      "details": "0 results",
-      "timestamp": "2025-08-30T16:58:50.704062"
+      "success": false,
+      "details": "All connection attempts failed",
+      "timestamp": "2025-09-05T14:18:17.112596"
     },
     {
-      "name": "MCP filesystem config",
-      "success": true,
-      "details": "Enabled",
-      "timestamp": "2025-08-30T16:58:50.704125"
-    },
-    {
-      "name": "MCP git config",
-      "success": true,
-      "details": "Enabled",
-      "timestamp": "2025-08-30T16:58:50.704128"
-    },
-    {
-      "name": "MCP supermemory config",
-      "success": true,
-      "details": "Enabled",
-      "timestamp": "2025-08-30T16:58:50.704130"
+      "name": "test_mcp_connections",
+      "success": false,
+      "details": "name 'get_config' is not defined",
+      "timestamp": "2025-09-05T14:18:17.112749"
     },
     {
       "name": "Statistics",
-      "success": true,
-      "details": "Success",
-      "timestamp": "2025-08-30T16:58:50.711065"
+      "success": false,
+      "details": "All connection attempts failed",
+      "timestamp": "2025-09-05T14:18:17.116347"
     },
     {
       "name": "Pattern imports",
-      "success": true,
-      "details": "All patterns imported",
-      "timestamp": "2025-08-30T16:58:50.722501"
+      "success": false,
+      "details": "cannot import name 'AdversarialDebatePattern' from 'app.swarms.patterns' (unknown location)",
+      "timestamp": "2025-09-05T14:18:17.116740"
     },
     {
-      "name": "Adversarial Debate pattern",
-      "success": true,
-      "details": "Initialized",
-      "timestamp": "2025-08-30T16:58:50.722514"
-    },
-    {
-      "name": "Quality Gates pattern",
-      "success": true,
-      "details": "Initialized",
-      "timestamp": "2025-08-30T16:58:50.722522"
-    },
-    {
-      "name": "Consensus pattern",
-      "success": true,
-      "details": "Initialized",
-      "timestamp": "2025-08-30T16:58:50.722528"
-    },
-    {
-      "name": "AG UI connection",
-      "success": true,
-      "details": "Port 3000",
-      "timestamp": "2025-08-30T16:58:50.738410"
+      "name": "test_ag_ui_connection",
+      "success": false,
+      "details": "name 'get_config' is not defined",
+      "timestamp": "2025-09-05T14:18:17.116886"
     }
   ],
   "summary": {
-    "total": 18,
-    "passed": 18,
-    "failed": 0
+    "total": 13,
+    "passed": 0,
+    "failed": 13
   }
 }

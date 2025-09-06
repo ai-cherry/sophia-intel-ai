@@ -1,0 +1,153 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alertmanager-pagerduty-templates
+  namespace: monitoring
+  labels:
+    app: alertmanager
+    component: templates
+data:
+  pagerduty.tmpl: |
+    {{ define "pagerduty.default.description" -}}
+    {{ .CommonAnnotations.summary | default (printf "%s in %s" .GroupLabels.alertname .GroupLabels.namespace) }}
+    {{- end }}
+
+    {{ define "pagerduty.default.client" -}}
+    AlertManager - {{ .GroupLabels.cluster | default "sophia-artemis" }}
+    {{- end }}
+
+    {{ define "pagerduty.default.clientURL" -}}
+    {{ .ExternalURL }}/#/alerts?receiver={{ .Receiver | urlquery }}
+    {{- end }}
+
+    {{ define "pagerduty.default.details" -}}
+    {
+      "firing_alerts": "{{ .Alerts.Firing | len }}",
+      "resolved_alerts": "{{ .Alerts.Resolved | len }}",
+      "status": "{{ .Status }}",
+      "domain": "{{ .GroupLabels.domain }}",
+      "namespace": "{{ .GroupLabels.namespace }}",
+      "service": "{{ .GroupLabels.service }}",
+      "severity": "{{ .GroupLabels.severity }}",
+      "cluster": "{{ .GroupLabels.cluster }}",
+      "alert_details": [
+        {{- range $i, $alert := .Alerts }}
+        {{- if $i }},{{ end }}
+        {
+          "alertname": "{{ $alert.Labels.alertname }}",
+          "status": "{{ $alert.Status }}",
+          "severity": "{{ $alert.Labels.severity }}",
+          "namespace": "{{ $alert.Labels.namespace }}",
+          "service": "{{ $alert.Labels.service | default "N/A" }}",
+          "pod": "{{ $alert.Labels.pod | default "N/A" }}",
+          "description": "{{ $alert.Annotations.description | js }}",
+          "value": "{{ $alert.Annotations.value | default "N/A" }}",
+          "started_at": "{{ $alert.StartsAt.Format "2006-01-02T15:04:05Z07:00" }}",
+          {{- if eq $alert.Status "resolved" }}
+          "ended_at": "{{ $alert.EndsAt.Format "2006-01-02T15:04:05Z07:00" }}",
+          {{- end }}
+          "runbook_url": "{{ $alert.Annotations.runbook_url | default "" }}",
+          "dashboard_url": "{{ $alert.Annotations.dashboard | default "" }}",
+          "labels": {
+            {{- range $key, $value := $alert.Labels.Map }}
+            {{- if $key }},{{ end }}
+            "{{ $key }}": "{{ $value }}"
+            {{- end }}
+          }
+        }
+        {{- end }}
+      ],
+      "common_annotations": {
+        {{- range $key, $value := .CommonAnnotations }}
+        "{{ $key }}": "{{ $value | js }}"{{ if not (last $key $.CommonAnnotations) }},{{ end }}
+        {{- end }}
+      },
+      "external_url": "{{ .ExternalURL }}",
+      "runbook_url": "https://docs.sophia-artemis.ai/runbooks/{{ .GroupLabels.alertname }}",
+      "dashboard_url": "https://grafana.sophia-artemis.ai/d/{{ .GroupLabels.domain }}",
+      "silence_url": "{{ .ExternalURL }}/#/silences/new?filter={alertname%3D%22{{ .GroupLabels.alertname }}%22}"
+    }
+    {{- end }}
+
+    {{ define "pagerduty.severity" -}}
+    {{- if eq .GroupLabels.severity "CRITICAL" -}}
+    critical
+    {{- else if eq .GroupLabels.severity "WARNING" -}}
+    warning
+    {{- else if eq .GroupLabels.severity "INFO" -}}
+    info
+    {{- else -}}
+    error
+    {{- end -}}
+    {{- end }}
+
+    {{ define "pagerduty.component" -}}
+    {{- if .GroupLabels.service -}}
+    {{ .GroupLabels.service }}
+    {{- else if .GroupLabels.component -}}
+    {{ .GroupLabels.component }}
+    {{- else -}}
+    {{ .GroupLabels.namespace | default "infrastructure" }}
+    {{- end -}}
+    {{- end }}
+
+    {{ define "pagerduty.group" -}}
+    {{ .GroupLabels.domain | default "platform" }}
+    {{- end }}
+
+    {{ define "pagerduty.class" -}}
+    {{ .GroupLabels.alertname }}
+    {{- end }}
+
+    {{ define "pagerduty.source" -}}
+    {{- if .GroupLabels.cluster -}}
+    {{ .GroupLabels.cluster }}
+    {{- else if .GroupLabels.node -}}
+    {{ .GroupLabels.node }}
+    {{- else -}}
+    {{ .GroupLabels.namespace | default "monitoring" }}
+    {{- end -}}
+    {{- end }}
+
+    {{ define "pagerduty.custom_details" -}}
+    {
+      "alert_fingerprint": "{{ .GroupKey }}",
+      "alert_count": "{{ .Alerts | len }}",
+      "firing_count": "{{ .Alerts.Firing | len }}",
+      "resolved_count": "{{ .Alerts.Resolved | len }}",
+      "domain": "{{ .GroupLabels.domain }}",
+      "environment": "{{ .GroupLabels.cluster | default "production" }}",
+      "namespace": "{{ .GroupLabels.namespace }}",
+      "service": "{{ .GroupLabels.service | default "N/A" }}",
+      "severity": "{{ .GroupLabels.severity }}",
+      "component": "{{ .GroupLabels.component | default "N/A" }}",
+      {{- if .GroupLabels.pod }}
+      "pod": "{{ .GroupLabels.pod }}",
+      {{- end }}
+      {{- if .GroupLabels.node }}
+      "node": "{{ .GroupLabels.node }}",
+      {{- end }}
+      {{- if .GroupLabels.gpu_node }}
+      "gpu_node": "{{ .GroupLabels.gpu_node }}",
+      {{- end }}
+      {{- if .GroupLabels.model_name }}
+      "ai_model": "{{ .GroupLabels.model_name }}",
+      {{- end }}
+      "first_alert_time": "{{ (index .Alerts 0).StartsAt.Format "2006-01-02T15:04:05Z07:00" }}",
+      "alert_manager_url": "{{ .ExternalURL }}",
+      "receiver": "{{ .Receiver }}",
+      "alerts": {{ template "pagerduty.default.details" . }}
+    }
+    {{- end }}
+
+    {{ define "pagerduty.artemis.summary" -}}
+    🔥 ARTEMIS: {{ .GroupLabels.alertname }} affecting {{ .GroupLabels.service | default .GroupLabels.namespace }}
+    {{- end }}
+
+    {{ define "pagerduty.sophia.summary" -}}
+    🤖 SOPHIA: {{ .GroupLabels.alertname }} on {{ .GroupLabels.model_name | default .GroupLabels.namespace }}
+    {{- end }}
+
+    {{ define "pagerduty.infrastructure.summary" -}}
+    🏗️ INFRA: {{ .GroupLabels.alertname }} on {{ .GroupLabels.node | default .GroupLabels.cluster }}
+    {{- end }}

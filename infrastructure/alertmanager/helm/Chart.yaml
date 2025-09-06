@@ -1,0 +1,45 @@
+apiVersion: v2
+name: alertmanager
+description: Production-ready AlertManager with intelligent alerting for Sophia-Intel-AI
+type: application
+version: 1.0.0
+appVersion: "0.27.0"
+keywords:
+  - alertmanager
+  - prometheus
+  - monitoring
+  - alerting
+  - notifications
+  - sophia-artemis
+home: https://prometheus.io/docs/alerting/alertmanager/
+sources:
+  - https://github.com/prometheus/alertmanager
+maintainers:
+  - name: Sophia-Intel-AI Platform Team
+    email: platform@sophia-artemis.ai
+dependencies:
+  - name: prometheus-operator-crds
+    version: "^8.0.0"
+    repository: https://prometheus-community.github.io/helm-charts
+    condition: prometheus-operator-crds.enabled
+annotations:
+  artifacthub.io/license: Apache-2.0
+  artifacthub.io/operator: "false"
+  artifacthub.io/prerelease: "false"
+  artifacthub.io/signKey: |
+    fingerprint: C5CE446E6E7F5B12
+    url: https://keys.sophia-artemis.ai/platform.asc
+  artifacthub.io/recommendations: |
+    - url: https://artifacthub.io/packages/helm/prometheus-community/kube-prometheus-stack
+    - url: https://artifacthub.io/packages/helm/grafana/grafana
+  artifacthub.io/changes: |
+    - kind: added
+      description: Initial release with HA clustering support
+    - kind: added
+      description: Domain-specific routing for Artemis and Sophia
+    - kind: added
+      description: ML-based false positive classification
+    - kind: added
+      description: Multi-channel notification support
+    - kind: added
+      description: 70% false positive reduction mechanisms

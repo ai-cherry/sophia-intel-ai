@@ -1,0 +1,309 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: keda-custom-metrics
+  namespace: monitoring
+  labels:
+    app: keda
+    component: metrics
+    integration: prometheus
+  annotations:
+    description: "Custom AI-specific metrics for KEDA autoscaling"
+    prometheus.io/scrape: "true"
+data:
+  # AI workload specific metrics definitions
+  ai-metrics.yaml: |
+    metrics:
+      # Artemis task processing metrics
+      - name: artemis_task_queue_depth
+        query: redis_list_length{list="artemis:task:queue"}
+        description: "Current depth of Artemis task queue"
+        unit: "tasks"
+        labels:
+          component: artemis
+          type: queue
+
+      - name: artemis_task_processing_rate
+        query: rate(artemis_tasks_processed_total[1m])
+        description: "Task processing rate per second"
+        unit: "tasks/sec"
+        labels:
+          component: artemis
+          type: throughput
+
+      - name: artemis_worker_efficiency
+        query: |
+          avg(
+            rate(artemis_tasks_processed_total[5m]) /
+            kube_deployment_status_replicas{deployment="artemis-worker"}
+          )
+        description: "Tasks processed per worker replica"
+        unit: "tasks/replica"
+        labels:
+          component: artemis
+          type: efficiency
+
+      # Sophia analytics metrics
+      - name: sophia_analytics_event_rate
+        query: sum(rate(sophia_analytics_events_processed_total[1m]))
+        description: "Analytics events processing rate"
+        unit: "events/sec"
+        labels:
+          component: sophia
+          type: throughput
+
+      - name: sophia_model_inference_latency
+        query: |
+          histogram_quantile(0.99,
+            sum(rate(sophia_model_inference_duration_seconds_bucket[5m])) by (le, model)
+          )
+        description: "P99 model inference latency"
+        unit: "seconds"
+        labels:
+          component: sophia
+          type: latency
+
+      - name: sophia_memory_pressure
+        query: |
+          avg(
+            container_memory_working_set_bytes{namespace="sophia-system"} /
+            container_spec_memory_limit_bytes{namespace="sophia-system"}
+          ) * 100
+        description: "Memory utilization percentage for AI models"
+        unit: "percent"
+        labels:
+          component: sophia
+          type: resource
+
+      # KEDA performance metrics
+      - name: keda_scaling_time
+        query: |
+          histogram_quantile(0.95,
+            sum(rate(keda_scale_loop_duration_seconds_bucket[5m])) by (le)
+          )
+        description: "P95 scaling decision time"
+        unit: "seconds"
+        target: 9
+        sla: true
+        labels:
+          component: keda
+          type: performance
+
+      - name: keda_scaling_improvement
+        query: |
+          (1 - (
+            histogram_quantile(0.95,
+              sum(rate(keda_scale_loop_duration_seconds_bucket[5m])) by (le)
+            ) / 60
+          )) * 100
+        description: "Percentage improvement from 60s baseline"
+        unit: "percent"
+        target: 85
+        sla: true
+        labels:
+          component: keda
+          type: sla
+
+      - name: keda_circuit_breaker_status
+        query: |
+          clamp_max(
+            rate(keda_scaled_object_events_total[1m]) > bool 3,
+            1
+          )
+        description: "Circuit breaker trigger status (1=triggered, 0=normal)"
+        unit: "boolean"
+        threshold: 0
+        labels:
+          component: keda
+          type: circuit-breaker
+
+      # Cost optimization metrics
+      - name: resource_utilization_efficiency
+        query: |
+          avg(
+            rate(container_cpu_usage_seconds_total{namespace=~"artemis-system|sophia-system"}[5m]) /
+            kube_pod_container_resource_requests_cpu_cores{namespace=~"artemis-system|sophia-system"}
+          ) * 100
+        description: "CPU utilization vs requested"
+        unit: "percent"
+        optimal_range: [70, 85]
+        labels:
+          component: cost
+          type: efficiency
+
+      - name: scaling_cost_efficiency
+        query: |
+          # Estimated hourly cost savings
+          sum(
+            (60 - histogram_quantile(0.95, sum(rate(keda_scale_loop_duration_seconds_bucket[5m])) by (le))) *
+            0.10 * # Cost per replica-hour
+            avg(kube_deployment_status_replicas{namespace=~"artemis-system|sophia-system"})
+          ) / 60
+        description: "Estimated hourly cost savings from efficient scaling"
+        unit: "USD/hour"
+        labels:
+          component: cost
+          type: savings
+
+  # Recording rules for performance optimization
+  recording-rules.yaml: |
+    groups:
+      - name: keda_performance_recording
+        interval: 30s
+        rules:
+          - record: keda:scaling_time_seconds
+            expr: |
+              histogram_quantile(0.95,
+                sum(rate(keda_scale_loop_duration_seconds_bucket[5m])) by (le)
+              )
+
+          - record: keda:scaling_improvement_percentage
+            expr: |
+              (1 - (keda:scaling_time_seconds / 60)) * 100
+
+          - record: ai:workload_efficiency
+            expr: |
+              sum(rate(sophia_analytics_events_processed_total[5m])) /
+              sum(kube_pod_container_resource_requests_cpu_cores{namespace="sophia-system"})
+
+          - record: artemis:queue_saturation
+            expr: |
+              redis_list_length{list="artemis:task:queue"} /
+              (kube_deployment_status_replicas{deployment="artemis-worker"} * 10)
+
+          - record: sophia:model_saturation
+            expr: |
+              avg(
+                container_memory_working_set_bytes{namespace="sophia-system",container="model-server"} /
+                container_spec_memory_limit_bytes{namespace="sophia-system",container="model-server"}
+              )
+
+  # Alert aggregation rules
+  alert-aggregation.yaml: |
+    aggregations:
+      - name: keda_health_score
+        expression: |
+          (
+            (keda:scaling_improvement_percentage >= 85) * 40 +
+            (rate(keda_scaled_object_events_total[1m]) <= 3) * 30 +
+            (up{job="keda-operator"} == 1) * 30
+          )
+        description: "Overall KEDA health score (0-100)"
+        thresholds:
+          critical: 50
+          warning: 70
+          healthy: 85
+
+      - name: ai_workload_health_score
+        expression: |
+          (
+            (artemis:queue_saturation < 1) * 25 +
+            (sophia:model_saturation < 0.8) * 25 +
+            (ai:workload_efficiency > 100) * 25 +
+            (resource_utilization_efficiency between 70 and 85) * 25
+          )
+        description: "AI workload health score (0-100)"
+        thresholds:
+          critical: 50
+          warning: 70
+          healthy: 85
+
+  # Integration endpoints for existing dashboards
+  dashboard-integration.yaml: |
+    endpoints:
+      - name: keda_metrics
+        path: /api/v1/query
+        queries:
+          scaling_time: keda:scaling_time_seconds
+          improvement: keda:scaling_improvement_percentage
+          circuit_breaker: keda_circuit_breaker_status
+          health_score: keda_health_score
+        refresh_interval: 30s
+        format: prometheus
+
+      - name: ai_metrics
+        path: /api/v1/query_range
+        queries:
+          artemis_queue: artemis_task_queue_depth
+          sophia_rate: sophia_analytics_event_rate
+          efficiency: ai:workload_efficiency
+        refresh_interval: 30s
+        format: prometheus
+
+      - name: cost_metrics
+        path: /api/v1/query
+        queries:
+          hourly_savings: scaling_cost_efficiency
+          resource_efficiency: resource_utilization_efficiency
+        refresh_interval: 60s
+        format: prometheus
+
+  # Webhook configuration for metric alerts
+  webhook-config.yaml: |
+    webhooks:
+      - name: scaling_sla_violation
+        url: ${ALERT_WEBHOOK_URL}
+        condition: keda:scaling_improvement_percentage < 85
+        payload:
+          severity: critical
+          component: keda
+          message: "KEDA not meeting 85% improvement SLA"
+          runbook: "https://docs.sophia-intel-ai.com/runbooks/keda-sla"
+
+      - name: circuit_breaker_triggered
+        url: ${ALERT_WEBHOOK_URL}
+        condition: keda_circuit_breaker_status == 1
+        payload:
+          severity: warning
+          component: keda
+          message: "Circuit breaker activated - falling back to HPA"
+          runbook: "https://docs.sophia-intel-ai.com/runbooks/circuit-breaker"
+---
+# ServiceMonitor to expose KEDA metrics to Prometheus
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: keda-metrics
+  namespace: keda-system
+  labels:
+    app: keda
+    prometheus: kube-prometheus
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: keda-operator
+  endpoints:
+    - port: metrics
+      interval: 30s
+      path: /metrics
+      relabelings:
+        - sourceLabels: [__meta_kubernetes_pod_name]
+          targetLabel: pod
+        - sourceLabels: [__meta_kubernetes_namespace]
+          targetLabel: namespace
+---
+# ServiceMonitor for KEDA Metrics Server
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: keda-metrics-apiserver
+  namespace: keda-system
+  labels:
+    app: keda
+    prometheus: kube-prometheus
+spec:
+  selector:
+    matchLabels:
+      app: keda-operator-metrics-apiserver
+  endpoints:
+    - port: metrics
+      interval: 30s
+      path: /metrics
+      scheme: https
+      tlsConfig:
+        insecureSkipVerify: true
+      relabelings:
+        - sourceLabels: [__meta_kubernetes_pod_name]
+          targetLabel: pod
+        - sourceLabels: [__meta_kubernetes_namespace]
+          targetLabel: namespace

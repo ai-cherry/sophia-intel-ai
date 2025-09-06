@@ -1,0 +1,71 @@
+{
+  "openrouter": [
+    {
+      "provider": "openrouter",
+      "model": "openai/gpt-3.5-turbo",
+      "status": "success",
+      "response": "OK",
+      "latency_ms": 1884
+    },
+    {
+      "provider": "openrouter",
+      "model": "anthropic/claude-instant-v1",
+      "status": "failed",
+      "error": "Error code: 400 - {'error': {'message': 'Invalid response received from openrouter: {\"error\":{\"message\":\"anthropic/claude-instant-v1 is not a valid model ID\",\"code\":400},\"user_id\":\"user_2uvYW9EjjlVjzK"
+    },
+    {
+      "provider": "openrouter",
+      "model": "google/palm-2-chat-bison",
+      "status": "failed",
+      "error": "Error code: 404 - {'error': {'message': 'Invalid response received from openrouter: {\"error\":{\"message\":\"No endpoints found for google/palm-2-chat-bison.\",\"code\":404},\"user_id\":\"user_2uvYW9EjjlVjzKnJ0"
+    },
+    {
+      "provider": "openrouter",
+      "model": "meta-llama/llama-2-70b-chat",
+      "status": "failed",
+      "error": "Error code: 404 - {'error': {'message': 'Invalid response received from openrouter: {\"error\":{\"message\":\"No endpoints found for meta-llama/llama-2-70b-chat.\",\"code\":404},\"user_id\":\"user_2uvYW9EjjlVjzK"
+    },
+    {
+      "provider": "openrouter",
+      "model": "gryphe/mythomax-l2-13b",
+      "status": "success",
+      "response": " OK",
+      "latency_ms": 4959
+    }
+  ],
+  "together": [
+    {
+      "provider": "together",
+      "model": "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",
+      "status": "success",
+      "response": "OK",
+      "latency_ms": 722
+    },
+    {
+      "provider": "together",
+      "model": "meta-llama/Llama-3.2-3B-Instruct-Turbo",
+      "status": "success",
+      "response": "OK",
+      "latency_ms": 1059
+    },
+    {
+      "provider": "together",
+      "model": "meta-llama/Llama-2-7b-chat-hf",
+      "status": "failed",
+      "error": "Error code: 400 - {'error': {'message': 'together-ai error: Unable to access non-serverless model meta-llama/Llama-2-7b-chat-hf. Please visit https://api.together.ai/models/meta-llama/Llama-2-7b-chat-"
+    },
+    {
+      "provider": "together",
+      "model": "mistralai/Mistral-7B-Instruct-v0.1",
+      "status": "success",
+      "response": " OK.",
+      "latency_ms": 571
+    },
+    {
+      "provider": "together",
+      "model": "togethercomputer/RedPajama-INCITE-7B-Chat",
+      "status": "failed",
+      "error": "Error code: 400 - {'error': {'message': 'together-ai error: Unable to access non-serverless model togethercomputer/RedPajama-INCITE-7B-Chat. Please visit https://api.together.ai/models/togethercompute"
+    }
+  ]
+}

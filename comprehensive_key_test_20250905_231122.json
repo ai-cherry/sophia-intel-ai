@@ -1,0 +1,96 @@
+{
+  "timestamp": "2025-09-05T23:11:22.273041",
+  "test_results": {
+    "portkey_keys": {
+      "OPENAI-VK": {
+        "status": "success",
+        "response": "OpenAI connected."
+      },
+      "ANTHROPIC-VK": {
+        "status": "success",
+        "response": "Anthropic connected."
+      },
+      "DEEPSEEK-VK": {
+        "status": "success",
+        "response": "DeepSeek is connected."
+      },
+      "OPENROUTER-VK": {
+        "status": "failed",
+        "error": "Error code: 400 - {'error': {'message': 'Invalid response received from openrouter: {\"error\":{\"messa"
+      },
+      "PERPLEXITY-VK": {
+        "status": "failed",
+        "error": "Error code: 400 - {'error': {'message': \"perplexity-ai error: Invalid model 'llama-3.1-sonar-small-1"
+      },
+      "GROQ-VK": {
+        "status": "failed",
+        "error": "Error code: 400 - {'error': {'message': 'groq error: The model `llama3-8b-8192` has been decommissio"
+      },
+      "MISTRAL-VK": {
+        "status": "success",
+        "response": "\"Mistral linked seamlessly.\""
+      },
+      "XAI-VK": {
+        "status": "failed",
+        "error": "Error code: 400 - {'error': {'message': 'Invalid response received from openrouter: {\"error\":{\"messa"
+      },
+      "TOGETHER-VK": {
+        "status": "success",
+        "response": "United as one."
+      },
+      "COHERE-VK": {
+        "status": "success",
+        "response": "Cohere connected."
+      },
+      "GEMINI-VK": {
+        "status": "failed",
+        "error": "Error code: 429 - {'error': {'message': 'google error: You exceeded your current quota, please check"
+      },
+      "HUGGINGFACE-VK": {
+        "status": "failed",
+        "error": "Error code: 404 - {'error': {'message': 'Invalid response received from huggingface: {\"html-message\""
+      },
+      "QDRANT-VK": {
+        "status": "configured",
+        "key": "qdrant-vk-d2b62a"
+      },
+      "MILVUS-VK": {
+        "status": "configured",
+        "key": "milvus-vk-34fa02"
+      }
+    },
+    "direct_keys": {
+      "openai_direct": "success",
+      "anthropic_direct": "success",
+      "openrouter_direct": "failed: 401",
+      "together_direct": "failed: No module named 'together'",
+      "huggingface_direct": "failed: 404",
+      "groq_direct": "failed: No module named 'groq'",
+      "mistral_direct": "failed: No module named 'mistralai'",
+      "deepseek_direct": "success",
+      "perplexity_direct": "failed: Error code: 400 - {'error': {'message': \"Invalid model 'llama-3.1-sonar-small-128k-online'. Permitte",
+      "gemini_direct": "failed: No module named 'google.generativeai'",
+      "llama_api": "failed: 404"
+    },
+    "orchestrator_access": {
+      "artemis_access": "error: 'ArtemisUnifiedFactory' object has no attribute 'create_agent'",
+      "sophia_access": "error: CircuitBreaker.__init__() got an unexpected keyword argument 'failure_threshold'",
+      "portkey_manager": "12 providers"
+    }
+  },
+  "summary": {
+    "portkey_virtual_keys": {
+      "total": 14,
+      "successful": 6
+    },
+    "direct_api_keys": {
+      "total": 11,
+      "successful": 3
+    },
+    "orchestrator_access": {
+      "artemis_access": "error: 'ArtemisUnifiedFactory' object has no attribute 'create_agent'",
+      "sophia_access": "error: CircuitBreaker.__init__() got an unexpected keyword argument 'failure_threshold'",
+      "portkey_manager": "12 providers"
+    }
+  }
+}

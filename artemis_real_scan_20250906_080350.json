@@ -1,0 +1,323 @@
+{
+  "timestamp": "2025-09-06T08:03:50.923613",
+  "repository": "/Users/lynnmusil/sophia-intel-ai",
+  "scan_type": "REAL_FILE_ANALYSIS",
+  "repository_stats": {
+    "python_files": 536,
+    "typescript_files": 5658,
+    "tsx_files": 97,
+    "total_files": 6291,
+    "critical_files": [
+      "app/artemis/unified_factory.py",
+      "app/sophia/sophia_orchestrator.py",
+      "app/core/websocket_manager.py",
+      "app/core/portkey_config.py",
+      "app/core/aimlapi_config.py",
+      "app/api/unified_server.py",
+      ".env"
+    ],
+    "sample_py_files": [
+      "/Users/lynnmusil/sophia-intel-ai/test_gong_correct_api.py",
+      "/Users/lynnmusil/sophia-intel-ai/test_memory_server.py",
+      "/Users/lynnmusil/sophia-intel-ai/activate_n8n_production.py",
+      "/Users/lynnmusil/sophia-intel-ai/test_components.py",
+      "/Users/lynnmusil/sophia-intel-ai/artemis_server_standalone.py",
+      "/Users/lynnmusil/sophia-intel-ai/test_gong_integration_with_artemis.py",
+      "/Users/lynnmusil/sophia-intel-ai/setup_production_monitoring.py",
+      "/Users/lynnmusil/sophia-intel-ai/sophia_server_standalone.py",
+      "/Users/lynnmusil/sophia-intel-ai/simple_test_server.py",
+      "/Users/lynnmusil/sophia-intel-ai/demo_prompt_library.py"
+    ]
+  },
+  "total_files_scanned": 108,
+  "total_issues_found": 28,
+  "security_issues": [
+    {
+      "type": "ENV_KEY_EXPOSED",
+      "file": ".env",
+      "key": "NETSUITE_AUTH_METHOD",
+      "severity": "CRITICAL",
+      "recommendation": "Move to secure secrets manager"
+    },
+    {
+      "type": "ENV_KEY_EXPOSED",
+      "file": ".env",
+      "key": "NETSUITE_ACCOUNT_ID",
+      "severity": "CRITICAL",
+      "recommendation": "Move to secure secrets manager"
+    },
+    {
+      "type": "ENV_KEY_EXPOSED",
+      "file": ".env",
+      "key": "NETSUITE_APPLICATION_ID",
+      "severity": "CRITICAL",
+      "recommendation": "Move to secure secrets manager"
+    },
+    {
+      "type": "ENV_KEY_EXPOSED",
+      "file": ".env",
+      "key": "NETSUITE_CONSUMER_KEY",
+      "severity": "CRITICAL",
+      "recommendation": "Move to secure secrets manager"
+    },
+    {
+      "type": "ENV_KEY_EXPOSED",
+      "file": ".env",
+      "key": "NETSUITE_CONSUMER_SECRET",
+      "severity": "CRITICAL",
+      "recommendation": "Move to secure secrets manager"
+    },
+    {
+      "type": "ENV_KEY_EXPOSED",
+      "file": ".env",
+      "key": "NETSUITE_TOKEN_ID",
+      "severity": "CRITICAL",
+      "recommendation": "Move to secure secrets manager"
+    },
+    {
+      "type": "ENV_KEY_EXPOSED",
+      "file": ".env",
+      "key": "NETSUITE_TOKEN_SECRET",
+      "severity": "CRITICAL",
+      "recommendation": "Move to secure secrets manager"
+    },
+    {
+      "type": "ENV_KEY_EXPOSED",
+      "file": ".env",
+      "key": "NETSUITE_REDIRECT_URI",
+      "severity": "CRITICAL",
+      "recommendation": "Move to secure secrets manager"
+    },
+    {
+      "type": "ENV_KEY_EXPOSED",
+      "file": ".env",
+      "key": "NETSUITE_SCOPE",
+      "severity": "CRITICAL",
+      "recommendation": "Move to secure secrets manager"
+    },
+    {
+      "type": "ENV_KEY_EXPOSED",
+      "file": ".env",
+      "key": "PORTKEY_API_KEY",
+      "severity": "CRITICAL",
+      "recommendation": "Move to secure secrets manager"
+    },
+    {
+      "type": "ENV_KEY_EXPOSED",
+      "file": ".env",
+      "key": "AIMLAPI_API_KEY",
+      "severity": "CRITICAL",
+      "recommendation": "Move to secure secrets manager"
+    },
+    {
+      "type": "ENV_KEY_EXPOSED",
+      "file": ".env",
+      "key": "OPENROUTER_API_KEY",
+      "severity": "CRITICAL",
+      "recommendation": "Move to secure secrets manager"
+    },
+    {
+      "type": "ENV_KEY_EXPOSED",
+      "file": ".env",
+      "key": "GEMINI_API_KEY",
+      "severity": "CRITICAL",
+      "recommendation": "Move to secure secrets manager"
+    },
+    {
+      "type": "ENV_KEY_EXPOSED",
+      "file": ".env",
+      "key": "XAI_API_KEY",
+      "severity": "CRITICAL",
+      "recommendation": "Move to secure secrets manager"
+    },
+    {
+      "type": "ENV_KEY_EXPOSED",
+      "file": ".env",
+      "key": "LLAMA_API_KEY",
+      "severity": "CRITICAL",
+      "recommendation": "Move to secure secrets manager"
+    },
+    {
+      "type": "ENV_KEY_EXPOSED",
+      "file": ".env",
+      "key": "HUGGINGFACE_API_TOKEN",
+      "severity": "CRITICAL",
+      "recommendation": "Move to secure secrets manager"
+    }
+  ],
+  "architecture_issues": [
+    {
+      "type": "DUPLICATE_FUNCTION",
+      "function": "__init__",
+      "locations": [
+        {
+          "file": "/app/core/orchestrator_personality.py",
+          "line": 17
+        },
+        {
+          "file": "/app/core/orchestrator_enhancements.py",
+          "line": 61
+        },
+        {
+          "file": "/app/core/orchestrator_config.py",
+          "line": 46
+        },
+        {
+          "file": "/scripts/orchestrator_consolidation.py",
+          "line": 23
+        },
+        {
+          "file": "/app/artemis/unified_factory.py",
+          "line": 37
+        },
+        {
+          "file": "/app/artemis/portkey_unified_factory.py",
+          "line": 33
+        },
+        {
+          "file": "/app/sophia/unified_factory.py",
+          "line": 35
+        },
+        {
+          "file": "/app/sophia/agent_factory.py",
+          "line": 35
+        },
+        {
+          "file": "/app/sophia/agent_factory.py",
+          "line": 45
+        },
+        {
+          "file": "/app/sophia/agent_factory.py",
+          "line": 54
+        },
+        {
+          "file": "/app/factories/prioritized_swarm_factory.py",
+          "line": 37
+        },
+        {
+          "file": "/app/factories/enhanced_agent_factory.py",
+          "line": 49
+        },
+        {
+          "file": "/app/factory/factory_bootstrap.py",
+          "line": 39
+        }
+      ],
+      "severity": "MEDIUM",
+      "impact": "Code redundancy increases maintenance burden"
+    },
+    {
+      "type": "DUPLICATE_FUNCTION",
+      "function": "run",
+      "locations": [
+        {
+          "file": "/app/sophia/agent_factory.py",
+          "line": 41
+        },
+        {
+          "file": "/app/sophia/agent_factory.py",
+          "line": 50
+        }
+      ],
+      "severity": "MEDIUM",
+      "impact": "Code redundancy increases maintenance burden"
+    },
+    {
+      "type": "COMPLEX_IMPORT_STRUCTURE",
+      "modules_analyzed": 20,
+      "severity": "LOW",
+      "recommendation": "Consider simplifying import structure"
+    }
+  ],
+  "performance_issues": [
+    {
+      "type": "NESTED_LOOP",
+      "file": "/app/research/web_research_team.py",
+      "line": 2,
+      "severity": "MEDIUM",
+      "complexity": "Potential O(n\u00b2) complexity"
+    },
+    {
+      "type": "NESTED_LOOP",
+      "file": "/app/tools/git_ops.py",
+      "line": 31,
+      "severity": "MEDIUM",
+      "complexity": "Potential O(n\u00b2) complexity"
+    },
+    {
+      "type": "NESTED_LOOP",
+      "file": "/app/tools/tool_schemas.py",
+      "line": 40,
+      "severity": "MEDIUM",
+      "complexity": "Potential O(n\u00b2) complexity"
+    },
+    {
+      "type": "NESTED_LOOP",
+      "file": "/app/tools/basic_tools.py",
+      "line": 2,
+      "severity": "MEDIUM",
+      "complexity": "Potential O(n\u00b2) complexity"
+    },
+    {
+      "type": "NESTED_LOOP",
+      "file": "/app/tools/test_ops.py",
+      "line": 7,
+      "severity": "MEDIUM",
+      "complexity": "Potential O(n\u00b2) complexity"
+    },
+    {
+      "type": "NESTED_LOOP",
+      "file": "/app/tools/test_ops.py",
+      "line": 56,
+      "severity": "MEDIUM",
+      "complexity": "Potential O(n\u00b2) complexity"
+    },
+    {
+      "type": "NESTED_LOOP",
+      "file": "/app/tools/code_search.py",
+      "line": 12,
+      "severity": "MEDIUM",
+      "complexity": "Potential O(n\u00b2) complexity"
+    },
+    {
+      "type": "NESTED_LOOP",
+      "file": "/app/embeddings/chunking_strategies.py",
+      "line": 2,
+      "severity": "MEDIUM",
+      "complexity": "Potential O(n\u00b2) complexity"
+    },
+    {
+      "type": "NESTED_LOOP",
+      "file": "/app/core/portkey_config.py",
+      "line": 49,
+      "severity": "MEDIUM",
+      "complexity": "Potential O(n\u00b2) complexity"
+    }
+  ],
+  "agents": [
+    {
+      "name": "SECURITY SCANNER ALPHA",
+      "model": "grok-code-fast-1",
+      "files_scanned": 8,
+      "issues": 16,
+      "success": true,
+      "time": 0.0004401206970214844
+    },
+    {
+      "name": "ARCHITECTURE ANALYZER BRAVO",
+      "model": "llama-4-scout",
+      "files_scanned": 70,
+      "issues": 3,
+      "success": true,
+      "time": 0.18373394012451172
+    },
+    {
+      "name": "PERFORMANCE SCANNER CHARLIE",
+      "model": "deepseek-chat",
+      "files_scanned": 30,
+      "issues": 9,
+      "success": true,
+      "time": 0.0069789886474609375
+    }
+  ]
+}

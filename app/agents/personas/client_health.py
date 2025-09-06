@@ -12,7 +12,7 @@ analytical insights with genuine care for client relationships and outcomes.
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Optional
+from typing import Any, Dict, List, Optional
 
 from .base_persona import BasePersonaAgent, ConversationStyle, PersonalityTrait, PersonaProfile
 
@@ -357,11 +357,11 @@ class ClientHealthAgent(BasePersonaAgent):
             "churn_probability": churn_probability,
             "primary_risks": risk_drivers,
             "recommended_interventions": interventions,
-            "urgency_level": "high"
-            if churn_probability > 0.6
-            else "medium"
-            if churn_probability > 0.3
-            else "low",
+            "urgency_level": (
+                "high"
+                if churn_probability > 0.6
+                else "medium" if churn_probability > 0.3 else "low"
+            ),
         }
 
     async def _plan_intervention(self, user_input: str, context: dict[str, Any]) -> dict[str, Any]:
@@ -968,3 +968,180 @@ class ClientHealthAgent(BasePersonaAgent):
         self, practices: str, user_input: str, context: dict[str, Any]
     ) -> str:
         return f"Based on your situation: {practices}. I recommend starting with a thorough client health assessment."
+
+    async def assess_client_health(self, assessment_data) -> Dict[str, Any]:
+        """Assess overall client health and provide recommendations"""
+        health_score = 0.0
+        risk_factors = []
+        recommendations = []
+
+        # Analyze engagement score
+        engagement = assessment_data.engagement_score
+        if engagement < 0.3:
+            risk_factors.append("Low engagement - high churn risk")
+            recommendations.append("Schedule executive business review immediately")
+            health_score += 0.1
+        elif engagement < 0.6:
+            risk_factors.append("Moderate engagement - needs attention")
+            recommendations.append("Increase touchpoint frequency")
+            health_score += 0.3
+        else:
+            health_score += 0.5
+
+        # Analyze support tickets
+        if assessment_data.support_tickets > 10:
+            risk_factors.append("High support ticket volume")
+            recommendations.append("Conduct root cause analysis of issues")
+            health_score -= 0.1
+
+        # Analyze last contact
+        if assessment_data.last_contact_days > 30:
+            risk_factors.append("No recent contact")
+            recommendations.append("Reach out for health check call")
+            health_score -= 0.2
+
+        # Calculate final health score
+        health_score = max(0.0, min(1.0, health_score + 0.5))
+
+        return {
+            "client_id": assessment_data.client_id,
+            "client_name": assessment_data.client_name,
+            "health_score": health_score,
+            "health_status": (
+                "at_risk"
+                if health_score < 0.4
+                else "needs_attention" if health_score < 0.7 else "healthy"
+            ),
+            "risk_factors": risk_factors,
+            "recommendations": recommendations,
+            "next_action": recommendations[0] if recommendations else "Continue regular engagement",
+            "renewal_likelihood": (
+                "low" if health_score < 0.4 else "medium" if health_score < 0.7 else "high"
+            ),
+        }
+
+    async def predict_churn_risk(
+        self, client_id: str, assessment_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Predict client churn risk based on various factors"""
+        churn_probability = 0.0
+        churn_indicators = []
+        prevention_actions = []
+
+        # Analyze various factors
+        if assessment_data.get("usage_decline", False):
+            churn_probability += 0.3
+            churn_indicators.append("Declining product usage")
+            prevention_actions.append("Conduct usage analysis and training")
+
+        if assessment_data.get("stakeholder_changes", False):
+            churn_probability += 0.2
+            churn_indicators.append("Key stakeholder changes")
+            prevention_actions.append("Re-establish executive relationships")
+
+        if assessment_data.get("competitor_evaluation", False):
+            churn_probability += 0.4
+            churn_indicators.append("Evaluating competitors")
+            prevention_actions.append("Schedule value demonstration")
+
+        if assessment_data.get("budget_concerns", False):
+            churn_probability += 0.2
+            churn_indicators.append("Budget constraints mentioned")
+            prevention_actions.append("Prepare ROI justification")
+
+        # Cap probability at 0.95
+        churn_probability = min(0.95, churn_probability)
+
+        return {
+            "client_id": client_id,
+            "churn_probability": churn_probability,
+            "risk_level": (
+                "critical"
+                if churn_probability > 0.7
+                else (
+                    "high"
+                    if churn_probability > 0.5
+                    else "medium" if churn_probability > 0.3 else "low"
+                )
+            ),
+            "churn_indicators": churn_indicators,
+            "prevention_actions": prevention_actions,
+            "timeline": (
+                "immediate"
+                if churn_probability > 0.7
+                else "within_30_days" if churn_probability > 0.5 else "quarterly_review"
+            ),
+            "confidence": 0.85,  # Model confidence
+        }
+
+    async def create_success_plan(
+        self, client_id: str, goals: List[str], timeline: str
+    ) -> Dict[str, Any]:
+        """Create a client success plan"""
+        plan_phases = []
+        success_metrics = []
+        activities = []
+
+        # Define phases based on timeline
+        if timeline == "quarterly":
+            plan_phases = [
+                {"phase": "Month 1", "focus": "Foundation & Quick Wins"},
+                {"phase": "Month 2", "focus": "Process Optimization"},
+                {"phase": "Month 3", "focus": "Scale & Measure"},
+            ]
+        elif timeline == "annual":
+            plan_phases = [
+                {"phase": "Q1", "focus": "Onboarding & Adoption"},
+                {"phase": "Q2", "focus": "Value Realization"},
+                {"phase": "Q3", "focus": "Expansion Planning"},
+                {"phase": "Q4", "focus": "Renewal & Growth"},
+            ]
+        else:
+            plan_phases = [
+                {"phase": "Week 1-2", "focus": "Assessment"},
+                {"phase": "Week 3-4", "focus": "Implementation"},
+            ]
+
+        # Map goals to activities
+        for goal in goals[:5]:  # Limit to 5 goals
+            goal_lower = goal.lower()
+            if "adoption" in goal_lower:
+                activities.append("User training workshops")
+                success_metrics.append("User adoption rate > 80%")
+            elif "roi" in goal_lower or "value" in goal_lower:
+                activities.append("ROI tracking dashboard setup")
+                success_metrics.append("Demonstrate 3x ROI")
+            elif "integration" in goal_lower:
+                activities.append("Technical integration sessions")
+                success_metrics.append("Complete system integrations")
+            elif "growth" in goal_lower or "expansion" in goal_lower:
+                activities.append("Expansion opportunity assessment")
+                success_metrics.append("Identify 2+ expansion opportunities")
+            else:
+                activities.append(f"Custom activity for: {goal}")
+                success_metrics.append(f"Achieve: {goal}")
+
+        return {
+            "client_id": client_id,
+            "plan_name": f"Success Plan - {timeline.title()}",
+            "timeline": timeline,
+            "phases": plan_phases,
+            "goals": goals[:5],
+            "activities": activities,
+            "success_metrics": success_metrics,
+            "check_in_frequency": (
+                "weekly"
+                if timeline == "monthly"
+                else "bi-weekly" if timeline == "quarterly" else "monthly"
+            ),
+            "stakeholder_reviews": [
+                {"timing": "Mid-point", "format": "Progress Review"},
+                {"timing": "End", "format": "Success Assessment"},
+            ],
+            "resources_needed": [
+                "Dedicated CSM",
+                "Technical support",
+                "Training materials",
+                "Executive sponsor",
+            ],
+        }

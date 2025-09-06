@@ -1,0 +1,421 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alert-rules-infrastructure
+  namespace: monitoring
+  labels:
+    app: alertmanager
+    domain: infrastructure
+data:
+  infrastructure-alerts.yaml: |
+    groups:
+    - name: infrastructure-core
+      interval: 30s
+      rules:
+      # Node Health Alerts
+      - alert: NodeDown
+        expr: |
+          up{job="node-exporter"} == 0
+        for: 2m
+        labels:
+          severity: CRITICAL
+          domain: infrastructure
+          component: node
+        annotations:
+          summary: "Node {{ $labels.node }} is DOWN"
+          description: "Node {{ $labels.node }} has been unreachable for more than 2 minutes"
+          runbook_url: "https://docs.sophia-artemis.ai/runbooks/node-down"
+
+      - alert: NodeNotReady
+        expr: |
+          kube_node_status_condition{condition="Ready",status="true"} == 0
+        for: 5m
+        labels:
+          severity: CRITICAL
+          domain: infrastructure
+          component: node
+        annotations:
+          summary: "Node {{ $labels.node }} is not ready"
+          description: "Node {{ $labels.node }} has been in NotReady state for more than 5 minutes"
+
+      - alert: NodeMemoryPressure
+        expr: |
+          kube_node_status_condition{condition="MemoryPressure",status="true"} == 1
+        for: 5m
+        labels:
+          severity: WARNING
+          domain: infrastructure
+          component: node
+          resource: memory
+        annotations:
+          summary: "Memory pressure on node {{ $labels.node }}"
+          description: "Node {{ $labels.node }} is experiencing memory pressure"
+
+      - alert: NodeDiskPressure
+        expr: |
+          kube_node_status_condition{condition="DiskPressure",status="true"} == 1
+        for: 5m
+        labels:
+          severity: WARNING
+          domain: infrastructure
+          component: node
+          resource: disk
+        annotations:
+          summary: "Disk pressure on node {{ $labels.node }}"
+          description: "Node {{ $labels.node }} is experiencing disk pressure"
+
+      # CPU Alerts
+      - alert: NodeHighCPUUsage
+        expr: |
+          (1 - avg(rate(node_cpu_seconds_total{mode="idle"}[5m])) by (instance)) * 100 > 85
+        for: 15m
+        labels:
+          severity: WARNING
+          domain: infrastructure
+          component: cpu
+        annotations:
+          summary: "High CPU usage on {{ $labels.instance }}"
+          description: "CPU usage on {{ $labels.instance }} is {{ $value | humanizePercentage }}"
+
+      - alert: NodeCPUThrottling
+        expr: |
+          rate(container_cpu_cfs_throttled_seconds_total[5m]) > 1
+        for: 10m
+        labels:
+          severity: WARNING
+          domain: infrastructure
+          component: cpu
+          throttling: high
+        annotations:
+          summary: "CPU throttling detected on {{ $labels.node }}"
+          description: "Container {{ $labels.container }} in pod {{ $labels.pod }} is being CPU throttled"
+
+      # Memory Alerts
+      - alert: NodeHighMemoryUsage
+        expr: |
+          (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 90
+        for: 10m
+        labels:
+          severity: WARNING
+          domain: infrastructure
+          component: memory
+        annotations:
+          summary: "High memory usage on {{ $labels.instance }}"
+          description: "Memory usage on {{ $labels.instance }} is {{ $value | humanizePercentage }}"
+
+      - alert: NodeMemoryCritical
+        expr: |
+          (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 95
+        for: 5m
+        labels:
+          severity: CRITICAL
+          domain: infrastructure
+          component: memory
+        annotations:
+          summary: "CRITICAL: Memory exhaustion on {{ $labels.instance }}"
+          description: "Memory usage on {{ $labels.instance }} is {{ $value | humanizePercentage }}, system may become unstable"
+
+      - alert: ContainerOOMKilled
+        expr: |
+          increase(kube_pod_container_status_terminated_reason{reason="OOMKilled"}[1h]) > 0
+        labels:
+          severity: WARNING
+          domain: infrastructure
+          component: memory
+          oom: killed
+        annotations:
+          summary: "Container {{ $labels.container }} was OOM killed"
+          description: "Container {{ $labels.container }} in pod {{ $labels.pod }} was killed due to out of memory"
+
+      # Disk Alerts
+      - alert: DiskSpaceLow
+        expr: |
+          (node_filesystem_avail_bytes{fstype!~"tmpfs|fuse.lxcfs|squashfs|vfat"} / node_filesystem_size_bytes) * 100 < 20
+        for: 10m
+        labels:
+          severity: WARNING
+          domain: infrastructure
+          component: disk
+        annotations:
+          summary: "Low disk space on {{ $labels.instance }}"
+          description: "Disk {{ $labels.device }} on {{ $labels.instance }} has only {{ $value | humanizePercentage }} free space"
+
+      - alert: DiskSpaceCritical
+        expr: |
+          (node_filesystem_avail_bytes{fstype!~"tmpfs|fuse.lxcfs|squashfs|vfat"} / node_filesystem_size_bytes) * 100 < 10
+        for: 5m
+        labels:
+          severity: CRITICAL
+          domain: infrastructure
+          component: disk
+        annotations:
+          summary: "CRITICAL: Disk space exhaustion on {{ $labels.instance }}"
+          description: "Disk {{ $labels.device }} on {{ $labels.instance }} has only {{ $value | humanizePercentage }} free space"
+
+      - alert: DiskIOSaturation
+        expr: |
+          rate(node_disk_io_time_seconds_total[5m]) > 0.9
+        for: 10m
+        labels:
+          severity: WARNING
+          domain: infrastructure
+          component: disk
+          io: saturated
+        annotations:
+          summary: "Disk I/O saturation on {{ $labels.instance }}"
+          description: "Disk {{ $labels.device }} on {{ $labels.instance }} is {{ $value | humanizePercentage }} saturated"
+
+      - alert: InodeExhaustion
+        expr: |
+          (node_filesystem_files_free / node_filesystem_files) * 100 < 10
+        for: 5m
+        labels:
+          severity: WARNING
+          domain: infrastructure
+          component: disk
+          resource: inodes
+        annotations:
+          summary: "Inode exhaustion on {{ $labels.instance }}"
+          description: "Filesystem {{ $labels.mountpoint }} on {{ $labels.instance }} has only {{ $value | humanizePercentage }} inodes free"
+
+      # Network Alerts
+      - alert: NetworkInterfaceDown
+        expr: |
+          node_network_up{device!~"lo|veth.*|docker.*|flannel.*|cali.*|cbr.*"} == 0
+        for: 5m
+        labels:
+          severity: CRITICAL
+          domain: infrastructure
+          component: network
+        annotations:
+          summary: "Network interface {{ $labels.device }} is down"
+          description: "Network interface {{ $labels.device }} on {{ $labels.instance }} has been down for 5 minutes"
+
+      - alert: NetworkHighErrorRate
+        expr: |
+          rate(node_network_receive_errs_total[5m]) > 0.01
+          or rate(node_network_transmit_errs_total[5m]) > 0.01
+        for: 10m
+        labels:
+          severity: WARNING
+          domain: infrastructure
+          component: network
+          errors: high
+        annotations:
+          summary: "High network error rate on {{ $labels.instance }}"
+          description: "Network interface {{ $labels.device }} is experiencing {{ $value | humanize }} errors per second"
+
+      - alert: NetworkPacketDrop
+        expr: |
+          rate(node_network_receive_drop_total[5m]) > 0.01
+          or rate(node_network_transmit_drop_total[5m]) > 0.01
+        for: 10m
+        labels:
+          severity: WARNING
+          domain: infrastructure
+          component: network
+          drops: high
+        annotations:
+          summary: "Network packet drops on {{ $labels.instance }}"
+          description: "Network interface {{ $labels.device }} is dropping {{ $value | humanize }} packets per second"
+
+      # Kubernetes Control Plane
+      - alert: KubeAPIDown
+        expr: |
+          up{job="kubernetes-apiservers"} == 0
+        for: 2m
+        labels:
+          severity: CRITICAL
+          domain: infrastructure
+          component: control-plane
+          service: apiserver
+        annotations:
+          summary: "Kubernetes API server is down"
+          description: "Kubernetes API server has been unreachable for 2 minutes"
+
+      - alert: KubeControllerManagerDown
+        expr: |
+          up{job="kube-controller-manager"} == 0
+        for: 5m
+        labels:
+          severity: CRITICAL
+          domain: infrastructure
+          component: control-plane
+          service: controller-manager
+        annotations:
+          summary: "Kubernetes Controller Manager is down"
+          description: "Kubernetes Controller Manager has been down for 5 minutes"
+
+      - alert: KubeSchedulerDown
+        expr: |
+          up{job="kube-scheduler"} == 0
+        for: 5m
+        labels:
+          severity: CRITICAL
+          domain: infrastructure
+          component: control-plane
+          service: scheduler
+        annotations:
+          summary: "Kubernetes Scheduler is down"
+          description: "Kubernetes Scheduler has been down for 5 minutes"
+
+      - alert: KubeAPIHighLatency
+        expr: |
+          histogram_quantile(0.99,
+            sum(rate(apiserver_request_duration_seconds_bucket{verb!~"WATCH|LIST"}[5m])) by (le, verb)
+          ) > 1
+        for: 10m
+        labels:
+          severity: WARNING
+          domain: infrastructure
+          component: control-plane
+          latency: high
+        annotations:
+          summary: "High API server latency"
+          description: "API server P99 latency for {{ $labels.verb }} is {{ $value | humanizeDuration }}"
+
+      # etcd Alerts
+      - alert: EtcdDown
+        expr: |
+          up{job="etcd"} == 0
+        for: 2m
+        labels:
+          severity: CRITICAL
+          domain: infrastructure
+          component: etcd
+        annotations:
+          summary: "etcd instance {{ $labels.instance }} is down"
+          description: "etcd instance {{ $labels.instance }} has been down for 2 minutes"
+
+      - alert: EtcdInsufficientMembers
+        expr: |
+          count(up{job="etcd"} == 1) < 3
+        for: 5m
+        labels:
+          severity: CRITICAL
+          domain: infrastructure
+          component: etcd
+          quorum: lost
+        annotations:
+          summary: "etcd cluster has insufficient members"
+          description: "etcd cluster has only {{ $value }} members, quorum at risk"
+
+      - alert: EtcdHighFsyncDuration
+        expr: |
+          histogram_quantile(0.99, rate(etcd_disk_wal_fsync_duration_seconds_bucket[5m])) > 0.5
+        for: 10m
+        labels:
+          severity: WARNING
+          domain: infrastructure
+          component: etcd
+          performance: degraded
+        annotations:
+          summary: "High etcd fsync duration"
+          description: "etcd fsync P99 duration is {{ $value | humanizeDuration }}, indicating disk performance issues"
+
+      # Container Registry
+      - alert: RegistryDown
+        expr: |
+          up{job="container-registry"} == 0
+        for: 5m
+        labels:
+          severity: CRITICAL
+          domain: infrastructure
+          component: registry
+        annotations:
+          summary: "Container registry is down"
+          description: "Container registry {{ $labels.instance }} has been down for 5 minutes"
+
+      - alert: RegistryStorageFull
+        expr: |
+          (container_registry_storage_used_bytes / container_registry_storage_limit_bytes) * 100 > 90
+        for: 10m
+        labels:
+          severity: WARNING
+          domain: infrastructure
+          component: registry
+          storage: full
+        annotations:
+          summary: "Container registry storage almost full"
+          description: "Container registry storage is {{ $value | humanizePercentage }} full"
+
+      # Certificate Expiration
+      - alert: CertificateExpiringSoon
+        expr: |
+          (probe_ssl_earliest_cert_expiry - time()) / 86400 < 30
+        for: 1h
+        labels:
+          severity: WARNING
+          domain: infrastructure
+          component: certificates
+        annotations:
+          summary: "Certificate expiring soon for {{ $labels.instance }}"
+          description: "SSL certificate for {{ $labels.instance }} will expire in {{ $value }} days"
+
+      - alert: CertificateExpiryCritical
+        expr: |
+          (probe_ssl_earliest_cert_expiry - time()) / 86400 < 7
+        for: 1h
+        labels:
+          severity: CRITICAL
+          domain: infrastructure
+          component: certificates
+        annotations:
+          summary: "CRITICAL: Certificate expiring for {{ $labels.instance }}"
+          description: "SSL certificate for {{ $labels.instance }} will expire in {{ $value }} days"
+
+      # PersistentVolume Alerts
+      - alert: PersistentVolumeError
+        expr: |
+          kube_persistentvolume_status_phase{phase=~"Failed|Pending"} > 0
+        for: 5m
+        labels:
+          severity: WARNING
+          domain: infrastructure
+          component: storage
+        annotations:
+          summary: "PersistentVolume {{ $labels.persistentvolume }} in error state"
+          description: "PersistentVolume {{ $labels.persistentvolume }} is in {{ $labels.phase }} state"
+
+      - alert: PersistentVolumeClaimPending
+        expr: |
+          kube_persistentvolumeclaim_status_phase{phase="Pending"} > 0
+        for: 15m
+        labels:
+          severity: WARNING
+          domain: infrastructure
+          component: storage
+        annotations:
+          summary: "PVC {{ $labels.persistentvolumeclaim }} is pending"
+          description: "PVC {{ $labels.persistentvolumeclaim }} in namespace {{ $labels.namespace }} has been pending for 15 minutes"
+
+      # Cluster Resource Alerts
+      - alert: ClusterCPUOvercommit
+        expr: |
+          sum(kube_pod_container_resource_requests{resource="cpu"})
+          /
+          sum(kube_node_status_allocatable{resource="cpu"})
+          > 1.5
+        for: 10m
+        labels:
+          severity: WARNING
+          domain: infrastructure
+          component: cluster-resources
+        annotations:
+          summary: "Cluster CPU overcommitted"
+          description: "Cluster CPU is overcommitted by {{ $value | humanizePercentage }}"
+
+      - alert: ClusterMemoryOvercommit
+        expr: |
+          sum(kube_pod_container_resource_requests{resource="memory"})
+          /
+          sum(kube_node_status_allocatable{resource="memory"})
+          > 1.2
+        for: 10m
+        labels:
+          severity: WARNING
+          domain: infrastructure
+          component: cluster-resources
+        annotations:
+          summary: "Cluster memory overcommitted"
+          description: "Cluster memory is overcommitted by {{ $value | humanizePercentage }}"

@@ -1,0 +1,135 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: monitoring-dev
+
+bases:
+  - ../../
+
+namePrefix: dev-
+nameSuffix: ""
+
+commonLabels:
+  environment: dev
+  tier: monitoring
+
+commonAnnotations:
+  environment: development
+  managed-by: kustomize
+
+# Dev-specific patches
+patchesStrategicMerge:
+  - |-
+    apiVersion: v1
+    kind: Namespace
+    metadata:
+      name: monitoring
+    ---
+    apiVersion: apps/v1
+    kind: StatefulSet
+    metadata:
+      name: alertmanager
+      namespace: monitoring
+    spec:
+      replicas: 1  # Single instance for dev
+      template:
+        spec:
+          containers:
+          - name: alertmanager
+            env:
+            - name: ENVIRONMENT
+              value: "dev"
+            - name: LOG_LEVEL
+              value: "debug"
+            resources:
+              requests:
+                memory: "256Mi"
+                cpu: "100m"
+              limits:
+                memory: "512Mi"
+                cpu: "500m"
+            args:
+            - '--config.file=/etc/alertmanager/alertmanager.yml'
+            - '--storage.path=/alertmanager'
+            - '--log.level=debug'
+            - '--cluster.listen-address='  # Disable clustering in dev
+          - name: oauth2-proxy
+            env:
+            - name: OAUTH2_PROXY_COOKIE_SECURE
+              value: "false"  # Allow non-HTTPS in dev
+  - |-
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: alertmanager
+      namespace: monitoring
+    spec:
+      type: NodePort  # Use NodePort for easy dev access
+  - |-
+    apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    metadata:
+      name: alertmanager
+      namespace: monitoring
+    spec:
+      policyTypes:
+      - Ingress
+      - Egress
+      ingress:
+      - from:
+        - podSelector: {}  # Allow all pods in dev namespace
+
+configMapGenerator:
+  - name: alertmanager-config
+    behavior: replace
+    files:
+      - alertmanager-dev.yml
+  - name: dev-env-config
+    literals:
+      - SLACK_WEBHOOK_URL=https://hooks.slack.com/services/DEV/WEBHOOK
+      - PAGERDUTY_KEY=dev-integration-key
+      - EMAIL_SMTP_HOST=smtp.dev.example.com
+      - TEAMS_WEBHOOK_URL=https://outlook.office.com/webhook/dev
+
+# Additional dev-specific resources
+resources:
+  - |-
+    apiVersion: v1
+    kind: ResourceQuota
+    metadata:
+      name: alertmanager-quota
+      namespace: monitoring-dev
+    spec:
+      hard:
+        requests.cpu: "2"
+        requests.memory: 2Gi
+        limits.cpu: "4"
+        limits.memory: 4Gi
+        persistentvolumeclaims: "3"
+  - |-
+    apiVersion: external-secrets.io/v1beta1
+    kind: ExternalSecret
+    metadata:
+      name: alertmanager-secrets
+      namespace: monitoring-dev
+    spec:
+      refreshInterval: 5m
+      secretStoreRef:
+        name: vault-backend
+        kind: SecretStore
+      target:
+        name: alertmanager-secrets
+        creationPolicy: Owner
+      data:
+        - secretKey: slack-webhook
+          remoteRef:
+            key: dev/alertmanager/slack
+            property: webhook
+        - secretKey: pagerduty-key
+          remoteRef:
+            key: dev/alertmanager/pagerduty
+            property: key
+        - secretKey: email-password
+          remoteRef:
+            key: dev/alertmanager/email
+            property: password

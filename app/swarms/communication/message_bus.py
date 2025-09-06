@@ -5,7 +5,7 @@ import logging
 import time
 from collections.abc import AsyncIterator
 from datetime import datetime, timezone
-from typing import Any, Optional
+from typing import Any, Dict, Optional
 from uuid import uuid4
 
 import msgpack
@@ -15,6 +15,8 @@ from opentelemetry.trace import SpanKind
 from pydantic import BaseModel, Field
 
 from app.core.ai_logger import logger
+from app.core.redis_config import redis_config
+from app.core.redis_manager import RedisManager, RedisNamespaces
 
 logger = logging.getLogger(__name__)
 
@@ -51,69 +53,54 @@ class MessageBus:
     """
     Redis-backed, observable message bus for agent communication.
     Implements persistence, replay, and observability as required.
-    Enhanced with connection pooling and performance optimizations.
+    Enhanced with connection pooling, bounded streams, and performance optimizations.
     """
 
-    def __init__(self, redis_pool: aioredis.Redis = None, redis_url: str = None):
-        self.redis = redis_pool
-        self.redis_url = redis_url or "redis://localhost:6379"
+    def __init__(self, redis_manager: Optional[RedisManager] = None):
+        self.redis_manager = redis_manager or RedisManager()
         self._initialized = False
         self._setup_metrics()
-        self.connection_closed = False
+
+        # Stream configuration with bounds
+        self.streams = {
+            "global": "swarm:global",
+            "threads": "swarm:threads",
+            "inbox": "swarm:inbox",
+        }
 
     async def initialize(self):
-        """Initialize Redis connection pool"""
+        """Initialize Redis connection with enhanced manager"""
         if self._initialized:
             return
 
-        if not self.redis:
+        # Initialize the Redis manager
+        await self.redis_manager.initialize()
+
+        # Ensure streams exist with bounded configuration
+        for stream_name, stream_key in self.streams.items():
             try:
-                # Use the current redis-py async API
-                self.redis = await aioredis.from_url(
-                    self.redis_url, max_connections=20, decode_responses=False
+                # Try to get stream info
+                async with self.redis_manager.get_connection() as redis:
+                    await redis.xinfo_stream(stream_key)
+            except Exception as e:
+                logger.info(f"Creating bounded stream {stream_key}")
+                # Create stream with initial dummy entry and bounds
+                await self.redis_manager.stream_add(
+                    stream_key, {"init": "true", "timestamp": str(time.time())}
                 )
-                logger.info("✅ Successfully connected to Redis with connection pool")
-            except Exception as e:
-                logger.error(f"Failed to initialize Redis connection pool: {str(e)}")
-                raise
-
-        # Create global namespace (skip custom STRUCT command as it's not standard Redis)
-        # This was likely for a Redis module that may not be installed
-
-        # Setup Redis streams
-        self.streams = {
-            "global": b"swarm:global",
-            "threads": b"swarm:threads",
-            "inbox": b"swarm:inbox",
-        }
-
-        # Ensure initial stream existence
-        for stream in self.streams.values():
-            try:
-                await self.redis.xinfo_stream(stream)
-            except Exception as e:
-                logger.warning(f"Stream {stream} may not exist: {e}")
-                # Create stream by adding a dummy entry
-                try:
-                    await self.redis.xadd(stream, {"init": "true"})
-                except Exception as create_error:
-                    logger.warning(f"Could not create stream {stream}: {create_error}")
 
         self._initialized = True
-        logger.info("📊 Message bus fully initialized with connection pooling")
+        logger.info("📊 Message bus initialized with bounded streams and connection pooling")
 
-    async def _get_redis(self) -> aioredis.Redis:
-        """Get Redis connection, ensuring initialization"""
+    async def _get_redis_manager(self) -> RedisManager:
+        """Get Redis manager, ensuring initialization"""
         if not self._initialized:
             await self.initialize()
-        if self.connection_closed:
-            logger.error("Redis connection closed during operation.")
-            raise RuntimeError("Redis connection closed")
-        return self.redis
+        return self.redis_manager
 
     async def publish(self, message: SwarmMessage):
-        """Publish a message to the bus with persistence and observability"""
-        redis = await self._get_redis()
+        """Publish a message to the bus with bounded streams and observability"""
+        redis_manager = await self._get_redis_manager()
         start_time = time.time()
         await self.record_publish_span(message)
 
@@ -124,20 +111,21 @@ class MessageBus:
                 "message": msgpack.dumps(message.dict()),
                 "priority": str(message.priority),
                 "type": message.message_type.value,
+                "timestamp": str(time.time()),
             }
 
-            # Add to global stream
-            global_id = await redis.xadd(self.streams["global"], payload, id="*")
+            # Add to global stream with bounds
+            global_id = await redis_manager.stream_add(self.streams["global"], payload)
 
-            # Add to thread stream
+            # Add to thread stream with bounds
             thread_id = message.thread_id
-            await redis.xadd(f"{self.streams['threads']}:{thread_id}", payload, id="*")
+            thread_stream = f"{self.streams['threads']}:{thread_id}"
+            await redis_manager.stream_add(thread_stream, payload)
 
             # Add to receiver inbox if specified
             if message.receiver_agent_id:
-                await redis.xadd(
-                    f"{self.streams['inbox']}:{message.receiver_agent_id}", payload, id="*"
-                )
+                inbox_stream = f"{self.streams['inbox']}:{message.receiver_agent_id}"
+                await redis_manager.stream_add(inbox_stream, payload)
 
             # Record metrics
             metrics = {
@@ -151,7 +139,7 @@ class MessageBus:
             self._record_metrics("bus_publish_latency_ms", metrics, time.time() - start_time)
 
             logger.debug(
-                f"📨 Published message {message.id} to {message.receiver_agent_id or 'broadcast'}"
+                f"📨 Published bounded message {message.id} to {message.receiver_agent_id or 'broadcast'}"
             )
             return str(global_id)
 
@@ -163,62 +151,92 @@ class MessageBus:
     async def subscribe(
         self, agent_id: str, message_types: Optional[list[MessageType]] = None
     ) -> AsyncIterator[SwarmMessage]:
-        """Subscribes to messages for an agent with optional filters"""
-        redis = await self._get_redis()
+        """Subscribes to messages for an agent with circuit breaker protection"""
+        redis_manager = await self._get_redis_manager()
         stream = f"{self.streams['inbox']}:{agent_id}"
+        group = f"agent_{agent_id}"
 
-        # Ensure consumer group exists
-        try:
-            await redis.xgroup_create(stream, f"agent_{agent_id}", id="0-0", mkstream=True)
-        except aioredis.error.ResponseError as e:
-            if "BUSYGROUP" not in str(e):
-                logger.warning(f"Failed to create group {stream}: {e}")
+        # Create consumer group with circuit breaker protection
+        await redis_manager.stream_create_group(stream, group)
 
-        # Start consuming
-        last_id = "0-0"
+        # Start consuming with bounded reads
+        last_id = ">"
+        consumer_name = f"{agent_id}_{int(time.time())}"
+
         while True:
-            # Provide 5s blocking timeout to prevent starvation
-            messages = await redis.xread(streams={stream: last_id}, count=1, block=5000)
+            try:
+                # Use consumer group for reliable delivery
+                messages = await redis_manager.stream_read_group(
+                    group, consumer_name, {stream: last_id}
+                )
 
-            if not messages:
-                continue
+                if not messages:
+                    await asyncio.sleep(0.1)  # Brief pause if no messages
+                    continue
 
-            stream_name, message_list = messages[0]
-            for message_id, message_data in message_list:
-                try:
-                    # Parse the message
-                    msg_data = msgpack.loads(message_data[b"message"])
-                    message = SwarmMessage(**msg_data)
+                stream_name, message_list = messages[0]
+                message_ids_to_ack = []
 
-                    # Check filters
-                    if message_types and message.message_type not in message_types:
-                        last_id = message_id
-                        continue
+                for message_id, message_data in message_list:
+                    try:
+                        # Parse the message
+                        msg_data = msgpack.loads(message_data[b"message"])
+                        message = SwarmMessage(**msg_data)
 
-                    # Process message
-                    yield message
-                    last_id = message_id
+                        # Check filters
+                        if message_types and message.message_type not in message_types:
+                            message_ids_to_ack.append(message_id)
+                            continue
 
-                except (json.JSONDecodeError, KeyError) as e:
-                    logger.warning(f"Invalid message format: {e}")
-                except Exception as e:
-                    logger.error(f"Message processing error: {e}")
+                        # Yield message
+                        yield message
+                        message_ids_to_ack.append(message_id)
+
+                    except (json.JSONDecodeError, KeyError) as e:
+                        logger.warning(f"Invalid message format: {e}")
+                        message_ids_to_ack.append(message_id)  # Ack invalid messages
+                    except Exception as e:
+                        logger.error(f"Message processing error: {e}")
+                        message_ids_to_ack.append(message_id)  # Ack to prevent redelivery
+
+                # Acknowledge processed messages
+                if message_ids_to_ack:
+                    await redis_manager.stream_ack(stream, group, message_ids_to_ack)
+
+            except Exception as e:
+                logger.error(f"Subscription error for agent {agent_id}: {e}")
+                await asyncio.sleep(1)  # Back off on error
 
     async def get_thread_history(self, thread_id: str, limit: int = 100) -> list[SwarmMessage]:
-        """Get message history for a specific thread with ordering"""
-        redis = await self._get_redis()
+        """Get message history for a specific thread with circuit breaker protection"""
+        redis_manager = await self._get_redis_manager()
         stream = f"{self.streams['threads']}:{thread_id}"
 
         try:
-            # Get messages in reverse order (newest first), then reverse for chronological
-            messages = await redis.xrevrange(stream, count=limit)
-        except:
+            # Use Redis manager for protected access
+            async with redis_manager.get_connection() as redis:
+                messages = await redis_manager.circuit_breaker.call(
+                    redis.xrevrange, stream, count=limit
+                )
+        except Exception as e:
+            logger.warning(f"Failed to get thread history for {thread_id}: {e}")
+            return []
+
+        if not messages:
             return []
 
         # Sort messages chronologically
         sorted_messages = sorted(messages, key=lambda x: int(x[0].split("-")[0]))
 
-        return [SwarmMessage(**msgpack.loads(msg[1][b"message"])) for _, msg in sorted_messages]
+        parsed_messages = []
+        for _, msg_data in sorted_messages:
+            try:
+                parsed_messages.append(SwarmMessage(**msgpack.loads(msg_data[b"message"])))
+            except Exception as e:
+                logger.warning(f"Failed to parse message in thread {thread_id}: {e}")
+                continue
+
+        return parsed_messages
 
     def _setup_metrics(self):
         """Initialize Prometheus metrics tracking"""
@@ -256,17 +274,38 @@ class MessageBus:
         return {"start": start, "span": span}
 
     async def close(self):
-        """Clean up Redis connection"""
-        if self.redis and not self.connection_closed:
-            try:
-                self.redis.close()
-                await self.redis.wait_closed()
-            except Exception as e:
-                logger.error(f"Error closing Redis connection: {e}")
-            finally:
-                self.connection_closed = True
-                self._initialized = False
-                logger.info("🔌 Message bus connection closed successfully")
+        """Clean up Redis manager connection"""
+        try:
+            await self.redis_manager.close()
+            self._initialized = False
+            logger.info("🔌 Message bus connection closed successfully")
+        except Exception as e:
+            logger.error(f"Error closing Redis connection: {e}")
+
+    async def get_health_status(self) -> Dict[str, Any]:
+        """Get message bus health status"""
+        redis_manager = await self._get_redis_manager()
+        health = await redis_manager.health_check()
+
+        # Add message bus specific metrics
+        health["message_bus_metrics"] = self.metrics
+        health["streams_info"] = {}
+
+        try:
+            async with redis_manager.get_connection() as redis:
+                for stream_name, stream_key in self.streams.items():
+                    try:
+                        info = await redis.xinfo_stream(stream_key)
+                        health["streams_info"][stream_name] = {
+                            "length": info.get("length", 0),
+                            "last_generated_id": info.get("last-generated-id", "0-0"),
+                        }
+                    except Exception:
+                        health["streams_info"][stream_name] = {"error": "Stream not found"}
+        except Exception as e:
+            logger.warning(f"Could not get stream info: {e}")
+
+        return health
 
 
 # Example usage for testing
@@ -275,6 +314,10 @@ if __name__ == "__main__":
     async def demo():
         bus = MessageBus()
         await bus.initialize()
+
+        # Check health status
+        health = await bus.get_health_status()
+        logger.info(f"Message bus health: {health['healthy']}")
 
         # Publish a message
         message = SwarmMessage(
@@ -286,10 +329,14 @@ if __name__ == "__main__":
         )
         await bus.publish(message)
 
-        # Subscribe and get messages
+        # Subscribe and get messages (with timeout for demo)
+        count = 0
         async for msg in bus.subscribe("agent_2", [MessageType.QUERY]):
             logger.info(f"Received: {msg.content}")
-            await bus.close()
-            break
+            count += 1
+            if count >= 1:  # Exit after first message for demo
+                break
+
+        await bus.close()
 
     asyncio.run(demo())

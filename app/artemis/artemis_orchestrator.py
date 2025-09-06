@@ -1,7 +1,9 @@
 """
 Artemis Code Excellence Orchestrator
 Specialized for software development, code generation, and technical excellence
+With enhanced MCP server integration for domain-aware routing
 """
+
 import ast
 import asyncio
 import json
@@ -14,7 +16,16 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional
 
+# Import unified factory and domain enforcer
+from app.artemis.unified_factory import artemis_unified_factory
+from app.core.domain_enforcer import OperationType, UserRole, domain_enforcer
 from app.core.portkey_manager import TaskType as PortkeyTaskType
+from app.core.shared_services import shared_services
+from app.mcp.connection_manager import MCPConnectionManager
+from app.mcp.enhanced_registry import MCPServerRegistry
+
+# Import MCP components for enhanced routing
+from app.mcp.router_config import MCPRouterConfiguration, MCPServerType
 from app.memory.unified_memory_router import MemoryDomain
 from app.orchestrators.base_orchestrator import (
     BaseOrchestrator,
@@ -88,7 +99,7 @@ class ArtemisOrchestrator(BaseOrchestrator):
 
     def __init__(self, code_context: Optional[CodeContext] = None):
         """
-        Initialize Artemis orchestrator
+        Initialize Artemis orchestrator with unified factory and MCP integration
 
         Args:
             code_context: Optional code-specific context
@@ -97,7 +108,7 @@ class ArtemisOrchestrator(BaseOrchestrator):
             domain=MemoryDomain.ARTEMIS,
             name="Artemis Code Excellence",
             description="Code generation and technical excellence orchestrator",
-            max_concurrent_tasks=8,
+            max_concurrent_tasks=8,  # Enforced by unified factory
             default_timeout_s=120,
             enable_caching=True,
             enable_monitoring=True,
@@ -113,6 +124,20 @@ class ArtemisOrchestrator(BaseOrchestrator):
 
         self.code_context = code_context or self._get_default_context()
 
+        # Use unified factory for agent/swarm creation
+        self.factory = artemis_unified_factory
+
+        # Use shared services
+        self.shared_services = shared_services
+
+        # Domain enforcer for access control
+        self.domain_enforcer = domain_enforcer
+
+        # Initialize MCP components for enhanced routing
+        self.mcp_router = MCPRouterConfiguration()
+        self.mcp_registry = MCPServerRegistry()
+        self.mcp_connection_manager = MCPConnectionManager()
+
         # Specialized components
         self.code_analyzer = CodeAnalyzer(self)
         self.test_generator = TestGenerator(self)
@@ -123,7 +148,7 @@ class ArtemisOrchestrator(BaseOrchestrator):
         # Code execution sandbox
         self._sandbox = CodeSandbox()
 
-        logger.info("Artemis Code Orchestrator initialized")
+        logger.info("Artemis Code Orchestrator initialized with unified factory and MCP routing")
 
     def _get_default_context(self) -> CodeContext:
         """Get default code context"""
@@ -136,7 +161,7 @@ class ArtemisOrchestrator(BaseOrchestrator):
 
     async def _execute_core(self, task: Task, routing: Any) -> Result:
         """
-        Execute Artemis-specific code task
+        Execute Artemis-specific code task with domain validation
 
         Args:
             task: Task to execute
@@ -148,6 +173,33 @@ class ArtemisOrchestrator(BaseOrchestrator):
         result = Result(success=False, content=None)
 
         try:
+            # Validate domain access
+            operation_type = self._map_task_to_operation(task.type)
+            validation = domain_enforcer.validate_request(
+                {
+                    "id": task.id,
+                    "user_id": task.metadata.get("user_id", "system"),
+                    "user_role": UserRole.DEVELOPER,  # Default for Artemis
+                    "target_domain": MemoryDomain.ARTEMIS,
+                    "operation_type": operation_type,
+                    "resource_path": task.metadata.get("resource_path"),
+                    "metadata": task.metadata,
+                }
+            )
+
+            if not validation.allowed:
+                result.errors.append(f"Domain access denied: {validation.reason}")
+                return result
+
+            # Log to shared services
+            if self.shared_services.get_logging_service():
+                await self.shared_services.get_logging_service().log(
+                    "info",
+                    f"Executing Artemis task: {task.id}",
+                    MemoryDomain.ARTEMIS,
+                    {"task_type": task.type, "operation": operation_type},
+                )
+
             # Analyze codebase context
             codebase_context = await self._analyze_codebase(task)
 
@@ -199,15 +251,37 @@ class ArtemisOrchestrator(BaseOrchestrator):
                 result.tokens_used = response.usage.total_tokens
                 result.cost = self.portkey._estimate_cost(routing.model, result.tokens_used)
 
+            # Record metrics to shared services
+            if self.shared_services.get_monitoring_service():
+                await self.shared_services.get_monitoring_service().record_metric(
+                    "artemis_task_execution", 1.0, {"task_type": task.type, "success": "true"}
+                )
+
         except Exception as e:
             logger.error(f"Artemis execution failed: {e}")
             result.errors.append(str(e))
 
+            # Record failure metric
+            if self.shared_services.get_monitoring_service():
+                await self.shared_services.get_monitoring_service().record_metric(
+                    "artemis_task_execution", 1.0, {"task_type": task.type, "success": "false"}
+                )
+
         return result
+
+    def _map_task_to_operation(self, task_type: TaskType) -> OperationType:
+        """Map task type to operation type for domain validation"""
+        mapping = {
+            TaskType.CODE_GENERATION: OperationType.CODE_GENERATION,
+            TaskType.CODE_REVIEW: OperationType.CODE_REVIEW,
+            TaskType.ORCHESTRATION: OperationType.ARCHITECTURE_DESIGN,
+            TaskType.WEB_RESEARCH: OperationType.DOCUMENTATION,
+        }
+        return mapping.get(task_type, OperationType.CODE_GENERATION)
 
     async def _analyze_codebase(self, task: Task) -> dict[str, Any]:
         """
-        Analyze codebase for context
+        Analyze codebase for context using MCP filesystem server
 
         Args:
             task: Current task
@@ -226,21 +300,52 @@ class ArtemisOrchestrator(BaseOrchestrator):
         if self.code_context.repository_path:
             repo_path = Path(self.code_context.repository_path)
 
-            # Analyze file structure
-            context["file_structure"] = self._analyze_file_structure(repo_path)
+            # Use MCP filesystem server for file operations
+            filesystem_connection = await self._get_mcp_connection(MCPServerType.FILESYSTEM)
+
+            if filesystem_connection:
+                try:
+                    # Analyze file structure via MCP
+                    context["file_structure"] = await self._analyze_file_structure_mcp(
+                        repo_path, filesystem_connection
+                    )
+                finally:
+                    await self.mcp_connection_manager.release_connection(
+                        filesystem_connection, "artemis"
+                    )
+            else:
+                # Fallback to local analysis
+                context["file_structure"] = self._analyze_file_structure(repo_path)
 
             # Detect dependencies
             context["dependencies"] = self._detect_dependencies(repo_path)
 
-            # Identify patterns and conventions
-            context["patterns"] = await self.code_analyzer.identify_patterns(repo_path)
-            context["conventions"] = await self.code_analyzer.detect_conventions(repo_path)
+            # Use MCP code analysis server for patterns
+            code_analysis_connection = await self._get_mcp_connection(MCPServerType.CODE_ANALYSIS)
+
+            if code_analysis_connection:
+                try:
+                    # Identify patterns and conventions via MCP
+                    context["patterns"] = await self._identify_patterns_mcp(
+                        repo_path, code_analysis_connection
+                    )
+                    context["conventions"] = await self._detect_conventions_mcp(
+                        repo_path, code_analysis_connection
+                    )
+                finally:
+                    await self.mcp_connection_manager.release_connection(
+                        code_analysis_connection, "artemis"
+                    )
+            else:
+                # Fallback to local analysis
+                context["patterns"] = await self.code_analyzer.identify_patterns(repo_path)
+                context["conventions"] = await self.code_analyzer.detect_conventions(repo_path)
 
         return context
 
     async def _load_code_examples(self, task: Task) -> list[dict[str, Any]]:
         """
-        Load relevant code examples from memory
+        Load relevant code examples from memory using MCP servers
 
         Args:
             task: Current task
@@ -250,8 +355,29 @@ class ArtemisOrchestrator(BaseOrchestrator):
         """
         examples = []
 
-        if self.memory:
-            # Search for similar code
+        # Use MCP indexing server for code search
+        indexing_connection = await self._get_mcp_connection(MCPServerType.INDEXING)
+
+        if indexing_connection:
+            try:
+                # Search via MCP indexing server with domain-specific partitions
+                search_results = await self._search_code_mcp(
+                    task.content, indexing_connection, filters={"type": "code", "domain": "artemis"}
+                )
+
+                for result in search_results:
+                    examples.append(
+                        {
+                            "code": result.get("content"),
+                            "relevance": result.get("score", 0),
+                            "source": result.get("source_uri"),
+                            "metadata": result.get("metadata", {}),
+                        }
+                    )
+            finally:
+                await self.mcp_connection_manager.release_connection(indexing_connection, "artemis")
+        elif self.memory:
+            # Fallback to direct memory search
             hits = await self.memory.search(
                 query=task.content, domain=MemoryDomain.ARTEMIS, k=5, filters={"type": "code"}
             )
@@ -264,6 +390,20 @@ class ArtemisOrchestrator(BaseOrchestrator):
                         "source": hit.source_uri,
                         "metadata": hit.metadata,
                     }
+                )
+
+        # Use MCP embedding server for semantic similarity
+        embedding_connection = await self._get_mcp_connection(MCPServerType.EMBEDDING)
+
+        if embedding_connection and examples:
+            try:
+                # Enhance examples with semantic similarity
+                examples = await self._enhance_with_embeddings_mcp(
+                    examples, task.content, embedding_connection
+                )
+            finally:
+                await self.mcp_connection_manager.release_connection(
+                    embedding_connection, "artemis"
                 )
 
         return examples
@@ -601,8 +741,13 @@ Requirements:
         language: str = "python",
         include_tests: bool = True,
         include_docs: bool = True,
+        user_id: str = "system",
+        user_role: UserRole = UserRole.DEVELOPER,
     ) -> CodeResult:
-        """Generate code from specification"""
+        """Generate code from specification with unified factory support"""
+        # Create a technical agent for code generation
+        agent_id = await self.factory.create_technical_agent("code_reviewer")
+
         task = Task(
             id=f"codegen_{datetime.now().timestamp()}",
             type=TaskType.CODE_GENERATION,
@@ -612,6 +757,9 @@ Requirements:
                 "language": language,
                 "generate_tests": include_tests,
                 "generate_docs": include_docs,
+                "agent_id": agent_id,
+                "user_id": user_id,
+                "user_role": user_role.value,
             },
         )
 
@@ -623,18 +771,35 @@ Requirements:
         return None
 
     async def review_code(
-        self, code: str, language: str = "python", focus_areas: list[str] = None
+        self,
+        code: str,
+        language: str = "python",
+        focus_areas: list[str] = None,
+        user_id: str = "system",
+        user_role: UserRole = UserRole.DEVELOPER,
     ) -> CodeReview:
-        """Review code for quality and issues"""
+        """Review code for quality and issues with unified factory support"""
         if not focus_areas:
             focus_areas = ["security", "performance", "maintainability", "testing"]
+
+        # Create a specialized team for code review
+        team_id = await self.factory.create_technical_team(
+            {"type": "code_analysis", "name": "Code Review Team"}
+        )
 
         task = Task(
             id=f"review_{datetime.now().timestamp()}",
             type=TaskType.CODE_REVIEW,
             content=f"Review {language} code focusing on {', '.join(focus_areas)}",
             priority=ExecutionPriority.NORMAL,
-            metadata={"code": code, "language": language, "focus_areas": focus_areas},
+            metadata={
+                "code": code,
+                "language": language,
+                "focus_areas": focus_areas,
+                "team_id": team_id,
+                "user_id": user_id,
+                "user_role": user_role.value,
+            },
         )
 
         result = await self.execute(task)
@@ -808,3 +973,61 @@ class CodeSandbox:
         """Execute code in sandbox"""
         # Would implement sandboxed execution
         return {"output": "", "errors": [], "execution_time": 0.0}
+
+    # ========== MCP Integration Methods ==========
+
+    async def _get_mcp_connection(self, server_type: MCPServerType):
+        """
+        Get MCP connection for Artemis domain
+
+        Args:
+            server_type: Type of MCP server needed
+
+        Returns:
+            Connection object or None
+        """
+        try:
+            # Route request through MCP router
+            server_name = await self.mcp_router.route_request(
+                server_type, MemoryDomain.ARTEMIS, {"operation": "artemis_code_task"}
+            )
+
+            if server_name:
+                # Get connection from manager
+                connection = await self.mcp_connection_manager.get_connection(
+                    server_name, "artemis"
+                )
+                return connection
+
+        except Exception as e:
+            logger.error(f"Failed to get MCP connection for {server_type}: {e}")
+
+        return None
+
+    async def _analyze_file_structure_mcp(self, repo_path: Path, connection) -> dict[str, Any]:
+        """Analyze file structure using MCP filesystem server"""
+        # Implementation would use MCP filesystem server
+        # This is a placeholder showing the pattern
+        return {"total_files": 0, "file_types": {}, "directories": []}
+
+    async def _identify_patterns_mcp(self, repo_path: Path, connection) -> dict[str, Any]:
+        """Identify code patterns using MCP code analysis server"""
+        # Implementation would use MCP code analysis server
+        return {"design_patterns": [], "anti_patterns": [], "common_imports": []}
+
+    async def _detect_conventions_mcp(self, repo_path: Path, connection) -> dict[str, Any]:
+        """Detect coding conventions using MCP code analysis server"""
+        # Implementation would use MCP code analysis server
+        return {"naming": "snake_case", "indentation": "spaces_4", "quotes": "double"}
+
+    async def _search_code_mcp(self, query: str, connection, filters: dict = None) -> list[dict]:
+        """Search code using MCP indexing server"""
+        # Implementation would use MCP indexing server
+        return []
+
+    async def _enhance_with_embeddings_mcp(
+        self, examples: list[dict], query: str, connection
+    ) -> list[dict]:
+        """Enhance examples with semantic similarity using MCP embedding server"""
+        # Implementation would use MCP embedding server
+        return examples

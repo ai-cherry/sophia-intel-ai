@@ -1,0 +1,187 @@
+
+# 🎯 GONG PRODUCTION WEBHOOK CONFIGURATION GUIDE
+
+## Overview
+Configure Gong webhooks to send events to your validated n8n endpoint for production traffic processing.
+
+**Production Webhook URL:** `https://scoobyjava.app.n8n.cloud/webhook/gong-webhook`
+**Configuration Date:** 2025-09-05 14:27:46
+
+## 📋 Manual Configuration Steps
+
+### Step 1: Login to Gong Admin Panel
+1. Navigate to: https://app.gong.io
+2. Login with your admin credentials
+3. Go to: **Admin → Automation → Webhook Rules**
+
+### Step 2: Create Webhook Rules
+
+#### A) Call Ended Webhook
+```
+Name: Production - Call Ended
+Trigger: Call Ended
+Action: Send Webhook
+URL: https://scoobyjava.app.n8n.cloud/webhook/gong-webhook
+Method: POST
+Headers: 
+  Content-Type: application/json
+```
+
+#### B) Transcript Ready Webhook
+```
+Name: Production - Transcript Ready
+Trigger: Transcript Ready
+Action: Send Webhook
+URL: https://scoobyjava.app.n8n.cloud/webhook/gong-webhook
+Method: POST
+Headers:
+  Content-Type: application/json
+```
+
+#### C) Deal at Risk Webhook
+```
+Name: Production - Deal at Risk
+Trigger: Deal Health Changed to At Risk
+Action: Send Webhook
+URL: https://scoobyjava.app.n8n.cloud/webhook/gong-webhook
+Method: POST
+Headers:
+  Content-Type: application/json
+```
+
+#### D) Meeting Insights Webhook
+```
+Name: Production - Meeting Insights
+Trigger: Meeting Insights Generated
+Action: Send Webhook
+URL: https://scoobyjava.app.n8n.cloud/webhook/gong-webhook
+Method: POST
+Headers:
+  Content-Type: application/json
+```
+
+### Step 3: Configure Webhook Security
+
+#### Enable Signature Validation
+1. In each webhook rule, enable **"Sign webhook requests"**
+2. Copy the provided webhook secret
+3. Store the secret securely for signature validation
+
+#### Save Webhook Secret
+```bash
+# Add to your environment variables
+export GONG_WEBHOOK_SECRET="<webhook_secret_from_gong>"
+```
+
+### Step 4: Test Webhook Configuration
+
+#### Test Each Webhook Rule
+1. In Gong Admin, click **"Test"** on each webhook rule
+2. Verify webhook appears in n8n execution log
+3. Check n8n dashboard for successful executions
+
+#### Validation Commands
+```bash
+# Check n8n workflow executions
+curl -H "X-N8N-API-KEY: YOUR_API_KEY" \
+     "https://scoobyjava.app.n8n.cloud/api/v1/executions"
+
+# Test webhook directly
+curl -X POST 'https://scoobyjava.app.n8n.cloud/webhook/gong-webhook' \
+     -H 'Content-Type: application/json' \
+     -d '{"eventType":"test","source":"manual_test"}'
+```
+
+### Step 5: Monitor Production Traffic
+
+#### Expected Event Types
+- `call.ended` - Sales call completion
+- `transcript.ready` - Call transcript processed
+- `deal.at_risk` - Deal health degradation
+- `insight.generated` - Meeting insights available
+
+#### Monitoring URLs
+- **n8n Dashboard:** https://scoobyjava.app.n8n.cloud
+- **Sophia Health:** http://localhost:8000/health
+- **Integration Status:** Check workflow executions
+
+## 🔐 Security Configuration
+
+### Webhook Signature Validation
+Gong signs webhook requests with HMAC-SHA256. Validate signatures to ensure authenticity:
+
+```python
+import hmac
+import hashlib
+
+def validate_gong_signature(payload, signature, secret):
+    expected = hmac.new(
+        secret.encode(),
+        payload.encode(),
+        hashlib.sha256
+    ).hexdigest()
+    return hmac.compare_digest(signature, expected)
+```
+
+### IP Whitelist (Optional)
+If needed, whitelist Gong's webhook IP ranges:
+- Check Gong documentation for current IP ranges
+- Configure firewall rules accordingly
+
+## 📊 Production Readiness Checklist
+
+- [ ] All 4 webhook rules created in Gong Admin
+- [ ] Webhook URLs pointing to production endpoint
+- [ ] Signature validation enabled
+- [ ] Webhook secret stored securely
+- [ ] Test webhooks successfully fired
+- [ ] n8n workflows executing correctly
+- [ ] Sophia system processing events
+- [ ] Monitoring alerts configured
+
+## ⚠️ Important Notes
+
+1. **Webhook Secret Management**
+   - Store webhook secrets securely
+   - Rotate secrets periodically
+   - Never commit secrets to version control
+
+2. **Error Handling**
+   - Monitor webhook failure rates
+   - Set up alerts for failed deliveries
+   - Implement retry mechanisms
+
+3. **Rate Limiting**
+   - Gong may rate limit webhook deliveries
+   - Ensure n8n can handle burst traffic
+   - Monitor performance metrics
+
+## 🆘 Troubleshooting
+
+### Common Issues
+
+#### Webhook Not Firing
+- Check webhook rule is active in Gong Admin
+- Verify trigger conditions are met
+- Check Gong webhook delivery logs
+
+#### 404/500 Errors
+- Verify webhook URL is correct
+- Check n8n workflow is activated
+- Validate n8n instance is responding
+
+#### Signature Validation Failures
+- Ensure webhook secret is correct
+- Check signature validation logic
+- Verify payload formatting
+
+### Support Contacts
+- **Gong Support:** support@gong.io
+- **n8n Support:** Via n8n Cloud dashboard
+- **Integration Team:** Internal escalation
+
+---
+
+**Generated by:** Gong Webhook Configurator
+**Status:** Ready for Production Configuration
+**Next Step:** Execute manual configuration in Gong Admin Panel

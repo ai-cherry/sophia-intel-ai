@@ -1,0 +1,61 @@
+{
+  "test_name": "Artemis Swarm Connectivity Test",
+  "timestamp": "2025-09-05T15:21:06.038389",
+  "providers_tested": 6,
+  "results": [
+    {
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "status": "error",
+      "error": "'Completions' object has no attribute 'acreate'",
+      "timestamp": "2025-09-05T15:21:06.011248"
+    },
+    {
+      "provider": "openai",
+      "model": "gpt-4o-mini",
+      "status": "error",
+      "error": "'Completions' object has no attribute 'acreate'",
+      "timestamp": "2025-09-05T15:21:06.016870"
+    },
+    {
+      "provider": "anthropic",
+      "model": "claude-3-haiku-20240307",
+      "status": "error",
+      "error": "'Completions' object has no attribute 'acreate'",
+      "timestamp": "2025-09-05T15:21:06.022263"
+    },
+    {
+      "provider": "groq",
+      "model": "llama-3.3-70b-versatile",
+      "status": "error",
+      "error": "'Completions' object has no attribute 'acreate'",
+      "timestamp": "2025-09-05T15:21:06.027636"
+    },
+    {
+      "provider": "gemini",
+      "model": "gemini-1.5-flash",
+      "status": "error",
+      "error": "'Completions' object has no attribute 'acreate'",
+      "timestamp": "2025-09-05T15:21:06.032958"
+    },
+    {
+      "provider": "together",
+      "model": "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",
+      "status": "error",
+      "error": "'Completions' object has no attribute 'acreate'",
+      "timestamp": "2025-09-05T15:21:06.038333"
+    }
+  ],
+  "summary": {
+    "total_providers": 6,
+    "successful": 0,
+    "failed": 6,
+    "timed_out": 0,
+    "success_rate": "0.0%",
+    "total_tokens_used": 0,
+    "average_latency_ms": 0,
+    "working_providers": [],
+    "failed_providers": ["deepseek", "openai", "anthropic", "groq", "gemini", "together"],
+    "timed_out_providers": []
+  }
+}

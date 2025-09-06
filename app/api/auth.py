@@ -1,3 +1,4 @@
+import os
 from datetime import datetime, timedelta
 from typing import Optional
 
@@ -10,14 +11,14 @@ from app.security.input_validator import validate_api_key
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 # Configuration from environment
-
 from dotenv import load_dotenv
 
 load_dotenv(".env.local")
 
-SECRET_KEY = get_config().get("JWT_SECRET_KEY", "os.urandom(32).hex()")
-ALGORITHM = get_config().get("JWT_ALGORITHM", "HS256")
-ACCESS_TOKEN_EXPIRE_MINUTES = int(get_config().get("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
+# Use environment variables directly
+SECRET_KEY = os.getenv("JWT_SECRET_KEY", "default-secret-key-change-in-production")
+ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 

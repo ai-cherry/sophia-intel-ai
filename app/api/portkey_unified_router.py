@@ -94,8 +94,14 @@ class PortkeyUnifiedRouter:
 
     def __init__(self):
         self.gateway = ElitePortkeyGateway()
-        self.agent_config = EliteAgentConfig()
-        self.optimizations = EliteOptimizations()
+        # Create a default agent config
+        self.agent_config = EliteAgentConfig(
+            agent_id="default",
+            virtual_key="default-vk",
+            provider="openrouter",
+            model="google/gemini-2.5-flash",
+        )
+        self.optimizations = EliteOptimizations
 
         # Model registry with real-time metrics
         self.model_registry: dict[str, ModelMetrics] = {}
@@ -406,9 +412,11 @@ class PortkeyUnifiedRouter:
             current_model = (
                 selected_model
                 if attempt == 0
-                else fallback_models[min(attempt - 1, len(fallback_models) - 1)]
-                if fallback_models
-                else selected_model
+                else (
+                    fallback_models[min(attempt - 1, len(fallback_models) - 1)]
+                    if fallback_models
+                    else selected_model
+                )
             )
 
             completion_params["model"] = current_model

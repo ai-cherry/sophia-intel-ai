@@ -1,0 +1,732 @@
+# Shared MCP Server Configuration
+# Infrastructure shared between Artemis and Sophia domains with appropriate filtering
+
+version: "1.0.0"
+domain: shared
+description: "MCP servers shared between Artemis and Sophia with domain-aware partitioning"
+
+servers:
+  # Database Server - Shared with Domain Filtering
+  shared_database:
+    name: "Shared Database Server"
+    type: database
+    shared: true
+    endpoint: "ws://localhost:8030/mcp"
+    description: "Centralized database with domain-specific schemas and access control"
+
+    capabilities:
+      - query_execution
+      - transaction_management
+      - schema_management
+      - data_migration
+      - backup_restore
+      - replication
+      - connection_pooling
+      - query_optimization
+
+    configuration:
+      database_engine: "postgresql"
+      connection:
+        host: "localhost"
+        port: 5432
+        max_connections: 100
+
+      domain_partitioning:
+        artemis:
+          schemas:
+            - code_metrics
+            - technical_debt
+            - test_coverage
+            - build_history
+            - deployment_logs
+            - performance_metrics
+          table_prefix: "artemis_"
+          access_level: "read_write"
+          row_level_security: true
+
+        sophia:
+          schemas:
+            - sales_data
+            - customer_health
+            - revenue_metrics
+            - market_data
+            - competitive_intel
+            - business_kpis
+          table_prefix: "sophia_"
+          access_level: "read_write"
+          row_level_security: true
+
+        shared:
+          schemas:
+            - common_data
+            - user_management
+            - audit_logs
+            - system_metrics
+          table_prefix: "shared_"
+          access_level: "read_only"
+
+      performance:
+        query_cache_size_mb: 1024
+        shared_buffers_mb: 4096
+        work_mem_mb: 64
+        maintenance_work_mem_mb: 256
+        effective_cache_size_gb: 16
+
+      security:
+        ssl_enabled: true
+        encryption_at_rest: true
+        audit_logging: true
+        row_level_security: true
+        column_encryption: ["pii", "financial", "credentials"]
+
+    connection_pool:
+      min_connections: 5
+      max_connections: 10
+      timeout_seconds: 30
+      idle_timeout_seconds: 600
+      validation_query: "SELECT 1"
+
+    health_check:
+      enabled: true
+      interval_seconds: 20
+      endpoint: "/health"
+      timeout_seconds: 5
+      failure_threshold: 2
+
+  # Indexing Server - Shared with Partitioning
+  shared_indexing:
+    name: "Shared Indexing Server"
+    type: indexing
+    shared: true
+    endpoint: "ws://localhost:8031/mcp"
+    description: "Elasticsearch-based indexing with domain-specific partitions"
+
+    capabilities:
+      - full_text_search
+      - faceted_search
+      - aggregations
+      - autocomplete
+      - fuzzy_search
+      - semantic_search
+      - index_management
+      - bulk_operations
+      - real_time_indexing
+
+    configuration:
+      backend: "elasticsearch"
+      cluster:
+        nodes:
+          - "localhost:9200"
+          - "localhost:9201"
+          - "localhost:9202"
+        replicas: 2
+        shards: 5
+
+      domain_partitions:
+        artemis:
+          indices:
+            - name: "artemis_code"
+              type: "code"
+              settings:
+                analyzer: "code_analyzer"
+                max_result_window: 10000
+            - name: "artemis_tests"
+              type: "test_results"
+            - name: "artemis_docs"
+              type: "documentation"
+          index_prefix: "artemis_"
+
+        sophia:
+          indices:
+            - name: "sophia_business"
+              type: "business_data"
+              settings:
+                analyzer: "business_analyzer"
+                max_result_window: 50000
+            - name: "sophia_customers"
+              type: "customer_data"
+            - name: "sophia_market"
+              type: "market_intelligence"
+          index_prefix: "sophia_"
+
+        shared:
+          indices:
+            - name: "shared_knowledge"
+              type: "knowledge_base"
+            - name: "shared_logs"
+              type: "application_logs"
+          index_prefix: "shared_"
+
+      search_settings:
+        default_operator: "AND"
+        max_clause_count: 1024
+        timeout_seconds: 30
+        highlight_enabled: true
+
+      analyzers:
+        code_analyzer:
+          tokenizer: "standard"
+          filters: ["lowercase", "code_synonyms", "stop"]
+
+        business_analyzer:
+          tokenizer: "standard"
+          filters: ["lowercase", "business_synonyms", "stemmer"]
+
+    connection_pool:
+      min_connections: 3
+      max_connections: 10
+      timeout_seconds: 30
+      idle_timeout_seconds: 300
+
+    health_check:
+      enabled: true
+      interval_seconds: 30
+      endpoint: "/health"
+      timeout_seconds: 10
+
+  # Embedding Server - Shared with Namespaces
+  shared_embedding:
+    name: "Shared Embedding Server"
+    type: embedding
+    shared: true
+    endpoint: "ws://localhost:8032/mcp"
+    description: "Vector embedding generation and similarity search with domain namespaces"
+
+    capabilities:
+      - text_embedding
+      - code_embedding
+      - document_embedding
+      - similarity_search
+      - clustering
+      - dimension_reduction
+      - batch_processing
+      - model_management
+
+    configuration:
+      models:
+        technical:
+          model_name: "code-embedding-v2"
+          dimensions: 768
+          max_sequence_length: 512
+          batch_size: 32
+          namespaces:
+            - technical_embeddings
+            - code_embeddings
+            - documentation_embeddings
+
+        business:
+          model_name: "business-embedding-v2"
+          dimensions: 768
+          max_sequence_length: 1024
+          batch_size: 16
+          namespaces:
+            - business_embeddings
+            - market_embeddings
+            - customer_embeddings
+
+        shared:
+          model_name: "universal-embedding-v1"
+          dimensions: 512
+          max_sequence_length: 512
+          batch_size: 24
+          namespaces:
+            - common_embeddings
+            - knowledge_embeddings
+
+      vector_store:
+        backend: "faiss"
+        index_type: "IVF_FLAT"
+        nlist: 1000
+        nprobe: 10
+        metric: "cosine_similarity"
+
+      domain_namespaces:
+        artemis:
+          primary_model: "technical"
+          namespaces:
+            - technical_embeddings
+            - code_embeddings
+          storage_path: "/data/embeddings/artemis/"
+
+        sophia:
+          primary_model: "business"
+          namespaces:
+            - business_embeddings
+            - market_embeddings
+          storage_path: "/data/embeddings/sophia/"
+
+        shared:
+          primary_model: "shared"
+          namespaces:
+            - common_embeddings
+          storage_path: "/data/embeddings/shared/"
+
+      processing:
+        gpu_enabled: true
+        gpu_device: 0
+        max_batch_size: 64
+        cache_embeddings: true
+        cache_ttl_seconds: 86400
+
+    connection_pool:
+      min_connections: 2
+      max_connections: 8
+      timeout_seconds: 60
+      idle_timeout_seconds: 300
+
+    health_check:
+      enabled: true
+      interval_seconds: 45
+      endpoint: "/health"
+      timeout_seconds: 20
+
+  # Meta Tagging Server - Shared with Domain Tags
+  shared_meta_tagging:
+    name: "Shared Meta Tagging Server"
+    type: meta_tagging
+    shared: true
+    endpoint: "ws://localhost:8033/mcp"
+    description: "Automated tagging and classification with domain-specific taxonomies"
+
+    capabilities:
+      - auto_tagging
+      - classification
+      - entity_extraction
+      - topic_modeling
+      - sentiment_analysis
+      - keyword_extraction
+      - taxonomy_management
+      - custom_rules
+
+    configuration:
+      tagging_engine:
+        backend: "spacy"
+        models:
+          - "en_core_web_lg"
+          - "custom_domain_model"
+
+      domain_taxonomies:
+        artemis:
+          categories:
+            - code
+            - architecture
+            - security
+            - performance
+            - testing
+            - documentation
+          tags:
+            code:
+              - language
+              - framework
+              - design_pattern
+              - complexity
+              - quality
+            architecture:
+              - style
+              - pattern
+              - component
+              - layer
+            security:
+              - vulnerability
+              - compliance
+              - encryption
+              - authentication
+          auto_tag: true
+          confidence_threshold: 0.7
+
+        sophia:
+          categories:
+            - business
+            - customer
+            - revenue
+            - market
+            - strategy
+            - operations
+          tags:
+            business:
+              - kpi
+              - metric
+              - goal
+              - initiative
+            customer:
+              - segment
+              - lifecycle
+              - satisfaction
+              - health
+            revenue:
+              - model
+              - stream
+              - forecast
+              - growth
+          auto_tag: true
+          confidence_threshold: 0.75
+
+        shared:
+          categories:
+            - general
+            - metadata
+            - system
+          tags:
+            general:
+              - priority
+              - status
+              - owner
+              - date
+          auto_tag: false
+
+      processing_rules:
+        max_tags_per_item: 20
+        min_confidence: 0.5
+        enable_hierarchical: true
+        enable_multi_label: true
+
+      ml_settings:
+        training_enabled: true
+        feedback_learning: true
+        model_update_frequency: "weekly"
+        min_training_samples: 1000
+
+    connection_pool:
+      min_connections: 2
+      max_connections: 8
+      timeout_seconds: 30
+      idle_timeout_seconds: 300
+
+    health_check:
+      enabled: true
+      interval_seconds: 40
+      endpoint: "/health"
+      timeout_seconds: 10
+
+  # Chunking Server - Shared with Different Strategies
+  shared_chunking:
+    name: "Shared Chunking Server"
+    type: chunking
+    shared: true
+    endpoint: "ws://localhost:8034/mcp"
+    description: "Document and code chunking with domain-specific strategies"
+
+    capabilities:
+      - document_chunking
+      - code_chunking
+      - semantic_chunking
+      - sliding_window
+      - recursive_splitting
+      - ast_based_chunking
+      - chunk_merging
+      - overlap_management
+
+    configuration:
+      strategies:
+        artemis:
+          primary_strategy: "ast_based"
+          fallback_strategy: "sliding_window"
+
+          ast_based:
+            languages:
+              - python
+              - javascript
+              - typescript
+              - java
+              - go
+            chunk_by:
+              - function
+              - class
+              - module
+            preserve_context: true
+            include_imports: true
+            max_chunk_size: 512
+
+          code_specific:
+            chunk_size: 512
+            overlap: 50
+            split_on:
+              - "\n\n"
+              - "\n}"
+              - "\nclass "
+              - "\ndef "
+              - "\nfunction "
+            respect_boundaries: true
+
+        sophia:
+          primary_strategy: "semantic_based"
+          fallback_strategy: "paragraph_based"
+
+          semantic_based:
+            model: "sentence-transformers"
+            similarity_threshold: 0.7
+            min_chunk_size: 100
+            max_chunk_size: 1024
+            preserve_sentences: true
+
+          business_specific:
+            chunk_size: 1024
+            overlap: 100
+            split_on:
+              - "\n\n"
+              - ". "
+              - ".\n"
+            preserve_context: true
+            include_metadata: true
+
+        shared:
+          primary_strategy: "balanced"
+
+          balanced:
+            chunk_size: 768
+            overlap: 75
+            adaptive: true
+            content_aware: true
+
+      processing_options:
+        parallel_processing: true
+        max_workers: 8
+        batch_size: 100
+        cache_chunks: true
+        cache_ttl_seconds: 3600
+
+      quality_control:
+        min_chunk_size: 50
+        max_chunk_size: 2048
+        validate_chunks: true
+        remove_duplicates: true
+        normalize_whitespace: true
+
+    connection_pool:
+      min_connections: 2
+      max_connections: 6
+      timeout_seconds: 45
+      idle_timeout_seconds: 300
+
+    health_check:
+      enabled: true
+      interval_seconds: 50
+      endpoint: "/health"
+      timeout_seconds: 10
+
+  # Knowledge Base Server - Shared with Partitioned Stores
+  shared_knowledge_base:
+    name: "Shared Knowledge Base Server"
+    type: knowledge_base
+    shared: true
+    endpoint: "ws://localhost:8035/mcp"
+    description: "Centralized knowledge management with domain-specific stores"
+
+    capabilities:
+      - knowledge_storage
+      - knowledge_retrieval
+      - knowledge_search
+      - relationship_mapping
+      - version_control
+      - collaborative_editing
+      - knowledge_graphs
+      - ontology_management
+
+    configuration:
+      storage_backend: "neo4j"
+      graph_database:
+        uri: "bolt://localhost:7687"
+        auth:
+          user: "neo4j"
+          password_env: "NEO4J_PASSWORD"
+
+      knowledge_stores:
+        artemis:
+          stores:
+            - code_patterns
+            - best_practices
+            - documentation
+            - architectural_decisions
+            - technical_standards
+          access: "read_write"
+          versioning: true
+
+        sophia:
+          stores:
+            - business_insights
+            - market_intelligence
+            - customer_knowledge
+            - competitive_analysis
+            - strategic_initiatives
+          access: "read_write"
+          versioning: true
+
+        shared:
+          stores:
+            - common_knowledge
+            - glossary
+            - standards
+            - policies
+            - procedures
+          access: "read_write"
+          versioning: false
+
+      knowledge_structure:
+        node_types:
+          - concept
+          - entity
+          - document
+          - decision
+          - insight
+
+        relationship_types:
+          - relates_to
+          - depends_on
+          - contradicts
+          - supports
+          - implements
+          - references
+
+        metadata_fields:
+          - author
+          - created_date
+          - modified_date
+          - confidence_level
+          - source
+          - tags
+          - domain
+
+      search_capabilities:
+        full_text: true
+        semantic: true
+        graph_traversal: true
+        faceted: true
+
+      collaboration:
+        concurrent_editing: true
+        conflict_resolution: "last_write_wins"
+        change_tracking: true
+        approval_workflow: false
+
+    connection_pool:
+      min_connections: 3
+      max_connections: 10
+      timeout_seconds: 30
+      idle_timeout_seconds: 300
+
+    health_check:
+      enabled: true
+      interval_seconds: 30
+      endpoint: "/health"
+      timeout_seconds: 10
+
+monitoring:
+  enabled: true
+  metrics_endpoint: "http://localhost:9092/metrics"
+
+  infrastructure_metrics:
+    - cpu_usage
+    - memory_usage
+    - disk_io
+    - network_traffic
+    - connection_pool_usage
+    - cache_hit_rate
+    - query_latency
+    - error_rate
+
+  alerts:
+    - name: "high_resource_usage"
+      condition: "cpu_usage > 80% OR memory_usage > 85%"
+      severity: "warning"
+      notification_channel: "ops"
+
+    - name: "connection_pool_exhausted"
+      condition: "available_connections == 0"
+      severity: "critical"
+      notification_channel: "pagerduty"
+
+    - name: "cross_domain_violation"
+      condition: "unauthorized_access_attempt > 0"
+      severity: "critical"
+      notification_channel: "security"
+
+  dashboards:
+    grafana:
+      enabled: true
+      url: "http://localhost:3000"
+      dashboard_ids:
+        - "shared-infrastructure"
+        - "domain-metrics"
+        - "resource-utilization"
+
+security:
+  domain_isolation:
+    enabled: true
+    enforcement_mode: "strict"
+
+    access_rules:
+      cross_domain_read: false
+      cross_domain_write: false
+      shared_read: true
+      shared_write: false
+
+    data_segregation:
+      logical_separation: true
+      physical_separation: false
+      encryption_per_domain: true
+
+  authentication:
+    method: "oauth2"
+    provider: "internal"
+    token_expiry_seconds: 3600
+    refresh_enabled: true
+
+  encryption:
+    in_transit: "tls_1_3"
+    at_rest: "aes_256_gcm"
+    key_rotation_days: 90
+
+  audit:
+    log_all_operations: true
+    include_payload: false
+    retention_days: 2555
+    immutable_storage: true
+
+    compliance_reports:
+      - soc2
+      - iso27001
+      - gdpr
+
+optimization:
+  resource_allocation:
+    cpu_shares:
+      artemis: 40
+      sophia: 40
+      shared: 20
+
+    memory_allocation:
+      artemis: "8GB"
+      sophia: "8GB"
+      shared: "4GB"
+
+    priority_scheduling:
+      artemis: "normal"
+      sophia: "normal"
+      shared: "low"
+
+  caching:
+    enabled: true
+    multi_tier: true
+
+    l1_cache:
+      type: "in_memory"
+      size_mb: 512
+      ttl_seconds: 300
+
+    l2_cache:
+      type: "redis"
+      endpoint: "localhost:6379"
+      size_gb: 10
+      ttl_seconds: 3600
+
+    l3_cache:
+      type: "disk"
+      path: "/cache/shared"
+      size_gb: 100
+      ttl_seconds: 86400
+
+  load_balancing:
+    algorithm: "weighted_round_robin"
+    health_check_interval: 10
+    fail_over_threshold: 3
+    sticky_sessions: false

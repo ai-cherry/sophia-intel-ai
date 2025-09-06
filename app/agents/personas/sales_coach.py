@@ -11,7 +11,7 @@ tough love with genuine care for team development.
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any, Dict, List, Optional
 
 from .base_persona import BasePersonaAgent, ConversationStyle, PersonalityTrait, PersonaProfile
 
@@ -785,3 +785,154 @@ class SalesCoachAgent(BasePersonaAgent):
             response += f"\n{i}. {rec}"
 
         return response.strip()
+
+    async def coach_deal(self, deal_analysis) -> Dict[str, Any]:
+        """Provide coaching for a specific deal"""
+        coaching_points = []
+        recommended_actions = []
+
+        # Analyze deal stage
+        if deal_analysis.stage.lower() in ["discovery", "qualification"]:
+            coaching_points.append("Focus on understanding the client's business impact")
+            recommended_actions.append("Schedule a discovery call with key stakeholders")
+        elif deal_analysis.stage.lower() in ["proposal", "negotiation"]:
+            coaching_points.append("Emphasize value over price in your positioning")
+            recommended_actions.append("Create a business case with clear ROI metrics")
+
+        # Analyze probability
+        if deal_analysis.probability < 0.3:
+            coaching_points.append("This deal needs immediate attention or qualification out")
+            recommended_actions.append("Identify and address the main blockers")
+        elif deal_analysis.probability > 0.7:
+            coaching_points.append("Strong position - focus on closing activities")
+            recommended_actions.append("Secure executive sponsor commitment")
+
+        # Analyze competitors
+        if deal_analysis.competitors:
+            coaching_points.append(
+                f"Differentiate against {', '.join(deal_analysis.competitors[:2])}"
+            )
+            recommended_actions.append("Prepare competitive battle cards")
+
+        return {
+            "deal_id": deal_analysis.deal_id,
+            "coaching_points": coaching_points,
+            "recommended_actions": recommended_actions,
+            "confidence_score": deal_analysis.probability,
+            "risk_assessment": (
+                "high"
+                if deal_analysis.probability < 0.3
+                else "medium" if deal_analysis.probability < 0.7 else "low"
+            ),
+            "next_best_action": (
+                recommended_actions[0] if recommended_actions else "Schedule strategic review"
+            ),
+        }
+
+    async def review_performance(self, review_data) -> Dict[str, Any]:
+        """Review sales performance and provide insights"""
+        insights = []
+        recommendations = []
+
+        # Analyze metrics
+        metrics = review_data.metrics or {}
+        attainment = 1.0  # Default to 100% if not provided
+        if "quota_attainment" in metrics:
+            attainment = metrics["quota_attainment"]
+            if attainment < 0.8:
+                insights.append("Below quota - need immediate intervention")
+                recommendations.append("Daily pipeline review for next 2 weeks")
+            elif attainment > 1.2:
+                insights.append("Exceeding quota - maintain momentum")
+                recommendations.append("Share best practices with team")
+
+        # Analyze deal flow
+        deals_closed = len(review_data.deals_closed) if review_data.deals_closed else 0
+        deals_lost = len(review_data.deals_lost) if review_data.deals_lost else 0
+
+        if deals_closed + deals_lost > 0:
+            win_rate = deals_closed / (deals_closed + deals_lost)
+            insights.append(f"Win rate: {win_rate:.1%}")
+            if win_rate < 0.3:
+                recommendations.append("Focus on qualification criteria")
+            elif win_rate > 0.5:
+                recommendations.append("Increase pipeline velocity")
+
+        return {
+            "rep_id": review_data.rep_id,
+            "period": review_data.period,
+            "overall_assessment": (
+                "needs improvement"
+                if attainment < 0.8
+                else "on track" if attainment < 1.0 else "exceeding"
+            ),
+            "insights": insights,
+            "recommendations": recommendations,
+            "strengths": ["Consistent activity levels", "Good customer relationships"],
+            "areas_for_improvement": ["Discovery process", "Objection handling"],
+            "action_items": recommendations[:3],
+        }
+
+    async def create_skill_development_plan(
+        self, rep_id: str, skills: List[str], goals: List[str]
+    ) -> Dict[str, Any]:
+        """Create personalized skill development plan"""
+        plan_items = []
+        timeline = []
+        resources = []
+
+        # Map skills to development activities
+        skill_activities = {
+            "prospecting": {
+                "activities": ["Cold calling role-play", "LinkedIn outreach workshop"],
+                "resources": ["Prospecting playbook", "Email templates"],
+                "timeline": "Week 1-2",
+            },
+            "discovery": {
+                "activities": ["Question framework training", "Active listening exercises"],
+                "resources": ["Discovery call recordings", "SPIN selling guide"],
+                "timeline": "Week 2-3",
+            },
+            "negotiation": {
+                "activities": ["Negotiation simulation", "Pricing strategy session"],
+                "resources": ["Negotiation tactics guide", "Deal desk collaboration"],
+                "timeline": "Week 3-4",
+            },
+            "closing": {
+                "activities": ["Closing techniques workshop", "Objection handling practice"],
+                "resources": ["Closing framework", "Common objections guide"],
+                "timeline": "Week 4-5",
+            },
+        }
+
+        for skill in skills:
+            skill_lower = skill.lower()
+            for key, details in skill_activities.items():
+                if key in skill_lower or skill_lower in key:
+                    plan_items.extend(details["activities"])
+                    resources.extend(details["resources"])
+                    timeline.append(details["timeline"])
+                    break
+
+        # Add goal-specific elements
+        for goal in goals[:3]:  # Focus on top 3 goals
+            plan_items.append(f"Goal-focused activity: {goal}")
+
+        return {
+            "rep_id": rep_id,
+            "plan_duration": "6 weeks",
+            "focus_areas": skills[:3],
+            "development_activities": plan_items[:5],
+            "resources": list(set(resources))[:5],
+            "milestones": [
+                {"week": 2, "checkpoint": "Initial skill assessment"},
+                {"week": 4, "checkpoint": "Mid-plan review"},
+                {"week": 6, "checkpoint": "Final evaluation"},
+            ],
+            "success_metrics": [
+                "Complete 80% of activities",
+                "Improvement in skill assessments",
+                "Apply learnings to active deals",
+            ],
+            "coaching_sessions": "Weekly 1:1 coaching calls",
+        }

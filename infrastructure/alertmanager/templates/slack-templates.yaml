@@ -1,0 +1,177 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alertmanager-templates
+  namespace: monitoring
+  labels:
+    app: alertmanager
+    component: templates
+data:
+  slack.tmpl: |
+    {{ define "__alertmanager" }}AlertManager{{ end }}
+    {{ define "__alertmanagerURL" }}{{ .ExternalURL }}/#/alerts?receiver={{ .Receiver | urlquery }}{{ end }}
+
+    {{ define "slack.title" -}}
+    {{- if eq .Status "firing" -}}
+    🔥 [{{ .Status | toUpper }}:{{ .Alerts.Firing | len }}] {{ .GroupLabels.SortedPairs.Values | join " " }}
+    {{- else -}}
+    ✅ [{{ .Status | toUpper }}:{{ .Alerts.Resolved | len }}] {{ .GroupLabels.SortedPairs.Values | join " " }}
+    {{- end -}}
+    {{- end }}
+
+    {{ define "slack.text" -}}
+    {{- if eq .Status "firing" -}}
+    {{- range .Alerts.Firing }}
+    *Alert:* {{ .Labels.alertname }}
+    *Severity:* {{ .Labels.severity }}
+    *Domain:* {{ .Labels.domain }}
+    *Namespace:* {{ .Labels.namespace }}
+    {{- if .Labels.service }}
+    *Service:* {{ .Labels.service }}
+    {{- end }}
+    {{- if .Labels.pod }}
+    *Pod:* {{ .Labels.pod }}
+    {{- end }}
+
+    *Description:* {{ .Annotations.description }}
+    {{- if .Annotations.value }}
+    *Value:* {{ .Annotations.value }}
+    {{- end }}
+
+    *Started:* {{ .StartsAt.Format "2006-01-02 15:04:05 MST" }}
+    {{- if .Annotations.runbook_url }}
+    *Runbook:* <{{ .Annotations.runbook_url }}|View Runbook>
+    {{- end }}
+    {{- if .Annotations.dashboard }}
+    *Dashboard:* <{{ .Annotations.dashboard }}|View Dashboard>
+    {{- end }}
+
+    *Labels:*
+    {{- range .Labels.SortedPairs }}
+      • {{ .Name }}: `{{ .Value }}`
+    {{- end }}
+
+    *Source:* <{{ .GeneratorURL }}|View in Prometheus>
+    ———————————————————
+    {{ end }}
+    {{- else -}}
+    {{- range .Alerts.Resolved }}
+    ✅ *Resolved:* {{ .Labels.alertname }}
+    *Namespace:* {{ .Labels.namespace }}
+    {{- if .Labels.service }}
+    *Service:* {{ .Labels.service }}
+    {{- end }}
+    *Resolved at:* {{ .EndsAt.Format "2006-01-02 15:04:05 MST" }}
+    *Duration:* {{ .StartsAt.Sub .EndsAt }}
+    ———————————————————
+    {{ end }}
+    {{- end }}
+
+    <{{ .ExternalURL }}/#/alerts?receiver={{ .Receiver | urlquery }}|📊 View in AlertManager>
+    {{- end }}
+
+    {{ define "slack.artemis.text" -}}
+    {{- if eq .Status "firing" -}}
+    ⚡ *Artemis Real-Time Alert*
+    {{- range .Alerts.Firing }}
+
+    *Alert:* {{ .Labels.alertname }}
+    *Severity:* `{{ .Labels.severity }}`
+    *Service:* {{ .Labels.destination_service_name | default .Labels.service }}
+    *Namespace:* {{ .Labels.namespace }}
+
+    {{- if eq .Labels.component "circuit-breaker" }}
+    🔌 *Circuit Breaker Status*
+    {{- else if eq .Labels.component "latency" }}
+    ⏱️ *Performance Issue*
+    {{- else if eq .Labels.component "errors" }}
+    ❌ *Error Rate Alert*
+    {{- else }}
+    ⚠️ *Service Alert*
+    {{- end }}
+
+    *Description:* {{ .Annotations.description }}
+    {{- if .Annotations.value }}
+    *Current Value:* `{{ .Annotations.value }}`
+    {{- end }}
+
+    *Impact:* Real-time service degradation possible
+    *Started:* {{ .StartsAt.Format "15:04:05 MST" }}
+
+    {{- if .Annotations.runbook_url }}
+    📚 <{{ .Annotations.runbook_url }}|Runbook> |
+    {{- end }}
+    {{- if .Annotations.dashboard }}
+    📊 <{{ .Annotations.dashboard }}|Dashboard> |
+    {{- end }}
+    🔇 <{{ $.ExternalURL }}/#/silences/new?filter={alertname%3D"{{ .Labels.alertname }}"%2Cnamespace%3D"{{ .Labels.namespace }}"}|Silence>
+
+    ———————————————————
+    {{ end }}
+    {{- else -}}
+    ✅ *Artemis Alert Resolved*
+    {{- range .Alerts.Resolved }}
+    *Alert:* {{ .Labels.alertname }}
+    *Service:* {{ .Labels.destination_service_name | default .Labels.service }}
+    *Resolution Time:* {{ .EndsAt.Format "15:04:05 MST" }}
+    *Total Duration:* {{ .EndsAt.Sub .StartsAt }}
+    {{ end }}
+    {{- end }}
+    {{- end }}
+
+    {{ define "slack.sophia.text" -}}
+    {{- if eq .Status "firing" -}}
+    🤖 *Sophia AI Alert*
+    {{- range .Alerts.Firing }}
+
+    *Alert:* {{ .Labels.alertname }}
+    *Severity:* `{{ .Labels.severity }}`
+    {{- if .Labels.model_name }}
+    *Model:* {{ .Labels.model_name }}
+    {{- end }}
+    {{- if .Labels.gpu_node }}
+    *GPU Node:* {{ .Labels.gpu_node }}
+    {{- end }}
+    *Namespace:* {{ .Labels.namespace }}
+
+    {{- if eq .Labels.component "gpu" }}
+    🎮 *GPU Resource Alert*
+    {{- else if eq .Labels.component "model-loading" }}
+    📦 *Model Loading Issue*
+    {{- else if eq .Labels.component "inference" }}
+    🔮 *Inference Pipeline Alert*
+    {{- else if eq .Labels.component "training" }}
+    🎓 *Training Job Alert*
+    {{- else }}
+    🧠 *AI Workload Alert*
+    {{- end }}
+
+    *Description:* {{ .Annotations.description }}
+    {{- if .Annotations.value }}
+    *Metric Value:* `{{ .Annotations.value }}`
+    {{- end }}
+
+    *Started:* {{ .StartsAt.Format "15:04:05 MST" }}
+
+    {{- if .Annotations.runbook_url }}
+    📚 <{{ .Annotations.runbook_url }}|Runbook> |
+    {{- end }}
+    {{- if .Annotations.dashboard }}
+    📊 <{{ .Annotations.dashboard }}|Dashboard> |
+    {{- end }}
+    🔇 <{{ $.ExternalURL }}/#/silences/new?filter={alertname%3D"{{ .Labels.alertname }}"}|Silence>
+
+    ———————————————————
+    {{ end }}
+    {{- else -}}
+    ✅ *Sophia AI Alert Resolved*
+    {{- range .Alerts.Resolved }}
+    *Alert:* {{ .Labels.alertname }}
+    {{- if .Labels.model_name }}
+    *Model:* {{ .Labels.model_name }}
+    {{- end }}
+    *Resolution Time:* {{ .EndsAt.Format "15:04:05 MST" }}
+    *Total Duration:* {{ .EndsAt.Sub .StartsAt }}
+    {{ end }}
+    {{- end }}
+    {{- end }}

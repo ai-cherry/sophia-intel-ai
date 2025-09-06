@@ -8,7 +8,7 @@ from fastapi import APIRouter, HTTPException
 router = APIRouter(prefix="/api/repo", tags=["repository"])
 
 # Security constants
-ROOT_DIR = Path(get_config().get("PROJECT_ROOT", os.getcwd()))
+ROOT_DIR = Path(os.getenv("PROJECT_ROOT", os.getcwd()))
 EXCLUDED_PATHS = [".git", ".env", "*.key", "*.pem", "__pycache__"]
 MAX_FILE_SIZE = 1024 * 1024  # 1MB
 MAX_TREE_DEPTH = 5

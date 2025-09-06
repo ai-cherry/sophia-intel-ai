@@ -1,0 +1,145 @@
+{
+  "timestamp": "2025-09-06T09:00:53.037338",
+  "repository": "/Users/lynnmusil/sophia-intel-ai",
+  "mcp_available": true,
+  "test_results": {
+    "mcp_connectivity": {
+      "simple_server": {
+        "status": "connected",
+        "health": {
+          "status": "healthy",
+          "timestamp": "2025-09-06T09:00:26.004837",
+          "services": {
+            "api": "running",
+            "database": "connected",
+            "cache": "connected"
+          }
+        }
+      },
+      "redis": {
+        "status": "connected"
+      },
+      "mcp_tools": {
+        "status": "functional",
+        "test_read": "success"
+      }
+    },
+    "swarm_creation": {
+      "success": true,
+      "scout_count": 6
+    },
+    "rapid_scan": {
+      "success": true,
+      "execution_time": 5.242052793502808
+    },
+    "custom_scan": {
+      "success": true
+    },
+    "swarm_status": {
+      "total_scans": 1,
+      "total_execution_time": 5.2419657707214355,
+      "average_scan_time": 5.2419657707214355,
+      "scouts": {
+        "rapid": [
+          {
+            "name": "Llama-4-Scout",
+            "model": "meta-llama/llama-4-scout",
+            "provider": "AIMLAPI",
+            "scan_count": 2,
+            "average_time": 5.158005475997925,
+            "total_tokens": 1171,
+            "performance_metrics": {
+              "expected_time": 11.45,
+              "quality_score": 86.0,
+              "scan_count": 2,
+              "total_tokens": 1171,
+              "average_time": 5.158005475997925
+            }
+          }
+        ],
+        "deep": [
+          {
+            "name": "Grok-Code-Fast",
+            "model": "x-ai/grok-code-fast-1",
+            "provider": "OpenRouter",
+            "scan_count": 0,
+            "average_time": 0.0,
+            "total_tokens": 0,
+            "performance_metrics": {
+              "expected_time": 17.65,
+              "quality_score": 88.5
+            }
+          },
+          {
+            "name": "Gemini-2.0-Flash",
+            "model": "gemini-2.0-flash-exp",
+            "provider": "Google",
+            "scan_count": 0,
+            "average_time": 0.0,
+            "total_tokens": 0,
+            "performance_metrics": {
+              "expected_time": 19.64,
+              "quality_score": 88.5
+            }
+          }
+        ],
+        "validation": [
+          {
+            "name": "GPT-4o-mini",
+            "model": "gpt-4o-mini",
+            "provider": "Portkey",
+            "scan_count": 1,
+            "average_time": 16.626749992370605,
+            "total_tokens": 856,
+            "performance_metrics": {
+              "expected_time": 15.1,
+              "quality_score": 83.5,
+              "scan_count": 1,
+              "total_tokens": 856,
+              "average_time": 16.626749992370605
+            }
+          },
+          {
+            "name": "Llama-4-Maverick",
+            "model": "meta-llama/llama-4-maverick",
+            "provider": "AIMLAPI",
+            "scan_count": 0,
+            "average_time": 0.0,
+            "total_tokens": 0,
+            "performance_metrics": {
+              "expected_time": 16.17,
+              "quality_score": 81.0
+            }
+          }
+        ],
+        "audit": [
+          {
+            "name": "GLM-4.5-Air",
+            "model": "zhipu/glm-4.5-air",
+            "provider": "AIMLAPI",
+            "scan_count": 0,
+            "average_time": 0.0,
+            "total_tokens": 0,
+            "performance_metrics": {
+              "expected_time": 61.98,
+              "quality_score": 84.5
+            }
+          }
+        ]
+      },
+      "mcp_enabled": false,
+      "last_scan": "scan_01be1aef"
+    },
+    "base_factory": {
+      "success": false,
+      "error": "'NoneType' object is not callable"
+    },
+    "artemis_integration": {
+      "success": true
+    }
+  },
+  "summary": {
+    "passed": 4,
+    "failed": 1
+  }
+}

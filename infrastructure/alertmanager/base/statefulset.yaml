@@ -1,0 +1,238 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: alertmanager
+  namespace: monitoring
+  labels:
+    app: alertmanager
+    component: alerting
+    tier: monitoring
+spec:
+  serviceName: alertmanager-headless
+  replicas: 3
+  selector:
+    matchLabels:
+      app: alertmanager
+      component: alerting
+  template:
+    metadata:
+      labels:
+        app: alertmanager
+        component: alerting
+        tier: monitoring
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9093"
+        prometheus.io/path: "/metrics"
+        checksum/config: "{{ .Values.configChecksum }}"
+    spec:
+      serviceAccountName: alertmanager
+      securityContext:
+        runAsUser: 65534
+        runAsNonRoot: true
+        fsGroup: 65534
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - alertmanager
+              topologyKey: kubernetes.io/hostname
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              preference:
+                matchExpressions:
+                  - key: node-role.kubernetes.io/monitoring
+                    operator: Exists
+      containers:
+        - name: alertmanager
+          image: prom/alertmanager:v0.27.0
+          imagePullPolicy: IfNotPresent
+          args:
+            - --config.file=/etc/alertmanager/alertmanager.yml
+            - --storage.path=/alertmanager
+            - --data.retention=120h
+            - --cluster.listen-address=0.0.0.0:9094
+            - --cluster.peer=alertmanager-0.alertmanager-headless.monitoring.svc.cluster.local:9094
+            - --cluster.peer=alertmanager-1.alertmanager-headless.monitoring.svc.cluster.local:9094
+            - --cluster.peer=alertmanager-2.alertmanager-headless.monitoring.svc.cluster.local:9094
+            - --cluster.reconnect-timeout=60s
+            - --cluster.probe-timeout=500ms
+            - --cluster.probe-interval=1s
+            - --cluster.settle-timeout=60s
+            - --cluster.push-pull-interval=60s
+            - --cluster.gossip-interval=200ms
+            - --log.level=info
+            - --log.format=json
+            - --web.external-url=https://alertmanager.sophia-artemis.ai
+          ports:
+            - containerPort: 9093
+              name: http
+              protocol: TCP
+            - containerPort: 9094
+              name: cluster
+              protocol: TCP
+            - containerPort: 9095
+              name: udp-cluster
+              protocol: UDP
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          resources:
+            requests:
+              cpu: 500m
+              memory: 512Mi
+            limits:
+              cpu: 2000m
+              memory: 2Gi
+          volumeMounts:
+            - name: config
+              mountPath: /etc/alertmanager
+            - name: templates
+              mountPath: /etc/alertmanager/templates
+            - name: storage
+              mountPath: /alertmanager
+            - name: secrets
+              mountPath: /etc/alertmanager/secrets
+              readOnly: true
+          livenessProbe:
+            httpGet:
+              path: /-/healthy
+              port: 9093
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 3
+            successThreshold: 1
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /-/ready
+              port: 9093
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            successThreshold: 1
+            failureThreshold: 3
+        - name: config-reloader
+          image: jimmidyson/configmap-reload:v0.9.0
+          imagePullPolicy: IfNotPresent
+          args:
+            - --volume-dir=/etc/alertmanager
+            - --webhook-url=http://localhost:9093/-/reload
+          resources:
+            requests:
+              cpu: 10m
+              memory: 20Mi
+            limits:
+              cpu: 100m
+              memory: 50Mi
+          volumeMounts:
+            - name: config
+              mountPath: /etc/alertmanager
+              readOnly: true
+        - name: oauth2-proxy
+          image: quay.io/oauth2-proxy/oauth2-proxy:v7.5.0
+          imagePullPolicy: IfNotPresent
+          args:
+            - --provider=oidc
+            - --oidc-issuer-url=$(OIDC_ISSUER_URL)
+            - --client-id=$(OAUTH_CLIENT_ID)
+            - --client-secret=$(OAUTH_CLIENT_SECRET)
+            - --cookie-secret=$(OAUTH_COOKIE_SECRET)
+            - --upstream=http://localhost:9093
+            - --http-address=0.0.0.0:4180
+            - --email-domain=*
+            - --cookie-secure=true
+            - --cookie-httponly=true
+            - --cookie-expire=24h
+            - --cookie-refresh=1h
+            - --skip-provider-button=false
+            - --pass-authorization-header=true
+            - --pass-access-token=true
+            - --set-xauthrequest=true
+            - --set-authorization-header=true
+          env:
+            - name: OIDC_ISSUER_URL
+              valueFrom:
+                secretKeyRef:
+                  name: alertmanager-oauth
+                  key: issuer-url
+            - name: OAUTH_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: alertmanager-oauth
+                  key: client-id
+            - name: OAUTH_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: alertmanager-oauth
+                  key: client-secret
+            - name: OAUTH_COOKIE_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: alertmanager-oauth
+                  key: cookie-secret
+          ports:
+            - containerPort: 4180
+              name: oauth-proxy
+              protocol: TCP
+          resources:
+            requests:
+              cpu: 10m
+              memory: 20Mi
+            limits:
+              cpu: 100m
+              memory: 50Mi
+          livenessProbe:
+            httpGet:
+              path: /ping
+              port: 4180
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /ping
+              port: 4180
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 5
+      volumes:
+        - name: config
+          configMap:
+            name: alertmanager-config
+        - name: templates
+          configMap:
+            name: alertmanager-templates
+        - name: secrets
+          secret:
+            secretName: alertmanager-secrets
+            defaultMode: 420
+  volumeClaimTemplates:
+    - metadata:
+        name: storage
+        labels:
+          app: alertmanager
+          component: alerting
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: fast-ssd
+        resources:
+          requests:
+            storage: 10Gi

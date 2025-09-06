@@ -1,0 +1,26 @@
+{
+  "perplexity": {
+    "models": ["sonar-pro", "sonar", "sonar-reasoning"],
+    "base_url": "https://api.perplexity.ai"
+  },
+  "xai": {
+    "models": ["grok-2", "grok-2-mini"],
+    "base_url": "https://api.x.ai/v1"
+  },
+  "huggingface": {
+    "models": ["microsoft/DialoGPT-medium", "google/flan-t5-base"],
+    "base_url": "https://api-inference.huggingface.co"
+  },
+  "mem0": {
+    "auth_format": "Try Token, Bearer, or Direct",
+    "note": "Key might be expired - regenerate at https://app.mem0.ai"
+  },
+  "qdrant": {
+    "note": "Use first part of key before '|' character",
+    "example": "key.split('|')[0]"
+  },
+  "weaviate": {
+    "fix": "pip install --upgrade protobuf==4.25.0",
+    "note": "Requires protobuf 4.x for compatibility"
+  }
+}

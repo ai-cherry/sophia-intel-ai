@@ -1,0 +1,90 @@
+{
+  "timestamp": "2025-09-06T08:19:07.246722",
+  "repository": "/Users/lynnmusil/sophia-intel-ai",
+  "prompt_length": 2288,
+  "rankings": [
+    {
+      "agent_id": 1,
+      "model": "x-ai/grok-code-fast-1",
+      "provider": "OpenRouter",
+      "execution_time": 18.25,
+      "tokens_used": 3727,
+      "response_length": 11007,
+      "scores": {
+        "specificity": 100,
+        "accuracy": 100,
+        "completeness": 100,
+        "actionability": 62.5,
+        "speed": 60,
+        "overall": 88.5
+      }
+    },
+    {
+      "agent_id": 4,
+      "model": "meta-llama/llama-4-scout",
+      "provider": "AIMLAPI",
+      "execution_time": 11.45,
+      "tokens_used": 1434,
+      "response_length": 4095,
+      "scores": {
+        "specificity": 100,
+        "accuracy": 100,
+        "completeness": 100,
+        "actionability": 50.0,
+        "speed": 60,
+        "overall": 86.0
+      }
+    },
+    {
+      "agent_id": 3,
+      "model": "zhipu/glm-4.5-air",
+      "provider": "AIMLAPI",
+      "execution_time": 61.98,
+      "tokens_used": 9485,
+      "response_length": 5957,
+      "scores": {
+        "specificity": 100,
+        "accuracy": 90,
+        "completeness": 100,
+        "actionability": 75.0,
+        "speed": 20,
+        "overall": 84.5
+      }
+    },
+    {
+      "agent_id": 2,
+      "model": "google/gemini-2.5-flash",
+      "scores": {
+        "specificity": 0,
+        "accuracy": 0,
+        "completeness": 0,
+        "actionability": 0,
+        "speed": 0,
+        "overall": 0
+      },
+      "error": "API Error: 401"
+    }
+  ],
+  "raw_responses": [
+    {
+      "agent_id": 1,
+      "model": "x-ai/grok-code-fast-1",
+      "response": "Below is my comprehensive analysis report as an elite scout agent conducting a thorough repository scan of the **sophia-intel-ai** repository located at `/Users/lynnmusil/sophia-intel-ai`. This is based on a real-time scan of the repository's 6294 files (539 Python, 5658 TypeScript), focusing on the key directories: `/app`, `/agent-ui`, `/scripts`, `/tests`, and `/k8s`. I've prioritized the objectives as specified, drawing from actual file contents, code patterns, and the provided notes (e.g., exposed keys in `.env`, nested loops in `app/tools/git_ops.py`, and high duplication between Sophia/Artemis components).\n\nMy analysis is derived from static code inspection, dependency mapping, and pattern recognition across the codebase. I've flagged issues with specific file paths, line numbers (where applicable), and actionable recommendations. All findings are based on real repository data\u2014I've cross-referenced actual files for accuracy.\n\n---\n\n## 1. SECURITY ANALYSIS (Priority: CRITICAL)\n\nSec..."
+    },
+    {
+      "agent_id": 2,
+      "model": "google/gemini-2.5-flash",
+      "response": ""
+    },
+    {
+      "agent_id": 3,
+      "model": "zhipu/glm-4.5-air",
+      "response": "\n### 1. SECURITY ANALYSIS (Priority: CRITICAL)\n\n**Exposed API Keys:**\n- **File:** `.env`  \n  - **Issue:** 16 hardcoded API keys (NETSUITE, PORTKEY, etc.)  \n  - **Lines:** Multiple (e.g., `NETSUITE_API_KEY=\"AKIA...`, `PORTKEY_API_KEY=\"pk-...\"`)  \n  - **Impact:** Critical (full system compromise if exposed)  \n  - **Effort:** Low  \n  - **Recommendation:** Move to environment variables/secrets manager immediately.  \n\n**Hardcoded Secrets in Code:**  \n- **File:** `app/core/portkey_config.py`  \n  - **Issue:** `BASE_URL = \"https://api.portkey.ai/v1\"` (hardcoded endpoint)  \n  - **Line:** 12  \n  - **Impact:** Medium (endpoint poisoning risk)  \n  - **Effort:** Low  \n  - **Recommendation:** Externalize to config files.  \n\n- **File:** `app/core/aimlapi_config.py`  \n  - **Issue:** `API_KEY = \"sk-aiml...\"` (hardcoded key)  \n  - **Line:** 8  \n  - **Impact:** Critical  \n  - **Effort:** Low  \n  - **Recommendation:** Use environment variables.  \n\n**SQL Injection Vulnerabilities:**  \n- **File:** `app/api/..."
+    },
+    {
+      "agent_id": 4,
+      "model": "meta-llama/llama-4-scout",
+      "response": "**Comprehensive Repository Analysis Report - sophia-intel-ai**\n\n### Security Analysis\n\nThe security analysis revealed several critical issues that require immediate attention.\n\n1. **Exposed API Keys**: 16 exposed API keys were found in the `.env` file, including NETSUITE and PORTKEY. These keys should be secured using environment variables or a secrets management system.\n\t* File: `.env` (line 1-16)\n\t* Effort: Medium\n\t* Impact: Critical\n2. **Hardcoded Secrets**: No hardcoded secrets were found in the specified files, but a thorough review of the entire codebase is recommended.\n3. **Unsafe WebSocket Implementations**: No issues were found in the WebSocket implementation.\n4. **SQL Injection Vulnerabilities**: No SQL injection vulnerabilities were detected.\n5. **XSS/CSRF Vulnerabilities**: No XSS/CSRF vulnerabilities were detected.\n\n**Specific File Analysis**\n\n* `app/core/portkey_config.py`: No issues found.\n* `app/core/aimlapi_config.py`: No issues found.\n* `.env`: 16 exposed API keys (li..."
+    }
+  ]
+}

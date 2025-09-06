@@ -1,0 +1,327 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alert-rules-sophia
+  namespace: monitoring
+  labels:
+    app: alertmanager
+    domain: sophia
+data:
+  sophia-alerts.yaml: |
+    groups:
+    - name: sophia-ai-workloads
+      interval: 60s
+      rules:
+      # Model Loading and Training Alerts
+      - alert: AIModelLoadingFailure
+        expr: |
+          sophia_model_loading_status{namespace="sophia-system",status="failed"} == 1
+        for: 2m
+        labels:
+          severity: CRITICAL
+          domain: sophia
+          component: model-loading
+        annotations:
+          summary: "AI model {{ $labels.model_name }} failed to load"
+          description: "Model {{ $labels.model_name }} version {{ $labels.model_version }} failed to load on {{ $labels.gpu_node }}"
+          value: "{{ $value }}"
+          runbook_url: "https://docs.sophia-artemis.ai/runbooks/ai-model-loading-failure"
+
+      - alert: AIModelLoadingTimeout
+        expr: |
+          sophia_model_loading_duration_seconds{namespace="sophia-system"} > 600
+        for: 1m
+        labels:
+          severity: WARNING
+          domain: sophia
+          component: model-loading
+        annotations:
+          summary: "Model loading timeout for {{ $labels.model_name }}"
+          description: "Model {{ $labels.model_name }} is taking longer than 10 minutes to load (current: {{ $value | humanizeDuration }})"
+
+      - alert: AITrainingJobFailure
+        expr: |
+          sophia_training_job_status{namespace="sophia-system",status="failed"} == 1
+        for: 1m
+        labels:
+          severity: CRITICAL
+          domain: sophia
+          component: training
+        annotations:
+          summary: "Training job {{ $labels.job_name }} failed"
+          description: "Training job {{ $labels.job_name }} for model {{ $labels.model_name }} failed after {{ $labels.duration | humanizeDuration }}"
+
+      - alert: AITrainingLossStagnation
+        expr: |
+          delta(sophia_training_loss{namespace="sophia-system"}[30m]) > -0.001
+        for: 1h
+        labels:
+          severity: WARNING
+          domain: sophia
+          component: training
+        annotations:
+          summary: "Training loss stagnation for {{ $labels.job_name }}"
+          description: "Training loss for job {{ $labels.job_name }} has not improved in the last hour (current loss: {{ $value }})"
+
+      # GPU Resource Alerts
+      - alert: GPUMemoryExhaustion
+        expr: |
+          (nvidia_gpu_memory_used_bytes{namespace="sophia-system"} / nvidia_gpu_memory_total_bytes{namespace="sophia-system"}) * 100 > 95
+        for: 5m
+        labels:
+          severity: CRITICAL
+          domain: sophia
+          component: gpu
+          resource: memory
+        annotations:
+          summary: "GPU memory exhaustion on {{ $labels.gpu_node }}"
+          description: "GPU {{ $labels.gpu_uuid }} on node {{ $labels.gpu_node }} is using {{ $value | humanizePercentage }} of available memory"
+
+      - alert: GPUHighTemperature
+        expr: |
+          nvidia_gpu_temperature_celsius{namespace="sophia-system"} > 85
+        for: 5m
+        labels:
+          severity: WARNING
+          domain: sophia
+          component: gpu
+          health: temperature
+        annotations:
+          summary: "High GPU temperature on {{ $labels.gpu_node }}"
+          description: "GPU {{ $labels.gpu_uuid }} temperature is {{ $value }}°C, exceeding safe threshold"
+
+      - alert: GPUUtilizationLow
+        expr: |
+          avg_over_time(nvidia_gpu_utilization{namespace="sophia-system"}[30m]) < 20
+          AND sophia_model_serving_active{namespace="sophia-system"} == 1
+        for: 30m
+        labels:
+          severity: INFO
+          domain: sophia
+          component: gpu
+          efficiency: low
+        annotations:
+          summary: "Low GPU utilization on {{ $labels.gpu_node }}"
+          description: "GPU {{ $labels.gpu_uuid }} has been underutilized ({{ $value }}%) while model serving is active"
+
+      - alert: GPUNodeOffline
+        expr: |
+          up{job="nvidia-gpu-exporter",namespace="sophia-system"} == 0
+        for: 2m
+        labels:
+          severity: CRITICAL
+          domain: sophia
+          component: gpu
+          availability: offline
+        annotations:
+          summary: "GPU node {{ $labels.instance }} is offline"
+          description: "Cannot reach GPU metrics exporter on {{ $labels.instance }}, GPU resources unavailable"
+
+      # CUDA Errors
+      - alert: CUDAOutOfMemory
+        expr: |
+          increase(sophia_cuda_oom_errors_total{namespace="sophia-system"}[5m]) > 0
+        for: 1m
+        labels:
+          severity: CRITICAL
+          domain: sophia
+          component: cuda
+        annotations:
+          summary: "CUDA out of memory errors on {{ $labels.gpu_node }}"
+          description: "{{ $value }} CUDA OOM errors in the last 5 minutes on {{ $labels.gpu_node }}"
+
+      - alert: CUDAKernelErrors
+        expr: |
+          rate(sophia_cuda_kernel_errors_total{namespace="sophia-system"}[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: WARNING
+          domain: sophia
+          component: cuda
+        annotations:
+          summary: "CUDA kernel errors detected"
+          description: "CUDA kernel errors occurring at {{ $value | humanize }} per second on {{ $labels.gpu_node }}"
+
+      # Inference Pipeline Alerts
+      - alert: InferencePipelineHighLatency
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(sophia_inference_duration_seconds_bucket{namespace="sophia-system"}[5m]))
+            by (model_name, le)
+          ) > 10
+        for: 10m
+        labels:
+          severity: WARNING
+          domain: sophia
+          component: inference
+          slo: latency
+        annotations:
+          summary: "High inference latency for model {{ $labels.model_name }}"
+          description: "P95 inference latency for {{ $labels.model_name }} is {{ $value | humanizeDuration }}, exceeding 10s SLO"
+
+      - alert: InferencePipelineBacklog
+        expr: |
+          sophia_inference_queue_size{namespace="sophia-system"} > 1000
+        for: 5m
+        labels:
+          severity: WARNING
+          domain: sophia
+          component: inference
+          queue: backlog
+        annotations:
+          summary: "Large inference queue backlog"
+          description: "Inference queue for {{ $labels.model_name }} has {{ $value }} pending requests"
+
+      - alert: InferenceThroughputDegradation
+        expr: |
+          (
+            rate(sophia_inference_requests_total{namespace="sophia-system"}[5m])
+            /
+            rate(sophia_inference_requests_total{namespace="sophia-system"}[5m] offset 1h)
+          ) < 0.5
+        for: 15m
+        labels:
+          severity: WARNING
+          domain: sophia
+          component: inference
+          performance: degraded
+        annotations:
+          summary: "Inference throughput degradation for {{ $labels.model_name }}"
+          description: "Inference throughput for {{ $labels.model_name }} has dropped by more than 50%"
+
+      # Model Serving Alerts
+      - alert: ModelServingEndpointDown
+        expr: |
+          up{job="model-serving",namespace="sophia-system"} == 0
+        for: 2m
+        labels:
+          severity: CRITICAL
+          domain: sophia
+          component: model-serving
+        annotations:
+          summary: "Model serving endpoint {{ $labels.instance }} is down"
+          description: "Cannot reach model serving endpoint {{ $labels.instance }} for {{ $labels.model_name }}"
+
+      - alert: ModelServingHighErrorRate
+        expr: |
+          sum(rate(sophia_model_serving_errors_total{namespace="sophia-system"}[5m])) by (model_name)
+          /
+          sum(rate(sophia_model_serving_requests_total{namespace="sophia-system"}[5m])) by (model_name)
+          * 100 > 5
+        for: 5m
+        labels:
+          severity: WARNING
+          domain: sophia
+          component: model-serving
+        annotations:
+          summary: "High error rate for model {{ $labels.model_name }}"
+          description: "Model serving error rate for {{ $labels.model_name }} is {{ $value | humanizePercentage }}"
+
+      # Batch Processing Alerts
+      - alert: BatchJobFailure
+        expr: |
+          kube_job_status_failed{namespace="sophia-system",job_name=~"batch-.*"} > 0
+        for: 1m
+        labels:
+          severity: WARNING
+          domain: sophia
+          component: batch-processing
+        annotations:
+          summary: "Batch job {{ $labels.job_name }} failed"
+          description: "Batch processing job {{ $labels.job_name }} has failed"
+
+      - alert: BatchJobStuck
+        expr: |
+          time() - kube_job_status_start_time{namespace="sophia-system",job_name=~"batch-.*"}
+          > 3600 * 6
+          AND kube_job_status_active{namespace="sophia-system",job_name=~"batch-.*"} > 0
+        for: 30m
+        labels:
+          severity: WARNING
+          domain: sophia
+          component: batch-processing
+        annotations:
+          summary: "Batch job {{ $labels.job_name }} stuck"
+          description: "Batch job {{ $labels.job_name }} has been running for more than 6 hours"
+
+      # Data Pipeline Alerts
+      - alert: DataPipelineBackpressure
+        expr: |
+          sophia_pipeline_backpressure_ratio{namespace="sophia-system"} > 0.8
+        for: 10m
+        labels:
+          severity: WARNING
+          domain: sophia
+          component: data-pipeline
+        annotations:
+          summary: "Data pipeline backpressure detected"
+          description: "Pipeline {{ $labels.pipeline_name }} is experiencing {{ $value | humanizePercentage }} backpressure"
+
+      - alert: DataIngestionFailure
+        expr: |
+          increase(sophia_data_ingestion_failures_total{namespace="sophia-system"}[5m]) > 10
+        for: 5m
+        labels:
+          severity: WARNING
+          domain: sophia
+          component: data-ingestion
+        annotations:
+          summary: "Data ingestion failures for {{ $labels.source }}"
+          description: "{{ $value }} data ingestion failures from {{ $labels.source }} in the last 5 minutes"
+
+      # Vector Database Alerts
+      - alert: VectorDBHighLatency
+        expr: |
+          histogram_quantile(0.99,
+            sum(rate(sophia_vectordb_query_duration_seconds_bucket{namespace="sophia-system"}[5m]))
+            by (operation, le)
+          ) > 1
+        for: 10m
+        labels:
+          severity: WARNING
+          domain: sophia
+          component: vectordb
+        annotations:
+          summary: "High vector database query latency"
+          description: "P99 latency for {{ $labels.operation }} operations is {{ $value | humanizeDuration }}"
+
+      - alert: VectorDBIndexingLag
+        expr: |
+          sophia_vectordb_indexing_lag_seconds{namespace="sophia-system"} > 300
+        for: 15m
+        labels:
+          severity: WARNING
+          domain: sophia
+          component: vectordb
+        annotations:
+          summary: "Vector database indexing lag"
+          description: "Vector indexing is lagging by {{ $value | humanizeDuration }}"
+
+      # Resource Optimization Alerts
+      - alert: ModelResourceOverprovisioned
+        expr: |
+          (
+            avg_over_time(sophia_model_resource_usage_ratio{namespace="sophia-system"}[1h]) < 0.3
+            AND sophia_model_serving_active{namespace="sophia-system"} == 1
+          )
+        for: 2h
+        labels:
+          severity: INFO
+          domain: sophia
+          component: resource-optimization
+        annotations:
+          summary: "Model {{ $labels.model_name }} is overprovisioned"
+          description: "Model {{ $labels.model_name }} is using only {{ $value | humanizePercentage }} of allocated resources"
+
+      # Model Drift Detection
+      - alert: ModelPerformanceDrift
+        expr: |
+          abs(sophia_model_accuracy{namespace="sophia-system"} - sophia_model_baseline_accuracy{namespace="sophia-system"}) > 0.05
+        for: 30m
+        labels:
+          severity: WARNING
+          domain: sophia
+          component: model-monitoring
+        annotations:
+          summary: "Performance drift detected for {{ $labels.model_name }}"
+          description: "Model {{ $labels.model_name }} accuracy has drifted by {{ $value | humanizePercentage }} from baseline"

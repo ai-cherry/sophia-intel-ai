@@ -1,0 +1,138 @@
+# Production Environment Overlay for KEDA
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: keda-system
+
+# Base configuration
+resources:
+  - ../../
+
+# Production-specific labels
+commonLabels:
+  environment: production
+  tier: production
+  criticality: high
+
+# Production-specific annotations
+commonAnnotations:
+  environment: production
+  sla.target: "99.9"
+  monitoring.required: "true"
+  alerting.enabled: "true"
+  change-management.required: "true"
+
+# Production patches - no changes to resource limits (uses base values)
+patches:
+  # Add production-specific environment variables
+  - patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: ENVIRONMENT
+          value: production
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: ENABLE_PROFILING
+          value: "true"
+    target:
+      kind: Deployment
+      labelSelector: "app=keda-operator"
+
+  # Production replica counts (as specified)
+  - patch: |-
+      - op: replace
+        path: /spec/minReplicaCount
+        value: 2
+      - op: replace
+        path: /spec/maxReplicaCount
+        value: 50
+    target:
+      kind: ScaledObject
+      name: artemis-scaler
+
+  - patch: |-
+      - op: replace
+        path: /spec/minReplicaCount
+        value: 3
+      - op: replace
+        path: /spec/maxReplicaCount
+        value: 100
+    target:
+      kind: ScaledObject
+      name: sophia-scaler
+
+  # Add PodDisruptionBudget for production
+  - patch: |-
+      apiVersion: policy/v1
+      kind: PodDisruptionBudget
+      metadata:
+        name: keda-operator-pdb
+        namespace: keda-system
+      spec:
+        minAvailable: 1
+        selector:
+          matchLabels:
+            app: keda-operator
+    target:
+      kind: Deployment
+      name: keda-operator
+
+# ConfigMap for production
+configMapGenerator:
+  - name: keda-config
+    namespace: keda-system
+    behavior: merge
+    literals:
+      - environment=production
+      - scaling.time.target=9 # Strict SLA target
+      - scaling.time.baseline=60
+      - improvement.target=85
+      - circuit.breaker.enabled=true
+      - circuit.breaker.max.events=3
+      - circuit.breaker.cooldown=60
+      - monitoring.enhanced=true
+      - alerting.pagerduty.enabled=true
+      - backup.hpa.enabled=true
+
+# Production uses external secrets exclusively
+patchesStrategicMerge:
+  - |-
+    apiVersion: external-secrets.io/v1beta1
+    kind: ExternalSecret
+    metadata:
+      name: redis-auth
+      namespace: artemis-system
+    spec:
+      refreshInterval: 5m  # More frequent refresh in production
+      secretStoreRef:
+        name: vault-backend
+        kind: SecretStore
+      dataFrom:
+        - extract:
+            key: production/redis/artemis
+
+  - |-
+    apiVersion: external-secrets.io/v1beta1
+    kind: ExternalSecret
+    metadata:
+      name: prometheus-auth
+      namespace: sophia-system
+    spec:
+      refreshInterval: 5m
+      secretStoreRef:
+        name: vault-backend
+        kind: SecretStore
+      dataFrom:
+        - extract:
+            key: production/prometheus/sophia
+
+# Helm values for production
+helmCharts:
+  - name: keda
+    repo: https://kedacore.github.io/charts
+    version: 2.13.0
+    releaseName: sophia-intel-keda-prod
+    namespace: keda-system
+    valuesFile: ../../../helm/values.yaml # Use base production values

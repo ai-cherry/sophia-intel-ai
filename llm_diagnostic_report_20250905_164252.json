@@ -1,0 +1,87 @@
+{
+  "timestamp": "2025-09-05T16:42:52.992510",
+  "summary": {
+    "total_providers": 10,
+    "working": 7,
+    "failed": 3,
+    "success_rate": "70.0%"
+  },
+  "working_providers": ["mistral", "groq", "anthropic", "together", "cohere", "openai", "deepseek"],
+  "failed_providers": ["perplexity", "gemini", "xai"],
+  "provider_details": {
+    "deepseek": {
+      "provider": "deepseek",
+      "status": "working",
+      "model": "deepseek-chat",
+      "latency_ms": 3520,
+      "response": "OK"
+    },
+    "openai": {
+      "provider": "openai",
+      "status": "working",
+      "model": "gpt-3.5-turbo",
+      "latency_ms": 2710,
+      "response": "OK"
+    },
+    "anthropic": {
+      "provider": "anthropic",
+      "status": "working",
+      "model": "claude-3-haiku-20240307",
+      "latency_ms": 677,
+      "response": "OK"
+    },
+    "groq": {
+      "provider": "groq",
+      "status": "working",
+      "model": "llama-3.1-8b-instant",
+      "latency_ms": 562,
+      "response": "OK"
+    },
+    "together": {
+      "provider": "together",
+      "status": "working",
+      "model": "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",
+      "latency_ms": 679,
+      "response": "OK"
+    },
+    "mistral": {
+      "provider": "mistral",
+      "status": "working",
+      "model": "mistral-small-latest",
+      "latency_ms": 546,
+      "response": "OK"
+    },
+    "xai": {
+      "provider": "xai",
+      "status": "failed",
+      "error": "Error code: 400 - {'error': {'message': 'Invalid response received from openrouter: {\"error\":{\"message\":\"grok-beta is not a valid model ID\",\"code\":400},\"user_id\":\"user_2uvYW9EjjlVjzKnJ0qkQ7PbTyTw\"}', ",
+      "diagnosis": "Invalid request format or model",
+      "fix_suggestion": "Check model name and request format"
+    },
+    "gemini": {
+      "provider": "gemini",
+      "status": "failed",
+      "error": "Error code: 429 - {'error': {'message': 'google error: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/g",
+      "diagnosis": "Rate limit or quota exceeded",
+      "fix_suggestion": "Check billing, upgrade plan, or wait for quota reset"
+    },
+    "perplexity": {
+      "provider": "perplexity",
+      "status": "failed",
+      "error": "Error code: 400 - {'error': {'message': \"perplexity-ai error: Invalid model 'llama-3.1-sonar-small-128k-online'. Permitted models can be found in the documentation at https://docs.perplexity.ai/gettin",
+      "diagnosis": "Invalid request format or model",
+      "fix_suggestion": "Check model name and request format"
+    },
+    "cohere": {
+      "provider": "cohere",
+      "status": "working",
+      "model": "command-r",
+      "latency_ms": 796,
+      "response": "OK."
+    }
+  },
+  "recommendations": [
+    "Upgrade gemini plan or implement rate limiting",
+    "Good coverage - consider load balancing across providers"
+  ]
+}

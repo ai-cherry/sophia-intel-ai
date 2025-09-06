@@ -9,11 +9,14 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
 
-from app.agents.personas import PERSONA_REGISTRY
+from app.agents.personas import (
+    PERSONA_REGISTRY,
+    ClientHealthAssessment,
+    DealAnalysis,
+    PerformanceReview,
+)
 from app.agents.personas.client_health import ClientHealthAgent
 from app.agents.personas.sales_coach import SalesCoachAgent
-
-# DealAnalysis, PerformanceReview, ClientHealthAssessment will be added when needed
 from app.api.auth import get_current_user
 from app.swarms.core.task_router import TaskRouter
 

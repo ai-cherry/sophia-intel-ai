@@ -1,0 +1,382 @@
+# Default values for AlertManager
+# This is a production-ready configuration with HA clustering and intelligent alerting
+
+replicaCount: 3
+
+image:
+  repository: prom/alertmanager
+  tag: v0.27.0
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: alertmanager
+
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "9093"
+  prometheus.io/path: "/metrics"
+
+podSecurityContext:
+  runAsUser: 65534
+  runAsNonRoot: true
+  fsGroup: 65534
+  runAsGroup: 65534
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 65534
+
+service:
+  type: ClusterIP
+  port: 9093
+  clusterPort: 9094
+  targetPort: 9093
+  annotations: {}
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 10800
+
+externalService:
+  enabled: true
+  type: LoadBalancer
+  port: 443
+  targetPort: 4180
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: alertmanager.sophia-artemis.ai
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: "tcp"
+
+ingress:
+  enabled: false
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  hosts:
+    - host: alertmanager.sophia-artemis.ai
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: alertmanager-tls
+      hosts:
+        - alertmanager.sophia-artemis.ai
+
+resources:
+  requests:
+    cpu: 500m
+    memory: 512Mi
+  limits:
+    cpu: 2000m
+    memory: 2Gi
+
+autoscaling:
+  enabled: false
+  minReplicas: 3
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+persistence:
+  enabled: true
+  storageClass: fast-ssd
+  accessMode: ReadWriteOnce
+  size: 10Gi
+  annotations: {}
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity:
+  podAntiAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchExpressions:
+            - key: app
+              operator: In
+              values:
+                - alertmanager
+        topologyKey: kubernetes.io/hostname
+
+# AlertManager configuration
+config:
+  global:
+    resolve_timeout: 5m
+    smtp_from: alerts@sophia-artemis.ai
+    smtp_smarthost: smtp.sendgrid.net:587
+    slack_api_url: "" # Set via secret
+    pagerduty_url: https://events.pagerduty.com/v2/enqueue
+    opsgenie_api_url: https://api.opsgenie.com/
+
+  route:
+    group_by: ["alertname", "cluster", "service"]
+    group_wait: 30s
+    group_interval: 5m
+    repeat_interval: 4h
+    receiver: default
+    routes: [] # Will be populated from config files
+
+  receivers: [] # Will be populated from config files
+
+  inhibit_rules: [] # Will be populated from config files
+
+  templates:
+    - "/etc/alertmanager/templates/*.tmpl"
+
+# Clustering configuration for HA
+clustering:
+  enabled: true
+  advertiseAddress: ""
+  peers:
+    - alertmanager-0.alertmanager-headless.monitoring.svc.cluster.local:9094
+    - alertmanager-1.alertmanager-headless.monitoring.svc.cluster.local:9094
+    - alertmanager-2.alertmanager-headless.monitoring.svc.cluster.local:9094
+  reconnectTimeout: 60s
+  probeTimeout: 500ms
+  probeInterval: 1s
+  settleTimeout: 60s
+  pushPullInterval: 60s
+  gossipInterval: 200ms
+
+# OAuth2 Proxy configuration
+oauth2Proxy:
+  enabled: true
+  image:
+    repository: quay.io/oauth2-proxy/oauth2-proxy
+    tag: v7.5.0
+    pullPolicy: IfNotPresent
+  provider: oidc
+  oidcIssuerUrl: "" # Set via secret
+  clientId: "" # Set via secret
+  clientSecret: "" # Set via secret
+  cookieSecret: "" # Set via secret
+  emailDomain: "*"
+  upstreamUrl: http://localhost:9093
+  httpAddress: 0.0.0.0:4180
+  resources:
+    requests:
+      cpu: 10m
+      memory: 20Mi
+    limits:
+      cpu: 100m
+      memory: 50Mi
+
+# Config reloader sidecar
+configReloader:
+  enabled: true
+  image:
+    repository: jimmidyson/configmap-reload
+    tag: v0.9.0
+    pullPolicy: IfNotPresent
+  volumeDir: /etc/alertmanager
+  webhookUrl: http://localhost:9093/-/reload
+  resources:
+    requests:
+      cpu: 10m
+      memory: 20Mi
+    limits:
+      cpu: 100m
+      memory: 50Mi
+
+# External Secrets configuration
+externalSecrets:
+  enabled: true
+  backend: aws-secrets-manager
+  region: us-west-2
+  secretStoreRef: alertmanager-secret-store
+  secrets:
+    - name: smtp-password
+      key: /alertmanager/smtp-password
+    - name: slack-api-url
+      key: /alertmanager/slack-api-url
+    - name: pagerduty-artemis-key
+      key: /alertmanager/pagerduty-artemis-key
+    - name: pagerduty-sophia-key
+      key: /alertmanager/pagerduty-sophia-key
+    - name: pagerduty-platform-key
+      key: /alertmanager/pagerduty-platform-key
+    - name: pagerduty-infra-key
+      key: /alertmanager/pagerduty-infra-key
+    - name: pagerduty-security-key
+      key: /alertmanager/pagerduty-security-key
+    - name: teams-infrastructure-webhook
+      key: /alertmanager/teams-infrastructure-webhook
+    - name: teams-critical-webhook
+      key: /alertmanager/teams-critical-webhook
+    - name: mlops-webhook-url
+      key: /alertmanager/mlops-webhook-url
+
+# ServiceMonitor for Prometheus scraping
+serviceMonitor:
+  enabled: true
+  interval: 30s
+  path: /metrics
+  labels:
+    prometheus: kube-prometheus
+  relabelings:
+    - sourceLabels: [__meta_kubernetes_pod_name]
+      targetLabel: instance
+
+# PrometheusRule for AlertManager self-monitoring
+prometheusRule:
+  enabled: true
+  labels:
+    prometheus: kube-prometheus
+  rules:
+    - alert: AlertManagerDown
+      expr: up{job="alertmanager"} == 0
+      for: 5m
+      labels:
+        severity: CRITICAL
+        component: alertmanager
+      annotations:
+        summary: "AlertManager instance is down"
+    - alert: AlertManagerClusterFailure
+      expr: count(alertmanager_cluster_members) < 2
+      for: 5m
+      labels:
+        severity: CRITICAL
+      annotations:
+        summary: "AlertManager cluster has less than 2 members"
+
+# Network Policy
+networkPolicy:
+  enabled: true
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: monitoring
+        - namespaceSelector:
+            matchLabels:
+              name: istio-system
+      ports:
+        - protocol: TCP
+          port: 9093
+        - protocol: TCP
+          port: 9094
+        - protocol: UDP
+          port: 9095
+  egress:
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 587
+        - protocol: TCP
+          port: 25
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              name: monitoring
+      ports:
+        - protocol: TCP
+          port: 9094
+        - protocol: UDP
+          port: 9095
+
+# Pod Disruption Budget
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 2
+  # maxUnavailable: 1
+
+# ML Integration for false positive reduction
+mlIntegration:
+  enabled: true
+  endpoint: http://sophia-ml.sophia-system:8080
+  services:
+    anomalyDetection:
+      enabled: true
+      endpoint: /anomaly
+      model: alert-pattern-detector
+      features:
+        - alert_frequency
+        - alert_severity_distribution
+        - time_of_day
+        - day_of_week
+    falsePositiveClassifier:
+      enabled: true
+      endpoint: /classify
+      model: false-positive-classifier
+      confidenceThreshold: 0.85
+      autoSuppress: true
+    feedbackLoop:
+      enabled: true
+      endpoint: /feedback
+      collectionInterval: 24h
+
+# Alert effectiveness tracking
+alertEffectiveness:
+  enabled: true
+  targetFalsePositiveReduction: 70 # percentage
+  trackingMetrics:
+    - false_positive_rate
+    - mean_time_to_acknowledge
+    - alert_resolution_time
+    - notification_success_rate
+    - alert_grouping_efficiency
+
+# Domain-specific configurations
+domains:
+  artemis:
+    groupWait: 30s
+    groupInterval: 5m
+    repeatInterval: 4h
+    criticalChannels:
+      - pagerduty
+      - slack-oncall
+    warningChannels:
+      - slack-engineering
+  sophia:
+    groupWait: 45s
+    groupInterval: 10m
+    repeatInterval: 6h
+    criticalChannels:
+      - pagerduty
+      - email
+    warningChannels:
+      - slack-sophia
+      - webhook
+  infrastructure:
+    groupWait: 10s
+    groupInterval: 3m
+    repeatInterval: 2h
+    criticalChannels:
+      - pagerduty
+      - teams
+    warningChannels:
+      - teams
+      - slack-infrastructure
+
+# Testing configuration
+testing:
+  enabled: false
+  loadTest:
+    enabled: false
+    alertsPerSecond: 100
+    duration: 300
+  chaosTest:
+    enabled: false
+    experiments:
+      - pod-failure
+      - network-partition
+      - cpu-stress

@@ -1,0 +1,378 @@
+# Artemis Domain MCP Server Configuration
+# Technical operations and code-focused services
+
+version: "1.0.0"
+domain: artemis
+description: "MCP servers exclusive to Artemis for code and technical operations"
+
+servers:
+  # Filesystem Server - Exclusive to Artemis
+  artemis_filesystem:
+    name: "Artemis Filesystem Server"
+    type: filesystem
+    exclusive: true
+    endpoint: "ws://localhost:8010/mcp"
+    description: "File system operations for code repositories"
+
+    capabilities:
+      - file_read
+      - file_write
+      - file_delete
+      - file_watch
+      - directory_operations
+      - repository_management
+
+    configuration:
+      root_path: "/workspace"
+      allowed_extensions:
+        - ".py"
+        - ".js"
+        - ".ts"
+        - ".jsx"
+        - ".tsx"
+        - ".java"
+        - ".go"
+        - ".rs"
+        - ".cpp"
+        - ".c"
+        - ".h"
+        - ".hpp"
+        - ".cs"
+        - ".rb"
+        - ".php"
+        - ".swift"
+        - ".kt"
+        - ".scala"
+        - ".r"
+        - ".sql"
+        - ".sh"
+        - ".yml"
+        - ".yaml"
+        - ".json"
+        - ".xml"
+        - ".toml"
+        - ".ini"
+        - ".cfg"
+        - ".conf"
+        - ".md"
+        - ".rst"
+        - ".txt"
+
+      ignore_patterns:
+        - "node_modules/"
+        - "__pycache__/"
+        - ".git/"
+        - ".venv/"
+        - "dist/"
+        - "build/"
+        - "*.pyc"
+        - "*.pyo"
+        - ".DS_Store"
+
+      max_file_size_mb: 10
+      enable_watching: true
+      watch_debounce_ms: 500
+
+    connection_pool:
+      min_connections: 3
+      max_connections: 10
+      timeout_seconds: 30
+      idle_timeout_seconds: 300
+
+    health_check:
+      enabled: true
+      interval_seconds: 30
+      endpoint: "/health"
+      timeout_seconds: 10
+
+    security:
+      authentication: api_key
+      encryption: tls
+      rate_limiting:
+        requests_per_minute: 1000
+        burst_size: 50
+
+  # Code Analysis Server - Exclusive to Artemis
+  artemis_code_analysis:
+    name: "Artemis Code Analysis Server"
+    type: code_analysis
+    exclusive: true
+    endpoint: "ws://localhost:8011/mcp"
+    description: "Advanced code analysis, linting, and quality checks"
+
+    capabilities:
+      - syntax_analysis
+      - semantic_analysis
+      - security_scanning
+      - performance_profiling
+      - complexity_calculation
+      - dependency_analysis
+      - code_smell_detection
+      - refactoring_suggestions
+      - test_coverage_analysis
+      - documentation_coverage
+
+    configuration:
+      supported_languages:
+        python:
+          linters: ["pylint", "flake8", "mypy", "black"]
+          security_scanners: ["bandit", "safety"]
+          complexity_tools: ["radon", "mccabe"]
+
+        javascript:
+          linters: ["eslint", "jshint", "prettier"]
+          security_scanners: ["npm audit", "snyk"]
+          complexity_tools: ["complexity-report", "plato"]
+
+        typescript:
+          linters: ["tslint", "eslint", "prettier"]
+          type_checker: "tsc"
+          security_scanners: ["npm audit", "snyk"]
+
+        java:
+          linters: ["checkstyle", "pmd", "spotbugs"]
+          security_scanners: ["owasp dependency-check"]
+          complexity_tools: ["javancss"]
+
+        go:
+          linters: ["golint", "gofmt", "govet"]
+          security_scanners: ["gosec"]
+          complexity_tools: ["gocyclo"]
+
+      analysis_depth: deep # shallow, medium, deep
+      enable_auto_fix: true
+      cache_results: true
+      cache_ttl_seconds: 3600
+
+      thresholds:
+        max_complexity: 10
+        min_test_coverage: 80
+        max_duplication: 5
+        max_file_length: 500
+        max_function_length: 50
+
+    connection_pool:
+      min_connections: 2
+      max_connections: 8
+      timeout_seconds: 60
+      idle_timeout_seconds: 300
+
+    health_check:
+      enabled: true
+      interval_seconds: 45
+      endpoint: "/health"
+      timeout_seconds: 15
+
+    performance:
+      max_file_size_mb: 5
+      max_analysis_time_seconds: 120
+      parallel_workers: 4
+      queue_size: 100
+
+  # Design Server - Exclusive to Artemis
+  artemis_design:
+    name: "Artemis Design Server"
+    type: design_server
+    exclusive: true
+    endpoint: "ws://localhost:8012/mcp"
+    description: "Architecture design, UML generation, and system modeling"
+
+    capabilities:
+      - uml_generation
+      - erd_creation
+      - architecture_diagrams
+      - sequence_diagrams
+      - class_diagrams
+      - flowchart_generation
+      - component_diagrams
+      - deployment_diagrams
+      - design_pattern_detection
+      - architecture_validation
+
+    configuration:
+      output_formats:
+        - svg
+        - png
+        - pdf
+        - plantuml
+        - mermaid
+        - graphviz
+
+      diagram_tools:
+        plantuml:
+          server: "http://localhost:8080/plantuml"
+          cache_enabled: true
+
+        mermaid:
+          version: "9.4.3"
+          theme: "default"
+
+        graphviz:
+          engine: "dot"
+          layout_algorithm: "hierarchical"
+
+      design_patterns:
+        - singleton
+        - factory
+        - observer
+        - strategy
+        - decorator
+        - adapter
+        - facade
+        - proxy
+        - command
+        - iterator
+        - template_method
+        - chain_of_responsibility
+
+      architecture_styles:
+        - microservices
+        - monolithic
+        - serverless
+        - event_driven
+        - layered
+        - hexagonal
+        - clean_architecture
+        - domain_driven_design
+
+    connection_pool:
+      min_connections: 1
+      max_connections: 5
+      timeout_seconds: 45
+      idle_timeout_seconds: 600
+
+    health_check:
+      enabled: true
+      interval_seconds: 60
+      endpoint: "/health"
+      timeout_seconds: 10
+
+    caching:
+      enabled: true
+      ttl_seconds: 7200
+      max_cache_size_mb: 500
+
+  # Codebase Memory - Exclusive to Artemis
+  artemis_codebase_memory:
+    name: "Artemis Codebase Memory"
+    type: memory
+    exclusive: true
+    endpoint: "ws://localhost:8013/mcp"
+    description: "Code patterns, implementations, and technical knowledge storage"
+
+    capabilities:
+      - code_pattern_storage
+      - implementation_history
+      - refactoring_tracking
+      - bug_fix_patterns
+      - performance_optimizations
+      - test_pattern_storage
+      - documentation_templates
+      - api_specifications
+
+    configuration:
+      storage_backend: "postgresql"
+      database:
+        host: "localhost"
+        port: 5432
+        database: "artemis_memory"
+        schema: "codebase"
+
+      indexes:
+        - name: "code_patterns_idx"
+          fields: ["language", "pattern_type", "complexity"]
+        - name: "implementation_idx"
+          fields: ["repository", "file_path", "function_name"]
+        - name: "timestamp_idx"
+          fields: ["created_at", "modified_at"]
+
+      retention_policy:
+        default_ttl_days: 365
+        pattern_ttl_days: -1 # Never expire patterns
+        implementation_ttl_days: 180
+        test_ttl_days: 90
+
+      partitioning:
+        strategy: "by_repository"
+        partition_size_gb: 10
+
+    connection_pool:
+      min_connections: 2
+      max_connections: 10
+      timeout_seconds: 30
+      idle_timeout_seconds: 300
+
+    health_check:
+      enabled: true
+      interval_seconds: 30
+      endpoint: "/health"
+      timeout_seconds: 10
+
+monitoring:
+  enabled: true
+  metrics_endpoint: "http://localhost:9090/metrics"
+
+  alerts:
+    - name: "high_error_rate"
+      condition: "error_rate > 0.05"
+      severity: "warning"
+      notification_channel: "slack"
+
+    - name: "connection_pool_exhausted"
+      condition: "available_connections == 0"
+      severity: "critical"
+      notification_channel: "pagerduty"
+
+    - name: "slow_analysis"
+      condition: "p95_latency > 30s"
+      severity: "warning"
+      notification_channel: "email"
+
+  dashboards:
+    grafana:
+      enabled: true
+      url: "http://localhost:3000"
+      dashboard_ids:
+        - "artemis-overview"
+        - "code-analysis-metrics"
+        - "filesystem-operations"
+
+security:
+  api_key_rotation:
+    enabled: true
+    rotation_interval_days: 30
+    notification_before_days: 7
+
+  audit_logging:
+    enabled: true
+    log_level: "info"
+    include_request_body: false
+    include_response_body: false
+    retention_days: 90
+
+  access_control:
+    require_authentication: true
+    allowed_roles:
+      - developer
+      - devops
+      - admin
+
+    ip_whitelist:
+      enabled: false
+      allowed_ips: []
+
+optimization:
+  caching:
+    enabled: true
+    redis_endpoint: "localhost:6379"
+    default_ttl_seconds: 3600
+
+  compression:
+    enabled: true
+    algorithm: "gzip"
+    level: 6
+
+  batching:
+    enabled: true
+    max_batch_size: 100
+    batch_timeout_ms: 1000

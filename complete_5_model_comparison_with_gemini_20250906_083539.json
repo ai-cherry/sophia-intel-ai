@@ -1,0 +1,61 @@
+{
+  "timestamp": "2025-09-06T08:35:39.200725",
+  "all_models": [
+    [
+      "Grok Code Fast",
+      {
+        "score": 88.5,
+        "time": 17.65,
+        "tokens": 3625
+      }
+    ],
+    [
+      "Gemini 2.0 Flash",
+      {
+        "score": 88.5,
+        "time": 19.640233993530273,
+        "tokens": "N/A (Direct API)"
+      }
+    ],
+    [
+      "Llama-4-Scout",
+      {
+        "score": 86.0,
+        "time": 11.45,
+        "tokens": 1434
+      }
+    ],
+    [
+      "GLM-4.5-Air",
+      {
+        "score": 84.5,
+        "time": 61.98,
+        "tokens": 9485
+      }
+    ],
+    [
+      "GPT-4o-mini",
+      {
+        "score": 83.5,
+        "time": 15.1,
+        "tokens": 1665
+      }
+    ]
+  ],
+  "gemini_details": {
+    "model": "gemini-2.0-flash-exp",
+    "provider": "Google Direct API",
+    "success": true,
+    "execution_time": 19.640233993530273,
+    "response_length": 13741,
+    "scores": {
+      "Specificity": 80,
+      "Accuracy": 100,
+      "Completeness": 100,
+      "Actionability": 87.5,
+      "Speed": 60,
+      "Overall": 88.5
+    },
+    "response_preview": "Okay, I've analyzed the Sophia-Intel-AI repository based on the provided information and file scan results. Here's a breakdown of my findings:\n\n**1. SECURITY ANALYSIS (CRITICAL)**\n\n*   **Exposed API Keys in .env (CRITICAL):**\n    *   **Finding:** The `.env` file contains 16 exposed API keys, including NETSUITE and PORTKEY. This is a severe security risk.\n    *   **File:** `.env`\n    *   **Recommendation:** Immediately remove all API keys from the `.env` file.  Implement a secure secret managemen"
+  }
+}

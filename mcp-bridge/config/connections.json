@@ -1,0 +1,363 @@
+{
+  "version": "1.0.0",
+  "description": "MCP Bridge Configuration for IDE Connections - Sophia-Artemis Consolidated System",
+  "last_updated": "2025-01-05",
+
+  "ide_connections": {
+    "claude_desktop": {
+      "name": "Claude Desktop MCP Bridge",
+      "description": "Claude Desktop connections for code and business operations",
+      "enabled": true,
+      "priority": "high",
+
+      "mcp_servers": {
+        "artemis_code_bridge": {
+          "command": "python",
+          "args": [
+            "app/mcp/bridges/artemis_code_bridge.py",
+            "--mode",
+            "claude",
+            "--domain",
+            "artemis"
+          ],
+          "env": {
+            "MCP_DOMAIN": "artemis",
+            "MCP_CLIENT": "claude_desktop",
+            "LOG_LEVEL": "INFO"
+          },
+          "priority": "code_operations",
+          "capabilities": [
+            "code_completion",
+            "code_review",
+            "refactoring",
+            "test_generation",
+            "documentation"
+          ],
+          "connection_config": {
+            "timeout": 60,
+            "retry_attempts": 3,
+            "keep_alive": true
+          }
+        },
+
+        "sophia_business_bridge": {
+          "command": "python",
+          "args": [
+            "app/mcp/bridges/sophia_business_bridge.py",
+            "--mode",
+            "claude",
+            "--domain",
+            "sophia"
+          ],
+          "env": {
+            "MCP_DOMAIN": "sophia",
+            "MCP_CLIENT": "claude_desktop",
+            "LOG_LEVEL": "INFO"
+          },
+          "priority": "business_operations",
+          "capabilities": [
+            "business_analysis",
+            "market_research",
+            "customer_insights",
+            "strategic_planning",
+            "revenue_analytics"
+          ],
+          "connection_config": {
+            "timeout": 45,
+            "retry_attempts": 3,
+            "keep_alive": true
+          }
+        },
+
+        "shared_knowledge_bridge": {
+          "command": "python",
+          "args": [
+            "app/mcp/bridges/shared_knowledge_bridge.py",
+            "--mode",
+            "claude",
+            "--domain",
+            "shared"
+          ],
+          "env": {
+            "MCP_DOMAIN": "shared",
+            "MCP_CLIENT": "claude_desktop",
+            "LOG_LEVEL": "INFO"
+          },
+          "priority": "knowledge_operations",
+          "capabilities": ["knowledge_retrieval", "context_enrichment", "cross_domain_search"],
+          "connection_config": {
+            "timeout": 30,
+            "retry_attempts": 2,
+            "keep_alive": false
+          }
+        }
+      },
+
+      "routing_rules": {
+        "default_domain": "sophia",
+        "code_keywords": ["code", "function", "class", "bug", "refactor", "test"],
+        "business_keywords": ["revenue", "customer", "sales", "market", "strategy"],
+        "auto_routing": true
+      }
+    },
+
+    "roo_cursor": {
+      "name": "Roo/Cursor MCP Bridge",
+      "description": "Roo and Cursor IDE connections for repository operations",
+      "enabled": true,
+      "priority": "high",
+
+      "mcp_servers": [
+        {
+          "name": "artemis-codebase-primary",
+          "endpoint": "ws://localhost:8001/mcp",
+          "protocol": "websocket",
+          "domain": "artemis",
+          "priority": 1,
+          "capabilities": ["code", "refactor", "analyze", "test", "debug"],
+          "connection_config": {
+            "max_connections": 5,
+            "connection_timeout": 30,
+            "idle_timeout": 300,
+            "reconnect": true,
+            "reconnect_delay": 5
+          },
+          "authentication": {
+            "type": "api_key",
+            "key_env": "ROO_MCP_API_KEY"
+          }
+        },
+
+        {
+          "name": "artemis-filesystem",
+          "endpoint": "ws://localhost:8010/mcp",
+          "protocol": "websocket",
+          "domain": "artemis",
+          "priority": 1,
+          "capabilities": ["file_read", "file_write", "file_watch", "directory_operations"],
+          "connection_config": {
+            "max_connections": 3,
+            "connection_timeout": 20,
+            "idle_timeout": 600,
+            "reconnect": true
+          }
+        },
+
+        {
+          "name": "shared-indexing-secondary",
+          "endpoint": "ws://localhost:8031/mcp",
+          "protocol": "websocket",
+          "domain": "shared",
+          "priority": 2,
+          "capabilities": ["search", "retrieve", "index_update"],
+          "connection_config": {
+            "max_connections": 2,
+            "connection_timeout": 30,
+            "idle_timeout": 300,
+            "reconnect": true
+          },
+          "filters": {
+            "index_partitions": ["code", "documentation", "tests"]
+          }
+        },
+
+        {
+          "name": "shared-embedding-secondary",
+          "endpoint": "ws://localhost:8032/mcp",
+          "protocol": "websocket",
+          "domain": "shared",
+          "priority": 2,
+          "capabilities": ["generate_embedding", "similarity_search", "semantic_search"],
+          "connection_config": {
+            "max_connections": 2,
+            "connection_timeout": 45,
+            "idle_timeout": 300,
+            "reconnect": true
+          },
+          "filters": {
+            "namespaces": ["technical_embeddings", "code_embeddings"]
+          }
+        }
+      ],
+
+      "routing_config": {
+        "primary_domain": "artemis",
+        "load_balancing": "round_robin",
+        "failover_enabled": true,
+        "circuit_breaker": {
+          "enabled": true,
+          "failure_threshold": 5,
+          "reset_timeout": 60
+        }
+      }
+    },
+
+    "cline": {
+      "name": "Cline MCP Bridge",
+      "description": "Cline IDE connections for code intelligence and meta-tagging",
+      "enabled": true,
+      "priority": "medium",
+
+      "mcp_servers": [
+        {
+          "name": "artemis-code-intelligence",
+          "endpoint": "ws://localhost:8011/mcp",
+          "protocol": "websocket",
+          "domain": "artemis",
+          "priority": 1,
+          "capabilities": [
+            "code_analysis",
+            "intelligence",
+            "suggestions",
+            "diagnostics",
+            "quick_fixes"
+          ],
+          "connection_config": {
+            "max_connections": 3,
+            "connection_timeout": 30,
+            "idle_timeout": 300,
+            "reconnect": true,
+            "reconnect_delay": 3
+          },
+          "features": {
+            "auto_complete": true,
+            "inline_suggestions": true,
+            "real_time_analysis": true,
+            "semantic_highlighting": true
+          }
+        },
+
+        {
+          "name": "artemis-design-server",
+          "endpoint": "ws://localhost:8012/mcp",
+          "protocol": "websocket",
+          "domain": "artemis",
+          "priority": 2,
+          "capabilities": ["architecture_analysis", "design_patterns", "uml_generation"],
+          "connection_config": {
+            "max_connections": 2,
+            "connection_timeout": 45,
+            "idle_timeout": 600,
+            "reconnect": true
+          }
+        },
+
+        {
+          "name": "shared-meta-tagging",
+          "endpoint": "ws://localhost:8033/mcp",
+          "protocol": "websocket",
+          "domain": "shared",
+          "priority": 1,
+          "capabilities": [
+            "auto_tagging",
+            "classification",
+            "metadata_extraction",
+            "semantic_tagging"
+          ],
+          "connection_config": {
+            "max_connections": 2,
+            "connection_timeout": 30,
+            "idle_timeout": 300,
+            "reconnect": true
+          },
+          "tag_configuration": {
+            "domains": ["code", "architecture", "quality", "security"],
+            "auto_tag_on_save": true,
+            "tag_propagation": true
+          }
+        }
+      ],
+
+      "intelligence_config": {
+        "analysis_depth": "deep",
+        "suggestion_frequency": "moderate",
+        "learning_mode": true,
+        "personalization": true
+      }
+    }
+  },
+
+  "global_settings": {
+    "connection_pool": {
+      "total_max_connections": 50,
+      "per_ide_max_connections": 20,
+      "connection_timeout_default": 30,
+      "idle_timeout_default": 300
+    },
+
+    "health_monitoring": {
+      "enabled": true,
+      "check_interval": 30,
+      "failure_threshold": 3,
+      "auto_reconnect": true,
+      "alert_on_failure": true
+    },
+
+    "performance": {
+      "enable_caching": true,
+      "cache_ttl": 300,
+      "batch_requests": true,
+      "batch_size": 10,
+      "compression": "gzip"
+    },
+
+    "security": {
+      "encryption": "tls",
+      "authentication_required": true,
+      "api_key_rotation": true,
+      "rotation_interval_days": 30,
+      "audit_logging": true
+    },
+
+    "logging": {
+      "level": "INFO",
+      "format": "json",
+      "destination": "app/logs/mcp_bridge.log",
+      "rotation": "daily",
+      "retention_days": 30
+    }
+  },
+
+  "failover_configuration": {
+    "enabled": true,
+    "strategies": {
+      "artemis": {
+        "primary": ["artemis-codebase-primary", "artemis-filesystem"],
+        "fallback": ["shared-indexing-secondary"],
+        "health_check_endpoint": "/health"
+      },
+      "sophia": {
+        "primary": ["sophia-business-bridge"],
+        "fallback": ["shared-knowledge-bridge"],
+        "health_check_endpoint": "/health"
+      }
+    }
+  },
+
+  "optimization_rules": {
+    "connection_reuse": true,
+    "lazy_loading": true,
+    "predictive_prefetch": true,
+    "smart_routing": {
+      "enabled": true,
+      "learning_algorithm": "reinforcement",
+      "optimization_metric": "latency"
+    }
+  },
+
+  "ide_specific_overrides": {
+    "vscode": {
+      "extensions": ["roo.mcp-bridge", "cursor.mcp-integration"],
+      "settings": {
+        "mcp.autoConnect": true,
+        "mcp.showStatusBar": true
+      }
+    },
+    "intellij": {
+      "plugins": ["com.cline.mcp"],
+      "settings": {
+        "mcp.enableIntelliSense": true
+      }
+    }
+  }
+}

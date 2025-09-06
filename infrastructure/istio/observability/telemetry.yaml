@@ -1,0 +1,263 @@
+apiVersion: telemetry.istio.io/v1alpha1
+kind: Telemetry
+metadata:
+  name: default-metrics
+  namespace: istio-system
+spec:
+  metrics:
+    - providers:
+        - name: prometheus
+      dimensions:
+        request_protocol: request.protocol | "unknown"
+        response_code: response.code | 200
+        source_workload: source.workload.name | "unknown"
+        source_app: source.labels["app"] | "unknown"
+        destination_service_name: destination.service.name | "unknown"
+        destination_version: destination.labels["version"] | "unknown"
+        method: request.method | "unknown"
+        path: request.path | "unknown"
+---
+apiVersion: telemetry.istio.io/v1alpha1
+kind: Telemetry
+metadata:
+  name: artemis-metrics
+  namespace: artemis-mesh
+spec:
+  selector:
+    matchLabels:
+      domain: artemis
+  metrics:
+    - providers:
+        - name: prometheus
+      dimensions:
+        domain: '"artemis"'
+        orchestrator_id: request.headers["x-orchestrator-id"] | "unknown"
+        agent_type: request.headers["agent-type"] | "unknown"
+        task_id: request.headers["x-task-id"] | "unknown"
+        concurrent_tasks: request.headers["x-concurrent-tasks"] | "0"
+      overrides:
+        - match:
+            metric: REQUEST_COUNT
+          tagOverrides:
+            domain:
+              value: "artemis"
+        - match:
+            metric: REQUEST_DURATION
+          tagOverrides:
+            domain:
+              value: "artemis"
+---
+apiVersion: telemetry.istio.io/v1alpha1
+kind: Telemetry
+metadata:
+  name: sophia-metrics
+  namespace: sophia-mesh
+spec:
+  selector:
+    matchLabels:
+      domain: sophia
+  metrics:
+    - providers:
+        - name: prometheus
+      dimensions:
+        domain: '"sophia"'
+        orchestrator_id: request.headers["x-orchestrator-id"] | "unknown"
+        business_unit: request.headers["x-business-unit"] | "unknown"
+        pipeline_type: request.headers["x-pipeline-type"] | "unknown"
+        task_priority: request.headers["x-priority"] | "normal"
+      overrides:
+        - match:
+            metric: REQUEST_COUNT
+          tagOverrides:
+            domain:
+              value: "sophia"
+        - match:
+            metric: REQUEST_DURATION
+          tagOverrides:
+            domain:
+              value: "sophia"
+---
+apiVersion: telemetry.istio.io/v1alpha1
+kind: Telemetry
+metadata:
+  name: distributed-tracing
+  namespace: istio-system
+spec:
+  tracing:
+    - providers:
+        - name: zipkin
+      randomSamplingPercentage: 100.0
+      customTags:
+        environment:
+          literal:
+            value: "production"
+        mesh:
+          literal:
+            value: "sophia-artemis"
+---
+apiVersion: telemetry.istio.io/v1alpha1
+kind: Telemetry
+metadata:
+  name: access-logging
+  namespace: istio-system
+spec:
+  accessLogging:
+    - providers:
+        - name: otel
+---
+apiVersion: telemetry.istio.io/v1alpha1
+kind: Telemetry
+metadata:
+  name: artemis-tracing
+  namespace: artemis-mesh
+spec:
+  selector:
+    matchLabels:
+      domain: artemis
+  tracing:
+    - providers:
+        - name: zipkin
+      randomSamplingPercentage: 100.0
+      customTags:
+        domain:
+          literal:
+            value: "artemis"
+        orchestrator:
+          request_header:
+            name: "x-orchestrator-id"
+            defaultValue: "unknown"
+        task_id:
+          request_header:
+            name: "x-task-id"
+            defaultValue: "unknown"
+---
+apiVersion: telemetry.istio.io/v1alpha1
+kind: Telemetry
+metadata:
+  name: sophia-tracing
+  namespace: sophia-mesh
+spec:
+  selector:
+    matchLabels:
+      domain: sophia
+  tracing:
+    - providers:
+        - name: zipkin
+      randomSamplingPercentage: 100.0
+      customTags:
+        domain:
+          literal:
+            value: "sophia"
+        orchestrator:
+          request_header:
+            name: "x-orchestrator-id"
+            defaultValue: "unknown"
+        business_unit:
+          request_header:
+            name: "x-business-unit"
+            defaultValue: "unknown"
+---
+apiVersion: telemetry.istio.io/v1alpha1
+kind: Telemetry
+metadata:
+  name: mcp-server-metrics
+  namespace: shared-services
+spec:
+  selector:
+    matchLabels:
+      mcp-type: "*"
+  metrics:
+    - providers:
+        - name: prometheus
+      dimensions:
+        mcp_server_type: destination.labels["mcp-type"] | "unknown"
+        mcp_operation: request.headers["x-mcp-operation"] | "unknown"
+        mcp_client: request.headers["x-mcp-client"] | "unknown"
+      overrides:
+        - match:
+            metric: REQUEST_COUNT
+          tagOverrides:
+            service_type:
+              value: "mcp"
+        - match:
+            metric: REQUEST_DURATION
+          tagOverrides:
+            service_type:
+              value: "mcp"
+---
+apiVersion: telemetry.istio.io/v1alpha1
+kind: Telemetry
+metadata:
+  name: cross-domain-metrics
+  namespace: istio-system
+spec:
+  metrics:
+    - providers:
+        - name: prometheus
+      dimensions:
+        source_domain: source.labels["domain"] | "unknown"
+        destination_domain: destination.labels["domain"] | "unknown"
+        cross_domain_token: request.headers["x-cross-domain-token"] | "none"
+      overrides:
+        - match:
+            metric: REQUEST_COUNT
+            customDimensions:
+              source_domain:
+                valueExpression: '"artemis"'
+              destination_domain:
+                valueExpression: '"sophia"'
+          tagOverrides:
+            flow_type:
+              value: "cross-domain"
+        - match:
+            metric: REQUEST_COUNT
+            customDimensions:
+              source_domain:
+                valueExpression: '"sophia"'
+              destination_domain:
+                valueExpression: '"artemis"'
+          tagOverrides:
+            flow_type:
+              value: "cross-domain"
+---
+apiVersion: telemetry.istio.io/v1alpha1
+kind: Telemetry
+metadata:
+  name: circuit-breaker-metrics
+  namespace: istio-system
+spec:
+  metrics:
+    - providers:
+        - name: prometheus
+      dimensions:
+        circuit_breaker_state: envoy_cluster_circuit_breakers_state | "closed"
+        service_name: destination.service.name | "unknown"
+      overrides:
+        - match:
+            metric: TCP_OPENED_CONNECTIONS
+          tagOverrides:
+            metric_type:
+              value: "circuit_breaker"
+---
+apiVersion: telemetry.istio.io/v1alpha1
+kind: Telemetry
+metadata:
+  name: rate-limit-metrics
+  namespace: istio-system
+spec:
+  metrics:
+    - providers:
+        - name: prometheus
+      dimensions:
+        rate_limit_domain: request.headers["x-ratelimit-domain"] | "unknown"
+        rate_limit_descriptor: request.headers["x-ratelimit-descriptor"] | "unknown"
+        rate_limited: response.headers["x-envoy-ratelimited"] | "false"
+      overrides:
+        - match:
+            metric: REQUEST_COUNT
+            customDimensions:
+              rate_limited:
+                valueExpression: '"true"'
+          tagOverrides:
+            metric_type:
+              value: "rate_limited"

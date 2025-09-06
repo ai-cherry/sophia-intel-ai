@@ -44,15 +44,18 @@ from app.api.memory.memory_endpoints import router as memory_router
 from app.api.portkey_router_endpoints import router as portkey_router
 from app.api.repository.repo_service import router as repo_router
 from app.api.resilient_websocket_endpoints import router as resilient_ws_router
-from app.api.routers.brain_training import router as brain_training_router
+
+# from app.api.routers.brain_training import router as brain_training_router  # Missing docx dependency
 from app.api.routers.integration_intelligence import router as integration_intelligence_router
 from app.api.routers.looker import router as looker_router
 from app.api.routers.slack_business_intelligence import router as slack_bi_router
 
 # from app.api.routers.memory import router as memory_api_router  # Module has import issues
 from app.api.routers.teams import router as teams_router
-from app.api.routers.voice import router as voice_router
+# from app.api.routers.voice import router as voice_router  # Requires ELEVENLABS_API_KEY
 from app.api.routes.foundational_knowledge import router as foundational_knowledge_router
+from app.api.routes.prompt_library import router as prompt_library_router
+from app.api.routes.redis_health import router as redis_health_router
 from app.api.super_orchestrator_router import router as super_orchestrator_router
 from app.api.unified_gateway import router as unified_gateway_router
 from app.factory import router as factory_router
@@ -88,15 +91,19 @@ app.include_router(
 )  # Integration Intelligence endpoints - includes /api/integration-intelligence prefix
 app.include_router(looker_router, prefix="/api")
 app.include_router(slack_bi_router)
-app.include_router(
-    brain_training_router
-)  # Brain Training endpoints - includes /api/brain-training prefix
+# app.include_router(
+#     brain_training_router
+# )  # Brain Training endpoints - includes /api/brain-training prefix - Missing docx dependency
 app.include_router(voice_router, prefix="/api")  # Voice endpoints - includes /api/voice prefix
 app.include_router(factory_router)  # Agent Factory endpoints
 app.include_router(personas_router)  # Persona agents endpoints - includes /api/personas prefix
 app.include_router(
     foundational_knowledge_router, prefix="/api/foundational"
 )  # Foundational Knowledge endpoints
+app.include_router(redis_health_router, prefix="/api")  # Redis health monitoring endpoints
+app.include_router(
+    prompt_library_router
+)  # Prompt Library endpoints - includes /api/v1/prompts prefix
 # app.include_router(memory_api_router, prefix="/api/memory-v2")  # Module has import issues
 
 # Mount static files for UI components
@@ -110,6 +117,43 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+# Startup and shutdown events for Redis monitoring
+@app.on_event("startup")
+async def startup_event():
+    """Initialize services on startup"""
+    try:
+        # Initialize message bus
+        await message_bus_instance.initialize()
+        logger.info("Message bus initialized")
+
+        # Start Redis health monitoring
+        from app.core.redis_health_monitor import redis_health_monitor
+
+        await redis_health_monitor.start_monitoring(interval=60.0)  # Monitor every minute
+        logger.info("Redis health monitoring started")
+
+    except Exception as e:
+        logger.error(f"Startup initialization failed: {e}")
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Clean up services on shutdown"""
+    try:
+        # Stop Redis health monitoring
+        from app.core.redis_health_monitor import redis_health_monitor
+
+        await redis_health_monitor.stop_monitoring()
+        logger.info("Redis health monitoring stopped")
+
+        # Close message bus
+        await message_bus_instance.close()
+        logger.info("Message bus closed")
+
+    except Exception as e:
+        logger.error(f"Shutdown cleanup failed: {e}")
 
 
 # Request models
@@ -195,8 +239,8 @@ async def startup_event():
         - AI Team Members: Marcus & Sarah ONLINE
         - Foundational Knowledge: ACTIVE
         - Airtable Sync: SCHEDULED
-        - Hub: http://localhost:{get_config().get('AGENT_API_PORT', '8003')}/hub
-        - WebSocket: ws://localhost:{get_config().get('AGENT_API_PORT', '8003')}/ws/bus
+        - Hub: http://localhost:{os.getenv('AGENT_API_PORT', '8003')}/hub
+        - WebSocket: ws://localhost:{os.getenv('AGENT_API_PORT', '8003')}/ws/bus
         - Models: Grok-5, Qwen3-30B, DeepSeek, Gemini
         """
         )
@@ -603,7 +647,7 @@ async def health_check():
     return {
         "status": "healthy",
         "service": "Unified API Server",
-        "port": int(get_config().get("AGENT_API_PORT", "8003")),
+        "port": int(os.getenv("AGENT_API_PORT", "8003")),
         "timestamp": datetime.now().isoformat(),
         "version": "5.1.0",
         "components": {
@@ -721,6 +765,6 @@ async def get_metrics():
 if __name__ == "__main__":
     import uvicorn
 
-    port = int(get_config().get("AGENT_API_PORT", "8003"))
+    port = int(os.getenv("AGENT_API_PORT", "8003"))
 
     uvicorn.run(app, host="0.0.0.0", port=port, log_level="info")

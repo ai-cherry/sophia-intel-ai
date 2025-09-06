@@ -1,0 +1,97 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: monitoring
+
+resources:
+  # Base resources
+  - ../base/namespace.yaml
+  - ../base/statefulset.yaml
+  - ../base/service.yaml
+  - ../base/rbac.yaml
+  - ../base/networkpolicy.yaml
+  - ../base/oauth2-proxy.yaml
+
+  # Configuration
+  - ../config/alertmanager-config.yaml
+  - ../config/alert-rules-artemis.yaml
+  - ../config/alert-rules-sophia.yaml
+  - ../config/alert-rules-infrastructure.yaml
+
+  # Monitoring
+  - ../monitoring/prometheus-rules.yaml
+  - ../monitoring/servicemonitor.yaml
+
+configMapGenerator:
+  - name: alertmanager-templates-slack
+    files:
+      - ../templates/slack-templates.yaml
+  - name: alertmanager-templates-email
+    files:
+      - ../templates/email-templates.html
+  - name: alertmanager-templates-pagerduty
+    files:
+      - ../templates/pagerduty-templates.yaml
+  - name: alertmanager-templates-teams
+    files:
+      - ../templates/teams-templates.yaml
+  - name: alertmanager-dashboards
+    files:
+      - grafana-dashboard.json=../monitoring/grafana-dashboard.json
+      - sla-dashboard.json=../monitoring/sla-dashboard.json
+
+# Common labels
+commonLabels:
+  app: alertmanager
+  component: monitoring
+  managed-by: gitops
+  part-of: sophia-intel-ai
+
+# Common annotations
+commonAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "9093"
+
+# Patches for environment-specific configurations
+patchesStrategicMerge:
+  - |-
+    apiVersion: apps/v1
+    kind: StatefulSet
+    metadata:
+      name: alertmanager
+      namespace: monitoring
+    spec:
+      template:
+        spec:
+          containers:
+          - name: alertmanager
+            env:
+            - name: ENVIRONMENT
+              value: "base"
+            - name: LOG_LEVEL
+              value: "info"
+
+# Images for easy version management
+images:
+  - name: prom/alertmanager
+    newTag: v0.27.0
+  - name: quay.io/oauth2-proxy/oauth2-proxy
+    newTag: v7.5.1
+
+# Replace specific values in configurations
+replacements:
+  - source:
+      kind: Service
+      name: alertmanager
+      fieldPath: metadata.name
+    targets:
+      - select:
+          kind: NetworkPolicy
+          name: alertmanager
+        fieldPaths:
+          - spec.podSelector.matchLabels.app
+      - select:
+          kind: ServiceMonitor
+          name: alertmanager
+        fieldPaths:
+          - spec.selector.matchLabels.app

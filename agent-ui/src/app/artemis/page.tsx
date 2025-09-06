@@ -92,7 +92,7 @@ const ArtemisCommandCenter: React.FC = () => {
   useEffect(() => {
     // Set initial time
     setCurrentTime(new Date().toLocaleString());
-    
+
     const interval = setInterval(() => {
       setCurrentTime(new Date().toLocaleString());
       setSystemMetrics(prev => prev.map(metric => ({

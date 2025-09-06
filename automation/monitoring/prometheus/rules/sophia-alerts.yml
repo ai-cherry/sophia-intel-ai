@@ -13,7 +13,7 @@ groups:
           summary: "Service {{ $labels.instance }} is down"
           description: "{{ $labels.instance }} of job {{ $labels.job }} has been down for more than 1 minute."
           runbook_url: "https://docs.sophia-intel-ai.com/runbooks/service-down"
-          
+
       - alert: HighErrorRate
         expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.1
         for: 2m
@@ -23,7 +23,7 @@ groups:
         annotations:
           summary: "High error rate on {{ $labels.instance }}"
           description: "{{ $labels.instance }} is experiencing {{ $value | humanizePercentage }} error rate"
-          
+
       - alert: HighLatency
         expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 1
         for: 5m
@@ -47,7 +47,7 @@ groups:
         annotations:
           summary: "High CPU usage on {{ $labels.instance }}"
           description: "CPU usage is above 80% (current value: {{ $value }}%)"
-          
+
       - alert: HighMemoryUsage
         expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 80
         for: 5m
@@ -57,7 +57,7 @@ groups:
         annotations:
           summary: "High memory usage on {{ $labels.instance }}"
           description: "Memory usage is above 80% (current value: {{ $value }}%)"
-          
+
       - alert: DiskSpaceLow
         expr: (1 - (node_filesystem_avail_bytes / node_filesystem_size_bytes)) * 100 > 85
         for: 5m
@@ -81,7 +81,7 @@ groups:
         annotations:
           summary: "Redis instance is down"
           description: "Redis instance {{ $labels.instance }} is down"
-          
+
       - alert: PostgreSQLDown
         expr: pg_up == 0
         for: 1m
@@ -91,7 +91,7 @@ groups:
         annotations:
           summary: "PostgreSQL instance is down"
           description: "PostgreSQL instance {{ $labels.instance }} is down"
-          
+
       - alert: WeaviateDown
         expr: up{job="weaviate"} == 0
         for: 2m
@@ -101,7 +101,7 @@ groups:
         annotations:
           summary: "Weaviate instance is down"
           description: "Weaviate instance {{ $labels.instance }} is down"
-          
+
       - alert: HighDatabaseConnections
         expr: pg_stat_activity_count > 80
         for: 5m
@@ -111,7 +111,7 @@ groups:
         annotations:
           summary: "High number of database connections"
           description: "PostgreSQL has {{ $value }} active connections"
-          
+
       - alert: RedisMemoryHigh
         expr: redis_memory_used_bytes / redis_memory_max_bytes * 100 > 80
         for: 5m
@@ -135,7 +135,7 @@ groups:
         annotations:
           summary: "Unified API is down"
           description: "Unified API service is not responding"
-          
+
       - alert: SophiaOrchestratorDown
         expr: up{job="sophia-orchestrator"} == 0
         for: 2m
@@ -145,7 +145,7 @@ groups:
         annotations:
           summary: "Sophia Orchestrator is down"
           description: "Sophia Orchestrator service is not responding"
-          
+
       - alert: ArtemisOrchestratorDown
         expr: up{job="artemis-orchestrator"} == 0
         for: 2m
@@ -155,7 +155,7 @@ groups:
         annotations:
           summary: "Artemis Orchestrator is down"
           description: "Artemis Orchestrator service is not responding"
-          
+
       - alert: HealthMonitorDown
         expr: up{job="health-monitor"} == 0
         for: 3m
@@ -165,7 +165,7 @@ groups:
         annotations:
           summary: "Health Monitor is down"
           description: "Health monitoring service is not responding"
-          
+
       - alert: HighRequestRate
         expr: rate(http_requests_total[5m]) > 1000
         for: 2m
@@ -175,7 +175,7 @@ groups:
         annotations:
           summary: "High request rate on {{ $labels.instance }}"
           description: "{{ $labels.instance }} is receiving {{ $value }} requests/second"
-          
+
       - alert: ComponentUnhealthy
         expr: sophia_component_health_status < 1
         for: 2m
@@ -199,7 +199,7 @@ groups:
         annotations:
           summary: "Slow response time for {{ $labels.component }}"
           description: "{{ $labels.component }} response time is {{ $value }}s"
-          
+
       - alert: HighGoroutineCount
         expr: go_goroutines > 1000
         for: 5m
@@ -209,7 +209,7 @@ groups:
         annotations:
           summary: "High goroutine count on {{ $labels.instance }}"
           description: "{{ $labels.instance }} has {{ $value }} goroutines"
-          
+
       - alert: HighGCPause
         expr: rate(go_gc_duration_seconds_sum[5m]) > 0.1
         for: 5m
@@ -233,7 +233,7 @@ groups:
         annotations:
           summary: "Low success rate on {{ $labels.instance }}"
           description: "Success rate is {{ $value | humanizePercentage }}"
-          
+
       - alert: NoTrafficReceived
         expr: rate(http_requests_total[10m]) == 0
         for: 10m

@@ -5,26 +5,47 @@ Provides full dashboard connectivity with WebSocket support
 """
 
 import asyncio
+import hashlib
 import json
 import logging
+import sys
+import os
 from contextlib import asynccontextmanager
 from datetime import datetime
-from typing import Any, Dict, List
+from functools import wraps
+from typing import Any, Dict, List, Optional, Callable
 
 import uvicorn
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
+# Add project root to path for imports
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__)))
+sys.path.insert(0, project_root)
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Import Redis manager for caching
+try:
+    from app.core.redis_manager import redis_manager
+    from app.core.redis_config import RedisNamespaces
+    REDIS_AVAILABLE = True
+    logger.info("Redis manager imported successfully")
+except ImportError as e:
+    logger.warning(f"Redis manager not available: {e}")
+    redis_manager = None
+    RedisNamespaces = None
+    REDIS_AVAILABLE = False
 
-# WebSocket connection manager
+
+# Enhanced WebSocket connection manager with scaling support
 class ConnectionManager:
     def __init__(self):
-        self.active_connections: List[WebSocket] = []
+        self.active_connections: Dict[str, WebSocket] = {}
+        self.connection_metadata: Dict[str, Dict[str, Any]] = {}
         self.system_stats = {
             "active_systems": 3,
             "total_systems": 3,
@@ -33,20 +54,111 @@ class ConnectionManager:
             "cost_today": 0.0,
             "tokens_used": 0,
         }
+        self.max_connections = 100  # Configurable limit
+        self.heartbeat_interval = 30  # seconds
+        
+    def _generate_connection_id(self) -> str:
+        """Generate unique connection ID"""
+        import uuid
+        return str(uuid.uuid4())
 
-    async def connect(self, websocket: WebSocket):
+    async def connect(self, websocket: WebSocket, client_info: Dict[str, Any] = None):
+        # Check connection limit
+        if len(self.active_connections) >= self.max_connections:
+            logger.warning(f"Connection limit reached ({self.max_connections})")
+            await websocket.close(code=1013, reason="Server overloaded")
+            return None
+            
+        connection_id = self._generate_connection_id()
         await websocket.accept()
-        self.active_connections.append(websocket)
+        
+        self.active_connections[connection_id] = websocket
+        self.connection_metadata[connection_id] = {
+            "connected_at": datetime.now().isoformat(),
+            "last_activity": datetime.now().isoformat(),
+            "client_info": client_info or {},
+            "message_count": 0,
+            "user_agent": client_info.get("user_agent") if client_info else None,
+            "ip_address": client_info.get("ip_address") if client_info else None,
+        }
+        
         logger.info(
-            f"WebSocket connection established. Total connections: {len(self.active_connections)}"
+            f"WebSocket connection established. ID: {connection_id}, "
+            f"Total connections: {len(self.active_connections)}"
         )
+        
+        # Send connection confirmation with ID
+        await self.send_personal_message(
+            {
+                "type": "connection_established",
+                "connection_id": connection_id,
+                "message": "Connected to Sophia Intel AI Orchestrator",
+                "timestamp": datetime.now().isoformat(),
+                "server_capacity": {
+                    "current_connections": len(self.active_connections),
+                    "max_connections": self.max_connections,
+                    "utilization": len(self.active_connections) / self.max_connections
+                }
+            },
+            websocket
+        )
+        
+        return connection_id
 
     def disconnect(self, websocket: WebSocket):
-        if websocket in self.active_connections:
-            self.active_connections.remove(websocket)
-        logger.info(
-            f"WebSocket connection closed. Total connections: {len(self.active_connections)}"
-        )
+        # Find connection by websocket
+        connection_id = None
+        for conn_id, ws in self.active_connections.items():
+            if ws == websocket:
+                connection_id = conn_id
+                break
+                
+        if connection_id:
+            self.active_connections.pop(connection_id, None)
+            metadata = self.connection_metadata.pop(connection_id, {})
+            
+            # Calculate session duration
+            connected_at = metadata.get("connected_at")
+            duration = "unknown"
+            if connected_at:
+                from datetime import datetime
+                start_time = datetime.fromisoformat(connected_at)
+                duration_seconds = (datetime.now() - start_time).total_seconds()
+                duration = f"{duration_seconds:.1f}s"
+                
+            logger.info(
+                f"WebSocket connection closed. ID: {connection_id}, "
+                f"Duration: {duration}, Messages: {metadata.get('message_count', 0)}, "
+                f"Remaining connections: {len(self.active_connections)}"
+            )
+        else:
+            logger.warning("Attempted to disconnect unknown WebSocket connection")
+            
+    def get_connection_stats(self) -> Dict[str, Any]:
+        """Get detailed connection statistics"""
+        now = datetime.now()
+        active_count = len(self.active_connections)
+        
+        # Calculate connection age distribution
+        ages = []
+        for metadata in self.connection_metadata.values():
+            connected_at = datetime.fromisoformat(metadata["connected_at"])
+            age_seconds = (now - connected_at).total_seconds()
+            ages.append(age_seconds)
+            
+        return {
+            "active_connections": active_count,
+            "max_connections": self.max_connections,
+            "utilization_percentage": (active_count / self.max_connections) * 100,
+            "connection_ages": {
+                "min_age_seconds": min(ages) if ages else 0,
+                "max_age_seconds": max(ages) if ages else 0,
+                "avg_age_seconds": sum(ages) / len(ages) if ages else 0
+            },
+            "total_messages_processed": sum(
+                meta.get("message_count", 0) for meta in self.connection_metadata.values()
+            )
+        }
 
     async def send_personal_message(self, message: dict, websocket: WebSocket):
         try:
@@ -55,19 +167,249 @@ class ConnectionManager:
             logger.error(f"Error sending message: {e}")
 
     async def broadcast(self, message: dict):
-        disconnected = []
-        for connection in self.active_connections:
-            try:
-                await connection.send_text(json.dumps(message))
-            except:
-                disconnected.append(connection)
-
-        # Clean up disconnected connections
-        for conn in disconnected:
-            self.disconnect(conn)
+        """Broadcast message to all connected clients with improved error handling"""
+        if not self.active_connections:
+            return
+            
+        # Track failed connections for cleanup
+        failed_connections = []
+        
+        # Send to all connections concurrently
+        tasks = []
+        for connection_id, websocket in self.active_connections.items():
+            tasks.append(self._safe_send_message(connection_id, websocket, message))
+            
+        # Execute all sends concurrently
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        
+        # Handle failed connections
+        for i, result in enumerate(results):
+            if isinstance(result, Exception):
+                connection_id = list(self.active_connections.keys())[i]
+                failed_connections.append(connection_id)
+                logger.warning(f"Failed to broadcast to connection {connection_id}: {result}")
+                
+        # Clean up failed connections
+        for connection_id in failed_connections:
+            websocket = self.active_connections.get(connection_id)
+            if websocket:
+                self.disconnect(websocket)
+    
+    async def _safe_send_message(self, connection_id: str, websocket: WebSocket, message: dict):
+        """Safely send message to a specific connection"""
+        try:
+            await websocket.send_text(json.dumps(message))
+            
+            # Update message count
+            if connection_id in self.connection_metadata:
+                self.connection_metadata[connection_id]["message_count"] += 1
+                self.connection_metadata[connection_id]["last_activity"] = datetime.now().isoformat()
+                
+        except Exception as e:
+            logger.error(f"Error sending message to connection {connection_id}: {e}")
+            raise
 
 
 manager = ConnectionManager()
+
+
+# API Response Caching System
+class APICache:
+    """Redis-based API response caching with intelligent TTL management"""
+    
+    def __init__(self):
+        self.default_ttl = 300  # 5 minutes
+        self.ttl_by_endpoint = {
+            "/health": 30,              # Health checks - 30 seconds
+            "/healthz": 30,             # Health checks - 30 seconds  
+            "/status": 60,              # System status - 1 minute
+            "/teams": 300,              # Teams list - 5 minutes
+            "/api/mcp/status": 60,      # MCP status - 1 minute
+            "/api/websocket/stats": 30,  # WebSocket stats - 30 seconds
+        }
+        
+    def _generate_cache_key(self, endpoint: str, query_params: dict = None, headers: dict = None) -> str:
+        """Generate cache key from endpoint and parameters"""
+        key_parts = [f"api_cache:{endpoint}"]
+        
+        if query_params:
+            # Sort params for consistent keys
+            sorted_params = sorted(query_params.items())
+            params_str = "&".join([f"{k}={v}" for k, v in sorted_params])
+            key_parts.append(hashlib.md5(params_str.encode()).hexdigest())
+            
+        if headers:
+            # Only include cache-relevant headers (e.g., accept-language, user type)
+            relevant_headers = {k.lower(): v for k, v in headers.items() 
+                              if k.lower() in ['accept-language', 'user-type', 'client-version']}
+            if relevant_headers:
+                headers_str = json.dumps(relevant_headers, sort_keys=True)
+                key_parts.append(hashlib.md5(headers_str.encode()).hexdigest())
+        
+        return ":".join(key_parts)
+    
+    def _get_ttl_for_endpoint(self, endpoint: str) -> int:
+        """Get appropriate TTL for endpoint"""
+        # Check for exact matches first
+        if endpoint in self.ttl_by_endpoint:
+            return self.ttl_by_endpoint[endpoint]
+            
+        # Check for pattern matches
+        for pattern, ttl in self.ttl_by_endpoint.items():
+            if endpoint.startswith(pattern.rstrip("*")):
+                return ttl
+                
+        return self.default_ttl
+    
+    async def get(self, endpoint: str, query_params: dict = None, headers: dict = None) -> Optional[dict]:
+        """Get cached response"""
+        if not REDIS_AVAILABLE or not redis_manager:
+            return None
+            
+        try:
+            cache_key = self._generate_cache_key(endpoint, query_params, headers)
+            cached_data = await redis_manager.get(cache_key)
+            
+            if cached_data:
+                logger.debug(f"Cache HIT for {endpoint}")
+                return json.loads(cached_data.decode())
+            else:
+                logger.debug(f"Cache MISS for {endpoint}")
+                return None
+                
+        except Exception as e:
+            logger.error(f"Cache GET error for {endpoint}: {e}")
+            return None
+    
+    async def set(self, endpoint: str, data: dict, query_params: dict = None, 
+                  headers: dict = None, custom_ttl: int = None) -> bool:
+        """Set cached response"""
+        if not REDIS_AVAILABLE or not redis_manager:
+            return False
+            
+        try:
+            cache_key = self._generate_cache_key(endpoint, query_params, headers)
+            ttl = custom_ttl or self._get_ttl_for_endpoint(endpoint)
+            
+            # Add cache metadata
+            cache_data = {
+                "data": data,
+                "cached_at": datetime.now().isoformat(),
+                "endpoint": endpoint,
+                "ttl": ttl
+            }
+            
+            await redis_manager.set_with_ttl(
+                cache_key, 
+                json.dumps(cache_data), 
+                ttl=ttl
+            )
+            
+            logger.debug(f"Cache SET for {endpoint} with TTL {ttl}s")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Cache SET error for {endpoint}: {e}")
+            return False
+    
+    async def delete(self, endpoint: str, query_params: dict = None, headers: dict = None) -> bool:
+        """Delete cached response"""
+        if not REDIS_AVAILABLE or not redis_manager:
+            return False
+            
+        try:
+            cache_key = self._generate_cache_key(endpoint, query_params, headers)
+            result = await redis_manager.delete(cache_key)
+            logger.debug(f"Cache DELETE for {endpoint}")
+            return result > 0
+            
+        except Exception as e:
+            logger.error(f"Cache DELETE error for {endpoint}: {e}")
+            return False
+    
+    async def clear_pattern(self, pattern: str) -> int:
+        """Clear multiple cache entries by pattern"""
+        if not REDIS_AVAILABLE or not redis_manager:
+            return 0
+            
+        try:
+            # Use Redis SCAN to find matching keys
+            keys = []
+            async for key in redis_manager.redis.scan_iter(match=f"api_cache:{pattern}*"):
+                keys.append(key)
+            
+            if keys:
+                deleted = await redis_manager.redis.delete(*keys)
+                logger.info(f"Cleared {deleted} cache entries matching pattern: {pattern}")
+                return deleted
+            else:
+                return 0
+                
+        except Exception as e:
+            logger.error(f"Cache CLEAR PATTERN error for {pattern}: {e}")
+            return 0
+
+    async def get_stats(self) -> dict:
+        """Get cache statistics"""
+        if not REDIS_AVAILABLE or not redis_manager:
+            return {"cache_available": False}
+            
+        try:
+            # Get cache keys count
+            cache_keys = []
+            async for key in redis_manager.redis.scan_iter(match="api_cache:*"):
+                cache_keys.append(key.decode() if isinstance(key, bytes) else key)
+            
+            # Get memory stats
+            memory_stats = await redis_manager.get_memory_stats()
+            
+            return {
+                "cache_available": True,
+                "total_cache_keys": len(cache_keys),
+                "cache_endpoints": list(self.ttl_by_endpoint.keys()),
+                "default_ttl": self.default_ttl,
+                "memory_usage": memory_stats.get("used_memory_human", "unknown"),
+                "sample_keys": cache_keys[:5]  # Show first 5 keys
+            }
+            
+        except Exception as e:
+            logger.error(f"Cache STATS error: {e}")
+            return {"cache_available": False, "error": str(e)}
+
+
+# Initialize cache manager
+api_cache = APICache()
+
+
+def cached_endpoint(ttl: Optional[int] = None, include_query_params: bool = True, 
+                   include_headers: bool = False):
+    """Decorator for caching API endpoint responses"""
+    def decorator(func: Callable) -> Callable:
+        @wraps(func)
+        async def wrapper(request: Request = None, *args, **kwargs):
+            # Extract endpoint path
+            endpoint = request.url.path if request else func.__name__
+            
+            # Extract parameters for cache key
+            query_params = dict(request.query_params) if request and include_query_params else None
+            headers = dict(request.headers) if request and include_headers else None
+            
+            # Try to get from cache first
+            cached_response = await api_cache.get(endpoint, query_params, headers)
+            if cached_response:
+                # Return cached data (unwrap from metadata)
+                return cached_response.get("data", cached_response)
+            
+            # Execute the original function
+            response = await func(request, *args, **kwargs) if request else await func(*args, **kwargs)
+            
+            # Cache the response
+            await api_cache.set(endpoint, response, query_params, headers, custom_ttl=ttl)
+            
+            return response
+            
+        return wrapper
+    return decorator
 
 
 # Background task to send periodic updates
@@ -93,6 +435,14 @@ async def send_periodic_updates():
 # Application lifespan manager
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Initialize Redis manager if available
+    if REDIS_AVAILABLE and redis_manager:
+        try:
+            await redis_manager.initialize()
+            logger.info("Redis manager initialized successfully for caching")
+        except Exception as e:
+            logger.error(f"Failed to initialize Redis manager: {e}")
+    
     # Start periodic updates task
     task = asyncio.create_task(send_periodic_updates())
     yield
@@ -131,34 +481,40 @@ async def root():
 
 @app.get("/health")
 @app.get("/healthz")
-async def health_check():
-    """Health check endpoint"""
+@cached_endpoint(ttl=30)
+async def health_check(request: Request):
+    """Health check endpoint with caching"""
     return {
         "status": "healthy",
         "timestamp": datetime.now().isoformat(),
         "services": {"api": "running", "database": "connected", "cache": "connected"},
+        "cache_enabled": REDIS_AVAILABLE,
     }
 
 
 @app.get("/status")
-async def system_status():
-    """System status endpoint"""
+@cached_endpoint(ttl=60)
+async def system_status(request: Request):
+    """System status endpoint with caching"""
     return {
         "systems": {"total": 3, "active": 3, "errors": 0},
         "infrastructure": {
             "weaviate": {"status": "healthy", "url": "http://localhost:8081", "port": 8081},
             "postgresql": {"status": "healthy", "host": "localhost", "port": 5432},
-            "redis": {"status": "healthy", "host": "localhost", "port": 6380},
+            "redis": {"status": "healthy", "host": "localhost", "port": 6379},
         },
         "ui": {"agent_dashboard": {"status": "running", "url": "http://localhost:3001"}},
         "cost": {"today": 0.00, "tokens": 0},
         "health_score": 100,
+        "cache_enabled": REDIS_AVAILABLE,
+        "cached_at": datetime.now().isoformat(),
     }
 
 
 @app.get("/teams")
-async def list_teams():
-    """List available AI teams/swarms"""
+@cached_endpoint(ttl=300)  # Cache for 5 minutes
+async def list_teams(request: Request):
+    """List available AI teams/swarms with caching"""
     return {
         "teams": [
             {
@@ -179,7 +535,9 @@ async def list_teams():
                 "status": "ready",
                 "description": "Autonomous code generation and development",
             },
-        ]
+        ],
+        "cache_enabled": REDIS_AVAILABLE,
+        "cached_at": datetime.now().isoformat(),
     }
 
 
@@ -573,6 +931,294 @@ async def analyze_document():
     result = "<strong>Document Analysis Complete:</strong>\n\nExecutive Summary: Document structure is solid with key insights identified.\n\nKey Points:\n• Strategic implications are clear and actionable\n• Technical requirements are well-defined\n• Implementation timeline is realistic\n\n<em>Artemis Critique: Actually not bad - whoever wrote this knew what they were doing.</em>"
 
     return {"result": result, "status": "success", "timestamp": datetime.now().isoformat()}
+
+
+# MCP Status endpoints to fix 404 errors
+@app.get("/api/mcp/status")
+@cached_endpoint(ttl=60)
+async def get_all_mcp_status(request: Request):
+    """Get MCP server status for all domains"""
+    return {
+        "timestamp": datetime.now().isoformat(),
+        "domains": {
+            "artemis": {
+                "domain": "artemis",
+                "servers": [
+                    {
+                        "name": "artemis_code_analysis",
+                        "status": "operational",
+                        "connections": {"active": 2, "max": 10, "utilization": 0.2},
+                        "performance": {"response_time_ms": 45, "throughput": 120, "error_rate": 0.001}
+                    },
+                    {
+                        "name": "artemis_codebase_memory", 
+                        "status": "operational",
+                        "connections": {"active": 1, "max": 10, "utilization": 0.1},
+                        "performance": {"response_time_ms": 32, "throughput": 85, "error_rate": 0.002}
+                    }
+                ],
+                "mythology_agents": [
+                    {
+                        "name": "Odin - Technical Wisdom",
+                        "context": "Code quality governance and architectural decisions",
+                        "widget_type": "technical_excellence_oracle"
+                    }
+                ]
+            },
+            "sophia": {
+                "domain": "sophia", 
+                "servers": [
+                    {
+                        "name": "sophia_business_analytics",
+                        "status": "operational",
+                        "connections": {"active": 3, "max": 15, "utilization": 0.2},
+                        "performance": {"response_time_ms": 67, "throughput": 95, "error_rate": 0.003}
+                    },
+                    {
+                        "name": "sophia_sales_intelligence",
+                        "status": "operational", 
+                        "connections": {"active": 2, "max": 10, "utilization": 0.2},
+                        "performance": {"response_time_ms": 89, "throughput": 78, "error_rate": 0.005}
+                    }
+                ],
+                "mythology_agents": [
+                    {
+                        "name": "Hermes - Sales Intelligence",
+                        "context": "Market intelligence and sales performance",
+                        "widget_type": "sales_performance_intelligence"
+                    },
+                    {
+                        "name": "Asclepius - Client Health", 
+                        "context": "Customer health and portfolio management",
+                        "widget_type": "client_health_monitor"
+                    }
+                ],
+                "pay_ready_context": {
+                    "processing_volume_24h": 2100000000,
+                    "properties_managed": 450000,
+                    "tenant_satisfaction_score": 88.5,
+                    "market_coverage_percentage": 47.3
+                }
+            },
+            "shared": {
+                "domain": "shared",
+                "servers": [
+                    {
+                        "name": "shared_indexing",
+                        "status": "operational",
+                        "connections": {"active": 4, "max": 20, "utilization": 0.2},
+                        "performance": {"response_time_ms": 23, "throughput": 150, "error_rate": 0.001}
+                    }
+                ],
+                "mythology_agents": [
+                    {
+                        "name": "Minerva - Cross-Domain Analytics", 
+                        "context": "Unified intelligence and pattern recognition",
+                        "widget_type": "unified_intelligence_analysis"
+                    }
+                ]
+            }
+        },
+        "summary": {
+            "total_servers": 6,
+            "operational_servers": 6, 
+            "total_connections": 12
+        }
+    }
+
+
+@app.get("/api/mcp/status/{domain}")
+@cached_endpoint(ttl=60)
+async def get_domain_mcp_status(domain: str, request: Request):
+    """Get MCP server status for a specific domain"""
+    # Create a mock request for get_all_mcp_status since it needs Request parameter  
+    all_status = await get_all_mcp_status(request)
+    
+    if domain.lower() in all_status["domains"]:
+        return all_status["domains"][domain.lower()]
+    else:
+        raise HTTPException(status_code=404, detail=f"Domain '{domain}' not found")
+
+
+@app.get("/api/mcp/metrics/summary")
+async def get_mcp_metrics():
+    """Get aggregated MCP metrics across all domains"""
+    return {
+        "timestamp": datetime.now().isoformat(),
+        "overall_health": 95.8,
+        "totals": {
+            "total_servers": 6,
+            "operational_servers": 6,
+            "total_connections": 12,
+            "avg_response_time": 51.2,
+            "avg_error_rate": 0.002
+        }
+    }
+
+
+# WebSocket connection monitoring endpoints
+@app.get("/api/websocket/stats")
+@cached_endpoint(ttl=30)
+async def get_websocket_stats(request: Request):
+    """Get WebSocket connection statistics with caching"""
+    stats = manager.get_connection_stats()
+    return {
+        "timestamp": datetime.now().isoformat(),
+        "websocket_stats": stats,
+        "status": "healthy" if stats["utilization_percentage"] < 80 else "degraded",
+        "cache_enabled": REDIS_AVAILABLE,
+    }
+
+
+@app.get("/api/websocket/connections")
+async def get_active_connections():
+    """Get details of all active WebSocket connections"""
+    connections = []
+    for connection_id, metadata in manager.connection_metadata.items():
+        connections.append({
+            "connection_id": connection_id,
+            **metadata,
+            "age_seconds": (
+                datetime.now() - datetime.fromisoformat(metadata["connected_at"])
+            ).total_seconds()
+        })
+    
+    return {
+        "timestamp": datetime.now().isoformat(),
+        "active_connections": connections,
+        "total_count": len(connections)
+    }
+
+
+# Cache Management Endpoints
+@app.get("/api/cache/stats")
+async def get_cache_stats():
+    """Get API response cache statistics"""
+    return await api_cache.get_stats()
+
+
+@app.get("/api/cache/health")
+@cached_endpoint(ttl=60)  # Cache the cache health check itself
+async def cache_health_check(request: Request):
+    """Health check for the caching system"""
+    if not REDIS_AVAILABLE:
+        return {
+            "cache_available": False,
+            "status": "disabled",
+            "message": "Redis not available",
+            "timestamp": datetime.now().isoformat()
+        }
+    
+    try:
+        # Test basic cache operation
+        test_key = "health_check_test"
+        test_data = {"test": "data", "timestamp": datetime.now().isoformat()}
+        
+        await api_cache.set("/test", test_data, custom_ttl=10)
+        cached_result = await api_cache.get("/test")
+        await api_cache.delete("/test")
+        
+        is_healthy = cached_result is not None
+        
+        return {
+            "cache_available": True,
+            "status": "healthy" if is_healthy else "degraded",
+            "test_result": "passed" if is_healthy else "failed",
+            "redis_available": REDIS_AVAILABLE,
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        return {
+            "cache_available": True,
+            "status": "error", 
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
+
+@app.delete("/api/cache/clear")
+async def clear_cache():
+    """Clear all API cache entries"""
+    if not REDIS_AVAILABLE:
+        raise HTTPException(status_code=503, detail="Cache not available")
+    
+    try:
+        cleared_count = await api_cache.clear_pattern("*")
+        return {
+            "status": "success",
+            "cleared_entries": cleared_count,
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to clear cache: {str(e)}")
+
+
+@app.delete("/api/cache/clear/{pattern}")
+async def clear_cache_pattern(pattern: str):
+    """Clear cache entries matching a specific pattern"""
+    if not REDIS_AVAILABLE:
+        raise HTTPException(status_code=503, detail="Cache not available")
+    
+    try:
+        cleared_count = await api_cache.clear_pattern(pattern)
+        return {
+            "status": "success", 
+            "pattern": pattern,
+            "cleared_entries": cleared_count,
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to clear cache pattern: {str(e)}")
+
+
+@app.post("/api/cache/warm")
+async def warm_cache():
+    """Warm up the cache by pre-loading common endpoints"""
+    if not REDIS_AVAILABLE:
+        raise HTTPException(status_code=503, detail="Cache not available")
+    
+    warmed_endpoints = []
+    
+    try:
+        # Create mock requests for warming endpoints
+        from unittest.mock import Mock
+        
+        # Warm up health endpoint
+        mock_request = Mock()
+        mock_request.url.path = "/health"
+        mock_request.query_params = {}
+        await health_check(mock_request)
+        warmed_endpoints.append("/health")
+        
+        # Warm up status endpoint
+        mock_request.url.path = "/status"
+        await system_status(mock_request)
+        warmed_endpoints.append("/status")
+        
+        # Warm up teams endpoint
+        mock_request.url.path = "/teams"
+        await list_teams(mock_request)
+        warmed_endpoints.append("/teams")
+        
+        # Warm up MCP status
+        mock_request.url.path = "/api/mcp/status"
+        await get_all_mcp_status(mock_request)
+        warmed_endpoints.append("/api/mcp/status")
+        
+        return {
+            "status": "success",
+            "warmed_endpoints": warmed_endpoints,
+            "count": len(warmed_endpoints),
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        return {
+            "status": "partial_success",
+            "warmed_endpoints": warmed_endpoints,
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
 
 
 if __name__ == "__main__":

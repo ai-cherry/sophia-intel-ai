@@ -23,6 +23,7 @@ router = APIRouter(prefix="/api/mcp", tags=["mcp"])
 # Global registry instance
 mcp_registry = MCPServerRegistry()
 
+
 class MCPStatusAPI:
     """API for MCP server status and monitoring"""
 
@@ -63,9 +64,7 @@ class MCPStatusAPI:
                 continue
 
             status = await self._get_server_detailed_status(
-                allocation.server_name,
-                allocation,
-                server_config
+                allocation.server_name, allocation, server_config
             )
             server_status.append(status)
 
@@ -79,14 +78,16 @@ class MCPStatusAPI:
                     "assigned_mcp_servers": [
                         "artemis_code_analysis",
                         "artemis_design",
-                        "artemis_codebase_memory"
+                        "artemis_codebase_memory",
                     ],
                     "context": "Code quality governance and architectural decisions",
-                    "widget_type": "technical_excellence_oracle"
+                    "widget_type": "technical_excellence_oracle",
                 }
             ],
             "domain_metrics": await self._calculate_domain_metrics(MemoryDomain.ARTEMIS),
-            "real_time_metrics": await self.artemis.get_performance_metrics() if self.artemis else {}
+            "real_time_metrics": (
+                await self.artemis.get_performance_metrics() if self.artemis else {}
+            ),
         }
 
     async def _get_sophia_status(self) -> Dict[str, Any]:
@@ -100,9 +101,7 @@ class MCPStatusAPI:
                 continue
 
             status = await self._get_server_detailed_status(
-                allocation.server_name,
-                allocation,
-                server_config
+                allocation.server_name, allocation, server_config
             )
             server_status.append(status)
 
@@ -113,38 +112,30 @@ class MCPStatusAPI:
             "mythology_agents": [
                 {
                     "name": "Hermes - Sales Intelligence",
-                    "assigned_mcp_servers": [
-                        "sophia_web_search",
-                        "sophia_sales_intelligence"
-                    ],
+                    "assigned_mcp_servers": ["sophia_web_search", "sophia_sales_intelligence"],
                     "context": "Market intelligence and sales performance",
-                    "widget_type": "sales_performance_intelligence"
+                    "widget_type": "sales_performance_intelligence",
                 },
                 {
                     "name": "Asclepius - Client Health",
-                    "assigned_mcp_servers": [
-                        "sophia_business_analytics",
-                        "sophia_business_memory"
-                    ],
+                    "assigned_mcp_servers": ["sophia_business_analytics", "sophia_business_memory"],
                     "context": "Customer health and portfolio management",
-                    "widget_type": "client_health_monitor"
+                    "widget_type": "client_health_monitor",
                 },
                 {
                     "name": "Athena - Strategic Operations",
-                    "assigned_mcp_servers": [
-                        "sophia_business_analytics"
-                    ],
+                    "assigned_mcp_servers": ["sophia_business_analytics"],
                     "context": "Strategic initiatives and executive support",
-                    "widget_type": "strategic_operations_command"
-                }
+                    "widget_type": "strategic_operations_command",
+                },
             ],
             "domain_metrics": await self._calculate_domain_metrics(MemoryDomain.SOPHIA),
             "pay_ready_context": {
                 "processing_volume_24h": 2100000000,  # $2.1B
                 "properties_managed": 450000,
                 "tenant_satisfaction_score": 88.5,
-                "market_coverage_percentage": 47.3
-            }
+                "market_coverage_percentage": 47.3,
+            },
         }
 
     async def _get_shared_status(self) -> Dict[str, Any]:
@@ -158,9 +149,7 @@ class MCPStatusAPI:
                 continue
 
             status = await self._get_server_detailed_status(
-                allocation.server_name,
-                allocation,
-                server_config
+                allocation.server_name, allocation, server_config
             )
             server_status.append(status)
 
@@ -174,20 +163,17 @@ class MCPStatusAPI:
                     "assigned_mcp_servers": [
                         "shared_indexing",
                         "shared_embedding",
-                        "shared_meta_tagging"
+                        "shared_meta_tagging",
                     ],
                     "context": "Unified intelligence and pattern recognition",
-                    "widget_type": "unified_intelligence_analysis"
+                    "widget_type": "unified_intelligence_analysis",
                 }
             ],
-            "domain_metrics": await self._calculate_domain_metrics(MemoryDomain.SHARED)
+            "domain_metrics": await self._calculate_domain_metrics(MemoryDomain.SHARED),
         }
 
     async def _get_server_detailed_status(
-        self,
-        server_name: str,
-        allocation: Any,
-        server_config: Any
+        self, server_name: str, allocation: Any, server_config: Any
     ) -> Dict[str, Any]:
         """Get detailed status for a single server"""
 
@@ -211,17 +197,14 @@ class MCPStatusAPI:
             "connections": {
                 "active": active_connections,
                 "max": max_connections,
-                "utilization": utilization
+                "utilization": utilization,
             },
             "capabilities": server_config.capabilities,
             "last_activity": self._get_last_activity(server_name),
             "performance_metrics": performance_metrics,
             "business_context": allocation.metadata.get("pay_ready_context"),
             "endpoint": server_config.endpoint,
-            "metadata": {
-                **server_config.metadata,
-                **allocation.metadata
-            }
+            "metadata": {**server_config.metadata, **allocation.metadata},
         }
 
     async def _check_server_health(self, server_name: str) -> bool:
@@ -232,6 +215,7 @@ class MCPStatusAPI:
 
             # Simulate occasional server issues
             import random
+
             if random.random() < 0.05:  # 5% chance of being offline
                 return False
 
@@ -252,25 +236,30 @@ class MCPStatusAPI:
         # Adjust based on server type
         if "code_analysis" in server_name:
             base_response_time = 200  # Code analysis takes longer
-            base_throughput = 20     # Lower throughput
+            base_throughput = 20  # Lower throughput
         elif "web_search" in server_name:
             base_response_time = 800  # External API calls
-            base_error_rate = 0.01   # Higher error rate for external services
+            base_error_rate = 0.01  # Higher error rate for external services
         elif "database" in server_name:
-            base_response_time = 10   # Fast database operations
-            base_throughput = 500     # High throughput
+            base_response_time = 10  # Fast database operations
+            base_throughput = 500  # High throughput
 
         return {
-            "response_time_ms": max(5, base_response_time + random.gauss(0, base_response_time * 0.2)),
-            "throughput_ops_per_sec": max(0, base_throughput + random.gauss(0, base_throughput * 0.3)),
+            "response_time_ms": max(
+                5, base_response_time + random.gauss(0, base_response_time * 0.2)
+            ),
+            "throughput_ops_per_sec": max(
+                0, base_throughput + random.gauss(0, base_throughput * 0.3)
+            ),
             "error_rate": max(0, min(1, base_error_rate + random.gauss(0, base_error_rate * 0.5))),
-            "uptime_percentage": random.uniform(98.0, 99.99)
+            "uptime_percentage": random.uniform(98.0, 99.99),
         }
 
     def _get_last_activity(self, server_name: str) -> str:
         """Get last activity timestamp for server"""
         # Simulate recent activity
         import random
+
         minutes_ago = random.randint(1, 30)
         last_activity = datetime.utcnow() - timedelta(minutes=minutes_ago)
 
@@ -293,7 +282,7 @@ class MCPStatusAPI:
                 "operational_servers": 0,
                 "total_connections": 0,
                 "avg_response_time": 0,
-                "error_rate": 0
+                "error_rate": 0,
             }
 
         total_servers = len(servers)
@@ -323,11 +312,15 @@ class MCPStatusAPI:
             "total_connections": total_connections,
             "avg_response_time": total_response_time / total_servers if total_servers > 0 else 0,
             "error_rate": total_error_rate / total_servers if total_servers > 0 else 0,
-            "health_percentage": (operational_count / total_servers * 100) if total_servers > 0 else 0
+            "health_percentage": (
+                (operational_count / total_servers * 100) if total_servers > 0 else 0
+            ),
         }
+
 
 # Initialize API instance
 mcp_api = MCPStatusAPI()
+
 
 @router.get("/status/{domain}")
 async def get_domain_status(domain: str) -> Dict[str, Any]:
@@ -337,6 +330,7 @@ async def get_domain_status(domain: str) -> Dict[str, Any]:
     except Exception as e:
         logger.error(f"Failed to get domain status for {domain}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.get("/status")
 async def get_all_domains_status() -> Dict[str, Any]:
@@ -351,29 +345,34 @@ async def get_all_domains_status() -> Dict[str, Any]:
             "domains": {
                 "artemis": artemis_status,
                 "sophia": sophia_status,
-                "shared": shared_status
+                "shared": shared_status,
             },
             "summary": {
                 "total_servers": (
-                    len(artemis_status["servers"]) +
-                    len(sophia_status["servers"]) +
-                    len(shared_status["servers"])
+                    len(artemis_status["servers"])
+                    + len(sophia_status["servers"])
+                    + len(shared_status["servers"])
                 ),
-                "operational_servers": sum([
-                    artemis_status["domain_metrics"]["operational_servers"],
-                    sophia_status["domain_metrics"]["operational_servers"],
-                    shared_status["domain_metrics"]["operational_servers"]
-                ]),
-                "total_connections": sum([
-                    artemis_status["domain_metrics"]["total_connections"],
-                    sophia_status["domain_metrics"]["total_connections"],
-                    shared_status["domain_metrics"]["total_connections"]
-                ])
-            }
+                "operational_servers": sum(
+                    [
+                        artemis_status["domain_metrics"]["operational_servers"],
+                        sophia_status["domain_metrics"]["operational_servers"],
+                        shared_status["domain_metrics"]["operational_servers"],
+                    ]
+                ),
+                "total_connections": sum(
+                    [
+                        artemis_status["domain_metrics"]["total_connections"],
+                        sophia_status["domain_metrics"]["total_connections"],
+                        shared_status["domain_metrics"]["total_connections"],
+                    ]
+                ),
+            },
         }
     except Exception as e:
         logger.error(f"Failed to get all domains status: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.get("/servers/{server_name}")
 async def get_server_status(server_name: str) -> Dict[str, Any]:
@@ -396,7 +395,9 @@ async def get_server_status(server_name: str) -> Dict[str, Any]:
                 break
 
         if not allocation:
-            raise HTTPException(status_code=404, detail=f"Server allocation not found for {server_name}")
+            raise HTTPException(
+                status_code=404, detail=f"Server allocation not found for {server_name}"
+            )
 
         status = await mcp_api._get_server_detailed_status(server_name, allocation, server_config)
         return status
@@ -406,6 +407,7 @@ async def get_server_status(server_name: str) -> Dict[str, Any]:
     except Exception as e:
         logger.error(f"Failed to get server status for {server_name}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.post("/servers/{server_name}/health-check")
 async def trigger_health_check(server_name: str) -> Dict[str, Any]:
@@ -422,7 +424,7 @@ async def trigger_health_check(server_name: str) -> Dict[str, Any]:
             "server_name": server_name,
             "timestamp": datetime.utcnow().isoformat(),
             "health_status": "healthy" if health else "unhealthy",
-            "performance_metrics": metrics
+            "performance_metrics": metrics,
         }
 
     except HTTPException:
@@ -430,6 +432,7 @@ async def trigger_health_check(server_name: str) -> Dict[str, Any]:
     except Exception as e:
         logger.error(f"Failed to check health for {server_name}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.get("/metrics/summary")
 async def get_metrics_summary() -> Dict[str, Any]:
@@ -440,44 +443,48 @@ async def get_metrics_summary() -> Dict[str, Any]:
         shared_metrics = await mcp_api._calculate_domain_metrics(MemoryDomain.SHARED)
 
         total_servers = (
-            artemis_metrics["total_servers"] +
-            sophia_metrics["total_servers"] +
-            shared_metrics["total_servers"]
+            artemis_metrics["total_servers"]
+            + sophia_metrics["total_servers"]
+            + shared_metrics["total_servers"]
         )
 
         operational_servers = (
-            artemis_metrics["operational_servers"] +
-            sophia_metrics["operational_servers"] +
-            shared_metrics["operational_servers"]
+            artemis_metrics["operational_servers"]
+            + sophia_metrics["operational_servers"]
+            + shared_metrics["operational_servers"]
         )
 
         return {
             "timestamp": datetime.utcnow().isoformat(),
-            "overall_health": (operational_servers / total_servers * 100) if total_servers > 0 else 0,
+            "overall_health": (
+                (operational_servers / total_servers * 100) if total_servers > 0 else 0
+            ),
             "domains": {
                 "artemis": artemis_metrics,
                 "sophia": sophia_metrics,
-                "shared": shared_metrics
+                "shared": shared_metrics,
             },
             "totals": {
                 "total_servers": total_servers,
                 "operational_servers": operational_servers,
                 "total_connections": (
-                    artemis_metrics["total_connections"] +
-                    sophia_metrics["total_connections"] +
-                    shared_metrics["total_connections"]
+                    artemis_metrics["total_connections"]
+                    + sophia_metrics["total_connections"]
+                    + shared_metrics["total_connections"]
                 ),
                 "avg_response_time": (
-                    artemis_metrics["avg_response_time"] +
-                    sophia_metrics["avg_response_time"] +
-                    shared_metrics["avg_response_time"]
-                ) / 3,
+                    artemis_metrics["avg_response_time"]
+                    + sophia_metrics["avg_response_time"]
+                    + shared_metrics["avg_response_time"]
+                )
+                / 3,
                 "avg_error_rate": (
-                    artemis_metrics["error_rate"] +
-                    sophia_metrics["error_rate"] +
-                    shared_metrics["error_rate"]
-                ) / 3
-            }
+                    artemis_metrics["error_rate"]
+                    + sophia_metrics["error_rate"]
+                    + shared_metrics["error_rate"]
+                )
+                / 3,
+            },
         }
 
     except Exception as e:

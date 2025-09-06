@@ -14,7 +14,7 @@ LOGS_DIR="${PROJECT_ROOT}/logs"
 
 # Default values
 MODE="development"
-ENVIRONMENT="local" 
+ENVIRONMENT="local"
 AUTO_RECOVERY="true"
 ACTION="start"
 VERBOSE="false"
@@ -35,10 +35,10 @@ log() {
     local message="$*"
     local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
     local log_file="${LOGS_DIR}/startup-manager.log"
-    
+
     # Ensure logs directory exists
     mkdir -p "${LOGS_DIR}"
-    
+
     case $level in
         "INFO")  echo -e "${BLUE}[${timestamp}] INFO: ${message}${NC}" | tee -a "$log_file" ;;
         "SUCCESS") echo -e "${GREEN}[${timestamp}] SUCCESS: ${message}${NC}" | tee -a "$log_file" ;;
@@ -74,7 +74,7 @@ detect_environment() {
 # Configuration loader
 load_config() {
     local config_file="${CONFIG_DIR}/startup-${ENVIRONMENT}.yaml"
-    
+
     if [[ -f "$config_file" ]]; then
         log "INFO" "Loading configuration from $config_file"
         # Simple YAML parsing for shell (basic key: value pairs)
@@ -97,9 +97,9 @@ health_check() {
     local service=$1
     local endpoint=$2
     local timeout=${3:-10}
-    
+
     log "DEBUG" "Checking health of $service at $endpoint"
-    
+
     if [[ "$endpoint" == http* ]]; then
         if timeout "$timeout" curl -sf "$endpoint" >/dev/null 2>&1; then
             log "SUCCESS" "$service is healthy"
@@ -113,7 +113,7 @@ health_check() {
         local host_port=${endpoint#tcp://}
         local host=${host_port%:*}
         local port=${host_port#*:}
-        
+
         if timeout "$timeout" bash -c "</dev/tcp/${host}/${port}" 2>/dev/null; then
             log "SUCCESS" "$service is healthy (TCP)"
             return 0
@@ -122,17 +122,17 @@ health_check() {
             return 1
         fi
     fi
-    
+
     return 1
 }
 
 # Dependency checker
 check_dependencies() {
     log "INFO" "Checking system dependencies for $MODE mode"
-    
+
     local required_commands=()
     local missing_commands=()
-    
+
     case "$MODE" in
         "development")
             required_commands=("docker" "docker-compose" "python3" "curl")
@@ -144,7 +144,7 @@ check_dependencies() {
             required_commands=("kubectl" "curl")
             ;;
     esac
-    
+
     for cmd in "${required_commands[@]}"; do
         if ! command -v "$cmd" &> /dev/null; then
             missing_commands+=("$cmd")
@@ -153,12 +153,12 @@ check_dependencies() {
             log "DEBUG" "Found required command: $cmd"
         fi
     done
-    
+
     if [[ ${#missing_commands[@]} -gt 0 ]]; then
         log "ERROR" "Missing dependencies: ${missing_commands[*]}"
         return 1
     fi
-    
+
     log "SUCCESS" "All dependencies are available"
     return 0
 }
@@ -167,7 +167,7 @@ check_dependencies() {
 manage_docker_compose() {
     local action=$1
     local compose_file
-    
+
     case "$ENVIRONMENT" in
         "local"|"development")
             compose_file="docker-compose.yml"
@@ -182,25 +182,25 @@ manage_docker_compose() {
             compose_file="docker-compose.yml"
             ;;
     esac
-    
+
     local full_compose_path="${PROJECT_ROOT}/${compose_file}"
-    
+
     if [[ ! -f "$full_compose_path" ]]; then
         log "ERROR" "Docker Compose file not found: $full_compose_path"
         return 1
     fi
-    
+
     cd "$PROJECT_ROOT"
-    
+
     case "$action" in
         "start")
             log "INFO" "Starting services with $compose_file"
             docker-compose -f "$compose_file" up -d --remove-orphans
-            
+
             # Wait for services to be ready
             log "INFO" "Waiting for services to be ready..."
             sleep 30
-            
+
             # Health check critical services
             local services=("redis:redis://localhost:6380" "weaviate:http://localhost:8081/v1/.well-known/ready")
             for service_endpoint in "${services[@]}"; do
@@ -227,12 +227,12 @@ manage_docker_compose() {
 manage_kubernetes() {
     local action=$1
     local namespace="${SOPHIA_NAMESPACE:-sophia-intel-ai}"
-    
+
     case "$action" in
         "start")
             log "INFO" "Deploying to Kubernetes namespace: $namespace"
             kubectl apply -k "${PROJECT_ROOT}/k8s/overlays/${ENVIRONMENT}"
-            
+
             # Wait for deployments
             log "INFO" "Waiting for deployments to be ready..."
             kubectl wait --for=condition=available --timeout=300s deployment --all -n "$namespace"
@@ -252,12 +252,12 @@ auto_recovery() {
     if [[ "$AUTO_RECOVERY" != "true" ]]; then
         return 0
     fi
-    
+
     log "INFO" "Starting auto-recovery monitoring"
-    
+
     while true; do
         sleep 60  # Check every minute
-        
+
         case "$MODE" in
             "development")
                 # Check if Docker containers are running
@@ -281,16 +281,16 @@ auto_recovery() {
 # Main startup function
 start_services() {
     log "INFO" "Starting Sophia Intel AI in $MODE mode (environment: $ENVIRONMENT)"
-    
+
     # Load configuration
     load_config
-    
+
     # Check dependencies
     if ! check_dependencies; then
         log "ERROR" "Dependency check failed"
         return 1
     fi
-    
+
     # Start services based on mode
     case "$MODE" in
         "development")
@@ -308,9 +308,9 @@ start_services() {
             fi
             ;;
     esac
-    
+
     log "SUCCESS" "Sophia Intel AI started successfully"
-    
+
     # Start auto-recovery in background if enabled
     if [[ "$AUTO_RECOVERY" == "true" ]]; then
         auto_recovery &
@@ -323,7 +323,7 @@ start_services() {
 # Stop services
 stop_services() {
     log "INFO" "Stopping Sophia Intel AI services"
-    
+
     # Stop auto-recovery if running
     if [[ -f "${LOGS_DIR}/recovery.pid" ]]; then
         local recovery_pid=$(cat "${LOGS_DIR}/recovery.pid")
@@ -333,7 +333,7 @@ stop_services() {
             rm -f "${LOGS_DIR}/recovery.pid"
         fi
     fi
-    
+
     # Stop services
     case "$MODE" in
         "development")
@@ -350,14 +350,14 @@ stop_services() {
             fi
             ;;
     esac
-    
+
     log "SUCCESS" "Sophia Intel AI stopped successfully"
 }
 
 # Status check
 check_status() {
     log "INFO" "Checking Sophia Intel AI status"
-    
+
     case "$MODE" in
         "development")
             manage_docker_compose "status"
@@ -372,7 +372,7 @@ check_status() {
 handle_signal() {
     local signal=$1
     log "INFO" "Received signal: $signal"
-    
+
     case "$signal" in
         "TERM"|"INT")
             stop_services

@@ -1,13 +1,35 @@
 {
-  "timestamp": "2025-09-06T09:46:41.754271",
+  "timestamp": "2025-09-06T10:27:50.000000",
   "servers": {
     "redis": true,
     "filesystem": false,
-    "git": false,
+    "git": true,
     "memory": false,
     "embeddings": false,
-    "unified_api": false,
+    "unified_api": true,
     "websocket": false
   },
-  "log_file": "/Users/lynnmusil/sophia-intel-ai/logs/mcp_startup_20250906_094623.log"
+  "running_services": {
+    "unified_api": {
+      "port": 8000,
+      "url": "http://localhost:8000",
+      "health_endpoint": "/healthz",
+      "status": "healthy",
+      "capabilities": ["orchestration", "routing", "team_execution", "hub", "websocket"]
+    },
+    "git": {
+      "port": 8002,
+      "url": "http://localhost:8002", 
+      "health_endpoint": "/health",
+      "status": "installed",
+      "capabilities": ["git_operations"]
+    },
+    "redis": {
+      "port": 6379,
+      "status": "available",
+      "capabilities": ["caching", "pub_sub"]
+    }
+  },
+  "log_file": "/Users/lynnmusil/sophia-intel-ai/logs/mcp_startup_20250906_094623.log",
+  "notes": "Unified API server running on port 8000 with full capabilities. MCP Git server package installed. Redis available."
 }

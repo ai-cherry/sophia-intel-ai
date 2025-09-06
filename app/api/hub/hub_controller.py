@@ -63,9 +63,7 @@ async def get_service_status() -> dict:
     overall = (
         "healthy"
         if healthy_count == total_count
-        else "degraded"
-        if healthy_count > 0
-        else "critical"
+        else "degraded" if healthy_count > 0 else "critical"
     )
 
     return {

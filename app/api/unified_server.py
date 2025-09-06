@@ -40,6 +40,9 @@ from app.api.graph_endpoints import router as graph_router
 from app.api.health import router as health_router
 from app.api.hub.hub_controller import router as hub_router
 from app.api.infrastructure_router import router as infrastructure_router
+
+# from app.factory import router as factory_router  # Has SlackIntegration import issues
+from app.api.mcp.status import router as mcp_status_router
 from app.api.memory.memory_endpoints import router as memory_router
 from app.api.portkey_router_endpoints import router as portkey_router
 from app.api.repository.repo_service import router as repo_router
@@ -55,12 +58,13 @@ from app.api.routers.teams import router as teams_router
 
 # from app.api.routers.voice import router as voice_router  # Requires ELEVENLABS_API_KEY
 from app.api.routes.foundational_knowledge import router as foundational_knowledge_router
+
+# Optimized MCP Router
+from app.api.mcp.unified_mcp_router import router as unified_mcp_router
 from app.api.routes.prompt_library import router as prompt_library_router
 from app.api.routes.redis_health import router as redis_health_router
 from app.api.super_orchestrator_router import router as super_orchestrator_router
 from app.api.unified_gateway import router as unified_gateway_router
-# from app.factory import router as factory_router  # Has SlackIntegration import issues
-from app.api.mcp.status import router as mcp_status_router
 
 # from app.ui.unified.chat_orchestrator import router as orchestrator_router  # Module deleted
 
@@ -107,6 +111,7 @@ app.include_router(
     prompt_library_router
 )  # Prompt Library endpoints - includes /api/v1/prompts prefix
 app.include_router(mcp_status_router)  # MCP server status monitoring
+app.include_router(unified_mcp_router)  # Unified MCP capabilities router
 # app.include_router(memory_api_router, prefix="/api/memory-v2")  # Module has import issues
 
 # Mount static files for UI components

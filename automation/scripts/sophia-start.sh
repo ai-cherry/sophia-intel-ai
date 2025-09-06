@@ -34,7 +34,7 @@ log() {
     shift
     local message="$*"
     local timestamp=$(date '+%H:%M:%S')
-    
+
     case $level in
         "INFO")  echo -e "${BLUE}[${timestamp}] ℹ️  ${message}${NC}" ;;
         "SUCCESS") echo -e "${GREEN}[${timestamp}] ✅ ${message}${NC}" ;;
@@ -91,11 +91,11 @@ detect_environment() {
 # Check system requirements
 check_requirements() {
     log "INFO" "Checking system requirements"
-    
+
     local missing_deps=()
     local platform=$(detect_platform)
     local environment=$(detect_environment)
-    
+
     # Platform-specific requirements
     case "$platform" in
         "macos")
@@ -108,12 +108,12 @@ check_requirements() {
             command -v yum >/dev/null || command -v dnf >/dev/null || missing_deps+=("yum/dnf")
             ;;
     esac
-    
+
     # Common requirements
     command -v docker >/dev/null || missing_deps+=("docker")
     command -v python3 >/dev/null || missing_deps+=("python3")
     command -v curl >/dev/null || missing_deps+=("curl")
-    
+
     # Environment-specific requirements
     case "$environment" in
         "kubernetes")
@@ -123,13 +123,13 @@ check_requirements() {
             command -v docker-compose >/dev/null || docker compose version >/dev/null 2>&1 || missing_deps+=("docker-compose")
             ;;
     esac
-    
+
     if [[ ${#missing_deps[@]} -gt 0 ]]; then
         log "ERROR" "Missing dependencies: ${missing_deps[*]}"
         log "INFO" "Please install missing dependencies and try again"
         return 1
     fi
-    
+
     log "SUCCESS" "All system requirements satisfied"
     return 0
 }
@@ -137,9 +137,9 @@ check_requirements() {
 # Install dependencies automatically
 install_dependencies() {
     local platform=$(detect_platform)
-    
+
     log "INFO" "Installing system dependencies for $platform"
-    
+
     case "$platform" in
         "macos")
             # Install Homebrew if not present
@@ -147,34 +147,34 @@ install_dependencies() {
                 log "INFO" "Installing Homebrew..."
                 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
             fi
-            
+
             # Install required packages
             brew install --quiet docker docker-compose python3 curl || true
             ;;
-            
+
         "linux-debian"|"linux-generic")
             if command -v apt-get >/dev/null; then
                 sudo apt-get update -qq
                 sudo apt-get install -y docker.io docker-compose python3 python3-pip curl
-                
+
                 # Add user to docker group
                 sudo usermod -aG docker "$USER" || true
             fi
             ;;
-            
+
         "linux-rhel")
             if command -v dnf >/dev/null; then
                 sudo dnf install -y docker docker-compose python3 python3-pip curl
             elif command -v yum >/dev/null; then
                 sudo yum install -y docker docker-compose python3 python3-pip curl
             fi
-            
+
             # Start Docker service
             sudo systemctl enable docker
             sudo systemctl start docker
             sudo usermod -aG docker "$USER" || true
             ;;
-            
+
         "linux-alpine")
             sudo apk update
             sudo apk add docker docker-compose python3 py3-pip curl
@@ -183,20 +183,20 @@ install_dependencies() {
             sudo addgroup "$USER" docker || true
             ;;
     esac
-    
+
     log "SUCCESS" "Dependencies installed (may require logout/login for Docker group)"
 }
 
 # Create configuration
 setup_configuration() {
     log "INFO" "Setting up configuration for $ENVIRONMENT environment"
-    
+
     local config_file="${PROJECT_ROOT}/.env.${ENVIRONMENT}"
-    
+
     if [[ ! -f "$config_file" ]] && [[ -f "${PROJECT_ROOT}/.env.template" ]]; then
         log "INFO" "Creating environment configuration from template"
         cp "${PROJECT_ROOT}/.env.template" "$config_file"
-        
+
         # Environment-specific adjustments
         case "$ENVIRONMENT" in
             "development")
@@ -210,10 +210,10 @@ setup_configuration() {
                 rm -f "${config_file}.bak"
                 ;;
         esac
-        
+
         log "WARNING" "Please review and update $config_file with your actual configuration"
     fi
-    
+
     # Create symbolic link for current environment
     if [[ -f "$config_file" ]]; then
         ln -sf ".env.${ENVIRONMENT}" "${PROJECT_ROOT}/.env"
@@ -225,9 +225,9 @@ setup_configuration() {
 start_services() {
     local mode=$1
     local environment=$2
-    
+
     log "HEADER" "Starting Sophia Intel AI ($mode mode, $environment environment)"
-    
+
     case "$mode" in
         "development"|"docker")
             if [[ -f "${PROJECT_ROOT}/docker-compose.enhanced.yml" ]]; then
@@ -238,7 +238,7 @@ start_services() {
                 docker-compose -f "${PROJECT_ROOT}/docker-compose.yml" up -d
             fi
             ;;
-            
+
         "kubernetes")
             if [[ -d "${PROJECT_ROOT}/k8s" ]]; then
                 log "INFO" "Deploying to Kubernetes"
@@ -250,7 +250,7 @@ start_services() {
                 return 1
             fi
             ;;
-            
+
         "helm")
             if [[ -d "${PROJECT_ROOT}/helm/sophia-intel-ai" ]]; then
                 log "INFO" "Deploying with Helm"
@@ -263,7 +263,7 @@ start_services() {
                 return 1
             fi
             ;;
-            
+
         "systemd")
             log "INFO" "Starting with systemd"
             if [[ -f "${AUTOMATION_DIR}/system-services/linux/sophia-intel-ai.service" ]]; then
@@ -276,7 +276,7 @@ start_services() {
                 return 1
             fi
             ;;
-            
+
         "launchd")
             log "INFO" "Starting with launchd"
             if [[ -f "${AUTOMATION_DIR}/system-services/macos/com.sophia.intel.ai.plist" ]]; then
@@ -287,23 +287,23 @@ start_services() {
                 return 1
             fi
             ;;
-            
+
         *)
             log "ERROR" "Unknown startup mode: $mode"
             return 1
             ;;
     esac
-    
+
     log "SUCCESS" "Services started successfully"
 }
 
 # Health check after startup
 verify_startup() {
     log "INFO" "Verifying system startup"
-    
+
     # Wait for services to be ready
     sleep 30
-    
+
     if command -v python3 >/dev/null; then
         log "INFO" "Running comprehensive health check"
         if python3 "${AUTOMATION_DIR}/scripts/health-check.py" --check-only --format=text; then
@@ -323,7 +323,7 @@ verify_startup() {
 show_info() {
     local platform=$(detect_platform)
     local environment=$(detect_environment)
-    
+
     echo -e "${CYAN}"
     echo "════════════════════════════════════════════════════════════════"
     echo "  🧠 SOPHIA INTEL AI - STARTUP SCRIPT"
@@ -348,13 +348,13 @@ USAGE:
 
 COMMANDS:
     start       Start all services (default)
-    stop        Stop all services  
+    stop        Stop all services
     restart     Restart all services
     status      Show service status
     install     Install system dependencies
     config      Setup configuration
     health      Run health check
-    
+
 OPTIONS:
     --mode=MODE             Startup mode (auto|development|kubernetes|helm|systemd|launchd)
     --environment=ENV       Environment (auto|development|staging|production)
@@ -374,7 +374,7 @@ EXAMPLES:
 
 ENVIRONMENT VARIABLES:
     SOPHIA_MODE             Override auto-detected mode
-    SOPHIA_ENVIRONMENT      Override auto-detected environment  
+    SOPHIA_ENVIRONMENT      Override auto-detected environment
     SOPHIA_PROFILE          Configuration profile to use
     SOPHIA_VERBOSE          Enable verbose output (true/false)
 
@@ -385,7 +385,7 @@ EOF
 main() {
     # Parse command line arguments
     local command="start"
-    
+
     while [[ $# -gt 0 ]]; do
         case $1 in
             --mode=*)
@@ -427,19 +427,19 @@ main() {
                 ;;
         esac
     done
-    
+
     # Override with environment variables
     MODE="${SOPHIA_MODE:-$MODE}"
     ENVIRONMENT="${SOPHIA_ENVIRONMENT:-$ENVIRONMENT}"
     PROFILE="${SOPHIA_PROFILE:-$PROFILE}"
     VERBOSE="${SOPHIA_VERBOSE:-$VERBOSE}"
-    
+
     # Auto-detect if needed
     if [[ "$MODE" == "auto" ]]; then
         MODE=$(detect_environment)
         log "DEBUG" "Auto-detected mode: $MODE"
     fi
-    
+
     if [[ "$ENVIRONMENT" == "auto" ]]; then
         ENVIRONMENT="development"
         if [[ -n "${KUBERNETES_SERVICE_HOST:-}" ]]; then
@@ -449,10 +449,10 @@ main() {
         fi
         log "DEBUG" "Auto-detected environment: $ENVIRONMENT"
     fi
-    
+
     # Show system information
     show_info
-    
+
     # Execute command
     case "$command" in
         "start")
@@ -460,13 +460,13 @@ main() {
                 log "INFO" "DRY RUN: Would start services in $MODE mode"
                 exit 0
             fi
-            
+
             check_requirements || [[ "$FORCE" == "true" ]] || exit 1
             setup_configuration
             start_services "$MODE" "$ENVIRONMENT"
             verify_startup
             ;;
-            
+
         "stop")
             log "INFO" "Stopping services"
             case "$MODE" in
@@ -487,13 +487,13 @@ main() {
                     ;;
             esac
             ;;
-            
+
         "restart")
             $0 stop "${@:2}"
             sleep 5
             $0 start "${@:2}"
             ;;
-            
+
         "status")
             log "INFO" "Checking service status"
             case "$MODE" in
@@ -511,19 +511,19 @@ main() {
                     ;;
             esac
             ;;
-            
+
         "install")
             install_dependencies
             ;;
-            
+
         "config")
             setup_configuration
             ;;
-            
+
         "health")
             python3 "${AUTOMATION_DIR}/scripts/health-check.py" --check-only --format=text
             ;;
-            
+
         *)
             log "ERROR" "Unknown command: $command"
             show_usage

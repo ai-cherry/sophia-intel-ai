@@ -2,8 +2,8 @@ global:
   scrape_interval: 15s
   evaluation_interval: 15s
   external_labels:
-    cluster: 'sophia-intel-ai'
-    environment: '${SOPHIA_ENVIRONMENT:-development}'
+    cluster: "sophia-intel-ai"
+    environment: "${SOPHIA_ENVIRONMENT:-development}"
 
 rule_files:
   - "rules/*.yml"
@@ -12,78 +12,78 @@ alerting:
   alertmanagers:
     - static_configs:
         - targets:
-          - alertmanager:9093
+            - alertmanager:9093
 
 scrape_configs:
   # Prometheus itself
-  - job_name: 'prometheus'
+  - job_name: "prometheus"
     static_configs:
-      - targets: ['localhost:9090']
+      - targets: ["localhost:9090"]
     scrape_interval: 30s
-    metrics_path: '/metrics'
-    
+    metrics_path: "/metrics"
+
   # Node Exporter (system metrics)
-  - job_name: 'node-exporter'
+  - job_name: "node-exporter"
     static_configs:
-      - targets: ['node-exporter:9100']
+      - targets: ["node-exporter:9100"]
     scrape_interval: 15s
-    
+
   # Docker containers
-  - job_name: 'docker-daemon'
+  - job_name: "docker-daemon"
     static_configs:
-      - targets: ['host.docker.internal:9323']
+      - targets: ["host.docker.internal:9323"]
     scrape_interval: 30s
-    
+
   # Redis metrics
-  - job_name: 'redis'
+  - job_name: "redis"
     static_configs:
-      - targets: ['redis-exporter:9121']
+      - targets: ["redis-exporter:9121"]
     scrape_interval: 30s
-    
+
   # PostgreSQL metrics
-  - job_name: 'postgres'
+  - job_name: "postgres"
     static_configs:
-      - targets: ['postgres-exporter:9187']
+      - targets: ["postgres-exporter:9187"]
     scrape_interval: 30s
-    
+
   # Weaviate metrics
-  - job_name: 'weaviate'
+  - job_name: "weaviate"
     static_configs:
-      - targets: ['weaviate:2112']
+      - targets: ["weaviate:2112"]
     scrape_interval: 30s
-    metrics_path: '/metrics'
-    
+    metrics_path: "/metrics"
+
   # Sophia Intel AI Services
-  - job_name: 'unified-api'
+  - job_name: "unified-api"
     static_configs:
-      - targets: ['unified-api:8000']
+      - targets: ["unified-api:8000"]
     scrape_interval: 15s
-    metrics_path: '/metrics'
+    metrics_path: "/metrics"
     scrape_timeout: 10s
-    
-  - job_name: 'sophia-orchestrator'
+
+  - job_name: "sophia-orchestrator"
     static_configs:
-      - targets: ['sophia-orchestrator:8000']
+      - targets: ["sophia-orchestrator:8000"]
     scrape_interval: 15s
-    metrics_path: '/metrics'
+    metrics_path: "/metrics"
     scrape_timeout: 10s
-    
-  - job_name: 'artemis-orchestrator'
+
+  - job_name: "artemis-orchestrator"
     static_configs:
-      - targets: ['artemis-orchestrator:8000']
+      - targets: ["artemis-orchestrator:8000"]
     scrape_interval: 15s
-    metrics_path: '/metrics'
+    metrics_path: "/metrics"
     scrape_timeout: 10s
-    
+
   # Health Monitor
-  - job_name: 'health-monitor'
+  - job_name: "health-monitor"
     static_configs:
-      - targets: ['health-monitor:8000']
+      - targets: ["health-monitor:8000"]
     scrape_interval: 30s
-    metrics_path: '/metrics'
-    
+    metrics_path: "/metrics"
+
   # Kubernetes service discovery (if running in K8s)
-  - job_name: 'kubernetes-pods'
+  - job_name: "kubernetes-pods"
     kubernetes_sd_configs:
       - role: pod
         namespaces:
@@ -115,9 +115,9 @@ scrape_configs:
       - source_labels: [__meta_kubernetes_pod_name]
         action: replace
         target_label: kubernetes_pod_name
-        
+
   # Kubernetes services discovery
-  - job_name: 'kubernetes-services'
+  - job_name: "kubernetes-services"
     kubernetes_sd_configs:
       - role: service
         namespaces:

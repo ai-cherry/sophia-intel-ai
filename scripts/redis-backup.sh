@@ -53,25 +53,25 @@ success() {
 # Setup backup directories
 setup_directories() {
     log "Setting up backup directories..."
-    
+
     mkdir -p "$BACKUP_DIR" || error "Failed to create backup directory: $BACKUP_DIR"
     mkdir -p "$(dirname "$LOG_FILE")" || error "Failed to create log directory"
-    
+
     # Set permissions
     chmod 750 "$BACKUP_DIR"
     chmod 644 "$LOG_FILE" 2>/dev/null || touch "$LOG_FILE"
-    
+
     success "Backup directories setup completed"
 }
 
 # Check Redis connectivity
 check_redis() {
     log "Checking Redis connectivity..."
-    
+
     if ! "$REDIS_CLI" ping > /dev/null 2>&1; then
         error "Redis is not responding. Cannot proceed with backup operations."
     fi
-    
+
     success "Redis connectivity confirmed"
 }
 
@@ -87,17 +87,17 @@ create_backup() {
     local timestamp=$(date +'%Y%m%d_%H%M%S')
     local backup_name="redis_backup_${timestamp}"
     local backup_path="$BACKUP_DIR/$backup_name"
-    
+
     log "Starting Redis backup: $backup_name (type: $backup_type)"
-    
+
     # Create backup directory
     mkdir -p "$backup_path"
-    
+
     # Get Redis info before backup
     local redis_info=$(get_redis_info "server")
     local memory_info=$(get_redis_info "memory")
     local keyspace_info=$(get_redis_info "keyspace")
-    
+
     # Save backup metadata
     cat > "$backup_path/backup_metadata.json" << EOF
 {
@@ -115,18 +115,18 @@ EOF
     # Trigger RDB save
     log "Triggering RDB snapshot..."
     "$REDIS_CLI" bgsave > /dev/null
-    
+
     # Wait for background save to complete
     local save_time=0
     while [ "$("$REDIS_CLI" lastsave)" = "$("$REDIS_CLI" lastsave)" ] && [ $save_time -lt 300 ]; do
         sleep 2
         save_time=$((save_time + 2))
     done
-    
+
     if [ $save_time -ge 300 ]; then
         warn "Background save took longer than expected, continuing anyway"
     fi
-    
+
     # Copy RDB file
     if [ -f "$DATA_DIR/sophia-intel-ai.rdb" ]; then
         cp "$DATA_DIR/sophia-intel-ai.rdb" "$backup_path/"
@@ -134,7 +134,7 @@ EOF
     else
         warn "RDB file not found, skipping"
     fi
-    
+
     # Copy AOF file if it exists
     if [ -f "$DATA_DIR/sophia-intel-ai.aof" ]; then
         cp "$DATA_DIR/sophia-intel-ai.aof" "$backup_path/"
@@ -142,7 +142,7 @@ EOF
     else
         log "AOF file not found (may be disabled)"
     fi
-    
+
     # Copy configuration
     if [ -f "$REDIS_CONF" ]; then
         cp "$REDIS_CONF" "$backup_path/redis.conf"
@@ -150,7 +150,7 @@ EOF
     else
         warn "Redis configuration file not found"
     fi
-    
+
     # Export Redis data as text (for easy inspection)
     log "Exporting Redis data as text dump..."
     "$REDIS_CLI" --scan | head -10000 | while read key; do
@@ -173,7 +173,7 @@ EOF
                 ;;
         esac
     done > "$backup_path/data_dump.redis" 2>/dev/null || true
-    
+
     # Get database statistics
     cat > "$backup_path/database_stats.txt" << EOF
 Redis Database Statistics - $(date)
@@ -204,20 +204,20 @@ EOF
         backup_path="${backup_path}.tar.gz"
         success "Backup compressed to ${backup_name}.tar.gz"
     fi
-    
+
     # Calculate backup size
     local backup_size=$(du -h "$backup_path" | cut -f1)
-    
+
     success "Redis backup completed: $backup_name"
     log "Backup size: $backup_size"
     log "Backup location: $backup_path"
-    
+
     # Update backup index
     update_backup_index "$backup_name" "$backup_size" "$backup_type"
-    
+
     # Cleanup old backups
     cleanup_old_backups
-    
+
     echo "$backup_path"
 }
 
@@ -227,10 +227,10 @@ update_backup_index() {
     local backup_size="$2"
     local backup_type="$3"
     local index_file="$BACKUP_DIR/backup_index.txt"
-    
+
     local entry="$(date -Iseconds),$backup_name,$backup_size,$backup_type"
     echo "$entry" >> "$index_file"
-    
+
     # Keep only last 100 entries
     if [ -f "$index_file" ]; then
         tail -n 100 "$index_file" > "${index_file}.tmp"
@@ -242,12 +242,12 @@ update_backup_index() {
 list_backups() {
     log "Available Redis backups:"
     echo "========================="
-    
+
     if [ ! -d "$BACKUP_DIR" ] || [ -z "$(ls -A "$BACKUP_DIR" 2>/dev/null)" ]; then
         echo "No backups found"
         return 0
     fi
-    
+
     # Show backup index if available
     if [ -f "$BACKUP_DIR/backup_index.txt" ]; then
         echo "Date                     | Backup Name              | Size    | Type"
@@ -261,7 +261,7 @@ list_backups() {
             echo "$line"
         done
     fi
-    
+
     echo "========================="
     local total_backups=$(find "$BACKUP_DIR" -name "redis_backup_*" | wc -l)
     log "Total backups: $total_backups"
@@ -271,13 +271,13 @@ list_backups() {
 restore_backup() {
     local backup_name="$1"
     local force="${2:-false}"
-    
+
     if [ -z "$backup_name" ]; then
         error "Backup name is required for restore operation"
     fi
-    
+
     log "Starting Redis restore from backup: $backup_name"
-    
+
     # Find backup file
     local backup_path=""
     if [ -f "$BACKUP_DIR/${backup_name}.tar.gz" ]; then
@@ -287,7 +287,7 @@ restore_backup() {
     else
         error "Backup not found: $backup_name"
     fi
-    
+
     # Confirm restore operation
     if [ "$force" != "true" ]; then
         echo -n "This will overwrite current Redis data. Continue? [y/N]: "
@@ -297,7 +297,7 @@ restore_backup() {
             exit 0
         fi
     fi
-    
+
     # Stop Redis for restore
     log "Stopping Redis for restore..."
     local redis_pid=""
@@ -305,14 +305,14 @@ restore_backup() {
         redis_pid=$(pgrep -f "redis-server")
         kill "$redis_pid" || warn "Failed to stop Redis gracefully"
         sleep 5
-        
+
         # Force kill if still running
         if pgrep -f "redis-server" > /dev/null; then
             pkill -9 -f "redis-server" || true
             sleep 2
         fi
     fi
-    
+
     # Extract compressed backup if needed
     local restore_dir="$backup_path"
     if [[ "$backup_path" == *.tar.gz ]]; then
@@ -321,41 +321,41 @@ restore_backup() {
         mkdir -p "$restore_dir"
         tar -xzf "$backup_path" -C "$restore_dir" --strip-components=1
     fi
-    
+
     # Backup current data
     local current_backup_name="pre_restore_$(date +'%Y%m%d_%H%M%S')"
     log "Creating backup of current data: $current_backup_name"
     mkdir -p "$BACKUP_DIR/$current_backup_name"
-    
+
     if [ -f "$DATA_DIR/sophia-intel-ai.rdb" ]; then
         cp "$DATA_DIR/sophia-intel-ai.rdb" "$BACKUP_DIR/$current_backup_name/"
     fi
     if [ -f "$DATA_DIR/sophia-intel-ai.aof" ]; then
         cp "$DATA_DIR/sophia-intel-ai.aof" "$BACKUP_DIR/$current_backup_name/"
     fi
-    
+
     # Restore data files
     log "Restoring data files..."
-    
+
     if [ -f "$restore_dir/sophia-intel-ai.rdb" ]; then
         cp "$restore_dir/sophia-intel-ai.rdb" "$DATA_DIR/"
         success "RDB file restored"
     fi
-    
+
     if [ -f "$restore_dir/sophia-intel-ai.aof" ]; then
         cp "$restore_dir/sophia-intel-ai.aof" "$DATA_DIR/"
         success "AOF file restored"
     fi
-    
+
     # Set proper permissions
     chown redis:redis "$DATA_DIR"/* 2>/dev/null || true
     chmod 660 "$DATA_DIR"/* 2>/dev/null || true
-    
+
     # Cleanup temporary extraction
     if [[ "$backup_path" == *.tar.gz ]]; then
         rm -rf "$restore_dir"
     fi
-    
+
     success "Redis restore completed from backup: $backup_name"
     log "Current data backed up to: $current_backup_name"
     warn "Please restart Redis to load the restored data"
@@ -364,11 +364,11 @@ restore_backup() {
 # Cleanup old backups
 cleanup_old_backups() {
     log "Cleaning up old backups..."
-    
+
     # Remove backups older than retention period
     find "$BACKUP_DIR" -name "redis_backup_*" -type f -mtime +$BACKUP_RETENTION_DAYS -delete 2>/dev/null || true
     find "$BACKUP_DIR" -name "redis_backup_*" -type d -mtime +$BACKUP_RETENTION_DAYS -exec rm -rf {} \; 2>/dev/null || true
-    
+
     # Keep only the most recent backups if we have too many
     local backup_count=$(find "$BACKUP_DIR" -name "redis_backup_*" | wc -l)
     if [ "$backup_count" -gt "$MAX_BACKUPS" ]; then
@@ -376,20 +376,20 @@ cleanup_old_backups() {
         find "$BACKUP_DIR" -name "redis_backup_*" -printf '%T@ %p\n' | sort -n | head -n "$excess_count" | cut -d' ' -f2- | xargs rm -rf
         log "Removed $excess_count old backups"
     fi
-    
+
     success "Backup cleanup completed"
 }
 
 # Verify backup integrity
 verify_backup() {
     local backup_name="$1"
-    
+
     if [ -z "$backup_name" ]; then
         error "Backup name is required for verification"
     fi
-    
+
     log "Verifying backup integrity: $backup_name"
-    
+
     # Find backup
     local backup_path=""
     if [ -f "$BACKUP_DIR/${backup_name}.tar.gz" ]; then
@@ -399,7 +399,7 @@ verify_backup() {
     else
         error "Backup not found: $backup_name"
     fi
-    
+
     # Verify compressed backup
     if [[ "$backup_path" == *.tar.gz ]]; then
         if tar -tzf "$backup_path" > /dev/null 2>&1; then
@@ -407,13 +407,13 @@ verify_backup() {
         else
             error "Compressed backup archive is corrupted"
         fi
-        
+
         # Extract to temporary location for further verification
         local temp_dir=$(mktemp -d)
         tar -xzf "$backup_path" -C "$temp_dir"
         backup_path="$temp_dir/$(basename "$backup_name")"
     fi
-    
+
     # Verify metadata
     if [ -f "$backup_path/backup_metadata.json" ]; then
         if jq empty "$backup_path/backup_metadata.json" 2>/dev/null; then
@@ -424,7 +424,7 @@ verify_backup() {
     else
         warn "Backup metadata not found"
     fi
-    
+
     # Verify RDB file
     if [ -f "$backup_path/sophia-intel-ai.rdb" ]; then
         if redis-check-rdb "$backup_path/sophia-intel-ai.rdb" 2>/dev/null; then
@@ -435,7 +435,7 @@ verify_backup() {
     else
         warn "RDB file not found in backup"
     fi
-    
+
     # Verify AOF file if present
     if [ -f "$backup_path/sophia-intel-ai.aof" ]; then
         if redis-check-aof "$backup_path/sophia-intel-ai.aof" 2>/dev/null; then
@@ -444,12 +444,12 @@ verify_backup() {
             warn "AOF file validation failed"
         fi
     fi
-    
+
     # Cleanup temporary extraction
     if [[ "$backup_path" == /tmp/* ]]; then
         rm -rf "$(dirname "$backup_path")"
     fi
-    
+
     success "Backup verification completed"
 }
 
@@ -490,10 +490,10 @@ EOF
 # Main execution
 main() {
     local command="${1:-help}"
-    
+
     # Setup logging and directories
     setup_directories
-    
+
     case "$command" in
         backup)
             check_redis

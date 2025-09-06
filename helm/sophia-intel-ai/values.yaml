@@ -7,7 +7,7 @@ global:
   namespace: sophia-intel-ai
   imageRegistry: ""
   imagePullSecrets: []
-  
+
   # Resource quotas
   resourceQuota:
     enabled: true
@@ -24,7 +24,7 @@ app:
   name: sophia-intel-ai
   version: "1.0.0"
   logLevel: INFO
-  
+
   # Auto-scaling configuration
   autoscaling:
     enabled: true
@@ -41,7 +41,7 @@ infrastructure:
     architecture: standalone
     auth:
       enabled: true
-      password: ""  # Will use secret
+      password: "" # Will use secret
     master:
       persistence:
         enabled: true
@@ -58,14 +58,14 @@ infrastructure:
       enabled: true
       serviceMonitor:
         enabled: true
-  
+
   # PostgreSQL configuration
   postgresql:
     enabled: true
     auth:
-      postgresPassword: ""  # Will use secret
+      postgresPassword: "" # Will use secret
       username: sophia
-      password: ""  # Will use secret
+      password: "" # Will use secret
       database: sophia
     primary:
       persistence:
@@ -83,7 +83,7 @@ infrastructure:
       enabled: true
       serviceMonitor:
         enabled: true
-  
+
   # Weaviate vector database
   weaviate:
     enabled: true
@@ -136,7 +136,7 @@ services:
       enabled: true
       minReplicas: 3
       maxReplicas: 10
-  
+
   # Sophia Orchestrator
   sophiaOrchestrator:
     enabled: true
@@ -159,7 +159,7 @@ services:
       enabled: true
       minReplicas: 2
       maxReplicas: 8
-  
+
   # Artemis Orchestrator
   artemisOrchestrator:
     enabled: true
@@ -201,11 +201,11 @@ monitoring:
         enabled: true
         size: 20Gi
         storageClass: ""
-  
+
   # Grafana
   grafana:
     enabled: true
-    adminPassword: ""  # Will use secret
+    adminPassword: "" # Will use secret
     persistence:
       enabled: true
       size: 5Gi
@@ -217,7 +217,7 @@ monitoring:
       limits:
         cpu: 500m
         memory: 512Mi
-    
+
     # Pre-configured dashboards
     dashboards:
       default:
@@ -233,15 +233,15 @@ security:
   # Pod Security Standards
   podSecurityStandards:
     enforced: restricted
-    
+
   # Network policies
   networkPolicies:
     enabled: true
-    
+
   # Service mesh (Istio)
   serviceMesh:
     enabled: false
-    
+
   # TLS configuration
   tls:
     enabled: true
@@ -253,11 +253,11 @@ security:
 storage:
   # Storage class for persistent volumes
   storageClass: ""
-  
+
   # Backup configuration
   backup:
     enabled: true
-    schedule: "0 2 * * *"  # Daily at 2 AM
+    schedule: "0 2 * * *" # Daily at 2 AM
     retention: "30d"
 
 # Ingress configuration
@@ -307,7 +307,7 @@ environments:
         memory: "8Gi"
     autoscaling:
       enabled: false
-  
+
   staging:
     replicaCounts:
       unifiedApi: 2
@@ -323,7 +323,7 @@ environments:
     autoscaling:
       enabled: true
       moderate: true
-  
+
   production:
     replicaCounts:
       unifiedApi: 3

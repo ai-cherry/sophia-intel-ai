@@ -26,12 +26,12 @@ metadata:
   name: sophia-role
   namespace: sophia-intel-ai
 rules:
-- apiGroups: [""]
-  resources: ["pods", "services", "endpoints", "configmaps", "secrets"]
-  verbs: ["get", "list", "watch"]
-- apiGroups: ["apps"]
-  resources: ["deployments", "replicasets"]
-  verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["pods", "services", "endpoints", "configmaps", "secrets"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["apps"]
+    resources: ["deployments", "replicasets"]
+    verbs: ["get", "list", "watch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -39,9 +39,9 @@ metadata:
   name: sophia-role-binding
   namespace: sophia-intel-ai
 subjects:
-- kind: ServiceAccount
-  name: sophia-service-account
-  namespace: sophia-intel-ai
+  - kind: ServiceAccount
+    name: sophia-service-account
+    namespace: sophia-intel-ai
 roleRef:
   kind: Role
   name: sophia-role

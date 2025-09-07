@@ -899,6 +899,9 @@ def build_parser() -> argparse.ArgumentParser:
 
     sp.set_defaults(func=_do_swarm)
 
+    # Return parser after registering core commands
+    return p
+
 
 def main() -> int:
     parser = build_parser()

@@ -24,7 +24,7 @@ def iso(s: str) -> dt.datetime:
         return dt.datetime.min
 
 # Expired: has expires: tag in the past
-res = client.memory_search('collab AND expires:', limit=500)
+res = client.memory_search('collab', limit=500)
 items = (res.get('results') if isinstance(res, dict) else res) or []
 expired = []
 for it in items:

@@ -17,6 +17,7 @@ from app.integrations.connectors.gong_pipeline.gong_brain_training_adapter impor
 from app.integrations.gong_csv_ingestion import GongCSVIngestion
 from app.integrations.linear_client import LinearClient
 from app.integrations.slack_integration import SlackIntegration
+from app.mcp.clients.stdio_client import detect_stdio_mcp
 from app.memory.unified_memory_router import DocChunk, MemoryDomain, get_memory_router
 from app.orchestrators.base_orchestrator import (
     BaseOrchestrator,
@@ -116,6 +117,17 @@ class IntegratedSwarmOrchestrator(BaseOrchestrator):
         # Execution tracking
         self.active_swarms: Dict[str, MicroSwarmCoordinator] = {}
 
+        # Prefer local stdio MCP for memory/FS/git if available
+        try:
+            self.mcp_stdio = detect_stdio_mcp()
+            if self.mcp_stdio:
+                logger.info(
+                    "Stdio MCP detected and will be used for memory/FS/git ops where applicable"
+                )
+        except Exception as e:
+            self.mcp_stdio = None
+            logger.warning(f"Stdio MCP not available: {e}")
+
         logger.info(f"Initialized integrated swarm orchestrator for {domain.value}")
 
     def _initialize_integrations(self):
@@ -202,6 +214,12 @@ class IntegratedSwarmOrchestrator(BaseOrchestrator):
         self.active_swarms[context.execution_id] = coordinator
 
         # Pre-execution integration tasks
+        # Record swarm_type and task in integration context for downstream tagging
+        try:
+            context.integration_context["swarm_type"] = swarm_request.get("type")
+            context.integration_context["task"] = swarm_request.get("content", "")[:200]
+        except Exception:
+            pass
         await self._pre_execution_integration(swarm_request, context)
 
         try:
@@ -312,6 +330,14 @@ class IntegratedSwarmOrchestrator(BaseOrchestrator):
             return self.artemis_factory.create_technical_strategy_swarm()
         elif swarm_type == "full_technical":
             return self.artemis_factory.create_full_technical_swarm()
+        elif swarm_type == "repository_scout":
+            return self.artemis_factory.create_repository_scout_swarm()
+        elif swarm_type == "code_planning":
+            return self.artemis_factory.create_code_planning_swarm()
+        elif swarm_type == "code_review_micro":
+            return self.artemis_factory.create_code_review_micro_swarm()
+        elif swarm_type == "security_micro":
+            return self.artemis_factory.create_security_micro_swarm()
         elif swarm_type == "custom":
             agents = request.get("agents", ["architect", "code_analyst", "quality_engineer"])
             return self.artemis_factory.create_custom_swarm(agents)
@@ -442,10 +468,84 @@ class IntegratedSwarmOrchestrator(BaseOrchestrator):
                 confidence=swarm_result.confidence,
             )
 
-            # Store in memory
+            # Store in memory (Unified router)
             await self.memory.upsert_chunks([chunk], self.domain)
 
             logger.info(f"Stored swarm result in memory: {context.execution_id}")
+
+            # Also store in stdio MCP memory for shared retrieval (Claude/Codex)
+            try:
+                if getattr(self, "mcp_stdio", None):
+                    preview = chunk.content[:6000]
+                    swarm_type = (
+                        context.integration_context.get("swarm_type")
+                        if context.integration_context
+                        else None
+                    )
+                    task_text = (
+                        context.integration_context.get("task")
+                        if context.integration_context
+                        else None
+                    )
+                    base_tags = [
+                        "artemis",
+                        f"domain:{self.domain.value}",
+                        f"swarm:{swarm_type or 'unknown'}",
+                        f"execution:{context.execution_id}",
+                        "completed",
+                    ]
+                    # Final result entry
+                    self.mcp_stdio.memory_add(
+                        topic=f"Swarm Result: {swarm_type or self.domain.value}",
+                        content=preview,
+                        source="artemis.orchestrator",
+                        tags=base_tags,
+                        memory_type="semantic",
+                    )
+                    # Per-role contributions
+                    if swarm_result.agent_contributions:
+                        for role, msgs in swarm_result.agent_contributions.items():
+                            if not msgs:
+                                continue
+                            role_preview = (
+                                msgs[-1].content if hasattr(msgs[-1], "content") else str(msgs[-1])
+                            )[:4000]
+                            self.mcp_stdio.memory_add(
+                                topic=f"Swarm Contribution: {swarm_type or 'unknown'} [{getattr(role, 'value', str(role))}]",
+                                content=role_preview,
+                                source="artemis.orchestrator",
+                                tags=base_tags + [f"role:{getattr(role, 'value', str(role))}"],
+                                memory_type="semantic",
+                            )
+                    # Proposal entry for review-centric swarms
+                    if swarm_type and "review" in str(swarm_type):
+                        import json as _json
+
+                        proposal_entry = {
+                            "proposal_id": f"{context.execution_id}",
+                            "swarm_type": swarm_type,
+                            "findings": "see contributions entries",
+                            "recommendations": swarm_result.final_output[:4000],
+                            "confidence": swarm_result.confidence,
+                            "status": "pending_review",
+                            "files_analyzed": [],
+                        }
+                        self.mcp_stdio.memory_add(
+                            topic=f"Proposal: {swarm_type}",
+                            content=_json.dumps(proposal_entry),
+                            source="artemis.orchestrator",
+                            tags=[
+                                "artemis",
+                                f"swarm:{swarm_type}",
+                                "proposal",
+                                "pending_review",
+                                f"execution:{context.execution_id}",
+                            ],
+                            memory_type="procedural",
+                        )
+                    logger.info("Mirrored swarm result into stdio MCP memory")
+            except Exception as e:
+                logger.warning(f"Failed to mirror result into stdio MCP memory: {e}")
 
         except Exception as e:
             logger.error(f"Failed to store swarm results: {e}")

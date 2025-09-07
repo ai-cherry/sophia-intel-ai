@@ -6,6 +6,7 @@ Base Micro-Swarm Architecture
 import asyncio
 import json
 import logging
+import os
 import uuid
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
@@ -15,6 +16,8 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from app.core.portkey_manager import TaskType, get_portkey_manager
 from app.memory.unified_memory_router import DocChunk, MemoryDomain, get_memory_router
+from app.models.approved_models import is_model_approved
+from app.models.llm_policy import get_llm_policy
 from app.orchestrators.base_orchestrator import BaseOrchestrator, Result, Task
 
 logger = logging.getLogger(__name__)
@@ -133,28 +136,60 @@ class MicroSwarmAgent:
         # Build prompt based on role and message type
         prompt = await self._build_role_prompt(message, context)
 
-        # Route to appropriate model
-        routing = self.portkey.route_request(
-            task_type=self._get_task_type(),
-            estimated_tokens=self.profile.max_tokens,
-            prefer_provider=(
-                self.profile.model_preferences[0] if self.profile.model_preferences else None
-            ),
-        )
-
-        # Execute with model
+        # Build messages
         messages = [
             {"role": "system", "content": prompt},
             {"role": "user", "content": message.content},
         ]
 
         try:
-            response = await self.portkey.execute_with_fallback(
-                task_type=self._get_task_type(),
-                messages=messages,
-                max_tokens=self.profile.max_tokens,
-                temperature=self.profile.temperature,
-            )
+            policy = get_llm_policy()
+            if policy.mode == "manual":
+                # Strict manual mode: allow per-role overrides; fall back to global force vars
+                role_key = self.profile.role.value.upper()  # ANALYST/STRATEGIST/VALIDATOR
+                provider = os.getenv(f"LLM_{role_key}_PROVIDER") or os.getenv("LLM_FORCE_PROVIDER")
+                model = os.getenv(f"LLM_{role_key}_MODEL") or os.getenv("LLM_FORCE_MODEL")
+                if not provider or not model:
+                    raise RuntimeError(
+                        "LLM manual mode active. Set LLM_FORCE_PROVIDER/LLM_FORCE_MODEL or per-role LLM_"
+                        f"{role_key}_PROVIDER / LLM_{role_key}_MODEL to proceed."
+                    )
+                # Enforce central approval list unless explicitly disabled
+                if (
+                    os.getenv("LLM_APPROVAL_STRICT", "true").lower() in {"1", "true", "yes"}
+                ) and not is_model_approved(provider, model):
+                    raise RuntimeError(
+                        f"Model not approved: provider='{provider}', model='{model}'."
+                        " Update app/models/approved_models.py or set LLM_APPROVAL_STRICT=false to override."
+                    )
+                response = await self.portkey.execute_manual(
+                    provider=provider,
+                    model=model,
+                    messages=messages,
+                    max_tokens=self.profile.max_tokens,
+                    temperature=self.profile.temperature,
+                )
+                model_used = f"{provider}/{model}"
+                est_cost = 0.0
+            else:
+                # Auto mode: use routing + fallbacks
+                routing = self.portkey.route_request(
+                    task_type=self._get_task_type(),
+                    estimated_tokens=self.profile.max_tokens,
+                    prefer_provider=(
+                        self.profile.model_preferences[0]
+                        if self.profile.model_preferences
+                        else None
+                    ),
+                )
+                response = await self.portkey.execute_with_fallback(
+                    task_type=self._get_task_type(),
+                    messages=messages,
+                    max_tokens=self.profile.max_tokens,
+                    temperature=self.profile.temperature,
+                )
+                model_used = routing.model
+                est_cost = routing.estimated_cost
 
             # Parse response
             response_content = response.choices[0].message.content
@@ -168,9 +203,9 @@ class MicroSwarmAgent:
                 reasoning=self._extract_reasoning(response_content),
                 thread_id=message.thread_id,
                 metadata={
-                    "model_used": routing.model,
+                    "model_used": model_used,
                     "tokens_used": getattr(response, "usage", {}).get("total_tokens", 0),
-                    "cost": routing.estimated_cost,
+                    "cost": est_cost,
                 },
             )
 

@@ -585,6 +585,232 @@ class ArtemisSwarmFactory:
 
         return MicroSwarmCoordinator(config)
 
+    @staticmethod
+    def create_repository_scout_swarm() -> MicroSwarmCoordinator:
+        """Repository Scout Swarm
+
+        Three-agent parallel swarm tailored to scan repositories, tag/code patterns,
+        analyze integrations, and propose scalability improvements.
+
+        Roles:
+        - ANALYST ("Tag Hunter"): tags/embeds code patterns, identifies hotspots
+          Preferred model: qwen/qwen3-coder (via OpenRouter)
+        - STRATEGIST ("Integration Stalker"): deep integration analysis with massive context
+          Preferred model: openrouter/sonoma-sky-alpha (via OpenRouter)
+        - VALIDATOR ("Scale Assassin"): synthesizes improvements and validates feasibility
+          Preferred model: deepseek/deepseek-chat-v3-0324 (via OpenRouter)
+        """
+
+        analyst = AgentProfile(
+            role=AgentRole.ANALYST,
+            name="Tag Hunter",
+            description="Extracts and tags repository patterns, hotspots, and architecture idioms.",
+            model_preferences=["qwen/qwen3-coder"],
+            specializations=["code_tagging", "pattern_detection", "hotspot_analysis"],
+            reasoning_style="Systematic tagging with lightweight code pattern recognition and repository heatmaps.",
+            confidence_threshold=0.80,
+            max_tokens=6000,
+            temperature=0.1,
+        )
+
+        strategist = AgentProfile(
+            role=AgentRole.STRATEGIST,
+            name="Integration Stalker",
+            description="Performs deep integration analysis using massive context and parallel insights.",
+            model_preferences=["openrouter/sonoma-sky-alpha"],
+            specializations=["integration_analysis", "mcp_wiring", "tool_parallelism"],
+            reasoning_style="Broad-context reasoning across repo subsystems; integration-first approach.",
+            confidence_threshold=0.88,
+            max_tokens=2000000,  # documentation-only; execution enforces env
+            temperature=0.1,
+        )
+
+        validator = AgentProfile(
+            role=AgentRole.VALIDATOR,
+            name="Scale Assassin",
+            description="Synthesizes scalable improvements, validates safety and feasibility.",
+            model_preferences=["deepseek/deepseek-chat-v3-0324"],
+            specializations=["scalability", "synthesis", "feasibility_validation"],
+            reasoning_style="Concise synthesis with risk checks and measurable outcomes.",
+            confidence_threshold=0.9,
+            max_tokens=8000,
+            temperature=0.05,
+        )
+
+        config = SwarmConfig(
+            name="Artemis Repository Scout Swarm",
+            domain=MemoryDomain.ARTEMIS,
+            coordination_pattern=CoordinationPattern.PARALLEL,
+            agents=[analyst, strategist, validator],
+            max_iterations=1,
+            consensus_threshold=0.85,
+            timeout_seconds=240,
+            enable_memory_integration=True,
+            enable_debate=False,
+            cost_limit_usd=3.0,
+        )
+
+        return MicroSwarmCoordinator(config)
+
+    @staticmethod
+    def create_code_planning_swarm() -> MicroSwarmCoordinator:
+        """Code Planning Micro-Swarm (3-role)"""
+        analyst = AgentProfile(
+            role=AgentRole.ANALYST,
+            name="Planning Analyst",
+            description="Maps impacted modules, dependencies, risks, and prerequisites.",
+            model_preferences=["qwen/qwen3-coder"],
+            specializations=["module_mapping", "risk_analysis", "dependency_graph"],
+            reasoning_style="Methodical inventory and impact assessment.",
+            confidence_threshold=0.8,
+            max_tokens=6000,
+            temperature=0.1,
+        )
+
+        strategist = AgentProfile(
+            role=AgentRole.STRATEGIST,
+            name="Planning Leader",
+            description="Produces plan-of-attack, milestones, and sequencing.",
+            model_preferences=["qwen/qwen3-30b-a3b-thinking-2507"],
+            specializations=["planning", "milestones", "sequencing"],
+            reasoning_style="Structured planning with tradeoff analysis.",
+            confidence_threshold=0.88,
+            max_tokens=24000,
+            temperature=0.1,
+        )
+
+        validator = AgentProfile(
+            role=AgentRole.VALIDATOR,
+            name="Plan Validator",
+            description="Validates feasibility, risks, and success criteria.",
+            model_preferences=["deepseek/deepseek-chat-v3-0324"],
+            specializations=["feasibility", "constraints", "success_criteria"],
+            reasoning_style="Concise validation with guardrails.",
+            confidence_threshold=0.9,
+            max_tokens=8000,
+            temperature=0.05,
+        )
+
+        config = SwarmConfig(
+            name="Artemis Code Planning Swarm",
+            domain=MemoryDomain.ARTEMIS,
+            coordination_pattern=CoordinationPattern.SEQUENTIAL,
+            agents=[analyst, strategist, validator],
+            max_iterations=1,
+            consensus_threshold=0.85,
+            timeout_seconds=240,
+            enable_memory_integration=True,
+            enable_debate=False,
+            cost_limit_usd=3.0,
+        )
+        return MicroSwarmCoordinator(config)
+
+    @staticmethod
+    def create_code_review_micro_swarm() -> MicroSwarmCoordinator:
+        """Code Review Micro-Swarm using approved models"""
+        analyst = AgentProfile(
+            role=AgentRole.ANALYST,
+            name="Review Analyst",
+            description="Performs deep code review across maintainability, performance, and bugs.",
+            model_preferences=["qwen/qwen3-max"],
+            specializations=["code_review", "maintainability", "bug_hunting"],
+            reasoning_style="Thorough code inspection with evidence.",
+            confidence_threshold=0.86,
+            max_tokens=10000,
+            temperature=0.05,
+        )
+
+        strategist = AgentProfile(
+            role=AgentRole.STRATEGIST,
+            name="Review Leader",
+            description="Synthesizes findings, prioritizes fixes, and proposes minimal diffs.",
+            model_preferences=["openrouter/sonoma-sky-alpha"],
+            specializations=["synthesis", "prioritization", "minimal_diffs"],
+            reasoning_style="Large-context synthesis over diff surfaces.",
+            confidence_threshold=0.88,
+            max_tokens=2000000,
+            temperature=0.1,
+        )
+
+        validator = AgentProfile(
+            role=AgentRole.VALIDATOR,
+            name="Review Validator",
+            description="Validates proposals and ensures safety; suggests targeted tests.",
+            model_preferences=["deepseek/deepseek-chat-v3-0324"],
+            specializations=["safety", "test_recs"],
+            reasoning_style="Conservative validation with test-first mindset.",
+            confidence_threshold=0.9,
+            max_tokens=8000,
+            temperature=0.05,
+        )
+
+        config = SwarmConfig(
+            name="Artemis Code Review Micro-Swarm",
+            domain=MemoryDomain.ARTEMIS,
+            coordination_pattern=CoordinationPattern.PARALLEL,
+            agents=[analyst, strategist, validator],
+            max_iterations=1,
+            consensus_threshold=0.86,
+            timeout_seconds=240,
+            enable_memory_integration=True,
+            enable_debate=False,
+            cost_limit_usd=3.0,
+        )
+        return MicroSwarmCoordinator(config)
+
+    @staticmethod
+    def create_security_micro_swarm() -> MicroSwarmCoordinator:
+        """Security Micro-Swarm using approved models"""
+        analyst = AgentProfile(
+            role=AgentRole.ANALYST,
+            name="Security Analyst",
+            description="Threat mapping and vulnerability identification (static/dynamic hints).",
+            model_preferences=["x-ai/grok-code-fast-1"],
+            specializations=["threat_model", "vuln_scan", "secrets"],
+            reasoning_style="Fast scanning with high-signal findings.",
+            confidence_threshold=0.85,
+            max_tokens=8000,
+            temperature=0.05,
+        )
+
+        strategist = AgentProfile(
+            role=AgentRole.STRATEGIST,
+            name="Security Leader",
+            description="Synthesizes risk posture across repo; guides remediation priorities.",
+            model_preferences=["openrouter/sonoma-sky-alpha"],
+            specializations=["risk_posture", "remediation_plan"],
+            reasoning_style="Large-context security synthesis.",
+            confidence_threshold=0.9,
+            max_tokens=2000000,
+            temperature=0.1,
+        )
+
+        validator = AgentProfile(
+            role=AgentRole.VALIDATOR,
+            name="Security Validator",
+            description="Validates mitigations and proposes compensating controls.",
+            model_preferences=["deepseek/deepseek-chat-v3-0324"],
+            specializations=["mitigations", "controls"],
+            reasoning_style="Pragmatic validation with defense-in-depth.",
+            confidence_threshold=0.92,
+            max_tokens=8000,
+            temperature=0.05,
+        )
+
+        config = SwarmConfig(
+            name="Artemis Security Micro-Swarm",
+            domain=MemoryDomain.ARTEMIS,
+            coordination_pattern=CoordinationPattern.SEQUENTIAL,
+            agents=[analyst, strategist, validator],
+            max_iterations=1,
+            consensus_threshold=0.9,
+            timeout_seconds=240,
+            enable_memory_integration=True,
+            enable_debate=False,
+            cost_limit_usd=3.0,
+        )
+        return MicroSwarmCoordinator(config)
+
 
 # Agent registry for easy access
 TECHNICAL_AGENTS = {
@@ -602,4 +828,8 @@ ARTEMIS_SWARMS = {
     "technical_strategy": ArtemisSwarmFactory.create_technical_strategy_swarm,
     "security_assessment": ArtemisSwarmFactory.create_security_assessment_swarm,
     "full_technical": ArtemisSwarmFactory.create_full_technical_swarm,
+    "repository_scout": ArtemisSwarmFactory.create_repository_scout_swarm,
+    "code_planning": ArtemisSwarmFactory.create_code_planning_swarm,
+    "code_review_micro": ArtemisSwarmFactory.create_code_review_micro_swarm,
+    "security_micro": ArtemisSwarmFactory.create_security_micro_swarm,
 }

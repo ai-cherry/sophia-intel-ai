@@ -922,10 +922,6 @@ def main() -> int:
         parser.print_help()
         return 1
     return int(args.func(args))
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())
     # collab merge-check
     sp = collab_sub.add_parser(
         "merge-check", help="Check if a proposal is merge-ready and emit Apply task if so"
@@ -1482,5 +1478,10 @@ if __name__ == "__main__":
         return 0
 
     sp.set_defaults(func=_do_collab_dashboard)
-
+    
+    # Return the parser (this should be inside build_parser function)
     return p
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

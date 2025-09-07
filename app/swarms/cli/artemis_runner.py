@@ -535,7 +535,7 @@ def build_parser() -> argparse.ArgumentParser:
             print(_json.dumps(err, indent=2))
             return 2
         files = proposal.get("files", [])
-        tests = proposal.get("tests", [])
+        tests = proposal.get("tests", []) or ["pytest -q -m smoke"]
         version = str(proposal.get("version", "1.0"))
         changed: list[dict] = []
         backups: list[dict] = []
@@ -906,8 +906,13 @@ def build_parser() -> argparse.ArgumentParser:
 
     sp.set_defaults(func=_do_swarm)
 
-    # Return parser after registering core commands
-    return p
+    # collab merge-check
+    sp = collab_sub.add_parser(
+        "merge-check", help="Check if a proposal is merge-ready and emit Apply task if so"
+    )
+    sp.add_argument("--proposal", required=True, dest="pid")
+    sp.add_argument("--json", action="store_true", help="JSON output")
+    sp.set_defaults(func=_do_collab_merge_check)
 
 
 def main() -> int:
@@ -1477,3 +1482,5 @@ if __name__ == "__main__":
         return 0
 
     sp.set_defaults(func=_do_collab_dashboard)
+
+    return p

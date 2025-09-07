@@ -107,6 +107,21 @@ test: ## Run all tests
 	@cd $(FRONTEND_DIR) && [ -f package.json ] && $(NPM) test --passWithNoTests || true
 	@echo "$(GREEN)✅ Tests completed$(RESET)"
 
+.PHONY: test-smoke
+test-smoke: ## Run fast smoke tests (pytest -m smoke)
+	@echo "$(BLUE)🧪 Running smoke tests...$(RESET)"
+	@$(PYTHON) -m pytest -q -m smoke || (echo "$(YELLOW)⚠️  No smoke tests or failures; ensure @pytest.mark.smoke exists$(RESET)" && exit 1)
+
+.PHONY: collab-approve
+collab-approve: ## Approve a collab proposal: make collab-approve ID=<proposal> AGENT=codex CONF=0.85
+	@if [ -z "$(ID)" ]; then echo "$(YELLOW)Usage: make collab-approve ID=<proposal> [AGENT=claude|codex] [CONF=0.9]$(RESET)"; exit 1; fi
+	@AGENT=$${AGENT:-codex} CONF=$${CONF:-0.85} ./bin/artemis-run collab approve --proposal $(ID) --agent $${AGENT} --confidence $${CONF}
+
+.PHONY: collab-apply
+collab-apply: ## Apply a collab proposal with auto-push: make collab-apply ID=<proposal> [FORCE=1]
+	@if [ -z "$(ID)" ]; then echo "$(YELLOW)Usage: make collab-apply ID=<proposal> [FORCE=1]$(RESET)"; exit 1; fi
+	@FLAGS="--git-push"; [ "$(FORCE)" = "1" ] && FLAGS="$$FLAGS --force"; ./bin/artemis-run collab apply --proposal $(ID) $$FLAGS
+
 .PHONY: test-api
 test-api: ## Test API endpoints
 	@echo "$(BLUE)🧪 Testing API endpoints...$(RESET)"

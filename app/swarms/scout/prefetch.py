@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import asyncio
+import os
 from pathlib import Path
 from typing import Any, List
 
@@ -16,14 +18,34 @@ async def prefetch_and_index(
     - Generates lightweight DocChunks and upserts to L2 (Weaviate) if available
     - Falls back to storing a brief summary in L1 if vectors unavailable
     """
+    if os.getenv("SCOUT_PREFETCH_ENABLED", "true").lower() in {"0", "false", "no"}:
+        return {"ok": True, "skipped": True, "reason": "SCOUT_PREFETCH_ENABLED=false"}
+
+    try:
+        max_files = int(os.getenv("SCOUT_PREFETCH_MAX_FILES", str(max_files)))
+    except Exception:
+        pass
+    try:
+        max_bytes_per_file = int(os.getenv("SCOUT_PREFETCH_MAX_BYTES", str(max_bytes_per_file)))
+    except Exception:
+        pass
+
     client = StdioMCPClient(Path.cwd())
     router = get_memory_router()
 
-    listing = client.repo_index(root=repo_root, max_bytes_per_file=max_bytes_per_file)
+    listing = await asyncio.to_thread(
+        client.repo_index, root=repo_root, max_bytes_per_file=max_bytes_per_file
+    )
     files: List[str] = []
     for it in (listing.get("files") if isinstance(listing, dict) else []) or []:
         p = it.get("path")
-        if p and p.endswith((".py", ".md", ".ts", ".tsx")) and "/node_modules/" not in p:
+        if not p:
+            continue
+        if "/node_modules/" in p or any(
+            p.endswith(ext) for ext in (".png", ".jpg", ".jpeg", ".gif", ".pdf")
+        ):
+            continue
+        if p.endswith((".py", ".md", ".ts", ".tsx")):
             files.append(p)
         if len(files) >= max_files:
             break
@@ -31,7 +53,7 @@ async def prefetch_and_index(
     chunks: List[DocChunk] = []
     for p in files:
         try:
-            fr = client.fs_read(p, max_bytes=max_bytes_per_file)
+            fr = await asyncio.to_thread(client.fs_read, p, max_bytes=max_bytes_per_file)
             content = fr.get("content", "") if isinstance(fr, dict) else str(fr)
             if not content:
                 continue
@@ -49,13 +71,21 @@ async def prefetch_and_index(
 
     try:
         report = await router.upsert_chunks(chunks, MemoryDomain.ARTEMIS)
-        return {"ok": True, "upserted": report.chunks_stored, "processed": report.chunks_processed}
+        return {
+            "ok": True,
+            "upserted": report.chunks_stored,
+            "processed": report.chunks_processed,
+            "files_considered": len(files),
+        }
     except Exception as e:
-        client.memory_add(
-            topic="scout_prefetch_summary",
-            content=f"Prefetched {len(chunks)} files for context.",
-            source="artemis-run",
-            tags=["scout", "prefetch", "fallback"],
-            memory_type="semantic",
-        )
+        try:
+            client.memory_add(
+                topic="scout_prefetch_summary",
+                content=f"Prefetched {len(chunks)} files for context.",
+                source="artemis-run",
+                tags=["scout", "prefetch", "fallback"],
+                memory_type="semantic",
+            )
+        except Exception:
+            pass
         return {"ok": False, "error": str(e), "fallback": True, "files": len(chunks)}

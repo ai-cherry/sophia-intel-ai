@@ -124,6 +124,13 @@ class MicroSwarmAgent:
         self.message_history: list[SwarmMessage] = []
         self.portkey = get_portkey_manager()
         self.memory = get_memory_router()
+        # Tool usage counters (per-iteration best-effort)
+        self._tool_usage: dict[str, int] = {}
+        self._tool_usage_total: int = 0
+
+    def reset_tool_usage(self) -> None:
+        self._tool_usage.clear()
+        self._tool_usage_total = 0
 
     async def process_message(self, message: SwarmMessage, context: dict[str, Any]) -> SwarmMessage:
         """Process incoming message and generate response"""
@@ -213,6 +220,15 @@ class MicroSwarmAgent:
                 },
             )
 
+            # Tool affordance: bounded REQUEST_FS_READ handling (max 2 per agent)
+            try:
+                augmented = await self._maybe_handle_fs_read(response_msg.content)
+                if augmented is not None:
+                    response_msg.content = augmented
+            except Exception:
+                # Tool errors should never break agent flow
+                pass
+
             return response_msg
 
         except Exception as e:
@@ -226,7 +242,7 @@ class MicroSwarmAgent:
             )
 
     async def _build_role_prompt(self, message: SwarmMessage, context: dict[str, Any]) -> str:
-        """Build role-specific prompt"""
+        """Build role-specific prompt (with Scout overlays when applicable)"""
 
         base_prompt = f"""You are {self.profile.name}, a {self.profile.role.value} in a micro-swarm AI system.
 
@@ -238,6 +254,29 @@ You are part of a collaborative system working on: {context.get('original_task',
 
 Current coordination pattern: {context.get('coordination_pattern', 'Unknown')}
 """
+
+        # Scout overlays (schema + role-specific guidance)
+        try:
+            swarm_name = str(context.get("swarm_name", ""))
+            if "Scout" in swarm_name:
+                from app.swarms.scout.prompts import (
+                    ANALYST_OVERLAY,
+                    SCOUT_OUTPUT_SCHEMA,
+                    STRATEGIST_OVERLAY,
+                    VALIDATOR_OVERLAY,
+                )
+
+                base_prompt += f"\nOutput schema (follow strictly):\n{SCOUT_OUTPUT_SCHEMA}\n"
+                role = self.profile.role
+                if role == AgentRole.ANALYST:
+                    base_prompt += f"\nOverlay:\n{ANALYST_OVERLAY}\n"
+                elif role == AgentRole.STRATEGIST:
+                    base_prompt += f"\nOverlay:\n{STRATEGIST_OVERLAY}\n"
+                elif role == AgentRole.VALIDATOR:
+                    base_prompt += f"\nOverlay:\n{VALIDATOR_OVERLAY}\n"
+        except Exception:
+            # Overlay addition should never break prompts
+            pass
 
         # Add message history context
         if self.message_history:
@@ -411,6 +450,15 @@ class MicroSwarmCoordinator:
             execution_time = (datetime.now() - start_time).total_seconds() * 1000
             result.execution_time_ms = execution_time
 
+            # Post-execution validations (e.g., Scout output schema)
+            try:
+                if "Scout" in self.config.name:
+                    missing = self._validate_scout_output(result.final_output)
+                    if missing:
+                        result.metadata["schema_missing_sections"] = missing
+            except Exception:
+                pass
+
             # Store results in memory
             if self.config.enable_memory_integration and result.success:
                 await self._store_swarm_results(task, result)
@@ -422,6 +470,82 @@ class MicroSwarmCoordinator:
             result.errors.append(str(e))
 
         return result
+
+    async def _maybe_handle_fs_read(self, text: str) -> str | None:
+        """Parse and handle REQUEST_FS_READ:<path>[:<max_bytes>]. Returns augmented text or None.
+
+        Safety limits:
+        - Max 2 tool calls per agent per coordinator iteration
+        - Path must be relative, no parent traversal, and within repo
+        - Default max_bytes=50000 (50KB); cap at 100KB
+        """
+        if not text or "REQUEST_FS_READ:" not in text:
+            return None
+        # Enforce per-agent usage limit
+        key = f"{self.swarm_id}:{self.profile.role.value}"
+        used = self._tool_usage.get(key, 0)
+        if used >= 2:
+            return None
+
+        import os
+        from pathlib import Path as _Path
+
+        from app.mcp.clients.stdio_client import detect_stdio_mcp
+
+        line = next(
+            (l for l in text.splitlines() if l.strip().startswith("REQUEST_FS_READ:")), None
+        )
+        if not line:
+            return None
+        try:
+            parts = line.strip().split(":", 2)
+            payload = parts[2] if len(parts) > 2 else ""
+            segs = payload.split(":")
+            raw_path = segs[0].strip()
+            max_bytes = 50_000
+            if len(segs) > 1:
+                try:
+                    max_bytes = min(int(segs[1]), 100_000)
+                except Exception:
+                    max_bytes = 50_000
+            # Normalize and validate path
+            norm = os.path.normpath(raw_path)
+            if os.path.isabs(norm) or norm.startswith(".."):
+                return None
+            # Read via stdio MCP (non-blocking call wrapped sync by server; safe to call directly)
+            mcp = detect_stdio_mcp(_Path.cwd())
+            if not mcp:
+                return None
+            fr = mcp.fs_read(norm, max_bytes=max_bytes)
+            content = fr.get("content", "") if isinstance(fr, dict) else str(fr)
+            # Augment original text with a file snippet
+            snippet = content if len(content) <= max_bytes else content[:max_bytes]
+            augmented = text + f"\n\nFILE_SNIPPET({norm}):\n" + snippet
+            self._tool_usage[key] = used + 1
+            self._tool_usage_total += 1
+            return augmented
+        except Exception:
+            return None
+
+    def _validate_scout_output(self, text: str) -> list[str]:
+        """Validate that required sections are present in Scout outputs.
+
+        Returns list of missing section names (empty if all present).
+        """
+        required = [
+            "FINDINGS:",
+            "INTEGRATIONS:",
+            "RISKS:",
+            "RECOMMENDATIONS:",
+            "METRICS:",
+            "CONFIDENCE:",
+        ]
+        upper = (text or "").upper()
+        missing: list[str] = []
+        for sec in required:
+            if sec not in upper:
+                missing.append(sec.strip(":").title())
+        return missing
 
     async def _execute_sequential(
         self, task: str, context: dict[str, Any], thread_id: str

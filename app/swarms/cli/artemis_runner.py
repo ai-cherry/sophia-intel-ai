@@ -760,8 +760,20 @@ def build_parser() -> argparse.ArgumentParser:
         "--task",
         default="Scout this repository: map integrations, hotspots, and propose improvements.",
     )
+    sp.add_argument("--check", action="store_true", help="Run scout readiness checks and exit")
 
     def _do_scout(args):
+        # Readiness check shortcut that avoids LLM imports
+        if getattr(args, "check", False):
+            import subprocess
+
+            proc = subprocess.run(
+                ["python3", "scripts/scout_readiness_check.py"],
+                capture_output=True,
+                text=True,
+            )
+            print(proc.stdout.strip() or proc.stderr.strip())
+            return 0 if proc.returncode == 0 else proc.returncode
         # This path requires network + LLM env; we provide a friendly message if not set
         try:
             from app.swarms.core.swarm_integration import get_artemis_orchestrator

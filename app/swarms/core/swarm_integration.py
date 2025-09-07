@@ -365,7 +365,27 @@ class IntegratedSwarmOrchestrator(BaseOrchestrator):
         elif swarm_type == "full_technical":
             return self.artemis_factory.create_full_technical_swarm()
         elif swarm_type == "repository_scout":
-            return self.artemis_factory.create_repository_scout_swarm()
+            coord = self.artemis_factory.create_repository_scout_swarm()
+            # Fire-and-forget prefetch to prime memory context for scouts
+            try:
+                import asyncio
+
+                from app.swarms.scout.delta_index import delta_index
+                from app.swarms.scout.prefetch import prefetch_and_index
+
+                # Limit: 10 files x 50KB each (~500KB total)
+                loop = asyncio.get_event_loop()
+                loop.create_task(
+                    prefetch_and_index(repo_root=".", max_files=10, max_bytes_per_file=50_000)
+                )
+                # Also schedule delta indexing (feature-flagged)
+                loop.create_task(
+                    delta_index(repo_root=".", max_total_bytes=500_000, max_bytes_per_file=50_000)
+                )
+            except Exception:
+                # Non-blocking: ignore any prefetch scheduling errors
+                pass
+            return coord
         elif swarm_type == "code_planning":
             return self.artemis_factory.create_code_planning_swarm()
         elif swarm_type == "code_review_micro":

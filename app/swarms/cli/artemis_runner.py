@@ -909,7 +909,9 @@ def build_parser() -> argparse.ArgumentParser:
     # collab merge-check (nested helpers to ensure availability at parse time)
     def _load_merge_threshold(default: float = 0.8) -> float:
         from pathlib import Path
+
         import yaml
+
         candidates = [
             Path("app/collaboration/collaboration_protocol.yaml"),
             Path("collaboration_protocol.yaml"),
@@ -960,6 +962,7 @@ def build_parser() -> argparse.ArgumentParser:
         if ready:
             # Emit apply task for codex
             import uuid
+
             apply_task_id = str(uuid.uuid4())
             tags = [
                 "collab",
@@ -997,6 +1000,8 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--proposal", required=True, dest="pid")
     sp.add_argument("--json", action="store_true", help="JSON output")
     sp.set_defaults(func=_do_collab_merge_check)
+
+    return p
 
 
 def main() -> int:
@@ -1468,9 +1473,6 @@ def main() -> int:
         return 0
 
     sp.set_defaults(func=_do_collab_dashboard)
-    
-    # Return the parser (this should be inside build_parser function)
-    return p
 
 
 if __name__ == "__main__":

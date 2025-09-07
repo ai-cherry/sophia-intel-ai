@@ -6,18 +6,17 @@ Real health checks for all system components
 import asyncio
 import logging
 import time
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import psutil
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from app.core.config import settings
 from app.core.resource_manager import get_resource_manager
-from app.models.orchestration_models import ConnectionMetrics, SystemHealth, SystemStatus
-from app.security.auth_middleware import get_current_user, verify_admin_access
+from app.models.orchestration_models import ConnectionMetrics, SystemStatus
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +39,7 @@ class ComponentHealth(BaseModel):
     status: HealthComponentStatus
     response_time_ms: Optional[float] = None
     last_check: datetime
-    details: Dict[str, Any] = Field(default_factory=dict)
+    details: dict[str, Any] = Field(default_factory=dict)
     error_message: Optional[str] = None
 
 
@@ -52,10 +51,10 @@ class DetailedHealthResponse(BaseModel):
     version: str = "2.1.0"
     environment: str
     timestamp: datetime = Field(default_factory=datetime.now)
-    components: Dict[str, ComponentHealth]
-    system_metrics: Dict[str, Any]
+    components: dict[str, ComponentHealth]
+    system_metrics: dict[str, Any]
     connection_metrics: ConnectionMetrics
-    alerts: List[Dict[str, Any]] = Field(default_factory=list)
+    alerts: list[dict[str, Any]] = Field(default_factory=list)
 
 
 class HealthMonitor:
@@ -73,7 +72,7 @@ class HealthMonitor:
             "error_rate_percent": 5.0,
         }
 
-    async def get_system_health(self, detailed: bool = False) -> Dict[str, Any]:
+    async def get_system_health(self, detailed: bool = False) -> dict[str, Any]:
         """Get overall system health status"""
         # Check cache first
         cache_key = f"system_health_{detailed}"
@@ -382,7 +381,7 @@ class HealthMonitor:
             test_request = {"type": "query", "query_type": "metrics", "content": "health check"}
 
             start_time = time.time()
-            result = await orchestrator.process_request(test_request)
+            await orchestrator.process_request(test_request)
             response_time = (time.time() - start_time) * 1000
 
             status = HealthComponentStatus.HEALTHY
@@ -525,7 +524,7 @@ class HealthMonitor:
                 error_message=str(e),
             )
 
-    async def _get_system_metrics(self) -> Dict[str, Any]:
+    async def _get_system_metrics(self) -> dict[str, Any]:
         """Get comprehensive system metrics"""
         try:
             memory = psutil.virtual_memory()
@@ -582,8 +581,8 @@ class HealthMonitor:
             return ConnectionMetrics()
 
     def _generate_alerts(
-        self, components: Dict[str, ComponentHealth], metrics: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
+        self, components: dict[str, ComponentHealth], metrics: dict[str, Any]
+    ) -> list[dict[str, Any]]:
         """Generate alerts based on thresholds"""
         alerts = []
 

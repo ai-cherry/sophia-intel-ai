@@ -6,8 +6,7 @@ from __future__ import annotations
 
 import json
 import os
-from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from app.core.ai_logger import logger
 from app.core.circuit_breaker import with_circuit_breaker
@@ -19,7 +18,6 @@ from app.knowledge.models import (
     KnowledgeVersion,
     PayReadyContext,
     SyncConflict,
-    SyncOperation,
 )
 from app.knowledge.storage_adapter import StorageAdapter
 from app.knowledge.versioning_engine import VersioningEngine
@@ -119,7 +117,7 @@ class FoundationalKnowledgeManager:
         return created
 
     @with_circuit_breaker("database")
-    async def get(self, knowledge_id: str) -> Optional[KnowledgeEntity]:
+    async def get(self, knowledge_id: str) -> KnowledgeEntity | None:
         """Get knowledge entity by ID, with cache check"""
         # Check cache first
         cached = await self._get_cached(knowledge_id)
@@ -175,7 +173,7 @@ class FoundationalKnowledgeManager:
 
     # ========== Search and Retrieval ==========
 
-    async def list_foundational(self, limit: int = 100) -> List[KnowledgeEntity]:
+    async def list_foundational(self, limit: int = 100) -> list[KnowledgeEntity]:
         """List all foundational knowledge entries"""
         return await self.storage.list_knowledge(
             classification=KnowledgeClassification.FOUNDATIONAL.value,
@@ -183,7 +181,7 @@ class FoundationalKnowledgeManager:
             limit=limit,
         )
 
-    async def search(self, query: str, include_operational: bool = False) -> List[KnowledgeEntity]:
+    async def search(self, query: str, include_operational: bool = False) -> list[KnowledgeEntity]:
         """Search knowledge with optional operational data inclusion"""
         results = await self.storage.search_knowledge(query)
 
@@ -201,11 +199,11 @@ class FoundationalKnowledgeManager:
 
         return results
 
-    async def get_by_category(self, category: str) -> List[KnowledgeEntity]:
+    async def get_by_category(self, category: str) -> list[KnowledgeEntity]:
         """Get all knowledge in a category"""
         return await self.storage.list_knowledge(category=category)
 
-    async def get_pay_ready_context(self) -> Dict[str, Any]:
+    async def get_pay_ready_context(self) -> dict[str, Any]:
         """
         Get comprehensive Pay-Ready context including all foundational knowledge
         """
@@ -236,7 +234,7 @@ class FoundationalKnowledgeManager:
 
     # ========== Version Management ==========
 
-    async def get_version_history(self, knowledge_id: str) -> List[KnowledgeVersion]:
+    async def get_version_history(self, knowledge_id: str) -> list[KnowledgeVersion]:
         """Get version history for knowledge entity"""
         return await self.versioning.get_history(knowledge_id)
 
@@ -251,7 +249,7 @@ class FoundationalKnowledgeManager:
         logger.info(f"Rolled back {knowledge_id} to version {version_number}")
         return entity
 
-    async def compare_versions(self, knowledge_id: str, v1: int, v2: int) -> Dict[str, Any]:
+    async def compare_versions(self, knowledge_id: str, v1: int, v2: int) -> dict[str, Any]:
         """Compare two versions of knowledge"""
         return await self.versioning.compare(knowledge_id, v1, v2)
 
@@ -292,7 +290,7 @@ class FoundationalKnowledgeManager:
             value = json.dumps(entity.dict())
             self.cache.setex(key, 3600, value)  # 1 hour TTL
 
-    async def _get_cached(self, knowledge_id: str) -> Optional[KnowledgeEntity]:
+    async def _get_cached(self, knowledge_id: str) -> KnowledgeEntity | None:
         """Get entity from cache"""
         if isinstance(self.cache, dict):
             # In-memory cache
@@ -328,7 +326,7 @@ class FoundationalKnowledgeManager:
 
     # ========== Statistics ==========
 
-    async def get_statistics(self) -> Dict[str, Any]:
+    async def get_statistics(self) -> dict[str, Any]:
         """Get knowledge base statistics"""
         all_knowledge = await self.storage.list_knowledge(limit=1000)
 

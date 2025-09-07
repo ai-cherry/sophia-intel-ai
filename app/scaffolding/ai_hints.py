@@ -11,7 +11,7 @@ import logging
 import re
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Optional
 
 from .meta_tagging import Complexity, MetaTag, SemanticRole
 from .semantic_classifier import SemanticClassifier
@@ -55,20 +55,20 @@ class AIHint:
 
     # Context information
     file_path: str = ""
-    line_range: Tuple[int, int] = (0, 0)
+    line_range: tuple[int, int] = (0, 0)
     component_name: str = ""
 
     # Implementation details
     estimated_effort: str = "medium"  # low, medium, high
-    prerequisites: List[str] = field(default_factory=list)
+    prerequisites: list[str] = field(default_factory=list)
     risk_level: str = "moderate"  # low, moderate, high
 
     # Metadata
     confidence: float = 0.0
-    tags: Set[str] = field(default_factory=set)
-    related_patterns: List[str] = field(default_factory=list)
+    tags: set[str] = field(default_factory=set)
+    related_patterns: list[str] = field(default_factory=list)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary representation."""
         return {
             "hint_type": self.hint_type.value,
@@ -89,7 +89,7 @@ class AIHint:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "AIHint":
+    def from_dict(cls, data: dict[str, Any]) -> "AIHint":
         """Create AIHint from dictionary."""
         data["hint_type"] = HintType(data["hint_type"])
         data["severity"] = Severity(data["severity"])
@@ -108,7 +108,7 @@ class PatternAnalyzer:
         self.performance_patterns = self._init_performance_patterns()
         self.test_patterns = self._init_test_patterns()
 
-    def _init_optimization_patterns(self) -> Dict[str, Tuple[re.Pattern, str, Severity]]:
+    def _init_optimization_patterns(self) -> dict[str, tuple[re.Pattern, str, Severity]]:
         """Initialize optimization opportunity patterns."""
         return {
             "todo_fixme": (
@@ -148,7 +148,7 @@ class PatternAnalyzer:
             ),
         }
 
-    def _init_refactoring_patterns(self) -> Dict[str, Tuple[re.Pattern, str, Severity]]:
+    def _init_refactoring_patterns(self) -> dict[str, tuple[re.Pattern, str, Severity]]:
         """Initialize refactoring opportunity patterns."""
         return {
             "long_methods": (
@@ -185,7 +185,7 @@ class PatternAnalyzer:
             ),
         }
 
-    def _init_security_patterns(self) -> Dict[str, Tuple[re.Pattern, str, Severity]]:
+    def _init_security_patterns(self) -> dict[str, tuple[re.Pattern, str, Severity]]:
         """Initialize security concern patterns."""
         return {
             "sql_injection": (
@@ -227,7 +227,7 @@ class PatternAnalyzer:
             ),
         }
 
-    def _init_performance_patterns(self) -> Dict[str, Tuple[re.Pattern, str, Severity]]:
+    def _init_performance_patterns(self) -> dict[str, tuple[re.Pattern, str, Severity]]:
         """Initialize performance issue patterns."""
         return {
             "n_plus_one": (
@@ -265,7 +265,7 @@ class PatternAnalyzer:
             ),
         }
 
-    def _init_test_patterns(self) -> Dict[str, Tuple[re.Pattern, str, Severity]]:
+    def _init_test_patterns(self) -> dict[str, tuple[re.Pattern, str, Severity]]:
         """Initialize test requirement patterns."""
         return {
             "missing_tests": (
@@ -300,7 +300,7 @@ class PatternAnalyzer:
             ),
         }
 
-    def analyze_patterns(self, content: str, file_path: str) -> List[AIHint]:
+    def analyze_patterns(self, content: str, file_path: str) -> list[AIHint]:
         """Analyze content for all pattern types."""
         hints = []
 
@@ -333,9 +333,9 @@ class PatternAnalyzer:
         self,
         content: str,
         file_path: str,
-        patterns: Dict[str, Tuple[re.Pattern, str, Severity]],
+        patterns: dict[str, tuple[re.Pattern, str, Severity]],
         hint_type: HintType,
-    ) -> List[AIHint]:
+    ) -> list[AIHint]:
         """Analyze content for a specific category of patterns."""
         hints = []
 
@@ -373,7 +373,7 @@ class PatternAnalyzer:
 
     def _generate_hint_details(
         self, pattern_name: str, count: int, hint_type: HintType
-    ) -> Tuple[str, str]:
+    ) -> tuple[str, str]:
         """Generate specific title and action for a pattern match."""
 
         actions = {
@@ -438,7 +438,7 @@ class RiskAssessmentEngine:
             "testing": 0.3,
         }
 
-    def _init_risk_factors(self) -> Dict[str, Tuple[re.Pattern, float, str]]:
+    def _init_risk_factors(self) -> dict[str, tuple[re.Pattern, float, str]]:
         """Initialize risk factor patterns with weights and descriptions."""
         return {
             "global_state_mutation": (
@@ -495,7 +495,7 @@ class RiskAssessmentEngine:
             ),
         }
 
-    def assess_modification_risk(self, content: str, meta_tag: MetaTag) -> List[AIHint]:
+    def assess_modification_risk(self, content: str, meta_tag: MetaTag) -> list[AIHint]:
         """Assess modification risk and generate relevant hints."""
         hints = []
         risk_score = 0.0
@@ -569,7 +569,7 @@ class RiskAssessmentEngine:
             return Severity.LOW
 
     def _generate_risk_mitigation_action(
-        self, risks: List[Tuple[str, str]], severity: Severity
+        self, risks: list[tuple[str, str]], severity: Severity
     ) -> str:
         """Generate specific risk mitigation actions."""
         actions = []
@@ -601,7 +601,7 @@ class OptimizationDetector:
         """Initialize optimization detection rules."""
         self.optimization_rules = self._init_optimization_rules()
 
-    def _init_optimization_rules(self) -> Dict[str, Any]:
+    def _init_optimization_rules(self) -> dict[str, Any]:
         """Initialize optimization detection rules."""
         return {
             "caching_opportunities": {
@@ -645,7 +645,7 @@ class OptimizationDetector:
             },
         }
 
-    def detect_optimizations(self, content: str, meta_tag: MetaTag) -> List[AIHint]:
+    def detect_optimizations(self, content: str, meta_tag: MetaTag) -> list[AIHint]:
         """Detect optimization opportunities."""
         hints = []
 
@@ -711,7 +711,7 @@ class TestRequirementAnalyzer:
         """Initialize test analysis rules."""
         self.test_rules = self._init_test_rules()
 
-    def _init_test_rules(self) -> Dict[str, Any]:
+    def _init_test_rules(self) -> dict[str, Any]:
         """Initialize test requirement rules."""
         return {
             "edge_case_testing": {
@@ -766,7 +766,7 @@ class TestRequirementAnalyzer:
             },
         }
 
-    def analyze_test_requirements(self, content: str, meta_tag: MetaTag) -> List[AIHint]:
+    def analyze_test_requirements(self, content: str, meta_tag: MetaTag) -> list[AIHint]:
         """Analyze test requirements for the component."""
         hints = []
 
@@ -833,7 +833,7 @@ class AIHintsPipeline:
         self.test_analyzer = TestRequirementAnalyzer()
         self.classifier = SemanticClassifier()
 
-    async def generate_hints(self, content: str, meta_tag: MetaTag) -> List[AIHint]:
+    async def generate_hints(self, content: str, meta_tag: MetaTag) -> list[AIHint]:
         """Generate comprehensive AI hints for a component."""
         hints = []
 
@@ -872,7 +872,7 @@ class AIHintsPipeline:
 
         return hints
 
-    async def _generate_architecture_hints(self, content: str, meta_tag: MetaTag) -> List[AIHint]:
+    async def _generate_architecture_hints(self, content: str, meta_tag: MetaTag) -> list[AIHint]:
         """Generate architecture-level improvement hints."""
         hints = []
 
@@ -918,7 +918,7 @@ class AIHintsPipeline:
 
         return hints
 
-    def _generate_documentation_hints(self, content: str, meta_tag: MetaTag) -> List[AIHint]:
+    def _generate_documentation_hints(self, content: str, meta_tag: MetaTag) -> list[AIHint]:
         """Generate documentation improvement hints."""
         hints = []
 
@@ -970,11 +970,11 @@ class AIHintsPipeline:
 
     def filter_hints(
         self,
-        hints: List[AIHint],
+        hints: list[AIHint],
         min_severity: Severity = Severity.LOW,
         min_confidence: float = 0.3,
         max_hints: Optional[int] = None,
-    ) -> List[AIHint]:
+    ) -> list[AIHint]:
         """Filter and prioritize hints based on criteria."""
 
         # Filter by severity and confidence
@@ -993,7 +993,7 @@ class AIHintsPipeline:
 
         return filtered_hints
 
-    def generate_summary_report(self, hints: List[AIHint]) -> Dict[str, Any]:
+    def generate_summary_report(self, hints: list[AIHint]) -> dict[str, Any]:
         """Generate a summary report of all hints."""
 
         # Group hints by type and severity
@@ -1030,7 +1030,7 @@ class AIHintsPipeline:
             "top_recommendations": [hint.to_dict() for hint in hints[:5]],
         }
 
-    def _estimate_total_effort(self, hints: List[AIHint]) -> str:
+    def _estimate_total_effort(self, hints: list[AIHint]) -> str:
         """Estimate total effort required to address all hints."""
         effort_mapping = {"low": 1, "medium": 3, "high": 8}
         total_points = sum(effort_mapping.get(hint.estimated_effort, 3) for hint in hints)
@@ -1044,13 +1044,13 @@ class AIHintsPipeline:
 
 
 # Utility functions for external use
-async def generate_ai_hints(content: str, meta_tag: MetaTag) -> List[AIHint]:
+async def generate_ai_hints(content: str, meta_tag: MetaTag) -> list[AIHint]:
     """Generate AI hints for a component."""
     pipeline = AIHintsPipeline()
     return await pipeline.generate_hints(content, meta_tag)
 
 
-def quick_pattern_analysis(content: str, file_path: str) -> List[AIHint]:
+def quick_pattern_analysis(content: str, file_path: str) -> list[AIHint]:
     """Quick pattern-based analysis for immediate insights."""
     analyzer = PatternAnalyzer()
     return analyzer.analyze_patterns(content, file_path)

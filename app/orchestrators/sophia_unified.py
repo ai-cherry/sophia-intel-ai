@@ -8,7 +8,7 @@ import json
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from app.core.portkey_manager import TaskType as PortkeyTaskType
 from app.knowledge.foundational_manager import FoundationalKnowledgeManager
@@ -31,24 +31,24 @@ class BusinessContext:
 
     industry: str
     company_size: str
-    key_metrics: List[str]
+    key_metrics: list[str]
     fiscal_year_start: str
     currency: str = "USD"
     time_zone: str = "America/Los_Angeles"
-    compliance_requirements: List[str] = field(default_factory=list)
+    compliance_requirements: list[str] = field(default_factory=list)
 
     # Enhanced fields
     market_segment: Optional[str] = None
     business_model: Optional[str] = None
-    revenue_streams: List[str] = field(default_factory=list)
-    customer_segments: List[str] = field(default_factory=list)
-    competitive_landscape: List[str] = field(default_factory=list)
+    revenue_streams: list[str] = field(default_factory=list)
+    customer_segments: list[str] = field(default_factory=list)
+    competitive_landscape: list[str] = field(default_factory=list)
 
     # Pay Ready specific context
-    pay_ready_context: Optional[Dict[str, Any]] = field(default_factory=dict)
+    pay_ready_context: Optional[dict[str, Any]] = field(default_factory=dict)
     company_mission: Optional[str] = None
-    key_differentiators: List[str] = field(default_factory=list)
-    strategic_priorities: List[str] = field(default_factory=list)
+    key_differentiators: list[str] = field(default_factory=list)
+    strategic_priorities: list[str] = field(default_factory=list)
     market_position: Optional[str] = None
 
 
@@ -60,9 +60,9 @@ class BusinessInsight:
     description: str
     impact_level: str  # "high", "medium", "low"
     confidence: float
-    supporting_data: List[Dict[str, Any]]
-    recommendations: List[str]
-    affected_metrics: List[str]
+    supporting_data: list[dict[str, Any]]
+    recommendations: list[str]
+    affected_metrics: list[str]
     time_horizon: str  # "immediate", "short_term", "long_term"
     category: str  # "opportunity", "risk", "trend", "anomaly"
 
@@ -72,20 +72,20 @@ class BusinessReport:
     """Comprehensive business intelligence report"""
 
     executive_summary: str
-    key_insights: List[BusinessInsight]
-    recommendations: List[Dict[str, Any]]
-    risks: List[Dict[str, Any]]
-    opportunities: List[Dict[str, Any]]
-    supporting_data: List[Dict[str, Any]]
+    key_insights: list[BusinessInsight]
+    recommendations: list[dict[str, Any]]
+    risks: list[dict[str, Any]]
+    opportunities: list[dict[str, Any]]
+    supporting_data: list[dict[str, Any]]
     confidence_level: float
-    data_sources: List[str]
+    data_sources: list[str]
     generated_at: datetime = field(default_factory=datetime.now)
 
     # Enhanced fields
-    trend_analysis: Dict[str, Any] = field(default_factory=dict)
-    competitive_analysis: Dict[str, Any] = field(default_factory=dict)
-    market_intelligence: Dict[str, Any] = field(default_factory=dict)
-    forecast_data: Dict[str, Any] = field(default_factory=dict)
+    trend_analysis: dict[str, Any] = field(default_factory=dict)
+    competitive_analysis: dict[str, Any] = field(default_factory=dict)
+    market_intelligence: dict[str, Any] = field(default_factory=dict)
+    forecast_data: dict[str, Any] = field(default_factory=dict)
 
 
 class SemanticBusinessLayer:
@@ -98,7 +98,7 @@ class SemanticBusinessLayer:
         self.business_ontology = self._initialize_business_ontology()
         self.query_patterns = self._initialize_query_patterns()
 
-    def _initialize_business_ontology(self) -> Dict[str, Any]:
+    def _initialize_business_ontology(self) -> dict[str, Any]:
         """Initialize business domain ontology"""
         return {
             "entities": {
@@ -121,7 +121,7 @@ class SemanticBusinessLayer:
             },
         }
 
-    def _initialize_query_patterns(self) -> Dict[str, Dict[str, Any]]:
+    def _initialize_query_patterns(self) -> dict[str, dict[str, Any]]:
         """Initialize common business query patterns"""
         return {
             "performance_analysis": {
@@ -156,7 +156,7 @@ class SemanticBusinessLayer:
             },
         }
 
-    async def parse_business_query(self, query: str) -> Dict[str, Any]:
+    async def parse_business_query(self, query: str) -> dict[str, Any]:
         """Parse and understand business query intent"""
         query_lower = query.lower()
 
@@ -210,7 +210,7 @@ class DataGatheringEngine:
         self.connector_priorities = self._initialize_connector_priorities()
         self.data_fusion_rules = self._initialize_data_fusion_rules()
 
-    def _initialize_connector_priorities(self) -> Dict[str, int]:
+    def _initialize_connector_priorities(self) -> dict[str, int]:
         """Initialize connector priority levels"""
         return {
             "salesforce": 1,  # Primary CRM
@@ -223,7 +223,7 @@ class DataGatheringEngine:
             "airtable": 8,  # Custom databases
         }
 
-    def _initialize_data_fusion_rules(self) -> Dict[str, Dict[str, Any]]:
+    def _initialize_data_fusion_rules(self) -> dict[str, dict[str, Any]]:
         """Initialize rules for data fusion and conflict resolution"""
         return {
             "customer_data": {
@@ -247,8 +247,8 @@ class DataGatheringEngine:
         }
 
     async def gather_business_data(
-        self, query_analysis: Dict[str, Any], task: UnifiedTask
-    ) -> Dict[str, Any]:
+        self, query_analysis: dict[str, Any], task: UnifiedTask
+    ) -> dict[str, Any]:
         """Gather data from multiple sources based on query analysis"""
         required_sources = query_analysis.get("required_data_sources", ["all_sources"])
 
@@ -286,7 +286,7 @@ class DataGatheringEngine:
             "source_metadata": self._generate_source_metadata(raw_data),
         }
 
-    def _map_data_sources_to_connectors(self, data_sources: List[str]) -> List[str]:
+    def _map_data_sources_to_connectors(self, data_sources: list[str]) -> list[str]:
         """Map abstract data source requirements to actual connectors"""
         mapping = {
             "sales": ["salesforce", "hubspot", "gong"],
@@ -308,8 +308,8 @@ class DataGatheringEngine:
         return list(connectors)
 
     async def _fetch_connector_data(
-        self, connector_name: str, query_analysis: Dict[str, Any], task: UnifiedTask
-    ) -> Dict[str, Any]:
+        self, connector_name: str, query_analysis: dict[str, Any], task: UnifiedTask
+    ) -> dict[str, Any]:
         """Fetch data from a specific connector with query context"""
         # This would integrate with actual connectors
         # For now, return structured mock data
@@ -325,7 +325,7 @@ class DataGatheringEngine:
             },
         }
 
-    async def _fuse_data(self, raw_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def _fuse_data(self, raw_data: dict[str, Any]) -> dict[str, Any]:
         """Apply data fusion rules to combine data from multiple sources"""
         fused = {}
 
@@ -347,7 +347,7 @@ class DataGatheringEngine:
 
         return fused
 
-    def _merge_data_records(self, primary: Dict, secondary: Dict, resolution_strategy: str) -> Dict:
+    def _merge_data_records(self, primary: dict, secondary: dict, resolution_strategy: str) -> dict:
         """Merge data records according to resolution strategy"""
         merged = primary.copy()
 
@@ -368,7 +368,7 @@ class DataGatheringEngine:
 
         return merged
 
-    def _calculate_data_quality(self, fused_data: Dict[str, Any]) -> Dict[str, float]:
+    def _calculate_data_quality(self, fused_data: dict[str, Any]) -> dict[str, float]:
         """Calculate quality scores for fused data"""
         quality_scores = {}
 
@@ -384,7 +384,7 @@ class DataGatheringEngine:
 
         return quality_scores
 
-    def _generate_source_metadata(self, raw_data: Dict[str, Any]) -> Dict[str, Any]:
+    def _generate_source_metadata(self, raw_data: dict[str, Any]) -> dict[str, Any]:
         """Generate metadata about data sources used"""
         return {
             "sources_used": list(raw_data.keys()),
@@ -410,7 +410,7 @@ class InsightGenerationEngine:
         self.insight_templates = self._initialize_insight_templates()
         self.pattern_detectors = self._initialize_pattern_detectors()
 
-    def _initialize_insight_templates(self) -> Dict[str, Dict[str, Any]]:
+    def _initialize_insight_templates(self) -> dict[str, dict[str, Any]]:
         """Initialize insight generation templates"""
         return {
             "trend_insight": {
@@ -430,7 +430,7 @@ class InsightGenerationEngine:
             },
         }
 
-    def _initialize_pattern_detectors(self) -> Dict[str, Any]:
+    def _initialize_pattern_detectors(self) -> dict[str, Any]:
         """Initialize pattern detection algorithms"""
         return {
             "trend_detection": {
@@ -451,8 +451,8 @@ class InsightGenerationEngine:
         }
 
     async def generate_insights(
-        self, business_data: Dict[str, Any], query_analysis: Dict[str, Any]
-    ) -> List[BusinessInsight]:
+        self, business_data: dict[str, Any], query_analysis: dict[str, Any]
+    ) -> list[BusinessInsight]:
         """Generate business insights from fused data"""
         insights = []
 
@@ -473,7 +473,7 @@ class InsightGenerationEngine:
 
         return ranked_insights[:10]  # Return top 10 insights
 
-    async def _detect_trends(self, data: Dict[str, Any]) -> List[BusinessInsight]:
+    async def _detect_trends(self, data: dict[str, Any]) -> list[BusinessInsight]:
         """Detect trends in business data"""
         trends = []
 
@@ -499,7 +499,7 @@ class InsightGenerationEngine:
 
         return trends
 
-    async def _detect_anomalies(self, data: Dict[str, Any]) -> List[BusinessInsight]:
+    async def _detect_anomalies(self, data: dict[str, Any]) -> list[BusinessInsight]:
         """Detect anomalies in business data"""
         anomalies = []
 
@@ -522,7 +522,7 @@ class InsightGenerationEngine:
 
         return anomalies
 
-    async def _identify_opportunities(self, data: Dict[str, Any]) -> List[BusinessInsight]:
+    async def _identify_opportunities(self, data: dict[str, Any]) -> list[BusinessInsight]:
         """Identify business opportunities"""
         opportunities = []
 
@@ -542,7 +542,7 @@ class InsightGenerationEngine:
 
         return opportunities
 
-    async def _assess_risks(self, data: Dict[str, Any]) -> List[BusinessInsight]:
+    async def _assess_risks(self, data: dict[str, Any]) -> list[BusinessInsight]:
         """Assess business risks"""
         risks = []
 
@@ -562,7 +562,7 @@ class InsightGenerationEngine:
 
         return risks
 
-    async def _analyze_correlations(self, data: Dict[str, Any]) -> List[BusinessInsight]:
+    async def _analyze_correlations(self, data: dict[str, Any]) -> list[BusinessInsight]:
         """Analyze correlations between metrics"""
         correlations = []
 
@@ -594,10 +594,10 @@ class InsightGenerationEngine:
 
     def _filter_insights(
         self,
-        insights: List[BusinessInsight],
-        query_analysis: Dict[str, Any],
-        quality_scores: Dict[str, float],
-    ) -> List[BusinessInsight]:
+        insights: list[BusinessInsight],
+        query_analysis: dict[str, Any],
+        quality_scores: dict[str, float],
+    ) -> list[BusinessInsight]:
         """Filter insights based on relevance and data quality"""
         filtered = []
 
@@ -616,7 +616,7 @@ class InsightGenerationEngine:
 
         return filtered
 
-    def _rank_insights(self, insights: List[BusinessInsight]) -> List[BusinessInsight]:
+    def _rank_insights(self, insights: list[BusinessInsight]) -> list[BusinessInsight]:
         """Rank insights by importance and relevance"""
         impact_weights = {"high": 3, "medium": 2, "low": 1}
 
@@ -771,7 +771,7 @@ class SophiaUnifiedOrchestrator(UnifiedBaseOrchestrator):
             logger.error(f"Failed to integrate Pay Ready context: {e}")
             logger.info("Continuing with default business context")
 
-    async def _get_cached_pay_ready_context(self) -> Dict[str, Any]:
+    async def _get_cached_pay_ready_context(self) -> dict[str, Any]:
         """Get Pay Ready context with caching for performance optimization and robust fallback"""
         current_time = datetime.now().timestamp()
 
@@ -821,7 +821,7 @@ class SophiaUnifiedOrchestrator(UnifiedBaseOrchestrator):
         self._cache_timestamp = None
         self._integrate_pay_ready_context()
 
-    def _get_embedded_pay_ready_fallback(self) -> Dict[str, Any]:
+    def _get_embedded_pay_ready_fallback(self) -> dict[str, Any]:
         """Get embedded Pay Ready context as ultimate fallback when all other methods fail"""
         return {
             "company": "Pay Ready",
@@ -991,8 +991,8 @@ class SophiaUnifiedOrchestrator(UnifiedBaseOrchestrator):
         return result
 
     async def _enrich_with_persona_context(
-        self, task: UnifiedTask, business_data: Dict[str, Any], insights: List[BusinessInsight]
-    ) -> Dict[str, Any]:
+        self, task: UnifiedTask, business_data: dict[str, Any], insights: list[BusinessInsight]
+    ) -> dict[str, Any]:
         """Enrich context with persona-specific information"""
         context = {
             "business_data": business_data,
@@ -1032,12 +1032,12 @@ class SophiaUnifiedOrchestrator(UnifiedBaseOrchestrator):
         return context
 
     def _prepare_semantic_messages(
-        self, task: UnifiedTask, query_analysis: Dict[str, Any], context: Dict[str, Any]
-    ) -> List[Dict[str, str]]:
+        self, task: UnifiedTask, query_analysis: dict[str, Any], context: dict[str, Any]
+    ) -> list[dict[str, str]]:
         """Prepare messages for LLM with semantic business understanding"""
 
         # Determine persona to use
-        persona_name = task.metadata.get("selected_persona", "smart")
+        task.metadata.get("selected_persona", "smart")
 
         pay_ready_context_section = ""
         if self.business_context.pay_ready_context:
@@ -1168,7 +1168,7 @@ Format the response as a structured business report suitable for Pay Ready's exe
             {"role": "user", "content": user_prompt},
         ]
 
-    def _format_data_summary(self, business_data: Dict[str, Any]) -> str:
+    def _format_data_summary(self, business_data: dict[str, Any]) -> str:
         """Format business data for LLM consumption"""
         summary_lines = []
 
@@ -1185,7 +1185,7 @@ Format the response as a structured business report suitable for Pay Ready's exe
 
         return "\n".join(summary_lines) if summary_lines else "No data sources available"
 
-    def _format_insights_summary(self, insights: List[BusinessInsight]) -> str:
+    def _format_insights_summary(self, insights: list[BusinessInsight]) -> str:
         """Format insights for LLM consumption"""
         if not insights:
             return "No insights generated"
@@ -1200,8 +1200,8 @@ Format the response as a structured business report suitable for Pay Ready's exe
         return "\n".join(summary_lines)
 
     async def _process_business_response(
-        self, response: Any, task: UnifiedTask, query_analysis: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, response: Any, task: UnifiedTask, query_analysis: dict[str, Any]
+    ) -> dict[str, Any]:
         """Process LLM response with business intelligence context"""
         content = (
             response.choices[0].message.content if hasattr(response, "choices") else str(response)
@@ -1223,9 +1223,9 @@ Format the response as a structured business report suitable for Pay Ready's exe
 
     async def _generate_business_report(
         self,
-        processed: Dict[str, Any],
-        insights: List[BusinessInsight],
-        business_data: Dict[str, Any],
+        processed: dict[str, Any],
+        insights: list[BusinessInsight],
+        business_data: dict[str, Any],
     ) -> BusinessReport:
         """Generate comprehensive business report"""
 
@@ -1275,7 +1275,7 @@ Format the response as a structured business report suitable for Pay Ready's exe
             forecast_data=self._extract_forecast_data(processed),
         )
 
-    def _extract_structured_analysis(self, content: str) -> Dict[str, Any]:
+    def _extract_structured_analysis(self, content: str) -> dict[str, Any]:
         """Extract structured analysis from LLM response"""
         # Simple extraction - would be more sophisticated in production
         return {
@@ -1284,7 +1284,7 @@ Format the response as a structured business report suitable for Pay Ready's exe
             "methodology": "Multi-source business intelligence analysis",
         }
 
-    def _extract_recommendations(self, content: str) -> List[Dict[str, Any]]:
+    def _extract_recommendations(self, content: str) -> list[dict[str, Any]]:
         """Extract recommendations from LLM response"""
         # Mock extraction - would use NLP in production
         return [
@@ -1297,7 +1297,7 @@ Format the response as a structured business report suitable for Pay Ready's exe
             }
         ]
 
-    def _extract_risk_assessment(self, content: str) -> List[Dict[str, Any]]:
+    def _extract_risk_assessment(self, content: str) -> list[dict[str, Any]]:
         """Extract risk assessment from LLM response"""
         return [
             {
@@ -1309,7 +1309,7 @@ Format the response as a structured business report suitable for Pay Ready's exe
             }
         ]
 
-    def _extract_opportunities(self, content: str) -> List[Dict[str, Any]]:
+    def _extract_opportunities(self, content: str) -> list[dict[str, Any]]:
         """Extract opportunities from LLM response"""
         return [
             {
@@ -1321,13 +1321,13 @@ Format the response as a structured business report suitable for Pay Ready's exe
             }
         ]
 
-    def _extract_llm_insights(self, content: str) -> List[BusinessInsight]:
+    def _extract_llm_insights(self, content: str) -> list[BusinessInsight]:
         """Extract insights from LLM response"""
         # Mock extraction - would parse the actual response
         return []
 
     def _calculate_business_confidence(
-        self, report: BusinessReport, business_data: Dict[str, Any]
+        self, report: BusinessReport, business_data: dict[str, Any]
     ) -> float:
         """Calculate confidence score for business analysis"""
         factors = []
@@ -1354,7 +1354,7 @@ Format the response as a structured business report suitable for Pay Ready's exe
 
         return sum(factors) / len(factors)
 
-    def _extract_business_citations(self, business_data: Dict[str, Any]) -> List[Dict[str, str]]:
+    def _extract_business_citations(self, business_data: dict[str, Any]) -> list[dict[str, str]]:
         """Extract citations from business data sources"""
         citations = []
 
@@ -1373,7 +1373,7 @@ Format the response as a structured business report suitable for Pay Ready's exe
 
         return citations
 
-    def _get_industry_benchmarks(self) -> Dict[str, Any]:
+    def _get_industry_benchmarks(self) -> dict[str, Any]:
         """Get industry benchmarks for the business context"""
         # Industry-specific benchmarks based on business context
         industry_benchmarks = {
@@ -1409,7 +1409,7 @@ Format the response as a structured business report suitable for Pay Ready's exe
 
         return benchmarks
 
-    async def _gather_competitive_intelligence(self) -> Dict[str, Any]:
+    async def _gather_competitive_intelligence(self) -> dict[str, Any]:
         """Gather competitive intelligence data"""
         # Mock competitive intelligence
         return {
@@ -1425,7 +1425,7 @@ Format the response as a structured business report suitable for Pay Ready's exe
         }
 
     def _calculate_overall_confidence(
-        self, insights: List[BusinessInsight], business_data: Dict[str, Any]
+        self, insights: list[BusinessInsight], business_data: dict[str, Any]
     ) -> float:
         """Calculate overall confidence for the business report"""
         if not insights:
@@ -1438,7 +1438,7 @@ Format the response as a structured business report suitable for Pay Ready's exe
 
         return (insight_confidence + data_quality) / 2
 
-    def _extract_trend_analysis(self, processed: Dict[str, Any]) -> Dict[str, Any]:
+    def _extract_trend_analysis(self, processed: dict[str, Any]) -> dict[str, Any]:
         """Extract trend analysis from processed data"""
         return {
             "key_trends": ["Growth acceleration", "Market expansion", "Product adoption"],
@@ -1446,7 +1446,7 @@ Format the response as a structured business report suitable for Pay Ready's exe
             "time_horizon": "6 months",
         }
 
-    def _extract_competitive_analysis(self, processed: Dict[str, Any]) -> Dict[str, Any]:
+    def _extract_competitive_analysis(self, processed: dict[str, Any]) -> dict[str, Any]:
         """Extract competitive analysis"""
         return {
             "competitive_position": "Strong",
@@ -1455,7 +1455,7 @@ Format the response as a structured business report suitable for Pay Ready's exe
             "competitive_advantages": ["Innovation", "Customer satisfaction"],
         }
 
-    def _extract_market_intelligence(self, processed: Dict[str, Any]) -> Dict[str, Any]:
+    def _extract_market_intelligence(self, processed: dict[str, Any]) -> dict[str, Any]:
         """Extract market intelligence"""
         return {
             "market_size": "Large and growing",
@@ -1464,7 +1464,7 @@ Format the response as a structured business report suitable for Pay Ready's exe
             "market_segments": self.business_context.customer_segments,
         }
 
-    def _extract_forecast_data(self, processed: Dict[str, Any]) -> Dict[str, Any]:
+    def _extract_forecast_data(self, processed: dict[str, Any]) -> dict[str, Any]:
         """Extract forecast data"""
         return {
             "revenue_forecast": "25% growth next quarter",
@@ -1473,7 +1473,7 @@ Format the response as a structured business report suitable for Pay Ready's exe
             "confidence_intervals": {"low": 0.15, "high": 0.35},
         }
 
-    async def _load_integration_context(self, task: UnifiedTask) -> Dict[str, Any]:
+    async def _load_integration_context(self, task: UnifiedTask) -> dict[str, Any]:
         """Load context from business integration sources"""
         integration_context = {}
 
@@ -1515,7 +1515,7 @@ Format the response as a structured business report suitable for Pay Ready's exe
         return None
 
     async def identify_growth_opportunities(
-        self, focus_areas: List[str] = None, market_segments: List[str] = None
+        self, focus_areas: list[str] = None, market_segments: list[str] = None
     ) -> BusinessReport:
         """Identify business growth opportunities"""
         if not focus_areas:
@@ -1571,7 +1571,7 @@ Format the response as a structured business report suitable for Pay Ready's exe
         return None
 
     async def generate_market_intelligence(
-        self, competitors: List[str] = None, focus_areas: List[str] = None
+        self, competitors: list[str] = None, focus_areas: list[str] = None
     ) -> BusinessReport:
         """Generate comprehensive market and competitive intelligence"""
         if not competitors:

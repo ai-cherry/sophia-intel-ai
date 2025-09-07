@@ -4,17 +4,14 @@ Advanced Slack integration for delivering swarm results with rich formatting,
 interactive elements, and intelligent routing
 """
 
-import asyncio
-import json
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Optional
 
-from app.integrations.slack_integration import SlackClient, SlackIntegrationError
+from app.integrations.slack_integration import SlackClient
 from app.swarms.core.micro_swarm_base import AgentRole, SwarmResult
-from app.swarms.core.scheduler import ScheduledTask
 
 logger = logging.getLogger(__name__)
 
@@ -60,8 +57,8 @@ class DeliveryConfig:
     include_confidence: bool = True
     include_cost: bool = False
     max_length: int = 4000  # Slack message limit
-    mention_users: List[str] = field(default_factory=list)
-    mention_roles: List[str] = field(default_factory=list)
+    mention_users: list[str] = field(default_factory=list)
+    mention_roles: list[str] = field(default_factory=list)
     custom_template: Optional[str] = None
     enable_threading: bool = True
     auto_summarize_long_content: bool = True
@@ -76,12 +73,12 @@ class DeliveryRule:
     description: str
 
     # Matching criteria
-    swarm_types: List[str] = field(default_factory=list)
-    agent_roles: List[AgentRole] = field(default_factory=list)
+    swarm_types: list[str] = field(default_factory=list)
+    agent_roles: list[AgentRole] = field(default_factory=list)
     confidence_threshold: float = 0.0
     cost_threshold: float = 0.0
-    keywords: List[str] = field(default_factory=list)
-    time_ranges: List[Dict[str, Any]] = field(default_factory=list)  # Business hours, etc.
+    keywords: list[str] = field(default_factory=list)
+    time_ranges: list[dict[str, Any]] = field(default_factory=list)  # Business hours, etc.
 
     # Delivery configuration
     delivery_config: DeliveryConfig = field(
@@ -106,7 +103,7 @@ class DeliveryResult:
     delivered_at: datetime = field(default_factory=datetime.now)
     format_used: DeliveryFormat = DeliveryFormat.SUMMARY
     character_count: int = 0
-    user_mentions: List[str] = field(default_factory=list)
+    user_mentions: list[str] = field(default_factory=list)
 
 
 class SlackDeliveryEngine:
@@ -123,22 +120,22 @@ class SlackDeliveryEngine:
             raise e
 
         # Delivery rules and routing
-        self.delivery_rules: Dict[str, DeliveryRule] = {}
+        self.delivery_rules: dict[str, DeliveryRule] = {}
         self.channel_mappings = self._initialize_channel_mappings()
 
         # Delivery tracking
-        self.delivery_history: List[DeliveryResult] = []
+        self.delivery_history: list[DeliveryResult] = []
 
         # Message templates
         self.templates = self._initialize_templates()
 
         # Rate limiting
-        self.last_delivery_times: Dict[str, datetime] = {}
-        self.delivery_counts: Dict[str, int] = {}
+        self.last_delivery_times: dict[str, datetime] = {}
+        self.delivery_counts: dict[str, int] = {}
 
         logger.info("Slack delivery engine initialized")
 
-    def _initialize_channel_mappings(self) -> Dict[ChannelType, str]:
+    def _initialize_channel_mappings(self) -> dict[ChannelType, str]:
         """Initialize default channel mappings"""
         return {
             ChannelType.GENERAL: "#general",
@@ -148,7 +145,7 @@ class SlackDeliveryEngine:
             ChannelType.EXECUTIVE: "#executive",
         }
 
-    def _initialize_templates(self) -> Dict[DeliveryFormat, str]:
+    def _initialize_templates(self) -> dict[DeliveryFormat, str]:
         """Initialize message templates"""
         return {
             DeliveryFormat.SUMMARY: """
@@ -226,7 +223,7 @@ class SlackDeliveryEngine:
         self,
         swarm_result: SwarmResult,
         config: DeliveryConfig,
-        context: Optional[Dict[str, Any]] = None,
+        context: Optional[dict[str, Any]] = None,
     ) -> DeliveryResult:
         """
         Deliver swarm result to Slack
@@ -303,7 +300,7 @@ class SlackDeliveryEngine:
             )
 
     async def _format_message(
-        self, swarm_result: SwarmResult, config: DeliveryConfig, context: Dict[str, Any]
+        self, swarm_result: SwarmResult, config: DeliveryConfig, context: dict[str, Any]
     ) -> str:
         """Format swarm result into Slack message"""
 
@@ -459,7 +456,7 @@ class SlackDeliveryEngine:
     def _extract_business_impact(self, swarm_result: SwarmResult) -> str:
         """Extract business impact information"""
 
-        content = swarm_result.final_output.lower()
+        swarm_result.final_output.lower()
         impact_keywords = [
             "revenue",
             "cost",
@@ -519,7 +516,7 @@ class SlackDeliveryEngine:
     def _extract_risk_assessment(self, swarm_result: SwarmResult) -> str:
         """Extract risk assessment information"""
 
-        content = swarm_result.final_output.lower()
+        swarm_result.final_output.lower()
         risk_keywords = [
             "risk",
             "threat",
@@ -802,8 +799,8 @@ class SlackDeliveryEngine:
         return False
 
     async def auto_deliver(
-        self, swarm_result: SwarmResult, context: Dict[str, Any]
-    ) -> List[DeliveryResult]:
+        self, swarm_result: SwarmResult, context: dict[str, Any]
+    ) -> list[DeliveryResult]:
         """Automatically deliver result based on configured rules"""
 
         results = []
@@ -824,7 +821,7 @@ class SlackDeliveryEngine:
         return results
 
     def _matches_delivery_rule(
-        self, swarm_result: SwarmResult, context: Dict[str, Any], rule: DeliveryRule
+        self, swarm_result: SwarmResult, context: dict[str, Any], rule: DeliveryRule
     ) -> bool:
         """Check if result matches delivery rule criteria"""
 
@@ -863,7 +860,7 @@ class SlackDeliveryEngine:
 
         return True
 
-    def get_delivery_statistics(self) -> Dict[str, Any]:
+    def get_delivery_statistics(self) -> dict[str, Any]:
         """Get delivery statistics"""
 
         total_deliveries = len(self.delivery_history)

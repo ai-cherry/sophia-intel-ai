@@ -5,19 +5,17 @@ resource management, and adaptive scheduling
 """
 
 import asyncio
-import json
+import contextlib
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set
-
-from app.core.secrets_manager import get_secret
+from typing import Any, Optional
 
 # Slack hooks removed
-from app.memory.unified_memory_router import MemoryDomain, get_memory_router
+from app.memory.unified_memory_router import get_memory_router
 from app.swarms.artemis.technical_agents import ArtemisSwarmFactory
-from app.swarms.core.micro_swarm_base import CoordinationPattern, MicroSwarmCoordinator, SwarmResult
+from app.swarms.core.micro_swarm_base import MicroSwarmCoordinator, SwarmResult
 from app.swarms.sophia.mythology_agents import SophiaMythologySwarmFactory
 
 logger = logging.getLogger(__name__)
@@ -83,8 +81,8 @@ class ScheduledTask:
 
     # Metadata
     created_by: str = "system"
-    tags: List[str] = field(default_factory=list)
-    context: Dict[str, Any] = field(default_factory=dict)
+    tags: list[str] = field(default_factory=list)
+    context: dict[str, Any] = field(default_factory=dict)
 
     # State tracking
     status: ScheduleStatus = ScheduleStatus.PENDING
@@ -96,7 +94,7 @@ class ScheduledTask:
 
     # Results
     last_result: Optional[SwarmResult] = None
-    execution_history: List[Dict[str, Any]] = field(default_factory=list)
+    execution_history: list[dict[str, Any]] = field(default_factory=list)
 
 
 @dataclass
@@ -139,9 +137,9 @@ class MicroSwarmScheduler:
         self.memory = get_memory_router()
 
         # Task management
-        self.scheduled_tasks: Dict[str, ScheduledTask] = {}
-        self.active_executions: Dict[str, asyncio.Task] = {}
-        self.execution_queue: List[ScheduledTask] = []
+        self.scheduled_tasks: dict[str, ScheduledTask] = {}
+        self.active_executions: dict[str, asyncio.Task] = {}
+        self.execution_queue: list[ScheduledTask] = []
 
         # Resource tracking
         self.daily_cost_tracker = 0.0
@@ -176,18 +174,14 @@ class MicroSwarmScheduler:
 
         if self.scheduler_task:
             self.scheduler_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self.scheduler_task
-            except asyncio.CancelledError:
-                pass
 
         # Cancel active executions
-        for task_id, execution_task in list(self.active_executions.items()):
+        for _task_id, execution_task in list(self.active_executions.items()):
             execution_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await execution_task
-            except asyncio.CancelledError:
-                pass
 
         logger.info("Scheduler stopped")
 
@@ -276,7 +270,7 @@ class MicroSwarmScheduler:
                 logger.error(f"Scheduler loop error: {e}")
                 await asyncio.sleep(60)  # Wait longer on error
 
-    def _get_ready_tasks(self) -> List[ScheduledTask]:
+    def _get_ready_tasks(self) -> list[ScheduledTask]:
         """Get tasks ready for execution"""
         now = datetime.now()
         ready_tasks = []
@@ -487,7 +481,7 @@ class MicroSwarmScheduler:
 
             # Handle task result or exception
             try:
-                result = await execution_task
+                await execution_task
                 logger.debug(f"Cleaned up completed execution for task {task_id}")
             except Exception as e:
                 logger.error(f"Execution task {task_id} failed with exception: {e}")
@@ -706,7 +700,7 @@ class MicroSwarmScheduler:
         """Send notification that task execution failed"""
         return
 
-    def get_scheduler_status(self) -> Dict[str, Any]:
+    def get_scheduler_status(self) -> dict[str, Any]:
         """Get current scheduler status"""
         return {
             "running": self.running,
@@ -726,7 +720,7 @@ class MicroSwarmScheduler:
             ),
         }
 
-    def get_task_status(self, task_id: str) -> Optional[Dict[str, Any]]:
+    def get_task_status(self, task_id: str) -> Optional[dict[str, Any]]:
         """Get status of a specific task"""
         if task_id not in self.scheduled_tasks:
             return None

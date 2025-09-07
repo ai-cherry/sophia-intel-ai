@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 from .persona_manager import (
     EvolutionTrigger,
@@ -51,9 +51,9 @@ class EvolutionEvent:
     timestamp: datetime
     trigger: EvolutionTrigger
     strategy: EvolutionStrategy
-    changes: Dict[str, Any]
-    performance_before: Dict[str, float]
-    performance_after: Dict[str, float]
+    changes: dict[str, Any]
+    performance_before: dict[str, float]
+    performance_after: dict[str, float]
     success_impact: float
     confidence: float
 
@@ -67,18 +67,18 @@ class PerformanceAnalysis:
 
     # Performance metrics
     overall_performance: float
-    domain_performance: Dict[str, float]
-    trait_effectiveness: Dict[str, float]
-    knowledge_utilization: Dict[str, float]
+    domain_performance: dict[str, float]
+    trait_effectiveness: dict[str, float]
+    knowledge_utilization: dict[str, float]
 
     # Trends and patterns
     performance_trend: str  # "improving", "declining", "stable"
-    strength_areas: List[str]
-    weakness_areas: List[str]
+    strength_areas: list[str]
+    weakness_areas: list[str]
 
     # Evolution recommendations
     recommended_strategy: EvolutionStrategy
-    recommended_changes: Dict[str, float]
+    recommended_changes: dict[str, float]
     confidence_level: float
 
     # Learning insights
@@ -97,8 +97,8 @@ class EvolutionEngine:
         self.storage_path = storage_path or Path("data/evolution")
         self.storage_path.mkdir(parents=True, exist_ok=True)
 
-        self.evolution_history: Dict[str, List[EvolutionEvent]] = {}
-        self.performance_analyses: Dict[str, List[PerformanceAnalysis]] = {}
+        self.evolution_history: dict[str, list[EvolutionEvent]] = {}
+        self.performance_analyses: dict[str, list[PerformanceAnalysis]] = {}
 
         # Configuration
         self.config = {
@@ -263,7 +263,7 @@ class EvolutionEngine:
 
     async def _apply_evolution_strategy(
         self, persona: Persona, analysis: PerformanceAnalysis, strategy: EvolutionStrategy
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Apply the specified evolution strategy to the persona."""
         changes = {}
 
@@ -282,7 +282,7 @@ class EvolutionEngine:
 
     def _apply_conservative_evolution(
         self, persona: Persona, analysis: PerformanceAnalysis
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Apply conservative evolution strategy (small, gradual changes)."""
         changes = {}
         max_change = 0.05
@@ -304,7 +304,7 @@ class EvolutionEngine:
 
     def _apply_aggressive_evolution(
         self, persona: Persona, analysis: PerformanceAnalysis
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Apply aggressive evolution strategy (larger, faster changes)."""
         changes = {}
         max_change = 0.15
@@ -334,9 +334,8 @@ class EvolutionEngine:
 
     def _apply_adaptive_evolution(
         self, persona: Persona, analysis: PerformanceAnalysis
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Apply adaptive evolution strategy (changes based on performance)."""
-        changes = {}
 
         # Adjust evolution intensity based on performance
         if analysis.overall_performance < 0.6:
@@ -351,7 +350,7 @@ class EvolutionEngine:
 
     def _apply_targeted_evolution(
         self, persona: Persona, analysis: PerformanceAnalysis
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Apply targeted evolution strategy (focus on specific weak areas)."""
         changes = {}
 
@@ -375,7 +374,7 @@ class EvolutionEngine:
 
     def _apply_balanced_evolution(
         self, persona: Persona, analysis: PerformanceAnalysis
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Apply balanced evolution strategy (improvement across all areas)."""
         changes = {}
         base_change = 0.03
@@ -395,13 +394,13 @@ class EvolutionEngine:
 
         return changes
 
-    def _get_recent_performance(self, persona: Persona, days: int = 30) -> List[PerformanceMetrics]:
+    def _get_recent_performance(self, persona: Persona, days: int = 30) -> list[PerformanceMetrics]:
         """Get recent performance metrics for a persona."""
         cutoff_date = datetime.now() - timedelta(days=days)
         return [perf for perf in persona.performance_history if perf.timestamp >= cutoff_date]
 
     def _calculate_overall_performance(
-        self, performance_metrics: List[PerformanceMetrics]
+        self, performance_metrics: list[PerformanceMetrics]
     ) -> float:
         """Calculate overall performance score from metrics."""
         if not performance_metrics:
@@ -431,7 +430,7 @@ class EvolutionEngine:
 
         return total_score / total_weight if total_weight > 0 else 0.0
 
-    def _analyze_domain_performance(self, persona: Persona) -> Dict[str, float]:
+    def _analyze_domain_performance(self, persona: Persona) -> dict[str, float]:
         """Analyze performance by domain."""
         domain_performance = {}
         recent_performance = self._get_recent_performance(persona)
@@ -453,7 +452,7 @@ class EvolutionEngine:
 
         return domain_performance
 
-    def _analyze_trait_effectiveness(self, persona: Persona) -> Dict[str, float]:
+    def _analyze_trait_effectiveness(self, persona: Persona) -> dict[str, float]:
         """Analyze how effective each trait is based on recent performance."""
         trait_effectiveness = {}
         recent_performance = self._get_recent_performance(persona)
@@ -472,7 +471,7 @@ class EvolutionEngine:
 
         return trait_effectiveness
 
-    def _analyze_knowledge_utilization(self, persona: Persona) -> Dict[str, float]:
+    def _analyze_knowledge_utilization(self, persona: Persona) -> dict[str, float]:
         """Analyze how well knowledge areas are being utilized."""
         utilization = {}
         recent_performance = self._get_recent_performance(persona)
@@ -534,9 +533,9 @@ class EvolutionEngine:
     def _identify_strength_weakness_areas(
         self,
         persona: Persona,
-        domain_performance: Dict[str, float],
-        trait_effectiveness: Dict[str, float],
-    ) -> Tuple[List[str], List[str]]:
+        domain_performance: dict[str, float],
+        trait_effectiveness: dict[str, float],
+    ) -> tuple[list[str], list[str]]:
         """Identify strength and weakness areas."""
         all_performance = {**domain_performance, **trait_effectiveness}
 
@@ -560,9 +559,9 @@ class EvolutionEngine:
         self,
         persona: Persona,
         overall_performance: float,
-        domain_performance: Dict[str, float],
-        trait_effectiveness: Dict[str, float],
-    ) -> Tuple[EvolutionStrategy, Dict[str, float], float]:
+        domain_performance: dict[str, float],
+        trait_effectiveness: dict[str, float],
+    ) -> tuple[EvolutionStrategy, dict[str, float], float]:
         """Generate evolution strategy and change recommendations."""
         confidence = 0.0
 
@@ -665,7 +664,7 @@ class EvolutionEngine:
         if len(expertise_levels) == 1:
             return expertise_levels[0]  # Single area = specialization level
 
-        mean_expertise = statistics.mean(expertise_levels)
+        statistics.mean(expertise_levels)
         std_expertise = statistics.stdev(expertise_levels)
 
         # Higher standard deviation indicates more specialization
@@ -674,8 +673,8 @@ class EvolutionEngine:
         return specialization
 
     def _estimate_post_evolution_performance(
-        self, performance_before: Dict[str, float], changes: Dict[str, Any]
-    ) -> Dict[str, float]:
+        self, performance_before: dict[str, float], changes: dict[str, Any]
+    ) -> dict[str, float]:
         """Estimate performance after evolution changes."""
         performance_after = performance_before.copy()
 
@@ -748,7 +747,7 @@ class EvolutionEngine:
             logger.error(f"Error in cross-persona knowledge sharing: {e}")
             return False
 
-    async def get_evolution_insights(self, persona_name: str) -> Dict[str, Any]:
+    async def get_evolution_insights(self, persona_name: str) -> dict[str, Any]:
         """Get comprehensive evolution insights for a persona."""
         insights = {
             "persona_name": persona_name,
@@ -803,7 +802,7 @@ class EvolutionEngine:
 
         return insights
 
-    def _analyze_evolution_triggers(self, evolution_events: List[EvolutionEvent]) -> Dict[str, int]:
+    def _analyze_evolution_triggers(self, evolution_events: list[EvolutionEvent]) -> dict[str, int]:
         """Analyze which triggers are most common for this persona."""
         trigger_counts = {}
         for event in evolution_events:
@@ -813,8 +812,8 @@ class EvolutionEngine:
         return dict(sorted(trigger_counts.items(), key=lambda x: x[1], reverse=True))
 
     def _analyze_strategy_effectiveness(
-        self, evolution_events: List[EvolutionEvent]
-    ) -> Dict[str, float]:
+        self, evolution_events: list[EvolutionEvent]
+    ) -> dict[str, float]:
         """Analyze effectiveness of different evolution strategies."""
         strategy_impacts = {}
 
@@ -828,7 +827,7 @@ class EvolutionEngine:
             strategy: statistics.mean(impacts) for strategy, impacts in strategy_impacts.items()
         }
 
-    def _calculate_knowledge_growth_rate(self, evolution_events: List[EvolutionEvent]) -> float:
+    def _calculate_knowledge_growth_rate(self, evolution_events: list[EvolutionEvent]) -> float:
         """Calculate rate of knowledge acquisition over time."""
         if len(evolution_events) < 2:
             return 0.0
@@ -845,7 +844,7 @@ class EvolutionEngine:
 
         return statistics.mean(knowledge_changes)
 
-    def _generate_actionable_recommendations(self, analysis: PerformanceAnalysis) -> Dict[str, Any]:
+    def _generate_actionable_recommendations(self, analysis: PerformanceAnalysis) -> dict[str, Any]:
         """Generate specific, actionable recommendations."""
         recommendations = {
             "immediate_actions": [],

@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, Set
 
 
 @dataclass(frozen=True)
 class ApprovedModels:
-    models_by_provider: Dict[str, Set[str]]
-    aliases: Dict[str, str]
+    models_by_provider: dict[str, set[str]]
+    aliases: dict[str, str]
 
     def is_approved(self, provider: str, model: str) -> bool:
         p = (provider or "").strip().lower()
@@ -89,5 +88,5 @@ def is_model_approved(provider: str, model: str) -> bool:
     return APPROVED.is_approved(provider, model)
 
 
-def list_approved() -> Dict[str, Set[str]]:
+def list_approved() -> dict[str, set[str]]:
     return APPROVED.models_by_provider

@@ -3,16 +3,14 @@ Natural Language Interface for Micro-Swarms
 Conversational AI interface that interprets natural language requests and orchestrates appropriate swarm executions
 """
 
-import asyncio
-import json
 import logging
 import re
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Optional
 
-from app.core.portkey_manager import TaskType, get_portkey_manager
+from app.core.portkey_manager import get_portkey_manager
 from app.memory.unified_memory_router import MemoryDomain
 from app.swarms.core.swarm_integration import get_artemis_orchestrator, get_sophia_orchestrator
 
@@ -59,14 +57,14 @@ class ParsedRequest:
     original_text: str
     intent: IntentType
     domain: DomainType
-    entities: List[Dict[str, Any]] = field(default_factory=list)
-    keywords: List[str] = field(default_factory=list)
-    time_references: List[Dict[str, Any]] = field(default_factory=list)
+    entities: list[dict[str, Any]] = field(default_factory=list)
+    keywords: list[str] = field(default_factory=list)
+    time_references: list[dict[str, Any]] = field(default_factory=list)
     confidence: float = 0.0
 
     # Swarm selection
     suggested_swarm_type: str = ""
-    suggested_agents: List[str] = field(default_factory=list)
+    suggested_agents: list[str] = field(default_factory=list)
     coordination_pattern: str = "sequential"
 
     # Execution parameters
@@ -75,8 +73,8 @@ class ParsedRequest:
     complexity: str = "medium"
 
     # Context and constraints
-    constraints: Dict[str, Any] = field(default_factory=dict)
-    context_requirements: List[str] = field(default_factory=list)
+    constraints: dict[str, Any] = field(default_factory=dict)
+    context_requirements: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -88,14 +86,14 @@ class ConversationContext:
     channel_id: Optional[str] = None
 
     # Message history
-    messages: List[Dict[str, Any]] = field(default_factory=list)
+    messages: list[dict[str, Any]] = field(default_factory=list)
 
     # Domain affinity (learns user preferences)
-    domain_preferences: Dict[str, float] = field(default_factory=dict)
+    domain_preferences: dict[str, float] = field(default_factory=dict)
 
     # Ongoing tasks
-    active_tasks: List[str] = field(default_factory=list)
-    completed_tasks: List[str] = field(default_factory=list)
+    active_tasks: list[str] = field(default_factory=list)
+    completed_tasks: list[str] = field(default_factory=list)
 
     # Context state
     current_topic: Optional[str] = None
@@ -119,7 +117,7 @@ class NaturalLanguageInterface:
         self.artemis_orchestrator = get_artemis_orchestrator()
 
         # Conversation management
-        self.conversations: Dict[str, ConversationContext] = {}
+        self.conversations: dict[str, ConversationContext] = {}
 
         # Intent and entity patterns
         self.intent_patterns = self._initialize_intent_patterns()
@@ -131,7 +129,7 @@ class NaturalLanguageInterface:
 
         logger.info("Natural language interface initialized")
 
-    def _initialize_intent_patterns(self) -> Dict[IntentType, List[str]]:
+    def _initialize_intent_patterns(self) -> dict[IntentType, list[str]]:
         """Initialize intent recognition patterns"""
         return {
             IntentType.ANALYZE: [
@@ -310,7 +308,7 @@ class NaturalLanguageInterface:
             ],
         }
 
-    def _initialize_domain_patterns(self) -> Dict[DomainType, List[str]]:
+    def _initialize_domain_patterns(self) -> dict[DomainType, list[str]]:
         """Initialize domain recognition patterns"""
         return {
             DomainType.BUSINESS: [
@@ -396,7 +394,7 @@ class NaturalLanguageInterface:
             ],
         }
 
-    def _initialize_entity_patterns(self) -> Dict[str, str]:
+    def _initialize_entity_patterns(self) -> dict[str, str]:
         """Initialize entity recognition patterns"""
         return {
             "timeframe": r"(today|yesterday|tomorrow|this week|last week|next week|this month|last month|next month|this quarter|last quarter|next quarter|this year|last year|next year|\d+\s+(day|week|month|quarter|year)s?\s+(ago|from now))",
@@ -409,7 +407,7 @@ class NaturalLanguageInterface:
             "priority": r"(urgent|high priority|asap|critical|low priority|when possible)",
         }
 
-    def _initialize_swarm_mappings(self) -> Dict[str, Dict[str, Any]]:
+    def _initialize_swarm_mappings(self) -> dict[str, dict[str, Any]]:
         """Initialize intent/domain to swarm mappings"""
         return {
             "business_analysis": {
@@ -450,7 +448,7 @@ class NaturalLanguageInterface:
         conversation_id: str,
         user_id: Optional[str] = None,
         channel_id: Optional[str] = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Process natural language request and orchestrate swarm execution
 
@@ -554,7 +552,7 @@ class NaturalLanguageInterface:
 
         return parsed
 
-    def _detect_intent(self, text: str) -> Tuple[IntentType, float]:
+    def _detect_intent(self, text: str) -> tuple[IntentType, float]:
         """Detect user intent from text"""
 
         intent_scores = {}
@@ -576,7 +574,7 @@ class NaturalLanguageInterface:
             # Default intent
             return IntentType.ANALYZE, 0.3
 
-    def _detect_domain(self, text: str, context: ConversationContext) -> Tuple[DomainType, float]:
+    def _detect_domain(self, text: str, context: ConversationContext) -> tuple[DomainType, float]:
         """Detect business domain from text and context"""
 
         domain_scores = {}
@@ -611,7 +609,7 @@ class NaturalLanguageInterface:
             # Default domain
             return DomainType.BUSINESS, 0.3
 
-    def _extract_entities(self, text: str) -> List[Dict[str, Any]]:
+    def _extract_entities(self, text: str) -> list[dict[str, Any]]:
         """Extract structured entities from text"""
 
         entities = []
@@ -623,7 +621,7 @@ class NaturalLanguageInterface:
 
         return entities
 
-    def _extract_keywords(self, text: str) -> List[str]:
+    def _extract_keywords(self, text: str) -> list[str]:
         """Extract important keywords from text"""
 
         # Simple keyword extraction (could be enhanced with NLP libraries)
@@ -687,11 +685,10 @@ class NaturalLanguageInterface:
 
     async def _determine_swarm_config(
         self, intent: IntentType, domain: DomainType, text: str, context: ConversationContext
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Determine appropriate swarm configuration"""
 
         # Map intent/domain combination to swarm type
-        swarm_key = f"{domain.value}_{intent.value}"
 
         # Check for specific mappings
         if intent in [IntentType.ANALYZE, IntentType.EVALUATE] and domain == DomainType.BUSINESS:
@@ -711,7 +708,7 @@ class NaturalLanguageInterface:
             else:
                 return self.swarm_mappings["business_analysis"]
 
-    def _determine_priority(self, text: str, entities: List[Dict[str, Any]]) -> str:
+    def _determine_priority(self, text: str, entities: list[dict[str, Any]]) -> str:
         """Determine request priority"""
 
         high_priority_words = ["urgent", "asap", "critical", "emergency", "immediate"]
@@ -733,7 +730,7 @@ class NaturalLanguageInterface:
 
         return "normal"
 
-    def _determine_urgency(self, text: str, entities: List[Dict[str, Any]]) -> str:
+    def _determine_urgency(self, text: str, entities: list[dict[str, Any]]) -> str:
         """Determine request urgency based on time references"""
 
         urgent_time_words = ["now", "today", "immediately", "asap"]
@@ -789,7 +786,7 @@ class NaturalLanguageInterface:
 
     async def _route_and_execute(
         self, parsed_request: ParsedRequest, context: ConversationContext
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Route request to appropriate orchestrator and execute"""
 
         # Determine target domain for routing
@@ -860,7 +857,7 @@ class NaturalLanguageInterface:
         return self.conversations[conversation_id]
 
     def _update_conversation_state(
-        self, context: ConversationContext, parsed_request: ParsedRequest, result: Dict[str, Any]
+        self, context: ConversationContext, parsed_request: ParsedRequest, result: dict[str, Any]
     ):
         """Update conversation state based on interaction"""
 
@@ -915,7 +912,7 @@ class NaturalLanguageInterface:
 
         return response
 
-    def get_conversation_summary(self, conversation_id: str) -> Optional[Dict[str, Any]]:
+    def get_conversation_summary(self, conversation_id: str) -> Optional[dict[str, Any]]:
         """Get summary of conversation"""
 
         if conversation_id not in self.conversations:
@@ -947,7 +944,7 @@ class NaturalLanguageInterface:
 
     async def schedule_recurring_analysis(
         self, message: str, interval_hours: int = 24, conversation_id: str = "scheduled"
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Schedule recurring analysis based on natural language description"""
 
         # Parse the request to understand what to schedule
@@ -978,7 +975,7 @@ class NaturalLanguageInterface:
             "orchestrator": orchestrator.config.name,
         }
 
-    def get_interface_statistics(self) -> Dict[str, Any]:
+    def get_interface_statistics(self) -> dict[str, Any]:
         """Get interface usage statistics"""
 
         total_conversations = len(self.conversations)
@@ -987,7 +984,7 @@ class NaturalLanguageInterface:
         # Domain distribution
         domain_counts = {}
         for context in self.conversations.values():
-            for domain, preference in context.domain_preferences.items():
+            for domain, _preference in context.domain_preferences.items():
                 domain_counts[domain] = domain_counts.get(domain, 0) + 1
 
         # Intent distribution (simplified)
@@ -1035,7 +1032,7 @@ async def process_natural_language_request(message: str, user_id: str = "default
     return await interface.chat(message, f"user_{user_id}", user_id)
 
 
-async def schedule_natural_language_task(message: str, interval_hours: int = 24) -> Dict[str, Any]:
+async def schedule_natural_language_task(message: str, interval_hours: int = 24) -> dict[str, Any]:
     """Schedule recurring task from natural language description"""
     interface = get_natural_language_interface()
     return await interface.schedule_recurring_analysis(message, interval_hours)

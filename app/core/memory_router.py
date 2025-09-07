@@ -9,11 +9,9 @@ import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Tuple
-from uuid import uuid4
+from typing import Any, Optional
 
 from app.core.unified_memory import (
-    MemoryContext,
     MemoryEntry,
     MemoryMetadata,
     MemoryPriority,
@@ -69,8 +67,8 @@ class RoutingMetrics:
     successful_routes: int = 0
     failed_routes: int = 0
     average_response_time_ms: float = 0.0
-    tier_usage_count: Dict[str, int] = field(default_factory=dict)
-    routing_decisions: Dict[str, int] = field(default_factory=dict)
+    tier_usage_count: dict[str, int] = field(default_factory=dict)
+    routing_decisions: dict[str, int] = field(default_factory=dict)
     fallback_count: int = 0
     circuit_breaker_trips: int = 0
 
@@ -81,8 +79,8 @@ class RoutingRule:
 
     rule_id: str
     name: str
-    conditions: Dict[str, Any]  # Conditions to match
-    target_tiers: List[MemoryTier]  # Preferred tiers in order
+    conditions: dict[str, Any]  # Conditions to match
+    target_tiers: list[MemoryTier]  # Preferred tiers in order
     priority: int = 5  # Rule priority (1-10)
     enabled: bool = True
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
@@ -146,11 +144,11 @@ class MemoryRouter:
         self.load_balancing_algorithm = LoadBalancingAlgorithm.RESPONSE_TIME_BASED
 
         # Health monitoring
-        self.tier_health: Dict[MemoryTier, TierHealth] = {}
-        self.circuit_breakers: Dict[MemoryTier, CircuitBreaker] = {}
+        self.tier_health: dict[MemoryTier, TierHealth] = {}
+        self.circuit_breakers: dict[MemoryTier, CircuitBreaker] = {}
 
         # Routing rules and metrics
-        self.custom_rules: List[RoutingRule] = []
+        self.custom_rules: list[RoutingRule] = []
         self.metrics = RoutingMetrics()
 
         # Configuration
@@ -189,8 +187,8 @@ class MemoryRouter:
             raise
 
     async def route_store_operation(
-        self, content: str, metadata: MemoryMetadata, embedding: Optional[List[float]] = None
-    ) -> Tuple[str, List[MemoryTier]]:
+        self, content: str, metadata: MemoryMetadata, embedding: Optional[list[float]] = None
+    ) -> tuple[str, list[MemoryTier]]:
         """Route a store operation to optimal tiers"""
 
         start_time = time.time()
@@ -291,7 +289,7 @@ class MemoryRouter:
 
     async def route_search_operation(
         self, request: MemorySearchRequest
-    ) -> List[MemorySearchResult]:
+    ) -> list[MemorySearchResult]:
         """Route a search operation across appropriate tiers"""
 
         start_time = time.time()
@@ -388,7 +386,7 @@ class MemoryRouter:
             logger.error(f"Failed to remove routing rule: {e}")
             return False
 
-    async def get_routing_status(self) -> Dict[str, Any]:
+    async def get_routing_status(self) -> dict[str, Any]:
         """Get comprehensive routing status"""
 
         return {
@@ -522,7 +520,7 @@ class MemoryRouter:
             health.consecutive_failures += 1
             health.quality_score = max(0.1, health.quality_score - 0.2)
 
-    async def _determine_store_tiers(self, metadata: MemoryMetadata) -> List[MemoryTier]:
+    async def _determine_store_tiers(self, metadata: MemoryMetadata) -> list[MemoryTier]:
         """Determine optimal storage tiers based on metadata and strategy"""
 
         if self.routing_strategy == RoutingStrategy.PERFORMANCE_FIRST:
@@ -536,19 +534,19 @@ class MemoryRouter:
         else:  # BALANCED
             return self._get_balanced_tiers(metadata)
 
-    def _get_performance_optimized_tiers(self, metadata: MemoryMetadata) -> List[MemoryTier]:
+    def _get_performance_optimized_tiers(self, metadata: MemoryMetadata) -> list[MemoryTier]:
         """Get tiers optimized for performance"""
         if metadata.priority in [MemoryPriority.CRITICAL, MemoryPriority.HIGH]:
             return [MemoryTier.L1_CACHE, MemoryTier.L2_SEMANTIC]
         else:
             return [MemoryTier.L1_CACHE, MemoryTier.L3_PERSISTENT]
 
-    def _get_reliability_optimized_tiers(self, metadata: MemoryMetadata) -> List[MemoryTier]:
+    def _get_reliability_optimized_tiers(self, metadata: MemoryMetadata) -> list[MemoryTier]:
         """Get tiers optimized for reliability"""
         # Store in multiple tiers for redundancy
         return [MemoryTier.L1_CACHE, MemoryTier.L2_SEMANTIC, MemoryTier.L3_PERSISTENT]
 
-    def _get_cost_optimized_tiers(self, metadata: MemoryMetadata) -> List[MemoryTier]:
+    def _get_cost_optimized_tiers(self, metadata: MemoryMetadata) -> list[MemoryTier]:
         """Get tiers optimized for cost"""
         # Use cheaper storage for most content
         if metadata.priority == MemoryPriority.CRITICAL:
@@ -556,7 +554,7 @@ class MemoryRouter:
         else:
             return [MemoryTier.L3_PERSISTENT]
 
-    def _get_balanced_tiers(self, metadata: MemoryMetadata) -> List[MemoryTier]:
+    def _get_balanced_tiers(self, metadata: MemoryMetadata) -> list[MemoryTier]:
         """Get balanced tier allocation"""
         if metadata.priority == MemoryPriority.CRITICAL:
             return [MemoryTier.L1_CACHE, MemoryTier.L2_SEMANTIC, MemoryTier.L3_PERSISTENT]
@@ -565,7 +563,7 @@ class MemoryRouter:
         else:
             return [MemoryTier.L1_CACHE, MemoryTier.L3_PERSISTENT]
 
-    async def _get_intelligent_tiers(self, metadata: MemoryMetadata) -> List[MemoryTier]:
+    async def _get_intelligent_tiers(self, metadata: MemoryMetadata) -> list[MemoryTier]:
         """AI-driven tier selection based on patterns and performance"""
 
         # Start with balanced approach
@@ -584,14 +582,14 @@ class MemoryRouter:
 
         return healthy_tiers
 
-    def _get_tier_access_order(self, priority: MemoryPriority) -> List[MemoryTier]:
+    def _get_tier_access_order(self, priority: MemoryPriority) -> list[MemoryTier]:
         """Get tier access order based on priority"""
         if priority == MemoryPriority.CRITICAL or priority == MemoryPriority.HIGH:
             return [MemoryTier.L1_CACHE, MemoryTier.L2_SEMANTIC, MemoryTier.L3_PERSISTENT]
         else:
             return [MemoryTier.L1_CACHE, MemoryTier.L3_PERSISTENT, MemoryTier.L2_SEMANTIC]
 
-    async def _determine_search_tiers(self, request: MemorySearchRequest) -> List[MemoryTier]:
+    async def _determine_search_tiers(self, request: MemorySearchRequest) -> list[MemoryTier]:
         """Determine which tiers to search"""
 
         search_tiers = []
@@ -608,7 +606,7 @@ class MemoryRouter:
 
         return search_tiers
 
-    async def _filter_healthy_tiers(self, tiers: List[MemoryTier]) -> List[MemoryTier]:
+    async def _filter_healthy_tiers(self, tiers: list[MemoryTier]) -> list[MemoryTier]:
         """Filter tiers to only include healthy ones"""
         healthy_tiers = []
 
@@ -621,7 +619,7 @@ class MemoryRouter:
 
         return healthy_tiers
 
-    async def _get_fallback_tiers(self) -> List[MemoryTier]:
+    async def _get_fallback_tiers(self) -> list[MemoryTier]:
         """Get any available tier as fallback"""
         for tier in [MemoryTier.L1_CACHE, MemoryTier.L2_SEMANTIC, MemoryTier.L3_PERSISTENT]:
             if self.tier_health[tier].available:
@@ -630,8 +628,8 @@ class MemoryRouter:
         return []  # No tiers available
 
     def _apply_routing_rules(
-        self, tiers: List[MemoryTier], metadata: MemoryMetadata, operation: str
-    ) -> List[MemoryTier]:
+        self, tiers: list[MemoryTier], metadata: MemoryMetadata, operation: str
+    ) -> list[MemoryTier]:
         """Apply custom routing rules"""
 
         for rule in self.custom_rules:
@@ -674,7 +672,7 @@ class MemoryRouter:
 
         return True
 
-    def _apply_load_balancing(self, tiers: List[MemoryTier]) -> List[MemoryTier]:
+    def _apply_load_balancing(self, tiers: list[MemoryTier]) -> list[MemoryTier]:
         """Apply load balancing algorithm"""
 
         if self.load_balancing_algorithm == LoadBalancingAlgorithm.RESPONSE_TIME_BASED:
@@ -699,7 +697,7 @@ class MemoryRouter:
         memory_id: str,
         content: str,
         metadata: MemoryMetadata,
-        embedding: Optional[List[float]],
+        embedding: Optional[list[float]],
     ) -> bool:
         """Store content in specific tier"""
         try:
@@ -720,7 +718,7 @@ class MemoryRouter:
 
     async def _search_tier(
         self, tier: MemoryTier, request: MemorySearchRequest
-    ) -> List[MemorySearchResult]:
+    ) -> list[MemorySearchResult]:
         """Search specific tier"""
         try:
             if tier == MemoryTier.L1_CACHE:
@@ -766,8 +764,8 @@ class MemoryRouter:
             ) / total
 
     def _deduplicate_search_results(
-        self, results: List[MemorySearchResult]
-    ) -> List[MemorySearchResult]:
+        self, results: list[MemorySearchResult]
+    ) -> list[MemorySearchResult]:
         """Remove duplicate search results"""
         seen_ids = set()
         unique_results = []
@@ -780,8 +778,8 @@ class MemoryRouter:
         return unique_results
 
     def _rank_search_results(
-        self, results: List[MemorySearchResult], request: MemorySearchRequest
-    ) -> List[MemorySearchResult]:
+        self, results: list[MemorySearchResult], request: MemorySearchRequest
+    ) -> list[MemorySearchResult]:
         """Rank search results by relevance"""
 
         def ranking_score(result: MemorySearchResult) -> float:
@@ -811,11 +809,7 @@ class MemoryRouter:
             return False
 
         # Validate target tiers are valid
-        for tier in rule.target_tiers:
-            if not isinstance(tier, MemoryTier):
-                return False
-
-        return True
+        return all(isinstance(tier, MemoryTier) for tier in rule.target_tiers)
 
 
 # Global memory router instance

@@ -3,14 +3,13 @@ WebSocket Security Implementation Example
 Demonstrates how to use the comprehensive WebSocket security system
 """
 
-import asyncio
 import logging
 from typing import Optional
 
 from fastapi import FastAPI, Query
 
-from .secure_websocket_factory import SecureWebSocketFactory, create_websocket_routes
-from .websocket_security_config import SecurityConfig, get_config
+from .secure_websocket_factory import SecureWebSocketFactory
+from .websocket_security_config import SecurityConfig
 
 logger = logging.getLogger(__name__)
 

@@ -6,7 +6,7 @@ and behavioral patterns for business intelligence tasks.
 """
 
 import logging
-from typing import Any, Dict
+from typing import Any
 
 from .persona_manager import (
     EvolutionTrigger,
@@ -186,7 +186,7 @@ You provide clear, actionable insights backed by data and strategic thinking.
     return sophia
 
 
-def get_sophia_specialized_prompts() -> Dict[str, str]:
+def get_sophia_specialized_prompts() -> dict[str, str]:
     """
     Get specialized system prompts for different Sophia contexts.
 
@@ -247,7 +247,7 @@ Structure all communications for C-suite consumption and decision-making.
     }
 
 
-def get_sophia_evolution_patterns() -> Dict[str, Dict[str, Any]]:
+def get_sophia_evolution_patterns() -> dict[str, dict[str, Any]]:
     """
     Define evolution patterns for Sophia's learning and adaptation.
 
@@ -291,7 +291,7 @@ def get_sophia_evolution_patterns() -> Dict[str, Dict[str, Any]]:
     }
 
 
-def customize_sophia_for_context(sophia: Persona, context: Dict[str, Any]) -> Persona:
+def customize_sophia_for_context(sophia: Persona, context: dict[str, Any]) -> Persona:
     """
     Customize Sophia persona based on specific task context.
 
@@ -393,7 +393,7 @@ class SophiaPersonaFactory:
         return sophia
 
     @staticmethod
-    def get_all_sophia_variants() -> Dict[str, Persona]:
+    def get_all_sophia_variants() -> dict[str, Persona]:
         """Get all available Sophia persona variants."""
         return {
             "base": SophiaPersonaFactory.create_base_sophia(),

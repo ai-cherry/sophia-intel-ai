@@ -4,21 +4,16 @@ Integrates with unified factories and validates configurations
 Respects 8-task concurrency limit and resource allocation
 """
 
-import asyncio
 import json
 import logging
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 from uuid import uuid4
 
-from app.artemis.unified_factory import artemis_unified_factory
-from app.sophia.unified_factory import sophia_unified_factory
 from app.swarms.templates.swarm_templates import (
-    AgentTemplateConfig,
     SwarmTemplate,
     SwarmTopology,
-    TemplateDomain,
     swarm_template_catalog,
 )
 
@@ -39,9 +34,9 @@ class SwarmCodeGenerator:
     def generate_swarm_code(
         self,
         template: SwarmTemplate,
-        custom_config: Optional[Dict[str, Any]] = None,
+        custom_config: Optional[dict[str, Any]] = None,
         swarm_name: Optional[str] = None,
-    ) -> Tuple[str, Dict[str, Any]]:
+    ) -> tuple[str, dict[str, Any]]:
         """Generate complete Python swarm code from template"""
 
         # Generate unique swarm name if not provided
@@ -79,13 +74,12 @@ class SwarmCodeGenerator:
         return code, metadata
 
     def _generate_sequential_swarm(
-        self, template: SwarmTemplate, swarm_name: str, config: Dict[str, Any]
+        self, template: SwarmTemplate, swarm_name: str, config: dict[str, Any]
     ) -> str:
         """Generate sequential pipeline swarm code"""
 
         # Extract agents for each stage
         agents = template.agents
-        coordination = template.coordination_config
 
         code = f'''"""
 Generated Sequential Pipeline Swarm: {swarm_name}
@@ -353,7 +347,7 @@ async def create_{swarm_name.replace("-", "_").lower()}() -> {swarm_name.replace
         return code
 
     def _generate_star_swarm(
-        self, template: SwarmTemplate, swarm_name: str, config: Dict[str, Any]
+        self, template: SwarmTemplate, swarm_name: str, config: dict[str, Any]
     ) -> str:
         """Generate star topology swarm code"""
 
@@ -614,7 +608,7 @@ async def create_{swarm_name.replace("-", "_").lower()}() -> {swarm_name.replace
         return code
 
     def _generate_committee_swarm(
-        self, template: SwarmTemplate, swarm_name: str, config: Dict[str, Any]
+        self, template: SwarmTemplate, swarm_name: str, config: dict[str, Any]
     ) -> str:
         """Generate committee voting swarm code"""
 
@@ -924,7 +918,7 @@ async def create_{swarm_name.replace("-", "_").lower()}() -> {swarm_name.replace
         return code
 
     def _generate_hierarchical_swarm(
-        self, template: SwarmTemplate, swarm_name: str, config: Dict[str, Any]
+        self, template: SwarmTemplate, swarm_name: str, config: dict[str, Any]
     ) -> str:
         """Generate hierarchical coordination swarm code"""
 
@@ -952,7 +946,7 @@ class {swarm_name.replace("-", "_").title()}:
     {template.description}
 
     Topology: Hierarchical Command Structure
-    Levels: {len(set(a.weight for a in agents_by_level))}
+    Levels: {len({a.weight for a in agents_by_level})}
     Total Agents: {len(agents_by_level)}
     """
 
@@ -964,7 +958,7 @@ class {swarm_name.replace("-", "_").title()}:
         self.metadata = {{
             "created_at": datetime.now(timezone.utc).isoformat(),
             "status": "initialized",
-            "hierarchy_levels": {len(set(a.weight for a in agents_by_level))},
+            "hierarchy_levels": {len({a.weight for a in agents_by_level})},
             "total_agents": {len(agents_by_level)}
         }}
 
@@ -1050,7 +1044,6 @@ class {swarm_name.replace("-", "_").title()}:
 '''
 
         # Generate execution code for each agent in the level
-        agent_counter = 0
         for level, level_agents in sorted(levels.items(), reverse=True):
             for i, agent in enumerate(level_agents):
                 factory = (
@@ -1158,9 +1151,9 @@ async def create_{swarm_name.replace("-", "_").lower()}() -> {swarm_name.replace
     def validate_and_generate(
         self,
         template_id: str,
-        custom_config: Optional[Dict[str, Any]] = None,
+        custom_config: Optional[dict[str, Any]] = None,
         swarm_name: Optional[str] = None,
-    ) -> Tuple[bool, str, Dict[str, Any], List[str]]:
+    ) -> tuple[bool, str, dict[str, Any], list[str]]:
         """Validate template and generate code with comprehensive checks"""
 
         # Get template
@@ -1206,7 +1199,7 @@ async def create_{swarm_name.replace("-", "_").lower()}() -> {swarm_name.replace
         except Exception as e:
             return False, "", {}, [f"Code generation failed: {str(e)}"]
 
-    def save_generated_swarm(self, swarm_name: str, code: str, metadata: Dict[str, Any]) -> str:
+    def save_generated_swarm(self, swarm_name: str, code: str, metadata: dict[str, Any]) -> str:
         """Save generated swarm code to file"""
 
         filename = f"{swarm_name.lower().replace('-', '_')}_swarm.py"

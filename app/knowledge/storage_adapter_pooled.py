@@ -13,7 +13,7 @@ import sqlite3
 import threading
 from contextlib import contextmanager
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 try:
     import psycopg2
@@ -35,14 +35,8 @@ except ImportError:
     SQLALCHEMY_AVAILABLE = False
 
 from app.core.ai_logger import logger
-from app.core.config import settings
 from app.knowledge.models import (
     KnowledgeEntity,
-    KnowledgeRelationship,
-    KnowledgeTag,
-    KnowledgeVersion,
-    SyncConflict,
-    SyncOperation,
 )
 
 
@@ -303,7 +297,7 @@ class PooledStorageAdapter:
 
         raise last_error
 
-    def _fetchone(self, query: str, params: tuple = ()) -> Optional[Dict[str, Any]]:
+    def _fetchone(self, query: str, params: tuple = ()) -> dict[str, Any] | None:
         """Fetch single row with connection pooling"""
         cursor = self._execute(query, params)
 
@@ -319,7 +313,7 @@ class PooledStorageAdapter:
                     return dict(zip([d[0] for d in cursor.description], row))
         return None
 
-    def _fetchall(self, query: str, params: tuple = ()) -> List[Dict[str, Any]]:
+    def _fetchall(self, query: str, params: tuple = ()) -> list[dict[str, Any]]:
         """Fetch all rows with connection pooling"""
         cursor = self._execute(query, params)
 
@@ -335,7 +329,7 @@ class PooledStorageAdapter:
                 return [dict(zip(columns, row)) for row in rows]
         return []
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get connection pool and query statistics"""
         stats = {
             "db_type": self.db_type,
@@ -411,7 +405,7 @@ class PooledStorageAdapter:
             logger.error(f"Failed to create knowledge entity {entity.id}: {e}")
             raise
 
-    async def get_knowledge(self, entity_id: str) -> Optional[KnowledgeEntity]:
+    async def get_knowledge(self, entity_id: str) -> KnowledgeEntity | None:
         """Get knowledge entity using pooled connections"""
         try:
             query = "SELECT * FROM knowledge_entities WHERE id = ? AND is_active = true"
@@ -497,12 +491,12 @@ class PooledStorageAdapter:
 
     async def list_knowledge(
         self,
-        classification: Optional[str] = None,
-        category: Optional[str] = None,
+        classification: str | None = None,
+        category: str | None = None,
         is_active: bool = True,
         limit: int = 100,
         offset: int = 0,
-    ) -> List[KnowledgeEntity]:
+    ) -> list[KnowledgeEntity]:
         """List knowledge entities using pooled connections with filtering"""
         try:
             # Build dynamic query based on filters
@@ -549,7 +543,7 @@ class PooledStorageAdapter:
 
 
 # Export enhanced adapter as default if available
-def get_storage_adapter(**kwargs) -> Union[StorageAdapter, PooledStorageAdapter]:
+def get_storage_adapter(**kwargs) -> StorageAdapter | PooledStorageAdapter:
     """
     Get appropriate storage adapter based on configuration.
 

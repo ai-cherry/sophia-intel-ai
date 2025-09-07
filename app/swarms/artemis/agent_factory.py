@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from typing import Any
 
 from app.llm.multi_transport import MultiTransportLLM
 from app.swarms.core.micro_swarm_base import AgentProfile, AgentRole, MicroSwarmAgent
@@ -27,16 +27,14 @@ class TaskConfig:
 class ArtemisAgent(MicroSwarmAgent):
     """Extended Artemis agent with task-specific LLM routing."""
 
-    def __init__(
-        self, profile: AgentProfile, task_config: TaskConfig, swarm_id: Optional[str] = None
-    ):
+    def __init__(self, profile: AgentProfile, task_config: TaskConfig, swarm_id: str | None = None):
         import uuid
 
         super().__init__(profile, swarm_id or str(uuid.uuid4()))
         self.task_config = task_config
         self.llm = MultiTransportLLM()
 
-    async def process_task(self, task: str, context: Dict[str, Any] = None) -> Dict[str, Any]:
+    async def process_task(self, task: str, context: dict[str, Any] = None) -> dict[str, Any]:
         """Process a task using the configured model."""
 
         messages = [
@@ -148,7 +146,7 @@ Provide specific, actionable feedback.""",
         )
 
     @staticmethod
-    def create_agent(task_type: str, name: Optional[str] = None) -> ArtemisAgent:
+    def create_agent(task_type: str, name: str | None = None) -> ArtemisAgent:
         """Create an Artemis agent for a specific task type."""
 
         task_config = ArtemisAgentFactory.load_task_config(task_type)

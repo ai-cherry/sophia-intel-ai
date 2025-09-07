@@ -8,7 +8,7 @@ import logging
 import os
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import redis
 from qdrant_client import QdrantClient
@@ -69,7 +69,7 @@ class VectorDBConfig:
     collection_name: str = "sophia_vectors"
     dimension: int = 1536  # OpenAI embedding dimension
     metric: str = "cosine"
-    additional_config: Dict[str, Any] = None
+    additional_config: dict[str, Any] = None
 
 
 class VectorDatabaseManager:
@@ -263,8 +263,8 @@ class VectorDatabaseManager:
     def store_vector(
         self,
         db_type: VectorDBType,
-        vector: List[float],
-        metadata: Dict[str, Any],
+        vector: list[float],
+        metadata: dict[str, Any],
         collection_name: Optional[str] = None,
     ):
         """Store a vector with metadata in the specified database"""
@@ -292,7 +292,6 @@ class VectorDatabaseManager:
             client = self.clients[db_type]
             if client:
                 try:
-                    import numpy as np
 
                     key = f"vector:{metadata.get('id', 'unknown')}"
 
@@ -330,7 +329,7 @@ class VectorDatabaseManager:
     def search_vectors(
         self,
         db_type: VectorDBType,
-        query_vector: List[float],
+        query_vector: list[float],
         top_k: int = 5,
         collection_name: Optional[str] = None,
     ):
@@ -426,7 +425,7 @@ class VectorDatabaseManager:
 
         return False
 
-    def test_all_connections(self) -> Dict[str, bool]:
+    def test_all_connections(self) -> dict[str, bool]:
         """Test all vector database connections"""
         results = {}
         for db_type in VectorDBType:
@@ -434,7 +433,7 @@ class VectorDatabaseManager:
                 results[db_type.value] = self.test_connection(db_type)
         return results
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Get status of all vector databases"""
         status = {}
         for db_type, config in self.configs.items():

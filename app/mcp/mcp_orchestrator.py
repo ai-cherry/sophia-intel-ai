@@ -27,10 +27,7 @@ from datetime import datetime
 from enum import Enum
 from typing import (
     Any,
-    Dict,
-    List,
     Optional,
-    Set,
     TypeVar,
 )
 from uuid import uuid4
@@ -95,13 +92,13 @@ class MCPCapability:
 
     server_type: MCPServerType
     server_url: str
-    capabilities: List[str]
+    capabilities: list[str]
     max_concurrent: int = 5
     timeout_seconds: int = 30
     retry_count: int = 3
     health_check_url: Optional[str] = None
-    authentication: Optional[Dict[str, str]] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    authentication: Optional[dict[str, str]] = None
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -116,10 +113,10 @@ class DAGNode:
     # MCP-specific fields
     server_type: Optional[MCPServerType] = None
     mcp_method: Optional[str] = None
-    mcp_params: Dict[str, Any] = field(default_factory=dict)
+    mcp_params: dict[str, Any] = field(default_factory=dict)
 
     # Execution fields
-    dependencies: Set[str] = field(default_factory=set)
+    dependencies: set[str] = field(default_factory=set)
     status: ExecutionStatus = ExecutionStatus.PENDING
     result: Optional[Any] = None
     error: Optional[str] = None
@@ -128,7 +125,7 @@ class DAGNode:
     retry_count: int = 0
 
     # Metadata
-    meta_tags: List[MetaTag] = field(default_factory=list)
+    meta_tags: list[MetaTag] = field(default_factory=list)
     priority: int = 5  # 1 (high) to 10 (low)
     timeout_seconds: int = 30
     cache_key: Optional[str] = None
@@ -141,11 +138,11 @@ class ExecutionPlan:
     id: str
     name: str
     description: Optional[str] = None
-    nodes: Dict[str, DAGNode] = field(default_factory=dict)
-    execution_order: List[List[str]] = field(default_factory=list)  # Parallel levels
+    nodes: dict[str, DAGNode] = field(default_factory=dict)
+    execution_order: list[list[str]] = field(default_factory=list)  # Parallel levels
     created_at: datetime = field(default_factory=datetime.utcnow)
     persona_domain: PersonaType = PersonaType.SOPHIA
-    context: Dict[str, Any] = field(default_factory=dict)
+    context: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -154,8 +151,8 @@ class ExecutionResult:
 
     plan_id: str
     status: ExecutionStatus
-    results: Dict[str, Any] = field(default_factory=dict)
-    errors: Dict[str, str] = field(default_factory=dict)
+    results: dict[str, Any] = field(default_factory=dict)
+    errors: dict[str, str] = field(default_factory=dict)
     execution_time_ms: float = 0.0
     nodes_executed: int = 0
     nodes_skipped: int = 0
@@ -164,15 +161,15 @@ class ExecutionResult:
     cache_misses: int = 0
     start_time: Optional[datetime] = None
     end_time: Optional[datetime] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 class MCPServerRegistry:
     """Registry of available MCP servers"""
 
     def __init__(self):
-        self.servers: Dict[MCPServerType, List[MCPCapability]] = defaultdict(list)
-        self.server_health: Dict[str, bool] = {}
+        self.servers: dict[MCPServerType, list[MCPCapability]] = defaultdict(list)
+        self.server_health: dict[str, bool] = {}
         self._initialize_default_servers()
 
     def _initialize_default_servers(self):
@@ -221,7 +218,7 @@ class MCPServerRegistry:
             f"Registered MCP server: {capability.server_type.value} at {capability.server_url}"
         )
 
-    def get_servers(self, server_type: MCPServerType) -> List[MCPCapability]:
+    def get_servers(self, server_type: MCPServerType) -> list[MCPCapability]:
         """Get available servers for type"""
         return [s for s in self.servers[server_type] if self.server_health.get(s.server_url, False)]
 
@@ -253,7 +250,7 @@ class MCPServerRegistry:
 
     async def health_check_all(self):
         """Health check all registered servers"""
-        tasks = [self.health_check(url) for url in self.server_health.keys()]
+        tasks = [self.health_check(url) for url in self.server_health]
         await asyncio.gather(*tasks)
 
 
@@ -261,7 +258,7 @@ class DAGBuilder:
     """Builder for creating execution DAGs"""
 
     def __init__(self):
-        self.nodes: Dict[str, DAGNode] = {}
+        self.nodes: dict[str, DAGNode] = {}
         self.graph = nx.DiGraph()
 
     def add_mcp_node(
@@ -270,8 +267,8 @@ class DAGBuilder:
         name: str,
         server_type: MCPServerType,
         method: str,
-        params: Dict[str, Any],
-        dependencies: Optional[Set[str]] = None,
+        params: dict[str, Any],
+        dependencies: Optional[set[str]] = None,
         **kwargs,
     ) -> "DAGBuilder":
         """Add MCP call node"""
@@ -299,7 +296,7 @@ class DAGBuilder:
         self,
         node_id: str,
         name: str,
-        dependencies: Set[str],
+        dependencies: set[str],
         aggregation_function: str = "merge",
         **kwargs,
     ) -> "DAGBuilder":
@@ -326,9 +323,9 @@ class DAGBuilder:
         node_id: str,
         name: str,
         condition: str,
-        dependencies: Set[str],
-        true_branch: List[str],
-        false_branch: List[str] = None,
+        dependencies: set[str],
+        true_branch: list[str],
+        false_branch: list[str] = None,
         **kwargs,
     ) -> "DAGBuilder":
         """Add conditional execution node"""
@@ -401,7 +398,7 @@ class MCPOrchestrator:
         self.memory_system = memory_system
         self.max_concurrent_nodes = max_concurrent_nodes
         self.default_timeout = default_timeout
-        self.active_executions: Dict[str, ExecutionPlan] = {}
+        self.active_executions: dict[str, ExecutionPlan] = {}
         self.execution_semaphore = asyncio.Semaphore(max_concurrent_nodes)
 
         # Metrics
@@ -735,7 +732,7 @@ class MCPOrchestrator:
     async def create_simple_plan(
         self,
         name: str,
-        mcp_calls: List[Dict[str, Any]],
+        mcp_calls: list[dict[str, Any]],
         persona_domain: PersonaType = PersonaType.SOPHIA,
     ) -> ExecutionPlan:
         """Create simple sequential execution plan"""
@@ -757,7 +754,7 @@ class MCPOrchestrator:
 
         return builder.build(plan_id=str(uuid4()), name=name, persona_domain=persona_domain)
 
-    async def get_execution_status(self, plan_id: str) -> Optional[Dict[str, Any]]:
+    async def get_execution_status(self, plan_id: str) -> Optional[dict[str, Any]]:
         """Get current status of execution"""
         if plan_id not in self.active_executions:
             return None
@@ -776,7 +773,7 @@ class MCPOrchestrator:
 
         return status
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """Comprehensive orchestrator health check"""
         await self.server_registry.health_check_all()
 
@@ -801,7 +798,7 @@ class MCPOrchestrator:
 # Factory function for easy instantiation
 async def create_mcp_orchestrator(
     memory_system: Optional[HierarchicalMemorySystem] = None,
-    config: Optional[Dict[str, Any]] = None,
+    config: Optional[dict[str, Any]] = None,
 ) -> MCPOrchestrator:
     """Create and initialize MCP orchestrator"""
 

@@ -6,7 +6,6 @@ from __future__ import annotations
 
 import os
 from datetime import datetime
-from typing import Any, Dict
 
 import psutil
 from fastapi import APIRouter, Depends

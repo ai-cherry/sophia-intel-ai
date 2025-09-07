@@ -17,11 +17,11 @@ class DealAnalysis:
     stage: str
     value: float
     probability: float
-    key_stakeholders: List[str]
-    competitors: List[str]
-    pain_points: List[str]
-    next_steps: List[str]
-    risks: List[str]
+    key_stakeholders: list[str]
+    competitors: list[str]
+    pain_points: list[str]
+    next_steps: list[str]
+    risks: list[str]
     rep_name: str
     timestamp: Optional[datetime] = None
 
@@ -36,10 +36,10 @@ class PerformanceReview:
 
     rep_id: str
     period: str
-    metrics: Dict[str, Any]
-    deals_closed: List[str]
-    deals_lost: List[str]
-    activities: Dict[str, int]
+    metrics: dict[str, Any]
+    deals_closed: list[str]
+    deals_lost: list[str]
+    activities: dict[str, int]
     timestamp: Optional[datetime] = None
 
     def __post_init__(self):
@@ -53,13 +53,13 @@ class ClientHealthAssessment:
 
     client_id: str
     client_name: str
-    usage_metrics: Dict[str, Any]
+    usage_metrics: dict[str, Any]
     engagement_score: float
     support_tickets: int
     last_contact_days: int
     contract_value: float
     renewal_date: Optional[str] = None
-    stakeholders: List[str] = None
+    stakeholders: list[str] = None
     timestamp: Optional[datetime] = None
 
     def __post_init__(self):
@@ -90,15 +90,15 @@ class PersonaRegistry:
             },
         }
 
-    def list_personas(self) -> List[str]:
+    def list_personas(self) -> list[str]:
         """Get list of available persona IDs"""
         return list(self._personas.keys())
 
-    def get_persona_info(self, persona_id: str) -> Optional[Dict[str, Any]]:
+    def get_persona_info(self, persona_id: str) -> Optional[dict[str, Any]]:
         """Get information about a specific persona"""
         return self._personas.get(persona_id)
 
-    def register_persona(self, persona_id: str, info: Dict[str, Any]):
+    def register_persona(self, persona_id: str, info: dict[str, Any]):
         """Register a new persona"""
         self._personas[persona_id] = info
 

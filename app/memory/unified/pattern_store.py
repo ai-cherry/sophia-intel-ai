@@ -3,16 +3,14 @@ Pattern Store - Behavioral patterns and trends memory
 Stores recurring patterns, behavioral insights, and predictive models
 """
 
-import asyncio
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Optional
 
 from app.core.unified_memory import (
     MemoryContext,
-    MemoryEntry,
     MemoryMetadata,
     MemoryPriority,
     unified_memory,
@@ -69,21 +67,21 @@ class BehavioralPattern:
     strength: PatternStrength
 
     # Pattern characteristics
-    triggers: List[str] = field(default_factory=list)
-    conditions: Dict[str, Any] = field(default_factory=dict)
-    outcomes: List[str] = field(default_factory=list)
+    triggers: list[str] = field(default_factory=list)
+    conditions: dict[str, Any] = field(default_factory=dict)
+    outcomes: list[str] = field(default_factory=list)
 
     # Statistical data
     metrics: PatternMetrics = field(default_factory=PatternMetrics)
 
     # Context
-    entities_involved: Set[str] = field(default_factory=set)  # users, agents, systems
-    domains: Set[str] = field(default_factory=set)
-    tags: Set[str] = field(default_factory=set)
+    entities_involved: set[str] = field(default_factory=set)  # users, agents, systems
+    domains: set[str] = field(default_factory=set)
+    tags: set[str] = field(default_factory=set)
 
     # Temporal aspects
-    time_patterns: Dict[str, Any] = field(default_factory=dict)  # hourly, daily, weekly patterns
-    seasonal_factors: Dict[str, float] = field(default_factory=dict)
+    time_patterns: dict[str, Any] = field(default_factory=dict)  # hourly, daily, weekly patterns
+    seasonal_factors: dict[str, float] = field(default_factory=dict)
 
     # Predictions
     next_likely_occurrence: Optional[datetime] = None
@@ -137,13 +135,13 @@ class PatternStore:
     async def search_patterns(
         self,
         query: str,
-        pattern_types: Optional[List[PatternType]] = None,
+        pattern_types: Optional[list[PatternType]] = None,
         min_strength: Optional[PatternStrength] = None,
-        entities_filter: Optional[Set[str]] = None,
+        entities_filter: Optional[set[str]] = None,
         trend_filter: Optional[str] = None,
         max_results: int = 15,
         domain: Optional[str] = None,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Search patterns with advanced filtering"""
 
         # Build search tags
@@ -187,7 +185,7 @@ class PatternStore:
 
     async def get_trending_patterns(
         self, time_period_days: int = 7, domain: Optional[str] = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Get patterns that are currently trending"""
 
         # Search for patterns with increasing trends
@@ -254,7 +252,7 @@ class PatternStore:
 
     async def predict_pattern_occurrence(
         self, pattern_id: str, prediction_horizon_hours: int = 24
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Predict when a pattern might next occur"""
 
         structured_data = await self._retrieve_structured_pattern(pattern_id)
@@ -402,7 +400,7 @@ class PatternStore:
         self,
         memory_id: str,
         pattern: Optional[BehavioralPattern],
-        pattern_dict: Optional[Dict[str, Any]] = None,
+        pattern_dict: Optional[dict[str, Any]] = None,
     ):
         """Store structured pattern data"""
 
@@ -451,7 +449,7 @@ class PatternStore:
             key, structured_data, ttl=86400 * 14, namespace="patterns"  # 14 days
         )
 
-    async def _retrieve_structured_pattern(self, pattern_id: str) -> Optional[Dict[str, Any]]:
+    async def _retrieve_structured_pattern(self, pattern_id: str) -> Optional[dict[str, Any]]:
         """Retrieve structured pattern data"""
 
         if not self.memory_interface.redis_manager:
@@ -473,9 +471,9 @@ class PatternStore:
 
     def _matches_pattern_filters(
         self,
-        structured_data: Optional[Dict[str, Any]],
+        structured_data: Optional[dict[str, Any]],
         min_strength: Optional[PatternStrength],
-        entities_filter: Optional[Set[str]],
+        entities_filter: Optional[set[str]],
     ) -> bool:
         """Check if pattern matches filtering criteria"""
 

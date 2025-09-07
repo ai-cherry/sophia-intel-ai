@@ -9,11 +9,10 @@ Comprehensive SMS outreach system with Twilio integration featuring:
 - Compliance audit trails
 """
 
-import asyncio
 import logging
 import re
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 from twilio.base.exceptions import TwilioException
 from twilio.rest import Client as TwilioClient
@@ -36,13 +35,13 @@ class ConsentManager:
     Manages consent for SMS communications with TCPA compliance
     """
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: dict[str, Any] = None):
         self.config = config or {}
-        self.consent_records: Dict[str, Dict[str, Any]] = {}
+        self.consent_records: dict[str, dict[str, Any]] = {}
         self.opt_out_keywords = ["STOP", "QUIT", "UNSUBSCRIBE", "CANCEL", "END", "OPT-OUT"]
         self.opt_in_keywords = ["START", "YES", "SUBSCRIBE", "JOIN", "OPT-IN"]
 
-    async def verify_consent(self, phone_number: str, prospect_id: str = "") -> Tuple[bool, str]:
+    async def verify_consent(self, phone_number: str, prospect_id: str = "") -> tuple[bool, str]:
         """Verify SMS consent for phone number"""
         try:
             # Clean phone number
@@ -150,7 +149,7 @@ class ConsentManager:
             logger.error(f"Error revoking consent for {phone_number}: {e}")
             return False
 
-    async def process_inbound_message(self, phone_number: str, message_body: str) -> Dict[str, Any]:
+    async def process_inbound_message(self, phone_number: str, message_body: str) -> dict[str, Any]:
         """Process inbound SMS message for opt-in/opt-out"""
         try:
             clean_phone = self._clean_phone_number(phone_number)
@@ -196,7 +195,7 @@ class ConsentManager:
         else:
             return f"+{digits_only}"
 
-    def _is_consent_expired(self, consent_record: Dict[str, Any]) -> bool:
+    def _is_consent_expired(self, consent_record: dict[str, Any]) -> bool:
         """Check if consent has expired"""
         if not consent_record.get("expiry_date"):
             return False
@@ -209,7 +208,7 @@ class ConsentManager:
         # For now, return False (not on DNC registry)
         return False
 
-    def get_consent_status(self, phone_number: str) -> Dict[str, Any]:
+    def get_consent_status(self, phone_number: str) -> dict[str, Any]:
         """Get detailed consent status for phone number"""
         clean_phone = self._clean_phone_number(phone_number)
         consent_record = self.consent_records.get(clean_phone)
@@ -239,10 +238,10 @@ class TCPAComplianceEngine:
     TCPA Compliance Engine for SMS communications
     """
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: dict[str, Any] = None):
         self.config = config or {}
         self.consent_manager = ConsentManager(config)
-        self.compliance_violations: List[ComplianceRecord] = []
+        self.compliance_violations: list[ComplianceRecord] = []
 
         # TCPA compliance rules
         self.quiet_hours_start = 21  # 9 PM
@@ -253,7 +252,7 @@ class TCPAComplianceEngine:
 
     async def validate_sms_outreach(
         self, prospect: Prospect, message_content: str, scheduled_time: datetime = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Complete TCPA compliance validation for SMS outreach"""
         scheduled_time = scheduled_time or datetime.now(timezone.utc)
 
@@ -315,12 +314,11 @@ class TCPAComplianceEngine:
 
     async def _validate_timing(
         self, prospect: Prospect, scheduled_time: datetime
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Validate timing compliance with TCPA quiet hours"""
         violations = []
 
         # Convert to prospect's timezone
-        prospect_tz = prospect.timezone or "UTC"
         # In production, would use actual timezone conversion
         local_time = scheduled_time  # Simplified for demo
 
@@ -351,7 +349,7 @@ class TCPAComplianceEngine:
 
     async def _validate_frequency(
         self, prospect: Prospect, scheduled_time: datetime
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Validate frequency compliance"""
         violations = []
 
@@ -381,7 +379,7 @@ class TCPAComplianceEngine:
 
         return {"valid": len(violations) == 0, "violations": violations}
 
-    async def _validate_message_content(self, message_content: str) -> Dict[str, Any]:
+    async def _validate_message_content(self, message_content: str) -> dict[str, Any]:
         """Validate message content for compliance"""
         warnings = []
 
@@ -456,7 +454,7 @@ class TCPAComplianceEngine:
         return candidate_time
 
     async def _log_compliance_check(
-        self, prospect: Prospect, validation_result: Dict[str, Any]
+        self, prospect: Prospect, validation_result: dict[str, Any]
     ) -> ComplianceRecord:
         """Log compliance check for audit trail"""
         compliance_record = ComplianceRecord(
@@ -481,7 +479,7 @@ class TCPAComplianceEngine:
 
     async def generate_compliance_report(
         self, start_date: datetime = None, end_date: datetime = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Generate compliance report for audit"""
         end_date = end_date or datetime.now(timezone.utc)
         start_date = start_date or (end_date - timedelta(days=30))
@@ -526,8 +524,8 @@ class TCPAComplianceEngine:
         return report
 
     async def _generate_compliance_recommendations(
-        self, compliance_records: List[ComplianceRecord]
-    ) -> List[str]:
+        self, compliance_records: list[ComplianceRecord]
+    ) -> list[str]:
         """Generate compliance improvement recommendations"""
         recommendations = []
 
@@ -563,8 +561,8 @@ class TwilioSMSManager:
     def __init__(self, account_sid: str, auth_token: str, from_phone: str):
         self.client = TwilioClient(account_sid, auth_token)
         self.from_phone = from_phone
-        self.delivery_callbacks: Dict[str, callable] = {}
-        self.message_cache: Dict[str, Dict[str, Any]] = {}
+        self.delivery_callbacks: dict[str, callable] = {}
+        self.message_cache: dict[str, dict[str, Any]] = {}
 
     async def send_sms(
         self, to_phone: str, message: str, scheduled_time: datetime = None, callback_url: str = None
@@ -622,7 +620,7 @@ class TwilioSMSManager:
             logger.error(f"Unexpected error sending SMS to {to_phone}: {e}")
             return None
 
-    async def get_message_status(self, platform_message_id: str) -> Dict[str, Any]:
+    async def get_message_status(self, platform_message_id: str) -> dict[str, Any]:
         """Get message delivery status from Twilio"""
         try:
             twilio_message = self.client.messages(platform_message_id).fetch()
@@ -658,7 +656,7 @@ class TwilioSMSManager:
             logger.error(f"Error fetching message status {platform_message_id}: {e}")
             return {"error": str(e)}
 
-    async def handle_delivery_webhook(self, webhook_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def handle_delivery_webhook(self, webhook_data: dict[str, Any]) -> dict[str, Any]:
         """Handle delivery status webhook from Twilio"""
         try:
             message_sid = webhook_data.get("MessageSid")
@@ -710,16 +708,16 @@ class SMSCampaignOrchestrator:
     def __init__(self, twilio_manager: TwilioSMSManager, compliance_engine: TCPAComplianceEngine):
         self.twilio_manager = twilio_manager
         self.compliance_engine = compliance_engine
-        self.active_campaigns: Dict[str, Dict[str, Any]] = {}
-        self.campaign_metrics: Dict[str, Dict[str, Any]] = {}
+        self.active_campaigns: dict[str, dict[str, Any]] = {}
+        self.campaign_metrics: dict[str, dict[str, Any]] = {}
 
     async def launch_sms_campaign(
         self,
         campaign_id: str,
-        prospects: List[Prospect],
+        prospects: list[Prospect],
         message_template: str,
-        campaign_config: Dict[str, Any] = None,
-    ) -> Dict[str, Any]:
+        campaign_config: dict[str, Any] = None,
+    ) -> dict[str, Any]:
         """Launch SMS campaign with compliance validation"""
         config = campaign_config or {}
 
@@ -812,7 +810,7 @@ class SMSCampaignOrchestrator:
 
         return personalized
 
-    async def get_campaign_performance(self, campaign_id: str) -> Dict[str, Any]:
+    async def get_campaign_performance(self, campaign_id: str) -> dict[str, Any]:
         """Get campaign performance metrics"""
         if campaign_id not in self.active_campaigns:
             return {"error": "Campaign not found"}
@@ -851,6 +849,6 @@ class SMSCampaignOrchestrator:
         logger.info(f"SMS campaign {campaign_id} paused")
         return True
 
-    async def get_compliance_summary(self) -> Dict[str, Any]:
+    async def get_compliance_summary(self) -> dict[str, Any]:
         """Get compliance summary across all campaigns"""
         return await self.compliance_engine.generate_compliance_report()

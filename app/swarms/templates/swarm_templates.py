@@ -4,25 +4,9 @@ Leverages existing unified factory patterns for both Sophia and Artemis domains
 Includes Pay Ready business templates and Artemis technical templates
 """
 
-import json
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
-
-from app.artemis.unified_factory import (
-    ArtemisUnifiedFactory,
-    MilitaryUnitType,
-)
-from app.artemis.unified_factory import SwarmType as ArtemisSwarmType
-from app.artemis.unified_factory import (
-    TechnicalAgentRole,
-)
-from app.sophia.unified_factory import (
-    BusinessAgentRole,
-    MythologyArchetype,
-    SophiaUnifiedFactory,
-)
-from app.sophia.unified_factory import SwarmType as SophiaSwarmType
+from typing import Any, Optional
 
 # ==============================================================================
 # TEMPLATE ENUMS AND TYPES
@@ -72,7 +56,7 @@ class AgentTemplateConfig:
     template_name: str
     role: str
     factory_type: str  # 'sophia' or 'artemis'
-    custom_config: Dict[str, Any] = field(default_factory=dict)
+    custom_config: dict[str, Any] = field(default_factory=dict)
     weight: float = 1.0  # influence weight in decision making
     required: bool = True
 
@@ -87,11 +71,11 @@ class SwarmTemplate:
     topology: SwarmTopology
     domain: TemplateDomain
     category: TemplateCategory
-    agents: List[AgentTemplateConfig]
-    coordination_config: Dict[str, Any]
-    resource_limits: Dict[str, Any]
-    success_criteria: Dict[str, Any]
-    example_use_cases: List[str]
+    agents: list[AgentTemplateConfig]
+    coordination_config: dict[str, Any]
+    resource_limits: dict[str, Any]
+    success_criteria: dict[str, Any]
+    example_use_cases: list[str]
     estimated_duration: str
     complexity_level: int  # 1-5
     pay_ready_optimized: bool = False
@@ -107,7 +91,7 @@ class CoordinationConfig:
     retry_attempts: int = 3
     parallel_execution: bool = True
     arbiter_required: bool = False
-    quality_gates: List[str] = field(default_factory=list)
+    quality_gates: list[str] = field(default_factory=list)
 
 
 # ==============================================================================
@@ -119,7 +103,7 @@ class SwarmTemplateCatalog:
     """Catalog of all available swarm templates"""
 
     def __init__(self):
-        self.templates: Dict[str, SwarmTemplate] = {}
+        self.templates: dict[str, SwarmTemplate] = {}
         self._initialize_templates()
 
     def _initialize_templates(self):
@@ -667,7 +651,7 @@ class SwarmTemplateCatalog:
         category: Optional[TemplateCategory] = None,
         topology: Optional[SwarmTopology] = None,
         pay_ready_only: bool = False,
-    ) -> List[SwarmTemplate]:
+    ) -> list[SwarmTemplate]:
         """List templates with optional filtering"""
         templates = list(self.templates.values())
 
@@ -682,11 +666,11 @@ class SwarmTemplateCatalog:
 
         return templates
 
-    def get_templates_by_complexity(self, max_complexity: int = 3) -> List[SwarmTemplate]:
+    def get_templates_by_complexity(self, max_complexity: int = 3) -> list[SwarmTemplate]:
         """Get templates within complexity limit"""
         return [t for t in self.templates.values() if t.complexity_level <= max_complexity]
 
-    def get_template_summary(self) -> Dict[str, Any]:
+    def get_template_summary(self) -> dict[str, Any]:
         """Get summary of all templates"""
         summary = {
             "total_templates": len(self.templates),
@@ -722,7 +706,7 @@ class SwarmTemplateCatalog:
 
         return summary
 
-    def validate_template(self, template: SwarmTemplate) -> Tuple[bool, List[str]]:
+    def validate_template(self, template: SwarmTemplate) -> tuple[bool, list[str]]:
         """Validate template configuration"""
         errors = []
 

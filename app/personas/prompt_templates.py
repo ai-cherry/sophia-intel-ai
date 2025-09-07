@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 import jinja2
 
@@ -56,7 +56,7 @@ class PromptMetrics:
     engagement_score: float = 0.0
     conversion_rate: float = 0.0
     last_used: datetime = field(default_factory=datetime.now)
-    performance_history: List[float] = field(default_factory=list)
+    performance_history: list[float] = field(default_factory=list)
 
 
 @dataclass
@@ -71,13 +71,13 @@ class PromptTemplate:
     template: str
     version: str = "1.0.0"
     status: PromptVersion = PromptVersion.DRAFT
-    persona_types: List[PersonaType] = field(default_factory=list)
-    task_domains: List[TaskDomain] = field(default_factory=list)
+    persona_types: list[PersonaType] = field(default_factory=list)
+    task_domains: list[TaskDomain] = field(default_factory=list)
 
     # Template configuration
-    parameters: Dict[str, Any] = field(default_factory=dict)
-    required_context: List[str] = field(default_factory=list)
-    optional_context: List[str] = field(default_factory=list)
+    parameters: dict[str, Any] = field(default_factory=dict)
+    required_context: list[str] = field(default_factory=list)
+    optional_context: list[str] = field(default_factory=list)
 
     # A/B testing configuration
     ab_test_group: Optional[str] = None
@@ -91,7 +91,7 @@ class PromptTemplate:
     updated_at: datetime = field(default_factory=datetime.now)
     created_by: str = "system"
     description: str = ""
-    tags: List[str] = field(default_factory=list)
+    tags: list[str] = field(default_factory=list)
 
     def __post_init__(self):
         """Initialize metrics with proper IDs."""
@@ -99,7 +99,7 @@ class PromptTemplate:
             self.metrics.prompt_id = self.id
             self.metrics.version = self.version
 
-    def render(self, context: Dict[str, Any]) -> str:
+    def render(self, context: dict[str, Any]) -> str:
         """
         Render the template with provided context.
 
@@ -123,7 +123,7 @@ class PromptTemplate:
             self.metrics.error_rate += 0.01
             raise
 
-    def validate_context(self, context: Dict[str, Any]) -> Tuple[bool, List[str]]:
+    def validate_context(self, context: dict[str, Any]) -> tuple[bool, list[str]]:
         """
         Validate that required context is present.
 
@@ -181,8 +181,8 @@ class ABTestConfiguration:
 
     test_id: str
     name: str
-    variants: List[str]  # Template IDs
-    weights: List[float]  # Relative weights for each variant
+    variants: list[str]  # Template IDs
+    weights: list[float]  # Relative weights for each variant
     start_date: datetime
     end_date: Optional[datetime] = None
     target_metric: str = "success_rate"
@@ -211,11 +211,11 @@ class PromptTemplateManager:
         self.storage_path = storage_path or Path("data/prompt_templates")
         self.storage_path.mkdir(parents=True, exist_ok=True)
 
-        self.templates: Dict[str, PromptTemplate] = {}
-        self.ab_tests: Dict[str, ABTestConfiguration] = {}
+        self.templates: dict[str, PromptTemplate] = {}
+        self.ab_tests: dict[str, ABTestConfiguration] = {}
 
         # Performance tracking
-        self.global_metrics: Dict[str, Any] = {
+        self.global_metrics: dict[str, Any] = {
             "total_renders": 0,
             "avg_success_rate": 0.0,
             "avg_response_time": 0.0,
@@ -276,7 +276,7 @@ class PromptTemplateManager:
         return template
 
     async def get_best_template(
-        self, persona: Persona, task_domain: TaskDomain, context: Dict[str, Any]
+        self, persona: Persona, task_domain: TaskDomain, context: dict[str, Any]
     ) -> Optional[PromptTemplate]:
         """
         Get the best template for a given persona and task context.
@@ -324,7 +324,7 @@ class PromptTemplateManager:
         return best_template
 
     async def _get_ab_test_template(
-        self, eligible_templates: List[PromptTemplate], context: Dict[str, Any]
+        self, eligible_templates: list[PromptTemplate], context: dict[str, Any]
     ) -> Optional[PromptTemplate]:
         """Select template based on active A/B tests."""
         # Find active A/B tests involving eligible templates
@@ -362,8 +362,8 @@ class PromptTemplateManager:
         self,
         test_id: str,
         name: str,
-        template_ids: List[str],
-        weights: Optional[List[float]] = None,
+        template_ids: list[str],
+        weights: Optional[list[float]] = None,
         duration_days: int = 30,
     ) -> ABTestConfiguration:
         """Create a new A/B test configuration."""
@@ -387,7 +387,7 @@ class PromptTemplateManager:
         logger.info(f"Created A/B test '{test_id}' with {len(template_ids)} variants")
         return ab_test
 
-    async def get_ab_test_results(self, test_id: str) -> Dict[str, Any]:
+    async def get_ab_test_results(self, test_id: str) -> dict[str, Any]:
         """Get results and analysis for an A/B test."""
         if test_id not in self.ab_tests:
             return {"error": "Test not found"}
@@ -430,7 +430,7 @@ class PromptTemplateManager:
 
         return results
 
-    def _calculate_statistical_significance(self, variants: List[Dict[str, Any]]) -> float:
+    def _calculate_statistical_significance(self, variants: list[dict[str, Any]]) -> float:
         """Calculate statistical significance of A/B test results."""
         # Simplified significance calculation
         # In production, use proper statistical tests (chi-square, t-test, etc.)
@@ -454,7 +454,7 @@ class PromptTemplateManager:
         return confidence
 
     async def generate_dynamic_prompt(
-        self, persona: Persona, task_domain: TaskDomain, context: Dict[str, Any]
+        self, persona: Persona, task_domain: TaskDomain, context: dict[str, Any]
     ) -> str:
         """
         Generate a dynamic prompt based on persona, task, and context.
@@ -493,8 +493,8 @@ class PromptTemplateManager:
             return persona.generate_system_prompt(context)
 
     def _enhance_context_with_persona(
-        self, context: Dict[str, Any], persona: Persona
-    ) -> Dict[str, Any]:
+        self, context: dict[str, Any], persona: Persona
+    ) -> dict[str, Any]:
         """Enhance context with persona-specific information."""
         enhanced = context.copy()
 
@@ -513,7 +513,7 @@ class PromptTemplateManager:
 
         return enhanced
 
-    def _template_to_dict(self, template: PromptTemplate) -> Dict[str, Any]:
+    def _template_to_dict(self, template: PromptTemplate) -> dict[str, Any]:
         """Convert template to dictionary for serialization."""
         return {
             "id": template.id,
@@ -551,7 +551,7 @@ class PromptTemplateManager:
             "tags": template.tags,
         }
 
-    def _dict_to_template(self, data: Dict[str, Any]) -> PromptTemplate:
+    def _dict_to_template(self, data: dict[str, Any]) -> PromptTemplate:
         """Convert dictionary to PromptTemplate object."""
         # Create metrics object
         metrics_data = data.get("metrics", {})
@@ -596,7 +596,7 @@ class PromptTemplateManager:
 
         return template
 
-    async def get_template_analytics(self) -> Dict[str, Any]:
+    async def get_template_analytics(self) -> dict[str, Any]:
         """Get comprehensive analytics for all templates."""
         analytics = {
             "total_templates": len(self.templates),
@@ -656,7 +656,7 @@ class PromptTemplateManager:
 
 
 # Pre-built template library
-def get_default_templates() -> List[Dict[str, Any]]:
+def get_default_templates() -> list[dict[str, Any]]:
     """Get default prompt templates for the system."""
     return [
         {

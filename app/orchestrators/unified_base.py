@@ -11,7 +11,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from app.core.circuit_breaker import CircuitBreaker, CircuitBreakerConfig
 from app.core.portkey_manager import TaskType, get_portkey_manager
@@ -50,18 +50,18 @@ class UnifiedTask:
     type: TaskType
     content: str
     priority: ExecutionPriority = ExecutionPriority.NORMAL
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     created_at: datetime = field(default_factory=datetime.now)
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
     status: TaskStatus = TaskStatus.PENDING
     retries: int = 0
     max_retries: int = 3
-    budget: Dict[str, float] = field(default_factory=lambda: {"cost_usd": 1.0, "tokens": 10000})
+    budget: dict[str, float] = field(default_factory=lambda: {"cost_usd": 1.0, "tokens": 10000})
 
     # Enhanced fields
     persona_context: Optional[PersonaContext] = None
-    tags: List[str] = field(default_factory=list)
+    tags: list[str] = field(default_factory=list)
     source_integration: Optional[str] = None
     confidence_threshold: float = 0.7
 
@@ -72,20 +72,20 @@ class UnifiedResult:
 
     success: bool
     content: Any
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    citations: List[Dict[str, str]] = field(default_factory=list)
+    metadata: dict[str, Any] = field(default_factory=dict)
+    citations: list[dict[str, str]] = field(default_factory=list)
     confidence: float = 1.0
     cost: float = 0.0
     tokens_used: int = 0
     execution_time_ms: float = 0.0
-    errors: List[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
 
     # Enhanced fields
     persona_used: Optional[str] = None
-    insights: List[Dict[str, Any]] = field(default_factory=list)
-    recommendations: List[str] = field(default_factory=list)
+    insights: list[dict[str, Any]] = field(default_factory=list)
+    recommendations: list[str] = field(default_factory=list)
     data_quality_score: float = 1.0
-    source_attribution: List[str] = field(default_factory=list)
+    source_attribution: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -103,7 +103,7 @@ class OrchestratorConfig:
     enable_persona: bool = True
     enable_cross_learning: bool = True
 
-    budget_limits: Dict[str, float] = field(
+    budget_limits: dict[str, float] = field(
         default_factory=lambda: {
             "hourly_cost_usd": 100.0,
             "daily_cost_usd": 1000.0,
@@ -112,9 +112,9 @@ class OrchestratorConfig:
     )
 
     # Integration configurations
-    integration_configs: Dict[str, Dict[str, Any]] = field(default_factory=dict)
-    data_sources: List[str] = field(default_factory=list)
-    quality_thresholds: Dict[str, float] = field(
+    integration_configs: dict[str, dict[str, Any]] = field(default_factory=dict)
+    data_sources: list[str] = field(default_factory=list)
+    quality_thresholds: dict[str, float] = field(
         default_factory=lambda: {"confidence_min": 0.6, "citation_min": 2, "source_diversity": 0.8}
     )
 
@@ -164,8 +164,8 @@ class UnifiedBaseOrchestrator(ABC):
 
         # Task management
         self._task_queue = asyncio.Queue()
-        self._active_tasks: Dict[str, UnifiedTask] = {}
-        self._task_history: List[Dict[str, Any]] = []
+        self._active_tasks: dict[str, UnifiedTask] = {}
+        self._task_history: list[dict[str, Any]] = []
         self._semaphore = asyncio.Semaphore(config.max_concurrent_tasks)
 
         # Cost tracking
@@ -361,7 +361,7 @@ class UnifiedBaseOrchestrator(ABC):
             f"(confidence: {result.confidence:.2f}, sources: {len(result.citations)})"
         )
 
-    async def _load_enhanced_context(self, task: UnifiedTask) -> Dict[str, Any]:
+    async def _load_enhanced_context(self, task: UnifiedTask) -> dict[str, Any]:
         """
         Load enhanced context with multi-source knowledge
 
@@ -579,7 +579,7 @@ class UnifiedBaseOrchestrator(ABC):
 
         # Share successful patterns with other domains
         if result.confidence > 0.8 and result.data_quality_score > 0.8:
-            shared_chunk = DocChunk(
+            DocChunk(
                 content=json.dumps(
                     {
                         "pattern": pattern,
@@ -599,7 +599,7 @@ class UnifiedBaseOrchestrator(ABC):
 
             await self.memory.upsert_chunks([chunk], MemoryDomain.SHARED)
 
-    def _calculate_source_diversity(self, sources: List[str]) -> float:
+    def _calculate_source_diversity(self, sources: list[str]) -> float:
         """Calculate diversity score for data sources"""
         if not sources:
             return 0.0
@@ -637,7 +637,7 @@ class UnifiedBaseOrchestrator(ABC):
 
         return int(base_ttl * quality_multiplier * priority_multiplier)
 
-    async def _load_shared_knowledge(self, task: UnifiedTask) -> Dict[str, Any]:
+    async def _load_shared_knowledge(self, task: UnifiedTask) -> dict[str, Any]:
         """Load cross-orchestrator shared knowledge"""
         if not self.memory:
             return {}
@@ -662,12 +662,12 @@ class UnifiedBaseOrchestrator(ABC):
             ]
         }
 
-    async def _load_integration_context(self, task: UnifiedTask) -> Dict[str, Any]:
+    async def _load_integration_context(self, task: UnifiedTask) -> dict[str, Any]:
         """Load context from integration sources"""
         # To be implemented by subclasses based on their specific integrations
         return {}
 
-    def _get_recent_tasks_with_patterns(self, limit: int = 5) -> List[Dict[str, Any]]:
+    def _get_recent_tasks_with_patterns(self, limit: int = 5) -> list[dict[str, Any]]:
         """Get recent task history with pattern analysis"""
         recent = self._task_history[-limit:] if self._task_history else []
 
@@ -694,13 +694,13 @@ class UnifiedBaseOrchestrator(ABC):
 
         return tasks_with_patterns
 
-    def _calculate_context_quality(self, context: Dict[str, Any]) -> Dict[str, float]:
+    def _calculate_context_quality(self, context: dict[str, Any]) -> dict[str, float]:
         """Calculate quality metrics for loaded context"""
         return {
             "relevance_score": sum(item.get("score", 0) for item in context.get("related_info", []))
             / max(len(context.get("related_info", [])), 1),
             "source_diversity": len(
-                set(item.get("source", "") for item in context.get("related_info", []))
+                {item.get("source", "") for item in context.get("related_info", [])}
             ),
             "recency_score": len(
                 [task for task in context.get("recent_tasks", []) if task.get("success", False)]
@@ -785,7 +785,7 @@ class UnifiedBaseOrchestrator(ABC):
                 logger.error(f"Error processing task: {e}")
                 await asyncio.sleep(1)
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Get enhanced orchestrator status"""
         return {
             "name": self.config.name,

@@ -12,7 +12,7 @@ from dataclasses import asdict, dataclass
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 import numpy as np
 
@@ -76,9 +76,9 @@ class MetadataStore:
         self.storage_dir.mkdir(parents=True, exist_ok=True)
 
         # In-memory store for fast access
-        self._metadata: Dict[str, EmbeddingMetadata] = {}
-        self._id_to_index: Dict[str, int] = {}  # Maps embedding_id to FAISS index
-        self._index_to_id: Dict[int, str] = {}  # Maps FAISS index to embedding_id
+        self._metadata: dict[str, EmbeddingMetadata] = {}
+        self._id_to_index: dict[str, int] = {}  # Maps embedding_id to FAISS index
+        self._index_to_id: dict[int, str] = {}  # Maps FAISS index to embedding_id
 
         self._next_index = 0
         self._load_metadata()
@@ -145,7 +145,7 @@ class MetadataStore:
         """Get metadata by embedding ID"""
         return self._metadata.get(embedding_id)
 
-    def get_by_faiss_index(self, faiss_index: int) -> Optional[Tuple[str, EmbeddingMetadata]]:
+    def get_by_faiss_index(self, faiss_index: int) -> Optional[tuple[str, EmbeddingMetadata]]:
         """Get embedding ID and metadata by FAISS index"""
         embedding_id = self._index_to_id.get(faiss_index)
         if embedding_id:
@@ -165,7 +165,7 @@ class MetadataStore:
 
         return True
 
-    def search_metadata(self, **criteria) -> List[str]:
+    def search_metadata(self, **criteria) -> list[str]:
         """Search metadata by criteria and return embedding IDs"""
         results = []
 
@@ -194,7 +194,7 @@ class MetadataStore:
 
         return results
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get metadata store statistics"""
         embedding_types = {}
         hierarchy_levels = {}
@@ -259,7 +259,7 @@ class LevelIndex:
             last_updated=datetime.now(),
         )
 
-    def add_vectors(self, vectors: np.ndarray, vector_ids: List[str]):
+    def add_vectors(self, vectors: np.ndarray, vector_ids: list[str]):
         """Add vectors to the index"""
         if len(vectors) != len(vector_ids):
             raise ValueError("Vectors and vector_ids must have same length")
@@ -289,7 +289,7 @@ class LevelIndex:
 
     def search(
         self, query_vector: np.ndarray, k: int = 10, threshold: Optional[float] = None
-    ) -> List[Tuple[str, float]]:
+    ) -> list[tuple[str, float]]:
         """Search for similar vectors"""
         if self.index.ntotal == 0:
             return []
@@ -406,7 +406,7 @@ class HierarchicalIndex:
         self.metadata_store = MetadataStore(self.storage_dir / "metadata")
 
         # Initialize level indices
-        self.level_indices: Dict[IndexLevel, LevelIndex] = {}
+        self.level_indices: dict[IndexLevel, LevelIndex] = {}
         for level in IndexLevel:
             self.level_indices[level] = LevelIndex(level, dimensions, index_type)
 
@@ -431,7 +431,7 @@ class HierarchicalIndex:
         """
         try:
             # Add to metadata store
-            faiss_index = self.metadata_store.add(embedding_id, metadata)
+            self.metadata_store.add(embedding_id, metadata)
 
             # Determine which level index to use
             level = IndexLevel(metadata.hierarchy_level.value)
@@ -448,7 +448,7 @@ class HierarchicalIndex:
             return False
 
     def add_batch_embeddings(
-        self, embeddings: List[Tuple[str, np.ndarray, EmbeddingMetadata]]
+        self, embeddings: list[tuple[str, np.ndarray, EmbeddingMetadata]]
     ) -> int:
         """
         Add multiple embeddings in batch for efficiency
@@ -463,7 +463,7 @@ class HierarchicalIndex:
             return 0
 
         # Group by hierarchy level
-        level_groups: Dict[IndexLevel, List[Tuple[str, np.ndarray, EmbeddingMetadata]]] = {}
+        level_groups: dict[IndexLevel, list[tuple[str, np.ndarray, EmbeddingMetadata]]] = {}
 
         for embedding_id, vector, metadata in embeddings:
             level = IndexLevel(metadata.hierarchy_level.value)
@@ -506,11 +506,11 @@ class HierarchicalIndex:
         self,
         query_vector: np.ndarray,
         k: int = 10,
-        levels: Optional[List[IndexLevel]] = None,
-        embedding_types: Optional[List[EmbeddingType]] = None,
+        levels: Optional[list[IndexLevel]] = None,
+        embedding_types: Optional[list[EmbeddingType]] = None,
         threshold: Optional[float] = None,
-        metadata_filters: Optional[Dict[str, Any]] = None,
-    ) -> List[SearchResult]:
+        metadata_filters: Optional[dict[str, Any]] = None,
+    ) -> list[SearchResult]:
         """
         Search for similar embeddings across hierarchy levels
 
@@ -579,7 +579,7 @@ class HierarchicalIndex:
 
     def hierarchical_search(
         self, query_vector: np.ndarray, k: int = 10, expand_results: bool = True
-    ) -> Dict[IndexLevel, List[SearchResult]]:
+    ) -> dict[IndexLevel, list[SearchResult]]:
         """
         Perform hierarchical search starting from file level and expanding down
 
@@ -636,7 +636,7 @@ class HierarchicalIndex:
 
         return results
 
-    def _matches_filters(self, metadata: EmbeddingMetadata, filters: Dict[str, Any]) -> bool:
+    def _matches_filters(self, metadata: EmbeddingMetadata, filters: dict[str, Any]) -> bool:
         """Check if metadata matches filters"""
         for key, value in filters.items():
             if hasattr(metadata, key):
@@ -669,7 +669,7 @@ class HierarchicalIndex:
 
         return " > ".join(parts)
 
-    def get_embedding(self, embedding_id: str) -> Optional[Tuple[EmbeddingMetadata, np.ndarray]]:
+    def get_embedding(self, embedding_id: str) -> Optional[tuple[EmbeddingMetadata, np.ndarray]]:
         """Get embedding metadata and vector by ID"""
         metadata = self.metadata_store.get(embedding_id)
         if metadata is None:
@@ -752,7 +752,7 @@ class HierarchicalIndex:
         except Exception as e:
             logger.warning(f"Failed to load existing indices: {e}")
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get comprehensive statistics for the hierarchical index"""
         level_stats = {}
         total_vectors = 0
@@ -801,7 +801,7 @@ class HierarchicalIndex:
                 return True
 
             # Create new index
-            new_index = LevelIndex(level, self.dimensions, self.index_type)
+            LevelIndex(level, self.dimensions, self.index_type)
 
             # Note: This would require storing original vectors
             # For now, this is a placeholder for the rebuild logic

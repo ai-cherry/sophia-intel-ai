@@ -9,14 +9,14 @@ Provides common functionality for both domain factories:
 - WebSocket real-time updates
 """
 
-import asyncio
+import contextlib
 import json
 import logging
 import os
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Optional
 from uuid import uuid4
 
 import httpx
@@ -27,10 +27,6 @@ from app.mcp.connection_manager import (
     CircuitBreaker,
     CircuitBreakerConfig,
     Connection,
-    ConnectionPoolConfig,
-    ConnectionState,
-    RetryConfig,
-    RetryStrategy,
 )
 
 # Import monitoring and metrics (optional)
@@ -60,7 +56,7 @@ class ModelConfig:
     temperature: float = 0.7
     timeout: int = 60
     cost_per_1k_tokens: float = 0.0
-    fallback_models: List[str] = field(default_factory=list)
+    fallback_models: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -72,9 +68,9 @@ class AgentConfig:
     role: str
     description: str
     model_config: ModelConfig
-    capabilities: List[str]
-    tools: List[str]
-    personality_traits: Dict[str, Any]
+    capabilities: list[str]
+    tools: list[str]
+    personality_traits: dict[str, Any]
     created_at: datetime = field(default_factory=datetime.now)
 
 
@@ -85,7 +81,7 @@ class SwarmConfig:
     id: str
     name: str
     description: str
-    agents: List[AgentConfig]
+    agents: list[AgentConfig]
     execution_strategy: str
     coordination_model: str
     max_parallel: int = 5
@@ -114,9 +110,9 @@ class MCPIntegrationManager:
     """
 
     def __init__(self):
-        self.connections: Dict[str, Connection] = {}
-        self.circuit_breakers: Dict[str, CircuitBreaker] = {}
-        self.health_status: Dict[str, bool] = {}
+        self.connections: dict[str, Connection] = {}
+        self.circuit_breakers: dict[str, CircuitBreaker] = {}
+        self.health_status: dict[str, bool] = {}
 
         # MCP Server configurations
         self.mcp_configs = {
@@ -144,7 +140,7 @@ class MCPIntegrationManager:
 
         logger.info("🔌 MCP Integration Manager initialized")
 
-    async def connect_all(self) -> Dict[str, bool]:
+    async def connect_all(self) -> dict[str, bool]:
         """Connect to all MCP servers"""
         results = {}
 
@@ -162,7 +158,7 @@ class MCPIntegrationManager:
 
         return results
 
-    async def _create_connection(self, name: str, config: Dict[str, Any]) -> Connection:
+    async def _create_connection(self, name: str, config: dict[str, Any]) -> Connection:
         """Create MCP server connection with circuit breaker"""
 
         # Initialize circuit breaker
@@ -188,7 +184,7 @@ class MCPIntegrationManager:
         )
 
     async def execute_mcp_operation(
-        self, server: str, operation: str, params: Dict[str, Any]
+        self, server: str, operation: str, params: dict[str, Any]
     ) -> Any:
         """Execute operation on MCP server with circuit breaker protection"""
 
@@ -214,7 +210,7 @@ class MCPIntegrationManager:
 
         return await circuit_breaker.async_call(_execute)
 
-    def get_connection_status(self) -> Dict[str, Any]:
+    def get_connection_status(self) -> dict[str, Any]:
         """Get status of all MCP connections"""
         return {
             "connections": {
@@ -253,11 +249,11 @@ class ModelRouter:
     """
 
     def __init__(self):
-        self.model_configs: Dict[str, ModelConfig] = self._initialize_models()
-        self.usage_stats: Dict[str, Dict[str, Any]] = {}
+        self.model_configs: dict[str, ModelConfig] = self._initialize_models()
+        self.usage_stats: dict[str, dict[str, Any]] = {}
         self.total_cost = 0.0
 
-    def _initialize_models(self) -> Dict[str, ModelConfig]:
+    def _initialize_models(self) -> dict[str, ModelConfig]:
         """Initialize all available models"""
         return {
             # Tier 1: Fast models
@@ -318,8 +314,8 @@ class ModelRouter:
         }
 
     async def route_request(
-        self, preferred_model: str, prompt: str, context: Dict[str, Any] = None
-    ) -> Dict[str, Any]:
+        self, preferred_model: str, prompt: str, context: dict[str, Any] = None
+    ) -> dict[str, Any]:
         """Route request to appropriate model with fallback"""
 
         if preferred_model not in self.model_configs:
@@ -350,8 +346,8 @@ class ModelRouter:
         raise HTTPException(status_code=503, detail="All models failed")
 
     async def _call_model(
-        self, config: ModelConfig, prompt: str, context: Dict[str, Any] = None
-    ) -> Dict[str, Any]:
+        self, config: ModelConfig, prompt: str, context: dict[str, Any] = None
+    ) -> dict[str, Any]:
         """Call specific model API"""
 
         headers = {"Content-Type": "application/json"}
@@ -414,7 +410,7 @@ class ModelRouter:
         stats["total_cost"] += cost
         self.total_cost += cost
 
-    def get_usage_report(self) -> Dict[str, Any]:
+    def get_usage_report(self) -> dict[str, Any]:
         """Get model usage and cost report"""
         return {
             "models": self.usage_stats,
@@ -445,12 +441,12 @@ class BaseAgentFactory:
         self.metrics_collector = MetricsCollector if MetricsCollector else None
 
         # Agent and swarm registries
-        self.agents: Dict[str, AgentConfig] = {}
-        self.swarms: Dict[str, SwarmConfig] = {}
-        self.agent_status: Dict[str, AgentStatus] = {}
+        self.agents: dict[str, AgentConfig] = {}
+        self.swarms: dict[str, SwarmConfig] = {}
+        self.agent_status: dict[str, AgentStatus] = {}
 
         # Performance tracking
-        self.performance_metrics: Dict[str, Any] = {
+        self.performance_metrics: dict[str, Any] = {
             "agents_created": 0,
             "swarms_created": 0,
             "tasks_executed": 0,
@@ -460,14 +456,14 @@ class BaseAgentFactory:
         }
 
         # WebSocket connections for real-time updates
-        self.websocket_connections: Set[WebSocket] = set()
+        self.websocket_connections: set[WebSocket] = set()
 
         # Initialize timestamp
         self.initialized_at = datetime.now()
 
         logger.info(f"🏭 {domain.upper()} Base Factory initialized: {self.factory_id}")
 
-    async def initialize(self) -> Dict[str, Any]:
+    async def initialize(self) -> dict[str, Any]:
         """Initialize factory components"""
         initialization_results = {
             "factory_id": self.factory_id,
@@ -494,9 +490,9 @@ class BaseAgentFactory:
         name: str,
         role: str,
         model: str,
-        capabilities: List[str],
-        tools: List[str] = None,
-        personality: Dict[str, Any] = None,
+        capabilities: list[str],
+        tools: list[str] = None,
+        personality: dict[str, Any] = None,
     ) -> str:
         """Create a new agent"""
 
@@ -536,8 +532,8 @@ class BaseAgentFactory:
         return agent_id
 
     async def execute_task(
-        self, agent_id: str, task: str, context: Dict[str, Any] = None
-    ) -> Dict[str, Any]:
+        self, agent_id: str, task: str, context: dict[str, Any] = None
+    ) -> dict[str, Any]:
         """Execute task with an agent"""
 
         if agent_id not in self.agents:
@@ -593,7 +589,7 @@ class BaseAgentFactory:
             }
 
     async def create_swarm(
-        self, name: str, description: str, agent_ids: List[str], strategy: str = "parallel"
+        self, name: str, description: str, agent_ids: list[str], strategy: str = "parallel"
     ) -> str:
         """Create an agent swarm"""
 
@@ -626,7 +622,7 @@ class BaseAgentFactory:
         logger.info(f"🐝 Created swarm: {name} with {len(agent_ids)} agents ({swarm_id})")
         return swarm_id
 
-    async def _broadcast_update(self, message: Dict[str, Any]):
+    async def _broadcast_update(self, message: dict[str, Any]):
         """Broadcast update to all connected WebSockets"""
         if not self.websocket_connections:
             return
@@ -643,7 +639,7 @@ class BaseAgentFactory:
         # Remove disconnected websockets
         self.websocket_connections -= disconnected
 
-    def get_factory_status(self) -> Dict[str, Any]:
+    def get_factory_status(self) -> dict[str, Any]:
         """Get comprehensive factory status"""
         uptime = (datetime.now() - self.initialized_at).total_seconds()
 
@@ -674,10 +670,8 @@ class BaseAgentFactory:
 
         # Close WebSocket connections
         for ws in self.websocket_connections:
-            try:
+            with contextlib.suppress(Exception):
                 await ws.close()
-            except Exception:
-                pass
 
         # Log final metrics
         logger.info(f"Final metrics: {self.performance_metrics}")
@@ -695,7 +689,7 @@ def create_base_factory(domain: str = "base") -> BaseAgentFactory:
     return BaseAgentFactory(domain)
 
 
-async def initialize_factory(factory: BaseAgentFactory) -> Dict[str, Any]:
+async def initialize_factory(factory: BaseAgentFactory) -> dict[str, Any]:
     """Initialize a factory with all components"""
     return await factory.initialize()
 

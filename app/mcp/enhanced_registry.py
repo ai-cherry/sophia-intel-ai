@@ -3,13 +3,11 @@ Enhanced MCP Server Registry with Domain-Aware Routing
 Extends basic registry with domain partitioning and intelligent allocation
 """
 
-import asyncio
 import logging
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime
-from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Optional
 
 from app.mcp.router_config import (
     MCPRouterConfiguration,
@@ -30,8 +28,8 @@ class ServerAllocation:
     domain: MemoryDomain
     access_level: str  # "exclusive", "shared", "read_only"
     priority: int = 0
-    filters: Dict[str, Any] = field(default_factory=dict)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    filters: dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -41,8 +39,8 @@ class DomainPartition:
     domain: MemoryDomain
     resource_type: str
     partition_key: str
-    partition_config: Dict[str, Any]
-    access_rules: Dict[str, Any] = field(default_factory=dict)
+    partition_config: dict[str, Any]
+    access_rules: dict[str, Any] = field(default_factory=dict)
 
 
 class MCPServerRegistry:
@@ -53,17 +51,17 @@ class MCPServerRegistry:
 
     def __init__(self):
         # Core registry components
-        self.servers: Dict[str, MCPServerConfig] = {}
-        self.allocations: Dict[MemoryDomain, List[ServerAllocation]] = defaultdict(list)
-        self.partitions: Dict[str, List[DomainPartition]] = defaultdict(list)
-        self.active_connections: Dict[str, int] = defaultdict(int)
+        self.servers: dict[str, MCPServerConfig] = {}
+        self.allocations: dict[MemoryDomain, list[ServerAllocation]] = defaultdict(list)
+        self.partitions: dict[str, list[DomainPartition]] = defaultdict(list)
+        self.active_connections: dict[str, int] = defaultdict(int)
 
         # Router configuration
         self.router = MCPRouterConfiguration()
 
         # Connection tracking
-        self.connection_history: List[Dict[str, Any]] = []
-        self.domain_metrics: Dict[MemoryDomain, Dict[str, Any]] = defaultdict(dict)
+        self.connection_history: list[dict[str, Any]] = []
+        self.domain_metrics: dict[MemoryDomain, dict[str, Any]] = defaultdict(dict)
 
         # Initialize registry
         self._initialize_registry()
@@ -372,7 +370,7 @@ class MCPServerRegistry:
 
     def get_servers_for_domain(
         self, domain: MemoryDomain, server_type: Optional[MCPServerType] = None
-    ) -> List[ServerAllocation]:
+    ) -> list[ServerAllocation]:
         """
         Get all servers allocated to a domain
 
@@ -395,8 +393,8 @@ class MCPServerRegistry:
         self,
         domain: MemoryDomain,
         server_type: MCPServerType,
-        request_metadata: Optional[Dict[str, Any]] = None,
-    ) -> Optional[Tuple[str, Dict[str, Any]]]:
+        request_metadata: Optional[dict[str, Any]] = None,
+    ) -> Optional[tuple[str, dict[str, Any]]]:
         """
         Allocate a connection for a domain and server type
 
@@ -493,7 +491,7 @@ class MCPServerRegistry:
         self,
         domain: MemoryDomain,
         allocation: ServerAllocation,
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: Optional[dict[str, Any]] = None,
     ):
         """Track connection allocation for metrics"""
         event = {
@@ -519,7 +517,7 @@ class MCPServerRegistry:
         self.domain_metrics[domain]["active_connections"] += 1
         self.domain_metrics[domain]["server_usage"][allocation.server_name] += 1
 
-    def get_metrics(self) -> Dict[str, Any]:
+    def get_metrics(self) -> dict[str, Any]:
         """Get registry metrics"""
         return {
             "total_servers": len(self.servers),
@@ -558,7 +556,7 @@ class MCPServerRegistry:
 
         return domain in routing_rule.allowed_domains
 
-    def get_connection_summary(self) -> Dict[str, Any]:
+    def get_connection_summary(self) -> dict[str, Any]:
         """Get summary of all connections and allocations"""
         summary = {
             "artemis": {"exclusive_servers": [], "shared_servers": [], "total_connections": 0},

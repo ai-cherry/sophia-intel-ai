@@ -6,7 +6,6 @@ task routing optimization, resource balancing, and context preservation
 
 import asyncio
 import json
-import logging
 import statistics
 import time
 from collections import defaultdict, deque
@@ -14,7 +13,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
 from threading import Lock, RLock
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Optional
 
 from app.core.ai_logger import logger
 from app.core.redis_manager import RedisManager
@@ -22,9 +21,7 @@ from app.core.websocket_manager import WebSocketManager
 from app.orchestrators.base_orchestrator import (
     BaseOrchestrator,
     ExecutionPriority,
-    Result,
     Task,
-    TaskType,
 )
 
 # ==================== TYPES AND ENUMS ====================
@@ -147,7 +144,7 @@ class TaskFlowEvent:
     processing_time_ms: Optional[float] = None
     context_preserved: bool = True
     pay_ready_context: bool = False
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 class PerformanceBottleneck:
@@ -161,7 +158,7 @@ class PerformanceBottleneck:
         orchestrator_affected: str,
         description: str,
         impact_score: float,
-        suggested_actions: List[str],
+        suggested_actions: list[str],
     ):
         self.id = bottleneck_id
         self.type = bottleneck_type
@@ -198,9 +195,9 @@ class EnhancedOrchestratorBridge:
         self.routing_strategy = routing_strategy
 
         # Orchestrator registry
-        self.orchestrators: Dict[str, BaseOrchestrator] = {}
-        self.orchestrator_metrics: Dict[str, OrchestratorMetrics] = {}
-        self.orchestrator_types: Dict[str, OrchestratorType] = {}
+        self.orchestrators: dict[str, BaseOrchestrator] = {}
+        self.orchestrator_metrics: dict[str, OrchestratorMetrics] = {}
+        self.orchestrator_types: dict[str, OrchestratorType] = {}
 
         # Bridge state and metrics
         self.bridge_metrics = BridgeMetrics()
@@ -208,13 +205,13 @@ class EnhancedOrchestratorBridge:
         self.health_status = BridgeHealthStatus.OFFLINE
 
         # Task tracking
-        self.active_tasks: Dict[str, TaskFlowEvent] = {}
+        self.active_tasks: dict[str, TaskFlowEvent] = {}
         self.task_history: deque = deque(maxlen=1000)  # Keep last 1000 task events
         self.routing_decisions: deque = deque(maxlen=500)
 
         # Performance monitoring
-        self.performance_samples: Dict[str, deque] = defaultdict(lambda: deque(maxlen=100))
-        self.bottlenecks: List[PerformanceBottleneck] = []
+        self.performance_samples: dict[str, deque] = defaultdict(lambda: deque(maxlen=100))
+        self.bottlenecks: list[PerformanceBottleneck] = []
 
         # Threading locks
         self.metrics_lock = RLock()
@@ -345,9 +342,7 @@ class EnhancedOrchestratorBridge:
         if not available_orchestrators:
             # Fallback: use least overloaded orchestrator
             available_orchestrators = [
-                orch_id
-                for orch_id in self.orchestrators.keys()
-                if orch_id != source_orchestrator_id
+                orch_id for orch_id in self.orchestrators if orch_id != source_orchestrator_id
             ]
 
         if not available_orchestrators:
@@ -368,14 +363,14 @@ class EnhancedOrchestratorBridge:
                 len(self.routing_decisions) % len(available_orchestrators)
             ]
 
-    def _select_least_loaded(self, orchestrators: List[str]) -> str:
+    def _select_least_loaded(self, orchestrators: list[str]) -> str:
         """Select orchestrator with lowest utilization"""
         return min(
             orchestrators,
             key=lambda orch_id: self.orchestrator_metrics[orch_id].utilization_percent,
         )
 
-    def _select_by_domain_affinity(self, task: Task, orchestrators: List[str]) -> str:
+    def _select_by_domain_affinity(self, task: Task, orchestrators: list[str]) -> str:
         """Select orchestrator based on domain affinity"""
         # Pay Ready tasks prefer Sophia for business context
         if self._is_pay_ready_task(task):
@@ -399,7 +394,7 @@ class EnhancedOrchestratorBridge:
 
         return self._select_least_loaded(orchestrators)
 
-    def _select_by_priority(self, task: Task, orchestrators: List[str]) -> str:
+    def _select_by_priority(self, task: Task, orchestrators: list[str]) -> str:
         """Select orchestrator based on task priority and performance"""
         if task.priority == ExecutionPriority.HIGH:
             # High priority tasks get the best performing orchestrator
@@ -413,7 +408,7 @@ class EnhancedOrchestratorBridge:
         else:
             return self._select_least_loaded(orchestrators)
 
-    def _select_intelligently(self, task: Task, orchestrators: List[str]) -> str:
+    def _select_intelligently(self, task: Task, orchestrators: list[str]) -> str:
         """Intelligent selection combining multiple factors"""
         scores = {}
 
@@ -480,7 +475,7 @@ class EnhancedOrchestratorBridge:
                     }
                 )
 
-    def get_coordination_metrics(self) -> Dict[str, Any]:
+    def get_coordination_metrics(self) -> dict[str, Any]:
         """Get comprehensive coordination metrics"""
         with self.metrics_lock:
             total_tasks = sum(m.active_tasks for m in self.orchestrator_metrics.values())
@@ -521,7 +516,7 @@ class EnhancedOrchestratorBridge:
 
     # ==================== BOTTLENECK DETECTION ====================
 
-    async def detect_bottlenecks(self) -> List[PerformanceBottleneck]:
+    async def detect_bottlenecks(self) -> list[PerformanceBottleneck]:
         """Detect performance bottlenecks in the coordination system"""
         if not self.enable_bottleneck_detection:
             return []
@@ -750,7 +745,7 @@ class EnhancedOrchestratorBridge:
         except Exception as e:
             logger.error(f"Failed to broadcast task event: {e}")
 
-    async def _broadcast_bottleneck_alert(self, bottlenecks: List[PerformanceBottleneck]) -> None:
+    async def _broadcast_bottleneck_alert(self, bottlenecks: list[PerformanceBottleneck]) -> None:
         """Broadcast bottleneck alert via WebSocket"""
         if not self.websocket_manager:
             return

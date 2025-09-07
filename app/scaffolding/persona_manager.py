@@ -18,7 +18,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -94,9 +94,9 @@ class PersonaContext:
     domain: str  # Current domain (e.g., "finance", "engineering", "analytics")
     task_type: str  # Type of task being performed
     user_expertise: str  # User's expertise level
-    interaction_history: List[Dict[str, Any]] = field(default_factory=list)
-    preferences: Dict[str, Any] = field(default_factory=dict)
-    constraints: List[str] = field(default_factory=list)
+    interaction_history: list[dict[str, Any]] = field(default_factory=list)
+    preferences: dict[str, Any] = field(default_factory=dict)
+    constraints: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -105,7 +105,7 @@ class PersonaEvolution:
 
     timestamp: str
     trigger: str  # What triggered the evolution
-    changes: Dict[str, Any]  # What changed
+    changes: dict[str, Any]  # What changed
     performance_before: float
     performance_after: float
     reason: str
@@ -118,18 +118,18 @@ class Persona:
     name: str
     description: str
     role: str
-    traits: Set[PersonaTrait] = field(default_factory=set)
-    capabilities: Set[PersonaCapability] = field(default_factory=set)
-    knowledge_domains: List[str] = field(default_factory=list)
+    traits: set[PersonaTrait] = field(default_factory=set)
+    capabilities: set[PersonaCapability] = field(default_factory=set)
+    knowledge_domains: list[str] = field(default_factory=list)
     prompt_template: str = ""
     system_message: str = ""
     temperature: float = 0.7
     max_tokens: int = 4000
-    evolution_history: List[PersonaEvolution] = field(default_factory=list)
-    performance_metrics: Dict[str, float] = field(default_factory=dict)
-    context_adaptations: Dict[str, Dict[str, Any]] = field(default_factory=dict)
+    evolution_history: list[PersonaEvolution] = field(default_factory=list)
+    performance_metrics: dict[str, float] = field(default_factory=dict)
+    context_adaptations: dict[str, dict[str, Any]] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary"""
         return {
             "name": self.name,
@@ -189,7 +189,7 @@ class Persona:
 
         return adapted
 
-    def evolve(self, trigger: str, changes: Dict[str, Any], performance_delta: float) -> None:
+    def evolve(self, trigger: str, changes: dict[str, Any], performance_delta: float) -> None:
         """Evolve the persona based on performance"""
         evolution = PersonaEvolution(
             timestamp=datetime.now().isoformat(),
@@ -227,9 +227,9 @@ class PersonaManager:
     """Manages AI personas and their interactions"""
 
     def __init__(self):
-        self.personas: Dict[str, Persona] = {}
+        self.personas: dict[str, Persona] = {}
         self.active_persona: Optional[Persona] = None
-        self.shared_knowledge: Dict[str, Any] = {}
+        self.shared_knowledge: dict[str, Any] = {}
         self._initialize_default_personas()
 
     def _initialize_default_personas(self) -> None:
@@ -392,8 +392,8 @@ Code quality requirements:
         name: str,
         description: str,
         role: str,
-        traits: List[str],
-        capabilities: List[str],
+        traits: list[str],
+        capabilities: list[str],
         **kwargs,
     ) -> Persona:
         """Create a new persona"""
@@ -427,7 +427,7 @@ Code quality requirements:
         return persona
 
     def share_knowledge(
-        self, source_persona: str, target_persona: str, knowledge: Dict[str, Any]
+        self, source_persona: str, target_persona: str, knowledge: dict[str, Any]
     ) -> None:
         """Share knowledge between personas"""
         source = self.get_persona(source_persona)
@@ -453,7 +453,7 @@ Code quality requirements:
 
     def get_collaboration_prompt(
         self,
-        personas: List[str],
+        personas: list[str],
         task: str,
         context: PersonaContext,
     ) -> str:
@@ -499,7 +499,7 @@ Begin collaborative analysis:"""
         self,
         persona_name: str,
         task_type: str,
-        success_metrics: Dict[str, float],
+        success_metrics: dict[str, float],
     ) -> float:
         """Evaluate persona performance and trigger evolution if needed"""
         persona = self.get_persona(persona_name)

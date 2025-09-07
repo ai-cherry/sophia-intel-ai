@@ -11,7 +11,7 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any
 from uuid import uuid4
 
 import redis.asyncio as redis
@@ -21,7 +21,6 @@ from app.artemis.agent_factory import ArtemisAgentFactory
 from app.core.circuit_breaker import with_circuit_breaker
 from app.memory.unified_memory_router import UnifiedMemoryRouter
 from app.sophia.agent_factory import SophiaBusinessAgentFactory
-from app.swarms.core.swarm_base import SwarmExecutionMode, SwarmType
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +55,7 @@ class OrchestratorRequest:
     id: str
     type: RequestType
     content: str
-    context: Dict[str, Any]
+    context: dict[str, Any]
     user_id: str
     session_id: str
     timestamp: datetime = None
@@ -73,7 +72,7 @@ class AgentSpawnEvent:
     """Event broadcast when agents are spawned."""
 
     factory: str  # 'sophia' or 'artemis'
-    agents: List[str]  # Agent IDs
+    agents: list[str]  # Agent IDs
     purpose: str
     complexity: str
     estimated_cost: float
@@ -92,8 +91,8 @@ class ExecutionEvent:
     agent_id: str
     task_id: str
     status: str
-    details: Dict[str, Any]
-    metrics: Dict[str, float]
+    details: dict[str, Any]
+    metrics: dict[str, float]
     timestamp: datetime = None
 
     def __post_init__(self):
@@ -105,7 +104,7 @@ class EventBroadcaster:
     """Broadcasts events to connected WebSocket clients."""
 
     def __init__(self):
-        self.connections: Set[WebSocket] = set()
+        self.connections: set[WebSocket] = set()
         self.redis_client = None
         self.event_queue = asyncio.Queue()
         self.broadcast_task = None
@@ -132,7 +131,7 @@ class EventBroadcaster:
         self.connections.discard(websocket)
         logger.info(f"WebSocket disconnected. Total connections: {len(self.connections)}")
 
-    async def publish(self, event_type: str, data: Dict[str, Any]):
+    async def publish(self, event_type: str, data: dict[str, Any]):
         """Publish an event to all connected clients."""
         event = {"type": event_type, "data": data, "timestamp": datetime.utcnow().isoformat()}
 
@@ -169,9 +168,9 @@ class ComplexityAnalyzer:
     """Analyzes request complexity for agent selection."""
 
     @staticmethod
-    def analyze(request: OrchestratorRequest) -> Dict[str, Any]:
+    def analyze(request: OrchestratorRequest) -> dict[str, Any]:
         """Analyze the complexity of a request."""
-        content_length = len(request.content)
+        len(request.content)
         word_count = len(request.content.split())
 
         # Determine complexity based on various factors
@@ -236,12 +235,12 @@ class FactoryAwareOrchestrator:
         self.complexity_analyzer = ComplexityAnalyzer()
 
         # Active executions tracking
-        self.active_executions: Dict[str, Dict[str, Any]] = {}
-        self.agent_performance: Dict[str, List[float]] = {}
+        self.active_executions: dict[str, dict[str, Any]] = {}
+        self.agent_performance: dict[str, list[float]] = {}
 
         # Learning components (will be expanded)
-        self.execution_patterns: List[Dict[str, Any]] = []
-        self.optimization_suggestions: List[Dict[str, Any]] = []
+        self.execution_patterns: list[dict[str, Any]] = []
+        self.optimization_suggestions: list[dict[str, Any]] = []
 
         logger.info("FactoryAwareOrchestrator initialized with full factory integration")
 
@@ -251,7 +250,7 @@ class FactoryAwareOrchestrator:
         logger.info("FactoryAwareOrchestrator fully initialized")
 
     @with_circuit_breaker("orchestrator")
-    async def process_request(self, request: OrchestratorRequest) -> Dict[str, Any]:
+    async def process_request(self, request: OrchestratorRequest) -> dict[str, Any]:
         """Process a request with full factory awareness and broadcasting."""
         try:
             # Analyze complexity
@@ -334,8 +333,8 @@ class FactoryAwareOrchestrator:
             return "hybrid"
 
     async def _spawn_sophia_agents(
-        self, request: OrchestratorRequest, complexity: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
+        self, request: OrchestratorRequest, complexity: dict[str, Any]
+    ) -> list[dict[str, Any]]:
         """Spawn Sophia business agents."""
         agents = []
         num_agents = complexity["recommended_agents"]
@@ -358,8 +357,8 @@ class FactoryAwareOrchestrator:
         return agents
 
     async def _spawn_artemis_agents(
-        self, request: OrchestratorRequest, complexity: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
+        self, request: OrchestratorRequest, complexity: dict[str, Any]
+    ) -> list[dict[str, Any]]:
         """Spawn Artemis technical agents."""
         agents = []
         num_agents = complexity["recommended_agents"]
@@ -384,8 +383,8 @@ class FactoryAwareOrchestrator:
         return agents
 
     async def _spawn_hybrid_agents(
-        self, request: OrchestratorRequest, complexity: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
+        self, request: OrchestratorRequest, complexity: dict[str, Any]
+    ) -> list[dict[str, Any]]:
         """Spawn both Sophia and Artemis agents for hybrid requests."""
         sophia_agents = await self._spawn_sophia_agents(
             request, {**complexity, "recommended_agents": 1}
@@ -396,8 +395,8 @@ class FactoryAwareOrchestrator:
         return sophia_agents + artemis_agents
 
     async def _execute_with_streaming(
-        self, agents: List[Dict[str, Any]], request: OrchestratorRequest
-    ) -> Dict[str, Any]:
+        self, agents: list[dict[str, Any]], request: OrchestratorRequest
+    ) -> dict[str, Any]:
         """Execute request with real-time streaming updates."""
         execution_id = str(uuid4())
         self.active_executions[execution_id] = {
@@ -477,7 +476,7 @@ class FactoryAwareOrchestrator:
             self.active_executions[execution_id]["error"] = str(e)
             raise
 
-    def _estimate_cost(self, agents: List[Dict[str, Any]], complexity: Dict[str, Any]) -> float:
+    def _estimate_cost(self, agents: list[dict[str, Any]], complexity: dict[str, Any]) -> float:
         """Estimate the cost of execution."""
         # Simple cost estimation model
         base_cost_per_agent = 0.01  # $0.01 per agent
@@ -489,7 +488,7 @@ class FactoryAwareOrchestrator:
         return num_agents * base_cost_per_agent * multiplier
 
     async def _store_execution(
-        self, request: OrchestratorRequest, agents: List[Dict[str, Any]], result: Dict[str, Any]
+        self, request: OrchestratorRequest, agents: list[dict[str, Any]], result: dict[str, Any]
     ):
         """Store execution for learning and analysis."""
         execution_data = {
@@ -537,7 +536,7 @@ class FactoryAwareOrchestrator:
         # In production, this would trigger actual learning
         logger.info("Learning process triggered")
 
-    async def get_active_executions(self) -> List[Dict[str, Any]]:
+    async def get_active_executions(self) -> list[dict[str, Any]]:
         """Get list of active executions."""
         return [
             {**exec_data, "execution_id": exec_id}
@@ -545,7 +544,7 @@ class FactoryAwareOrchestrator:
             if exec_data["status"] == "running"
         ]
 
-    async def get_agent_performance(self, agent_id: str) -> Dict[str, Any]:
+    async def get_agent_performance(self, agent_id: str) -> dict[str, Any]:
         """Get performance metrics for a specific agent."""
         if agent_id not in self.agent_performance:
             return {"agent_id": agent_id, "metrics": [], "average_score": 0.0}

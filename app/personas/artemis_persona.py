@@ -6,7 +6,7 @@ and behavioral patterns for code excellence and technical tasks.
 """
 
 import logging
-from typing import Any, Dict
+from typing import Any
 
 from .persona_manager import (
     EvolutionTrigger,
@@ -240,7 +240,7 @@ You prioritize code quality, maintainability, and performance while being practi
     return artemis
 
 
-def get_artemis_specialized_prompts() -> Dict[str, str]:
+def get_artemis_specialized_prompts() -> dict[str, str]:
     """
     Get specialized system prompts for different Artemis contexts.
 
@@ -317,7 +317,7 @@ Ensure documentation is accurate, comprehensive, and maintainable.
     }
 
 
-def get_artemis_code_quality_standards() -> Dict[str, Any]:
+def get_artemis_code_quality_standards() -> dict[str, Any]:
     """
     Define Artemis's code quality standards and metrics.
 
@@ -366,7 +366,7 @@ def get_artemis_code_quality_standards() -> Dict[str, Any]:
     }
 
 
-def get_artemis_evolution_patterns() -> Dict[str, Dict[str, Any]]:
+def get_artemis_evolution_patterns() -> dict[str, dict[str, Any]]:
     """
     Define evolution patterns for Artemis's learning and adaptation.
 
@@ -423,7 +423,7 @@ def get_artemis_evolution_patterns() -> Dict[str, Dict[str, Any]]:
     }
 
 
-def customize_artemis_for_context(artemis: Persona, context: Dict[str, Any]) -> Persona:
+def customize_artemis_for_context(artemis: Persona, context: dict[str, Any]) -> Persona:
     """
     Customize Artemis persona based on specific task context.
 
@@ -558,7 +558,7 @@ class ArtemisPersonaFactory:
         return artemis
 
     @staticmethod
-    def get_all_artemis_variants() -> Dict[str, Persona]:
+    def get_all_artemis_variants() -> dict[str, Persona]:
         """Get all available Artemis persona variants."""
         return {
             "base": ArtemisPersonaFactory.create_base_artemis(),

@@ -9,7 +9,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Optional
 from uuid import uuid4
 
 import aiohttp
@@ -36,7 +36,7 @@ class PortkeyConfig:
 
     api_key: str = "hPxFZGd8AN269n4bznDf2/Onbi8I"
     base_url: str = "https://api.portkey.ai/v1/chat/completions"
-    virtual_keys: Dict[str, str] = field(
+    virtual_keys: dict[str, str] = field(
         default_factory=lambda: {
             "OPENAI": "openai-vk-190a60",
             "ANTHROPIC": "anthropic-vk-b42804",
@@ -58,7 +58,7 @@ class AgentConfiguration:
     system_prompt: str
     temperature: float = 0.7
     max_tokens: int = 2000
-    specialized_capabilities: List[str] = field(default_factory=list)
+    specialized_capabilities: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -69,11 +69,11 @@ class SwarmTask:
     task_type: str
     description: str
     priority: int = 5
-    assigned_agents: List[str] = field(default_factory=list)
-    context: Dict[str, Any] = field(default_factory=dict)
+    assigned_agents: list[str] = field(default_factory=list)
+    context: dict[str, Any] = field(default_factory=dict)
     deadline: Optional[datetime] = None
     status: str = "pending"
-    results: Dict[str, Any] = field(default_factory=dict)
+    results: dict[str, Any] = field(default_factory=dict)
 
 
 class ArtemisPortkeyAgent:
@@ -83,7 +83,7 @@ class ArtemisPortkeyAgent:
         self.config = config
         self.portkey_config = portkey_config
         self.session: Optional[aiohttp.ClientSession] = None
-        self.execution_history: List[Dict[str, Any]] = []
+        self.execution_history: list[dict[str, Any]] = []
 
     async def initialize(self):
         """Initialize agent with HTTP session"""
@@ -95,7 +95,7 @@ class ArtemisPortkeyAgent:
         if self.session:
             await self.session.close()
 
-    async def execute_task(self, task: SwarmTask, context: Dict[str, Any] = None) -> Dict[str, Any]:
+    async def execute_task(self, task: SwarmTask, context: dict[str, Any] = None) -> dict[str, Any]:
         """Execute a task using the agent's LLM"""
         await self.initialize()
 
@@ -121,7 +121,7 @@ class ArtemisPortkeyAgent:
 
         return result
 
-    def _build_prompt(self, task: SwarmTask, context: Dict[str, Any]) -> str:
+    def _build_prompt(self, task: SwarmTask, context: dict[str, Any]) -> str:
         """Build specialized prompt based on agent role"""
         base_context = f"""
 Task Type: {task.task_type}
@@ -285,12 +285,12 @@ class ArtemisSwarmOrchestrator:
         self.portkey_config = PortkeyConfig()
 
         # Initialize agents
-        self.agents: Dict[str, ArtemisPortkeyAgent] = {}
+        self.agents: dict[str, ArtemisPortkeyAgent] = {}
         self._initialize_agents()
 
         # Execution tracking
-        self.active_tasks: Dict[str, SwarmTask] = {}
-        self.execution_history: List[Dict[str, Any]] = []
+        self.active_tasks: dict[str, SwarmTask] = {}
+        self.execution_history: list[dict[str, Any]] = []
 
         # Performance metrics
         self.metrics = {
@@ -404,7 +404,7 @@ class ArtemisSwarmOrchestrator:
 
         logger.info(f"✅ Initialized {len(self.agents)} Artemis agents with Portkey connections")
 
-    async def deploy_sophia_enhancements(self) -> Dict[str, Any]:
+    async def deploy_sophia_enhancements(self) -> dict[str, Any]:
         """Deploy the full Sophia dashboard enhancement swarm"""
         logger.info("🚀 Deploying Artemis swarm for Sophia dashboard enhancements...")
 
@@ -429,7 +429,7 @@ class ArtemisSwarmOrchestrator:
 
         return final_result
 
-    def _create_enhancement_tasks(self, deployment_id: str) -> List[SwarmTask]:
+    def _create_enhancement_tasks(self, deployment_id: str) -> list[SwarmTask]:
         """Create the coordinated task breakdown for Sophia enhancements"""
 
         return [
@@ -531,7 +531,7 @@ class ArtemisSwarmOrchestrator:
             ),
         ]
 
-    async def _execute_swarm_tasks(self, tasks: List[SwarmTask]) -> Dict[str, Any]:
+    async def _execute_swarm_tasks(self, tasks: list[SwarmTask]) -> dict[str, Any]:
         """Execute tasks through coordinated swarm interaction"""
         results = {}
 
@@ -577,8 +577,8 @@ class ArtemisSwarmOrchestrator:
         return results
 
     async def _execute_task_with_coordination(
-        self, task: SwarmTask, architecture_context: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, task: SwarmTask, architecture_context: dict[str, Any]
+    ) -> dict[str, Any]:
         """Execute a task with coordination from other agents"""
         # Add architectural context to task
         enhanced_context = {**task.context, "architecture": architecture_context}
@@ -597,7 +597,7 @@ class ArtemisSwarmOrchestrator:
 
         return primary_result
 
-    async def _share_architectural_decisions(self, architecture_result: Dict[str, Any]):
+    async def _share_architectural_decisions(self, architecture_result: dict[str, Any]):
         """Share architectural decisions with all agents via message bus"""
         message = SwarmMessage(
             sender_agent_id="lead_architect",
@@ -612,8 +612,8 @@ class ArtemisSwarmOrchestrator:
         await self.message_bus.publish(message)
 
     async def _process_deployment_results(
-        self, results: Dict[str, Any], deployment_id: str
-    ) -> Dict[str, Any]:
+        self, results: dict[str, Any], deployment_id: str
+    ) -> dict[str, Any]:
         """Process and aggregate deployment results"""
 
         total_cost = sum(r.get("cost_estimate", 0) for r in results.values())
@@ -645,12 +645,12 @@ class ArtemisSwarmOrchestrator:
             "deliverables": deliverables,
             "agent_contributions": {
                 agent_id: [r for r in results.values() if r["agent_id"] == agent_id]
-                for agent_id in self.agents.keys()
+                for agent_id in self.agents
             },
             "success": avg_confidence > 0.7,
         }
 
-    async def _broadcast_deployment_complete(self, deployment_id: str, result: Dict[str, Any]):
+    async def _broadcast_deployment_complete(self, deployment_id: str, result: dict[str, Any]):
         """Broadcast deployment completion to WebSocket subscribers"""
         await self.websocket_manager.broadcast(
             "swarm_deployments",
@@ -666,7 +666,7 @@ class ArtemisSwarmOrchestrator:
             },
         )
 
-    def _update_metrics(self, result: Dict[str, Any], execution_time: float):
+    def _update_metrics(self, result: dict[str, Any], execution_time: float):
         """Update orchestrator metrics"""
         self.metrics["tasks_completed"] += result["tasks_completed"]
         self.metrics["total_cost_usd"] += result["total_cost_usd"]
@@ -685,7 +685,7 @@ class ArtemisSwarmOrchestrator:
 
         self.metrics["success_rate"] = success_count / total_deployments
 
-    async def get_deployment_status(self, deployment_id: str) -> Dict[str, Any]:
+    async def get_deployment_status(self, deployment_id: str) -> dict[str, Any]:
         """Get status of a specific deployment"""
         # Check active tasks
         active_task = self.active_tasks.get(deployment_id)
@@ -703,7 +703,7 @@ class ArtemisSwarmOrchestrator:
 
         return {"deployment_id": deployment_id, "status": "not_found"}
 
-    async def get_swarm_metrics(self) -> Dict[str, Any]:
+    async def get_swarm_metrics(self) -> dict[str, Any]:
         """Get comprehensive swarm metrics"""
         agent_metrics = {}
         for agent_id, agent in self.agents.items():

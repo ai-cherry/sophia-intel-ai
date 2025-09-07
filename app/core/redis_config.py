@@ -6,8 +6,7 @@ and Pay Ready business cycle optimization.
 
 import os
 from dataclasses import dataclass
-from datetime import timedelta
-from typing import Dict, Optional
+from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -19,7 +18,7 @@ class RedisPoolConfig(BaseModel):
     min_connections: int = Field(default=5, description="Minimum connections in pool")
     retry_on_timeout: bool = Field(default=True, description="Retry on connection timeout")
     socket_keepalive: bool = Field(default=True, description="Enable socket keepalive")
-    socket_keepalive_options: Dict[str, int] = Field(
+    socket_keepalive_options: dict[str, int] = Field(
         default_factory=lambda: {}  # Let Redis handle platform-specific keepalive options
     )
     connection_timeout: float = Field(default=5.0, description="Connection timeout in seconds")
@@ -167,7 +166,7 @@ class RedisConfig(BaseModel):
 
         return config
 
-    def get_stream_config(self, stream_name: str) -> Dict[str, any]:
+    def get_stream_config(self, stream_name: str) -> dict[str, any]:
         """Get stream-specific configuration"""
 
         base_config = {

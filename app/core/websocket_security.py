@@ -12,7 +12,7 @@ import re
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Optional
 
 import redis.asyncio as aioredis
 
@@ -55,7 +55,7 @@ class SecurityEvent:
     user_id: Optional[str] = None
     tenant_id: Optional[str] = None
     ip_address: Optional[str] = None
-    details: Dict[str, Any] = field(default_factory=dict)
+    details: dict[str, Any] = field(default_factory=dict)
     raw_message: Optional[str] = None
     blocked: bool = False
     response_action: Optional[str] = None
@@ -78,8 +78,8 @@ class TenantIsolationRule:
     """Tenant isolation rule"""
 
     resource_pattern: str
-    allowed_tenant_types: Set[TenantType]
-    cross_tenant_roles: Set[UserRole]
+    allowed_tenant_types: set[TenantType]
+    cross_tenant_roles: set[UserRole]
     description: str = ""
 
 
@@ -102,8 +102,8 @@ class WebSocketSecurityMiddleware:
         self.enable_threat_detection = enable_threat_detection
 
         # Security events tracking
-        self.recent_events: List[SecurityEvent] = []
-        self.blocked_clients: Dict[str, datetime] = {}
+        self.recent_events: list[SecurityEvent] = []
+        self.blocked_clients: dict[str, datetime] = {}
 
         # Initialize validation rules
         self.validation_rules = self._initialize_validation_rules()
@@ -113,9 +113,9 @@ class WebSocketSecurityMiddleware:
         self.threat_patterns = self._initialize_threat_patterns()
 
         # Suspicious pattern tracking
-        self.pattern_tracking: Dict[str, Dict[str, int]] = {}
+        self.pattern_tracking: dict[str, dict[str, int]] = {}
 
-    def _initialize_validation_rules(self) -> Dict[str, List[InputValidationRule]]:
+    def _initialize_validation_rules(self) -> dict[str, list[InputValidationRule]]:
         """Initialize input validation rules by message type"""
         return {
             "subscribe": [
@@ -164,7 +164,7 @@ class WebSocketSecurityMiddleware:
             ],
         }
 
-    def _initialize_isolation_rules(self) -> List[TenantIsolationRule]:
+    def _initialize_isolation_rules(self) -> list[TenantIsolationRule]:
         """Initialize tenant isolation rules"""
         return [
             TenantIsolationRule(
@@ -199,7 +199,7 @@ class WebSocketSecurityMiddleware:
             ),
         ]
 
-    def _initialize_threat_patterns(self) -> Dict[str, List[str]]:
+    def _initialize_threat_patterns(self) -> dict[str, list[str]]:
         """Initialize threat detection patterns"""
         return {
             "sql_injection": [
@@ -258,8 +258,8 @@ class WebSocketSecurityMiddleware:
             asyncio.create_task(self._threat_analysis_loop())
 
     async def validate_input(
-        self, message: Dict[str, Any], message_type: str, user: Optional[AuthenticatedUser] = None
-    ) -> Tuple[bool, Dict[str, Any], Optional[SecurityEvent]]:
+        self, message: dict[str, Any], message_type: str, user: Optional[AuthenticatedUser] = None
+    ) -> tuple[bool, dict[str, Any], Optional[SecurityEvent]]:
         """
         Validate incoming message input
 
@@ -386,7 +386,7 @@ class WebSocketSecurityMiddleware:
 
         return sanitized.strip()
 
-    async def _detect_threats_in_text(self, text: str) -> List[str]:
+    async def _detect_threats_in_text(self, text: str) -> list[str]:
         """Detect threat patterns in text"""
         threats = []
         text_upper = text.upper()
@@ -400,7 +400,7 @@ class WebSocketSecurityMiddleware:
 
     async def check_tenant_isolation(
         self, user: AuthenticatedUser, resource_identifier: str, operation: str = "access"
-    ) -> Tuple[bool, Optional[SecurityEvent]]:
+    ) -> tuple[bool, Optional[SecurityEvent]]:
         """
         Check tenant isolation for resource access
 
@@ -463,7 +463,7 @@ class WebSocketSecurityMiddleware:
             return False, None
 
     async def detect_anomalous_behavior(
-        self, user: AuthenticatedUser, message_type: str, message_data: Dict[str, Any]
+        self, user: AuthenticatedUser, message_type: str, message_data: dict[str, Any]
     ) -> Optional[SecurityEvent]:
         """
         Detect anomalous behavior patterns
@@ -603,7 +603,7 @@ class WebSocketSecurityMiddleware:
                 f"blocked_client:{client_id}", duration_seconds, block_until.isoformat()
             )
 
-    async def is_client_blocked(self, client_id: str) -> Tuple[bool, Optional[datetime]]:
+    async def is_client_blocked(self, client_id: str) -> tuple[bool, Optional[datetime]]:
         """Check if client is currently blocked"""
         # Check in-memory blocks
         if client_id in self.blocked_clients:
@@ -649,12 +649,12 @@ class WebSocketSecurityMiddleware:
                     del self.blocked_clients[client_id]
 
                 # Clean old pattern tracking
-                hour_ago = now - timedelta(hours=1)
+                now - timedelta(hours=1)
                 for user_key in list(self.pattern_tracking.keys()):
                     user_patterns = self.pattern_tracking[user_key]
                     expired_patterns = [
                         k
-                        for k in user_patterns.keys()
+                        for k in user_patterns
                         if k.endswith(f"_{(now - timedelta(hours=2)).hour}")
                     ]
                     for pattern in expired_patterns:
@@ -701,7 +701,7 @@ class WebSocketSecurityMiddleware:
                 logger.error(f"Error in threat analysis: {e}")
                 await asyncio.sleep(60)
 
-    def get_security_metrics(self) -> Dict[str, Any]:
+    def get_security_metrics(self) -> dict[str, Any]:
         """Get security metrics"""
         now = datetime.utcnow()
         recent_cutoff = now - timedelta(hours=1)
@@ -749,7 +749,7 @@ class WebSocketSecurityMiddleware:
         limit: int = 100,
         threat_level: Optional[ThreatLevel] = None,
         event_type: Optional[SecurityEventType] = None,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Get recent security events with filtering"""
         events = self.recent_events[-limit:] if not threat_level and not event_type else []
 

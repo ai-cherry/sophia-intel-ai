@@ -8,7 +8,7 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, Optional, Set
+from typing import Any, Optional
 
 import jwt
 import redis.asyncio as aioredis
@@ -49,7 +49,7 @@ class AuthenticatedUser:
     role: UserRole
     tenant_id: str
     tenant_type: TenantType
-    permissions: Set[str]
+    permissions: set[str]
     session_id: str
     expires_at: datetime
     last_activity: datetime
@@ -66,7 +66,7 @@ class SessionInfo:
     websocket: WebSocket
     created_at: datetime
     last_heartbeat: datetime
-    subscriptions: Set[str]
+    subscriptions: set[str]
     is_active: bool = True
 
 
@@ -89,7 +89,7 @@ class WebSocketAuthenticator:
         self.session_timeout_minutes = session_timeout_minutes
 
         # Active sessions
-        self.active_sessions: Dict[str, SessionInfo] = {}
+        self.active_sessions: dict[str, SessionInfo] = {}
 
         # Tenant permissions mapping
         self.tenant_permissions = {
@@ -254,7 +254,7 @@ class WebSocketAuthenticator:
             logger.error(f"Authentication error: {e}")
             raise HTTPException(status_code=401, detail="Authentication failed")
 
-    def _get_user_permissions(self, role: UserRole, tenant_type: TenantType) -> Set[str]:
+    def _get_user_permissions(self, role: UserRole, tenant_type: TenantType) -> set[str]:
         """Get user permissions based on role and tenant"""
         permissions = set()
 
@@ -401,7 +401,7 @@ class WebSocketAuthenticator:
             session.is_active = False
 
             try:
-                if not session.websocket.client_state.name == "DISCONNECTED":
+                if session.websocket.client_state.name != "DISCONNECTED":
                     await session.websocket.close()
             except Exception as e:
                 logger.warning(f"Error closing WebSocket: {e}")
@@ -455,7 +455,7 @@ class WebSocketAuthenticator:
         logger.info(f"Refreshed token for user: {user.username}")
         return token
 
-    def get_session_metrics(self) -> Dict[str, Any]:
+    def get_session_metrics(self) -> dict[str, Any]:
         """Get session metrics"""
         active_count = len([s for s in self.active_sessions.values() if s.is_active])
 

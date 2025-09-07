@@ -8,7 +8,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
@@ -16,7 +16,7 @@ from pydantic import BaseModel
 from app.api.middleware.auth import get_current_user
 from app.core.websocket_manager import WebSocketManager
 from app.mcp.connection_manager import MCPConnectionManager
-from app.mcp.enhanced_registry import MCPServerRegistry, MCPServerType, MemoryDomain
+from app.mcp.enhanced_registry import MCPServerRegistry, MemoryDomain
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/mcp-status", tags=["mcp-status"])
@@ -42,8 +42,8 @@ class MCPServerHealth(BaseModel):
     throughput_ops_per_sec: int
     error_rate: float
     last_activity: str
-    connections: Dict[str, Any]
-    business_context: Optional[str] = None
+    connections: dict[str, Any]
+    business_context: str | None = None
 
 
 class MCPDomainSummary(BaseModel):
@@ -57,7 +57,7 @@ class MCPDomainSummary(BaseModel):
     total_connections: int
     avg_response_time_ms: float
     overall_health_score: float
-    pay_ready_context: Optional[Dict[str, Any]] = None
+    pay_ready_context: dict[str, Any] | None = None
 
 
 class MCPSystemOverview(BaseModel):
@@ -67,9 +67,9 @@ class MCPSystemOverview(BaseModel):
     overall_status: str
     total_servers: int
     healthy_servers: int
-    domain_summaries: List[MCPDomainSummary]
-    system_metrics: Dict[str, Any]
-    mythology_agents: List[Dict[str, Any]]
+    domain_summaries: list[MCPDomainSummary]
+    system_metrics: dict[str, Any]
+    mythology_agents: list[dict[str, Any]]
 
 
 # ==================== HELPER FUNCTIONS ====================
@@ -165,7 +165,7 @@ async def _ping_server(server_name: str) -> bool:
         return False
 
 
-async def _get_server_performance_metrics(server_name: str) -> Dict[str, Any]:
+async def _get_server_performance_metrics(server_name: str) -> dict[str, Any]:
     """Get performance metrics for a server"""
     # Simulated metrics - in production would come from monitoring systems
     base_metrics = {
@@ -275,7 +275,7 @@ async def _get_domain_summary(domain: str) -> MCPDomainSummary:
     )
 
 
-def _get_mythology_agents_status() -> List[Dict[str, Any]]:
+def _get_mythology_agents_status() -> list[dict[str, Any]]:
     """Get status of mythology agents and their MCP server assignments"""
     return [
         {
@@ -408,13 +408,13 @@ async def get_domain_status(domain: str, user: str = Depends(get_current_user)) 
         raise HTTPException(status_code=500, detail=f"Failed to get domain status: {str(e)}")
 
 
-@router.get("/servers", response_model=List[MCPServerHealth])
+@router.get("/servers", response_model=list[MCPServerHealth])
 async def get_all_servers_status(
-    domain: Optional[str] = Query(None, description="Filter by domain"),
-    server_type: Optional[str] = Query(None, description="Filter by server type"),
-    status: Optional[str] = Query(None, description="Filter by status"),
+    domain: str | None = Query(None, description="Filter by domain"),
+    server_type: str | None = Query(None, description="Filter by server type"),
+    status: str | None = Query(None, description="Filter by status"),
     user: str = Depends(get_current_user),
-) -> List[MCPServerHealth]:
+) -> list[MCPServerHealth]:
     """
     Get detailed status for all MCP servers with optional filtering
 
@@ -470,10 +470,10 @@ async def get_server_status(
         raise HTTPException(status_code=500, detail=f"Failed to get server status: {str(e)}")
 
 
-@router.get("/mythology-agents", response_model=List[Dict[str, Any]])
+@router.get("/mythology-agents", response_model=list[dict[str, Any]])
 async def get_mythology_agents_status(
     user: str = Depends(get_current_user),
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """
     Get status of all mythology agents and their MCP server assignments
     """
@@ -487,7 +487,7 @@ async def get_mythology_agents_status(
 
 
 @router.post("/server/{server_name}/restart")
-async def restart_server(server_name: str, user: str = Depends(get_current_user)) -> Dict[str, Any]:
+async def restart_server(server_name: str, user: str = Depends(get_current_user)) -> dict[str, Any]:
     """
     Restart a specific MCP server (if supported)
 

@@ -7,9 +7,9 @@ compliance management, and campaign orchestration.
 
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Optional
 from uuid import uuid4
 
 logger = logging.getLogger(__name__)
@@ -116,7 +116,7 @@ class Prospect:
     created_at: datetime = field(default_factory=datetime.now)
     updated_at: datetime = field(default_factory=datetime.now)
     source: str = ""
-    tags: List[str] = field(default_factory=list)
+    tags: list[str] = field(default_factory=list)
 
     @property
     def full_name(self) -> str:
@@ -169,11 +169,11 @@ class MessageTemplate:
     # Content
     subject_template: str = ""  # For email
     body_template: str = ""
-    variables: List[str] = field(default_factory=list)  # Placeholder variables
+    variables: list[str] = field(default_factory=list)  # Placeholder variables
 
     # Personalization
     personalization_level: str = "basic"  # basic, advanced, hyper
-    dynamic_content_rules: Dict[str, Any] = field(default_factory=dict)
+    dynamic_content_rules: dict[str, Any] = field(default_factory=dict)
 
     # Performance
     usage_count: int = 0
@@ -184,7 +184,7 @@ class MessageTemplate:
     # A/B Testing
     is_test_variant: bool = False
     parent_template_id: Optional[str] = None
-    test_results: Dict[str, Any] = field(default_factory=dict)
+    test_results: dict[str, Any] = field(default_factory=dict)
 
     # Approval and compliance
     approval_status: str = "approved"
@@ -195,11 +195,11 @@ class MessageTemplate:
     created_at: datetime = field(default_factory=datetime.now)
     updated_at: datetime = field(default_factory=datetime.now)
     created_by: str = ""
-    tags: List[str] = field(default_factory=list)
+    tags: list[str] = field(default_factory=list)
 
     def render_message(
-        self, prospect: Prospect, custom_variables: Dict[str, Any] = None
-    ) -> Dict[str, str]:
+        self, prospect: Prospect, custom_variables: dict[str, Any] = None
+    ) -> dict[str, str]:
         """Render message template with prospect data"""
         variables = {
             "first_name": prospect.first_name,
@@ -271,7 +271,7 @@ class ComplianceRecord:
     # Audit trail
     created_at: datetime = field(default_factory=datetime.now)
     updated_at: datetime = field(default_factory=datetime.now)
-    system_flags: List[str] = field(default_factory=list)
+    system_flags: list[str] = field(default_factory=list)
 
     def add_violation(self, violation_type: str, description: str):
         """Add compliance violation"""
@@ -397,14 +397,14 @@ class OutreachSequence:
     description: str = ""
 
     # Sequence configuration
-    steps: List[Dict[str, Any]] = field(default_factory=list)
+    steps: list[dict[str, Any]] = field(default_factory=list)
     total_steps: int = 0
     active: bool = True
 
     # Targeting
-    target_segments: List[str] = field(default_factory=list)
-    priority_prospects: List[str] = field(default_factory=list)
-    exclusion_rules: List[str] = field(default_factory=list)
+    target_segments: list[str] = field(default_factory=list)
+    priority_prospects: list[str] = field(default_factory=list)
+    exclusion_rules: list[str] = field(default_factory=list)
 
     # Performance
     prospects_enrolled: int = 0
@@ -414,7 +414,7 @@ class OutreachSequence:
 
     # A/B Testing
     is_test_sequence: bool = False
-    test_variations: List[str] = field(default_factory=list)
+    test_variations: list[str] = field(default_factory=list)
 
     # Metadata
     created_at: datetime = field(default_factory=datetime.now)
@@ -427,7 +427,7 @@ class OutreachSequence:
         channel: CommunicationChannel,
         template_id: str,
         delay_days: int = 1,
-        conditions: Dict[str, Any] = None,
+        conditions: dict[str, Any] = None,
     ):
         """Add step to outreach sequence"""
         step = {
@@ -444,8 +444,8 @@ class OutreachSequence:
         self.updated_at = datetime.now()
 
     def get_next_step(
-        self, current_step: int, prospect_data: Dict[str, Any] = None
-    ) -> Optional[Dict[str, Any]]:
+        self, current_step: int, prospect_data: dict[str, Any] = None
+    ) -> Optional[dict[str, Any]]:
         """Get next step in sequence for prospect"""
         next_step_number = current_step + 1
 
@@ -463,7 +463,7 @@ class OutreachSequence:
         return None
 
     def _check_step_conditions(
-        self, conditions: Dict[str, Any], prospect_data: Dict[str, Any]
+        self, conditions: dict[str, Any], prospect_data: dict[str, Any]
     ) -> bool:
         """Check if step conditions are met"""
         # Simplified condition checking
@@ -483,15 +483,15 @@ class OutreachCampaign:
     campaign_type: str = "prospecting"  # prospecting, nurture, re_engagement
 
     # Campaign configuration
-    channels: List[CommunicationChannel] = field(default_factory=list)
-    sequences: List[str] = field(default_factory=list)  # Sequence IDs
-    target_segments: List[str] = field(default_factory=list)
+    channels: list[CommunicationChannel] = field(default_factory=list)
+    sequences: list[str] = field(default_factory=list)  # Sequence IDs
+    target_segments: list[str] = field(default_factory=list)
 
     # Scheduling
     start_date: Optional[datetime] = None
     end_date: Optional[datetime] = None
     timezone: str = "UTC"
-    send_times: List[str] = field(default_factory=list)  # ["09:00", "14:00"]
+    send_times: list[str] = field(default_factory=list)  # ["09:00", "14:00"]
 
     # Status
     status: str = "draft"  # draft, active, paused, completed
@@ -523,9 +523,9 @@ class OutreachCampaign:
     created_at: datetime = field(default_factory=datetime.now)
     updated_at: datetime = field(default_factory=datetime.now)
     created_by: str = ""
-    tags: List[str] = field(default_factory=list)
+    tags: list[str] = field(default_factory=list)
 
-    def calculate_performance_metrics(self) -> Dict[str, float]:
+    def calculate_performance_metrics(self) -> dict[str, float]:
         """Calculate campaign performance metrics"""
         metrics = {
             "delivery_rate": 0.0,
@@ -589,10 +589,7 @@ class OutreachCampaign:
         if self.start_date and now < self.start_date:
             return False
 
-        if self.end_date and now > self.end_date:
-            return False
-
-        return True
+        return not (self.end_date and now > self.end_date)
 
     def get_campaign_health_score(self) -> float:
         """Calculate overall campaign health score"""

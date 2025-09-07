@@ -3,21 +3,18 @@ Comprehensive Agent Factory Configuration System
 Integrates mythology agents, military swarms, Portkey routing, and Slack delivery
 """
 
-import asyncio
-import json
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Optional
 from uuid import uuid4
 
-from app.core.portkey_manager import TaskType, get_portkey_manager
+from app.core.portkey_manager import get_portkey_manager
 from app.factory.agent_factory import AgentFactory
 from app.memory.unified_memory_router import MemoryDomain
 from app.swarms.artemis.military_swarm_config import (
     ARTEMIS_MILITARY_UNITS,
-    ARTEMIS_MISSION_TEMPLATES,
     MilitaryAgentFactory,
 )
 from app.swarms.core.micro_swarm_base import (
@@ -35,8 +32,6 @@ from app.swarms.core.slack_delivery import (
     create_technical_delivery_config,
 )
 from app.swarms.sophia.mythology_agents import (
-    MYTHOLOGY_AGENTS,
-    SOPHIA_SWARMS,
     SophiaMythologySwarmFactory,
 )
 
@@ -100,7 +95,7 @@ class SwarmFactoryConfig:
     cost_alert_threshold: float = 5.0
 
     # Additional metadata
-    tags: List[str] = field(default_factory=list)
+    tags: list[str] = field(default_factory=list)
     created_at: datetime = field(default_factory=datetime.now)
     created_by: str = "factory"
     version: str = "1.0"
@@ -114,7 +109,7 @@ class ExecutionContext:
     priority: int = 1  # 1=highest, 5=lowest
     requester: str = "system"
     deadline: Optional[datetime] = None
-    context_data: Dict[str, Any] = field(default_factory=dict)
+    context_data: dict[str, Any] = field(default_factory=dict)
     delivery_overrides: Optional[DeliveryConfig] = None
     cost_limit_override: Optional[float] = None
 
@@ -138,11 +133,11 @@ class SwarmExecutionResult:
     execution_time_ms: float
     total_cost: float
     tokens_used: int
-    models_used: List[str]
+    models_used: list[str]
 
     # Agent details
-    agents_participated: List[str]
-    agent_contributions: Dict[str, Any]
+    agents_participated: list[str]
+    agent_contributions: dict[str, Any]
     coordination_pattern: CoordinationPattern
 
     # Factory metadata
@@ -151,11 +146,11 @@ class SwarmExecutionResult:
     execution_context: Optional[ExecutionContext] = None
 
     # Delivery results
-    delivery_results: List[Dict[str, Any]] = field(default_factory=list)
+    delivery_results: list[dict[str, Any]] = field(default_factory=list)
 
     # Errors and warnings
-    errors: List[str] = field(default_factory=list)
-    warnings: List[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
 
 
 class ComprehensiveSwarmFactory:
@@ -177,9 +172,9 @@ class ComprehensiveSwarmFactory:
         self.mythology_factory = SophiaMythologySwarmFactory()
 
         # Factory configurations
-        self.swarm_configs: Dict[str, SwarmFactoryConfig] = {}
-        self.active_swarms: Dict[str, MicroSwarmCoordinator] = {}
-        self.execution_history: List[SwarmExecutionResult] = []
+        self.swarm_configs: dict[str, SwarmFactoryConfig] = {}
+        self.active_swarms: dict[str, MicroSwarmCoordinator] = {}
+        self.execution_history: list[SwarmExecutionResult] = []
 
         # Monitoring and metrics
         self.execution_metrics = {
@@ -270,7 +265,7 @@ class ComprehensiveSwarmFactory:
         logger.info(f"Initialized {len(self.swarm_configs)} pre-configured swarms")
 
     async def create_swarm(
-        self, config: SwarmFactoryConfig, custom_agents: Optional[List[str]] = None
+        self, config: SwarmFactoryConfig, custom_agents: Optional[list[str]] = None
     ) -> str:
         """
         Create a swarm based on factory configuration
@@ -321,7 +316,7 @@ class ComprehensiveSwarmFactory:
             raise
 
     async def _create_mythology_swarm(
-        self, config: SwarmFactoryConfig, custom_agents: Optional[List[str]]
+        self, config: SwarmFactoryConfig, custom_agents: Optional[list[str]]
     ) -> MicroSwarmCoordinator:
         """Create mythology-based swarm"""
 
@@ -339,7 +334,7 @@ class ComprehensiveSwarmFactory:
             return self.mythology_factory.create_custom_swarm(agents, config.coordination_pattern)
 
     async def _create_military_swarm(
-        self, config: SwarmFactoryConfig, custom_agents: Optional[List[str]]
+        self, config: SwarmFactoryConfig, custom_agents: Optional[list[str]]
     ) -> MicroSwarmCoordinator:
         """Create military-themed swarm"""
 
@@ -365,7 +360,7 @@ class ComprehensiveSwarmFactory:
         agents = []
         squad = unit_config.get("squad_composition", {})
 
-        for role_name, profile in squad.items():
+        for _role_name, profile in squad.items():
             # Map military roles to micro-swarm roles
             role_mapping = {
                 "Reconnaissance Lead": AgentRole.ANALYST,
@@ -415,7 +410,7 @@ class ComprehensiveSwarmFactory:
         return MicroSwarmCoordinator(swarm_config)
 
     async def _create_hybrid_swarm(
-        self, config: SwarmFactoryConfig, custom_agents: Optional[List[str]]
+        self, config: SwarmFactoryConfig, custom_agents: Optional[list[str]]
     ) -> MicroSwarmCoordinator:
         """Create hybrid swarm combining mythology and military elements"""
 
@@ -464,7 +459,7 @@ class ComprehensiveSwarmFactory:
         return MicroSwarmCoordinator(swarm_config)
 
     async def _create_custom_swarm(
-        self, config: SwarmFactoryConfig, custom_agents: Optional[List[str]]
+        self, config: SwarmFactoryConfig, custom_agents: Optional[list[str]]
     ) -> MicroSwarmCoordinator:
         """Create custom swarm from agent specifications"""
 
@@ -579,14 +574,12 @@ class ComprehensiveSwarmFactory:
                     msg.metadata.get("tokens_used", 0) for msg in swarm_result.reasoning_chain
                 ),
                 models_used=list(
-                    set(
+                    {
                         msg.metadata.get("model_used", "unknown")
                         for msg in swarm_result.reasoning_chain
-                    )
+                    }
                 ),
-                agents_participated=[
-                    role.value for role in swarm_result.agent_contributions.keys()
-                ],
+                agents_participated=[role.value for role in swarm_result.agent_contributions],
                 agent_contributions=swarm_result.agent_contributions,
                 coordination_pattern=coordinator.config.coordination_pattern,
                 factory_config=config,
@@ -679,7 +672,7 @@ class ComprehensiveSwarmFactory:
             self.execution_metrics["swarm_type_counts"].get(swarm_type, 0) + 1
         )
 
-    def get_available_swarms(self) -> Dict[str, Dict[str, Any]]:
+    def get_available_swarms(self) -> dict[str, dict[str, Any]]:
         """Get all available swarm configurations"""
 
         available = {}
@@ -699,7 +692,7 @@ class ComprehensiveSwarmFactory:
 
         return available
 
-    def get_execution_metrics(self) -> Dict[str, Any]:
+    def get_execution_metrics(self) -> dict[str, Any]:
         """Get comprehensive execution metrics"""
 
         # Calculate success rate
@@ -743,7 +736,7 @@ class ComprehensiveSwarmFactory:
             "cost_analysis": self._get_cost_analysis(),
         }
 
-    def _get_top_performing_swarms(self) -> List[Dict[str, Any]]:
+    def _get_top_performing_swarms(self) -> list[dict[str, Any]]:
         """Get top performing swarms by success rate and efficiency"""
 
         swarm_performance = {}
@@ -786,7 +779,7 @@ class ComprehensiveSwarmFactory:
         performers.sort(key=lambda x: (x["success_rate"], x["avg_confidence"]), reverse=True)
         return performers[:5]
 
-    def _get_cost_analysis(self) -> Dict[str, Any]:
+    def _get_cost_analysis(self) -> dict[str, Any]:
         """Get cost analysis across swarms and time periods"""
 
         if not self.execution_history:

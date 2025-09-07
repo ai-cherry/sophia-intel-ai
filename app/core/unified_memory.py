@@ -10,12 +10,12 @@ import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Union
+from typing import Any, Optional
 from uuid import uuid4
 
 from app.core.mem0_config import mem0_manager
 from app.core.redis_manager import RedisNamespaces, redis_manager
-from app.core.vector_db_config import MemoryType, VectorDBType, vector_db_manager
+from app.core.vector_db_config import VectorDBType, vector_db_manager
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +56,7 @@ class MemoryMetadata:
     memory_id: str = field(default_factory=lambda: str(uuid4()))
     context: MemoryContext = MemoryContext.KNOWLEDGE
     priority: MemoryPriority = MemoryPriority.STANDARD
-    tags: Set[str] = field(default_factory=set)
+    tags: set[str] = field(default_factory=set)
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     accessed_count: int = 0
@@ -77,8 +77,8 @@ class MemoryEntry:
 
     content: str
     metadata: MemoryMetadata
-    embedding: Optional[List[float]] = None
-    tier_locations: Dict[MemoryTier, str] = field(default_factory=dict)
+    embedding: Optional[list[float]] = None
+    tier_locations: dict[MemoryTier, str] = field(default_factory=dict)
 
 
 @dataclass
@@ -86,8 +86,8 @@ class MemorySearchRequest:
     """Memory search request specification"""
 
     query: str
-    context_filter: Optional[List[MemoryContext]] = None
-    tag_filter: Optional[Set[str]] = None
+    context_filter: Optional[list[MemoryContext]] = None
+    tag_filter: Optional[set[str]] = None
     domain_filter: Optional[str] = None
     user_filter: Optional[str] = None
     priority_threshold: MemoryPriority = MemoryPriority.LOW
@@ -202,7 +202,7 @@ class UnifiedMemoryInterface:
         self,
         content: str,
         metadata: Optional[MemoryMetadata] = None,
-        embedding: Optional[List[float]] = None,
+        embedding: Optional[list[float]] = None,
     ) -> str:
         """
         Store memory entry with intelligent tier allocation
@@ -285,7 +285,7 @@ class UnifiedMemoryInterface:
             logger.error(f"Failed to retrieve memory {memory_id}: {e}")
             return None
 
-    async def search(self, request: MemorySearchRequest) -> List[MemorySearchResult]:
+    async def search(self, request: MemorySearchRequest) -> list[MemorySearchResult]:
         """
         Cross-tier semantic search with intelligent result fusion
         """
@@ -366,7 +366,7 @@ class UnifiedMemoryInterface:
 
             # Update in all tiers where it exists
             update_tasks = []
-            for tier, location in existing_entry.tier_locations.items():
+            for tier, _location in existing_entry.tier_locations.items():
                 update_tasks.append(self._update_in_tier(tier, existing_entry))
 
             results = await asyncio.gather(*update_tasks, return_exceptions=True)
@@ -400,7 +400,7 @@ class UnifiedMemoryInterface:
             logger.error(f"Failed to delete memory {memory_id}: {e}")
             return False
 
-    async def get_health_status(self) -> Dict[str, Any]:
+    async def get_health_status(self) -> dict[str, Any]:
         """Get comprehensive health status of all memory tiers"""
         status = {
             "unified_memory_available": self._initialized,
@@ -416,13 +416,13 @@ class UnifiedMemoryInterface:
 
         return status
 
-    async def get_metrics(self) -> Dict[str, Any]:
+    async def get_metrics(self) -> dict[str, Any]:
         """Get performance metrics"""
         return self.metrics.copy()
 
     # Private methods for tier-specific operations
 
-    async def _determine_storage_tiers(self, entry: MemoryEntry) -> List[MemoryTier]:
+    async def _determine_storage_tiers(self, entry: MemoryEntry) -> list[MemoryTier]:
         """Determine which tiers to store the entry in based on metadata"""
         tiers = []
 
@@ -444,7 +444,7 @@ class UnifiedMemoryInterface:
 
         return tiers
 
-    def _get_tier_access_order(self, priority: MemoryPriority) -> List[MemoryTier]:
+    def _get_tier_access_order(self, priority: MemoryPriority) -> list[MemoryTier]:
         """Get tier access order based on priority"""
         if priority == MemoryPriority.CRITICAL or priority == MemoryPriority.HIGH:
             return [MemoryTier.L1_CACHE, MemoryTier.L2_SEMANTIC, MemoryTier.L3_PERSISTENT]
@@ -633,7 +633,7 @@ class UnifiedMemoryInterface:
         # Mem0 retrieval would go here
         return None
 
-    async def _search_l1_cache(self, request: MemorySearchRequest) -> List[MemorySearchResult]:
+    async def _search_l1_cache(self, request: MemorySearchRequest) -> list[MemorySearchResult]:
         """Search L1 cache with text matching"""
         results = []
 
@@ -674,7 +674,7 @@ class UnifiedMemoryInterface:
 
         return results[: request.max_results]
 
-    async def _search_l2_semantic(self, request: MemorySearchRequest) -> List[MemorySearchResult]:
+    async def _search_l2_semantic(self, request: MemorySearchRequest) -> list[MemorySearchResult]:
         """Search L2 vector database with semantic similarity"""
         results = []
 
@@ -716,7 +716,7 @@ class UnifiedMemoryInterface:
 
         return results
 
-    async def _search_l3_persistent(self, request: MemorySearchRequest) -> List[MemorySearchResult]:
+    async def _search_l3_persistent(self, request: MemorySearchRequest) -> list[MemorySearchResult]:
         """Search L3 persistent storage"""
         results = []
 
@@ -732,7 +732,7 @@ class UnifiedMemoryInterface:
         return results
 
     def _matches_search_filters(
-        self, metadata: Dict[str, Any], request: MemorySearchRequest
+        self, metadata: dict[str, Any], request: MemorySearchRequest
     ) -> bool:
         """Check if metadata matches search filters"""
         # Context filter
@@ -748,18 +748,13 @@ class UnifiedMemoryInterface:
                 return False
 
         # Domain filter
-        if request.domain_filter:
-            if metadata.get("domain") != request.domain_filter:
-                return False
+        if request.domain_filter and metadata.get("domain") != request.domain_filter:
+            return False
 
         # User filter
-        if request.user_filter:
-            if metadata.get("user_id") != request.user_filter:
-                return False
+        return not (request.user_filter and metadata.get("user_id") != request.user_filter)
 
-        return True
-
-    def _dict_to_metadata(self, metadata_dict: Dict[str, Any]) -> MemoryMetadata:
+    def _dict_to_metadata(self, metadata_dict: dict[str, Any]) -> MemoryMetadata:
         """Convert dictionary to MemoryMetadata object"""
         return MemoryMetadata(
             memory_id=metadata_dict.get("memory_id", str(uuid4())),
@@ -780,7 +775,7 @@ class UnifiedMemoryInterface:
             confidence_score=metadata_dict.get("confidence_score", 1.0),
         )
 
-    def _deduplicate_results(self, results: List[MemorySearchResult]) -> List[MemorySearchResult]:
+    def _deduplicate_results(self, results: list[MemorySearchResult]) -> list[MemorySearchResult]:
         """Remove duplicate results and merge scores"""
         seen_ids = set()
         unique_results = []
@@ -806,7 +801,7 @@ class UnifiedMemoryInterface:
                 alpha * response_time_ms + (1 - alpha) * current_avg
             )
 
-    async def _get_tier_health(self, tier: MemoryTier) -> Dict[str, Any]:
+    async def _get_tier_health(self, tier: MemoryTier) -> dict[str, Any]:
         """Get health status for a specific tier"""
         if tier == MemoryTier.L1_CACHE:
             if self.redis_manager:
@@ -896,7 +891,7 @@ async def store_memory(
     content: str,
     context: MemoryContext = MemoryContext.KNOWLEDGE,
     priority: MemoryPriority = MemoryPriority.STANDARD,
-    tags: Optional[Set[str]] = None,
+    tags: Optional[set[str]] = None,
     user_id: Optional[str] = None,
     domain: Optional[str] = None,
 ) -> str:
@@ -910,10 +905,10 @@ async def store_memory(
 async def search_memory(
     query: str,
     max_results: int = 10,
-    context_filter: Optional[List[MemoryContext]] = None,
+    context_filter: Optional[list[MemoryContext]] = None,
     domain: Optional[str] = None,
     user_id: Optional[str] = None,
-) -> List[MemorySearchResult]:
+) -> list[MemorySearchResult]:
     """Search memory with simplified interface"""
     request = MemorySearchRequest(
         query=query,

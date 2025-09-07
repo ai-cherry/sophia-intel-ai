@@ -5,7 +5,6 @@ Service endpoints for n8n workflow integration with Sophia intelligence
 """
 
 import asyncio
-import logging
 from datetime import datetime
 from typing import Any, Optional
 
@@ -13,9 +12,9 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from pydantic import BaseModel, Field
 
 from app.core.ai_logger import logger
-from app.core.monitoring import APIMetrics, track_api_call
+from app.core.monitoring import track_api_call
 from app.core.security import get_current_user, verify_api_key
-from app.integrations.gong_sophia_bridge import GongEventType, GongSophiaService
+from app.integrations.gong_sophia_bridge import GongSophiaService
 
 # Initialize router with existing patterns
 router = APIRouter(

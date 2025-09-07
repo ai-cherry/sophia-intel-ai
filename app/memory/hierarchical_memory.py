@@ -25,7 +25,7 @@ import time
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, TypeVar
+from typing import Any, Optional, TypeVar
 from uuid import uuid4
 
 import asyncpg
@@ -78,7 +78,7 @@ class QueryContext:
     query_type: QueryType
     persona_domain: PersonaType
     embedding_type: Optional[EmbeddingType] = None
-    meta_tags: List[MetaTag] = field(default_factory=list)
+    meta_tags: list[MetaTag] = field(default_factory=list)
     priority: int = 5  # 1 (high) to 10 (low)
     max_latency_ms: Optional[int] = None
     expected_result_size: Optional[int] = None
@@ -93,7 +93,7 @@ class MemoryEntry:
     tier: MemoryTier
     persona_domain: PersonaType
     embedding_vector: Optional[EmbeddingVector] = None
-    meta_tags: List[MetaTag] = field(default_factory=list)
+    meta_tags: list[MetaTag] = field(default_factory=list)
     access_pattern: AccessPattern = AccessPattern.COOL
     created_at: datetime = field(default_factory=datetime.utcnow)
     last_accessed: datetime = field(default_factory=datetime.utcnow)
@@ -106,9 +106,9 @@ class MemoryEntry:
 class QueryResult:
     """Result from hierarchical memory query"""
 
-    entries: List[MemoryEntry]
+    entries: list[MemoryEntry]
     total_count: int
-    tiers_accessed: List[MemoryTier]
+    tiers_accessed: list[MemoryTier]
     latency_ms: float
     cache_hit_ratio: float
     query_context: QueryContext
@@ -125,7 +125,7 @@ class MemoryTierAdapter:
         """Store entry"""
         raise NotImplementedError
 
-    async def search(self, query: str, context: QueryContext, limit: int = 10) -> List[MemoryEntry]:
+    async def search(self, query: str, context: QueryContext, limit: int = 10) -> list[MemoryEntry]:
         """Search entries"""
         raise NotImplementedError
 
@@ -133,7 +133,7 @@ class MemoryTierAdapter:
         """Delete entry"""
         raise NotImplementedError
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """Check tier health"""
         raise NotImplementedError
 
@@ -206,7 +206,7 @@ class L1RedisAdapter(MemoryTierAdapter):
             logger.error(f"L1 Redis set error: {e}")
             return False
 
-    async def search(self, query: str, context: QueryContext, limit: int = 10) -> List[MemoryEntry]:
+    async def search(self, query: str, context: QueryContext, limit: int = 10) -> list[MemoryEntry]:
         """Limited search via key patterns"""
         if not self.redis_client:
             await self.connect()
@@ -241,7 +241,7 @@ class L1RedisAdapter(MemoryTierAdapter):
             logger.error(f"L1 Redis delete error: {e}")
             return False
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """Redis health check"""
         try:
             if not self.redis_client:
@@ -323,7 +323,7 @@ class L2VectorAdapter(MemoryTierAdapter):
             logger.error(f"L2 Weaviate set error: {e}")
             return False
 
-    async def search(self, query: str, context: QueryContext, limit: int = 10) -> List[MemoryEntry]:
+    async def search(self, query: str, context: QueryContext, limit: int = 10) -> list[MemoryEntry]:
         """Semantic search in Weaviate"""
         if not self.client:
             await self.connect()
@@ -395,7 +395,7 @@ class L2VectorAdapter(MemoryTierAdapter):
         except Exception as e:
             logger.error(f"Schema creation error: {e}")
 
-    def _weaviate_to_entry(self, weaviate_obj: Dict) -> MemoryEntry:
+    def _weaviate_to_entry(self, weaviate_obj: dict) -> MemoryEntry:
         """Convert Weaviate object to MemoryEntry"""
         props = weaviate_obj.get("properties", {})
 
@@ -415,7 +415,7 @@ class L2VectorAdapter(MemoryTierAdapter):
             meta_tags=[],  # Deserialize meta_tags when needed
         )
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """Weaviate health check"""
         try:
             if not self.client:
@@ -545,7 +545,7 @@ class L3StructuredAdapter(MemoryTierAdapter):
                 logger.error(f"L3 Neon set error: {e}")
                 return False
 
-    async def search(self, query: str, context: QueryContext, limit: int = 10) -> List[MemoryEntry]:
+    async def search(self, query: str, context: QueryContext, limit: int = 10) -> list[MemoryEntry]:
         """Complex search in PostgreSQL"""
         if not self.pool:
             await self.connect()
@@ -607,7 +607,7 @@ class L3StructuredAdapter(MemoryTierAdapter):
             meta_tags=[],  # Deserialize meta_tags when needed
         )
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """PostgreSQL health check"""
         try:
             if not self.pool:
@@ -684,7 +684,7 @@ class L4ColdStorageAdapter(MemoryTierAdapter):
             logger.error(f"L4 S3 set error: {e}")
             return False
 
-    async def search(self, query: str, context: QueryContext, limit: int = 10) -> List[MemoryEntry]:
+    async def search(self, query: str, context: QueryContext, limit: int = 10) -> list[MemoryEntry]:
         """Limited search in S3 via listing and filtering"""
         try:
             prefix = f"{context.persona_domain.value}/"
@@ -721,14 +721,14 @@ class L4ColdStorageAdapter(MemoryTierAdapter):
             logger.error(f"L4 S3 delete error: {e}")
             return False
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """S3 health check"""
         try:
             # Check bucket accessibility
             self.s3_client.head_bucket(Bucket=self.bucket_name)
 
             # Count objects
-            response = self.s3_client.list_objects_v2(Bucket=self.bucket_name, MaxKeys=1)
+            self.s3_client.list_objects_v2(Bucket=self.bucket_name, MaxKeys=1)
 
             return {
                 "tier": self.tier.value,
@@ -755,7 +755,7 @@ class QueryRouter:
             QueryType.BULK_RETRIEVAL: [MemoryTier.L4_COLD_STORAGE],
         }
 
-    def route_query(self, context: QueryContext) -> List[MemoryTier]:
+    def route_query(self, context: QueryContext) -> list[MemoryTier]:
         """Determine which tiers to query based on context"""
         base_tiers = self.routing_rules.get(context.query_type, [])
 
@@ -763,9 +763,8 @@ class QueryRouter:
         optimized_tiers = []
 
         # High priority queries check hot cache first
-        if context.priority <= 3:
-            if MemoryTier.L1_HOT_CACHE not in base_tiers:
-                optimized_tiers.append(MemoryTier.L1_HOT_CACHE)
+        if context.priority <= 3 and MemoryTier.L1_HOT_CACHE not in base_tiers:
+            optimized_tiers.append(MemoryTier.L1_HOT_CACHE)
 
         optimized_tiers.extend(base_tiers)
 
@@ -844,7 +843,7 @@ class HierarchicalMemorySystem:
 
     async def get(self, key: str, context: QueryContext) -> Optional[MemoryEntry]:
         """Get entry with intelligent tier routing"""
-        start_time = time.time()
+        time.time()
         self.metrics["queries"] += 1
 
         # Route query to appropriate tiers
@@ -945,7 +944,7 @@ class HierarchicalMemorySystem:
 
         return success_count > 0
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """Comprehensive system health check"""
         health_status = {
             "status": "healthy",
@@ -1005,7 +1004,7 @@ class HierarchicalMemorySystem:
 
 # Factory function for easy instantiation
 async def create_hierarchical_memory(
-    config: Optional[Dict[str, str]] = None,
+    config: Optional[dict[str, str]] = None,
 ) -> HierarchicalMemorySystem:
     """Create and initialize hierarchical memory system"""
 

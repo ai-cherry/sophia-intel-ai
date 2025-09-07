@@ -8,13 +8,9 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Optional
 
 from app.core.unified_memory import (
-    MemoryContext,
-    MemoryEntry,
-    MemoryMetadata,
-    MemoryPriority,
     unified_memory,
 )
 from app.core.vector_db_config import VectorDBType, vector_db_manager
@@ -53,7 +49,7 @@ class VectorMetadata:
     chunk_index: Optional[int] = None  # For chunked content
     total_chunks: Optional[int] = None
     parent_document_id: Optional[str] = None
-    preprocessing_steps: List[str] = field(default_factory=list)
+    preprocessing_steps: list[str] = field(default_factory=list)
     quality_score: float = 1.0  # Embedding quality assessment
 
 
@@ -62,17 +58,17 @@ class SemanticQuery:
     """Comprehensive semantic search query"""
 
     query_text: Optional[str] = None
-    query_vector: Optional[List[float]] = None
+    query_vector: Optional[list[float]] = None
 
     # Search parameters
     top_k: int = 10
     similarity_threshold: float = 0.7
 
     # Filters
-    content_types: Optional[Set[str]] = None
-    domains: Optional[Set[str]] = None
-    date_range: Optional[Tuple[datetime, datetime]] = None
-    metadata_filters: Dict[str, Any] = field(default_factory=dict)
+    content_types: Optional[set[str]] = None
+    domains: Optional[set[str]] = None
+    date_range: Optional[tuple[datetime, datetime]] = None
+    metadata_filters: dict[str, Any] = field(default_factory=dict)
 
     # Advanced options
     rerank: bool = False
@@ -99,7 +95,7 @@ class SemanticResult:
     # Enhanced metadata
     content_type: Optional[str] = None
     relevance_explanation: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 class VectorStore:
@@ -134,7 +130,7 @@ class VectorStore:
     async def store_embedding(
         self,
         content: str,
-        embedding: Optional[List[float]] = None,
+        embedding: Optional[list[float]] = None,
         metadata: Optional[VectorMetadata] = None,
         memory_id: Optional[str] = None,
         domain: Optional[str] = None,
@@ -201,7 +197,7 @@ class VectorStore:
 
     async def semantic_search(
         self, query: SemanticQuery, operation: VectorOperation = VectorOperation.SIMILARITY_SEARCH
-    ) -> List[SemanticResult]:
+    ) -> list[SemanticResult]:
         """Perform semantic search across vector databases"""
 
         # Generate query embedding if needed
@@ -230,7 +226,7 @@ class VectorStore:
 
         # Aggregate and rank results
         all_results = []
-        for i, results in enumerate(database_results):
+        for _i, results in enumerate(database_results):
             if isinstance(results, Exception):
                 logger.warning(f"Database search failed: {results}")
                 continue
@@ -257,7 +253,7 @@ class VectorStore:
         max_results: int = 5,
         similarity_threshold: float = 0.8,
         domain: Optional[str] = None,
-    ) -> List[SemanticResult]:
+    ) -> list[SemanticResult]:
         """Find content similar to the provided text"""
 
         query = SemanticQuery(
@@ -270,8 +266,8 @@ class VectorStore:
         return await self.semantic_search(query)
 
     async def cluster_content(
-        self, content_ids: List[str], num_clusters: int = 5, domain: Optional[str] = None
-    ) -> Dict[str, Any]:
+        self, content_ids: list[str], num_clusters: int = 5, domain: Optional[str] = None
+    ) -> dict[str, Any]:
         """Cluster content based on semantic similarity"""
 
         # This would implement clustering using the vector database
@@ -288,10 +284,10 @@ class VectorStore:
     async def get_content_recommendations(
         self,
         user_id: str,
-        based_on_content: Optional[List[str]] = None,
+        based_on_content: Optional[list[str]] = None,
         max_results: int = 10,
         domain: Optional[str] = None,
-    ) -> List[SemanticResult]:
+    ) -> list[SemanticResult]:
         """Get content recommendations for a user"""
 
         # This would implement a recommendation system
@@ -306,11 +302,11 @@ class VectorStore:
 
     async def detect_anomalies(
         self, content: str, reference_domain: Optional[str] = None, anomaly_threshold: float = 0.3
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Detect if content is anomalous compared to reference set"""
 
         # Generate embedding for content
-        embedding = await self._generate_embedding(content)
+        await self._generate_embedding(content)
 
         # This would implement anomaly detection logic
         # For now, return a placeholder
@@ -323,7 +319,7 @@ class VectorStore:
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
-    async def get_vector_analytics(self, domain: Optional[str] = None) -> Dict[str, Any]:
+    async def get_vector_analytics(self, domain: Optional[str] = None) -> dict[str, Any]:
         """Get analytics on vector store usage and performance"""
 
         analytics = {
@@ -361,7 +357,7 @@ class VectorStore:
 
     async def _generate_embedding(
         self, content: str, model: Optional[EmbeddingModel] = None
-    ) -> List[float]:
+    ) -> list[float]:
         """Generate embedding for content"""
 
         # For now, return a placeholder embedding
@@ -389,7 +385,7 @@ class VectorStore:
 
     async def _search_database(
         self, db_type: VectorDBType, query: SemanticQuery
-    ) -> List[SemanticResult]:
+    ) -> list[SemanticResult]:
         """Search a specific vector database"""
 
         try:
@@ -434,7 +430,7 @@ class VectorStore:
             logger.error(f"Search failed for {db_type.value}: {e}")
             return []
 
-    def _deduplicate_results(self, results: List[SemanticResult]) -> List[SemanticResult]:
+    def _deduplicate_results(self, results: list[SemanticResult]) -> list[SemanticResult]:
         """Remove duplicate results based on content or memory ID"""
 
         seen_ids = set()
@@ -460,8 +456,8 @@ class VectorStore:
         return unique_results
 
     def _rank_results(
-        self, results: List[SemanticResult], query: SemanticQuery
-    ) -> List[SemanticResult]:
+        self, results: list[SemanticResult], query: SemanticQuery
+    ) -> list[SemanticResult]:
         """Re-rank results based on multiple factors"""
 
         def ranking_score(result: SemanticResult) -> float:
@@ -491,8 +487,8 @@ class VectorStore:
         return sorted(results, key=ranking_score, reverse=True)
 
     async def _rerank_results(
-        self, results: List[SemanticResult], query: SemanticQuery
-    ) -> List[SemanticResult]:
+        self, results: list[SemanticResult], query: SemanticQuery
+    ) -> list[SemanticResult]:
         """Apply advanced re-ranking using cross-encoder or similar"""
 
         # Placeholder for advanced re-ranking
@@ -526,7 +522,7 @@ class VectorStore:
         return "; ".join(explanations)
 
     async def _store_vector_metadata(
-        self, vector_id: str, metadata: VectorMetadata, storage_metadata: Dict[str, Any]
+        self, vector_id: str, metadata: VectorMetadata, storage_metadata: dict[str, Any]
     ):
         """Store vector metadata for tracking and analytics"""
 

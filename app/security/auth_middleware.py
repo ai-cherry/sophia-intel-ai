@@ -3,17 +3,13 @@ Production Authentication Middleware
 Handles JWT tokens, API keys, and rate limiting
 """
 
-import asyncio
-import hashlib
-import json
 import logging
 import time
 from datetime import datetime, timedelta
-from typing import Dict, Optional, Set, Tuple
+from typing import Optional
 
 import jwt
-from fastapi import HTTPException, Request, Response
-from fastapi.security import HTTPBearer
+from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
 
@@ -28,13 +24,13 @@ class RateLimiter:
     """Production rate limiter with Redis backend"""
 
     def __init__(self):
-        self.local_cache: Dict[str, Dict[str, any]] = {}
+        self.local_cache: dict[str, dict[str, any]] = {}
         self.cleanup_interval = 300  # 5 minutes
         self.last_cleanup = time.time()
 
     async def is_rate_limited(
         self, identifier: str, limit: int, window_seconds: int, burst_limit: Optional[int] = None
-    ) -> Tuple[bool, Dict[str, int]]:
+    ) -> tuple[bool, dict[str, int]]:
         """
         Check if request should be rate limited
 
@@ -98,7 +94,7 @@ class RateLimiter:
 
     async def _local_rate_limit(
         self, identifier: str, limit: int, window_seconds: int
-    ) -> Tuple[bool, Dict[str, int]]:
+    ) -> tuple[bool, dict[str, int]]:
         """Fallback local rate limiting"""
         current_time = time.time()
         window_start = current_time - (current_time % window_seconds)
@@ -156,7 +152,7 @@ class JWTHandler:
         self.secret_key = settings.jwt_secret.get_secret_value()
         self.expiry_hours = settings.jwt_expiry_hours
 
-    def create_token(self, user_id: str, permissions: Set[str] = None) -> str:
+    def create_token(self, user_id: str, permissions: set[str] = None) -> str:
         """Create JWT token"""
         now = datetime.utcnow()
         payload = {
@@ -169,7 +165,7 @@ class JWTHandler:
 
         return jwt.encode(payload, self.secret_key, algorithm=self.algorithm)
 
-    def verify_token(self, token: str) -> Optional[Dict]:
+    def verify_token(self, token: str) -> Optional[dict]:
         """Verify and decode JWT token"""
         try:
             # Remove 'Bearer ' prefix if present
@@ -192,7 +188,7 @@ class JWTHandler:
             logger.error(f"JWT verification error: {e}")
             return None
 
-    def get_user_permissions(self, payload: Dict) -> Set[str]:
+    def get_user_permissions(self, payload: dict) -> set[str]:
         """Extract user permissions from token payload"""
         return set(payload.get("permissions", []))
 
@@ -269,7 +265,7 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
         path = path.rstrip("/")
         return any(path.startswith(public) for public in self.public_paths)
 
-    async def _authenticate(self, request: Request) -> Dict:
+    async def _authenticate(self, request: Request) -> dict:
         """Authenticate the request"""
         auth_header = request.headers.get(settings.auth_token_header)
 
@@ -302,7 +298,7 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
 
         return {"authenticated": False, "error": "Invalid authentication token"}
 
-    async def _check_rate_limit(self, request: Request, auth_result: Dict) -> Dict:
+    async def _check_rate_limit(self, request: Request, auth_result: dict) -> dict:
         """Check rate limiting"""
         # Determine user tier
         user_type = auth_result.get("user_type", "anonymous")
@@ -354,7 +350,7 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
             },
         )
 
-    def _create_rate_limit_response(self, rate_info: Dict) -> JSONResponse:
+    def _create_rate_limit_response(self, rate_info: dict) -> JSONResponse:
         """Create rate limit error response"""
         return JSONResponse(
             status_code=429,
@@ -378,7 +374,7 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
         )
 
     def _add_headers(
-        self, response: Response, start_time: float, rate_info: Dict = None
+        self, response: Response, start_time: float, rate_info: dict = None
     ) -> Response:
         """Add standard headers to response"""
         processing_time = (time.time() - start_time) * 1000
@@ -406,7 +402,7 @@ async def verify_admin_access(request: Request) -> bool:
     return auth_info.get("authenticated", False) and "admin" in auth_info.get("permissions", set())
 
 
-async def get_current_user(request: Request) -> Optional[Dict]:
+async def get_current_user(request: Request) -> Optional[dict]:
     """Get current authenticated user info"""
     if not hasattr(request.state, "auth"):
         return None

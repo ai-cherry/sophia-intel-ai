@@ -9,7 +9,7 @@ import signal
 import sys
 import weakref
 from contextlib import asynccontextmanager
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Optional
 
 from app.core.config import settings
 from app.core.connections import get_connection_manager
@@ -21,8 +21,8 @@ class ResourceTracker:
     """Tracks all active resources for proper cleanup"""
 
     def __init__(self):
-        self._resources: Set[weakref.ReferenceType] = set()
-        self._cleanup_handlers: List[callable] = []
+        self._resources: set[weakref.ReferenceType] = set()
+        self._cleanup_handlers: list[callable] = []
         self._shutdown_initiated = False
 
     def register_resource(self, resource: Any) -> None:
@@ -146,7 +146,7 @@ class ProductionResourceManager:
             raise
         # Connection cleanup is handled by connection manager
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """Comprehensive health check"""
         health_status = {"status": "healthy", "resources": {}, "connections": {}}
 

@@ -5,11 +5,9 @@ Comprehensive API for prompt CRUD, version control, and A/B testing
 
 import logging
 from datetime import datetime, timezone
-from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, Body, HTTPException, Query
 from pydantic import BaseModel, Field
 
 from app.prompts.mythology_prompts import (
@@ -20,14 +18,11 @@ from app.prompts.mythology_prompts import (
 )
 from app.prompts.prompt_library import (
     ABTestConfig,
-    ABTestResult,
     MergeStrategy,
     PromptBranch,
-    PromptDiff,
     PromptLibrary,
     PromptMetadata,
     PromptStatus,
-    PromptType,
     PromptVersion,
 )
 
@@ -47,8 +42,8 @@ class PromptCreateRequest(BaseModel):
     domain: str = Field(..., description="Domain (sophia, artemis)")
     agent_name: Optional[str] = Field(None, description="Agent name")
     task_type: Optional[str] = Field(None, description="Task type")
-    business_context: Optional[List[str]] = Field(None, description="Business contexts")
-    performance_tags: Optional[List[str]] = Field(None, description="Performance tags")
+    business_context: Optional[list[str]] = Field(None, description="Business contexts")
+    performance_tags: Optional[list[str]] = Field(None, description="Performance tags")
     branch: str = Field("main", description="Branch name")
     commit_message: Optional[str] = Field(None, description="Commit message")
 
@@ -76,9 +71,9 @@ class ABTestCreateRequest(BaseModel):
     name: str = Field(..., description="A/B test name")
     description: str = Field(..., description="Test description")
     control_version: str = Field(..., description="Control version ID")
-    test_versions: List[str] = Field(..., description="Test version IDs")
-    traffic_split: Dict[str, float] = Field(..., description="Traffic split percentages")
-    success_metrics: List[str] = Field(..., description="Success metrics to track")
+    test_versions: list[str] = Field(..., description="Test version IDs")
+    traffic_split: dict[str, float] = Field(..., description="Traffic split percentages")
+    success_metrics: list[str] = Field(..., description="Success metrics to track")
     end_time: Optional[datetime] = Field(None, description="Test end time")
     minimum_sample_size: int = Field(100, description="Minimum sample size")
 
@@ -86,14 +81,14 @@ class ABTestCreateRequest(BaseModel):
 class ABTestResultRequest(BaseModel):
     version_id: str = Field(..., description="Version ID")
     success: bool = Field(..., description="Whether interaction was successful")
-    metrics: Optional[Dict[str, float]] = Field(None, description="Additional metrics")
+    metrics: Optional[dict[str, float]] = Field(None, description="Additional metrics")
 
 
 class SearchRequest(BaseModel):
     query: Optional[str] = Field("", description="Search query")
     domain: Optional[str] = Field(None, description="Filter by domain")
     agent_name: Optional[str] = Field(None, description="Filter by agent name")
-    tags: Optional[List[str]] = Field(None, description="Filter by tags")
+    tags: Optional[list[str]] = Field(None, description="Filter by tags")
     limit: int = Field(50, description="Maximum results")
 
 
@@ -105,11 +100,11 @@ class PromptResponse(BaseModel):
     branch: str
     version: str
     content: str
-    metadata: Dict[str, Any]
+    metadata: dict[str, Any]
     status: str
     created_at: datetime
-    performance_metrics: Optional[Dict[str, float]] = None
-    a_b_test_data: Optional[Dict[str, Any]] = None
+    performance_metrics: Optional[dict[str, float]] = None
+    a_b_test_data: Optional[dict[str, Any]] = None
 
 
 class BranchResponse(BaseModel):
@@ -129,8 +124,8 @@ class DiffResponse(BaseModel):
 
     from_version: str
     to_version: str
-    content_diff: List[str]
-    metadata_diff: Dict[str, Any]
+    content_diff: list[str]
+    metadata_diff: dict[str, Any]
     similarity_score: float
     change_summary: str
 
@@ -253,7 +248,7 @@ async def get_prompt(prompt_id: str, branch: str = "main", version: Optional[str
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.get("/{prompt_id}/history", response_model=List[PromptResponse])
+@router.get("/{prompt_id}/history", response_model=list[PromptResponse])
 async def get_prompt_history(prompt_id: str, branch: Optional[str] = None):
     """Get version history for a prompt"""
     try:
@@ -306,7 +301,7 @@ async def create_branch(prompt_id: str, request: BranchCreateRequest):
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.get("/{prompt_id}/branches", response_model=List[BranchResponse])
+@router.get("/{prompt_id}/branches", response_model=list[BranchResponse])
 async def get_branches(prompt_id: str):
     """Get all branches for a prompt"""
     try:
@@ -358,7 +353,7 @@ async def diff_versions(prompt_id: str, from_version: str, to_version: str):
 
 
 # Search and Discovery
-@router.post("/search", response_model=List[PromptResponse])
+@router.post("/search", response_model=list[PromptResponse])
 async def search_prompts(request: SearchRequest):
     """Search prompts with filters"""
     try:
@@ -379,7 +374,7 @@ async def search_prompts(request: SearchRequest):
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.get("/agents", response_model=Dict[str, List[str]])
+@router.get("/agents", response_model=dict[str, list[str]])
 async def get_available_agents():
     """Get list of available mythology and technical agents"""
     try:
@@ -395,7 +390,7 @@ async def get_available_agents():
 
 
 # A/B Testing
-@router.post("/ab-tests", response_model=Dict[str, str])
+@router.post("/ab-tests", response_model=dict[str, str])
 async def create_ab_test(request: ABTestCreateRequest):
     """Create a new A/B test"""
     try:
@@ -440,7 +435,7 @@ async def record_ab_test_result(test_id: str, request: ABTestResultRequest):
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.get("/ab-tests/{test_id}/results", response_model=Dict[str, Any])
+@router.get("/ab-tests/{test_id}/results", response_model=dict[str, Any])
 async def get_ab_test_results(test_id: str):
     """Get A/B test results"""
     try:
@@ -467,7 +462,7 @@ async def get_ab_test_results(test_id: str):
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.get("/ab-tests", response_model=List[Dict[str, Any]])
+@router.get("/ab-tests", response_model=list[dict[str, Any]])
 async def get_active_ab_tests():
     """Get list of active A/B tests"""
     try:
@@ -495,7 +490,7 @@ async def get_active_ab_tests():
 
 # Performance Analytics
 @router.post("/{version_id}/metrics")
-async def update_performance_metrics(version_id: str, metrics: Dict[str, float] = Body(...)):
+async def update_performance_metrics(version_id: str, metrics: dict[str, float] = Body(...)):
     """Update performance metrics for a prompt version"""
     try:
         prompt_library.update_performance_metrics(version_id, metrics)
@@ -558,7 +553,7 @@ async def get_context_prompt(agent_name: str, business_context: str, task_type: 
             "prompt_content": prompt_content,
         }
 
-    except ValueError as e:
+    except ValueError:
         raise HTTPException(status_code=400, detail=f"Invalid business context: {business_context}")
     except Exception as e:
         logger.error(f"Error getting context prompt: {e}")
@@ -587,7 +582,7 @@ async def create_context_variant(
             "message": f"Context variant created for {business_context}",
         }
 
-    except ValueError as e:
+    except ValueError:
         raise HTTPException(status_code=400, detail=f"Invalid business context: {business_context}")
     except Exception as e:
         logger.error(f"Error creating context variant: {e}")
@@ -620,7 +615,7 @@ async def get_optimization_suggestions(prompt_id: str):
 
 # Export/Import
 @router.get("/export")
-async def export_prompts(prompt_ids: Optional[List[str]] = Query(None)):
+async def export_prompts(prompt_ids: Optional[list[str]] = Query(None)):
     """Export prompts to portable format"""
     try:
         export_data = prompt_library.export_prompts(prompt_ids)
@@ -632,7 +627,7 @@ async def export_prompts(prompt_ids: Optional[List[str]] = Query(None)):
 
 
 @router.post("/import")
-async def import_prompts(import_data: Dict[str, Any] = Body(...), overwrite: bool = Body(False)):
+async def import_prompts(import_data: dict[str, Any] = Body(...), overwrite: bool = Body(False)):
     """Import prompts from exported data"""
     try:
         prompt_library.import_prompts(import_data, overwrite)

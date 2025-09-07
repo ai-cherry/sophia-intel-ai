@@ -4,12 +4,10 @@ Gong-Sophia Intelligence Bridge
 Leverages existing Sophia/Artemis architecture patterns for Gong context integration
 """
 
-import asyncio
-import logging
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from app.core.ai_logger import logger
 from app.integrations.connectors.base_connector import BaseServiceConnector
@@ -54,7 +52,7 @@ class GongContextEvent:
     event_type: GongEventType
     call_id: str
     timestamp: datetime
-    raw_data: Dict[str, Any]
+    raw_data: dict[str, Any]
     priority: str
     signature_valid: bool
     sophia_context: GongIntelligenceContext
@@ -86,7 +84,7 @@ class GongAgentMapper:
     }
 
     @classmethod
-    def get_agents_for_event(cls, event_type: GongEventType) -> Dict[str, Any]:
+    def get_agents_for_event(cls, event_type: GongEventType) -> dict[str, Any]:
         """Get appropriate agents for Gong event type"""
         return cls.AGENT_MAPPING.get(
             event_type,
@@ -113,7 +111,7 @@ class GongSophiaContextProcessor(MicroSwarmBase):
         # Context continuity tracking using existing patterns
         self.context_threads = {}
 
-    async def process_gong_event(self, event_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def process_gong_event(self, event_data: dict[str, Any]) -> dict[str, Any]:
         """
         Main processing pipeline leveraging existing Sophia patterns
         """
@@ -137,11 +135,9 @@ class GongSophiaContextProcessor(MicroSwarmBase):
 
         # Phase 1: Artemis Reconnaissance (if high priority)
         if gong_event.priority in ["high", "critical", "urgent"]:
-            reconnaissance_result = await self._deploy_artemis_mission(
-                gong_event, execution_context
-            )
+            await self._deploy_artemis_mission(gong_event, execution_context)
         else:
-            reconnaissance_result = None
+            pass
 
         # Phase 2: Sophia Intelligence Processing using existing agents
         intelligence_result = await self._process_with_sophia_agents(gong_event, execution_context)
@@ -166,7 +162,7 @@ class GongSophiaContextProcessor(MicroSwarmBase):
             "execution_context": execution_context.to_dict(),
         }
 
-    def _create_gong_event(self, event_data: Dict[str, Any]) -> GongContextEvent:
+    def _create_gong_event(self, event_data: dict[str, Any]) -> GongContextEvent:
         """Create structured Gong event from raw webhook data"""
         event_type = GongEventType(event_data.get("eventType", "call_ended"))
 
@@ -190,7 +186,7 @@ class GongSophiaContextProcessor(MicroSwarmBase):
             sophia_context=context_mapping[event_type],
         )
 
-    def _determine_priority(self, event_type: GongEventType, event_data: Dict[str, Any]) -> str:
+    def _determine_priority(self, event_type: GongEventType, event_data: dict[str, Any]) -> str:
         """Determine processing priority using existing patterns"""
         priority_rules = {
             GongEventType.DEAL_AT_RISK: "urgent",
@@ -210,7 +206,7 @@ class GongSophiaContextProcessor(MicroSwarmBase):
 
     async def _deploy_artemis_mission(
         self, event: GongContextEvent, context: SwarmExecutionContext
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Deploy Artemis mission for tactical intelligence gathering
         Leverages existing military orchestrator patterns
@@ -242,7 +238,7 @@ class GongSophiaContextProcessor(MicroSwarmBase):
 
     async def _process_with_sophia_agents(
         self, event: GongContextEvent, context: SwarmExecutionContext
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Process with existing Sophia mythology agents
         Maintains existing agent personalities and specialized capabilities
@@ -336,7 +332,7 @@ class GongSophiaContextProcessor(MicroSwarmBase):
 
     async def _build_context_continuity(
         self, event: GongContextEvent, context: SwarmExecutionContext
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Build context continuity using existing message braider patterns
         """
@@ -354,7 +350,7 @@ class GongSophiaContextProcessor(MicroSwarmBase):
                 )
 
             # Add current event to context thread
-            thread_update = await self.message_braider.add_to_thread(
+            await self.message_braider.add_to_thread(
                 thread_id=context_key,
                 message={
                     "event_type": event.event_type.value,
@@ -376,8 +372,8 @@ class GongSophiaContextProcessor(MicroSwarmBase):
             return {"continuity_established": False, "error": str(e)}
 
     async def _store_unified_context(
-        self, event: GongContextEvent, intelligence: Dict[str, Any], context_thread: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, event: GongContextEvent, intelligence: dict[str, Any], context_thread: dict[str, Any]
+    ) -> dict[str, Any]:
         """
         Store in unified memory architecture leveraging existing 4-tier system
         """
@@ -415,7 +411,7 @@ class GongSophiaContextProcessor(MicroSwarmBase):
             return {"storage_successful": False, "error": str(e)}
 
     async def _update_sophia_context_graph(
-        self, event: GongContextEvent, intelligence: Dict[str, Any]
+        self, event: GongContextEvent, intelligence: dict[str, Any]
     ):
         """
         Update Sophia's context graph for future interaction continuity
@@ -443,8 +439,8 @@ class GongSophiaContextProcessor(MicroSwarmBase):
             logger.error(f"❌ Context graph update failed: {e}")
 
     def _extract_relationship_updates(
-        self, event: GongContextEvent, intelligence: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, event: GongContextEvent, intelligence: dict[str, Any]
+    ) -> dict[str, Any]:
         """Extract relationship updates for context continuity"""
         return {
             "call_participants": event.raw_data.get("participants", []),
@@ -457,7 +453,7 @@ class GongSophiaContextProcessor(MicroSwarmBase):
         }
 
     def _prepare_next_interaction_context(
-        self, event: GongContextEvent, intelligence: Dict[str, Any]
+        self, event: GongContextEvent, intelligence: dict[str, Any]
     ) -> str:
         """Prepare context for Sophia's next interaction with this contact/company"""
         context_snippets = []
@@ -477,7 +473,7 @@ class GongSophiaContextProcessor(MicroSwarmBase):
 
         return " | ".join(context_snippets)
 
-    def _calculate_confidence(self, results: Dict[str, Any]) -> float:
+    def _calculate_confidence(self, results: dict[str, Any]) -> float:
         """Calculate confidence score for intelligence results"""
         confidence_factors = []
 
@@ -502,7 +498,7 @@ class GongSophiaService(BaseServiceConnector):
         super().__init__(service_name="gong_sophia_bridge")
         self.processor = GongSophiaContextProcessor()
 
-    async def process_gong_webhook(self, webhook_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def process_gong_webhook(self, webhook_data: dict[str, Any]) -> dict[str, Any]:
         """
         Main service endpoint for Gong webhook processing
         Called by n8n instead of direct infrastructure calls

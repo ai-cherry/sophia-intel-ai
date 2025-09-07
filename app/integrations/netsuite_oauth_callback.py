@@ -6,7 +6,6 @@ Simple server to handle OAuth 2.0 callbacks for testing
 import asyncio
 import logging
 import webbrowser
-from urllib.parse import parse_qs, urlparse
 
 from aiohttp import web
 

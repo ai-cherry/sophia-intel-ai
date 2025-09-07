@@ -54,7 +54,6 @@ class ServiceConfig:
     @classmethod
     def from_env(cls) -> "ServiceConfig":
         """Create configuration from environment variables"""
-        import os
 
         return cls(
             ollama_url=get_config().get("OLLAMA_URL", "cls.ollama_url"),

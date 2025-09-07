@@ -3,17 +3,16 @@ Sophia Portkey-Integrated Business Intelligence Factory
 Extends the Sophia factory with Portkey routing for all LLM operations
 """
 
-import asyncio
 import json
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 from uuid import uuid4
 
 from app.core.portkey_config import PortkeyManager, get_portkey_manager
 from app.core.vector_db_config import get_vector_db_manager
-from app.memory.unified_memory import search_memory, store_memory
+from app.memory.unified_memory import store_memory
 
 logger = logging.getLogger(__name__)
 
@@ -63,11 +62,11 @@ class SophiaAgentProfile:
     specialty: str
     personality: Optional[str] = None
     business_domain: str = "general"
-    expertise_areas: List[str] = field(default_factory=list)
-    tools: List[str] = field(default_factory=list)
+    expertise_areas: list[str] = field(default_factory=list)
+    tools: list[str] = field(default_factory=list)
     virtual_key: str = "openai-vk-190a60"
-    integrations: List[str] = field(default_factory=list)
-    performance_metrics: Dict[str, float] = field(default_factory=dict)
+    integrations: list[str] = field(default_factory=list)
+    performance_metrics: dict[str, float] = field(default_factory=dict)
 
 
 @dataclass
@@ -79,8 +78,8 @@ class BusinessInsight:
     insight_type: str
     content: str
     confidence: float
-    supporting_data: Dict[str, Any]
-    recommendations: List[str]
+    supporting_data: dict[str, Any]
+    recommendations: list[str]
     created_at: datetime
 
 
@@ -187,7 +186,7 @@ class PortkeySophiaFactory:
 
         return agent_profile
 
-    def _get_role_expertise(self, role: str) -> List[str]:
+    def _get_role_expertise(self, role: str) -> list[str]:
         """Get expertise areas based on role"""
         expertise_map = {
             BusinessAgentRole.MARKET_ANALYST: [
@@ -247,7 +246,7 @@ class PortkeySophiaFactory:
         }
         return expertise_map.get(role, ["general_business_analysis"])
 
-    def _get_role_tools(self, role: str) -> List[str]:
+    def _get_role_tools(self, role: str) -> list[str]:
         """Get tools based on role"""
         tools_map = {
             BusinessAgentRole.MARKET_ANALYST: [
@@ -283,7 +282,7 @@ class PortkeySophiaFactory:
         }
         return tools_map.get(role, ["data_analyzer", "report_generator"])
 
-    def _get_role_integrations(self, role: str) -> List[str]:
+    def _get_role_integrations(self, role: str) -> list[str]:
         """Get integrations based on role"""
         integrations_map = {
             BusinessAgentRole.SALES_STRATEGIST: ["salesforce", "hubspot", "gong"],
@@ -368,7 +367,7 @@ class PortkeySophiaFactory:
         self,
         agent: SophiaAgentProfile,
         query: str,
-        context: Dict[str, Any] = None,
+        context: dict[str, Any] = None,
         temperature: float = 0.7,
         max_tokens: int = 2000,
     ) -> BusinessInsight:
@@ -506,7 +505,7 @@ Operating Guidelines:
 
 Your responses should be strategic, insightful, and focused on driving business value."""
 
-    def _extract_recommendations(self, content: str) -> List[str]:
+    def _extract_recommendations(self, content: str) -> list[str]:
         """Extract recommendations from insight content"""
         recommendations = []
 
@@ -526,8 +525,8 @@ Your responses should be strategic, insightful, and focused on driving business 
         return recommendations[:5]  # Limit to top 5 recommendations
 
     async def create_business_team(
-        self, team_name: str, objective: str, required_roles: List[str], **kwargs
-    ) -> Dict[str, Any]:
+        self, team_name: str, objective: str, required_roles: list[str], **kwargs
+    ) -> dict[str, Any]:
         """
         Create a team of business agents with diverse providers
 
@@ -580,7 +579,7 @@ Your responses should be strategic, insightful, and focused on driving business 
 
         return team_config
 
-    async def search_similar_insights(self, query: str, limit: int = 5) -> List[Dict[str, Any]]:
+    async def search_similar_insights(self, query: str, limit: int = 5) -> list[dict[str, Any]]:
         """Search for similar business insights in vector database"""
         try:
             # Generate embedding for query
@@ -604,7 +603,7 @@ Your responses should be strategic, insightful, and focused on driving business 
             logger.error(f"Failed to search insights: {e}")
             return []
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """Perform health check on Sophia factory"""
         portkey_health = self.portkey_manager.health_check()
         vector_db_health = self.vector_db.health_check()

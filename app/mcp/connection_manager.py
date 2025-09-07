@@ -4,14 +4,13 @@ Centralizes connection management for the Sophia-Artemis consolidated system
 """
 
 import asyncio
-import json
 import logging
 import random
 from collections import deque
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -78,7 +77,7 @@ class Connection:
     created_at: datetime
     last_used: datetime
     state: str = "idle"
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     def is_expired(self, max_lifetime: float) -> bool:
         """Check if connection has exceeded max lifetime"""
@@ -216,7 +215,7 @@ class CircuitBreaker:
         time_since_failure = (datetime.utcnow() - self.last_failure_time).total_seconds()
         return time_since_failure >= self.config.timeout
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Get circuit breaker status"""
         return {
             "name": self.name,
@@ -237,7 +236,7 @@ class RetryManager:
         self.fibonacci_cache = [1, 1]
 
     async def execute_with_retry(
-        self, func: Callable, context: Optional[Dict[str, Any]] = None
+        self, func: Callable, context: Optional[dict[str, Any]] = None
     ) -> Any:
         """
         Execute function with retry logic
@@ -313,7 +312,7 @@ class ConnectionPool:
     def __init__(self, name: str, config: ConnectionPoolConfig):
         self.name = name
         self.config = config
-        self.connections: List[Connection] = []
+        self.connections: list[Connection] = []
         self.available_connections: asyncio.Queue = asyncio.Queue()
         self.semaphore = asyncio.Semaphore(config.max_size)
         self.lock = asyncio.Lock()
@@ -459,7 +458,7 @@ class ConnectionPool:
 
         logger.info(f"Connection pool {self.name} closed")
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get pool statistics"""
         active_count = sum(1 for c in self.connections if c.state == "active")
         idle_count = sum(1 for c in self.connections if c.state == "idle")
@@ -483,20 +482,20 @@ class MCPConnectionManager:
 
     def __init__(self):
         # Connection pools
-        self.pools: Dict[str, ConnectionPool] = {}
+        self.pools: dict[str, ConnectionPool] = {}
 
         # Circuit breakers
-        self.circuit_breakers: Dict[str, CircuitBreaker] = {}
+        self.circuit_breakers: dict[str, CircuitBreaker] = {}
 
         # Retry managers
-        self.retry_managers: Dict[str, RetryManager] = {}
+        self.retry_managers: dict[str, RetryManager] = {}
 
         # Health monitoring
-        self.health_status: Dict[str, bool] = {}
-        self.health_check_tasks: Dict[str, asyncio.Task] = {}
+        self.health_status: dict[str, bool] = {}
+        self.health_check_tasks: dict[str, asyncio.Task] = {}
 
         # Metrics
-        self.connection_metrics: Dict[str, Dict[str, Any]] = {}
+        self.connection_metrics: dict[str, dict[str, Any]] = {}
 
         # Initialize manager
         self._initialize_manager()
@@ -689,7 +688,7 @@ class MCPConnectionManager:
             if domain and domain in self.connection_metrics[server_name]["by_domain"]:
                 self.connection_metrics[server_name]["by_domain"][domain]["failed"] += 1
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Get overall connection manager status"""
         return {
             "pools": {name: pool.get_stats() for name, pool in self.pools.items()},

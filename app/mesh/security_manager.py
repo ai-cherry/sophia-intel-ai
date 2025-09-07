@@ -5,19 +5,18 @@ Manages mTLS certificates, RBAC updates, and security policies
 
 import asyncio
 import base64
-import json
 import logging
 import secrets
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Optional
 
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography.x509.oid import ExtensionOID, NameOID
+from cryptography.x509.oid import NameOID
 from kubernetes import client, config
 from kubernetes.client.rest import ApiException
 
@@ -62,12 +61,12 @@ class SecurityPolicy:
     namespace: str
     mtls_mode: SecurityLevel
     authorization_mode: AuthorizationMode
-    allowed_principals: List[str] = field(default_factory=list)
-    allowed_namespaces: List[str] = field(default_factory=list)
-    allowed_services: List[str] = field(default_factory=list)
-    allowed_methods: List[str] = field(default_factory=list)
-    allowed_paths: List[str] = field(default_factory=list)
-    custom_rules: Dict[str, Any] = field(default_factory=dict)
+    allowed_principals: list[str] = field(default_factory=list)
+    allowed_namespaces: list[str] = field(default_factory=list)
+    allowed_services: list[str] = field(default_factory=list)
+    allowed_methods: list[str] = field(default_factory=list)
+    allowed_paths: list[str] = field(default_factory=list)
+    custom_rules: dict[str, Any] = field(default_factory=dict)
     created_at: datetime = field(default_factory=datetime.now)
     updated_at: datetime = field(default_factory=datetime.now)
 
@@ -79,9 +78,9 @@ class RBACPolicy:
     name: str
     namespace: str
     role: str
-    subjects: List[str] = field(default_factory=list)
-    permissions: Dict[str, List[str]] = field(default_factory=dict)
-    conditions: Dict[str, Any] = field(default_factory=dict)
+    subjects: list[str] = field(default_factory=list)
+    permissions: dict[str, list[str]] = field(default_factory=dict)
+    conditions: dict[str, Any] = field(default_factory=dict)
     created_at: datetime = field(default_factory=datetime.now)
 
 
@@ -106,9 +105,9 @@ class SecurityManager:
         """
         self.ca_cert_path = ca_cert_path
         self.ca_key_path = ca_key_path
-        self.certificates: Dict[str, Certificate] = {}
-        self.policies: Dict[str, SecurityPolicy] = {}
-        self.rbac_policies: Dict[str, RBACPolicy] = {}
+        self.certificates: dict[str, Certificate] = {}
+        self.policies: dict[str, SecurityPolicy] = {}
+        self.rbac_policies: dict[str, RBACPolicy] = {}
         self.running = False
 
         # Initialize Kubernetes client
@@ -170,8 +169,8 @@ class SecurityManager:
         self,
         common_name: str,
         namespace: str,
-        san_dns_names: Optional[List[str]] = None,
-        san_ip_addresses: Optional[List[str]] = None,
+        san_dns_names: Optional[list[str]] = None,
+        san_ip_addresses: Optional[list[str]] = None,
         validity_days: int = 365,
     ) -> Certificate:
         """
@@ -312,7 +311,7 @@ class SecurityManager:
         logger.info(f"Rotating certificate: {cert_key}")
 
         # Create new certificate with same parameters
-        old_cert = self.certificates[cert_key]
+        self.certificates[cert_key]
         new_cert = await self.create_certificate(
             common_name=common_name, namespace=namespace, validity_days=365
         )
@@ -699,8 +698,8 @@ class SecurityManager:
         name: str,
         namespace: str,
         role: str,
-        subjects: List[str],
-        permissions: Dict[str, List[str]],
+        subjects: list[str],
+        permissions: dict[str, list[str]],
     ) -> RBACPolicy:
         """
         Create an RBAC policy

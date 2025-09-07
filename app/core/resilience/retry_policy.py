@@ -11,7 +11,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Type, TypeVar, Union
+from typing import Any, Callable, Optional, TypeVar
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +44,7 @@ class RetryConfig:
     jitter_factor: float = 0.1  # Jitter range (0.1 = ±10%)
 
     # Retry conditions
-    retry_on_exceptions: List[Type[Exception]] = None
+    retry_on_exceptions: list[type[Exception]] = None
     retry_on_result: Optional[Callable[[Any], bool]] = None
 
     # Retry budget (optional)
@@ -216,7 +216,7 @@ class RetryBudget:
         # Request tracking
         self.total_requests = 0
         self.retry_requests = 0
-        self.request_window: List[tuple] = []
+        self.request_window: list[tuple] = []
         self.window_duration = 60  # Track last 60 seconds
 
         # Lock for thread safety
@@ -268,7 +268,7 @@ class RetryBudget:
             if timestamp > cutoff
         ]
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get retry budget statistics"""
         self._clean_window()
 
@@ -317,7 +317,7 @@ class RetryPolicy:
         self.total_attempts = 0
         self.successful_attempts = 0
         self.failed_attempts = 0
-        self.retry_counts: Dict[int, int] = {}
+        self.retry_counts: dict[int, int] = {}
 
     def _create_strategy(self) -> RetryPolicyBase:
         """Create retry strategy based on configuration"""
@@ -455,7 +455,7 @@ class RetryPolicy:
             raise last_exception
         raise RuntimeError("Retry policy execution failed unexpectedly")
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get retry policy statistics"""
         stats = {
             "total_attempts": self.total_attempts,
@@ -502,7 +502,7 @@ class CompositeRetryPolicy:
     Useful for complex retry scenarios with fallback strategies
     """
 
-    def __init__(self, policies: List[RetryPolicy]):
+    def __init__(self, policies: list[RetryPolicy]):
         """
         Initialize composite retry policy
 

@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 from re import Pattern
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 from .meta_tagging import Complexity, ModificationRisk, Priority, SemanticRole
 
@@ -50,11 +50,11 @@ class ClassificationResult:
 
     semantic_role: SemanticRole
     confidence: float
-    primary_matches: List[PatternMatch]
-    secondary_matches: List[PatternMatch]
-    reasoning: List[str]
+    primary_matches: list[PatternMatch]
+    secondary_matches: list[PatternMatch]
+    reasoning: list[str]
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "semantic_role": self.semantic_role.value,
             "confidence": self.confidence,
@@ -97,10 +97,10 @@ class SemanticClassifier:
 
     def _initialize_role_patterns(
         self,
-    ) -> Dict[SemanticRole, Dict[AnalysisContext, List[Tuple[Pattern, float]]]]:
+    ) -> dict[SemanticRole, dict[AnalysisContext, list[tuple[Pattern, float]]]]:
         """Initialize comprehensive role-based pattern matching."""
 
-        def compile_patterns(patterns: List[Tuple[str, float]]) -> List[Tuple[Pattern, float]]:
+        def compile_patterns(patterns: list[tuple[str, float]]) -> list[tuple[Pattern, float]]:
             return [(re.compile(pattern, re.IGNORECASE), weight) for pattern, weight in patterns]
 
         return {
@@ -301,10 +301,10 @@ class SemanticClassifier:
             },
         }
 
-    def _initialize_capability_patterns(self) -> Dict[str, List[Tuple[Pattern, float]]]:
+    def _initialize_capability_patterns(self) -> dict[str, list[tuple[Pattern, float]]]:
         """Initialize capability detection patterns."""
 
-        def compile_patterns(patterns: List[Tuple[str, float]]) -> List[Tuple[Pattern, float]]:
+        def compile_patterns(patterns: list[tuple[str, float]]) -> list[tuple[Pattern, float]]:
             return [(re.compile(pattern, re.IGNORECASE), weight) for pattern, weight in patterns]
 
         return {
@@ -372,7 +372,7 @@ class SemanticClassifier:
             "streaming": compile_patterns([(r"stream", 0.7), (r"chunk", 0.6), (r"yield", 0.5)]),
         }
 
-    def _initialize_complexity_indicators(self) -> Dict[str, Tuple[Pattern, float]]:
+    def _initialize_complexity_indicators(self) -> dict[str, tuple[Pattern, float]]:
         """Initialize complexity assessment patterns."""
         return {
             "high_nesting": (re.compile(r"(\s{12,})", re.MULTILINE), 0.7),
@@ -385,7 +385,7 @@ class SemanticClassifier:
             "comprehensions": (re.compile(r"\[.*for.*in.*\]", re.MULTILINE), 0.3),
         }
 
-    def _initialize_risk_indicators(self) -> Dict[str, Tuple[Pattern, float]]:
+    def _initialize_risk_indicators(self) -> dict[str, tuple[Pattern, float]]:
         """Initialize risk assessment patterns."""
         return {
             "global_state": (re.compile(r"global\s+\w+", re.IGNORECASE), 0.7),
@@ -458,7 +458,7 @@ class SemanticClassifier:
 
     def _extract_contexts(
         self, component_name: str, file_path: str, content: str, ast_node: Optional[ast.AST] = None
-    ) -> Dict[AnalysisContext, str]:
+    ) -> dict[AnalysisContext, str]:
         """Extract all analysis contexts from the component."""
 
         contexts = {
@@ -528,8 +528,8 @@ class SemanticClassifier:
         return " ".join(decorators)
 
     def _match_role_patterns(
-        self, role: SemanticRole, contexts: Dict[AnalysisContext, str]
-    ) -> List[PatternMatch]:
+        self, role: SemanticRole, contexts: dict[AnalysisContext, str]
+    ) -> list[PatternMatch]:
         """Match patterns for a specific role across all contexts."""
         matches = []
 
@@ -560,15 +560,15 @@ class SemanticClassifier:
     def _get_role_for_pattern(self, pattern_str: str) -> SemanticRole:
         """Determine which role a pattern belongs to."""
         for role, context_patterns in self.role_patterns.items():
-            for context, patterns in context_patterns.items():
+            for _context, patterns in context_patterns.items():
                 for pattern, _ in patterns:
                     if pattern.pattern == pattern_str:
                         return role
         return SemanticRole.UNKNOWN
 
     def _generate_reasoning(
-        self, role: SemanticRole, matches: List[PatternMatch], contexts: Dict[AnalysisContext, str]
-    ) -> List[str]:
+        self, role: SemanticRole, matches: list[PatternMatch], contexts: dict[AnalysisContext, str]
+    ) -> list[str]:
         """Generate human-readable reasoning for classification."""
         reasoning = []
 
@@ -604,7 +604,7 @@ class SemanticClassifier:
 
         return reasoning or [f"Classified as {role.value} based on pattern analysis"]
 
-    def identify_capabilities(self, content: str) -> Dict[str, float]:
+    def identify_capabilities(self, content: str) -> dict[str, float]:
         """Identify component capabilities with confidence scores."""
         capabilities = {}
 
@@ -622,7 +622,7 @@ class SemanticClassifier:
 
     def assess_complexity(
         self, content: str, ast_node: Optional[ast.AST] = None
-    ) -> Tuple[Complexity, float, List[str]]:
+    ) -> tuple[Complexity, float, list[str]]:
         """Assess component complexity with detailed analysis."""
         indicators = []
         total_score = 0.0
@@ -673,7 +673,7 @@ class SemanticClassifier:
                 complexity += 0.1
             elif isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 complexity += 0.05
-            elif isinstance(child, ast.ClassDef) or isinstance(child, ast.ExceptHandler):
+            elif isinstance(child, (ast.ClassDef, ast.ExceptHandler)):
                 complexity += 0.1
             elif isinstance(child, ast.BoolOp):
                 complexity += 0.05 * (len(child.values) - 1)
@@ -681,8 +681,8 @@ class SemanticClassifier:
         return complexity
 
     def assess_risk(
-        self, content: str, contexts: Dict[AnalysisContext, str]
-    ) -> Tuple[ModificationRisk, float, List[str]]:
+        self, content: str, contexts: dict[AnalysisContext, str]
+    ) -> tuple[ModificationRisk, float, list[str]]:
         """Assess modification risk with detailed analysis."""
         risk_factors = []
         total_risk = 0.0
@@ -727,8 +727,8 @@ class SemanticClassifier:
         semantic_role: SemanticRole,
         complexity: Complexity,
         risk: ModificationRisk,
-        capabilities: Dict[str, float],
-    ) -> Tuple[Priority, List[str]]:
+        capabilities: dict[str, float],
+    ) -> tuple[Priority, list[str]]:
         """Generate priority level with reasoning."""
         priority_score = 0.0
         reasoning = []
@@ -770,7 +770,7 @@ class SemanticClassifier:
 
     def enhanced_classify(
         self, component_name: str, file_path: str, content: str, ast_node: Optional[ast.AST] = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Perform comprehensive classification with all metrics."""
 
         # Extract contexts
@@ -820,7 +820,7 @@ def quick_classify(component_name: str, file_path: str, content: str) -> Semanti
 
 def detailed_analysis(
     component_name: str, file_path: str, content: str, ast_node: Optional[ast.AST] = None
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Comprehensive analysis for detailed insights."""
     classifier = SemanticClassifier()
     return classifier.enhanced_classify(component_name, file_path, content, ast_node)

@@ -10,7 +10,7 @@ import time
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +34,7 @@ class AgentResult:
     output: Any
     error: Optional[str] = None
     execution_time: float = 0.0
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -42,9 +42,9 @@ class ChainContext:
     """Context passed between agents in a chain"""
 
     initial_input: Any
-    results: List[AgentResult] = field(default_factory=list)
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    shared_memory: Dict[str, Any] = field(default_factory=dict)
+    results: list[AgentResult] = field(default_factory=list)
+    metadata: dict[str, Any] = field(default_factory=dict)
+    shared_memory: dict[str, Any] = field(default_factory=dict)
 
     def get_last_output(self) -> Any:
         """Get output from the last successful agent"""
@@ -133,7 +133,7 @@ class AnalysisAgent(BaseAgent):
     def __init__(self):
         super().__init__("AnalysisAgent")
 
-    async def process(self, input_data: Any, context: ChainContext) -> Dict[str, Any]:
+    async def process(self, input_data: Any, context: ChainContext) -> dict[str, Any]:
         """Analyze input data"""
         # Simulate analysis
         await asyncio.sleep(0.5)
@@ -157,7 +157,7 @@ class OptimizationAgent(BaseAgent):
     def __init__(self):
         super().__init__("OptimizationAgent")
 
-    async def process(self, input_data: Any, context: ChainContext) -> Dict[str, Any]:
+    async def process(self, input_data: Any, context: ChainContext) -> dict[str, Any]:
         """Optimize based on analysis"""
         await asyncio.sleep(0.3)
 
@@ -186,7 +186,7 @@ class ValidationAgent(BaseAgent):
     def __init__(self):
         super().__init__("ValidationAgent")
 
-    async def process(self, input_data: Any, context: ChainContext) -> Dict[str, Any]:
+    async def process(self, input_data: Any, context: ChainContext) -> dict[str, Any]:
         """Validate results"""
         await asyncio.sleep(0.2)
 
@@ -204,7 +204,7 @@ class ImplementationAgent(BaseAgent):
     def __init__(self):
         super().__init__("ImplementationAgent")
 
-    async def process(self, input_data: Any, context: ChainContext) -> Dict[str, Any]:
+    async def process(self, input_data: Any, context: ChainContext) -> dict[str, Any]:
         """Implement solution"""
         await asyncio.sleep(1.0)
 
@@ -223,7 +223,7 @@ class MonitoringAgent(BaseAgent):
     def __init__(self):
         super().__init__("MonitoringAgent")
 
-    async def process(self, input_data: Any, context: ChainContext) -> Dict[str, Any]:
+    async def process(self, input_data: Any, context: ChainContext) -> dict[str, Any]:
         """Monitor metrics"""
         await asyncio.sleep(0.3)
 
@@ -244,8 +244,8 @@ class AgentChain:
 
     def __init__(self, name: str = "DefaultChain"):
         self.name = name
-        self.agents: List[BaseAgent] = []
-        self.parallel_groups: List[List[BaseAgent]] = []
+        self.agents: list[BaseAgent] = []
+        self.parallel_groups: list[list[BaseAgent]] = []
         self.error_handler: Optional[Callable] = None
         self.monitoring_enabled = True
 
@@ -254,7 +254,7 @@ class AgentChain:
         self.agents.append(agent)
         return self
 
-    def add_parallel(self, agents: List[BaseAgent]) -> "AgentChain":
+    def add_parallel(self, agents: list[BaseAgent]) -> "AgentChain":
         """Add agents to run in parallel"""
         self.parallel_groups.append(agents)
         return self
@@ -364,8 +364,8 @@ class ChainOrchestrator:
     """Orchestrates multiple chains"""
 
     def __init__(self):
-        self.chains: Dict[str, AgentChain] = {}
-        self.execution_history: List[Dict[str, Any]] = []
+        self.chains: dict[str, AgentChain] = {}
+        self.execution_history: list[dict[str, Any]] = []
 
     def register_chain(self, name: str, chain: AgentChain):
         """Register a chain"""
@@ -394,7 +394,7 @@ class ChainOrchestrator:
 
         return context
 
-    def get_performance_metrics(self) -> Dict[str, Any]:
+    def get_performance_metrics(self) -> dict[str, Any]:
         """Get performance metrics for chains"""
         if not self.execution_history:
             return {"total_executions": 0}

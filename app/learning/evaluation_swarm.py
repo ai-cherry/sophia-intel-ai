@@ -5,16 +5,14 @@ extracts patterns, grades performance, and generates improvement recommendations
 """
 
 import asyncio
-import json
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 from uuid import uuid4
 
 import numpy as np
-from pydantic import BaseModel
 
 from app.memory.unified_memory_router import UnifiedMemoryRouter
 
@@ -88,7 +86,7 @@ class SwarmGrade:
         else:
             return GradeLevel.F
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "accuracy_score": self.accuracy_score,
@@ -120,8 +118,8 @@ class Pattern:
     category: str
     frequency: int
     success_rate: float
-    applicable_scenarios: List[str]
-    recommendations: List[str]
+    applicable_scenarios: list[str]
+    recommendations: list[str]
     discovered_at: datetime = field(default_factory=datetime.utcnow)
 
 
@@ -134,8 +132,8 @@ class Insight:
     description: str
     severity: str  # 'info', 'warning', 'critical'
     category: str
-    affected_agents: List[str]
-    recommendations: List[str]
+    affected_agents: list[str]
+    recommendations: list[str]
     confidence: float
     timestamp: datetime = field(default_factory=datetime.utcnow)
 
@@ -146,14 +144,14 @@ class EvaluationReport:
 
     project_id: str
     grade: SwarmGrade
-    insights: List[Insight]
-    patterns_discovered: List[Pattern]
-    recommendations: List[str]
-    config_updates: Dict[str, Any]
+    insights: list[Insight]
+    patterns_discovered: list[Pattern]
+    recommendations: list[str]
+    config_updates: dict[str, Any]
     learning_applied: bool
     timestamp: datetime = field(default_factory=datetime.utcnow)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "project_id": self.project_id,
@@ -183,7 +181,7 @@ class EvaluationReport:
 class PerformanceAnalyst:
     """Analyzes execution performance metrics."""
 
-    async def analyze(self, executions: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def analyze(self, executions: list[dict[str, Any]]) -> dict[str, Any]:
         """Analyze performance metrics from executions."""
         if not executions:
             return {"status": "no_data"}
@@ -222,8 +220,8 @@ class PerformanceAnalyst:
         }
 
     def _generate_performance_recommendations(
-        self, bottlenecks: List[Dict], avg_time: float
-    ) -> List[str]:
+        self, bottlenecks: list[dict], avg_time: float
+    ) -> list[str]:
         """Generate performance improvement recommendations."""
         recommendations = []
 
@@ -243,7 +241,7 @@ class PerformanceAnalyst:
 class QualityAuditor:
     """Audits output quality and completeness."""
 
-    async def audit(self, executions: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def audit(self, executions: list[dict[str, Any]]) -> dict[str, Any]:
         """Audit quality of execution outputs."""
         if not executions:
             return {"status": "no_data"}
@@ -291,8 +289,8 @@ class QualityAuditor:
         }
 
     def _generate_quality_recommendations(
-        self, avg_quality: float, issues: List[Dict]
-    ) -> List[str]:
+        self, avg_quality: float, issues: list[dict]
+    ) -> list[str]:
         """Generate quality improvement recommendations."""
         recommendations = []
 
@@ -301,7 +299,7 @@ class QualityAuditor:
             recommendations.append("Add validation checks before final output")
 
         if issues:
-            unique_issues = set(issue["issue"] for issue in issues)
+            unique_issues = {issue["issue"] for issue in issues}
             for issue_type in unique_issues:
                 recommendations.append(f"Address issue: {issue_type}")
 
@@ -314,7 +312,7 @@ class QualityAuditor:
 class ProcessOptimizer:
     """Identifies process improvement opportunities."""
 
-    async def optimize(self, executions: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def optimize(self, executions: list[dict[str, Any]]) -> dict[str, Any]:
         """Identify process optimizations."""
         if not executions:
             return {"status": "no_data"}
@@ -359,8 +357,8 @@ class ProcessOptimizer:
         }
 
     def _generate_process_recommendations(
-        self, patterns: List[Dict], routing_issues: List[Dict]
-    ) -> List[str]:
+        self, patterns: list[dict], routing_issues: list[dict]
+    ) -> list[str]:
         """Generate process improvement recommendations."""
         recommendations = []
 
@@ -385,9 +383,9 @@ class LearningExtractor:
     """Extracts reusable patterns and lessons."""
 
     def __init__(self):
-        self.pattern_library: List[Pattern] = []
+        self.pattern_library: list[Pattern] = []
 
-    async def extract(self, executions: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def extract(self, executions: list[dict[str, Any]]) -> dict[str, Any]:
         """Extract learning patterns from executions."""
         if not executions:
             return {"status": "no_data"}
@@ -446,8 +444,8 @@ class LearningExtractor:
         }
 
     def _generate_learning_recommendations(
-        self, patterns: List[Pattern], failures: List[Dict]
-    ) -> List[str]:
+        self, patterns: list[Pattern], failures: list[dict]
+    ) -> list[str]:
         """Generate learning-based recommendations."""
         recommendations = []
 
@@ -457,7 +455,7 @@ class LearningExtractor:
             )
 
         if failures:
-            unique_errors = set(f.get("error", "unknown") for f in failures)
+            unique_errors = {f.get("error", "unknown") for f in failures}
             for error in unique_errors:
                 recommendations.append(f"Implement error handling for: {error}")
 
@@ -549,7 +547,7 @@ class RetrospectiveSwarm:
             logger.error(f"Error evaluating project {project_id}: {e}")
             return self._create_empty_report(project_id)
 
-    async def _gather_executions(self, project_id: str) -> List[Dict[str, Any]]:
+    async def _gather_executions(self, project_id: str) -> list[dict[str, Any]]:
         """Gather all executions for a project."""
         # In production, this would query the memory system
         # For now, return mock data
@@ -569,8 +567,8 @@ class RetrospectiveSwarm:
         ]
 
     def _synthesize_insights(
-        self, performance: Dict, quality: Dict, process: Dict, learning: Dict
-    ) -> List[Insight]:
+        self, performance: dict, quality: dict, process: dict, learning: dict
+    ) -> list[Insight]:
         """Synthesize insights from all analyses."""
         insights = []
 
@@ -636,7 +634,7 @@ class RetrospectiveSwarm:
 
         return insights
 
-    def _calculate_grade(self, performance: Dict, quality: Dict, process: Dict) -> SwarmGrade:
+    def _calculate_grade(self, performance: dict, quality: dict, process: dict) -> SwarmGrade:
         """Calculate overall grade for the project."""
         grade = SwarmGrade()
 
@@ -658,7 +656,7 @@ class RetrospectiveSwarm:
 
         return grade
 
-    def _consolidate_recommendations(self, *recommendation_lists) -> List[str]:
+    def _consolidate_recommendations(self, *recommendation_lists) -> list[str]:
         """Consolidate and deduplicate recommendations."""
         all_recommendations = []
         for rec_list in recommendation_lists:
@@ -674,7 +672,7 @@ class RetrospectiveSwarm:
 
         return unique_recommendations[:10]  # Limit to top 10
 
-    def _generate_config_updates(self, insights: List[Insight]) -> Dict[str, Any]:
+    def _generate_config_updates(self, insights: list[Insight]) -> dict[str, Any]:
         """Generate configuration updates based on insights."""
         config_updates = {}
 
@@ -684,9 +682,8 @@ class RetrospectiveSwarm:
                     config_updates["min_quality_threshold"] = 0.75
                 elif insight.category == "performance":
                     config_updates["max_execution_time"] = 15
-            elif insight.severity == "warning":
-                if insight.category == "process":
-                    config_updates["max_agents_per_task"] = 2
+            elif insight.severity == "warning" and insight.category == "process":
+                config_updates["max_agents_per_task"] = 2
 
         return config_updates
 

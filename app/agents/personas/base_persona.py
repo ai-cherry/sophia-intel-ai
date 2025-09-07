@@ -9,7 +9,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -53,12 +53,12 @@ class PersonaProfile:
     role: str
     backstory: str
     avatar_url: str = ""
-    personality_traits: List[PersonalityTrait] = field(default_factory=list)
-    conversation_styles: Dict[str, ConversationStyle] = field(default_factory=dict)
-    expertise_areas: List[str] = field(default_factory=list)
-    catchphrases: List[str] = field(default_factory=list)
-    values: List[str] = field(default_factory=list)
-    communication_preferences: Dict[str, str] = field(default_factory=dict)
+    personality_traits: list[PersonalityTrait] = field(default_factory=list)
+    conversation_styles: dict[str, ConversationStyle] = field(default_factory=dict)
+    expertise_areas: list[str] = field(default_factory=list)
+    catchphrases: list[str] = field(default_factory=list)
+    values: list[str] = field(default_factory=list)
+    communication_preferences: dict[str, str] = field(default_factory=dict)
 
 
 @dataclass
@@ -69,9 +69,9 @@ class Memory:
     context: str
     timestamp: datetime
     importance_score: float
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert memory to dictionary"""
         return {
             "content": self.content,
@@ -111,14 +111,14 @@ class BasePersonaAgent(ABC):
         }
 
         # Memory systems
-        self.episodic_memory: List[Memory] = []
-        self.semantic_memory: Dict[str, Any] = {}
-        self.working_memory: Dict[str, Any] = {}
-        self.procedural_memory: Dict[str, Any] = {}
+        self.episodic_memory: list[Memory] = []
+        self.semantic_memory: dict[str, Any] = {}
+        self.working_memory: dict[str, Any] = {}
+        self.procedural_memory: dict[str, Any] = {}
 
         # Learning and adaptation
-        self.learning_patterns: Dict[str, float] = {}
-        self.pattern_confidence: Dict[str, float] = {}
+        self.learning_patterns: dict[str, float] = {}
+        self.pattern_confidence: dict[str, float] = {}
         self.interaction_count = 0
         self.conversation_count = 0
 
@@ -140,7 +140,7 @@ class BasePersonaAgent(ABC):
         content: str,
         context: str,
         importance_score: float,
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: Optional[dict[str, Any]] = None,
     ):
         """Store a memory in episodic memory"""
         memory = Memory(
@@ -159,7 +159,7 @@ class BasePersonaAgent(ABC):
             self.episodic_memory.sort(key=lambda m: m.importance_score, reverse=True)
             self.episodic_memory = self.episodic_memory[: self.memory_capacity]
 
-    def recall_memories(self, context: str, limit: int = 5) -> List[Memory]:
+    def recall_memories(self, context: str, limit: int = 5) -> list[Memory]:
         """Recall relevant memories based on context"""
         relevant_memories = [
             m
@@ -174,7 +174,7 @@ class BasePersonaAgent(ABC):
 
         return relevant_memories[:limit]
 
-    async def interact(self, message: str, context: Dict[str, Any]) -> str:
+    async def interact(self, message: str, context: dict[str, Any]) -> str:
         """Main interaction method for the persona"""
         self.interaction_count += 1
         self.conversation_count += 1
@@ -204,7 +204,7 @@ class BasePersonaAgent(ABC):
         return response
 
     @abstractmethod
-    async def process_interaction(self, user_input: str, context: Dict[str, Any]) -> Dict[str, Any]:
+    async def process_interaction(self, user_input: str, context: dict[str, Any]) -> dict[str, Any]:
         """Process user interaction - must be implemented by subclasses"""
         pass
 
@@ -213,14 +213,14 @@ class BasePersonaAgent(ABC):
         """Generate persona-specific greeting - must be implemented by subclasses"""
         pass
 
-    def generate_response_with_personality(self, response_data: Dict[str, Any]) -> str:
+    def generate_response_with_personality(self, response_data: dict[str, Any]) -> str:
         """Generate response with persona's personality"""
         # Default implementation - can be overridden
         if isinstance(response_data, dict) and "message" in response_data:
             return response_data["message"]
         return str(response_data)
 
-    def learn_from_feedback(self, feedback: Dict[str, Any]):
+    def learn_from_feedback(self, feedback: dict[str, Any]):
         """Learn from user feedback"""
         rating = feedback.get("rating", 3)
         interaction_id = feedback.get("interaction_id")
@@ -239,7 +239,7 @@ class BasePersonaAgent(ABC):
                 self.pattern_confidence.get(pattern_key, 0.5) - 0.1, 0.0
             )
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get persona statistics"""
         return {
             "interaction_count": self.interaction_count,
@@ -268,11 +268,11 @@ class BasePersonaAgent(ABC):
             )
             self.episodic_memory.append(memory)
 
-    def _initialize_methodologies(self) -> Dict[str, Dict[str, Any]]:
+    def _initialize_methodologies(self) -> dict[str, dict[str, Any]]:
         """Initialize agent-specific methodologies (for subclasses)"""
         return {}
 
-    def _initialize_coaching_templates(self) -> Dict[str, str]:
+    def _initialize_coaching_templates(self) -> dict[str, str]:
         """Initialize coaching templates (for subclasses)"""
         return {}
 

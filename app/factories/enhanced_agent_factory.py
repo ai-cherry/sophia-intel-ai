@@ -6,7 +6,7 @@ Strategically uses new models for specific agent capabilities
 import logging
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from app.core.aimlapi_config import aimlapi_manager
 from app.core.enhanced_llm_router import LLMProviderType, enhanced_router
@@ -42,7 +42,7 @@ class AgentModelConfig:
     provider_type: LLMProviderType
     temperature: float = 0.7
     max_tokens: Optional[int] = None
-    capabilities: List[str] = None
+    capabilities: list[str] = None
 
 
 class EnhancedAgentFactory:
@@ -147,7 +147,7 @@ class EnhancedAgentFactory:
         role: Optional[AgentRole] = None,
         custom_instructions: Optional[str] = None,
         **kwargs,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Create a specialized agent with optimal model selection"""
 
         config = self.agent_model_configs.get(agent_type)
@@ -193,7 +193,7 @@ class EnhancedAgentFactory:
         name: str,
         role: Optional[AgentRole],
         custom_instructions: Optional[str],
-        capabilities: List[str],
+        capabilities: list[str],
     ) -> str:
         """Build optimized system prompt for agent"""
 
@@ -283,8 +283,8 @@ You leverage full thinking capabilities for profound insights.""",
         return prompt
 
     def create_agent_swarm(
-        self, swarm_name: str, agent_configs: List[Dict[str, Any]]
-    ) -> Dict[str, Any]:
+        self, swarm_name: str, agent_configs: list[dict[str, Any]]
+    ) -> dict[str, Any]:
         """Create a coordinated swarm of specialized agents"""
 
         agents = []
@@ -297,16 +297,16 @@ You leverage full thinking capabilities for profound insights.""",
             "agents": agents,
             "agent_count": len(agents),
             "capabilities": list(
-                set(cap for agent in agents for cap in agent.get("capabilities", []))
+                {cap for agent in agents for cap in agent.get("capabilities", [])}
             ),
-            "models_used": list(set(agent["model_config"]["primary"] for agent in agents)),
+            "models_used": list({agent["model_config"]["primary"] for agent in agents}),
         }
 
         logger.info(f"Created swarm '{swarm_name}' with {len(agents)} agents")
         return swarm
 
     def get_optimal_agent_for_task(
-        self, task_description: str, required_capabilities: List[str]
+        self, task_description: str, required_capabilities: list[str]
     ) -> SpecializedAgentType:
         """Determine the optimal agent type for a given task"""
 
@@ -323,7 +323,7 @@ You leverage full thinking capabilities for profound insights.""",
         # Default to analyzer for general tasks
         return SpecializedAgentType.ANALYZER
 
-    def execute_with_agent(self, agent: Dict[str, Any], messages: List[Dict[str, str]]) -> Any:
+    def execute_with_agent(self, agent: dict[str, Any], messages: list[dict[str, str]]) -> Any:
         """Execute a task using a specific agent"""
 
         model_config = agent["model_config"]

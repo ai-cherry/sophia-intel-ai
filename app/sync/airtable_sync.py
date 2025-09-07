@@ -4,11 +4,10 @@ Airtable synchronization service for foundational knowledge
 
 from __future__ import annotations
 
-import asyncio
 import json
 import os
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 try:
     from pyairtable import Api as AirtableApi
@@ -109,7 +108,7 @@ class AirtableSync:
 
         return operation
 
-    async def incremental_sync(self, since: Optional[datetime] = None) -> SyncOperation:
+    async def incremental_sync(self, since: datetime | None = None) -> SyncOperation:
         """
         Perform incremental sync of changes since last sync
         """
@@ -246,7 +245,7 @@ class AirtableSync:
         return await self.manager.update(remote_entity)
 
     async def _airtable_to_entity(
-        self, record: Dict[str, Any], classification: KnowledgeClassification
+        self, record: dict[str, Any], classification: KnowledgeClassification
     ) -> KnowledgeEntity:
         """
         Convert Airtable record to KnowledgeEntity
@@ -280,7 +279,7 @@ class AirtableSync:
 
         return entity
 
-    def _entity_to_airtable(self, entity: KnowledgeEntity) -> Dict[str, Any]:
+    def _entity_to_airtable(self, entity: KnowledgeEntity) -> dict[str, Any]:
         """
         Convert KnowledgeEntity to Airtable record format
         """
@@ -330,7 +329,7 @@ class AirtableSync:
 
         return KnowledgePriority.MEDIUM
 
-    async def _get_last_sync_time(self) -> Optional[datetime]:
+    async def _get_last_sync_time(self) -> datetime | None:
         """
         Get timestamp of last successful sync
         """

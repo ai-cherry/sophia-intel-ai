@@ -6,8 +6,8 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
-from uuid import UUID, uuid4
+from typing import Any
+from uuid import uuid4
 
 from pydantic import BaseModel, Field, validator
 
@@ -58,7 +58,7 @@ class PayReadyContext(BaseModel):
     )
     industry: str = "PropTech / Real Estate Technology"
     stage: str = "High-growth, bootstrapped and profitable"
-    metrics: Dict[str, Any] = Field(
+    metrics: dict[str, Any] = Field(
         default_factory=lambda: {
             "annual_rent_processed": "$20B+",
             "employee_count": 100,
@@ -66,7 +66,7 @@ class PayReadyContext(BaseModel):
             "market": "U.S. Multifamily Housing",
         }
     )
-    key_differentiators: List[str] = Field(
+    key_differentiators: list[str] = Field(
         default_factory=lambda: [
             "AI-first approach to resident engagement",
             "Comprehensive financial operating system",
@@ -74,7 +74,7 @@ class PayReadyContext(BaseModel):
             "Bootstrapped and profitable growth model",
         ]
     )
-    foundational_categories: List[str] = Field(
+    foundational_categories: list[str] = Field(
         default_factory=lambda: [
             "company_overview",
             "strategic_initiatives",
@@ -93,17 +93,17 @@ class KnowledgeEntity(BaseModel):
     category: str
     classification: KnowledgeClassification = KnowledgeClassification.OPERATIONAL
     priority: KnowledgePriority = KnowledgePriority.MEDIUM
-    content: Dict[str, Any]
-    pay_ready_context: Optional[PayReadyContext] = None
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    content: dict[str, Any]
+    pay_ready_context: PayReadyContext | None = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
     source: str = "manual"
-    source_id: Optional[str] = None
+    source_id: str | None = None
     is_active: bool = True
     is_foundational: bool = False  # Explicit foundational flag
     version: int = 1
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
-    synced_at: Optional[datetime] = None
+    synced_at: datetime | None = None
 
     @validator("is_foundational", always=True)
     def set_foundational_flag(cls, v, values):
@@ -122,7 +122,7 @@ class KnowledgeEntity(BaseModel):
             return KnowledgePriority.HIGH
         return v
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for storage"""
         return {
             "id": self.id,
@@ -150,13 +150,13 @@ class KnowledgeVersion(BaseModel):
     version_id: str = Field(default_factory=lambda: str(uuid4()))
     knowledge_id: str
     version_number: int
-    content: Dict[str, Any]
-    metadata: Optional[Dict[str, Any]] = None
-    change_summary: Optional[str] = None
-    changed_by: Optional[str] = None
+    content: dict[str, Any]
+    metadata: dict[str, Any] | None = None
+    change_summary: str | None = None
+    changed_by: str | None = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
-    def generate_diff(self, previous: Optional[KnowledgeVersion]) -> Dict[str, Any]:
+    def generate_diff(self, previous: KnowledgeVersion | None) -> dict[str, Any]:
         """Generate diff from previous version"""
         if not previous:
             return {"type": "initial", "content": self.content}
@@ -201,10 +201,10 @@ class SyncOperation(BaseModel):
     source: str  # airtable, manual, api
     status: str  # pending, in_progress, completed, failed
     started_at: datetime = Field(default_factory=datetime.utcnow)
-    completed_at: Optional[datetime] = None
+    completed_at: datetime | None = None
     records_processed: int = 0
     conflicts_detected: int = 0
-    error_details: Optional[Dict[str, Any]] = None
+    error_details: dict[str, Any] | None = None
 
     def complete(self, records: int = 0, conflicts: int = 0):
         """Mark operation as complete"""
@@ -226,12 +226,12 @@ class SyncConflict(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid4()))
     knowledge_id: str
     sync_operation_id: str
-    local_version: Dict[str, Any]
-    remote_version: Dict[str, Any]
+    local_version: dict[str, Any]
+    remote_version: dict[str, Any]
     conflict_type: ConflictType
     resolution_status: ResolutionStatus = ResolutionStatus.PENDING
-    resolved_by: Optional[str] = None
-    resolved_at: Optional[datetime] = None
+    resolved_by: str | None = None
+    resolved_at: datetime | None = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
     def auto_resolve(self, strategy: str = "remote_wins") -> KnowledgeEntity:
@@ -266,7 +266,7 @@ class KnowledgeTag(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid4()))
     knowledge_id: str
     tag_name: str
-    tag_value: Optional[str] = None
+    tag_value: str | None = None
     tag_type: str = "custom"  # custom, system, ai_generated
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
@@ -284,7 +284,7 @@ class KnowledgeRelationship(BaseModel):
     target_id: str
     relationship_type: str  # depends_on, related_to, supersedes, contradicts
     strength: float = Field(default=1.0, ge=0.0, le=1.0)
-    metadata: Optional[Dict[str, Any]] = None
+    metadata: dict[str, Any] | None = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
     def is_strong(self) -> bool:

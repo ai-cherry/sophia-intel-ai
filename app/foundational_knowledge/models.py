@@ -4,7 +4,7 @@ Pydantic models and database schemas for Foundational Knowledge System
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -85,7 +85,7 @@ class FoundationalKnowledge(BaseModel):
     title: str
     content: Optional[str] = None
     category: Optional[str] = None
-    tags: Optional[List[str]] = Field(default_factory=list)
+    tags: Optional[list[str]] = Field(default_factory=list)
 
     # Classification
     data_classification: DataClassification = DataClassification.PROPRIETARY
@@ -93,8 +93,8 @@ class FoundationalKnowledge(BaseModel):
     access_level: AccessLevel = AccessLevel.EXECUTIVE
 
     # Metadata
-    metadata: Dict[str, Any] = Field(default_factory=dict)
-    embeddings: Optional[List[float]] = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
+    embeddings: Optional[list[float]] = None
 
     # Tracking
     version: int = 1
@@ -139,13 +139,13 @@ class KnowledgeVersion(BaseModel):
     title: str
     content: Optional[str] = None
     category: Optional[str] = None
-    tags: Optional[List[str]] = Field(default_factory=list)
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    tags: Optional[list[str]] = Field(default_factory=list)
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
     # Change tracking
     change_type: ChangeType
     change_summary: Optional[str] = None
-    changed_fields: List[str] = Field(default_factory=list)
+    changed_fields: list[str] = Field(default_factory=list)
     previous_version_id: Optional[UUID] = None
 
     # Audit
@@ -164,7 +164,7 @@ class KnowledgeRelationship(BaseModel):
     target_knowledge_id: UUID
     relationship_type: RelationshipType
     strength: float = Field(ge=0.0, le=1.0, default=1.0)
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=dict)
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 
@@ -197,11 +197,11 @@ class SyncOperation(BaseModel):
 
     # Error tracking
     error_message: Optional[str] = None
-    error_details: Optional[Dict[str, Any]] = None
+    error_details: Optional[dict[str, Any]] = None
 
     # Metadata
     triggered_by: Optional[str] = None
-    sync_metadata: Dict[str, Any] = Field(default_factory=dict)
+    sync_metadata: dict[str, Any] = Field(default_factory=dict)
 
     @property
     def is_successful(self) -> bool:
@@ -225,11 +225,11 @@ class CreateKnowledgeRequest(BaseModel):
     title: str
     content: Optional[str] = None
     category: Optional[str] = None
-    tags: Optional[List[str]] = Field(default_factory=list)
+    tags: Optional[list[str]] = Field(default_factory=list)
     data_classification: Optional[DataClassification] = DataClassification.INTERNAL
     sensitivity_level: Optional[SensitivityLevel] = SensitivityLevel.MEDIUM
     access_level: Optional[AccessLevel] = AccessLevel.EMPLOYEE
-    metadata: Optional[Dict[str, Any]] = Field(default_factory=dict)
+    metadata: Optional[dict[str, Any]] = Field(default_factory=dict)
 
 
 class UpdateKnowledgeRequest(BaseModel):
@@ -238,11 +238,11 @@ class UpdateKnowledgeRequest(BaseModel):
     title: Optional[str] = None
     content: Optional[str] = None
     category: Optional[str] = None
-    tags: Optional[List[str]] = None
+    tags: Optional[list[str]] = None
     data_classification: Optional[DataClassification] = None
     sensitivity_level: Optional[SensitivityLevel] = None
     access_level: Optional[AccessLevel] = None
-    metadata: Optional[Dict[str, Any]] = None
+    metadata: Optional[dict[str, Any]] = None
 
 
 class KnowledgeSearchRequest(BaseModel):
@@ -250,7 +250,7 @@ class KnowledgeSearchRequest(BaseModel):
 
     query: str
     category: Optional[str] = None
-    tags: Optional[List[str]] = None
+    tags: Optional[list[str]] = None
     classification: Optional[DataClassification] = None
     limit: int = Field(default=20, le=100)
     offset: int = Field(default=0, ge=0)
@@ -260,7 +260,7 @@ class KnowledgeSearchRequest(BaseModel):
 class KnowledgeSearchResponse(BaseModel):
     """Response model for knowledge search"""
 
-    results: List[FoundationalKnowledge]
+    results: list[FoundationalKnowledge]
     total_count: int
     query: str
     took_ms: int
@@ -277,7 +277,7 @@ class SyncTriggerRequest(BaseModel):
 class SyncStatusResponse(BaseModel):
     """Response model for sync status"""
 
-    active_syncs: List[SyncOperation]
+    active_syncs: list[SyncOperation]
     last_successful_sync: Optional[SyncOperation]
     next_scheduled_sync: Optional[datetime]
     sync_health: str  # 'healthy', 'degraded', 'unhealthy'
@@ -290,7 +290,7 @@ class CacheMetadata(BaseModel):
     """Cache metadata for tracking"""
 
     cache_key: str
-    knowledge_ids: List[UUID]
+    knowledge_ids: list[UUID]
     query_hash: str
     created_at: datetime = Field(default_factory=datetime.utcnow)
     expires_at: datetime

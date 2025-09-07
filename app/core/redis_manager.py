@@ -7,14 +7,12 @@ bounded streams, TTL management, and circuit breaker protection.
 import asyncio
 import logging
 import time
-from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Union
+from datetime import datetime
+from typing import Any, Optional
 
 import redis.asyncio as aioredis
-from redis.asyncio.client import Pipeline
-from redis.exceptions import ConnectionError, RedisError, TimeoutError
+from redis.exceptions import ConnectionError, TimeoutError
 
 from app.core.redis_config import PAY_READY_REDIS_CONFIG, RedisConfig, RedisNamespaces, redis_config
 
@@ -92,7 +90,7 @@ class RedisHealthMonitor:
         }
         self._response_times = []
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """Perform comprehensive health check"""
         start_time = time.time()
 
@@ -288,7 +286,7 @@ class RedisManager:
     async def stream_add(
         self,
         stream: str,
-        fields: Dict[str, Any],
+        fields: dict[str, Any],
         message_id: str = "*",
         maxlen: Optional[int] = None,
         approximate: bool = True,
@@ -306,8 +304,8 @@ class RedisManager:
             )
 
     async def stream_read(
-        self, streams: Dict[str, str], count: Optional[int] = None, block: Optional[int] = None
-    ) -> List[Any]:
+        self, streams: dict[str, str], count: Optional[int] = None, block: Optional[int] = None
+    ) -> list[Any]:
         """Read from streams with configurable blocking"""
 
         if count is None:
@@ -340,11 +338,11 @@ class RedisManager:
         self,
         group: str,
         consumer: str,
-        streams: Dict[str, str],
+        streams: dict[str, str],
         count: Optional[int] = None,
         block: Optional[int] = None,
         noack: bool = False,
-    ) -> List[Any]:
+    ) -> list[Any]:
         """Read from stream as consumer group member"""
 
         if count is None:
@@ -364,7 +362,7 @@ class RedisManager:
                 noack=noack,
             )
 
-    async def stream_ack(self, stream: str, group: str, message_ids: List[str]) -> int:
+    async def stream_ack(self, stream: str, group: str, message_ids: list[str]) -> int:
         """Acknowledge processed messages"""
         async with self.get_connection() as redis:
             return await self.circuit_breaker.call(redis.xack, stream, group, *message_ids)
@@ -378,7 +376,7 @@ class RedisManager:
 
     # Pay Ready business cycle optimizations
 
-    async def pay_ready_cache_set(self, account_id: str, data: Dict[str, Any]) -> bool:
+    async def pay_ready_cache_set(self, account_id: str, data: dict[str, Any]) -> bool:
         """Cache Pay Ready account data with business cycle TTL"""
         key = f"account:{account_id}"
         ttl = self.config.ttl.pay_ready_snapshot
@@ -389,25 +387,22 @@ class RedisManager:
 
         return await self.set_with_ttl(key, data, ttl, namespace=RedisNamespaces.PAY_READY)
 
-    async def pay_ready_bulk_cache(self, accounts: Dict[str, Dict[str, Any]]) -> int:
+    async def pay_ready_bulk_cache(self, accounts: dict[str, dict[str, Any]]) -> int:
         """Bulk cache Pay Ready accounts for efficiency"""
-        async with self.get_connection() as redis:
-            async with redis.pipeline() as pipe:
-                count = 0
-                for account_id, data in accounts.items():
-                    key = RedisNamespaces.format_key(
-                        RedisNamespaces.PAY_READY, f"account:{account_id}"
-                    )
-                    ttl = self.config.ttl.pay_ready_snapshot
+        async with self.get_connection() as redis, redis.pipeline() as pipe:
+            count = 0
+            for account_id, data in accounts.items():
+                key = RedisNamespaces.format_key(RedisNamespaces.PAY_READY, f"account:{account_id}")
+                ttl = self.config.ttl.pay_ready_snapshot
 
-                    if self._is_month_end_period():
-                        ttl *= PAY_READY_REDIS_CONFIG["month_end_multiplier"]
+                if self._is_month_end_period():
+                    ttl *= PAY_READY_REDIS_CONFIG["month_end_multiplier"]
 
-                    pipe.setex(key, ttl, data)
-                    count += 1
+                pipe.setex(key, ttl, data)
+                count += 1
 
-                await pipe.execute()
-                return count
+            await pipe.execute()
+            return count
 
     def _is_month_end_period(self) -> bool:
         """Check if we're in month-end processing period"""
@@ -417,7 +412,7 @@ class RedisManager:
 
     # WebSocket support
 
-    async def websocket_state_set(self, client_id: str, state: Dict[str, Any]) -> bool:
+    async def websocket_state_set(self, client_id: str, state: dict[str, Any]) -> bool:
         """Set WebSocket client state with appropriate TTL"""
         return await self.set_with_ttl(
             f"client:{client_id}",
@@ -426,7 +421,7 @@ class RedisManager:
             namespace=RedisNamespaces.WEBSOCKET,
         )
 
-    async def websocket_state_get(self, client_id: str) -> Optional[Dict[str, Any]]:
+    async def websocket_state_get(self, client_id: str) -> Optional[dict[str, Any]]:
         """Get WebSocket client state"""
         return await self.get(f"client:{client_id}", namespace=RedisNamespaces.WEBSOCKET)
 
@@ -447,7 +442,7 @@ class RedisManager:
                     count += 1
         return count
 
-    async def get_memory_stats(self) -> Dict[str, Any]:
+    async def get_memory_stats(self) -> dict[str, Any]:
         """Get detailed memory usage statistics"""
         async with self.get_connection() as redis:
             info = await redis.info(section="memory")
@@ -468,17 +463,16 @@ class RedisManager:
     @asynccontextmanager
     async def pipeline(self):
         """Get Redis pipeline for bulk operations"""
-        async with self.get_connection() as redis:
-            async with redis.pipeline() as pipe:
-                yield pipe
+        async with self.get_connection() as redis, redis.pipeline() as pipe:
+            yield pipe
 
     # Health and monitoring
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """Perform health check"""
         return await self.health_monitor.health_check()
 
-    async def get_metrics(self) -> Dict[str, Any]:
+    async def get_metrics(self) -> dict[str, Any]:
         """Get current metrics"""
         return self.health_monitor.metrics.copy()
 

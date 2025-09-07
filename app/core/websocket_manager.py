@@ -9,13 +9,13 @@ import json
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Optional
 
 from fastapi import HTTPException, WebSocket, WebSocketDisconnect
 
 from .websocket_auth import AuthenticatedUser, TenantType, UserRole, WebSocketAuthenticator
 from .websocket_rate_limiter import DomainType, WebSocketRateLimiter
-from .websocket_security import SecurityEventType, ThreatLevel, WebSocketSecurityMiddleware
+from .websocket_security import WebSocketSecurityMiddleware
 
 logger = logging.getLogger(__name__)
 

@@ -5,12 +5,11 @@ Maintains domain isolation while sharing infrastructure
 """
 
 import asyncio
-import json
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set
+from typing import Any, Optional
 from uuid import uuid4
 
 from app.memory.unified_memory_router import MemoryDomain
@@ -75,7 +74,7 @@ class ServiceConfig:
     timeout_seconds: int = 30
     retry_attempts: int = 3
     health_check_interval: int = 60
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -88,7 +87,7 @@ class ServiceHealth:
     uptime_seconds: float
     error_count: int = 0
     response_time_ms: float = 0.0
-    details: Dict[str, Any] = field(default_factory=dict)
+    details: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -118,7 +117,7 @@ class BaseService:
         self.status = ServiceStatus.INITIALIZING
         self.start_time = datetime.now(timezone.utc)
         self.metrics = ServiceMetrics(service_name=config.name)
-        self._connections: Set[str] = set()
+        self._connections: set[str] = set()
 
     async def initialize(self) -> bool:
         """Initialize the service"""
@@ -207,13 +206,13 @@ class UnifiedMemoryService(BaseService):
         )
         super().__init__(config)
         self.domain_isolation = True
-        self._memory_stores: Dict[MemoryDomain, Dict] = {
+        self._memory_stores: dict[MemoryDomain, dict] = {
             MemoryDomain.ARTEMIS: {},
             MemoryDomain.SOPHIA: {},
         }
 
     async def store(
-        self, domain: MemoryDomain, key: str, value: Any, metadata: Optional[Dict[str, Any]] = None
+        self, domain: MemoryDomain, key: str, value: Any, metadata: Optional[dict[str, Any]] = None
     ) -> bool:
         """Store data in domain-specific memory"""
         try:
@@ -270,11 +269,11 @@ class MonitoringService(BaseService):
             name="PrometheusMonitoring", type=ServiceType.MONITORING, priority=ServicePriority.HIGH
         )
         super().__init__(config)
-        self._metrics_registry: Dict[str, List[float]] = {}
-        self._alerts: List[Dict[str, Any]] = []
+        self._metrics_registry: dict[str, list[float]] = {}
+        self._alerts: list[dict[str, Any]] = []
 
     async def record_metric(
-        self, metric_name: str, value: float, labels: Optional[Dict[str, str]] = None
+        self, metric_name: str, value: float, labels: Optional[dict[str, str]] = None
     ):
         """Record a metric"""
         try:
@@ -323,7 +322,7 @@ class MonitoringService(BaseService):
         alert_name: str,
         severity: str,
         message: str,
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: Optional[dict[str, Any]] = None,
     ):
         """Create an alert"""
         alert = {
@@ -352,7 +351,7 @@ class StructuredLoggingService(BaseService):
             name="StructuredLogging", type=ServiceType.LOGGING, priority=ServicePriority.HIGH
         )
         super().__init__(config)
-        self._log_buffer: List[Dict[str, Any]] = []
+        self._log_buffer: list[dict[str, Any]] = []
         self._max_buffer_size = 10000
 
     async def log(
@@ -360,7 +359,7 @@ class StructuredLoggingService(BaseService):
         level: str,
         message: str,
         domain: Optional[MemoryDomain] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: Optional[dict[str, Any]] = None,
     ):
         """Log a structured message"""
         try:
@@ -391,7 +390,7 @@ class StructuredLoggingService(BaseService):
 
     async def query_logs(
         self, domain: Optional[MemoryDomain] = None, level: Optional[str] = None, limit: int = 100
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Query logs with filters"""
         logs = self._log_buffer
 
@@ -418,15 +417,15 @@ class TracingService(BaseService):
             name="OpenTelemetryTracing", type=ServiceType.TRACING, priority=ServicePriority.NORMAL
         )
         super().__init__(config)
-        self._active_spans: Dict[str, Dict[str, Any]] = {}
-        self._completed_spans: List[Dict[str, Any]] = []
+        self._active_spans: dict[str, dict[str, Any]] = {}
+        self._completed_spans: list[dict[str, Any]] = []
 
     async def start_span(
         self,
         name: str,
         domain: MemoryDomain,
         parent_span_id: Optional[str] = None,
-        attributes: Optional[Dict[str, Any]] = None,
+        attributes: Optional[dict[str, Any]] = None,
     ) -> str:
         """Start a new trace span"""
         span_id = f"span_{uuid4().hex[:8]}"
@@ -447,7 +446,7 @@ class TracingService(BaseService):
         return span_id
 
     async def end_span(
-        self, span_id: str, status: str = "ok", attributes: Optional[Dict[str, Any]] = None
+        self, span_id: str, status: str = "ok", attributes: Optional[dict[str, Any]] = None
     ):
         """End a trace span"""
         if span_id not in self._active_spans:
@@ -473,7 +472,7 @@ class TracingService(BaseService):
             self._completed_spans = self._completed_spans[-1000:]
 
     async def add_span_event(
-        self, span_id: str, event_name: str, attributes: Optional[Dict[str, Any]] = None
+        self, span_id: str, event_name: str, attributes: Optional[dict[str, Any]] = None
     ):
         """Add an event to a span"""
         if span_id not in self._active_spans:
@@ -502,8 +501,8 @@ class CacheService(BaseService):
             name="RedisCache", type=ServiceType.CACHING, priority=ServicePriority.NORMAL
         )
         super().__init__(config)
-        self._cache: Dict[str, Dict[str, Any]] = {}
-        self._ttl_tasks: Dict[str, asyncio.Task] = {}
+        self._cache: dict[str, dict[str, Any]] = {}
+        self._ttl_tasks: dict[str, asyncio.Task] = {}
 
     async def set(
         self,
@@ -596,9 +595,9 @@ class SharedServiceRegistry:
     """Central registry for all shared services"""
 
     def __init__(self):
-        self.services: Dict[str, BaseService] = {}
+        self.services: dict[str, BaseService] = {}
         self._initialized = False
-        self._health_check_tasks: Dict[str, asyncio.Task] = {}
+        self._health_check_tasks: dict[str, asyncio.Task] = {}
 
         logger.info("🔧 Shared Service Registry initialized")
 
@@ -670,7 +669,7 @@ class SharedServiceRegistry:
         """Get cache service"""
         return self.services.get("caching")
 
-    async def get_all_health_statuses(self) -> Dict[str, ServiceHealth]:
+    async def get_all_health_statuses(self) -> dict[str, ServiceHealth]:
         """Get health status of all services"""
         health_statuses = {}
 
@@ -679,7 +678,7 @@ class SharedServiceRegistry:
 
         return health_statuses
 
-    def get_all_metrics(self) -> Dict[str, ServiceMetrics]:
+    def get_all_metrics(self) -> dict[str, ServiceMetrics]:
         """Get metrics for all services"""
         metrics = {}
 
@@ -721,7 +720,7 @@ async def log_structured(
     level: str,
     message: str,
     domain: Optional[MemoryDomain] = None,
-    metadata: Optional[Dict[str, Any]] = None,
+    metadata: Optional[dict[str, Any]] = None,
 ):
     """Convenience function for structured logging"""
     logging_service = shared_services.get_logging_service()
@@ -731,7 +730,7 @@ async def log_structured(
         logger.warning("Logging service not available")
 
 
-async def record_metric(metric_name: str, value: float, labels: Optional[Dict[str, str]] = None):
+async def record_metric(metric_name: str, value: float, labels: Optional[dict[str, str]] = None):
     """Convenience function for recording metrics"""
     monitoring_service = shared_services.get_monitoring_service()
     if monitoring_service:
@@ -744,7 +743,7 @@ async def start_trace(
     name: str,
     domain: MemoryDomain,
     parent_span_id: Optional[str] = None,
-    attributes: Optional[Dict[str, Any]] = None,
+    attributes: Optional[dict[str, Any]] = None,
 ) -> Optional[str]:
     """Convenience function for starting a trace span"""
     tracing_service = shared_services.get_tracing_service()
@@ -755,7 +754,7 @@ async def start_trace(
         return None
 
 
-async def end_trace(span_id: str, status: str = "ok", attributes: Optional[Dict[str, Any]] = None):
+async def end_trace(span_id: str, status: str = "ok", attributes: Optional[dict[str, Any]] = None):
     """Convenience function for ending a trace span"""
     tracing_service = shared_services.get_tracing_service()
     if tracing_service:
@@ -796,11 +795,11 @@ class ServiceHealthMonitor:
 
     def __init__(self, registry: SharedServiceRegistry):
         self.registry = registry
-        self.unhealthy_services: Set[str] = set()
-        self.health_history: Dict[str, List[ServiceHealth]] = {}
+        self.unhealthy_services: set[str] = set()
+        self.health_history: dict[str, list[ServiceHealth]] = {}
         self.alert_threshold = 3  # Number of consecutive unhealthy checks before alert
 
-    async def check_all_services(self) -> Dict[str, ServiceHealth]:
+    async def check_all_services(self) -> dict[str, ServiceHealth]:
         """Check health of all services"""
         health_statuses = await self.registry.get_all_health_statuses()
 

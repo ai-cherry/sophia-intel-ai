@@ -15,13 +15,12 @@ Features:
 """
 
 import asyncio
-import json
 import logging
 from collections import defaultdict
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Optional
 from uuid import uuid4
 
 import networkx as nx
@@ -86,12 +85,12 @@ class MCPServer:
 
     name: str
     endpoint: str
-    capabilities: Set[MCPCapability]
+    capabilities: set[MCPCapability]
     priority: int = 1  # 1 = highest priority
     timeout_seconds: int = 30
     max_retries: int = 3
     health_check_url: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     # Health tracking
     status: ServerStatus = ServerStatus.UNKNOWN
@@ -107,8 +106,8 @@ class MCPTask:
     id: str = field(default_factory=lambda: str(uuid4()))
     capability: MCPCapability = None
     operation: str = ""
-    parameters: Dict[str, Any] = field(default_factory=dict)
-    dependencies: Set[str] = field(default_factory=set)
+    parameters: dict[str, Any] = field(default_factory=dict)
+    dependencies: set[str] = field(default_factory=set)
     priority: int = 1
     timeout_seconds: int = 30
 
@@ -127,7 +126,7 @@ class ExecutionPlan:
     """DAG-based execution plan"""
 
     id: str = field(default_factory=lambda: str(uuid4()))
-    tasks: Dict[str, MCPTask] = field(default_factory=dict)
+    tasks: dict[str, MCPTask] = field(default_factory=dict)
     dependencies: nx.DiGraph = field(default_factory=nx.DiGraph)
     created_at: datetime = field(default_factory=datetime.now)
 
@@ -141,11 +140,11 @@ class ExecutionPlan:
             if dep_id in self.tasks:
                 self.dependencies.add_edge(dep_id, task.id)
 
-    def get_ready_tasks(self) -> List[MCPTask]:
+    def get_ready_tasks(self) -> list[MCPTask]:
         """Get tasks ready for execution (all dependencies completed)"""
         ready = []
 
-        for task_id, task in self.tasks.items():
+        for _task_id, task in self.tasks.items():
             if task.status != ExecutionStatus.PENDING:
                 continue
 
@@ -167,19 +166,19 @@ class UnifiedMCPOrchestrator:
     Unified MCP orchestration system that consolidates both existing implementations
     """
 
-    def __init__(self, config: Optional[Dict[str, Any]] = None):
+    def __init__(self, config: Optional[dict[str, Any]] = None):
         self.config = config or {}
 
         # Server registry
-        self.servers: Dict[str, MCPServer] = {}
-        self.capability_map: Dict[MCPCapability, List[MCPServer]] = defaultdict(list)
+        self.servers: dict[str, MCPServer] = {}
+        self.capability_map: dict[MCPCapability, list[MCPServer]] = defaultdict(list)
 
         # Execution tracking
-        self.active_plans: Dict[str, ExecutionPlan] = {}
-        self.execution_history: List[Dict[str, Any]] = []
+        self.active_plans: dict[str, ExecutionPlan] = {}
+        self.execution_history: list[dict[str, Any]] = []
 
         # Circuit breakers
-        self.circuit_breakers: Dict[str, Dict[str, Any]] = {}
+        self.circuit_breakers: dict[str, dict[str, Any]] = {}
 
         # Performance metrics
         self.metrics = {
@@ -272,7 +271,7 @@ class UnifiedMCPOrchestrator:
         logger.info(f"Unregistered MCP server: {server_name}")
         return True
 
-    async def health_check_servers(self) -> Dict[str, ServerStatus]:
+    async def health_check_servers(self) -> dict[str, ServerStatus]:
         """Perform health checks on all registered servers"""
         health_status = {}
 
@@ -304,7 +303,7 @@ class UnifiedMCPOrchestrator:
         self.metrics["server_health_checks"] += 1
         return health_status
 
-    def create_execution_plan(self, tasks: List[MCPTask]) -> ExecutionPlan:
+    def create_execution_plan(self, tasks: list[MCPTask]) -> ExecutionPlan:
         """Create execution plan from list of tasks"""
         plan = ExecutionPlan()
 
@@ -321,7 +320,7 @@ class UnifiedMCPOrchestrator:
 
         return plan
 
-    async def execute_plan(self, plan: ExecutionPlan) -> Dict[str, Any]:
+    async def execute_plan(self, plan: ExecutionPlan) -> dict[str, Any]:
         """Execute a complete execution plan"""
         start_time = datetime.now()
         self.metrics["total_executions"] += 1
@@ -418,7 +417,7 @@ class UnifiedMCPOrchestrator:
                 "execution_time_seconds": (datetime.now() - start_time).total_seconds(),
             }
 
-    def get_scaling_recommendations(self) -> Dict[str, Any]:
+    def get_scaling_recommendations(self) -> dict[str, Any]:
         """Get basic horizontal scaling recommendations"""
         current_load = len(self.active_plans)
         max_concurrent = self.scaling_config["max_concurrent_tasks"]
@@ -525,7 +524,7 @@ class UnifiedMCPOrchestrator:
         else:
             return {"status": "completed", "data": f"Processed {task.operation}"}
 
-    def get_server_status(self) -> Dict[str, Any]:
+    def get_server_status(self) -> dict[str, Any]:
         """Get status of all servers"""
         return {
             "servers": {
@@ -543,7 +542,7 @@ class UnifiedMCPOrchestrator:
             "metrics": self.metrics,
         }
 
-    def get_capability_map(self) -> Dict[str, List[str]]:
+    def get_capability_map(self) -> dict[str, list[str]]:
         """Get mapping of capabilities to servers"""
         return {
             capability.value: [server.name for server in servers]
@@ -553,7 +552,7 @@ class UnifiedMCPOrchestrator:
     # Convenience methods for common operations
 
     async def simple_execute(
-        self, capability: MCPCapability, operation: str, parameters: Dict[str, Any] = None
+        self, capability: MCPCapability, operation: str, parameters: dict[str, Any] = None
     ) -> Any:
         """Execute a single task without complex planning"""
         task = MCPTask(capability=capability, operation=operation, parameters=parameters or {})
@@ -569,8 +568,8 @@ class UnifiedMCPOrchestrator:
             )
 
     async def batch_execute(
-        self, tasks: List[Tuple[MCPCapability, str, Dict[str, Any]]]
-    ) -> List[Any]:
+        self, tasks: list[tuple[MCPCapability, str, dict[str, Any]]]
+    ) -> list[Any]:
         """Execute multiple independent tasks in parallel"""
         mcp_tasks = [
             MCPTask(capability=capability, operation=operation, parameters=parameters)

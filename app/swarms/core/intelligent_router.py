@@ -3,16 +3,15 @@ Intelligent LLM Router for Micro-Swarms
 Advanced routing with agent-specific optimization, cost management, and performance tracking
 """
 
-import asyncio
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 from app.core.portkey_manager import RoutingDecision, TaskType, get_portkey_manager
 from app.memory.unified_memory_router import get_memory_router
-from app.swarms.core.micro_swarm_base import AgentRole, SwarmMessage
+from app.swarms.core.micro_swarm_base import AgentRole
 
 logger = logging.getLogger(__name__)
 
@@ -50,8 +49,8 @@ class ModelPerformanceMetrics:
     last_updated: datetime = field(default_factory=datetime.now)
 
     # Agent-specific performance
-    agent_performance: Dict[AgentRole, float] = field(default_factory=dict)
-    task_performance: Dict[TaskType, float] = field(default_factory=dict)
+    agent_performance: dict[AgentRole, float] = field(default_factory=dict)
+    task_performance: dict[TaskType, float] = field(default_factory=dict)
 
 
 @dataclass
@@ -64,12 +63,12 @@ class RoutingContext:
     swarm_budget: float
     time_constraint_ms: Optional[int] = None
     quality_requirement: float = 0.8  # 0.0 to 1.0
-    previous_models_tried: List[str] = field(default_factory=list)
+    previous_models_tried: list[str] = field(default_factory=list)
     retry_count: int = 0
 
     # Historical context
-    recent_performance: Dict[str, float] = field(default_factory=dict)
-    workload_characteristics: Dict[str, Any] = field(default_factory=dict)
+    recent_performance: dict[str, float] = field(default_factory=dict)
+    workload_characteristics: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -77,12 +76,12 @@ class EnhancedRoutingDecision:
     """Enhanced routing decision with additional metadata"""
 
     primary_choice: RoutingDecision
-    fallback_choices: List[RoutingDecision]
+    fallback_choices: list[RoutingDecision]
     reasoning: str
     confidence: float
     expected_performance: ModelPerformanceMetrics
-    cost_estimation: Dict[str, float]
-    risk_assessment: Dict[str, float]
+    cost_estimation: dict[str, float]
+    risk_assessment: dict[str, float]
     routing_strategy_used: RoutingStrategy
 
 
@@ -96,8 +95,8 @@ class IntelligentRouter:
         self.memory = get_memory_router()
 
         # Performance tracking
-        self.model_metrics: Dict[str, ModelPerformanceMetrics] = {}
-        self.routing_history: List[Dict[str, Any]] = []
+        self.model_metrics: dict[str, ModelPerformanceMetrics] = {}
+        self.routing_history: list[dict[str, Any]] = []
 
         # Model configuration
         self.model_tiers = self._initialize_model_tiers()
@@ -109,7 +108,7 @@ class IntelligentRouter:
 
         logger.info("Intelligent Router initialized with adaptive capabilities")
 
-    def _initialize_model_tiers(self) -> Dict[ModelTier, List[Dict[str, Any]]]:
+    def _initialize_model_tiers(self) -> dict[ModelTier, list[dict[str, Any]]]:
         """Initialize model tier configurations"""
         return {
             ModelTier.PREMIUM: [
@@ -197,7 +196,7 @@ class IntelligentRouter:
             ],
         }
 
-    def _initialize_agent_preferences(self) -> Dict[AgentRole, Dict[str, Any]]:
+    def _initialize_agent_preferences(self) -> dict[AgentRole, dict[str, Any]]:
         """Initialize agent-specific model preferences"""
         return {
             AgentRole.ANALYST: {
@@ -455,7 +454,7 @@ class IntelligentRouter:
         primary_routing = await self._create_routing_decision(primary_model, context)
 
         fallbacks = []
-        for model_config, tier, score in scored_models[1:3]:
+        for model_config, tier, _score in scored_models[1:3]:
             fallback_routing = await self._create_routing_decision(model_config, context)
             fallbacks.append(fallback_routing)
 
@@ -500,7 +499,7 @@ class IntelligentRouter:
         primary_routing = await self._create_routing_decision(primary_model, context)
 
         fallbacks = []
-        for model_config, tier, score in scored_models[1:3]:
+        for model_config, tier, _score in scored_models[1:3]:
             fallback_routing = await self._create_routing_decision(model_config, context)
             fallbacks.append(fallback_routing)
 
@@ -519,7 +518,7 @@ class IntelligentRouter:
         )
 
     async def _create_routing_decision(
-        self, model_config: Dict[str, Any], context: RoutingContext
+        self, model_config: dict[str, Any], context: RoutingContext
     ) -> RoutingDecision:
         """Create routing decision for a specific model"""
 
@@ -548,7 +547,7 @@ class IntelligentRouter:
                 avg_confidence_score=0.75,
             )
 
-    async def _get_recent_performance(self, context: RoutingContext) -> Dict[str, float]:
+    async def _get_recent_performance(self, context: RoutingContext) -> dict[str, float]:
         """Get recent performance data for models with this agent/task combination"""
 
         # Filter routing history for relevant entries
@@ -715,7 +714,7 @@ class IntelligentRouter:
             alpha * task_perf_score + (1 - alpha) * metrics.task_performance[task_type]
         )
 
-    def get_performance_report(self) -> Dict[str, Any]:
+    def get_performance_report(self) -> dict[str, Any]:
         """Get comprehensive performance report"""
 
         report = {

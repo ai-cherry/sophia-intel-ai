@@ -9,7 +9,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Optional
 from uuid import uuid4
 
 from app.memory.unified_memory_router import MemoryDomain
@@ -95,7 +95,7 @@ class DomainRequest:
     target_domain: MemoryDomain
     operation_type: OperationType
     resource_path: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     timestamp: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
 
@@ -108,7 +108,7 @@ class ValidationResult:
     reason: Optional[str] = None
     suggested_domain: Optional[MemoryDomain] = None
     access_level: AccessLevel = AccessLevel.NONE
-    restrictions: List[str] = field(default_factory=list)
+    restrictions: list[str] = field(default_factory=list)
     audit_logged: bool = False
 
 
@@ -123,7 +123,7 @@ class CrossDomainRequest:
     requestor_id: str
     requestor_role: UserRole
     justification: str
-    data: Dict[str, Any] = field(default_factory=dict)
+    data: dict[str, Any] = field(default_factory=dict)
     approved: bool = False
     approval_timestamp: Optional[str] = None
     approver_id: Optional[str] = None
@@ -141,7 +141,7 @@ class DomainAuditLog:
     user_role: UserRole
     allowed: bool
     timestamp: str
-    details: Dict[str, Any] = field(default_factory=dict)
+    details: dict[str, Any] = field(default_factory=dict)
 
 
 # ==============================================================================
@@ -194,11 +194,11 @@ class DomainEnforcer:
         self.access_matrix = self._initialize_access_matrix()
 
         # Cross-domain request management
-        self.pending_cross_domain_requests: Dict[str, CrossDomainRequest] = {}
-        self.approved_cross_domain_requests: Dict[str, CrossDomainRequest] = {}
+        self.pending_cross_domain_requests: dict[str, CrossDomainRequest] = {}
+        self.approved_cross_domain_requests: dict[str, CrossDomainRequest] = {}
 
         # Audit logging
-        self.audit_logs: List[DomainAuditLog] = []
+        self.audit_logs: list[DomainAuditLog] = []
         self.enable_audit_logging = True
 
         # Statistics
@@ -212,7 +212,7 @@ class DomainEnforcer:
 
         logger.info("🛡️ Domain Boundary Enforcer initialized with strict separation rules")
 
-    def _initialize_access_matrix(self) -> Dict[Tuple[UserRole, MemoryDomain], AccessLevel]:
+    def _initialize_access_matrix(self) -> dict[tuple[UserRole, MemoryDomain], AccessLevel]:
         """Initialize the access control matrix"""
         matrix = {}
 
@@ -380,7 +380,7 @@ class DomainEnforcer:
 
         return access_hierarchy.get(user_level, 0) >= access_hierarchy.get(required_level, 0)
 
-    def _check_resource_restrictions(self, request: DomainRequest) -> List[str]:
+    def _check_resource_restrictions(self, request: DomainRequest) -> list[str]:
         """Check for resource-specific restrictions"""
         restrictions = []
 
@@ -417,7 +417,7 @@ class DomainEnforcer:
 
         return restrictions
 
-    def _are_restrictions_blocking(self, restrictions: List[str]) -> bool:
+    def _are_restrictions_blocking(self, restrictions: list[str]) -> bool:
         """Determine if restrictions should block the request"""
         # Any restriction is blocking for now
         # Could be made more sophisticated based on restriction types
@@ -435,7 +435,7 @@ class DomainEnforcer:
         requestor_id: str,
         requestor_role: UserRole,
         justification: str,
-        data: Optional[Dict[str, Any]] = None,
+        data: Optional[dict[str, Any]] = None,
     ) -> CrossDomainRequest:
         """
         Create a cross-domain request that requires approval
@@ -555,7 +555,7 @@ class DomainEnforcer:
         user_id: Optional[str] = None,
         allowed: Optional[bool] = None,
         limit: int = 100,
-    ) -> List[DomainAuditLog]:
+    ) -> list[DomainAuditLog]:
         """
         Get audit logs with optional filtering
 
@@ -582,7 +582,7 @@ class DomainEnforcer:
         # Return most recent logs first
         return sorted(logs, key=lambda x: x.timestamp, reverse=True)[:limit]
 
-    def get_validation_statistics(self) -> Dict[str, Any]:
+    def get_validation_statistics(self) -> dict[str, Any]:
         """Get validation statistics"""
         return {
             **self.validation_stats,
@@ -599,7 +599,7 @@ class DomainEnforcer:
             "audit_logs_count": len(self.audit_logs),
         }
 
-    def get_domain_summary(self) -> Dict[str, Any]:
+    def get_domain_summary(self) -> dict[str, Any]:
         """Get summary of domain boundaries and operations"""
         return {
             "artemis_domain": {
@@ -675,7 +675,7 @@ def validate_domain_request(
     target_domain: MemoryDomain,
     operation: OperationType,
     resource_path: Optional[str] = None,
-    metadata: Optional[Dict[str, Any]] = None,
+    metadata: Optional[dict[str, Any]] = None,
 ) -> ValidationResult:
     """
     Convenience function to validate a domain request
@@ -736,7 +736,7 @@ def request_cross_domain_access(
     )
 
 
-def get_domain_access_summary(user_role: UserRole) -> Dict[str, Any]:
+def get_domain_access_summary(user_role: UserRole) -> dict[str, Any]:
     """
     Get a summary of what domains and operations a user role can access
 

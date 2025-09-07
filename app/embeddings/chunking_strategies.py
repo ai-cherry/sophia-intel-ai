@@ -11,7 +11,7 @@ import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -47,11 +47,11 @@ class ChunkMetadata:
     start_position: int
     end_position: int
     token_count: int
-    overlap_with: List[str] = field(default_factory=list)
+    overlap_with: list[str] = field(default_factory=list)
     hierarchy_level: Optional[str] = None
     parent_chunk_id: Optional[str] = None
     semantic_boundary: bool = False
-    extra_metadata: Dict[str, Any] = field(default_factory=dict)
+    extra_metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -140,7 +140,7 @@ class BaseChunker(ABC):
         self._chunk_counter = 0
 
     @abstractmethod
-    def chunk_content(self, content: str, content_id: str) -> List[Chunk]:
+    def chunk_content(self, content: str, content_id: str) -> list[Chunk]:
         """Chunk content into pieces"""
         pass
 
@@ -174,7 +174,7 @@ class BaseChunker(ABC):
 
         return Chunk(content=content, metadata=metadata)
 
-    def _add_overlap(self, chunks: List[Chunk]) -> List[Chunk]:
+    def _add_overlap(self, chunks: list[Chunk]) -> list[Chunk]:
         """Add overlap between adjacent chunks"""
         if len(chunks) <= 1 or self.overlap_size <= 0:
             return chunks
@@ -221,7 +221,7 @@ class CodeChunker(BaseChunker):
         self.function_patterns = self._get_function_patterns()
         self.class_patterns = self._get_class_patterns()
 
-    def _get_function_patterns(self) -> Dict[str, re.Pattern]:
+    def _get_function_patterns(self) -> dict[str, re.Pattern]:
         """Get function detection patterns for different languages"""
         patterns = {
             "python": re.compile(r"^(\s*)def\s+(\w+)\s*\([^)]*\)\s*:", re.MULTILINE),
@@ -238,7 +238,7 @@ class CodeChunker(BaseChunker):
         }
         return patterns.get(self.language, patterns["python"])
 
-    def _get_class_patterns(self) -> Dict[str, re.Pattern]:
+    def _get_class_patterns(self) -> dict[str, re.Pattern]:
         """Get class detection patterns for different languages"""
         patterns = {
             "python": re.compile(r"^(\s*)class\s+(\w+)(?:\([^)]*\))?\s*:", re.MULTILINE),
@@ -251,14 +251,14 @@ class CodeChunker(BaseChunker):
         }
         return patterns.get(self.language, patterns["python"])
 
-    def chunk_content(self, content: str, content_id: str) -> List[Chunk]:
+    def chunk_content(self, content: str, content_id: str) -> list[Chunk]:
         """Chunk code content into logical units"""
         if self.language == "python":
             return self._chunk_python_code(content, content_id)
         else:
             return self._chunk_generic_code(content, content_id)
 
-    def _chunk_python_code(self, content: str, content_id: str) -> List[Chunk]:
+    def _chunk_python_code(self, content: str, content_id: str) -> list[Chunk]:
         """Chunk Python code using AST analysis"""
         chunks = []
 
@@ -308,7 +308,7 @@ class CodeChunker(BaseChunker):
 
         return "\n".join(lines[start_line:end_line])
 
-    def _chunk_generic_code(self, content: str, content_id: str) -> List[Chunk]:
+    def _chunk_generic_code(self, content: str, content_id: str) -> list[Chunk]:
         """Chunk code for non-Python languages"""
         chunks = []
         lines = content.split("\n")
@@ -333,7 +333,6 @@ class CodeChunker(BaseChunker):
         boundaries.sort(key=lambda x: x[1])  # Sort by line number
 
         # Create chunks based on boundaries
-        prev_end = 0
         for i, (boundary_type, line_num, name) in enumerate(boundaries):
             # Find end of this boundary
             next_start = boundaries[i + 1][1] if i + 1 < len(boundaries) else len(lines)
@@ -361,7 +360,7 @@ class CodeChunker(BaseChunker):
 
         return self._add_overlap(chunks)
 
-    def _chunk_by_lines(self, content: str, content_id: str) -> List[Chunk]:
+    def _chunk_by_lines(self, content: str, content_id: str) -> list[Chunk]:
         """Fall back to line-based chunking"""
         chunks = []
         lines = content.split("\n")
@@ -411,7 +410,7 @@ class CodeChunker(BaseChunker):
 
         return chunks
 
-    def create_hierarchical_chunks(self, content: str, content_id: str) -> Dict[str, List[Chunk]]:
+    def create_hierarchical_chunks(self, content: str, content_id: str) -> dict[str, list[Chunk]]:
         """Create chunks at multiple hierarchy levels"""
         hierarchical_chunks = {}
 
@@ -493,7 +492,7 @@ class CodeChunker(BaseChunker):
 
         return hierarchical_chunks
 
-    def _extract_code_blocks(self, content: str, content_id: str) -> List[Chunk]:
+    def _extract_code_blocks(self, content: str, content_id: str) -> list[Chunk]:
         """Extract logical code blocks (if/for/try blocks, etc.)"""
         blocks = []
         lines = content.split("\n")
@@ -581,7 +580,7 @@ class DocumentationChunker(BaseChunker):
         self.heading_pattern = re.compile(r"^(#{1,6})\s+(.+)$", re.MULTILINE)
         self.paragraph_separator = re.compile(r"\n\s*\n")
 
-    def chunk_content(self, content: str, content_id: str) -> List[Chunk]:
+    def chunk_content(self, content: str, content_id: str) -> list[Chunk]:
         """Chunk documentation content by semantic sections"""
         if self._is_markdown(content):
             return self._chunk_markdown(content, content_id)
@@ -598,12 +597,9 @@ class DocumentationChunker(BaseChunker):
             r"\[.*\]\(.*\)",  # Links
         ]
 
-        for pattern in markdown_indicators:
-            if re.search(pattern, content, re.MULTILINE):
-                return True
-        return False
+        return any(re.search(pattern, content, re.MULTILINE) for pattern in markdown_indicators)
 
-    def _chunk_markdown(self, content: str, content_id: str) -> List[Chunk]:
+    def _chunk_markdown(self, content: str, content_id: str) -> list[Chunk]:
         """Chunk markdown content by headers and sections"""
         chunks = []
 
@@ -663,7 +659,7 @@ class DocumentationChunker(BaseChunker):
 
         return self._add_overlap(chunks)
 
-    def _chunk_by_paragraphs(self, content: str, content_id: str) -> List[Chunk]:
+    def _chunk_by_paragraphs(self, content: str, content_id: str) -> list[Chunk]:
         """Chunk content by paragraphs"""
         chunks = []
         paragraphs = self.paragraph_separator.split(content)
@@ -717,7 +713,7 @@ class DocumentationChunker(BaseChunker):
 
         return chunks
 
-    def _chunk_text_document(self, content: str, content_id: str) -> List[Chunk]:
+    def _chunk_text_document(self, content: str, content_id: str) -> list[Chunk]:
         """Chunk plain text document"""
         # Simple sentence-aware chunking
         sentences = self._split_into_sentences(content)
@@ -766,7 +762,7 @@ class DocumentationChunker(BaseChunker):
 
         return chunks
 
-    def _split_into_sentences(self, text: str) -> List[str]:
+    def _split_into_sentences(self, text: str) -> list[str]:
         """Split text into sentences"""
         # Simple sentence splitting (could be improved with nltk or spacy)
         sentence_endings = re.compile(r"[.!?]+\s+")
@@ -777,7 +773,7 @@ class DocumentationChunker(BaseChunker):
 
     def _subdivide_large_section(
         self, section_content: str, content_id: str, base_position: int
-    ) -> List[Chunk]:
+    ) -> list[Chunk]:
         """Subdivide a large section into smaller chunks"""
         # Use paragraph-based subdivision
         paragraphs = self.paragraph_separator.split(section_content)
@@ -840,7 +836,7 @@ class ConversationChunker(BaseChunker):
         )
         self.turn_boundary = re.compile(r"\n(?=(?:User|Assistant|System|Human|AI):)", re.IGNORECASE)
 
-    def chunk_content(self, content: str, content_id: str) -> List[Chunk]:
+    def chunk_content(self, content: str, content_id: str) -> list[Chunk]:
         """Chunk conversation content by message exchanges"""
         # Detect conversation format
         if self.message_pattern.search(content):
@@ -848,7 +844,7 @@ class ConversationChunker(BaseChunker):
         else:
             return self._chunk_unstructured_conversation(content, content_id)
 
-    def _chunk_structured_conversation(self, content: str, content_id: str) -> List[Chunk]:
+    def _chunk_structured_conversation(self, content: str, content_id: str) -> list[Chunk]:
         """Chunk structured conversation (User: ... Assistant: ...)"""
         chunks = []
 
@@ -912,7 +908,7 @@ class ConversationChunker(BaseChunker):
 
         return chunks
 
-    def _chunk_unstructured_conversation(self, content: str, content_id: str) -> List[Chunk]:
+    def _chunk_unstructured_conversation(self, content: str, content_id: str) -> list[Chunk]:
         """Chunk unstructured conversation content"""
         # Fall back to paragraph-based chunking with conversation awareness
         paragraphs = re.split(r"\n\s*\n", content)
@@ -982,7 +978,7 @@ class AdaptiveChunker:
 
     def chunk_content(
         self, content: str, content_id: str, content_type: Optional[ContentType] = None
-    ) -> List[Chunk]:
+    ) -> list[Chunk]:
         """Adaptively chunk content based on detected type"""
 
         # Detect content type if not provided
@@ -1007,7 +1003,7 @@ class AdaptiveChunker:
 
     def _detect_content_type(self, content: str) -> ContentType:
         """Detect the type of content"""
-        content_lower = content.lower()
+        content.lower()
 
         # Check for code indicators
         code_patterns = [
@@ -1077,7 +1073,7 @@ class AdaptiveChunker:
         else:
             return "python"  # Default
 
-    def get_chunking_stats(self, chunks: List[Chunk]) -> Dict[str, Any]:
+    def get_chunking_stats(self, chunks: list[Chunk]) -> dict[str, Any]:
         """Get statistics about the chunking results"""
         if not chunks:
             return {}

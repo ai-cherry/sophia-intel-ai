@@ -8,13 +8,11 @@ Four-phase personality analysis system:
 - Phase D: Full psychological assessment with relationship mapping
 """
 
-import asyncio
 import logging
 import re
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple
+from datetime import datetime
+from typing import Any
 
 from .models import (
     BehaviorPattern,
@@ -31,20 +29,20 @@ logger = logging.getLogger(__name__)
 class BasePersonalityAnalyzer(ABC):
     """Base class for all personality analysis agents"""
 
-    def __init__(self, agent_id: str, config: Dict[str, Any] = None):
+    def __init__(self, agent_id: str, config: dict[str, Any] = None):
         self.agent_id = agent_id
         self.config = config or {}
-        self.analysis_cache: Dict[str, Dict[str, Any]] = {}
+        self.analysis_cache: dict[str, dict[str, Any]] = {}
         self.confidence_threshold = config.get("confidence_threshold", 0.6) if config else 0.6
 
     @abstractmethod
     async def analyze_personality(
-        self, prospect_id: str, data_sources: Dict[str, Any]
+        self, prospect_id: str, data_sources: dict[str, Any]
     ) -> PersonalityProfile:
         """Analyze personality from available data sources"""
         pass
 
-    def _extract_text_patterns(self, text: str) -> Dict[str, Any]:
+    def _extract_text_patterns(self, text: str) -> dict[str, Any]:
         """Extract linguistic and stylistic patterns from text"""
         patterns = {
             "word_count": len(text.split()),
@@ -140,12 +138,12 @@ class BasicPersonalityAgent(BasePersonalityAnalyzer):
     personality and communication style indicators.
     """
 
-    def __init__(self, agent_id: str = "basic_personality", config: Dict[str, Any] = None):
+    def __init__(self, agent_id: str = "basic_personality", config: dict[str, Any] = None):
         super().__init__(agent_id, config)
         self.analysis_version = "basic_v1.0"
 
     async def analyze_personality(
-        self, prospect_id: str, data_sources: Dict[str, Any]
+        self, prospect_id: str, data_sources: dict[str, Any]
     ) -> PersonalityProfile:
         """Analyze basic personality indicators from available data"""
         profile = PersonalityProfile(
@@ -185,7 +183,7 @@ class BasicPersonalityAgent(BasePersonalityAnalyzer):
         return profile
 
     async def _analyze_linkedin_activity(
-        self, profile: PersonalityProfile, linkedin_data: Dict[str, Any]
+        self, profile: PersonalityProfile, linkedin_data: dict[str, Any]
     ):
         """Analyze LinkedIn activity patterns"""
         posts = linkedin_data.get("posts", [])
@@ -223,7 +221,7 @@ class BasicPersonalityAgent(BasePersonalityAnalyzer):
             network_patterns = await self._analyze_network_patterns(connections)
             profile.activity_patterns["network_characteristics"] = network_patterns
 
-    async def _analyze_posting_patterns(self, posts: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def _analyze_posting_patterns(self, posts: list[dict[str, Any]]) -> dict[str, Any]:
         """Analyze posting patterns and content themes"""
         patterns = {
             "posting_frequency": "low",
@@ -284,7 +282,7 @@ class BasicPersonalityAgent(BasePersonalityAnalyzer):
 
         return patterns
 
-    async def _analyze_engagement_patterns(self, comments: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def _analyze_engagement_patterns(self, comments: list[dict[str, Any]]) -> dict[str, Any]:
         """Analyze how prospect engages with others' content"""
         patterns = {
             "engagement_frequency": "low",
@@ -348,7 +346,7 @@ class BasicPersonalityAgent(BasePersonalityAnalyzer):
 
         return patterns
 
-    async def _analyze_network_patterns(self, connections: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def _analyze_network_patterns(self, connections: list[dict[str, Any]]) -> dict[str, Any]:
         """Analyze professional network characteristics"""
         patterns = {
             "network_size": len(connections),
@@ -401,7 +399,7 @@ class BasicPersonalityAgent(BasePersonalityAnalyzer):
         return patterns
 
     async def _analyze_email_patterns(
-        self, profile: PersonalityProfile, email_data: Dict[str, Any]
+        self, profile: PersonalityProfile, email_data: dict[str, Any]
     ):
         """Analyze email communication patterns"""
         messages = email_data.get("messages", [])
@@ -439,7 +437,7 @@ class BasicPersonalityAgent(BasePersonalityAnalyzer):
 
         profile.behavior_patterns.append(email_behavior)
 
-    async def _analyze_response_patterns(self, messages: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def _analyze_response_patterns(self, messages: list[dict[str, Any]]) -> dict[str, Any]:
         """Analyze email response timing and patterns"""
         patterns = {
             "avg_response_time_hours": 24.0,
@@ -500,7 +498,7 @@ class BasicPersonalityAgent(BasePersonalityAnalyzer):
 
         return patterns
 
-    async def _analyze_web_behavior(self, profile: PersonalityProfile, web_data: Dict[str, Any]):
+    async def _analyze_web_behavior(self, profile: PersonalityProfile, web_data: dict[str, Any]):
         """Analyze web behavior patterns"""
         sessions = web_data.get("sessions", [])
 
@@ -635,14 +633,14 @@ class DISCProfileAnalyzer(BasePersonalityAnalyzer):
     Advanced DISC analysis with psychological insights and behavioral predictions.
     """
 
-    def __init__(self, agent_id: str = "disc_analyzer", config: Dict[str, Any] = None):
+    def __init__(self, agent_id: str = "disc_analyzer", config: dict[str, Any] = None):
         super().__init__(agent_id, config)
         self.analysis_version = "disc_v2.0"
 
     async def analyze_personality(
         self,
         prospect_id: str,
-        data_sources: Dict[str, Any],
+        data_sources: dict[str, Any],
         basic_profile: PersonalityProfile = None,
     ) -> PersonalityProfile:
         """Perform comprehensive DISC analysis"""
@@ -670,7 +668,7 @@ class DISCProfileAnalyzer(BasePersonalityAnalyzer):
         return profile
 
     async def _perform_comprehensive_disc_analysis(
-        self, profile: PersonalityProfile, data_sources: Dict[str, Any]
+        self, profile: PersonalityProfile, data_sources: dict[str, Any]
     ):
         """Perform detailed DISC analysis with multiple data sources"""
         # Analyze leadership indicators for Dominance
@@ -705,7 +703,7 @@ class DISCProfileAnalyzer(BasePersonalityAnalyzer):
         # Update primary/secondary types
         self._update_disc_types(profile)
 
-    async def _analyze_dominance_indicators(self, data_sources: Dict[str, Any]) -> float:
+    async def _analyze_dominance_indicators(self, data_sources: dict[str, Any]) -> float:
         """Analyze indicators of Dominance (D) traits"""
         dominance_score = 0.0
         indicators = []
@@ -795,7 +793,7 @@ class DISCProfileAnalyzer(BasePersonalityAnalyzer):
 
         return min(dominance_score, 1.0)
 
-    async def _analyze_influence_indicators(self, data_sources: Dict[str, Any]) -> float:
+    async def _analyze_influence_indicators(self, data_sources: dict[str, Any]) -> float:
         """Analyze indicators of Influence (I) traits"""
         influence_score = 0.0
 
@@ -851,7 +849,7 @@ class DISCProfileAnalyzer(BasePersonalityAnalyzer):
 
         return min(influence_score, 1.0)
 
-    async def _analyze_steadiness_indicators(self, data_sources: Dict[str, Any]) -> float:
+    async def _analyze_steadiness_indicators(self, data_sources: dict[str, Any]) -> float:
         """Analyze indicators of Steadiness (S) traits"""
         steadiness_score = 0.0
 
@@ -912,7 +910,7 @@ class DISCProfileAnalyzer(BasePersonalityAnalyzer):
 
         return min(steadiness_score, 1.0)
 
-    async def _analyze_conscientiousness_indicators(self, data_sources: Dict[str, Any]) -> float:
+    async def _analyze_conscientiousness_indicators(self, data_sources: dict[str, Any]) -> float:
         """Analyze indicators of Conscientiousness (C) traits"""
         conscientiousness_score = 0.0
 
@@ -1107,7 +1105,7 @@ class DISCProfileAnalyzer(BasePersonalityAnalyzer):
         profile.decision_factors = preferences.get("decision_factors", [])
 
     async def _analyze_decision_patterns(
-        self, profile: PersonalityProfile, data_sources: Dict[str, Any]
+        self, profile: PersonalityProfile, data_sources: dict[str, Any]
     ):
         """Analyze decision-making patterns"""
         if not profile.primary_disc_type:
@@ -1147,7 +1145,7 @@ class PredictivePersonalityEngine(BasePersonalityAnalyzer):
     optimal outreach timing, and decision-making preferences.
     """
 
-    def __init__(self, agent_id: str = "predictive_personality", config: Dict[str, Any] = None):
+    def __init__(self, agent_id: str = "predictive_personality", config: dict[str, Any] = None):
         super().__init__(agent_id, config)
         self.analysis_version = "predictive_v1.0"
         self.historical_patterns = {}  # Would load from database
@@ -1155,9 +1153,9 @@ class PredictivePersonalityEngine(BasePersonalityAnalyzer):
     async def analyze_personality(
         self,
         prospect_id: str,
-        data_sources: Dict[str, Any],
+        data_sources: dict[str, Any],
         enhanced_profile: PersonalityProfile = None,
-        historical_similar_profiles: List[Dict[str, Any]] = None,
+        historical_similar_profiles: list[dict[str, Any]] = None,
     ) -> PersonalityProfile:
         """Generate predictive personality insights"""
         profile = enhanced_profile or PersonalityProfile(
@@ -1183,7 +1181,7 @@ class PredictivePersonalityEngine(BasePersonalityAnalyzer):
         return profile
 
     async def _predict_optimal_timing(
-        self, profile: PersonalityProfile, data_sources: Dict[str, Any]
+        self, profile: PersonalityProfile, data_sources: dict[str, Any]
     ):
         """Predict optimal outreach timing windows"""
         timing_patterns = {}
@@ -1266,7 +1264,7 @@ class PredictivePersonalityEngine(BasePersonalityAnalyzer):
         profile.behavior_patterns.append(timing_pattern)
 
     async def _predict_content_resonance(
-        self, profile: PersonalityProfile, data_sources: Dict[str, Any]
+        self, profile: PersonalityProfile, data_sources: dict[str, Any]
     ):
         """Predict what types of content will resonate"""
         content_preferences = {}
@@ -1343,7 +1341,7 @@ class PredictivePersonalityEngine(BasePersonalityAnalyzer):
         content_pattern.add_evidence({"content_preferences": content_preferences})
         profile.behavior_patterns.append(content_pattern)
 
-    def _extract_content_themes(self, content_items: List[Dict[str, Any]]) -> List[str]:
+    def _extract_content_themes(self, content_items: list[dict[str, Any]]) -> list[str]:
         """Extract themes from content items"""
         themes = {
             "leadership": 0,
@@ -1381,7 +1379,7 @@ class PredictivePersonalityEngine(BasePersonalityAnalyzer):
         return [theme for theme, count in sorted_themes[:3] if count > 0]
 
     async def _predict_decision_timeline(
-        self, profile: PersonalityProfile, historical_similar_profiles: List[Dict[str, Any]]
+        self, profile: PersonalityProfile, historical_similar_profiles: list[dict[str, Any]]
     ):
         """Predict decision-making timeline based on similar profiles"""
         # Default timeline based on personality type
@@ -1426,7 +1424,7 @@ class PredictivePersonalityEngine(BasePersonalityAnalyzer):
         profile.behavior_patterns.append(timeline_pattern)
 
     async def _predict_stakeholder_dynamics(
-        self, profile: PersonalityProfile, data_sources: Dict[str, Any]
+        self, profile: PersonalityProfile, data_sources: dict[str, Any]
     ):
         """Predict stakeholder influence patterns"""
         stakeholder_predictions = {}
@@ -1510,14 +1508,14 @@ class AdvancedPsychProfileAgent(BasePersonalityAnalyzer):
     cognitive style analysis, and relationship mapping capabilities.
     """
 
-    def __init__(self, agent_id: str = "advanced_psych_profile", config: Dict[str, Any] = None):
+    def __init__(self, agent_id: str = "advanced_psych_profile", config: dict[str, Any] = None):
         super().__init__(agent_id, config)
         self.analysis_version = "advanced_v1.0"
 
     async def analyze_personality(
         self,
         prospect_id: str,
-        data_sources: Dict[str, Any],
+        data_sources: dict[str, Any],
         predictive_profile: PersonalityProfile = None,
     ) -> PersonalityProfile:
         """Generate comprehensive psychological assessment"""
@@ -1541,7 +1539,7 @@ class AdvancedPsychProfileAgent(BasePersonalityAnalyzer):
         return profile
 
     async def _analyze_cognitive_style(
-        self, profile: PersonalityProfile, data_sources: Dict[str, Any]
+        self, profile: PersonalityProfile, data_sources: dict[str, Any]
     ):
         """Analyze cognitive processing and problem-solving style"""
         cognitive_indicators = {
@@ -1620,7 +1618,7 @@ class AdvancedPsychProfileAgent(BasePersonalityAnalyzer):
         profile.behavior_patterns.append(cognitive_pattern)
 
     async def _assess_risk_tolerance(
-        self, profile: PersonalityProfile, data_sources: Dict[str, Any]
+        self, profile: PersonalityProfile, data_sources: dict[str, Any]
     ):
         """Assess risk tolerance and decision-making under uncertainty"""
         risk_score = 0.5  # Default neutral
@@ -1673,7 +1671,7 @@ class AdvancedPsychProfileAgent(BasePersonalityAnalyzer):
         profile.risk_tolerance = risk_score
 
     async def _analyze_innovation_adoption(
-        self, profile: PersonalityProfile, data_sources: Dict[str, Any]
+        self, profile: PersonalityProfile, data_sources: dict[str, Any]
     ):
         """Analyze innovation adoption patterns (Rogers' Diffusion of Innovation)"""
         adoption_score = 0.5
@@ -1735,7 +1733,7 @@ class AdvancedPsychProfileAgent(BasePersonalityAnalyzer):
             profile.innovation_adoption = "laggard"
 
     async def _assess_social_proof_sensitivity(
-        self, profile: PersonalityProfile, data_sources: Dict[str, Any]
+        self, profile: PersonalityProfile, data_sources: dict[str, Any]
     ):
         """Assess sensitivity to social proof and peer influence"""
         social_proof_score = 0.5
@@ -1780,7 +1778,7 @@ class AdvancedPsychProfileAgent(BasePersonalityAnalyzer):
         profile.social_proof_sensitivity = social_proof_score
 
     async def _analyze_authority_responsiveness(
-        self, profile: PersonalityProfile, data_sources: Dict[str, Any]
+        self, profile: PersonalityProfile, data_sources: dict[str, Any]
     ):
         """Analyze responsiveness to authority and expertise"""
         authority_score = 0.5
@@ -1824,7 +1822,7 @@ class AdvancedPsychProfileAgent(BasePersonalityAnalyzer):
         profile.authority_responsiveness = authority_score
 
     async def _map_relationship_dynamics(
-        self, profile: PersonalityProfile, data_sources: Dict[str, Any]
+        self, profile: PersonalityProfile, data_sources: dict[str, Any]
     ):
         """Map relationship dynamics and networking patterns"""
         relationship_mapping = {}
@@ -1879,7 +1877,7 @@ class AdvancedPsychProfileAgent(BasePersonalityAnalyzer):
         profile.behavior_patterns.append(relationship_pattern)
 
     async def _predict_negotiation_style(
-        self, profile: PersonalityProfile, data_sources: Dict[str, Any]
+        self, profile: PersonalityProfile, data_sources: dict[str, Any]
     ):
         """Predict negotiation style and approach"""
         negotiation_predictions = {}

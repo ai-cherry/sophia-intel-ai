@@ -8,12 +8,9 @@ Integrates with existing optimized_mcp_orchestrator.py
 import asyncio
 import json
 import logging
-import time
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Union
-from uuid import uuid4
+from typing import Any, Optional
 
 import redis.asyncio as redis
 from pydantic import BaseModel, Field, validator
@@ -50,7 +47,7 @@ class MCPServerRegistration(BaseModel):
     server_id: str
     name: str
     domain: MCPDomain
-    capabilities: List[MCPCapabilityType]
+    capabilities: list[MCPCapabilityType]
     endpoint: str
     connection_type: ConnectionType = ConnectionType.WEBSOCKET
     priority: int = Field(default=10, ge=1, le=100)
@@ -65,7 +62,7 @@ class MCPServerRegistration(BaseModel):
     # Metadata
     version: str = "1.0.0"
     description: str = ""
-    tags: Set[str] = set()
+    tags: set[str] = set()
     created_at: datetime = Field(default_factory=datetime.now)
 
     # Runtime state (not stored in registration)
@@ -126,11 +123,11 @@ class ServerLoadBalancer:
     """Load balancer for MCP servers"""
 
     def __init__(self):
-        self.round_robin_counters: Dict[str, int] = {}
+        self.round_robin_counters: dict[str, int] = {}
 
     def select_server(
         self,
-        servers: List[MCPServerRegistration],
+        servers: list[MCPServerRegistration],
         strategy: str = "priority",
         exclude_unhealthy: bool = True,
     ) -> Optional[MCPServerRegistration]:
@@ -184,8 +181,8 @@ class CentralMCPRegistry:
         self.orchestrator: Optional[OptimizedMCPOrchestrator] = None
 
         # Registry storage
-        self.registered_servers: Dict[str, MCPServerRegistration] = {}
-        self.domain_servers: Dict[MCPDomain, List[str]] = {
+        self.registered_servers: dict[str, MCPServerRegistration] = {}
+        self.domain_servers: dict[MCPDomain, list[str]] = {
             MCPDomain.ARTEMIS: [],
             MCPDomain.SOPHIA: [],
             MCPDomain.SHARED: [],
@@ -195,7 +192,7 @@ class CentralMCPRegistry:
         self.load_balancer = ServerLoadBalancer()
 
         # Health monitoring
-        self.health_check_tasks: Dict[str, asyncio.Task] = {}
+        self.health_check_tasks: dict[str, asyncio.Task] = {}
         self.monitoring_enabled = True
 
         # Metrics
@@ -317,10 +314,10 @@ class CentralMCPRegistry:
     async def discover_servers(
         self,
         domain: Optional[MCPDomain] = None,
-        capabilities: Optional[List[MCPCapabilityType]] = None,
-        status_filter: Optional[List[ServerStatus]] = None,
-        tags: Optional[Set[str]] = None,
-    ) -> List[MCPServerRegistration]:
+        capabilities: Optional[list[MCPCapabilityType]] = None,
+        status_filter: Optional[list[ServerStatus]] = None,
+        tags: Optional[set[str]] = None,
+    ) -> list[MCPServerRegistration]:
         """Discover servers based on criteria"""
 
         servers = list(self.registered_servers.values())
@@ -373,7 +370,7 @@ class CentralMCPRegistry:
         return selected
 
     async def update_server_status(
-        self, server_id: str, status: ServerStatus, details: Optional[Dict] = None
+        self, server_id: str, status: ServerStatus, details: Optional[dict] = None
     ):
         """Update server status"""
         if server_id not in self.registered_servers:
@@ -394,7 +391,7 @@ class CentralMCPRegistry:
         # Persist status change
         await self._persist_registration(self.registered_servers[server_id])
 
-    async def get_registry_status(self) -> Dict[str, Any]:
+    async def get_registry_status(self) -> dict[str, Any]:
         """Get comprehensive registry status"""
 
         status_counts = {}
@@ -427,7 +424,7 @@ class CentralMCPRegistry:
             "orchestrator_integrated": self.orchestrator is not None,
         }
 
-    async def get_server_details(self, server_id: str) -> Optional[Dict[str, Any]]:
+    async def get_server_details(self, server_id: str) -> Optional[dict[str, Any]]:
         """Get detailed information about a specific server"""
         if server_id not in self.registered_servers:
             return None
@@ -491,7 +488,7 @@ class CentralMCPRegistry:
     async def _perform_health_check(self, server_id: str) -> bool:
         """Perform actual health check on a server"""
         try:
-            registration = self.registered_servers[server_id]
+            self.registered_servers[server_id]
 
             # Use orchestrator for health check if available
             if self.orchestrator:
@@ -681,8 +678,8 @@ async def register_mcp_server(registration: MCPServerRegistration) -> bool:
 
 
 async def discover_mcp_servers(
-    domain: Optional[MCPDomain] = None, capabilities: Optional[List[MCPCapabilityType]] = None
-) -> List[MCPServerRegistration]:
+    domain: Optional[MCPDomain] = None, capabilities: Optional[list[MCPCapabilityType]] = None
+) -> list[MCPServerRegistration]:
     """Convenience function to discover MCP servers"""
     registry = await get_central_registry()
     return await registry.discover_servers(domain=domain, capabilities=capabilities)

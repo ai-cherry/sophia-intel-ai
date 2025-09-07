@@ -9,7 +9,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 from app.core.portkey_manager import TaskType
 from app.memory.unified_memory_router import DocChunk, MemoryDomain
@@ -51,15 +51,15 @@ class CrossDomainKnowledge:
 
     id: str
     source_domain: MemoryDomain
-    target_domains: List[MemoryDomain]
+    target_domains: list[MemoryDomain]
     knowledge_type: str
-    content: Dict[str, Any]
+    content: dict[str, Any]
     confidence: float
     applicability_score: float
     created_at: datetime = field(default_factory=datetime.now)
     usage_count: int = 0
     success_rate: float = 1.0
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -70,7 +70,7 @@ class CollaborationRequest:
     requesting_domain: MemoryDomain
     target_domain: MemoryDomain
     collaboration_type: CollaborationType
-    task_context: Dict[str, Any]
+    task_context: dict[str, Any]
     expected_outcome: str
     priority: ExecutionPriority
     timeout_s: int = 300
@@ -83,13 +83,13 @@ class CollaborationResult:
 
     collaboration_id: str
     success: bool
-    shared_knowledge: List[CrossDomainKnowledge]
-    enhanced_context: Dict[str, Any]
-    recommendations: List[str]
-    lessons_learned: List[str]
-    performance_metrics: Dict[str, float]
+    shared_knowledge: list[CrossDomainKnowledge]
+    enhanced_context: dict[str, Any]
+    recommendations: list[str]
+    lessons_learned: list[str]
+    performance_metrics: dict[str, float]
     execution_time_ms: float
-    errors: List[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -98,10 +98,10 @@ class LearnedPattern:
 
     id: str
     pattern_type: LearnedPatternType
-    domains_involved: List[MemoryDomain]
-    trigger_conditions: Dict[str, Any]
-    success_indicators: Dict[str, Any]
-    actions: List[Dict[str, Any]]
+    domains_involved: list[MemoryDomain]
+    trigger_conditions: dict[str, Any]
+    success_indicators: dict[str, Any]
+    actions: list[dict[str, Any]]
     confidence: float
     usage_count: int = 0
     success_rate: float = 0.0
@@ -200,7 +200,7 @@ class KnowledgeGraph:
 
     def find_related_knowledge(
         self, knowledge_id: str, max_results: int = 5
-    ) -> List[Tuple[CrossDomainKnowledge, float]]:
+    ) -> list[tuple[CrossDomainKnowledge, float]]:
         """Find knowledge related to a given piece"""
         related = []
 
@@ -215,13 +215,13 @@ class KnowledgeGraph:
         related.sort(key=lambda x: x[1], reverse=True)
         return related[:max_results]
 
-    def get_domain_knowledge(self, domain: MemoryDomain) -> List[CrossDomainKnowledge]:
+    def get_domain_knowledge(self, domain: MemoryDomain) -> list[CrossDomainKnowledge]:
         """Get all knowledge from a specific domain"""
         return [knowledge for knowledge in self.nodes.values() if knowledge.source_domain == domain]
 
     def get_applicable_knowledge(
-        self, target_domain: MemoryDomain, task_context: Dict[str, Any]
-    ) -> List[CrossDomainKnowledge]:
+        self, target_domain: MemoryDomain, task_context: dict[str, Any]
+    ) -> list[CrossDomainKnowledge]:
         """Get knowledge applicable to a specific domain and context"""
         applicable = []
 
@@ -239,7 +239,7 @@ class KnowledgeGraph:
         return applicable
 
     def _calculate_context_applicability(
-        self, knowledge: CrossDomainKnowledge, task_context: Dict[str, Any]
+        self, knowledge: CrossDomainKnowledge, task_context: dict[str, Any]
     ) -> float:
         """Calculate how applicable knowledge is to a specific context"""
         factors = []
@@ -276,8 +276,8 @@ class PatternLearningEngine:
         self.success_threshold = 0.7
 
     async def learn_from_collaboration(
-        self, collaboration_result: CollaborationResult, task_context: Dict[str, Any]
-    ) -> List[LearnedPattern]:
+        self, collaboration_result: CollaborationResult, task_context: dict[str, Any]
+    ) -> list[LearnedPattern]:
         """Learn patterns from collaboration results"""
         learned_patterns = []
 
@@ -310,7 +310,7 @@ class PatternLearningEngine:
         return learned_patterns
 
     async def _extract_success_pattern(
-        self, result: CollaborationResult, context: Dict[str, Any]
+        self, result: CollaborationResult, context: dict[str, Any]
     ) -> Optional[LearnedPattern]:
         """Extract successful collaboration pattern"""
         if not result.success:
@@ -351,7 +351,7 @@ class PatternLearningEngine:
         )
 
     async def _extract_optimization_pattern(
-        self, result: CollaborationResult, context: Dict[str, Any]
+        self, result: CollaborationResult, context: dict[str, Any]
     ) -> Optional[LearnedPattern]:
         """Extract optimization patterns from successful collaboration"""
         if not result.success or result.execution_time_ms > 5000:  # Skip slow executions
@@ -386,7 +386,7 @@ class PatternLearningEngine:
         return None
 
     async def _extract_failure_pattern(
-        self, result: CollaborationResult, context: Dict[str, Any]
+        self, result: CollaborationResult, context: dict[str, Any]
     ) -> Optional[LearnedPattern]:
         """Extract failure patterns to avoid"""
         if result.success:
@@ -413,8 +413,8 @@ class PatternLearningEngine:
         )
 
     def find_applicable_patterns(
-        self, context: Dict[str, Any], domains_involved: List[MemoryDomain]
-    ) -> List[LearnedPattern]:
+        self, context: dict[str, Any], domains_involved: list[MemoryDomain]
+    ) -> list[LearnedPattern]:
         """Find patterns applicable to current context"""
         applicable = []
 
@@ -427,7 +427,7 @@ class PatternLearningEngine:
         return applicable
 
     def _is_pattern_applicable(
-        self, pattern: LearnedPattern, context: Dict[str, Any], domains: List[MemoryDomain]
+        self, pattern: LearnedPattern, context: dict[str, Any], domains: list[MemoryDomain]
     ) -> bool:
         """Check if a pattern is applicable to the current context"""
         # Check domain compatibility
@@ -461,7 +461,7 @@ class PatternMatcher:
     """Utility class for pattern matching"""
 
     def calculate_trigger_match(
-        self, trigger_conditions: Dict[str, Any], context: Dict[str, Any]
+        self, trigger_conditions: dict[str, Any], context: dict[str, Any]
     ) -> float:
         """Calculate how well trigger conditions match the context"""
         if not trigger_conditions or not context:
@@ -798,7 +798,7 @@ class CrossLearningOrchestrator(UnifiedBaseOrchestrator):
 
     # Helper methods for collaboration facilitation
 
-    def _extract_domains_from_task(self, task: UnifiedTask) -> Tuple[MemoryDomain, MemoryDomain]:
+    def _extract_domains_from_task(self, task: UnifiedTask) -> tuple[MemoryDomain, MemoryDomain]:
         """Extract source and target domains from task metadata"""
         source_domain = task.metadata.get("source_domain", MemoryDomain.SHARED)
         target_domain = task.metadata.get("target_domain", MemoryDomain.SHARED)
@@ -812,8 +812,8 @@ class CrossLearningOrchestrator(UnifiedBaseOrchestrator):
         return source_domain, target_domain
 
     async def _create_enhanced_context(
-        self, shared_knowledge: List[CrossDomainKnowledge], task_metadata: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, shared_knowledge: list[CrossDomainKnowledge], task_metadata: dict[str, Any]
+    ) -> dict[str, Any]:
         """Create enhanced context from shared knowledge"""
         enhanced_context = {
             "shared_insights": [],
@@ -902,7 +902,7 @@ class CrossLearningOrchestrator(UnifiedBaseOrchestrator):
 
     async def _process_handoff_result(
         self, handoff_result: UnifiedResult, original_task: UnifiedTask
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Process result from handoff execution"""
         # Create knowledge from successful handoff
         if handoff_result.success:
@@ -934,7 +934,7 @@ class CrossLearningOrchestrator(UnifiedBaseOrchestrator):
             "recommendations": handoff_result.recommendations,
         }
 
-    def _determine_joint_execution_domains(self, task: UnifiedTask) -> List[MemoryDomain]:
+    def _determine_joint_execution_domains(self, task: UnifiedTask) -> list[MemoryDomain]:
         """Determine which domains should participate in joint execution"""
         content_lower = task.content.lower()
         participating_domains = []
@@ -960,8 +960,8 @@ class CrossLearningOrchestrator(UnifiedBaseOrchestrator):
         return participating_domains
 
     async def _create_joint_sub_tasks(
-        self, main_task: UnifiedTask, domains: List[MemoryDomain]
-    ) -> Dict[MemoryDomain, UnifiedTask]:
+        self, main_task: UnifiedTask, domains: list[MemoryDomain]
+    ) -> dict[MemoryDomain, UnifiedTask]:
         """Create sub-tasks for joint execution"""
         sub_tasks = {}
 
@@ -1002,8 +1002,8 @@ class CrossLearningOrchestrator(UnifiedBaseOrchestrator):
             return content
 
     async def _synthesize_joint_results(
-        self, sub_results: Dict[MemoryDomain, UnifiedResult], main_task: UnifiedTask
-    ) -> Dict[str, Any]:
+        self, sub_results: dict[MemoryDomain, UnifiedResult], main_task: UnifiedTask
+    ) -> dict[str, Any]:
         """Synthesize results from joint execution"""
         synthesis = {
             "combined_insights": [],
@@ -1039,8 +1039,8 @@ class CrossLearningOrchestrator(UnifiedBaseOrchestrator):
         return synthesis
 
     async def _generate_cross_domain_recommendations(
-        self, results: Dict[MemoryDomain, UnifiedResult]
-    ) -> List[str]:
+        self, results: dict[MemoryDomain, UnifiedResult]
+    ) -> list[str]:
         """Generate recommendations that leverage insights from multiple domains"""
         recommendations = []
 
@@ -1067,7 +1067,7 @@ class CrossLearningOrchestrator(UnifiedBaseOrchestrator):
 
         return recommendations
 
-    def _get_recent_collaborations(self, hours: int = 24) -> List[CollaborationResult]:
+    def _get_recent_collaborations(self, hours: int = 24) -> list[CollaborationResult]:
         """Get recent collaboration results for pattern learning"""
         cutoff_time = datetime.now() - timedelta(hours=hours)
 
@@ -1077,7 +1077,7 @@ class CrossLearningOrchestrator(UnifiedBaseOrchestrator):
             if collab.get("timestamp", datetime.min) > cutoff_time
         ]
 
-    async def _generate_pattern_insights(self, patterns: List[LearnedPattern]) -> Dict[str, Any]:
+    async def _generate_pattern_insights(self, patterns: list[LearnedPattern]) -> dict[str, Any]:
         """Generate insights about learned patterns"""
         insights = {
             "pattern_distribution": {},
@@ -1110,7 +1110,7 @@ class CrossLearningOrchestrator(UnifiedBaseOrchestrator):
 
         return insights
 
-    def _prepare_collaboration_messages(self, task: UnifiedTask) -> List[Dict[str, str]]:
+    def _prepare_collaboration_messages(self, task: UnifiedTask) -> list[dict[str, str]]:
         """Prepare messages for LLM-guided collaboration"""
         system_prompt = """You are a Cross-Learning Coordination AI that facilitates collaboration between different AI orchestrators.
 
@@ -1155,7 +1155,7 @@ Provide a structured response with clear action items."""
 
     async def _process_collaboration_response(
         self, response: Any, task: UnifiedTask
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Process LLM response to extract collaboration strategy"""
         content = (
             response.choices[0].message.content if hasattr(response, "choices") else str(response)
@@ -1178,8 +1178,8 @@ Provide a structured response with clear action items."""
         return strategy
 
     async def _execute_collaboration_strategy(
-        self, strategy: Dict[str, Any], task: UnifiedTask
-    ) -> Dict[str, Any]:
+        self, strategy: dict[str, Any], task: UnifiedTask
+    ) -> dict[str, Any]:
         """Execute the determined collaboration strategy"""
         strategy_result = {"success": False, "details": {}}
 
@@ -1207,8 +1207,8 @@ Provide a structured response with clear action items."""
         return strategy_result
 
     async def _execute_multi_domain_strategy(
-        self, domains: List[MemoryDomain], task: UnifiedTask, strategy: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, domains: list[MemoryDomain], task: UnifiedTask, strategy: dict[str, Any]
+    ) -> dict[str, Any]:
         """Execute multi-domain collaboration strategy"""
         results = {}
 
@@ -1279,7 +1279,7 @@ Provide a structured response with clear action items."""
         requesting_domain: MemoryDomain,
         target_domain: MemoryDomain,
         collaboration_type: CollaborationType,
-        task_context: Dict[str, Any],
+        task_context: dict[str, Any],
         expected_outcome: str = "Enhanced task execution",
     ) -> CollaborationResult:
         """Request cross-domain collaboration"""
@@ -1372,7 +1372,7 @@ Provide a structured response with clear action items."""
             logger.error(f"Failed to share knowledge: {e}")
             return False
 
-    def get_collaboration_metrics(self) -> Dict[str, Any]:
+    def get_collaboration_metrics(self) -> dict[str, Any]:
         """Get collaboration and knowledge sharing metrics"""
         return {
             **self.sharing_metrics,
@@ -1384,13 +1384,13 @@ Provide a structured response with clear action items."""
         }
 
     async def get_applicable_patterns(
-        self, context: Dict[str, Any], domains: List[MemoryDomain]
-    ) -> List[LearnedPattern]:
+        self, context: dict[str, Any], domains: list[MemoryDomain]
+    ) -> list[LearnedPattern]:
         """Get patterns applicable to current context"""
         return self.pattern_engine.find_applicable_patterns(context, domains)
 
     async def get_cross_domain_knowledge(
-        self, target_domain: MemoryDomain, context: Dict[str, Any], limit: int = 10
-    ) -> List[CrossDomainKnowledge]:
+        self, target_domain: MemoryDomain, context: dict[str, Any], limit: int = 10
+    ) -> list[CrossDomainKnowledge]:
         """Get knowledge applicable to target domain"""
         return self.knowledge_graph.get_applicable_knowledge(target_domain, context)[:limit]

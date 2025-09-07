@@ -17,7 +17,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Optional
 
 import networkx as nx
 
@@ -68,11 +68,11 @@ class MCPServer:
 
     name: str
     endpoint: str
-    capabilities: Set[MCPCapability]
+    capabilities: set[MCPCapability]
     version: str
     status: str = "active"
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    performance_metrics: Dict[str, float] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
+    performance_metrics: dict[str, float] = field(default_factory=dict)
 
     def supports(self, capability: MCPCapability) -> bool:
         """Check if server supports a capability"""
@@ -103,8 +103,8 @@ class MCPTask:
     id: str
     capability: MCPCapability
     operation: str
-    parameters: Dict[str, Any]
-    dependencies: List[str] = field(default_factory=list)
+    parameters: dict[str, Any]
+    dependencies: list[str] = field(default_factory=list)
     priority: int = 5  # 1-10, higher is more important
     timeout_s: int = 60
     retry_count: int = 3
@@ -117,14 +117,14 @@ class MCPTask:
 class ExecutionPlan:
     """Execution plan for multiple MCP tasks"""
 
-    tasks: List[MCPTask]
+    tasks: list[MCPTask]
     strategy: ExecutionStrategy
     dag: Optional[nx.DiGraph] = None
-    server_assignments: Dict[str, str] = field(default_factory=dict)
+    server_assignments: dict[str, str] = field(default_factory=dict)
     estimated_duration_s: float = 0
     parallelism_level: int = 1
 
-    def get_execution_order(self) -> List[List[MCPTask]]:
+    def get_execution_order(self) -> list[list[MCPTask]]:
         """Get tasks organized by execution order"""
         if self.strategy == ExecutionStrategy.DAG_BASED and self.dag:
             # Topological sort for dependency order
@@ -169,8 +169,8 @@ class CapabilityMapper:
     """Maps capabilities to available MCP servers"""
 
     def __init__(self):
-        self.servers: Dict[str, MCPServer] = {}
-        self.capability_index: Dict[MCPCapability, List[str]] = {}
+        self.servers: dict[str, MCPServer] = {}
+        self.capability_index: dict[MCPCapability, list[str]] = {}
 
     def register_server(self, server: MCPServer) -> None:
         """Register an MCP server"""
@@ -199,7 +199,7 @@ class CapabilityMapper:
             del self.servers[server_name]
             logger.info(f"Unregistered MCP server: {server_name}")
 
-    def find_servers(self, capability: MCPCapability, min_health: float = 0.3) -> List[MCPServer]:
+    def find_servers(self, capability: MCPCapability, min_health: float = 0.3) -> list[MCPServer]:
         """Find servers that support a capability"""
         servers = []
 
@@ -226,7 +226,7 @@ class ExecutionPlanner:
 
     def create_plan(
         self,
-        tasks: List[MCPTask],
+        tasks: list[MCPTask],
         strategy: ExecutionStrategy = ExecutionStrategy.ADAPTIVE,
     ) -> ExecutionPlan:
         """Create execution plan for tasks"""
@@ -264,7 +264,7 @@ class ExecutionPlanner:
             parallelism_level=parallelism,
         )
 
-    def _determine_optimal_strategy(self, tasks: List[MCPTask]) -> ExecutionStrategy:
+    def _determine_optimal_strategy(self, tasks: list[MCPTask]) -> ExecutionStrategy:
         """Determine optimal execution strategy"""
 
         # Check for dependencies
@@ -289,7 +289,7 @@ class ExecutionPlanner:
 
         return ExecutionStrategy.PARALLEL
 
-    def _build_dag(self, tasks: List[MCPTask]) -> nx.DiGraph:
+    def _build_dag(self, tasks: list[MCPTask]) -> nx.DiGraph:
         """Build directed acyclic graph from tasks"""
         dag = nx.DiGraph()
 
@@ -307,9 +307,9 @@ class ExecutionPlanner:
 
     def _estimate_duration(
         self,
-        tasks: List[MCPTask],
+        tasks: list[MCPTask],
         strategy: ExecutionStrategy,
-        assignments: Dict[str, str],
+        assignments: dict[str, str],
     ) -> float:
         """Estimate execution duration"""
 
@@ -329,7 +329,7 @@ class ExecutionPlanner:
         else:
             return sum(task_durations) * 0.7
 
-    def _calculate_parallelism(self, tasks: List[MCPTask], strategy: ExecutionStrategy) -> int:
+    def _calculate_parallelism(self, tasks: list[MCPTask], strategy: ExecutionStrategy) -> int:
         """Calculate optimal parallelism level"""
 
         if strategy == ExecutionStrategy.SEQUENTIAL:
@@ -354,9 +354,9 @@ class ResultAggregator:
 
     def aggregate(
         self,
-        results: List[Tuple[MCPTask, Any]],
+        results: list[tuple[MCPTask, Any]],
         strategy: str = "merge",
-        options: Dict[str, Any] = None,
+        options: dict[str, Any] = None,
     ) -> Any:
         """Aggregate results using specified strategy"""
 
@@ -369,8 +369,8 @@ class ResultAggregator:
             return self._merge_results(results, options)
 
     def _merge_results(
-        self, results: List[Tuple[MCPTask, Any]], options: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, results: list[tuple[MCPTask, Any]], options: dict[str, Any]
+    ) -> dict[str, Any]:
         """Merge all results into a dictionary"""
         merged = {}
 
@@ -385,7 +385,7 @@ class ResultAggregator:
 
         return merged
 
-    def _chain_results(self, results: List[Tuple[MCPTask, Any]], options: Dict[str, Any]) -> Any:
+    def _chain_results(self, results: list[tuple[MCPTask, Any]], options: dict[str, Any]) -> Any:
         """Chain results (output of one is input to next)"""
         if not results:
             return None
@@ -400,7 +400,7 @@ class ResultAggregator:
         return sorted_results[-1][1] if sorted_results else None
 
     def _select_best_result(
-        self, results: List[Tuple[MCPTask, Any]], options: Dict[str, Any]
+        self, results: list[tuple[MCPTask, Any]], options: dict[str, Any]
     ) -> Any:
         """Select best result based on criteria"""
         if not results:
@@ -420,7 +420,7 @@ class ResultAggregator:
         best = max(successful, key=lambda r: r[0].priority)
         return best[1]
 
-    def _consensus_result(self, results: List[Tuple[MCPTask, Any]], options: Dict[str, Any]) -> Any:
+    def _consensus_result(self, results: list[tuple[MCPTask, Any]], options: dict[str, Any]) -> Any:
         """Find consensus among results"""
         if not results:
             return None
@@ -439,7 +439,7 @@ class ResultAggregator:
         return None
 
     def _transform_results(
-        self, results: List[Tuple[MCPTask, Any]], options: Dict[str, Any]
+        self, results: list[tuple[MCPTask, Any]], options: dict[str, Any]
     ) -> Any:
         """Transform results using custom function"""
         transform_fn = options.get("transform_fn")
@@ -457,7 +457,7 @@ class MCPOrchestrator:
         self.mapper = CapabilityMapper()
         self.planner = ExecutionPlanner(self.mapper)
         self.aggregator = ResultAggregator()
-        self.execution_history: List[Dict[str, Any]] = []
+        self.execution_history: list[dict[str, Any]] = []
         self._initialize_default_servers()
 
     def _initialize_default_servers(self) -> None:
@@ -572,7 +572,7 @@ class MCPOrchestrator:
 
             return None
 
-    async def execute_plan(self, plan: ExecutionPlan, max_workers: int = 5) -> Dict[str, Any]:
+    async def execute_plan(self, plan: ExecutionPlan, max_workers: int = 5) -> dict[str, Any]:
         """Execute an execution plan"""
 
         start_time = datetime.now()
@@ -624,10 +624,10 @@ class MCPOrchestrator:
 
     async def orchestrate(
         self,
-        tasks: List[MCPTask],
+        tasks: list[MCPTask],
         strategy: ExecutionStrategy = ExecutionStrategy.ADAPTIVE,
         aggregation: str = "merge",
-        aggregation_options: Dict[str, Any] = None,
+        aggregation_options: dict[str, Any] = None,
     ) -> Any:
         """
         Orchestrate execution of multiple MCP tasks
@@ -668,11 +668,11 @@ class MCPOrchestrator:
 
         return aggregated
 
-    def get_capabilities(self) -> List[MCPCapability]:
+    def get_capabilities(self) -> list[MCPCapability]:
         """Get all available capabilities"""
         return list(self.mapper.capability_index.keys())
 
-    def get_server_status(self) -> Dict[str, Any]:
+    def get_server_status(self) -> dict[str, Any]:
         """Get status of all servers"""
         return {
             name: {

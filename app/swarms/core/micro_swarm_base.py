@@ -8,17 +8,15 @@ import json
 import logging
 import os
 import uuid
-from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 from app.core.portkey_manager import TaskType, get_portkey_manager
 from app.memory.unified_memory_router import DocChunk, MemoryDomain, get_memory_router
 from app.models.approved_models import is_model_approved
 from app.models.llm_policy import get_llm_policy
-from app.orchestrators.base_orchestrator import BaseOrchestrator, Result, Task
 
 logger = logging.getLogger(__name__)
 
@@ -61,10 +59,10 @@ class SwarmMessage:
     recipient_role: Optional[AgentRole] = None
     message_type: MessageType = MessageType.ANALYSIS_RESULT
     content: str = ""
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     confidence: float = 1.0
     reasoning: str = ""
-    citations: List[str] = field(default_factory=list)
+    citations: list[str] = field(default_factory=list)
     timestamp: datetime = field(default_factory=datetime.now)
     thread_id: str = ""
 
@@ -76,8 +74,8 @@ class AgentProfile:
     role: AgentRole
     name: str
     description: str
-    model_preferences: List[str]  # Preferred LLM models
-    specializations: List[str]
+    model_preferences: list[str]  # Preferred LLM models
+    specializations: list[str]
     reasoning_style: str
     confidence_threshold: float = 0.8
     max_tokens: int = 4000
@@ -91,7 +89,7 @@ class SwarmConfig:
     name: str
     domain: MemoryDomain
     coordination_pattern: CoordinationPattern
-    agents: List[AgentProfile]
+    agents: list[AgentProfile]
     max_iterations: int = 3
     consensus_threshold: float = 0.85
     timeout_seconds: int = 120
@@ -107,14 +105,14 @@ class SwarmResult:
     success: bool
     final_output: str
     confidence: float
-    reasoning_chain: List[SwarmMessage]
-    agent_contributions: Dict[AgentRole, List[SwarmMessage]]
+    reasoning_chain: list[SwarmMessage]
+    agent_contributions: dict[AgentRole, list[SwarmMessage]]
     consensus_achieved: bool
     iterations_used: int
     total_cost: float
     execution_time_ms: float
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    errors: List[str] = field(default_factory=list)
+    metadata: dict[str, Any] = field(default_factory=dict)
+    errors: list[str] = field(default_factory=list)
 
 
 class MicroSwarmAgent:
@@ -123,11 +121,11 @@ class MicroSwarmAgent:
     def __init__(self, profile: AgentProfile, swarm_id: str):
         self.profile = profile
         self.swarm_id = swarm_id
-        self.message_history: List[SwarmMessage] = []
+        self.message_history: list[SwarmMessage] = []
         self.portkey = get_portkey_manager()
         self.memory = get_memory_router()
 
-    async def process_message(self, message: SwarmMessage, context: Dict[str, Any]) -> SwarmMessage:
+    async def process_message(self, message: SwarmMessage, context: dict[str, Any]) -> SwarmMessage:
         """Process incoming message and generate response"""
 
         # Add to message history
@@ -227,7 +225,7 @@ class MicroSwarmAgent:
                 thread_id=message.thread_id,
             )
 
-    async def _build_role_prompt(self, message: SwarmMessage, context: Dict[str, Any]) -> str:
+    async def _build_role_prompt(self, message: SwarmMessage, context: dict[str, Any]) -> str:
         """Build role-specific prompt"""
 
         base_prompt = f"""You are {self.profile.name}, a {self.profile.role.value} in a micro-swarm AI system.
@@ -355,8 +353,8 @@ class MicroSwarmCoordinator:
 
     def __init__(self, config: SwarmConfig):
         self.config = config
-        self.agents: Dict[AgentRole, MicroSwarmAgent] = {}
-        self.message_threads: Dict[str, List[SwarmMessage]] = {}
+        self.agents: dict[AgentRole, MicroSwarmAgent] = {}
+        self.message_threads: dict[str, list[SwarmMessage]] = {}
         self.memory = get_memory_router()
         self.swarm_id = str(uuid.uuid4())
 
@@ -366,7 +364,7 @@ class MicroSwarmCoordinator:
 
         logger.info(f"Initialized micro-swarm '{config.name}' with {len(self.agents)} agents")
 
-    async def execute(self, task: str, context: Dict[str, Any] = None) -> SwarmResult:
+    async def execute(self, task: str, context: dict[str, Any] = None) -> SwarmResult:
         """Execute micro-swarm coordination"""
         start_time = datetime.now()
         thread_id = str(uuid.uuid4())
@@ -426,7 +424,7 @@ class MicroSwarmCoordinator:
         return result
 
     async def _execute_sequential(
-        self, task: str, context: Dict[str, Any], thread_id: str
+        self, task: str, context: dict[str, Any], thread_id: str
     ) -> SwarmResult:
         """Execute sequential coordination (Analyst -> Strategist -> Validator)"""
 
@@ -475,7 +473,7 @@ class MicroSwarmCoordinator:
         )
 
     async def _execute_parallel(
-        self, task: str, context: Dict[str, Any], thread_id: str
+        self, task: str, context: dict[str, Any], thread_id: str
     ) -> SwarmResult:
         """Execute parallel coordination - all agents work simultaneously"""
 
@@ -525,7 +523,7 @@ class MicroSwarmCoordinator:
         )
 
     async def _execute_debate(
-        self, task: str, context: Dict[str, Any], thread_id: str
+        self, task: str, context: dict[str, Any], thread_id: str
     ) -> SwarmResult:
         """Execute debate coordination - agents challenge each other"""
 
@@ -611,7 +609,7 @@ class MicroSwarmCoordinator:
         )
 
     async def _execute_consensus(
-        self, task: str, context: Dict[str, Any], thread_id: str
+        self, task: str, context: dict[str, Any], thread_id: str
     ) -> SwarmResult:
         """Execute consensus coordination - agents must agree"""
 
@@ -681,7 +679,7 @@ class MicroSwarmCoordinator:
         )
 
     async def _execute_hierarchical(
-        self, task: str, context: Dict[str, Any], thread_id: str
+        self, task: str, context: dict[str, Any], thread_id: str
     ) -> SwarmResult:
         """Execute hierarchical coordination - Strategist leads, coordinates others"""
 
@@ -770,7 +768,7 @@ class MicroSwarmCoordinator:
             execution_time_ms=0.0,
         )
 
-    async def _load_memory_context(self, task: str) -> Dict[str, Any]:
+    async def _load_memory_context(self, task: str) -> dict[str, Any]:
         """Load relevant context from memory"""
         try:
             # Search for relevant information
@@ -808,7 +806,7 @@ class MicroSwarmCoordinator:
                 metadata={
                     "swarm_name": self.config.name,
                     "coordination_pattern": self.config.coordination_pattern.value,
-                    "agents_used": [role.value for role in result.agent_contributions.keys()],
+                    "agents_used": [role.value for role in result.agent_contributions],
                     "execution_time_ms": result.execution_time_ms,
                     "cost_usd": result.total_cost,
                 },
@@ -821,7 +819,7 @@ class MicroSwarmCoordinator:
             logger.error(f"Failed to store swarm results: {e}")
 
     async def _synthesize_parallel_results(
-        self, responses: List[SwarmMessage], context: Dict[str, Any]
+        self, responses: list[SwarmMessage], context: dict[str, Any]
     ) -> str:
         """Synthesize results from parallel execution"""
         synthesis = f"Synthesis of {len(responses)} parallel agent analyses:\n\n"
@@ -835,7 +833,7 @@ class MicroSwarmCoordinator:
         return synthesis
 
     async def _create_debate_synthesis(
-        self, messages: List[SwarmMessage], context: Dict[str, Any]
+        self, messages: list[SwarmMessage], context: dict[str, Any]
     ) -> str:
         """Create synthesis from debate messages"""
         synthesis = f"Synthesis from {len(messages)} debate messages:\n\n"
@@ -858,7 +856,7 @@ class MicroSwarmCoordinator:
         return synthesis
 
     async def _create_consensus_synthesis(
-        self, messages: List[SwarmMessage], context: Dict[str, Any]
+        self, messages: list[SwarmMessage], context: dict[str, Any]
     ) -> str:
         """Create synthesis from consensus messages"""
         synthesis = f"CONSENSUS REACHED among {len(messages)} agents:\n\n"
@@ -873,8 +871,8 @@ class MicroSwarmCoordinator:
         return synthesis
 
     def _organize_contributions(
-        self, messages: List[SwarmMessage]
-    ) -> Dict[AgentRole, List[SwarmMessage]]:
+        self, messages: list[SwarmMessage]
+    ) -> dict[AgentRole, list[SwarmMessage]]:
         """Organize messages by agent role"""
         contributions = {role: [] for role in AgentRole}
 

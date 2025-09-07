@@ -92,7 +92,7 @@ async def test_netsuite_connection():
             print(f"   ✅ Found {len(metadata.get('items', []))} record types")
 
             # Display first 5 record types
-            for i, item in enumerate(metadata.get("items", [])[:5]):
+            for _i, item in enumerate(metadata.get("items", [])[:5]):
                 print(f"   - {item}")
         except Exception as e:
             print(f"   ❌ Error fetching metadata: {e}")

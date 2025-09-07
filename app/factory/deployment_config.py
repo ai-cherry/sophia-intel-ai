@@ -4,16 +4,15 @@ Handles scheduled runs, monitoring, cost management, and automated deployments
 """
 
 import asyncio
-import json
+import contextlib
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, time, timedelta
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Optional
 from uuid import uuid4
 
 from app.factory.comprehensive_swarm_factory import (
-    DeploymentSchedule,
     ExecutionContext,
     SwarmFactoryConfig,
     SwarmType,
@@ -66,14 +65,14 @@ class ScheduleConfig:
     interval_minutes: Optional[int] = None  # For interval scheduling
     start_time: Optional[time] = None  # Daily start time
     end_time: Optional[time] = None  # Daily end time
-    days_of_week: List[int] = field(default_factory=list)  # 0=Monday, 6=Sunday
+    days_of_week: list[int] = field(default_factory=list)  # 0=Monday, 6=Sunday
 
     # Event-driven configuration
-    trigger_events: List[str] = field(default_factory=list)
-    event_conditions: Dict[str, Any] = field(default_factory=dict)
+    trigger_events: list[str] = field(default_factory=list)
+    event_conditions: dict[str, Any] = field(default_factory=dict)
 
     # Conditional scheduling
-    conditions: List[Dict[str, Any]] = field(default_factory=list)
+    conditions: list[dict[str, Any]] = field(default_factory=list)
 
     # Execution limits
     max_concurrent_runs: int = 1
@@ -89,7 +88,7 @@ class ScheduleConfig:
 
     created_at: datetime = field(default_factory=datetime.now)
     created_by: str = "system"
-    tags: List[str] = field(default_factory=list)
+    tags: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -110,7 +109,7 @@ class DeploymentTemplate:
 
     # Monitoring and alerting
     enable_monitoring: bool = True
-    alert_channels: List[str] = field(default_factory=list)
+    alert_channels: list[str] = field(default_factory=list)
     success_notifications: bool = True
     failure_notifications: bool = True
 
@@ -129,7 +128,7 @@ class DeploymentTemplate:
     created_at: datetime = field(default_factory=datetime.now)
     updated_at: datetime = field(default_factory=datetime.now)
     created_by: str = "system"
-    tags: List[str] = field(default_factory=list)
+    tags: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -157,8 +156,8 @@ class DeploymentRun:
     # Monitoring data
     execution_context: Optional[ExecutionContext] = None
     error_message: Optional[str] = None
-    warnings: List[str] = field(default_factory=list)
-    notifications_sent: List[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
+    notifications_sent: list[str] = field(default_factory=list)
 
     # Metadata
     environment: DeploymentEnvironment = DeploymentEnvironment.PRODUCTION
@@ -173,12 +172,12 @@ class DeploymentManager:
 
     def __init__(self):
         # Deployment configurations
-        self.deployment_templates: Dict[str, DeploymentTemplate] = {}
-        self.schedule_configs: Dict[str, ScheduleConfig] = {}
+        self.deployment_templates: dict[str, DeploymentTemplate] = {}
+        self.schedule_configs: dict[str, ScheduleConfig] = {}
 
         # Runtime tracking
-        self.active_runs: Dict[str, DeploymentRun] = {}
-        self.run_history: List[DeploymentRun] = []
+        self.active_runs: dict[str, DeploymentRun] = {}
+        self.run_history: list[DeploymentRun] = []
 
         # Monitoring and metrics
         self.deployment_metrics = {
@@ -193,7 +192,7 @@ class DeploymentManager:
         }
 
         # Event handlers
-        self.event_handlers: Dict[str, List[Callable]] = {}
+        self.event_handlers: dict[str, list[Callable]] = {}
 
         # Background task for scheduling
         self.scheduler_task: Optional[asyncio.Task] = None
@@ -412,10 +411,8 @@ class DeploymentManager:
         self.is_running = False
         if self.scheduler_task:
             self.scheduler_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self.scheduler_task
-            except asyncio.CancelledError:
-                pass
         logger.info("Deployment scheduler stopped")
 
     async def _scheduler_loop(self):
@@ -752,7 +749,7 @@ class DeploymentManager:
             ) / total_runs
 
     async def trigger_event_deployment(
-        self, event: str, event_data: Dict[str, Any], priority_override: Optional[int] = None
+        self, event: str, event_data: dict[str, Any], priority_override: Optional[int] = None
     ):
         """Trigger event-driven deployments"""
 
@@ -809,7 +806,7 @@ class DeploymentManager:
             return True
         return False
 
-    def get_deployment_status(self) -> Dict[str, Any]:
+    def get_deployment_status(self) -> dict[str, Any]:
         """Get current deployment status"""
 
         success_rate = 0.0
@@ -889,7 +886,7 @@ async def stop_automated_deployments():
     await manager.stop_scheduler()
 
 
-async def trigger_emergency_response(event_data: Dict[str, Any]):
+async def trigger_emergency_response(event_data: dict[str, Any]):
     """Trigger emergency response deployment"""
     manager = get_deployment_manager()
     return await manager.trigger_event_deployment("system_alert", event_data, priority_override=1)

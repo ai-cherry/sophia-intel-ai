@@ -10,20 +10,18 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Optional
 from uuid import uuid4
 
 from fastapi import APIRouter, HTTPException, WebSocket
 
 # Import Portkey configuration manager
-from app.core.portkey_config import AgentRole, ModelProvider, portkey_manager
+from app.core.portkey_config import ModelProvider, portkey_manager
 
 # Import memory system for persistence
-from app.memory.unified_memory import search_memory, store_memory
-from app.models.schemas import ModelFieldsModel
+from app.memory.unified_memory import store_memory
 
 # Import existing orchestrator components
-from app.orchestrators.base_orchestrator import OrchestratorConfig
 
 logger = logging.getLogger(__name__)
 
@@ -130,10 +128,10 @@ class AgentProfile:
     deployment_ready: bool = True
     mission_count: int = 0
     success_rate: float = 1.0
-    capabilities: List[str] = field(default_factory=list)
-    tools: List[str] = field(default_factory=list)
+    capabilities: list[str] = field(default_factory=list)
+    tools: list[str] = field(default_factory=list)
     virtual_key: str = "openai-vk-190a60"
-    tactical_traits: Dict[str, Any] = field(default_factory=dict)
+    tactical_traits: dict[str, Any] = field(default_factory=dict)
     callsign: Optional[str] = None
     rank: Optional[str] = None
 
@@ -147,9 +145,9 @@ class SquadFormation:
     motto: str
     minimum_agents: int
     maximum_agents: int
-    required_specialists: List[str]
+    required_specialists: list[str]
     communication_protocol: str
-    chain_of_command: List[str]
+    chain_of_command: list[str]
 
 
 @dataclass
@@ -158,10 +156,10 @@ class MissionTemplate:
 
     name: str
     objective: str
-    units_deployed: List[str]
-    phases: List[Dict[str, Any]]
+    units_deployed: list[str]
+    phases: list[dict[str, Any]]
     total_duration: str
-    success_criteria: Dict[str, Any]
+    success_criteria: dict[str, Any]
     priority: str = "NORMAL"
 
 
@@ -181,21 +179,21 @@ class ArtemisUnifiedFactory:
         self.config = UnifiedArtemisConfig()
 
         # Agent and swarm management
-        self.agent_templates: Dict[str, AgentProfile] = {}
-        self.military_units: Dict[str, Dict[str, Any]] = {}
-        self.specialized_swarms: Dict[str, Any] = {}
-        self.domain_teams: Dict[str, Any] = {}
-        self.active_agents: Dict[str, AgentProfile] = {}
-        self.active_swarms: Dict[str, Any] = {}
+        self.agent_templates: dict[str, AgentProfile] = {}
+        self.military_units: dict[str, dict[str, Any]] = {}
+        self.specialized_swarms: dict[str, Any] = {}
+        self.domain_teams: dict[str, Any] = {}
+        self.active_agents: dict[str, AgentProfile] = {}
+        self.active_swarms: dict[str, Any] = {}
 
         # Concurrent task management
         self._concurrent_tasks = 0
-        self._task_queue: List[Any] = []
+        self._task_queue: list[Any] = []
         self._task_lock = asyncio.Lock()
 
         # Mission management
-        self.mission_templates: Dict[str, MissionTemplate] = {}
-        self.active_missions: Dict[str, Any] = {}
+        self.mission_templates: dict[str, MissionTemplate] = {}
+        self.active_missions: dict[str, Any] = {}
 
         # Metrics tracking
         self.technical_metrics = {
@@ -209,7 +207,7 @@ class ArtemisUnifiedFactory:
         }
 
         # WebSocket connections for real-time updates
-        self.websocket_connections: Set[WebSocket] = set()
+        self.websocket_connections: set[WebSocket] = set()
 
         # Initialize templates and configurations
         self._initialize_technical_templates()
@@ -523,7 +521,7 @@ class ArtemisUnifiedFactory:
                     logger.info(f"Processing queued task: {next_task.get('id')}")
                     # Would trigger task execution here
 
-    async def queue_task(self, task: Dict[str, Any]) -> str:
+    async def queue_task(self, task: dict[str, Any]) -> str:
         """Queue a task for execution when a slot becomes available"""
         task_id = f"queued_{uuid4().hex[:8]}"
         task["id"] = task_id
@@ -535,7 +533,7 @@ class ArtemisUnifiedFactory:
 
         return task_id
 
-    def get_task_status(self) -> Dict[str, Any]:
+    def get_task_status(self) -> dict[str, Any]:
         """Get current task execution status"""
         return {
             "active_tasks": self._concurrent_tasks,
@@ -550,7 +548,7 @@ class ArtemisUnifiedFactory:
     # ==============================================================================
 
     async def create_technical_agent(
-        self, template_name: str, custom_config: Optional[Dict[str, Any]] = None
+        self, template_name: str, custom_config: Optional[dict[str, Any]] = None
     ) -> str:
         """Create a technical agent from templates"""
         if not await self._acquire_task_slot():
@@ -613,7 +611,7 @@ class ArtemisUnifiedFactory:
             await self._release_task_slot()
 
     async def create_military_squad(
-        self, unit_designation: str, mission_parameters: Optional[Dict[str, Any]] = None
+        self, unit_designation: str, mission_parameters: Optional[dict[str, Any]] = None
     ) -> str:
         """Create a military squad from unit configuration"""
         if not await self._acquire_task_slot():
@@ -672,7 +670,7 @@ class ArtemisUnifiedFactory:
             await self._release_task_slot()
 
     async def create_specialized_swarm(
-        self, swarm_type: SwarmType, swarm_config: Dict[str, Any]
+        self, swarm_type: SwarmType, swarm_config: dict[str, Any]
     ) -> str:
         """Create a specialized swarm (refactoring, domain team, etc.)"""
         if not await self._acquire_task_slot():
@@ -701,7 +699,7 @@ class ArtemisUnifiedFactory:
 
             elif swarm_type == SwarmType.DOMAIN_TEAM:
                 # Create domain-specific team
-                domain = swarm_config.get("domain", "technical")
+                swarm_config.get("domain", "technical")
                 for role in ["security_auditor", "code_reviewer"]:
                     agent_id = await self.create_technical_agent(role)
                     swarm_instance["agents"].append(agent_id)
@@ -722,8 +720,8 @@ class ArtemisUnifiedFactory:
         self,
         mission_type: str,
         target: Optional[str] = None,
-        parameters: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        parameters: Optional[dict[str, Any]] = None,
+    ) -> dict[str, Any]:
         """Execute a tactical mission with military units"""
         if not await self._acquire_task_slot():
             return {
@@ -805,8 +803,8 @@ class ArtemisUnifiedFactory:
             await self._release_task_slot()
 
     async def _execute_mission_phase(
-        self, mission_id: str, phase: Dict[str, Any], deployed_units: Dict[str, str]
-    ) -> Dict[str, Any]:
+        self, mission_id: str, phase: dict[str, Any], deployed_units: dict[str, str]
+    ) -> dict[str, Any]:
         """Execute a single mission phase"""
         phase_result = {
             "phase": phase["phase"],
@@ -829,7 +827,7 @@ class ArtemisUnifiedFactory:
     # TEAM MANAGEMENT METHODS
     # ==============================================================================
 
-    async def create_technical_team(self, team_config: Dict[str, Any]) -> str:
+    async def create_technical_team(self, team_config: dict[str, Any]) -> str:
         """Create a technical operations team"""
         team_id = f"team_{uuid4().hex[:8]}"
         team_type = team_config.get("type", "code_analysis")
@@ -871,7 +869,7 @@ class ArtemisUnifiedFactory:
     # WEBSOCKET AND REAL-TIME UPDATES
     # ==============================================================================
 
-    async def _broadcast_mission_update(self, mission_id: str, mission_data: Dict[str, Any]):
+    async def _broadcast_mission_update(self, mission_id: str, mission_data: dict[str, Any]):
         """Broadcast mission updates via WebSocket"""
         if self.websocket_connections:
             update = {
@@ -907,7 +905,7 @@ class ArtemisUnifiedFactory:
     # QUERY AND STATUS METHODS
     # ==============================================================================
 
-    def get_technical_templates(self) -> Dict[str, Any]:
+    def get_technical_templates(self) -> dict[str, Any]:
         """Get all available technical templates"""
         return {
             name: {
@@ -922,7 +920,7 @@ class ArtemisUnifiedFactory:
             for name, template in self.agent_templates.items()
         }
 
-    def get_military_units(self) -> Dict[str, Any]:
+    def get_military_units(self) -> dict[str, Any]:
         """Get all military unit configurations"""
         return {
             name: {
@@ -939,7 +937,7 @@ class ArtemisUnifiedFactory:
             for name, unit in self.military_units.items()
         }
 
-    def get_mission_templates(self) -> Dict[str, Any]:
+    def get_mission_templates(self) -> dict[str, Any]:
         """Get all mission templates"""
         return {
             name: {
@@ -953,7 +951,7 @@ class ArtemisUnifiedFactory:
             for name, mission in self.mission_templates.items()
         }
 
-    def get_factory_metrics(self) -> Dict[str, Any]:
+    def get_factory_metrics(self) -> dict[str, Any]:
         """Get factory performance metrics"""
         return {
             "technical_metrics": self.technical_metrics,
@@ -971,7 +969,7 @@ class ArtemisUnifiedFactory:
             "capabilities": self.config.capabilities,
         }
 
-    def list_active_agents(self) -> List[Dict[str, Any]]:
+    def list_active_agents(self) -> list[dict[str, Any]]:
         """List all active agents"""
         return [
             {
@@ -986,7 +984,7 @@ class ArtemisUnifiedFactory:
             for agent in self.active_agents.values()
         ]
 
-    def list_active_swarms(self) -> List[Dict[str, Any]]:
+    def list_active_swarms(self) -> list[dict[str, Any]]:
         """List all active swarms and squads"""
         return [
             {
@@ -999,7 +997,7 @@ class ArtemisUnifiedFactory:
             for swarm in self.active_swarms.values()
         ]
 
-    def list_active_missions(self) -> List[Dict[str, Any]]:
+    def list_active_missions(self) -> list[dict[str, Any]]:
         """List all active and recent missions"""
         return [
             {
@@ -1029,7 +1027,7 @@ router = APIRouter(prefix="/api/artemis/unified", tags=["artemis-unified-factory
 
 
 @router.post("/agents/create")
-async def create_agent(request: Dict[str, Any]):
+async def create_agent(request: dict[str, Any]):
     """Create a technical agent"""
     try:
         template = request.get("template")
@@ -1052,7 +1050,7 @@ async def create_agent(request: Dict[str, Any]):
 
 
 @router.post("/squads/create")
-async def create_squad(request: Dict[str, Any]):
+async def create_squad(request: dict[str, Any]):
     """Create a military squad"""
     try:
         unit = request.get("unit")
@@ -1070,7 +1068,7 @@ async def create_squad(request: Dict[str, Any]):
 
 
 @router.post("/missions/execute")
-async def execute_mission(request: Dict[str, Any]):
+async def execute_mission(request: dict[str, Any]):
     """Execute a tactical mission"""
     try:
         mission_type = request.get("mission_type")
@@ -1140,7 +1138,7 @@ async def websocket_endpoint(websocket: WebSocket):
     try:
         while True:
             # Keep connection alive and handle messages
-            data = await websocket.receive_text()
+            await websocket.receive_text()
             # Process commands if needed
     except Exception:
         pass

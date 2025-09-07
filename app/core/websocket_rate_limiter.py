@@ -7,11 +7,11 @@ and Pay Ready business cycle awareness
 import asyncio
 import logging
 import time
-from collections import defaultdict, deque
+from collections import deque
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 import redis.asyncio as aioredis
 
@@ -89,7 +89,7 @@ class PayReadyBusinessCycle:
             {"hour": 17, "multiplier": 1.8, "name": "end_of_day_processing"},
         ]
 
-    def get_business_multiplier(self) -> Tuple[float, str]:
+    def get_business_multiplier(self) -> tuple[float, str]:
         """Get rate limit multiplier based on business cycle"""
         now = datetime.now()
         hour = now.hour
@@ -131,7 +131,7 @@ class WebSocketRateLimiter:
         self.cleanup_interval = cleanup_interval
 
         # In-memory rate limiting state
-        self.client_states: Dict[str, ClientRateState] = {}
+        self.client_states: dict[str, ClientRateState] = {}
         self.global_metrics = DDoSMetrics()
 
         # Pay Ready business cycle handler
@@ -149,7 +149,7 @@ class WebSocketRateLimiter:
             5: 3600,  # 1 hour
         }
 
-    def _initialize_rate_limits(self) -> Dict[str, Dict[str, RateLimit]]:
+    def _initialize_rate_limits(self) -> dict[str, dict[str, RateLimit]]:
         """Initialize rate limit configurations"""
         return {
             # Per-role limits
@@ -202,8 +202,8 @@ class WebSocketRateLimiter:
         client_id: str,
         user: Optional[AuthenticatedUser] = None,
         domain: DomainType = DomainType.GENERAL,
-        request_data: Optional[Dict[str, Any]] = None,
-    ) -> Tuple[bool, Optional[Dict[str, Any]]]:
+        request_data: Optional[dict[str, Any]] = None,
+    ) -> tuple[bool, Optional[dict[str, Any]]]:
         """
         Check if request should be rate limited
 
@@ -399,12 +399,12 @@ class WebSocketRateLimiter:
             except Exception as e:
                 logger.error(f"Failed to log violation to Redis: {e}")
 
-    async def detect_ddos_patterns(self) -> Optional[Dict[str, Any]]:
+    async def detect_ddos_patterns(self) -> Optional[dict[str, Any]]:
         """Detect potential DDoS attack patterns"""
         if not self.enable_ddos_protection:
             return None
 
-        now = time.time()
+        time.time()
         alert_data = None
 
         # Detect high request rate
@@ -501,7 +501,7 @@ class WebSocketRateLimiter:
                 logger.error(f"Error in cleanup loop: {e}")
                 await asyncio.sleep(60)
 
-    def get_metrics(self) -> Dict[str, Any]:
+    def get_metrics(self) -> dict[str, Any]:
         """Get rate limiter metrics"""
         now = time.time()
 
@@ -541,7 +541,7 @@ class WebSocketRateLimiter:
             state.burst_tokens = 0
             logger.info(f"Reset rate limits for client: {client_id}")
 
-    async def get_client_status(self, client_id: str) -> Optional[Dict[str, Any]]:
+    async def get_client_status(self, client_id: str) -> Optional[dict[str, Any]]:
         """Get detailed status for a specific client"""
         if client_id not in self.client_states:
             return None

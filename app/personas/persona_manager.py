@@ -11,7 +11,7 @@ from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 from uuid import uuid4
 
 # Configure logging
@@ -78,7 +78,7 @@ class KnowledgeArea:
 
     domain: str
     expertise_level: float  # 0.0 to 1.0
-    recent_performance: List[float] = field(default_factory=list)
+    recent_performance: list[float] = field(default_factory=list)
     learning_rate: float = 0.1
     decay_rate: float = 0.02  # Knowledge decay over time
     last_accessed: datetime = field(default_factory=datetime.now)
@@ -133,17 +133,17 @@ class Persona:
     last_updated: datetime = field(default_factory=datetime.now)
 
     # Core characteristics
-    traits: Dict[str, PersonaTrait] = field(default_factory=dict)
-    knowledge_areas: Dict[str, KnowledgeArea] = field(default_factory=dict)
-    communication_style: Dict[str, Any] = field(default_factory=dict)
+    traits: dict[str, PersonaTrait] = field(default_factory=dict)
+    knowledge_areas: dict[str, KnowledgeArea] = field(default_factory=dict)
+    communication_style: dict[str, Any] = field(default_factory=dict)
 
     # Evolution and performance
-    performance_history: List[PerformanceMetrics] = field(default_factory=list)
-    evolution_triggers: List[EvolutionTrigger] = field(default_factory=list)
+    performance_history: list[PerformanceMetrics] = field(default_factory=list)
+    evolution_triggers: list[EvolutionTrigger] = field(default_factory=list)
     adaptation_rate: float = 0.1
 
     # Context and specialization
-    preferred_domains: List[TaskDomain] = field(default_factory=list)
+    preferred_domains: list[TaskDomain] = field(default_factory=list)
     system_prompt_template: str = ""
     context_window_size: int = 4000
 
@@ -227,7 +227,7 @@ class Persona:
             return self.knowledge_areas[domain_str].expertise_level
         return 0.0
 
-    def generate_system_prompt(self, task_context: Optional[Dict[str, Any]] = None) -> str:
+    def generate_system_prompt(self, task_context: Optional[dict[str, Any]] = None) -> str:
         """Generate a system prompt based on current persona state."""
         # This is a basic implementation - will be enhanced by prompt_templates.py
         prompt_parts = [
@@ -251,7 +251,7 @@ class Persona:
 
         return "\n".join(prompt_parts)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert persona to dictionary for serialization."""
         return {
             "name": self.name,
@@ -283,8 +283,8 @@ class PersonaManager:
         self.storage_path = storage_path or Path("data/personas")
         self.storage_path.mkdir(parents=True, exist_ok=True)
 
-        self.personas: Dict[str, Persona] = {}
-        self.active_instances: Dict[str, Persona] = {}  # Task-specific instances
+        self.personas: dict[str, Persona] = {}
+        self.active_instances: dict[str, Persona] = {}  # Task-specific instances
 
         logger.info(f"PersonaManager initialized with storage path: {self.storage_path}")
 
@@ -326,7 +326,7 @@ class PersonaManager:
             return False
 
     async def create_persona_instance(
-        self, persona_name: str, task_context: Dict[str, Any]
+        self, persona_name: str, task_context: dict[str, Any]
     ) -> Optional[Persona]:
         """Create a task-specific instance of a persona."""
         try:
@@ -397,7 +397,7 @@ class PersonaManager:
             logger.debug(f"Cleaned up instance '{instance_id}'")
 
     async def get_best_persona_for_task(
-        self, task_domain: TaskDomain, additional_criteria: Optional[Dict[str, Any]] = None
+        self, task_domain: TaskDomain, additional_criteria: Optional[dict[str, Any]] = None
     ) -> Optional[str]:
         """Determine the best persona for a given task."""
         best_persona = None
@@ -425,7 +425,7 @@ class PersonaManager:
         )
         return best_persona
 
-    def _dict_to_persona(self, data: Dict[str, Any]) -> Persona:
+    def _dict_to_persona(self, data: dict[str, Any]) -> Persona:
         """Convert dictionary to Persona object."""
         persona = Persona(
             name=data["name"],
@@ -461,7 +461,7 @@ class PersonaManager:
 
         return copy.deepcopy(persona)
 
-    async def get_persona_analytics(self, persona_name: str) -> Dict[str, Any]:
+    async def get_persona_analytics(self, persona_name: str) -> dict[str, Any]:
         """Get analytics and insights for a persona."""
         persona = self.personas.get(persona_name)
         if not persona:

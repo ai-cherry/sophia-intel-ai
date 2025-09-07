@@ -3,27 +3,25 @@ Swarm Integration Layer
 Bridges micro-swarms with existing swarm infrastructure, orchestrators, and integrations
 """
 
-import asyncio
 import json
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Optional
 
 from app.core.portkey_manager import TaskType
 from app.integrations.gong_brain_training_adapter import GongBrainTrainingAdapter
 from app.integrations.gong_csv_ingestion import GongCSVIngestionPipeline
 from app.integrations.linear_client import LinearClient
 from app.mcp.clients.stdio_client import detect_stdio_mcp
-from app.memory.unified_memory_router import DocChunk, MemoryDomain, get_memory_router
+from app.memory.unified_memory_router import DocChunk, MemoryDomain
 from app.orchestrators.base_orchestrator import (
     BaseOrchestrator,
     ExecutionPriority,
     OrchestratorConfig,
     Result,
     Task,
-    TaskStatus,
 )
 from app.swarms.artemis.technical_agents import ArtemisSwarmFactory
 from app.swarms.core.intelligent_router import get_intelligent_router
@@ -56,8 +54,8 @@ class IntegrationConfig:
     enabled: bool = True
     auto_sync: bool = False
     sync_interval_minutes: int = 60
-    config_params: Dict[str, Any] = field(default_factory=dict)
-    error_handling: Dict[str, Any] = field(default_factory=dict)
+    config_params: dict[str, Any] = field(default_factory=dict)
+    error_handling: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -69,7 +67,7 @@ class SwarmExecutionContext:
     user_id: Optional[str] = None
     channel_id: Optional[str] = None
     parent_task_id: Optional[str] = None
-    integration_context: Dict[str, Any] = field(default_factory=dict)
+    integration_context: dict[str, Any] = field(default_factory=dict)
 
     # Resource constraints
     max_cost_usd: float = 2.0
@@ -110,11 +108,11 @@ class IntegratedSwarmOrchestrator(BaseOrchestrator):
         self.delivery_engine = get_delivery_engine() if domain == MemoryDomain.SOPHIA else None
 
         # External integrations
-        self.integrations: Dict[str, Any] = {}
+        self.integrations: dict[str, Any] = {}
         self._initialize_integrations()
 
         # Execution tracking
-        self.active_swarms: Dict[str, MicroSwarmCoordinator] = {}
+        self.active_swarms: dict[str, MicroSwarmCoordinator] = {}
 
         # Prefer local stdio MCP for memory/FS/git if available
         try:
@@ -218,7 +216,7 @@ class IntegratedSwarmOrchestrator(BaseOrchestrator):
                 success=False, content=f"Swarm execution failed: {str(e)}", errors=[str(e)]
             )
 
-    async def _parse_swarm_request(self, task: Task) -> Dict[str, Any]:
+    async def _parse_swarm_request(self, task: Task) -> dict[str, Any]:
         """Parse task content into swarm request"""
 
         # Try to parse as JSON first
@@ -239,7 +237,7 @@ class IntegratedSwarmOrchestrator(BaseOrchestrator):
         }
 
     async def _execute_integrated_swarm(
-        self, swarm_request: Dict[str, Any], context: SwarmExecutionContext
+        self, swarm_request: dict[str, Any], context: SwarmExecutionContext
     ) -> SwarmResult:
         """Execute swarm with full integration support"""
 
@@ -260,7 +258,7 @@ class IntegratedSwarmOrchestrator(BaseOrchestrator):
 
         try:
             # Create message braider for this execution
-            braider = create_message_braider(
+            create_message_braider(
                 swarm_id=context.execution_id,
                 coordination_pattern=swarm_request.get("coordination_pattern", "sequential"),
             )
@@ -281,7 +279,7 @@ class IntegratedSwarmOrchestrator(BaseOrchestrator):
                 del self.active_swarms[context.execution_id]
 
     async def _create_swarm_coordinator(
-        self, swarm_request: Dict[str, Any]
+        self, swarm_request: dict[str, Any]
     ) -> MicroSwarmCoordinator:
         """Create appropriate swarm coordinator based on request"""
 
@@ -333,7 +331,7 @@ class IntegratedSwarmOrchestrator(BaseOrchestrator):
         return "business_intelligence"
 
     async def _create_sophia_swarm(
-        self, swarm_type: str, request: Dict[str, Any]
+        self, swarm_type: str, request: dict[str, Any]
     ) -> MicroSwarmCoordinator:
         """Create Sophia domain swarm"""
 
@@ -352,7 +350,7 @@ class IntegratedSwarmOrchestrator(BaseOrchestrator):
             return self.sophia_factory.create_business_intelligence_swarm()
 
     async def _create_artemis_swarm(
-        self, swarm_type: str, request: Dict[str, Any]
+        self, swarm_type: str, request: dict[str, Any]
     ) -> MicroSwarmCoordinator:
         """Create Artemis domain swarm"""
 
@@ -381,7 +379,7 @@ class IntegratedSwarmOrchestrator(BaseOrchestrator):
             return self.artemis_factory.create_code_review_swarm()
 
     async def _pre_execution_integration(
-        self, swarm_request: Dict[str, Any], context: SwarmExecutionContext
+        self, swarm_request: dict[str, Any], context: SwarmExecutionContext
     ):
         """Perform pre-execution integration tasks"""
 
@@ -434,7 +432,7 @@ class IntegratedSwarmOrchestrator(BaseOrchestrator):
         except Exception as e:
             logger.error(f"Post-execution integration failed: {e}")
 
-    async def _load_linear_context(self, content: str) -> Optional[Dict[str, Any]]:
+    async def _load_linear_context(self, content: str) -> Optional[dict[str, Any]]:
         """Load relevant context from Linear"""
 
         try:
@@ -455,7 +453,7 @@ class IntegratedSwarmOrchestrator(BaseOrchestrator):
 
         return None
 
-    async def _load_gong_context(self, content: str) -> Optional[Dict[str, Any]]:
+    async def _load_gong_context(self, content: str) -> Optional[dict[str, Any]]:
         """Load relevant context from Gong"""
 
         try:
@@ -518,7 +516,7 @@ class IntegratedSwarmOrchestrator(BaseOrchestrator):
                         if context.integration_context
                         else None
                     )
-                    task_text = (
+                    (
                         context.integration_context.get("task")
                         if context.integration_context
                         else None
@@ -745,7 +743,7 @@ Execution ID: {context.execution_id}"""
         self,
         content: str,
         swarm_type: str = "auto_detect",
-        context: Optional[Dict[str, Any]] = None,
+        context: Optional[dict[str, Any]] = None,
         user_id: Optional[str] = None,
         channel_id: Optional[str] = None,
     ) -> Result:
@@ -789,7 +787,7 @@ Execution ID: {context.execution_id}"""
 
         return self.scheduler.schedule_task(task)
 
-    def get_integration_status(self) -> Dict[str, Any]:
+    def get_integration_status(self) -> dict[str, Any]:
         """Get status of all integrations"""
 
         status = {

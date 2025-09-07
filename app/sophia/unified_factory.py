@@ -10,18 +10,16 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Optional
 from uuid import uuid4
 
 from fastapi import APIRouter, HTTPException, WebSocket
 
 # Import memory system for persistence
-from app.memory.unified_memory import search_memory, store_memory
+from app.memory.unified_memory import store_memory
 from app.memory.unified_memory_router import MemoryDomain
-from app.models.schemas import ModelFieldsModel
 
 # Import orchestrator components
-from app.orchestrators.base_orchestrator import OrchestratorConfig
 
 logger = logging.getLogger(__name__)
 
@@ -131,12 +129,12 @@ class BusinessAgentProfile:
     personality: Optional[str] = None
     domain: Optional[str] = None
     archetype: Optional[MythologyArchetype] = None
-    capabilities: List[str] = field(default_factory=list)
-    kpis: List[str] = field(default_factory=list)
+    capabilities: list[str] = field(default_factory=list)
+    kpis: list[str] = field(default_factory=list)
     virtual_key: str = "openai-vk-190a60"
     temperature: float = 0.3
-    specialized_prompts: Dict[str, str] = field(default_factory=dict)
-    wisdom_traits: Dict[str, Any] = field(default_factory=dict)
+    specialized_prompts: dict[str, str] = field(default_factory=dict)
+    wisdom_traits: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -147,11 +145,11 @@ class BusinessTeamConfig:
     name: str
     description: str
     team_type: SwarmType
-    agents: List[BusinessAgentProfile]
+    agents: list[BusinessAgentProfile]
     strategy: str = "balanced"
     consensus_threshold: float = 0.85
     enable_debate: bool = True
-    okr_focus: List[str] = field(default_factory=list)
+    okr_focus: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -183,16 +181,16 @@ class SophiaUnifiedFactory:
         self.config = UnifiedSophiaConfig()
 
         # Agent and team management
-        self.business_templates: Dict[str, BusinessAgentProfile] = {}
-        self.mythology_agents: Dict[str, BusinessAgentProfile] = {}
-        self.business_teams: Dict[str, BusinessTeamConfig] = {}
-        self.analytical_swarms: Dict[str, Any] = {}
-        self.active_agents: Dict[str, BusinessAgentProfile] = {}
-        self.active_teams: Dict[str, Any] = {}
+        self.business_templates: dict[str, BusinessAgentProfile] = {}
+        self.mythology_agents: dict[str, BusinessAgentProfile] = {}
+        self.business_teams: dict[str, BusinessTeamConfig] = {}
+        self.analytical_swarms: dict[str, Any] = {}
+        self.active_agents: dict[str, BusinessAgentProfile] = {}
+        self.active_teams: dict[str, Any] = {}
 
         # Concurrent task management
         self._concurrent_tasks = 0
-        self._task_queue: List[Any] = []
+        self._task_queue: list[Any] = []
         self._task_lock = asyncio.Lock()
 
         # Business metrics tracking
@@ -208,10 +206,10 @@ class SophiaUnifiedFactory:
         }
 
         # Performance tracking
-        self.performance_metrics: Dict[str, Dict] = {}
+        self.performance_metrics: dict[str, dict] = {}
 
         # WebSocket connections for real-time updates
-        self.websocket_connections: Set[WebSocket] = set()
+        self.websocket_connections: set[WebSocket] = set()
 
         # Portkey virtual keys for business operations
         self.virtual_keys = {
@@ -642,7 +640,7 @@ class SophiaUnifiedFactory:
                     logger.info(f"Processing queued task: {next_task.get('id')}")
                     # Would trigger task execution here
 
-    async def queue_task(self, task: Dict[str, Any]) -> str:
+    async def queue_task(self, task: dict[str, Any]) -> str:
         """Queue a task for execution when a slot becomes available"""
         task_id = f"queued_{uuid4().hex[:8]}"
         task["id"] = task_id
@@ -659,7 +657,7 @@ class SophiaUnifiedFactory:
     # ==============================================================================
 
     async def create_business_agent(
-        self, template_name: str, custom_config: Optional[Dict[str, Any]] = None
+        self, template_name: str, custom_config: Optional[dict[str, Any]] = None
     ) -> str:
         """Create a business agent from template"""
         if not await self._acquire_task_slot():
@@ -739,13 +737,13 @@ class SophiaUnifiedFactory:
             await self._release_task_slot()
 
     async def create_mythology_agent(
-        self, archetype: MythologyArchetype, custom_config: Optional[Dict[str, Any]] = None
+        self, archetype: MythologyArchetype, custom_config: Optional[dict[str, Any]] = None
     ) -> str:
         """Create a mythology-based wisdom agent"""
         return await self.create_business_agent(archetype.value, custom_config)
 
     async def create_business_team(
-        self, team_template: str, custom_config: Optional[Dict[str, Any]] = None
+        self, team_template: str, custom_config: Optional[dict[str, Any]] = None
     ) -> str:
         """Create a business team from template"""
         if not await self._acquire_task_slot():
@@ -813,7 +811,7 @@ class SophiaUnifiedFactory:
             await self._release_task_slot()
 
     async def create_analytical_swarm(
-        self, swarm_type: SwarmType, swarm_config: Dict[str, Any]
+        self, swarm_type: SwarmType, swarm_config: dict[str, Any]
     ) -> str:
         """Create an analytical swarm for business intelligence"""
         if not await self._acquire_task_slot():
@@ -860,8 +858,8 @@ class SophiaUnifiedFactory:
     # ==============================================================================
 
     async def execute_business_task(
-        self, agent_or_team_id: str, task: str, context: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        self, agent_or_team_id: str, task: str, context: Optional[dict[str, Any]] = None
+    ) -> dict[str, Any]:
         """Execute a business task with an agent or team"""
         if not await self._acquire_task_slot():
             return {
@@ -954,8 +952,8 @@ class SophiaUnifiedFactory:
             await self._release_task_slot()
 
     async def calculate_okr_metrics(
-        self, financial_data: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        self, financial_data: Optional[dict[str, Any]] = None
+    ) -> dict[str, Any]:
         """Calculate and update OKR metrics"""
         try:
             if financial_data:
@@ -1011,7 +1009,7 @@ class SophiaUnifiedFactory:
     # WEBSOCKET AND REAL-TIME UPDATES
     # ==============================================================================
 
-    async def _broadcast_task_update(self, result: Dict[str, Any]):
+    async def _broadcast_task_update(self, result: dict[str, Any]):
         """Broadcast task updates via WebSocket"""
         if self.websocket_connections:
             update = {
@@ -1046,7 +1044,7 @@ class SophiaUnifiedFactory:
     # QUERY AND STATUS METHODS
     # ==============================================================================
 
-    def get_business_templates(self) -> Dict[str, Any]:
+    def get_business_templates(self) -> dict[str, Any]:
         """Get all available business templates"""
         return {
             "business_agents": {
@@ -1073,7 +1071,7 @@ class SophiaUnifiedFactory:
             },
         }
 
-    def get_team_templates(self) -> Dict[str, Any]:
+    def get_team_templates(self) -> dict[str, Any]:
         """Get all team templates"""
         return {
             name: {
@@ -1087,7 +1085,7 @@ class SophiaUnifiedFactory:
             for name, team in self.business_teams.items()
         }
 
-    def get_factory_metrics(self) -> Dict[str, Any]:
+    def get_factory_metrics(self) -> dict[str, Any]:
         """Get factory performance metrics"""
         return {
             "business_metrics": self.business_metrics,
@@ -1111,7 +1109,7 @@ class SophiaUnifiedFactory:
             "capabilities": self.config.capabilities,
         }
 
-    def list_active_agents(self) -> List[Dict[str, Any]]:
+    def list_active_agents(self) -> list[dict[str, Any]]:
         """List all active agents"""
         return [
             {
@@ -1126,7 +1124,7 @@ class SophiaUnifiedFactory:
             for agent in self.active_agents.values()
         ]
 
-    def list_active_teams(self) -> List[Dict[str, Any]]:
+    def list_active_teams(self) -> list[dict[str, Any]]:
         """List all active teams"""
         return [
             {
@@ -1146,7 +1144,7 @@ class SophiaUnifiedFactory:
             for team in self.active_teams.values()
         ]
 
-    def get_performance_metrics(self) -> Dict[str, Any]:
+    def get_performance_metrics(self) -> dict[str, Any]:
         """Get performance metrics for all agents and teams"""
         total_agents = len(self.active_agents)
         total_teams = len(self.active_teams)
@@ -1172,7 +1170,7 @@ class SophiaUnifiedFactory:
             "domain_distribution": self._get_domain_distribution(),
         }
 
-    def _get_most_used_agents(self) -> List[Dict[str, Any]]:
+    def _get_most_used_agents(self) -> list[dict[str, Any]]:
         """Get most frequently used agents"""
         agent_usage = []
         for agent_id, metrics in self.performance_metrics.items():
@@ -1191,7 +1189,7 @@ class SophiaUnifiedFactory:
         agent_usage.sort(key=lambda x: x["tasks_completed"], reverse=True)
         return agent_usage[:5]  # Top 5
 
-    def _get_domain_distribution(self) -> Dict[str, int]:
+    def _get_domain_distribution(self) -> dict[str, int]:
         """Get distribution of agents by domain"""
         domain_counts = {}
         for agent in self.active_agents.values():
@@ -1216,7 +1214,7 @@ router = APIRouter(prefix="/api/sophia/unified", tags=["sophia-unified-factory"]
 
 
 @router.post("/agents/create")
-async def create_agent(request: Dict[str, Any]):
+async def create_agent(request: dict[str, Any]):
     """Create a business agent"""
     try:
         template = request.get("template")
@@ -1234,7 +1232,7 @@ async def create_agent(request: Dict[str, Any]):
 
 
 @router.post("/teams/create")
-async def create_team(request: Dict[str, Any]):
+async def create_team(request: dict[str, Any]):
     """Create a business team"""
     try:
         template = request.get("template")
@@ -1252,7 +1250,7 @@ async def create_team(request: Dict[str, Any]):
 
 
 @router.post("/tasks/execute")
-async def execute_task(request: Dict[str, Any]):
+async def execute_task(request: dict[str, Any]):
     """Execute a business task"""
     try:
         executor = request.get("executor")
@@ -1271,7 +1269,7 @@ async def execute_task(request: Dict[str, Any]):
 
 
 @router.post("/okr/calculate")
-async def calculate_okr(request: Dict[str, Any]):
+async def calculate_okr(request: dict[str, Any]):
     """Calculate OKR metrics"""
     try:
         financial_data = request.get("financial_data")
@@ -1330,7 +1328,7 @@ async def websocket_endpoint(websocket: WebSocket):
     try:
         while True:
             # Keep connection alive and handle messages
-            data = await websocket.receive_text()
+            await websocket.receive_text()
             # Process commands if needed
     except Exception:
         pass

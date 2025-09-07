@@ -240,7 +240,7 @@ class WebSocketSecurityMonitor:
     async def check_security_health(self) -> dict:
         """Check overall security health"""
         status = await self.ws_manager.get_security_status()
-        metrics = self.ws_manager.get_metrics()
+        self.ws_manager.get_metrics()
 
         alerts = []
 

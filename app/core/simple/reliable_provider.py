@@ -8,7 +8,7 @@ import os
 import time
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from portkey_ai import Portkey
 
@@ -130,7 +130,7 @@ class ReliableProviderManager:
         system_prompt: Optional[str] = None,
         temperature: float = 0.7,
         max_retries: int = 2,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Complete a prompt with automatic provider selection and fallback
 
@@ -174,7 +174,7 @@ class ReliableProviderManager:
 
     async def _execute_completion(
         self, provider_name: str, prompt: str, system_prompt: Optional[str], temperature: float
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Execute completion with a specific provider"""
         config = self.PROVIDERS[provider_name]
         client = self._get_client(provider_name)
@@ -228,7 +228,7 @@ class ReliableProviderManager:
         if success:
             history["successes"] += 1
             history["total_latency_ms"] += latency_ms
-            total_requests = history["successes"] + history["failures"]
+            history["successes"] + history["failures"]
             history["avg_latency_ms"] = history["total_latency_ms"] / history["successes"]
         else:
             history["failures"] += 1
@@ -238,7 +238,7 @@ class ReliableProviderManager:
         wait_time = 2**attempt
         await asyncio.sleep(wait_time)
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get usage statistics"""
         stats = {
             "total_requests": self.request_count,
@@ -280,7 +280,7 @@ class AsyncReliableProvider(ReliableProviderManager):
 
     async def _execute_completion(
         self, provider_name: str, prompt: str, system_prompt: Optional[str], temperature: float
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Execute completion in thread pool"""
         loop = asyncio.get_event_loop()
 

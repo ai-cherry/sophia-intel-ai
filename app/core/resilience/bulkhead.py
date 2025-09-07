@@ -10,10 +10,10 @@ import threading
 from abc import ABC, abstractmethod
 from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import TimeoutError as FutureTimeoutError
-from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, TypeVar, Union
+from typing import Any, Callable, Optional, TypeVar
 
 logger = logging.getLogger(__name__)
 
@@ -168,7 +168,7 @@ class BulkheadBase(ABC):
             self.state_changed_at = datetime.utcnow()
             logger.info(f"Bulkhead '{self.name}' state changed to {new_state.value}")
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get bulkhead statistics"""
         avg_execution_time = (
             (self.total_execution_time / max(self.completed_calls, 1))
@@ -217,7 +217,7 @@ class SemaphoreBulkhead(BulkheadBase):
 
         # Create semaphore
         self.semaphore = threading.Semaphore(self.config.max_concurrent)
-        self.queue: List[threading.Event] = []
+        self.queue: list[threading.Event] = []
         self._lock = threading.Lock()
 
         logger.info(
@@ -467,7 +467,7 @@ class ThreadPoolBulkhead(BulkheadBase):
         )
 
         self._lock = threading.Lock()
-        self._futures: List[Any] = []
+        self._futures: list[Any] = []
 
         logger.info(
             f"Thread pool bulkhead '{name}' initialized with "
@@ -584,7 +584,7 @@ class BulkheadRegistry:
 
     def __init__(self):
         """Initialize bulkhead registry"""
-        self.bulkheads: Dict[str, BulkheadBase] = {}
+        self.bulkheads: dict[str, BulkheadBase] = {}
         self._lock = threading.Lock()
         logger.info("Bulkhead registry initialized")
 
@@ -648,7 +648,7 @@ class BulkheadRegistry:
 
             return False
 
-    def get_all_stats(self) -> Dict[str, Any]:
+    def get_all_stats(self) -> dict[str, Any]:
         """Get statistics for all bulkheads"""
         return {
             "bulkheads": {name: bulkhead.get_stats() for name, bulkhead in self.bulkheads.items()},

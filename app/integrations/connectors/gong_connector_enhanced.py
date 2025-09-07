@@ -13,7 +13,7 @@ from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 import aiohttp
 import asyncpg
@@ -45,11 +45,11 @@ class CallFilter:
 
     fromDateTime: Optional[str] = None
     toDateTime: Optional[str] = None
-    callIds: Optional[List[str]] = None
+    callIds: Optional[list[str]] = None
     workspaceId: Optional[str] = None
-    contentSelector: Optional[Dict] = field(default_factory=dict)
+    contentSelector: Optional[dict] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert to API request format"""
         filter_dict = {}
         if self.fromDateTime:
@@ -71,11 +71,11 @@ class GongCall:
     title: str
     scheduled_at: datetime
     duration_seconds: int
-    participants: List[Dict[str, Any]]
+    participants: list[dict[str, Any]]
     outcome: Optional[str] = None
     sentiment_score: Optional[float] = None
     talk_ratio: Optional[float] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -89,8 +89,8 @@ class TranscriptChunk:
     start_ms: int
     end_ms: int
     sentiment: Optional[float] = None
-    topics: List[str] = field(default_factory=list)
-    embedding: Optional[List[float]] = None
+    topics: list[str] = field(default_factory=list)
+    embedding: Optional[list[float]] = None
 
 
 class GongConnectorEnhanced:
@@ -139,7 +139,7 @@ class GongConnectorEnhanced:
         self.batch_size = 50
 
         # Rate limiting state
-        self.request_times: List[datetime] = []
+        self.request_times: list[datetime] = []
 
     async def initialize(self):
         """Initialize all connections"""
@@ -318,9 +318,9 @@ class GongConnectorEnhanced:
     async def _make_request(
         self,
         endpoint: GongEndpoint,
-        json_data: Optional[Dict] = None,
-        params: Optional[Dict] = None,
-    ) -> Dict[str, Any]:
+        json_data: Optional[dict] = None,
+        params: Optional[dict] = None,
+    ) -> dict[str, Any]:
         """Make API request with retry logic"""
         await self._check_rate_limit()
 
@@ -351,7 +351,7 @@ class GongConnectorEnhanced:
 
     async def get_transcript(
         self, call_filter: CallFilter, use_cache: bool = True
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Get transcript using CORRECTED POST method
 
@@ -379,7 +379,7 @@ class GongConnectorEnhanced:
 
     async def get_extensive_calls(
         self, call_filter: CallFilter, use_cache: bool = True
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Get extensive call data using CORRECTED POST method
 
@@ -423,7 +423,7 @@ class GongConnectorEnhanced:
         from_date: Optional[datetime] = None,
         to_date: Optional[datetime] = None,
         limit: int = 100,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Get list of calls using POST method"""
         if not from_date:
             from_date = datetime.now() - timedelta(days=7)
@@ -441,8 +441,8 @@ class GongConnectorEnhanced:
         return response.get("calls", [])
 
     async def process_transcript_to_chunks(
-        self, call_id: str, transcript_data: Dict[str, Any]
-    ) -> List[TranscriptChunk]:
+        self, call_id: str, transcript_data: dict[str, Any]
+    ) -> list[TranscriptChunk]:
         """Process transcript into chunks for vector storage"""
         chunks = []
 
@@ -517,7 +517,7 @@ class GongConnectorEnhanced:
         return chunks
 
     async def store_chunks_in_weaviate(
-        self, chunks: List[TranscriptChunk], call_metadata: Dict[str, Any]
+        self, chunks: list[TranscriptChunk], call_metadata: dict[str, Any]
     ):
         """Store transcript chunks in Weaviate for vector search"""
         batch = []
@@ -549,7 +549,7 @@ class GongConnectorEnhanced:
 
         logger.info(f"Stored {len(chunks)} chunks in Weaviate")
 
-    def _insert_weaviate_batch(self, batch: List[Dict]):
+    def _insert_weaviate_batch(self, batch: list[dict]):
         """Insert batch of objects into Weaviate"""
         with self.weaviate_client.batch as batch_context:
             for obj in batch:
@@ -558,7 +558,7 @@ class GongConnectorEnhanced:
                 )
 
     async def store_call_in_postgres(
-        self, call_data: Dict[str, Any], extensive_data: Optional[Dict] = None
+        self, call_data: dict[str, Any], extensive_data: Optional[dict] = None
     ):
         """Store call data in PostgreSQL"""
         async with self.pg_pool.acquire() as conn:
@@ -608,7 +608,7 @@ class GongConnectorEnhanced:
                     participant.get("affiliation") == "internal",
                 )
 
-    async def process_webhook(self, event_type: str, payload: Dict[str, Any]):
+    async def process_webhook(self, event_type: str, payload: dict[str, Any]):
         """Process incoming webhook from Gong"""
         webhook_id = payload.get("webhookId", hashlib.md5(json.dumps(payload).encode()).hexdigest())
         call_id = payload.get("callId")
@@ -713,7 +713,7 @@ class GongConnectorEnhanced:
                         chunk.text[:200],
                     )
 
-    async def _handle_deal_risk(self, payload: Dict[str, Any]):
+    async def _handle_deal_risk(self, payload: dict[str, Any]):
         """Handle deal at risk webhook"""
         logger.warning(f"Deal at risk: {payload}")
         # Additional processing for deal risks
@@ -721,11 +721,11 @@ class GongConnectorEnhanced:
 
     async def batch_process_calls(
         self,
-        call_ids: List[str],
+        call_ids: list[str],
         batch_size: int = 10,
         include_transcript: bool = True,
         include_extensive: bool = True,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Batch process multiple calls efficiently"""
         results = {"processed": [], "failed": [], "transcripts": {}, "extensive_data": {}}
 
@@ -764,8 +764,8 @@ class GongConnectorEnhanced:
         return results
 
     async def search_transcripts(
-        self, query: str, limit: int = 10, filters: Optional[Dict] = None
-    ) -> List[Dict[str, Any]]:
+        self, query: str, limit: int = 10, filters: Optional[dict] = None
+    ) -> list[dict[str, Any]]:
         """Search transcripts using Weaviate vector search"""
         where_filter = None
         if filters:
@@ -806,7 +806,7 @@ class GongConnectorEnhanced:
 
     async def get_analytics(
         self, from_date: datetime, to_date: datetime, group_by: str = "day"
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Get analytics for a date range"""
         async with self.pg_pool.acquire() as conn:
             # Get call statistics
@@ -849,7 +849,7 @@ class GongConnectorEnhanced:
                 "top_performers": [dict(p) for p in top_performers],
             }
 
-    async def health_check(self) -> Dict[str, bool]:
+    async def health_check(self) -> dict[str, bool]:
         """Check health of all connections"""
         health = {"gong_api": False, "postgres": False, "redis": False, "weaviate": False}
 

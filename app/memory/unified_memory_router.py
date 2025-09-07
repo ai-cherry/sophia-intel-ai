@@ -669,7 +669,7 @@ class UnifiedMemoryRouter:
         documents = [hit.content for hit in hits]
 
         # Call reranking model
-        response = await self.portkey.execute_with_fallback(
+        await self.portkey.execute_with_fallback(
             task_type=TaskType.RERANKING,
             messages=[{"role": "user", "content": query}],
             documents=documents,

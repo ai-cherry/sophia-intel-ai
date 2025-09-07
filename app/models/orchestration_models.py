@@ -5,11 +5,10 @@ Comprehensive validation models for requests, responses, and internal data struc
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Optional, Union
 from uuid import uuid4
 
 from pydantic import BaseModel, Field, root_validator, validator
-from pydantic.types import SecretStr
 
 # ============================================
 # Core Enums
@@ -78,7 +77,7 @@ class BaseRequest(BaseModel):
         default_factory=lambda: str(uuid4()), description="Unique request identifier"
     )
     timestamp: datetime = Field(default_factory=datetime.now, description="Request timestamp")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
+    metadata: dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
     timeout_seconds: Optional[int] = Field(
         default=300, ge=1, le=3600, description="Request timeout"
     )
@@ -110,7 +109,7 @@ class CommandRequest(BaseRequest):
     """System command request"""
 
     command: str = Field(..., min_length=1, description="Command to execute")
-    parameters: Dict[str, Any] = Field(default_factory=dict, description="Command parameters")
+    parameters: dict[str, Any] = Field(default_factory=dict, description="Command parameters")
     require_confirmation: bool = Field(
         default=False, description="Whether command requires confirmation"
     )
@@ -140,8 +139,8 @@ class QueryRequest(BaseRequest):
     """Data query request"""
 
     query_type: str = Field(..., description="Type of query")
-    parameters: Dict[str, Any] = Field(default_factory=dict, description="Query parameters")
-    filters: Dict[str, Any] = Field(default_factory=dict, description="Query filters")
+    parameters: dict[str, Any] = Field(default_factory=dict, description="Query parameters")
+    filters: dict[str, Any] = Field(default_factory=dict, description="Query filters")
     limit: Optional[int] = Field(default=100, ge=1, le=10000, description="Result limit")
     offset: Optional[int] = Field(default=0, ge=0, description="Result offset")
 
@@ -157,7 +156,7 @@ class AgentRequest(BaseRequest):
     """Agent management request"""
 
     action: str = Field(..., description="Agent action")
-    agent_config: Dict[str, Any] = Field(default_factory=dict, description="Agent configuration")
+    agent_config: dict[str, Any] = Field(default_factory=dict, description="Agent configuration")
     agent_id: Optional[str] = Field(default=None, description="Target agent ID")
 
     @validator("action")
@@ -177,8 +176,8 @@ class OrchestrationRequest(BaseRequest):
     orchestrator: OrchestratorType = Field(
         default=OrchestratorType.SUPER, description="Target orchestrator"
     )
-    context: Dict[str, Any] = Field(default_factory=dict, description="Additional context")
-    budget: Dict[str, Union[int, float]] = Field(
+    context: dict[str, Any] = Field(default_factory=dict, description="Additional context")
+    budget: dict[str, Union[int, float]] = Field(
         default_factory=dict, description="Resource budget"
     )
 
@@ -197,7 +196,7 @@ class BaseResponse(BaseModel):
     processing_time_ms: Optional[float] = Field(
         default=None, description="Processing time in milliseconds"
     )
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Response metadata")
+    metadata: dict[str, Any] = Field(default_factory=dict, description="Response metadata")
 
     class Config:
         use_enum_values = True
@@ -213,7 +212,7 @@ class ChatResponse(BaseResponse):
     confidence_score: Optional[float] = Field(
         default=None, ge=0.0, le=1.0, description="Confidence score"
     )
-    citations: List[Dict[str, Any]] = Field(default_factory=list, description="Source citations")
+    citations: list[dict[str, Any]] = Field(default_factory=list, description="Source citations")
     needs_confirmation: bool = Field(
         default=False, description="Whether response needs user confirmation"
     )
@@ -223,10 +222,10 @@ class CommandResponse(BaseResponse):
     """Command execution response"""
 
     command: str = Field(..., description="Executed command")
-    result: Dict[str, Any] = Field(..., description="Command execution result")
+    result: dict[str, Any] = Field(..., description="Command execution result")
     success: bool = Field(..., description="Whether command succeeded")
     error_message: Optional[str] = Field(default=None, description="Error message if failed")
-    affected_resources: List[str] = Field(
+    affected_resources: list[str] = Field(
         default_factory=list, description="Resources affected by command"
     )
 
@@ -235,9 +234,9 @@ class QueryResponse(BaseResponse):
     """Query response model"""
 
     query_type: str = Field(..., description="Query type")
-    data: Union[Dict[str, Any], List[Any]] = Field(..., description="Query result data")
+    data: Union[dict[str, Any], list[Any]] = Field(..., description="Query result data")
     total_count: Optional[int] = Field(default=None, description="Total available results")
-    page_info: Optional[Dict[str, Any]] = Field(default=None, description="Pagination information")
+    page_info: Optional[dict[str, Any]] = Field(default=None, description="Pagination information")
 
 
 class OrchestrationResponse(BaseResponse):
@@ -246,13 +245,13 @@ class OrchestrationResponse(BaseResponse):
     task_id: str = Field(..., description="Task identifier")
     type: TaskType = Field(..., description="Task type")
     status: TaskStatus = Field(..., description="Task status")
-    result: Optional[Dict[str, Any]] = Field(default=None, description="Task result")
+    result: Optional[dict[str, Any]] = Field(default=None, description="Task result")
     orchestrator_used: str = Field(..., description="Orchestrator that handled the task")
     confidence_score: Optional[float] = Field(
         default=None, ge=0.0, le=1.0, description="Result confidence"
     )
-    citations: List[Dict[str, Any]] = Field(default_factory=list, description="Source citations")
-    cost_estimate: Optional[Dict[str, float]] = Field(default=None, description="Cost breakdown")
+    citations: list[dict[str, Any]] = Field(default_factory=list, description="Source citations")
+    cost_estimate: Optional[dict[str, float]] = Field(default=None, description="Cost breakdown")
 
 
 class ErrorResponse(BaseResponse):
@@ -260,7 +259,7 @@ class ErrorResponse(BaseResponse):
 
     error_code: str = Field(..., description="Error code")
     error_message: str = Field(..., description="Human-readable error message")
-    error_details: Dict[str, Any] = Field(
+    error_details: dict[str, Any] = Field(
         default_factory=dict, description="Additional error details"
     )
     retry_after: Optional[int] = Field(default=None, description="Retry after seconds")
@@ -286,8 +285,8 @@ class Task(BaseModel):
     updated_at: Optional[datetime] = Field(default=None, description="Last update timestamp")
     started_at: Optional[datetime] = Field(default=None, description="Start timestamp")
     completed_at: Optional[datetime] = Field(default=None, description="Completion timestamp")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Task metadata")
-    budget: Dict[str, Union[int, float]] = Field(
+    metadata: dict[str, Any] = Field(default_factory=dict, description="Task metadata")
+    budget: dict[str, Union[int, float]] = Field(
         default_factory=dict, description="Resource budget"
     )
     retries: int = Field(default=0, description="Number of retries")
@@ -318,15 +317,15 @@ class ExecutionResult(BaseModel):
     task_id: str = Field(..., description="Task ID")
     success: bool = Field(..., description="Whether execution succeeded")
     content: Optional[Any] = Field(default=None, description="Result content")
-    errors: List[str] = Field(default_factory=list, description="Error messages")
-    warnings: List[str] = Field(default_factory=list, description="Warning messages")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Result metadata")
+    errors: list[str] = Field(default_factory=list, description="Error messages")
+    warnings: list[str] = Field(default_factory=list, description="Warning messages")
+    metadata: dict[str, Any] = Field(default_factory=dict, description="Result metadata")
     tokens_used: Optional[int] = Field(default=None, description="Tokens consumed")
     cost: Optional[float] = Field(default=None, description="Execution cost")
     confidence: Optional[float] = Field(
         default=None, ge=0.0, le=1.0, description="Result confidence"
     )
-    citations: List[Dict[str, Any]] = Field(default_factory=list, description="Source citations")
+    citations: list[dict[str, Any]] = Field(default_factory=list, description="Source citations")
     processing_time_ms: Optional[float] = Field(default=None, description="Processing time")
 
 
@@ -334,8 +333,8 @@ class SystemHealth(BaseModel):
     """System health status model"""
 
     status: SystemStatus = Field(..., description="Overall system status")
-    components: Dict[str, Dict[str, Any]] = Field(..., description="Component health details")
-    metrics: Dict[str, Union[int, float]] = Field(..., description="System metrics")
+    components: dict[str, dict[str, Any]] = Field(..., description="Component health details")
+    metrics: dict[str, Union[int, float]] = Field(..., description="System metrics")
     last_check: datetime = Field(default_factory=datetime.now, description="Last health check")
     uptime_seconds: Optional[int] = Field(default=None, description="System uptime")
     version: str = Field(default="2.1.0", description="System version")
@@ -344,13 +343,13 @@ class SystemHealth(BaseModel):
 class ConnectionMetrics(BaseModel):
     """Connection pool metrics"""
 
-    redis_connections: Dict[str, int] = Field(
+    redis_connections: dict[str, int] = Field(
         default_factory=dict, description="Redis connection stats"
     )
-    http_connections: Dict[str, int] = Field(
+    http_connections: dict[str, int] = Field(
         default_factory=dict, description="HTTP connection stats"
     )
-    websocket_connections: Dict[str, int] = Field(
+    websocket_connections: dict[str, int] = Field(
         default_factory=dict, description="WebSocket connection stats"
     )
     total_active: int = Field(default=0, description="Total active connections")
@@ -363,7 +362,7 @@ class ConnectionMetrics(BaseModel):
 # ============================================
 
 
-def validate_task_budget(budget: Dict[str, Union[int, float]]) -> Dict[str, Union[int, float]]:
+def validate_task_budget(budget: dict[str, Union[int, float]]) -> dict[str, Union[int, float]]:
     """Validate task budget constraints"""
     if not budget:
         return {}
@@ -415,7 +414,7 @@ def create_error_response(
     request_id: str,
     error_code: str,
     error_message: str,
-    error_details: Dict[str, Any] = None,
+    error_details: dict[str, Any] = None,
     retry_after: Optional[int] = None,
 ) -> ErrorResponse:
     """Factory function to create standardized error responses"""
@@ -433,8 +432,8 @@ def create_orchestration_task(
     content: str,
     task_type: TaskType,
     priority: TaskPriority = TaskPriority.NORMAL,
-    budget: Dict[str, Union[int, float]] = None,
-    metadata: Dict[str, Any] = None,
+    budget: dict[str, Union[int, float]] = None,
+    metadata: dict[str, Any] = None,
 ) -> Task:
     """Factory function to create orchestration tasks"""
     validated_budget = validate_task_budget(budget or {})

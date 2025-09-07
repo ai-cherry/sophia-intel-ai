@@ -3,10 +3,9 @@ Memory Adapter for MCP Integration
 Provides unified memory storage and retrieval capabilities
 """
 
-import json
 import logging
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -18,17 +17,17 @@ class UnifiedMemoryAdapter:
 
     def __init__(self):
         """Initialize the memory adapter"""
-        self.memory_store: Dict[str, List[Dict[str, Any]]] = {}
-        self.metadata_store: Dict[str, Dict[str, Any]] = {}
-        self.context_cache: Dict[str, Any] = {}
+        self.memory_store: dict[str, list[dict[str, Any]]] = {}
+        self.metadata_store: dict[str, dict[str, Any]] = {}
+        self.context_cache: dict[str, Any] = {}
         logger.info("UnifiedMemoryAdapter initialized")
 
     async def store_conversation(
         self,
         session_id: str,
-        messages: List[Dict[str, Any]],
-        metadata: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        messages: list[dict[str, Any]],
+        metadata: Optional[dict[str, Any]] = None,
+    ) -> dict[str, Any]:
         """
         Store conversation messages with optional metadata
 
@@ -72,7 +71,7 @@ class UnifiedMemoryAdapter:
 
     async def retrieve_context(
         self, session_id: str, last_n: int = 10, include_system: bool = False
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Retrieve conversation context for a session
 
@@ -121,7 +120,7 @@ class UnifiedMemoryAdapter:
 
     async def search_memories(
         self, query: str, session_id: Optional[str] = None, limit: int = 10
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Search through stored memories
 
@@ -163,7 +162,7 @@ class UnifiedMemoryAdapter:
             logger.error(f"Error searching memories: {e}")
             return {"success": False, "error": str(e), "query": query}
 
-    async def delete_session(self, session_id: str) -> Dict[str, Any]:
+    async def delete_session(self, session_id: str) -> dict[str, Any]:
         """
         Delete all memories for a session
 
@@ -197,7 +196,7 @@ class UnifiedMemoryAdapter:
             logger.error(f"Error deleting session: {e}")
             return {"success": False, "error": str(e), "session_id": session_id}
 
-    async def export_session(self, session_id: str) -> Dict[str, Any]:
+    async def export_session(self, session_id: str) -> dict[str, Any]:
         """
         Export session data as JSON
 
@@ -224,7 +223,7 @@ class UnifiedMemoryAdapter:
             logger.error(f"Error exporting session: {e}")
             return {"success": False, "error": str(e), "session_id": session_id}
 
-    async def get_statistics(self) -> Dict[str, Any]:
+    async def get_statistics(self) -> dict[str, Any]:
         """
         Get memory adapter statistics
 

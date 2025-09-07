@@ -4,7 +4,7 @@ import json
 import os
 import subprocess
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 
 class StdioMCPClient:
@@ -15,14 +15,14 @@ class StdioMCPClient:
     Expects the stdio server to output exactly one JSON line per request.
     """
 
-    def __init__(self, repo_root: Optional[Path] = None, cmd_path: Optional[Path] = None) -> None:
+    def __init__(self, repo_root: Path | None = None, cmd_path: Path | None = None) -> None:
         self.repo_root = repo_root or Path.cwd()
         default_cmd = self.repo_root / "bin/mcp-fs-memory"
         self.cmd_path = cmd_path or default_cmd
         if not self.cmd_path.exists():
             raise FileNotFoundError(f"MCP stdio server not found at {self.cmd_path}")
 
-    def _call(self, method: str, params: Optional[Dict[str, Any]] = None, req_id: str = "1") -> Any:
+    def _call(self, method: str, params: dict[str, Any] | None = None, req_id: str = "1") -> Any:
         req = {"id": req_id, "method": method, "params": params or {}}
         p = subprocess.run(
             [str(self.cmd_path)],
@@ -67,7 +67,7 @@ class StdioMCPClient:
         topic: str,
         content: str,
         source: str = "artemis",
-        tags: Optional[list[str]] = None,
+        tags: list[str] | None = None,
         memory_type: str = "semantic",
     ) -> Any:
         return self._call(
@@ -90,8 +90,8 @@ class StdioMCPClient:
     def git_status(self) -> Any:
         return self._call("git.status", {})
 
-    def git_diff(self, path: Optional[str] = None, staged: bool = False) -> Any:
-        p: Dict[str, Any] = {}
+    def git_diff(self, path: str | None = None, staged: bool = False) -> Any:
+        p: dict[str, Any] = {}
         if path:
             p["path"] = path
         if staged:
@@ -99,7 +99,7 @@ class StdioMCPClient:
         return self._call("git.diff", p)
 
 
-def detect_stdio_mcp(repo_root: Optional[Path] = None) -> Optional[StdioMCPClient]:
+def detect_stdio_mcp(repo_root: Path | None = None) -> StdioMCPClient | None:
     root = repo_root or Path.cwd()
     cmd = root / "bin/mcp-fs-memory"
     if cmd.exists() and os.access(cmd, os.X_OK):

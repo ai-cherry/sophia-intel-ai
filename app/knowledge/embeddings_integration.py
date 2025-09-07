@@ -8,7 +8,7 @@ and the multi-modal embedding generation system.
 import asyncio
 import logging
 from datetime import datetime
-from typing import Dict, List, Optional, Tuple
+from typing import Optional
 
 import numpy as np
 
@@ -22,7 +22,6 @@ from app.knowledge.foundational_manager import FoundationalKnowledgeManager
 from app.knowledge.models import KnowledgeClassification, KnowledgeEntity
 from app.scaffolding.meta_tagging import (
     MetaTag,
-    MetaTagRegistry,
     SemanticRole,
     get_global_registry,
 )
@@ -64,13 +63,13 @@ class FoundationalKnowledgeEmbeddings:
         self.meta_registry = get_global_registry()
 
         # Track embedded knowledge entities
-        self._embedded_entities: Dict[str, datetime] = {}
+        self._embedded_entities: dict[str, datetime] = {}
 
     async def embed_knowledge_entity(
         self,
         entity: KnowledgeEntity,
         force_regenerate: bool = False,
-    ) -> Tuple[np.ndarray, EmbeddingMetadata]:
+    ) -> tuple[np.ndarray, EmbeddingMetadata]:
         """
         Generate embeddings for a knowledge entity.
 
@@ -123,7 +122,7 @@ class FoundationalKnowledgeEmbeddings:
         self,
         batch_size: int = 10,
         force_regenerate: bool = False,
-    ) -> Dict[str, Tuple[np.ndarray, EmbeddingMetadata]]:
+    ) -> dict[str, tuple[np.ndarray, EmbeddingMetadata]]:
         """
         Generate embeddings for all foundational knowledge.
 
@@ -170,7 +169,7 @@ class FoundationalKnowledgeEmbeddings:
         top_k: int = 10,
         classification_filter: Optional[KnowledgeClassification] = None,
         include_operational: bool = False,
-    ) -> List[Tuple[KnowledgeEntity, float]]:
+    ) -> list[tuple[KnowledgeEntity, float]]:
         """
         Search foundational knowledge using semantic similarity.
 
@@ -250,7 +249,7 @@ class FoundationalKnowledgeEmbeddings:
             return existing_tag
 
         # Create new meta tag for knowledge entity
-        from app.scaffolding.meta_tagging import Complexity, ModificationRisk, Priority
+        from app.scaffolding.meta_tagging import ModificationRisk, Priority
 
         meta_tag = MetaTag(
             component_name=entity.name,
@@ -276,7 +275,7 @@ class FoundationalKnowledgeEmbeddings:
             performance_impact="minimal",
             maintainability_score=0.9 if entity.is_foundational else 0.7,
             last_modified=entity.updated_at,
-            tags=set(["knowledge", entity.category, entity.classification.value]),
+            tags={"knowledge", entity.category, entity.classification.value},
             extra_metadata={
                 "knowledge_entity_id": entity.id,
                 "is_foundational": entity.is_foundational,
@@ -398,7 +397,7 @@ class FoundationalKnowledgeEmbeddings:
 
         return integrations
 
-    async def get_statistics(self) -> Dict[str, any]:
+    async def get_statistics(self) -> dict[str, any]:
         """Get integration statistics."""
         knowledge_stats = await self.knowledge_manager.get_statistics()
         embedding_stats = self.embeddings.get_stats()

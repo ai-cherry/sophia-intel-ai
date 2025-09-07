@@ -9,7 +9,7 @@ import os
 import sqlite3
 import threading
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 try:
     import psycopg2
@@ -20,10 +20,7 @@ except ImportError:
 from app.core.ai_logger import logger
 from app.knowledge.models import (
     KnowledgeEntity,
-    KnowledgeRelationship,
-    KnowledgeTag,
     KnowledgeVersion,
-    SyncConflict,
     SyncOperation,
 )
 
@@ -77,7 +74,7 @@ class StorageAdapter:
 
             return cursor
 
-    def _fetchone(self, query: str, params: tuple = ()) -> Optional[Dict[str, Any]]:
+    def _fetchone(self, query: str, params: tuple = ()) -> dict[str, Any] | None:
         """Fetch single row (thread safety handled in _execute)"""
         cursor = self._execute(query, params)
         row = cursor.fetchone()
@@ -88,7 +85,7 @@ class StorageAdapter:
                 return dict(row)
         return None
 
-    def _fetchall(self, query: str, params: tuple = ()) -> List[Dict[str, Any]]:
+    def _fetchall(self, query: str, params: tuple = ()) -> list[dict[str, Any]]:
         """Fetch all rows (thread safety handled in _execute)"""
         cursor = self._execute(query, params)
         rows = cursor.fetchall()
@@ -130,7 +127,7 @@ class StorageAdapter:
         logger.info(f"Created knowledge entity: {entity.id}")
         return entity
 
-    async def get_knowledge(self, knowledge_id: str) -> Optional[KnowledgeEntity]:
+    async def get_knowledge(self, knowledge_id: str) -> KnowledgeEntity | None:
         """Get knowledge entity by ID"""
         query = "SELECT * FROM foundational_knowledge WHERE id = ?"
         row = self._fetchone(query, (knowledge_id,))
@@ -178,12 +175,12 @@ class StorageAdapter:
 
     async def list_knowledge(
         self,
-        classification: Optional[str] = None,
-        category: Optional[str] = None,
+        classification: str | None = None,
+        category: str | None = None,
         is_active: bool = True,
         limit: int = 100,
         offset: int = 0,
-    ) -> List[KnowledgeEntity]:
+    ) -> list[KnowledgeEntity]:
         """List knowledge entities with filters"""
         query = "SELECT * FROM foundational_knowledge WHERE 1=1"
         params = []
@@ -206,7 +203,7 @@ class StorageAdapter:
         rows = self._fetchall(query, tuple(params))
         return [self._row_to_entity(row) for row in rows]
 
-    async def search_knowledge(self, query_text: str) -> List[KnowledgeEntity]:
+    async def search_knowledge(self, query_text: str) -> list[KnowledgeEntity]:
         """Search knowledge entities"""
         # Simple text search - in production, use full-text search
         query = """
@@ -248,7 +245,7 @@ class StorageAdapter:
         )
         return version
 
-    async def get_versions(self, knowledge_id: str) -> List[KnowledgeVersion]:
+    async def get_versions(self, knowledge_id: str) -> list[KnowledgeVersion]:
         """Get all versions for a knowledge entity"""
         query = """
             SELECT * FROM knowledge_versions
@@ -274,9 +271,7 @@ class StorageAdapter:
 
         return versions
 
-    async def get_version(
-        self, knowledge_id: str, version_number: int
-    ) -> Optional[KnowledgeVersion]:
+    async def get_version(self, knowledge_id: str, version_number: int) -> KnowledgeVersion | None:
         """Get specific version"""
         query = """
             SELECT * FROM knowledge_versions
@@ -346,7 +341,7 @@ class StorageAdapter:
 
     # ========== Helper Methods ==========
 
-    def _row_to_entity(self, row: Dict[str, Any]) -> KnowledgeEntity:
+    def _row_to_entity(self, row: dict[str, Any]) -> KnowledgeEntity:
         """Convert database row to KnowledgeEntity"""
         from app.knowledge.models import KnowledgeClassification, KnowledgePriority, PayReadyContext
 

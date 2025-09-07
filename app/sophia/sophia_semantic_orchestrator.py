@@ -17,7 +17,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Optional
 
 from app.integrations.connectors.base_connector import BaseConnector
 from app.memory.unified_memory_router import MemoryDomain, UnifiedMemoryRouter
@@ -70,10 +70,10 @@ class SemanticQuery:
     """Semantic query for business intelligence"""
 
     intent: str  # What the user wants to know
-    entities: List[str]  # Key entities mentioned
-    metrics: List[str]  # Metrics to analyze
-    time_range: Optional[Tuple[datetime, datetime]] = None
-    filters: Dict[str, Any] = field(default_factory=dict)
+    entities: list[str]  # Key entities mentioned
+    metrics: list[str]  # Metrics to analyze
+    time_range: Optional[tuple[datetime, datetime]] = None
+    filters: dict[str, Any] = field(default_factory=dict)
     comparison: Optional[str] = None  # e.g., "vs last quarter"
     granularity: str = "daily"  # daily, weekly, monthly, quarterly
     confidence_threshold: float = 0.7
@@ -83,10 +83,10 @@ class SemanticQuery:
 class DataGatheringPlan:
     """Plan for gathering data from multiple sources"""
 
-    sources: List[DataSourceType]
-    queries: Dict[DataSourceType, List[str]]
-    priority: Dict[DataSourceType, int]
-    dependencies: Dict[str, List[str]]
+    sources: list[DataSourceType]
+    queries: dict[DataSourceType, list[str]]
+    priority: dict[DataSourceType, int]
+    dependencies: dict[str, list[str]]
     timeout_s: int = 60
     parallel: bool = True
 
@@ -100,11 +100,11 @@ class SemanticInsight:
     description: str
     impact: str  # Business impact description
     confidence: float
-    supporting_data: List[Dict[str, Any]]
-    visualizations: List[Dict[str, Any]]
-    actions: List[str]  # Recommended actions
-    related_insights: List[str]  # IDs of related insights
-    semantic_tags: Set[str]
+    supporting_data: list[dict[str, Any]]
+    visualizations: list[dict[str, Any]]
+    actions: list[str]  # Recommended actions
+    related_insights: list[str]  # IDs of related insights
+    semantic_tags: set[str]
     timestamp: datetime = field(default_factory=datetime.now)
 
 
@@ -117,7 +117,7 @@ class SemanticBusinessLayer:
         self.metric_definitions = self._load_metric_definitions()
         self.industry_benchmarks = {}
 
-    def _load_business_ontology(self) -> Dict[str, Any]:
+    def _load_business_ontology(self) -> dict[str, Any]:
         """Load business domain ontology"""
         return {
             "sales": {
@@ -142,7 +142,7 @@ class SemanticBusinessLayer:
             },
         }
 
-    def _load_metric_definitions(self) -> Dict[str, Any]:
+    def _load_metric_definitions(self) -> dict[str, Any]:
         """Load standard metric definitions"""
         return {
             "arr": {
@@ -180,7 +180,7 @@ class SemanticBusinessLayer:
         query_lower = query.lower()
 
         # Check against ontology
-        for domain, info in self.business_ontology.items():
+        for _domain, info in self.business_ontology.items():
             for entity in info["entities"]:
                 if entity in query_lower:
                     entities.append(entity)
@@ -204,7 +204,7 @@ class SemanticBusinessLayer:
             comparison=comparison,
         )
 
-    def _extract_time_range(self, query: str) -> Optional[Tuple[datetime, datetime]]:
+    def _extract_time_range(self, query: str) -> Optional[tuple[datetime, datetime]]:
         """Extract time range from query"""
         now = datetime.now()
         query_lower = query.lower()
@@ -265,7 +265,7 @@ class InsightSynthesizer:
         self.orchestrator = orchestrator
         self.insight_patterns = self._load_insight_patterns()
 
-    def _load_insight_patterns(self) -> Dict[InsightType, Any]:
+    def _load_insight_patterns(self) -> dict[InsightType, Any]:
         """Load patterns for different insight types"""
         return {
             InsightType.TREND: {
@@ -291,9 +291,9 @@ class InsightSynthesizer:
 
     async def synthesize(
         self,
-        data_sources: Dict[DataSourceType, Any],
+        data_sources: dict[DataSourceType, Any],
         semantic_query: SemanticQuery,
-    ) -> List[SemanticInsight]:
+    ) -> list[SemanticInsight]:
         """Synthesize insights from multiple data sources"""
         insights = []
 
@@ -329,8 +329,8 @@ class InsightSynthesizer:
         return ranked_insights
 
     async def _detect_trends(
-        self, data_sources: Dict[DataSourceType, Any], query: SemanticQuery
-    ) -> List[SemanticInsight]:
+        self, data_sources: dict[DataSourceType, Any], query: SemanticQuery
+    ) -> list[SemanticInsight]:
         """Detect trends in data"""
         insights = []
 
@@ -368,8 +368,8 @@ class InsightSynthesizer:
         return insights
 
     async def _detect_anomalies(
-        self, data_sources: Dict[DataSourceType, Any], query: SemanticQuery
-    ) -> List[SemanticInsight]:
+        self, data_sources: dict[DataSourceType, Any], query: SemanticQuery
+    ) -> list[SemanticInsight]:
         """Detect anomalies in data"""
         insights = []
 
@@ -379,8 +379,8 @@ class InsightSynthesizer:
         return insights
 
     async def _find_correlations(
-        self, data_sources: Dict[DataSourceType, Any], query: SemanticQuery
-    ) -> List[SemanticInsight]:
+        self, data_sources: dict[DataSourceType, Any], query: SemanticQuery
+    ) -> list[SemanticInsight]:
         """Find correlations between metrics"""
         insights = []
 
@@ -390,8 +390,8 @@ class InsightSynthesizer:
         return insights
 
     async def _generate_predictions(
-        self, data_sources: Dict[DataSourceType, Any], query: SemanticQuery
-    ) -> List[SemanticInsight]:
+        self, data_sources: dict[DataSourceType, Any], query: SemanticQuery
+    ) -> list[SemanticInsight]:
         """Generate predictive insights"""
         insights = []
 
@@ -402,10 +402,10 @@ class InsightSynthesizer:
 
     async def _identify_opportunities(
         self,
-        data_sources: Dict[DataSourceType, Any],
+        data_sources: dict[DataSourceType, Any],
         query: SemanticQuery,
-        existing_insights: List[SemanticInsight],
-    ) -> List[SemanticInsight]:
+        existing_insights: list[SemanticInsight],
+    ) -> list[SemanticInsight]:
         """Identify business opportunities"""
         insights = []
 
@@ -429,13 +429,13 @@ class InsightSynthesizer:
         return insights
 
     def _extract_metric_data(
-        self, data_sources: Dict[DataSourceType, Any], metric: str
-    ) -> List[float]:
+        self, data_sources: dict[DataSourceType, Any], metric: str
+    ) -> list[float]:
         """Extract metric data from sources"""
         # Simplified implementation
         return [float(i) for i in range(10)]  # Mock data
 
-    def _calculate_trend(self, data: List[float]) -> float:
+    def _calculate_trend(self, data: list[float]) -> float:
         """Calculate trend direction and strength"""
         # Simplified linear trend
         if not data:
@@ -451,7 +451,7 @@ class InsightSynthesizer:
         else:
             return "Moderate impact worth monitoring"
 
-    def _generate_trend_actions(self, metric: str, trend: float) -> List[str]:
+    def _generate_trend_actions(self, metric: str, trend: float) -> list[str]:
         """Generate recommended actions based on trend"""
         actions = []
 
@@ -474,21 +474,19 @@ class InsightSynthesizer:
 
         return actions
 
-    def _has_sufficient_data(self, data_sources: Dict[DataSourceType, Any]) -> bool:
+    def _has_sufficient_data(self, data_sources: dict[DataSourceType, Any]) -> bool:
         """Check if we have sufficient data for predictions"""
         # Simplified check
         return len(data_sources) >= 2
 
-    def _validate_insights(self, insights: List[SemanticInsight]) -> List[SemanticInsight]:
+    def _validate_insights(self, insights: list[SemanticInsight]) -> list[SemanticInsight]:
         """Validate and cross-reference insights"""
         validated = []
 
         for insight in insights:
             # Check for contradictions
-            contradicts = False
             for other in insights:
                 if other != insight and self._contradicts(insight, other):
-                    contradicts = True
                     insight.confidence *= 0.7  # Reduce confidence
 
             if insight.confidence >= 0.5:  # Minimum confidence threshold
@@ -501,7 +499,7 @@ class InsightSynthesizer:
         # Simplified contradiction check
         return False
 
-    def _rank_insights(self, insights: List[SemanticInsight]) -> List[SemanticInsight]:
+    def _rank_insights(self, insights: list[SemanticInsight]) -> list[SemanticInsight]:
         """Rank insights by importance"""
         return sorted(
             insights,
@@ -566,11 +564,11 @@ class SophiaSemanticOrchestrator(BaseOrchestrator):
         self.active_persona = self.persona_manager.activate_persona("sophia")
 
         # Data source connectors
-        self.data_sources: Dict[DataSourceType, BaseConnector] = {}
+        self.data_sources: dict[DataSourceType, BaseConnector] = {}
         self._initialize_data_sources()
 
         # Cache for insights
-        self.insight_cache: Dict[str, SemanticInsight] = {}
+        self.insight_cache: dict[str, SemanticInsight] = {}
 
         logger.info("Initialized Sophia Semantic Orchestrator")
 
@@ -595,7 +593,7 @@ class SophiaSemanticOrchestrator(BaseOrchestrator):
     async def process_query(
         self,
         query: str,
-        context: Optional[Dict[str, Any]] = None,
+        context: Optional[dict[str, Any]] = None,
     ) -> InsightReport:
         """
         Process a business intelligence query
@@ -624,7 +622,7 @@ class SophiaSemanticOrchestrator(BaseOrchestrator):
             ),
             constraints=["accuracy", "timeliness", "actionability"],
         )
-        adapted_persona = self.active_persona.adapt_to_context(persona_context)
+        self.active_persona.adapt_to_context(persona_context)
 
         # Create data gathering plan
         gathering_plan = self._create_gathering_plan(semantic_query)
@@ -691,7 +689,7 @@ class SophiaSemanticOrchestrator(BaseOrchestrator):
             parallel=True,
         )
 
-    async def _gather_multi_source_data(self, plan: DataGatheringPlan) -> Dict[DataSourceType, Any]:
+    async def _gather_multi_source_data(self, plan: DataGatheringPlan) -> dict[DataSourceType, Any]:
         """Gather data from multiple sources according to plan"""
         results = {}
 
@@ -720,7 +718,7 @@ class SophiaSemanticOrchestrator(BaseOrchestrator):
 
         return results
 
-    async def _fetch_from_source(self, source: DataSourceType, queries: List[str]) -> Any:
+    async def _fetch_from_source(self, source: DataSourceType, queries: list[str]) -> Any:
         """Fetch data from a specific source"""
         # This would use actual connectors
         # Returning mock data for now
@@ -733,8 +731,8 @@ class SophiaSemanticOrchestrator(BaseOrchestrator):
     def _generate_insight_report(
         self,
         query: SemanticQuery,
-        insights: List[SemanticInsight],
-        data_sources: Dict[DataSourceType, Any],
+        insights: list[SemanticInsight],
+        data_sources: dict[DataSourceType, Any],
     ) -> InsightReport:
         """Generate comprehensive insight report"""
 
@@ -813,7 +811,7 @@ class SophiaSemanticOrchestrator(BaseOrchestrator):
         )
 
     def _create_executive_summary(
-        self, query: SemanticQuery, insights: List[SemanticInsight]
+        self, query: SemanticQuery, insights: list[SemanticInsight]
     ) -> str:
         """Create executive summary from insights"""
         if not insights:
@@ -847,7 +845,7 @@ class SophiaSemanticOrchestrator(BaseOrchestrator):
         self,
         query: str,
         report: InsightReport,
-        insights: List[SemanticInsight],
+        insights: list[SemanticInsight],
     ) -> None:
         """Store insights in memory for future reference"""
         memory_router = UnifiedMemoryRouter()

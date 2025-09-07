@@ -16,7 +16,6 @@ from app.knowledge.models import (
     KnowledgeClassification,
     KnowledgeEntity,
     KnowledgePriority,
-    PayReadyContext,
 )
 from app.sync.airtable_sync import AirtableSync
 

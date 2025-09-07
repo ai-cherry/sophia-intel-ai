@@ -8,12 +8,10 @@ import asyncio
 import json
 import logging
 import uuid
-from contextlib import asynccontextmanager
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Set
+from datetime import datetime
+from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from fastapi.responses import StreamingResponse
+from fastapi import APIRouter, HTTPException, Query, Request
 from sse_starlette import EventSourceResponse
 
 from ...core.agui_event_adapter import AGUIEventAdapter
@@ -32,7 +30,7 @@ router = APIRouter(prefix="/agui", tags=["AG-UI Events"])
 
 # Global instances (would be injected in real app)
 event_adapter = AGUIEventAdapter(enable_streaming=True, enable_deltas=True)
-active_connections: Dict[str, Dict[str, Any]] = {}
+active_connections: dict[str, dict[str, Any]] = {}
 performance_metrics = {
     "total_connections": 0,
     "active_connections": 0,
@@ -48,9 +46,9 @@ class AGUIStreamManager:
 
     def __init__(self, websocket_manager: Optional[WebSocketManager] = None):
         self.websocket_manager = websocket_manager
-        self.connections: Dict[str, Dict[str, Any]] = {}
-        self.domain_subscriptions: Dict[DomainContext, Set[str]] = {}
-        self.event_queues: Dict[str, asyncio.Queue] = {}
+        self.connections: dict[str, dict[str, Any]] = {}
+        self.domain_subscriptions: dict[DomainContext, set[str]] = {}
+        self.event_queues: dict[str, asyncio.Queue] = {}
         self.metrics = {
             "connections_created": 0,
             "connections_closed": 0,
@@ -67,10 +65,10 @@ class AGUIStreamManager:
         session_id: Optional[str] = None,
         user_id: Optional[str] = None,
         tenant_id: Optional[str] = None,
-        event_types: List[str] = None,
-        domains: List[str] = None,
+        event_types: list[str] = None,
+        domains: list[str] = None,
         auth_token: Optional[str] = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Create new AG-UI SSE connection"""
 
         connection_info = {
@@ -147,8 +145,8 @@ class AGUIStreamManager:
     async def broadcast_event(
         self,
         event: AGUIEvent,
-        target_domains: List[DomainContext] = None,
-        target_connections: List[str] = None,
+        target_domains: list[DomainContext] = None,
+        target_connections: list[str] = None,
     ):
         """Broadcast AG-UI event to relevant connections"""
 
@@ -248,7 +246,7 @@ class AGUIStreamManager:
         finally:
             await self.close_connection(connection_id)
 
-    def get_metrics(self) -> Dict[str, Any]:
+    def get_metrics(self) -> dict[str, Any]:
         """Get stream manager metrics"""
         return {
             **self.metrics,
@@ -488,9 +486,9 @@ async def get_active_connections():
 
 @router.post("/broadcast")
 async def broadcast_custom_event(
-    event_data: Dict[str, Any],
-    target_domains: Optional[List[str]] = Query(None, description="Target domains"),
-    target_connections: Optional[List[str]] = Query(None, description="Target connection IDs"),
+    event_data: dict[str, Any],
+    target_domains: Optional[list[str]] = Query(None, description="Target domains"),
+    target_connections: Optional[list[str]] = Query(None, description="Target connection IDs"),
 ):
     """Broadcast custom event to specified targets (admin only)"""
 
@@ -532,7 +530,7 @@ async def broadcast_custom_event(
 
 
 # WebSocket integration bridge
-async def bridge_websocket_event(ws_event: Dict[str, Any], session_id: str = None):
+async def bridge_websocket_event(ws_event: dict[str, Any], session_id: str = None):
     """Bridge WebSocket event to AG-UI stream (called from WebSocket manager)"""
 
     try:

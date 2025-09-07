@@ -3,15 +3,13 @@ Message Braiding System for Micro-Swarms
 Advanced inter-agent communication with context threading, semantic linking, and collaborative reasoning
 """
 
-import asyncio
-import json
 import logging
 import uuid
 from collections import defaultdict
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Optional
 
 from app.memory.unified_memory_router import get_memory_router
 from app.swarms.core.micro_swarm_base import AgentRole, MessageType, SwarmMessage
@@ -51,7 +49,7 @@ class BraidConnection:
     semantic_similarity: float
     temporal_proximity: float
     logical_dependency: float
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     created_at: datetime = field(default_factory=datetime.now)
 
 
@@ -61,10 +59,10 @@ class BraidThread:
 
     thread_id: str
     thread_type: BraidType
-    messages: List[SwarmMessage] = field(default_factory=list)
-    connections: List[BraidConnection] = field(default_factory=list)
-    participants: Set[AgentRole] = field(default_factory=set)
-    topic_embedding: Optional[List[float]] = None
+    messages: list[SwarmMessage] = field(default_factory=list)
+    connections: list[BraidConnection] = field(default_factory=list)
+    participants: set[AgentRole] = field(default_factory=set)
+    topic_embedding: Optional[list[float]] = None
     coherence_score: float = 0.0
     completion_status: str = "active"  # active, completed, abandoned
     created_at: datetime = field(default_factory=datetime.now)
@@ -77,8 +75,8 @@ class BraidingContext:
 
     swarm_id: str
     current_coordination_pattern: str
-    active_threads: List[BraidThread]
-    message_history: List[SwarmMessage]
+    active_threads: list[BraidThread]
+    message_history: list[SwarmMessage]
     semantic_coherence_threshold: float = 0.7
     temporal_window_ms: int = 30000  # 30 seconds
     max_thread_length: int = 20
@@ -91,12 +89,12 @@ class BraidingResult:
     """Result of braiding analysis"""
 
     message_id: str
-    assigned_threads: List[str]
-    new_connections: List[BraidConnection]
-    thread_updates: List[BraidThread]
+    assigned_threads: list[str]
+    new_connections: list[BraidConnection]
+    thread_updates: list[BraidThread]
     braiding_confidence: float
     reasoning: str
-    suggested_responses: List[Dict[str, Any]] = field(default_factory=list)
+    suggested_responses: list[dict[str, Any]] = field(default_factory=list)
 
 
 class MessageBraider:
@@ -110,17 +108,17 @@ class MessageBraider:
         self.memory = get_memory_router()
 
         # Active braids
-        self.active_threads: Dict[str, BraidThread] = {}
-        self.message_index: Dict[str, SwarmMessage] = {}
-        self.connection_graph: Dict[str, List[BraidConnection]] = defaultdict(list)
+        self.active_threads: dict[str, BraidThread] = {}
+        self.message_index: dict[str, SwarmMessage] = {}
+        self.connection_graph: dict[str, list[BraidConnection]] = defaultdict(list)
 
         # Semantic analysis
-        self.topic_embeddings: Dict[str, List[float]] = {}
-        self.semantic_cache: Dict[Tuple[str, str], float] = {}
+        self.topic_embeddings: dict[str, list[float]] = {}
+        self.semantic_cache: dict[tuple[str, str], float] = {}
 
         # Pattern detection
-        self.debate_patterns: List[Dict[str, Any]] = []
-        self.consensus_indicators: List[Dict[str, Any]] = []
+        self.debate_patterns: list[dict[str, Any]] = []
+        self.consensus_indicators: list[dict[str, Any]] = []
 
         logger.info(f"Message braider initialized for swarm {context.swarm_id}")
 
@@ -194,7 +192,7 @@ class MessageBraider:
                 reasoning=f"Braiding failed: {str(e)}",
             )
 
-    async def _analyze_message(self, message: SwarmMessage) -> Dict[str, Any]:
+    async def _analyze_message(self, message: SwarmMessage) -> dict[str, Any]:
         """Analyze message content and context"""
 
         analysis = {
@@ -244,13 +242,13 @@ class MessageBraider:
         return analysis
 
     async def _find_relevant_threads(
-        self, message: SwarmMessage, analysis: Dict[str, Any]
-    ) -> List[BraidThread]:
+        self, message: SwarmMessage, analysis: dict[str, Any]
+    ) -> list[BraidThread]:
         """Find threads relevant to the current message"""
 
         relevant_threads = []
 
-        for thread_id, thread in self.active_threads.items():
+        for _thread_id, thread in self.active_threads.items():
             relevance_score = await self._calculate_thread_relevance(message, thread, analysis)
 
             if relevance_score > 0.3:  # Minimum relevance threshold
@@ -263,7 +261,7 @@ class MessageBraider:
         return [thread for thread, score in relevant_threads[:5]]
 
     async def _calculate_thread_relevance(
-        self, message: SwarmMessage, thread: BraidThread, analysis: Dict[str, Any]
+        self, message: SwarmMessage, thread: BraidThread, analysis: dict[str, Any]
     ) -> float:
         """Calculate relevance between message and thread"""
 
@@ -309,16 +307,11 @@ class MessageBraider:
         return sum(relevance_factors)
 
     async def _determine_braiding_pattern(
-        self, message: SwarmMessage, relevant_threads: List[BraidThread]
+        self, message: SwarmMessage, relevant_threads: list[BraidThread]
     ) -> BraidType:
         """Determine the braiding pattern for this message"""
 
         # Pattern indicators
-        is_response = message.message_type in [
-            MessageType.CHALLENGE,
-            MessageType.VALIDATION,
-            MessageType.SYNTHESIS,
-        ]
         is_new_topic = len(relevant_threads) == 0
         is_debate_message = message.message_type == MessageType.CHALLENGE
         is_consensus_seeking = (
@@ -340,8 +333,8 @@ class MessageBraider:
             return BraidType.SEQUENTIAL
 
     async def _create_connections(
-        self, message: SwarmMessage, relevant_threads: List[BraidThread], pattern: BraidType
-    ) -> List[BraidConnection]:
+        self, message: SwarmMessage, relevant_threads: list[BraidThread], pattern: BraidType
+    ) -> list[BraidConnection]:
         """Create connections between messages based on braiding pattern"""
 
         connections = []
@@ -384,9 +377,9 @@ class MessageBraider:
     async def _update_threads(
         self,
         message: SwarmMessage,
-        relevant_threads: List[BraidThread],
-        connections: List[BraidConnection],
-    ) -> List[BraidThread]:
+        relevant_threads: list[BraidThread],
+        connections: list[BraidConnection],
+    ) -> list[BraidThread]:
         """Update threads with new message and connections"""
 
         updated_threads = []
@@ -465,12 +458,15 @@ class MessageBraider:
             factors.append(0.4 * semantic_sim)
 
         # Role relationship
-        if message1.sender_role and message2.sender_role:
-            if (
+        if (
+            message1.sender_role
+            and message2.sender_role
+            and (
                 message1.sender_role == message2.recipient_role
                 or message2.sender_role == message1.recipient_role
-            ):
-                factors.append(0.3)  # Direct response relationship
+            )
+        ):
+            factors.append(0.3)  # Direct response relationship
 
         # Pattern-specific bonuses
         if pattern == BraidType.DEBATE:
@@ -486,7 +482,7 @@ class MessageBraider:
         return min(1.0, sum(factors))
 
     def _calculate_braiding_confidence(
-        self, message: SwarmMessage, connections: List[BraidConnection], threads: List[BraidThread]
+        self, message: SwarmMessage, connections: list[BraidConnection], threads: list[BraidThread]
     ) -> float:
         """Calculate confidence in the braiding decisions"""
 
@@ -513,8 +509,8 @@ class MessageBraider:
         return min(1.0, sum(confidence_factors))
 
     async def _generate_response_suggestions(
-        self, message: SwarmMessage, threads: List[BraidThread]
-    ) -> List[Dict[str, Any]]:
+        self, message: SwarmMessage, threads: list[BraidThread]
+    ) -> list[dict[str, Any]]:
         """Generate suggested responses based on braiding context"""
 
         suggestions = []
@@ -554,7 +550,7 @@ class MessageBraider:
 
         return suggestions
 
-    async def _get_content_embedding(self, content: str) -> List[float]:
+    async def _get_content_embedding(self, content: str) -> list[float]:
         """Get embedding for content (simplified implementation)"""
         # In production, this would use an actual embedding model
         # For now, return a simple hash-based embedding
@@ -564,7 +560,7 @@ class MessageBraider:
         return [float(int(content_hash[i : i + 2], 16)) / 255.0 for i in range(0, 32, 2)]
 
     async def _calculate_semantic_similarity(
-        self, embedding1: List[float], embedding2: List[float]
+        self, embedding1: list[float], embedding2: list[float]
     ) -> float:
         """Calculate semantic similarity between embeddings"""
         if len(embedding1) != len(embedding2):
@@ -645,8 +641,8 @@ class MessageBraider:
         return (type1, type2) in related_pairs or (type2, type1) in related_pairs
 
     def _blend_embeddings(
-        self, embedding1: List[float], embedding2: List[float], alpha: float
-    ) -> List[float]:
+        self, embedding1: list[float], embedding2: list[float], alpha: float
+    ) -> list[float]:
         """Blend two embeddings with given weight"""
         return [alpha * e1 + (1 - alpha) * e2 for e1, e2 in zip(embedding1, embedding2)]
 
@@ -693,7 +689,7 @@ class MessageBraider:
 
         return sum(coherence_factors) / len(coherence_factors) if coherence_factors else 0.5
 
-    def get_thread_summary(self, thread_id: str) -> Optional[Dict[str, Any]]:
+    def get_thread_summary(self, thread_id: str) -> Optional[dict[str, Any]]:
         """Get summary of a specific thread"""
         if thread_id not in self.active_threads:
             return None
@@ -713,7 +709,7 @@ class MessageBraider:
             "updated_at": thread.updated_at.isoformat(),
         }
 
-    def get_braiding_statistics(self) -> Dict[str, Any]:
+    def get_braiding_statistics(self) -> dict[str, Any]:
         """Get comprehensive braiding statistics"""
 
         stats = {

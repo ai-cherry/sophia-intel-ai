@@ -9,7 +9,7 @@ import os
 import time
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -206,7 +206,7 @@ class HybridProviderManager:
         system_prompt: Optional[str] = None,
         temperature: float = 0.7,
         max_retries: int = 2,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Complete a prompt with automatic provider selection and fallback
 
@@ -250,7 +250,7 @@ class HybridProviderManager:
 
     async def _execute_completion(
         self, provider_name: str, prompt: str, system_prompt: Optional[str], temperature: float
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Execute completion with a specific provider using best method"""
         config = self.PROVIDERS[provider_name]
 
@@ -297,7 +297,7 @@ class HybridProviderManager:
         }
 
     async def _execute_direct(
-        self, provider_name: str, messages: List[Dict], config: ProviderConfig, temperature: float
+        self, provider_name: str, messages: list[dict], config: ProviderConfig, temperature: float
     ) -> Any:
         """Execute using direct API"""
         loop = asyncio.get_event_loop()
@@ -348,7 +348,7 @@ class HybridProviderManager:
             raise Exception(f"Direct API not implemented for {provider_name}")
 
     async def _execute_portkey(
-        self, provider_name: str, messages: List[Dict], config: ProviderConfig, temperature: float
+        self, provider_name: str, messages: list[dict], config: ProviderConfig, temperature: float
     ) -> Any:
         """Execute using Portkey"""
         loop = asyncio.get_event_loop()
@@ -391,7 +391,7 @@ class HybridProviderManager:
         wait_time = 2**attempt
         await asyncio.sleep(wait_time)
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get usage statistics"""
         stats = {
             "total_requests": self.request_count,

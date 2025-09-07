@@ -18,7 +18,7 @@ import logging
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 import numpy as np
 
@@ -70,9 +70,9 @@ class CodeChunk:
     end_line: int
     file_path: str
     chunk_type: str  # function, class, module, etc.
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     parent_chunk: Optional[str] = None
-    child_chunks: List[str] = field(default_factory=list)
+    child_chunks: list[str] = field(default_factory=list)
 
     @property
     def id(self) -> str:
@@ -88,11 +88,11 @@ class EmbeddingResult:
     chunk_id: str
     embedding: np.ndarray
     embedding_type: EmbeddingType
-    metadata: Dict[str, Any]
+    metadata: dict[str, Any]
     timestamp: str
     model: str
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for storage"""
         return {
             "chunk_id": self.chunk_id,
@@ -110,7 +110,7 @@ class CodeChunker:
     def __init__(self, config: EmbeddingConfig):
         self.config = config
 
-    def chunk_file(self, file_path: Path, content: str) -> List[CodeChunk]:
+    def chunk_file(self, file_path: Path, content: str) -> list[CodeChunk]:
         """Chunk a file based on configured strategy"""
         if self.config.strategy == ChunkingStrategy.AST_BASED:
             return self._ast_based_chunking(file_path, content)
@@ -123,7 +123,7 @@ class CodeChunker:
         else:
             return self._fixed_size_chunking(file_path, content)
 
-    def _ast_based_chunking(self, file_path: Path, content: str) -> List[CodeChunk]:
+    def _ast_based_chunking(self, file_path: Path, content: str) -> list[CodeChunk]:
         """Chunk based on AST structure"""
         import ast
 
@@ -213,7 +213,7 @@ class CodeChunker:
 
         return chunks
 
-    def _semantic_chunking(self, file_path: Path, content: str) -> List[CodeChunk]:
+    def _semantic_chunking(self, file_path: Path, content: str) -> list[CodeChunk]:
         """Chunk based on semantic boundaries"""
         chunks = []
         lines = content.split("\n")
@@ -282,7 +282,7 @@ class CodeChunker:
 
         return chunks
 
-    def _sliding_window_chunking(self, file_path: Path, content: str) -> List[CodeChunk]:
+    def _sliding_window_chunking(self, file_path: Path, content: str) -> list[CodeChunk]:
         """Create overlapping chunks"""
         chunks = []
         lines = content.split("\n")
@@ -304,7 +304,7 @@ class CodeChunker:
 
         return chunks
 
-    def _hierarchical_chunking(self, file_path: Path, content: str) -> List[CodeChunk]:
+    def _hierarchical_chunking(self, file_path: Path, content: str) -> list[CodeChunk]:
         """Create multi-level chunks"""
         chunks = []
 
@@ -340,7 +340,7 @@ class CodeChunker:
 
         return chunks
 
-    def _fixed_size_chunking(self, file_path: Path, content: str) -> List[CodeChunk]:
+    def _fixed_size_chunking(self, file_path: Path, content: str) -> list[CodeChunk]:
         """Simple fixed-size chunking"""
         chunks = []
         lines = content.split("\n")
@@ -367,7 +367,7 @@ class EmbeddingGenerator:
 
     def __init__(self, config: EmbeddingConfig):
         self.config = config
-        self._embedding_cache: Dict[str, np.ndarray] = {}
+        self._embedding_cache: dict[str, np.ndarray] = {}
 
     async def generate_embedding(
         self, chunk: CodeChunk, embedding_type: EmbeddingType
@@ -509,7 +509,7 @@ Content:
 
     async def generate_multi_modal_embeddings(
         self, chunk: CodeChunk
-    ) -> Dict[EmbeddingType, EmbeddingResult]:
+    ) -> dict[EmbeddingType, EmbeddingResult]:
         """Generate multiple types of embeddings for a chunk"""
         results = {}
 
@@ -532,8 +532,8 @@ class EmbeddingIndex:
 
     def __init__(self, dimensions: int = 3072):
         self.dimensions = dimensions
-        self.embeddings: Dict[str, EmbeddingResult] = {}
-        self.type_indices: Dict[EmbeddingType, List[str]] = {}
+        self.embeddings: dict[str, EmbeddingResult] = {}
+        self.type_indices: dict[EmbeddingType, list[str]] = {}
 
     def add_embedding(self, result: EmbeddingResult) -> None:
         """Add embedding to index"""
@@ -550,7 +550,7 @@ class EmbeddingIndex:
         embedding_type: Optional[EmbeddingType] = None,
         top_k: int = 10,
         threshold: float = 0.7,
-    ) -> List[Tuple[str, float, EmbeddingResult]]:
+    ) -> list[tuple[str, float, EmbeddingResult]]:
         """Search for similar embeddings"""
         results = []
 
@@ -612,7 +612,7 @@ class EmbeddingIndex:
         self.embeddings = {}
         self.type_indices = {}
 
-        for chunk_id, result_dict in data["embeddings"].items():
+        for _chunk_id, result_dict in data["embeddings"].items():
             result = EmbeddingResult(
                 chunk_id=result_dict["chunk_id"],
                 embedding=np.array(result_dict["embedding"]),
@@ -648,7 +648,7 @@ class MultiModalEmbeddingSystem:
             embeddings = await self.generator.generate_multi_modal_embeddings(chunk)
 
             # Add to index
-            for emb_type, result in embeddings.items():
+            for _emb_type, result in embeddings.items():
                 self.index.add_embedding(result)
                 count += 1
 
@@ -675,7 +675,7 @@ class MultiModalEmbeddingSystem:
         query: str,
         embedding_type: Optional[EmbeddingType] = None,
         top_k: int = 10,
-    ) -> List[Tuple[str, float, Dict[str, Any]]]:
+    ) -> list[tuple[str, float, dict[str, Any]]]:
         """Search for relevant code chunks"""
         # Generate query embedding
         query_chunk = CodeChunk(

@@ -15,15 +15,13 @@ Features:
 - Compatible with Claude, Cursor, Cline, and other AI assistants
 """
 
-import asyncio
-import json
+import contextlib
 import logging
-import time
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Optional
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException, Query, Response
-from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi import APIRouter, HTTPException, Query
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from app.mcp.optimized_mcp_orchestrator import (
@@ -44,7 +42,7 @@ class MCPRequest(BaseModel):
     """Generic MCP request"""
 
     method: str = Field(..., description="MCP method to execute")
-    params: Dict[str, Any] = Field(default_factory=dict, description="Method parameters")
+    params: dict[str, Any] = Field(default_factory=dict, description="Method parameters")
     client_id: Optional[str] = Field("default", description="Client identifier")
     domain: Optional[str] = Field(None, description="Preferred domain (artemis, sophia, shared)")
     timeout: Optional[int] = Field(30, description="Request timeout in seconds")
@@ -57,7 +55,7 @@ class MCPResponse(BaseModel):
     success: bool = Field(..., description="Whether the request succeeded")
     data: Optional[Any] = Field(None, description="Response data")
     error: Optional[str] = Field(None, description="Error message if failed")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Request metadata")
+    metadata: dict[str, Any] = Field(default_factory=dict, description="Request metadata")
 
 
 class MCPHealthResponse(BaseModel):
@@ -65,10 +63,10 @@ class MCPHealthResponse(BaseModel):
 
     status: str
     timestamp: str
-    orchestrator: Dict[str, Any]
-    registry: Dict[str, Any]
-    connections: Dict[str, Any]
-    capabilities: Dict[str, List[str]]
+    orchestrator: dict[str, Any]
+    registry: dict[str, Any]
+    connections: dict[str, Any]
+    capabilities: dict[str, list[str]]
 
 
 # Global orchestrator instance will be initialized on startup
@@ -88,7 +86,7 @@ async def mcp_health():
     """Get MCP system health status"""
     try:
         orchestrator = await get_mcp_orchestrator()
-        health_status = await orchestrator.get_health_status()
+        await orchestrator.get_health_status()
 
         return MCPHealthResponse(
             status="healthy",
@@ -154,10 +152,8 @@ async def mcp_git(request: MCPRequest) -> JSONResponse:
         # Git operations typically belong to Artemis domain
         domain = MCPDomain.ARTEMIS
         if request.domain:
-            try:
+            with contextlib.suppress(ValueError):
                 domain = MCPDomain(request.domain.lower())
-            except ValueError:
-                pass
 
         result = await orchestrator.execute_mcp_request(
             capability=MCPCapabilityType.GIT,
@@ -191,10 +187,8 @@ async def mcp_memory(request: MCPRequest) -> JSONResponse:
         # Memory operations typically belong to Sophia domain
         domain = MCPDomain.SOPHIA
         if request.domain:
-            try:
+            with contextlib.suppress(ValueError):
                 domain = MCPDomain(request.domain.lower())
-            except ValueError:
-                pass
 
         result = await orchestrator.execute_mcp_request(
             capability=MCPCapabilityType.MEMORY,
@@ -228,10 +222,8 @@ async def mcp_embeddings(request: MCPRequest) -> JSONResponse:
         # Embeddings are shared infrastructure
         domain = MCPDomain.SHARED
         if request.domain:
-            try:
+            with contextlib.suppress(ValueError):
                 domain = MCPDomain(request.domain.lower())
-            except ValueError:
-                pass
 
         result = await orchestrator.execute_mcp_request(
             capability=MCPCapabilityType.EMBEDDINGS,
@@ -397,10 +389,8 @@ async def mcp_execute(
         # Parse domain
         domain = None
         if request.domain:
-            try:
+            with contextlib.suppress(ValueError):
                 domain = MCPDomain(request.domain.lower())
-            except ValueError:
-                pass
 
         result = await orchestrator.execute_mcp_request(
             capability=capability_type,
@@ -431,7 +421,7 @@ async def mcp_execute(
 async def get_connections():
     """Get current MCP connections"""
     try:
-        orchestrator = await get_mcp_orchestrator()
+        await get_mcp_orchestrator()
 
         # Mock connection data since the new orchestrator doesn't have registry.servers
         return JSONResponse(
@@ -456,7 +446,7 @@ async def get_connections():
 async def get_servers():
     """Get MCP server status"""
     try:
-        orchestrator = await get_orchestrator()
+        await get_orchestrator()
 
         # Mock server data since the optimized orchestrator doesn't have registry.servers
         servers = {
@@ -540,7 +530,7 @@ async def get_capabilities():
     """Get available MCP capabilities"""
     try:
         orchestrator = await get_mcp_orchestrator()
-        health = await orchestrator.get_health_status()
+        await orchestrator.get_health_status()
 
         capabilities = {}
         for capability_type in MCPCapabilityType:
@@ -582,7 +572,7 @@ def get_capability_description(capability: MCPCapabilityType) -> str:
     return descriptions.get(capability, "Unknown capability")
 
 
-def get_capability_endpoints(capability: MCPCapabilityType) -> List[str]:
+def get_capability_endpoints(capability: MCPCapabilityType) -> list[str]:
     """Get available endpoints for capability"""
     endpoints = {
         MCPCapabilityType.FILESYSTEM: [

@@ -8,13 +8,12 @@ import hashlib
 import json
 import logging
 import time
-import uuid
 from copy import deepcopy
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -54,8 +53,8 @@ class PromptMetadata:
     domain: str  # sophia, artemis, etc.
     agent_name: Optional[str] = None
     task_type: Optional[str] = None
-    business_context: Optional[List[str]] = None
-    performance_tags: Optional[List[str]] = None
+    business_context: Optional[list[str]] = None
+    performance_tags: Optional[list[str]] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
     author: Optional[str] = None
@@ -75,8 +74,8 @@ class PromptVersion:
     commit_message: Optional[str] = None
     status: PromptStatus = PromptStatus.DRAFT
     created_at: Optional[datetime] = None
-    performance_metrics: Optional[Dict[str, float]] = None
-    a_b_test_data: Optional[Dict[str, Any]] = None
+    performance_metrics: Optional[dict[str, float]] = None
+    a_b_test_data: Optional[dict[str, Any]] = None
 
     def __post_init__(self):
         if self.created_at is None:
@@ -86,12 +85,12 @@ class PromptVersion:
         if self.a_b_test_data is None:
             self.a_b_test_data = {}
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for storage"""
         return asdict(self)
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "PromptVersion":
+    def from_dict(cls, data: dict[str, Any]) -> "PromptVersion":
         """Create from dictionary"""
         # Handle datetime conversion
         if "created_at" in data and isinstance(data["created_at"], str):
@@ -124,12 +123,12 @@ class PromptBranch:
     is_merged: bool = False
     merged_at: Optional[datetime] = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for storage"""
         return asdict(self)
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "PromptBranch":
+    def from_dict(cls, data: dict[str, Any]) -> "PromptBranch":
         """Create from dictionary"""
         # Handle datetime conversion
         for field in ["created_at", "merged_at"]:
@@ -144,8 +143,8 @@ class PromptDiff:
 
     from_version: str
     to_version: str
-    content_diff: List[str]
-    metadata_diff: Dict[str, Any]
+    content_diff: list[str]
+    metadata_diff: dict[str, Any]
     similarity_score: float
     change_summary: str
 
@@ -162,9 +161,9 @@ class ABTestConfig:
     name: str
     description: str
     control_version: str
-    test_versions: List[str]
-    traffic_split: Dict[str, float]  # version_id -> percentage
-    success_metrics: List[str]
+    test_versions: list[str]
+    traffic_split: dict[str, float]  # version_id -> percentage
+    success_metrics: list[str]
     start_time: datetime
     end_time: Optional[datetime] = None
     status: str = "active"  # active, paused, completed
@@ -180,8 +179,8 @@ class ABTestResult:
     version_id: str
     sample_size: int
     success_rate: float
-    confidence_interval: Tuple[float, float]
-    metrics: Dict[str, float]
+    confidence_interval: tuple[float, float]
+    metrics: dict[str, float]
     statistical_significance: bool
     winner: bool = False
 
@@ -197,13 +196,13 @@ class PromptLibrary:
         self.storage_path.mkdir(parents=True, exist_ok=True)
 
         # In-memory storage for fast access
-        self.prompts: Dict[str, List[PromptVersion]] = {}
-        self.branches: Dict[str, List[PromptBranch]] = {}
-        self.ab_tests: Dict[str, ABTestConfig] = {}
-        self.ab_results: Dict[str, List[ABTestResult]] = {}
+        self.prompts: dict[str, list[PromptVersion]] = {}
+        self.branches: dict[str, list[PromptBranch]] = {}
+        self.ab_tests: dict[str, ABTestConfig] = {}
+        self.ab_results: dict[str, list[ABTestResult]] = {}
 
         # Performance tracking
-        self.performance_cache: Dict[str, Dict[str, float]] = {}
+        self.performance_cache: dict[str, dict[str, float]] = {}
 
         # Load existing data
         self._load_from_storage()
@@ -511,7 +510,7 @@ class PromptLibrary:
 
     def get_prompt_history(
         self, prompt_id: str, branch: Optional[str] = None
-    ) -> List[PromptVersion]:
+    ) -> list[PromptVersion]:
         """Get version history for a prompt"""
         if prompt_id not in self.prompts:
             return []
@@ -522,7 +521,7 @@ class PromptLibrary:
 
         return sorted(versions, key=lambda v: v.created_at, reverse=True)
 
-    def get_branches(self, prompt_id: str) -> List[PromptBranch]:
+    def get_branches(self, prompt_id: str) -> list[PromptBranch]:
         """Get all branches for a prompt"""
         if prompt_id not in self.branches:
             return []
@@ -534,12 +533,12 @@ class PromptLibrary:
         domain: Optional[str] = None,
         agent_name: Optional[str] = None,
         prompt_type: Optional[PromptType] = None,
-        tags: Optional[List[str]] = None,
-    ) -> List[PromptVersion]:
+        tags: Optional[list[str]] = None,
+    ) -> list[PromptVersion]:
         """Search prompts with various filters"""
 
         results = []
-        for prompt_id, versions in self.prompts.items():
+        for _prompt_id, versions in self.prompts.items():
             for version in versions:
                 # Apply filters
                 if domain and version.metadata.domain != domain:
@@ -592,7 +591,7 @@ class PromptLibrary:
         test_id: str,
         version_id: str,
         success: bool,
-        metrics: Optional[Dict[str, float]] = None,
+        metrics: Optional[dict[str, float]] = None,
     ):
         """Record a single result for an A/B test"""
         if test_id not in self.ab_tests:
@@ -612,7 +611,7 @@ class PromptLibrary:
 
         self.ab_results[test_id].append(result_data)
 
-    def get_ab_test_results(self, test_id: str) -> Dict[str, ABTestResult]:
+    def get_ab_test_results(self, test_id: str) -> dict[str, ABTestResult]:
         """Get current results for an A/B test"""
         if test_id not in self.ab_tests:
             raise ValueError(f"A/B test {test_id} does not exist")
@@ -646,7 +645,7 @@ class PromptLibrary:
 
         return results
 
-    def update_performance_metrics(self, version_id: str, metrics: Dict[str, float]):
+    def update_performance_metrics(self, version_id: str, metrics: dict[str, float]):
         """Update performance metrics for a prompt version"""
         # Find the version and update its metrics
         for versions in self.prompts.values():
@@ -662,7 +661,7 @@ class PromptLibrary:
 
     def get_performance_leaderboard(
         self, domain: Optional[str] = None, metric: str = "success_rate", limit: int = 10
-    ) -> List[Tuple[PromptVersion, float]]:
+    ) -> list[tuple[PromptVersion, float]]:
         """Get top performing prompts by metric"""
 
         candidates = []
@@ -676,7 +675,7 @@ class PromptLibrary:
         candidates.sort(key=lambda x: x[1], reverse=True)
         return candidates[:limit]
 
-    def export_prompts(self, prompt_ids: Optional[List[str]] = None) -> Dict[str, Any]:
+    def export_prompts(self, prompt_ids: Optional[list[str]] = None) -> dict[str, Any]:
         """Export prompts to a portable format"""
 
         export_data = {
@@ -696,7 +695,7 @@ class PromptLibrary:
 
         return export_data
 
-    def import_prompts(self, import_data: Dict[str, Any], overwrite: bool = False):
+    def import_prompts(self, import_data: dict[str, Any], overwrite: bool = False):
         """Import prompts from exported data"""
 
         for prompt_id, versions_data in import_data.get("prompts", {}).items():

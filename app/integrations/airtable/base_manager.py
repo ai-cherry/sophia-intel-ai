@@ -7,10 +7,9 @@ bases and shared data synchronization.
 
 import asyncio
 import logging
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from datetime import datetime
+from typing import Any, Optional
 
-import aiohttp
 from pyairtable import Api
 
 from .models import (
@@ -31,22 +30,22 @@ class AirtableBaseManager:
     Central manager for all Airtable bases in federated architecture
     """
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: dict[str, Any] = None):
         self.config = config or {}
-        self.bases: Dict[str, AirtableBase] = {}
-        self.api_clients: Dict[str, Api] = {}
-        self.base_schemas: Dict[str, Dict[str, Any]] = {}
+        self.bases: dict[str, AirtableBase] = {}
+        self.api_clients: dict[str, Api] = {}
+        self.base_schemas: dict[str, dict[str, Any]] = {}
 
         # Rate limiting
         self.rate_limit_per_second = 5
         self.last_request_time = datetime.now()
 
         # Caching
-        self.record_cache: Dict[str, Dict[str, AirtableRecord]] = {}
+        self.record_cache: dict[str, dict[str, AirtableRecord]] = {}
         self.cache_ttl_seconds = 300  # 5 minutes
         self.last_cache_clear = datetime.now()
 
-    async def initialize_federated_bases(self, base_configs: Dict[str, Dict[str, Any]]):
+    async def initialize_federated_bases(self, base_configs: dict[str, dict[str, Any]]):
         """Initialize all bases in federated architecture"""
         logger.info("Initializing federated Airtable architecture")
 
@@ -73,7 +72,7 @@ class AirtableBaseManager:
 
         logger.info(f"Initialized {len(self.bases)} Airtable bases")
 
-    async def _initialize_base(self, base_type: BaseType, config: Dict[str, Any]):
+    async def _initialize_base(self, base_type: BaseType, config: dict[str, Any]):
         """Initialize individual Airtable base"""
         base_id = config["base_id"]
         api_key = config["api_key"]
@@ -128,7 +127,7 @@ class AirtableBaseManager:
         except Exception as e:
             logger.error(f"Failed to load schema for base {base_id}: {e}")
 
-    async def _get_standard_schema(self, base_type: BaseType) -> Dict[str, Dict[str, Any]]:
+    async def _get_standard_schema(self, base_type: BaseType) -> dict[str, dict[str, Any]]:
         """Get standard schema for base type"""
         schemas = {
             BaseType.SHARED_CORE: {
@@ -267,7 +266,7 @@ class AirtableBaseManager:
         self,
         base_id: str,
         table_name: str,
-        record_data: Dict[str, Any],
+        record_data: dict[str, Any],
         record_type: RecordType = None,
     ) -> AirtableRecord:
         """Create new record in Airtable base"""
@@ -357,7 +356,7 @@ class AirtableBaseManager:
         base_id: str,
         table_name: str,
         record_id: str,
-        updates: Dict[str, Any],
+        updates: dict[str, Any],
         updated_by: str = "system",
     ) -> Optional[AirtableRecord]:
         """Update record in Airtable base"""
@@ -410,9 +409,9 @@ class AirtableBaseManager:
         base_id: str,
         table_name: str,
         formula: str = "",
-        sort: List[Dict[str, Any]] = None,
+        sort: list[dict[str, Any]] = None,
         max_records: int = 100,
-    ) -> List[AirtableRecord]:
+    ) -> list[AirtableRecord]:
         """Query records from Airtable base with filtering and sorting"""
         await self._rate_limit_check()
 
@@ -541,7 +540,7 @@ class AirtableBaseManager:
         category: str = "",
         business_domain: str = "",
         max_results: int = 50,
-    ) -> List[FoundationalKnowledge]:
+    ) -> list[FoundationalKnowledge]:
         """Get foundational knowledge entries for Sophia"""
         try:
             # Build filter formula
@@ -626,7 +625,7 @@ class AirtableBaseManager:
         self.last_cache_clear = now
         logger.info("Cleared expired cache entries")
 
-    async def get_base_health_status(self) -> Dict[str, Dict[str, Any]]:
+    async def get_base_health_status(self) -> dict[str, dict[str, Any]]:
         """Get health status for all bases"""
         health_status = {}
 

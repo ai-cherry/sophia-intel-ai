@@ -132,7 +132,7 @@ __all__ = [
 ]
 
 
-async def initialize_persona_system(storage_path: Optional[Path] = None) -> Dict[str, Any]:
+async def initialize_persona_system(storage_path: Optional[Path] = None) -> dict[str, Any]:
     """
     Initialize the complete persona management system.
 
@@ -148,7 +148,7 @@ async def initialize_persona_system(storage_path: Optional[Path] = None) -> Dict
         # Initialize managers
         persona_manager = get_persona_manager(storage_path)
         template_manager = get_template_manager(storage_path)
-        evolution_engine = get_evolution_engine(storage_path)
+        get_evolution_engine(storage_path)
 
         # Create base personas
         sophia = create_sophia_persona()
@@ -202,7 +202,7 @@ async def initialize_persona_system(storage_path: Optional[Path] = None) -> Dict
         return {"success": False, "error": str(e), "version": __version__}
 
 
-def get_persona_system_info() -> Dict[str, Any]:
+def get_persona_system_info() -> dict[str, Any]:
     """
     Get information about the persona system capabilities.
 
@@ -252,8 +252,8 @@ def get_persona_system_info() -> Dict[str, Any]:
 async def create_custom_persona(
     name: str,
     persona_type: PersonaType,
-    traits: Dict[str, float],
-    knowledge_areas: Dict[str, float],
+    traits: dict[str, float],
+    knowledge_areas: dict[str, float],
     **kwargs,
 ) -> Persona:
     """
@@ -286,8 +286,8 @@ async def create_custom_persona(
 
 
 async def run_persona_benchmark(
-    personas: List[Persona], benchmark_tasks: List[Dict[str, Any]]
-) -> Dict[str, Any]:
+    personas: list[Persona], benchmark_tasks: list[dict[str, Any]]
+) -> dict[str, Any]:
     """
     Run benchmark tests on personas to compare their performance.
 
@@ -324,9 +324,7 @@ async def run_persona_benchmark(
                 task_domain = TaskDomain(task.get("domain", "general"))
                 context = task.get("context", {})
 
-                prompt = await template_manager.generate_dynamic_prompt(
-                    persona, task_domain, context
-                )
+                await template_manager.generate_dynamic_prompt(persona, task_domain, context)
 
                 # Simulate task performance (in real implementation, this would call the LLM)
                 # For now, we'll estimate based on persona's expertise in the domain

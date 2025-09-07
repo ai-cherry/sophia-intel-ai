@@ -10,14 +10,11 @@ import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
-from uuid import uuid4
+from typing import Any, Optional
 
 from app.core.unified_memory import (
     MemoryContext,
     MemoryPriority,
-    MemorySearchRequest,
-    MemorySearchResult,
     unified_memory,
 )
 from app.memory.unified.execution_store import ExecutionType, execution_store
@@ -70,7 +67,7 @@ class RAGContext:
     # Retrieval parameters
     max_results: int = 10
     similarity_threshold: float = 0.7
-    include_contexts: Set[MemoryContext] = field(
+    include_contexts: set[MemoryContext] = field(
         default_factory=lambda: {
             MemoryContext.INTELLIGENCE,
             MemoryContext.KNOWLEDGE,
@@ -83,7 +80,7 @@ class RAGContext:
     synthesis_mode: ContextSynthesisMode = ContextSynthesisMode.STRUCTURED
 
     # Filtering
-    time_range: Optional[Tuple[datetime, datetime]] = None
+    time_range: Optional[tuple[datetime, datetime]] = None
     priority_threshold: MemoryPriority = MemoryPriority.LOW
     confidence_threshold: float = 0.0
 
@@ -104,7 +101,7 @@ class RAGSource:
     relevance_score: float
     confidence: float
     created_at: datetime
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -115,17 +112,17 @@ class RAGResult:
     domain: RAGDomain
 
     # Retrieved sources
-    sources: List[RAGSource]
+    sources: list[RAGSource]
     total_sources_found: int
 
     # Synthesized context
     synthesized_context: str
-    context_structure: Dict[str, Any]
+    context_structure: dict[str, Any]
 
     # Insights and analysis
-    key_insights: List[str] = field(default_factory=list)
-    cross_references: List[Dict[str, str]] = field(default_factory=list)
-    reasoning_chain: List[str] = field(default_factory=list)
+    key_insights: list[str] = field(default_factory=list)
+    cross_references: list[dict[str, str]] = field(default_factory=list)
+    reasoning_chain: list[str] = field(default_factory=list)
 
     # Metadata
     strategy_used: RAGStrategy = RAGStrategy.ADAPTIVE
@@ -244,7 +241,7 @@ class UnifiedRAGSystem:
         self,
         query: str,
         domain: RAGDomain = RAGDomain.SHARED,
-        intelligence_types: Optional[List[IntelligenceType]] = None,
+        intelligence_types: Optional[list[IntelligenceType]] = None,
     ) -> RAGResult:
         """Query specifically for intelligence insights"""
 
@@ -266,7 +263,7 @@ class UnifiedRAGSystem:
         self,
         query: str,
         domain: RAGDomain = RAGDomain.ARTEMIS,
-        execution_types: Optional[List[ExecutionType]] = None,
+        execution_types: Optional[list[ExecutionType]] = None,
     ) -> RAGResult:
         """Query execution history and context"""
 
@@ -287,7 +284,7 @@ class UnifiedRAGSystem:
         self,
         query: str,
         domain: RAGDomain = RAGDomain.SHARED,
-        pattern_types: Optional[List[PatternType]] = None,
+        pattern_types: Optional[list[PatternType]] = None,
     ) -> RAGResult:
         """Query behavioral patterns and trends"""
 
@@ -308,7 +305,7 @@ class UnifiedRAGSystem:
         self,
         query: str,
         domain: RAGDomain = RAGDomain.SHARED,
-        knowledge_types: Optional[List[KnowledgeType]] = None,
+        knowledge_types: Optional[list[KnowledgeType]] = None,
     ) -> RAGResult:
         """Query structured knowledge and facts"""
 
@@ -352,7 +349,7 @@ class UnifiedRAGSystem:
 
         return await self.retrieve_and_synthesize(context)
 
-    async def get_rag_analytics(self) -> Dict[str, Any]:
+    async def get_rag_analytics(self) -> dict[str, Any]:
         """Get RAG system analytics and performance metrics"""
 
         analytics = {
@@ -404,7 +401,7 @@ class UnifiedRAGSystem:
         else:
             return RAGStrategy.HYBRID
 
-    async def _retrieve_from_all_stores(self, context: RAGContext) -> List[RAGSource]:
+    async def _retrieve_from_all_stores(self, context: RAGContext) -> list[RAGSource]:
         """Retrieve context from all applicable memory stores"""
 
         all_sources = []
@@ -438,7 +435,7 @@ class UnifiedRAGSystem:
 
         return all_sources
 
-    async def _retrieve_from_intelligence_store(self, context: RAGContext) -> List[RAGSource]:
+    async def _retrieve_from_intelligence_store(self, context: RAGContext) -> list[RAGSource]:
         """Retrieve from intelligence store"""
 
         try:
@@ -477,7 +474,7 @@ class UnifiedRAGSystem:
             logger.error(f"Intelligence store retrieval failed: {e}")
             return []
 
-    async def _retrieve_from_execution_store(self, context: RAGContext) -> List[RAGSource]:
+    async def _retrieve_from_execution_store(self, context: RAGContext) -> list[RAGSource]:
         """Retrieve from execution store"""
 
         try:
@@ -516,7 +513,7 @@ class UnifiedRAGSystem:
             logger.error(f"Execution store retrieval failed: {e}")
             return []
 
-    async def _retrieve_from_pattern_store(self, context: RAGContext) -> List[RAGSource]:
+    async def _retrieve_from_pattern_store(self, context: RAGContext) -> list[RAGSource]:
         """Retrieve from pattern store"""
 
         try:
@@ -553,7 +550,7 @@ class UnifiedRAGSystem:
             logger.error(f"Pattern store retrieval failed: {e}")
             return []
 
-    async def _retrieve_from_knowledge_store(self, context: RAGContext) -> List[RAGSource]:
+    async def _retrieve_from_knowledge_store(self, context: RAGContext) -> list[RAGSource]:
         """Retrieve from knowledge store"""
 
         try:
@@ -619,7 +616,7 @@ class UnifiedRAGSystem:
             logger.error(f"Knowledge store retrieval failed: {e}")
             return []
 
-    async def _retrieve_from_vector_store(self, context: RAGContext) -> List[RAGSource]:
+    async def _retrieve_from_vector_store(self, context: RAGContext) -> list[RAGSource]:
         """Retrieve using semantic search from vector store"""
 
         try:
@@ -666,8 +663,8 @@ class UnifiedRAGSystem:
             return []
 
     async def _rank_and_deduplicate_sources(
-        self, sources: List[RAGSource], context: RAGContext
-    ) -> List[RAGSource]:
+        self, sources: list[RAGSource], context: RAGContext
+    ) -> list[RAGSource]:
         """Rank sources by relevance and remove duplicates"""
 
         # Deduplicate by memory_id and content similarity
@@ -727,15 +724,14 @@ class UnifiedRAGSystem:
         return ranked_sources
 
     async def _synthesize_context(
-        self, sources: List[RAGSource], context: RAGContext
-    ) -> Tuple[str, Dict[str, Any]]:
+        self, sources: list[RAGSource], context: RAGContext
+    ) -> tuple[str, dict[str, Any]]:
         """Synthesize retrieved sources into coherent context"""
 
         if not sources:
             return "No relevant context found.", {"sources_count": 0}
 
         synthesis_mode = context.synthesis_mode
-        domain = context.domain
 
         # Build context structure
         structure = {
@@ -786,7 +782,7 @@ class UnifiedRAGSystem:
 
         return synthesized, structure
 
-    def _synthesize_concatenation(self, sources: List[RAGSource], context: RAGContext) -> str:
+    def _synthesize_concatenation(self, sources: list[RAGSource], context: RAGContext) -> str:
         """Simple concatenation synthesis"""
 
         parts = [f"Context for query: {context.query}\n"]
@@ -803,7 +799,7 @@ class UnifiedRAGSystem:
 
         return "\n".join(parts)
 
-    def _synthesize_structured(self, sources: List[RAGSource], context: RAGContext) -> str:
+    def _synthesize_structured(self, sources: list[RAGSource], context: RAGContext) -> str:
         """Structured synthesis organized by source type and relevance"""
 
         # Group sources by type
@@ -849,7 +845,7 @@ class UnifiedRAGSystem:
 
         return "\n".join(parts)
 
-    async def _synthesize_summary(self, sources: List[RAGSource], context: RAGContext) -> str:
+    async def _synthesize_summary(self, sources: list[RAGSource], context: RAGContext) -> str:
         """Summarization synthesis extracting key points"""
 
         # For now, provide a structured summary
@@ -873,12 +869,12 @@ class UnifiedRAGSystem:
 
         # Add source summary
         parts.append(
-            f"\nBased on {len(sources)} sources from {len(set(s.source_type for s in sources))} different knowledge stores."
+            f"\nBased on {len(sources)} sources from {len({s.source_type for s in sources})} different knowledge stores."
         )
 
         return "\n".join(parts)
 
-    async def _synthesize_narrative(self, sources: List[RAGSource], context: RAGContext) -> str:
+    async def _synthesize_narrative(self, sources: list[RAGSource], context: RAGContext) -> str:
         """Narrative synthesis creating a coherent story"""
 
         # Sort sources chronologically
@@ -899,7 +895,7 @@ class UnifiedRAGSystem:
 
         return "\n".join(parts)
 
-    async def _synthesize_analytical(self, sources: List[RAGSource], context: RAGContext) -> str:
+    async def _synthesize_analytical(self, sources: list[RAGSource], context: RAGContext) -> str:
         """Analytical synthesis focusing on insights and patterns"""
 
         parts = [f"Analytical context for: {context.query}\n"]
@@ -937,7 +933,7 @@ class UnifiedRAGSystem:
 
         return "\n".join(parts)
 
-    async def _extract_insights(self, sources: List[RAGSource], context: RAGContext) -> List[str]:
+    async def _extract_insights(self, sources: list[RAGSource], context: RAGContext) -> list[str]:
         """Extract key insights from sources"""
 
         insights = []
@@ -978,8 +974,8 @@ class UnifiedRAGSystem:
         return insights[:5]  # Limit to top 5 insights
 
     async def _find_cross_references(
-        self, sources: List[RAGSource], context: RAGContext
-    ) -> List[Dict[str, str]]:
+        self, sources: list[RAGSource], context: RAGContext
+    ) -> list[dict[str, str]]:
         """Find cross-references between sources"""
 
         cross_refs = []
@@ -1024,8 +1020,8 @@ class UnifiedRAGSystem:
         return cross_refs[:3]  # Limit to top 3 cross-references
 
     async def _build_reasoning_chain(
-        self, sources: List[RAGSource], context: RAGContext
-    ) -> List[str]:
+        self, sources: list[RAGSource], context: RAGContext
+    ) -> list[str]:
         """Build reasoning chain from sources"""
 
         if not context.include_reasoning:
@@ -1038,7 +1034,7 @@ class UnifiedRAGSystem:
 
         # Step 2: Source selection rationale
         reasoning.append(
-            f"Retrieved {len(sources)} sources from {len(set(s.source_type for s in sources))} knowledge stores"
+            f"Retrieved {len(sources)} sources from {len({s.source_type for s in sources})} knowledge stores"
         )
 
         # Step 3: Relevance assessment
@@ -1074,7 +1070,7 @@ class UnifiedRAGSystem:
         self.metrics["by_domain"][context.domain.value] += 1
         self.metrics["by_strategy"][result.strategy_used.value] += 1
 
-    async def _analyze_query_patterns(self) -> Dict[str, Any]:
+    async def _analyze_query_patterns(self) -> dict[str, Any]:
         """Analyze query patterns and trends"""
 
         return {
@@ -1091,7 +1087,7 @@ class UnifiedRAGSystem:
             "query_frequency": self.metrics["total_queries"],
         }
 
-    async def _calculate_retrieval_effectiveness(self) -> Dict[str, float]:
+    async def _calculate_retrieval_effectiveness(self) -> dict[str, float]:
         """Calculate retrieval effectiveness metrics"""
 
         total_queries = self.metrics["total_queries"]

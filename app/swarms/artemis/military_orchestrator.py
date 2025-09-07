@@ -4,17 +4,13 @@ Coordinates military-themed swarm operations for code excellence
 """
 
 import asyncio
-import json
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timedelta
-from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 from app.swarms.artemis.military_swarm_config import (
     ARTEMIS_MILITARY_UNITS,
-    ARTEMIS_MISSION_TEMPLATES,
-    COMMUNICATION_PROTOCOLS,
     AgentProfile,
     MilitaryAgentFactory,
     MissionStatus,
@@ -33,7 +29,7 @@ class IntelligenceReport:
     timestamp: datetime
     unit: str
     agent: str
-    findings: List[Dict[str, Any]]
+    findings: list[dict[str, Any]]
     priority: str  # FLASH, IMMEDIATE, PRIORITY, ROUTINE
     confidence: float
 
@@ -44,11 +40,11 @@ class MissionPhaseResult:
 
     phase_number: int
     phase_name: str
-    units_involved: List[str]
+    units_involved: list[str]
     start_time: datetime
     end_time: datetime
     success: bool
-    deliverables: Dict[str, Any]
+    deliverables: dict[str, Any]
     issues_found: int = 0
     issues_resolved: int = 0
 
@@ -62,12 +58,12 @@ class MissionReport:
     target: str
     start_time: datetime
     end_time: datetime
-    phases: List[MissionPhaseResult]
+    phases: list[MissionPhaseResult]
     total_issues_found: int
     total_issues_resolved: int
     success_rate: float
-    recommendations: List[str]
-    commendations: List[Dict[str, str]]  # Agent commendations
+    recommendations: list[str]
+    commendations: list[dict[str, str]]  # Agent commendations
 
 
 class ArtemisMillitaryOrchestrator:
@@ -75,11 +71,11 @@ class ArtemisMillitaryOrchestrator:
     Military-style command and control for code excellence operations
     """
 
-    def __init__(self, config: Optional[Dict[str, Any]] = None):
+    def __init__(self, config: Optional[dict[str, Any]] = None):
         self.config = config or {}
-        self.active_missions: Dict[str, Any] = {}
-        self.unit_registry: Dict[str, List[AgentProfile]] = {}
-        self.intelligence_buffer: List[IntelligenceReport] = []
+        self.active_missions: dict[str, Any] = {}
+        self.unit_registry: dict[str, list[AgentProfile]] = {}
+        self.intelligence_buffer: list[IntelligenceReport] = []
         self.command_authorization = True
 
         # Initialize unit registry
@@ -93,7 +89,7 @@ class ArtemisMillitaryOrchestrator:
             squad = unit_config.get("squad_composition", {})
             agents = []
 
-            for role, profile in squad.items():
+            for _role, profile in squad.items():
                 if isinstance(profile, AgentProfile):
                     agents.append(profile)
 
@@ -107,7 +103,7 @@ class ArtemisMillitaryOrchestrator:
         mission_type: str,
         target: str,
         priority: str = "NORMAL",
-        custom_parameters: Optional[Dict[str, Any]] = None,
+        custom_parameters: Optional[dict[str, Any]] = None,
     ) -> MissionReport:
         """
         Deploy a complete mission with all phases
@@ -210,9 +206,9 @@ class ArtemisMillitaryOrchestrator:
     async def _execute_phase(
         self,
         mission_id: str,
-        phase_config: Dict[str, Any],
+        phase_config: dict[str, Any],
         target: str,
-        custom_parameters: Optional[Dict[str, Any]],
+        custom_parameters: Optional[dict[str, Any]],
     ) -> MissionPhaseResult:
         """Execute a single mission phase"""
         start_time = datetime.now()
@@ -275,13 +271,13 @@ class ArtemisMillitaryOrchestrator:
             issues_resolved=issues_resolved,
         )
 
-    def _deploy_unit(self, unit_name: str) -> List[Dict[str, Any]]:
+    def _deploy_unit(self, unit_name: str) -> list[dict[str, Any]]:
         """Deploy a military unit and return agent configurations"""
         return MilitaryAgentFactory.create_squad(unit_name)
 
     async def _execute_reconnaissance(
-        self, agents: List[Dict[str, Any]], target: str
-    ) -> Tuple[Dict[str, Any], int]:
+        self, agents: list[dict[str, Any]], target: str
+    ) -> tuple[dict[str, Any], int]:
         """Execute reconnaissance operations"""
         logger.info("Reconnaissance in progress...")
 
@@ -329,7 +325,7 @@ class ArtemisMillitaryOrchestrator:
         }
 
         # Store intelligence in buffer
-        for category, items in findings["issues"].items():
+        for _category, items in findings["issues"].items():
             for item in items:
                 intel = IntelligenceReport(
                     timestamp=datetime.now(),
@@ -347,8 +343,8 @@ class ArtemisMillitaryOrchestrator:
         return findings, total_issues
 
     async def _execute_analysis(
-        self, agents: List[Dict[str, Any]], intelligence: List[IntelligenceReport]
-    ) -> Dict[str, Any]:
+        self, agents: list[dict[str, Any]], intelligence: list[IntelligenceReport]
+    ) -> dict[str, Any]:
         """Execute detailed analysis of reconnaissance findings"""
         logger.info("Analyzing reconnaissance data...")
 
@@ -384,8 +380,8 @@ class ArtemisMillitaryOrchestrator:
         return analysis_report
 
     async def _execute_planning(
-        self, agents: List[Dict[str, Any]], intelligence: List[IntelligenceReport]
-    ) -> Dict[str, Any]:
+        self, agents: list[dict[str, Any]], intelligence: list[IntelligenceReport]
+    ) -> dict[str, Any]:
         """Execute strategic planning phase"""
         logger.info("Strategic planning in progress...")
 
@@ -440,8 +436,8 @@ class ArtemisMillitaryOrchestrator:
         return remediation_plan
 
     async def _execute_strike(
-        self, agents: List[Dict[str, Any]], target: str, plan: Dict[str, Any]
-    ) -> Tuple[Dict[str, Any], int]:
+        self, agents: list[dict[str, Any]], target: str, plan: dict[str, Any]
+    ) -> tuple[dict[str, Any], int]:
         """Execute strike force operations - actual code remediation"""
         logger.info("Strike force engaging targets...")
 
@@ -497,8 +493,8 @@ class ArtemisMillitaryOrchestrator:
         return execution_report, issues_resolved
 
     async def _execute_verification(
-        self, agents: List[Dict[str, Any]], target: str
-    ) -> Dict[str, Any]:
+        self, agents: list[dict[str, Any]], target: str
+    ) -> dict[str, Any]:
         """Execute final verification and sign-off"""
         logger.info("Final verification in progress...")
 
@@ -530,7 +526,7 @@ class ArtemisMillitaryOrchestrator:
 
         return verification_report
 
-    def _generate_recommendations(self, phase_results: List[MissionPhaseResult]) -> List[str]:
+    def _generate_recommendations(self, phase_results: list[MissionPhaseResult]) -> list[str]:
         """Generate recommendations based on mission results"""
         recommendations = [
             "Implement automated dependency scanning in CI/CD pipeline",
@@ -543,8 +539,8 @@ class ArtemisMillitaryOrchestrator:
         return recommendations
 
     def _generate_commendations(
-        self, phase_results: List[MissionPhaseResult]
-    ) -> List[Dict[str, str]]:
+        self, phase_results: list[MissionPhaseResult]
+    ) -> list[dict[str, str]]:
         """Generate agent commendations for exceptional performance"""
         commendations = [
             {
@@ -585,7 +581,7 @@ class ArtemisMillitaryOrchestrator:
 
             logger.info("Mission aborted - All units returning to base")
 
-    def get_mission_status(self, mission_id: str) -> Dict[str, Any]:
+    def get_mission_status(self, mission_id: str) -> dict[str, Any]:
         """Get current status of a mission"""
         if mission_id in self.active_missions:
             mission = self.active_missions[mission_id]
@@ -598,7 +594,7 @@ class ArtemisMillitaryOrchestrator:
             }
         return {"error": "Mission not found"}
 
-    def get_unit_status(self, unit_name: str) -> Dict[str, Any]:
+    def get_unit_status(self, unit_name: str) -> dict[str, Any]:
         """Get current status of a military unit"""
         unit = get_unit_by_designation(unit_name)
         if unit:

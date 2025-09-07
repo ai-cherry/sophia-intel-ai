@@ -2,25 +2,25 @@ from __future__ import annotations
 
 import difflib
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 from app.mcp.clients.stdio_client import StdioMCPClient
 
 
-def _ensure_trailing_newline(text: str) -> Tuple[str, bool]:
+def _ensure_trailing_newline(text: str) -> tuple[str, bool]:
     if text.endswith("\n"):
         return text, False
     return text + "\n", True
 
 
-def _normalize_whitespace(text: str) -> Tuple[str, bool]:
+def _normalize_whitespace(text: str) -> tuple[str, bool]:
     # Example normalization: convert tabs to 4 spaces (non-destructive example)
     if "\t" not in text:
         return text, False
     return text.replace("\t", "    "), True
 
 
-def propose_diff_for_file(client: StdioMCPClient, rel_path: str) -> Dict[str, Any]:
+def propose_diff_for_file(client: StdioMCPClient, rel_path: str) -> dict[str, Any]:
     """
     Create a minimal, safe patch proposal for a file.
     Prioritizes: trailing newline and tab normalization.
@@ -52,9 +52,9 @@ def propose_diff_for_file(client: StdioMCPClient, rel_path: str) -> Dict[str, An
 
 
 def propose_patches(
-    client: StdioMCPClient, paths: List[str], max_files: int = 20
-) -> List[Dict[str, Any]]:
-    results: List[Dict[str, Any]] = []
+    client: StdioMCPClient, paths: list[str], max_files: int = 20
+) -> list[dict[str, Any]]:
+    results: list[dict[str, Any]] = []
     count = 0
     root = Path.cwd().resolve()
     for p in paths:

@@ -1,13 +1,15 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
 from pathlib import Path
-from typing import List
 
 from app.mcp.clients.stdio_client import detect_stdio_mcp
 from app.swarms.coding.patch_proposal import propose_patches
-from app.swarms.core.swarm_integration import get_artemis_orchestrator
+
+# Lazy-import heavy LLM orchestration only in commands that need it to keep
+# lightweight CLI subcommands (collab/cleanup) working without LLM deps.
 
 
 def cmd_smoke(args) -> int:
@@ -41,8 +43,8 @@ def cmd_smoke(args) -> int:
     return 0
 
 
-def _collect_files(paths: List[str]) -> List[Path]:
-    files: List[Path] = []
+def _collect_files(paths: list[str]) -> list[Path]:
+    files: list[Path] = []
     for p in paths:
         pp = Path(p)
         if pp.is_dir():
@@ -51,7 +53,7 @@ def _collect_files(paths: List[str]) -> List[Path]:
             files.append(pp)
     # dedupe
     seen = set()
-    uniq: List[Path] = []
+    uniq: list[Path] = []
     for f in files:
         try:
             rf = f.resolve()
@@ -704,7 +706,7 @@ def build_parser() -> argparse.ArgumentParser:
                     commit_info = {"error": str(e)}
 
                 # Mirror apply completion in memory
-                try:
+                with contextlib.suppress(Exception):
                     client.memory_add(
                         topic=f"collab_apply:{args.pid}",
                         content=_json.dumps(
@@ -714,8 +716,6 @@ def build_parser() -> argparse.ArgumentParser:
                         tags=["collab", "apply", "status:completed", f"id:{args.pid}"],
                         memory_type="episodic",
                     )
-                except Exception:
-                    pass
 
             out = {
                 "ok": test_result["passed"],
@@ -757,6 +757,8 @@ def build_parser() -> argparse.ArgumentParser:
     def _do_scout(args):
         # This path requires network + LLM env; we provide a friendly message if not set
         try:
+            from app.swarms.core.swarm_integration import get_artemis_orchestrator
+
             orchestrator = get_artemis_orchestrator()
             import asyncio
 
@@ -870,6 +872,8 @@ def build_parser() -> argparse.ArgumentParser:
                     coord.execute(task=args.task, context={"mode": "leader"})
                 )
             else:
+                from app.swarms.core.swarm_integration import get_artemis_orchestrator
+
                 orchestrator = get_artemis_orchestrator()
                 import asyncio
 
@@ -1255,13 +1259,12 @@ if __name__ == "__main__":
                 if not p.is_file():
                     continue
                 matched += 1
-                if p.stat().st_mtime < cutoff:
-                    if not args.dry_run:
-                        try:
-                            p.unlink()
-                            removed.append(str(p))
-                        except Exception:
-                            pass
+                if p.stat().st_mtime < cutoff and not args.dry_run:
+                    try:
+                        p.unlink()
+                        removed.append(str(p))
+                    except Exception:
+                        pass
         out = {"ok": True, "matched": matched, "removed": removed, "dry_run": args.dry_run}
         print(
             _json.dumps(out, indent=2)

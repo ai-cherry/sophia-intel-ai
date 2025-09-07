@@ -7,7 +7,7 @@ Specialized contract for Shared (cross-domain) services
 import asyncio
 from abc import abstractmethod
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from .base_contract import (
     BaseMCPServerContract,
@@ -177,12 +177,12 @@ class SharedServiceContract(BaseMCPServerContract):
     # Shared service abstract methods
 
     @abstractmethod
-    async def generate_embeddings(self, request: EmbeddingRequest) -> Dict[str, Any]:
+    async def generate_embeddings(self, request: EmbeddingRequest) -> dict[str, Any]:
         """Generate embeddings for text or data"""
         pass
 
     @abstractmethod
-    async def perform_semantic_search(self, request: SearchRequest) -> List[Dict[str, Any]]:
+    async def perform_semantic_search(self, request: SearchRequest) -> list[dict[str, Any]]:
         """Perform semantic search across domains"""
         pass
 
@@ -196,7 +196,7 @@ class SharedServiceContract(BaseMCPServerContract):
     @abstractmethod
     async def manage_shared_cache(
         self, operation: str, key: str, value: Any = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Manage shared cache operations"""
         pass
 
@@ -234,7 +234,7 @@ class SharedServiceContract(BaseMCPServerContract):
             # Check indexing capabilities
             try:
                 # Test basic indexing operations
-                test_document = {
+                {
                     "id": "test",
                     "content": "health check document",
                     "timestamp": datetime.now().isoformat(),
@@ -276,7 +276,7 @@ class SharedServiceContract(BaseMCPServerContract):
                 # Test cache operations
                 test_cache_data = {"health_check": True, "timestamp": datetime.now().isoformat()}
                 serialized = json.dumps(test_cache_data)
-                deserialized = json.loads(serialized)
+                json.loads(serialized)
 
                 health_details["cache_management"] = "operational"
                 capabilities_status["cache_management"] = CapabilityStatus.AVAILABLE
@@ -405,27 +405,27 @@ class SharedServiceContract(BaseMCPServerContract):
 
     # Capability-specific handlers (to be implemented by concrete servers)
 
-    async def _handle_embeddings(self, request: MCPRequest) -> Dict[str, Any]:
+    async def _handle_embeddings(self, request: MCPRequest) -> dict[str, Any]:
         """Handle embeddings requests"""
         # Default implementation - to be overridden
         return {"message": "Embeddings capability not implemented"}
 
-    async def _handle_indexing(self, request: MCPRequest) -> Dict[str, Any]:
+    async def _handle_indexing(self, request: MCPRequest) -> dict[str, Any]:
         """Handle indexing requests"""
         # Default implementation - to be overridden
         return {"message": "Indexing capability not implemented"}
 
-    async def _handle_database_operations(self, request: MCPRequest) -> Dict[str, Any]:
+    async def _handle_database_operations(self, request: MCPRequest) -> dict[str, Any]:
         """Handle database operation requests"""
         # Default implementation - to be overridden
         return {"message": "Database operations capability not implemented"}
 
-    async def _handle_cross_domain_communication(self, request: MCPRequest) -> Dict[str, Any]:
+    async def _handle_cross_domain_communication(self, request: MCPRequest) -> dict[str, Any]:
         """Handle cross-domain communication requests"""
         # Default implementation - to be overridden
         return {"message": "Cross-domain communication capability not implemented"}
 
-    async def _handle_cache_management(self, request: MCPRequest) -> Dict[str, Any]:
+    async def _handle_cache_management(self, request: MCPRequest) -> dict[str, Any]:
         """Handle cache management requests"""
         # Default implementation - to be overridden
         return {"message": "Cache management capability not implemented"}
@@ -433,7 +433,7 @@ class SharedServiceContract(BaseMCPServerContract):
     # Shared service utility methods
 
     async def calculate_vector_similarity(
-        self, vector_a: List[float], vector_b: List[float], metric: str = "cosine"
+        self, vector_a: list[float], vector_b: list[float], metric: str = "cosine"
     ) -> float:
         """Calculate similarity between two vectors"""
         try:
@@ -465,7 +465,7 @@ class SharedServiceContract(BaseMCPServerContract):
         except Exception as e:
             raise Exception(f"Vector similarity calculation failed: {str(e)}")
 
-    async def normalize_vector(self, vector: List[float]) -> List[float]:
+    async def normalize_vector(self, vector: list[float]) -> list[float]:
         """Normalize a vector to unit length"""
         try:
             import math
@@ -479,7 +479,7 @@ class SharedServiceContract(BaseMCPServerContract):
         except Exception as e:
             raise Exception(f"Vector normalization failed: {str(e)}")
 
-    async def batch_process_items(self, items: List[Any], batch_size: int, processor) -> List[Any]:
+    async def batch_process_items(self, items: list[Any], batch_size: int, processor) -> list[Any]:
         """Process items in batches for efficiency"""
         results = []
 

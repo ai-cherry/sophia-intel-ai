@@ -8,14 +8,12 @@ import logging
 import re
 import time
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Optional
 
 import aiohttp
 import redis.asyncio as redis
-from cryptography.fernet import Fernet
-from pydantic import BaseModel, Field, validator
 
 logger = logging.getLogger(__name__)
 
@@ -80,9 +78,9 @@ class ValidationResultData:
     validation_time: datetime
     response_time_ms: Optional[float] = None
     error_message: Optional[str] = None
-    additional_info: Dict[str, Any] = field(default_factory=dict)
+    additional_info: dict[str, Any] = field(default_factory=dict)
     permissions_validated: bool = False
-    rate_limit_info: Optional[Dict[str, Any]] = None
+    rate_limit_info: Optional[dict[str, Any]] = None
 
 
 class SecretFormatValidator:
@@ -142,11 +140,7 @@ class SecretFormatValidator:
             return False
 
         # Check if each part is valid base64-like
-        for part in parts:
-            if not re.match(r"^[A-Za-z0-9_-]+$", part):
-                return False
-
-        return True
+        return all(re.match(r"^[A-Za-z0-9_-]+$", part) for part in parts)
 
     @staticmethod
     def get_validator_for_type(secret_type: SecretType) -> Optional[callable]:
@@ -169,8 +163,8 @@ class ExternalAPIValidator:
     def __init__(self, config: ValidationConfig):
         self.config = config
         self._session: Optional[aiohttp.ClientSession] = None
-        self._rate_limits: Dict[str, List[float]] = {}
-        self._validation_cache: Dict[str, ValidationResultData] = {}
+        self._rate_limits: dict[str, list[float]] = {}
+        self._validation_cache: dict[str, ValidationResultData] = {}
 
     async def __aenter__(self):
         if not self._session:
@@ -630,8 +624,8 @@ class ComprehensiveSecretValidator:
         self.stats["validation_results"][result.result.value] += 1
 
     async def validate_multiple_secrets(
-        self, secrets: Dict[str, str], batch_size: int = 5
-    ) -> Dict[str, ValidationResultData]:
+        self, secrets: dict[str, str], batch_size: int = 5
+    ) -> dict[str, ValidationResultData]:
         """Validate multiple secrets in batches"""
 
         results = {}
@@ -665,7 +659,7 @@ class ComprehensiveSecretValidator:
 
         return results
 
-    def get_validation_report(self) -> Dict[str, Any]:
+    def get_validation_report(self) -> dict[str, Any]:
         """Get comprehensive validation report"""
         total = self.stats["total_validations"]
         valid_count = self.stats["validation_results"][ValidationResult.VALID.value]
@@ -688,7 +682,7 @@ class ComprehensiveSecretValidator:
             },
         }
 
-    def get_health_status(self) -> Dict[str, Any]:
+    def get_health_status(self) -> dict[str, Any]:
         """Get validator health status"""
         total = self.stats["total_validations"]
         error_count = (

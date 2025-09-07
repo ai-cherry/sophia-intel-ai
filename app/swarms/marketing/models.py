@@ -4,12 +4,11 @@ Marketing Microswarm Data Models
 Core data structures for marketing intelligence and automation
 """
 
-import asyncio
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Optional
 from uuid import uuid4
 
 logger = logging.getLogger(__name__)
@@ -64,36 +63,36 @@ class BrandGuidelines:
     """Brand guidelines and compliance rules"""
 
     # Visual Identity
-    primary_colors: List[str] = field(default_factory=lambda: ["#1A73E8", "#34A853"])
-    secondary_colors: List[str] = field(default_factory=lambda: ["#EA4335", "#FBBC04"])
+    primary_colors: list[str] = field(default_factory=lambda: ["#1A73E8", "#34A853"])
+    secondary_colors: list[str] = field(default_factory=lambda: ["#EA4335", "#FBBC04"])
     font_family: str = "Inter, Arial, sans-serif"
-    logo_variants: Dict[str, str] = field(default_factory=dict)
+    logo_variants: dict[str, str] = field(default_factory=dict)
 
     # Voice and Tone
-    voice_attributes: List[str] = field(
+    voice_attributes: list[str] = field(
         default_factory=lambda: ["professional", "approachable", "confident"]
     )
-    tone_guidelines: Dict[str, str] = field(default_factory=dict)
-    approved_terminology: List[str] = field(default_factory=list)
-    avoided_terminology: List[str] = field(default_factory=list)
+    tone_guidelines: dict[str, str] = field(default_factory=dict)
+    approved_terminology: list[str] = field(default_factory=list)
+    avoided_terminology: list[str] = field(default_factory=list)
 
     # Messaging Framework
     value_proposition: str = ""
-    key_differentiators: List[str] = field(default_factory=list)
-    proof_points: List[str] = field(default_factory=list)
-    elevator_pitch_templates: Dict[str, str] = field(default_factory=dict)
+    key_differentiators: list[str] = field(default_factory=list)
+    proof_points: list[str] = field(default_factory=list)
+    elevator_pitch_templates: dict[str, str] = field(default_factory=dict)
 
     # Compliance Rules
-    legal_disclaimers: List[str] = field(default_factory=list)
-    required_elements: List[str] = field(default_factory=list)
-    channel_specific_rules: Dict[str, Dict[str, Any]] = field(default_factory=dict)
+    legal_disclaimers: list[str] = field(default_factory=list)
+    required_elements: list[str] = field(default_factory=list)
+    channel_specific_rules: dict[str, dict[str, Any]] = field(default_factory=dict)
 
     # Asset Management
-    template_library: Dict[str, str] = field(default_factory=dict)
-    image_library: Dict[str, str] = field(default_factory=dict)
-    video_assets: Dict[str, str] = field(default_factory=dict)
+    template_library: dict[str, str] = field(default_factory=dict)
+    image_library: dict[str, str] = field(default_factory=dict)
+    video_assets: dict[str, str] = field(default_factory=dict)
 
-    def validate_content(self, content: str, channel: str) -> Dict[str, Any]:
+    def validate_content(self, content: str, channel: str) -> dict[str, Any]:
         """Validate content against brand guidelines"""
         compliance_score = 0.0
         violations = []
@@ -175,8 +174,8 @@ class MarketInsight:
     # Content
     summary: str = ""
     detailed_analysis: str = ""
-    key_findings: List[str] = field(default_factory=list)
-    supporting_data: List[Dict[str, Any]] = field(default_factory=list)
+    key_findings: list[str] = field(default_factory=list)
+    supporting_data: list[dict[str, Any]] = field(default_factory=list)
 
     # Context
     industry: str = ""
@@ -185,20 +184,20 @@ class MarketInsight:
     time_period: str = "current"
 
     # Sources and Attribution
-    data_sources: List[str] = field(default_factory=list)
-    external_references: List[str] = field(default_factory=list)
-    internal_research: List[str] = field(default_factory=list)
+    data_sources: list[str] = field(default_factory=list)
+    external_references: list[str] = field(default_factory=list)
+    internal_research: list[str] = field(default_factory=list)
 
     # Actionability
-    recommended_actions: List[str] = field(default_factory=list)
-    business_implications: List[str] = field(default_factory=list)
+    recommended_actions: list[str] = field(default_factory=list)
+    business_implications: list[str] = field(default_factory=list)
     urgency_level: str = "normal"  # urgent, high, normal, low
 
     # Metadata
     created_at: datetime = field(default_factory=datetime.now)
     updated_at: datetime = field(default_factory=datetime.now)
     created_by: str = "market_intelligence_agent"
-    tags: List[str] = field(default_factory=list)
+    tags: list[str] = field(default_factory=list)
 
     def is_actionable(self) -> bool:
         """Check if insight has actionable recommendations"""
@@ -250,18 +249,18 @@ class CampaignPerformance:
     sentiment_score: float = 0.0  # -1 to 1
 
     # Audience Insights
-    audience_segments: Dict[str, int] = field(default_factory=dict)
-    demographic_breakdown: Dict[str, int] = field(default_factory=dict)
-    geographic_performance: Dict[str, float] = field(default_factory=dict)
+    audience_segments: dict[str, int] = field(default_factory=dict)
+    demographic_breakdown: dict[str, int] = field(default_factory=dict)
+    geographic_performance: dict[str, float] = field(default_factory=dict)
 
     # A/B Testing Results
-    variant_performance: Dict[str, Dict[str, float]] = field(default_factory=dict)
+    variant_performance: dict[str, dict[str, float]] = field(default_factory=dict)
     statistical_significance: float = 0.0
     winning_variant: Optional[str] = None
 
     # Metadata
     measured_at: datetime = field(default_factory=datetime.now)
-    data_sources: List[str] = field(default_factory=list)
+    data_sources: list[str] = field(default_factory=list)
 
     def calculate_effectiveness_score(self) -> float:
         """Calculate overall campaign effectiveness score"""
@@ -274,7 +273,7 @@ class CampaignPerformance:
         )
         return min(effectiveness, 1.0)
 
-    def identify_optimization_opportunities(self) -> List[str]:
+    def identify_optimization_opportunities(self) -> list[str]:
         """Identify areas for campaign optimization"""
         opportunities = []
 
@@ -306,48 +305,48 @@ class CreativeCampaign:
     status: CampaignStatus = CampaignStatus.DRAFT
 
     # Target Audience
-    target_segments: List[MarketSegment] = field(default_factory=list)
-    prospect_criteria: Dict[str, Any] = field(default_factory=dict)
+    target_segments: list[MarketSegment] = field(default_factory=list)
+    prospect_criteria: dict[str, Any] = field(default_factory=dict)
     personalization_level: str = "basic"  # basic, advanced, hyper_personalized
 
     # Creative Elements
-    subject_lines: List[str] = field(default_factory=list)
-    message_variants: List[str] = field(default_factory=list)
-    visual_assets: List[str] = field(default_factory=list)
-    call_to_actions: List[str] = field(default_factory=list)
+    subject_lines: list[str] = field(default_factory=list)
+    message_variants: list[str] = field(default_factory=list)
+    visual_assets: list[str] = field(default_factory=list)
+    call_to_actions: list[str] = field(default_factory=list)
 
     # Multi-Channel Components
     email_template: Optional[str] = None
     sms_template: Optional[str] = None
     linkedin_template: Optional[str] = None
     video_script: Optional[str] = None
-    gift_strategy: Optional[Dict[str, Any]] = None
+    gift_strategy: Optional[dict[str, Any]] = None
 
     # Testing and Optimization
-    ab_test_variants: List[Dict[str, Any]] = field(default_factory=list)
-    success_metrics: List[str] = field(default_factory=list)
-    optimization_goals: List[str] = field(default_factory=list)
+    ab_test_variants: list[dict[str, Any]] = field(default_factory=list)
+    success_metrics: list[str] = field(default_factory=list)
+    optimization_goals: list[str] = field(default_factory=list)
 
     # Approval Workflow
     approval_required: bool = True
-    approvers: List[str] = field(default_factory=list)
-    approval_history: List[Dict[str, Any]] = field(default_factory=list)
+    approvers: list[str] = field(default_factory=list)
+    approval_history: list[dict[str, Any]] = field(default_factory=list)
     brand_compliance_score: float = 0.0
 
     # Execution
     launch_date: Optional[datetime] = None
     end_date: Optional[datetime] = None
-    execution_schedule: Dict[str, Any] = field(default_factory=dict)
+    execution_schedule: dict[str, Any] = field(default_factory=dict)
 
     # Performance Tracking
     performance_metrics: Optional[CampaignPerformance] = None
-    learning_insights: List[str] = field(default_factory=list)
+    learning_insights: list[str] = field(default_factory=list)
 
     # Metadata
     created_at: datetime = field(default_factory=datetime.now)
     updated_at: datetime = field(default_factory=datetime.now)
     created_by: str = "creative_outreach_agent"
-    tags: List[str] = field(default_factory=list)
+    tags: list[str] = field(default_factory=list)
 
     def submit_for_approval(self, approver: str) -> bool:
         """Submit campaign for approval"""
@@ -403,40 +402,40 @@ class MarketingContext:
     """Context for marketing operations and decision-making"""
 
     # Business Context
-    company_info: Dict[str, Any] = field(default_factory=dict)
+    company_info: dict[str, Any] = field(default_factory=dict)
     industry: str = ""
-    target_markets: List[MarketSegment] = field(default_factory=list)
-    competitive_landscape: List[str] = field(default_factory=list)
+    target_markets: list[MarketSegment] = field(default_factory=list)
+    competitive_landscape: list[str] = field(default_factory=list)
 
     # Brand Guidelines
     brand_guidelines: Optional[BrandGuidelines] = None
 
     # Campaign Context
-    active_campaigns: List[str] = field(default_factory=list)
-    campaign_history: List[Dict[str, Any]] = field(default_factory=list)
-    budget_constraints: Dict[str, float] = field(default_factory=dict)
+    active_campaigns: list[str] = field(default_factory=list)
+    campaign_history: list[dict[str, Any]] = field(default_factory=list)
+    budget_constraints: dict[str, float] = field(default_factory=dict)
 
     # Audience Intelligence
-    prospect_database: Dict[str, Any] = field(default_factory=dict)
-    segment_performance: Dict[str, float] = field(default_factory=dict)
-    personality_insights: Dict[str, Dict[str, Any]] = field(default_factory=dict)
+    prospect_database: dict[str, Any] = field(default_factory=dict)
+    segment_performance: dict[str, float] = field(default_factory=dict)
+    personality_insights: dict[str, dict[str, Any]] = field(default_factory=dict)
 
     # Market Intelligence
-    recent_insights: List[MarketInsight] = field(default_factory=list)
-    competitive_intelligence: Dict[str, Any] = field(default_factory=dict)
-    industry_trends: List[Dict[str, Any]] = field(default_factory=list)
+    recent_insights: list[MarketInsight] = field(default_factory=list)
+    competitive_intelligence: dict[str, Any] = field(default_factory=dict)
+    industry_trends: list[dict[str, Any]] = field(default_factory=list)
 
     # Performance Data
-    channel_performance: Dict[str, CampaignPerformance] = field(default_factory=dict)
-    roi_by_segment: Dict[str, float] = field(default_factory=dict)
-    attribution_data: Dict[str, Any] = field(default_factory=dict)
+    channel_performance: dict[str, CampaignPerformance] = field(default_factory=dict)
+    roi_by_segment: dict[str, float] = field(default_factory=dict)
+    attribution_data: dict[str, Any] = field(default_factory=dict)
 
     # Integration Context
-    connected_platforms: List[str] = field(default_factory=list)
-    data_sources: List[str] = field(default_factory=list)
-    sync_status: Dict[str, datetime] = field(default_factory=dict)
+    connected_platforms: list[str] = field(default_factory=list)
+    data_sources: list[str] = field(default_factory=list)
+    sync_status: dict[str, datetime] = field(default_factory=dict)
 
-    def get_high_priority_insights(self) -> List[MarketInsight]:
+    def get_high_priority_insights(self) -> list[MarketInsight]:
         """Get high-priority actionable insights"""
         return [
             insight
@@ -444,7 +443,7 @@ class MarketingContext:
             if insight.get_priority_score() > 0.7 and insight.is_actionable()
         ]
 
-    def get_best_performing_segments(self, limit: int = 3) -> List[str]:
+    def get_best_performing_segments(self, limit: int = 3) -> list[str]:
         """Get top performing market segments"""
         sorted_segments = sorted(self.segment_performance.items(), key=lambda x: x[1], reverse=True)
         return [segment for segment, _ in sorted_segments[:limit]]
@@ -460,10 +459,10 @@ class CampaignData:
 
     campaign: CreativeCampaign
     context: MarketingContext
-    execution_log: List[Dict[str, Any]] = field(default_factory=list)
-    real_time_metrics: Dict[str, Any] = field(default_factory=dict)
+    execution_log: list[dict[str, Any]] = field(default_factory=list)
+    real_time_metrics: dict[str, Any] = field(default_factory=dict)
 
-    def log_execution_event(self, event_type: str, details: Dict[str, Any]):
+    def log_execution_event(self, event_type: str, details: dict[str, Any]):
         """Log campaign execution event"""
         self.execution_log.append(
             {"timestamp": datetime.now(), "event_type": event_type, "details": details}

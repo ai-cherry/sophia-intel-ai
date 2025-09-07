@@ -7,10 +7,10 @@ Includes failure threshold configuration and recovery timeout
 import asyncio
 import logging
 from collections import deque
-from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, Dict, Optional, TypeVar, Union
+from typing import Any, Callable, Optional, TypeVar
 
 logger = logging.getLogger(__name__)
 
@@ -191,9 +191,8 @@ class CircuitBreaker:
                 # Single failure in HALF_OPEN reopens circuit
                 self._transition_to_open()
 
-            elif self.state == CircuitState.CLOSED:
-                if self._should_open_circuit():
-                    self._transition_to_open()
+            elif self.state == CircuitState.CLOSED and self._should_open_circuit():
+                self._transition_to_open()
 
     def _should_open_circuit(self) -> bool:
         """Determine if circuit should open based on failures"""
@@ -278,7 +277,7 @@ class CircuitBreaker:
             except Exception as e:
                 logger.error(f"Error in on_half_open callback: {e}")
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """
         Get current circuit breaker status
 
@@ -344,7 +343,7 @@ class CircuitBreakerGroup:
             name: Name of the group
         """
         self.name = name
-        self.breakers: Dict[str, CircuitBreaker] = {}
+        self.breakers: dict[str, CircuitBreaker] = {}
         logger.info(f"Circuit breaker group '{name}' initialized")
 
     def add_breaker(
@@ -368,7 +367,7 @@ class CircuitBreakerGroup:
         """Get a circuit breaker by name"""
         return self.breakers.get(name)
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Get status of all circuit breakers in the group"""
         return {
             "group": self.name,

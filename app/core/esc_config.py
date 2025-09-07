@@ -9,7 +9,7 @@ import os
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Optional
 
 from pydantic import BaseModel, Field
 
@@ -39,7 +39,7 @@ class ESCIntegrationConfig:
     auto_refresh: bool = True
     refresh_interval: int = 300
     watch_files: bool = True
-    fallback_env_files: List[str] = field(default_factory=lambda: [".env", ".env.local"])
+    fallback_env_files: list[str] = field(default_factory=lambda: [".env", ".env.local"])
     enable_audit_logging: bool = True
     backward_compatibility: bool = True
     hot_reload_enabled: bool = True
@@ -52,7 +52,7 @@ class ESCRuntimeConfig(BaseModel):
     last_refresh: Optional[datetime] = None
     fallback_mode: bool = False
     config_entries: int = 0
-    source_summary: Dict[str, int] = Field(default_factory=dict)
+    source_summary: dict[str, int] = Field(default_factory=dict)
     integration_health: str = "unknown"  # healthy, degraded, failed
     change_callbacks: int = 0
 
@@ -70,10 +70,10 @@ class SophiaESCConfig:
         self.audit_logger: Optional[ESCAuditLogger] = None
 
         # Backward compatibility - environment variable fallbacks
-        self._env_fallbacks: Dict[str, str] = {}
+        self._env_fallbacks: dict[str, str] = {}
 
         # Change notification system
-        self._change_callbacks: List[Callable[[str, Any, Any], None]] = []
+        self._change_callbacks: list[Callable[[str, Any, Any], None]] = []
         self._critical_config_keys = {
             "infrastructure.redis.url",
             "infrastructure.redis.password",
@@ -448,7 +448,7 @@ class SophiaESCConfig:
             env_key = key.replace(".", "_").upper()
             return os.getenv(env_key, default)
 
-    def get_all(self, prefix: str = "") -> Dict[str, Any]:
+    def get_all(self, prefix: str = "") -> dict[str, Any]:
         """Get all configuration values with optional prefix"""
         if self.config_loader and not self.runtime_state.fallback_mode:
             return self.config_loader.get_all(prefix)
@@ -484,7 +484,7 @@ class SophiaESCConfig:
             return success
         return False
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Get integration status"""
         loader_status = {}
         if self.config_loader:
@@ -508,7 +508,7 @@ class SophiaESCConfig:
             "config_loader": loader_status,
         }
 
-    def get_health_summary(self) -> Dict[str, Any]:
+    def get_health_summary(self) -> dict[str, Any]:
         """Get health summary for monitoring"""
         return {
             "healthy": self.runtime_state.integration_health == "healthy",
@@ -619,7 +619,7 @@ async def get_secret_config(key: str, default: Any = None) -> Any:
         return os.getenv(env_key, default)
 
 
-def get_all_config(prefix: str = "") -> Dict[str, Any]:
+def get_all_config(prefix: str = "") -> dict[str, Any]:
     """Get all configuration values (backward compatible)"""
     config = get_esc_config()
     if config:

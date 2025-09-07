@@ -5,13 +5,11 @@ Authentication middleware for API endpoints
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from typing import Optional
 
 import jwt
 from fastapi import Depends, HTTPException, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from app.core.ai_logger import logger
 from app.core.config import settings
 
 # Security scheme for Swagger UI
@@ -32,7 +30,7 @@ class AuthorizationError(HTTPException):
         super().__init__(status_code=403, detail=detail)
 
 
-def create_jwt_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
+def create_jwt_token(data: dict, expires_delta: timedelta | None = None) -> str:
     """Create a JWT token"""
     to_encode = data.copy()
 
@@ -101,8 +99,8 @@ async def verify_admin_access(user: str = Depends(verify_api_key)) -> str:
 
 
 async def get_current_user(
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
-) -> Optional[str]:
+    credentials: HTTPAuthorizationCredentials | None = Depends(security),
+) -> str | None:
     """
     Get current user from credentials (optional auth)
 
@@ -158,8 +156,6 @@ rate_limiter = RateLimitMiddleware(requests_per_minute=settings.max_concurrent_r
 
 
 # Dependency for rate limiting
-async def check_rate_limit(
-    request: Request, user: Optional[str] = Depends(get_current_user)
-) -> str:
+async def check_rate_limit(request: Request, user: str | None = Depends(get_current_user)) -> str:
     """Rate limit dependency"""
     return await rate_limiter.check_rate_limit(request, user)

@@ -5,18 +5,16 @@ import logging
 import time
 from collections.abc import AsyncIterator
 from datetime import datetime, timezone
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 from uuid import uuid4
 
 import msgpack
-import redis.asyncio as aioredis
 from opentelemetry import trace
 from opentelemetry.trace import SpanKind
 from pydantic import BaseModel, Field
 
 from app.core.ai_logger import logger
-from app.core.redis_config import redis_config
-from app.core.redis_manager import RedisManager, RedisNamespaces
+from app.core.redis_manager import RedisManager
 
 logger = logging.getLogger(__name__)
 
@@ -77,12 +75,12 @@ class MessageBus:
         await self.redis_manager.initialize()
 
         # Ensure streams exist with bounded configuration
-        for stream_name, stream_key in self.streams.items():
+        for _stream_name, stream_key in self.streams.items():
             try:
                 # Try to get stream info
                 async with self.redis_manager.get_connection() as redis:
                     await redis.xinfo_stream(stream_key)
-            except Exception as e:
+            except Exception:
                 logger.info(f"Creating bounded stream {stream_key}")
                 # Create stream with initial dummy entry and bounds
                 await self.redis_manager.stream_add(
@@ -282,7 +280,7 @@ class MessageBus:
         except Exception as e:
             logger.error(f"Error closing Redis connection: {e}")
 
-    async def get_health_status(self) -> Dict[str, Any]:
+    async def get_health_status(self) -> dict[str, Any]:
         """Get message bus health status"""
         redis_manager = await self._get_redis_manager()
         health = await redis_manager.health_check()

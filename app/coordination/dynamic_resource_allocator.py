@@ -25,7 +25,7 @@ from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 from uuid import uuid4
 
 logger = logging.getLogger(__name__)
@@ -175,21 +175,21 @@ class DynamicResourceAllocator:
     Dynamic resource allocation system for Sophia and Artemis orchestrators
     """
 
-    def __init__(self, config: Optional[Dict[str, Any]] = None):
+    def __init__(self, config: Optional[dict[str, Any]] = None):
         self.config = config or {}
 
         # Resource budgets for each orchestrator
-        self.budgets: Dict[OrchestratorType, ResourceBudget] = {}
+        self.budgets: dict[OrchestratorType, ResourceBudget] = {}
 
         # Usage metrics history (last 24 hours)
-        self.usage_history: Dict[OrchestratorType, deque] = {
+        self.usage_history: dict[OrchestratorType, deque] = {
             OrchestratorType.SOPHIA: deque(maxlen=1440),  # 24 hours * 60 minutes
             OrchestratorType.ARTEMIS: deque(maxlen=1440),
         }
 
         # Allocation requests queue
-        self.pending_requests: List[AllocationRequest] = []
-        self.allocation_history: List[Dict[str, Any]] = []
+        self.pending_requests: list[AllocationRequest] = []
+        self.allocation_history: list[dict[str, Any]] = []
 
         # Current allocation strategy
         self.current_strategy: AllocationStrategy = AllocationStrategy.DEMAND_BASED
@@ -254,7 +254,7 @@ class DynamicResourceAllocator:
 
         logger.info("Initialized default resource budgets (50/50 split)")
 
-    async def request_resources(self, request: AllocationRequest) -> Dict[str, Any]:
+    async def request_resources(self, request: AllocationRequest) -> dict[str, Any]:
         """Request resource allocation"""
 
         logger.info(
@@ -391,10 +391,7 @@ class DynamicResourceAllocator:
             return True
 
         # Rebalance if resource saturation is occurring
-        if metrics.resource_saturation_events > 0:
-            return True
-
-        return False
+        return metrics.resource_saturation_events > 0
 
     async def _rebalance_resources(self):
         """Rebalance resources between orchestrators"""
@@ -428,7 +425,7 @@ class DynamicResourceAllocator:
 
     def _calculate_optimal_allocation(
         self, sophia_metrics: UsageMetrics, artemis_metrics: UsageMetrics
-    ) -> Dict[OrchestratorType, ResourceBudget]:
+    ) -> dict[OrchestratorType, ResourceBudget]:
         """Calculate optimal resource allocation based on metrics and strategy"""
 
         total_resources = self._calculate_total_resources()
@@ -448,8 +445,8 @@ class DynamicResourceAllocator:
         self,
         sophia_metrics: UsageMetrics,
         artemis_metrics: UsageMetrics,
-        total_resources: Dict[str, float],
-    ) -> Dict[OrchestratorType, ResourceBudget]:
+        total_resources: dict[str, float],
+    ) -> dict[OrchestratorType, ResourceBudget]:
         """Allocate resources based on demand (queue depth and throughput)"""
 
         sophia_demand = sophia_metrics.queue_depth + sophia_metrics.tasks_completed_last_hour
@@ -483,8 +480,8 @@ class DynamicResourceAllocator:
         self,
         sophia_metrics: UsageMetrics,
         artemis_metrics: UsageMetrics,
-        total_resources: Dict[str, float],
-    ) -> Dict[OrchestratorType, ResourceBudget]:
+        total_resources: dict[str, float],
+    ) -> dict[OrchestratorType, ResourceBudget]:
         """Allocate resources to optimize overall performance"""
 
         # Factor in success rate and response time
@@ -523,8 +520,8 @@ class DynamicResourceAllocator:
         self,
         sophia_metrics: UsageMetrics,
         artemis_metrics: UsageMetrics,
-        total_resources: Dict[str, float],
-    ) -> Dict[OrchestratorType, ResourceBudget]:
+        total_resources: dict[str, float],
+    ) -> dict[OrchestratorType, ResourceBudget]:
         """Allocate resources to minimize costs while maintaining performance"""
 
         # Factor in cost per task and resource efficiency
@@ -560,8 +557,8 @@ class DynamicResourceAllocator:
         }
 
     def _equal_split_allocation(
-        self, total_resources: Dict[str, float]
-    ) -> Dict[OrchestratorType, ResourceBudget]:
+        self, total_resources: dict[str, float]
+    ) -> dict[OrchestratorType, ResourceBudget]:
         """50/50 equal split allocation"""
         return {
             OrchestratorType.SOPHIA: self._create_budget_from_ratio(0.5, total_resources),
@@ -569,7 +566,7 @@ class DynamicResourceAllocator:
         }
 
     def _create_budget_from_ratio(
-        self, ratio: float, total_resources: Dict[str, float]
+        self, ratio: float, total_resources: dict[str, float]
     ) -> ResourceBudget:
         """Create resource budget from allocation ratio"""
         return ResourceBudget(
@@ -584,7 +581,7 @@ class DynamicResourceAllocator:
             last_updated=datetime.now(),
         )
 
-    def _calculate_total_resources(self) -> Dict[str, float]:
+    def _calculate_total_resources(self) -> dict[str, float]:
         """Calculate total available resources"""
         sophia_budget = self.budgets.get(OrchestratorType.SOPHIA)
         artemis_budget = self.budgets.get(OrchestratorType.ARTEMIS)
@@ -601,7 +598,7 @@ class DynamicResourceAllocator:
             "budget_usd": sophia_budget.budget_usd + artemis_budget.budget_usd,
         }
 
-    async def _apply_allocations(self, new_allocations: Dict[OrchestratorType, ResourceBudget]):
+    async def _apply_allocations(self, new_allocations: dict[OrchestratorType, ResourceBudget]):
         """Apply new resource allocations"""
         for orchestrator, new_budget in new_allocations.items():
             current_budget = self.budgets.get(orchestrator)
@@ -694,7 +691,7 @@ class DynamicResourceAllocator:
 
     def _create_allocation_response(
         self, request: AllocationRequest, success: bool, message: str
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Create response for allocation request"""
         return {
             "request_id": request.id,
@@ -707,7 +704,7 @@ class DynamicResourceAllocator:
             "budget_status": self._get_budget_status(request.orchestrator) if success else None,
         }
 
-    def _get_budget_status(self, orchestrator: OrchestratorType) -> Dict[str, Any]:
+    def _get_budget_status(self, orchestrator: OrchestratorType) -> dict[str, Any]:
         """Get current budget status for an orchestrator"""
         budget = self.budgets.get(orchestrator)
         if not budget:
@@ -784,7 +781,7 @@ class DynamicResourceAllocator:
         self.current_strategy = strategy
         logger.info(f"Allocation strategy changed to: {strategy.value}")
 
-    def get_allocation_status(self) -> Dict[str, Any]:
+    def get_allocation_status(self) -> dict[str, Any]:
         """Get current allocation status and metrics"""
         return {
             "current_strategy": self.current_strategy.value,
@@ -810,7 +807,7 @@ class DynamicResourceAllocator:
 
     def predict_resource_needs(
         self, hours_ahead: int = 4
-    ) -> Dict[OrchestratorType, Dict[str, float]]:
+    ) -> dict[OrchestratorType, dict[str, float]]:
         """Predict resource needs based on historical patterns"""
         predictions = {}
 
@@ -867,7 +864,7 @@ async def request_compute_tokens(
     orchestrator: OrchestratorType,
     amount: int,
     priority: ResourcePriority = ResourcePriority.NORMAL,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Request compute tokens for an orchestrator"""
     allocator = get_resource_allocator()
     request = AllocationRequest(
@@ -883,7 +880,7 @@ async def request_budget(
     orchestrator: OrchestratorType,
     amount: float,
     priority: ResourcePriority = ResourcePriority.NORMAL,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Request budget allocation for an orchestrator"""
     allocator = get_resource_allocator()
     request = AllocationRequest(

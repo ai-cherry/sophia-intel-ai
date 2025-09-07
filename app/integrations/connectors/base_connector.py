@@ -4,6 +4,7 @@ Foundation for all external service connectors
 """
 
 import asyncio
+import contextlib
 import json
 import logging
 from abc import ABC, abstractmethod
@@ -210,10 +211,8 @@ class BaseConnector(ABC):
         """Close connection to service"""
         if self._sync_task:
             self._sync_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self._sync_task
-            except asyncio.CancelledError:
-                pass
 
         if self.session:
             await self.session.close()

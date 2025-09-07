@@ -1004,6 +1004,8 @@ class IntegrationOrchestrator:
 
     def _determine_processing_mode(self, platform_data: dict[str, Any]) -> ProcessingMode:
         """Determine appropriate processing mode based on data characteristics"""
+        # platform_data will be used in future implementations for more sophisticated analysis
+        _ = platform_data  # Mark as intentionally unused for now
 
         # Check data freshness and priority indicators
         data_age = datetime.now(timezone.utc) - datetime.now(timezone.utc).replace(

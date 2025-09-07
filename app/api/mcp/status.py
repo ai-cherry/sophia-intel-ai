@@ -3,18 +3,15 @@ MCP Server Status API
 Provides real-time status information for MCP servers across domains
 """
 
-import asyncio
-import json
 import logging
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, HTTPException
 
 from app.artemis.artemis_orchestrator import ArtemisOrchestrator
 from app.core.shared_services import shared_services
 from app.mcp.enhanced_registry import MCPServerRegistry, MemoryDomain
-from app.mcp.router_config import MCPServerType
 from app.sophia.sophia_orchestrator import SophiaOrchestrator
 
 logger = logging.getLogger(__name__)
@@ -40,7 +37,7 @@ class MCPStatusAPI:
         if not self.artemis:
             self.artemis = ArtemisOrchestrator()
 
-    async def get_domain_server_status(self, domain: str) -> Dict[str, Any]:
+    async def get_domain_server_status(self, domain: str) -> dict[str, Any]:
         """Get comprehensive server status for a domain"""
         await self.initialize_orchestrators()
 
@@ -53,7 +50,7 @@ class MCPStatusAPI:
         else:
             raise HTTPException(status_code=400, detail=f"Invalid domain: {domain}")
 
-    async def _get_artemis_status(self) -> Dict[str, Any]:
+    async def _get_artemis_status(self) -> dict[str, Any]:
         """Get Artemis domain server status"""
         servers = self.registry.get_servers_for_domain(MemoryDomain.ARTEMIS)
 
@@ -90,7 +87,7 @@ class MCPStatusAPI:
             ),
         }
 
-    async def _get_sophia_status(self) -> Dict[str, Any]:
+    async def _get_sophia_status(self) -> dict[str, Any]:
         """Get Sophia domain server status"""
         servers = self.registry.get_servers_for_domain(MemoryDomain.SOPHIA)
 
@@ -138,7 +135,7 @@ class MCPStatusAPI:
             },
         }
 
-    async def _get_shared_status(self) -> Dict[str, Any]:
+    async def _get_shared_status(self) -> dict[str, Any]:
         """Get shared domain server status"""
         servers = self.registry.get_servers_for_domain(MemoryDomain.SHARED)
 
@@ -174,7 +171,7 @@ class MCPStatusAPI:
 
     async def _get_server_detailed_status(
         self, server_name: str, allocation: Any, server_config: Any
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Get detailed status for a single server"""
 
         # Simulate health check (in production, would make actual health check)
@@ -224,7 +221,7 @@ class MCPStatusAPI:
             logger.error(f"Health check failed for {server_name}: {e}")
             return False
 
-    async def _get_server_performance_metrics(self, server_name: str) -> Dict[str, float]:
+    async def _get_server_performance_metrics(self, server_name: str) -> dict[str, float]:
         """Get performance metrics for a server"""
         # Simulate realistic metrics based on server type
         import random
@@ -261,7 +258,7 @@ class MCPStatusAPI:
         import random
 
         minutes_ago = random.randint(1, 30)
-        last_activity = datetime.utcnow() - timedelta(minutes=minutes_ago)
+        datetime.utcnow() - timedelta(minutes=minutes_ago)
 
         if minutes_ago < 60:
             return f"{minutes_ago} minutes ago"
@@ -272,7 +269,7 @@ class MCPStatusAPI:
             days_ago = minutes_ago // 1440
             return f"{days_ago} days ago"
 
-    async def _calculate_domain_metrics(self, domain: MemoryDomain) -> Dict[str, Any]:
+    async def _calculate_domain_metrics(self, domain: MemoryDomain) -> dict[str, Any]:
         """Calculate aggregated metrics for a domain"""
         servers = self.registry.get_servers_for_domain(domain)
 
@@ -323,7 +320,7 @@ mcp_api = MCPStatusAPI()
 
 
 @router.get("/status/{domain}")
-async def get_domain_status(domain: str) -> Dict[str, Any]:
+async def get_domain_status(domain: str) -> dict[str, Any]:
     """Get MCP server status for a specific domain"""
     try:
         return await mcp_api.get_domain_server_status(domain.lower())
@@ -333,7 +330,7 @@ async def get_domain_status(domain: str) -> Dict[str, Any]:
 
 
 @router.get("/status")
-async def get_all_domains_status() -> Dict[str, Any]:
+async def get_all_domains_status() -> dict[str, Any]:
     """Get MCP server status for all domains"""
     try:
         artemis_status = await mcp_api.get_domain_server_status("artemis")
@@ -375,7 +372,7 @@ async def get_all_domains_status() -> Dict[str, Any]:
 
 
 @router.get("/servers/{server_name}")
-async def get_server_status(server_name: str) -> Dict[str, Any]:
+async def get_server_status(server_name: str) -> dict[str, Any]:
     """Get detailed status for a specific server"""
     try:
         # Find the server in registry
@@ -410,7 +407,7 @@ async def get_server_status(server_name: str) -> Dict[str, Any]:
 
 
 @router.post("/servers/{server_name}/health-check")
-async def trigger_health_check(server_name: str) -> Dict[str, Any]:
+async def trigger_health_check(server_name: str) -> dict[str, Any]:
     """Trigger a manual health check for a server"""
     try:
         server_config = mcp_api.registry.servers.get(server_name)
@@ -435,7 +432,7 @@ async def trigger_health_check(server_name: str) -> Dict[str, Any]:
 
 
 @router.get("/metrics/summary")
-async def get_metrics_summary() -> Dict[str, Any]:
+async def get_metrics_summary() -> dict[str, Any]:
     """Get aggregated metrics across all domains"""
     try:
         artemis_metrics = await mcp_api._calculate_domain_metrics(MemoryDomain.ARTEMIS)

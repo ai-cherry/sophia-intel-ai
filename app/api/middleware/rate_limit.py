@@ -9,7 +9,6 @@ import asyncio
 import time
 from collections import defaultdict, deque
 from functools import wraps
-from typing import Dict, Optional, Tuple
 
 from fastapi import HTTPException, Request, Response, status
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -25,13 +24,13 @@ class InMemoryRateLimiter:
 
     def __init__(self):
         # Structure: {client_id: {endpoint: deque of timestamps}}
-        self.requests: Dict[str, Dict[str, deque]] = defaultdict(lambda: defaultdict(deque))
+        self.requests: dict[str, dict[str, deque]] = defaultdict(lambda: defaultdict(deque))
         self.global_requests: deque = deque()
         self.lock = asyncio.Lock()
 
     async def is_allowed(
         self, client_id: str, endpoint: str, limit: int, window_seconds: int = 60
-    ) -> Tuple[bool, int, int]:
+    ) -> tuple[bool, int, int]:
         """
         Check if request is allowed based on rate limit
         Returns (is_allowed, requests_made, reset_time)
@@ -61,7 +60,7 @@ class InMemoryRateLimiter:
             reset_time = int(now + window_seconds)
             return True, current_requests + 1, reset_time
 
-    async def check_global_limit(self, limit: int, window_seconds: int = 60) -> Tuple[bool, int]:
+    async def check_global_limit(self, limit: int, window_seconds: int = 60) -> tuple[bool, int]:
         """
         Check global rate limit across all clients
         Returns (is_allowed, current_global_requests)
@@ -89,7 +88,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     FastAPI middleware for rate limiting
     """
 
-    def __init__(self, app, rate_limiter: Optional[InMemoryRateLimiter] = None):
+    def __init__(self, app, rate_limiter: InMemoryRateLimiter | None = None):
         super().__init__(app)
         self.rate_limiter = rate_limiter or InMemoryRateLimiter()
         self.enabled = settings.rate_limit_enabled

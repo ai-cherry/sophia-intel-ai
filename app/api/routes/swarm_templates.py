@@ -7,7 +7,7 @@ import asyncio
 import json
 import logging
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 from uuid import uuid4
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException, WebSocket, WebSocketDisconnect
@@ -15,7 +15,6 @@ from pydantic import BaseModel, Field
 
 from app.swarms.templates.swarm_generator import swarm_code_generator
 from app.swarms.templates.swarm_templates import (
-    SwarmTemplate,
     SwarmTopology,
     TemplateCategory,
     TemplateDomain,
@@ -40,15 +39,15 @@ class TemplateListRequest(BaseModel):
 class CodeGenerationRequest(BaseModel):
     template_id: str
     swarm_name: Optional[str] = None
-    custom_config: Dict[str, Any] = Field(default_factory=dict)
+    custom_config: dict[str, Any] = Field(default_factory=dict)
     save_to_file: bool = False
 
 
 class SwarmDeploymentRequest(BaseModel):
     template_id: str
     swarm_name: str
-    custom_config: Dict[str, Any] = Field(default_factory=dict)
-    agent_overrides: Dict[str, Any] = Field(default_factory=dict)
+    custom_config: dict[str, Any] = Field(default_factory=dict)
+    agent_overrides: dict[str, Any] = Field(default_factory=dict)
     auto_deploy: bool = False
     monitoring_enabled: bool = True
     notifications_enabled: bool = True
@@ -60,7 +59,7 @@ class SwarmStatusRequest(BaseModel):
 
 class TemplateValidationRequest(BaseModel):
     template_id: str
-    custom_config: Dict[str, Any] = Field(default_factory=dict)
+    custom_config: dict[str, Any] = Field(default_factory=dict)
 
 
 # ==============================================================================
@@ -79,31 +78,31 @@ class TemplateResponse(BaseModel):
     estimated_duration: str
     complexity_level: int
     pay_ready_optimized: bool
-    resource_limits: Dict[str, Any]
-    success_criteria: Dict[str, Any]
-    example_use_cases: List[str]
+    resource_limits: dict[str, Any]
+    success_criteria: dict[str, Any]
+    example_use_cases: list[str]
 
 
 class CodeGenerationResponse(BaseModel):
     success: bool
     code: Optional[str] = None
-    metadata: Optional[Dict[str, Any]] = None
+    metadata: Optional[dict[str, Any]] = None
     file_path: Optional[str] = None
-    errors: List[str] = Field(default_factory=list)
+    errors: list[str] = Field(default_factory=list)
 
 
 class DeploymentResponse(BaseModel):
     success: bool
     swarm_id: Optional[str] = None
     deployment_status: str
-    metadata: Optional[Dict[str, Any]] = None
-    errors: List[str] = Field(default_factory=list)
+    metadata: Optional[dict[str, Any]] = None
+    errors: list[str] = Field(default_factory=list)
 
 
 class SwarmStatusResponse(BaseModel):
     swarm_id: str
     status: str
-    metadata: Dict[str, Any]
+    metadata: dict[str, Any]
     created_at: str
     last_updated: str
 
@@ -113,8 +112,8 @@ class SwarmStatusResponse(BaseModel):
 # ==============================================================================
 
 # Track active swarm deployments
-active_deployments: Dict[str, Dict[str, Any]] = {}
-websocket_connections: List[WebSocket] = []
+active_deployments: dict[str, dict[str, Any]] = {}
+websocket_connections: list[WebSocket] = []
 
 # ==============================================================================
 # ROUTER SETUP
@@ -127,7 +126,7 @@ router = APIRouter(prefix="/api/swarm-templates", tags=["swarm-templates"])
 # ==============================================================================
 
 
-@router.get("/list", response_model=List[TemplateResponse])
+@router.get("/list", response_model=list[TemplateResponse])
 async def list_templates(
     domain: Optional[str] = None,
     category: Optional[str] = None,
@@ -284,7 +283,7 @@ async def generate_swarm_code(request: CodeGenerationRequest):
         return CodeGenerationResponse(success=False, errors=[f"Code generation failed: {str(e)}"])
 
 
-@router.post("/validate", response_model=Dict[str, Any])
+@router.post("/validate", response_model=dict[str, Any])
 async def validate_template_configuration(request: TemplateValidationRequest):
     """Validate template configuration without generating code"""
     try:
@@ -550,7 +549,7 @@ async def deployment_websocket(websocket: WebSocket):
 
         # Keep connection alive
         while True:
-            data = await websocket.receive_text()
+            await websocket.receive_text()
             # Echo back for keepalive
             await websocket.send_json(
                 {"type": "keepalive", "timestamp": datetime.now(timezone.utc).isoformat()}

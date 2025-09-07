@@ -4,15 +4,12 @@ Background Monitoring Agents for Sophia-Intel-AI
 Provides continuous system health monitoring and auto-remediation
 """
 import asyncio
-import json
 import logging
-import os
-import time
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
-from typing import Any, Deque, Dict, List, Optional
+from typing import Any, Optional
 
 import psutil
 
@@ -31,7 +28,7 @@ class HealthMetric:
     value: float
     timestamp: datetime
     status: str  # healthy, warning, critical
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -51,8 +48,8 @@ class BaseMonitoringAgent:
     def __init__(self, name: str, check_interval: int = 30):
         self.name = name
         self.check_interval = check_interval
-        self.metrics_history: Deque[HealthMetric] = deque(maxlen=1000)
-        self.alerts: List[Alert] = []
+        self.metrics_history: deque[HealthMetric] = deque(maxlen=1000)
+        self.alerts: list[Alert] = []
         self.running = False
         self.ws_manager = WebSocketManager()
 
@@ -71,11 +68,11 @@ class BaseMonitoringAgent:
                 logger.error(f"{self.name} error: {e}")
                 await asyncio.sleep(5)
 
-    async def collect_metrics(self) -> List[HealthMetric]:
+    async def collect_metrics(self) -> list[HealthMetric]:
         """Collect metrics - override in subclasses"""
         raise NotImplementedError
 
-    async def analyze_metrics(self, metrics: List[HealthMetric]):
+    async def analyze_metrics(self, metrics: list[HealthMetric]):
         """Analyze metrics and generate alerts"""
         for metric in metrics:
             self.metrics_history.append(metric)
@@ -115,7 +112,7 @@ class BaseMonitoringAgent:
             },
         )
 
-    async def broadcast_status(self, metrics: List[HealthMetric]):
+    async def broadcast_status(self, metrics: list[HealthMetric]):
         """Broadcast current status via WebSocket"""
         await self.ws_manager.broadcast(
             "monitoring_updates",
@@ -147,7 +144,7 @@ class MemoryGuardAgent(BaseMonitoringAgent):
         self.memory_threshold_warning = 70  # %
         self.memory_threshold_critical = 85  # %
 
-    async def collect_metrics(self) -> List[HealthMetric]:
+    async def collect_metrics(self) -> list[HealthMetric]:
         """Collect memory metrics"""
         memory = psutil.virtual_memory()
         swap = psutil.swap_memory()
@@ -217,7 +214,7 @@ class CostTrackerAgent(BaseMonitoringAgent):
         self.costs_by_provider = defaultdict(float)
         self.requests_by_provider = defaultdict(int)
 
-    async def collect_metrics(self) -> List[HealthMetric]:
+    async def collect_metrics(self) -> list[HealthMetric]:
         """Collect cost metrics"""
         metrics = []
 
@@ -269,11 +266,11 @@ class PerformanceAgent(BaseMonitoringAgent):
 
     def __init__(self):
         super().__init__("Performance", check_interval=15)
-        self.response_times: Deque[float] = deque(maxlen=100)
+        self.response_times: deque[float] = deque(maxlen=100)
         self.error_count = 0
         self.success_count = 0
 
-    async def collect_metrics(self) -> List[HealthMetric]:
+    async def collect_metrics(self) -> list[HealthMetric]:
         """Collect performance metrics"""
         metrics = []
 
@@ -345,7 +342,7 @@ class LogMonitorAgent(BaseMonitoringAgent):
         self.error_patterns = ["ERROR", "CRITICAL", "Exception", "Failed", "Timeout"]
         self.error_counts = defaultdict(int)
 
-    async def collect_metrics(self) -> List[HealthMetric]:
+    async def collect_metrics(self) -> list[HealthMetric]:
         """Collect log metrics"""
         metrics = []
 
@@ -392,7 +389,7 @@ class HealthCheckAgent(BaseMonitoringAgent):
             "llm_providers": self.check_llm_providers,
         }
 
-    async def collect_metrics(self) -> List[HealthMetric]:
+    async def collect_metrics(self) -> list[HealthMetric]:
         """Collect health check metrics"""
         metrics = []
 
@@ -486,7 +483,7 @@ class BackgroundAgentManager:
                 logger.error(f"Dashboard update error: {e}")
                 await asyncio.sleep(10)
 
-    def get_dashboard_data(self) -> Dict[str, Any]:
+    def get_dashboard_data(self) -> dict[str, Any]:
         """Get current dashboard data"""
         data = {"timestamp": datetime.now().isoformat(), "agents": {}}
 
@@ -504,7 +501,7 @@ class BackgroundAgentManager:
 
         return data
 
-    async def broadcast_dashboard(self, data: Dict[str, Any]):
+    async def broadcast_dashboard(self, data: dict[str, Any]):
         """Broadcast dashboard data via WebSocket"""
         ws_manager = WebSocketManager()
         await ws_manager.broadcast(

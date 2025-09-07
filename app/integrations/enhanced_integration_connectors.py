@@ -6,10 +6,9 @@ Provides operational intelligence and stuck account detection for Asana, Linear,
 import asyncio
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set
-from uuid import uuid4
+from typing import Any, Optional
 
 from app.core.websocket_manager import WebSocketManager
 from app.integrations.asana_client import AsanaClient
@@ -51,9 +50,9 @@ class StuckAccountAlert:
     description: str
     detected_at: datetime
     last_activity: Optional[datetime] = None
-    metrics: Dict[str, Any] = field(default_factory=dict)
-    recommended_actions: List[str] = field(default_factory=list)
-    affected_stakeholders: List[str] = field(default_factory=list)
+    metrics: dict[str, Any] = field(default_factory=dict)
+    recommended_actions: list[str] = field(default_factory=list)
+    affected_stakeholders: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -65,8 +64,8 @@ class OperationalIntelligence:
     description: str
     confidence: float
     impact_score: float
-    data: Dict[str, Any]
-    recommendations: List[str]
+    data: dict[str, Any]
+    recommendations: list[str]
     generated_at: datetime
 
 
@@ -76,9 +75,9 @@ class AsanaEnhancedConnector:
     def __init__(self, websocket_manager: WebSocketManager):
         self.asana_client = AsanaClient()
         self.websocket_manager = websocket_manager
-        self.stuck_account_cache: Dict[str, StuckAccountAlert] = {}
+        self.stuck_account_cache: dict[str, StuckAccountAlert] = {}
 
-    async def detect_stuck_accounts(self, workspace_gid: str) -> List[StuckAccountAlert]:
+    async def detect_stuck_accounts(self, workspace_gid: str) -> list[StuckAccountAlert]:
         """Detect stuck accounts across Asana projects and tasks"""
         alerts = []
 
@@ -107,8 +106,8 @@ class AsanaEnhancedConnector:
         return alerts
 
     async def _analyze_project_for_stuck_conditions(
-        self, project: Dict[str, Any]
-    ) -> List[StuckAccountAlert]:
+        self, project: dict[str, Any]
+    ) -> list[StuckAccountAlert]:
         """Analyze individual project for stuck conditions"""
         alerts = []
         now = datetime.utcnow()
@@ -171,8 +170,8 @@ class AsanaEnhancedConnector:
         return alerts
 
     async def _analyze_tasks_for_stuck_conditions(
-        self, tasks: List[Dict[str, Any]], project: Dict[str, Any]
-    ) -> List[StuckAccountAlert]:
+        self, tasks: list[dict[str, Any]], project: dict[str, Any]
+    ) -> list[StuckAccountAlert]:
         """Analyze tasks for stuck conditions"""
         alerts = []
         now = datetime.utcnow()
@@ -270,9 +269,9 @@ class LinearEnhancedConnector:
     def __init__(self, websocket_manager: WebSocketManager):
         self.linear_client = LinearClient()
         self.websocket_manager = websocket_manager
-        self.velocity_history: Dict[str, List[Dict[str, Any]]] = {}
+        self.velocity_history: dict[str, list[dict[str, Any]]] = {}
 
-    async def detect_stuck_accounts(self) -> List[StuckAccountAlert]:
+    async def detect_stuck_accounts(self) -> list[StuckAccountAlert]:
         """Detect stuck accounts in Linear issues and projects"""
         alerts = []
 
@@ -294,7 +293,7 @@ class LinearEnhancedConnector:
 
         return alerts
 
-    async def _analyze_team_velocity(self, team: Dict[str, Any]) -> List[StuckAccountAlert]:
+    async def _analyze_team_velocity(self, team: dict[str, Any]) -> list[StuckAccountAlert]:
         """Analyze team velocity for stuck conditions"""
         alerts = []
 
@@ -342,15 +341,15 @@ class LinearEnhancedConnector:
 
         return alerts
 
-    async def _get_team_issues(self, team_id: str) -> List[Dict[str, Any]]:
+    async def _get_team_issues(self, team_id: str) -> list[dict[str, Any]]:
         """Get issues for a specific team"""
         # This would use Linear's GraphQL API to get team issues
         # For now, return empty list as placeholder
         return []
 
     async def _analyze_issues_for_stuck_conditions(
-        self, issues: List[Dict[str, Any]], team: Dict[str, Any]
-    ) -> List[StuckAccountAlert]:
+        self, issues: list[dict[str, Any]], team: dict[str, Any]
+    ) -> list[StuckAccountAlert]:
         """Analyze Linear issues for stuck conditions"""
         alerts = []
         now = datetime.utcnow()
@@ -398,7 +397,7 @@ class SlackEnhancedConnector:
         self.slack_client = SlackIntegration()
         self.websocket_manager = websocket_manager
 
-    async def detect_communication_gaps(self) -> List[StuckAccountAlert]:
+    async def detect_communication_gaps(self) -> list[StuckAccountAlert]:
         """Detect communication gaps and inactive channels"""
         alerts = []
 
@@ -415,12 +414,12 @@ class SlackEnhancedConnector:
 
         return alerts
 
-    async def _get_active_channels(self) -> List[Dict[str, Any]]:
+    async def _get_active_channels(self) -> list[dict[str, Any]]:
         """Get active Slack channels"""
         # Placeholder - would use Slack API to get channels
         return []
 
-    async def _analyze_channel_activity(self, channel: Dict[str, Any]) -> List[StuckAccountAlert]:
+    async def _analyze_channel_activity(self, channel: dict[str, Any]) -> list[StuckAccountAlert]:
         """Analyze channel for communication gaps"""
         alerts = []
 
@@ -440,9 +439,9 @@ class EnhancedIntegrationOrchestrator:
         self.slack_connector = SlackEnhancedConnector(websocket_manager)
 
         # Operational intelligence cache
-        self.intelligence_cache: List[OperationalIntelligence] = []
+        self.intelligence_cache: list[OperationalIntelligence] = []
 
-    async def run_stuck_account_detection(self) -> Dict[str, Any]:
+    async def run_stuck_account_detection(self) -> dict[str, Any]:
         """Run comprehensive stuck account detection across all integrations"""
         logger.info("🔍 Running comprehensive stuck account detection...")
 
@@ -490,8 +489,8 @@ class EnhancedIntegrationOrchestrator:
             return {"status": "failed", "error": str(e), "timestamp": start_time.isoformat()}
 
     async def _generate_operational_intelligence(
-        self, alerts: List[StuckAccountAlert]
-    ) -> List[OperationalIntelligence]:
+        self, alerts: list[StuckAccountAlert]
+    ) -> list[OperationalIntelligence]:
         """Generate operational intelligence from stuck account alerts"""
         intelligence = []
 
@@ -540,14 +539,14 @@ class EnhancedIntegrationOrchestrator:
 
         return intelligence
 
-    def _group_alerts_by_severity(self, alerts: List[StuckAccountAlert]) -> Dict[str, int]:
+    def _group_alerts_by_severity(self, alerts: list[StuckAccountAlert]) -> dict[str, int]:
         """Group alerts by severity level"""
         severity_counts = {severity.value: 0 for severity in StuckAccountSeverity}
         for alert in alerts:
             severity_counts[alert.severity.value] += 1
         return severity_counts
 
-    def _group_alerts_by_type(self, alerts: List[StuckAccountAlert]) -> Dict[str, int]:
+    def _group_alerts_by_type(self, alerts: list[StuckAccountAlert]) -> dict[str, int]:
         """Group alerts by type"""
         type_counts = {alert_type.value: 0 for alert_type in StuckAccountType}
         for alert in alerts:
@@ -555,7 +554,7 @@ class EnhancedIntegrationOrchestrator:
         return type_counts
 
     async def _broadcast_detection_summary(
-        self, alerts: List[StuckAccountAlert], intelligence: List[OperationalIntelligence]
+        self, alerts: list[StuckAccountAlert], intelligence: list[OperationalIntelligence]
     ):
         """Broadcast detection summary to subscribers"""
         await self.websocket_manager.broadcast_operational_intelligence(
@@ -577,19 +576,17 @@ class EnhancedIntegrationOrchestrator:
             },
         )
 
-    async def get_operational_dashboard_data(self) -> Dict[str, Any]:
+    async def get_operational_dashboard_data(self) -> dict[str, Any]:
         """Get comprehensive operational dashboard data"""
         return {
-            "active_alerts": len(
-                [alert for alert in self.asana_connector.stuck_account_cache.values()]
-            ),
+            "active_alerts": len(list(self.asana_connector.stuck_account_cache.values())),
             "recent_intelligence": [intel.__dict__ for intel in self.intelligence_cache[-10:]],
             "system_health": await self._calculate_system_health(),
             "recommendations": await self._get_top_recommendations(),
             "last_scan": datetime.utcnow().isoformat(),
         }
 
-    async def _calculate_system_health(self) -> Dict[str, Any]:
+    async def _calculate_system_health(self) -> dict[str, Any]:
         """Calculate overall system health score"""
         # Simple health calculation based on alert severity
         total_alerts = len(self.asana_connector.stuck_account_cache)
@@ -632,7 +629,7 @@ class EnhancedIntegrationOrchestrator:
             "total_alerts": total_alerts,
         }
 
-    async def _get_top_recommendations(self) -> List[str]:
+    async def _get_top_recommendations(self) -> list[str]:
         """Get top recommendations based on current intelligence"""
         recommendations = set()
 

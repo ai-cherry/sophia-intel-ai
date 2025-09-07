@@ -4,11 +4,10 @@ Base MCP Server Contract Interface
 Defines the fundamental contract that all MCP servers must implement
 """
 
-import asyncio
 from abc import ABC, abstractmethod
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Union
+from typing import Any, Optional
 
 from pydantic import BaseModel
 
@@ -38,10 +37,10 @@ class MCPRequest(BaseModel):
     client_id: str
     capability: str
     method: str
-    parameters: Dict[str, Any] = {}
+    parameters: dict[str, Any] = {}
     timeout: Optional[int] = 30
     priority: int = 5  # 1-10, where 1 is highest
-    metadata: Dict[str, Any] = {}
+    metadata: dict[str, Any] = {}
 
 
 class MCPResponse(BaseModel):
@@ -49,26 +48,26 @@ class MCPResponse(BaseModel):
 
     request_id: str
     success: bool
-    result: Optional[Dict[str, Any]] = None
+    result: Optional[dict[str, Any]] = None
     error: Optional[str] = None
     error_code: Optional[str] = None
     execution_time: float
     server_id: str
     timestamp: datetime
-    metadata: Dict[str, Any] = {}
+    metadata: dict[str, Any] = {}
 
 
 class CapabilityDeclaration(BaseModel):
     """Capability declaration for MCP servers"""
 
     name: str
-    methods: List[str]
+    methods: list[str]
     description: str
     status: CapabilityStatus = CapabilityStatus.AVAILABLE
-    requirements: List[str] = []
-    dependencies: List[str] = []
-    configuration: Dict[str, Any] = {}
-    performance_metrics: Dict[str, Any] = {}
+    requirements: list[str] = []
+    dependencies: list[str] = []
+    configuration: dict[str, Any] = {}
+    performance_metrics: dict[str, Any] = {}
 
 
 class HealthCheckResult(BaseModel):
@@ -77,8 +76,8 @@ class HealthCheckResult(BaseModel):
     status: HealthStatus
     timestamp: datetime
     response_time: float
-    details: Dict[str, Any] = {}
-    capabilities_status: Dict[str, CapabilityStatus] = {}
+    details: dict[str, Any] = {}
+    capabilities_status: dict[str, CapabilityStatus] = {}
     error_message: Optional[str] = None
 
 
@@ -90,7 +89,7 @@ class ConnectionInfo(BaseModel):
     last_activity: datetime
     request_count: int = 0
     error_count: int = 0
-    client_metadata: Dict[str, Any] = {}
+    client_metadata: dict[str, Any] = {}
 
 
 class BaseMCPServerContract(ABC):
@@ -103,8 +102,8 @@ class BaseMCPServerContract(ABC):
         self.server_id = server_id
         self.name = name
         self.version = version
-        self.capabilities: Dict[str, CapabilityDeclaration] = {}
-        self.active_connections: Dict[str, ConnectionInfo] = {}
+        self.capabilities: dict[str, CapabilityDeclaration] = {}
+        self.active_connections: dict[str, ConnectionInfo] = {}
         self.server_start_time = datetime.now()
         self.request_count = 0
         self.error_count = 0
@@ -127,7 +126,7 @@ class BaseMCPServerContract(ABC):
         pass
 
     @abstractmethod
-    async def get_capabilities(self) -> Dict[str, CapabilityDeclaration]:
+    async def get_capabilities(self) -> dict[str, CapabilityDeclaration]:
         """Get all available capabilities"""
         pass
 
@@ -138,7 +137,7 @@ class BaseMCPServerContract(ABC):
 
     # Connection Management
 
-    async def register_connection(self, client_id: str, metadata: Dict[str, Any] = None) -> bool:
+    async def register_connection(self, client_id: str, metadata: dict[str, Any] = None) -> bool:
         """Register a new client connection"""
         try:
             self.active_connections[client_id] = ConnectionInfo(
@@ -198,7 +197,7 @@ class BaseMCPServerContract(ABC):
 
     # Metrics and Monitoring
 
-    async def get_server_metrics(self) -> Dict[str, Any]:
+    async def get_server_metrics(self) -> dict[str, Any]:
         """Get comprehensive server metrics"""
         uptime = (datetime.now() - self.server_start_time).total_seconds()
 
@@ -223,7 +222,7 @@ class BaseMCPServerContract(ABC):
             "timestamp": datetime.now().isoformat(),
         }
 
-    async def get_connection_metrics(self) -> List[Dict[str, Any]]:
+    async def get_connection_metrics(self) -> list[dict[str, Any]]:
         """Get metrics for all connections"""
         return [
             {
@@ -285,7 +284,7 @@ class BaseMCPServerContract(ABC):
         )
 
     async def create_success_response(
-        self, request: MCPRequest, result: Dict[str, Any], execution_time: float
+        self, request: MCPRequest, result: dict[str, Any], execution_time: float
     ) -> MCPResponse:
         """Create standardized success response"""
         return MCPResponse(
@@ -299,7 +298,7 @@ class BaseMCPServerContract(ABC):
 
     # Server Information
 
-    async def get_server_info(self) -> Dict[str, Any]:
+    async def get_server_info(self) -> dict[str, Any]:
         """Get comprehensive server information"""
         return {
             "server_id": self.server_id,

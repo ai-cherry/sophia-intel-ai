@@ -5,7 +5,6 @@ Classification engine for automatic knowledge categorization
 from __future__ import annotations
 
 import re
-from typing import Dict, List, Optional, Set
 
 from app.core.ai_logger import logger
 from app.knowledge.models import (
@@ -29,7 +28,7 @@ class ClassificationEngine:
         self.priority_rules = self._init_priority_rules()
         self.pay_ready_keywords = self._init_pay_ready_keywords()
 
-    def _init_classification_rules(self) -> Dict[KnowledgeClassification, Dict]:
+    def _init_classification_rules(self) -> dict[KnowledgeClassification, dict]:
         """Initialize classification rules"""
         return {
             KnowledgeClassification.FOUNDATIONAL: {
@@ -132,7 +131,7 @@ class ClassificationEngine:
             },
         }
 
-    def _init_priority_rules(self) -> Dict[KnowledgePriority, List[str]]:
+    def _init_priority_rules(self) -> dict[KnowledgePriority, list[str]]:
         """Initialize priority determination rules"""
         return {
             KnowledgePriority.CRITICAL: [
@@ -184,7 +183,7 @@ class ClassificationEngine:
             ],
         }
 
-    def _init_pay_ready_keywords(self) -> Set[str]:
+    def _init_pay_ready_keywords(self) -> set[str]:
         """Pay-Ready specific keywords that indicate foundational knowledge"""
         return {
             "pay ready",
@@ -273,7 +272,7 @@ class ClassificationEngine:
         else:
             return KnowledgePriority.LOW
 
-    async def suggest_tags(self, entity: KnowledgeEntity) -> List[str]:
+    async def suggest_tags(self, entity: KnowledgeEntity) -> list[str]:
         """
         Suggest relevant tags for knowledge entity
         """
@@ -331,7 +330,7 @@ class ClassificationEngine:
         # Remove duplicates and return
         return list(set(tags))
 
-    async def detect_sensitivity(self, entity: KnowledgeEntity) -> Dict[str, bool]:
+    async def detect_sensitivity(self, entity: KnowledgeEntity) -> dict[str, bool]:
         """
         Detect sensitive information in knowledge
         """
@@ -392,11 +391,7 @@ class ClassificationEngine:
             r"\b\d{4}\s?\d{4}\s?\d{4}\s?\d{4}\b",  # Credit card
         ]
 
-        for pattern in pii_patterns:
-            if re.search(pattern, text):
-                return True
-
-        return False
+        return any(re.search(pattern, text) for pattern in pii_patterns)
 
     def _contains_financial(self, text: str) -> bool:
         """Check for financial information"""

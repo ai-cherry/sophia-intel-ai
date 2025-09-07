@@ -7,9 +7,9 @@ task types, cost constraints, and performance requirements.
 import logging
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from app.core.portkey_manager import ModelTier, TaskType, get_portkey_manager
+from app.core.portkey_manager import TaskType, get_portkey_manager
 from app.swarms.core.micro_swarm_base import AgentRole
 
 logger = logging.getLogger(__name__)
@@ -44,19 +44,19 @@ class ModelRoutingRule:
     description: str
 
     # Matching criteria
-    agent_roles: List[AgentRole] = field(default_factory=list)
-    task_types: List[TaskType] = field(default_factory=list)
-    swarm_profiles: List[SwarmModelProfile] = field(default_factory=list)
+    agent_roles: list[AgentRole] = field(default_factory=list)
+    task_types: list[TaskType] = field(default_factory=list)
+    swarm_profiles: list[SwarmModelProfile] = field(default_factory=list)
 
     # Model preferences
-    primary_models: List[str] = field(default_factory=list)
-    fallback_models: List[str] = field(default_factory=list)
-    excluded_models: List[str] = field(default_factory=list)
+    primary_models: list[str] = field(default_factory=list)
+    fallback_models: list[str] = field(default_factory=list)
+    excluded_models: list[str] = field(default_factory=list)
 
     # Performance constraints
     max_cost_per_1k_tokens: float = 0.05
     min_context_window: int = 4000
-    required_capabilities: List[str] = field(default_factory=list)
+    required_capabilities: list[str] = field(default_factory=list)
 
     # Quality requirements
     min_performance_tier: ModelPerformanceTier = ModelPerformanceTier.EFFICIENT
@@ -72,7 +72,7 @@ class ModelRoutingRule:
     # Metadata
     enabled: bool = True
     created_by: str = "system"
-    tags: List[str] = field(default_factory=list)
+    tags: list[str] = field(default_factory=list)
 
 
 class ModelRoutingEngine:
@@ -80,8 +80,8 @@ class ModelRoutingEngine:
 
     def __init__(self):
         self.portkey = get_portkey_manager()
-        self.routing_rules: Dict[str, ModelRoutingRule] = {}
-        self.model_performance_cache: Dict[str, Dict[str, float]] = {}
+        self.routing_rules: dict[str, ModelRoutingRule] = {}
+        self.model_performance_cache: dict[str, dict[str, float]] = {}
         self.routing_statistics = {
             "total_requests": 0,
             "successful_routes": 0,
@@ -239,8 +239,8 @@ class ModelRoutingEngine:
         swarm_profile: SwarmModelProfile,
         estimated_tokens: int = 1000,
         cost_limit: float = None,
-        context: Dict[str, Any] = None,
-    ) -> Dict[str, Any]:
+        context: dict[str, Any] = None,
+    ) -> dict[str, Any]:
         """
         Route model request based on agent role, task type, and constraints
 
@@ -317,7 +317,7 @@ class ModelRoutingEngine:
 
     def _find_matching_rules(
         self, agent_role: AgentRole, task_type: TaskType, swarm_profile: SwarmModelProfile
-    ) -> List[ModelRoutingRule]:
+    ) -> list[ModelRoutingRule]:
         """Find routing rules that match the request criteria"""
 
         matching_rules = []
@@ -375,7 +375,7 @@ class ModelRoutingEngine:
 
         return rule
 
-    def _select_primary_model(self, rule: ModelRoutingRule, context: Dict[str, Any]) -> str:
+    def _select_primary_model(self, rule: ModelRoutingRule, context: dict[str, Any]) -> str:
         """Select the best primary model from the rule"""
 
         if not rule.primary_models:
@@ -398,7 +398,7 @@ class ModelRoutingEngine:
         # Default to first model in list
         return rule.primary_models[0]
 
-    def _prepare_fallbacks(self, rule: ModelRoutingRule, context: Dict[str, Any]) -> List[str]:
+    def _prepare_fallbacks(self, rule: ModelRoutingRule, context: dict[str, Any]) -> list[str]:
         """Prepare fallback model list"""
 
         fallbacks = []
@@ -421,7 +421,7 @@ class ModelRoutingEngine:
 
     def _get_default_routing(
         self, agent_role: AgentRole, task_type: TaskType, estimated_tokens: int, cost_limit: float
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Get default routing when no rules match"""
 
         # Use Portkey's built-in routing
@@ -490,7 +490,7 @@ class ModelRoutingEngine:
 
         return ". ".join(rationale_parts) + "."
 
-    def _update_routing_stats(self, routing_decision: Dict[str, Any]):
+    def _update_routing_stats(self, routing_decision: dict[str, Any]):
         """Update routing statistics"""
 
         self.routing_statistics["total_requests"] += 1
@@ -519,11 +519,11 @@ class ModelRoutingEngine:
             return True
         return False
 
-    def update_model_performance(self, model: str, performance_metrics: Dict[str, float]):
+    def update_model_performance(self, model: str, performance_metrics: dict[str, float]):
         """Update model performance cache"""
         self.model_performance_cache[model] = performance_metrics
 
-    def get_routing_statistics(self) -> Dict[str, Any]:
+    def get_routing_statistics(self) -> dict[str, Any]:
         """Get routing statistics"""
 
         success_rate = 0.0
@@ -585,7 +585,7 @@ def create_cost_optimized_rule(rule_id: str, max_cost_per_1k: float = 0.005) -> 
     )
 
 
-def create_quality_focused_rule(rule_id: str, agent_roles: List[AgentRole]) -> ModelRoutingRule:
+def create_quality_focused_rule(rule_id: str, agent_roles: list[AgentRole]) -> ModelRoutingRule:
     """Create a quality-focused routing rule"""
     return ModelRoutingRule(
         rule_id=rule_id,
@@ -600,7 +600,7 @@ def create_quality_focused_rule(rule_id: str, agent_roles: List[AgentRole]) -> M
     )
 
 
-def create_speed_optimized_rule(rule_id: str, task_types: List[TaskType]) -> ModelRoutingRule:
+def create_speed_optimized_rule(rule_id: str, task_types: list[TaskType]) -> ModelRoutingRule:
     """Create a speed-optimized routing rule"""
     return ModelRoutingRule(
         rule_id=rule_id,

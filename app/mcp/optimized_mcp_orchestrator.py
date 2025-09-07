@@ -7,18 +7,15 @@ Unified, efficient MCP server coordination with real operations
 import asyncio
 import json
 import logging
-import os
 import subprocess
 import time
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 import aiofiles
-import httpx
 import redis.asyncio as redis
-import yaml
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
@@ -45,7 +42,7 @@ class MCPCapability(BaseModel):
     """MCP capability definition"""
 
     name: str
-    methods: List[str]
+    methods: list[str]
     domain: str = Field(..., pattern="^(artemis|sophia|shared)$")
     description: str
     enabled: bool = True
@@ -56,7 +53,7 @@ class MCPServerConfig(BaseModel):
 
     name: str
     domain: str
-    capabilities: List[MCPCapability]
+    capabilities: list[MCPCapability]
     health_check_interval: int = 30
     max_retries: int = 3
     timeout: int = 30
@@ -82,7 +79,7 @@ class OptimizedMCPOrchestrator:
         # Domain-based capability registry
         self.capabilities = self._load_capability_registry()
 
-    def _load_capability_registry(self) -> Dict[str, MCPServerConfig]:
+    def _load_capability_registry(self) -> dict[str, MCPServerConfig]:
         """Load optimized capability registry"""
         return {
             "artemis_filesystem": MCPServerConfig(
@@ -277,7 +274,7 @@ class OptimizedMCPOrchestrator:
 
         # Check git operations
         try:
-            result = subprocess.run(
+            subprocess.run(
                 ["git", "status", "--porcelain"],
                 cwd=self.repo_path,
                 capture_output=True,
@@ -298,8 +295,8 @@ class OptimizedMCPOrchestrator:
         )
 
     async def execute_operation(
-        self, capability: str, method: str, params: Dict[str, Any], client_id: str = "default"
-    ) -> Dict[str, Any]:
+        self, capability: str, method: str, params: dict[str, Any], client_id: str = "default"
+    ) -> dict[str, Any]:
         """Execute MCP operation with performance tracking"""
         start_time = time.time()
 
@@ -354,7 +351,7 @@ class OptimizedMCPOrchestrator:
 
     # Real Operation Handlers
 
-    async def _handle_filesystem_operation(self, method: str, params: Dict[str, Any]) -> Any:
+    async def _handle_filesystem_operation(self, method: str, params: dict[str, Any]) -> Any:
         """Handle real filesystem operations"""
         if method == "read_file":
             file_path = Path(self.repo_path) / params["path"]
@@ -425,7 +422,7 @@ class OptimizedMCPOrchestrator:
         else:
             raise ValueError(f"Unknown filesystem method: {method}")
 
-    async def _handle_git_operation(self, method: str, params: Dict[str, Any]) -> Any:
+    async def _handle_git_operation(self, method: str, params: dict[str, Any]) -> Any:
         """Handle real git operations"""
         if method == "git_status":
             result = subprocess.run(
@@ -490,7 +487,7 @@ class OptimizedMCPOrchestrator:
         else:
             raise ValueError(f"Unknown git method: {method}")
 
-    async def _handle_memory_operation(self, method: str, params: Dict[str, Any]) -> Any:
+    async def _handle_memory_operation(self, method: str, params: dict[str, Any]) -> Any:
         """Handle memory operations with Redis backend"""
         if method == "store_memory":
             key = f"memory:{params['key']}"
@@ -537,7 +534,7 @@ class OptimizedMCPOrchestrator:
         else:
             raise ValueError(f"Unknown memory method: {method}")
 
-    async def _handle_embeddings_operation(self, method: str, params: Dict[str, Any]) -> Any:
+    async def _handle_embeddings_operation(self, method: str, params: dict[str, Any]) -> Any:
         """Handle embeddings operations"""
         if method == "generate_embeddings":
             # Mock embeddings - in production would use actual embedding models
@@ -562,7 +559,7 @@ class OptimizedMCPOrchestrator:
         else:
             raise ValueError(f"Unknown embeddings method: {method}")
 
-    async def _handle_code_analysis_operation(self, method: str, params: Dict[str, Any]) -> Any:
+    async def _handle_code_analysis_operation(self, method: str, params: dict[str, Any]) -> Any:
         """Handle code analysis operations"""
         if method == "analyze_code":
             file_path = Path(self.repo_path) / params["path"]
@@ -586,7 +583,7 @@ class OptimizedMCPOrchestrator:
         else:
             raise ValueError(f"Unknown code analysis method: {method}")
 
-    async def _handle_analytics_operation(self, method: str, params: Dict[str, Any]) -> Any:
+    async def _handle_analytics_operation(self, method: str, params: dict[str, Any]) -> Any:
         """Handle business analytics operations"""
         if method == "sales_metrics":
             # Mock sales data
@@ -600,7 +597,7 @@ class OptimizedMCPOrchestrator:
         else:
             raise ValueError(f"Unknown analytics method: {method}")
 
-    async def _handle_database_operation(self, method: str, params: Dict[str, Any]) -> Any:
+    async def _handle_database_operation(self, method: str, params: dict[str, Any]) -> Any:
         """Handle database operations"""
         if method == "query":
             # Mock database query
@@ -613,7 +610,7 @@ class OptimizedMCPOrchestrator:
         else:
             raise ValueError(f"Unknown database method: {method}")
 
-    def get_capability_description(self, capability: MCPCapabilityType) -> Dict[str, Any]:
+    def get_capability_description(self, capability: MCPCapabilityType) -> dict[str, Any]:
         """Get description for a specific capability"""
         descriptions = {
             MCPCapabilityType.FILESYSTEM: {
@@ -659,7 +656,7 @@ class OptimizedMCPOrchestrator:
         }
         return descriptions.get(capability, {})
 
-    def get_capability_endpoints(self, capability: MCPCapabilityType) -> List[str]:
+    def get_capability_endpoints(self, capability: MCPCapabilityType) -> list[str]:
         """Get API endpoints for a specific capability"""
         endpoint_map = {
             MCPCapabilityType.FILESYSTEM: [
@@ -677,7 +674,7 @@ class OptimizedMCPOrchestrator:
         }
         return endpoint_map.get(capability, [])
 
-    async def get_health_status(self) -> Dict[str, Any]:
+    async def get_health_status(self) -> dict[str, Any]:
         """Get comprehensive health status"""
         return {
             "orchestrator_status": "healthy",
@@ -688,7 +685,7 @@ class OptimizedMCPOrchestrator:
             "last_updated": datetime.now().isoformat(),
         }
 
-    async def get_capabilities(self) -> Dict[str, Any]:
+    async def get_capabilities(self) -> dict[str, Any]:
         """Get all available capabilities"""
         capabilities_info = {}
 
@@ -713,10 +710,10 @@ class OptimizedMCPOrchestrator:
         self,
         capability: MCPCapabilityType,
         method: str,
-        params: Dict[str, Any],
+        params: dict[str, Any],
         client_id: str = "default",
         domain: MCPDomain = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Execute MCP request with capability type enum support"""
         capability_str = capability.value if hasattr(capability, "value") else str(capability)
         return await self.execute_operation(capability_str, method, params, client_id)
@@ -747,7 +744,7 @@ async def get_mcp_orchestrator() -> OptimizedMCPOrchestrator:
     return _global_orchestrator
 
 
-async def mcp_read_file(file_path: str, client_id: str = "default") -> Dict[str, Any]:
+async def mcp_read_file(file_path: str, client_id: str = "default") -> dict[str, Any]:
     """Convenience function for file reading"""
     orchestrator = await get_mcp_orchestrator()
     return await orchestrator.execute_operation(
@@ -755,7 +752,7 @@ async def mcp_read_file(file_path: str, client_id: str = "default") -> Dict[str,
     )
 
 
-async def mcp_git_status(repository: str = ".", client_id: str = "default") -> Dict[str, Any]:
+async def mcp_git_status(repository: str = ".", client_id: str = "default") -> dict[str, Any]:
     """Convenience function for git status"""
     orchestrator = await get_mcp_orchestrator()
     return await orchestrator.execute_operation(

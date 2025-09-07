@@ -8,7 +8,7 @@ import os
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Optional
 
 
 class ApprovalStatus(Enum):
@@ -26,8 +26,8 @@ class ModelApproval:
 
     model_id: str
     status: ApprovalStatus
-    allowed_orchestrators: Set[str] = field(default_factory=set)
-    allowed_agents: Set[str] = field(default_factory=set)
+    allowed_orchestrators: set[str] = field(default_factory=set)
+    allowed_agents: set[str] = field(default_factory=set)
     cost_tier: str = "standard"
     max_tokens_per_request: int = 32768
     requires_approval_above: int = 100000  # Token threshold
@@ -53,7 +53,7 @@ class ModelApprovalDashboard:
             self.usage_tracking = {}
             self.cost_tracking = {}
 
-    def _initialize_approvals(self) -> Dict[str, ModelApproval]:
+    def _initialize_approvals(self) -> dict[str, ModelApproval]:
         """Initialize model approval configurations"""
 
         # Default approval configuration based on your priorities
@@ -277,7 +277,7 @@ class ModelApprovalDashboard:
         orchestrator: Optional[str] = None,
         agent: Optional[str] = None,
         cost_tier: Optional[str] = None,
-    ) -> List[str]:
+    ) -> list[str]:
         """Get list of approved models for specific context"""
 
         approved = []
@@ -349,7 +349,7 @@ class ModelApprovalDashboard:
         self.usage_tracking[model_id]["total_requests"] += 1
         self.usage_tracking[model_id]["total_cost"] += cost
 
-    def get_usage_report(self) -> Dict[str, Any]:
+    def get_usage_report(self) -> dict[str, Any]:
         """Get usage report for all models"""
 
         report = {
@@ -370,7 +370,7 @@ class ModelApprovalDashboard:
 
         return report
 
-    def get_dashboard_summary(self) -> Dict[str, Any]:
+    def get_dashboard_summary(self) -> dict[str, Any]:
         """Get dashboard summary"""
 
         summary = {
@@ -431,7 +431,7 @@ class ModelApprovalDashboard:
         with open(self.config_file, "w") as f:
             json.dump(data, f, indent=2)
 
-    def _load_approvals(self) -> Dict[str, ModelApproval]:
+    def _load_approvals(self) -> dict[str, ModelApproval]:
         """Load approvals from file"""
         with open(self.config_file) as f:
             data = json.load(f)

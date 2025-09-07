@@ -8,12 +8,9 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 from portkey_ai import Portkey
-
-from app.orchestrators.artemis_unified import ArtemisUnifiedOrchestrator
-from app.orchestrators.sophia_unified import SophiaUnifiedOrchestrator
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +41,7 @@ class CrossDomainInsight:
     original_content: str
     translated_content: str
     confidence: float
-    metadata: Dict[str, Any]
+    metadata: dict[str, Any]
     timestamp: datetime = None
 
     def __post_init__(self):
@@ -205,7 +202,7 @@ class SophiaArtemisBridge:
         self.learning_history.append(insight)
         return insight
 
-    def translate_to_business(self, technical_metric: Dict[str, Any]) -> CrossDomainInsight:
+    def translate_to_business(self, technical_metric: dict[str, Any]) -> CrossDomainInsight:
         """
         Translate technical metrics to business impact
 
@@ -312,7 +309,7 @@ Business impact:"""
 
         return f"Technical implementation: {result}"
 
-    def _build_business_narrative(self, technical_metric: Dict[str, Any]) -> str:
+    def _build_business_narrative(self, technical_metric: dict[str, Any]) -> str:
         """Build business narrative from technical metrics"""
         narratives = []
 
@@ -341,8 +338,8 @@ Business impact:"""
         return ". ".join(narratives)
 
     def create_unified_insight(
-        self, business_context: Dict[str, Any], technical_context: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, business_context: dict[str, Any], technical_context: dict[str, Any]
+    ) -> dict[str, Any]:
         """Create unified insight combining both domains"""
         return {
             "timestamp": datetime.now().isoformat(),
@@ -361,8 +358,8 @@ Business impact:"""
         }
 
     def _find_correlations(
-        self, business_context: Dict[str, Any], technical_context: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
+        self, business_context: dict[str, Any], technical_context: dict[str, Any]
+    ) -> list[dict[str, Any]]:
         """Find correlations between business and technical metrics"""
         correlations = []
 
@@ -388,8 +385,8 @@ Business impact:"""
         return correlations
 
     def _generate_recommendations(
-        self, business_context: Dict[str, Any], technical_context: Dict[str, Any]
-    ) -> List[str]:
+        self, business_context: dict[str, Any], technical_context: dict[str, Any]
+    ) -> list[str]:
         """Generate cross-domain recommendations"""
         recommendations = []
 
@@ -421,7 +418,7 @@ Business impact:"""
         # For now, it's a placeholder for the synchronization logic
         pass
 
-    def get_translation_performance(self) -> Dict[str, Any]:
+    def get_translation_performance(self) -> dict[str, Any]:
         """Get performance metrics for translations"""
         if not self.learning_history:
             return {"total_translations": 0}

@@ -4,16 +4,13 @@ Bridges existing WebSocket events to AG-UI format while maintaining backwards co
 Selective adoption for new features with fallback to existing infrastructure
 """
 
-import asyncio
-import json
 import logging
 from collections.abc import AsyncGenerator
 from dataclasses import replace
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Optional
 
 from .agui_event_types import (
-    STREAMING_EVENT_TYPES,
     WEBSOCKET_TO_AGUI_MAPPING,
     AGUIEvent,
     AGUIEventMetadata,
@@ -24,8 +21,6 @@ from .agui_event_types import (
     DomainContext,
     WebSocketEventType,
     get_domain_from_message,
-    requires_authentication,
-    should_stream_event,
 )
 
 logger = logging.getLogger(__name__)
@@ -41,12 +36,12 @@ class AGUIEventAdapter:
         self.enable_streaming = enable_streaming
         self.enable_deltas = enable_deltas
         self.sequence_counter = 0
-        self.active_streams: Dict[str, Dict[str, Any]] = {}
-        self.text_buffers: Dict[str, str] = {}
+        self.active_streams: dict[str, dict[str, Any]] = {}
+        self.text_buffers: dict[str, str] = {}
 
     async def convert_websocket_event(
         self,
-        ws_event: Dict[str, Any],
+        ws_event: dict[str, Any],
         session_id: Optional[str] = None,
         user_id: Optional[str] = None,
         tenant_id: Optional[str] = None,
@@ -222,7 +217,7 @@ class AGUIEventAdapter:
         self,
         tool_name: str,
         tool_id: str,
-        arguments: Dict[str, Any],
+        arguments: dict[str, Any],
         session_id: Optional[str] = None,
         user_id: Optional[str] = None,
         tenant_id: Optional[str] = None,
@@ -296,7 +291,7 @@ class AGUIEventAdapter:
         return AGUIEvent(type=event_type, metadata=metadata, data=tool_call)
 
     def _convert_connected_event(
-        self, ws_event: Dict[str, Any], metadata: AGUIEventMetadata
+        self, ws_event: dict[str, Any], metadata: AGUIEventMetadata
     ) -> AGUIEvent:
         """Convert connected event"""
         return AGUIEvent(
@@ -311,11 +306,11 @@ class AGUIEventAdapter:
         )
 
     def _convert_swarm_event(
-        self, ws_event: Dict[str, Any], metadata: AGUIEventMetadata
+        self, ws_event: dict[str, Any], metadata: AGUIEventMetadata
     ) -> AGUIEvent:
         """Convert swarm event to appropriate AG-UI event type"""
         event_type_str = ws_event.get("event_type", "progress")
-        session_id = ws_event.get("session_id")
+        ws_event.get("session_id")
 
         # Map swarm event types to AG-UI types
         event_mapping = WEBSOCKET_TO_AGUI_MAPPING.get(WebSocketEventType.SWARM_EVENT, {})
@@ -352,7 +347,7 @@ class AGUIEventAdapter:
         return AGUIEvent(type=agui_type, metadata=metadata, data=data)
 
     def _convert_memory_event(
-        self, ws_event: Dict[str, Any], metadata: AGUIEventMetadata
+        self, ws_event: dict[str, Any], metadata: AGUIEventMetadata
     ) -> AGUIEvent:
         """Convert memory update event"""
         metadata = replace(metadata, domain=DomainContext.SYSTEM)
@@ -368,7 +363,7 @@ class AGUIEventAdapter:
         )
 
     def _convert_pay_ready_event(
-        self, ws_event: Dict[str, Any], metadata: AGUIEventMetadata
+        self, ws_event: dict[str, Any], metadata: AGUIEventMetadata
     ) -> AGUIEvent:
         """Convert Pay Ready update event"""
         metadata = replace(metadata, domain=DomainContext.PAY_READY)
@@ -386,7 +381,7 @@ class AGUIEventAdapter:
         )
 
     def _convert_stuck_account_event(
-        self, ws_event: Dict[str, Any], metadata: AGUIEventMetadata
+        self, ws_event: dict[str, Any], metadata: AGUIEventMetadata
     ) -> AGUIEvent:
         """Convert stuck account alert event"""
         metadata = replace(metadata, domain=DomainContext.PAY_READY)
@@ -404,7 +399,7 @@ class AGUIEventAdapter:
         )
 
     def _convert_performance_event(
-        self, ws_event: Dict[str, Any], metadata: AGUIEventMetadata
+        self, ws_event: dict[str, Any], metadata: AGUIEventMetadata
     ) -> AGUIEvent:
         """Convert team performance update event"""
         metadata = replace(metadata, domain=DomainContext.OPERATIONS)
@@ -421,7 +416,7 @@ class AGUIEventAdapter:
         )
 
     def _convert_intelligence_event(
-        self, ws_event: Dict[str, Any], metadata: AGUIEventMetadata
+        self, ws_event: dict[str, Any], metadata: AGUIEventMetadata
     ) -> AGUIEvent:
         """Convert operational intelligence event"""
         metadata = replace(metadata, domain=DomainContext.SOPHIA_INTEL)
@@ -439,7 +434,7 @@ class AGUIEventAdapter:
         )
 
     def _convert_deployment_event(
-        self, ws_event: Dict[str, Any], metadata: AGUIEventMetadata
+        self, ws_event: dict[str, Any], metadata: AGUIEventMetadata
     ) -> AGUIEvent:
         """Convert swarm deployment event"""
         metadata = replace(metadata, domain=DomainContext.ARTEMIS)
@@ -456,7 +451,7 @@ class AGUIEventAdapter:
         )
 
     def _convert_metrics_event(
-        self, ws_event: Dict[str, Any], metadata: AGUIEventMetadata
+        self, ws_event: dict[str, Any], metadata: AGUIEventMetadata
     ) -> AGUIEvent:
         """Convert system metrics event"""
         metadata = replace(metadata, domain=DomainContext.SYSTEM)
@@ -472,7 +467,7 @@ class AGUIEventAdapter:
         )
 
     def _convert_heartbeat_event(
-        self, ws_event: Dict[str, Any], metadata: AGUIEventMetadata
+        self, ws_event: dict[str, Any], metadata: AGUIEventMetadata
     ) -> AGUIEvent:
         """Convert heartbeat event"""
         return AGUIEvent(
@@ -482,7 +477,7 @@ class AGUIEventAdapter:
         )
 
     def _convert_error_event(
-        self, ws_event: Dict[str, Any], metadata: AGUIEventMetadata
+        self, ws_event: dict[str, Any], metadata: AGUIEventMetadata
     ) -> AGUIEvent:
         """Convert error event"""
         return AGUIEvent(
@@ -496,7 +491,7 @@ class AGUIEventAdapter:
         )
 
     def _convert_generic_event(
-        self, ws_event: Dict[str, Any], metadata: AGUIEventMetadata
+        self, ws_event: dict[str, Any], metadata: AGUIEventMetadata
     ) -> AGUIEvent:
         """Fallback for unmapped events"""
         return AGUIEvent(
@@ -518,7 +513,7 @@ class AGUIEventAdapter:
         self.sequence_counter += 1
         return self.sequence_counter
 
-    def get_active_streams(self) -> Dict[str, Any]:
+    def get_active_streams(self) -> dict[str, Any]:
         """Get information about active streams"""
         return {
             "count": len(self.active_streams),
@@ -544,7 +539,7 @@ class AGUIEventAdapter:
         self,
         state: str,
         previous_state: Optional[str] = None,
-        context: Optional[Dict[str, Any]] = None,
+        context: Optional[dict[str, Any]] = None,
         progress: Optional[float] = None,
         message: Optional[str] = None,
         session_id: Optional[str] = None,

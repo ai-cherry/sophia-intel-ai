@@ -30,7 +30,7 @@ from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Optional
 
 from jinja2 import DictLoader, Environment
 
@@ -101,9 +101,9 @@ class ConceptMapping:
     concept_id: str
     concept_name: str
     description: str
-    related_concepts: Set[str] = field(default_factory=set)
-    document_references: Set[str] = field(default_factory=set)
-    code_references: Set[str] = field(default_factory=set)
+    related_concepts: set[str] = field(default_factory=set)
+    document_references: set[str] = field(default_factory=set)
+    code_references: set[str] = field(default_factory=set)
     embedding_vector: Optional[EmbeddingVector] = None
     importance_score: float = 1.0
     last_updated: datetime = field(default_factory=datetime.utcnow)
@@ -119,9 +119,9 @@ class ExampleTier:
     code: str
     output: Optional[str] = None
     explanation: Optional[str] = None
-    prerequisites: List[str] = field(default_factory=list)
-    related_concepts: Set[str] = field(default_factory=set)
-    meta_tags: List[MetaTag] = field(default_factory=list)
+    prerequisites: list[str] = field(default_factory=list)
+    related_concepts: set[str] = field(default_factory=set)
+    meta_tags: list[MetaTag] = field(default_factory=list)
 
 
 @dataclass
@@ -134,7 +134,7 @@ class AIContextSection:
     confidence_score: float = 1.0  # How confident we are in this context
     auto_generated: bool = False
     last_updated: datetime = field(default_factory=datetime.utcnow)
-    source_analysis: Optional[Dict[str, Any]] = None  # Analysis that generated this
+    source_analysis: Optional[dict[str, Any]] = None  # Analysis that generated this
 
 
 @dataclass
@@ -161,18 +161,18 @@ class DocumentEntry:
     status: DocumentStatus = DocumentStatus.CURRENT
 
     # Tiered examples
-    examples: Dict[ComplexityLevel, List[ExampleTier]] = field(default_factory=dict)
+    examples: dict[ComplexityLevel, list[ExampleTier]] = field(default_factory=dict)
 
     # AI context sections
-    ai_contexts: Dict[AIContextType, AIContextSection] = field(default_factory=dict)
+    ai_contexts: dict[AIContextType, AIContextSection] = field(default_factory=dict)
 
     # Semantic mappings
-    concepts: Set[str] = field(default_factory=set)
-    related_documents: Set[str] = field(default_factory=set)
+    concepts: set[str] = field(default_factory=set)
+    related_documents: set[str] = field(default_factory=set)
 
     # Metadata
-    meta_tags: List[MetaTag] = field(default_factory=list)
-    source_files: Set[str] = field(default_factory=set)
+    meta_tags: list[MetaTag] = field(default_factory=list)
+    source_files: set[str] = field(default_factory=set)
     auto_generated: bool = False
     template_used: Optional[str] = None
 
@@ -198,7 +198,7 @@ class CodeAnalyzer:
         self.docstring_pattern = re.compile(r'"""([^"]+)"""', re.DOTALL)
         self.import_pattern = re.compile(r"from\s+(\S+)\s+import|import\s+(\S+)", re.MULTILINE)
 
-    def analyze_python_file(self, file_path: Path) -> Dict[str, Any]:
+    def analyze_python_file(self, file_path: Path) -> dict[str, Any]:
         """Analyze Python file for documentation insights"""
         if not file_path.exists():
             return {}
@@ -223,7 +223,7 @@ class CodeAnalyzer:
             logger.error(f"Error analyzing {file_path}: {e}")
             return {"error": str(e)}
 
-    def _extract_functions(self, tree: ast.AST) -> List[Dict[str, Any]]:
+    def _extract_functions(self, tree: ast.AST) -> list[dict[str, Any]]:
         """Extract function definitions"""
         functions = []
 
@@ -241,7 +241,7 @@ class CodeAnalyzer:
 
         return functions
 
-    def _extract_classes(self, tree: ast.AST) -> List[Dict[str, Any]]:
+    def _extract_classes(self, tree: ast.AST) -> list[dict[str, Any]]:
         """Extract class definitions"""
         classes = []
 
@@ -272,7 +272,7 @@ class CodeAnalyzer:
 
         return classes
 
-    def _extract_imports(self, content: str) -> List[str]:
+    def _extract_imports(self, content: str) -> list[str]:
         """Extract import statements"""
         imports = []
         for match in self.import_pattern.finditer(content):
@@ -282,11 +282,11 @@ class CodeAnalyzer:
                 imports.append(match.group(2))
         return imports
 
-    def _extract_docstrings(self, content: str) -> List[str]:
+    def _extract_docstrings(self, content: str) -> list[str]:
         """Extract all docstrings"""
         return [match.group(1).strip() for match in self.docstring_pattern.finditer(content)]
 
-    def _estimate_complexity(self, tree: ast.AST) -> Dict[str, int]:
+    def _estimate_complexity(self, tree: ast.AST) -> dict[str, int]:
         """Estimate code complexity metrics"""
         complexity = {
             "cyclomatic_complexity": 0,
@@ -329,7 +329,7 @@ class TemplateManager:
         self.templates = self._initialize_templates()
         self.jinja_env = Environment(loader=DictLoader(self.templates))
 
-    def _initialize_templates(self) -> Dict[str, str]:
+    def _initialize_templates(self) -> dict[str, str]:
         """Initialize built-in templates"""
         return {
             "api_reference": """# {{ title }}
@@ -553,7 +553,7 @@ class TemplateManager:
 """,
         }
 
-    def render_template(self, template_name: str, context: Dict[str, Any]) -> str:
+    def render_template(self, template_name: str, context: dict[str, Any]) -> str:
         """Render template with context"""
         try:
             template = self.jinja_env.get_template(template_name)
@@ -582,11 +582,11 @@ class LivingDocumentationSystem:
         self.template_manager = TemplateManager()
 
         # Document storage
-        self.documents: Dict[str, DocumentEntry] = {}
-        self.concepts: Dict[str, ConceptMapping] = {}
+        self.documents: dict[str, DocumentEntry] = {}
+        self.concepts: dict[str, ConceptMapping] = {}
 
         # Change tracking
-        self.file_hashes: Dict[str, str] = {}
+        self.file_hashes: dict[str, str] = {}
         self.last_scan: Optional[datetime] = None
 
         # Metrics
@@ -609,7 +609,7 @@ class LivingDocumentationSystem:
 
         logger.info(f"Initialized living documentation system with {len(self.documents)} documents")
 
-    async def scan_and_update(self, source_directory: Path) -> Dict[str, Any]:
+    async def scan_and_update(self, source_directory: Path) -> dict[str, Any]:
         """Scan source code and update documentation"""
         scan_results = {
             "files_scanned": 0,
@@ -713,7 +713,7 @@ class LivingDocumentationSystem:
         return document
 
     async def update_document(
-        self, doc_id: str, updates: Dict[str, Any], preserve_manual_changes: bool = True
+        self, doc_id: str, updates: dict[str, Any], preserve_manual_changes: bool = True
     ) -> Optional[DocumentEntry]:
         """Update existing document"""
 
@@ -784,10 +784,10 @@ class LivingDocumentationSystem:
     async def search_documents(
         self,
         query: str,
-        doc_types: Optional[List[DocumentationType]] = None,
-        complexity_levels: Optional[List[ComplexityLevel]] = None,
+        doc_types: Optional[list[DocumentationType]] = None,
+        complexity_levels: Optional[list[ComplexityLevel]] = None,
         limit: int = 10,
-    ) -> List[DocumentEntry]:
+    ) -> list[DocumentEntry]:
         """Search documents with semantic understanding"""
 
         results = []
@@ -832,7 +832,7 @@ class LivingDocumentationSystem:
         results.sort(key=lambda x: x[1], reverse=True)
         return [doc for doc, score in results[:limit]]
 
-    async def get_related_documents(self, doc_id: str, limit: int = 5) -> List[DocumentEntry]:
+    async def get_related_documents(self, doc_id: str, limit: int = 5) -> list[DocumentEntry]:
         """Get documents related to the given document"""
 
         if doc_id not in self.documents:
@@ -867,7 +867,7 @@ class LivingDocumentationSystem:
         related.sort(key=lambda x: x[1], reverse=True)
         return [doc for doc, score in related[:limit]]
 
-    async def generate_documentation_health_report(self) -> Dict[str, Any]:
+    async def generate_documentation_health_report(self) -> dict[str, Any]:
         """Generate comprehensive documentation health report"""
 
         report = {
@@ -967,7 +967,7 @@ class LivingDocumentationSystem:
         return report
 
     async def _update_documentation_for_file(
-        self, file_path: Path, analysis: Dict[str, Any]
+        self, file_path: Path, analysis: dict[str, Any]
     ) -> bool:
         """Update documentation for a specific file"""
 
@@ -1047,7 +1047,7 @@ class LivingDocumentationSystem:
             document.concepts.add(concept_id)
 
     async def _calculate_document_metrics(
-        self, document: DocumentEntry, code_analysis: Dict[str, Any]
+        self, document: DocumentEntry, code_analysis: dict[str, Any]
     ):
         """Calculate quality metrics for document"""
 
@@ -1241,7 +1241,7 @@ async def main():
     docs_system = await create_living_documentation_system("./docs")
 
     # Create a sample document
-    document = await docs_system.create_document(
+    await docs_system.create_document(
         doc_id="example_api",
         title="Example API Documentation",
         doc_type=DocumentationType.API_REFERENCE,

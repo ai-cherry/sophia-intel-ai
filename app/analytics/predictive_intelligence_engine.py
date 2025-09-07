@@ -3,17 +3,12 @@ Predictive Intelligence Engine for Operational Analytics
 Provides predictive models for stuck account detection, team performance forecasting, and operational intelligence
 """
 
-import asyncio
-import json
 import logging
-import math
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
-
-import numpy as np
+from typing import Any, Optional
 
 from app.core.websocket_manager import WebSocketManager
 
@@ -50,12 +45,12 @@ class PredictionResult:
     target_type: str  # "account", "team", "project"
     prediction_value: float  # 0.0 to 1.0 risk/probability score
     confidence: PredictionConfidence
-    features_analyzed: Dict[str, Any]
-    contributing_factors: List[str]
-    recommendations: List[str]
+    features_analyzed: dict[str, Any]
+    contributing_factors: list[str]
+    recommendations: list[str]
     generated_at: datetime
     expires_at: Optional[datetime] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -64,7 +59,7 @@ class TimeSeriesPoint:
 
     timestamp: datetime
     value: float
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 class MovingAverageCalculator:
@@ -113,7 +108,7 @@ class StuckAccountPredictor:
             "dependency_blocks": 0.10,
         }
 
-    async def predict_stuck_risk(self, account_data: Dict[str, Any]) -> PredictionResult:
+    async def predict_stuck_risk(self, account_data: dict[str, Any]) -> PredictionResult:
         """Predict risk of account becoming stuck"""
 
         # Extract and calculate features
@@ -144,7 +139,7 @@ class StuckAccountPredictor:
             metadata={"model_version": "1.0", "algorithm": "weighted_features"},
         )
 
-    async def _extract_features(self, account_data: Dict[str, Any]) -> Dict[str, float]:
+    async def _extract_features(self, account_data: dict[str, Any]) -> dict[str, float]:
         """Extract predictive features from account data"""
         features = {}
 
@@ -185,7 +180,7 @@ class StuckAccountPredictor:
 
         return features
 
-    def _calculate_risk_score(self, features: Dict[str, float]) -> float:
+    def _calculate_risk_score(self, features: dict[str, float]) -> float:
         """Calculate weighted risk score"""
         total_score = 0
         total_weight = 0
@@ -197,7 +192,7 @@ class StuckAccountPredictor:
 
         return total_score / max(total_weight, 0.001)  # Normalize
 
-    def _calculate_confidence(self, features: Dict[str, float]) -> PredictionConfidence:
+    def _calculate_confidence(self, features: dict[str, float]) -> PredictionConfidence:
         """Calculate prediction confidence based on data completeness"""
         available_features = len(features)
         total_features = len(self.feature_weights)
@@ -214,7 +209,7 @@ class StuckAccountPredictor:
         else:
             return PredictionConfidence.VERY_LOW
 
-    def _identify_contributing_factors(self, features: Dict[str, float]) -> List[str]:
+    def _identify_contributing_factors(self, features: dict[str, float]) -> list[str]:
         """Identify main contributing factors to stuck risk"""
         factors = []
 
@@ -234,8 +229,8 @@ class StuckAccountPredictor:
         return factors
 
     def _generate_recommendations(
-        self, features: Dict[str, float], factors: List[str]
-    ) -> List[str]:
+        self, features: dict[str, float], factors: list[str]
+    ) -> list[str]:
         """Generate recommendations based on risk factors"""
         recommendations = []
 
@@ -274,11 +269,11 @@ class TeamPerformancePredictor:
     """Predicts team performance trends"""
 
     def __init__(self):
-        self.velocity_trackers: Dict[str, MovingAverageCalculator] = defaultdict(
+        self.velocity_trackers: dict[str, MovingAverageCalculator] = defaultdict(
             lambda: MovingAverageCalculator(window_size=14)
         )
 
-    async def predict_team_performance(self, team_data: Dict[str, Any]) -> PredictionResult:
+    async def predict_team_performance(self, team_data: dict[str, Any]) -> PredictionResult:
         """Predict team performance trend"""
 
         team_id = team_data["id"]
@@ -341,8 +336,8 @@ class TeamPerformancePredictor:
         )
 
     def _analyze_performance_factors(
-        self, features: Dict[str, float], performance_score: float
-    ) -> List[str]:
+        self, features: dict[str, float], performance_score: float
+    ) -> list[str]:
         """Analyze factors affecting team performance"""
         factors = []
 
@@ -363,8 +358,8 @@ class TeamPerformancePredictor:
         return factors
 
     def _generate_performance_recommendations(
-        self, features: Dict[str, float], performance_score: float
-    ) -> List[str]:
+        self, features: dict[str, float], performance_score: float
+    ) -> list[str]:
         """Generate performance improvement recommendations"""
         recommendations = []
 
@@ -410,8 +405,8 @@ class PredictiveIntelligenceEngine:
         self.team_performance_predictor = TeamPerformancePredictor()
 
         # Prediction cache and history
-        self.prediction_cache: Dict[str, PredictionResult] = {}
-        self.prediction_history: List[PredictionResult] = []
+        self.prediction_cache: dict[str, PredictionResult] = {}
+        self.prediction_history: list[PredictionResult] = []
 
         # Model performance tracking
         self.model_metrics = {
@@ -421,7 +416,7 @@ class PredictiveIntelligenceEngine:
             "false_negative_rate": 0.0,
         }
 
-    async def analyze_operational_data(self, operational_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def analyze_operational_data(self, operational_data: dict[str, Any]) -> dict[str, Any]:
         """Analyze operational data and generate predictions"""
         logger.info("🔮 Running predictive intelligence analysis...")
 
@@ -476,8 +471,8 @@ class PredictiveIntelligenceEngine:
             return {"status": "failed", "error": str(e), "timestamp": start_time.isoformat()}
 
     async def _generate_prediction_summary(
-        self, predictions: List[PredictionResult]
-    ) -> Dict[str, Any]:
+        self, predictions: list[PredictionResult]
+    ) -> dict[str, Any]:
         """Generate summary insights from predictions"""
 
         high_risk_accounts = [
@@ -501,14 +496,14 @@ class PredictiveIntelligenceEngine:
             "confidence_distribution": self._analyze_confidence_distribution(predictions),
         }
 
-    def _group_predictions_by_type(self, predictions: List[PredictionResult]) -> Dict[str, int]:
+    def _group_predictions_by_type(self, predictions: list[PredictionResult]) -> dict[str, int]:
         """Group predictions by type"""
         type_counts = defaultdict(int)
         for prediction in predictions:
             type_counts[prediction.prediction_type.value] += 1
         return dict(type_counts)
 
-    def _extract_top_risk_factors(self, predictions: List[PredictionResult]) -> List[str]:
+    def _extract_top_risk_factors(self, predictions: list[PredictionResult]) -> list[str]:
         """Extract most common risk factors"""
         factor_counts = defaultdict(int)
         for prediction in predictions:
@@ -520,7 +515,7 @@ class PredictiveIntelligenceEngine:
             for factor, count in sorted(factor_counts.items(), key=lambda x: x[1], reverse=True)[:5]
         ]
 
-    def _extract_top_recommendations(self, predictions: List[PredictionResult]) -> List[str]:
+    def _extract_top_recommendations(self, predictions: list[PredictionResult]) -> list[str]:
         """Extract most common recommendations"""
         rec_counts = defaultdict(int)
         for prediction in predictions:
@@ -532,8 +527,8 @@ class PredictiveIntelligenceEngine:
         ]
 
     def _analyze_confidence_distribution(
-        self, predictions: List[PredictionResult]
-    ) -> Dict[str, int]:
+        self, predictions: list[PredictionResult]
+    ) -> dict[str, int]:
         """Analyze distribution of prediction confidence levels"""
         confidence_counts = defaultdict(int)
         for prediction in predictions:
@@ -541,7 +536,7 @@ class PredictiveIntelligenceEngine:
         return dict(confidence_counts)
 
     async def _broadcast_predictions(
-        self, predictions: List[PredictionResult], summary: Dict[str, Any]
+        self, predictions: list[PredictionResult], summary: dict[str, Any]
     ):
         """Broadcast prediction results via WebSocket"""
 
@@ -578,7 +573,7 @@ class PredictiveIntelligenceEngine:
             },
         )
 
-    async def get_prediction_dashboard_data(self) -> Dict[str, Any]:
+    async def get_prediction_dashboard_data(self) -> dict[str, Any]:
         """Get comprehensive prediction dashboard data"""
         active_predictions = {
             pid: pred
@@ -607,7 +602,7 @@ class PredictiveIntelligenceEngine:
             ),
         }
 
-    async def _calculate_recent_trends(self) -> Dict[str, Any]:
+    async def _calculate_recent_trends(self) -> dict[str, Any]:
         """Calculate recent prediction trends"""
         recent_predictions = [
             p

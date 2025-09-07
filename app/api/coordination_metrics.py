@@ -6,9 +6,7 @@ Lightweight metrics endpoint for monitoring orchestrator performance
 without over-engineering the solution.
 """
 
-import asyncio
-import json
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any
 
 from fastapi import APIRouter, HTTPException
@@ -33,7 +31,6 @@ async def get_metrics_dashboard() -> MetricsSummary:
     try:
         # Import here to avoid circular dependencies
         from app.coordination.dynamic_resource_allocator import DynamicResourceAllocator
-        from app.coordination.sophia_artemis_bridge import SophiaArtemisCoordinationBridge
 
         # Get allocator instance
         allocator = DynamicResourceAllocator()

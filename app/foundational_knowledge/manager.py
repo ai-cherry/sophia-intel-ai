@@ -3,15 +3,14 @@ Foundational Knowledge Manager
 Core service for managing CEO-curated knowledge with versioning and caching
 """
 
-import asyncio
 import hashlib
 import json
 import logging
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from datetime import datetime
+from typing import Any, Optional
 from uuid import UUID
 
-from sqlalchemy import and_, delete, func, or_, select, update
+from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from app.foundational_knowledge.cache_manager import CacheManager
@@ -89,7 +88,7 @@ class FoundationalKnowledgeManager:
         async with self.async_session() as session:
             try:
                 # Create initial version
-                version = await self.versioning_engine.create_version(
+                await self.versioning_engine.create_version(
                     knowledge=knowledge,
                     change_type=ChangeType.CREATE,
                     changed_by=created_by,
@@ -151,7 +150,7 @@ class FoundationalKnowledgeManager:
                 select(FoundationalKnowledge).where(
                     and_(
                         FoundationalKnowledge.id == knowledge_id,
-                        FoundationalKnowledge.is_current == True,
+                        FoundationalKnowledge.is_current,
                     )
                 )
             )
@@ -178,7 +177,7 @@ class FoundationalKnowledgeManager:
             return None
 
     async def update_knowledge(
-        self, knowledge_id: UUID, updates: Dict[str, Any], updated_by: str = "system"
+        self, knowledge_id: UUID, updates: dict[str, Any], updated_by: str = "system"
     ) -> Optional[FoundationalKnowledge]:
         """
         Update foundational knowledge with versioning
@@ -198,7 +197,7 @@ class FoundationalKnowledgeManager:
                     select(FoundationalKnowledge).where(
                         and_(
                             FoundationalKnowledge.id == knowledge_id,
-                            FoundationalKnowledge.is_current == True,
+                            FoundationalKnowledge.is_current,
                         )
                     )
                 )
@@ -208,7 +207,7 @@ class FoundationalKnowledgeManager:
                     return None
 
                 # Create version before updating
-                version = await self.versioning_engine.create_version(
+                await self.versioning_engine.create_version(
                     knowledge=knowledge,
                     change_type=ChangeType.UPDATE,
                     changed_by=updated_by,
@@ -274,7 +273,7 @@ class FoundationalKnowledgeManager:
 
                 if soft_delete:
                     # Create deletion version
-                    version = await self.versioning_engine.create_version(
+                    await self.versioning_engine.create_version(
                         knowledge=knowledge,
                         change_type=ChangeType.DELETE,
                         changed_by=deleted_by,
@@ -317,13 +316,13 @@ class FoundationalKnowledgeManager:
         self,
         query: str,
         category: Optional[str] = None,
-        tags: Optional[List[str]] = None,
+        tags: Optional[list[str]] = None,
         classification: Optional[DataClassification] = None,
         user_level: AccessLevel = AccessLevel.EMPLOYEE,
         limit: int = 20,
         offset: int = 0,
         use_cache: bool = True,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Search foundational knowledge
 
@@ -355,7 +354,7 @@ class FoundationalKnowledgeManager:
 
         async with self.async_session() as session:
             # Build query
-            stmt = select(FoundationalKnowledge).where(FoundationalKnowledge.is_current == True)
+            stmt = select(FoundationalKnowledge).where(FoundationalKnowledge.is_current)
 
             # Add filters
             filters = []
@@ -455,7 +454,7 @@ class FoundationalKnowledgeManager:
         target_id: UUID,
         relationship_type: RelationshipType,
         strength: float = 1.0,
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: Optional[dict[str, Any]] = None,
     ) -> KnowledgeRelationship:
         """
         Add a relationship between knowledge items
@@ -488,10 +487,10 @@ class FoundationalKnowledgeManager:
     async def get_related_knowledge(
         self,
         knowledge_id: UUID,
-        relationship_types: Optional[List[RelationshipType]] = None,
+        relationship_types: Optional[list[RelationshipType]] = None,
         min_strength: float = 0.0,
         limit: int = 10,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Get related knowledge items
 
@@ -515,7 +514,7 @@ class FoundationalKnowledgeManager:
                     and_(
                         KnowledgeRelationship.source_knowledge_id == knowledge_id,
                         KnowledgeRelationship.strength >= min_strength,
-                        FoundationalKnowledge.is_current == True,
+                        FoundationalKnowledge.is_current,
                     )
                 )
             )
@@ -546,7 +545,7 @@ class FoundationalKnowledgeManager:
 
     async def get_version_history(
         self, knowledge_id: UUID, limit: int = 10
-    ) -> List[KnowledgeVersion]:
+    ) -> list[KnowledgeVersion]:
         """
         Get version history for knowledge
 
@@ -605,7 +604,7 @@ class FoundationalKnowledgeManager:
                 return None
 
             # Create restore version
-            restore_version = await self.versioning_engine.create_version(
+            await self.versioning_engine.create_version(
                 knowledge=knowledge,
                 change_type=ChangeType.RESTORE,
                 changed_by=restored_by,
@@ -665,27 +664,27 @@ class FoundationalKnowledgeManager:
         key_string = ":".join(key_parts)
         return f"knowledge:{hashlib.md5(key_string.encode()).hexdigest()}"
 
-    async def get_statistics(self) -> Dict[str, Any]:
+    async def get_statistics(self) -> dict[str, Any]:
         """Get knowledge base statistics"""
         async with self.async_session() as session:
             # Total knowledge count
             total_count = await session.scalar(
                 select(func.count())
                 .select_from(FoundationalKnowledge)
-                .where(FoundationalKnowledge.is_current == True)
+                .where(FoundationalKnowledge.is_current)
             )
 
             # Count by category
             category_counts = await session.execute(
                 select(FoundationalKnowledge.category, func.count().label("count"))
-                .where(FoundationalKnowledge.is_current == True)
+                .where(FoundationalKnowledge.is_current)
                 .group_by(FoundationalKnowledge.category)
             )
 
             # Count by classification
             classification_counts = await session.execute(
                 select(FoundationalKnowledge.data_classification, func.count().label("count"))
-                .where(FoundationalKnowledge.is_current == True)
+                .where(FoundationalKnowledge.is_current)
                 .group_by(FoundationalKnowledge.data_classification)
             )
 

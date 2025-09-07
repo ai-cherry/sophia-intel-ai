@@ -3,16 +3,14 @@ Intelligence Store - High-level reasoning and insights memory
 Stores strategic insights, analytical findings, and high-level cognitive outputs
 """
 
-import asyncio
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Optional
 
 from app.core.unified_memory import (
     MemoryContext,
-    MemoryEntry,
     MemoryMetadata,
     MemoryPriority,
     unified_memory,
@@ -53,14 +51,14 @@ class IntelligenceInsight:
     detailed_analysis: str
     intelligence_type: IntelligenceType
     confidence: IntelligenceConfidence
-    supporting_evidence: List[str]
-    implications: List[str]
-    recommendations: List[str]
-    stakeholders: Set[str]
+    supporting_evidence: list[str]
+    implications: list[str]
+    recommendations: list[str]
+    stakeholders: set[str]
     time_relevance: str  # "immediate", "short_term", "long_term"
     business_impact: str  # "critical", "high", "medium", "low"
-    sources: List[str]
-    tags: Set[str]
+    sources: list[str]
+    tags: set[str]
 
 
 class IntelligenceStore:
@@ -111,7 +109,7 @@ class IntelligenceStore:
         logger.info(f"Stored intelligence insight: {insight.title} ({memory_id})")
         return memory_id
 
-    async def retrieve_insight(self, memory_id: str) -> Optional[Dict[str, Any]]:
+    async def retrieve_insight(self, memory_id: str) -> Optional[dict[str, Any]]:
         """Retrieve a specific intelligence insight"""
         entry = await self.memory_interface.retrieve(memory_id)
         if not entry:
@@ -130,14 +128,14 @@ class IntelligenceStore:
     async def search_insights(
         self,
         query: str,
-        intelligence_types: Optional[List[IntelligenceType]] = None,
-        business_impact: Optional[List[str]] = None,
-        time_relevance: Optional[List[str]] = None,
+        intelligence_types: Optional[list[IntelligenceType]] = None,
+        business_impact: Optional[list[str]] = None,
+        time_relevance: Optional[list[str]] = None,
         min_confidence: Optional[IntelligenceConfidence] = None,
-        stakeholders: Optional[Set[str]] = None,
+        stakeholders: Optional[set[str]] = None,
         max_results: int = 10,
         domain: Optional[str] = None,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Search intelligence insights with advanced filtering"""
 
         # Build search tags
@@ -191,7 +189,7 @@ class IntelligenceStore:
 
     async def get_strategic_summary(
         self, domain: Optional[str] = None, time_period_days: int = 30
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Get strategic intelligence summary for executive dashboards"""
 
         # Search for high-impact insights from recent period
@@ -303,7 +301,7 @@ class IntelligenceStore:
 
         return success
 
-    async def get_intelligence_analytics(self, domain: Optional[str] = None) -> Dict[str, Any]:
+    async def get_intelligence_analytics(self, domain: Optional[str] = None) -> dict[str, Any]:
         """Get analytics on intelligence store usage and patterns"""
 
         # This would integrate with the analytics system
@@ -411,7 +409,7 @@ class IntelligenceStore:
             key, structured_data, ttl=86400 * 30, namespace="intelligence"  # 30 days
         )
 
-    async def _retrieve_structured_insight(self, memory_id: str) -> Optional[Dict[str, Any]]:
+    async def _retrieve_structured_insight(self, memory_id: str) -> Optional[dict[str, Any]]:
         """Retrieve structured insight data"""
 
         if not self.memory_interface.redis_manager:
@@ -442,12 +440,12 @@ class IntelligenceStore:
 
     def _matches_advanced_filters(
         self,
-        structured_data: Optional[Dict[str, Any]],
-        intelligence_types: Optional[List[IntelligenceType]],
-        business_impact: Optional[List[str]],
-        time_relevance: Optional[List[str]],
+        structured_data: Optional[dict[str, Any]],
+        intelligence_types: Optional[list[IntelligenceType]],
+        business_impact: Optional[list[str]],
+        time_relevance: Optional[list[str]],
         min_confidence: Optional[IntelligenceConfidence],
-        stakeholders: Optional[Set[str]],
+        stakeholders: Optional[set[str]],
     ) -> bool:
         """Check if insight matches advanced filtering criteria"""
 

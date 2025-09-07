@@ -3,12 +3,10 @@ Artemis Portkey-Integrated Unified Factory
 Extends the ArtemisUnifiedFactory with Portkey routing for all LLM operations
 """
 
-import asyncio
 import json
 import logging
-from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Optional
 from uuid import uuid4
 
 from app.artemis.unified_factory import (
@@ -16,11 +14,10 @@ from app.artemis.unified_factory import (
     ArtemisUnifiedFactory,
     SwarmType,
     TechnicalAgentRole,
-    UnifiedArtemisConfig,
 )
 from app.core.portkey_config import PortkeyManager, get_portkey_manager
 from app.core.vector_db_config import get_vector_db_manager
-from app.memory.unified_memory import search_memory, store_memory
+from app.memory.unified_memory import store_memory
 
 logger = logging.getLogger(__name__)
 
@@ -121,7 +118,7 @@ class PortkeyArtemisFactory(ArtemisUnifiedFactory):
 
         return agent_profile
 
-    def _get_role_capabilities(self, role: TechnicalAgentRole) -> List[str]:
+    def _get_role_capabilities(self, role: TechnicalAgentRole) -> list[str]:
         """Get capabilities based on role"""
         capabilities_map = {
             TechnicalAgentRole.CODE_REVIEWER: [
@@ -172,7 +169,7 @@ class PortkeyArtemisFactory(ArtemisUnifiedFactory):
         }
         return capabilities_map.get(role, ["general_analysis"])
 
-    def _get_role_tools(self, role: TechnicalAgentRole) -> List[str]:
+    def _get_role_tools(self, role: TechnicalAgentRole) -> list[str]:
         """Get tools based on role"""
         tools_map = {
             TechnicalAgentRole.CODE_REVIEWER: ["ast_parser", "linter", "complexity_analyzer"],
@@ -199,7 +196,7 @@ class PortkeyArtemisFactory(ArtemisUnifiedFactory):
         }
         return tools_map.get(role, ["text_analyzer"])
 
-    def _get_fallback_providers(self, primary_provider: str) -> List[str]:
+    def _get_fallback_providers(self, primary_provider: str) -> list[str]:
         """Get fallback providers for a primary provider"""
         config = self.portkey_manager.get_provider_config(primary_provider)
         return config.fallback_providers if config else []
@@ -278,7 +275,7 @@ class PortkeyArtemisFactory(ArtemisUnifiedFactory):
         temperature: float = 0.7,
         max_tokens: int = 2000,
         **kwargs,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Execute a task using Portkey routing
 
@@ -393,7 +390,7 @@ Your responses should be direct, technical, and focused on the mission objective
 
     async def create_swarm_with_portkey(
         self, swarm_type: SwarmType, mission_name: str, agent_count: int = 3, **kwargs
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Create a swarm with Portkey-routed agents
 
@@ -448,7 +445,7 @@ Your responses should be direct, technical, and focused on the mission objective
             ],
             "created_at": datetime.now(timezone.utc).isoformat(),
             "portkey_enabled": True,
-            "provider_diversity": len(set(a.tactical_traits.get("provider") for a in agents)),
+            "provider_diversity": len({a.tactical_traits.get("provider") for a in agents}),
         }
 
         # Store swarm configuration
@@ -466,7 +463,7 @@ Your responses should be direct, technical, and focused on the mission objective
 
         return swarm_config
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """Perform comprehensive health check"""
         portkey_health = self.portkey_manager.health_check()
         vector_db_health = self.vector_db.health_check()

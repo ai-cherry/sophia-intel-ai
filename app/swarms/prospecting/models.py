@@ -6,9 +6,9 @@ Data models for prospect analysis, personality profiling, and research insights.
 
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Optional
 from uuid import uuid4
 
 logger = logging.getLogger(__name__)
@@ -85,17 +85,17 @@ class BehaviorPattern:
 
     # Pattern details
     frequency: str = ""  # daily, weekly, monthly
-    timing_patterns: List[str] = field(default_factory=list)
+    timing_patterns: list[str] = field(default_factory=list)
     consistency_score: float = 0.0  # 0-1
     confidence_level: float = 0.0  # 0-1
 
     # Supporting data
     data_points: int = 0
     observation_period_days: int = 0
-    supporting_evidence: List[Dict[str, Any]] = field(default_factory=list)
+    supporting_evidence: list[dict[str, Any]] = field(default_factory=list)
 
     # Predictive insights
-    predicts: List[str] = field(default_factory=list)  # What this pattern predicts
+    predicts: list[str] = field(default_factory=list)  # What this pattern predicts
     correlation_strength: float = 0.0
 
     # Metadata
@@ -103,7 +103,7 @@ class BehaviorPattern:
     last_updated: datetime = field(default_factory=datetime.now)
     source: ResearchSource = ResearchSource.LINKEDIN
 
-    def add_evidence(self, evidence: Dict[str, Any]):
+    def add_evidence(self, evidence: dict[str, Any]):
         """Add supporting evidence for pattern"""
         self.supporting_evidence.append({**evidence, "timestamp": datetime.now()})
         self.data_points += 1
@@ -127,22 +127,22 @@ class PersonalityProfile:
     # Basic personality indicators
     primary_disc_type: Optional[PersonalityType] = None
     secondary_disc_type: Optional[PersonalityType] = None
-    disc_scores: Dict[str, float] = field(default_factory=dict)  # D, I, S, C scores
+    disc_scores: dict[str, float] = field(default_factory=dict)  # D, I, S, C scores
 
     # Communication preferences
     communication_style: CommunicationStyle = CommunicationStyle.DIRECT
-    preferred_contact_methods: List[str] = field(default_factory=list)
-    response_timing_patterns: Dict[str, Any] = field(default_factory=dict)
+    preferred_contact_methods: list[str] = field(default_factory=list)
+    response_timing_patterns: dict[str, Any] = field(default_factory=dict)
 
     # Decision making
     decision_making_style: DecisionMakingStyle = DecisionMakingStyle.DATA_DRIVEN
-    decision_factors: List[str] = field(default_factory=list)
-    influence_network: List[str] = field(default_factory=list)  # Key influencers
+    decision_factors: list[str] = field(default_factory=list)
+    influence_network: list[str] = field(default_factory=list)  # Key influencers
 
     # Behavioral patterns
-    behavior_patterns: List[BehaviorPattern] = field(default_factory=list)
-    engagement_patterns: Dict[str, Any] = field(default_factory=dict)
-    activity_patterns: Dict[str, Any] = field(default_factory=dict)
+    behavior_patterns: list[BehaviorPattern] = field(default_factory=list)
+    engagement_patterns: dict[str, Any] = field(default_factory=dict)
+    activity_patterns: dict[str, Any] = field(default_factory=dict)
 
     # Advanced psychological insights
     risk_tolerance: float = 0.5  # 0-1 scale
@@ -157,12 +157,12 @@ class PersonalityProfile:
     analysis_version: str = "1.0"
 
     # Data sources
-    data_sources: List[ResearchSource] = field(default_factory=list)
+    data_sources: list[ResearchSource] = field(default_factory=list)
     linkedin_data_points: int = 0
     email_data_points: int = 0
     web_behavior_data_points: int = 0
 
-    def get_primary_disc_traits(self) -> List[str]:
+    def get_primary_disc_traits(self) -> list[str]:
         """Get primary DISC traits and characteristics"""
         trait_mapping = {
             PersonalityType.DOMINANT: [
@@ -201,7 +201,7 @@ class PersonalityProfile:
 
         return trait_mapping.get(self.primary_disc_type, [])
 
-    def get_optimal_outreach_approach(self) -> Dict[str, Any]:
+    def get_optimal_outreach_approach(self) -> dict[str, Any]:
         """Get personalized outreach recommendations"""
         if not self.primary_disc_type:
             return {"approach": "generic", "confidence": 0.0}
@@ -313,19 +313,19 @@ class ResearchInsight:
     author: str = ""
 
     # Tags and categorization
-    tags: List[str] = field(default_factory=list)
-    keywords: List[str] = field(default_factory=list)
-    entities_mentioned: List[str] = field(default_factory=list)
+    tags: list[str] = field(default_factory=list)
+    keywords: list[str] = field(default_factory=list)
+    entities_mentioned: list[str] = field(default_factory=list)
 
     # Analysis results
     sentiment: float = 0.0  # -1 to 1
     confidence: float = 0.0  # 0-1
-    related_insights: List[str] = field(default_factory=list)  # Related insight IDs
+    related_insights: list[str] = field(default_factory=list)  # Related insight IDs
 
     # Outreach recommendations
     outreach_angle: str = ""
-    message_themes: List[str] = field(default_factory=list)
-    talking_points: List[str] = field(default_factory=list)
+    message_themes: list[str] = field(default_factory=list)
+    talking_points: list[str] = field(default_factory=list)
 
     # Metadata
     discovered_at: datetime = field(default_factory=datetime.now)
@@ -357,7 +357,7 @@ class ResearchInsight:
 
         return sum(factors)
 
-    def generate_outreach_recommendations(self) -> Dict[str, Any]:
+    def generate_outreach_recommendations(self) -> dict[str, Any]:
         """Generate specific outreach recommendations based on insight"""
         recommendations = {
             "primary_angle": self.outreach_angle,
@@ -402,20 +402,20 @@ class ProspectIntelligence:
 
     # Personality and behavior
     personality_profile: Optional[PersonalityProfile] = None
-    behavior_patterns: List[BehaviorPattern] = field(default_factory=list)
-    communication_preferences: Dict[str, Any] = field(default_factory=dict)
+    behavior_patterns: list[BehaviorPattern] = field(default_factory=list)
+    communication_preferences: dict[str, Any] = field(default_factory=dict)
 
     # Research insights
-    research_insights: List[ResearchInsight] = field(default_factory=list)
-    company_insights: List[ResearchInsight] = field(default_factory=list)
-    industry_insights: List[ResearchInsight] = field(default_factory=list)
+    research_insights: list[ResearchInsight] = field(default_factory=list)
+    company_insights: list[ResearchInsight] = field(default_factory=list)
+    industry_insights: list[ResearchInsight] = field(default_factory=list)
 
     # Engagement history
     engagement_score: float = 0.0  # 0-1
     last_engagement: Optional[datetime] = None
-    engagement_history: List[Dict[str, Any]] = field(default_factory=list)
+    engagement_history: list[dict[str, Any]] = field(default_factory=list)
     response_rate: float = 0.0
-    preferred_engagement_channels: List[str] = field(default_factory=list)
+    preferred_engagement_channels: list[str] = field(default_factory=list)
 
     # Scoring and prioritization
     lead_score: int = 0
@@ -427,12 +427,12 @@ class ProspectIntelligence:
     estimated_deal_size: float = 0.0
     decision_timeline: str = ""  # 3-6 months, 6-12 months, etc.
     budget_authority: str = ""  # influencer, decision_maker, economic_buyer
-    pain_points: List[str] = field(default_factory=list)
+    pain_points: list[str] = field(default_factory=list)
 
     # Competitive landscape
-    current_solutions: List[str] = field(default_factory=list)
-    competitive_threats: List[str] = field(default_factory=list)
-    switching_barriers: List[str] = field(default_factory=list)
+    current_solutions: list[str] = field(default_factory=list)
+    competitive_threats: list[str] = field(default_factory=list)
+    switching_barriers: list[str] = field(default_factory=list)
 
     # Metadata
     created_at: datetime = field(default_factory=datetime.now)
@@ -452,7 +452,7 @@ class ProspectIntelligence:
 
         return sum(priority_factors)
 
-    def get_personalized_outreach_strategy(self) -> Dict[str, Any]:
+    def get_personalized_outreach_strategy(self) -> dict[str, Any]:
         """Get comprehensive personalized outreach strategy"""
         strategy = {
             "priority_score": self.get_outreach_priority(),

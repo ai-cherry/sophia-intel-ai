@@ -4,12 +4,11 @@ Manages service discovery, registration, and mesh configuration updates
 """
 
 import asyncio
-import json
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Optional
 
 import aiohttp
 from kubernetes import client, config, watch
@@ -35,8 +34,8 @@ class ServiceEndpoint:
     namespace: str
     address: str
     port: int
-    labels: Dict[str, str] = field(default_factory=dict)
-    annotations: Dict[str, str] = field(default_factory=dict)
+    labels: dict[str, str] = field(default_factory=dict)
+    annotations: dict[str, str] = field(default_factory=dict)
     status: ServiceStatus = ServiceStatus.UNKNOWN
     last_health_check: Optional[datetime] = None
     version: str = "unknown"
@@ -50,13 +49,13 @@ class MeshService:
     name: str
     namespace: str
     domain: str  # artemis, sophia, or shared
-    endpoints: List[ServiceEndpoint] = field(default_factory=list)
+    endpoints: list[ServiceEndpoint] = field(default_factory=list)
     virtual_service: Optional[str] = None
     destination_rule: Optional[str] = None
     service_entry: Optional[str] = None
-    labels: Dict[str, str] = field(default_factory=dict)
-    selectors: Dict[str, str] = field(default_factory=dict)
-    ports: List[Dict[str, Any]] = field(default_factory=list)
+    labels: dict[str, str] = field(default_factory=dict)
+    selectors: dict[str, str] = field(default_factory=dict)
+    ports: list[dict[str, Any]] = field(default_factory=list)
     created_at: datetime = field(default_factory=datetime.now)
     updated_at: datetime = field(default_factory=datetime.now)
 
@@ -82,8 +81,8 @@ class MeshController:
         """
         self.istio_namespace = istio_namespace
         self.prometheus_url = prometheus_url
-        self.services: Dict[str, MeshService] = {}
-        self.watchers: Dict[str, watch.Watch] = {}
+        self.services: dict[str, MeshService] = {}
+        self.watchers: dict[str, watch.Watch] = {}
         self.running = False
 
         # Initialize Kubernetes client
@@ -236,7 +235,7 @@ class MeshController:
             del self.services[service_key]
             logger.info(f"Deregistered service: {service_key}")
 
-    async def update_service(self, name: str, namespace: str, updates: Dict[str, Any]):
+    async def update_service(self, name: str, namespace: str, updates: dict[str, Any]):
         """
         Update service configuration
 
@@ -273,7 +272,7 @@ class MeshController:
 
     async def list_services(
         self, domain: Optional[str] = None, namespace: Optional[str] = None
-    ) -> List[MeshService]:
+    ) -> list[MeshService]:
         """
         List services in the mesh
 
@@ -294,7 +293,7 @@ class MeshController:
 
         return services
 
-    async def get_healthy_endpoints(self, name: str, namespace: str) -> List[ServiceEndpoint]:
+    async def get_healthy_endpoints(self, name: str, namespace: str) -> list[ServiceEndpoint]:
         """
         Get healthy endpoints for a service
 
@@ -356,7 +355,7 @@ class MeshController:
                 if not self.running:
                     break
 
-                event_type = event["type"]
+                event["type"]
                 endpoints = event["object"]
 
                 # Update service endpoints
@@ -484,7 +483,7 @@ class MeshController:
         else:
             return "unknown"
 
-    async def apply_mesh_config(self, config: Dict[str, Any]):
+    async def apply_mesh_config(self, config: dict[str, Any]):
         """
         Apply mesh configuration updates
 
@@ -513,7 +512,7 @@ class MeshController:
             logger.error(f"Failed to apply mesh configuration: {e}")
             raise
 
-    async def _apply_virtual_service(self, config: Dict[str, Any]):
+    async def _apply_virtual_service(self, config: dict[str, Any]):
         """Apply VirtualService configuration"""
         try:
             namespace = config.get("namespace", "default")
@@ -565,7 +564,7 @@ class MeshController:
             logger.error(f"Failed to apply VirtualService: {e}")
             raise
 
-    async def _apply_destination_rule(self, config: Dict[str, Any]):
+    async def _apply_destination_rule(self, config: dict[str, Any]):
         """Apply DestinationRule configuration"""
         try:
             namespace = config.get("namespace", "default")
@@ -617,7 +616,7 @@ class MeshController:
             logger.error(f"Failed to apply DestinationRule: {e}")
             raise
 
-    async def _apply_service_entry(self, config: Dict[str, Any]):
+    async def _apply_service_entry(self, config: dict[str, Any]):
         """Apply ServiceEntry configuration"""
         try:
             namespace = config.get("namespace", "default")

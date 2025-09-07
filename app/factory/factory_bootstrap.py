@@ -8,7 +8,7 @@ import logging
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 # Supporting services
 from app.core.portkey_manager import get_portkey_manager
@@ -38,9 +38,9 @@ class FactoryBootstrap:
 
     def __init__(self, config_path: Optional[Path] = None):
         self.config_path = config_path or Path("app/factory/config")
-        self.initialization_log: List[Dict[str, Any]] = []
-        self.failed_components: List[str] = []
-        self.warnings: List[str] = []
+        self.initialization_log: list[dict[str, Any]] = []
+        self.failed_components: list[str] = []
+        self.warnings: list[str] = []
 
         # Component status tracking
         self.component_status = {
@@ -58,7 +58,7 @@ class FactoryBootstrap:
         skip_validation: bool = False,
         start_scheduler: bool = True,
         create_test_swarms: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Bootstrap the complete swarm factory system
 
@@ -160,7 +160,7 @@ class FactoryBootstrap:
 
         # Initialize Memory Router
         try:
-            memory_router = get_memory_router()
+            get_memory_router()
             # Simple health check - this would be more comprehensive in production
             self.component_status["memory_router"] = True
             self._log_success("Memory Router", "Initialized successfully")
@@ -220,7 +220,7 @@ class FactoryBootstrap:
             delivery_engine = get_delivery_engine()
 
             # Check delivery statistics
-            stats = delivery_engine.get_delivery_statistics()
+            delivery_engine.get_delivery_statistics()
 
             self.component_status["slack_delivery"] = True
             self._log_success("Slack Delivery Engine", "Initialized with delivery templates")
@@ -419,7 +419,7 @@ class FactoryBootstrap:
         )
         logger.warning(f"⚠️ {component}: {message}")
 
-    def _log_success_summary(self, result: Dict[str, Any]):
+    def _log_success_summary(self, result: dict[str, Any]):
         """Log successful bootstrap summary"""
         logger.info("=" * 60)
         logger.info("🎉 SWARM FACTORY BOOTSTRAP COMPLETE")
@@ -441,7 +441,7 @@ class FactoryBootstrap:
         logger.info("\n🚀 System is ready for swarm operations!")
         logger.info("=" * 60)
 
-    def _log_failure_summary(self, result: Dict[str, Any]):
+    def _log_failure_summary(self, result: dict[str, Any]):
         """Log failed bootstrap summary"""
         logger.error("=" * 60)
         logger.error("💥 SWARM FACTORY BOOTSTRAP FAILED")
@@ -479,7 +479,7 @@ def get_bootstrap() -> FactoryBootstrap:
 
 
 # Convenience functions for different bootstrap scenarios
-async def quick_bootstrap(start_scheduler: bool = False) -> Dict[str, Any]:
+async def quick_bootstrap(start_scheduler: bool = False) -> dict[str, Any]:
     """Quick bootstrap for development/testing"""
     bootstrap = get_bootstrap()
     return await bootstrap.bootstrap_complete_system(
@@ -487,7 +487,7 @@ async def quick_bootstrap(start_scheduler: bool = False) -> Dict[str, Any]:
     )
 
 
-async def production_bootstrap() -> Dict[str, Any]:
+async def production_bootstrap() -> dict[str, Any]:
     """Full production bootstrap with all validations"""
     bootstrap = get_bootstrap()
     return await bootstrap.bootstrap_complete_system(
@@ -495,7 +495,7 @@ async def production_bootstrap() -> Dict[str, Any]:
     )
 
 
-async def development_bootstrap() -> Dict[str, Any]:
+async def development_bootstrap() -> dict[str, Any]:
     """Development bootstrap with test swarms"""
     bootstrap = get_bootstrap()
     return await bootstrap.bootstrap_complete_system(
@@ -503,7 +503,7 @@ async def development_bootstrap() -> Dict[str, Any]:
     )
 
 
-async def minimal_bootstrap() -> Dict[str, Any]:
+async def minimal_bootstrap() -> dict[str, Any]:
     """Minimal bootstrap - core components only"""
     bootstrap = get_bootstrap()
 

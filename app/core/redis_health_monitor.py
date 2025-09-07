@@ -5,14 +5,15 @@ for Redis infrastructure with Pay Ready business cycle awareness.
 """
 
 import asyncio
+import contextlib
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Optional
 
-from app.core.redis_config import PAY_READY_REDIS_CONFIG, RedisConfig
-from app.core.redis_manager import RedisManager, redis_manager
+from app.core.redis_config import PAY_READY_REDIS_CONFIG
+from app.core.redis_manager import RedisManager
 
 logger = logging.getLogger(__name__)
 
@@ -34,8 +35,8 @@ class HealthAlert:
     component: str
     message: str
     timestamp: datetime
-    metrics: Dict[str, Any]
-    suggested_actions: List[str]
+    metrics: dict[str, Any]
+    suggested_actions: list[str]
 
 
 class RedisHealthMonitor:
@@ -43,8 +44,8 @@ class RedisHealthMonitor:
 
     def __init__(self, redis_manager: Optional[RedisManager] = None):
         self.redis_manager = redis_manager or redis_manager
-        self.alerts: List[HealthAlert] = []
-        self.alert_callbacks: List[Callable] = []
+        self.alerts: list[HealthAlert] = []
+        self.alert_callbacks: list[Callable] = []
         self.monitoring_active = False
         self._monitoring_task: Optional[asyncio.Task] = None
 
@@ -66,7 +67,7 @@ class RedisHealthMonitor:
         self.spike_detection_window = timedelta(
             seconds=self.pay_ready_config["spike_detection_window"]
         )
-        self.historical_metrics: List[Dict[str, Any]] = []
+        self.historical_metrics: list[dict[str, Any]] = []
 
     async def start_monitoring(self, interval: float = 30.0):
         """Start continuous health monitoring"""
@@ -83,10 +84,8 @@ class RedisHealthMonitor:
         self.monitoring_active = False
         if self._monitoring_task:
             self._monitoring_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self._monitoring_task
-            except asyncio.CancelledError:
-                pass
         logger.info("Stopped Redis health monitoring")
 
     async def _monitoring_loop(self, interval: float):
@@ -101,7 +100,7 @@ class RedisHealthMonitor:
                 logger.error(f"Health monitoring error: {e}")
                 await asyncio.sleep(interval)
 
-    async def comprehensive_health_check(self) -> Dict[str, Any]:
+    async def comprehensive_health_check(self) -> dict[str, Any]:
         """Perform comprehensive health assessment"""
         health_data = {
             "timestamp": datetime.utcnow().isoformat(),
@@ -187,7 +186,7 @@ class RedisHealthMonitor:
 
         return health_data
 
-    async def _check_memory_health(self) -> Dict[str, Any]:
+    async def _check_memory_health(self) -> dict[str, Any]:
         """Check Redis memory usage and health"""
         try:
             memory_stats = await self.redis_manager.get_memory_stats()
@@ -196,10 +195,7 @@ class RedisHealthMonitor:
             used_memory = memory_stats["used_memory"]
             max_memory = memory_stats["maxmemory"]
 
-            if max_memory > 0:
-                usage_percent = used_memory / max_memory
-            else:
-                usage_percent = 0
+            usage_percent = used_memory / max_memory if max_memory > 0 else 0
 
             status = HealthStatus.HEALTHY
             alerts = []
@@ -266,7 +262,7 @@ class RedisHealthMonitor:
             logger.error(f"Memory health check failed: {e}")
             return {"status": HealthStatus.DOWN, "error": str(e), "metrics": {}}
 
-    async def _check_connection_pool_health(self) -> Dict[str, Any]:
+    async def _check_connection_pool_health(self) -> dict[str, Any]:
         """Monitor Redis connection pool health"""
         try:
             # Get connection pool statistics
@@ -322,7 +318,7 @@ class RedisHealthMonitor:
             logger.error(f"Connection pool health check failed: {e}")
             return {"status": HealthStatus.DOWN, "error": str(e), "metrics": {}}
 
-    async def _check_performance_health(self) -> Dict[str, Any]:
+    async def _check_performance_health(self) -> dict[str, Any]:
         """Monitor Redis performance metrics"""
         try:
             metrics = await self.redis_manager.get_metrics()
@@ -373,7 +369,7 @@ class RedisHealthMonitor:
             logger.error(f"Performance health check failed: {e}")
             return {"status": HealthStatus.DOWN, "error": str(e), "metrics": {}}
 
-    async def _check_pay_ready_health(self) -> Dict[str, Any]:
+    async def _check_pay_ready_health(self) -> dict[str, Any]:
         """Monitor Pay Ready business cycle specific health"""
         try:
             now = datetime.utcnow()
@@ -428,7 +424,7 @@ class RedisHealthMonitor:
             logger.error(f"Pay Ready health check failed: {e}")
             return {"status": HealthStatus.DOWN, "error": str(e), "metrics": {}}
 
-    async def _check_streams_health(self) -> Dict[str, Any]:
+    async def _check_streams_health(self) -> dict[str, Any]:
         """Monitor Redis streams health and bounds"""
         try:
             stream_info = {}
@@ -501,16 +497,13 @@ class RedisHealthMonitor:
             avg_ops = sum(prev_ops) / len(prev_ops) if prev_ops else 0
 
             # Detect spike (operations > 150% of average)
-            if avg_ops > 0 and current_ops > (avg_ops * 1.5):
-                return True
-
-            return False
+            return bool(avg_ops > 0 and current_ops > avg_ops * 1.5)
 
         except Exception as e:
             logger.warning(f"Traffic spike detection failed: {e}")
             return False
 
-    def _store_historical_metrics(self, metrics: Dict[str, Any]):
+    def _store_historical_metrics(self, metrics: dict[str, Any]):
         """Store metrics for trend analysis"""
         metrics["timestamp"] = datetime.utcnow().isoformat()
         self.historical_metrics.append(metrics)
@@ -524,8 +517,8 @@ class RedisHealthMonitor:
         level: HealthStatus,
         component: str,
         message: str,
-        metrics: Dict[str, Any],
-        suggested_actions: List[str],
+        metrics: dict[str, Any],
+        suggested_actions: list[str],
     ):
         """Create and store health alert"""
         alert = HealthAlert(
@@ -573,7 +566,7 @@ class RedisHealthMonitor:
         if callback in self.alert_callbacks:
             self.alert_callbacks.remove(callback)
 
-    async def get_health_summary(self) -> Dict[str, Any]:
+    async def get_health_summary(self) -> dict[str, Any]:
         """Get concise health summary"""
         health_data = await self.comprehensive_health_check()
 
@@ -600,6 +593,6 @@ redis_health_monitor = RedisHealthMonitor()
 
 
 # Convenience function for quick health checks
-async def check_redis_health() -> Dict[str, Any]:
+async def check_redis_health() -> dict[str, Any]:
     """Quick Redis health check"""
     return await redis_health_monitor.get_health_summary()

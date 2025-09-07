@@ -7,9 +7,8 @@ import asyncio
 import logging
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -74,9 +73,9 @@ class RoutingRule:
     """Routing rule for MCP server access"""
 
     server_type: MCPServerType
-    allowed_domains: Set[MemoryDomain]
+    allowed_domains: set[MemoryDomain]
     priority: int = 0
-    filters: Dict[str, Any] = field(default_factory=dict)
+    filters: dict[str, Any] = field(default_factory=dict)
     load_balancing: str = "round_robin"  # round_robin, least_connections, random
 
 
@@ -89,8 +88,8 @@ class MCPServerConfig:
     endpoint: str
     connection_pool: ConnectionPool
     health_check: HealthCheckConfig
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    capabilities: List[str] = field(default_factory=list)
+    metadata: dict[str, Any] = field(default_factory=dict)
+    capabilities: list[str] = field(default_factory=list)
 
 
 class MCPRouterConfiguration:
@@ -100,10 +99,10 @@ class MCPRouterConfiguration:
     """
 
     def __init__(self):
-        self.routing_rules: Dict[MCPServerType, RoutingRule] = {}
-        self.server_configs: Dict[str, MCPServerConfig] = {}
-        self.connection_pools: Dict[str, Any] = {}
-        self.health_status: Dict[str, bool] = {}
+        self.routing_rules: dict[MCPServerType, RoutingRule] = {}
+        self.server_configs: dict[str, MCPServerConfig] = {}
+        self.connection_pools: dict[str, Any] = {}
+        self.health_status: dict[str, bool] = {}
         self.executor = ThreadPoolExecutor(max_workers=10)
 
         # Initialize routing rules
@@ -361,7 +360,7 @@ class MCPRouterConfiguration:
         )
 
     async def route_request(
-        self, server_type: MCPServerType, domain: MemoryDomain, request: Dict[str, Any]
+        self, server_type: MCPServerType, domain: MemoryDomain, request: dict[str, Any]
     ) -> Optional[str]:
         """
         Route a request to the appropriate MCP server based on domain and type
@@ -460,7 +459,7 @@ class MCPRouterConfiguration:
         """Get configuration for a specific server"""
         return self.server_configs.get(server_name)
 
-    def get_servers_by_domain(self, domain: MemoryDomain) -> List[MCPServerConfig]:
+    def get_servers_by_domain(self, domain: MemoryDomain) -> list[MCPServerConfig]:
         """Get all servers accessible by a domain"""
         servers = []
         for server_type, rule in self.routing_rules.items():
@@ -471,7 +470,7 @@ class MCPRouterConfiguration:
                         servers.append(config)
         return servers
 
-    def validate_connection_limits(self) -> Dict[str, bool]:
+    def validate_connection_limits(self) -> dict[str, bool]:
         """Validate that connection pools are within limits"""
         validation_results = {}
         for name, config in self.server_configs.items():
@@ -480,7 +479,7 @@ class MCPRouterConfiguration:
             validation_results[name] = current <= pool.max_connections
         return validation_results
 
-    def get_routing_summary(self) -> Dict[str, Any]:
+    def get_routing_summary(self) -> dict[str, Any]:
         """Get summary of routing configuration"""
         return {
             "total_servers": len(self.server_configs),

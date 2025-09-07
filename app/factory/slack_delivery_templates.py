@@ -5,8 +5,7 @@ Pre-configured delivery templates for different swarm types and business context
 
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime, time
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from app.swarms.core.micro_swarm_base import AgentRole
 from app.swarms.core.slack_delivery import (
@@ -27,7 +26,7 @@ class SlackChannelConfig:
     channel_name: str
     description: str
     primary_purpose: str
-    audience: List[str]
+    audience: list[str]
     notification_level: DeliveryPriority
     business_hours_only: bool = True
     auto_thread: bool = True
@@ -42,10 +41,10 @@ class MessageTemplate:
     name: str
     description: str
     format_string: str
-    required_variables: List[str]
-    optional_variables: List[str] = field(default_factory=list)
-    default_values: Dict[str, Any] = field(default_factory=dict)
-    tags: List[str] = field(default_factory=list)
+    required_variables: list[str]
+    optional_variables: list[str] = field(default_factory=list)
+    default_values: dict[str, Any] = field(default_factory=dict)
+    tags: list[str] = field(default_factory=list)
 
 
 class SlackDeliveryTemplateManager:
@@ -54,9 +53,9 @@ class SlackDeliveryTemplateManager:
     """
 
     def __init__(self):
-        self.channel_configs: Dict[str, SlackChannelConfig] = {}
-        self.message_templates: Dict[str, MessageTemplate] = {}
-        self.delivery_configs: Dict[str, DeliveryConfig] = {}
+        self.channel_configs: dict[str, SlackChannelConfig] = {}
+        self.message_templates: dict[str, MessageTemplate] = {}
+        self.delivery_configs: dict[str, DeliveryConfig] = {}
 
         # Initialize default configurations
         self._initialize_channel_configs()
@@ -538,7 +537,7 @@ class SlackDeliveryTemplateManager:
         """Get channel configuration"""
         return self.channel_configs.get(channel_id)
 
-    def create_delivery_rules(self) -> List[DeliveryRule]:
+    def create_delivery_rules(self) -> list[DeliveryRule]:
         """Create delivery rules based on configurations"""
 
         rules = []
@@ -642,7 +641,7 @@ class SlackDeliveryTemplateManager:
 
         return rules
 
-    def format_message_with_template(self, template_id: str, variables: Dict[str, Any]) -> str:
+    def format_message_with_template(self, template_id: str, variables: dict[str, Any]) -> str:
         """Format a message using a template"""
 
         template = self.message_templates.get(template_id)
@@ -665,7 +664,7 @@ class SlackDeliveryTemplateManager:
             raise ValueError(f"Template formatting error for {template_id}: {e}")
 
     def get_appropriate_delivery_config(
-        self, swarm_type: str, context: Dict[str, Any]
+        self, swarm_type: str, context: dict[str, Any]
     ) -> DeliveryConfig:
         """Get appropriate delivery config based on swarm type and context"""
 
@@ -739,19 +738,19 @@ def get_critical_alert_config() -> DeliveryConfig:
     return manager.get_delivery_config("critical_alerts")
 
 
-def format_executive_summary(variables: Dict[str, Any]) -> str:
+def format_executive_summary(variables: dict[str, Any]) -> str:
     """Format executive summary message"""
     manager = get_template_manager()
     return manager.format_message_with_template("executive_summary", variables)
 
 
-def format_technical_report(variables: Dict[str, Any]) -> str:
+def format_technical_report(variables: dict[str, Any]) -> str:
     """Format technical operations report"""
     manager = get_template_manager()
     return manager.format_message_with_template("technical_ops", variables)
 
 
-def format_strategic_analysis(variables: Dict[str, Any]) -> str:
+def format_strategic_analysis(variables: dict[str, Any]) -> str:
     """Format strategic analysis report"""
     manager = get_template_manager()
     return manager.format_message_with_template("strategic_analysis", variables)

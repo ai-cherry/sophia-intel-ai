@@ -3,16 +3,14 @@ Execution Store - Task execution history and context memory
 Stores task execution logs, workflow states, and operational context
 """
 
-import asyncio
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Optional
 
 from app.core.unified_memory import (
     MemoryContext,
-    MemoryEntry,
     MemoryMetadata,
     MemoryPriority,
     unified_memory,
@@ -62,12 +60,12 @@ class ExecutionContext:
     swarm_id: Optional[str] = None
     workflow_id: Optional[str] = None
     parent_execution_id: Optional[str] = None
-    child_execution_ids: List[str] = field(default_factory=list)
+    child_execution_ids: list[str] = field(default_factory=list)
 
     # Parameters and results
-    input_parameters: Dict[str, Any] = field(default_factory=dict)
-    output_results: Dict[str, Any] = field(default_factory=dict)
-    error_details: Optional[Dict[str, Any]] = None
+    input_parameters: dict[str, Any] = field(default_factory=dict)
+    output_results: dict[str, Any] = field(default_factory=dict)
+    error_details: Optional[dict[str, Any]] = None
 
     # Performance metrics
     cpu_usage_percent: Optional[float] = None
@@ -79,7 +77,7 @@ class ExecutionContext:
     # Context and metadata
     user_id: Optional[str] = None
     session_id: Optional[str] = None
-    tags: Set[str] = field(default_factory=set)
+    tags: set[str] = field(default_factory=set)
     priority: int = 5  # 1-10 scale
     retry_count: int = 0
     max_retries: int = 3
@@ -135,7 +133,7 @@ class ExecutionStore:
         logger.debug(f"Stored execution context: {execution.task_name} ({memory_id})")
         return memory_id
 
-    async def retrieve_execution(self, execution_id: str) -> Optional[Dict[str, Any]]:
+    async def retrieve_execution(self, execution_id: str) -> Optional[dict[str, Any]]:
         """Retrieve a specific execution context"""
         entry = await self.memory_interface.retrieve(execution_id)
         if not entry:
@@ -156,9 +154,9 @@ class ExecutionStore:
         execution_id: str,
         status: ExecutionStatus,
         end_time: Optional[datetime] = None,
-        output_results: Optional[Dict[str, Any]] = None,
-        error_details: Optional[Dict[str, Any]] = None,
-        performance_metrics: Optional[Dict[str, Any]] = None,
+        output_results: Optional[dict[str, Any]] = None,
+        error_details: Optional[dict[str, Any]] = None,
+        performance_metrics: Optional[dict[str, Any]] = None,
     ) -> bool:
         """Update execution status and results"""
 
@@ -201,14 +199,14 @@ class ExecutionStore:
     async def search_executions(
         self,
         query: str,
-        execution_types: Optional[List[ExecutionType]] = None,
-        status_filter: Optional[List[ExecutionStatus]] = None,
+        execution_types: Optional[list[ExecutionType]] = None,
+        status_filter: Optional[list[ExecutionStatus]] = None,
         agent_filter: Optional[str] = None,
         swarm_filter: Optional[str] = None,
         date_range: Optional[tuple] = None,
         max_results: int = 20,
         domain: Optional[str] = None,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Search execution history with advanced filtering"""
 
         # Build search tags
@@ -261,7 +259,7 @@ class ExecutionStore:
 
     async def get_execution_analytics(
         self, time_period_hours: int = 24, domain: Optional[str] = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Get execution analytics and performance metrics"""
 
         # Search for recent executions
@@ -369,7 +367,7 @@ class ExecutionStore:
 
         return analytics
 
-    async def get_execution_hierarchy(self, root_execution_id: str) -> Dict[str, Any]:
+    async def get_execution_hierarchy(self, root_execution_id: str) -> dict[str, Any]:
         """Get full execution hierarchy tree"""
 
         root_execution = await self._retrieve_structured_execution(root_execution_id)
@@ -388,7 +386,7 @@ class ExecutionStore:
     async def cleanup_old_executions(self, days_old: int = 30) -> int:
         """Clean up old execution records to manage storage"""
 
-        cutoff_time = datetime.now(timezone.utc).replace(day=datetime.now().day - days_old)
+        datetime.now(timezone.utc).replace(day=datetime.now().day - days_old)
 
         # This would be implemented with a more efficient bulk deletion
         # For now, return 0 as placeholder
@@ -457,7 +455,7 @@ class ExecutionStore:
 
         return "\n".join(content_parts)
 
-    def _format_execution_content_from_dict(self, execution_dict: Dict[str, Any]) -> str:
+    def _format_execution_content_from_dict(self, execution_dict: dict[str, Any]) -> str:
         """Format execution dictionary into content (for updates)"""
 
         content_parts = [
@@ -506,7 +504,7 @@ class ExecutionStore:
         self,
         memory_id: str,
         execution: Optional[ExecutionContext],
-        execution_dict: Optional[Dict[str, Any]] = None,
+        execution_dict: Optional[dict[str, Any]] = None,
     ):
         """Store structured execution data for complex queries"""
 
@@ -550,7 +548,7 @@ class ExecutionStore:
             key, structured_data, ttl=86400 * 7, namespace="execution"  # 7 days
         )
 
-    async def _retrieve_structured_execution(self, execution_id: str) -> Optional[Dict[str, Any]]:
+    async def _retrieve_structured_execution(self, execution_id: str) -> Optional[dict[str, Any]]:
         """Retrieve structured execution data"""
 
         if not self.memory_interface.redis_manager:
@@ -588,8 +586,8 @@ class ExecutionStore:
                 )
 
     async def _build_execution_tree(
-        self, execution_id: str, execution_data: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, execution_id: str, execution_data: dict[str, Any]
+    ) -> dict[str, Any]:
         """Recursively build execution hierarchy tree"""
 
         tree_node = {

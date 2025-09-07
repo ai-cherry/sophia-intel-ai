@@ -19,7 +19,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Optional
 from uuid import uuid4
 
 logger = logging.getLogger(__name__)
@@ -51,9 +51,9 @@ class CoordinationContext:
 
     session_id: str = field(default_factory=lambda: str(uuid4()))
     original_query: str = ""
-    business_context: Dict[str, Any] = field(default_factory=dict)
-    technical_context: Dict[str, Any] = field(default_factory=dict)
-    shared_memory: Dict[str, Any] = field(default_factory=dict)
+    business_context: dict[str, Any] = field(default_factory=dict)
+    technical_context: dict[str, Any] = field(default_factory=dict)
+    shared_memory: dict[str, Any] = field(default_factory=dict)
     coordination_pattern: CoordinationPattern = CoordinationPattern.SOPHIA_LEADS
     priority_level: int = 1  # 1 = highest
     created_at: datetime = field(default_factory=datetime.now)
@@ -68,7 +68,7 @@ class CoordinationContext:
         self.technical_context[key] = value
         self.shared_memory[f"technical_{key}"] = value
 
-    def get_combined_context(self) -> Dict[str, Any]:
+    def get_combined_context(self) -> dict[str, Any]:
         """Get combined context for comprehensive analysis"""
         return {
             "business": self.business_context,
@@ -88,7 +88,7 @@ class DelegationRequest:
     to_orchestrator: str = ""
     task_type: TaskType = TaskType.TECHNICAL_IMPLEMENTATION
     request_details: str = ""
-    parameters: Dict[str, Any] = field(default_factory=dict)
+    parameters: dict[str, Any] = field(default_factory=dict)
     context: CoordinationContext = field(default_factory=CoordinationContext)
     priority: int = 1
     timeout_seconds: int = 300
@@ -104,8 +104,8 @@ class DelegationResponse:
     result: Any = None
     error: Optional[str] = None
     execution_time_seconds: float = 0.0
-    additional_context: Dict[str, Any] = field(default_factory=dict)
-    recommendations: List[str] = field(default_factory=list)
+    additional_context: dict[str, Any] = field(default_factory=dict)
+    recommendations: list[str] = field(default_factory=list)
     created_at: datetime = field(default_factory=datetime.now)
 
 
@@ -115,8 +115,8 @@ class SophiaArtemisCoordinationBridge:
     """
 
     def __init__(self):
-        self.active_sessions: Dict[str, CoordinationContext] = {}
-        self.delegation_history: List[Dict[str, Any]] = []
+        self.active_sessions: dict[str, CoordinationContext] = {}
+        self.delegation_history: list[dict[str, Any]] = []
 
         # Performance metrics
         self.metrics = {
@@ -131,8 +131,8 @@ class SophiaArtemisCoordinationBridge:
         logger.info("Sophia-Artemis Coordination Bridge initialized")
 
     async def coordinate_business_analysis(
-        self, query: str, user_context: Dict[str, Any] = None
-    ) -> Dict[str, Any]:
+        self, query: str, user_context: dict[str, Any] = None
+    ) -> dict[str, Any]:
         """
         Coordinate a business analysis that may require technical insights
 
@@ -242,8 +242,8 @@ class SophiaArtemisCoordinationBridge:
                 del self.active_sessions[context.session_id]
 
     async def coordinate_technical_implementation(
-        self, requirements: str, business_context: Dict[str, Any] = None
-    ) -> Dict[str, Any]:
+        self, requirements: str, business_context: dict[str, Any] = None
+    ) -> dict[str, Any]:
         """
         Coordinate technical implementation with business validation
 
@@ -321,7 +321,7 @@ class SophiaArtemisCoordinationBridge:
 
     async def coordinate_hybrid_analysis(
         self, query: str, require_both: bool = True
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Coordinate analysis that requires both business and technical perspectives
 
@@ -471,7 +471,7 @@ class SophiaArtemisCoordinationBridge:
 
     async def _invoke_sophia(
         self, query: str, context: CoordinationContext, analysis_type: str
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Invoke Sophia orchestrator (will integrate with actual Sophia)"""
 
         # This will call the actual Sophia orchestrator
@@ -512,7 +512,7 @@ class SophiaArtemisCoordinationBridge:
 
     async def _invoke_artemis(
         self, query: str, context: CoordinationContext, task_type: str
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Invoke Artemis orchestrator (will integrate with actual Artemis)"""
 
         # This will call the actual Artemis orchestrator
@@ -551,7 +551,7 @@ class SophiaArtemisCoordinationBridge:
         logger.info(f"Artemis analysis ({task_type}) completed")
         return technical_response
 
-    def _analyze_technical_needs(self, sophia_result: Dict[str, Any], original_query: str) -> bool:
+    def _analyze_technical_needs(self, sophia_result: dict[str, Any], original_query: str) -> bool:
         """Analyze if business result needs technical implementation insights"""
 
         # Check for technical keywords or requirements in the analysis
@@ -580,7 +580,7 @@ class SophiaArtemisCoordinationBridge:
         # If multiple technical concepts are mentioned, delegate to Artemis
         return technical_mentions >= 2
 
-    def _extract_technical_requirements(self, sophia_result: Dict[str, Any]) -> str:
+    def _extract_technical_requirements(self, sophia_result: dict[str, Any]) -> str:
         """Extract technical requirements from Sophia's business analysis"""
 
         requirements = []
@@ -602,7 +602,7 @@ class SophiaArtemisCoordinationBridge:
 
         return "; ".join(requirements)
 
-    def get_coordination_metrics(self) -> Dict[str, Any]:
+    def get_coordination_metrics(self) -> dict[str, Any]:
         """Get coordination performance metrics"""
         return {
             "metrics": self.metrics.copy(),
@@ -620,7 +620,7 @@ class SophiaArtemisCoordinationBridge:
             },
         }
 
-    def get_active_sessions(self) -> Dict[str, Dict[str, Any]]:
+    def get_active_sessions(self) -> dict[str, dict[str, Any]]:
         """Get information about currently active coordination sessions"""
         return {
             session_id: {
@@ -649,21 +649,21 @@ def get_coordination_bridge() -> SophiaArtemisCoordinationBridge:
 # Convenience functions for common coordination patterns
 
 
-async def analyze_with_business_lead(query: str, context: Dict[str, Any] = None) -> Dict[str, Any]:
+async def analyze_with_business_lead(query: str, context: dict[str, Any] = None) -> dict[str, Any]:
     """Sophia-led analysis with potential technical delegation"""
     bridge = get_coordination_bridge()
     return await bridge.coordinate_business_analysis(query, context)
 
 
 async def implement_with_business_validation(
-    requirements: str, business_context: Dict[str, Any] = None
-) -> Dict[str, Any]:
+    requirements: str, business_context: dict[str, Any] = None
+) -> dict[str, Any]:
     """Artemis-led implementation with business validation"""
     bridge = get_coordination_bridge()
     return await bridge.coordinate_technical_implementation(requirements, business_context)
 
 
-async def hybrid_perspective_analysis(query: str, require_both: bool = True) -> Dict[str, Any]:
+async def hybrid_perspective_analysis(query: str, require_both: bool = True) -> dict[str, Any]:
     """Combined business and technical analysis"""
     bridge = get_coordination_bridge()
     return await bridge.coordinate_hybrid_analysis(query, require_both)

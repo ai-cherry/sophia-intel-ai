@@ -13,7 +13,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 import numpy as np
 
@@ -57,7 +57,7 @@ class EmbeddingMetadata:
     created_at: datetime = field(default_factory=datetime.now)
     provider: str = "openai"
     model: str = "text-embedding-ada-002"
-    extra_metadata: Dict[str, Any] = field(default_factory=dict)
+    extra_metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -77,7 +77,7 @@ class EmbeddingCache:
         self.cache_dir = Path(cache_dir)
         self.cache_dir.mkdir(parents=True, exist_ok=True)
         self.default_ttl_hours = default_ttl_hours
-        self._memory_cache: Dict[str, CachedEmbedding] = {}
+        self._memory_cache: dict[str, CachedEmbedding] = {}
         self._load_persistent_cache()
 
     def _load_persistent_cache(self):
@@ -179,7 +179,7 @@ class EmbeddingCache:
         self._cleanup_expired()
         self._save_persistent_cache()
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get cache statistics"""
         now = datetime.now()
         active_count = sum(1 for cached in self._memory_cache.values() if cached.expires_at > now)
@@ -267,7 +267,7 @@ class MultiModalEmbeddings:
         provider: Optional[str] = None,
         model: Optional[str] = None,
         use_cache: bool = True,
-    ) -> Tuple[np.ndarray, EmbeddingMetadata]:
+    ) -> tuple[np.ndarray, EmbeddingMetadata]:
         """
         Generate embedding for content
 
@@ -334,13 +334,13 @@ class MultiModalEmbeddings:
 
     async def generate_batch_embeddings(
         self,
-        contents: List[str],
-        embedding_types: List[EmbeddingType],
-        metadatas: Optional[List[EmbeddingMetadata]] = None,
+        contents: list[str],
+        embedding_types: list[EmbeddingType],
+        metadatas: Optional[list[EmbeddingMetadata]] = None,
         provider: Optional[str] = None,
         model: Optional[str] = None,
         use_cache: bool = True,
-    ) -> List[Tuple[np.ndarray, EmbeddingMetadata]]:
+    ) -> list[tuple[np.ndarray, EmbeddingMetadata]]:
         """
         Generate embeddings in batches for efficiency
 
@@ -452,8 +452,8 @@ class MultiModalEmbeddings:
             raise
 
     async def _call_batch_embedding_api(
-        self, contents: List[str], provider: str, model: str
-    ) -> List[np.ndarray]:
+        self, contents: list[str], provider: str, model: str
+    ) -> list[np.ndarray]:
         """Call embedding API for batch of contents"""
         try:
             client = self.portkey_manager.get_client(provider)
@@ -470,7 +470,7 @@ class MultiModalEmbeddings:
 
     async def generate_hierarchical_embeddings(
         self, file_content: str, file_path: str, language: str = "python"
-    ) -> Dict[str, List[Tuple[np.ndarray, EmbeddingMetadata]]]:
+    ) -> dict[str, list[tuple[np.ndarray, EmbeddingMetadata]]]:
         """
         Generate embeddings at multiple hierarchy levels for a file
 
@@ -523,7 +523,7 @@ class MultiModalEmbeddings:
 
         return results
 
-    def get_provider_info(self, provider: str) -> Dict[str, Any]:
+    def get_provider_info(self, provider: str) -> dict[str, Any]:
         """Get information about an embedding provider"""
         config = self.provider_configs.get(provider)
         if not config:
@@ -536,7 +536,7 @@ class MultiModalEmbeddings:
             "model_configs": config["models"],
         }
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get embedding generation statistics"""
         cache_stats = self.cache.get_stats()
 
@@ -547,11 +547,11 @@ class MultiModalEmbeddings:
             "default_provider": self.default_provider,
         }
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """Perform health check on embedding providers"""
         results = {}
 
-        for provider in self.provider_configs.keys():
+        for provider in self.provider_configs:
             try:
                 # Test with a simple embedding
                 test_content = "This is a test."

@@ -4,16 +4,18 @@ Provides provider health monitoring, cost analytics, and virtual key management.
 """
 
 import asyncio
+import builtins
+import contextlib
 import json
 import logging
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel, Field
 
-from app.api.portkey_unified_router import RoutingStrategy, unified_router
-from app.core.portkey_config import AgentRole, ModelProvider, PortkeyManager
+from app.api.portkey_unified_router import unified_router
+from app.core.portkey_config import ModelProvider, PortkeyManager
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +26,7 @@ router = APIRouter(prefix="/model-registry", tags=["model-registry"])
 # WebSocket connection manager
 class ConnectionManager:
     def __init__(self):
-        self.active_connections: List[WebSocket] = []
+        self.active_connections: list[WebSocket] = []
 
     async def connect(self, websocket: WebSocket):
         await websocket.accept()
@@ -38,10 +40,8 @@ class ConnectionManager:
 
     async def broadcast(self, message: dict):
         for connection in self.active_connections:
-            try:
+            with contextlib.suppress(builtins.BaseException):
                 await connection.send_text(json.dumps(message))
-            except:
-                pass
 
 
 manager = ConnectionManager()
@@ -61,8 +61,8 @@ class ProviderHealthStatus(BaseModel):
 class VirtualKeyConfig(BaseModel):
     provider: str = Field(..., description="Provider name")
     virtual_key: str = Field(..., description="Virtual key identifier")
-    models: List[str] = Field(..., description="Available models for this provider")
-    fallback_providers: List[str] = Field(..., description="Fallback provider chain")
+    models: list[str] = Field(..., description="Available models for this provider")
+    fallback_providers: list[str] = Field(..., description="Fallback provider chain")
     max_tokens: int = Field(default=4096, description="Maximum tokens per request")
     temperature: float = Field(default=0.7, description="Default temperature setting")
     retry_count: int = Field(default=3, description="Retry attempts on failure")
@@ -72,15 +72,15 @@ class CostAnalytics(BaseModel):
     daily_cost: float = Field(..., description="Total cost today in USD")
     weekly_cost: float = Field(..., description="Total cost this week in USD")
     monthly_cost: float = Field(..., description="Total cost this month in USD")
-    cost_by_provider: Dict[str, float] = Field(..., description="Cost breakdown by provider")
-    token_usage: Dict[str, int] = Field(..., description="Token usage by provider")
+    cost_by_provider: dict[str, float] = Field(..., description="Cost breakdown by provider")
+    token_usage: dict[str, int] = Field(..., description="Token usage by provider")
     request_count: int = Field(..., description="Total requests today")
 
 
 class FallbackChainConfig(BaseModel):
     primary_provider: str = Field(..., description="Primary provider")
-    fallback_chain: List[str] = Field(..., description="Ordered fallback provider list")
-    load_balance_weights: Dict[str, float] = Field(
+    fallback_chain: list[str] = Field(..., description="Ordered fallback provider list")
+    load_balance_weights: dict[str, float] = Field(
         default_factory=dict, description="Load balancing weights"
     )
     routing_strategy: str = Field(default="balanced", description="Routing strategy")
@@ -106,7 +106,7 @@ class PerformanceMetrics(BaseModel):
 portkey_manager = PortkeyManager()
 
 
-@router.get("/providers", response_model=List[ProviderHealthStatus])
+@router.get("/providers", response_model=list[ProviderHealthStatus])
 async def get_provider_health():
     """Get health status for all configured providers."""
     try:
@@ -184,7 +184,7 @@ async def get_provider_health():
         raise HTTPException(status_code=500, detail=f"Failed to get provider health: {str(e)}")
 
 
-@router.get("/virtual-keys", response_model=List[VirtualKeyConfig])
+@router.get("/virtual-keys", response_model=list[VirtualKeyConfig])
 async def get_virtual_keys():
     """Get all virtual key configurations."""
     try:
@@ -286,7 +286,7 @@ async def get_cost_analytics():
         raise HTTPException(status_code=500, detail=f"Failed to get cost analytics: {str(e)}")
 
 
-@router.get("/fallback-chains", response_model=Dict[str, FallbackChainConfig])
+@router.get("/fallback-chains", response_model=dict[str, FallbackChainConfig])
 async def get_fallback_chains():
     """Get current fallback chain configurations."""
     try:
@@ -333,7 +333,7 @@ async def update_fallback_chain(provider: str, config: FallbackChainConfig):
         raise HTTPException(status_code=500, detail=f"Failed to update fallback chain: {str(e)}")
 
 
-@router.post("/test-model", response_model=Dict[str, Any])
+@router.post("/test-model", response_model=dict[str, Any])
 async def test_model(request: ModelTestRequest):
     """Test a specific model/provider connection."""
     try:
@@ -366,7 +366,7 @@ async def test_model(request: ModelTestRequest):
         raise HTTPException(status_code=500, detail=f"Failed to test model: {str(e)}")
 
 
-@router.get("/performance-metrics", response_model=List[PerformanceMetrics])
+@router.get("/performance-metrics", response_model=list[PerformanceMetrics])
 async def get_performance_metrics():
     """Get performance metrics for all providers."""
     try:

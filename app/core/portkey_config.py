@@ -7,7 +7,7 @@ import logging
 import os
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from portkey_ai import Portkey
 
@@ -52,8 +52,8 @@ class ProviderConfig:
     """Configuration for each provider"""
 
     virtual_key: str
-    models: List[str]
-    fallback_providers: List[str]
+    models: list[str]
+    fallback_providers: list[str]
     max_tokens: int = 4096
     temperature: float = 0.7
     retry_count: int = 3
@@ -292,7 +292,7 @@ class PortkeyManager:
         """Test connection to a specific provider"""
         try:
             client = self.get_client_for_provider(provider)
-            response = client.chat.completions.create(
+            client.chat.completions.create(
                 messages=[{"role": "user", "content": "Test connection"}], max_tokens=10
             )
             logger.info(f"✓ {provider.value} connection successful")
@@ -301,14 +301,14 @@ class PortkeyManager:
             logger.error(f"✗ {provider.value} connection failed: {e}")
             return False
 
-    def test_all_connections(self) -> Dict[str, bool]:
+    def test_all_connections(self) -> dict[str, bool]:
         """Test all provider connections"""
         results = {}
         for provider in ModelProvider:
             results[provider.value] = self.test_connection(provider)
         return results
 
-    def get_provider_status(self) -> Dict[str, Any]:
+    def get_provider_status(self) -> dict[str, Any]:
         """Get status of all providers"""
         status = {}
         for provider, config in self.providers.items():

@@ -18,7 +18,7 @@ from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, TypeVar
+from typing import Any, Optional, TypeVar
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -112,16 +112,16 @@ class MetaTag:
     modification_risk: ModificationRisk = ModificationRisk.MODERATE
 
     # Capabilities & Dependencies
-    capabilities: Set[str] = field(default_factory=set)
-    dependencies: Set[str] = field(default_factory=set)
-    dependents: Set[str] = field(default_factory=set)
-    external_integrations: Set[str] = field(default_factory=set)
+    capabilities: set[str] = field(default_factory=set)
+    dependencies: set[str] = field(default_factory=set)
+    dependents: set[str] = field(default_factory=set)
+    external_integrations: set[str] = field(default_factory=set)
 
     # AI Enhancement Hints
-    optimization_opportunities: List[str] = field(default_factory=list)
-    refactoring_suggestions: List[str] = field(default_factory=list)
-    test_requirements: List[str] = field(default_factory=list)
-    security_considerations: List[str] = field(default_factory=list)
+    optimization_opportunities: list[str] = field(default_factory=list)
+    refactoring_suggestions: list[str] = field(default_factory=list)
+    test_requirements: list[str] = field(default_factory=list)
+    security_considerations: list[str] = field(default_factory=list)
 
     # Quality Metrics
     cyclomatic_complexity: int = 0
@@ -135,7 +135,7 @@ class MetaTag:
     updated_at: datetime = field(default_factory=datetime.now)
     version: str = "1.0.0"
     confidence_score: float = 0.0
-    tags: Set[str] = field(default_factory=set)
+    tags: set[str] = field(default_factory=set)
 
     # Hash for change detection
     content_hash: str = ""
@@ -156,7 +156,7 @@ class MetaTag:
         if isinstance(self.tags, list):
             self.tags = set(self.tags)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary with serializable values."""
         data = asdict(self)
 
@@ -185,7 +185,7 @@ class MetaTag:
         return data
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "MetaTag":
+    def from_dict(cls, data: dict[str, Any]) -> "MetaTag":
         """Create MetaTag from dictionary."""
         # Convert enum strings back to enums
         if "semantic_role" in data:
@@ -243,10 +243,10 @@ class MetaTagRegistry:
     def __init__(self, storage_path: Optional[str] = None):
         """Initialize registry with optional persistent storage."""
         self.storage_path = storage_path or "meta_tags_registry.json"
-        self._tags: Dict[str, MetaTag] = {}
-        self._file_index: Dict[str, Set[str]] = {}  # file_path -> tag_ids
-        self._role_index: Dict[SemanticRole, Set[str]] = {}  # role -> tag_ids
-        self._dependency_graph: Dict[str, Set[str]] = {}  # component -> dependencies
+        self._tags: dict[str, MetaTag] = {}
+        self._file_index: dict[str, set[str]] = {}  # file_path -> tag_ids
+        self._role_index: dict[SemanticRole, set[str]] = {}  # role -> tag_ids
+        self._dependency_graph: dict[str, set[str]] = {}  # component -> dependencies
 
         # Initialize role index
         for role in SemanticRole:
@@ -278,12 +278,12 @@ class MetaTagRegistry:
         """Retrieve a meta-tag by ID."""
         return self._tags.get(tag_id)
 
-    def get_by_file(self, file_path: str) -> List[MetaTag]:
+    def get_by_file(self, file_path: str) -> list[MetaTag]:
         """Get all meta-tags for a specific file."""
         tag_ids = self._file_index.get(file_path, set())
         return [self._tags[tag_id] for tag_id in tag_ids if tag_id in self._tags]
 
-    def get_by_role(self, role: SemanticRole) -> List[MetaTag]:
+    def get_by_role(self, role: SemanticRole) -> list[MetaTag]:
         """Get all meta-tags for a specific semantic role."""
         tag_ids = self._role_index.get(role, set())
         return [self._tags[tag_id] for tag_id in tag_ids if tag_id in self._tags]
@@ -299,9 +299,9 @@ class MetaTagRegistry:
         self,
         role: Optional[SemanticRole] = None,
         complexity: Optional[Complexity] = None,
-        capabilities: Optional[Set[str]] = None,
-        tags: Optional[Set[str]] = None,
-    ) -> List[MetaTag]:
+        capabilities: Optional[set[str]] = None,
+        tags: Optional[set[str]] = None,
+    ) -> list[MetaTag]:
         """Search meta-tags by various criteria."""
         results = list(self._tags.values())
 
@@ -319,11 +319,11 @@ class MetaTagRegistry:
 
         return results
 
-    def get_dependencies(self, component_name: str) -> Set[str]:
+    def get_dependencies(self, component_name: str) -> set[str]:
         """Get dependencies for a component."""
         return self._dependency_graph.get(component_name, set())
 
-    def get_dependents(self, component_name: str) -> Set[str]:
+    def get_dependents(self, component_name: str) -> set[str]:
         """Get components that depend on the given component."""
         dependents = set()
         for comp, deps in self._dependency_graph.items():
@@ -341,7 +341,7 @@ class MetaTagRegistry:
                     if dep_tag:
                         dep_tag.dependents.add(tag.component_name)
 
-    def get_high_risk_components(self) -> List[MetaTag]:
+    def get_high_risk_components(self) -> list[MetaTag]:
         """Get components with high modification risk."""
         return [
             tag
@@ -349,7 +349,7 @@ class MetaTagRegistry:
             if tag.modification_risk in [ModificationRisk.HIGH, ModificationRisk.CRITICAL]
         ]
 
-    def get_optimization_candidates(self) -> List[MetaTag]:
+    def get_optimization_candidates(self) -> list[MetaTag]:
         """Get components with optimization opportunities."""
         return [tag for tag in self._tags.values() if tag.optimization_opportunities]
 
@@ -383,7 +383,7 @@ class MetaTagRegistry:
                 data = json.load(f)
 
             # Load tags
-            for tag_id, tag_data in data.get("tags", {}).items():
+            for _tag_id, tag_data in data.get("tags", {}).items():
                 tag = MetaTag.from_dict(tag_data)
                 self.register(tag)
 
@@ -395,7 +395,7 @@ class MetaTagRegistry:
         except Exception as e:
             logger.error(f"Failed to load meta-tags: {e}")
 
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Get registry statistics."""
         role_counts = {}
         for role in SemanticRole:
@@ -481,7 +481,7 @@ class AutoTagger:
             "security": r"auth|security|token|encrypt|decrypt",
         }
 
-    async def tag_file(self, file_path: str) -> List[MetaTag]:
+    async def tag_file(self, file_path: str) -> list[MetaTag]:
         """Analyze and tag a single file."""
         try:
             with open(file_path, encoding="utf-8") as f:
@@ -513,7 +513,7 @@ class AutoTagger:
 
     async def _analyze_python_file(
         self, file_path: str, content: str, content_hash: str
-    ) -> List[MetaTag]:
+    ) -> list[MetaTag]:
         """Analyze Python file using AST."""
         try:
             tree = ast.parse(content)
@@ -679,7 +679,7 @@ class AutoTagger:
 
         return SemanticRole.UNKNOWN
 
-    def _extract_capabilities(self, content: str) -> Set[str]:
+    def _extract_capabilities(self, content: str) -> set[str]:
         """Extract capabilities from content analysis."""
         capabilities = set()
         content_lower = content.lower()
@@ -727,16 +727,14 @@ class AutoTagger:
         complexity = 1  # Base complexity
 
         for child in ast.walk(node):
-            if isinstance(child, (ast.If, ast.While, ast.For, ast.AsyncFor)) or isinstance(
-                child, ast.ExceptHandler
-            ):
+            if isinstance(child, (ast.If, ast.While, ast.For, ast.AsyncFor, ast.ExceptHandler)):
                 complexity += 1
             elif isinstance(child, ast.BoolOp):
                 complexity += len(child.values) - 1
 
         return complexity
 
-    def _extract_dependencies(self, content: str) -> Set[str]:
+    def _extract_dependencies(self, content: str) -> set[str]:
         """Extract dependencies from import statements."""
         dependencies = set()
 
@@ -746,9 +744,8 @@ class AutoTagger:
                 if isinstance(node, ast.Import):
                     for alias in node.names:
                         dependencies.add(alias.name.split(".")[0])
-                elif isinstance(node, ast.ImportFrom):
-                    if node.module:
-                        dependencies.add(node.module.split(".")[0])
+                elif isinstance(node, ast.ImportFrom) and node.module:
+                    dependencies.add(node.module.split(".")[0])
         except:
             # Fallback to regex if AST parsing fails
             import_pattern = r"(?:from\s+(\w+)|import\s+(\w+))"
@@ -811,8 +808,8 @@ def get_global_registry() -> MetaTagRegistry:
 
 
 async def auto_tag_directory(
-    directory_path: str, file_patterns: List[str] = None
-) -> Dict[str, List[MetaTag]]:
+    directory_path: str, file_patterns: list[str] = None
+) -> dict[str, list[MetaTag]]:
     """Auto-tag all files in a directory."""
     if file_patterns is None:
         file_patterns = ["*.py", "*.js", "*.ts", "*.json", "*.yaml", "*.yml"]

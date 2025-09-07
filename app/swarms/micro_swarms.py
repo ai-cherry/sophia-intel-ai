@@ -7,9 +7,7 @@ A/B testing, quick analysis, and cost-effective processing.
 import logging
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, List, Optional
-
-from app.swarms.core.swarm_base import SwarmExecutionMode, SwarmType
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +30,7 @@ class MicroSwarmConfig:
 
     name: str
     purpose: SwarmPurpose
-    agents: List[str]  # Model IDs
+    agents: list[str]  # Model IDs
     pattern: str  # Execution pattern
     max_time: float  # Maximum execution time in seconds
     cost_limit: float  # Maximum cost in dollars
@@ -42,7 +40,7 @@ class MicroSwarmConfig:
     consensus_required: bool = False
     min_consensus: float = 0.8
     parallel: bool = True
-    gates: List[str] = None
+    gates: list[str] = None
     escalation_enabled: bool = True
     cache_results: bool = True
 
@@ -50,7 +48,7 @@ class MicroSwarmConfig:
         if self.gates is None:
             self.gates = []
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "name": self.name,
@@ -80,7 +78,7 @@ class MicroSwarmLibrary:
     }
 
     @staticmethod
-    def get_all_configs() -> Dict[str, MicroSwarmConfig]:
+    def get_all_configs() -> dict[str, MicroSwarmConfig]:
         """Get all micro-swarm configurations."""
         return {
             "quick_analysis": MicroSwarmConfig(
@@ -178,13 +176,13 @@ class MicroSwarmLibrary:
         return configs.get(name)
 
     @staticmethod
-    def get_configs_by_purpose(purpose: SwarmPurpose) -> List[MicroSwarmConfig]:
+    def get_configs_by_purpose(purpose: SwarmPurpose) -> list[MicroSwarmConfig]:
         """Get all configs for a specific purpose."""
         configs = MicroSwarmLibrary.get_all_configs()
         return [cfg for cfg in configs.values() if cfg.purpose == purpose]
 
     @staticmethod
-    def get_configs_under_cost(max_cost: float) -> List[MicroSwarmConfig]:
+    def get_configs_under_cost(max_cost: float) -> list[MicroSwarmConfig]:
         """Get all configs under a certain cost limit."""
         configs = MicroSwarmLibrary.get_all_configs()
         return [cfg for cfg in configs.values() if cfg.cost_limit <= max_cost]
@@ -200,7 +198,7 @@ class ConfidenceBasedRouter:
 
         logger.info("ConfidenceBasedRouter initialized")
 
-    async def route_request(self, request: str, initial_tier: str = "tier1") -> Dict[str, Any]:
+    async def route_request(self, request: str, initial_tier: str = "tier1") -> dict[str, Any]:
         """Route request through escalation tiers based on confidence."""
         tiers = MicroSwarmLibrary.ESCALATION_TIERS
         current_tier = initial_tier
@@ -253,7 +251,7 @@ class ConfidenceBasedRouter:
             "escalated": len(attempts) > 1,
         }
 
-    async def _execute_tier(self, request: str, models: List[str]) -> Dict[str, Any]:
+    async def _execute_tier(self, request: str, models: list[str]) -> dict[str, Any]:
         """Execute request with specified model tier."""
         # In production, this would actually execute with the models
         # For now, return mock result
@@ -288,7 +286,7 @@ class MicroSwarmExecutor:
 
         logger.info("MicroSwarmExecutor initialized")
 
-    async def execute(self, config_name: str, request: str) -> Dict[str, Any]:
+    async def execute(self, config_name: str, request: str) -> dict[str, Any]:
         """Execute a micro-swarm configuration."""
         config = self.library.get_config(config_name)
 
@@ -316,7 +314,7 @@ class MicroSwarmExecutor:
 
         return result
 
-    async def _execute_fixed(self, config: MicroSwarmConfig, request: str) -> Dict[str, Any]:
+    async def _execute_fixed(self, config: MicroSwarmConfig, request: str) -> dict[str, Any]:
         """Execute with fixed swarm configuration."""
         # In production, this would execute with actual agents
         # For now, return mock result
@@ -340,7 +338,7 @@ class MicroSwarmExecutor:
             "gates_passed": config.gates,
         }
 
-    async def compare_configs(self, config_names: List[str], request: str) -> Dict[str, Any]:
+    async def compare_configs(self, config_names: list[str], request: str) -> dict[str, Any]:
         """Compare multiple micro-swarm configurations (A/B testing)."""
         results = {}
 

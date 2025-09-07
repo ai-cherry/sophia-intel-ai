@@ -9,7 +9,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Optional
 from uuid import uuid4
 
 logger = logging.getLogger(__name__)
@@ -92,16 +92,16 @@ class AirtableBase:
 
     # Configuration
     api_key: str = ""
-    access_permissions: Dict[str, List[str]] = field(default_factory=dict)
+    access_permissions: dict[str, list[str]] = field(default_factory=dict)
     sync_enabled: bool = True
     auto_sync_interval: int = 300  # seconds
 
     # Tables and structure
-    tables: Dict[str, Dict[str, Any]] = field(default_factory=dict)
+    tables: dict[str, dict[str, Any]] = field(default_factory=dict)
     schema_version: str = "1.0"
 
     # Sync configuration
-    sync_dependencies: List[str] = field(default_factory=list)  # Other base IDs
+    sync_dependencies: list[str] = field(default_factory=list)  # Other base IDs
     sync_priority: int = 1  # 1=highest, 10=lowest
     conflict_resolution: str = "manual"  # manual, auto_merge, source_wins
 
@@ -111,7 +111,7 @@ class AirtableBase:
     last_sync: Optional[datetime] = None
     sync_status: SyncStatus = SyncStatus.PENDING
 
-    def get_table_names(self) -> List[str]:
+    def get_table_names(self) -> list[str]:
         """Get list of table names in base"""
         return list(self.tables.keys())
 
@@ -136,18 +136,18 @@ class AirtableRecord:
     record_type: RecordType
 
     # Data
-    fields: Dict[str, Any] = field(default_factory=dict)
+    fields: dict[str, Any] = field(default_factory=dict)
 
     # Sync metadata
     sync_id: str = field(default_factory=lambda: str(uuid4()))
     source_base: str = ""  # Original base for federated records
     sync_status: SyncStatus = SyncStatus.PENDING
     last_synced: Optional[datetime] = None
-    sync_conflicts: List[Dict[str, Any]] = field(default_factory=list)
+    sync_conflicts: list[dict[str, Any]] = field(default_factory=list)
 
     # Versioning
     version: int = 1
-    version_history: List[Dict[str, Any]] = field(default_factory=list)
+    version_history: list[dict[str, Any]] = field(default_factory=list)
 
     # Metadata
     created_at: datetime = field(default_factory=datetime.now)
@@ -214,16 +214,16 @@ class SyncConfiguration:
     name: str = ""
 
     # Source and target configuration
-    source_bases: List[str] = field(default_factory=list)
-    target_bases: List[str] = field(default_factory=list)
+    source_bases: list[str] = field(default_factory=list)
+    target_bases: list[str] = field(default_factory=list)
     bi_directional: bool = True
 
     # Sync rules
-    sync_tables: Dict[str, List[str]] = field(default_factory=dict)  # base_id -> table_names
-    field_mappings: Dict[str, Dict[str, str]] = field(
+    sync_tables: dict[str, list[str]] = field(default_factory=dict)  # base_id -> table_names
+    field_mappings: dict[str, dict[str, str]] = field(
         default_factory=dict
     )  # table -> field mappings
-    transformation_rules: Dict[str, Any] = field(default_factory=dict)
+    transformation_rules: dict[str, Any] = field(default_factory=dict)
 
     # Scheduling
     sync_schedule: str = "*/5 * * * *"  # Cron format, default every 5 minutes
@@ -232,7 +232,7 @@ class SyncConfiguration:
 
     # Conflict resolution
     conflict_resolution_strategy: str = "manual"  # manual, source_wins, target_wins, merge
-    notification_webhooks: List[str] = field(default_factory=list)
+    notification_webhooks: list[str] = field(default_factory=list)
 
     # Performance
     batch_size: int = 100
@@ -280,11 +280,11 @@ class BrandAsset:
     file_url: str = ""
     file_format: str = ""  # png, svg, pdf, jpg, etc.
     file_size: int = 0
-    dimensions: Dict[str, int] = field(default_factory=dict)  # width, height
+    dimensions: dict[str, int] = field(default_factory=dict)  # width, height
 
     # Usage guidelines
-    usage_contexts: List[str] = field(default_factory=list)  # email, social, print, web
-    usage_restrictions: List[str] = field(default_factory=list)
+    usage_contexts: list[str] = field(default_factory=list)  # email, social, print, web
+    usage_restrictions: list[str] = field(default_factory=list)
     brand_compliance_score: float = 1.0
 
     # Color information (for color assets)
@@ -295,7 +295,7 @@ class BrandAsset:
 
     # Template information (for template assets)
     template_type: str = ""  # powerpoint, email, social, document
-    template_variables: List[str] = field(default_factory=list)
+    template_variables: list[str] = field(default_factory=list)
     customization_level: str = "medium"  # low, medium, high
 
     # Version management
@@ -312,13 +312,13 @@ class BrandAsset:
     created_at: datetime = field(default_factory=datetime.now)
     updated_at: datetime = field(default_factory=datetime.now)
     created_by: str = "brand_team"
-    tags: List[str] = field(default_factory=list)
+    tags: list[str] = field(default_factory=list)
 
     def is_approved_for_use(self) -> bool:
         """Check if asset is approved for use"""
         return self.approval_status == "approved"
 
-    def get_usage_guidelines(self) -> Dict[str, Any]:
+    def get_usage_guidelines(self) -> dict[str, Any]:
         """Get comprehensive usage guidelines"""
         return {
             "contexts": self.usage_contexts,
@@ -348,39 +348,39 @@ class FoundationalKnowledge:
     # Content
     content: str = ""
     summary: str = ""
-    key_points: List[str] = field(default_factory=list)
-    related_concepts: List[str] = field(default_factory=list)
+    key_points: list[str] = field(default_factory=list)
+    related_concepts: list[str] = field(default_factory=list)
 
     # Context and usage
-    business_domains: List[str] = field(default_factory=list)  # marketing, sales, finance
-    use_cases: List[str] = field(default_factory=list)
+    business_domains: list[str] = field(default_factory=list)  # marketing, sales, finance
+    use_cases: list[str] = field(default_factory=list)
     importance_level: str = "medium"  # critical, high, medium, low
     confidence_level: float = 0.9  # 0.0 to 1.0
 
     # Sources and validation
-    data_sources: List[str] = field(default_factory=list)
-    external_references: List[str] = field(default_factory=list)
+    data_sources: list[str] = field(default_factory=list)
+    external_references: list[str] = field(default_factory=list)
     validation_status: str = "verified"  # verified, pending, outdated
     last_validated: Optional[datetime] = None
 
     # Usage tracking
     access_count: int = 0
     last_accessed: Optional[datetime] = None
-    sophia_usage_contexts: List[Dict[str, Any]] = field(default_factory=list)
+    sophia_usage_contexts: list[dict[str, Any]] = field(default_factory=list)
 
     # Relationships
     parent_knowledge: Optional[str] = None  # Parent knowledge ID
-    child_knowledge: List[str] = field(default_factory=list)  # Child knowledge IDs
-    related_knowledge: List[str] = field(default_factory=list)  # Related knowledge IDs
+    child_knowledge: list[str] = field(default_factory=list)  # Child knowledge IDs
+    related_knowledge: list[str] = field(default_factory=list)  # Related knowledge IDs
 
     # Metadata
     created_at: datetime = field(default_factory=datetime.now)
     updated_at: datetime = field(default_factory=datetime.now)
     created_by: str = "knowledge_team"
     version: int = 1
-    tags: List[str] = field(default_factory=list)
+    tags: list[str] = field(default_factory=list)
 
-    def increment_access(self, context: Dict[str, Any] = None):
+    def increment_access(self, context: dict[str, Any] = None):
         """Increment access count and log usage context"""
         self.access_count += 1
         self.last_accessed = datetime.now()
@@ -405,9 +405,8 @@ class FoundationalKnowledge:
         elif relationship_type == "child":
             if related_id not in self.child_knowledge:
                 self.child_knowledge.append(related_id)
-        elif relationship_type == "related":
-            if related_id not in self.related_knowledge:
-                self.related_knowledge.append(related_id)
+        elif relationship_type == "related" and related_id not in self.related_knowledge:
+            self.related_knowledge.append(related_id)
 
         self.updated_at = datetime.now()
 
@@ -451,9 +450,9 @@ class SyncOperation:
     record_id: str = ""
 
     # Data
-    source_data: Dict[str, Any] = field(default_factory=dict)
-    target_data: Dict[str, Any] = field(default_factory=dict)
-    transformed_data: Dict[str, Any] = field(default_factory=dict)
+    source_data: dict[str, Any] = field(default_factory=dict)
+    target_data: dict[str, Any] = field(default_factory=dict)
+    transformed_data: dict[str, Any] = field(default_factory=dict)
 
     # Status and results
     status: SyncStatus = SyncStatus.PENDING
@@ -468,7 +467,7 @@ class SyncOperation:
     duration_seconds: float = 0.0
 
     # Conflict resolution
-    conflicts_detected: List[Dict[str, Any]] = field(default_factory=list)
+    conflicts_detected: list[dict[str, Any]] = field(default_factory=list)
     resolution_applied: Optional[str] = None
     manual_review_required: bool = False
 

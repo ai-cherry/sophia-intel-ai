@@ -513,9 +513,9 @@ class PortkeyManager:
             Dictionary of provider to validation status
         """
         results = {}
-        for provider, vk in self.VIRTUAL_KEYS.items():
+        for provider, _vk in self.VIRTUAL_KEYS.items():
             try:
-                client = self.get_client(provider)
+                self.get_client(provider)
                 # Test with a minimal request
                 # Note: This is just checking client creation, not actual API call
                 results[provider] = True

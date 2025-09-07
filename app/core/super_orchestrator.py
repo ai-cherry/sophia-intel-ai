@@ -8,7 +8,7 @@ import json
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from fastapi import WebSocket
 
@@ -735,7 +735,7 @@ class SuperOrchestrator:
             "timestamp": datetime.now(),
         }
 
-    async def parallel_swarm_orchestration(self, tasks: List[dict]) -> List[dict]:
+    async def parallel_swarm_orchestration(self, tasks: list[dict]) -> list[dict]:
         """Consolidated parallel swarm orchestration"""
         # Implementation consolidated from true_parallel_orchestrator.py
         results = []
@@ -749,7 +749,7 @@ class SuperOrchestrator:
         # Implementation consolidated from dev_mcp_unified/core/universal_orchestrator.py
         return await self.process_request({"type": "mcp", **mcp_request})
 
-    def get_consolidated_capabilities(self) -> Dict[str, List[str]]:
+    def get_consolidated_capabilities(self) -> dict[str, list[str]]:
         """Return all consolidated capabilities"""
         return {
             "business_intelligence": [

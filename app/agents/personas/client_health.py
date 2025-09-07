@@ -12,7 +12,7 @@ analytical insights with genuine care for client relationships and outcomes.
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from .base_persona import BasePersonaAgent, ConversationStyle, PersonalityTrait, PersonaProfile
 
@@ -969,7 +969,7 @@ class ClientHealthAgent(BasePersonaAgent):
     ) -> str:
         return f"Based on your situation: {practices}. I recommend starting with a thorough client health assessment."
 
-    async def assess_client_health(self, assessment_data) -> Dict[str, Any]:
+    async def assess_client_health(self, assessment_data) -> dict[str, Any]:
         """Assess overall client health and provide recommendations"""
         health_score = 0.0
         risk_factors = []
@@ -1021,8 +1021,8 @@ class ClientHealthAgent(BasePersonaAgent):
         }
 
     async def predict_churn_risk(
-        self, client_id: str, assessment_data: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, client_id: str, assessment_data: dict[str, Any]
+    ) -> dict[str, Any]:
         """Predict client churn risk based on various factors"""
         churn_probability = 0.0
         churn_indicators = []
@@ -1075,8 +1075,8 @@ class ClientHealthAgent(BasePersonaAgent):
         }
 
     async def create_success_plan(
-        self, client_id: str, goals: List[str], timeline: str
-    ) -> Dict[str, Any]:
+        self, client_id: str, goals: list[str], timeline: str
+    ) -> dict[str, Any]:
         """Create a client success plan"""
         plan_phases = []
         success_metrics = []

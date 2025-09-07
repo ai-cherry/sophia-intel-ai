@@ -3,12 +3,10 @@ Orchestrator Configuration with GPT-5 as Primary Model
 Centralized configuration for all orchestrators
 """
 
-import os
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
-from app.core.aimlapi_config import aimlapi_manager
 from app.core.enhanced_llm_router import LLMProviderType, enhanced_router
 
 
@@ -119,7 +117,7 @@ class OrchestratorConfigManager:
         """Get configuration for specific orchestrator"""
         return self.configs.get(orchestrator_type, OrchestratorModelConfig())
 
-    def get_model_for_task(self, task_type: str) -> Dict[str, Any]:
+    def get_model_for_task(self, task_type: str) -> dict[str, Any]:
         """Get optimal model for specific task type"""
         if task_type in self.task_routing:
             return self.task_routing[task_type]
@@ -237,7 +235,7 @@ Maintain system harmony and optimize for overall performance.""",
                 )
                 return response
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Get status of all orchestrators"""
         return {
             "orchestrators": {

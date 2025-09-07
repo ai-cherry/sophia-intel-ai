@@ -13,7 +13,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 from urllib.parse import urlparse
 
 from app.core.circuit_breaker import CircuitBreaker
@@ -70,11 +70,11 @@ class ResearchFinding:
     """Individual research finding"""
 
     content: str
-    citations: List[Citation]
+    citations: list[Citation]
     confidence: float
     domain: ResearchDomain
-    keywords: List[str]
-    contradictions: Optional[List[str]] = None
+    keywords: list[str]
+    contradictions: Optional[list[str]] = None
 
 
 @dataclass
@@ -83,13 +83,13 @@ class ResearchReport:
 
     query: str
     domain: ResearchDomain
-    findings: List[ResearchFinding]
+    findings: list[ResearchFinding]
     summary: str
     total_confidence: float
     research_time: float
     provider_used: ResearchProvider
     cached: bool = False
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 class ResearchCache:
@@ -124,7 +124,7 @@ class ResearchCache:
         content = f"{query}:{domain.value}"
         return f"research:{hashlib.md5(content.encode()).hexdigest()}"
 
-    def _report_to_dict(self, report: ResearchReport) -> Dict[str, Any]:
+    def _report_to_dict(self, report: ResearchReport) -> dict[str, Any]:
         """Convert report to dict for caching"""
         return {
             "query": report.query,
@@ -157,7 +157,7 @@ class ResearchCache:
             "metadata": report.metadata,
         }
 
-    def _dict_to_report(self, data: Dict[str, Any]) -> ResearchReport:
+    def _dict_to_report(self, data: dict[str, Any]) -> ResearchReport:
         """Convert dict to report"""
         findings = []
         for f_data in data["findings"]:
@@ -207,7 +207,7 @@ class BaseResearchProvider(ABC):
         self.portkey_manager = get_portkey_manager()
 
     @abstractmethod
-    async def search(self, query: str, domain: ResearchDomain, **kwargs) -> List[ResearchFinding]:
+    async def search(self, query: str, domain: ResearchDomain, **kwargs) -> list[ResearchFinding]:
         """Execute search with provider"""
         pass
 
@@ -216,7 +216,7 @@ class BaseResearchProvider(ABC):
         """Verify source reliability"""
         pass
 
-    async def _rate_confidence(self, content: str, citations: List[Citation]) -> float:
+    async def _rate_confidence(self, content: str, citations: list[Citation]) -> float:
         """Rate confidence of findings"""
         # Base confidence on number and quality of citations
         if not citations:
@@ -241,7 +241,7 @@ class PerplexityProvider(BaseResearchProvider):
         super().__init__(ResearchProvider.PERPLEXITY)
         self.api_key = self.portkey_manager.get_virtual_key("perplexity")
 
-    async def search(self, query: str, domain: ResearchDomain, **kwargs) -> List[ResearchFinding]:
+    async def search(self, query: str, domain: ResearchDomain, **kwargs) -> list[ResearchFinding]:
         """Execute Perplexity search"""
         try:
             # Use Portkey to call Perplexity with citations
@@ -294,8 +294,8 @@ class PerplexityProvider(BaseResearchProvider):
             return SourceReliability.MODERATE
 
     async def _parse_perplexity_response(
-        self, response: Dict[str, Any], domain: ResearchDomain
-    ) -> List[ResearchFinding]:
+        self, response: dict[str, Any], domain: ResearchDomain
+    ) -> list[ResearchFinding]:
         """Parse Perplexity response into findings"""
         findings = []
 
@@ -332,7 +332,7 @@ class PerplexityProvider(BaseResearchProvider):
 
         return findings
 
-    def _extract_keywords(self, content: str) -> List[str]:
+    def _extract_keywords(self, content: str) -> list[str]:
         """Extract keywords from content"""
         # Simple keyword extraction - could be enhanced with NLP
         import re
@@ -347,7 +347,7 @@ class FactChecker:
     def __init__(self):
         self.portkey_manager = get_portkey_manager()
 
-    async def check_facts(self, findings: List[ResearchFinding]) -> List[ResearchFinding]:
+    async def check_facts(self, findings: list[ResearchFinding]) -> list[ResearchFinding]:
         """Check facts and identify contradictions"""
         if len(findings) < 2:
             return findings
@@ -363,8 +363,8 @@ class FactChecker:
         return findings
 
     async def _find_contradictions(
-        self, finding: ResearchFinding, other_findings: List[ResearchFinding]
-    ) -> List[str]:
+        self, finding: ResearchFinding, other_findings: list[ResearchFinding]
+    ) -> list[str]:
         """Find contradictions with other findings"""
         if not other_findings:
             return []
@@ -405,7 +405,7 @@ class WebResearchTeam:
         self.providers = self._init_providers()
         self.memory_router = get_memory_router()
 
-    def _init_providers(self) -> Dict[ResearchProvider, BaseResearchProvider]:
+    def _init_providers(self) -> dict[ResearchProvider, BaseResearchProvider]:
         """Initialize research providers"""
         providers = {}
 
@@ -489,7 +489,7 @@ class WebResearchTeam:
 
         return report
 
-    async def _generate_summary(self, findings: List[ResearchFinding]) -> str:
+    async def _generate_summary(self, findings: list[ResearchFinding]) -> str:
         """Generate research summary"""
         if not findings:
             return "No findings to summarize"
@@ -544,7 +544,7 @@ class SophiaResearchTeam(WebResearchTeam):
     def __init__(self):
         super().__init__(ResearchDomain.BUSINESS)
 
-    async def market_research(self, companies: List[str], topics: List[str]) -> ResearchReport:
+    async def market_research(self, companies: list[str], topics: list[str]) -> ResearchReport:
         """Specialized market research"""
         query = f"Market analysis for {', '.join(companies)} regarding {', '.join(topics)}"
         report = await self.research(query, deep_search=True)
@@ -556,7 +556,7 @@ class SophiaResearchTeam(WebResearchTeam):
 
         return report
 
-    async def competitive_analysis(self, company: str, competitors: List[str]) -> ResearchReport:
+    async def competitive_analysis(self, company: str, competitors: list[str]) -> ResearchReport:
         """Competitive analysis research"""
         query = f"Competitive analysis: {company} vs {', '.join(competitors)}"
         report = await self.research(query, deep_search=True)
@@ -587,7 +587,7 @@ class ArtemisResearchTeam(WebResearchTeam):
 
         return report
 
-    async def cve_research(self, keywords: List[str]) -> ResearchReport:
+    async def cve_research(self, keywords: list[str]) -> ResearchReport:
         """Research CVEs and security vulnerabilities"""
         query = f"CVE vulnerabilities: {', '.join(keywords)}"
         report = await self.research(query, deep_search=True)

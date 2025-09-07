@@ -7,7 +7,7 @@ This ensures all orchestrators and agents can access the keys
 import os
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 
 class KeyType(Enum):
@@ -381,19 +381,19 @@ class UnifiedKeysManager:
 
     def get_portkey_virtual_key(self, provider: str) -> Optional[str]:
         """Get Portkey virtual key for a provider"""
-        for key_name, config in self.portkey_virtual_keys.items():
+        for _key_name, config in self.portkey_virtual_keys.items():
             if config.provider == provider.lower():
                 return config.key
         return None
 
     def get_direct_api_key(self, provider: str) -> Optional[str]:
         """Get direct API key for a provider"""
-        for key_name, config in self.direct_api_keys.items():
+        for _key_name, config in self.direct_api_keys.items():
             if config.provider == provider.lower():
                 return config.key
         return None
 
-    def get_all_keys_for_provider(self, provider: str) -> Dict[str, Any]:
+    def get_all_keys_for_provider(self, provider: str) -> dict[str, Any]:
         """Get all keys (virtual and direct) for a provider"""
         result = {}
 
@@ -416,7 +416,7 @@ class UnifiedKeysManager:
 
         return result
 
-    def get_working_providers(self) -> Dict[str, list]:
+    def get_working_providers(self) -> dict[str, list]:
         """Get list of working providers based on test results"""
         return {
             "portkey_working": ["openai", "anthropic", "deepseek", "mistral", "together", "cohere"],
@@ -424,7 +424,7 @@ class UnifiedKeysManager:
             "needs_fix": ["groq", "perplexity", "gemini", "huggingface", "openrouter", "xai"],
         }
 
-    def get_provider_status(self) -> Dict[str, Any]:
+    def get_provider_status(self) -> dict[str, Any]:
         """Get comprehensive status of all providers"""
         status = {
             "portkey_api_key": self.portkey_api_key[:20] + "..." if self.portkey_api_key else None,

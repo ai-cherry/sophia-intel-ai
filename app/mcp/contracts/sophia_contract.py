@@ -7,7 +7,7 @@ Specialized contract for Sophia (business intelligence) domain servers
 import asyncio
 from abc import abstractmethod
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from .base_contract import (
     BaseMCPServerContract,
@@ -196,19 +196,19 @@ class SophiaServerContract(BaseMCPServerContract):
         pass
 
     @abstractmethod
-    async def generate_business_insights(self, context: Dict[str, Any]) -> List[BusinessInsight]:
+    async def generate_business_insights(self, context: dict[str, Any]) -> list[BusinessInsight]:
         """Generate actionable business insights"""
         pass
 
     @abstractmethod
-    async def perform_memory_operation(self, request: MemoryRequest) -> Dict[str, Any]:
+    async def perform_memory_operation(self, request: MemoryRequest) -> dict[str, Any]:
         """Perform intelligent memory operations"""
         pass
 
     @abstractmethod
     async def synthesize_strategic_intelligence(
-        self, inputs: List[Dict[str, Any]]
-    ) -> Dict[str, Any]:
+        self, inputs: list[dict[str, Any]]
+    ) -> dict[str, Any]:
         """Synthesize multiple data sources into strategic intelligence"""
         pass
 
@@ -225,7 +225,7 @@ class SophiaServerContract(BaseMCPServerContract):
             # Check memory/cache availability
             try:
                 # Test basic memory operations
-                test_memory = {
+                {
                     "test_key": "health_check_value",
                     "timestamp": datetime.now().isoformat(),
                 }
@@ -261,7 +261,6 @@ class SophiaServerContract(BaseMCPServerContract):
 
             # Check business intelligence modules
             try:
-                import math
                 import statistics
 
                 # Test basic calculations
@@ -386,27 +385,27 @@ class SophiaServerContract(BaseMCPServerContract):
 
     # Capability-specific handlers (to be implemented by concrete servers)
 
-    async def _handle_business_analytics(self, request: MCPRequest) -> Dict[str, Any]:
+    async def _handle_business_analytics(self, request: MCPRequest) -> dict[str, Any]:
         """Handle business analytics requests"""
         # Default implementation - to be overridden
         return {"message": "Business analytics capability not implemented"}
 
-    async def _handle_sales_intelligence(self, request: MCPRequest) -> Dict[str, Any]:
+    async def _handle_sales_intelligence(self, request: MCPRequest) -> dict[str, Any]:
         """Handle sales intelligence requests"""
         # Default implementation - to be overridden
         return {"message": "Sales intelligence capability not implemented"}
 
-    async def _handle_customer_intelligence(self, request: MCPRequest) -> Dict[str, Any]:
+    async def _handle_customer_intelligence(self, request: MCPRequest) -> dict[str, Any]:
         """Handle customer intelligence requests"""
         # Default implementation - to be overridden
         return {"message": "Customer intelligence capability not implemented"}
 
-    async def _handle_memory_management(self, request: MCPRequest) -> Dict[str, Any]:
+    async def _handle_memory_management(self, request: MCPRequest) -> dict[str, Any]:
         """Handle memory management requests"""
         # Default implementation - to be overridden
         return {"message": "Memory management capability not implemented"}
 
-    async def _handle_strategic_planning(self, request: MCPRequest) -> Dict[str, Any]:
+    async def _handle_strategic_planning(self, request: MCPRequest) -> dict[str, Any]:
         """Handle strategic planning requests"""
         # Default implementation - to be overridden
         return {"message": "Strategic planning capability not implemented"}
@@ -414,8 +413,8 @@ class SophiaServerContract(BaseMCPServerContract):
     # Sophia-specific utility methods
 
     async def calculate_business_metrics(
-        self, data: Dict[str, Any], metrics: List[str]
-    ) -> Dict[str, Any]:
+        self, data: dict[str, Any], metrics: list[str]
+    ) -> dict[str, Any]:
         """Calculate standard business metrics from data"""
         results = {}
 
@@ -452,7 +451,7 @@ class SophiaServerContract(BaseMCPServerContract):
 
         return results
 
-    async def generate_insights_from_data(self, data: Dict[str, Any]) -> List[BusinessInsight]:
+    async def generate_insights_from_data(self, data: dict[str, Any]) -> list[BusinessInsight]:
         """Generate business insights from raw data"""
         insights = []
 
@@ -484,7 +483,7 @@ class SophiaServerContract(BaseMCPServerContract):
                         )
                         insights.append(insight)
 
-        except Exception as e:
+        except Exception:
             # Log error but don't fail completely
             pass
 

@@ -8,7 +8,7 @@ import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Optional, Union
 
 
 class AGUIEventType(str, Enum):
@@ -126,7 +126,7 @@ class AGUIToolCall:
 
     tool_name: str
     tool_id: str
-    arguments: Dict[str, Any]
+    arguments: dict[str, Any]
     status: str = "pending"  # pending, running, complete, error
     result: Optional[Any] = None
     error: Optional[str] = None
@@ -141,7 +141,7 @@ class AGUIStateUpdate:
 
     state: str
     previous_state: Optional[str] = None
-    context: Dict[str, Any] = field(default_factory=dict)
+    context: dict[str, Any] = field(default_factory=dict)
     progress: Optional[float] = None  # 0.0 to 1.0
     message: Optional[str] = None
 
@@ -152,10 +152,10 @@ class AGUIEvent:
 
     type: AGUIEventType
     metadata: AGUIEventMetadata
-    data: Union[AGUITextDelta, AGUIToolCall, AGUIStateUpdate, Dict[str, Any]]
-    raw_data: Optional[Dict[str, Any]] = None  # Original WebSocket event data
+    data: Union[AGUITextDelta, AGUIToolCall, AGUIStateUpdate, dict[str, Any]]
+    raw_data: Optional[dict[str, Any]] = None  # Original WebSocket event data
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for JSON serialization"""
         result = {
             "type": self.type.value,
@@ -280,7 +280,7 @@ AUTHENTICATED_EVENT_TYPES = {
 }
 
 
-def get_domain_from_message(message: Dict[str, Any]) -> DomainContext:
+def get_domain_from_message(message: dict[str, Any]) -> DomainContext:
     """Extract domain context from message content"""
 
     message_type = message.get("type", "").lower()
@@ -314,6 +314,6 @@ def requires_authentication(event_type: AGUIEventType) -> bool:
     return event_type in AUTHENTICATED_EVENT_TYPES
 
 
-def get_events_for_domain(domain: DomainContext) -> List[AGUIEventType]:
+def get_events_for_domain(domain: DomainContext) -> list[AGUIEventType]:
     """Get list of event types for a domain"""
     return EVENT_FILTERS.get(domain, [])

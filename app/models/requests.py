@@ -1,7 +1,7 @@
 import re
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, validator
 
@@ -24,8 +24,8 @@ class MemoryStoreRequest(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True)
 
     content: str = Field(..., min_length=1, max_length=65536, description="Content to store")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Associated metadata")
-    tags: Optional[List[str]] = Field(None, max_items=20, description="Content tags")
+    metadata: dict[str, Any] = Field(default_factory=dict, description="Associated metadata")
+    tags: Optional[list[str]] = Field(None, max_items=20, description="Content tags")
     source: Optional[str] = Field(None, max_length=255, description="Content source")
     priority: Optional[int] = Field(default=0, ge=0, le=10, description="Storage priority")
 
@@ -48,7 +48,7 @@ class MemorySearchRequest(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True)
 
     query: str = Field(..., min_length=1, max_length=1024, description="Search query")
-    filters: Dict[str, Any] = Field(default_factory=dict, description="Search filters")
+    filters: dict[str, Any] = Field(default_factory=dict, description="Search filters")
     top_k: int = Field(default=5, ge=1, le=100, description="Number of results to return")
     similarity_threshold: Optional[float] = Field(
         None, ge=0.0, le=1.0, description="Minimum similarity score"
@@ -103,7 +103,7 @@ class ChatRequest(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True)
 
     model: str = Field(..., min_length=1, description="Model identifier")
-    messages: List[ChatMessage] = Field(
+    messages: list[ChatMessage] = Field(
         ..., min_items=1, max_items=100, description="Conversation messages"
     )
     temperature: Optional[float] = Field(
@@ -159,8 +159,8 @@ class SwarmResponse(BaseModel):
     execution_time: Optional[float] = Field(None, ge=0, description="Execution time in seconds")
     agent_count: Optional[int] = Field(None, ge=1, le=100, description="Number of agents involved")
     model_used: Optional[str] = Field(None, description="Model that generated the response")
-    token_usage: Optional[Dict[str, int]] = Field(None, description="Token usage statistics")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
+    token_usage: Optional[dict[str, int]] = Field(None, description="Token usage statistics")
+    metadata: dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
     timestamp: datetime = Field(default_factory=datetime.utcnow, description="Response timestamp")
     request_id: Optional[str] = Field(None, description="Unique request identifier")
 

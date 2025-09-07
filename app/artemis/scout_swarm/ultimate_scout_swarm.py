@@ -17,7 +17,7 @@ import time
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 from uuid import uuid4
 
 import httpx
@@ -77,8 +77,8 @@ class ScoutConfig:
     max_tokens: int = 4000
     temperature: float = 0.3
     timeout: int = 60
-    specialties: List[str] = field(default_factory=list)
-    performance_metrics: Dict[str, float] = field(default_factory=dict)
+    specialties: list[str] = field(default_factory=list)
+    performance_metrics: dict[str, float] = field(default_factory=dict)
 
 
 @dataclass
@@ -87,12 +87,12 @@ class ScanResult:
 
     scout_name: str
     tier: ScoutTier
-    findings: List[Dict[str, Any]]
+    findings: list[dict[str, Any]]
     execution_time: float
     tokens_used: int
     success: bool
     error: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -103,10 +103,10 @@ class SwarmReport:
     timestamp: datetime
     repository: str
     total_execution_time: float
-    tier_results: Dict[ScoutTier, List[ScanResult]]
-    critical_findings: List[Dict[str, Any]]
-    recommendations: List[Dict[str, Any]]
-    statistics: Dict[str, Any]
+    tier_results: dict[ScoutTier, list[ScanResult]]
+    critical_findings: list[dict[str, Any]]
+    recommendations: list[dict[str, Any]]
+    statistics: dict[str, Any]
 
 
 # ==============================================================================
@@ -123,7 +123,7 @@ class BaseScout:
         self.total_tokens = 0
         self.average_time = 0.0
 
-    async def scan(self, target: str, context: Dict[str, Any]) -> ScanResult:
+    async def scan(self, target: str, context: dict[str, Any]) -> ScanResult:
         """Execute scan on target with given context"""
         start_time = time.time()
 
@@ -170,7 +170,7 @@ class BaseScout:
                 error=str(e),
             )
 
-    def _build_prompt(self, target: str, context: Dict[str, Any]) -> str:
+    def _build_prompt(self, target: str, context: dict[str, Any]) -> str:
         """Build scan prompt based on tier and context"""
         base_prompt = f"""
 MISSION: Repository Analysis - {target}
@@ -235,11 +235,11 @@ No time limit. Be exhaustive and thorough.
 
         return base_prompt
 
-    async def _call_api(self, prompt: str) -> Dict[str, Any]:
+    async def _call_api(self, prompt: str) -> dict[str, Any]:
         """Make API call to model provider"""
         raise NotImplementedError("Subclasses must implement _call_api")
 
-    def _parse_findings(self, response: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _parse_findings(self, response: dict[str, Any]) -> list[dict[str, Any]]:
         """Parse API response into structured findings"""
         content = response.get("choices", [{}])[0].get("message", {}).get("content", "")
 
@@ -305,7 +305,7 @@ class LlamaScout(BaseScout):
         )
         super().__init__(config)
 
-    async def _call_api(self, prompt: str) -> Dict[str, Any]:
+    async def _call_api(self, prompt: str) -> dict[str, Any]:
         """Call AIMLAPI for Llama-4-Scout"""
         async with httpx.AsyncClient(timeout=self.config.timeout) as client:
             response = await client.post(
@@ -354,7 +354,7 @@ class GrokScout(BaseScout):
         )
         super().__init__(config)
 
-    async def _call_api(self, prompt: str) -> Dict[str, Any]:
+    async def _call_api(self, prompt: str) -> dict[str, Any]:
         """Call OpenRouter for Grok Code Fast"""
         async with httpx.AsyncClient(timeout=self.config.timeout) as client:
             response = await client.post(
@@ -397,7 +397,7 @@ class GeminiScout(BaseScout):
         )
         super().__init__(config)
 
-    async def _call_api(self, prompt: str) -> Dict[str, Any]:
+    async def _call_api(self, prompt: str) -> dict[str, Any]:
         """Call Google Gemini API"""
         model = "gemini-2.0-flash-exp"
         async with httpx.AsyncClient(timeout=self.config.timeout) as client:
@@ -453,7 +453,7 @@ class GPTScout(BaseScout):
         )
         super().__init__(config)
 
-    async def _call_api(self, prompt: str) -> Dict[str, Any]:
+    async def _call_api(self, prompt: str) -> dict[str, Any]:
         """Call Portkey for GPT-4o-mini"""
         async with httpx.AsyncClient(timeout=self.config.timeout) as client:
             response = await client.post(
@@ -496,7 +496,7 @@ class MaverickScout(BaseScout):
         )
         super().__init__(config)
 
-    async def _call_api(self, prompt: str) -> Dict[str, Any]:
+    async def _call_api(self, prompt: str) -> dict[str, Any]:
         """Call AIMLAPI for Llama 4 Maverick"""
         return await LlamaScout()._call_api(prompt)  # Same API, different model
 
@@ -524,7 +524,7 @@ class GLMScout(BaseScout):
         )
         super().__init__(config)
 
-    async def _call_api(self, prompt: str) -> Dict[str, Any]:
+    async def _call_api(self, prompt: str) -> dict[str, Any]:
         """Call AIMLAPI for GLM-4.5-Air"""
         return await LlamaScout()._call_api(prompt)  # Same API, different model
 
@@ -560,7 +560,7 @@ class UltimateScoutSwarm:
         # Swarm statistics
         self.total_scans = 0
         self.total_execution_time = 0.0
-        self.scan_history: List[SwarmReport] = []
+        self.scan_history: list[SwarmReport] = []
 
         logger.info(
             f"🚀 Ultimate Scout Swarm initialized with {sum(len(s) for s in self.scouts.values())} scouts"
@@ -639,8 +639,8 @@ class UltimateScoutSwarm:
         return report
 
     async def _execute_tier(
-        self, tier: ScoutTier, repository_path: str, context: Dict[str, Any]
-    ) -> List[ScanResult]:
+        self, tier: ScoutTier, repository_path: str, context: dict[str, Any]
+    ) -> list[ScanResult]:
         """
         Execute all scouts in a tier
 
@@ -672,7 +672,7 @@ class UltimateScoutSwarm:
 
         return valid_results
 
-    async def _get_repo_stats(self, repository_path: str) -> Dict[str, Any]:
+    async def _get_repo_stats(self, repository_path: str) -> dict[str, Any]:
         """
         Get repository statistics using MCP tools
 
@@ -707,7 +707,7 @@ class UltimateScoutSwarm:
 
         return stats
 
-    def _extract_critical_issues(self, results: List[ScanResult]) -> List[Dict[str, Any]]:
+    def _extract_critical_issues(self, results: list[ScanResult]) -> list[dict[str, Any]]:
         """
         Extract critical issues from scan results
 
@@ -728,7 +728,7 @@ class UltimateScoutSwarm:
 
         return critical
 
-    def _extract_findings(self, results: List[ScanResult]) -> List[Dict[str, Any]]:
+    def _extract_findings(self, results: list[ScanResult]) -> list[dict[str, Any]]:
         """
         Extract all findings from scan results
 
@@ -753,9 +753,9 @@ class UltimateScoutSwarm:
         self,
         scan_id: str,
         repository: str,
-        tier_results: Dict[ScoutTier, List[ScanResult]],
+        tier_results: dict[ScoutTier, list[ScanResult]],
         total_time: float,
-        repo_stats: Dict[str, Any],
+        repo_stats: dict[str, Any],
     ) -> SwarmReport:
         """
         Compile final swarm report
@@ -806,8 +806,8 @@ class UltimateScoutSwarm:
         )
 
     def _generate_recommendations(
-        self, tier_results: Dict[ScoutTier, List[ScanResult]]
-    ) -> List[Dict[str, Any]]:
+        self, tier_results: dict[ScoutTier, list[ScanResult]]
+    ) -> list[dict[str, Any]]:
         """
         Generate actionable recommendations from scan results
 
@@ -841,7 +841,7 @@ class UltimateScoutSwarm:
                         "type": issue_type,
                         "count": len(findings),
                         "recommendation": f"Address {len(findings)} instances of {issue_type}",
-                        "scouts_agreed": list(set(f["scout"] for f in findings)),
+                        "scouts_agreed": list({f["scout"] for f in findings}),
                     }
                 )
 
@@ -850,7 +850,7 @@ class UltimateScoutSwarm:
 
         return recommendations[:10]  # Top 10 recommendations
 
-    def get_swarm_status(self) -> Dict[str, Any]:
+    def get_swarm_status(self) -> dict[str, Any]:
         """
         Get current swarm status and statistics
 
@@ -885,7 +885,7 @@ class UltimateScoutSwarm:
         }
 
     async def execute_custom_scan(
-        self, repository_path: str, scouts_to_use: List[str], custom_prompt: Optional[str] = None
+        self, repository_path: str, scouts_to_use: list[str], custom_prompt: Optional[str] = None
     ) -> SwarmReport:
         """
         Execute custom scan with specific scouts
@@ -1006,7 +1006,7 @@ class ArtemisScoutSwarmIntegration:
     @staticmethod
     async def execute_tactical_scan(
         repository_path: str, threat_level: str = "standard"
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Execute tactical repository scan
 

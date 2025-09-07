@@ -3,18 +3,16 @@ Access Control System for ESC Integration
 Role-based access control for secrets and configuration management.
 """
 
-import asyncio
 import hashlib
 import logging
 import time
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Optional
 
 import jwt
 from cryptography.fernet import Fernet
-from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
 
@@ -60,10 +58,10 @@ class Role:
     """Role definition with permissions"""
 
     name: str
-    permissions: Set[Permission]
+    permissions: set[Permission]
     description: str = ""
-    resource_patterns: List[str] = field(default_factory=list)  # Regex patterns for resource access
-    environments: List[str] = field(default_factory=list)  # Allowed environments
+    resource_patterns: list[str] = field(default_factory=list)  # Regex patterns for resource access
+    environments: list[str] = field(default_factory=list)  # Allowed environments
 
 
 @dataclass
@@ -72,12 +70,12 @@ class User:
 
     user_id: str
     username: str
-    roles: Set[str]
+    roles: set[str]
     email: Optional[str] = None
     created_at: datetime = field(default_factory=datetime.utcnow)
     last_access: Optional[datetime] = None
     active: bool = True
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -103,7 +101,7 @@ class AccessResult:
     user_id: str
     permission: Permission
     resource_id: str
-    roles_evaluated: Set[str]
+    roles_evaluated: set[str]
     timestamp: datetime = field(default_factory=datetime.utcnow)
 
 
@@ -111,7 +109,7 @@ class RoleManager:
     """Manages roles and permissions"""
 
     def __init__(self):
-        self.roles: Dict[str, Role] = {}
+        self.roles: dict[str, Role] = {}
         self._initialize_default_roles()
 
     def _initialize_default_roles(self):
@@ -211,7 +209,7 @@ class RoleManager:
         """Get role by name"""
         return self.roles.get(role_name)
 
-    def get_user_permissions(self, user: User) -> Set[Permission]:
+    def get_user_permissions(self, user: User) -> set[Permission]:
         """Get all permissions for a user based on their roles"""
         permissions = set()
         for role_name in user.roles:
@@ -220,7 +218,7 @@ class RoleManager:
                 permissions.update(role.permissions)
         return permissions
 
-    def get_user_environments(self, user: User) -> Set[str]:
+    def get_user_environments(self, user: User) -> set[str]:
         """Get all environments a user has access to"""
         environments = set()
         for role_name in user.roles:
@@ -254,7 +252,7 @@ class AccessTokenManager:
 
         return jwt.encode(payload, self.secret_key, algorithm=self.algorithm)
 
-    def validate_token(self, token: str) -> Optional[Dict[str, Any]]:
+    def validate_token(self, token: str) -> Optional[dict[str, Any]]:
         """Validate JWT token and return payload"""
         try:
             payload = jwt.decode(token, self.secret_key, algorithms=[self.algorithm])
@@ -288,18 +286,18 @@ class AccessControlManager:
         self.token_manager = AccessTokenManager(secret_key or Fernet.generate_key().decode())
 
         # User registry
-        self.users: Dict[str, User] = {}
+        self.users: dict[str, User] = {}
 
         # Access audit trail
-        self.access_log: List[AccessResult] = []
+        self.access_log: list[AccessResult] = []
         self.max_log_entries = 10000
 
         # Rate limiting
-        self.rate_limits: Dict[str, List[float]] = {}
+        self.rate_limits: dict[str, list[float]] = {}
         self.max_requests_per_minute = 60
 
         # Session management
-        self.active_sessions: Dict[str, Dict[str, Any]] = {}
+        self.active_sessions: dict[str, dict[str, Any]] = {}
 
         logger.info("Access Control Manager initialized")
 
@@ -376,14 +374,11 @@ class AccessControlManager:
             self.rate_limits[user_id] = []
         self.rate_limits[user_id].append(time.time())
 
-    def _matches_resource_pattern(self, resource_id: str, patterns: List[str]) -> bool:
+    def _matches_resource_pattern(self, resource_id: str, patterns: list[str]) -> bool:
         """Check if resource ID matches any of the patterns"""
         import re
 
-        for pattern in patterns:
-            if re.match(pattern, resource_id):
-                return True
-        return False
+        return any(re.match(pattern, resource_id) for pattern in patterns)
 
     async def check_access(self, request: AccessRequest) -> AccessResult:
         """Check if user has access to perform the requested action"""
@@ -502,7 +497,7 @@ class AccessControlManager:
             f"resource={result.resource_id}, reason={result.reason}",
         )
 
-    def get_user_permissions_summary(self, user_id: str) -> Dict[str, Any]:
+    def get_user_permissions_summary(self, user_id: str) -> dict[str, Any]:
         """Get summary of user permissions"""
         user = self.get_user(user_id)
         if not user:
@@ -523,7 +518,7 @@ class AccessControlManager:
 
     def get_access_log(
         self, user_id: Optional[str] = None, limit: int = 100
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Get access log entries"""
         entries = self.access_log
 
@@ -545,7 +540,7 @@ class AccessControlManager:
             for entry in entries
         ]
 
-    def get_system_statistics(self) -> Dict[str, Any]:
+    def get_system_statistics(self) -> dict[str, Any]:
         """Get system access control statistics"""
         total_requests = len(self.access_log)
         granted_requests = len([entry for entry in self.access_log if entry.granted])

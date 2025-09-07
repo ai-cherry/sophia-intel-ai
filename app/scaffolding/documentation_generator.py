@@ -18,7 +18,7 @@ import re
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 from app.scaffolding.meta_tagging import CodeMetadata, MetaTaggingEngine
 from app.scaffolding.semantic_classifier import get_semantic_classifier
@@ -56,10 +56,10 @@ class DocumentationSection:
     title: str
     content: str
     section_type: str  # overview, parameters, returns, examples, etc.
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    subsections: List["DocumentationSection"] = field(default_factory=list)
-    code_examples: List[Dict[str, str]] = field(default_factory=list)
-    references: List[str] = field(default_factory=list)
+    metadata: dict[str, Any] = field(default_factory=dict)
+    subsections: list["DocumentationSection"] = field(default_factory=list)
+    code_examples: list[dict[str, str]] = field(default_factory=list)
+    references: list[str] = field(default_factory=list)
 
     def to_markdown(self, level: int = 1) -> str:
         """Convert to markdown format"""
@@ -100,11 +100,11 @@ class DocumentationSection:
 class ConceptMap:
     """Semantic concept mapping for documentation"""
 
-    concepts: Dict[str, List[str]]  # concept -> related items
-    relationships: List[Tuple[str, str, str]]  # (from, relationship, to)
-    hierarchy: Dict[str, List[str]]  # parent -> children
+    concepts: dict[str, list[str]]  # concept -> related items
+    relationships: list[tuple[str, str, str]]  # (from, relationship, to)
+    hierarchy: dict[str, list[str]]  # parent -> children
 
-    def get_related_concepts(self, concept: str) -> List[str]:
+    def get_related_concepts(self, concept: str) -> list[str]:
         """Get concepts related to a given concept"""
         related = set()
 
@@ -113,7 +113,7 @@ class ConceptMap:
             related.update(self.concepts[concept])
 
         # Through relationships
-        for from_c, rel, to_c in self.relationships:
+        for from_c, _rel, to_c in self.relationships:
             if from_c == concept:
                 related.add(to_c)
             elif to_c == concept:
@@ -144,7 +144,7 @@ class DocumentationGenerator:
         self.project_root = project_root
         self.meta_tagger = MetaTaggingEngine(project_root)
         self.classifier = get_semantic_classifier()
-        self.template_cache: Dict[str, str] = {}
+        self.template_cache: dict[str, str] = {}
         self._load_templates()
 
     def _load_templates(self) -> None:
@@ -256,7 +256,7 @@ class DocumentationGenerator:
 
     def _generate_api_reference(
         self,
-        metadata_list: List[CodeMetadata],
+        metadata_list: list[CodeMetadata],
         source: str,
         complexity_tier: ComplexityTier,
     ) -> DocumentationSection:
@@ -450,7 +450,7 @@ class DocumentationGenerator:
                 section_type="function",
             )
 
-    def _extract_function_signature(self, node: ast.FunctionDef) -> Dict[str, Any]:
+    def _extract_function_signature(self, node: ast.FunctionDef) -> dict[str, Any]:
         """Extract function signature information"""
         info = {
             "name": node.name,
@@ -495,9 +495,9 @@ class DocumentationGenerator:
     def _generate_function_examples(
         self,
         func_name: str,
-        sig_info: Dict[str, Any],
+        sig_info: dict[str, Any],
         complexity_tier: ComplexityTier,
-    ) -> List[Dict[str, str]]:
+    ) -> list[dict[str, str]]:
         """Generate examples for a function"""
         examples = []
 
@@ -549,9 +549,9 @@ except Exception as e:
     def _generate_class_examples(
         self,
         class_name: str,
-        methods: List[Dict[str, Any]],
+        methods: list[dict[str, Any]],
         complexity_tier: ComplexityTier,
-    ) -> List[Dict[str, str]]:
+    ) -> list[dict[str, str]]:
         """Generate examples for a class"""
         examples = []
 
@@ -582,7 +582,7 @@ result = obj.setup().process().get_result()""",
         return examples
 
     def _generate_docstrings(
-        self, metadata_list: List[CodeMetadata], source: str
+        self, metadata_list: list[CodeMetadata], source: str
     ) -> DocumentationSection:
         """Generate docstring recommendations"""
 
@@ -649,7 +649,7 @@ Example:
 
     def _generate_user_guide(
         self,
-        metadata_list: List[CodeMetadata],
+        metadata_list: list[CodeMetadata],
         source: str,
         complexity_tier: ComplexityTier,
     ) -> DocumentationSection:
@@ -683,7 +683,7 @@ Example:
         return section
 
     def _generate_use_cases(
-        self, metadata_list: List[CodeMetadata], complexity_tier: ComplexityTier
+        self, metadata_list: list[CodeMetadata], complexity_tier: ComplexityTier
     ) -> DocumentationSection:
         """Generate common use cases"""
 
@@ -715,7 +715,7 @@ Example:
 
     def _generate_generic(
         self,
-        metadata_list: List[CodeMetadata],
+        metadata_list: list[CodeMetadata],
         source: str,
         doc_type: DocumentationType,
     ) -> DocumentationSection:
@@ -727,7 +727,7 @@ Example:
             section_type=doc_type.value,
         )
 
-    def build_concept_map(self, metadata_list: List[CodeMetadata]) -> ConceptMap:
+    def build_concept_map(self, metadata_list: list[CodeMetadata]) -> ConceptMap:
         """Build semantic concept map from metadata"""
 
         concepts = {}

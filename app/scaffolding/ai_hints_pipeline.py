@@ -16,7 +16,7 @@ import ast
 import logging
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 from app.scaffolding.meta_tagging import AIHints, CodeMetadata, ComplexityLevel
 from app.scaffolding.semantic_classifier import get_semantic_classifier
@@ -75,7 +75,7 @@ class RefactoringRecommendation:
     priority: int  # 1 (high) to 5 (low)
     estimated_effort: str  # hours/days
     breaking_change: bool
-    migration_steps: List[str] = field(default_factory=list)
+    migration_steps: list[str] = field(default_factory=list)
 
 
 class AIHintsGenerator:
@@ -86,7 +86,7 @@ class AIHintsGenerator:
         self.risk_patterns = self._compile_risk_patterns()
         self.optimization_patterns = self._compile_optimization_patterns()
 
-    def _compile_risk_patterns(self) -> Dict[str, RiskFactor]:
+    def _compile_risk_patterns(self) -> dict[str, RiskFactor]:
         """Compile patterns that indicate risk"""
         return {
             # Database patterns
@@ -125,7 +125,7 @@ class AIHintsGenerator:
             r"os\.environ\[": RiskFactor.CONFIGURATION_CHANGES,
         }
 
-    def _compile_optimization_patterns(self) -> List[Tuple[str, str, str]]:
+    def _compile_optimization_patterns(self) -> list[tuple[str, str, str]]:
         """Compile patterns that indicate optimization opportunities"""
         return [
             (
@@ -213,7 +213,7 @@ class AIHintsGenerator:
 
         return risk_score
 
-    def _determine_test_requirements(self, metadata: CodeMetadata, risk: float) -> List[str]:
+    def _determine_test_requirements(self, metadata: CodeMetadata, risk: float) -> list[str]:
         """Determine required test strategies"""
         requirements = []
 
@@ -252,7 +252,7 @@ class AIHintsGenerator:
 
     def _identify_optimization_potential(
         self, metadata: CodeMetadata, source_code: str
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Identify optimization opportunities"""
         score = 0.0
         suggestions = []
@@ -310,7 +310,7 @@ class AIHintsGenerator:
             "suggestions": suggestions,
         }
 
-    def _extract_dependencies(self, source_code: str) -> List[str]:
+    def _extract_dependencies(self, source_code: str) -> list[str]:
         """Extract external dependencies from code"""
         dependencies = []
 
@@ -321,16 +321,15 @@ class AIHintsGenerator:
                 if isinstance(node, ast.Import):
                     for alias in node.names:
                         dependencies.append(alias.name)
-                elif isinstance(node, ast.ImportFrom):
-                    if node.module:
-                        dependencies.append(node.module)
+                elif isinstance(node, ast.ImportFrom) and node.module:
+                    dependencies.append(node.module)
 
         except Exception as e:
             logger.warning(f"Failed to parse dependencies: {e}")
 
         return list(set(dependencies))
 
-    def _identify_side_effects(self, source_code: str) -> List[str]:
+    def _identify_side_effects(self, source_code: str) -> list[str]:
         """Identify potential side effects"""
         side_effects = []
 
@@ -364,7 +363,7 @@ class AIHintsGenerator:
 
         return side_effects
 
-    def _check_concurrency_safety(self, source_code: str, side_effects: List[str]) -> bool:
+    def _check_concurrency_safety(self, source_code: str, side_effects: list[str]) -> bool:
         """Check if code is safe for concurrent execution"""
 
         # Not safe if modifies global state
@@ -390,10 +389,7 @@ class AIHintsGenerator:
         )
 
         # If has concurrent operations but no locks, not safe
-        if "concurrent_execution" in side_effects and not has_locks:
-            return False
-
-        return True
+        return not ("concurrent_execution" in side_effects and not has_locks)
 
     def _check_idempotency(self, metadata: CodeMetadata, source_code: str) -> bool:
         """Check if operation is idempotent"""
@@ -427,7 +423,7 @@ class AIHintsGenerator:
 
         return True
 
-    def _is_pure_function(self, source_code: str, side_effects: List[str]) -> bool:
+    def _is_pure_function(self, source_code: str, side_effects: list[str]) -> bool:
         """Check if function is pure (no side effects, deterministic)"""
 
         # Has side effects? Not pure
@@ -448,8 +444,8 @@ class AIHintsGenerator:
         return True
 
     def generate_batch_hints(
-        self, metadata_list: List[CodeMetadata], source_codes: Dict[str, str]
-    ) -> Dict[str, AIHints]:
+        self, metadata_list: list[CodeMetadata], source_codes: dict[str, str]
+    ) -> dict[str, AIHints]:
         """Generate hints for multiple code elements efficiently"""
         results = {}
 
@@ -462,7 +458,7 @@ class AIHintsGenerator:
 
     def get_refactoring_recommendations(
         self, metadata: CodeMetadata, source_code: str
-    ) -> List[RefactoringRecommendation]:
+    ) -> list[RefactoringRecommendation]:
         """Get specific refactoring recommendations"""
         recommendations = []
 

@@ -6,7 +6,7 @@ Specialized contract for Artemis (development/technical) domain servers
 
 from abc import abstractmethod
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from .base_contract import (
     BaseMCPServerContract,
@@ -187,12 +187,12 @@ class ArtemisServerContract(BaseMCPServerContract):
         pass
 
     @abstractmethod
-    async def perform_filesystem_operation(self, request: FilesystemRequest) -> Dict[str, Any]:
+    async def perform_filesystem_operation(self, request: FilesystemRequest) -> dict[str, Any]:
         """Perform filesystem operation with security and validation"""
         pass
 
     @abstractmethod
-    async def generate_code_suggestions(self, context: Dict[str, Any]) -> List[Dict[str, Any]]:
+    async def generate_code_suggestions(self, context: dict[str, Any]) -> list[dict[str, Any]]:
         """Generate intelligent code suggestions"""
         pass
 
@@ -209,7 +209,6 @@ class ArtemisServerContract(BaseMCPServerContract):
             # Check filesystem access
             try:
                 # Test basic filesystem operations
-                import os
                 import tempfile
 
                 with tempfile.NamedTemporaryFile(delete=True) as tmp:
@@ -358,27 +357,27 @@ class ArtemisServerContract(BaseMCPServerContract):
 
     # Capability-specific handlers (to be implemented by concrete servers)
 
-    async def _handle_code_analysis(self, request: MCPRequest) -> Dict[str, Any]:
+    async def _handle_code_analysis(self, request: MCPRequest) -> dict[str, Any]:
         """Handle code analysis requests"""
         # Default implementation - to be overridden
         return {"message": "Code analysis capability not implemented"}
 
-    async def _handle_filesystem(self, request: MCPRequest) -> Dict[str, Any]:
+    async def _handle_filesystem(self, request: MCPRequest) -> dict[str, Any]:
         """Handle filesystem requests"""
         # Default implementation - to be overridden
         return {"message": "Filesystem capability not implemented"}
 
-    async def _handle_git_operations(self, request: MCPRequest) -> Dict[str, Any]:
+    async def _handle_git_operations(self, request: MCPRequest) -> dict[str, Any]:
         """Handle git operation requests"""
         # Default implementation - to be overridden
         return {"message": "Git operations capability not implemented"}
 
-    async def _handle_test_generation(self, request: MCPRequest) -> Dict[str, Any]:
+    async def _handle_test_generation(self, request: MCPRequest) -> dict[str, Any]:
         """Handle test generation requests"""
         # Default implementation - to be overridden
         return {"message": "Test generation capability not implemented"}
 
-    async def _handle_refactoring(self, request: MCPRequest) -> Dict[str, Any]:
+    async def _handle_refactoring(self, request: MCPRequest) -> dict[str, Any]:
         """Handle refactoring requests"""
         # Default implementation - to be overridden
         return {"message": "Refactoring capability not implemented"}

@@ -5,11 +5,10 @@ Provides scheduled synchronization between local knowledge base and Airtable,
 with configurable intervals, monitoring, and error recovery.
 """
 
-import asyncio
 import logging
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
@@ -53,8 +52,8 @@ class SyncScheduler:
         # Sync status tracking
         self.current_status = SyncStatus.IDLE
         self.last_sync_time: Optional[datetime] = None
-        self.last_sync_result: Optional[Dict[str, Any]] = None
-        self.sync_history: List[Dict[str, Any]] = []
+        self.last_sync_result: Optional[dict[str, Any]] = None
+        self.sync_history: list[dict[str, Any]] = []
         self.max_history_entries = 100
 
         # Error tracking
@@ -294,7 +293,7 @@ class SyncScheduler:
             logger.info("Existing data found, running incremental sync")
             await self._run_incremental_sync()
 
-    async def _handle_conflicts(self, conflicts: List[Dict[str, Any]]):
+    async def _handle_conflicts(self, conflicts: list[dict[str, Any]]):
         """
         Handle sync conflicts.
 
@@ -333,7 +332,7 @@ class SyncScheduler:
             "Sync scheduler paused due to critical failures. Manual intervention required."
         )
 
-    def _add_to_history(self, sync_result: Dict[str, Any]):
+    def _add_to_history(self, sync_result: dict[str, Any]):
         """
         Add sync result to history.
 
@@ -360,7 +359,7 @@ class SyncScheduler:
 
         logger.debug(f"Cleaned up sync history, {len(self.sync_history)} entries remaining")
 
-    async def trigger_manual_sync(self, sync_type: str = "incremental") -> Dict[str, Any]:
+    async def trigger_manual_sync(self, sync_type: str = "incremental") -> dict[str, Any]:
         """
         Manually trigger a synchronization.
 
@@ -383,7 +382,7 @@ class SyncScheduler:
 
         return self.last_sync_result
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """
         Get current sync status and statistics.
 
@@ -417,7 +416,7 @@ class SyncScheduler:
             "history_count": len(self.sync_history),
         }
 
-    def get_history(self, limit: int = 10) -> List[Dict[str, Any]]:
+    def get_history(self, limit: int = 10) -> list[dict[str, Any]]:
         """
         Get sync history.
 

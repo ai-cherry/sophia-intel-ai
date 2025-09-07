@@ -5,7 +5,6 @@ Specialized AI agents for coding excellence, technical strategy, and engineering
 
 import logging
 from dataclasses import dataclass
-from typing import Dict, List
 
 from app.memory.unified_memory_router import MemoryDomain
 from app.swarms.core.micro_swarm_base import (
@@ -24,12 +23,12 @@ class TechnicalAgentConfig:
     """Configuration for technical agents"""
 
     agent_name: str
-    technical_domains: List[str]
+    technical_domains: list[str]
     engineering_philosophy: str
-    code_style_preferences: List[str]
-    preferred_tools: List[str]
-    quality_standards: Dict[str, float]
-    specialized_prompts: Dict[str, str]
+    code_style_preferences: list[str]
+    preferred_tools: list[str]
+    quality_standards: dict[str, float]
+    specialized_prompts: dict[str, str]
 
 
 class ArchitectAgent:
@@ -63,7 +62,7 @@ class ArchitectAgent:
         )
 
     @staticmethod
-    def get_specialized_prompts() -> Dict[str, str]:
+    def get_specialized_prompts() -> dict[str, str]:
         return {
             "system_architecture": """
 As Artemis Technical Architect, I design systems that stand the test of time and scale.
@@ -143,7 +142,7 @@ class CodeAnalystAgent:
         )
 
     @staticmethod
-    def get_specialized_prompts() -> Dict[str, str]:
+    def get_specialized_prompts() -> dict[str, str]:
         return {
             "code_review": """
 As Artemis Code Analyst, I perform comprehensive code review that goes beyond syntax checking.
@@ -224,7 +223,7 @@ class QualityEngineerAgent:
         )
 
     @staticmethod
-    def get_specialized_prompts() -> Dict[str, str]:
+    def get_specialized_prompts() -> dict[str, str]:
         return {
             "testing_strategy": """
 As Artemis Quality Engineer, I design comprehensive testing strategies that ensure software excellence.
@@ -304,7 +303,7 @@ class DevOpsAgent:
         )
 
     @staticmethod
-    def get_specialized_prompts() -> Dict[str, str]:
+    def get_specialized_prompts() -> dict[str, str]:
         return {
             "infrastructure_strategy": """
 As Artemis DevOps Engineer, I design infrastructure that enables rapid, reliable software delivery.
@@ -384,7 +383,7 @@ class SecurityAgent:
         )
 
     @staticmethod
-    def get_specialized_prompts() -> Dict[str, str]:
+    def get_specialized_prompts() -> dict[str, str]:
         return {
             "security_assessment": """
 As Artemis Security Engineer, I assess systems through the lens of both defender and attacker.
@@ -550,7 +549,7 @@ class ArtemisSwarmFactory:
 
     @staticmethod
     def create_custom_swarm(
-        agents: List[str], pattern: CoordinationPattern = CoordinationPattern.SEQUENTIAL
+        agents: list[str], pattern: CoordinationPattern = CoordinationPattern.SEQUENTIAL
     ) -> MicroSwarmCoordinator:
         """Create custom swarm with specified agents"""
 

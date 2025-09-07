@@ -6,10 +6,10 @@ Implements the strategic model allocation for coding, scouting, and reasoning ta
 import logging
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from app.core.aimlapi_config import aimlapi_manager
-from app.core.enhanced_llm_router import LLMProviderType, enhanced_router
+from app.core.enhanced_llm_router import enhanced_router
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ class SwarmModelConfig:
     """Configuration for swarm model assignments"""
 
     swarm_type: SwarmType
-    models: List[Dict[str, Any]]
+    models: list[dict[str, Any]]
     coordination_strategy: str
     cost_optimization: bool = True
 
@@ -154,7 +154,7 @@ class PrioritizedSwarmFactory:
             f"Prioritized Swarm Factory initialized with {len(self.swarm_configs)} swarm types"
         )
 
-    def create_coding_swarm(self, task_description: str) -> Dict[str, Any]:
+    def create_coding_swarm(self, task_description: str) -> dict[str, Any]:
         """Create an optimized coding swarm"""
         config = self.swarm_configs[SwarmType.CODING_SWARM]
 
@@ -179,8 +179,8 @@ class PrioritizedSwarmFactory:
         }
 
     def create_repository_scouting_swarm(
-        self, repo_path: str, objectives: List[str]
-    ) -> Dict[str, Any]:
+        self, repo_path: str, objectives: list[str]
+    ) -> dict[str, Any]:
         """Create a repository scouting swarm"""
         config = self.swarm_configs[SwarmType.REPOSITORY_SCOUTING]
 
@@ -207,7 +207,7 @@ class PrioritizedSwarmFactory:
 
     def create_reasoning_council(
         self, problem: str, complexity_level: str = "high"
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Create a reasoning council for complex problems"""
         config = self.swarm_configs[SwarmType.REASONING_COUNCIL]
 
@@ -232,7 +232,7 @@ class PrioritizedSwarmFactory:
             "execution_plan": self._generate_reasoning_execution_plan(complexity_level),
         }
 
-    def _generate_coding_prompt(self, model_config: Dict) -> str:
+    def _generate_coding_prompt(self, model_config: dict) -> str:
         """Generate specialized prompts for coding agents"""
         prompts = {
             "fast_generation": f"""You are {model_config['name']}, powered by Grok Code Fast 1.
@@ -259,7 +259,7 @@ Your role: Fast validation and quick fixes.
         }
         return prompts.get(model_config["role"], f"You are {model_config['name']}")
 
-    def _generate_scouting_prompt(self, model_config: Dict, repo_path: str) -> str:
+    def _generate_scouting_prompt(self, model_config: dict, repo_path: str) -> str:
         """Generate specialized prompts for scouting agents"""
         prompts = {
             "initial_scan": f"""You are {model_config['name']}, powered by Gemini 2.5 Flash.
@@ -286,7 +286,7 @@ Your role: Comprehensive multimodal analysis.
         }
         return prompts.get(model_config["role"], f"You are {model_config['name']}")
 
-    def _generate_reasoning_prompt(self, model_config: Dict, complexity: str) -> str:
+    def _generate_reasoning_prompt(self, model_config: dict, complexity: str) -> str:
         """Generate specialized prompts for reasoning agents"""
         prompts = {
             "orchestration": f"""You are {model_config['name']}, the MASTER COORDINATOR powered by GPT-5.
@@ -313,7 +313,7 @@ Your role: Deep strategic and business reasoning.
         }
         return prompts.get(model_config["role"], f"You are {model_config['name']}")
 
-    def _generate_coding_execution_plan(self, task: str) -> Dict[str, Any]:
+    def _generate_coding_execution_plan(self, task: str) -> dict[str, Any]:
         """Generate execution plan for coding swarm"""
         return {
             "phases": [
@@ -339,7 +339,7 @@ Your role: Deep strategic and business reasoning.
             "optimization": "Use Grok Code Fast for 90% cost savings on simple tasks",
         }
 
-    def _generate_scouting_execution_plan(self, objectives: List[str]) -> Dict[str, Any]:
+    def _generate_scouting_execution_plan(self, objectives: list[str]) -> dict[str, Any]:
         """Generate execution plan for repository scouting"""
         return {
             "phases": [
@@ -365,7 +365,7 @@ Your role: Deep strategic and business reasoning.
             "objectives": objectives,
         }
 
-    def _generate_reasoning_execution_plan(self, complexity: str) -> Dict[str, Any]:
+    def _generate_reasoning_execution_plan(self, complexity: str) -> dict[str, Any]:
         """Generate execution plan for reasoning council"""
         if complexity == "extreme":
             return {
@@ -382,7 +382,7 @@ Your role: Deep strategic and business reasoning.
                 "consensus": "Require agreement from 2/3 agents",
             }
 
-    def get_cost_estimate(self, swarm_type: SwarmType, estimated_tokens: int) -> Dict[str, float]:
+    def get_cost_estimate(self, swarm_type: SwarmType, estimated_tokens: int) -> dict[str, float]:
         """Estimate costs for different swarm configurations"""
         cost_per_million = {
             "grok-code-fast-1": {"input": 0.20, "output": 1.50},

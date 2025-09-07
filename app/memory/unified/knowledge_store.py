@@ -3,16 +3,14 @@ Knowledge Store - Structured knowledge and facts memory
 Stores factual information, entities, relationships, and structured knowledge
 """
 
-import asyncio
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Optional
 
 from app.core.unified_memory import (
     MemoryContext,
-    MemoryEntry,
     MemoryMetadata,
     MemoryPriority,
     unified_memory,
@@ -52,7 +50,7 @@ class EntityRelationship:
     source_entity: str
     target_entity: str
     confidence: float = 1.0
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -65,17 +63,17 @@ class KnowledgeEntity:
     description: str
 
     # Attributes and properties
-    properties: Dict[str, Any] = field(default_factory=dict)
-    aliases: Set[str] = field(default_factory=set)
-    categories: Set[str] = field(default_factory=set)
+    properties: dict[str, Any] = field(default_factory=dict)
+    aliases: set[str] = field(default_factory=set)
+    categories: set[str] = field(default_factory=set)
 
     # Relationships
-    relationships: List[EntityRelationship] = field(default_factory=list)
+    relationships: list[EntityRelationship] = field(default_factory=list)
 
     # Verification and quality
     verification_status: VerificationStatus = VerificationStatus.UNVERIFIED
     confidence_score: float = 1.0
-    sources: List[str] = field(default_factory=list)
+    sources: list[str] = field(default_factory=list)
 
     # Temporal aspects
     valid_from: Optional[datetime] = None
@@ -83,8 +81,8 @@ class KnowledgeEntity:
     last_updated: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
     # Context
-    domains: Set[str] = field(default_factory=set)
-    tags: Set[str] = field(default_factory=set)
+    domains: set[str] = field(default_factory=set)
+    tags: set[str] = field(default_factory=set)
 
 
 @dataclass
@@ -96,24 +94,24 @@ class FactualKnowledge:
     knowledge_type: KnowledgeType
 
     # Evidence and verification
-    evidence: List[str] = field(default_factory=list)
+    evidence: list[str] = field(default_factory=list)
     verification_status: VerificationStatus = VerificationStatus.UNVERIFIED
     confidence_score: float = 1.0
 
     # Context and scope
-    subject_entities: Set[str] = field(default_factory=set)
-    applicable_domains: Set[str] = field(default_factory=set)
+    subject_entities: set[str] = field(default_factory=set)
+    applicable_domains: set[str] = field(default_factory=set)
     temporal_scope: Optional[str] = None  # "current", "historical", "future"
 
     # Sources and attribution
-    sources: List[str] = field(default_factory=list)
+    sources: list[str] = field(default_factory=list)
     created_by: Optional[str] = None
     verified_by: Optional[str] = None
 
     # Metadata
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    tags: Set[str] = field(default_factory=set)
+    tags: set[str] = field(default_factory=set)
 
 
 class KnowledgeStore:
@@ -198,12 +196,12 @@ class KnowledgeStore:
     async def search_entities(
         self,
         query: str,
-        entity_types: Optional[List[str]] = None,
-        verification_status: Optional[List[VerificationStatus]] = None,
+        entity_types: Optional[list[str]] = None,
+        verification_status: Optional[list[VerificationStatus]] = None,
         min_confidence: float = 0.0,
         max_results: int = 15,
         domain: Optional[str] = None,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Search knowledge entities"""
 
         # Build search tags
@@ -247,13 +245,13 @@ class KnowledgeStore:
     async def search_facts(
         self,
         query: str,
-        knowledge_types: Optional[List[KnowledgeType]] = None,
-        verification_status: Optional[List[VerificationStatus]] = None,
-        subject_entities: Optional[Set[str]] = None,
+        knowledge_types: Optional[list[KnowledgeType]] = None,
+        verification_status: Optional[list[VerificationStatus]] = None,
+        subject_entities: Optional[set[str]] = None,
         min_confidence: float = 0.0,
         max_results: int = 20,
         domain: Optional[str] = None,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Search factual knowledge"""
 
         # Build search tags
@@ -301,8 +299,8 @@ class KnowledgeStore:
         return enhanced_results
 
     async def get_entity_relationships(
-        self, entity_id: str, relationship_types: Optional[List[str]] = None, max_depth: int = 2
-    ) -> Dict[str, Any]:
+        self, entity_id: str, relationship_types: Optional[list[str]] = None, max_depth: int = 2
+    ) -> dict[str, Any]:
         """Get entity relationships as a graph"""
 
         entity_data = await self._retrieve_structured_entity(entity_id)
@@ -339,7 +337,7 @@ class KnowledgeStore:
 
         return graph
 
-    async def get_knowledge_summary(self, domain: Optional[str] = None) -> Dict[str, Any]:
+    async def get_knowledge_summary(self, domain: Optional[str] = None) -> dict[str, Any]:
         """Get summary of knowledge store contents"""
 
         # This would be implemented with more efficient aggregation queries
@@ -502,7 +500,7 @@ class KnowledgeStore:
         self,
         memory_id: str,
         entity: Optional[KnowledgeEntity],
-        entity_dict: Optional[Dict[str, Any]] = None,
+        entity_dict: Optional[dict[str, Any]] = None,
     ):
         """Store structured entity data"""
 
@@ -549,7 +547,7 @@ class KnowledgeStore:
         self,
         memory_id: str,
         fact: Optional[FactualKnowledge],
-        fact_dict: Optional[Dict[str, Any]] = None,
+        fact_dict: Optional[dict[str, Any]] = None,
     ):
         """Store structured fact data"""
 
@@ -582,7 +580,7 @@ class KnowledgeStore:
             key, structured_data, ttl=86400 * 30, namespace="knowledge"  # 30 days
         )
 
-    async def _retrieve_structured_entity(self, entity_id: str) -> Optional[Dict[str, Any]]:
+    async def _retrieve_structured_entity(self, entity_id: str) -> Optional[dict[str, Any]]:
         """Retrieve structured entity data"""
 
         if not self.memory_interface.redis_manager:
@@ -602,7 +600,7 @@ class KnowledgeStore:
 
         return None
 
-    async def _retrieve_structured_fact(self, fact_id: str) -> Optional[Dict[str, Any]]:
+    async def _retrieve_structured_fact(self, fact_id: str) -> Optional[dict[str, Any]]:
         """Retrieve structured fact data"""
 
         if not self.memory_interface.redis_manager:

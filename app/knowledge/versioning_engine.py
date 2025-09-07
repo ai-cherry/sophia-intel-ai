@@ -5,7 +5,7 @@ Versioning engine for knowledge entities
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from app.core.ai_logger import logger
 from app.knowledge.models import KnowledgeEntity, KnowledgeVersion
@@ -28,7 +28,7 @@ class VersioningEngine:
         self,
         entity: KnowledgeEntity,
         changed_by: str = "system",
-        change_summary: Optional[str] = None,
+        change_summary: str | None = None,
     ) -> KnowledgeVersion:
         """Create a new version for a knowledge entity"""
         # Get current versions to determine version number
@@ -62,14 +62,12 @@ class VersioningEngine:
 
         return version
 
-    async def get_history(self, knowledge_id: str) -> List[KnowledgeVersion]:
+    async def get_history(self, knowledge_id: str) -> list[KnowledgeVersion]:
         """Get complete version history for a knowledge entity"""
         versions = await self.storage.get_versions(knowledge_id)
         return versions
 
-    async def get_version(
-        self, knowledge_id: str, version_number: int
-    ) -> Optional[KnowledgeVersion]:
+    async def get_version(self, knowledge_id: str, version_number: int) -> KnowledgeVersion | None:
         """Get specific version of knowledge"""
         return await self.storage.get_version(knowledge_id, version_number)
 
@@ -120,7 +118,7 @@ class VersioningEngine:
         logger.info(f"Rolled back knowledge {knowledge_id} to version {version_number}")
         return updated
 
-    async def compare(self, knowledge_id: str, v1: int, v2: int) -> Dict[str, Any]:
+    async def compare(self, knowledge_id: str, v1: int, v2: int) -> dict[str, Any]:
         """Compare two versions of knowledge"""
         version1 = await self.get_version(knowledge_id, v1)
         version2 = await self.get_version(knowledge_id, v2)
@@ -140,7 +138,7 @@ class VersioningEngine:
 
         return comparison
 
-    async def get_latest_changes(self, knowledge_id: str, limit: int = 5) -> List[Dict[str, Any]]:
+    async def get_latest_changes(self, knowledge_id: str, limit: int = 5) -> list[dict[str, Any]]:
         """Get the latest changes for a knowledge entity"""
         versions = await self.get_history(knowledge_id)
         changes = []
@@ -201,7 +199,7 @@ class VersioningEngine:
 
         return "; ".join(changes) if changes else "Content updated"
 
-    def _compare_metadata(self, meta1: Optional[Dict], meta2: Optional[Dict]) -> Dict[str, Any]:
+    def _compare_metadata(self, meta1: dict | None, meta2: dict | None) -> dict[str, Any]:
         """Compare metadata between versions"""
         if not meta1:
             meta1 = {}

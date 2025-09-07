@@ -6,9 +6,9 @@ Extracted and structured prompts from existing mythology agents with business co
 import logging
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
-from .prompt_library import PromptLibrary, PromptMetadata, PromptStatus, PromptType
+from .prompt_library import PromptLibrary, PromptMetadata
 
 logger = logging.getLogger(__name__)
 
@@ -51,17 +51,17 @@ class PromptTemplate:
     name: str
     description: str
     base_prompt: str
-    variables: Dict[str, str]  # Variable name -> description
-    business_contexts: List[BusinessContext]
-    performance_tags: List[str]
-    usage_examples: Optional[List[str]] = None
+    variables: dict[str, str]  # Variable name -> description
+    business_contexts: list[BusinessContext]
+    performance_tags: list[str]
+    usage_examples: Optional[list[str]] = None
 
 
 class SophiaPromptTemplates:
     """Sophia (Business Intelligence) mythology agent prompts"""
 
     @staticmethod
-    def get_hermes_prompts() -> Dict[str, PromptTemplate]:
+    def get_hermes_prompts() -> dict[str, PromptTemplate]:
         """Hermes - Messenger of the Gods, Commerce & Communication prompts"""
         return {
             "market_analysis": PromptTemplate(
@@ -194,7 +194,7 @@ I deliver not just information, but persuasive intelligence that drives action."
         }
 
     @staticmethod
-    def get_asclepius_prompts() -> Dict[str, PromptTemplate]:
+    def get_asclepius_prompts() -> dict[str, PromptTemplate]:
         """Asclepius - God of Healing & Medicine prompts"""
         return {
             "business_diagnostics": PromptTemplate(
@@ -333,7 +333,7 @@ Healing is not just about fixing what's broken - it's about creating resilient, 
         }
 
     @staticmethod
-    def get_athena_prompts() -> Dict[str, PromptTemplate]:
+    def get_athena_prompts() -> dict[str, PromptTemplate]:
         """Athena - Goddess of Wisdom, Strategy & Warfare prompts"""
         return {
             "strategic_planning": PromptTemplate(
@@ -472,7 +472,7 @@ My wisdom comes from understanding that the best decisions serve both immediate 
         }
 
     @staticmethod
-    def get_odin_prompts() -> Dict[str, PromptTemplate]:
+    def get_odin_prompts() -> dict[str, PromptTemplate]:
         """Odin - All-Father, God of Wisdom, War & Death prompts"""
         return {
             "strategic_vision": PromptTemplate(
@@ -615,7 +615,7 @@ The ravens of thought and memory bring me intelligence from across all business 
         }
 
     @staticmethod
-    def get_minerva_prompts() -> Dict[str, PromptTemplate]:
+    def get_minerva_prompts() -> dict[str, PromptTemplate]:
         """Minerva - Roman Goddess of Wisdom, Arts & Strategic Warfare prompts"""
         return {
             "strategic_validation": PromptTemplate(
@@ -758,7 +758,7 @@ class ArtemisPromptTemplates:
     """Artemis (Technical Excellence) agent prompts"""
 
     @staticmethod
-    def get_architect_prompts() -> Dict[str, PromptTemplate]:
+    def get_architect_prompts() -> dict[str, PromptTemplate]:
         """Technical Architect prompts"""
         return {
             "system_architecture": PromptTemplate(
@@ -851,7 +851,7 @@ class MythologyPromptManager:
         logger.info("Mythology prompts initialized successfully")
 
     def _register_agent_prompts(
-        self, agent_name: str, prompts: Dict[str, PromptTemplate], domain: str
+        self, agent_name: str, prompts: dict[str, PromptTemplate], domain: str
     ):
         """Register prompts for a specific agent"""
         for prompt_key, template in prompts.items():
@@ -877,7 +877,7 @@ class MythologyPromptManager:
         agent_name: str,
         task_type: str,
         business_context: BusinessContext,
-        variables: Dict[str, str] = None,
+        variables: dict[str, str] = None,
     ) -> Optional[str]:
         """Get the best prompt version for specific context"""
 
@@ -944,7 +944,7 @@ class MythologyPromptManager:
 
         return variant_version.id
 
-    def get_performance_insights(self, agent_name: Optional[str] = None) -> Dict[str, Any]:
+    def get_performance_insights(self, agent_name: Optional[str] = None) -> dict[str, Any]:
         """Get performance insights for mythology prompts"""
 
         leaderboard = self.library.get_performance_leaderboard(
@@ -977,7 +977,7 @@ class MythologyPromptManager:
 
         return insights
 
-    def suggest_optimizations(self, prompt_id: str) -> List[str]:
+    def suggest_optimizations(self, prompt_id: str) -> list[str]:
         """Suggest optimizations for a specific prompt based on performance data"""
 
         versions = self.library.get_prompt_history(prompt_id)

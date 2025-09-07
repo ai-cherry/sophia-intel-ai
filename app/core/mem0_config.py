@@ -7,7 +7,7 @@ Uses proper Token format authentication
 import logging
 import os
 from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from typing import Any
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -49,7 +49,7 @@ class Mem0Manager:
 
         self._initialized = True
 
-    def get_headers(self) -> Dict[str, str]:
+    def get_headers(self) -> dict[str, str]:
         """Get properly formatted authentication headers"""
         return {
             "Authorization": f"{self.config.auth_header_format} {self.config.api_key}",
@@ -86,7 +86,7 @@ class Mem0Manager:
             logger.error(f"✗ Mem0 connection failed: {e}")
             return False
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Get status information"""
         return {
             "api_key": self.config.api_key[:10] + "..." if self.config.api_key else None,

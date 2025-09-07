@@ -5,7 +5,7 @@ Professional command structure with military-inspired organization
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 
 class MissionStatus(Enum):
@@ -40,7 +40,7 @@ class AgentProfile:
     deployment_ready: bool = True
     mission_count: int = 0
     success_rate: float = 1.0
-    commendations: List[str] = field(default_factory=list)
+    commendations: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -52,9 +52,9 @@ class SquadFormation:
     motto: str
     minimum_agents: int
     maximum_agents: int
-    required_specialists: List[str]
+    required_specialists: list[str]
     communication_protocol: str
-    chain_of_command: List[str]  # Ranks in order of authority
+    chain_of_command: list[str]  # Ranks in order of authority
 
 
 # ============================================
@@ -626,17 +626,17 @@ COMMAND_CENTER_CONFIG = {
 # ============================================
 
 
-def get_unit_by_designation(designation: str) -> Dict[str, Any]:
+def get_unit_by_designation(designation: str) -> dict[str, Any]:
     """Get military unit configuration by designation"""
     return ARTEMIS_MILITARY_UNITS.get(designation, {})
 
 
-def get_mission_template(mission_type: str) -> Dict[str, Any]:
+def get_mission_template(mission_type: str) -> dict[str, Any]:
     """Get mission template configuration"""
     return ARTEMIS_MISSION_TEMPLATES.get(mission_type, {})
 
 
-def calculate_mission_resources(units: List[str]) -> Dict[str, Any]:
+def calculate_mission_resources(units: list[str]) -> dict[str, Any]:
     """Calculate total resources needed for mission"""
     total_agents = 0
     models_required = set()
@@ -712,7 +712,7 @@ class MilitaryAgentFactory:
     """Factory for creating military-themed agent configurations"""
 
     @staticmethod
-    def create_squad(unit_designation: str) -> List[Dict[str, Any]]:
+    def create_squad(unit_designation: str) -> list[dict[str, Any]]:
         """Create a squad of agents from unit configuration"""
         unit = get_unit_by_designation(unit_designation)
         if not unit:
@@ -721,7 +721,7 @@ class MilitaryAgentFactory:
         agents = []
         squad = unit.get("squad_composition", {})
 
-        for role, profile in squad.items():
+        for _role, profile in squad.items():
             if isinstance(profile, AgentProfile):
                 agent_config = {
                     "name": profile.callsign,
@@ -761,7 +761,7 @@ Remember: {unit['motto']}""",
         return agents
 
     @staticmethod
-    def create_mission_team(mission_type: str) -> Dict[str, List[Dict[str, Any]]]:
+    def create_mission_team(mission_type: str) -> dict[str, list[dict[str, Any]]]:
         """Create complete team for a mission"""
         mission = get_mission_template(mission_type)
         if not mission:

@@ -12,7 +12,7 @@ from collections import defaultdict, deque
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Optional
 
 import numpy as np
 
@@ -61,7 +61,7 @@ class CodeNode:
     signature: Optional[str] = None
     docstring: Optional[str] = None
     parent_id: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -72,17 +72,17 @@ class CodeRelationship:
     target_id: str
     relationship_type: RelationshipType
     confidence: float = 1.0
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
 class DependencyGraph:
     """Complete dependency and relationship graph"""
 
-    nodes: Dict[str, CodeNode] = field(default_factory=dict)
-    relationships: List[CodeRelationship] = field(default_factory=list)
-    adjacency_list: Dict[str, List[str]] = field(default_factory=lambda: defaultdict(list))
-    reverse_adjacency: Dict[str, List[str]] = field(default_factory=lambda: defaultdict(list))
+    nodes: dict[str, CodeNode] = field(default_factory=dict)
+    relationships: list[CodeRelationship] = field(default_factory=list)
+    adjacency_list: dict[str, list[str]] = field(default_factory=lambda: defaultdict(list))
+    reverse_adjacency: dict[str, list[str]] = field(default_factory=lambda: defaultdict(list))
 
 
 class PythonASTAnalyzer:
@@ -98,7 +98,7 @@ class PythonASTAnalyzer:
 
     def analyze_file(
         self, file_path: str, content: str
-    ) -> Tuple[Dict[str, CodeNode], List[CodeRelationship]]:
+    ) -> tuple[dict[str, CodeNode], list[CodeRelationship]]:
         """Analyze a Python file and extract code graph"""
         self.current_file = file_path
         self.nodes = {}
@@ -436,7 +436,7 @@ class GraphAnalyzer:
     def __init__(self):
         self.graph = DependencyGraph()
 
-    def build_graph(self, file_contents: Dict[str, str]) -> DependencyGraph:
+    def build_graph(self, file_contents: dict[str, str]) -> DependencyGraph:
         """Build complete dependency graph from multiple files"""
         logger.info(f"Building dependency graph for {len(file_contents)} files")
 
@@ -520,7 +520,7 @@ class GraphAnalyzer:
 
         return None
 
-    def find_strongly_connected_components(self) -> List[List[str]]:
+    def find_strongly_connected_components(self) -> list[list[str]]:
         """Find strongly connected components using Tarjan's algorithm"""
         index_counter = [0]
         stack = []
@@ -562,7 +562,7 @@ class GraphAnalyzer:
 
         return sccs
 
-    def compute_centrality_metrics(self) -> Dict[str, Dict[str, float]]:
+    def compute_centrality_metrics(self) -> dict[str, dict[str, float]]:
         """Compute various centrality metrics for nodes"""
         metrics = {}
 
@@ -585,7 +585,7 @@ class GraphAnalyzer:
 
         return metrics
 
-    def _compute_betweenness_centrality(self) -> Dict[str, float]:
+    def _compute_betweenness_centrality(self) -> dict[str, float]:
         """Compute betweenness centrality using shortest paths"""
         betweenness = dict.fromkeys(self.graph.nodes, 0.0)
 
@@ -611,7 +611,7 @@ class GraphAnalyzer:
 
         return betweenness
 
-    def _find_shortest_paths(self, source: str) -> Dict[str, List[str]]:
+    def _find_shortest_paths(self, source: str) -> dict[str, list[str]]:
         """Find shortest paths from source to all other nodes using BFS"""
         visited = {source}
         queue = deque([(source, [source])])
@@ -629,7 +629,7 @@ class GraphAnalyzer:
 
         return paths
 
-    def find_code_clusters(self) -> Dict[str, List[str]]:
+    def find_code_clusters(self) -> dict[str, list[str]]:
         """Find clusters of related code based on relationships"""
         # Use relationship strength to cluster related code
         clusters = {}
@@ -645,7 +645,7 @@ class GraphAnalyzer:
 
         return clusters
 
-    def _explore_cluster(self, start_node: str, visited: Set[str]) -> List[str]:
+    def _explore_cluster(self, start_node: str, visited: set[str]) -> list[str]:
         """Explore connected nodes to form a cluster"""
         cluster = []
         stack = [start_node]
@@ -673,7 +673,7 @@ class GraphAnalyzer:
 
         return cluster
 
-    def get_node_context(self, node_id: str, depth: int = 2) -> Dict[str, Any]:
+    def get_node_context(self, node_id: str, depth: int = 2) -> dict[str, Any]:
         """Get contextual information about a node"""
         if node_id not in self.graph.nodes:
             return {}
@@ -700,7 +700,7 @@ class GraphAnalyzer:
         context_nodes = {node_id}
         current_level = {node_id}
 
-        for d in range(depth):
+        for _d in range(depth):
             next_level = set()
             for current_node in current_level:
                 # Add neighbors
@@ -733,7 +733,7 @@ class ContextualEmbeddings:
         self.centrality_metrics = {}
         self.code_clusters = {}
 
-    async def build_contextual_index(self, file_contents: Dict[str, str]) -> Dict[str, Any]:
+    async def build_contextual_index(self, file_contents: dict[str, str]) -> dict[str, Any]:
         """
         Build contextual embeddings for a codebase
 
@@ -795,7 +795,7 @@ class ContextualEmbeddings:
             "stats": self._compute_contextual_stats(),
         }
 
-    def _extract_node_content(self, node: CodeNode, file_contents: Dict[str, str]) -> Optional[str]:
+    def _extract_node_content(self, node: CodeNode, file_contents: dict[str, str]) -> Optional[str]:
         """Extract content for a specific node"""
         if node.file_path not in file_contents:
             return None
@@ -826,7 +826,7 @@ class ContextualEmbeddings:
         return "\n".join(context_parts)
 
     async def _generate_contextual_embedding(
-        self, base_embedding: np.ndarray, context: Dict[str, Any], node: CodeNode
+        self, base_embedding: np.ndarray, context: dict[str, Any], node: CodeNode
     ) -> np.ndarray:
         """
         Generate context-aware embedding by incorporating relationship information
@@ -909,7 +909,7 @@ class ContextualEmbeddings:
 
         return " | ".join(context_parts)
 
-    def _compute_contextual_stats(self) -> Dict[str, Any]:
+    def _compute_contextual_stats(self) -> dict[str, Any]:
         """Compute statistics about the contextual embedding process"""
         if not self.dependency_graph:
             return {}
@@ -934,17 +934,17 @@ class ContextualEmbeddings:
             ),
         }
 
-    def find_similar_contexts(self, node_id: str, k: int = 5) -> List[Tuple[str, float]]:
+    def find_similar_contexts(self, node_id: str, k: int = 5) -> list[tuple[str, float]]:
         """Find nodes with similar contextual patterns"""
         if not self.dependency_graph or node_id not in self.dependency_graph.nodes:
             return []
 
-        target_node = self.dependency_graph.nodes[node_id]
+        self.dependency_graph.nodes[node_id]
         target_context = self.graph_analyzer.get_node_context(node_id)
 
         similarities = []
 
-        for other_id, other_node in self.dependency_graph.nodes.items():
+        for other_id, _other_node in self.dependency_graph.nodes.items():
             if other_id == node_id:
                 continue
 
@@ -961,20 +961,20 @@ class ContextualEmbeddings:
         return similarities[:k]
 
     def _compute_contextual_similarity(
-        self, context1: Dict[str, Any], context2: Dict[str, Any]
+        self, context1: dict[str, Any], context2: dict[str, Any]
     ) -> float:
         """Compute similarity between two contextual patterns"""
         # Simple structural similarity based on relationship patterns
 
         # Compare relationship types
-        rel_types1 = set(
+        rel_types1 = {
             rel.relationship_type
             for rel in context1["incoming_relationships"] + context1["outgoing_relationships"]
-        )
-        rel_types2 = set(
+        }
+        rel_types2 = {
             rel.relationship_type
             for rel in context2["incoming_relationships"] + context2["outgoing_relationships"]
-        )
+        }
 
         if not rel_types1 and not rel_types2:
             return 0.0

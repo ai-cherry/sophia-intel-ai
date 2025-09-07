@@ -4,12 +4,11 @@ Complete API interface for the micro-swarm architecture with natural language pr
 scheduling, monitoring, and integration management
 """
 
-import asyncio
 import logging
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, HTTPException, status
 from pydantic import BaseModel, Field
 
 from app.swarms.core.natural_language_interface import get_natural_language_interface
@@ -51,11 +50,11 @@ class SwarmExecutionRequest(BaseModel):
     content: str = Field(..., description="Task content")
     domain: str = Field("sophia", description="Domain: sophia or artemis")
     swarm_type: str = Field("auto_detect", description="Specific swarm type")
-    agents: Optional[List[str]] = Field(None, description="Specific agents to use")
+    agents: Optional[list[str]] = Field(None, description="Specific agents to use")
     coordination_pattern: str = Field("sequential", description="Coordination pattern")
     max_cost_usd: float = Field(2.0, description="Maximum cost limit")
     timeout_minutes: int = Field(10, description="Timeout in minutes")
-    context: Optional[Dict[str, Any]] = Field(None, description="Additional context")
+    context: Optional[dict[str, Any]] = Field(None, description="Additional context")
 
 
 class ScheduleTaskRequest(BaseModel):
@@ -81,7 +80,7 @@ class SlackDeliveryRequest(BaseModel):
     channel: str = Field(..., description="Slack channel")
     format: str = Field("summary", description="Delivery format")
     priority: str = Field("normal", description="Delivery priority")
-    mention_users: Optional[List[str]] = Field(None, description="Users to mention")
+    mention_users: Optional[list[str]] = Field(None, description="Users to mention")
     include_confidence: bool = Field(True, description="Include confidence scores")
     include_cost: bool = Field(False, description="Include cost information")
 
@@ -275,7 +274,7 @@ async def cancel_task(task_id: str):
 
 
 @router.post("/deliver-to-slack", summary="Deliver Results to Slack")
-async def deliver_to_slack(execution_result: Dict[str, Any], delivery_config: SlackDeliveryRequest):
+async def deliver_to_slack(execution_result: dict[str, Any], delivery_config: SlackDeliveryRequest):
     """
     Deliver swarm results to Slack with rich formatting
 

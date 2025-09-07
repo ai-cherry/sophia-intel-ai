@@ -5,7 +5,7 @@ Centralized configuration for WebSocket security components
 
 import os
 from dataclasses import dataclass
-from typing import Dict, List, Optional
+from typing import Optional
 
 
 @dataclass
@@ -136,7 +136,7 @@ def get_config(environment: str = None) -> SecurityConfig:
         return SecurityPresets.development()
 
 
-def validate_config(config: SecurityConfig) -> List[str]:
+def validate_config(config: SecurityConfig) -> list[str]:
     """Validate security configuration and return any warnings"""
     warnings = []
 

@@ -8,7 +8,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from app.core.portkey_manager import TaskType as PortkeyTaskType
 from app.memory.unified_memory_router import MemoryDomain
@@ -27,21 +27,21 @@ logger = logging.getLogger(__name__)
 class CodeContext:
     """Enhanced code context for Artemis"""
 
-    languages: List[str]
-    frameworks: List[str]
+    languages: list[str]
+    frameworks: list[str]
     repository_path: Optional[str] = None
     test_framework: Optional[str] = None
     style_guide: Optional[str] = None
     complexity_threshold: int = 10
     coverage_target: float = 80.0
-    performance_benchmarks: Dict[str, float] = field(default_factory=dict)
+    performance_benchmarks: dict[str, float] = field(default_factory=dict)
 
     # Enhanced fields
-    architecture_patterns: List[str] = field(default_factory=list)
-    code_standards: Dict[str, Any] = field(default_factory=dict)
-    security_requirements: List[str] = field(default_factory=list)
-    performance_targets: Dict[str, float] = field(default_factory=dict)
-    quality_gates: Dict[str, float] = field(default_factory=dict)
+    architecture_patterns: list[str] = field(default_factory=list)
+    code_standards: dict[str, Any] = field(default_factory=dict)
+    security_requirements: list[str] = field(default_factory=list)
+    performance_targets: dict[str, float] = field(default_factory=dict)
+    quality_gates: dict[str, float] = field(default_factory=dict)
 
 
 @dataclass
@@ -51,10 +51,10 @@ class CodePattern:
     name: str
     type: str  # "design_pattern", "anti_pattern", "architecture_pattern"
     description: str
-    locations: List[Dict[str, Any]]
+    locations: list[dict[str, Any]]
     confidence: float
     impact: str  # "positive", "negative", "neutral"
-    recommendations: List[str]
+    recommendations: list[str]
 
 
 @dataclass
@@ -82,10 +82,10 @@ class CodeResult:
     tests: Optional[str] = None
     documentation: Optional[str] = None
     quality_metrics: Optional[QualityMetrics] = None
-    security_analysis: Dict[str, Any] = field(default_factory=dict)
-    performance_analysis: Dict[str, Any] = field(default_factory=dict)
-    dependencies: List[str] = field(default_factory=list)
-    patterns: List[CodePattern] = field(default_factory=list)
+    security_analysis: dict[str, Any] = field(default_factory=dict)
+    performance_analysis: dict[str, Any] = field(default_factory=dict)
+    dependencies: list[str] = field(default_factory=list)
+    patterns: list[CodePattern] = field(default_factory=list)
     generated_at: datetime = field(default_factory=datetime.now)
 
 
@@ -95,14 +95,14 @@ class CodeReview:
 
     overall_score: float
     quality_metrics: QualityMetrics
-    issues: List[Dict[str, Any]]
-    suggestions: List[Dict[str, Any]]
-    security_vulnerabilities: List[Dict[str, Any]]
-    performance_concerns: List[Dict[str, Any]]
-    best_practices: List[Dict[str, Any]]
-    patterns: List[CodePattern]
-    refactoring_opportunities: List[Dict[str, Any]]
-    technical_debt_assessment: Dict[str, Any]
+    issues: list[dict[str, Any]]
+    suggestions: list[dict[str, Any]]
+    security_vulnerabilities: list[dict[str, Any]]
+    performance_concerns: list[dict[str, Any]]
+    best_practices: list[dict[str, Any]]
+    patterns: list[CodePattern]
+    refactoring_opportunities: list[dict[str, Any]]
+    technical_debt_assessment: dict[str, Any]
 
 
 class CodeSemanticEngine:
@@ -116,7 +116,7 @@ class CodeSemanticEngine:
         self.pattern_library = self._initialize_pattern_library()
         self.quality_framework = self._initialize_quality_framework()
 
-    def _initialize_code_ontology(self) -> Dict[str, Any]:
+    def _initialize_code_ontology(self) -> dict[str, Any]:
         """Initialize code domain ontology"""
         return {
             "languages": {
@@ -155,7 +155,7 @@ class CodeSemanticEngine:
             },
         }
 
-    def _initialize_pattern_library(self) -> Dict[str, Dict[str, Any]]:
+    def _initialize_pattern_library(self) -> dict[str, dict[str, Any]]:
         """Initialize pattern recognition library"""
         return {
             "design_patterns": {
@@ -214,7 +214,7 @@ class CodeSemanticEngine:
             },
         }
 
-    def _initialize_quality_framework(self) -> Dict[str, Dict[str, Any]]:
+    def _initialize_quality_framework(self) -> dict[str, dict[str, Any]]:
         """Initialize code quality assessment framework"""
         return {
             "metrics": {
@@ -246,7 +246,7 @@ class CodeSemanticEngine:
             },
         }
 
-    async def analyze_code_semantics(self, code: str, language: str) -> Dict[str, Any]:
+    async def analyze_code_semantics(self, code: str, language: str) -> dict[str, Any]:
         """Analyze code for semantic understanding"""
         analysis = {
             "language": language,
@@ -271,7 +271,7 @@ class CodeSemanticEngine:
 
         return analysis
 
-    async def _detect_patterns(self, code: str, language: str) -> List[CodePattern]:
+    async def _detect_patterns(self, code: str, language: str) -> list[CodePattern]:
         """Detect code patterns using pattern library"""
         detected_patterns = []
 
@@ -309,7 +309,7 @@ class CodeSemanticEngine:
 
         return detected_patterns
 
-    def _extract_concepts(self, code: str, language: str) -> List[Dict[str, Any]]:
+    def _extract_concepts(self, code: str, language: str) -> list[dict[str, Any]]:
         """Extract programming concepts from code"""
         concepts = []
         code_lower = code.lower()
@@ -328,7 +328,7 @@ class CodeSemanticEngine:
 
         return concepts
 
-    async def _analyze_structure(self, code: str, language: str) -> Dict[str, Any]:
+    async def _analyze_structure(self, code: str, language: str) -> dict[str, Any]:
         """Analyze semantic structure of code"""
         structure = {
             "classes": [],
@@ -345,7 +345,7 @@ class CodeSemanticEngine:
 
         return structure
 
-    async def _analyze_python_structure(self, code: str) -> Dict[str, Any]:
+    async def _analyze_python_structure(self, code: str) -> dict[str, Any]:
         """Analyze Python code structure"""
         structure = {
             "classes": [],
@@ -388,7 +388,7 @@ class CodeSemanticEngine:
 
         return structure
 
-    async def _analyze_js_structure(self, code: str) -> Dict[str, Any]:
+    async def _analyze_js_structure(self, code: str) -> dict[str, Any]:
         """Analyze JavaScript/TypeScript code structure"""
         structure = {
             "classes": [],
@@ -424,7 +424,7 @@ class CodeSemanticEngine:
 
         return structure
 
-    def _analyze_intent(self, code: str, language: str) -> Dict[str, Any]:
+    def _analyze_intent(self, code: str, language: str) -> dict[str, Any]:
         """Analyze the intent and purpose of code"""
         return {
             "primary_purpose": "general_computation",  # Would be more sophisticated
@@ -433,7 +433,7 @@ class CodeSemanticEngine:
             "maintainability": "good",
         }
 
-    def _get_pattern_recommendations(self, pattern_name: str, category: str) -> List[str]:
+    def _get_pattern_recommendations(self, pattern_name: str, category: str) -> list[str]:
         """Get recommendations for detected patterns"""
         recommendations = {
             "singleton": ["Consider dependency injection instead", "Ensure thread safety"],
@@ -461,7 +461,7 @@ class QualityAssurancePipeline:
         self.security_scanners = self._initialize_security_scanners()
         self.performance_analyzers = self._initialize_performance_analyzers()
 
-    def _initialize_quality_checkers(self) -> Dict[str, Dict[str, Any]]:
+    def _initialize_quality_checkers(self) -> dict[str, dict[str, Any]]:
         """Initialize quality checking tools"""
         return {
             "python": {
@@ -484,7 +484,7 @@ class QualityAssurancePipeline:
             },
         }
 
-    def _initialize_security_scanners(self) -> Dict[str, List[str]]:
+    def _initialize_security_scanners(self) -> dict[str, list[str]]:
         """Initialize security scanning tools"""
         return {
             "python": ["bandit", "safety", "semgrep"],
@@ -493,7 +493,7 @@ class QualityAssurancePipeline:
             "general": ["sonarqube", "checkmarx", "veracode"],
         }
 
-    def _initialize_performance_analyzers(self) -> Dict[str, List[str]]:
+    def _initialize_performance_analyzers(self) -> dict[str, list[str]]:
         """Initialize performance analysis tools"""
         return {
             "python": ["cProfile", "py-spy", "memory_profiler"],
@@ -502,7 +502,7 @@ class QualityAssurancePipeline:
             "general": ["perf", "valgrind", "jmeter"],
         }
 
-    async def run_comprehensive_analysis(self, code: str, language: str) -> Dict[str, Any]:
+    async def run_comprehensive_analysis(self, code: str, language: str) -> dict[str, Any]:
         """Run comprehensive quality assurance analysis"""
         analysis_results = {
             "quality_metrics": {},
@@ -548,7 +548,7 @@ class QualityAssurancePipeline:
             overall_quality=0.0,  # Will be calculated
         )
 
-    async def _analyze_security(self, code: str, language: str) -> Dict[str, Any]:
+    async def _analyze_security(self, code: str, language: str) -> dict[str, Any]:
         """Analyze security vulnerabilities"""
         security_issues = []
 
@@ -581,7 +581,7 @@ class QualityAssurancePipeline:
             "compliance_level": "basic",
         }
 
-    async def _analyze_performance(self, code: str, language: str) -> Dict[str, Any]:
+    async def _analyze_performance(self, code: str, language: str) -> dict[str, Any]:
         """Analyze performance characteristics"""
         performance_concerns = []
 
@@ -614,7 +614,7 @@ class QualityAssurancePipeline:
             "bottlenecks": performance_concerns,
         }
 
-    async def _check_compliance(self, code: str, language: str) -> Dict[str, Any]:
+    async def _check_compliance(self, code: str, language: str) -> dict[str, Any]:
         """Check compliance with coding standards"""
         compliance_issues = []
 
@@ -635,7 +635,7 @@ class QualityAssurancePipeline:
             "standards": ["pep8"] if language == "python" else ["standard"],
         }
 
-    def _generate_qa_recommendations(self, analysis_results: Dict[str, Any]) -> List[str]:
+    def _generate_qa_recommendations(self, analysis_results: dict[str, Any]) -> list[str]:
         """Generate quality assurance recommendations"""
         recommendations = []
 
@@ -663,7 +663,7 @@ class QualityAssurancePipeline:
 
         return recommendations
 
-    def _calculate_overall_qa_score(self, analysis_results: Dict[str, Any]) -> float:
+    def _calculate_overall_qa_score(self, analysis_results: dict[str, Any]) -> float:
         """Calculate overall quality assurance score"""
         scores = []
 
@@ -913,7 +913,7 @@ class ArtemisUnifiedOrchestrator(UnifiedBaseOrchestrator):
 
         return result
 
-    async def _analyze_semantic_codebase(self, task: UnifiedTask) -> Dict[str, Any]:
+    async def _analyze_semantic_codebase(self, task: UnifiedTask) -> dict[str, Any]:
         """
         Analyze codebase with semantic understanding
 
@@ -953,7 +953,7 @@ class ArtemisUnifiedOrchestrator(UnifiedBaseOrchestrator):
 
         return context
 
-    async def _analyze_repository_structure(self, repo_path: Path) -> Dict[str, Any]:
+    async def _analyze_repository_structure(self, repo_path: Path) -> dict[str, Any]:
         """Analyze repository structure and organization"""
         structure = {
             "total_files": 0,
@@ -1017,7 +1017,7 @@ class ArtemisUnifiedOrchestrator(UnifiedBaseOrchestrator):
                 ".rs": "rust",
             }
 
-            for ext, count in sorted(
+            for ext, _count in sorted(
                 structure["file_types"].items(), key=lambda x: x[1], reverse=True
             ):
                 if ext in lang_mapping:
@@ -1029,7 +1029,7 @@ class ArtemisUnifiedOrchestrator(UnifiedBaseOrchestrator):
 
     async def _perform_semantic_analysis(
         self, repo_path: Path, task: UnifiedTask
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Perform semantic analysis on relevant code files"""
         semantic_results = {
             "analyzed_files": [],
@@ -1067,7 +1067,7 @@ class ArtemisUnifiedOrchestrator(UnifiedBaseOrchestrator):
 
         return semantic_results
 
-    async def _analyze_codebase_patterns(self, repo_path: Path) -> Dict[str, Any]:
+    async def _analyze_codebase_patterns(self, repo_path: Path) -> dict[str, Any]:
         """Analyze patterns across the entire codebase"""
         pattern_analysis = {
             "architectural_patterns": [],
@@ -1081,7 +1081,7 @@ class ArtemisUnifiedOrchestrator(UnifiedBaseOrchestrator):
         # For now, return mock structure
         return pattern_analysis
 
-    async def _calculate_codebase_quality(self, repo_path: Path) -> Dict[str, Any]:
+    async def _calculate_codebase_quality(self, repo_path: Path) -> dict[str, Any]:
         """Calculate quality metrics for the entire codebase"""
         quality_metrics = {
             "overall_complexity": 0.0,
@@ -1107,7 +1107,7 @@ class ArtemisUnifiedOrchestrator(UnifiedBaseOrchestrator):
 
         return quality_metrics
 
-    async def _generate_architectural_overview(self, repo_path: Path) -> Dict[str, Any]:
+    async def _generate_architectural_overview(self, repo_path: Path) -> dict[str, Any]:
         """Generate architectural overview of the codebase"""
         overview = {
             "architecture_style": "layered",
@@ -1122,7 +1122,7 @@ class ArtemisUnifiedOrchestrator(UnifiedBaseOrchestrator):
         # For now, return mock structure
         return overview
 
-    def _select_files_for_analysis(self, repo_path: Path, task: UnifiedTask) -> List[Path]:
+    def _select_files_for_analysis(self, repo_path: Path, task: UnifiedTask) -> list[Path]:
         """Select relevant files for semantic analysis based on task"""
         relevant_files = []
 
@@ -1174,7 +1174,7 @@ class ArtemisUnifiedOrchestrator(UnifiedBaseOrchestrator):
 
         return ext_mapping.get(file_path.suffix.lower(), "unknown")
 
-    async def _load_code_patterns(self, task: UnifiedTask) -> Dict[str, Any]:
+    async def _load_code_patterns(self, task: UnifiedTask) -> dict[str, Any]:
         """Load relevant code patterns and examples"""
         patterns = {
             "detected_patterns": [],
@@ -1218,8 +1218,8 @@ class ArtemisUnifiedOrchestrator(UnifiedBaseOrchestrator):
         return patterns
 
     def _prepare_semantic_code_messages(
-        self, task: UnifiedTask, codebase_context: Dict[str, Any], code_patterns: Dict[str, Any]
-    ) -> List[Dict[str, str]]:
+        self, task: UnifiedTask, codebase_context: dict[str, Any], code_patterns: dict[str, Any]
+    ) -> list[dict[str, str]]:
         """Prepare messages for LLM with semantic code understanding"""
 
         # Detect primary language for the task
@@ -1292,7 +1292,7 @@ Ensure the solution integrates well with the existing codebase architecture and 
         ]
 
     def _determine_primary_language(
-        self, task: UnifiedTask, codebase_context: Dict[str, Any]
+        self, task: UnifiedTask, codebase_context: dict[str, Any]
     ) -> str:
         """Determine the primary language for the task"""
         # Check task metadata first
@@ -1307,7 +1307,7 @@ Ensure the solution integrates well with the existing codebase architecture and 
         # Default to first language in context
         return self.code_context.languages[0] if self.code_context.languages else "python"
 
-    def _format_codebase_insights(self, codebase_context: Dict[str, Any]) -> str:
+    def _format_codebase_insights(self, codebase_context: dict[str, Any]) -> str:
         """Format codebase insights for LLM consumption"""
         insights = []
 
@@ -1330,7 +1330,7 @@ Ensure the solution integrates well with the existing codebase architecture and 
 
         return "\n- ".join([""] + insights) if insights else "- No codebase analysis available"
 
-    def _format_pattern_recommendations(self, code_patterns: Dict[str, Any]) -> str:
+    def _format_pattern_recommendations(self, code_patterns: dict[str, Any]) -> str:
         """Format pattern recommendations for LLM consumption"""
         recommendations = []
 
@@ -1356,7 +1356,7 @@ Ensure the solution integrates well with the existing codebase architecture and 
         )
 
     async def _generate_code_with_qa(
-        self, messages: List[Dict], routing: Any, task: UnifiedTask
+        self, messages: list[dict], routing: Any, task: UnifiedTask
     ) -> Any:
         """Generate code with quality assurance checks"""
         # Use appropriate model for code generation
@@ -1370,7 +1370,7 @@ Ensure the solution integrates well with the existing codebase architecture and 
         return response
 
     async def _review_code_comprehensively(
-        self, messages: List[Dict], routing: Any, task: UnifiedTask
+        self, messages: list[dict], routing: Any, task: UnifiedTask
     ) -> Any:
         """Perform comprehensive code review"""
         # Add code to review to the messages
@@ -1393,7 +1393,7 @@ Ensure the solution integrates well with the existing codebase architecture and 
         return response
 
     async def _general_code_task_with_qa(
-        self, messages: List[Dict], routing: Any, task: UnifiedTask
+        self, messages: list[dict], routing: Any, task: UnifiedTask
     ) -> Any:
         """Handle general code tasks with QA considerations"""
         response = await self.portkey.execute_with_fallback(
@@ -1405,7 +1405,7 @@ Ensure the solution integrates well with the existing codebase architecture and 
 
         return response
 
-    async def _process_semantic_response(self, response: Any, task: UnifiedTask) -> Dict[str, Any]:
+    async def _process_semantic_response(self, response: Any, task: UnifiedTask) -> dict[str, Any]:
         """Process LLM response with semantic code understanding"""
         content = (
             response.choices[0].message.content if hasattr(response, "choices") else str(response)
@@ -1444,7 +1444,7 @@ Ensure the solution integrates well with the existing codebase architecture and 
 
         return processed
 
-    def _extract_enhanced_code_blocks(self, content: str) -> List[Dict[str, str]]:
+    def _extract_enhanced_code_blocks(self, content: str) -> list[dict[str, str]]:
         """Extract code blocks with enhanced language detection"""
         import re
 
@@ -1498,7 +1498,7 @@ Ensure the solution integrates well with the existing codebase architecture and 
 
         return "unknown"
 
-    async def _analyze_code_complexity(self, code_blocks: List[Dict[str, str]]) -> Dict[str, Any]:
+    async def _analyze_code_complexity(self, code_blocks: list[dict[str, str]]) -> dict[str, Any]:
         """Analyze complexity of generated code blocks"""
         complexity_analysis = {
             "overall_complexity": 0.0,
@@ -1587,8 +1587,8 @@ Ensure the solution integrates well with the existing codebase architecture and 
         return None
 
     async def _run_qa_pipeline(
-        self, processed: Dict[str, Any], task: UnifiedTask
-    ) -> Dict[str, Any]:
+        self, processed: dict[str, Any], task: UnifiedTask
+    ) -> dict[str, Any]:
         """Run comprehensive quality assurance pipeline"""
         primary_code = processed.get("primary_code", "")
         primary_language = processed.get("primary_language", "unknown")
@@ -1607,7 +1607,7 @@ Ensure the solution integrates well with the existing codebase architecture and 
 
         return qa_results
 
-    async def _run_artemis_specific_checks(self, processed: Dict[str, Any]) -> Dict[str, Any]:
+    async def _run_artemis_specific_checks(self, processed: dict[str, Any]) -> dict[str, Any]:
         """Run Artemis-specific quality checks"""
         checks = {
             "pattern_compliance": True,
@@ -1638,7 +1638,7 @@ Ensure the solution integrates well with the existing codebase architecture and 
 
         return checks
 
-    async def _validate_quality_gates(self, processed: Dict[str, Any]) -> Dict[str, Any]:
+    async def _validate_quality_gates(self, processed: dict[str, Any]) -> dict[str, Any]:
         """Validate code against quality gates"""
         validation = {
             "passed": True,
@@ -1695,7 +1695,7 @@ Ensure the solution integrates well with the existing codebase architecture and 
         return validation
 
     async def _generate_code_result(
-        self, processed: Dict[str, Any], task: UnifiedTask
+        self, processed: dict[str, Any], task: UnifiedTask
     ) -> CodeResult:
         """Generate comprehensive code result"""
         qa_results = processed.get("qa_results", {})
@@ -1720,7 +1720,7 @@ Ensure the solution integrates well with the existing codebase architecture and 
             patterns=patterns,
         )
 
-    def _extract_dependencies(self, processed: Dict[str, Any]) -> List[str]:
+    def _extract_dependencies(self, processed: dict[str, Any]) -> list[str]:
         """Extract dependencies from generated code"""
         dependencies = []
         primary_code = processed.get("primary_code", "")
@@ -1760,7 +1760,7 @@ Ensure the solution integrates well with the existing codebase architecture and 
         return list(set(dependencies))  # Remove duplicates
 
     def _calculate_code_confidence(
-        self, processed: Dict[str, Any], quality_validation: Dict[str, Any]
+        self, processed: dict[str, Any], quality_validation: dict[str, Any]
     ) -> float:
         """Calculate confidence score for generated code"""
         factors = []
@@ -1795,7 +1795,7 @@ Ensure the solution integrates well with the existing codebase architecture and 
 
         return sum(factors) / len(factors)
 
-    def _extract_code_citations(self, codebase_context: Dict[str, Any]) -> List[Dict[str, str]]:
+    def _extract_code_citations(self, codebase_context: dict[str, Any]) -> list[dict[str, str]]:
         """Extract citations from codebase analysis"""
         citations = []
 
@@ -1840,7 +1840,7 @@ Ensure the solution integrates well with the existing codebase architecture and 
 
         return citations
 
-    def _detect_language(self, processed: Dict[str, Any]) -> str:
+    def _detect_language(self, processed: dict[str, Any]) -> str:
         """Detect primary language from processed result"""
         return processed.get("primary_language", "unknown")
 
@@ -1880,7 +1880,7 @@ Ensure the solution integrates well with the existing codebase architecture and 
         self,
         code: str,
         language: str = "python",
-        focus_areas: List[str] = None,
+        focus_areas: list[str] = None,
         include_refactoring_suggestions: bool = True,
     ) -> CodeReview:
         """Perform comprehensive code review with quality analysis"""
@@ -1919,8 +1919,8 @@ Ensure the solution integrates well with the existing codebase architecture and 
     async def refactor_code_with_patterns(
         self,
         code: str,
-        target_patterns: List[str],
-        quality_goals: Dict[str, float] = None,
+        target_patterns: list[str],
+        quality_goals: dict[str, float] = None,
         maintain_functionality: bool = True,
     ) -> CodeResult:
         """Refactor code applying specific patterns and quality goals"""
@@ -1953,7 +1953,7 @@ Ensure the solution integrates well with the existing codebase architecture and 
 
         return None
 
-    async def analyze_technical_debt(self, repository_path: Optional[str] = None) -> Dict[str, Any]:
+    async def analyze_technical_debt(self, repository_path: Optional[str] = None) -> dict[str, Any]:
         """Analyze technical debt across the codebase"""
         content = "Analyze technical debt and provide refactoring roadmap"
         if repository_path:
@@ -2018,7 +2018,7 @@ Ensure the solution integrates well with the existing codebase architecture and 
 class CodeSandbox:
     """Safe code execution sandbox for testing generated code"""
 
-    async def execute_code(self, code: str, language: str, timeout: int = 10) -> Dict[str, Any]:
+    async def execute_code(self, code: str, language: str, timeout: int = 10) -> dict[str, Any]:
         """Execute code in a safe sandbox environment"""
         result = {
             "output": "",
@@ -2035,7 +2035,7 @@ class CodeSandbox:
 
         return result
 
-    async def validate_syntax(self, code: str, language: str) -> Dict[str, Any]:
+    async def validate_syntax(self, code: str, language: str) -> dict[str, Any]:
         """Validate code syntax without execution"""
         validation = {
             "valid": True,

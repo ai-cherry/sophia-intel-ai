@@ -6,22 +6,20 @@ Provides real-time metrics, task flow analytics, and performance monitoring
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from app.api.middleware.auth import get_current_user
 from app.core.ai_logger import logger
 from app.core.websocket_manager import WebSocketManager
-from app.orchestrators.base_orchestrator import ExecutionPriority, TaskType
 
 router = APIRouter(prefix="/orchestrator-coordination", tags=["coordination"])
 
 # WebSocket manager for real-time updates
-ws_manager: Optional[WebSocketManager] = None
+ws_manager: WebSocketManager | None = None
 
 
 # Pydantic models for API responses
@@ -39,7 +37,7 @@ class OrchestratorStatus(BaseModel):
     uptime_hours: float
     last_heartbeat: datetime
     domain: str
-    resource_usage: Dict[str, float]
+    resource_usage: dict[str, float]
 
 
 class TaskBridge(BaseModel):
@@ -54,8 +52,8 @@ class TaskBridge(BaseModel):
     context_preserved: bool
     pay_ready_context: bool
     created_at: datetime
-    completed_at: Optional[datetime] = None
-    processing_time_ms: Optional[int] = None
+    completed_at: datetime | None = None
+    processing_time_ms: int | None = None
 
 
 class CoordinationMetrics(BaseModel):
@@ -76,13 +74,13 @@ class CoordinationMetrics(BaseModel):
 class TaskFlowAnalytics(BaseModel):
     """Analytics data for task flow visualization"""
 
-    orchestrator_utilization: Dict[str, float]
-    task_distribution: Dict[str, int]
-    priority_breakdown: Dict[str, int]
-    processing_times: Dict[str, List[float]]
-    bottleneck_analysis: Dict[str, Any]
+    orchestrator_utilization: dict[str, float]
+    task_distribution: dict[str, int]
+    priority_breakdown: dict[str, int]
+    processing_times: dict[str, list[float]]
+    bottleneck_analysis: dict[str, Any]
     flow_efficiency: float
-    resource_allocation: Dict[str, Dict[str, Any]]
+    resource_allocation: dict[str, dict[str, Any]]
 
 
 class ResourceAllocation(BaseModel):
@@ -95,7 +93,7 @@ class ResourceAllocation(BaseModel):
     queue_depth: int
     average_wait_time_ms: float
     predicted_capacity: int
-    scaling_recommendation: Optional[str] = None
+    scaling_recommendation: str | None = None
 
 
 class PerformanceBottleneck(BaseModel):
@@ -109,11 +107,11 @@ class PerformanceBottleneck(BaseModel):
     impact_score: float
     suggested_action: str
     detected_at: datetime
-    resolved_at: Optional[datetime] = None
+    resolved_at: datetime | None = None
 
 
 # Mock data generators (in production, these would interface with actual orchestrators)
-def get_mock_orchestrator_status() -> List[OrchestratorStatus]:
+def get_mock_orchestrator_status() -> list[OrchestratorStatus]:
     """Generate mock orchestrator status data"""
     return [
         OrchestratorStatus(
@@ -147,7 +145,7 @@ def get_mock_orchestrator_status() -> List[OrchestratorStatus]:
     ]
 
 
-def get_mock_task_bridges() -> List[TaskBridge]:
+def get_mock_task_bridges() -> list[TaskBridge]:
     """Generate mock task bridge data"""
     now = datetime.utcnow()
     return [
@@ -206,7 +204,7 @@ def get_mock_coordination_metrics() -> CoordinationMetrics:
     )
 
 
-def get_mock_performance_bottlenecks() -> List[PerformanceBottleneck]:
+def get_mock_performance_bottlenecks() -> list[PerformanceBottleneck]:
     """Generate mock bottleneck analysis"""
     now = datetime.utcnow()
     return [
@@ -236,7 +234,7 @@ def get_mock_performance_bottlenecks() -> List[PerformanceBottleneck]:
 # API Endpoints
 
 
-@router.get("/status", response_model=List[OrchestratorStatus])
+@router.get("/status", response_model=list[OrchestratorStatus])
 async def get_orchestrator_status(current_user=Depends(get_current_user)):
     """
     Get current status of all orchestrators
@@ -256,10 +254,10 @@ async def get_orchestrator_status(current_user=Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/task-bridges", response_model=List[TaskBridge])
+@router.get("/task-bridges", response_model=list[TaskBridge])
 async def get_task_bridges(
-    status: Optional[str] = None,
-    orchestrator_id: Optional[str] = None,
+    status: str | None = None,
+    orchestrator_id: str | None = None,
     current_user=Depends(get_current_user),
 ):
     """
@@ -355,7 +353,7 @@ async def get_task_flow_analytics(time_range: str = "1h", current_user=Depends(g
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/resource-allocation", response_model=List[ResourceAllocation])
+@router.get("/resource-allocation", response_model=list[ResourceAllocation])
 async def get_resource_allocation(current_user=Depends(get_current_user)):
     """
     Get current resource allocation status for all orchestrators
@@ -397,9 +395,9 @@ async def get_resource_allocation(current_user=Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/bottlenecks", response_model=List[PerformanceBottleneck])
+@router.get("/bottlenecks", response_model=list[PerformanceBottleneck])
 async def get_performance_bottlenecks(
-    severity: Optional[str] = None, current_user=Depends(get_current_user)
+    severity: str | None = None, current_user=Depends(get_current_user)
 ):
     """
     Get identified performance bottlenecks in the coordination system

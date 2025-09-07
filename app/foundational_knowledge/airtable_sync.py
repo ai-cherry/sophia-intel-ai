@@ -5,11 +5,9 @@ Handles synchronization between Airtable CEO Knowledge Base and local foundation
 
 import asyncio
 import hashlib
-import json
 import logging
-import os
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Set
+from datetime import datetime
+from typing import Any, Optional
 from uuid import UUID, uuid4
 
 import aiohttp
@@ -33,7 +31,7 @@ class AirtableRecord(BaseModel):
     """Airtable record model"""
 
     id: str
-    fields: Dict[str, Any]
+    fields: dict[str, Any]
     createdTime: str
 
 
@@ -44,7 +42,7 @@ class SyncQueueItem(BaseModel):
     table_name: str
     record_id: str
     operation: str  # 'create', 'update', 'delete'
-    data: Dict[str, Any]
+    data: dict[str, Any]
     priority: int = 0
     created_at: datetime = datetime.utcnow()
     attempts: int = 0
@@ -95,7 +93,7 @@ class AirtableSync:
 
         # Sync queue
         self.sync_queue: asyncio.Queue = asyncio.Queue()
-        self.processing_set: Set[str] = set()  # Track items being processed
+        self.processing_set: set[str] = set()  # Track items being processed
 
         # Table mappings from config
         self.table_mappings = {
@@ -165,7 +163,7 @@ class AirtableSync:
         try:
             sync_op.status = SyncStatus.RUNNING
 
-            for table_name in self.table_mappings.keys():
+            for table_name in self.table_mappings:
                 logger.info(f"Syncing table: {table_name}")
 
                 table_result = await self.sync_table(
@@ -340,7 +338,7 @@ class AirtableSync:
         table_name: str,
         modified_since: Optional[datetime] = None,
         offset: Optional[str] = None,
-    ) -> List[AirtableRecord]:
+    ) -> list[AirtableRecord]:
         """
         Fetch records from Airtable
 
@@ -432,8 +430,8 @@ class AirtableSync:
             return "created" if created else "failed"
 
     async def _map_record_to_knowledge(
-        self, record: AirtableRecord, table_name: str, mapping: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, record: AirtableRecord, table_name: str, mapping: dict[str, Any]
+    ) -> dict[str, Any]:
         """
         Map Airtable record to foundational knowledge
 
@@ -496,8 +494,8 @@ class AirtableSync:
         return UUID(hash_obj.hexdigest()[:32])
 
     def _detect_changes(
-        self, existing: FoundationalKnowledge, new_data: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, existing: FoundationalKnowledge, new_data: dict[str, Any]
+    ) -> dict[str, Any]:
         """
         Detect changes between existing and new data
 
@@ -542,7 +540,7 @@ class AirtableSync:
 
         return changes
 
-    async def _handle_deletions(self, table_name: str, current_record_ids: List[str]) -> int:
+    async def _handle_deletions(self, table_name: str, current_record_ids: list[str]) -> int:
         """
         Handle deletions for full sync
 

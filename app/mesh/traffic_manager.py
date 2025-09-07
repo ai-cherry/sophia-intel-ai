@@ -4,12 +4,11 @@ Manages traffic shifting, canary deployments, and failover scenarios
 """
 
 import asyncio
-import json
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 import aiohttp
 from kubernetes import client, config
@@ -61,7 +60,7 @@ class TrafficSplit:
 
     service_name: str
     namespace: str
-    splits: Dict[str, int]  # version -> percentage
+    splits: dict[str, int]  # version -> percentage
     active: bool = True
     created_at: datetime = field(default_factory=datetime.now)
 
@@ -77,7 +76,7 @@ class CanaryDeployment:
     current_percentage: int
     target_percentage: int
     status: str = "in_progress"
-    metrics: Dict[str, float] = field(default_factory=dict)
+    metrics: dict[str, float] = field(default_factory=dict)
     started_at: datetime = field(default_factory=datetime.now)
     last_update: datetime = field(default_factory=datetime.now)
 
@@ -100,9 +99,9 @@ class TrafficManager:
             prometheus_url: Prometheus URL for metrics
         """
         self.prometheus_url = prometheus_url
-        self.policies: Dict[str, TrafficPolicy] = {}
-        self.active_canaries: Dict[str, CanaryDeployment] = {}
-        self.traffic_splits: Dict[str, TrafficSplit] = {}
+        self.policies: dict[str, TrafficPolicy] = {}
+        self.active_canaries: dict[str, CanaryDeployment] = {}
+        self.traffic_splits: dict[str, TrafficSplit] = {}
         self.running = False
 
         # Initialize Kubernetes client
@@ -189,7 +188,7 @@ class TrafficManager:
         logger.info(f"Canary deployment created: {canary_key}")
         return canary
 
-    async def update_traffic_split(self, service_name: str, namespace: str, splits: Dict[str, int]):
+    async def update_traffic_split(self, service_name: str, namespace: str, splits: dict[str, int]):
         """
         Update traffic split for a service
 
@@ -347,8 +346,8 @@ class TrafficManager:
         self,
         service_name: str,
         namespace: str,
-        version_splits: Dict[str, int],
-        routing_rules: Optional[Dict[str, Any]] = None,
+        version_splits: dict[str, int],
+        routing_rules: Optional[dict[str, Any]] = None,
     ):
         """
         Setup A/B testing
@@ -432,7 +431,7 @@ class TrafficManager:
         """Execute gradual traffic shifts"""
         while self.running:
             try:
-                for policy_key, policy in list(self.policies.items()):
+                for _policy_key, policy in list(self.policies.items()):
                     if policy.shift_mode != TrafficShiftMode.GRADUAL:
                         continue
 
@@ -453,7 +452,7 @@ class TrafficManager:
 
     async def _get_canary_metrics(
         self, service_name: str, namespace: str, version: str
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """Get metrics for canary version"""
         metrics = {}
 
@@ -522,7 +521,7 @@ class TrafficManager:
         return metrics
 
     async def _apply_ab_routing_rules(
-        self, service_name: str, namespace: str, routing_rules: Dict[str, Any]
+        self, service_name: str, namespace: str, routing_rules: dict[str, Any]
     ):
         """Apply A/B testing routing rules"""
         try:

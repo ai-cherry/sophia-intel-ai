@@ -17,7 +17,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Optional
 from uuid import uuid4
 
 logger = logging.getLogger(__name__)
@@ -80,23 +80,23 @@ class DomainTask:
     # Task execution
     priority: TaskPriority = TaskPriority.MEDIUM
     status: TaskStatus = TaskStatus.PENDING
-    assigned_agents: List[str] = field(default_factory=list)
+    assigned_agents: list[str] = field(default_factory=list)
 
     # Dependencies and relationships
-    dependencies: List[str] = field(default_factory=list)  # Other task IDs
-    blocks: List[str] = field(default_factory=list)  # Tasks this blocks
+    dependencies: list[str] = field(default_factory=list)  # Other task IDs
+    blocks: list[str] = field(default_factory=list)  # Tasks this blocks
     parent_task_id: Optional[str] = None
-    subtasks: List[str] = field(default_factory=list)
+    subtasks: list[str] = field(default_factory=list)
 
     # Data and context
-    input_data: Dict[str, Any] = field(default_factory=dict)
-    output_data: Dict[str, Any] = field(default_factory=dict)
-    context: Dict[str, Any] = field(default_factory=dict)
+    input_data: dict[str, Any] = field(default_factory=dict)
+    output_data: dict[str, Any] = field(default_factory=dict)
+    context: dict[str, Any] = field(default_factory=dict)
 
     # Cross-domain coordination
     requires_technical_support: bool = False
-    technical_requirements: List[str] = field(default_factory=list)
-    cross_domain_dependencies: List[str] = field(default_factory=list)
+    technical_requirements: list[str] = field(default_factory=list)
+    cross_domain_dependencies: list[str] = field(default_factory=list)
 
     # Timing
     created_at: datetime = field(default_factory=datetime.now)
@@ -107,9 +107,9 @@ class DomainTask:
     estimated_duration_hours: float = 1.0
 
     # Results
-    success_criteria: List[str] = field(default_factory=list)
-    success_metrics: Dict[str, Any] = field(default_factory=dict)
-    results: Dict[str, Any] = field(default_factory=dict)
+    success_criteria: list[str] = field(default_factory=list)
+    success_metrics: dict[str, Any] = field(default_factory=dict)
+    results: dict[str, Any] = field(default_factory=dict)
     error_message: str = ""
 
     def start_task(self):
@@ -118,7 +118,7 @@ class DomainTask:
         self.started_at = datetime.now()
         self.updated_at = datetime.now()
 
-    def complete_task(self, results: Dict[str, Any] = None, success: bool = True):
+    def complete_task(self, results: dict[str, Any] = None, success: bool = True):
         """Mark task as completed"""
         self.status = TaskStatus.COMPLETED if success else TaskStatus.FAILED
         self.completed_at = datetime.now()
@@ -163,7 +163,7 @@ class CrossDomainRequest:
     request_type: str = ""  # technical_support, data_request, resource_allocation
     title: str = ""
     description: str = ""
-    requirements: List[str] = field(default_factory=list)
+    requirements: list[str] = field(default_factory=list)
 
     # Priority and timing
     priority: TaskPriority = TaskPriority.MEDIUM
@@ -173,14 +173,14 @@ class CrossDomainRequest:
     # Status
     status: TaskStatus = TaskStatus.PENDING
     assigned_domain: Optional[DomainType] = None
-    response: Dict[str, Any] = field(default_factory=dict)
+    response: dict[str, Any] = field(default_factory=dict)
 
     # Metadata
     created_at: datetime = field(default_factory=datetime.now)
     updated_at: datetime = field(default_factory=datetime.now)
     resolved_at: Optional[datetime] = None
 
-    def resolve_request(self, response: Dict[str, Any], success: bool = True):
+    def resolve_request(self, response: dict[str, Any], success: bool = True):
         """Resolve cross-domain request"""
         self.status = TaskStatus.COMPLETED if success else TaskStatus.FAILED
         self.response = response
@@ -191,25 +191,25 @@ class CrossDomainRequest:
 class BaseDomainOrchestra(ABC):
     """Base class for all domain orchestrators"""
 
-    def __init__(self, domain: DomainType, config: Dict[str, Any] = None):
+    def __init__(self, domain: DomainType, config: dict[str, Any] = None):
         self.domain = domain
         self.config = config or {}
 
         # Task management
-        self.active_tasks: Dict[str, DomainTask] = {}
+        self.active_tasks: dict[str, DomainTask] = {}
         self.task_queue = asyncio.Queue()
-        self.completed_tasks: List[DomainTask] = []
+        self.completed_tasks: list[DomainTask] = []
 
         # Agent management
-        self.registered_agents: Dict[str, Any] = {}
-        self.agent_capabilities: Dict[str, List[str]] = {}
+        self.registered_agents: dict[str, Any] = {}
+        self.agent_capabilities: dict[str, list[str]] = {}
 
         # Cross-domain coordination
-        self.cross_domain_requests: Dict[str, CrossDomainRequest] = {}
-        self.cross_domain_callbacks: Dict[str, callable] = {}
+        self.cross_domain_requests: dict[str, CrossDomainRequest] = {}
+        self.cross_domain_callbacks: dict[str, callable] = {}
 
         # Performance tracking
-        self.performance_metrics: Dict[str, Any] = {}
+        self.performance_metrics: dict[str, Any] = {}
         self.last_health_check: datetime = datetime.now()
 
         # State
@@ -222,7 +222,7 @@ class BaseDomainOrchestra(ABC):
         pass
 
     @abstractmethod
-    async def process_task(self, task: DomainTask) -> Dict[str, Any]:
+    async def process_task(self, task: DomainTask) -> dict[str, Any]:
         """Process domain-specific task"""
         pass
 
@@ -320,7 +320,7 @@ class BaseDomainOrchestra(ABC):
         logger.info(f"Task {task.task_id} submitted to {self.domain.value} orchestra")
         return task.task_id
 
-    async def get_task_status(self, task_id: str) -> Optional[Dict[str, Any]]:
+    async def get_task_status(self, task_id: str) -> Optional[dict[str, Any]]:
         """Get status of specific task"""
         task = await self._find_task(task_id)
         if not task:
@@ -371,7 +371,7 @@ class BaseDomainOrchestra(ABC):
         """Register callback for cross-domain request completion"""
         self.cross_domain_callbacks[request_id] = callback
 
-    async def handle_cross_domain_request(self, request: CrossDomainRequest) -> Dict[str, Any]:
+    async def handle_cross_domain_request(self, request: CrossDomainRequest) -> dict[str, Any]:
         """Handle incoming cross-domain request"""
         logger.info(
             f"{self.domain.value} handling cross-domain request from {request.source_domain.value}"
@@ -435,7 +435,7 @@ class BaseDomainOrchestra(ABC):
                 self.performance_metrics["tasks_completed"] / total_tasks
             )
 
-    async def get_domain_health(self) -> Dict[str, Any]:
+    async def get_domain_health(self) -> dict[str, Any]:
         """Get domain orchestra health status"""
         return {
             "domain": self.domain.value,
@@ -472,7 +472,7 @@ class BaseDomainOrchestra(ABC):
 class MarketingDomainOrchestra(BaseDomainOrchestra):
     """Marketing domain orchestra for campaign management and automation"""
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: dict[str, Any] = None):
         super().__init__(DomainType.MARKETING, config)
         self.campaign_manager = None  # Would inject campaign management system
         self.brand_manager = None  # Would inject brand management system
@@ -480,7 +480,7 @@ class MarketingDomainOrchestra(BaseDomainOrchestra):
     def _get_orchestrator_type(self) -> OrchestraType:
         return OrchestraType.BUSINESS
 
-    async def process_task(self, task: DomainTask) -> Dict[str, Any]:
+    async def process_task(self, task: DomainTask) -> dict[str, Any]:
         """Process marketing-specific task"""
         task_type = task.context.get("task_type", "general")
 
@@ -493,7 +493,7 @@ class MarketingDomainOrchestra(BaseDomainOrchestra):
         else:
             return await self._handle_general_marketing_task(task)
 
-    async def _handle_campaign_launch(self, task: DomainTask) -> Dict[str, Any]:
+    async def _handle_campaign_launch(self, task: DomainTask) -> dict[str, Any]:
         """Handle campaign launch task"""
         campaign_config = task.input_data.get("campaign_config", {})
 
@@ -507,9 +507,9 @@ class MarketingDomainOrchestra(BaseDomainOrchestra):
             "estimated_reach": campaign_config.get("target_audience_size", 1000),
         }
 
-    async def _handle_brand_compliance(self, task: DomainTask) -> Dict[str, Any]:
+    async def _handle_brand_compliance(self, task: DomainTask) -> dict[str, Any]:
         """Handle brand compliance check"""
-        content = task.input_data.get("content", "")
+        task.input_data.get("content", "")
 
         # Simulate brand compliance check
         compliance_score = 0.85  # Mock score
@@ -520,7 +520,7 @@ class MarketingDomainOrchestra(BaseDomainOrchestra):
             "suggestions": ["Consider adjusting tone to match brand voice"],
         }
 
-    async def _handle_performance_analysis(self, task: DomainTask) -> Dict[str, Any]:
+    async def _handle_performance_analysis(self, task: DomainTask) -> dict[str, Any]:
         """Handle marketing performance analysis"""
         campaign_id = task.input_data.get("campaign_id", "")
 
@@ -536,7 +536,7 @@ class MarketingDomainOrchestra(BaseDomainOrchestra):
             "recommendations": ["Increase budget allocation to high-performing segments"],
         }
 
-    async def _handle_general_marketing_task(self, task: DomainTask) -> Dict[str, Any]:
+    async def _handle_general_marketing_task(self, task: DomainTask) -> dict[str, Any]:
         """Handle general marketing task"""
         return {
             "task_completed": True,
@@ -548,7 +548,7 @@ class MarketingDomainOrchestra(BaseDomainOrchestra):
 class SalesDomainOrchestra(BaseDomainOrchestra):
     """Sales domain orchestra for pipeline and opportunity management"""
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: dict[str, Any] = None):
         super().__init__(DomainType.SALES, config)
         self.crm_integration = None  # Would inject CRM system
         self.pipeline_manager = None  # Would inject pipeline management
@@ -556,7 +556,7 @@ class SalesDomainOrchestra(BaseDomainOrchestra):
     def _get_orchestrator_type(self) -> OrchestraType:
         return OrchestraType.BUSINESS
 
-    async def process_task(self, task: DomainTask) -> Dict[str, Any]:
+    async def process_task(self, task: DomainTask) -> dict[str, Any]:
         """Process sales-specific task"""
         task_type = task.context.get("task_type", "general")
 
@@ -569,7 +569,7 @@ class SalesDomainOrchestra(BaseDomainOrchestra):
         else:
             return await self._handle_general_sales_task(task)
 
-    async def _handle_lead_qualification(self, task: DomainTask) -> Dict[str, Any]:
+    async def _handle_lead_qualification(self, task: DomainTask) -> dict[str, Any]:
         """Handle lead qualification task"""
         lead_data = task.input_data.get("lead_data", {})
 
@@ -583,7 +583,7 @@ class SalesDomainOrchestra(BaseDomainOrchestra):
             "recommended_actions": ["Schedule discovery call", "Send product demo"],
         }
 
-    async def _handle_opportunity_analysis(self, task: DomainTask) -> Dict[str, Any]:
+    async def _handle_opportunity_analysis(self, task: DomainTask) -> dict[str, Any]:
         """Handle opportunity analysis"""
         opportunity_id = task.input_data.get("opportunity_id", "")
 
@@ -595,7 +595,7 @@ class SalesDomainOrchestra(BaseDomainOrchestra):
             "risk_factors": ["Budget approval pending", "Multiple stakeholders involved"],
         }
 
-    async def _handle_forecast_update(self, task: DomainTask) -> Dict[str, Any]:
+    async def _handle_forecast_update(self, task: DomainTask) -> dict[str, Any]:
         """Handle sales forecast update"""
         period = task.input_data.get("period", "Q4")
 
@@ -607,7 +607,7 @@ class SalesDomainOrchestra(BaseDomainOrchestra):
             "key_opportunities": 15,
         }
 
-    async def _handle_general_sales_task(self, task: DomainTask) -> Dict[str, Any]:
+    async def _handle_general_sales_task(self, task: DomainTask) -> dict[str, Any]:
         """Handle general sales task"""
         return {
             "task_completed": True,
@@ -619,7 +619,7 @@ class SalesDomainOrchestra(BaseDomainOrchestra):
 class FinanceDomainOrchestra(BaseDomainOrchestra):
     """Finance domain orchestra for budget and ROI management"""
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: dict[str, Any] = None):
         super().__init__(DomainType.FINANCE, config)
         self.budget_tracker = None  # Would inject budget tracking system
         self.roi_calculator = None  # Would inject ROI calculation engine
@@ -627,7 +627,7 @@ class FinanceDomainOrchestra(BaseDomainOrchestra):
     def _get_orchestrator_type(self) -> OrchestraType:
         return OrchestraType.BUSINESS
 
-    async def process_task(self, task: DomainTask) -> Dict[str, Any]:
+    async def process_task(self, task: DomainTask) -> dict[str, Any]:
         """Process finance-specific task"""
         task_type = task.context.get("task_type", "general")
 
@@ -640,7 +640,7 @@ class FinanceDomainOrchestra(BaseDomainOrchestra):
         else:
             return await self._handle_general_finance_task(task)
 
-    async def _handle_budget_analysis(self, task: DomainTask) -> Dict[str, Any]:
+    async def _handle_budget_analysis(self, task: DomainTask) -> dict[str, Any]:
         """Handle budget analysis task"""
         department = task.input_data.get("department", "")
         period = task.input_data.get("period", "current_month")
@@ -655,7 +655,7 @@ class FinanceDomainOrchestra(BaseDomainOrchestra):
             "forecast_status": "On track",
         }
 
-    async def _handle_roi_calculation(self, task: DomainTask) -> Dict[str, Any]:
+    async def _handle_roi_calculation(self, task: DomainTask) -> dict[str, Any]:
         """Handle ROI calculation"""
         campaign_id = task.input_data.get("campaign_id", "")
         investment = task.input_data.get("investment", 10000)
@@ -672,7 +672,7 @@ class FinanceDomainOrchestra(BaseDomainOrchestra):
             "payback_period_days": 45,
         }
 
-    async def _handle_cost_optimization(self, task: DomainTask) -> Dict[str, Any]:
+    async def _handle_cost_optimization(self, task: DomainTask) -> dict[str, Any]:
         """Handle cost optimization analysis"""
         return {
             "optimization_opportunities": [
@@ -683,7 +683,7 @@ class FinanceDomainOrchestra(BaseDomainOrchestra):
             "implementation_priority": ["Marketing spend", "Software licenses"],
         }
 
-    async def _handle_general_finance_task(self, task: DomainTask) -> Dict[str, Any]:
+    async def _handle_general_finance_task(self, task: DomainTask) -> dict[str, Any]:
         """Handle general finance task"""
         return {
             "task_completed": True,
@@ -698,7 +698,7 @@ class FinanceDomainOrchestra(BaseDomainOrchestra):
 class InfrastructureDomainOrchestra(BaseDomainOrchestra):
     """Infrastructure domain orchestra for system management"""
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: dict[str, Any] = None):
         super().__init__(DomainType.INFRASTRUCTURE, config)
         self.cloud_manager = None  # Would inject cloud management system
         self.monitoring_system = None  # Would inject monitoring system
@@ -706,7 +706,7 @@ class InfrastructureDomainOrchestra(BaseDomainOrchestra):
     def _get_orchestrator_type(self) -> OrchestraType:
         return OrchestraType.TECHNICAL
 
-    async def process_task(self, task: DomainTask) -> Dict[str, Any]:
+    async def process_task(self, task: DomainTask) -> dict[str, Any]:
         """Process infrastructure-specific task"""
         task_type = task.context.get("task_type", "general")
 
@@ -719,7 +719,7 @@ class InfrastructureDomainOrchestra(BaseDomainOrchestra):
         else:
             return await self._handle_general_infrastructure_task(task)
 
-    async def _handle_scaling_task(self, task: DomainTask) -> Dict[str, Any]:
+    async def _handle_scaling_task(self, task: DomainTask) -> dict[str, Any]:
         """Handle infrastructure scaling"""
         service = task.input_data.get("service", "")
         target_capacity = task.input_data.get("target_capacity", 100)
@@ -732,7 +732,7 @@ class InfrastructureDomainOrchestra(BaseDomainOrchestra):
             "cost_impact": f"+${target_capacity * 0.1}/hour",
         }
 
-    async def _handle_monitoring_task(self, task: DomainTask) -> Dict[str, Any]:
+    async def _handle_monitoring_task(self, task: DomainTask) -> dict[str, Any]:
         """Handle monitoring task"""
         return {
             "monitoring_status": "Active",
@@ -741,7 +741,7 @@ class InfrastructureDomainOrchestra(BaseDomainOrchestra):
             "system_health": "Good",
         }
 
-    async def _handle_deployment_task(self, task: DomainTask) -> Dict[str, Any]:
+    async def _handle_deployment_task(self, task: DomainTask) -> dict[str, Any]:
         """Handle deployment task"""
         service = task.input_data.get("service", "")
         version = task.input_data.get("version", "1.0.0")
@@ -754,7 +754,7 @@ class InfrastructureDomainOrchestra(BaseDomainOrchestra):
             "health_check_passed": True,
         }
 
-    async def _handle_general_infrastructure_task(self, task: DomainTask) -> Dict[str, Any]:
+    async def _handle_general_infrastructure_task(self, task: DomainTask) -> dict[str, Any]:
         """Handle general infrastructure task"""
         return {
             "task_completed": True,
@@ -766,7 +766,7 @@ class InfrastructureDomainOrchestra(BaseDomainOrchestra):
 class SecurityDomainOrchestra(BaseDomainOrchestra):
     """Security domain orchestra for security and compliance"""
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: dict[str, Any] = None):
         super().__init__(DomainType.SECURITY, config)
         self.threat_detector = None  # Would inject threat detection system
         self.compliance_checker = None  # Would inject compliance system
@@ -774,7 +774,7 @@ class SecurityDomainOrchestra(BaseDomainOrchestra):
     def _get_orchestrator_type(self) -> OrchestraType:
         return OrchestraType.TECHNICAL
 
-    async def process_task(self, task: DomainTask) -> Dict[str, Any]:
+    async def process_task(self, task: DomainTask) -> dict[str, Any]:
         """Process security-specific task"""
         task_type = task.context.get("task_type", "general")
 
@@ -787,7 +787,7 @@ class SecurityDomainOrchestra(BaseDomainOrchestra):
         else:
             return await self._handle_general_security_task(task)
 
-    async def _handle_threat_analysis(self, task: DomainTask) -> Dict[str, Any]:
+    async def _handle_threat_analysis(self, task: DomainTask) -> dict[str, Any]:
         """Handle threat analysis"""
         return {
             "threats_analyzed": 45,
@@ -797,7 +797,7 @@ class SecurityDomainOrchestra(BaseDomainOrchestra):
             "recommended_actions": ["Update firewall rules", "Review access permissions"],
         }
 
-    async def _handle_compliance_check(self, task: DomainTask) -> Dict[str, Any]:
+    async def _handle_compliance_check(self, task: DomainTask) -> dict[str, Any]:
         """Handle compliance check"""
         framework = task.input_data.get("framework", "SOC2")
 
@@ -810,7 +810,7 @@ class SecurityDomainOrchestra(BaseDomainOrchestra):
             "next_review_date": datetime.now() + timedelta(days=90),
         }
 
-    async def _handle_access_review(self, task: DomainTask) -> Dict[str, Any]:
+    async def _handle_access_review(self, task: DomainTask) -> dict[str, Any]:
         """Handle access review"""
         return {
             "users_reviewed": 150,
@@ -820,7 +820,7 @@ class SecurityDomainOrchestra(BaseDomainOrchestra):
             "review_completion": "100%",
         }
 
-    async def _handle_general_security_task(self, task: DomainTask) -> Dict[str, Any]:
+    async def _handle_general_security_task(self, task: DomainTask) -> dict[str, Any]:
         """Handle general security task"""
         return {
             "task_completed": True,
@@ -837,7 +837,7 @@ class DomainOrchestraFactory:
 
     @staticmethod
     def create_domain_orchestra(
-        domain: DomainType, config: Dict[str, Any] = None
+        domain: DomainType, config: dict[str, Any] = None
     ) -> BaseDomainOrchestra:
         """Create domain orchestra instance"""
 
@@ -857,8 +857,8 @@ class DomainOrchestraFactory:
 
     @staticmethod
     def create_business_orchestras(
-        config: Dict[str, Any] = None,
-    ) -> Dict[DomainType, BaseDomainOrchestra]:
+        config: dict[str, Any] = None,
+    ) -> dict[DomainType, BaseDomainOrchestra]:
         """Create all business domain orchestras"""
         business_domains = [
             DomainType.MARKETING,
@@ -881,8 +881,8 @@ class DomainOrchestraFactory:
 
     @staticmethod
     def create_technical_orchestras(
-        config: Dict[str, Any] = None,
-    ) -> Dict[DomainType, BaseDomainOrchestra]:
+        config: dict[str, Any] = None,
+    ) -> dict[DomainType, BaseDomainOrchestra]:
         """Create all technical domain orchestras"""
         technical_domains = [
             DomainType.INFRASTRUCTURE,

@@ -9,9 +9,9 @@ import json
 import logging
 import os
 import secrets
-from base64 import b64decode, b64encode
+from base64 import b64encode
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
@@ -69,7 +69,7 @@ class UnifiedCredentialManager:
         logger.info("🔐 New encryption key generated and stored securely")
         return key
 
-    def _load_credentials(self) -> Dict[str, Any]:
+    def _load_credentials(self) -> dict[str, Any]:
         """Load and decrypt credentials"""
         if not self.config_path.exists():
             return self._initialize_default_credentials()
@@ -85,7 +85,7 @@ class UnifiedCredentialManager:
             logger.warning(f"Failed to load credentials, using defaults: {e}")
             return self._initialize_default_credentials()
 
-    def _initialize_default_credentials(self) -> Dict[str, Any]:
+    def _initialize_default_credentials(self) -> dict[str, Any]:
         """Initialize with secure defaults"""
         default_credentials = {
             "redis": {
@@ -134,7 +134,7 @@ class UnifiedCredentialManager:
         """Generate cryptographically secure password"""
         return secrets.token_urlsafe(length)
 
-    def _calculate_checksum(self, data: Dict[str, Any]) -> str:
+    def _calculate_checksum(self, data: dict[str, Any]) -> str:
         """Calculate SHA-256 checksum of credentials"""
         # Exclude metadata from checksum calculation
         data_copy = data.copy()
@@ -144,7 +144,7 @@ class UnifiedCredentialManager:
         json_str = json.dumps(data_copy, sort_keys=True)
         return hashlib.sha256(json_str.encode()).hexdigest()
 
-    def _save_credentials(self, credentials: Dict[str, Any]):
+    def _save_credentials(self, credentials: dict[str, Any]):
         """Encrypt and save credentials"""
         try:
             # Update checksum
@@ -167,7 +167,7 @@ class UnifiedCredentialManager:
             logger.error(f"Failed to save credentials: {e}")
             raise
 
-    def get_redis_config(self) -> Dict[str, Any]:
+    def get_redis_config(self) -> dict[str, Any]:
         """Get Redis configuration with URL construction"""
         redis_config = self.credentials["redis"].copy()
 
@@ -190,7 +190,7 @@ class UnifiedCredentialManager:
 
         return redis_config
 
-    def get_database_config(self) -> Dict[str, Any]:
+    def get_database_config(self) -> dict[str, Any]:
         """Get database configuration"""
         return self.credentials["database"].copy()
 
@@ -204,11 +204,11 @@ class UnifiedCredentialManager:
         self._save_credentials(self.credentials)
         logger.info(f"🔑 API key updated for {service}")
 
-    def get_security_config(self) -> Dict[str, Any]:
+    def get_security_config(self) -> dict[str, Any]:
         """Get security configuration"""
         return self.credentials["security"].copy()
 
-    def get_mcp_config(self) -> Dict[str, Any]:
+    def get_mcp_config(self) -> dict[str, Any]:
         """Get MCP configuration"""
         return self.credentials["mcp"].copy()
 
@@ -240,7 +240,7 @@ class UnifiedCredentialManager:
         logger.info("✅ Credential integrity verified")
         return True
 
-    def export_config_for_service(self, service: str) -> Dict[str, Any]:
+    def export_config_for_service(self, service: str) -> dict[str, Any]:
         """Export configuration for specific service"""
         configs = {
             "redis": self.get_redis_config(),
@@ -328,7 +328,7 @@ hll-sparse-max-bytes 3000
         logger.info(f"📄 Redis configuration created at {output_path}")
         return output_path
 
-    def get_connection_info(self) -> Dict[str, Any]:
+    def get_connection_info(self) -> dict[str, Any]:
         """Get connection info for services"""
         return {
             "redis": {

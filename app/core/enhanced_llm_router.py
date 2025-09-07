@@ -7,14 +7,14 @@ import logging
 import os
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Optional
 
 from openai import OpenAI
 
-from app.core.aimlapi_config import AIMLModelFamily, aimlapi_manager
+from app.core.aimlapi_config import aimlapi_manager
 
 # Import existing managers
-from app.core.portkey_config import AgentRole, ModelProvider, portkey_manager
+from app.core.portkey_config import ModelProvider, portkey_manager
 from app.core.unified_keys import unified_keys
 
 logger = logging.getLogger(__name__)
@@ -94,7 +94,7 @@ class EnhancedLLMRouter:
         require_reasoning: bool = False,
         require_long_context: bool = False,
         budget_mode: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Get the best model and provider for a specific task"""
 
         candidates = []
@@ -239,14 +239,14 @@ class EnhancedLLMRouter:
 
     def create_completion(
         self,
-        messages: List[Dict[str, str]],
+        messages: list[dict[str, str]],
         model: Optional[str] = None,
         provider_type: Optional[LLMProviderType] = None,
         task_type: str = "chat",
         temperature: float = 0.7,
         max_tokens: Optional[int] = None,
         stream: bool = False,
-        tools: Optional[List[Dict]] = None,
+        tools: Optional[list[dict]] = None,
         **kwargs,
     ) -> Any:
         """Create a completion using the best available provider"""
@@ -327,7 +327,7 @@ class EnhancedLLMRouter:
                 )
             raise
 
-    def _call_aimlapi(self, model: str, messages: List[Dict], **kwargs) -> Any:
+    def _call_aimlapi(self, model: str, messages: list[dict], **kwargs) -> Any:
         """Call AIMLAPI for GPT-5, Grok-4, and 300+ models"""
         # Map short names to full model IDs if needed
         model_mapping = {
@@ -342,7 +342,7 @@ class EnhancedLLMRouter:
 
         return self.aimlapi.chat_completion(model=model, messages=messages, **kwargs)
 
-    def _call_portkey(self, model: str, messages: List[Dict], **kwargs) -> Any:
+    def _call_portkey(self, model: str, messages: list[dict], **kwargs) -> Any:
         """Call via Portkey gateway"""
         # Get appropriate provider for the model
         provider = None
@@ -358,7 +358,7 @@ class EnhancedLLMRouter:
         client = self.portkey.get_client_for_provider(provider)
         return client.chat.completions.create(model=model, messages=messages, **kwargs)
 
-    def _call_direct(self, model: str, messages: List[Dict], **kwargs) -> Any:
+    def _call_direct(self, model: str, messages: list[dict], **kwargs) -> Any:
         """Call provider directly without gateway"""
         # Determine provider from model name
         if "gpt" in model.lower():
@@ -407,7 +407,7 @@ class EnhancedLLMRouter:
 
         raise last_error or Exception("All fallback attempts failed")
 
-    def list_available_models(self) -> Dict[str, List[str]]:
+    def list_available_models(self) -> dict[str, list[str]]:
         """List all available models by provider"""
         return {
             "aimlapi": self.aimlapi.list_models(),
@@ -419,7 +419,7 @@ class EnhancedLLMRouter:
             "direct": list(self.keys.direct_api_keys.keys()),
         }
 
-    def get_provider_status(self) -> Dict[str, Any]:
+    def get_provider_status(self) -> dict[str, Any]:
         """Get status of all providers"""
         status = {
             "aimlapi": {

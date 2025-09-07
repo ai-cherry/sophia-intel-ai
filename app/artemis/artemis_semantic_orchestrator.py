@@ -18,7 +18,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from app.memory.unified_memory_router import MemoryDomain, UnifiedMemoryRouter
 from app.orchestrators.base_orchestrator import (
@@ -78,10 +78,10 @@ class CodeRequest:
     description: str
     strategy: CodeGenerationStrategy
     target_file: Optional[str] = None
-    context_files: List[str] = field(default_factory=list)
-    requirements: List[str] = field(default_factory=list)
-    constraints: List[str] = field(default_factory=list)
-    quality_targets: Dict[CodeQualityMetric, float] = field(default_factory=dict)
+    context_files: list[str] = field(default_factory=list)
+    requirements: list[str] = field(default_factory=list)
+    constraints: list[str] = field(default_factory=list)
+    quality_targets: dict[CodeQualityMetric, float] = field(default_factory=dict)
     language: str = "python"
     framework: Optional[str] = None
 
@@ -94,9 +94,9 @@ class CodeArtifact:
     file_path: str
     artifact_type: str  # code, test, documentation
     metadata: CodeMetadata
-    quality_scores: Dict[CodeQualityMetric, float]
-    dependencies: List[str]
-    tests: List[str]
+    quality_scores: dict[CodeQualityMetric, float]
+    dependencies: list[str]
+    tests: list[str]
     documentation: str
 
 
@@ -121,7 +121,7 @@ class CodeSemanticEngine:
         self.hints_generator = AIHintsGenerator()
         self.pattern_library = self._load_pattern_library()
 
-    def _load_pattern_library(self) -> Dict[CodePattern, Dict[str, Any]]:
+    def _load_pattern_library(self) -> dict[CodePattern, dict[str, Any]]:
         """Load design pattern library with implementations"""
         return {
             CodePattern.SINGLETON: {
@@ -198,7 +198,7 @@ class CodeSemanticEngine:
 
         return metadata[0] if metadata else None
 
-    def identify_patterns(self, code: str) -> List[PatternMatch]:
+    def identify_patterns(self, code: str) -> list[PatternMatch]:
         """Identify design patterns in code"""
         matches = []
 
@@ -259,8 +259,8 @@ class CodeSemanticEngine:
         return False
 
     def suggest_improvements(
-        self, metadata: CodeMetadata, patterns: List[PatternMatch]
-    ) -> List[str]:
+        self, metadata: CodeMetadata, patterns: list[PatternMatch]
+    ) -> list[str]:
         """Suggest code improvements based on analysis"""
         suggestions = []
 
@@ -292,7 +292,7 @@ class CodeQualityAssurance:
         self.orchestrator = orchestrator
         self.quality_rules = self._load_quality_rules()
 
-    def _load_quality_rules(self) -> Dict[CodeQualityMetric, List[Any]]:
+    def _load_quality_rules(self) -> dict[CodeQualityMetric, list[Any]]:
         """Load quality rules and checks"""
         return {
             CodeQualityMetric.READABILITY: [
@@ -319,7 +319,7 @@ class CodeQualityAssurance:
 
     async def assess_quality(
         self, code: str, language: str = "python"
-    ) -> Dict[CodeQualityMetric, float]:
+    ) -> dict[CodeQualityMetric, float]:
         """Assess code quality across multiple dimensions"""
         scores = {}
 
@@ -353,9 +353,8 @@ class CodeQualityAssurance:
         try:
             tree = ast.parse(code)
             for node in ast.walk(tree):
-                if isinstance(node, ast.FunctionDef):
-                    if not node.name.islower():
-                        score -= 0.05
+                if isinstance(node, ast.FunctionDef) and not node.name.islower():
+                    score -= 0.05
         except:
             pass
 
@@ -466,7 +465,7 @@ class CodeQualityAssurance:
 
         return score
 
-    def generate_quality_report(self, scores: Dict[CodeQualityMetric, float]) -> Dict[str, Any]:
+    def generate_quality_report(self, scores: dict[CodeQualityMetric, float]) -> dict[str, Any]:
         """Generate quality assessment report"""
         overall_score = sum(scores.values()) / len(scores) if scores else 0
 
@@ -557,14 +556,14 @@ class ArtemisSemanticOrchestrator(BaseOrchestrator):
         self.pattern_library = self.semantic_engine.pattern_library
 
         # Cache for generated code
-        self.code_cache: Dict[str, CodeArtifact] = {}
+        self.code_cache: dict[str, CodeArtifact] = {}
 
         logger.info("Initialized Artemis Semantic Orchestrator")
 
     async def generate_code(
         self,
         request: CodeRequest,
-        context: Optional[Dict[str, Any]] = None,
+        context: Optional[dict[str, Any]] = None,
     ) -> CodeArtifact:
         """
         Generate or modify code based on request
@@ -585,7 +584,7 @@ class ArtemisSemanticOrchestrator(BaseOrchestrator):
             ),
             constraints=request.constraints,
         )
-        adapted_persona = self.active_persona.adapt_to_context(persona_context)
+        self.active_persona.adapt_to_context(persona_context)
 
         # Analyze context files if provided
         context_metadata = []
@@ -655,7 +654,7 @@ class ArtemisSemanticOrchestrator(BaseOrchestrator):
         return "general"
 
     async def _generate_new_code(
-        self, request: CodeRequest, context: List[CodeMetadata]
+        self, request: CodeRequest, context: list[CodeMetadata]
     ) -> CodeArtifact:
         """Generate new code from scratch"""
 
@@ -698,44 +697,44 @@ class ArtemisSemanticOrchestrator(BaseOrchestrator):
         )
 
     async def _refactor_code(
-        self, request: CodeRequest, context: List[CodeMetadata]
+        self, request: CodeRequest, context: list[CodeMetadata]
     ) -> CodeArtifact:
         """Refactor existing code"""
         # Implementation would refactor based on patterns and best practices
         return await self._generate_new_code(request, context)  # Placeholder
 
-    async def _extend_code(self, request: CodeRequest, context: List[CodeMetadata]) -> CodeArtifact:
+    async def _extend_code(self, request: CodeRequest, context: list[CodeMetadata]) -> CodeArtifact:
         """Extend existing functionality"""
         # Implementation would extend based on existing patterns
         return await self._generate_new_code(request, context)  # Placeholder
 
-    async def _fix_code(self, request: CodeRequest, context: List[CodeMetadata]) -> CodeArtifact:
+    async def _fix_code(self, request: CodeRequest, context: list[CodeMetadata]) -> CodeArtifact:
         """Fix bugs in code"""
         # Implementation would analyze and fix bugs
         return await self._generate_new_code(request, context)  # Placeholder
 
     async def _optimize_code(
-        self, request: CodeRequest, context: List[CodeMetadata]
+        self, request: CodeRequest, context: list[CodeMetadata]
     ) -> CodeArtifact:
         """Optimize code performance"""
         # Implementation would optimize based on profiling
         return await self._generate_new_code(request, context)  # Placeholder
 
     async def _generate_tests(
-        self, request: CodeRequest, context: List[CodeMetadata]
+        self, request: CodeRequest, context: list[CodeMetadata]
     ) -> CodeArtifact:
         """Generate test suite"""
         # Implementation would generate comprehensive tests
         return await self._generate_new_code(request, context)  # Placeholder
 
     async def _generate_documentation(
-        self, request: CodeRequest, context: List[CodeMetadata]
+        self, request: CodeRequest, context: list[CodeMetadata]
     ) -> CodeArtifact:
         """Generate documentation"""
         # Implementation would generate docs
         return await self._generate_new_code(request, context)  # Placeholder
 
-    def _identify_relevant_patterns(self, description: str) -> List[CodePattern]:
+    def _identify_relevant_patterns(self, description: str) -> list[CodePattern]:
         """Identify relevant design patterns for the task"""
         patterns = []
 
@@ -756,8 +755,8 @@ class ArtemisSemanticOrchestrator(BaseOrchestrator):
         return patterns
 
     def _design_code_structure(
-        self, request: CodeRequest, patterns: List[CodePattern]
-    ) -> Dict[str, Any]:
+        self, request: CodeRequest, patterns: list[CodePattern]
+    ) -> dict[str, Any]:
         """Design the code structure"""
         structure = {
             "imports": [],
@@ -786,9 +785,9 @@ class ArtemisSemanticOrchestrator(BaseOrchestrator):
 
     async def _generate_implementation(
         self,
-        structure: Dict[str, Any],
+        structure: dict[str, Any],
         request: CodeRequest,
-        context: List[CodeMetadata],
+        context: list[CodeMetadata],
     ) -> str:
         """Generate actual implementation"""
 
@@ -824,7 +823,7 @@ if __name__ == "__main__":
 
         return "\n".join(code_parts)
 
-    async def _generate_test_suite(self, code: str, request: CodeRequest) -> List[str]:
+    async def _generate_test_suite(self, code: str, request: CodeRequest) -> list[str]:
         """Generate test suite for code"""
         tests = []
 
@@ -861,7 +860,7 @@ if __name__ == "__main__":
 Generated documentation for functions and classes
 """
 
-    def _extract_dependencies(self, code: str) -> List[str]:
+    def _extract_dependencies(self, code: str) -> list[str]:
         """Extract dependencies from code"""
         dependencies = []
 
@@ -872,9 +871,8 @@ Generated documentation for functions and classes
                 if isinstance(node, ast.Import):
                     for alias in node.names:
                         dependencies.append(alias.name)
-                elif isinstance(node, ast.ImportFrom):
-                    if node.module:
-                        dependencies.append(node.module)
+                elif isinstance(node, ast.ImportFrom) and node.module:
+                    dependencies.append(node.module)
         except:
             pass
 
@@ -883,7 +881,7 @@ Generated documentation for functions and classes
     async def _improve_quality(
         self,
         artifact: CodeArtifact,
-        quality_report: Dict[str, Any],
+        quality_report: dict[str, Any],
         request: CodeRequest,
     ) -> CodeArtifact:
         """Improve code quality based on report"""

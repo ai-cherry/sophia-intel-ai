@@ -3,18 +3,14 @@ Redis Health Monitoring API Endpoints
 Provides health status, metrics, and monitoring for Redis infrastructure.
 """
 
-import asyncio
-from datetime import datetime, timedelta
-from typing import Any, Dict, Optional
+from datetime import datetime
+from typing import Any, Optional
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Query
 
 from app.core.redis_config import RedisNamespaces
 from app.core.redis_health_monitor import (
     HealthStatus,
-    RedisHealthMonitor,
-    check_redis_health,
     redis_health_monitor,
 )
 from app.core.redis_manager import redis_manager
@@ -23,7 +19,7 @@ router = APIRouter(prefix="/redis", tags=["Redis Health"])
 
 
 @router.get("/health", summary="Get Redis Health Status")
-async def get_redis_health() -> Dict[str, Any]:
+async def get_redis_health() -> dict[str, Any]:
     """
     Get comprehensive Redis health status including:
     - Overall system health
@@ -41,7 +37,7 @@ async def get_redis_health() -> Dict[str, Any]:
 
 
 @router.get("/health/summary", summary="Get Redis Health Summary")
-async def get_redis_health_summary() -> Dict[str, Any]:
+async def get_redis_health_summary() -> dict[str, Any]:
     """
     Get concise Redis health summary with key metrics and critical alerts.
     """
@@ -53,7 +49,7 @@ async def get_redis_health_summary() -> Dict[str, Any]:
 
 
 @router.get("/metrics", summary="Get Redis Metrics")
-async def get_redis_metrics() -> Dict[str, Any]:
+async def get_redis_metrics() -> dict[str, Any]:
     """
     Get detailed Redis metrics including memory, performance, and connection pool stats.
     """
@@ -79,7 +75,7 @@ async def get_redis_metrics() -> Dict[str, Any]:
 
 
 @router.get("/streams", summary="Get Redis Streams Status")
-async def get_streams_status() -> Dict[str, Any]:
+async def get_streams_status() -> dict[str, Any]:
     """
     Get status of Redis streams including length, capacity, and health.
     """
@@ -102,7 +98,7 @@ async def get_streams_status() -> Dict[str, Any]:
 async def get_redis_alerts(
     level: Optional[str] = Query(None, description="Filter by alert level"),
     limit: int = Query(10, ge=1, le=100, description="Maximum number of alerts"),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Get recent Redis health alerts with optional filtering.
     """
@@ -145,7 +141,7 @@ async def get_redis_alerts(
 
 
 @router.get("/pay-ready", summary="Get Pay Ready Redis Status")
-async def get_pay_ready_status() -> Dict[str, Any]:
+async def get_pay_ready_status() -> dict[str, Any]:
     """
     Get Pay Ready business cycle specific Redis monitoring status.
     """
@@ -162,7 +158,7 @@ async def get_pay_ready_status() -> Dict[str, Any]:
 async def start_monitoring(
     background_tasks: BackgroundTasks,
     interval: float = Query(30.0, ge=10.0, le=300.0, description="Monitoring interval in seconds"),
-) -> Dict[str, str]:
+) -> dict[str, str]:
     """
     Start continuous Redis health monitoring with specified interval.
     """
@@ -182,7 +178,7 @@ async def start_monitoring(
 
 
 @router.post("/monitoring/stop", summary="Stop Redis Health Monitoring")
-async def stop_monitoring() -> Dict[str, str]:
+async def stop_monitoring() -> dict[str, str]:
     """
     Stop continuous Redis health monitoring.
     """
@@ -194,7 +190,7 @@ async def stop_monitoring() -> Dict[str, str]:
 
 
 @router.get("/monitoring/status", summary="Get Monitoring Status")
-async def get_monitoring_status() -> Dict[str, Any]:
+async def get_monitoring_status() -> dict[str, Any]:
     """
     Get current status of Redis health monitoring.
     """
@@ -210,7 +206,7 @@ async def get_monitoring_status() -> Dict[str, Any]:
 async def cleanup_expired_keys(
     pattern: str = Query("*", description="Key pattern to cleanup"),
     scan_count: int = Query(100, ge=10, le=1000, description="Scan batch size"),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Cleanup expired Redis keys matching pattern.
     """
@@ -228,7 +224,7 @@ async def cleanup_expired_keys(
 
 
 @router.get("/memory/usage", summary="Get Detailed Memory Usage")
-async def get_memory_usage() -> Dict[str, Any]:
+async def get_memory_usage() -> dict[str, Any]:
     """
     Get detailed Redis memory usage by namespace and pattern.
     """
@@ -274,7 +270,7 @@ async def get_memory_usage() -> Dict[str, Any]:
 
 
 @router.post("/test/connection", summary="Test Redis Connection")
-async def test_redis_connection() -> Dict[str, Any]:
+async def test_redis_connection() -> dict[str, Any]:
     """
     Test Redis connection and basic operations.
     """
@@ -289,7 +285,7 @@ async def test_redis_connection() -> Dict[str, Any]:
             # Test SET/GET
             test_key = f"test:{int(start_time.timestamp())}"
             await redis.set(test_key, "test_value", ex=60)
-            value = await redis.get(test_key)
+            await redis.get(test_key)
             await redis.delete(test_key)
 
             # Test stream operation

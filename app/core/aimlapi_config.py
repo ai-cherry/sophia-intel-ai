@@ -7,7 +7,7 @@ import logging
 import os
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from openai import OpenAI
 
@@ -59,7 +59,7 @@ class AIMLModelConfig:
 
     model_id: str
     family: AIMLModelFamily
-    capabilities: List[str]
+    capabilities: list[str]
     context_window: int
     max_tokens: int
     supports_vision: bool = False
@@ -91,7 +91,7 @@ class AIMLAPIManager:
             self._initialized = True
             logger.info(f"AIMLAPI Manager initialized with {len(self.models)} models")
 
-    def _initialize_models(self) -> Dict[str, AIMLModelConfig]:
+    def _initialize_models(self) -> dict[str, AIMLModelConfig]:
         """Initialize available AIMLAPI models - Updated with latest prioritized models"""
         return {
             # GPT-5 Series (Latest)
@@ -417,7 +417,7 @@ class AIMLAPIManager:
         """Get configuration for a specific model"""
         return self.models.get(model_name)
 
-    def list_models(self, family: Optional[AIMLModelFamily] = None) -> List[str]:
+    def list_models(self, family: Optional[AIMLModelFamily] = None) -> list[str]:
         """List available models, optionally filtered by family"""
         if family:
             return [name for name, config in self.models.items() if config.family == family]
@@ -473,11 +473,11 @@ class AIMLAPIManager:
     def chat_completion(
         self,
         model: str,
-        messages: List[Dict[str, str]],
+        messages: list[dict[str, str]],
         temperature: float = 0.7,
         max_tokens: Optional[int] = None,
         stream: bool = False,
-        tools: Optional[List[Dict]] = None,
+        tools: Optional[list[dict]] = None,
         **kwargs,
     ) -> Any:
         """Create a chat completion using AIMLAPI"""
@@ -517,7 +517,7 @@ class AIMLAPIManager:
             logger.error(f"AIMLAPI request failed: {str(e)}")
             raise
 
-    def test_connection(self) -> Dict[str, Any]:
+    def test_connection(self) -> dict[str, Any]:
         """Test connection to AIMLAPI service"""
         results = {}
 

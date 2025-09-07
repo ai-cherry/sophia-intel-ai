@@ -253,22 +253,24 @@ class NetSuiteConnector(BaseConnector):
         if headers:
             request_headers.update(headers)
 
-        async with aiohttp.ClientSession() as session:
-            async with session.request(
+        async with (
+            aiohttp.ClientSession() as session,
+            session.request(
                 method=method,
                 url=url,
                 params=params,
                 json=json_data,
                 headers=request_headers,
                 timeout=aiohttp.ClientTimeout(total=self.config.timeout_seconds),
-            ) as response:
+            ) as response,
+        ):
 
-                if response.status == 200:
-                    return await response.json()
-                else:
-                    error_text = await response.text()
-                    logger.error(f"NetSuite API error {response.status}: {error_text}")
-                    raise Exception(f"NetSuite API error: {response.status} - {error_text}")
+            if response.status == 200:
+                return await response.json()
+            else:
+                error_text = await response.text()
+                logger.error(f"NetSuite API error {response.status}: {error_text}")
+                raise Exception(f"NetSuite API error: {response.status} - {error_text}")
 
     def _generate_tba_headers(self, method: str, url: str) -> dict[str, str]:
         """Generate Token-Based Authentication headers"""

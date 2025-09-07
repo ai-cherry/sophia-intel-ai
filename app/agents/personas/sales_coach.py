@@ -11,7 +11,7 @@ tough love with genuine care for team development.
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from .base_persona import BasePersonaAgent, ConversationStyle, PersonalityTrait, PersonaProfile
 
@@ -786,7 +786,7 @@ class SalesCoachAgent(BasePersonaAgent):
 
         return response.strip()
 
-    async def coach_deal(self, deal_analysis) -> Dict[str, Any]:
+    async def coach_deal(self, deal_analysis) -> dict[str, Any]:
         """Provide coaching for a specific deal"""
         coaching_points = []
         recommended_actions = []
@@ -829,7 +829,7 @@ class SalesCoachAgent(BasePersonaAgent):
             ),
         }
 
-    async def review_performance(self, review_data) -> Dict[str, Any]:
+    async def review_performance(self, review_data) -> dict[str, Any]:
         """Review sales performance and provide insights"""
         insights = []
         recommendations = []
@@ -874,8 +874,8 @@ class SalesCoachAgent(BasePersonaAgent):
         }
 
     async def create_skill_development_plan(
-        self, rep_id: str, skills: List[str], goals: List[str]
-    ) -> Dict[str, Any]:
+        self, rep_id: str, skills: list[str], goals: list[str]
+    ) -> dict[str, Any]:
         """Create personalized skill development plan"""
         plan_items = []
         timeline = []

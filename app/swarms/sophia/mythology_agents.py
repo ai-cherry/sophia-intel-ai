@@ -5,7 +5,6 @@ Specialized AI agents based on Greek/Roman mythological archetypes for business 
 
 import logging
 from dataclasses import dataclass
-from typing import Dict, List
 
 from app.memory.unified_memory_router import MemoryDomain
 from app.swarms.core.micro_swarm_base import (
@@ -24,12 +23,12 @@ class MythologyAgentConfig:
     """Configuration for mythology-based agents"""
 
     deity_name: str
-    domain_expertise: List[str]
-    personality_traits: List[str]
+    domain_expertise: list[str]
+    personality_traits: list[str]
     communication_style: str
     decision_making_approach: str
-    preferred_models: List[str]
-    specialized_prompts: Dict[str, str]
+    preferred_models: list[str]
+    specialized_prompts: dict[str, str]
 
 
 class HermesAgent:
@@ -60,7 +59,7 @@ class HermesAgent:
         )
 
     @staticmethod
-    def get_specialized_prompts() -> Dict[str, str]:
+    def get_specialized_prompts() -> dict[str, str]:
         return {
             "market_analysis": """
 As Hermes, divine messenger and master of commerce, I bring swift intelligence from the market realm.
@@ -135,7 +134,7 @@ class AsclepiusAgent:
         )
 
     @staticmethod
-    def get_specialized_prompts() -> Dict[str, str]:
+    def get_specialized_prompts() -> dict[str, str]:
         return {
             "business_diagnostics": """
 As Asclepius, divine healer and master of restoration, I diagnose the ailments that afflict organizations.
@@ -211,7 +210,7 @@ class AthenaAgent:
         )
 
     @staticmethod
-    def get_specialized_prompts() -> Dict[str, str]:
+    def get_specialized_prompts() -> dict[str, str]:
         return {
             "strategic_planning": """
 As Athena, goddess of wisdom and strategic warfare, I craft strategies that ensure victory.
@@ -287,7 +286,7 @@ class OdinAgent:
         )
 
     @staticmethod
-    def get_specialized_prompts() -> Dict[str, str]:
+    def get_specialized_prompts() -> dict[str, str]:
         return {
             "strategic_vision": """
 As Odin, All-Father who sees across all nine realms, I provide vision that transcends mortal limitations.
@@ -363,7 +362,7 @@ class MinervaAgent:
         )
 
     @staticmethod
-    def get_specialized_prompts() -> Dict[str, str]:
+    def get_specialized_prompts() -> dict[str, str]:
         return {
             "strategic_validation": """
 As Minerva, goddess of wisdom and systematic thought, I validate strategies with intellectual rigor.
@@ -503,7 +502,7 @@ class SophiaMythologySwarmFactory:
 
     @staticmethod
     def create_custom_swarm(
-        agents: List[str], pattern: CoordinationPattern = CoordinationPattern.SEQUENTIAL
+        agents: list[str], pattern: CoordinationPattern = CoordinationPattern.SEQUENTIAL
     ) -> MicroSwarmCoordinator:
         """Create custom swarm with specified agents"""
 

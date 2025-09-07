@@ -30,7 +30,7 @@ from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Set
+from typing import Any, Callable, Optional
 from uuid import uuid4
 
 import yaml
@@ -93,14 +93,14 @@ class ComponentMetadata:
     name: str
     description: Optional[str] = None
     version: str = "1.0.0"
-    dependencies: Set[str] = field(default_factory=set)
-    provides: Set[str] = field(default_factory=set)  # Capabilities provided
-    requires: Set[str] = field(default_factory=set)  # Capabilities required
+    dependencies: set[str] = field(default_factory=set)
+    provides: set[str] = field(default_factory=set)  # Capabilities provided
+    requires: set[str] = field(default_factory=set)  # Capabilities required
     priority: int = 5  # Initialization priority (1 = highest)
-    config_schema: Optional[Dict[str, Any]] = None
+    config_schema: Optional[dict[str, Any]] = None
     health_check_interval: int = 60  # seconds
     auto_restart: bool = True
-    meta_tags: List[MetaTag] = field(default_factory=list)
+    meta_tags: list[MetaTag] = field(default_factory=list)
 
 
 @dataclass
@@ -110,14 +110,14 @@ class ComponentInstance:
     metadata: ComponentMetadata
     instance: Any
     status: ComponentStatus = ComponentStatus.REGISTERED
-    config: Dict[str, Any] = field(default_factory=dict)
+    config: dict[str, Any] = field(default_factory=dict)
     initialization_time: Optional[datetime] = None
     last_health_check: Optional[datetime] = None
-    health_data: Dict[str, Any] = field(default_factory=dict)
+    health_data: dict[str, Any] = field(default_factory=dict)
     error_count: int = 0
     last_error: Optional[str] = None
     restart_count: int = 0
-    metrics: Dict[str, Any] = field(default_factory=dict)
+    metrics: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -128,7 +128,7 @@ class IntegrationEvent:
     event_type: str
     source_component: str
     target_component: Optional[str] = None
-    payload: Dict[str, Any] = field(default_factory=dict)
+    payload: dict[str, Any] = field(default_factory=dict)
     timestamp: datetime = field(default_factory=datetime.utcnow)
     processed: bool = False
 
@@ -145,9 +145,9 @@ class SystemHealthReport:
     system_uptime: timedelta
     last_initialization: datetime
     integration_events_processed: int
-    performance_metrics: Dict[str, Any] = field(default_factory=dict)
-    component_details: Dict[str, Dict[str, Any]] = field(default_factory=dict)
-    recommendations: List[str] = field(default_factory=list)
+    performance_metrics: dict[str, Any] = field(default_factory=dict)
+    component_details: dict[str, dict[str, Any]] = field(default_factory=dict)
+    recommendations: list[str] = field(default_factory=list)
 
 
 class ConfigurationManager:
@@ -155,10 +155,10 @@ class ConfigurationManager:
 
     def __init__(self, config_path: Optional[Path] = None):
         self.config_path = config_path or Path("config/scaffolding_config.yaml")
-        self.config: Dict[str, Any] = {}
-        self.config_schemas: Dict[str, Dict[str, Any]] = {}
+        self.config: dict[str, Any] = {}
+        self.config_schemas: dict[str, dict[str, Any]] = {}
 
-    async def load_config(self) -> Dict[str, Any]:
+    async def load_config(self) -> dict[str, Any]:
         """Load configuration from file"""
         if self.config_path.exists():
             try:
@@ -195,17 +195,17 @@ class ConfigurationManager:
         except Exception as e:
             logger.error(f"Error saving config: {e}")
 
-    def get_component_config(self, component_id: str) -> Dict[str, Any]:
+    def get_component_config(self, component_id: str) -> dict[str, Any]:
         """Get configuration for specific component"""
         return self.config.get("components", {}).get(component_id, {})
 
-    def set_component_config(self, component_id: str, config: Dict[str, Any]):
+    def set_component_config(self, component_id: str, config: dict[str, Any]):
         """Set configuration for component"""
         if "components" not in self.config:
             self.config["components"] = {}
         self.config["components"][component_id] = config
 
-    def validate_config(self, component_id: str, config: Dict[str, Any]) -> bool:
+    def validate_config(self, component_id: str, config: dict[str, Any]) -> bool:
         """Validate configuration against schema"""
         schema = self.config_schemas.get(component_id)
         if not schema:
@@ -220,11 +220,11 @@ class ConfigurationManager:
 
         return True
 
-    def register_config_schema(self, component_id: str, schema: Dict[str, Any]):
+    def register_config_schema(self, component_id: str, schema: dict[str, Any]):
         """Register configuration schema for component"""
         self.config_schemas[component_id] = schema
 
-    def _get_default_config(self) -> Dict[str, Any]:
+    def _get_default_config(self) -> dict[str, Any]:
         """Get default configuration"""
         return {
             "system": {
@@ -276,8 +276,8 @@ class EventBus:
     """Event bus for component coordination"""
 
     def __init__(self):
-        self.subscribers: Dict[str, List[Callable]] = defaultdict(list)
-        self.event_history: List[IntegrationEvent] = []
+        self.subscribers: dict[str, list[Callable]] = defaultdict(list)
+        self.event_history: list[IntegrationEvent] = []
         self.max_history = 1000
 
     def subscribe(self, event_type: str, callback: Callable[[IntegrationEvent], Awaitable[None]]):
@@ -302,7 +302,7 @@ class EventBus:
 
     def get_event_history(
         self, event_type: Optional[str] = None, limit: int = 100
-    ) -> List[IntegrationEvent]:
+    ) -> list[IntegrationEvent]:
         """Get recent event history"""
         events = self.event_history
         if event_type:
@@ -318,8 +318,8 @@ class IntegrationHub:
         self.event_bus = EventBus()
 
         # Component registry
-        self.components: Dict[str, ComponentInstance] = {}
-        self.component_registry: Dict[ComponentType, List[str]] = defaultdict(list)
+        self.components: dict[str, ComponentInstance] = {}
+        self.component_registry: dict[ComponentType, list[str]] = defaultdict(list)
 
         # System state
         self.initialization_phase = InitializationPhase.PRE_INIT
@@ -462,7 +462,7 @@ class IntegrationHub:
         component = self.components.get(component_id)
         return component.instance if component else None
 
-    async def get_components_by_type(self, component_type: ComponentType) -> List[Any]:
+    async def get_components_by_type(self, component_type: ComponentType) -> list[Any]:
         """Get all components of specific type"""
         component_ids = self.component_registry.get(component_type, [])
         return [
@@ -515,7 +515,7 @@ class IntegrationHub:
 
             return False
 
-    async def health_check_component(self, component_id: str) -> Dict[str, Any]:
+    async def health_check_component(self, component_id: str) -> dict[str, Any]:
         """Perform health check on specific component"""
         if component_id not in self.components:
             return {"status": "unknown", "error": "Component not registered"}
@@ -893,7 +893,7 @@ class IntegrationHub:
 
         logger.info("Post-initialization complete")
 
-    def _get_initialization_order(self) -> List[str]:
+    def _get_initialization_order(self) -> list[str]:
         """Get component initialization order based on dependencies and priority"""
         # Sort by priority for now - could implement proper dependency resolution
         components = list(self.components.values())

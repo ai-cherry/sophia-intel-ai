@@ -5,10 +5,9 @@ Manual-only mode: no automatic fallbacks or model selection.
 
 from __future__ import annotations
 
-import json
 import os
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import httpx
 
@@ -16,7 +15,7 @@ import httpx
 @dataclass
 class LLMResponse:
     text: str
-    usage: Dict[str, int]
+    usage: dict[str, int]
     model: str
     provider: str
     raw: Any = None
@@ -59,10 +58,10 @@ class MultiTransportLLM:
         self,
         provider: str,
         model: str,
-        messages: List[Dict[str, str]],
+        messages: list[dict[str, str]],
         max_tokens: int = 256,
         temperature: float = 0.0,
-        transport: Optional[str] = None,
+        transport: str | None = None,
     ) -> LLMResponse:
         """
         Execute completion with explicit provider/model.
@@ -101,7 +100,7 @@ class MultiTransportLLM:
         self,
         provider: str,
         model: str,
-        messages: List[Dict[str, str]],
+        messages: list[dict[str, str]],
         max_tokens: int,
         temperature: float,
     ) -> LLMResponse:
@@ -144,7 +143,7 @@ class MultiTransportLLM:
         self,
         provider: str,
         model: str,
-        messages: List[Dict[str, str]],
+        messages: list[dict[str, str]],
         max_tokens: int,
         temperature: float,
     ) -> LLMResponse:
@@ -172,7 +171,7 @@ class MultiTransportLLM:
             raise ValueError(f"Unknown provider for direct transport: {provider}")
 
     async def _complete_openai(
-        self, model: str, messages: List[Dict[str, str]], max_tokens: int, temperature: float
+        self, model: str, messages: list[dict[str, str]], max_tokens: int, temperature: float
     ) -> LLMResponse:
         """OpenAI direct completion."""
         if not self.keys.get("openai"):
@@ -202,7 +201,7 @@ class MultiTransportLLM:
             )
 
     async def _complete_anthropic(
-        self, model: str, messages: List[Dict[str, str]], max_tokens: int, temperature: float
+        self, model: str, messages: list[dict[str, str]], max_tokens: int, temperature: float
     ) -> LLMResponse:
         """Anthropic direct completion."""
         if not self.keys.get("anthropic"):
@@ -259,7 +258,7 @@ class MultiTransportLLM:
             )
 
     async def _complete_openrouter(
-        self, model: str, messages: List[Dict[str, str]], max_tokens: int, temperature: float
+        self, model: str, messages: list[dict[str, str]], max_tokens: int, temperature: float
     ) -> LLMResponse:
         """OpenRouter completion."""
         if not self.keys.get("openrouter"):
@@ -292,7 +291,7 @@ class MultiTransportLLM:
             )
 
     async def _complete_together(
-        self, model: str, messages: List[Dict[str, str]], max_tokens: int, temperature: float
+        self, model: str, messages: list[dict[str, str]], max_tokens: int, temperature: float
     ) -> LLMResponse:
         """Together AI completion."""
         if not self.keys.get("together"):
@@ -322,7 +321,7 @@ class MultiTransportLLM:
             )
 
     async def _complete_groq(
-        self, model: str, messages: List[Dict[str, str]], max_tokens: int, temperature: float
+        self, model: str, messages: list[dict[str, str]], max_tokens: int, temperature: float
     ) -> LLMResponse:
         """Groq completion."""
         if not self.keys.get("groq"):
@@ -352,7 +351,7 @@ class MultiTransportLLM:
             )
 
     async def _complete_xai(
-        self, model: str, messages: List[Dict[str, str]], max_tokens: int, temperature: float
+        self, model: str, messages: list[dict[str, str]], max_tokens: int, temperature: float
     ) -> LLMResponse:
         """X.AI (Grok) completion."""
         if not self.keys.get("xai"):
@@ -382,7 +381,7 @@ class MultiTransportLLM:
             )
 
     async def _complete_deepseek(
-        self, model: str, messages: List[Dict[str, str]], max_tokens: int, temperature: float
+        self, model: str, messages: list[dict[str, str]], max_tokens: int, temperature: float
     ) -> LLMResponse:
         """DeepSeek completion."""
         if not self.keys.get("deepseek"):
@@ -412,7 +411,7 @@ class MultiTransportLLM:
             )
 
     async def _complete_perplexity(
-        self, model: str, messages: List[Dict[str, str]], max_tokens: int, temperature: float
+        self, model: str, messages: list[dict[str, str]], max_tokens: int, temperature: float
     ) -> LLMResponse:
         """Perplexity completion."""
         if not self.keys.get("perplexity"):
@@ -442,7 +441,7 @@ class MultiTransportLLM:
             )
 
     async def _complete_aimlapi(
-        self, model: str, messages: List[Dict[str, str]], max_tokens: int, temperature: float
+        self, model: str, messages: list[dict[str, str]], max_tokens: int, temperature: float
     ) -> LLMResponse:
         """AIMLAPI completion (OpenRouter-like)."""
         if not self.keys.get("aimlapi"):

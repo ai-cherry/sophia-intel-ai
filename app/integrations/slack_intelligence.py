@@ -26,6 +26,12 @@ from app.integrations.looker_client import get_looker_client
 
 logger = logging.getLogger(__name__)
 
+# Provide a safe default for INTEGRATIONS if not imported from a central config
+try:
+    INTEGRATIONS  # type: ignore[name-defined]
+except NameError:
+    INTEGRATIONS = {}
+
 
 @dataclass
 class SlackAlert:

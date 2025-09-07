@@ -4,10 +4,12 @@ import asyncio
 import json
 import os
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import TYPE_CHECKING, Any, Dict, List
 
 from app.mcp.clients.stdio_client import StdioMCPClient
-from app.memory.unified_memory_router import DocChunk, MemoryDomain, get_memory_router
+
+if TYPE_CHECKING:
+    from app.memory.unified_memory_router import DocChunk
 
 CACHE_PATH = Path("tmp/scout_index_cache.json")
 
@@ -43,6 +45,9 @@ async def delta_index(
         return {"ok": True, "skipped": True, "reason": "SCOUT_DELTA_INDEX_ENABLED=false"}
 
     client = StdioMCPClient(Path.cwd())
+    # Lazy import to avoid heavy deps at module import time
+    from app.memory.unified_memory_router import DocChunk, MemoryDomain, get_memory_router
+
     router = get_memory_router()
 
     listing = await asyncio.to_thread(

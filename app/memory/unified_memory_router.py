@@ -314,14 +314,36 @@ class UnifiedMemoryRouter:
                 logger.warning("L2 upsert fallback: Weaviate unavailable; skipping upsert")
                 return report
 
+            # Ensure schema (DocChunk class) exists when using local/unauth Weaviate
+            try:
+                self._ensure_weaviate_schema(weaviate_client)
+            except Exception as e:
+                logger.warning(f"Schema bootstrap skipped/failed: {e}")
+
             # Prepare batch
             batch = []
+            from datetime import timezone
+
             for chunk in embedded_chunks:
+                # Ensure RFC3339 timestamp with 'Z' (UTC) suffix for Weaviate
+                try:
+                    dt = chunk.timestamp
+                    if getattr(dt, "tzinfo", None) is None:
+                        dt = dt.replace(tzinfo=timezone.utc)
+                    else:
+                        dt = dt.astimezone(timezone.utc)
+                    ts = dt.isoformat().replace("+00:00", "Z")
+                except Exception:
+                    # Fallback to current UTC time if anything goes wrong
+                    from datetime import datetime
+                    from datetime import timezone as _tz
+
+                    ts = datetime.now(_tz.utc).isoformat().replace("+00:00", "Z")
                 data_object = {
                     "content": chunk.content,
                     "source_uri": chunk.source_uri,
                     "domain": domain.value,
-                    "timestamp": chunk.timestamp.isoformat(),
+                    "timestamp": ts,
                     "confidence": chunk.confidence,
                     "metadata": json.dumps(chunk.metadata),
                 }
@@ -357,6 +379,48 @@ class UnifiedMemoryRouter:
             logger.error(f"Upsert failed: {e}")
 
         return report
+
+    def _ensure_weaviate_schema(self, client) -> None:
+        """Best-effort schema bootstrap for local Weaviate.
+
+        - If class DocChunk missing and WEAVIATE_AUTO_BOOTSTRAP is not disabled,
+          create class with vectorizer='none'.
+        - No-op for remote/authenticated clouds to avoid surprises.
+        """
+        import os
+
+        try:
+            # Detect local URL and no API key
+            url = os.getenv("WEAVIATE_URL", "http://localhost:8081")
+            is_local = url.startswith("http://localhost") or url.startswith("http://127.0.0.1")
+            if os.getenv("WEAVIATE_AUTO_BOOTSTRAP", "true").lower() not in {"1", "true", "yes"}:
+                return
+            # If cloud (https) and API key present, skip auto-bootstrap
+            if url.startswith("https://") and os.getenv("WEAVIATE_API_KEY"):
+                return
+            # Read schema
+            schema = client.schema.get()
+            classes = [c.get("class") for c in schema.get("classes", [])]
+            if any(c == "DocChunk" for c in classes):
+                return
+            # Create DocChunk class
+            body = {
+                "class": "DocChunk",
+                "vectorizer": "none",
+                "properties": [
+                    {"name": "content", "dataType": ["text"]},
+                    {"name": "source_uri", "dataType": ["text"]},
+                    {"name": "domain", "dataType": ["text"]},
+                    {"name": "timestamp", "dataType": ["date"]},
+                    {"name": "confidence", "dataType": ["number"]},
+                    {"name": "metadata", "dataType": ["text"]},
+                ],
+            }
+            client.schema.create_class(body)
+            logger.info("Weaviate: auto-created DocChunk class")
+        except Exception as e:
+            # Don't block upserts; just log
+            logger.debug(f"Weaviate schema ensure skipped: {e}")
 
     async def search(
         self,

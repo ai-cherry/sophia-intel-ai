@@ -18,6 +18,12 @@ from app.integrations.slack_intelligence import (
 
 logger = logging.getLogger(__name__)
 
+# Provide a safe default for INTEGRATIONS if not imported from a central config
+try:
+    INTEGRATIONS  # type: ignore[name-defined]
+except NameError:
+    INTEGRATIONS = {}
+
 router = APIRouter(prefix="/api/slack", tags=["slack", "business-intelligence", "sophia-ai"])
 
 

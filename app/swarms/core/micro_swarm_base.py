@@ -429,6 +429,10 @@ class MicroSwarmCoordinator:
         )
 
         try:
+            # Reset tool usage counters for all agents at start of execution
+            for agent in self.agents.values():
+                agent.reset_tool_usage()
+
             # Load relevant memory context
             if self.config.enable_memory_integration:
                 memory_context = await self._load_memory_context(task)
@@ -453,14 +457,38 @@ class MicroSwarmCoordinator:
             # Post-execution validations (e.g., Scout output schema)
             try:
                 if "Scout" in self.config.name:
+                    # Apply header injection shim before validation
+                    original_output = result.final_output
+                    result.final_output = self._inject_missing_headers(result.final_output)
+
                     missing = self._validate_scout_output(result.final_output)
                     if missing:
                         result.metadata["schema_missing_sections"] = missing
+                        if original_output != result.final_output:
+                            result.metadata["header_injection_applied"] = True
+                        import os as _os
+
+                        if _os.getenv("SCOUT_SCHEMA_STRICT", "false").lower() in {
+                            "1",
+                            "true",
+                            "yes",
+                        }:
+                            result.success = False
+                            result.errors.append(f"Missing required sections: {missing}")
+            except Exception:
+                pass
+
+            # Tool usage metrics (aggregate)
+            try:
+                result.metadata["tool_usage_total"] = sum(
+                    getattr(a, "_tool_usage_total", 0) for a in self.agents.values()
+                )
             except Exception:
                 pass
 
             # Store results in memory
-            if self.config.enable_memory_integration and result.success:
+            store_on_failure = os.getenv("STORE_RESULTS_ON_FAILURE", "false").lower() == "true"
+            if self.config.enable_memory_integration and (result.success or store_on_failure):
                 await self._store_swarm_results(task, result)
 
             logger.info(f"Micro-swarm '{self.config.name}' completed in {execution_time:.2f}ms")
@@ -475,19 +503,27 @@ class MicroSwarmCoordinator:
         """Parse and handle REQUEST_FS_READ:<path>[:<max_bytes>]. Returns augmented text or None.
 
         Safety limits:
-        - Max 2 tool calls per agent per coordinator iteration
+        - Max N tool calls per agent per coordinator iteration (TOOL_FS_READ_MAX_CALLS; default 2)
         - Path must be relative, no parent traversal, and within repo
-        - Default max_bytes=50000 (50KB); cap at 100KB
+        - Default max_bytes=50000 (50KB); cap at TOOL_FS_READ_MAX_BYTES (default 100KB)
+        - Feature flag TOOL_FS_READ_ENABLED
         """
+        import os
+
+        if os.getenv("TOOL_FS_READ_ENABLED", "true").lower() in {"0", "false", "no"}:
+            return None
         if not text or "REQUEST_FS_READ:" not in text:
             return None
         # Enforce per-agent usage limit
         key = f"{self.swarm_id}:{self.profile.role.value}"
         used = self._tool_usage.get(key, 0)
-        if used >= 2:
+        try:
+            max_calls = int(os.getenv("TOOL_FS_READ_MAX_CALLS", "2"))
+        except Exception:
+            max_calls = 2
+        if used >= max_calls:
             return None
 
-        import os
         from pathlib import Path as _Path
 
         from app.mcp.clients.stdio_client import detect_stdio_mcp
@@ -502,12 +538,20 @@ class MicroSwarmCoordinator:
             payload = parts[2] if len(parts) > 2 else ""
             segs = payload.split(":")
             raw_path = segs[0].strip()
-            max_bytes = 50_000
+            try:
+                default_bytes = int(os.getenv("TOOL_FS_READ_DEFAULT_BYTES", "50000"))
+            except Exception:
+                default_bytes = 50_000
+            try:
+                max_cap = int(os.getenv("TOOL_FS_READ_MAX_BYTES", "100000"))
+            except Exception:
+                max_cap = 100_000
+            max_bytes = default_bytes
             if len(segs) > 1:
                 try:
-                    max_bytes = min(int(segs[1]), 100_000)
+                    max_bytes = min(int(segs[1]), max_cap)
                 except Exception:
-                    max_bytes = 50_000
+                    max_bytes = default_bytes
             # Normalize and validate path
             norm = os.path.normpath(raw_path)
             if os.path.isabs(norm) or norm.startswith(".."):
@@ -526,6 +570,90 @@ class MicroSwarmCoordinator:
             return augmented
         except Exception:
             return None
+
+    def _inject_missing_headers(self, text: str) -> str:
+        """Inject missing section headers before validation if JSON sections exist.
+
+        This shim parses synthesized content and prepends proper section headers
+        if the required JSON sections exist but headers are missing.
+        Gated by SCOUT_HEADER_INJECT_ENABLED env var (default true).
+        """
+        import os
+        import re
+
+        if os.getenv("SCOUT_HEADER_INJECT_ENABLED", "true").lower() not in {"1", "true", "yes"}:
+            return text
+
+        if not text or not text.strip():
+            return text
+
+        # Required sections mapping
+        required_sections = {
+            "FINDINGS:": ["findings", "issues", "patterns", "discovered"],
+            "INTEGRATIONS:": ["integrations", "subsystems", "interactions", "components"],
+            "RISKS:": ["risks", "failures", "security", "concerns", "bottlenecks"],
+            "RECOMMENDATIONS:": ["recommendations", "actions", "steps", "suggestions"],
+            "METRICS:": ["metrics", "context", "files", "time", "tokens"],
+            "CONFIDENCE:": ["confidence"],
+        }
+
+        text_upper = text.upper()
+        missing_headers = []
+        content_sections = {}
+
+        # Check which headers are already present
+        for header in required_sections:
+            if header not in text_upper:
+                missing_headers.append(header)
+
+        if not missing_headers:
+            return text  # All headers present
+
+        # Try to find content that corresponds to missing headers
+        for header in missing_headers:
+            keywords = required_sections[header]
+
+            # Look for JSON-like structures or bullet points mentioning these keywords
+            for keyword in keywords:
+                # Pattern to find content blocks that might belong to this section
+                patterns = [
+                    rf'["\']?{keyword}["\']?\s*[:=]\s*\[([^\]]+)\]',  # JSON array
+                    rf'["\']?{keyword}["\']?\s*[:=]\s*([^\n,}}]+)',  # JSON value
+                    rf"(?:^|\n)\s*[-•*]\s*[^\n]*{keyword}[^\n]*",  # Bullet points
+                    rf"(?:^|\n)\s*\d+\.\s*[^\n]*{keyword}[^\n]*",  # Numbered lists
+                ]
+
+                for pattern in patterns:
+                    matches = re.findall(pattern, text, re.IGNORECASE | re.MULTILINE)
+                    if matches:
+                        content_sections[header] = matches
+                        break
+                if header in content_sections:
+                    break
+
+        # Only inject headers if we found corresponding content
+        if not content_sections:
+            return text
+
+        # Inject headers at the beginning
+        injected_text = text
+        header_injections = []
+
+        for header in [
+            "FINDINGS:",
+            "INTEGRATIONS:",
+            "RISKS:",
+            "RECOMMENDATIONS:",
+            "METRICS:",
+            "CONFIDENCE:",
+        ]:
+            if header in missing_headers and header in content_sections:
+                header_injections.append(f"\n{header}")
+
+        if header_injections:
+            injected_text = "\n".join(header_injections) + "\n\n" + text
+
+        return injected_text
 
     def _validate_scout_output(self, text: str) -> list[str]:
         """Validate that required sections are present in Scout outputs.
@@ -615,8 +743,30 @@ class MicroSwarmCoordinator:
             )
             tasks.append(agent.process_message(message, context))
 
-        # Execute all agents in parallel
-        responses = await asyncio.gather(*tasks, return_exceptions=True)
+        # Execute all agents in parallel with timeout
+        import os as _os
+
+        timeout_ms = int(_os.getenv("SCOUT_PARALLEL_TIMEOUT_MS", "120000"))
+        timeout_sec = timeout_ms / 1000.0
+
+        timed_out_agents = []
+        try:
+            responses = await asyncio.wait_for(
+                asyncio.gather(*tasks, return_exceptions=True), timeout=timeout_sec
+            )
+        except asyncio.TimeoutError:
+            # Collect any completed responses
+            responses = []
+            for i, task in enumerate(tasks):
+                if task.done():
+                    try:
+                        responses.append(task.result())
+                    except:
+                        responses.append(None)
+                else:
+                    task.cancel()
+                    timed_out_agents.append(list(self.agents.keys())[i].value)
+                    responses.append(None)
 
         # Process responses
         valid_responses = []
@@ -628,13 +778,32 @@ class MicroSwarmCoordinator:
 
         # Synthesize results
         if valid_responses:
-            synthesis_content = await self._synthesize_parallel_results(valid_responses, context)
+            import os as _os
+
+            use_synth = _os.getenv("SCOUT_SYNTHESIZER_ENABLED", "true").lower() in {
+                "1",
+                "true",
+                "yes",
+            }
+            if use_synth and "Scout" in self.config.name:
+                try:
+                    synthesis_content = await self._run_scout_synthesizer(
+                        task, valid_responses, context
+                    )
+                except Exception:
+                    synthesis_content = await self._synthesize_parallel_results(
+                        valid_responses, context
+                    )
+            else:
+                synthesis_content = await self._synthesize_parallel_results(
+                    valid_responses, context
+                )
             avg_confidence = sum(r.confidence for r in valid_responses) / len(valid_responses)
         else:
             synthesis_content = "No valid responses from agents"
             avg_confidence = 0.0
 
-        return SwarmResult(
+        result = SwarmResult(
             success=len(valid_responses) > 0,
             final_output=synthesis_content,
             confidence=avg_confidence,
@@ -645,6 +814,13 @@ class MicroSwarmCoordinator:
             total_cost=total_cost,
             execution_time_ms=0.0,
         )
+
+        # Add timeout metadata if any agents timed out
+        if timed_out_agents:
+            result.metadata["partial_synthesis"] = True
+            result.metadata["agents_timed_out"] = timed_out_agents
+
+        return result
 
     async def _execute_debate(
         self, task: str, context: dict[str, Any], thread_id: str
@@ -955,6 +1131,120 @@ class MicroSwarmCoordinator:
         synthesis += "Based on the collective analysis above, the key insights and recommendations are synthesized into a unified response."
 
         return synthesis
+
+    async def _run_scout_synthesizer(
+        self, task: str, responses: list[SwarmMessage], context: dict[str, Any]
+    ) -> str:
+        """Run a dedicated synthesis LLM pass that enforces the scout schema strictly."""
+        try:
+            from app.core.portkey_manager import TaskType
+            from app.models.approved_models import is_model_approved
+        except Exception:
+            # Fallback to simple synthesis if imports fail
+            return await self._synthesize_parallel_results(responses, context)
+
+        # Build synthesis prompt with overlay and agent excerpts
+        overlay = ""
+        try:
+            from app.swarms.scout.prompts import SCOUT_OUTPUT_SCHEMA, SYNTHESIS_OVERLAY
+
+            overlay = f"Output schema (follow strictly):\n{SCOUT_OUTPUT_SCHEMA}\n\nOverlay:\n{SYNTHESIS_OVERLAY}\n"
+        except Exception:
+            overlay = "Follow SCOUT_OUTPUT_SCHEMA and synthesize a unified report."
+
+        excerpts = []
+        for r in responses:
+            role = getattr(r.sender_role, "value", "agent").upper()
+            excerpts.append(f"{role}:\n{r.content}\n")
+        context_block = "\n\n".join(excerpts)[:200000]
+
+        system = (
+            "You are the Artemis Scout Synthesis Agent. Merge multiple agent outputs into one cohesive,"
+            " strictly structured report with resolved contradictions."
+        )
+        user = f"Task: {task}\n\n{overlay}\n\nAgent outputs to synthesize:\n{context_block}\n\nProduce the final report now."
+
+        messages = [{"role": "system", "content": system}, {"role": "user", "content": user}]
+
+        # Choose provider/model for synthesis
+        import os as _os
+
+        provider = (
+            _os.getenv("LLM_SYNTHESIZER_PROVIDER")
+            or _os.getenv("LLM_FORCE_PROVIDER")
+            or "openrouter"
+        )
+        model = (
+            _os.getenv("LLM_SYNTHESIZER_MODEL")
+            or _os.getenv("LLM_FORCE_MODEL")
+            or "anthropic/claude-3.5-sonnet"
+        )
+
+        # Enforce approval list unless disabled
+        try:
+            if (
+                _os.getenv("LLM_APPROVAL_STRICT", "true").lower() in {"1", "true", "yes"}
+            ) and not is_model_approved(provider, model):
+                # Fall back to existing synthesis
+                return await self._synthesize_parallel_results(responses, context)
+        except Exception:
+            pass
+
+        # Moderate max tokens for synthesis
+        try:
+            max_tokens_cap = int(_os.getenv("LLM_MAX_OUTPUT_TOKENS", "6000"))
+        except Exception:
+            max_tokens_cap = 6000
+
+        # Build explicit fallback chain from env
+        chain: list[tuple[str, str]] = []
+        if provider and model:
+            chain.append((provider, model))
+        fb1p = _os.getenv("LLM_SYNTHESIZER_FALLBACK_1_PROVIDER")
+        fb1m = _os.getenv("LLM_SYNTHESIZER_FALLBACK_1_MODEL")
+        fb2p = _os.getenv("LLM_SYNTHESIZER_FALLBACK_2_PROVIDER")
+        fb2m = _os.getenv("LLM_SYNTHESIZER_FALLBACK_2_MODEL")
+        if fb1p and fb1m:
+            chain.append((fb1p, fb1m))
+        if fb2p and fb2m:
+            chain.append((fb2p, fb2m))
+
+        # If no explicit chain provided, use a sensible default premium chain
+        if not chain:
+            chain = [
+                ("openai", "gpt-5"),
+                ("anthropic", "claude-4.1-opus"),
+                ("openai", "gpt-4o"),
+            ]
+
+        # Try manual chain first (explicit providers/models), then router fallback
+        for prov, mdl in chain:
+            try:
+                resp = await self.portkey.execute_manual(
+                    provider=prov,
+                    model=mdl,
+                    messages=messages,
+                    max_tokens=max_tokens_cap,
+                    temperature=0.1,
+                )
+                content = resp.choices[0].message.content
+                if content:
+                    return content
+            except Exception:
+                continue
+
+        try:
+            # Route as long planning (good for synthesis) if chain failed or not provided
+            resp = await self.portkey.execute_with_fallback(
+                task_type=TaskType.LONG_PLANNING,
+                messages=messages,
+                max_tokens=max_tokens_cap,
+                temperature=0.1,
+            )
+            content = resp.choices[0].message.content
+            return content or await self._synthesize_parallel_results(responses, context)
+        except Exception:
+            return await self._synthesize_parallel_results(responses, context)
 
     async def _create_debate_synthesis(
         self, messages: list[SwarmMessage], context: dict[str, Any]

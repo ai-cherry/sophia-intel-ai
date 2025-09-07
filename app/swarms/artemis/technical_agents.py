@@ -600,41 +600,98 @@ class ArtemisSwarmFactory:
           Preferred model: deepseek/deepseek-chat-v3-0324 (via OpenRouter)
         """
 
-        analyst = AgentProfile(
-            role=AgentRole.ANALYST,
-            name="Tag Hunter",
-            description="Extracts and tags repository patterns, hotspots, and architecture idioms.",
-            model_preferences=["qwen/qwen3-coder"],
-            specializations=["code_tagging", "pattern_detection", "hotspot_analysis"],
-            reasoning_style="Systematic tagging with lightweight code pattern recognition and repository heatmaps.",
-            confidence_threshold=0.80,
-            max_tokens=6000,
-            temperature=0.1,
-        )
+        import os as _os
 
-        strategist = AgentProfile(
-            role=AgentRole.STRATEGIST,
-            name="Integration Stalker",
-            description="Performs deep integration analysis using massive context and parallel insights.",
-            model_preferences=["openrouter/sonoma-sky-alpha"],
-            specializations=["integration_analysis", "mcp_wiring", "tool_parallelism"],
-            reasoning_style="Broad-context reasoning across repo subsystems; integration-first approach.",
-            confidence_threshold=0.88,
-            max_tokens=2000000,  # documentation-only; execution enforces env
-            temperature=0.1,
-        )
+        enhanced = _os.getenv("SCOUT_ENHANCED_SPECIALISTS", "false").lower() in {"1", "true", "yes"}
 
-        validator = AgentProfile(
-            role=AgentRole.VALIDATOR,
-            name="Scale Assassin",
-            description="Synthesizes scalable improvements, validates safety and feasibility.",
-            model_preferences=["deepseek/deepseek-chat-v3-0324"],
-            specializations=["scalability", "synthesis", "feasibility_validation"],
-            reasoning_style="Concise synthesis with risk checks and measurable outcomes.",
-            confidence_threshold=0.9,
-            max_tokens=8000,
-            temperature=0.05,
-        )
+        if enhanced:
+            # Enhanced specialist profiles: security, architecture, performance
+            analyst = AgentProfile(
+                role=AgentRole.ANALYST,
+                name="Security Scout",
+                description="Focuses on auth, session, secrets, logging, and dangerous patterns.",
+                model_preferences=["deepseek/deepseek-coder"],
+                specializations=[
+                    "security_smells",
+                    "auth_session_flows",
+                    "secret_management",
+                    "logging_pii",
+                ],
+                reasoning_style="Threat modeling mindset; evidence with file/line references.",
+                confidence_threshold=0.80,
+                max_tokens=8000,
+                temperature=0.05,
+            )
+
+            strategist = AgentProfile(
+                role=AgentRole.STRATEGIST,
+                name="Architecture Strategist",
+                description="Analyzes topology, integration contracts, boundaries, and failure domains.",
+                model_preferences=["moonshotai/kimi-k2-0905"],  # large-context via OpenRouter
+                specializations=[
+                    "system_topology",
+                    "integration_contracts",
+                    "failure_domains",
+                    "scalability_tradeoffs",
+                ],
+                reasoning_style="Macro-level architecture synthesis across subsystems; prioritize integration risks.",
+                confidence_threshold=0.88,
+                max_tokens=200000,  # advisory; execution clamps
+                temperature=0.1,
+            )
+
+            validator = AgentProfile(
+                role=AgentRole.VALIDATOR,
+                name="Performance Validator",
+                description="Validates hotspots: I/O, n+1, caching, concurrency, memory pressure.",
+                model_preferences=["deepseek/deepseek-chat-v3-0324"],
+                specializations=[
+                    "performance_bottlenecks",
+                    "profiling_hypotheses",
+                    "caching_strategies",
+                    "concurrency_issues",
+                ],
+                reasoning_style="Concise performance validation with measurable KPIs and quick wins.",
+                confidence_threshold=0.9,
+                max_tokens=8000,
+                temperature=0.05,
+            )
+        else:
+            analyst = AgentProfile(
+                role=AgentRole.ANALYST,
+                name="Tag Hunter",
+                description="Extracts and tags repository patterns, hotspots, and architecture idioms.",
+                model_preferences=["qwen/qwen3-coder"],
+                specializations=["code_tagging", "pattern_detection", "hotspot_analysis"],
+                reasoning_style="Systematic tagging with lightweight code pattern recognition and repository heatmaps.",
+                confidence_threshold=0.80,
+                max_tokens=6000,
+                temperature=0.1,
+            )
+
+            strategist = AgentProfile(
+                role=AgentRole.STRATEGIST,
+                name="Integration Stalker",
+                description="Performs deep integration analysis using massive context and parallel insights.",
+                model_preferences=["openrouter/sonoma-sky-alpha"],
+                specializations=["integration_analysis", "mcp_wiring", "tool_parallelism"],
+                reasoning_style="Broad-context reasoning across repo subsystems; integration-first approach.",
+                confidence_threshold=0.88,
+                max_tokens=2000000,  # documentation-only; execution enforces env
+                temperature=0.1,
+            )
+
+            validator = AgentProfile(
+                role=AgentRole.VALIDATOR,
+                name="Scale Assassin",
+                description="Synthesizes scalable improvements, validates safety and feasibility.",
+                model_preferences=["deepseek/deepseek-chat-v3-0324"],
+                specializations=["scalability", "synthesis", "feasibility_validation"],
+                reasoning_style="Concise synthesis with risk checks and measurable outcomes.",
+                confidence_threshold=0.9,
+                max_tokens=8000,
+                temperature=0.05,
+            )
 
         config = SwarmConfig(
             name="Artemis Repository Scout Swarm",

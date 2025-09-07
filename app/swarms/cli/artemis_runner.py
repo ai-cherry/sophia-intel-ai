@@ -118,6 +118,49 @@ def cmd_apply(args) -> int:
     return 0
 
 
+def format_scout_json(task_text, result):
+    def _extract_list(section: str) -> list[str]:
+        text = getattr(result, "final_output", None) or getattr(result, "content", "") or ""
+        lines = text.splitlines()
+        items = []
+        capturing = False
+        header = section.upper() + ":"
+        for ln in lines:
+            up = ln.strip().upper()
+            if up.startswith(header):
+                capturing = True
+                continue
+            if capturing and up.endswith(":"):
+                break
+            if capturing:
+                clean = ln.strip()
+                if clean:
+                    items.append(clean)
+        return items
+
+    risks = [{"text": r, "severity": "unknown"} for r in _extract_list("RISKS")]
+    out = {
+        "task": task_text,
+        "findings": _extract_list("FINDINGS"),
+        "integrations": _extract_list("INTEGRATIONS"),
+        "risks": risks,
+        "recommendations": _extract_list("RECOMMENDATIONS"),
+        "metrics": {
+            "files_analyzed": 0,
+            "execution_time": float(getattr(result, "execution_time_ms", 0.0)),
+            "confidence": float(getattr(result, "confidence", 0.0)),
+        },
+        "success": bool(getattr(result, "success", False)),
+    }
+    try:
+        md = getattr(result, "metadata", {}) or {}
+        if isinstance(md, dict) and "tool_usage_total" in md:
+            out["metrics"]["tool_usage_total"] = md["tool_usage_total"]
+    except Exception:
+        pass
+    return out
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="artemis-run", description="Artemis local runner (stdio MCP)")
     sub = p.add_subparsers(dest="cmd")
@@ -761,13 +804,31 @@ def build_parser() -> argparse.ArgumentParser:
         default="Scout this repository: map integrations, hotspots, and propose improvements.",
     )
     sp.add_argument("--check", action="store_true", help="Run scout readiness checks and exit")
+    sp.add_argument(
+        "--approval",
+        choices=["suggest", "auto-analyze", "full-auto"],
+        default=None,
+        help="Approval mode: suggest (ask before analysis & prefetch), auto-analyze (ask before prefetch), full-auto",
+    )
+    sp.add_argument(
+        "--json", action="store_true", help="Emit structured JSON output and suppress progress"
+    )
 
     def _do_scout(args):
+        import os as _os
+        import subprocess as _sp
+
+        # If JSON mode, suppress INFO/DEBUG logs to keep stdout clean
+        if getattr(args, "json", False):
+            try:
+                import logging as _logging
+
+                _logging.disable(_logging.INFO)
+            except Exception:
+                pass
         # Readiness check shortcut that avoids LLM imports
         if getattr(args, "check", False):
-            import subprocess
-
-            proc = subprocess.run(
+            proc = _sp.run(
                 ["python3", "scripts/scout_readiness_check.py"],
                 capture_output=True,
                 text=True,
@@ -781,27 +842,153 @@ def build_parser() -> argparse.ArgumentParser:
             orchestrator = get_artemis_orchestrator()
             import asyncio
 
+            # Helpers
+            def _approval_mode() -> str:
+                if args.approval:
+                    return args.approval
+                return _os.getenv("ARTEMIS_DEFAULT_APPROVAL_MODE", "full-auto").lower()
+
+            def _confirm(prompt: str) -> bool:
+                try:
+                    ans = input(f"{prompt} [y/n]: ").strip().lower()
+                    return ans in ("y", "yes")
+                except Exception:
+                    return False
+
+            from pathlib import Path as _Path
+
+            def _load_project_instructions() -> str:
+                repo = _Path.cwd()
+                for p in [
+                    repo / ".artemis" / "scout.md",
+                    repo / ".artemis" / "instructions.md",
+                    repo / "artemis.md",
+                ]:
+                    if p.exists() and p.is_file():
+                        try:
+                            return p.read_text()[:20000]
+                        except Exception:
+                            return ""
+                return ""
+
+            def _run_hook(which: str, json_input: str | None = None, approval: str = "") -> int:
+                hook = _Path(".artemis/hooks") / (
+                    "pre-scout.sh" if which == "pre" else "post-scout.sh"
+                )
+                if not hook.exists() or not _os.access(hook, _os.X_OK):
+                    return 0
+                # Best-effort ownership check
+                try:
+                    st = hook.stat()
+                    if hasattr(_os, "geteuid") and st.st_uid != _os.geteuid():
+                        return 0
+                except Exception:
+                    pass
+                env = {
+                    **_os.environ,
+                    "ARTEMIS_TASK": (args.task or ""),
+                    "ARTEMIS_APPROVAL_MODE": _approval_mode(),
+                }
+                try:
+                    if json_input is None:
+                        pr = _sp.run([str(hook)], env=env, capture_output=True, text=True)
+                    else:
+                        pr = _sp.run(
+                            [str(hook)], env=env, input=json_input, capture_output=True, text=True
+                        )
+                    return pr.returncode
+                except Exception:
+                    return 0
+
+            mode = _approval_mode()
+            # Ask before prefetch/index in suggest/auto-analyze
+            if mode in ("suggest", "auto-analyze"):
+                max_files = int(_os.getenv("SCOUT_PREFETCH_MAX_FILES", "10"))
+                max_bytes = int(_os.getenv("SCOUT_PREFETCH_MAX_BYTES", "50000"))
+                if not _confirm(
+                    f"Proceed with prefetch/index (up to {max_files} files x {max_bytes} bytes)?"
+                ):
+                    _os.environ["SCOUT_PREFETCH_ENABLED"] = "false"
+                    _os.environ["SCOUT_DELTA_INDEX_ENABLED"] = "false"
+
+            # Append project instructions
+            eff_task = args.task or ""
+            proj = _load_project_instructions()
+            if proj:
+                eff_task += f"\n\nProject Instructions:\n{proj}\n"
+
+            # Ask before analysis in suggest mode
+            if mode == "suggest" and not _confirm("Proceed with scout analysis now?"):
+                if args.json:
+                    j = json.dumps(
+                        {
+                            "success": False,
+                            "task": eff_task,
+                            "error": "Aborted by user",
+                        }
+                    )
+                    print(j)
+                else:
+                    print("Aborted by user.")
+                return 1
+
+            # Pre hook
+            if _run_hook("pre", approval=mode) != 0:
+                if args.json:
+                    j = json.dumps(
+                        {
+                            "success": False,
+                            "task": eff_task,
+                            "error": "Pre-scout hook blocked execution",
+                        }
+                    )
+                    print(j)
+                else:
+                    print("Pre-scout hook blocked execution.")
+                return 2
+
             result = asyncio.get_event_loop().run_until_complete(
                 orchestrator.execute_swarm(
-                    content=args.task, swarm_type="repository_scout", context={}
+                    content=eff_task, swarm_type="repository_scout", context={}
                 )
             )
-            print(
-                json.dumps(
-                    {
-                        "success": result.success,
-                        "confidence": result.confidence,
-                        "summary": result.final_output[:2000],
-                    },
-                    indent=2,
+
+            if args.json:
+                out = format_scout_json(eff_task, result)
+                j = json.dumps(out)
+                print(j)
+                _run_hook("post", json_input=j, approval=mode)
+            else:
+                _summary = (
+                    getattr(result, "final_output", None) or getattr(result, "content", "") or ""
                 )
-            )
+                print(
+                    json.dumps(
+                        {
+                            "success": getattr(result, "success", False),
+                            "confidence": float(getattr(result, "confidence", 0.0)),
+                            "summary": _summary[:2000],
+                        },
+                        indent=2,
+                    )
+                )
+                _run_hook("post", json_input=None, approval=mode)
             return 0
         except Exception as e:
-            print(f"ERROR running scout swarm: {e}")
-            print(
-                "Ensure LLM_* env vars are set (per-role or global) and network access is available."
-            )
+            if getattr(args, "json", False):
+                print(
+                    json.dumps(
+                        {
+                            "success": False,
+                            "error": f"ERROR running scout swarm: {e}",
+                        }
+                    )
+                )
+            else:
+                print(f"ERROR running scout swarm: {e}")
+                print(
+                    "Ensure LLM_* env vars are set (per-role or global) and network access is available."
+                )
             return 2
 
     sp.set_defaults(func=_do_scout)
@@ -1012,6 +1199,379 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--proposal", required=True, dest="pid")
     sp.add_argument("--json", action="store_true", help="JSON output")
     sp.set_defaults(func=_do_collab_merge_check)
+
+    # Health and proof: verify MCP, memory vectors, recent scout breadcrumbs
+    sp = sub.add_parser("health", help="Check MCP/memory health and show proof of scout indexing")
+    sp.add_argument("--json", action="store_true", help="JSON output")
+    sp.add_argument("--limit", type=int, default=5, help="Max recent items to show")
+
+    def _do_health(args):
+        import asyncio as _asyncio
+        import json as _json
+        from pathlib import Path as _Path
+
+        out = {"ok": True, "mcp": {}, "vectors": {}, "recent": {}}
+        client = detect_stdio_mcp(_Path.cwd())
+        out["mcp"]["available"] = bool(client)
+        if client:
+            try:
+                # repo index sample
+                idx = client.repo_index(root=".", max_bytes_per_file=5000)
+                files = (idx.get("files") if isinstance(idx, dict) else []) or []
+                out["mcp"]["repo_index_sample"] = len(files)
+            except Exception as e:
+                out["mcp"]["repo_index_error"] = str(e)
+            try:
+                res = client.memory_search("scout", limit=args.limit)
+                items = res.get("results") if isinstance(res, dict) else res or []
+                out["recent"]["mcp_memory"] = [
+                    {
+                        "topic": it.get("topic"),
+                        "timestamp": it.get("timestamp"),
+                        "tags": it.get("tags")[:6] if isinstance(it.get("tags"), list) else [],
+                        "content_preview": (it.get("content") or "")[:140],
+                    }
+                    for it in items
+                ]
+            except Exception as e:
+                out["recent"]["mcp_memory_error"] = str(e)
+        else:
+            out["ok"] = False
+            out["error"] = "MCP stdio server not available (bin/mcp-fs-memory)."
+
+        # Vector/embedding availability via memory router search
+        try:
+            from app.memory.unified_memory_router import MemoryDomain, get_memory_router
+
+            async def _probe():
+                router = get_memory_router()
+                hits = await router.search("artemis", MemoryDomain.ARTEMIS, k=1)
+                return hits
+
+            hits = _asyncio.get_event_loop().run_until_complete(_probe())
+            out["vectors"]["available"] = True
+            out["vectors"]["probe_hits"] = len(hits)
+        except Exception as e:
+            out["vectors"]["available"] = False
+            out["vectors"]["error"] = str(e)
+
+        # Delta index cache proof
+        try:
+            cache_path = _Path("tmp/scout_index_cache.json")
+            if cache_path.exists():
+                import json as _j
+
+                data = _j.loads(cache_path.read_text())
+                out["recent"]["delta_index_cache_entries"] = len(data)
+            else:
+                out["recent"]["delta_index_cache_entries"] = 0
+        except Exception:
+            pass
+
+        if args.json:
+            print(_json.dumps(out))
+        else:
+            print(
+                _json.dumps(
+                    {
+                        "ok": out.get("ok", True),
+                        "mcp_available": out.get("mcp", {}).get("available", False),
+                        "repo_index_sample": out.get("mcp", {}).get("repo_index_sample", 0),
+                        "vectors_available": out.get("vectors", {}).get("available", False),
+                        "probe_hits": out.get("vectors", {}).get("probe_hits", 0),
+                        "delta_index_cache_entries": out.get("recent", {}).get(
+                            "delta_index_cache_entries", 0
+                        ),
+                        "recent_mcp_memory": out.get("recent", {}).get("mcp_memory", [])[:3],
+                    },
+                    indent=2,
+                )
+            )
+        return 0 if out.get("ok", True) else 2
+
+    sp.set_defaults(func=_do_health)
+
+    # Metrics: summarize recent scout runs from vectors + MCP
+    sp = sub.add_parser(
+        "metrics", help="Show recent scout metrics with quality scoring (vectors + MCP breadcrumbs)"
+    )
+    sp.add_argument("--json", action="store_true", help="JSON output")
+    sp.add_argument("--limit", type=int, default=5, help="Max recent items to show")
+    sp.add_argument("--recent", action="store_true", help="Show only recent summaries")
+
+    def _do_metrics(args):
+        import asyncio as _asyncio
+        import json as _json
+        from pathlib import Path as _Path
+
+        out = {
+            "ok": True,
+            "mcp_recent": [],
+            "vector_runs": [],
+            "aggregates": {},
+            "quality_score": {},
+        }
+
+        # Recent MCP entries
+        client = detect_stdio_mcp(_Path.cwd())
+        if client:
+            try:
+                res = client.memory_search(
+                    "artemis AND completed AND swarm:repository_scout", limit=args.limit
+                )
+                items = res.get("results") if isinstance(res, dict) else res or []
+                out["mcp_recent"] = [
+                    {
+                        "topic": it.get("topic"),
+                        "timestamp": it.get("timestamp"),
+                        "tags": it.get("tags")[:8] if isinstance(it.get("tags"), list) else [],
+                        "content_preview": (it.get("content") or "")[:160],
+                    }
+                    for it in items
+                ]
+            except Exception as e:
+                out["mcp_error"] = str(e)
+        else:
+            out["mcp_error"] = "MCP not available"
+
+        # Vector-backed runs (if Weaviate available)
+        try:
+            from app.memory.unified_memory_router import MemoryDomain, get_memory_router
+
+            async def _load():
+                router = get_memory_router()
+                # Search for scout swarm runs by swarm name keyword
+                hits = await router.search(
+                    "Artemis Repository Scout Swarm", MemoryDomain.ARTEMIS, k=50
+                )
+                return hits
+
+            hits = _asyncio.get_event_loop().run_until_complete(_load())
+            runs = []
+            for h in hits or []:
+                md = h.metadata or {}
+                # metadata is JSON or dict depending on storage
+                if isinstance(md, str):
+                    try:
+                        import json as _j
+
+                        md = _j.loads(md)
+                    except Exception:
+                        md = {}
+                swarm_name = md.get("swarm_name")
+                if not swarm_name or "Scout" not in str(swarm_name):
+                    continue
+                runs.append(
+                    {
+                        "swarm_name": swarm_name,
+                        "coordination_pattern": md.get("coordination_pattern"),
+                        "execution_time_ms": md.get("execution_time_ms"),
+                        "cost_usd": md.get("cost_usd"),
+                        "source_uri": getattr(h, "source_uri", ""),
+                    }
+                )
+            out["vector_runs"] = runs[: args.limit]
+            # Aggregates
+            etimes = [
+                r.get("execution_time_ms") or 0.0
+                for r in runs
+                if isinstance(r.get("execution_time_ms"), (int, float))
+            ]
+            costs = [
+                r.get("cost_usd") or 0.0
+                for r in runs
+                if isinstance(r.get("cost_usd"), (int, float))
+            ]
+
+            def _avg(arr):
+                return (sum(arr) / len(arr)) if arr else 0.0
+
+            out["aggregates"] = {
+                "vector_runs": len(runs),
+                "avg_execution_time_ms": _avg(etimes),
+                "avg_cost_usd": _avg(costs),
+            }
+        except Exception as e:
+            out["vector_error"] = str(e)
+
+        # Calculate quality score from the most recent scout run
+        def _calculate_quality_score():
+            """Calculate quality score based on the most recent scout run data."""
+            try:
+                # Try to get the most recent MCP entry first
+                recent_data = None
+                if out.get("mcp_recent") and len(out["mcp_recent"]) > 0:
+                    # Look for content that can be parsed as scout output
+                    for entry in out["mcp_recent"][:3]:  # Check top 3 most recent
+                        content = entry.get("content_preview", "")
+                        if "FINDINGS:" in content or "RISKS:" in content:
+                            recent_data = content
+                            break
+
+                # If no MCP data, try vector runs
+                if not recent_data and out.get("vector_runs"):
+                    # Vector runs don't contain the actual scout output, so we can't score them
+                    pass
+
+                if not recent_data:
+                    return {
+                        "overall_score": 0.0,
+                        "components": {
+                            "schema_valid": 0.0,
+                            "confidence": 0.0,
+                            "risk_signal": 0.0,
+                            "findings_signal": 0.0,
+                            "recs_signal": 0.0,
+                        },
+                        "details": {
+                            "schema_validation": {
+                                "valid": False,
+                                "missing_sections": ["No recent scout data available"],
+                            },
+                            "per_agent_metrics": [],
+                            "synthesis_metrics": {},
+                            "orchestrator_metrics": {
+                                "success": False,
+                                "execution_time_ms": 0,
+                                "confidence": 0.0,
+                            },
+                            "tool_usage_total": 0,
+                        },
+                        "note": "No recent scout run data available for scoring",
+                    }
+
+                # Create a dummy result object to use with format_scout_json
+                class DummyResult:
+                    def __init__(self, content):
+                        self.final_output = content
+                        self.success = True
+                        self.confidence = 0.0  # Will be extracted from content if available
+                        self.execution_time_ms = 0.0
+                        self.metadata = {}
+
+                dummy_result = DummyResult(recent_data)
+                scout_data = format_scout_json("recent_scout_run", dummy_result)
+
+                # Extract components for quality scoring
+                schema_sections = ["FINDINGS", "INTEGRATIONS", "RISKS", "RECOMMENDATIONS"]
+                missing_sections = []
+                found_sections = 0
+
+                for section in schema_sections:
+                    section_key = section.lower()
+                    if section_key in scout_data and scout_data[section_key]:
+                        found_sections += 1
+                    else:
+                        missing_sections.append(section)
+
+                # Check for METRICS and CONFIDENCE sections in raw content
+                has_metrics = "METRICS:" in recent_data.upper()
+                has_confidence = "CONFIDENCE:" in recent_data.upper()
+                if has_metrics:
+                    found_sections += 1
+                else:
+                    missing_sections.append("METRICS")
+                if has_confidence:
+                    found_sections += 1
+                else:
+                    missing_sections.append("CONFIDENCE")
+
+                # Calculate component scores
+                schema_valid = 1.0 if found_sections >= 6 else found_sections / 6.0
+                confidence = scout_data.get("metrics", {}).get("confidence", 0.0)
+
+                # Count items for signals
+                risks_count = len(scout_data.get("risks", []))
+                findings_count = len(scout_data.get("findings", []))
+                recommendations_count = len(scout_data.get("recommendations", []))
+
+                # Calculate signals (capped as per formula)
+                risk_signal = min(1.0, risks_count / 8.0) if risks_count > 0 else 0.0
+                findings_signal = min(1.0, findings_count / 12.0) if findings_count > 0 else 0.0
+                recs_signal = (
+                    min(1.0, recommendations_count / 10.0) if recommendations_count > 0 else 0.0
+                )
+
+                # Overall score formula
+                overall_score = (
+                    0.25 * schema_valid
+                    + 0.25 * confidence
+                    + 0.2 * risk_signal
+                    + 0.15 * findings_signal
+                    + 0.15 * recs_signal
+                )
+
+                # Get orchestrator metrics
+                execution_time = scout_data.get("metrics", {}).get("execution_time", 0.0)
+                tool_usage = scout_data.get("metrics", {}).get("tool_usage_total", 0)
+
+                return {
+                    "overall_score": round(overall_score, 3),
+                    "components": {
+                        "schema_valid": round(schema_valid, 3),
+                        "confidence": round(confidence, 3),
+                        "risk_signal": round(risk_signal, 3),
+                        "findings_signal": round(findings_signal, 3),
+                        "recs_signal": round(recs_signal, 3),
+                    },
+                    "details": {
+                        "schema_validation": {
+                            "valid": len(missing_sections) == 0,
+                            "missing_sections": missing_sections,
+                        },
+                        "per_agent_metrics": [],  # Not available in current data structure
+                        "synthesis_metrics": {
+                            "model_used": "unknown",
+                            "response_time_ms": execution_time,
+                            "tokens_used": 0,
+                            "cost_usd": 0.0,
+                        },
+                        "orchestrator_metrics": {
+                            "execution_time_ms": execution_time,
+                            "success": scout_data.get("success", False),
+                            "confidence": confidence,
+                        },
+                        "tool_usage_total": tool_usage,
+                    },
+                    "counts": {
+                        "risks": risks_count,
+                        "findings": findings_count,
+                        "recommendations": recommendations_count,
+                    },
+                }
+
+            except Exception as e:
+                return {
+                    "overall_score": 0.0,
+                    "error": f"Failed to calculate quality score: {str(e)}",
+                    "components": {
+                        "schema_valid": 0.0,
+                        "confidence": 0.0,
+                        "risk_signal": 0.0,
+                        "findings_signal": 0.0,
+                        "recs_signal": 0.0,
+                    },
+                }
+
+        out["quality_score"] = _calculate_quality_score()
+
+        if args.json:
+            print(_json.dumps(out))
+        else:
+            print(
+                _json.dumps(
+                    {
+                        "ok": out.get("ok", True),
+                        "recent_mcp": out.get("mcp_recent", [])[:3],
+                        "vector_aggregates": out.get("aggregates", {}),
+                        "quality_score": out.get("quality_score", {}),
+                    },
+                    indent=2,
+                )
+            )
+        return 0 if out.get("ok", True) else 2
+
+    sp.set_defaults(func=_do_metrics)
 
     return p
 
@@ -1485,6 +2045,106 @@ def main() -> int:
         return 0
 
     sp.set_defaults(func=_do_collab_dashboard)
+
+    # Metrics command for scout visibility
+    sp = sub.add_parser("metrics", help="Show scout execution metrics and statistics")
+    sp.add_argument("--recent", action="store_true", help="Show recent scout executions")
+    sp.add_argument("--json", action="store_true", help="Output as JSON")
+    sp.add_argument("--limit", type=int, default=5, help="Number of recent executions to show")
+
+    def _do_metrics(args):
+        client = detect_stdio_mcp(Path.cwd())
+        if not client:
+            print("ERROR: stdio MCP server not found")
+            return 2
+
+        import json as _json
+
+        # Search for recent scout executions in memory
+        results = client.memory_search("integrated_swarm", limit=args.limit * 3)
+        items = results.get("results") if isinstance(results, dict) else results or []
+
+        # Filter for scout swarms
+        scout_runs = []
+        for item in items:
+            if (
+                "scout" in item.get("topic", "").lower()
+                or "scout" in str(item.get("tags", [])).lower()
+            ):
+                try:
+                    content = _json.loads(item.get("content", "{}"))
+                    metadata = content.get("metadata", {})
+                    scout_runs.append(
+                        {
+                            "timestamp": item.get("timestamp", ""),
+                            "task": content.get("task", "")[:100],
+                            "confidence": content.get("confidence", 0.0),
+                            "success": content.get("success", False),
+                            "execution_time_ms": metadata.get("execution_time_ms", 0),
+                            "tool_usage_total": metadata.get("tool_usage_total", 0),
+                            "agents": metadata.get("agents_used", []),
+                            "pattern": metadata.get("coordination_pattern", "unknown"),
+                            "cost_usd": metadata.get("cost_usd", 0.0),
+                        }
+                    )
+                except:
+                    pass
+
+        # Sort by timestamp
+        scout_runs.sort(key=lambda x: x["timestamp"], reverse=True)
+        scout_runs = scout_runs[: args.limit]
+
+        if args.json:
+            output = {
+                "scout_executions": scout_runs,
+                "summary": {
+                    "total_shown": len(scout_runs),
+                    "avg_confidence": (
+                        sum(r["confidence"] for r in scout_runs) / len(scout_runs)
+                        if scout_runs
+                        else 0
+                    ),
+                    "avg_time_ms": (
+                        sum(r["execution_time_ms"] for r in scout_runs) / len(scout_runs)
+                        if scout_runs
+                        else 0
+                    ),
+                    "total_cost": sum(r["cost_usd"] for r in scout_runs),
+                    "success_rate": (
+                        sum(1 for r in scout_runs if r["success"]) / len(scout_runs)
+                        if scout_runs
+                        else 0
+                    ),
+                },
+            }
+            print(_json.dumps(output, indent=2))
+        else:
+            print(f"\n=== Recent Scout Executions ({len(scout_runs)}) ===\n")
+            for run in scout_runs:
+                print(f"Timestamp: {run['timestamp']}")
+                print(f"Task: {run['task']}")
+                print(
+                    f"Success: {'✅' if run['success'] else '❌'} | Confidence: {run['confidence']:.2f}"
+                )
+                print(
+                    f"Time: {run['execution_time_ms']:.0f}ms | Tools used: {run['tool_usage_total']}"
+                )
+                print(f"Pattern: {run['pattern']} | Cost: ${run['cost_usd']:.4f}")
+                print("-" * 60)
+
+            if scout_runs:
+                print("\nSummary:")
+                print(
+                    f"Average confidence: {sum(r['confidence'] for r in scout_runs) / len(scout_runs):.2f}"
+                )
+                print(
+                    f"Average time: {sum(r['execution_time_ms'] for r in scout_runs) / len(scout_runs):.0f}ms"
+                )
+                print(f"Total cost: ${sum(r['cost_usd'] for r in scout_runs):.4f}")
+
+        return 0
+
+    sp.set_defaults(func=_do_metrics)
 
 
 if __name__ == "__main__":

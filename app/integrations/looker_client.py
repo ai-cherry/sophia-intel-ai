@@ -28,6 +28,12 @@ except ImportError as e:
 
 logger = logging.getLogger(__name__)
 
+# Provide a safe default for INTEGRATIONS if not imported from a central config
+try:
+    INTEGRATIONS  # type: ignore[name-defined]
+except NameError:
+    INTEGRATIONS = {}
+
 
 @dataclass
 class LookerDashboard:

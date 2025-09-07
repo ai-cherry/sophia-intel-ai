@@ -118,6 +118,23 @@ cd agent-ui && npm run dev
 
 ## 📋 Usage
 
+### Artemis Scout CLI (Local)
+
+- Run readiness: `./bin/artemis-run scout --check`
+- Approval modes: `--approval {suggest, auto-analyze, full-auto}` (default from `ARTEMIS_DEFAULT_APPROVAL_MODE`, default `full-auto`)
+- JSON output: `--json` prints structured fields and suppresses progress
+- Project instructions: auto-loads from `.artemis/scout.md`, `.artemis/instructions.md`, or `artemis.md`
+- Hooks (local-only):
+  - Pre-scout: `.artemis/hooks/pre-scout.sh` (exec + owner), blocks on non-zero; env `ARTEMIS_TASK`, `ARTEMIS_APPROVAL_MODE`
+  - Post-scout: `.artemis/hooks/post-scout.sh` (exec + owner), runs after completion; if `--json`, JSON piped to stdin
+
+Examples:
+
+```bash
+./bin/artemis-run scout --approval suggest --task "Scout the repository for integrations/hotspots"
+./bin/artemis-run scout --json --approval full-auto | jq '.risks'
+```
+
 ### Basic AI Chat
 
 ```python

@@ -36,12 +36,26 @@ APPROVED = ApprovedModels(
         # OpenRouter-hosted families
         "openrouter": {
             "openrouter/sonoma-sky-alpha",
+            "deepseek/deepseek-coder",
+            "deepseek/deepseek-chat-v3.1",
+            "qwen/qwq-32b-preview",
+            "meta-llama/llama-3.3-70b-instruct",
+            "mistralai/mistral-large-2411",
+            "google/gemini-2.0-flash",
+            "nvidia/llama-3.1-nemotron-70b-instruct",
+            "amazon/nova-pro-v1",
+            "google/gemini-flash-1.5-8b",
+            "google/gemini-pro-1.5",
+            "moonshotai/kimi-k2-0905",
+            "qwen/qwen-2.5-coder-32b-instruct",
         },
         # Qwen
         "qwen": {
             "qwen3-max",
             "qwen3-coder",
             "qwen3-30b-a3b-thinking-2507",
+            "qwq-32b-preview",
+            "qwen-2.5-coder-32b-instruct",
         },
         # Moonshot
         "moonshotai": {
@@ -51,6 +65,7 @@ APPROVED = ApprovedModels(
         "deepseek": {
             "deepseek-chat-v3-0324",
             "deepseek-chat-v3.1",
+            "deepseek-coder",
         },
         # X.AI (Grok)
         "x-ai": {
@@ -60,12 +75,18 @@ APPROVED = ApprovedModels(
         "openai": {
             "gpt-4.1-mini",
             "gpt-5-mini",
+            "gpt-5",
+            "gpt-4o",
+            "gpt-4o-mini",
             "text-embedding-3-large",
         },
         # Anthropic
         "anthropic": {
             "claude-4.1-opus",
             "claude-4.1-sonnet",
+            "claude-3-opus-20240229",
+            "claude-3.5-sonnet-20241022",
+            "claude-3-haiku",
         },
         # Groq (fast lint/checks) – model id to be set explicitly by owner
         "groq": {

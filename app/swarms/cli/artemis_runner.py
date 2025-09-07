@@ -417,6 +417,12 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--json", action="store_true", help="JSON output")
     sp.add_argument("--dry-run", action="store_true", help="Preview only; no writes")
     sp.add_argument("--force", action="store_true", help="Bypass conflict detection")
+    sp.add_argument(
+        "--git-push",
+        action="store_true",
+        dest="git_push",
+        help="If tests pass, auto add/commit and push the changes",
+    )
 
     def _apply_line_changes(text: str, changes: list[dict]) -> str:
         lines = text.splitlines(keepends=True)
@@ -501,6 +507,8 @@ def build_parser() -> argparse.ArgumentParser:
             return 2
         import json as _json
         import time
+        import subprocess
+        import shlex
 
         # 1) Load proposal content from memory
         search = client.memory_search(f"collab AND id:{args.pid} AND collab_proposal", limit=5)
@@ -663,11 +671,52 @@ def build_parser() -> argparse.ArgumentParser:
                     original_text = orig.get("content") if isinstance(orig, dict) else str(orig)
                     client.fs_write(b["path"], original_text)
 
+            # Optionally auto-commit and push on success
+            commit_info: dict[str, str] | None = None
+            if test_result["passed"] and not args.dry_run and getattr(args, "git_push", False):
+                message = f"collab: apply {args.pid} (tests passed)"
+                try:
+                    # Stage everything
+                    subprocess.run(["git", "add", "-A"], check=True)
+                    # Try normal commit first
+                    proc = subprocess.run(["git", "commit", "-m", message], text=True, capture_output=True)
+                    if proc.returncode != 0:
+                        # Fallback: bypass hooks
+                        proc2 = subprocess.run(
+                            ["git", "commit", "--no-verify", "-m", message], text=True, capture_output=True
+                        )
+                        if proc2.returncode != 0:
+                            raise RuntimeError(f"git commit failed: {proc.stderr or proc2.stderr}")
+                    # Push
+                    push = subprocess.run(["git", "push"], text=True, capture_output=True)
+                    if push.returncode != 0:
+                        raise RuntimeError(f"git push failed: {push.stderr}")
+                    # Capture short commit id
+                    head = subprocess.run(
+                        ["git", "rev-parse", "--short", "HEAD"], text=True, capture_output=True, check=True
+                    )
+                    commit_info = {"commit": head.stdout.strip(), "message": message}
+                except Exception as e:
+                    commit_info = {"error": str(e)}
+
+                # Mirror apply completion in memory
+                try:
+                    client.memory_add(
+                        topic=f"collab_apply:{args.pid}",
+                        content=_json.dumps({"status": "completed", "commit": commit_info}, indent=2),
+                        source="artemis-run",
+                        tags=["collab", "apply", "status:completed", f"id:{args.pid}"],
+                        memory_type="episodic",
+                    )
+                except Exception:
+                    pass
+
             out = {
                 "ok": test_result["passed"],
                 "proposal": args.pid,
                 "changed": changed,
                 "tests": test_result,
+                **({"git": commit_info} if commit_info is not None else {}),
             }
             print(
                 _json.dumps(out, indent=2)

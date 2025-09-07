@@ -66,45 +66,45 @@ class RelationshipType(str, Enum):
 class FoundationalKnowledge(BaseModel):
     """Core foundational knowledge model"""
     model_config = ConfigDict(from_attributes=True)
-    
+
     id: UUID = Field(default_factory=uuid4)
     source_id: str
     source_table: str
     source_platform: str = "airtable"
-    
+
     # Content
     title: str
     content: Optional[str] = None
     category: Optional[str] = None
     tags: Optional[List[str]] = Field(default_factory=list)
-    
+
     # Classification
     data_classification: DataClassification = DataClassification.PROPRIETARY
     sensitivity_level: SensitivityLevel = SensitivityLevel.HIGH
     access_level: AccessLevel = AccessLevel.EXECUTIVE
-    
+
     # Metadata
     metadata: Dict[str, Any] = Field(default_factory=dict)
     embeddings: Optional[List[float]] = None
-    
+
     # Tracking
     version: int = 1
     is_current: bool = True
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     last_synced_at: Optional[datetime] = None
-    
+
     # Computed fields
     @property
     def is_sensitive(self) -> bool:
         """Check if knowledge contains sensitive data"""
         return self.sensitivity_level in [SensitivityLevel.HIGH, SensitivityLevel.CRITICAL]
-    
+
     @property
     def requires_auth(self) -> bool:
         """Check if knowledge requires authentication to access"""
         return self.access_level != AccessLevel.PUBLIC
-    
+
     def can_access(self, user_level: AccessLevel) -> bool:
         """Check if user has access to this knowledge"""
         level_hierarchy = {
@@ -120,24 +120,24 @@ class FoundationalKnowledge(BaseModel):
 class KnowledgeVersion(BaseModel):
     """Version history for foundational knowledge"""
     model_config = ConfigDict(from_attributes=True)
-    
+
     id: UUID = Field(default_factory=uuid4)
     knowledge_id: UUID
     version_number: int
-    
+
     # Snapshot of data
     title: str
     content: Optional[str] = None
     category: Optional[str] = None
     tags: Optional[List[str]] = Field(default_factory=list)
     metadata: Dict[str, Any] = Field(default_factory=dict)
-    
+
     # Change tracking
     change_type: ChangeType
     change_summary: Optional[str] = None
     changed_fields: List[str] = Field(default_factory=list)
     previous_version_id: Optional[UUID] = None
-    
+
     # Audit
     changed_by: str
     changed_at: datetime = Field(default_factory=datetime.utcnow)
@@ -147,7 +147,7 @@ class KnowledgeVersion(BaseModel):
 class KnowledgeRelationship(BaseModel):
     """Relationships between knowledge items"""
     model_config = ConfigDict(from_attributes=True)
-    
+
     id: UUID = Field(default_factory=uuid4)
     source_knowledge_id: UUID
     target_knowledge_id: UUID
@@ -162,13 +162,13 @@ class KnowledgeRelationship(BaseModel):
 class SyncOperation(BaseModel):
     """Sync operation tracking"""
     model_config = ConfigDict(from_attributes=True)
-    
+
     id: UUID = Field(default_factory=uuid4)
     sync_type: str  # 'full', 'incremental', 'manual'
     source_platform: str = "airtable"
     source_base: Optional[str] = None
     source_table: Optional[str] = None
-    
+
     # Results
     status: SyncStatus = SyncStatus.PENDING
     records_processed: int = 0
@@ -176,25 +176,25 @@ class SyncOperation(BaseModel):
     records_updated: int = 0
     records_deleted: int = 0
     records_failed: int = 0
-    
+
     # Timing
     started_at: datetime = Field(default_factory=datetime.utcnow)
     completed_at: Optional[datetime] = None
     duration_seconds: Optional[int] = None
-    
+
     # Error tracking
     error_message: Optional[str] = None
     error_details: Optional[Dict[str, Any]] = None
-    
+
     # Metadata
     triggered_by: Optional[str] = None
     sync_metadata: Dict[str, Any] = Field(default_factory=dict)
-    
+
     @property
     def is_successful(self) -> bool:
         """Check if sync completed successfully"""
         return self.status == SyncStatus.COMPLETED and not self.error_message
-    
+
     @property
     def success_rate(self) -> float:
         """Calculate success rate of sync"""

@@ -32,26 +32,26 @@ log_error() {
 
 check_requirements() {
     log_info "Checking system requirements..."
-    
+
     # Check Python version
     if ! python3 --version | grep -E "3\.(10|11|12)" > /dev/null; then
         log_error "Python 3.10+ required"
         exit 1
     fi
-    
+
     # Check for required tools
     for tool in docker redis-cli; do
         if ! command -v $tool &> /dev/null; then
             log_warn "$tool not found, some features may be limited"
         fi
     done
-    
+
     log_info "System requirements check complete"
 }
 
 setup_environment() {
     log_info "Setting up environment..."
-    
+
     # Create .env if it doesn't exist
     if [ ! -f "$ENV_FILE" ]; then
         log_info "Creating .env file from template..."
@@ -99,31 +99,31 @@ ENABLE_CACHING=true
 EOF
         log_warn "Please configure your .env file with actual values"
     fi
-    
+
     # Create secrets vault directory
     mkdir -p "$SECRETS_VAULT"
     chmod 700 "$SECRETS_VAULT"
-    
+
     log_info "Environment setup complete"
 }
 
 install_dependencies() {
     log_info "Installing Python dependencies..."
-    
+
     cd "$PROJECT_ROOT"
-    
+
     # Create virtual environment if it doesn't exist
     if [ ! -d "venv" ]; then
         log_info "Creating virtual environment..."
         python3 -m venv venv
     fi
-    
+
     # Activate virtual environment
     source venv/bin/activate
-    
+
     # Upgrade pip
     pip install --upgrade pip
-    
+
     # Install dependencies with uv if available
     if command -v uv &> /dev/null; then
         log_info "Installing with uv..."
@@ -132,20 +132,20 @@ install_dependencies() {
         log_info "Installing with pip..."
         pip install -r requirements.txt
     fi
-    
+
     # Install development dependencies
     if [ "${1:-}" = "--dev" ]; then
         log_info "Installing development dependencies..."
         pip install -r requirements-dev.txt
         pre-commit install
     fi
-    
+
     log_info "Dependencies installed successfully"
 }
 
 setup_infrastructure() {
     log_info "Setting up infrastructure services..."
-    
+
     # Start Redis
     if command -v docker &> /dev/null; then
         log_info "Starting Redis..."
@@ -156,7 +156,7 @@ setup_infrastructure() {
     else
         log_warn "Docker not found, please start Redis manually"
     fi
-    
+
     # Start Weaviate (optional for vector memory)
     if [ "${ENABLE_WEAVIATE:-false}" = "true" ]; then
         log_info "Starting Weaviate..."
@@ -167,16 +167,16 @@ setup_infrastructure() {
             -e PERSISTENCE_DATA_PATH=/var/lib/weaviate \
             semitechnologies/weaviate:latest 2>/dev/null || log_warn "Weaviate container already exists"
     fi
-    
+
     log_info "Infrastructure setup complete"
 }
 
 initialize_system() {
     log_info "Initializing Sophia + Artemis system..."
-    
+
     cd "$PROJECT_ROOT"
     source venv/bin/activate
-    
+
     # Initialize secrets
     log_info "Initializing secrets manager..."
     python3 << 'EOF'
@@ -202,7 +202,7 @@ for var in env_vars:
 
 print("Secrets initialization complete")
 EOF
-    
+
     # Initialize Portkey configuration
     log_info "Validating Portkey configuration..."
     python3 << 'EOF'
@@ -215,7 +215,7 @@ try:
 except Exception as e:
     print(f"✗ Portkey initialization failed: {e}")
 EOF
-    
+
     # Test memory router
     log_info "Testing memory router..."
     python3 << 'EOF'
@@ -237,16 +237,16 @@ async def test_memory():
 
 asyncio.run(test_memory())
 EOF
-    
+
     log_info "System initialization complete"
 }
 
 start_services() {
     log_info "Starting Sophia + Artemis services..."
-    
+
     cd "$PROJECT_ROOT"
     source venv/bin/activate
-    
+
     # Start based on deployment mode
     case "${DEPLOYMENT_MODE:-development}" in
         development)
@@ -275,21 +275,21 @@ start_services() {
 
 health_check() {
     log_info "Running health checks..."
-    
+
     # Check API endpoint
     if curl -s http://localhost:8000/health > /dev/null 2>&1; then
         log_info "✓ API is healthy"
     else
         log_warn "✗ API is not responding"
     fi
-    
+
     # Check Redis
     if redis-cli ping > /dev/null 2>&1; then
         log_info "✓ Redis is healthy"
     else
         log_warn "✗ Redis is not responding"
     fi
-    
+
     # Check orchestrators
     python3 << 'EOF'
 import asyncio
@@ -310,18 +310,18 @@ EOF
 
 cleanup() {
     log_info "Cleaning up..."
-    
+
     # Stop services gracefully
     if [ -f "/tmp/sophia-artemis.pid" ]; then
         kill $(cat /tmp/sophia-artemis.pid) 2>/dev/null || true
         rm /tmp/sophia-artemis.pid
     fi
-    
+
     # Optionally stop Docker containers
     if [ "${STOP_CONTAINERS:-false}" = "true" ]; then
         docker stop sophia-redis sophia-weaviate 2>/dev/null || true
     fi
-    
+
     log_info "Cleanup complete"
 }
 

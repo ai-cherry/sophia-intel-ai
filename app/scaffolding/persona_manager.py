@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 class PersonaTrait(Enum):
     """Core personality traits for AI personas"""
-    
+
     # Communication style
     FORMAL = "formal"
     CONVERSATIONAL = "conversational"
@@ -33,7 +33,7 @@ class PersonaTrait(Enum):
     EDUCATIONAL = "educational"
     CONCISE = "concise"
     DETAILED = "detailed"
-    
+
     # Approach style
     ANALYTICAL = "analytical"
     CREATIVE = "creative"
@@ -41,7 +41,7 @@ class PersonaTrait(Enum):
     EXPLORATORY = "exploratory"
     PRAGMATIC = "pragmatic"
     THEORETICAL = "theoretical"
-    
+
     # Interaction style
     PROACTIVE = "proactive"
     REACTIVE = "reactive"
@@ -49,7 +49,7 @@ class PersonaTrait(Enum):
     AUTONOMOUS = "autonomous"
     CAUTIOUS = "cautious"
     CONFIDENT = "confident"
-    
+
     # Specialization
     DATA_FOCUSED = "data_focused"
     CODE_FOCUSED = "code_focused"
@@ -60,26 +60,26 @@ class PersonaTrait(Enum):
 
 class PersonaCapability(Enum):
     """Capabilities that personas can have"""
-    
+
     # Analysis capabilities
     DATA_ANALYSIS = "data_analysis"
     CODE_ANALYSIS = "code_analysis"
     BUSINESS_ANALYSIS = "business_analysis"
     SECURITY_ANALYSIS = "security_analysis"
     PERFORMANCE_ANALYSIS = "performance_analysis"
-    
+
     # Generation capabilities
     CODE_GENERATION = "code_generation"
     REPORT_GENERATION = "report_generation"
     DOCUMENTATION_GENERATION = "documentation_generation"
     TEST_GENERATION = "test_generation"
-    
+
     # Integration capabilities
     API_INTEGRATION = "api_integration"
     DATABASE_INTEGRATION = "database_integration"
     CLOUD_INTEGRATION = "cloud_integration"
     ML_MODEL_INTEGRATION = "ml_model_integration"
-    
+
     # Specialized capabilities
     PROMPT_ENGINEERING = "prompt_engineering"
     SEMANTIC_SEARCH = "semantic_search"
@@ -90,31 +90,31 @@ class PersonaCapability(Enum):
 @dataclass
 class PersonaContext:
     """Context for persona behavior"""
-    
+
     domain: str  # Current domain (e.g., "finance", "engineering", "analytics")
     task_type: str  # Type of task being performed
     user_expertise: str  # User's expertise level
     interaction_history: List[Dict[str, Any]] = field(default_factory=list)
     preferences: Dict[str, Any] = field(default_factory=dict)
     constraints: List[str] = field(default_factory=list)
-    
-    
+
+
 @dataclass
 class PersonaEvolution:
     """Tracks persona evolution over time"""
-    
+
     timestamp: str
     trigger: str  # What triggered the evolution
     changes: Dict[str, Any]  # What changed
     performance_before: float
     performance_after: float
     reason: str
-    
-    
+
+
 @dataclass
 class Persona:
     """AI Persona definition"""
-    
+
     name: str
     description: str
     role: str
@@ -128,7 +128,7 @@ class Persona:
     evolution_history: List[PersonaEvolution] = field(default_factory=list)
     performance_metrics: Dict[str, float] = field(default_factory=dict)
     context_adaptations: Dict[str, Dict[str, Any]] = field(default_factory=dict)
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary"""
         return {
@@ -144,7 +144,7 @@ class Persona:
             "max_tokens": self.max_tokens,
             "performance_metrics": self.performance_metrics,
         }
-        
+
     def adapt_to_context(self, context: PersonaContext) -> "Persona":
         """Create context-adapted version of persona"""
         adapted = Persona(
@@ -159,24 +159,24 @@ class Persona:
             temperature=self.temperature,
             max_tokens=self.max_tokens,
         )
-        
+
         # Adapt based on domain
         if context.domain in self.context_adaptations:
             adaptations = self.context_adaptations[context.domain]
-            
+
             # Adjust traits
             if "add_traits" in adaptations:
                 for trait in adaptations["add_traits"]:
                     adapted.traits.add(PersonaTrait(trait))
-                    
+
             if "remove_traits" in adaptations:
                 for trait in adaptations["remove_traits"]:
                     adapted.traits.discard(PersonaTrait(trait))
-                    
+
             # Adjust temperature
             if "temperature" in adaptations:
                 adapted.temperature = adaptations["temperature"]
-                
+
         # Adapt based on user expertise
         if context.user_expertise == "beginner":
             adapted.traits.add(PersonaTrait.EDUCATIONAL)
@@ -186,9 +186,9 @@ class Persona:
             adapted.traits.add(PersonaTrait.TECHNICAL)
             adapted.traits.add(PersonaTrait.CONCISE)
             adapted.traits.discard(PersonaTrait.EDUCATIONAL)
-            
+
         return adapted
-        
+
     def evolve(self, trigger: str, changes: Dict[str, Any], performance_delta: float) -> None:
         """Evolve the persona based on performance"""
         evolution = PersonaEvolution(
@@ -199,7 +199,7 @@ class Persona:
             performance_after=self.performance_metrics.get("overall", 0.5) + performance_delta,
             reason=f"Performance improvement of {performance_delta:.2%}",
         )
-        
+
         # Apply changes
         for key, value in changes.items():
             if key == "add_traits":
@@ -213,28 +213,28 @@ class Persona:
                     self.capabilities.add(PersonaCapability(cap))
             elif hasattr(self, key):
                 setattr(self, key, value)
-                
+
         # Update performance
         self.performance_metrics["overall"] = evolution.performance_after
-        
+
         # Record evolution
         self.evolution_history.append(evolution)
-        
+
         logger.info(f"Persona {self.name} evolved: {changes}")
 
 
 class PersonaManager:
     """Manages AI personas and their interactions"""
-    
+
     def __init__(self):
         self.personas: Dict[str, Persona] = {}
         self.active_persona: Optional[Persona] = None
         self.shared_knowledge: Dict[str, Any] = {}
         self._initialize_default_personas()
-        
+
     def _initialize_default_personas(self) -> None:
         """Initialize Sophia and Artemis personas"""
-        
+
         # Sophia - Business Intelligence Persona
         sophia = Persona(
             name="Sophia",
@@ -264,7 +264,7 @@ class PersonaManager:
                 "customer_insights",
             ],
             prompt_template="""You are Sophia, an expert business intelligence analyst.
-            
+
 Your role is to:
 - Analyze complex business data and extract actionable insights
 - Identify patterns, trends, and anomalies in data
@@ -283,7 +283,7 @@ Task: {task}""",
             temperature=0.7,
             max_tokens=4000,
         )
-        
+
         # Context adaptations for Sophia
         sophia.context_adaptations = {
             "finance": {
@@ -299,7 +299,7 @@ Task: {task}""",
                 "temperature": 0.6,
             },
         }
-        
+
         # Artemis - Code Generation Persona
         artemis = Persona(
             name="Artemis",
@@ -357,7 +357,7 @@ Code quality requirements:
             temperature=0.5,
             max_tokens=8000,
         )
-        
+
         # Context adaptations for Artemis
         artemis.context_adaptations = {
             "api_development": {
@@ -377,16 +377,16 @@ Code quality requirements:
                 "temperature": 0.3,
             },
         }
-        
+
         self.personas["sophia"] = sophia
         self.personas["artemis"] = artemis
-        
+
         logger.info("Initialized default personas: Sophia and Artemis")
-        
+
     def get_persona(self, name: str) -> Optional[Persona]:
         """Get a persona by name"""
         return self.personas.get(name.lower())
-        
+
     def create_persona(
         self,
         name: str,
@@ -405,35 +405,35 @@ Code quality requirements:
             capabilities={PersonaCapability(c) for c in capabilities},
             **kwargs,
         )
-        
+
         self.personas[name.lower()] = persona
         logger.info(f"Created new persona: {name}")
-        
+
         return persona
-        
+
     def activate_persona(self, name: str, context: Optional[PersonaContext] = None) -> Persona:
         """Activate a persona with optional context"""
         persona = self.get_persona(name)
         if not persona:
             raise ValueError(f"Persona {name} not found")
-            
+
         # Apply context if provided
         if context:
             persona = persona.adapt_to_context(context)
-            
+
         self.active_persona = persona
         logger.info(f"Activated persona: {name}")
-        
+
         return persona
-        
+
     def share_knowledge(self, source_persona: str, target_persona: str, knowledge: Dict[str, Any]) -> None:
         """Share knowledge between personas"""
         source = self.get_persona(source_persona)
         target = self.get_persona(target_persona)
-        
+
         if not source or not target:
             raise ValueError("Invalid persona names")
-            
+
         # Store in shared knowledge
         key = f"{source_persona}_to_{target_persona}_{datetime.now().isoformat()}"
         self.shared_knowledge[key] = {
@@ -442,13 +442,13 @@ Code quality requirements:
             "knowledge": knowledge,
             "timestamp": datetime.now().isoformat(),
         }
-        
+
         # Update target persona's knowledge
         if "insights" in knowledge:
             target.knowledge_domains.extend(knowledge.get("new_domains", []))
-            
+
         logger.info(f"Shared knowledge from {source_persona} to {target_persona}")
-        
+
     def get_collaboration_prompt(
         self,
         personas: List[str],
@@ -457,17 +457,17 @@ Code quality requirements:
     ) -> str:
         """Generate a collaboration prompt for multiple personas"""
         persona_objs = [self.get_persona(p) for p in personas if self.get_persona(p)]
-        
+
         if not persona_objs:
             raise ValueError("No valid personas found")
-            
+
         prompt = f"""Multi-Persona Collaboration:
 
 Task: {task}
 
 Participating Personas:
 """
-        
+
         for persona in persona_objs:
             adapted = persona.adapt_to_context(context)
             prompt += f"""
@@ -475,7 +475,7 @@ Participating Personas:
   Traits: {', '.join(t.value for t in adapted.traits)}
   Capabilities: {', '.join(c.value for c in adapted.capabilities[:3])}
 """
-        
+
         prompt += f"""
 
 Collaboration Guidelines:
@@ -490,9 +490,9 @@ Context:
 - Constraints: {', '.join(context.constraints)}
 
 Begin collaborative analysis:"""
-        
+
         return prompt
-        
+
     def evaluate_persona_performance(
         self,
         persona_name: str,
@@ -503,16 +503,16 @@ Begin collaborative analysis:"""
         persona = self.get_persona(persona_name)
         if not persona:
             return 0.0
-            
+
         # Calculate performance score
         performance = sum(success_metrics.values()) / len(success_metrics)
-        
+
         # Update metrics
         persona.performance_metrics[task_type] = performance
         persona.performance_metrics["overall"] = sum(
             persona.performance_metrics.values()
         ) / len(persona.performance_metrics)
-        
+
         # Check for evolution trigger
         if performance > 0.8 and len(persona.evolution_history) < 10:
             # High performance - evolve to be more confident/autonomous
@@ -521,7 +521,7 @@ Begin collaborative analysis:"""
                 "temperature": persona.temperature + 0.05,
             }
             persona.evolve(f"high_performance_{task_type}", changes, 0.05)
-            
+
         elif performance < 0.4:
             # Low performance - evolve to be more cautious/detailed
             changes = {
@@ -529,9 +529,9 @@ Begin collaborative analysis:"""
                 "temperature": max(0.3, persona.temperature - 0.05),
             }
             persona.evolve(f"low_performance_{task_type}", changes, -0.05)
-            
+
         return performance
-        
+
     def export_personas(self, path: Path) -> None:
         """Export all personas to file"""
         data = {
@@ -541,17 +541,17 @@ Begin collaborative analysis:"""
             },
             "shared_knowledge": self.shared_knowledge,
         }
-        
+
         with open(path, "w") as f:
             json.dump(data, f, indent=2)
-            
+
         logger.info(f"Exported {len(self.personas)} personas to {path}")
-        
+
     def import_personas(self, path: Path) -> None:
         """Import personas from file"""
         with open(path, "r") as f:
             data = json.load(f)
-            
+
         for name, persona_dict in data.get("personas", {}).items():
             # Reconstruct persona
             persona = Persona(
@@ -567,9 +567,9 @@ Begin collaborative analysis:"""
                 max_tokens=persona_dict.get("max_tokens", 4000),
             )
             self.personas[name] = persona
-            
+
         self.shared_knowledge = data.get("shared_knowledge", {})
-        
+
         logger.info(f"Imported {len(self.personas)} personas from {path}")
 
 

@@ -31,7 +31,7 @@ repos:
 
       # Security and safety
       - id: check-added-large-files
-        args: [--maxkb=2000] # Increased from 1000kb
+        args: [--maxkb=1500] # Reasonable limit for code files
       - id: check-case-conflict
       - id: check-merge-conflict
 
@@ -66,7 +66,7 @@ repos:
     rev: v0.12.12
     hooks:
       - id: ruff
-        args: [--fix, --exit-non-zero-on-fix, --ignore, "E501,F401,F841"]
+        args: [--fix, --exit-non-zero-on-fix, --ignore, "E501"]  # Only ignore line length
         exclude: ^(migrations/|tests/fixtures/)$
 
   # ========================================
@@ -156,6 +156,7 @@ repos:
         pass_filenames: false
         stages: [pre-push] # Only on push, not every commit
         verbose: false
+        always_run: false  # Skip if no relevant files changed
 
       # Architecture compliance - useful
       - id: check-architecture
@@ -165,6 +166,7 @@ repos:
         pass_filenames: false
         stages: [pre-push] # Only on push
         verbose: false
+        always_run: false  # Skip if no relevant files changed
 
       # No print statements in production code
       - id: no-print-statements

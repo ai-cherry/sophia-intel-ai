@@ -906,34 +906,10 @@ def build_parser() -> argparse.ArgumentParser:
 
     sp.set_defaults(func=_do_swarm)
 
-    # collab merge-check
-    sp = collab_sub.add_parser(
-        "merge-check", help="Check if a proposal is merge-ready and emit Apply task if so"
-    )
-    sp.add_argument("--proposal", required=True, dest="pid")
-    sp.add_argument("--json", action="store_true", help="JSON output")
-    sp.set_defaults(func=_do_collab_merge_check)
-
-
-def main() -> int:
-    parser = build_parser()
-    args = parser.parse_args()
-    if not getattr(args, "cmd", None):
-        parser.print_help()
-        return 1
-    return int(args.func(args))
-    # collab merge-check
-    sp = collab_sub.add_parser(
-        "merge-check", help="Check if a proposal is merge-ready and emit Apply task if so"
-    )
-    sp.add_argument("--proposal", required=True, dest="pid")
-    sp.add_argument("--json", action="store_true", help="JSON output")
-
+    # collab merge-check (nested helpers to ensure availability at parse time)
     def _load_merge_threshold(default: float = 0.8) -> float:
         from pathlib import Path
-
         import yaml
-
         candidates = [
             Path("app/collaboration/collaboration_protocol.yaml"),
             Path("collaboration_protocol.yaml"),
@@ -984,7 +960,6 @@ def main() -> int:
         if ready:
             # Emit apply task for codex
             import uuid
-
             apply_task_id = str(uuid.uuid4())
             tags = [
                 "collab",
@@ -1016,7 +991,22 @@ def main() -> int:
         )
         return 0
 
+    sp = collab_sub.add_parser(
+        "merge-check", help="Check if a proposal is merge-ready and emit Apply task if so"
+    )
+    sp.add_argument("--proposal", required=True, dest="pid")
+    sp.add_argument("--json", action="store_true", help="JSON output")
     sp.set_defaults(func=_do_collab_merge_check)
+
+
+def main() -> int:
+    parser = build_parser()
+    args = parser.parse_args()
+    if not getattr(args, "cmd", None):
+        parser.print_help()
+        return 1
+    return int(args.func(args))
+    # (Removed duplicate merge-check definition moved earlier)
 
     # collab watch
     sp = collab_sub.add_parser(

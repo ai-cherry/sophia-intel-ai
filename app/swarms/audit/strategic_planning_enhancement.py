@@ -242,24 +242,24 @@ class StrategicPlanningEngine:
         # Update environmental data
         self.environmental_data.update(
             {
-                "technology_landscape": scan_results[0]
-                if not isinstance(scan_results[0], Exception)
-                else {},
-                "competitive_environment": scan_results[1]
-                if not isinstance(scan_results[1], Exception)
-                else {},
-                "market_conditions": scan_results[2]
-                if not isinstance(scan_results[2], Exception)
-                else {},
-                "regulatory_changes": scan_results[3]
-                if not isinstance(scan_results[3], Exception)
-                else {},
-                "stakeholder_sentiment": scan_results[4]
-                if not isinstance(scan_results[4], Exception)
-                else {},
-                "performance_indicators": scan_results[5]
-                if not isinstance(scan_results[5], Exception)
-                else {},
+                "technology_landscape": (
+                    scan_results[0] if not isinstance(scan_results[0], Exception) else {}
+                ),
+                "competitive_environment": (
+                    scan_results[1] if not isinstance(scan_results[1], Exception) else {}
+                ),
+                "market_conditions": (
+                    scan_results[2] if not isinstance(scan_results[2], Exception) else {}
+                ),
+                "regulatory_changes": (
+                    scan_results[3] if not isinstance(scan_results[3], Exception) else {}
+                ),
+                "stakeholder_sentiment": (
+                    scan_results[4] if not isinstance(scan_results[4], Exception) else {}
+                ),
+                "performance_indicators": (
+                    scan_results[5] if not isinstance(scan_results[5], Exception) else {}
+                ),
             }
         )
 
@@ -302,21 +302,21 @@ class StrategicPlanningEngine:
 
         orient_results = {
             "strategic_position": strategic_position,
-            "capability_assessment": orientation_results[1]
-            if not isinstance(orientation_results[1], Exception)
-            else {},
-            "competitive_analysis": orientation_results[2]
-            if not isinstance(orientation_results[2], Exception)
-            else {},
-            "resource_evaluation": orientation_results[3]
-            if not isinstance(orientation_results[3], Exception)
-            else {},
-            "stakeholder_mapping": orientation_results[4]
-            if not isinstance(orientation_results[4], Exception)
-            else {},
-            "intelligence_synthesis": orientation_results[5]
-            if not isinstance(orientation_results[5], Exception)
-            else {},
+            "capability_assessment": (
+                orientation_results[1] if not isinstance(orientation_results[1], Exception) else {}
+            ),
+            "competitive_analysis": (
+                orientation_results[2] if not isinstance(orientation_results[2], Exception) else {}
+            ),
+            "resource_evaluation": (
+                orientation_results[3] if not isinstance(orientation_results[3], Exception) else {}
+            ),
+            "stakeholder_mapping": (
+                orientation_results[4] if not isinstance(orientation_results[4], Exception) else {}
+            ),
+            "intelligence_synthesis": (
+                orientation_results[5] if not isinstance(orientation_results[5], Exception) else {}
+            ),
             "orientation_clarity_score": self._calculate_orientation_clarity(),
         }
 
@@ -350,21 +350,21 @@ class StrategicPlanningEngine:
 
         decide_results = {
             "scenario_forecasts": len(scenario_forecasts),
-            "strategic_options_evaluated": decision_results[0]
-            if not isinstance(decision_results[0], Exception)
-            else {},
-            "risk_assessments": decision_results[1]
-            if not isinstance(decision_results[1], Exception)
-            else {},
-            "resource_analysis": decision_results[2]
-            if not isinstance(decision_results[2], Exception)
-            else {},
-            "implementation_scenarios": decision_results[3]
-            if not isinstance(decision_results[3], Exception)
-            else {},
-            "stakeholder_impact": decision_results[4]
-            if not isinstance(decision_results[4], Exception)
-            else {},
+            "strategic_options_evaluated": (
+                decision_results[0] if not isinstance(decision_results[0], Exception) else {}
+            ),
+            "risk_assessments": (
+                decision_results[1] if not isinstance(decision_results[1], Exception) else {}
+            ),
+            "resource_analysis": (
+                decision_results[2] if not isinstance(decision_results[2], Exception) else {}
+            ),
+            "implementation_scenarios": (
+                decision_results[3] if not isinstance(decision_results[3], Exception) else {}
+            ),
+            "stakeholder_impact": (
+                decision_results[4] if not isinstance(decision_results[4], Exception) else {}
+            ),
             "strategic_decisions": strategic_decisions,
             "decision_confidence_score": self._calculate_decision_confidence(),
         }
@@ -394,24 +394,36 @@ class StrategicPlanningEngine:
         implementation_plan = await self._synthesize_implementation_plan(implementation_results)
 
         act_results = {
-            "implementation_roadmap": implementation_results[0]
-            if not isinstance(implementation_results[0], Exception)
-            else {},
-            "resource_allocation": implementation_results[1]
-            if not isinstance(implementation_results[1], Exception)
-            else {},
-            "monitoring_systems": implementation_results[2]
-            if not isinstance(implementation_results[2], Exception)
-            else {},
-            "success_metrics": implementation_results[3]
-            if not isinstance(implementation_results[3], Exception)
-            else {},
-            "contingency_plans": implementation_results[4]
-            if not isinstance(implementation_results[4], Exception)
-            else {},
-            "communication_plan": implementation_results[5]
-            if not isinstance(implementation_results[5], Exception)
-            else {},
+            "implementation_roadmap": (
+                implementation_results[0]
+                if not isinstance(implementation_results[0], Exception)
+                else {}
+            ),
+            "resource_allocation": (
+                implementation_results[1]
+                if not isinstance(implementation_results[1], Exception)
+                else {}
+            ),
+            "monitoring_systems": (
+                implementation_results[2]
+                if not isinstance(implementation_results[2], Exception)
+                else {}
+            ),
+            "success_metrics": (
+                implementation_results[3]
+                if not isinstance(implementation_results[3], Exception)
+                else {}
+            ),
+            "contingency_plans": (
+                implementation_results[4]
+                if not isinstance(implementation_results[4], Exception)
+                else {}
+            ),
+            "communication_plan": (
+                implementation_results[5]
+                if not isinstance(implementation_results[5], Exception)
+                else {}
+            ),
             "implementation_plan": implementation_plan,
             "readiness_score": self._calculate_implementation_readiness(),
         }

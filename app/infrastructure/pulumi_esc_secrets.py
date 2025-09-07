@@ -281,9 +281,9 @@ class AdvancedSecretsManager:
                 status=status,
                 last_rotation=secret.last_rotation.isoformat() if secret.last_rotation else "never",
                 age_hours=age_hours,
-                next_rotation=secret.next_rotation.isoformat()
-                if secret.next_rotation
-                else "not scheduled",
+                next_rotation=(
+                    secret.next_rotation.isoformat() if secret.next_rotation else "not scheduled"
+                ),
                 rotation_count=secret.rotation_count,
                 active_version=secret.active_version,
             )

@@ -2,6 +2,7 @@
 Sophia Intelligence System - ElevenLabs Voice Integration
 Provides text-to-speech capabilities using ElevenLabs API
 """
+
 import base64
 import io
 import logging

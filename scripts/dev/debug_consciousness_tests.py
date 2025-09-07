@@ -114,7 +114,9 @@ async def validate_consciousness_assumptions():
             if tracker_value_after and actual_swarm_type == expected_swarm_type:
                 print("   ✅ MemoryEnhancedGenesisSwarm consciousness integration - LIKELY WORKING")
             else:
-                print("   🚨 MemoryEnhancedGenesisSwarm consciousness integration - POTENTIAL ISSUE")
+                print(
+                    "   🚨 MemoryEnhancedGenesisSwarm consciousness integration - POTENTIAL ISSUE"
+                )
 
     except Exception as e:
         print(f"   ❌ MemoryEnhancedGenesisSwarm consciousness integration - ERROR: {e}")

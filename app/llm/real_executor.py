@@ -111,9 +111,11 @@ class RealLLMExecutor:
                     return LLMResponse(
                         content=result.get("content", ""),
                         success=result.get("success", False),
-                        status=ResponseStatus.SUCCESS
-                        if result.get("success")
-                        else ResponseStatus.ERROR,
+                        status=(
+                            ResponseStatus.SUCCESS
+                            if result.get("success")
+                            else ResponseStatus.ERROR
+                        ),
                         model=model,
                         trace_id=trace_id,
                         session_id=session_id,

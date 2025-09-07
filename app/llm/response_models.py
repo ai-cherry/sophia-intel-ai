@@ -87,14 +87,18 @@ class LLMResponse:
             "task_type": self.task_type,
             "timestamp": self.timestamp.isoformat(),
             "latency_ms": self.latency_ms,
-            "token_stats": {
-                "prompt_tokens": self.token_stats.prompt_tokens if self.token_stats else 0,
-                "completion_tokens": self.token_stats.completion_tokens if self.token_stats else 0,
-                "total_tokens": self.token_stats.total_tokens if self.token_stats else 0,
-                "cached_tokens": self.token_stats.cached_tokens if self.token_stats else 0,
-            }
-            if self.token_stats
-            else None,
+            "token_stats": (
+                {
+                    "prompt_tokens": self.token_stats.prompt_tokens if self.token_stats else 0,
+                    "completion_tokens": (
+                        self.token_stats.completion_tokens if self.token_stats else 0
+                    ),
+                    "total_tokens": self.token_stats.total_tokens if self.token_stats else 0,
+                    "cached_tokens": self.token_stats.cached_tokens if self.token_stats else 0,
+                }
+                if self.token_stats
+                else None
+            ),
             "estimated_cost": self.estimated_cost,
             "error": self.error,
             "error_code": self.error_code,

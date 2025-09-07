@@ -568,9 +568,11 @@ class RealTimeLearningMiddleware(LearningMiddleware):
                 "avg_quality": np.mean(quality_scores),
                 "min_quality": min(quality_scores),
                 "max_quality": max(quality_scores),
-                "quality_trend": "improving"
-                if len(quality_scores) > 1 and quality_scores[-1] > quality_scores[0]
-                else "stable",
+                "quality_trend": (
+                    "improving"
+                    if len(quality_scores) > 1 and quality_scores[-1] > quality_scores[0]
+                    else "stable"
+                ),
             }
 
         return patterns

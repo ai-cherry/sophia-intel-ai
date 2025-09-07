@@ -48,9 +48,9 @@ class EvolutionAlert:
             "message": self.message,
             "timestamp": self.timestamp.isoformat(),
             "resolved": self.resolved,
-            "resolution_timestamp": self.resolution_timestamp.isoformat()
-            if self.resolution_timestamp
-            else None,
+            "resolution_timestamp": (
+                self.resolution_timestamp.isoformat() if self.resolution_timestamp else None
+            ),
             "experimental_context": self.experimental_context or {},
         }
 
@@ -499,7 +499,9 @@ class ExperimentalEvolutionMonitor:
             self.resolved_alerts.append(alert)
             del self.active_alerts[alert_id]
 
-            logger.info(f"🧪📊✅ Resolved experimental evolution alert {alert_id}: {resolution_note}")
+            logger.info(
+                f"🧪📊✅ Resolved experimental evolution alert {alert_id}: {resolution_note}"
+            )
 
     async def _evaluate_alerts(self):
         """Evaluate and potentially auto-resolve alerts."""
@@ -568,13 +570,15 @@ class ExperimentalEvolutionMonitor:
                 "total_breakthrough_events": total_breakthroughs,
             },
             "system_health": self._calculate_system_health(),
-            "experimental_status": "active"
-            if any(
-                any(m.experimental_variants > 0 for m in metrics)
-                for metrics in self.metrics_history.values()
-                if metrics
-            )
-            else "inactive",
+            "experimental_status": (
+                "active"
+                if any(
+                    any(m.experimental_variants > 0 for m in metrics)
+                    for metrics in self.metrics_history.values()
+                    if metrics
+                )
+                else "inactive"
+            ),
         }
 
     def _get_alert_breakdown(self) -> dict[str, int]:

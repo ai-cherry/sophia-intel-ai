@@ -148,7 +148,9 @@ async def startup_event():
     )
     orchestrator_initialized = await sophia_orchestrator.initialize()
     if orchestrator_initialized:
-        logger.info("💎 Sophia AGNO Orchestrator ready with specialized business intelligence teams")
+        logger.info(
+            "💎 Sophia AGNO Orchestrator ready with specialized business intelligence teams"
+        )
     else:
         logger.error("❌ Failed to initialize Sophia AGNO orchestrator")
 
@@ -518,9 +520,9 @@ async def chat_legacy_endpoint(persona_id: str, request: dict):
                 "persona_id": "sophia_universal",
                 "timestamp": response.timestamp,
                 "command_type": response.command_type,
-                "insights": response.insights[:3]
-                if response.insights
-                else [],  # Limit for legacy compatibility
+                "insights": (
+                    response.insights[:3] if response.insights else []
+                ),  # Limit for legacy compatibility
                 "recommendations": response.recommendations[:3] if response.recommendations else [],
             }
         except Exception as e:
@@ -693,9 +695,9 @@ async def execute_business_task(agent_or_team_id: str, request: TaskExecuteReque
         return {
             "success": result["success"],
             "result": result,
-            "message": "Task executed successfully"
-            if result["success"]
-            else "Task execution failed",
+            "message": (
+                "Task executed successfully" if result["success"] else "Task execution failed"
+            ),
         }
     except Exception as e:
         logger.error(f"Failed to execute business task: {e}")

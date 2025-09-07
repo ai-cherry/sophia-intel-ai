@@ -6,6 +6,7 @@ with advanced collaboration patterns: debates, consensus, cross-validation
 
 Designed to CRUSH complex implementation challenges through coordinated AI expertise
 """
+
 from __future__ import annotations
 
 import logging

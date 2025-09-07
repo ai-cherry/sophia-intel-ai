@@ -192,9 +192,12 @@ class GongEmailExtractor:
         try:
             import aiohttp
 
-            async with aiohttp.ClientSession() as session, session.get(
-                f"{self.api_url}/v2/emails", headers=headers, params=params
-            ) as response:
+            async with (
+                aiohttp.ClientSession() as session,
+                session.get(
+                    f"{self.api_url}/v2/emails", headers=headers, params=params
+                ) as response,
+            ):
                 if response.status == 200:
                     data = await response.json()
                     emails = data.get("emails", [])
@@ -217,9 +220,10 @@ class GongEmailExtractor:
         try:
             import aiohttp
 
-            async with aiohttp.ClientSession() as session, session.get(
-                f"{self.api_url}/v2/emails/{email_id}", headers=headers
-            ) as response:
+            async with (
+                aiohttp.ClientSession() as session,
+                session.get(f"{self.api_url}/v2/emails/{email_id}", headers=headers) as response,
+            ):
                 if response.status == 200:
                     return await response.json()
                 else:
@@ -772,11 +776,11 @@ class GongEmailPipeline:
                 "opportunity_stage": email.opportunity_stage,
                 "contact_ids": email.contact_ids,
                 "account_id": email.account_id,
-                "sentiment": "positive"
-                if email.sentiment_score > 0.1
-                else "negative"
-                if email.sentiment_score < -0.1
-                else "neutral",
+                "sentiment": (
+                    "positive"
+                    if email.sentiment_score > 0.1
+                    else "negative" if email.sentiment_score < -0.1 else "neutral"
+                ),
                 "sentiment_score": email.sentiment_score,
                 "urgency_score": email.urgency_score,
                 "topics": email.topics,

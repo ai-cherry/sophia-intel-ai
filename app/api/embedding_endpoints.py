@@ -299,9 +299,11 @@ async def semantic_search(
         results = [
             SearchResult(
                 index=int(idx),
-                text=request.documents[idx][:200] + "..."
-                if len(request.documents[idx]) > 200
-                else request.documents[idx],
+                text=(
+                    request.documents[idx][:200] + "..."
+                    if len(request.documents[idx]) > 200
+                    else request.documents[idx]
+                ),
                 score=float(similarities[idx]),
             )
             for idx in top_indices

@@ -224,9 +224,10 @@ class LinearDataFetcher:
             }
             """
 
-            async with aiohttp.ClientSession() as session, session.post(
-                self.base_url, headers=headers, json={"query": query}
-            ) as response:
+            async with (
+                aiohttp.ClientSession() as session,
+                session.post(self.base_url, headers=headers, json={"query": query}) as response,
+            ):
                 if response.status == 200:
                     data = await response.json()
                     if "errors" in data:

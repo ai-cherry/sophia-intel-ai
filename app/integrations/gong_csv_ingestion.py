@@ -458,11 +458,11 @@ class GongCSVIngestionPipeline:
                     "callId": record.call_id,
                     "chunkId": chunk["chunk_id"],
                     "text": chunk["text"],
-                    "speaker": "Multiple"
-                    if len(record.participants) > 1
-                    else record.participants[0]
-                    if record.participants
-                    else "Unknown",
+                    "speaker": (
+                        "Multiple"
+                        if len(record.participants) > 1
+                        else record.participants[0] if record.participants else "Unknown"
+                    ),
                     "chunkIndex": chunk["index"],
                     "callTitle": record.title,
                     "callDate": record.date,

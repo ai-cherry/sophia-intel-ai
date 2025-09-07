@@ -284,9 +284,9 @@ class RateLimitMonitor:
                     "avg_latency": round(rate_info.avg_latency, 3),
                     "success_rate": round(rate_info.success_rate, 3),
                     "rate_limit_count": rate_info.rate_limit_count,
-                    "last_rate_limit": rate_info.last_rate_limit.isoformat()
-                    if rate_info.last_rate_limit
-                    else None,
+                    "last_rate_limit": (
+                        rate_info.last_rate_limit.isoformat() if rate_info.last_rate_limit else None
+                    ),
                 }
 
         return {"provider": provider, "status": "not_configured"}
@@ -373,9 +373,9 @@ class RateLimitMonitor:
                 },
                 "rate_limits": {
                     "hit_count": rate_info.rate_limit_count,
-                    "last_hit": rate_info.last_rate_limit.isoformat()
-                    if rate_info.last_rate_limit
-                    else None,
+                    "last_hit": (
+                        rate_info.last_rate_limit.isoformat() if rate_info.last_rate_limit else None
+                    ),
                 },
             }
 

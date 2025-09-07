@@ -16,11 +16,10 @@ import ast
 import logging
 from dataclasses import dataclass, field
 from enum import Enum
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Tuple
 
 from app.scaffolding.meta_tagging import AIHints, CodeMetadata, ComplexityLevel
-from app.scaffolding.semantic_classifier import CodePattern, get_semantic_classifier
+from app.scaffolding.semantic_classifier import get_semantic_classifier
 
 logger = logging.getLogger(__name__)
 
@@ -97,34 +96,29 @@ class AIHintsGenerator:
             r"\.update\(": RiskFactor.DATABASE_OPERATIONS,
             r"\.delete\(": RiskFactor.DATABASE_OPERATIONS,
             r"BEGIN TRANSACTION": RiskFactor.DATABASE_OPERATIONS,
-
             # API patterns
             r"requests\.(get|post|put|delete)": RiskFactor.EXTERNAL_API_CALLS,
             r"httpx\.(get|post|put|delete)": RiskFactor.EXTERNAL_API_CALLS,
             r"aiohttp\.(get|post|put|delete)": RiskFactor.EXTERNAL_API_CALLS,
             r"openai\.": RiskFactor.EXTERNAL_API_CALLS,
             r"anthropic\.": RiskFactor.EXTERNAL_API_CALLS,
-
             # File system patterns
             r"open\(": RiskFactor.FILE_SYSTEM_OPERATIONS,
             r"\.write\(": RiskFactor.FILE_SYSTEM_OPERATIONS,
             r"\.read\(": RiskFactor.FILE_SYSTEM_OPERATIONS,
             r"shutil\.": RiskFactor.FILE_SYSTEM_OPERATIONS,
             r"os\.remove": RiskFactor.FILE_SYSTEM_OPERATIONS,
-
             # Security patterns
             r"jwt\.": RiskFactor.AUTHENTICATION_LOGIC,
             r"bcrypt\.": RiskFactor.AUTHENTICATION_LOGIC,
             r"hashlib\.": RiskFactor.CRYPTOGRAPHIC_OPERATIONS,
             r"cryptography\.": RiskFactor.CRYPTOGRAPHIC_OPERATIONS,
             r"stripe\.": RiskFactor.PAYMENT_PROCESSING,
-
             # Concurrency patterns
             r"asyncio\.": RiskFactor.CONCURRENT_OPERATIONS,
             r"threading\.": RiskFactor.CONCURRENT_OPERATIONS,
             r"multiprocessing\.": RiskFactor.CONCURRENT_OPERATIONS,
             r"async def": RiskFactor.CONCURRENT_OPERATIONS,
-
             # State patterns
             r"global ": RiskFactor.GLOBAL_STATE_MODIFICATION,
             r"__setattr__": RiskFactor.GLOBAL_STATE_MODIFICATION,
@@ -134,7 +128,11 @@ class AIHintsGenerator:
     def _compile_optimization_patterns(self) -> List[Tuple[str, str, str]]:
         """Compile patterns that indicate optimization opportunities"""
         return [
-            (r"for .* in .*:\n.*for .* in", "nested_loops", "Consider vectorization or optimization"),
+            (
+                r"for .* in .*:\n.*for .* in",
+                "nested_loops",
+                "Consider vectorization or optimization",
+            ),
             (r"time\.sleep\(", "blocking_sleep", "Use async sleep in async context"),
             (r"\+ \[.*\]", "list_concatenation", "Use extend() instead of + for lists"),
             (r"except:$", "bare_except", "Specify exception types"),
@@ -149,9 +147,7 @@ class AIHintsGenerator:
         hints = AIHints()
 
         # Calculate modification risk
-        hints.modification_risk = self._calculate_modification_risk(
-            metadata, source_code
-        )
+        hints.modification_risk = self._calculate_modification_risk(metadata, source_code)
 
         # Determine test requirements
         hints.test_requirements = self._determine_test_requirements(
@@ -159,9 +155,7 @@ class AIHintsGenerator:
         )
 
         # Identify optimization potential
-        optimization = self._identify_optimization_potential(
-            metadata, source_code
-        )
+        optimization = self._identify_optimization_potential(metadata, source_code)
         hints.optimization_potential = optimization["score"]
         hints.refactoring_suggestions = optimization["suggestions"]
 
@@ -172,23 +166,17 @@ class AIHintsGenerator:
         hints.side_effects = self._identify_side_effects(source_code)
 
         # Check concurrency safety
-        hints.concurrency_safe = self._check_concurrency_safety(
-            source_code, hints.side_effects
-        )
+        hints.concurrency_safe = self._check_concurrency_safety(source_code, hints.side_effects)
 
         # Check idempotency
         hints.idempotent = self._check_idempotency(metadata, source_code)
 
         # Check if pure function
-        hints.pure_function = self._is_pure_function(
-            source_code, hints.side_effects
-        )
+        hints.pure_function = self._is_pure_function(source_code, hints.side_effects)
 
         return hints
 
-    def _calculate_modification_risk(
-        self, metadata: CodeMetadata, source_code: str
-    ) -> float:
+    def _calculate_modification_risk(self, metadata: CodeMetadata, source_code: str) -> float:
         """Calculate the risk of modifying this code"""
         risk_score = 0.0
         risk_factors = []
@@ -196,6 +184,7 @@ class AIHintsGenerator:
         # Check for risk patterns
         for pattern, risk_factor in self.risk_patterns.items():
             import re
+
             if re.search(pattern, source_code):
                 risk_factors.append(risk_factor.value)
 
@@ -224,9 +213,7 @@ class AIHintsGenerator:
 
         return risk_score
 
-    def _determine_test_requirements(
-        self, metadata: CodeMetadata, risk: float
-    ) -> List[str]:
+    def _determine_test_requirements(self, metadata: CodeMetadata, risk: float) -> List[str]:
         """Determine required test strategies"""
         requirements = []
 
@@ -286,9 +273,11 @@ class AIHintsGenerator:
             suggestions.append("long_function: Consider breaking into smaller functions")
 
         # Deep nesting
-        max_indent = max(
-            (len(line) - len(line.lstrip())) // 4 for line in lines if line.strip()
-        ) if lines else 0
+        max_indent = (
+            max((len(line) - len(line.lstrip())) // 4 for line in lines if line.strip())
+            if lines
+            else 0
+        )
 
         if max_indent > 4:
             score += 0.3
@@ -375,9 +364,7 @@ class AIHintsGenerator:
 
         return side_effects
 
-    def _check_concurrency_safety(
-        self, source_code: str, side_effects: List[str]
-    ) -> bool:
+    def _check_concurrency_safety(self, source_code: str, side_effects: List[str]) -> bool:
         """Check if code is safe for concurrent execution"""
 
         # Not safe if modifies global state
@@ -399,8 +386,7 @@ class AIHintsGenerator:
 
         # Check for proper locking
         has_locks = any(
-            lock in source_code
-            for lock in ["Lock(", "RLock(", "Semaphore(", "asyncio.Lock("]
+            lock in source_code for lock in ["Lock(", "RLock(", "Semaphore(", "asyncio.Lock("]
         )
 
         # If has concurrent operations but no locks, not safe
@@ -409,9 +395,7 @@ class AIHintsGenerator:
 
         return True
 
-    def _check_idempotency(
-        self, metadata: CodeMetadata, source_code: str
-    ) -> bool:
+    def _check_idempotency(self, metadata: CodeMetadata, source_code: str) -> bool:
         """Check if operation is idempotent"""
 
         # Check for non-idempotent operations
@@ -438,17 +422,12 @@ class AIHintsGenerator:
         # Repository methods are often idempotent by design
         if metadata.semantic_role.value == "repository":
             # Check for specific patterns
-            if any(
-                method in metadata.name
-                for method in ["get", "find", "fetch", "retrieve"]
-            ):
+            if any(method in metadata.name for method in ["get", "find", "fetch", "retrieve"]):
                 return True
 
         return True
 
-    def _is_pure_function(
-        self, source_code: str, side_effects: List[str]
-    ) -> bool:
+    def _is_pure_function(self, source_code: str, side_effects: List[str]) -> bool:
         """Check if function is pure (no side effects, deterministic)"""
 
         # Has side effects? Not pure

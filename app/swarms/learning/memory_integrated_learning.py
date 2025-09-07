@@ -855,9 +855,9 @@ async def create_memory_integrated_learning(
         memory_store=memory_store,
         vector_dimension=config.get("vector_dimension", 128) if config else 128,
         max_working_memory_size=config.get("max_working_memory_size", 1000) if config else 1000,
-        knowledge_graph_max_nodes=config.get("knowledge_graph_max_nodes", 10000)
-        if config
-        else 10000,
+        knowledge_graph_max_nodes=(
+            config.get("knowledge_graph_max_nodes", 10000) if config else 10000
+        ),
     )
 
     await system.initialize()

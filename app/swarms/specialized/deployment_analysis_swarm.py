@@ -5,6 +5,7 @@ Advanced multi-agent deployment analysis and optimization system for
 Sophia Intel AI platform with specialized agents for infrastructure
 audit, cost optimization, performance monitoring, and GPU integration.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -370,9 +371,9 @@ class DeploymentAnalysisSwarm:
                     analysis_result["domain_analyses"][domain.value] = result
 
             # Synthesize cross-domain optimization recommendations
-            analysis_result[
-                "optimization_recommendations"
-            ] = await self._synthesize_recommendations(analysis_result["domain_analyses"])
+            analysis_result["optimization_recommendations"] = (
+                await self._synthesize_recommendations(analysis_result["domain_analyses"])
+            )
 
             # Generate implementation roadmap
             analysis_result["implementation_roadmap"] = await self._generate_implementation_roadmap(

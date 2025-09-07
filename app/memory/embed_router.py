@@ -2,7 +2,9 @@
 Embedding router with caching for dual-tier embeddings.
 Routes to appropriate model based on chunk characteristics.
 """
+
 from __future__ import annotations
+
 import hashlib
 import json
 import os

@@ -313,9 +313,9 @@ async def tactical_chat_legacy_endpoint(agent_id: str, request: dict):
                 "timestamp": response.timestamp,
                 "tactical_status": "operational",
                 "command_type": response.command_type,
-                "findings": response.findings[:3]
-                if response.findings
-                else [],  # Limit for legacy compatibility
+                "findings": (
+                    response.findings[:3] if response.findings else []
+                ),  # Limit for legacy compatibility
                 "recommendations": response.recommendations[:3] if response.recommendations else [],
             }
         except Exception as e:

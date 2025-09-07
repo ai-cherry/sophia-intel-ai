@@ -593,9 +593,9 @@ class MemoryIntegrationPattern(SwarmPattern):
             "failed_operations": len(
                 [op for op in self.memory_operations_log if op.get("status") == "failed"]
             ),
-            "last_operation": self.memory_operations_log[-1]
-            if self.memory_operations_log
-            else None,
+            "last_operation": (
+                self.memory_operations_log[-1] if self.memory_operations_log else None
+            ),
         }
 
     async def validate_memory_integration(self) -> dict[str, Any]:

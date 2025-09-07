@@ -68,9 +68,9 @@ class LearningEnhancedExecutionStrategy(ABC):
             agent_states={f"agent_{i}": {} for i in range(len(swarm.agents))},
             solution={
                 "success": len([r for r in result if r.get("success", False)]) > 0,
-                "quality_score": np.mean([r.get("quality_score", 0.0) for r in result])
-                if result
-                else 0.0,
+                "quality_score": (
+                    np.mean([r.get("quality_score", 0.0) for r in result]) if result else 0.0
+                ),
                 "agent_results": result,
             },
             metrics=swarm.metrics,
@@ -374,9 +374,9 @@ class LearningEnhancedSequentialExecution(LearningEnhancedExecutionStrategy):
                 {
                     "success_trend": success_trend,
                     "quality_trend": quality_trend,
-                    "recommended_approach": "build_on_success"
-                    if success_trend[-1]
-                    else "course_correct",
+                    "recommended_approach": (
+                        "build_on_success" if success_trend[-1] else "course_correct"
+                    ),
                 }
             )
 
@@ -428,9 +428,9 @@ class LearningEnhancedSequentialExecution(LearningEnhancedExecutionStrategy):
 
         # Update recommendations for next agent
         if agent_position > 0:
-            updated_knowledge[
-                "next_agent_recommendations"
-            ] = await self._generate_next_agent_recommendations(updated_knowledge, new_result)
+            updated_knowledge["next_agent_recommendations"] = (
+                await self._generate_next_agent_recommendations(updated_knowledge, new_result)
+            )
 
         return updated_knowledge
 

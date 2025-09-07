@@ -1113,9 +1113,11 @@ class MemoryEnhancedGenesisSwarm(MemoryEnhancedImprovedSwarm):
                 SwarmMemoryEventType.CONSCIOUSNESS_MEASURED,
                 {
                     "consciousness_level": consciousness_level,
-                    "generation": getattr(self.evolution_engine, "generation", 1)
-                    if hasattr(self, "evolution_engine")
-                    else 1,
+                    "generation": (
+                        getattr(self.evolution_engine, "generation", 1)
+                        if hasattr(self, "evolution_engine")
+                        else 1
+                    ),
                     "emergence_events": len(
                         getattr(self.consciousness_tracker, "emergence_events", [])
                     ),

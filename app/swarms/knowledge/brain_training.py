@@ -486,12 +486,12 @@ class BrainTrainingPipeline:
             "learning_objectives_progress": {
                 obj_id: obj.progress for obj_id, obj in self.learning_objectives.items()
             },
-            "recent_performance": self.performance_history[-10:]
-            if self.performance_history
-            else [],
-            "average_processing_time": np.mean(self.processing_times)
-            if self.processing_times
-            else 0.0,
+            "recent_performance": (
+                self.performance_history[-10:] if self.performance_history else []
+            ),
+            "average_processing_time": (
+                np.mean(self.processing_times) if self.processing_times else 0.0
+            ),
             "content_processors_available": list(self.content_processors.keys()),
             "training_sessions_completed": len(self.training_history),
         }

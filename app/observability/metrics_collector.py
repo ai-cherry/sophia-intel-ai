@@ -1,4 +1,5 @@
 """Comprehensive observability system for MCP tools and agents."""
+
 import asyncio
 import contextlib
 import json
@@ -209,9 +210,9 @@ class TraceCollector:
                     "duration_ms": trace.duration_ms,
                     "success": trace.success,
                     "error": trace.error,
-                    "memory_delta": trace.memory_after - trace.memory_before
-                    if trace.memory_after
-                    else 0,
+                    "memory_delta": (
+                        trace.memory_after - trace.memory_before if trace.memory_after else 0
+                    ),
                     "context": trace.context,
                 }
             )

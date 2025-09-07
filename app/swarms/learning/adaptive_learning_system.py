@@ -1075,9 +1075,9 @@ class LearningEnhancedSwarmMixin:
                         "applied_knowledge": [k.id for k in applicable_knowledge],
                     },
                     agent_states={agent.__class__.__name__: {} for agent in self.agents},
-                    solution=result.__dict__
-                    if hasattr(result, "__dict__")
-                    else {"result": str(result)},
+                    solution=(
+                        result.__dict__ if hasattr(result, "__dict__") else {"result": str(result)}
+                    ),
                     metrics=self.metrics,
                 )
 

@@ -13,29 +13,20 @@ AI Context:
 """
 
 import ast
-import asyncio
-import json
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional
 
-from app.core.portkey_manager import TaskType as PortkeyTaskType, get_portkey_manager
 from app.memory.unified_memory_router import MemoryDomain, UnifiedMemoryRouter
 from app.orchestrators.base_orchestrator import (
     BaseOrchestrator,
-    ExecutionPriority,
     OrchestratorConfig,
-    Result,
-    Task,
-    TaskType,
 )
 from app.scaffolding.ai_hints_pipeline import (
     AIHintsGenerator,
-    OptimizationOpportunity,
-    RefactoringRecommendation,
 )
 from app.scaffolding.embedding_system import (
     CodeChunk,
@@ -136,36 +127,34 @@ class CodeSemanticEngine:
             CodePattern.SINGLETON: {
                 "description": "Ensures a class has only one instance",
                 "use_cases": ["database connections", "configuration managers", "loggers"],
-                "template": '''class Singleton:
+                "template": """class Singleton:
     _instance = None
 
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super().__new__(cls)
-        return cls._instance''',
+        return cls._instance""",
                 "pros": ["Global access", "Lazy initialization"],
                 "cons": ["Testing difficulties", "Hidden dependencies"],
             },
-
             CodePattern.FACTORY: {
                 "description": "Creates objects without specifying exact classes",
                 "use_cases": ["object creation with complex logic", "decoupling"],
-                "template": '''class Factory:
+                "template": """class Factory:
     @staticmethod
     def create(type_: str) -> Product:
         if type_ == "A":
             return ProductA()
         elif type_ == "B":
             return ProductB()
-        raise ValueError(f"Unknown type: {type_}")''',
+        raise ValueError(f"Unknown type: {type_}")""",
                 "pros": ["Flexibility", "Encapsulation"],
                 "cons": ["Added complexity"],
             },
-
             CodePattern.OBSERVER: {
                 "description": "Notifies multiple objects about state changes",
                 "use_cases": ["event systems", "model-view patterns", "pub-sub"],
-                "template": '''class Subject:
+                "template": """class Subject:
     def __init__(self):
         self._observers = []
 
@@ -174,15 +163,14 @@ class CodeSemanticEngine:
 
     def notify(self):
         for observer in self._observers:
-            observer.update(self)''',
+            observer.update(self)""",
                 "pros": ["Loose coupling", "Dynamic relationships"],
                 "cons": ["Memory leaks risk", "Unexpected updates"],
             },
-
             CodePattern.REPOSITORY: {
                 "description": "Encapsulates data access logic",
                 "use_cases": ["data persistence", "query abstraction", "caching"],
-                "template": '''class Repository:
+                "template": """class Repository:
     def __init__(self, db):
         self.db = db
 
@@ -191,7 +179,7 @@ class CodeSemanticEngine:
 
     async def save(self, entity: Entity) -> None:
         await self.db.add(entity)
-        await self.db.commit()''',
+        await self.db.commit()""",
                 "pros": ["Testability", "Separation of concerns"],
                 "cons": ["Abstraction overhead"],
             },
@@ -221,23 +209,27 @@ class CodeSemanticEngine:
                 if isinstance(node, ast.ClassDef):
                     # Check for singleton pattern
                     if self._is_singleton(node):
-                        matches.append(PatternMatch(
-                            pattern=CodePattern.SINGLETON,
-                            confidence=0.85,
-                            location=f"class {node.name}",
-                            suggestion="Consider dependency injection for better testability",
-                            example=self.pattern_library[CodePattern.SINGLETON]["template"],
-                        ))
+                        matches.append(
+                            PatternMatch(
+                                pattern=CodePattern.SINGLETON,
+                                confidence=0.85,
+                                location=f"class {node.name}",
+                                suggestion="Consider dependency injection for better testability",
+                                example=self.pattern_library[CodePattern.SINGLETON]["template"],
+                            )
+                        )
 
                     # Check for factory pattern
                     if self._is_factory(node):
-                        matches.append(PatternMatch(
-                            pattern=CodePattern.FACTORY,
-                            confidence=0.8,
-                            location=f"class {node.name}",
-                            suggestion="Good use of factory pattern",
-                            example=self.pattern_library[CodePattern.FACTORY]["template"],
-                        ))
+                        matches.append(
+                            PatternMatch(
+                                pattern=CodePattern.FACTORY,
+                                confidence=0.8,
+                                location=f"class {node.name}",
+                                suggestion="Good use of factory pattern",
+                                example=self.pattern_library[CodePattern.FACTORY]["template"],
+                            )
+                        )
 
         except SyntaxError:
             logger.warning("Failed to parse code for pattern matching")
@@ -274,7 +266,9 @@ class CodeSemanticEngine:
 
         # Based on complexity
         if metadata.complexity == ComplexityLevel.CRITICAL:
-            suggestions.append("Consider breaking down this component into smaller, focused modules")
+            suggestions.append(
+                "Consider breaking down this component into smaller, focused modules"
+            )
 
         # Based on AI hints
         if metadata.ai_hints.modification_risk > 0.7:
@@ -323,7 +317,9 @@ class CodeQualityAssurance:
             ],
         }
 
-    async def assess_quality(self, code: str, language: str = "python") -> Dict[CodeQualityMetric, float]:
+    async def assess_quality(
+        self, code: str, language: str = "python"
+    ) -> Dict[CodeQualityMetric, float]:
         """Assess code quality across multiple dimensions"""
         scores = {}
 
@@ -376,7 +372,8 @@ class CodeQualityAssurance:
 
             # Count control flow statements
             control_flow = sum(
-                1 for node in ast.walk(tree)
+                1
+                for node in ast.walk(tree)
                 if isinstance(node, (ast.If, ast.For, ast.While, ast.Try))
             )
 
@@ -451,8 +448,7 @@ class CodeQualityAssurance:
         try:
             tree = ast.parse(code)
             items = sum(
-                1 for node in ast.walk(tree)
-                if isinstance(node, (ast.FunctionDef, ast.ClassDef))
+                1 for node in ast.walk(tree) if isinstance(node, (ast.FunctionDef, ast.ClassDef))
             )
 
             if items > 0:
@@ -470,9 +466,7 @@ class CodeQualityAssurance:
 
         return score
 
-    def generate_quality_report(
-        self, scores: Dict[CodeQualityMetric, float]
-    ) -> Dict[str, Any]:
+    def generate_quality_report(self, scores: Dict[CodeQualityMetric, float]) -> Dict[str, Any]:
         """Generate quality assessment report"""
         overall_score = sum(scores.values()) / len(scores) if scores else 0
 
@@ -481,11 +475,17 @@ class CodeQualityAssurance:
         for metric, score in scores.items():
             if score < 0.6:
                 if metric == CodeQualityMetric.READABILITY:
-                    recommendations.append("Improve code readability with better naming and structure")
+                    recommendations.append(
+                        "Improve code readability with better naming and structure"
+                    )
                 elif metric == CodeQualityMetric.COMPLEXITY:
-                    recommendations.append("Reduce complexity by extracting functions and simplifying logic")
+                    recommendations.append(
+                        "Reduce complexity by extracting functions and simplifying logic"
+                    )
                 elif metric == CodeQualityMetric.SECURITY:
-                    recommendations.append("Address security concerns, especially hardcoded secrets")
+                    recommendations.append(
+                        "Address security concerns, especially hardcoded secrets"
+                    )
                 elif metric == CodeQualityMetric.DOCUMENTATION:
                     recommendations.append("Add comprehensive docstrings and comments")
 
@@ -580,7 +580,9 @@ class ArtemisSemanticOrchestrator(BaseOrchestrator):
         persona_context = PersonaContext(
             domain=self._determine_domain(request),
             task_type=request.strategy.value,
-            user_expertise=context.get("user_expertise", "intermediate") if context else "intermediate",
+            user_expertise=(
+                context.get("user_expertise", "intermediate") if context else "intermediate"
+            ),
             constraints=request.constraints,
         )
         adapted_persona = self.active_persona.adapt_to_context(persona_context)
@@ -664,9 +666,7 @@ class ArtemisSemanticOrchestrator(BaseOrchestrator):
         code_structure = self._design_code_structure(request, patterns)
 
         # Generate implementation
-        implementation = await self._generate_implementation(
-            code_structure, request, context
-        )
+        implementation = await self._generate_implementation(code_structure, request, context)
 
         # Generate tests
         tests = await self._generate_test_suite(implementation, request)
@@ -704,16 +704,12 @@ class ArtemisSemanticOrchestrator(BaseOrchestrator):
         # Implementation would refactor based on patterns and best practices
         return await self._generate_new_code(request, context)  # Placeholder
 
-    async def _extend_code(
-        self, request: CodeRequest, context: List[CodeMetadata]
-    ) -> CodeArtifact:
+    async def _extend_code(self, request: CodeRequest, context: List[CodeMetadata]) -> CodeArtifact:
         """Extend existing functionality"""
         # Implementation would extend based on existing patterns
         return await self._generate_new_code(request, context)  # Placeholder
 
-    async def _fix_code(
-        self, request: CodeRequest, context: List[CodeMetadata]
-    ) -> CodeArtifact:
+    async def _fix_code(self, request: CodeRequest, context: List[CodeMetadata]) -> CodeArtifact:
         """Fix bugs in code"""
         # Implementation would analyze and fix bugs
         return await self._generate_new_code(request, context)  # Placeholder
@@ -772,11 +768,13 @@ class ArtemisSemanticOrchestrator(BaseOrchestrator):
 
         # Add necessary imports
         if request.language == "python":
-            structure["imports"].extend([
-                "import logging",
-                "from typing import Optional, List, Dict, Any",
-                "from dataclasses import dataclass",
-            ])
+            structure["imports"].extend(
+                [
+                    "import logging",
+                    "from typing import Optional, List, Dict, Any",
+                    "from dataclasses import dataclass",
+                ]
+            )
 
         # Add pattern-specific structures
         for pattern in patterns:
@@ -811,7 +809,8 @@ class ArtemisSemanticOrchestrator(BaseOrchestrator):
             code_parts.append("")
 
         # Add main implementation
-        code_parts.append(f'''def main():
+        code_parts.append(
+            f'''def main():
     """
     {request.description}
     """
@@ -820,13 +819,12 @@ class ArtemisSemanticOrchestrator(BaseOrchestrator):
 
 
 if __name__ == "__main__":
-    main()''')
+    main()'''
+        )
 
         return "\n".join(code_parts)
 
-    async def _generate_test_suite(
-        self, code: str, request: CodeRequest
-    ) -> List[str]:
+    async def _generate_test_suite(self, code: str, request: CodeRequest) -> List[str]:
         """Generate test suite for code"""
         tests = []
 
@@ -926,6 +924,4 @@ Generated documentation for functions and classes
             metadata={"quality": artifact.quality_scores},
         )
 
-        await self.embedding_system.generator.generate_embedding(
-            chunk, EmbeddingType.CODE
-        )
+        await self.embedding_system.generator.generate_embedding(chunk, EmbeddingType.CODE)

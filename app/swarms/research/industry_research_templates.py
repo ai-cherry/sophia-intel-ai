@@ -4,6 +4,7 @@
 Badass Implementation Swarm Enhanced Research System
 Premium AI agent templates for deep industry analysis
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass

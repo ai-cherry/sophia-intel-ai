@@ -4,6 +4,7 @@
 Advanced multi-agent web research system with real-time data gathering,
 competitive intelligence, and market analysis capabilities.
 """
+
 from __future__ import annotations
 
 import asyncio

@@ -1570,12 +1570,10 @@ class LinearClient:
             "process_maturity": round(process_score / 0.20, 2),
             "risk_level": risk_level,
             "risk_factors": risk_factors,
-            "value_tier": "High"
-            if overall_value >= 75
-            else "Medium"
-            if overall_value >= 50
-            else "Low",
-            "development_readiness": "Production Ready"
-            if overall_value >= 80
-            else "Needs Improvement",
+            "value_tier": (
+                "High" if overall_value >= 75 else "Medium" if overall_value >= 50 else "Low"
+            ),
+            "development_readiness": (
+                "Production Ready" if overall_value >= 80 else "Needs Improvement"
+            ),
         }

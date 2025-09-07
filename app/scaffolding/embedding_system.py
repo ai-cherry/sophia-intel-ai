@@ -18,7 +18,7 @@ import logging
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 
@@ -123,9 +123,7 @@ class CodeChunker:
         else:
             return self._fixed_size_chunking(file_path, content)
 
-    def _ast_based_chunking(
-        self, file_path: Path, content: str
-    ) -> List[CodeChunk]:
+    def _ast_based_chunking(self, file_path: Path, content: str) -> List[CodeChunk]:
         """Chunk based on AST structure"""
         import ast
 
@@ -215,9 +213,7 @@ class CodeChunker:
 
         return chunks
 
-    def _semantic_chunking(
-        self, file_path: Path, content: str
-    ) -> List[CodeChunk]:
+    def _semantic_chunking(self, file_path: Path, content: str) -> List[CodeChunk]:
         """Chunk based on semantic boundaries"""
         chunks = []
         lines = content.split("\n")
@@ -232,7 +228,7 @@ class CodeChunker:
             "async def ",
             "# ---",
             "# ===",
-            "\"\"\"",
+            '"""',
             "'''",
         ]
 
@@ -286,9 +282,7 @@ class CodeChunker:
 
         return chunks
 
-    def _sliding_window_chunking(
-        self, file_path: Path, content: str
-    ) -> List[CodeChunk]:
+    def _sliding_window_chunking(self, file_path: Path, content: str) -> List[CodeChunk]:
         """Create overlapping chunks"""
         chunks = []
         lines = content.split("\n")
@@ -310,15 +304,13 @@ class CodeChunker:
 
         return chunks
 
-    def _hierarchical_chunking(
-        self, file_path: Path, content: str
-    ) -> List[CodeChunk]:
+    def _hierarchical_chunking(self, file_path: Path, content: str) -> List[CodeChunk]:
         """Create multi-level chunks"""
         chunks = []
 
         # Level 1: Entire file
         file_chunk = CodeChunk(
-            content=content[:self.config.chunk_size * 2],  # Summary
+            content=content[: self.config.chunk_size * 2],  # Summary
             start_line=1,
             end_line=len(content.split("\n")),
             file_path=str(file_path),
@@ -339,9 +331,7 @@ class CodeChunker:
         # Level 3: Fine-grained chunks for large functions
         for chunk in ast_chunks:
             if len(chunk.content) > self.config.chunk_size * 2:
-                sub_chunks = self._fixed_size_chunking(
-                    Path(chunk.file_path), chunk.content
-                )
+                sub_chunks = self._fixed_size_chunking(Path(chunk.file_path), chunk.content)
                 for sub_chunk in sub_chunks:
                     sub_chunk.metadata["level"] = 3
                     sub_chunk.parent_chunk = chunk.id
@@ -350,9 +340,7 @@ class CodeChunker:
 
         return chunks
 
-    def _fixed_size_chunking(
-        self, file_path: Path, content: str
-    ) -> List[CodeChunk]:
+    def _fixed_size_chunking(self, file_path: Path, content: str) -> List[CodeChunk]:
         """Simple fixed-size chunking"""
         chunks = []
         lines = content.split("\n")
@@ -418,9 +406,7 @@ class EmbeddingGenerator:
 
         return result
 
-    def _prepare_content(
-        self, chunk: CodeChunk, embedding_type: EmbeddingType
-    ) -> str:
+    def _prepare_content(self, chunk: CodeChunk, embedding_type: EmbeddingType) -> str:
         """Prepare content for embedding based on type"""
 
         if embedding_type == EmbeddingType.CODE:
@@ -610,8 +596,7 @@ class EmbeddingIndex:
         data = {
             "dimensions": self.dimensions,
             "embeddings": {
-                chunk_id: result.to_dict()
-                for chunk_id, result in self.embeddings.items()
+                chunk_id: result.to_dict() for chunk_id, result in self.embeddings.items()
             },
         }
 
@@ -620,7 +605,7 @@ class EmbeddingIndex:
 
     def load_index(self, path: Path) -> None:
         """Load index from disk"""
-        with open(path, "r") as f:
+        with open(path) as f:
             data = json.load(f)
 
         self.dimensions = data["dimensions"]
@@ -715,15 +700,17 @@ class MultiModalEmbeddingSystem:
         # Format results
         formatted = []
         for chunk_id, similarity, result in results:
-            formatted.append((
-                chunk_id,
-                similarity,
-                {
-                    "file_path": result.metadata.get("file_path"),
-                    "lines": result.metadata.get("lines"),
-                    "type": result.embedding_type.value,
-                    "metadata": result.metadata,
-                },
-            ))
+            formatted.append(
+                (
+                    chunk_id,
+                    similarity,
+                    {
+                        "file_path": result.metadata.get("file_path"),
+                        "lines": result.metadata.get("lines"),
+                        "type": result.embedding_type.value,
+                        "metadata": result.metadata,
+                    },
+                )
+            )
 
         return formatted

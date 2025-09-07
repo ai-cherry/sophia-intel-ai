@@ -448,15 +448,21 @@ async def full_duplex_conversation(request: dict[str, Any]):
             "ai_response": {"text": ai_response_text, "system": system, "persona": persona},
             "audio_response": {
                 "success": synthesis.success,
-                "audio_base64": synthesis.audio_base64
-                if hasattr(synthesis, "audio_base64")
-                else synthesis.get("audio_base64", ""),
-                "voice_used": synthesis.voice_used
-                if hasattr(synthesis, "voice_used")
-                else synthesis.get("voice_used", "Unknown"),
-                "generation_time": synthesis.generation_time
-                if hasattr(synthesis, "generation_time")
-                else synthesis.get("generation_time", 0),
+                "audio_base64": (
+                    synthesis.audio_base64
+                    if hasattr(synthesis, "audio_base64")
+                    else synthesis.get("audio_base64", "")
+                ),
+                "voice_used": (
+                    synthesis.voice_used
+                    if hasattr(synthesis, "voice_used")
+                    else synthesis.get("voice_used", "Unknown")
+                ),
+                "generation_time": (
+                    synthesis.generation_time
+                    if hasattr(synthesis, "generation_time")
+                    else synthesis.get("generation_time", 0)
+                ),
             },
         }
 

@@ -557,9 +557,11 @@ class AgentFactory:
             agent_def = AgentDefinition(
                 name=blueprint.metadata.name,
                 role=self._map_specialty_to_role(blueprint.specialty),
-                model=blueprint.config.model_settings.model
-                if hasattr(blueprint.config.model_settings, "model")
-                else "openai/gpt-4o-mini",
+                model=(
+                    blueprint.config.model_settings.model
+                    if hasattr(blueprint.config.model_settings, "model")
+                    else "openai/gpt-4o-mini"
+                ),
                 temperature=blueprint.config.model_settings.temperature,
                 instructions=blueprint.system_prompt_template,
                 capabilities=[cap.value for cap in blueprint.capabilities],
@@ -928,12 +930,12 @@ class AgentFactory:
             "status": "active",
             "created_at": datetime.now().isoformat(),
             "executions": len(executions),
-            "success_rate": sum(1 for e in executions if e.success) / len(executions)
-            if executions
-            else 0,
-            "average_execution_time": sum(e.execution_time for e in executions) / len(executions)
-            if executions
-            else 0,
+            "success_rate": (
+                sum(1 for e in executions if e.success) / len(executions) if executions else 0
+            ),
+            "average_execution_time": (
+                sum(e.execution_time for e in executions) / len(executions) if executions else 0
+            ),
             "total_cost": sum(e.cost_estimate for e in executions),
         }
 

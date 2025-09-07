@@ -263,9 +263,11 @@ async def validate_adr_005_implementation():
                 [r for r in workflow_results if r.get("memory_enabled", False)]
             ),
             "results": workflow_results,
-            "status": "functional"
-            if all(r.get("status") == "success" for r in workflow_results)
-            else "degraded",
+            "status": (
+                "functional"
+                if all(r.get("status") == "success" for r in workflow_results)
+                else "degraded"
+            ),
         }
 
     except Exception as e:
@@ -309,11 +311,9 @@ async def validate_adr_005_implementation():
             "avg_operation_time_ms": avg_op_time,
             "operations_per_second": 1000 / avg_op_time if avg_op_time > 0 else 0,
             "performance_target_met": avg_op_time < 100,  # Target: <100ms per operation
-            "status": "optimal"
-            if avg_op_time < 50
-            else "acceptable"
-            if avg_op_time < 100
-            else "degraded",
+            "status": (
+                "optimal" if avg_op_time < 50 else "acceptable" if avg_op_time < 100 else "degraded"
+            ),
         }
 
         logger.info(f"✅ Memory Performance: {avg_op_time:.1f}ms avg operation time")

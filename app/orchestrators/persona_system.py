@@ -2,6 +2,7 @@
 Sophia Intelligence System - AI Persona Management
 Manages different AI personalities and responses for various contexts
 """
+
 import logging
 import random
 from dataclasses import dataclass

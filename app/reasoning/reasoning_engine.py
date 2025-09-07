@@ -423,10 +423,11 @@ class ReasoningEngine:
             "action_steps": sum(
                 1 for s in context.previous_steps if s.step_type == ReasoningStepType.ACTION
             ),
-            "average_confidence": sum(s.confidence for s in context.previous_steps)
-            / len(context.previous_steps)
-            if context.previous_steps
-            else 0,
+            "average_confidence": (
+                sum(s.confidence for s in context.previous_steps) / len(context.previous_steps)
+                if context.previous_steps
+                else 0
+            ),
         }
 
         logger.info(f"Reasoning metrics: {metrics}")

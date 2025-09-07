@@ -166,9 +166,11 @@ class AsanaClient:
                 "gid": project.get("gid"),
                 "name": project.get("name"),
                 "owner": project.get("owner", {}).get("name") if project.get("owner") else None,
-                "status": project.get("current_status", {}).get("text")
-                if project.get("current_status")
-                else "No status",
+                "status": (
+                    project.get("current_status", {}).get("text")
+                    if project.get("current_status")
+                    else "No status"
+                ),
                 "due_date": project.get("due_date"),
                 "is_overdue": False,
                 "member_count": len(project.get("members", [])),

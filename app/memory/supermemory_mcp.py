@@ -64,9 +64,9 @@ class MemoryEntry:
             "tags": json.dumps(self.tags),
             "timestamp": self.timestamp.isoformat(),
             "memory_type": self.memory_type.value,
-            "embedding_vector": json.dumps(self.embedding_vector)
-            if self.embedding_vector
-            else None,
+            "embedding_vector": (
+                json.dumps(self.embedding_vector) if self.embedding_vector else None
+            ),
         }
 
 

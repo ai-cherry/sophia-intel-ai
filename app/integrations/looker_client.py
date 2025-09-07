@@ -139,9 +139,11 @@ class LookerClient:
                         id=str(dash.id),
                         title=dash.title or "Untitled",
                         description=getattr(dash, "description", None),
-                        folder_id=str(getattr(dash, "folder_id", None))
-                        if getattr(dash, "folder_id", None)
-                        else None,
+                        folder_id=(
+                            str(getattr(dash, "folder_id", None))
+                            if getattr(dash, "folder_id", None)
+                            else None
+                        ),
                         created_at=getattr(dash, "created_at", None),
                         updated_at=getattr(dash, "updated_at", None),
                         view_count=getattr(dash, "view_count", None),
@@ -169,12 +171,16 @@ class LookerClient:
                         id=str(look.id),
                         title=look.title or "Untitled",
                         description=getattr(look, "description", None),
-                        query_id=str(getattr(look, "query_id", None))
-                        if getattr(look, "query_id", None)
-                        else None,
-                        folder_id=str(getattr(look, "folder_id", None))
-                        if getattr(look, "folder_id", None)
-                        else None,
+                        query_id=(
+                            str(getattr(look, "query_id", None))
+                            if getattr(look, "query_id", None)
+                            else None
+                        ),
+                        folder_id=(
+                            str(getattr(look, "folder_id", None))
+                            if getattr(look, "folder_id", None)
+                            else None
+                        ),
                         created_at=getattr(look, "created_at", None),
                         updated_at=getattr(look, "updated_at", None),
                         view_count=getattr(look, "view_count", None),
@@ -339,9 +345,11 @@ class LookerClient:
                     "name": getattr(model, "name", "Unknown"),
                     "title": getattr(model, "title", getattr(model, "name", "Unknown")),
                     "description": getattr(model, "description", None),
-                    "explores_count": len(getattr(model, "explores", []))
-                    if getattr(model, "explores", None)
-                    else 0,
+                    "explores_count": (
+                        len(getattr(model, "explores", []))
+                        if getattr(model, "explores", None)
+                        else 0
+                    ),
                 }
 
                 # Add explore information
@@ -442,9 +450,11 @@ class LookerClient:
             return {
                 "looker_version": versions.looker_release_version,
                 "api_version": versions.current_version.version,
-                "supported_versions": [v.version for v in versions.supported_versions]
-                if versions.supported_versions
-                else [],
+                "supported_versions": (
+                    [v.version for v in versions.supported_versions]
+                    if versions.supported_versions
+                    else []
+                ),
                 "current_user": {
                     "id": me.id,
                     "email": me.email,

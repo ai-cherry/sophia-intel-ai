@@ -4,6 +4,7 @@
 Advanced multi-agent system for UI/UX design, prototyping, and development
 with real-time collaboration and quality assurance.
 """
+
 from __future__ import annotations
 
 import os
@@ -231,9 +232,9 @@ class UIdevelopmentSwarm:
             "state_management": {
                 "local_state": ["isLoading", "isVisible", "selectedItem"],
                 "global_state": ["user", "theme", "preferences"],
-                "state_pattern": "useState"
-                if task.framework == UIFramework.REACT
-                else "composition_api",
+                "state_pattern": (
+                    "useState" if task.framework == UIFramework.REACT else "composition_api"
+                ),
             },
             "data_flow": {
                 "props": ["data", "onSelect", "onClose", "className"],
@@ -256,9 +257,11 @@ class UIdevelopmentSwarm:
                 "design_system": task.design_system.value,
                 "build_tool": "vite",
                 "testing": "vitest + playwright",
-                "styling": "tailwindcss"
-                if task.design_system == DesignSystem.TAILWIND
-                else "styled-components",
+                "styling": (
+                    "tailwindcss"
+                    if task.design_system == DesignSystem.TAILWIND
+                    else "styled-components"
+                ),
             },
             "estimated_complexity": "medium",
             "development_time": "2-3 days",
@@ -338,9 +341,11 @@ class UIdevelopmentSwarm:
             "typescript_support": True,
             "component_files": component_code,
             "prop_types_defined": True,
-            "hooks_implemented": ["useState", "useEffect", "useCallback"]
-            if task.framework == UIFramework.REACT
-            else [],
+            "hooks_implemented": (
+                ["useState", "useEffect", "useCallback"]
+                if task.framework == UIFramework.REACT
+                else []
+            ),
         }
 
     async def _execute_styling(self, task: UITask, components: dict[str, Any]) -> dict[str, Any]:

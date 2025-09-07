@@ -2,6 +2,7 @@
 Incremental Indexing System with SHA-based Change Detection.
 Optimizes embedding generation by skipping unchanged content.
 """
+
 import asyncio
 import hashlib
 import os

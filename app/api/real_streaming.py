@@ -132,9 +132,11 @@ async def stream_coding_swarm_execution(
             {
                 "phase": "planning_complete",
                 "token": "✅ Planning phase complete",
-                "planning_result": planning_result["content"][:500] + "..."
-                if planning_result["success"]
-                else "Planning failed",
+                "planning_result": (
+                    planning_result["content"][:500] + "..."
+                    if planning_result["success"]
+                    else "Planning failed"
+                ),
                 "timestamp": datetime.now().isoformat(),
             }
         ) + "\n"
@@ -157,9 +159,9 @@ async def stream_coding_swarm_execution(
             context={
                 "system_prompt": "You are a senior software engineer. Write production-ready code.",
                 "memory_results": memories_context,
-                "planning_context": planning_result["content"]
-                if planning_result["success"]
-                else None,
+                "planning_context": (
+                    planning_result["content"] if planning_result["success"] else None
+                ),
             },
         )
 
@@ -181,9 +183,11 @@ async def stream_coding_swarm_execution(
             {
                 "phase": "generation_complete",
                 "token": "✅ Code generation complete",
-                "generation_result": generation_result["content"][:500] + "..."
-                if generation_result["success"]
-                else "Generation failed",
+                "generation_result": (
+                    generation_result["content"][:500] + "..."
+                    if generation_result["success"]
+                    else "Generation failed"
+                ),
                 "timestamp": datetime.now().isoformat(),
             }
         ) + "\n"
@@ -213,9 +217,11 @@ async def stream_coding_swarm_execution(
             {
                 "phase": "review_complete",
                 "token": "✅ Code review complete",
-                "critic_result": critic_result["content"][:300] + "..."
-                if critic_result["success"]
-                else "Review failed",
+                "critic_result": (
+                    critic_result["content"][:300] + "..."
+                    if critic_result["success"]
+                    else "Review failed"
+                ),
                 "timestamp": datetime.now().isoformat(),
             }
         ) + "\n"
@@ -237,9 +243,9 @@ async def stream_coding_swarm_execution(
             context={
                 "system_prompt": "You are a technical judge. Make final decisions on code quality and next steps.",
                 "original_task": request.message,
-                "generation_result": generation_result["content"][:500]
-                if generation_result["success"]
-                else None,
+                "generation_result": (
+                    generation_result["content"][:500] if generation_result["success"] else None
+                ),
             },
         )
 
@@ -247,9 +253,11 @@ async def stream_coding_swarm_execution(
             {
                 "phase": "judgment_complete",
                 "token": "✅ Final decision made",
-                "judge_result": judge_result["content"][:300] + "..."
-                if judge_result["success"]
-                else "Decision failed",
+                "judge_result": (
+                    judge_result["content"][:300] + "..."
+                    if judge_result["success"]
+                    else "Decision failed"
+                ),
                 "timestamp": datetime.now().isoformat(),
             }
         ) + "\n"
@@ -262,9 +270,9 @@ async def stream_coding_swarm_execution(
                 "token": "🎯 Coding Swarm execution complete!",
                 "final_results": {
                     "planning": planning_result["content"] if planning_result["success"] else None,
-                    "generation": generation_result["content"]
-                    if generation_result["success"]
-                    else None,
+                    "generation": (
+                        generation_result["content"] if generation_result["success"] else None
+                    ),
                     "review": critic_result["content"] if critic_result["success"] else None,
                     "decision": judge_result["content"] if judge_result["success"] else None,
                     "success": all(

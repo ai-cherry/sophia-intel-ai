@@ -12,9 +12,11 @@ from typing import Any, Dict, List, Optional, Tuple
 from app.artemis.unified_factory import (
     ArtemisUnifiedFactory,
     MilitaryUnitType,
-    TechnicalAgentRole,
 )
 from app.artemis.unified_factory import SwarmType as ArtemisSwarmType
+from app.artemis.unified_factory import (
+    TechnicalAgentRole,
+)
 from app.sophia.unified_factory import (
     BusinessAgentRole,
     MythologyArchetype,

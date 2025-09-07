@@ -328,9 +328,9 @@ async def get_factory_integration_status() -> dict[str, Any]:
             "integrated": integrated,
             "factory": "artemis",
             "swarm_name": "Orchestrator Research Swarm",
-            "agents_available": list(research_swarm.research_agents.keys())
-            if research_swarm
-            else [],
+            "agents_available": (
+                list(research_swarm.research_agents.keys()) if research_swarm else []
+            ),
         }
     except:
         return {"integrated": False, "error": "Could not check factory integration"}

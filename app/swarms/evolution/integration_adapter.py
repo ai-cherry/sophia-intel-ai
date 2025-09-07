@@ -319,7 +319,9 @@ class ExperimentalSwarmEvolutionAdapter:
                             },
                         )
                 else:
-                    logger.warning(f"🧪 Evolution did not improve performance for {self.swarm_type}")
+                    logger.warning(
+                        f"🧪 Evolution did not improve performance for {self.swarm_type}"
+                    )
             else:
                 logger.warning(f"🧪 Evolution failed for {self.swarm_type}")
 

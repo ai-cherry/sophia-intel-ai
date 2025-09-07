@@ -251,12 +251,12 @@ class AirbyteClient:
             connection_id=response["connectionId"],
             status=SyncStatus(response["status"]),
             created_at=datetime.fromisoformat(response["createdAt"]),
-            started_at=datetime.fromisoformat(response["startedAt"])
-            if response.get("startedAt")
-            else None,
-            ended_at=datetime.fromisoformat(response["endedAt"])
-            if response.get("endedAt")
-            else None,
+            started_at=(
+                datetime.fromisoformat(response["startedAt"]) if response.get("startedAt") else None
+            ),
+            ended_at=(
+                datetime.fromisoformat(response["endedAt"]) if response.get("endedAt") else None
+            ),
             records_synced=response.get("recordsSynced", 0),
             bytes_synced=response.get("bytesSynced", 0),
             error_message=response.get("errorMessage"),
@@ -481,9 +481,9 @@ class GongAirbyteOrchestrator:
 
             return {
                 "pipeline_configured": bool(self.connection_id),
-                "connection_status": pipeline_connection.status
-                if pipeline_connection
-                else "not_found",
+                "connection_status": (
+                    pipeline_connection.status if pipeline_connection else "not_found"
+                ),
                 "source_id": self.source_id,
                 "destination_id": self.destination_id,
                 "connection_id": self.connection_id,

@@ -57,15 +57,15 @@ class ServiceConfig:
         import os
 
         return cls(
-            ollama_url=get_config().get('OLLAMA_URL', 'cls.ollama_url'),
-            redis_url=get_config().get('REDIS_URL', 'cls.redis_url'),
-            mcp_server_url=get_config().get('MCP_SERVER_URL', 'cls.mcp_server_url'),
-            n8n_url=get_config().get('N8N_URL', 'cls.n8n_url'),
+            ollama_url=get_config().get("OLLAMA_URL", "cls.ollama_url"),
+            redis_url=get_config().get("REDIS_URL", "cls.redis_url"),
+            mcp_server_url=get_config().get("MCP_SERVER_URL", "cls.mcp_server_url"),
+            n8n_url=get_config().get("N8N_URL", "cls.n8n_url"),
             max_websocket_connections=int(
-                get_config().get('MAX_WEBSOCKET_CONNECTIONS', cls.max_websocket_connections)
+                get_config().get("MAX_WEBSOCKET_CONNECTIONS", cls.max_websocket_connections)
             ),
             connection_idle_timeout_seconds=int(
-                get_config().get('CONNECTION_IDLE_TIMEOUT', cls.connection_idle_timeout_seconds)
+                get_config().get("CONNECTION_IDLE_TIMEOUT", cls.connection_idle_timeout_seconds)
             ),
         )
 
@@ -76,33 +76,25 @@ class ServiceConfig:
 class ChatOrchestratorProtocol(Protocol):
     """Protocol defining ChatOrchestrator interface"""
 
-    async def initialize(self) -> None:
-        ...
+    async def initialize(self) -> None: ...
 
-    async def handle_chat(self, request: Any) -> Any:
-        ...
+    async def handle_chat(self, request: Any) -> Any: ...
 
-    async def stream_tokens(self, message: str, session_id: str) -> Any:
-        ...
+    async def stream_tokens(self, message: str, session_id: str) -> Any: ...
 
-    async def get_metrics(self) -> dict[str, Any]:
-        ...
+    async def get_metrics(self) -> dict[str, Any]: ...
 
-    async def shutdown(self) -> None:
-        ...
+    async def shutdown(self) -> None: ...
 
 
 class ManagerProtocol(Protocol):
     """Protocol defining Orchestra Manager interface"""
 
-    def interpret_intent(self, message: str, context: Any) -> tuple:
-        ...
+    def interpret_intent(self, message: str, context: Any) -> tuple: ...
 
-    def generate_response(self, intent: str, parameters: dict, context: Any) -> str:
-        ...
+    def generate_response(self, intent: str, parameters: dict, context: Any) -> str: ...
 
-    def get_status(self) -> dict[str, Any]:
-        ...
+    def get_status(self) -> dict[str, Any]: ...
 
 
 # ==================== Dependency Injection Container ====================
@@ -338,9 +330,9 @@ class WebSocketConnectionPool:
         """Get pool metrics"""
         return {
             **self.metrics,
-            "utilization": len(self.connections) / self.max_connections
-            if self.max_connections > 0
-            else 0,
+            "utilization": (
+                len(self.connections) / self.max_connections if self.max_connections > 0 else 0
+            ),
         }
 
 

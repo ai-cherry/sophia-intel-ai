@@ -389,9 +389,11 @@ class EnhancedMemorySystem:
                 "total": len(self.patterns),
                 "by_type": {ptype: len(pids) for ptype, pids in self.pattern_index.items()},
                 "total_usage": sum(p["usage_count"] for p in self.patterns.values()),
-                "avg_success_rate": sum(self.success_rates.values()) / len(self.success_rates)
-                if self.success_rates
-                else 0,
+                "avg_success_rate": (
+                    sum(self.success_rates.values()) / len(self.success_rates)
+                    if self.success_rates
+                    else 0
+                ),
             },
             "contexts": {
                 "active": len(self.active_contexts),

@@ -399,9 +399,9 @@ def route_coding_task(code: str, task: str = "generate") -> tuple[str, dict[str,
         task_type=task_type,
         estimated_tokens=len(code) // 4 + 500,  # Rough estimate
         preferred_providers=["deepseek", "openai", "anthropic"],
-        required_capabilities=["specialized_coding"]
-        if task_type == TaskType.CODE_GENERATION
-        else None,
+        required_capabilities=(
+            ["specialized_coding"] if task_type == TaskType.CODE_GENERATION else None
+        ),
     )
 
     return router.route_task(requirements)
@@ -416,9 +416,9 @@ def route_research_task(query: str, need_realtime: bool = False) -> tuple[str, d
         task_type=TaskType.WEB_RESEARCH if need_realtime else TaskType.TECHNICAL_RESEARCH,
         estimated_tokens=500,
         preferred_providers=["perplexity"] if need_realtime else ["anthropic", "openai"],
-        required_capabilities=["real_time_search", "citations"]
-        if need_realtime
-        else ["thorough_analysis"],
+        required_capabilities=(
+            ["real_time_search", "citations"] if need_realtime else ["thorough_analysis"]
+        ),
     )
 
     return router.route_task(requirements)

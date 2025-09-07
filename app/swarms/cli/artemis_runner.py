@@ -2,9 +2,8 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import List
 
 from app.mcp.clients.stdio_client import detect_stdio_mcp
 from app.swarms.coding.patch_proposal import propose_patches
@@ -474,7 +473,6 @@ def build_parser() -> argparse.ArgumentParser:
         return "".join(src_lines)
 
     def _run_tests(commands: list[str]) -> dict:
-        import shlex
         import subprocess
         import time
 
@@ -506,9 +504,8 @@ def build_parser() -> argparse.ArgumentParser:
             print("ERROR: stdio MCP server (bin/mcp-fs-memory) not found or not working.")
             return 2
         import json as _json
-        import time
         import subprocess
-        import shlex
+        import time
 
         # 1) Load proposal content from memory
         search = client.memory_search(f"collab AND id:{args.pid} AND collab_proposal", limit=5)
@@ -679,11 +676,15 @@ def build_parser() -> argparse.ArgumentParser:
                     # Stage everything
                     subprocess.run(["git", "add", "-A"], check=True)
                     # Try normal commit first
-                    proc = subprocess.run(["git", "commit", "-m", message], text=True, capture_output=True)
+                    proc = subprocess.run(
+                        ["git", "commit", "-m", message], text=True, capture_output=True
+                    )
                     if proc.returncode != 0:
                         # Fallback: bypass hooks
                         proc2 = subprocess.run(
-                            ["git", "commit", "--no-verify", "-m", message], text=True, capture_output=True
+                            ["git", "commit", "--no-verify", "-m", message],
+                            text=True,
+                            capture_output=True,
                         )
                         if proc2.returncode != 0:
                             raise RuntimeError(f"git commit failed: {proc.stderr or proc2.stderr}")
@@ -693,7 +694,10 @@ def build_parser() -> argparse.ArgumentParser:
                         raise RuntimeError(f"git push failed: {push.stderr}")
                     # Capture short commit id
                     head = subprocess.run(
-                        ["git", "rev-parse", "--short", "HEAD"], text=True, capture_output=True, check=True
+                        ["git", "rev-parse", "--short", "HEAD"],
+                        text=True,
+                        capture_output=True,
+                        check=True,
                     )
                     commit_info = {"commit": head.stdout.strip(), "message": message}
                 except Exception as e:
@@ -703,7 +707,9 @@ def build_parser() -> argparse.ArgumentParser:
                 try:
                     client.memory_add(
                         topic=f"collab_apply:{args.pid}",
-                        content=_json.dumps({"status": "completed", "commit": commit_info}, indent=2),
+                        content=_json.dumps(
+                            {"status": "completed", "commit": commit_info}, indent=2
+                        ),
                         source="artemis-run",
                         tags=["collab", "apply", "status:completed", f"id:{args.pid}"],
                         memory_type="episodic",
@@ -795,7 +801,6 @@ def build_parser() -> argparse.ArgumentParser:
                 from app.swarms.artemis.technical_agents import (
                     AgentProfile,
                     AgentRole,
-                    ArtemisSwarmFactory,
                     CoordinationPattern,
                     MemoryDomain,
                     SwarmConfig,
@@ -1229,7 +1234,6 @@ if __name__ == "__main__":
     def _do_cleanup_backups(args):
         import datetime as _dt
         import json as _json
-        import os
         import time
 
         def _parse_duration(s: str) -> _dt.timedelta:

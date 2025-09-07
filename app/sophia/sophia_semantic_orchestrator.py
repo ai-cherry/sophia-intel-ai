@@ -13,24 +13,17 @@ AI Context:
 """
 
 import asyncio
-import json
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
 
-from app.core.portkey_manager import TaskType as PortkeyTaskType, get_portkey_manager
 from app.integrations.connectors.base_connector import BaseConnector
 from app.memory.unified_memory_router import MemoryDomain, UnifiedMemoryRouter
 from app.orchestrators.base_orchestrator import (
     BaseOrchestrator,
-    ExecutionPriority,
     OrchestratorConfig,
-    Result,
-    Task,
-    TaskType,
 )
 from app.scaffolding.embedding_system import (
     EmbeddingConfig,
@@ -39,7 +32,6 @@ from app.scaffolding.embedding_system import (
 )
 from app.scaffolding.persona_manager import (
     PersonaContext,
-    PersonaTrait,
     get_persona_manager,
 )
 from app.sophia.sophia_orchestrator import BusinessContext, InsightReport
@@ -319,9 +311,7 @@ class InsightSynthesizer:
 
         # Generate predictions if enough data
         if self._has_sufficient_data(data_sources):
-            prediction_insights = await self._generate_predictions(
-                data_sources, semantic_query
-            )
+            prediction_insights = await self._generate_predictions(data_sources, semantic_query)
             insights.extend(prediction_insights)
 
         # Identify opportunities and risks
@@ -356,16 +346,22 @@ class InsightSynthesizer:
                         type=InsightType.TREND,
                         title=f"{metric.upper()} Trending {'Up' if trend_direction > 0 else 'Down'}",
                         description=f"{metric} has shown a {abs(trend_direction)*100:.1f}% "
-                                  f"{'increase' if trend_direction > 0 else 'decrease'} over the period",
+                        f"{'increase' if trend_direction > 0 else 'decrease'} over the period",
                         impact=self._assess_trend_impact(metric, trend_direction),
                         confidence=0.85,
                         supporting_data=[{"metric": metric, "trend": trend_direction}],
-                        visualizations=[{
-                            "type": "line_chart",
-                            "data": trend_data,
-                        }],
+                        visualizations=[
+                            {
+                                "type": "line_chart",
+                                "data": trend_data,
+                            }
+                        ],
                         actions=self._generate_trend_actions(metric, trend_direction),
-                        semantic_tags={metric, "trend", query.entities[0] if query.entities else "general"},
+                        semantic_tags={
+                            metric,
+                            "trend",
+                            query.entities[0] if query.entities else "general",
+                        },
                     )
                     insights.append(insight)
 
@@ -419,7 +415,7 @@ class InsightSynthesizer:
                 opportunity = SemanticInsight(
                     type=InsightType.OPPORTUNITY,
                     title=f"Growth Opportunity in {insight.semantic_tags}",
-                    description=f"Based on positive trends, there's an opportunity to capitalize on growth",
+                    description="Based on positive trends, there's an opportunity to capitalize on growth",
                     impact="High potential for revenue increase",
                     confidence=insight.confidence * 0.8,
                     supporting_data=insight.supporting_data,
@@ -460,17 +456,21 @@ class InsightSynthesizer:
         actions = []
 
         if trend > 0.2:
-            actions.extend([
-                f"Investigate drivers of {metric} growth",
-                "Consider scaling related operations",
-                "Update forecasts to reflect positive trend",
-            ])
+            actions.extend(
+                [
+                    f"Investigate drivers of {metric} growth",
+                    "Consider scaling related operations",
+                    "Update forecasts to reflect positive trend",
+                ]
+            )
         elif trend < -0.2:
-            actions.extend([
-                f"Identify root causes of {metric} decline",
-                "Implement corrective measures",
-                "Review and adjust strategy",
-            ])
+            actions.extend(
+                [
+                    f"Identify root causes of {metric} decline",
+                    "Implement corrective measures",
+                    "Review and adjust strategy",
+                ]
+            )
 
         return actions
 
@@ -619,7 +619,9 @@ class SophiaSemanticOrchestrator(BaseOrchestrator):
         persona_context = PersonaContext(
             domain=self._determine_domain(semantic_query),
             task_type="business_analysis",
-            user_expertise=context.get("user_expertise", "intermediate") if context else "intermediate",
+            user_expertise=(
+                context.get("user_expertise", "intermediate") if context else "intermediate"
+            ),
             constraints=["accuracy", "timeliness", "actionability"],
         )
         adapted_persona = self.active_persona.adapt_to_context(persona_context)
@@ -631,14 +633,10 @@ class SophiaSemanticOrchestrator(BaseOrchestrator):
         data_results = await self._gather_multi_source_data(gathering_plan)
 
         # Synthesize insights
-        insights = await self.insight_synthesizer.synthesize(
-            data_results, semantic_query
-        )
+        insights = await self.insight_synthesizer.synthesize(data_results, semantic_query)
 
         # Generate report
-        report = self._generate_insight_report(
-            semantic_query, insights, data_results
-        )
+        report = self._generate_insight_report(semantic_query, insights, data_results)
 
         # Store in memory for future reference
         await self._store_in_memory(query, report, insights)
@@ -673,14 +671,13 @@ class SophiaSemanticOrchestrator(BaseOrchestrator):
             sources.append(DataSourceType.CRM)
             queries[DataSourceType.CRM] = [
                 f"SELECT * FROM {e} WHERE date >= '{query.time_range[0]}'"
-                for e in query.entities if query.time_range
+                for e in query.entities
+                if query.time_range
             ]
 
         if any(m in ["revenue", "profit", "expense"] for m in query.metrics):
             sources.append(DataSourceType.FINANCIAL)
-            queries[DataSourceType.FINANCIAL] = [
-                f"GET /metrics/{m}" for m in query.metrics
-            ]
+            queries[DataSourceType.FINANCIAL] = [f"GET /metrics/{m}" for m in query.metrics]
 
         if "campaign" in query.entities or "marketing" in str(query.intent):
             sources.append(DataSourceType.ANALYTICS)
@@ -694,9 +691,7 @@ class SophiaSemanticOrchestrator(BaseOrchestrator):
             parallel=True,
         )
 
-    async def _gather_multi_source_data(
-        self, plan: DataGatheringPlan
-    ) -> Dict[DataSourceType, Any]:
+    async def _gather_multi_source_data(self, plan: DataGatheringPlan) -> Dict[DataSourceType, Any]:
         """Gather data from multiple sources according to plan"""
         results = {}
 
@@ -705,9 +700,7 @@ class SophiaSemanticOrchestrator(BaseOrchestrator):
             tasks = []
             for source in plan.sources:
                 if source in self.data_sources:
-                    task = self._fetch_from_source(
-                        source, plan.queries.get(source, [])
-                    )
+                    task = self._fetch_from_source(source, plan.queries.get(source, []))
                     tasks.append(task)
 
             if tasks:
@@ -720,18 +713,14 @@ class SophiaSemanticOrchestrator(BaseOrchestrator):
             for source in sorted(plan.sources, key=lambda s: plan.priority.get(s, 999)):
                 if source in self.data_sources:
                     try:
-                        data = await self._fetch_from_source(
-                            source, plan.queries.get(source, [])
-                        )
+                        data = await self._fetch_from_source(source, plan.queries.get(source, []))
                         results[source] = data
                     except Exception as e:
                         logger.error(f"Failed to fetch from {source}: {e}")
 
         return results
 
-    async def _fetch_from_source(
-        self, source: DataSourceType, queries: List[str]
-    ) -> Any:
+    async def _fetch_from_source(self, source: DataSourceType, queries: List[str]) -> Any:
         """Fetch data from a specific source"""
         # This would use actual connectors
         # Returning mock data for now
@@ -767,12 +756,14 @@ class SophiaSemanticOrchestrator(BaseOrchestrator):
         recommendations = []
         for insight in insights:
             if insight.actions:
-                recommendations.append({
-                    "action": insight.actions[0],
-                    "rationale": insight.description,
-                    "priority": "high" if insight.confidence > 0.8 else "medium",
-                    "effort": "medium",  # Would be calculated
-                })
+                recommendations.append(
+                    {
+                        "action": insight.actions[0],
+                        "rationale": insight.description,
+                        "priority": "high" if insight.confidence > 0.8 else "medium",
+                        "effort": "medium",  # Would be calculated
+                    }
+                )
 
         # Identify risks
         risks = [
@@ -799,11 +790,13 @@ class SophiaSemanticOrchestrator(BaseOrchestrator):
         # Compile supporting data
         supporting_data = []
         for source, data in data_sources.items():
-            supporting_data.append({
-                "source": source.value,
-                "records": len(data.get("data", [])) if isinstance(data, dict) else 0,
-                "timestamp": data.get("timestamp") if isinstance(data, dict) else None,
-            })
+            supporting_data.append(
+                {
+                    "source": source.value,
+                    "records": len(data.get("data", [])) if isinstance(data, dict) else 0,
+                    "timestamp": data.get("timestamp") if isinstance(data, dict) else None,
+                }
+            )
 
         # Calculate overall confidence
         avg_confidence = sum(i.confidence for i in insights) / len(insights) if insights else 0.5
@@ -816,7 +809,7 @@ class SophiaSemanticOrchestrator(BaseOrchestrator):
             opportunities=opportunities,
             supporting_data=supporting_data,
             confidence_level=avg_confidence,
-            data_sources=[s.value for s in data_sources.keys()],
+            data_sources=[s.value for s in data_sources],
         )
 
     def _create_executive_summary(

@@ -760,9 +760,9 @@ RESPONSE STYLE:
                     / max(len(result.executed_opportunities) + len(result.failed_opportunities), 1),
                     "risk_level": risk_tolerance,
                     "dry_run": dry_run,
-                    "tactical_status": "mission_accomplished"
-                    if result.success
-                    else "mission_partially_completed",
+                    "tactical_status": (
+                        "mission_accomplished" if result.success else "mission_partially_completed"
+                    ),
                 },
                 "execution_time": execution_time,
                 "timestamp": datetime.now().isoformat(),
@@ -1296,9 +1296,9 @@ RESPONSE STYLE:
             "domain_teams": len(self.domain_teams),
             "total_operations": sum(self.technical_metrics.values())
             + sum(self.domain_metrics.values()),
-            "tactical_readiness": "maximum"
-            if sum(self.technical_metrics.values()) > 0
-            else "ready",
+            "tactical_readiness": (
+                "maximum" if sum(self.technical_metrics.values()) > 0 else "ready"
+            ),
             "integration_readiness": "operational" if len(self.domain_teams) > 0 else "ready",
             "okr_metrics": {
                 "revenue_per_employee": self.okr_tracker.revenue_per_employee,

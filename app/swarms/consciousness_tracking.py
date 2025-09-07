@@ -293,18 +293,18 @@ class ConsciousnessTracker:
                 await self._establish_baseline(context)
 
             # Measure each consciousness dimension
-            measurements[
-                ConsciousnessType.COORDINATION_EFFECTIVENESS
-            ] = await self._measure_coordination_effectiveness(context)
-            measurements[
-                ConsciousnessType.PATTERN_RECOGNITION
-            ] = await self._measure_pattern_recognition(context)
-            measurements[
-                ConsciousnessType.ADAPTIVE_LEARNING
-            ] = await self._measure_adaptive_learning(context)
-            measurements[
-                ConsciousnessType.EMERGENCE_DETECTION
-            ] = await self._measure_emergence_detection(context)
+            measurements[ConsciousnessType.COORDINATION_EFFECTIVENESS] = (
+                await self._measure_coordination_effectiveness(context)
+            )
+            measurements[ConsciousnessType.PATTERN_RECOGNITION] = (
+                await self._measure_pattern_recognition(context)
+            )
+            measurements[ConsciousnessType.ADAPTIVE_LEARNING] = (
+                await self._measure_adaptive_learning(context)
+            )
+            measurements[ConsciousnessType.EMERGENCE_DETECTION] = (
+                await self._measure_emergence_detection(context)
+            )
             measurements[ConsciousnessType.SELF_REFLECTION] = await self._measure_self_reflection(
                 context
             )
@@ -352,9 +352,9 @@ class ConsciousnessTracker:
         if len(self.baseline_samples) < self.baseline_required_samples:
             # Collect baseline sample
             sample = {}
-            sample[
-                ConsciousnessType.COORDINATION_EFFECTIVENESS
-            ] = await self._measure_coordination_effectiveness(context, baseline_mode=True)
+            sample[ConsciousnessType.COORDINATION_EFFECTIVENESS] = (
+                await self._measure_coordination_effectiveness(context, baseline_mode=True)
+            )
             sample[ConsciousnessType.PATTERN_RECOGNITION] = await self._measure_pattern_recognition(
                 context, baseline_mode=True
             )
@@ -1284,7 +1284,9 @@ class ConsciousnessTracker:
         )
 
         if recent_events > self.alert_thresholds["emergence_frequency"]:
-            logger.warning(f"🚨 High emergence frequency alert: {recent_events} events in last hour")
+            logger.warning(
+                f"🚨 High emergence frequency alert: {recent_events} events in last hour"
+            )
 
         # Check for breakthrough significance
         if self.breakthrough_patterns:
@@ -1404,11 +1406,11 @@ class ConsciousnessTracker:
             )
 
             correlation_analysis["predictive_insights"] = {
-                "consciousness_trend": "improving"
-                if recent_trend > 0.01
-                else "stable"
-                if recent_trend > -0.01
-                else "declining",
+                "consciousness_trend": (
+                    "improving"
+                    if recent_trend > 0.01
+                    else "stable" if recent_trend > -0.01 else "declining"
+                ),
                 "predicted_performance_impact": recent_trend * 2.0,  # Simplified prediction
                 "confidence": min(
                     1.0, len(self.consciousness_profile.consciousness_trajectory) / 50.0
@@ -1451,10 +1453,12 @@ class ConsciousnessTracker:
                 "total_measurements": len(self.measurement_history),
                 "total_emergence_events": len(self.emergence_events),
                 "total_breakthroughs": len(self.breakthrough_patterns),
-                "avg_consciousness_level": sum(self.consciousness_profile.consciousness_trajectory)
-                / len(self.consciousness_profile.consciousness_trajectory)
-                if self.consciousness_profile.consciousness_trajectory
-                else 0,
+                "avg_consciousness_level": (
+                    sum(self.consciousness_profile.consciousness_trajectory)
+                    / len(self.consciousness_profile.consciousness_trajectory)
+                    if self.consciousness_profile.consciousness_trajectory
+                    else 0
+                ),
             },
         }
 
@@ -1497,9 +1501,9 @@ class ConsciousnessTracker:
             },
             "collective_consciousness": {
                 "contribution_score": self.consciousness_profile.collective_consciousness_contribution,
-                "synchronization_data": list(self.collective_data_buffer)[-10:]
-                if self.collective_data_buffer
-                else [],
+                "synchronization_data": (
+                    list(self.collective_data_buffer)[-10:] if self.collective_data_buffer else []
+                ),
             },
             "recommendations": self._generate_recommendations(),
         }

@@ -114,9 +114,9 @@ class SwarmPattern(ABC):
             "successful_executions": successful,
             "success_rate": successful / total if total > 0 else 0,
             "average_execution_time": avg_time,
-            "last_execution": self.execution_history[-1].timestamp
-            if self.execution_history
-            else None,
+            "last_execution": (
+                self.execution_history[-1].timestamp if self.execution_history else None
+            ),
         }
 
     def reset_history(self) -> None:

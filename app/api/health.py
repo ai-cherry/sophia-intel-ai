@@ -216,9 +216,7 @@ class HealthChecker:
         overall_status = (
             "healthy"
             if healthy_systems == total_systems
-            else "degraded"
-            if healthy_systems > 0
-            else "unhealthy"
+            else "degraded" if healthy_systems > 0 else "unhealthy"
         )
 
         return {

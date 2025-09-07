@@ -66,7 +66,7 @@ repos:
     rev: v0.12.12
     hooks:
       - id: ruff
-        args: [--fix, --exit-non-zero-on-fix, --ignore, "E501"]  # Only ignore line length
+        args: [--fix, --exit-non-zero-on-fix, --ignore, "E501"] # Only ignore line length
         exclude: ^(migrations/|tests/fixtures/)$
 
   # ========================================
@@ -114,7 +114,7 @@ repos:
           - sqlalchemy>=2.0.0
         args: [--ignore-missing-imports, --no-strict-optional, --warn-return-any]
         exclude: ^(tests/|scripts/|migrations/|.*test.*\.py)$
-        pass_filenames: true  # Pass files to mypy
+        pass_filenames: true # Pass files to mypy
 
   # ========================================
   # Documentation and Markdown
@@ -156,7 +156,7 @@ repos:
         pass_filenames: false
         stages: [pre-push] # Only on push, not every commit
         verbose: false
-        always_run: false  # Skip if no relevant files changed
+        always_run: false # Skip if no relevant files changed
 
       # Architecture compliance - useful
       - id: check-architecture
@@ -166,7 +166,7 @@ repos:
         pass_filenames: false
         stages: [pre-push] # Only on push
         verbose: false
-        always_run: false  # Skip if no relevant files changed
+        always_run: false # Skip if no relevant files changed
 
       # No print statements in production code
       - id: no-print-statements

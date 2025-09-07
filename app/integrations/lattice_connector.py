@@ -127,9 +127,10 @@ class LatticeConnector:
             Connection status and user info
         """
         try:
-            async with aiohttp.ClientSession() as session, session.get(
-                f"{self.base_url}/users/me", headers=self.headers
-            ) as response:
+            async with (
+                aiohttp.ClientSession() as session,
+                session.get(f"{self.base_url}/users/me", headers=self.headers) as response,
+            ):
                 if response.status == 200:
                     data = await response.json()
                     return {
@@ -167,9 +168,12 @@ class LatticeConnector:
             params["cycle"] = cycle
 
         try:
-            async with aiohttp.ClientSession() as session, session.get(
-                f"{self.base_url}/reviews", headers=self.headers, params=params
-            ) as response:
+            async with (
+                aiohttp.ClientSession() as session,
+                session.get(
+                    f"{self.base_url}/reviews", headers=self.headers, params=params
+                ) as response,
+            ):
                 if response.status == 200:
                     data = await response.json()
                     reviews = []
@@ -187,9 +191,11 @@ class LatticeConnector:
                             goals_achieved=item.get("goals_achieved", []),
                             areas_for_improvement=item.get("areas_for_improvement", []),
                             created_at=datetime.fromisoformat(item["created_at"]),
-                            completed_at=datetime.fromisoformat(item["completed_at"])
-                            if item.get("completed_at")
-                            else None,
+                            completed_at=(
+                                datetime.fromisoformat(item["completed_at"])
+                                if item.get("completed_at")
+                                else None
+                            ),
                         )
                         reviews.append(review)
                     return reviews
@@ -220,9 +226,12 @@ class LatticeConnector:
             params["status"] = status
 
         try:
-            async with aiohttp.ClientSession() as session, session.get(
-                f"{self.base_url}/goals", headers=self.headers, params=params
-            ) as response:
+            async with (
+                aiohttp.ClientSession() as session,
+                session.get(
+                    f"{self.base_url}/goals", headers=self.headers, params=params
+                ) as response,
+            ):
                 if response.status == 200:
                     data = await response.json()
                     goals = []
@@ -236,9 +245,11 @@ class LatticeConnector:
                             status=item["status"],
                             progress=item.get("progress", 0),
                             key_results=item.get("key_results", []),
-                            due_date=datetime.fromisoformat(item["due_date"])
-                            if item.get("due_date")
-                            else None,
+                            due_date=(
+                                datetime.fromisoformat(item["due_date"])
+                                if item.get("due_date")
+                                else None
+                            ),
                             created_at=datetime.fromisoformat(item["created_at"]),
                             updated_at=datetime.fromisoformat(item["updated_at"]),
                         )
@@ -277,9 +288,12 @@ class LatticeConnector:
             params["type"] = feedback_type
 
         try:
-            async with aiohttp.ClientSession() as session, session.get(
-                f"{self.base_url}/feedback", headers=self.headers, params=params
-            ) as response:
+            async with (
+                aiohttp.ClientSession() as session,
+                session.get(
+                    f"{self.base_url}/feedback", headers=self.headers, params=params
+                ) as response,
+            ):
                 if response.status == 200:
                     data = await response.json()
                     feedback_list = []
@@ -335,9 +349,12 @@ class LatticeConnector:
             params["end_date"] = end_date.isoformat()
 
         try:
-            async with aiohttp.ClientSession() as session, session.get(
-                f"{self.base_url}/one-on-ones", headers=self.headers, params=params
-            ) as response:
+            async with (
+                aiohttp.ClientSession() as session,
+                session.get(
+                    f"{self.base_url}/one-on-ones", headers=self.headers, params=params
+                ) as response,
+            ):
                 if response.status == 200:
                     data = await response.json()
                     meetings = []
@@ -370,9 +387,10 @@ class LatticeConnector:
             Engagement metrics and trends
         """
         try:
-            async with aiohttp.ClientSession() as session, session.get(
-                f"{self.base_url}/engagement/scores", headers=self.headers
-            ) as response:
+            async with (
+                aiohttp.ClientSession() as session,
+                session.get(f"{self.base_url}/engagement/scores", headers=self.headers) as response,
+            ):
                 if response.status == 200:
                     data = await response.json()
                     return {

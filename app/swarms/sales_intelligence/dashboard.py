@@ -208,31 +208,21 @@ class MetricsCalculator:
     def get_metric_color(self, metric_type: MetricType, value: float) -> str:
         """Get color coding for metric value"""
         color_rules = {
-            MetricType.CALL_QUALITY: lambda v: "green"
-            if v >= 70
-            else "yellow"
-            if v >= 50
-            else "red",
-            MetricType.SENTIMENT: lambda v: "green"
-            if v >= 0.2
-            else "yellow"
-            if v >= -0.2
-            else "red",
-            MetricType.RISK_SCORE: lambda v: "red"
-            if v >= 0.7
-            else "yellow"
-            if v >= 0.4
-            else "green",
-            MetricType.TALK_TIME: lambda v: "green"
-            if 0.3 <= v <= 0.4
-            else "yellow"
-            if 0.2 <= v <= 0.5
-            else "red",
-            MetricType.QUESTION_QUALITY: lambda v: "green"
-            if v >= 0.7
-            else "yellow"
-            if v >= 0.5
-            else "red",
+            MetricType.CALL_QUALITY: lambda v: (
+                "green" if v >= 70 else "yellow" if v >= 50 else "red"
+            ),
+            MetricType.SENTIMENT: lambda v: (
+                "green" if v >= 0.2 else "yellow" if v >= -0.2 else "red"
+            ),
+            MetricType.RISK_SCORE: lambda v: (
+                "red" if v >= 0.7 else "yellow" if v >= 0.4 else "green"
+            ),
+            MetricType.TALK_TIME: lambda v: (
+                "green" if 0.3 <= v <= 0.4 else "yellow" if 0.2 <= v <= 0.5 else "red"
+            ),
+            MetricType.QUESTION_QUALITY: lambda v: (
+                "green" if v >= 0.7 else "yellow" if v >= 0.5 else "red"
+            ),
         }
 
         return color_rules.get(metric_type, lambda v: "gray")(value)
@@ -438,12 +428,16 @@ class SalesIntelligenceDashboard:
         insights = {
             "sentiment": lambda d: f"Sentiment is {'positive' if d.get('overall_sentiment', 0) > 0.2 else 'negative' if d.get('overall_sentiment', 0) < -0.2 else 'neutral'}",
             "risk_assessment": lambda d: f"Deal risk is {'high' if d.get('overall_risk_score', 0) > 0.7 else 'moderate'}",
-            "competitive": lambda d: f"Competitor {d.get('competitor_mentions', [{}])[0].get('competitor', 'unknown')} mentioned"
-            if d.get("competitor_mentions")
-            else None,
-            "coaching": lambda d: "Talk time balance needs improvement"
-            if d.get("talk_time_balance", {}).get("internal_ratio", 0) > 0.6
-            else None,
+            "competitive": lambda d: (
+                f"Competitor {d.get('competitor_mentions', [{}])[0].get('competitor', 'unknown')} mentioned"
+                if d.get("competitor_mentions")
+                else None
+            ),
+            "coaching": lambda d: (
+                "Talk time balance needs improvement"
+                if d.get("talk_time_balance", {}).get("internal_ratio", 0) > 0.6
+                else None
+            ),
         }
 
         insight_generator = insights.get(output.agent_type)
@@ -578,50 +572,62 @@ class SalesIntelligenceDashboard:
             platform_summary = {
                 "total_records": self.platform_data.total_records,
                 "connected_platforms": self.platform_data.connected_platforms,
-                "last_sync": self.platform_data.last_sync.isoformat()
-                if self.platform_data.last_sync
-                else None,
+                "last_sync": (
+                    self.platform_data.last_sync.isoformat()
+                    if self.platform_data.last_sync
+                    else None
+                ),
                 "platforms": {
                     "gong": {
                         "enabled": bool(self.platform_data.gong),
                         "count": self.platform_data.gong.count if self.platform_data.gong else 0,
-                        "type": self.platform_data.gong.data_type
-                        if self.platform_data.gong
-                        else "calls",
+                        "type": (
+                            self.platform_data.gong.data_type
+                            if self.platform_data.gong
+                            else "calls"
+                        ),
                     },
                     "asana": {
                         "enabled": bool(self.platform_data.asana),
                         "count": self.platform_data.asana.count if self.platform_data.asana else 0,
-                        "type": self.platform_data.asana.data_type
-                        if self.platform_data.asana
-                        else "projects",
+                        "type": (
+                            self.platform_data.asana.data_type
+                            if self.platform_data.asana
+                            else "projects"
+                        ),
                     },
                     "linear": {
                         "enabled": bool(self.platform_data.linear),
-                        "count": self.platform_data.linear.count
-                        if self.platform_data.linear
-                        else 0,
-                        "type": self.platform_data.linear.data_type
-                        if self.platform_data.linear
-                        else "teams",
+                        "count": (
+                            self.platform_data.linear.count if self.platform_data.linear else 0
+                        ),
+                        "type": (
+                            self.platform_data.linear.data_type
+                            if self.platform_data.linear
+                            else "teams"
+                        ),
                     },
                     "notion": {
                         "enabled": bool(self.platform_data.notion),
-                        "count": self.platform_data.notion.count
-                        if self.platform_data.notion
-                        else 0,
-                        "type": self.platform_data.notion.data_type
-                        if self.platform_data.notion
-                        else "databases",
+                        "count": (
+                            self.platform_data.notion.count if self.platform_data.notion else 0
+                        ),
+                        "type": (
+                            self.platform_data.notion.data_type
+                            if self.platform_data.notion
+                            else "databases"
+                        ),
                     },
                     "hubspot": {
                         "enabled": bool(self.platform_data.hubspot),
-                        "count": self.platform_data.hubspot.count
-                        if self.platform_data.hubspot
-                        else 0,
-                        "type": self.platform_data.hubspot.data_type
-                        if self.platform_data.hubspot
-                        else "contacts",
+                        "count": (
+                            self.platform_data.hubspot.count if self.platform_data.hubspot else 0
+                        ),
+                        "type": (
+                            self.platform_data.hubspot.data_type
+                            if self.platform_data.hubspot
+                            else "contacts"
+                        ),
                     },
                 },
             }
@@ -721,24 +727,32 @@ def create_dashboard_app(dashboard: SalesIntelligenceDashboard) -> FastAPI:
                 "data": {
                     "total_records": platform_data.total_records,
                     "connected_platforms": platform_data.connected_platforms,
-                    "last_sync": platform_data.last_sync.isoformat()
-                    if platform_data.last_sync
-                    else None,
+                    "last_sync": (
+                        platform_data.last_sync.isoformat() if platform_data.last_sync else None
+                    ),
                     "platforms": {
                         name: {
                             "enabled": bool(getattr(platform_data, name)),
-                            "count": getattr(platform_data, name).count
-                            if getattr(platform_data, name)
-                            else 0,
-                            "type": getattr(platform_data, name).data_type
-                            if getattr(platform_data, name)
-                            else "unknown",
-                            "last_updated": getattr(platform_data, name).last_updated.isoformat()
-                            if getattr(platform_data, name)
-                            else None,
-                            "metadata": getattr(platform_data, name).metadata
-                            if getattr(platform_data, name)
-                            else {},
+                            "count": (
+                                getattr(platform_data, name).count
+                                if getattr(platform_data, name)
+                                else 0
+                            ),
+                            "type": (
+                                getattr(platform_data, name).data_type
+                                if getattr(platform_data, name)
+                                else "unknown"
+                            ),
+                            "last_updated": (
+                                getattr(platform_data, name).last_updated.isoformat()
+                                if getattr(platform_data, name)
+                                else None
+                            ),
+                            "metadata": (
+                                getattr(platform_data, name).metadata
+                                if getattr(platform_data, name)
+                                else {}
+                            ),
                         }
                         for name in ["gong", "asana", "linear", "notion", "hubspot"]
                     },

@@ -18,7 +18,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional, Set
 
 logger = logging.getLogger(__name__)
 
@@ -426,7 +426,9 @@ Code quality requirements:
 
         return persona
 
-    def share_knowledge(self, source_persona: str, target_persona: str, knowledge: Dict[str, Any]) -> None:
+    def share_knowledge(
+        self, source_persona: str, target_persona: str, knowledge: Dict[str, Any]
+    ) -> None:
         """Share knowledge between personas"""
         source = self.get_persona(source_persona)
         target = self.get_persona(target_persona)
@@ -509,9 +511,9 @@ Begin collaborative analysis:"""
 
         # Update metrics
         persona.performance_metrics[task_type] = performance
-        persona.performance_metrics["overall"] = sum(
-            persona.performance_metrics.values()
-        ) / len(persona.performance_metrics)
+        persona.performance_metrics["overall"] = sum(persona.performance_metrics.values()) / len(
+            persona.performance_metrics
+        )
 
         # Check for evolution trigger
         if performance > 0.8 and len(persona.evolution_history) < 10:
@@ -535,10 +537,7 @@ Begin collaborative analysis:"""
     def export_personas(self, path: Path) -> None:
         """Export all personas to file"""
         data = {
-            "personas": {
-                name: persona.to_dict()
-                for name, persona in self.personas.items()
-            },
+            "personas": {name: persona.to_dict() for name, persona in self.personas.items()},
             "shared_knowledge": self.shared_knowledge,
         }
 
@@ -549,7 +548,7 @@ Begin collaborative analysis:"""
 
     def import_personas(self, path: Path) -> None:
         """Import personas from file"""
-        with open(path, "r") as f:
+        with open(path) as f:
             data = json.load(f)
 
         for name, persona_dict in data.get("personas", {}).items():

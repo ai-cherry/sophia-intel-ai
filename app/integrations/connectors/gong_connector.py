@@ -2,6 +2,7 @@
 Gong.io Connector
 Integrates with Gong for conversation intelligence and sales insights
 """
+
 import asyncio
 import logging
 from datetime import datetime, timedelta

@@ -265,9 +265,9 @@ async def list_mcp_servers(ws_manager=Depends(get_ws_manager)):
             "url": client.url,
             "state": client.state.value,
             "connected": client.state.value == "connected",
-            "last_connection": client.last_connection_time.isoformat()
-            if client.last_connection_time
-            else None,
+            "last_connection": (
+                client.last_connection_time.isoformat() if client.last_connection_time else None
+            ),
             "reconnect_attempts": client.reconnect_attempts,
             "circuit_breaker_open": client.circuit_breaker_open,
         }

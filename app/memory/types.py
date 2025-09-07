@@ -2,6 +2,7 @@
 Memory system type definitions.
 Shared types for memory entries and operations.
 """
+
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum

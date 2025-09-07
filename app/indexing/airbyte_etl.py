@@ -6,6 +6,7 @@ This module provides functionality to:
 - Process and chunk the extracted data
 - Index processed chunks into Weaviate with appropriate metadata
 """
+
 import logging
 import os
 import shutil

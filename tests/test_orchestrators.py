@@ -2,9 +2,7 @@
 Test suite for Sophia and Artemis orchestrators
 """
 
-import asyncio
 import json
-from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -292,9 +290,7 @@ class TestIntegration:
         artemis = ArtemisOrchestrator()
 
         # Sophia generates requirements from BI analysis
-        bi_task = Task(
-            id="bi-123", type="analysis", description="Analyze customer churn patterns"
-        )
+        bi_task = Task(id="bi-123", type="analysis", description="Analyze customer churn patterns")
 
         bi_result = await sophia.execute(bi_task)
         assert bi_result.success

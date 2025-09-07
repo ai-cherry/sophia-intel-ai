@@ -220,12 +220,14 @@ class OpenRouterLatest:
                                 id=model_id,
                                 name=model_data.get("name", model_id),
                                 context_length=model_data.get("context_length", 4096),
-                                pricing_prompt=float(pricing.get("prompt", 0))
-                                if pricing.get("prompt")
-                                else 0,
-                                pricing_completion=float(pricing.get("completion", 0))
-                                if pricing.get("completion")
-                                else 0,
+                                pricing_prompt=(
+                                    float(pricing.get("prompt", 0)) if pricing.get("prompt") else 0
+                                ),
+                                pricing_completion=(
+                                    float(pricing.get("completion", 0))
+                                    if pricing.get("completion")
+                                    else 0
+                                ),
                                 supports_functions=model_data.get("supports_functions", False),
                                 supports_vision="vision"
                                 in model_data.get("description", "").lower(),
@@ -338,9 +340,9 @@ class OpenRouterLatest:
                 self.model_health[model_id] = {
                     "available": available,
                     "checked_at": datetime.now(),
-                    "response_time": response.elapsed.total_seconds()
-                    if hasattr(response, "elapsed")
-                    else None,
+                    "response_time": (
+                        response.elapsed.total_seconds() if hasattr(response, "elapsed") else None
+                    ),
                 }
 
                 return available

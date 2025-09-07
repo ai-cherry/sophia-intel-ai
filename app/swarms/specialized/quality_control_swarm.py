@@ -4,6 +4,7 @@
 Advanced multi-agent quality assurance system with automated testing,
 code review, security audits, and compliance validation.
 """
+
 from __future__ import annotations
 
 import asyncio

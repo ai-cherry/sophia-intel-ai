@@ -13,11 +13,8 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional
 from urllib.parse import urlparse
-
-import httpx
-from pydantic import BaseModel, Field
 
 from app.core.circuit_breaker import CircuitBreaker
 from app.core.portkey_manager import TaskType, get_portkey_manager
@@ -210,9 +207,7 @@ class BaseResearchProvider(ABC):
         self.portkey_manager = get_portkey_manager()
 
     @abstractmethod
-    async def search(
-        self, query: str, domain: ResearchDomain, **kwargs
-    ) -> List[ResearchFinding]:
+    async def search(self, query: str, domain: ResearchDomain, **kwargs) -> List[ResearchFinding]:
         """Execute search with provider"""
         pass
 
@@ -246,9 +241,7 @@ class PerplexityProvider(BaseResearchProvider):
         super().__init__(ResearchProvider.PERPLEXITY)
         self.api_key = self.portkey_manager.get_virtual_key("perplexity")
 
-    async def search(
-        self, query: str, domain: ResearchDomain, **kwargs
-    ) -> List[ResearchFinding]:
+    async def search(self, query: str, domain: ResearchDomain, **kwargs) -> List[ResearchFinding]:
         """Execute Perplexity search"""
         try:
             # Use Portkey to call Perplexity with citations
@@ -563,9 +556,7 @@ class SophiaResearchTeam(WebResearchTeam):
 
         return report
 
-    async def competitive_analysis(
-        self, company: str, competitors: List[str]
-    ) -> ResearchReport:
+    async def competitive_analysis(self, company: str, competitors: List[str]) -> ResearchReport:
         """Competitive analysis research"""
         query = f"Competitive analysis: {company} vs {', '.join(competitors)}"
         report = await self.research(query, deep_search=True)

@@ -459,7 +459,9 @@ class ExperimentalEvolutionEngine:
             "consciousness_breakthroughs": 0,
         }
 
-        logger.info(f"🧪 Experimental evolution engine initialized - Mode: {self.config.mode.value}")
+        logger.info(
+            f"🧪 Experimental evolution engine initialized - Mode: {self.config.mode.value}"
+        )
         if not self.config.enabled:
             logger.info(
                 "⚠️ Experimental evolution engine is DISABLED - enable in config to activate"

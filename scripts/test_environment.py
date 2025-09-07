@@ -258,9 +258,11 @@ class TechStackAnalyzer:
 
             client = weaviate.Client(
                 url=self.config.weaviate_url or "http://localhost:8080",
-                auth_client_secret=weaviate.AuthApiKey(api_key=self.config.weaviate_api_key)
-                if self.config.weaviate_api_key
-                else None,
+                auth_client_secret=(
+                    weaviate.AuthApiKey(api_key=self.config.weaviate_api_key)
+                    if self.config.weaviate_api_key
+                    else None
+                ),
             )
 
             # Get server version
@@ -271,9 +273,9 @@ class TechStackAnalyzer:
                 "status": "✅",
                 "server_version": server_version,
                 "latest_version": "1.32.0",
-                "client_version": weaviate.__version__
-                if hasattr(weaviate, "__version__")
-                else "Unknown",
+                "client_version": (
+                    weaviate.__version__ if hasattr(weaviate, "__version__") else "Unknown"
+                ),
             }
 
             logger.info(f"  ✅ Server: {server_version} (latest: 1.32.0)")

@@ -235,9 +235,9 @@ class AGNOAgent(ABC):
         await self.emit_event(
             "agent.stop",
             {
-                "runtime_seconds": (self.stop_time - self.start_time).total_seconds()
-                if self.start_time
-                else 0,
+                "runtime_seconds": (
+                    (self.stop_time - self.start_time).total_seconds() if self.start_time else 0
+                ),
                 "execution_count": self.execution_count,
                 "success_count": self.success_count,
                 "failure_count": self.failure_count,
@@ -293,9 +293,11 @@ class AGNOAgent(ABC):
                     {
                         "success": True,
                         "execution_time": execution_time,
-                        "result": result
-                        if isinstance(result, (dict, list, str, int, float, bool))
-                        else str(result),
+                        "result": (
+                            result
+                            if isinstance(result, (dict, list, str, int, float, bool))
+                            else str(result)
+                        ),
                     },
                 )
 
@@ -472,9 +474,9 @@ class AGNOAgent(ABC):
             "execution_count": self.execution_count,
             "success_count": self.success_count,
             "failure_count": self.failure_count,
-            "avg_execution_time": self.total_execution_time / self.execution_count
-            if self.execution_count > 0
-            else 0,
+            "avg_execution_time": (
+                self.total_execution_time / self.execution_count if self.execution_count > 0 else 0
+            ),
             "resources": self.resources.to_dict(),
         }
 
@@ -484,12 +486,12 @@ class AGNOAgent(ABC):
             "execution_count": self.execution_count,
             "success_count": self.success_count,
             "failure_count": self.failure_count,
-            "success_rate": self.success_count / self.execution_count
-            if self.execution_count > 0
-            else 0,
-            "avg_execution_time": self.total_execution_time / self.execution_count
-            if self.execution_count > 0
-            else 0,
+            "success_rate": (
+                self.success_count / self.execution_count if self.execution_count > 0 else 0
+            ),
+            "avg_execution_time": (
+                self.total_execution_time / self.execution_count if self.execution_count > 0 else 0
+            ),
             "total_execution_time": self.total_execution_time,
             "error_count": self.error_count,
             "resource_history": [

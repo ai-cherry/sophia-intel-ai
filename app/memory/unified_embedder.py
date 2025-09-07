@@ -525,9 +525,9 @@ class EliteUnifiedEmbedder:
             texts=[text],
             strategy=strategy,
             purpose=purpose,
-            metadata=[{"language": language, "priority": priority}]
-            if language or priority
-            else None,
+            metadata=(
+                [{"language": language, "priority": priority}] if language or priority else None
+            ),
             return_metadata=return_metadata,
         )
 
@@ -627,9 +627,9 @@ class EliteUnifiedEmbedder:
 
                 health_results[tier.value] = {
                     "status": "healthy",
-                    "single_embedding_dims": len(single_result)
-                    if isinstance(single_result, list)
-                    else 0,
+                    "single_embedding_dims": (
+                        len(single_result) if isinstance(single_result, list) else 0
+                    ),
                     "batch_embeddings_count": len(batch_result) if batch_result else 0,
                     "response_time_ms": None,  # Could be added with timing
                 }

@@ -97,9 +97,11 @@ class UnifiedMemoryStore:
                 {
                     "id": mem_id.decode() if isinstance(mem_id, bytes) else mem_id,
                     "content": content.decode() if isinstance(content, bytes) else content,
-                    "metadata": {k.decode(): v.decode() for k, v in meta.items()}
-                    if isinstance(meta, dict)
-                    else meta,
+                    "metadata": (
+                        {k.decode(): v.decode() for k, v in meta.items()}
+                        if isinstance(meta, dict)
+                        else meta
+                    ),
                 }
             )
 

@@ -778,9 +778,9 @@ class IntegrationOrchestrator:
         await asyncio.gather(*team_tasks, return_exceptions=True)
 
         # Perform cross-platform entity correlations
-        analysis_results[
-            "cross_platform_correlations"
-        ] = await self._execute_cross_platform_correlations(platform_data)
+        analysis_results["cross_platform_correlations"] = (
+            await self._execute_cross_platform_correlations(platform_data)
+        )
 
         # Calculate OKR insights
         analysis_results["okr_insights"] = await self._calculate_okr_insights(analysis_results)
@@ -922,9 +922,9 @@ class IntegrationOrchestrator:
         bi_results = analysis_results.get("team_results", {}).get("business_intelligence", {})
         if bi_results.get("success"):
             # Extract OKR metrics from BI analysis
-            okr_insights[
-                "current_revenue_per_employee"
-            ] = 150000.0  # Placeholder - would extract from actual BI results
+            okr_insights["current_revenue_per_employee"] = (
+                150000.0  # Placeholder - would extract from actual BI results
+            )
 
         # Calculate gap to target
         gap = (
@@ -1027,12 +1027,14 @@ class IntegrationOrchestrator:
                 "current_value": self.okr_tracker.revenue_per_employee,
                 "target_value": self.okr_tracker.target_revenue_per_employee,
                 "progress_percentage": (
-                    self.okr_tracker.revenue_per_employee
-                    / self.okr_tracker.target_revenue_per_employee
-                )
-                * 100
-                if self.okr_tracker.target_revenue_per_employee > 0
-                else 0,
+                    (
+                        self.okr_tracker.revenue_per_employee
+                        / self.okr_tracker.target_revenue_per_employee
+                    )
+                    * 100
+                    if self.okr_tracker.target_revenue_per_employee > 0
+                    else 0
+                ),
                 "trend": "improving" if self.okr_tracker.growth_rate > 0 else "declining",
             },
             "team_contributions": {},
@@ -1098,7 +1100,7 @@ class IntegrationTeamFactory:
 
 # Convenience function for quick orchestrated analysis
 async def execute_revenue_per_employee_intelligence(
-    platform_data: dict[str, Any]
+    platform_data: dict[str, Any],
 ) -> dict[str, Any]:
     """Quick function for revenue per employee focused intelligence analysis"""
 

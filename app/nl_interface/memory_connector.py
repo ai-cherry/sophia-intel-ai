@@ -334,9 +334,9 @@ class NLMemoryConnector:
                 "interaction_count": len(history),
                 "recent_intents": recent_intents,
                 "entities": all_entities,
-                "summary": ". ".join(summary_parts)
-                if summary_parts
-                else "Recent conversation context",
+                "summary": (
+                    ". ".join(summary_parts) if summary_parts else "Recent conversation context"
+                ),
             }
 
         except Exception as e:

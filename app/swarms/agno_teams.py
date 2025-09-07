@@ -380,14 +380,16 @@ class SophiaAGNOTeam:
             extra_data={
                 "role": config["role"],
                 "team": self.config.name,
-                "domain": getattr(self, "domain", {}).get("value", "general_operations")
-                if hasattr(getattr(self, "domain", {}), "get")
-                else str(getattr(self, "domain", "general_operations")),
+                "domain": (
+                    getattr(self, "domain", {}).get("value", "general_operations")
+                    if hasattr(getattr(self, "domain", {}), "get")
+                    else str(getattr(self, "domain", "general_operations"))
+                ),
                 "personality_type": "base",
                 "temperature": config.get("temperature", 0.5),
-                "created_at": asyncio.get_event_loop().time()
-                if hasattr(asyncio, "get_event_loop")
-                else 0,
+                "created_at": (
+                    asyncio.get_event_loop().time() if hasattr(asyncio, "get_event_loop") else 0
+                ),
             },
         )
 

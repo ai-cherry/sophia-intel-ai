@@ -1,16 +1,18 @@
 """
 Pydantic models and database schemas for Foundational Knowledge System
 """
+
 from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional
 from uuid import UUID, uuid4
 
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class DataClassification(str, Enum):
     """Data classification levels"""
+
     PUBLIC = "public"
     INTERNAL = "internal"
     CONFIDENTIAL = "confidential"
@@ -20,6 +22,7 @@ class DataClassification(str, Enum):
 
 class SensitivityLevel(str, Enum):
     """Data sensitivity levels"""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -28,6 +31,7 @@ class SensitivityLevel(str, Enum):
 
 class AccessLevel(str, Enum):
     """Access control levels"""
+
     PUBLIC = "public"
     EMPLOYEE = "employee"
     MANAGER = "manager"
@@ -37,6 +41,7 @@ class AccessLevel(str, Enum):
 
 class ChangeType(str, Enum):
     """Types of changes for versioning"""
+
     CREATE = "create"
     UPDATE = "update"
     DELETE = "delete"
@@ -45,6 +50,7 @@ class ChangeType(str, Enum):
 
 class SyncStatus(str, Enum):
     """Sync operation status"""
+
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"
@@ -54,6 +60,7 @@ class SyncStatus(str, Enum):
 
 class RelationshipType(str, Enum):
     """Knowledge relationship types"""
+
     RELATES_TO = "relates_to"
     DEPENDS_ON = "depends_on"
     SUPERSEDES = "supersedes"
@@ -63,8 +70,10 @@ class RelationshipType(str, Enum):
 
 # ==================== Base Models ====================
 
+
 class FoundationalKnowledge(BaseModel):
     """Core foundational knowledge model"""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID = Field(default_factory=uuid4)
@@ -112,13 +121,14 @@ class FoundationalKnowledge(BaseModel):
             AccessLevel.EMPLOYEE: 1,
             AccessLevel.MANAGER: 2,
             AccessLevel.EXECUTIVE: 3,
-            AccessLevel.OWNER: 4
+            AccessLevel.OWNER: 4,
         }
         return level_hierarchy.get(user_level, 0) >= level_hierarchy.get(self.access_level, 0)
 
 
 class KnowledgeVersion(BaseModel):
     """Version history for foundational knowledge"""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID = Field(default_factory=uuid4)
@@ -146,6 +156,7 @@ class KnowledgeVersion(BaseModel):
 
 class KnowledgeRelationship(BaseModel):
     """Relationships between knowledge items"""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID = Field(default_factory=uuid4)
@@ -159,8 +170,10 @@ class KnowledgeRelationship(BaseModel):
 
 # ==================== Sync Models ====================
 
+
 class SyncOperation(BaseModel):
     """Sync operation tracking"""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID = Field(default_factory=uuid4)
@@ -205,8 +218,10 @@ class SyncOperation(BaseModel):
 
 # ==================== API Request/Response Models ====================
 
+
 class CreateKnowledgeRequest(BaseModel):
     """Request model for creating knowledge"""
+
     title: str
     content: Optional[str] = None
     category: Optional[str] = None
@@ -219,6 +234,7 @@ class CreateKnowledgeRequest(BaseModel):
 
 class UpdateKnowledgeRequest(BaseModel):
     """Request model for updating knowledge"""
+
     title: Optional[str] = None
     content: Optional[str] = None
     category: Optional[str] = None
@@ -231,6 +247,7 @@ class UpdateKnowledgeRequest(BaseModel):
 
 class KnowledgeSearchRequest(BaseModel):
     """Request model for searching knowledge"""
+
     query: str
     category: Optional[str] = None
     tags: Optional[List[str]] = None
@@ -242,6 +259,7 @@ class KnowledgeSearchRequest(BaseModel):
 
 class KnowledgeSearchResponse(BaseModel):
     """Response model for knowledge search"""
+
     results: List[FoundationalKnowledge]
     total_count: int
     query: str
@@ -250,6 +268,7 @@ class KnowledgeSearchResponse(BaseModel):
 
 class SyncTriggerRequest(BaseModel):
     """Request model for triggering sync"""
+
     sync_type: str = "incremental"  # 'full', 'incremental', 'manual'
     source_table: Optional[str] = None  # Specific table to sync
     force: bool = False  # Force sync even if recently synced
@@ -257,6 +276,7 @@ class SyncTriggerRequest(BaseModel):
 
 class SyncStatusResponse(BaseModel):
     """Response model for sync status"""
+
     active_syncs: List[SyncOperation]
     last_successful_sync: Optional[SyncOperation]
     next_scheduled_sync: Optional[datetime]
@@ -265,8 +285,10 @@ class SyncStatusResponse(BaseModel):
 
 # ==================== Cache Models ====================
 
+
 class CacheMetadata(BaseModel):
     """Cache metadata for tracking"""
+
     cache_key: str
     knowledge_ids: List[UUID]
     query_hash: str
@@ -279,8 +301,10 @@ class CacheMetadata(BaseModel):
 
 # ==================== Access Log Models ====================
 
+
 class AccessLog(BaseModel):
     """Access log for audit trail"""
+
     id: UUID = Field(default_factory=uuid4)
     knowledge_id: Optional[UUID] = None
     accessed_by: str

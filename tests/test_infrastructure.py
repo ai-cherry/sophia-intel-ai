@@ -2,16 +2,13 @@
 Test suite for infrastructure components (secrets, memory, portkey)
 """
 
-import asyncio
 import json
 import os
 import tempfile
-from datetime import datetime, timedelta
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from cryptography.fernet import Fernet
 
 from app.core.portkey_manager import PortkeyManager, TaskType
 from app.core.secrets_manager import SecretsManager as SecureSecretsManager
@@ -50,7 +47,7 @@ class TestSecretsManager:
 
             # Read vault file directly
             vault_file = manager.vault_path / "secrets.json"
-            with open(vault_file, "r") as f:
+            with open(vault_file) as f:
                 vault_data = json.load(f)
 
             # Verify data is encrypted
@@ -233,9 +230,10 @@ class TestUnifiedMemoryRouter:
     @pytest.fixture
     def mock_clients(self):
         """Mock memory backend clients"""
-        with patch("app.memory.unified_memory_router.redis.Redis") as mock_redis, patch(
-            "app.memory.unified_memory_router.weaviate.Client"
-        ) as mock_weaviate:
+        with (
+            patch("app.memory.unified_memory_router.redis.Redis") as mock_redis,
+            patch("app.memory.unified_memory_router.weaviate.Client") as mock_weaviate,
+        ):
             redis_client = MagicMock()
             redis_client.get = MagicMock(return_value=None)
             redis_client.setex = MagicMock()
@@ -356,7 +354,7 @@ class TestIntegrationE2E:
 
             # Verify it's not accessible without proper access
             vault_file = secrets.vault_path / "secrets.json"
-            with open(vault_file, "r") as f:
+            with open(vault_file) as f:
                 vault_data = json.load(f)
 
             # Data should be encrypted

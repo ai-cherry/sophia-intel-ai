@@ -509,14 +509,21 @@ def build_parser() -> argparse.ArgumentParser:
         import subprocess
         import time
 
-        # 1) Load proposal content from memory
-        search = client.memory_search(f"collab AND id:{args.pid} AND collab_proposal", limit=5)
-        results = search.get("results") if isinstance(search, dict) else search
-        if not results:
+        # 1) Load proposal content from memory (robust filtering without advanced query syntax)
+        search = client.memory_search("collab", limit=500)
+        items = search.get("results") if isinstance(search, dict) else (search or [])
+        target = None
+        for it in items:
+            topic = it.get("topic", "")
+            tags = it.get("tags", []) or []
+            if topic.startswith("collab_proposal:") and any(t == f"id:{args.pid}" for t in tags):
+                target = it
+                break
+        if not target:
             err = {"ok": False, "error": f"Proposal {args.pid} not found"}
             print(_json.dumps(err, indent=2))
             return 2
-        proposal_raw = results[0].get("content") or "{}"
+        proposal_raw = target.get("content") or "{}"
         try:
             proposal = _json.loads(proposal_raw)
         except Exception:

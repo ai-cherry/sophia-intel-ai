@@ -5,6 +5,7 @@ services:
   redis:
     image: redis:7-alpine
     container_name: sophia-redis
+    profiles: ["mcp"]
     ports:
       - "6380:6379"
     volumes:
@@ -16,6 +17,28 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
+
+  # Unified API for MCP checks (dev)
+  api:
+    image: python:3.11-slim
+    container_name: sophia-api
+    profiles: ["mcp"]
+    working_dir: /app
+    volumes:
+      - ./:/app
+    environment:
+      AGENT_API_PORT: "8003"
+      LOCAL_DEV_MODE: "true"
+      REDIS_URL: "redis://redis:6379/0"
+    command: >-
+      bash -lc "apt-get update && apt-get install -y gcc python3-dev \
+      && pip install --no-cache-dir -r requirements.txt \
+      && python -m app.api.unified_server"
+    ports:
+      - "8003:8003"
+    depends_on:
+      redis:
+        condition: service_healthy
 
   # Weaviate for L2 vector storage
   weaviate:

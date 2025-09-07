@@ -43,6 +43,9 @@ from app.api.infrastructure_router import router as infrastructure_router
 
 # from app.factory import router as factory_router  # Has SlackIntegration import issues
 from app.api.mcp.status import router as mcp_status_router
+
+# Optimized MCP Router
+from app.api.mcp.unified_mcp_router import router as unified_mcp_router
 from app.api.memory.memory_endpoints import router as memory_router
 from app.api.portkey_router_endpoints import router as portkey_router
 from app.api.repository.repo_service import router as repo_router
@@ -58,9 +61,6 @@ from app.api.routers.teams import router as teams_router
 
 # from app.api.routers.voice import router as voice_router  # Requires ELEVENLABS_API_KEY
 from app.api.routes.foundational_knowledge import router as foundational_knowledge_router
-
-# Optimized MCP Router
-from app.api.mcp.unified_mcp_router import router as unified_mcp_router
 from app.api.routes.prompt_library import router as prompt_library_router
 from app.api.routes.redis_health import router as redis_health_router
 from app.api.super_orchestrator_router import router as super_orchestrator_router

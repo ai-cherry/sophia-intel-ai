@@ -134,6 +134,78 @@ status: ## Check service status
 	@curl -s http://localhost:$(API_PORT)/health > /dev/null && echo "$(GREEN)✅ API Server (port $(API_PORT))$(RESET)" || echo "$(RED)❌ API Server (port $(API_PORT))$(RESET)"
 	@curl -s http://localhost:$(FRONTEND_PORT) > /dev/null && echo "$(GREEN)✅ Frontend (port $(FRONTEND_PORT))$(RESET)" || echo "$(RED)❌ Frontend (port $(FRONTEND_PORT))$(RESET)"
 
+.PHONY: mcp-health
+mcp-health: ## Show MCP health from unified API
+	@echo "$(BLUE)🧠 Checking MCP health...$(RESET)"
+	@curl -s http://localhost:$(API_PORT)/api/mcp/health | jq . || echo "$(YELLOW)⚠️  MCP health endpoint not reachable. Is the API running?$(RESET)"
+
+.PHONY: mcp-status
+mcp-status: ## Show MCP server/domain status summary
+	@echo "$(BLUE)🧠 Checking MCP domain/server status...$(RESET)"
+	@curl -s http://localhost:$(API_PORT)/api/mcp/status | jq . || echo "$(YELLOW)⚠️  MCP status endpoint not reachable. Is the API running?$(RESET)"
+
+.PHONY: mcp-check
+mcp-check: ## Quick MCP readiness check (health + capabilities + git status)
+	@echo "$(BLUE)🧠 MCP readiness check...$(RESET)"
+	@echo "$(CYAN)• Health$(RESET)"
+	@curl -s http://localhost:$(API_PORT)/api/mcp/health | jq '{status,connections,capabilities}' || true
+	@echo "$(CYAN)• Capabilities$(RESET)"
+	@curl -s http://localhost:$(API_PORT)/api/mcp/capabilities | jq . || true
+	@echo "$(CYAN)• Git status$(RESET)"
+	@curl -s "http://localhost:$(API_PORT)/api/mcp/git/status?repository=." | jq . || true
+
+.PHONY: mcp-redis-print
+mcp-redis-print: ## Print Redis URL from credential manager
+	@echo "$(BLUE)🔑 Printing Redis config from UnifiedCredentialManager...$(RESET)"
+	@$(PYTHON) - <<'PY'
+from app.core.unified_credential_manager import UnifiedCredentialManager
+u = UnifiedCredentialManager()
+print(u.get_redis_config())
+PY
+
+.PHONY: mcp-redis-pass
+mcp-redis-pass: ## Set Redis password in credential manager: make mcp-redis-pass PASS=yourpass
+	@if [ -z "$(PASS)" ]; then echo "$(YELLOW)Usage: make mcp-redis-pass PASS=yourpass$(RESET)"; exit 1; fi
+	@echo "$(BLUE)🔐 Updating Redis password in UnifiedCredentialManager...$(RESET)"
+	@PASS="$(PASS)" $(PYTHON) - <<'PY'
+import os
+from app.core.unified_credential_manager import UnifiedCredentialManager
+u = UnifiedCredentialManager()
+new = u.update_redis_password(os.environ.get('PASS'))
+print({'updated_password': new, 'redis_url': u.get_redis_config()['url']})
+PY
+
+# -------------------------------
+# Codex Agents setup & commands
+# -------------------------------
+
+.PHONY: codex-self-setup
+codex-self-setup: ## Configure Codex agents & commands locally in this repo
+	@echo "$(BLUE)🧩 Setting up Codex agents (local) ...$(RESET)"
+	@chmod +x bin/codex-* || true
+	@echo "$(GREEN)✅ Codex agents configured. Try: ./bin/codex-agents$(RESET)"
+
+.PHONY: codex-agents
+codex-agents: ## List available Codex agents
+	@./bin/codex-agents
+
+.PHONY: codex-fix-routing
+codex-fix-routing: ## Launch routing fix agent
+	@./bin/codex-fix-routing "Fix Portkey/OpenRouter Gemini→OpenAI routing with safe fallbacks."
+
+.PHONY: codex-fix-all
+codex-fix-all: ## Run a full fix workflow (debug -> refactor -> test -> review)
+	@./bin/codex-debug "Identify top issues to fix now, propose plan."
+	@./bin/codex-refactor "Apply minimal diffs for fixes per plan."
+	@./bin/codex-test "Add/update tests to cover fixes."
+	@./bin/codex-review "Review the changes for quality and regressions."
+
+.PHONY: codex-daily
+codex-daily: ## Run daily maintenance (security, perf, docs)
+	@./bin/codex-security "Security audit for recent changes."
+	@./bin/codex-perf "Performance scan and quick wins."
+	@./bin/codex-docs "Update docs for changes."
+
 .PHONY: logs
 logs: ## Show recent logs
 	@echo "$(BLUE)📄 Recent logs:$(RESET)"
@@ -192,6 +264,32 @@ docker-down: ## Stop Docker services
 .PHONY: docker-logs
 docker-logs: ## Show Docker logs
 	@$(DOCKER_COMPOSE) logs -f
+
+.PHONY: mcp-stdio
+mcp-stdio: ## Run minimal stdio MCP (filesystem + memory)
+	@echo "$(BLUE)🧰 Starting stdio MCP (fs+memory) ...$(RESET)"
+	@./bin/mcp-fs-memory
+
+.PHONY: mcp-stdio-test
+mcp-stdio-test: ## Test stdio MCP with a few JSON lines
+	@echo '{"id":"1","method":"initialize"}' | ./bin/mcp-fs-memory | sed -n '1p'
+	@echo '{"id":"2","method":"fs.list","params":{"path":"."}}' | ./bin/mcp-fs-memory | sed -n '1p'
+	@echo '{"id":"3","method":"memory.search","params":{"query":"FastAPI"}}' | ./bin/mcp-fs-memory | sed -n '1p'
+
+.PHONY: docker-up-mcp
+docker-up-mcp: ## Start only API + Redis (MCP profile)
+	@echo "$(BLUE)🐳 Starting MCP stack (api + redis)...$(RESET)"
+	@$(DOCKER_COMPOSE) --profile mcp up -d
+	@echo "$(GREEN)✅ MCP stack started (ports: API 8003, Redis 6380)$(RESET)"
+
+.PHONY: docker-down-mcp
+docker-down-mcp: ## Stop MCP stack
+	@$(DOCKER_COMPOSE) --profile mcp down
+	@echo "$(GREEN)✅ MCP stack stopped$(RESET)"
+
+.PHONY: docker-logs-mcp
+docker-logs-mcp: ## Tail logs for API + Redis
+	@$(DOCKER_COMPOSE) --profile mcp logs -f api redis
 
 .PHONY: backup
 backup: ## Backup data directory

@@ -38,6 +38,11 @@ if ! pgrep -x "redis-server" > /dev/null; then
     redis-server --daemonize yes
 fi
 
-# Run the master startup script
-echo "🎯 Starting MCP Master Controller..."
-python3 scripts/mcp_master_startup.py
+# Check if centralized startup is available
+if [ -f "scripts/start_centralized_mcp.py" ]; then
+    echo "🎯 Starting Centralized MCP System (Phase 2)..."
+    python3 scripts/start_centralized_mcp.py
+else
+    echo "🎯 Starting MCP Master Controller (Phase 1)..."
+    python3 scripts/mcp_master_startup.py
+fi

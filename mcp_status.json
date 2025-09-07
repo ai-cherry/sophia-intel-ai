@@ -19,7 +19,7 @@
     },
     "git": {
       "port": 8002,
-      "url": "http://localhost:8002", 
+      "url": "http://localhost:8002",
       "health_endpoint": "/health",
       "status": "installed",
       "capabilities": ["git_operations"]

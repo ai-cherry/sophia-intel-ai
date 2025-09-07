@@ -118,10 +118,10 @@ class SmartCommandDispatcher:
 
         # Circuit breakers for each component
         self.circuit_breakers = {
-            "memory": CircuitBreaker(failure_threshold=3, recovery_timeout=30),
-            "swarm": CircuitBreaker(failure_threshold=2, recovery_timeout=60),
-            "orchestrator": CircuitBreaker(failure_threshold=3, recovery_timeout=30),
-            "n8n": CircuitBreaker(failure_threshold=5, recovery_timeout=20),
+            "memory": CircuitBreaker(failure_threshold=3, recovery_timeout=30.0),
+            "swarm": CircuitBreaker(failure_threshold=2, recovery_timeout=60.0),
+            "orchestrator": CircuitBreaker(failure_threshold=3, recovery_timeout=30.0),
+            "n8n": CircuitBreaker(failure_threshold=5, recovery_timeout=20.0),
         }
 
         # Performance tracking
@@ -595,9 +595,9 @@ class SmartCommandDispatcher:
                 execution_result={
                     "execution_mode": enriched_command.recommended_mode.value,
                     "execution_time": execution_time,
-                    "quality_score": result.get("quality_score", 0)
-                    if isinstance(result, dict)
-                    else 0,
+                    "quality_score": (
+                        result.get("quality_score", 0) if isinstance(result, dict) else 0
+                    ),
                 },
                 metadata=enriched_command.metadata,
             )
@@ -763,9 +763,11 @@ class SmartCommandDispatcher:
             "analysis": {
                 "avg_complexity": avg_complexity,
                 "interaction_count": len(history),
-                "most_common_intent": max(intent_distribution.items(), key=lambda x: x[1])[0]
-                if intent_distribution
-                else None,
+                "most_common_intent": (
+                    max(intent_distribution.items(), key=lambda x: x[1])[0]
+                    if intent_distribution
+                    else None
+                ),
             },
         }
 

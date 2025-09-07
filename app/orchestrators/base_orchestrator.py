@@ -2,6 +2,7 @@
 Base Orchestrator Pattern
 Foundation for all domain-specific orchestrators (Sophia, Artemis)
 """
+
 import asyncio
 import json
 import logging
@@ -12,7 +13,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Optional
 
-from app.core.circuit_breaker import CircuitBreaker
+from app.core.circuit_breaker import CircuitBreaker, CircuitBreakerConfig
 from app.core.portkey_manager import TaskType, get_portkey_manager
 from app.core.secrets_manager import get_secrets_manager
 from app.memory.unified_memory_router import DocChunk, MemoryDomain, get_memory_router
@@ -118,7 +119,13 @@ class BaseOrchestrator(ABC):
 
         # Circuit breaker for fault tolerance
         self.circuit_breaker = CircuitBreaker(
-            failure_threshold=5, recovery_timeout=60, expected_exception=Exception
+            name=f"{self.config.name}.orchestrator",
+            config=CircuitBreakerConfig(
+                failure_threshold=5,
+                success_threshold=2,
+                timeout=60.0,
+                expected_exception=Exception,
+            ),
         )
 
         # Task management
@@ -171,7 +178,7 @@ class BaseOrchestrator(ABC):
 
             # Execute with monitoring and circuit breaker
             async with self._semaphore:
-                if self.metrics:
+                if self.metrics and hasattr(self.metrics, "timer"):
                     with self.metrics.timer(f"{self.domain.value}.execution"):
                         result = await self._execute_with_circuit_breaker(task, routing)
                 else:
@@ -212,15 +219,13 @@ class BaseOrchestrator(ABC):
             # Store in history
             self._task_history.append({"task": task, "result": result, "timestamp": datetime.now()})
 
-            # Emit metrics
+            # Emit basic metrics (collector exposes generic record/increment)
             if self.metrics:
-                self.metrics.record_task_completion(
-                    domain=self.domain.value,
-                    task_type=task.type.value,
-                    success=result.success,
-                    duration_ms=result.execution_time_ms,
-                    cost_usd=result.cost,
-                )
+                labels = {"domain": self.domain.value, "task_type": task.type.value}
+                status_label = {"status": "success" if result.success else "failure"}
+                self.metrics.increment("tasks.total", 1.0, labels={**labels, **status_label})
+                self.metrics.record("tasks.duration_ms", result.execution_time_ms, labels=labels)
+                self.metrics.record("tasks.cost_usd", result.cost, labels=labels)
 
         return result
 
@@ -276,10 +281,16 @@ class BaseOrchestrator(ABC):
         if self.memory and self.config.enable_memory and result.success:
             await self._store_results(task, result)
 
-        # Cache successful results
+        # Cache successful results (store a lightweight, serializable summary)
         if self.config.enable_caching and result.success:
             cache_key = self._generate_cache_key(task)
-            await self.memory.put_ephemeral(cache_key, result, ttl_s=3600)  # 1 hour cache
+            summary = {
+                "success": result.success,
+                "confidence": result.confidence,
+                "cost": result.cost,
+                "execution_time_ms": result.execution_time_ms,
+            }
+            await self.memory.put_ephemeral(cache_key, summary, ttl_s=3600)  # 1 hour cache
 
         # Log execution completion
         status = "succeeded" if result.success else "failed"
@@ -324,9 +335,9 @@ class BaseOrchestrator(ABC):
             content=json.dumps(
                 {
                     "task": task.content,
-                    "result": result.content
-                    if isinstance(result.content, str)
-                    else str(result.content),
+                    "result": (
+                        result.content if isinstance(result.content, str) else str(result.content)
+                    ),
                 }
             ),
             source_uri=f"task://{task.id}",

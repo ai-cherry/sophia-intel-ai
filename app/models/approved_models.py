@@ -78,6 +78,9 @@ APPROVED = ApprovedModels(
         "anthropic/claude-opus-4.1": "anthropic/claude-4.1-opus",
         "anthropic/claude-sonnet-4": "anthropic/claude-4.1-sonnet",
         "deepseek/deepseek-chat-v3-1": "deepseek/deepseek-chat-v3.1",
+        # OpenRouter fully-qualified ids mapping to provider-native ids
+        "openrouter/qwen/qwen3-coder": "qwen/qwen3-coder",
+        "openrouter/deepseek/deepseek-chat-v3-0324": "deepseek/deepseek-chat-v3-0324",
     },
 )
 

@@ -13,7 +13,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-from app.core.circuit_breaker import CircuitBreaker
+from app.core.circuit_breaker import CircuitBreaker, CircuitBreakerConfig
 from app.core.portkey_manager import TaskType, get_portkey_manager
 from app.core.secrets_manager import get_secrets_manager
 from app.memory.unified_memory_router import DocChunk, MemoryDomain, get_memory_router
@@ -153,7 +153,13 @@ class UnifiedBaseOrchestrator(ABC):
 
         # Circuit breaker for fault tolerance
         self.circuit_breaker = CircuitBreaker(
-            failure_threshold=5, recovery_timeout=60, expected_exception=Exception
+            name=f"{self.config.name}.orchestrator",
+            config=CircuitBreakerConfig(
+                failure_threshold=5,
+                success_threshold=2,
+                timeout=60.0,
+                expected_exception=Exception,
+            ),
         )
 
         # Task management

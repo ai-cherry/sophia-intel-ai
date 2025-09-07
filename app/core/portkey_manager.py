@@ -2,7 +2,10 @@
 Portkey Virtual Keys Management System
 Centralized provider abstraction with intelligent routing
 """
+
+import asyncio
 import logging
+import os
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
@@ -342,8 +345,11 @@ class PortkeyManager:
         # Try primary
         try:
             client = self.get_client(routing.provider)
-            response = await client.chat.completions.create(
-                model=routing.model, messages=messages, **kwargs
+            response = await asyncio.to_thread(
+                client.chat.completions.create,
+                model=routing.model,
+                messages=messages,
+                **kwargs,
             )
             self._record_usage(routing.provider, routing.model, response.usage)
             return response
@@ -354,8 +360,11 @@ class PortkeyManager:
         for fallback in routing.fallbacks:
             try:
                 client = self.get_client(fallback.provider)
-                response = await client.chat.completions.create(
-                    model=fallback.model, messages=messages, **kwargs
+                response = await asyncio.to_thread(
+                    client.chat.completions.create,
+                    model=fallback.model,
+                    messages=messages,
+                    **kwargs,
                 )
                 self._record_usage(fallback.provider, fallback.model, response.usage)
                 logger.info(f"Succeeded with fallback: {fallback.provider}/{fallback.model}")
@@ -365,6 +374,109 @@ class PortkeyManager:
                 continue
 
         raise Exception("All providers failed")
+
+    async def embed_texts(
+        self,
+        texts: list[str],
+        provider: Optional[str] = None,
+        model: Optional[str] = None,
+    ) -> list[list[float]]:
+        """Generate embeddings with provider, fallback to local if needed.
+
+        Provider/model resolution order:
+        - Explicit args
+        - EMBEDDING_PROVIDER / EMBEDDING_MODEL
+        - LLM_EMBEDDING_PROVIDER / LLM_EMBEDDING_MODEL
+        - Defaults: openai + text-embedding-3-small
+        """
+        prov = (
+            provider
+            or os.getenv("EMBEDDING_PROVIDER")
+            or os.getenv("LLM_EMBEDDING_PROVIDER")
+            or "openai"
+        )
+        mdl = (
+            model
+            or os.getenv("EMBEDDING_MODEL")
+            or os.getenv("LLM_EMBEDDING_MODEL")
+            or "text-embedding-3-small"
+        )
+
+        try:
+            client = self.get_client(prov)
+            # Portkey proxies provider SDKs; use embeddings API
+            resp = await asyncio.to_thread(
+                client.embeddings.create,
+                model=mdl,
+                input=texts,
+            )
+            # OpenAI-compatible structure: resp may be object or dict
+            data = (
+                getattr(resp, "data", None)
+                if hasattr(resp, "data")
+                else (resp.get("data") if isinstance(resp, dict) else None)
+            ) or []
+            vectors = [
+                (
+                    getattr(item, "embedding", None)
+                    if hasattr(item, "embedding")
+                    else item.get("embedding")
+                )
+                for item in data
+            ]
+            # Validate shape; trigger fallback if invalid
+            if not vectors or not isinstance(vectors[0], list):
+                raise ValueError("Embedding response in unexpected format")
+            # Ensure all produced
+            if len(vectors) == len(texts) and all(v is not None for v in vectors):
+                return vectors  # type: ignore[return-value]
+            raise ValueError("Embedding provider returned incomplete vectors")
+        except Exception as e:
+            logger.warning(f"Embedding provider '{prov}' failed; using local fallback: {e}")
+            return self._local_embed(texts)
+
+    def _local_embed(self, texts: list[str], dim: int = 256) -> list[list[float]]:
+        """Very simple local hash-based embedding as a safety fallback.
+        Not semantically meaningful, but stable and deterministic for indexing.
+        """
+        import hashlib
+        import math
+
+        vectors: list[list[float]] = []
+        for t in texts:
+            v = [0.0] * dim
+            # Hash tokens into buckets
+            for tok in t.split():
+                h = int(hashlib.sha256(tok.encode()).hexdigest()[:8], 16)
+                idx = h % dim
+                v[idx] += 1.0
+            # L2 normalize
+            norm = math.sqrt(sum(x * x for x in v)) or 1.0
+            v = [x / norm for x in v]
+            vectors.append(v)
+        return vectors
+
+    async def execute_manual(
+        self, provider: str, model: str, messages: list[dict[str, str]], **kwargs
+    ) -> dict[str, Any]:
+        """
+        Execute a request against an explicit provider/model without any routing or fallback.
+
+        Args:
+            provider: Provider key (e.g., 'openai','anthropic','groq','openrouter', etc.)
+            model: Exact model ID for that provider
+            messages: Chat messages
+            **kwargs: Additional parameters passed to chat.completions.create
+
+        Returns:
+            Response from provider
+        """
+        client = self.get_client(provider)
+        response = await asyncio.to_thread(
+            client.chat.completions.create, model=model, messages=messages, **kwargs
+        )
+        self._record_usage(provider, model, getattr(response, "usage", None))
+        return response
 
     def _record_usage(self, provider: str, model: str, usage: Any) -> None:
         """Record usage statistics"""

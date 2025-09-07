@@ -11,12 +11,10 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional, Union
 
-from app.integrations.connectors.gong_pipeline.gong_brain_training_adapter import (
-    GongBrainTrainingAdapter,
-)
-from app.integrations.gong_csv_ingestion import GongCSVIngestion
+from app.core.portkey_manager import TaskType
+from app.integrations.gong_brain_training_adapter import GongBrainTrainingAdapter
+from app.integrations.gong_csv_ingestion import GongCSVIngestionPipeline
 from app.integrations.linear_client import LinearClient
-from app.integrations.slack_integration import SlackIntegration
 from app.mcp.clients.stdio_client import detect_stdio_mcp
 from app.memory.unified_memory_router import DocChunk, MemoryDomain, get_memory_router
 from app.orchestrators.base_orchestrator import (
@@ -108,7 +106,8 @@ class IntegratedSwarmOrchestrator(BaseOrchestrator):
         # Core services
         self.intelligent_router = get_intelligent_router()
         self.scheduler = get_scheduler()
-        self.delivery_engine = get_delivery_engine()
+        # Slack delivery: only enabled for Sophia domain
+        self.delivery_engine = get_delivery_engine() if domain == MemoryDomain.SOPHIA else None
 
         # External integrations
         self.integrations: Dict[str, Any] = {}
@@ -134,15 +133,21 @@ class IntegratedSwarmOrchestrator(BaseOrchestrator):
         """Initialize external integrations"""
 
         try:
-            # Slack integration
-            self.integrations["slack"] = SlackIntegration()
+            # Slack integration available only for Sophia domain
+            if self.domain == MemoryDomain.SOPHIA:
+                try:
+                    from app.integrations.slack_integration import SlackClient
+
+                    self.integrations["slack"] = SlackClient()
+                except Exception as e:
+                    logger.warning(f"Slack integration unavailable: {e}")
 
             # Linear integration
             self.integrations["linear"] = LinearClient()
 
             # Gong integrations
             self.integrations["gong_training"] = GongBrainTrainingAdapter()
-            self.integrations["gong_csv"] = GongCSVIngestion()
+            self.integrations["gong_csv"] = GongCSVIngestionPipeline()
 
             logger.info("Initialized external integrations")
         except Exception as e:
@@ -165,6 +170,37 @@ class IntegratedSwarmOrchestrator(BaseOrchestrator):
                 timeout_minutes=task.metadata.get("timeout_minutes", 10),
                 priority=task.priority,
             )
+
+            # Collaboration context (pending tasks and active proposals)
+            try:
+                mcp = detect_stdio_mcp()
+                if mcp:
+                    # Pending tasks for this domain's primary agent
+                    agent = "codex" if self.domain == MemoryDomain.ARTEMIS else "claude"
+                    pending_q = f"collab AND pending AND for:{agent}"
+                    proposals_q = "collab AND pending_review"
+                    pending = mcp.memory_search(pending_q, limit=20).get("results", [])
+                    proposals = mcp.memory_search(proposals_q, limit=20).get("results", [])
+                    context.integration_context["collab"] = {
+                        "pending_tasks": [
+                            {
+                                "topic": it.get("topic"),
+                                "tags": it.get("tags"),
+                                "ts": it.get("timestamp"),
+                            }
+                            for it in pending
+                        ],
+                        "active_proposals": [
+                            {
+                                "topic": it.get("topic"),
+                                "tags": it.get("tags"),
+                                "ts": it.get("timestamp"),
+                            }
+                            for it in proposals
+                        ],
+                    }
+            except Exception:
+                pass
 
             # Execute swarm with full integration
             swarm_result = await self._execute_integrated_swarm(
@@ -565,11 +601,16 @@ class IntegratedSwarmOrchestrator(BaseOrchestrator):
                 "channel_id": context.channel_id,
             }
 
-            # Auto-deliver via delivery engine
-            await self.delivery_engine.auto_deliver(swarm_result, notification_context)
+            # Slack delivery only for Sophia
+            if self.domain == MemoryDomain.SOPHIA and self.delivery_engine:
+                await self.delivery_engine.auto_deliver(swarm_result, notification_context)
 
-            # Send direct notification if from Slack
-            if context.request_source == "slack" and context.channel_id:
+            # Direct Slack notification only if source is Slack and Sophia domain
+            if (
+                self.domain == MemoryDomain.SOPHIA
+                and context.request_source == "slack"
+                and context.channel_id
+            ):
                 await self._send_slack_notification(swarm_result, context)
 
         except Exception as e:
@@ -578,30 +619,26 @@ class IntegratedSwarmOrchestrator(BaseOrchestrator):
     async def _send_slack_notification(
         self, swarm_result: SwarmResult, context: SwarmExecutionContext
     ):
-        """Send direct Slack notification"""
-
+        """Send direct Slack notification (Sophia only)."""
         try:
             slack_client = self.integrations.get("slack")
             if not slack_client or not context.channel_id:
                 return
 
-            # Format message
             emoji = "✅" if swarm_result.success else "❌"
             confidence_pct = int(swarm_result.confidence * 100)
+            message = f"""{emoji} Swarm Analysis Complete
 
-            message = f"""{emoji} **Swarm Analysis Complete**
+Domain: {self.domain.value.title()}
+Confidence: {confidence_pct}%
+Duration: {swarm_result.execution_time_ms / 60000:.1f} minutes
 
-**Domain:** {self.domain.value.title()}
-**Confidence:** {confidence_pct}%
-**Duration:** {swarm_result.execution_time_ms / 60000:.1f} minutes
+Results:
+{swarm_result.final_output[:500]}{'...' if len(swarm_result.final_output) > 500 else ''}
 
-**Results:**
-{swarm_result.final_output[:500]}{"..." if len(swarm_result.final_output) > 500 else ""}
-
-*Execution ID: {context.execution_id}*"""
+Execution ID: {context.execution_id}"""
 
             await slack_client.send_message(channel=context.channel_id, message=message)
-
         except Exception as e:
             logger.error(f"Failed to send Slack notification: {e}")
 
@@ -716,7 +753,7 @@ class IntegratedSwarmOrchestrator(BaseOrchestrator):
 
         task = Task(
             id=f"integrated_swarm_{int(datetime.now().timestamp())}",
-            type=self.domain.value,
+            type=TaskType.ORCHESTRATION,
             content=content,
             metadata={
                 "swarm_type": swarm_type,

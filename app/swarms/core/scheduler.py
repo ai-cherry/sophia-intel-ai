@@ -13,7 +13,8 @@ from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Set
 
 from app.core.secrets_manager import get_secret
-from app.integrations.slack_integration import SlackIntegration
+
+# Slack hooks removed
 from app.memory.unified_memory_router import MemoryDomain, get_memory_router
 from app.swarms.artemis.technical_agents import ArtemisSwarmFactory
 from app.swarms.core.micro_swarm_base import CoordinationPattern, MicroSwarmCoordinator, SwarmResult
@@ -105,7 +106,7 @@ class SchedulerConfig:
     max_concurrent_tasks: int = 5
     default_timeout_minutes: int = 15
     max_daily_cost: float = 50.0
-    enable_slack_notifications: bool = True
+    enable_slack_notifications: bool = False
     enable_adaptive_scheduling: bool = True
     business_hours_start: int = 9  # 9 AM
     business_hours_end: int = 17  # 5 PM
@@ -151,12 +152,7 @@ class MicroSwarmScheduler:
         self.artemis_factory = ArtemisSwarmFactory()
 
         # Notifications
-        self.slack = None
-        if config.enable_slack_notifications:
-            try:
-                self.slack = SlackIntegration()
-            except Exception as e:
-                logger.warning(f"Failed to initialize Slack notifications: {e}")
+        self.slack = None  # Slack disabled
 
         # Scheduler state
         self.running = False
@@ -326,9 +322,7 @@ class MicroSwarmScheduler:
 
         logger.info(f"Started execution of task '{task.name}' (ID: {task.task_id})")
 
-        # Send notification
-        if self.slack:
-            await self._notify_execution_started(task)
+        # Notifications disabled (Slack removed)
 
     async def _execute_task(self, task: ScheduledTask) -> ExecutionResult:
         """Execute a swarm task"""
@@ -389,9 +383,7 @@ class MicroSwarmScheduler:
             # Store result in memory
             await self._store_execution_result(task, result)
 
-            # Send success notification
-            if self.slack and swarm_result.success:
-                await self._notify_execution_completed(task, result)
+            # Notifications disabled
 
             logger.info(
                 f"Task '{task.name}' completed successfully in {duration_minutes:.2f} minutes"
@@ -704,39 +696,15 @@ class MicroSwarmScheduler:
     # Notification methods
     async def _notify_execution_started(self, task: ScheduledTask):
         """Send notification that task execution started"""
-        try:
-            await self.slack.send_message(
-                channel="#swarm-executions",
-                message=f"🚀 Started execution of '{task.name}' (Type: {task.swarm_type})",
-            )
-        except Exception as e:
-            logger.error(f"Failed to send start notification: {e}")
+        return
 
     async def _notify_execution_completed(self, task: ScheduledTask, result: ExecutionResult):
         """Send notification that task execution completed"""
-        try:
-            swarm_result = result.swarm_result
-            message = f"""✅ '{task.name}' completed successfully!
-
-Duration: {result.duration_minutes:.1f} minutes
-Cost: ${result.cost_usd:.3f}
-Confidence: {swarm_result.confidence:.2f}
-
-Output: {swarm_result.final_output[:300]}..."""
-
-            await self.slack.send_message(channel="#swarm-executions", message=message)
-        except Exception as e:
-            logger.error(f"Failed to send completion notification: {e}")
+        return
 
     async def _notify_execution_failed(self, task: ScheduledTask, error_msg: str):
         """Send notification that task execution failed"""
-        try:
-            await self.slack.send_message(
-                channel="#swarm-executions",
-                message=f"❌ '{task.name}' execution failed: {error_msg}",
-            )
-        except Exception as e:
-            logger.error(f"Failed to send failure notification: {e}")
+        return
 
     def get_scheduler_status(self) -> Dict[str, Any]:
         """Get current scheduler status"""

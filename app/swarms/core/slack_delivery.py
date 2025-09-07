@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any, Dict, List, Optional, Union
 
-from app.integrations.slack_integration import SlackIntegration
+from app.integrations.slack_integration import SlackClient, SlackIntegrationError
 from app.swarms.core.micro_swarm_base import AgentRole, SwarmResult
 from app.swarms.core.scheduler import ScheduledTask
 
@@ -115,7 +115,12 @@ class SlackDeliveryEngine:
     """
 
     def __init__(self):
-        self.slack = SlackIntegration()
+        # Slack may be disabled or not configured; allow graceful fallback
+        try:
+            self.slack = SlackClient()
+        except Exception as e:
+            # Re-raise to be handled by factory below to select a Null engine
+            raise e
 
         # Delivery rules and routing
         self.delivery_rules: Dict[str, DeliveryRule] = {}
@@ -938,9 +943,27 @@ def create_alert_delivery_config(channel: str = "#alerts") -> DeliveryConfig:
 _delivery_engine = None
 
 
-def get_delivery_engine() -> SlackDeliveryEngine:
-    """Get global delivery engine instance"""
+class _NullDeliveryEngine:
+    """No-op delivery engine used when Slack is unavailable."""
+
+    async def deliver_result(self, *args, **kwargs):
+        return DeliveryResult(
+            delivery_id=f"noop_{int(datetime.now().timestamp())}",
+            success=False,
+            channel="#noop",
+            message_ts="",
+            error_message="Slack delivery disabled",
+        )
+
+
+def get_delivery_engine() -> SlackDeliveryEngine | _NullDeliveryEngine:
+    """Get global delivery engine instance without raising if Slack unavailable"""
     global _delivery_engine
-    if _delivery_engine is None:
+    if _delivery_engine is not None:
+        return _delivery_engine
+    try:
         _delivery_engine = SlackDeliveryEngine()
+    except Exception as e:
+        logging.getLogger(__name__).warning(f"SlackDeliveryEngine disabled: {e}")
+        _delivery_engine = _NullDeliveryEngine()
     return _delivery_engine

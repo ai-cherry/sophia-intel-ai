@@ -1,0 +1,13 @@
+version: 1.0
+tags:
+  common: [collab, id, created_by, timestamp]
+  routing:
+    claude: ["for:claude", "domain:planning", "domain:architecture"]
+    codex: ["for:codex", "domain:implementation", "domain:debugging"]
+  lifecycle:
+    task: [pending, claimed, in_progress, completed, blocked]
+    proposal: [pending_review, approved, rejected, applied]
+    review: ["status:approved", "status:rejected", "confidence"]
+thresholds:
+  merge_ready_confidence: 0.8
+  auto_apply_confidence: 0.9

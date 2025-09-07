@@ -25,6 +25,12 @@ except ImportError as e:
 
 logger = logging.getLogger(__name__)
 
+# Provide a safe default for INTEGRATIONS if not imported from a central config
+try:  # noqa: SIM105
+    INTEGRATIONS  # type: ignore[name-defined]
+except NameError:  # pragma: no cover - runtime guard
+    INTEGRATIONS = {}
+
 
 class SlackMessageType(Enum):
     """Types of Slack messages"""

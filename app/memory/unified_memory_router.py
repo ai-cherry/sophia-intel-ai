@@ -2,6 +2,7 @@
 Unified Memory Router - Multi-tiered Memory Architecture
 Coordinates Redis (L1), Weaviate/Milvus (L2), Neon (L3), and S3 (L4)
 """
+
 import hashlib
 import json
 import logging
@@ -308,6 +309,10 @@ class UnifiedMemoryRouter:
 
             # Get Weaviate client
             weaviate_client = await self._get_weaviate()
+            if weaviate_client is None:
+                report.errors.append("Weaviate unavailable; skipping L2 upsert")
+                logger.warning("L2 upsert fallback: Weaviate unavailable; skipping upsert")
+                return report
 
             # Prepare batch
             batch = []
@@ -368,10 +373,34 @@ class UnifiedMemoryRouter:
         cache_key = self._hash_query(query, domain, filters)
         cached = await self.get_ephemeral(f"search:{cache_key}")
         if cached:
-            return cached
+            try:
+                obj = cached
+                if isinstance(cached, str):
+                    obj = json.loads(cached)
+                if isinstance(obj, list) and obj and isinstance(obj[0], dict):
+                    return [
+                        SearchHit(
+                            content=it.get("content", ""),
+                            score=float(it.get("score", 0.0)),
+                            source_uri=it.get("source_uri", ""),
+                            metadata=it.get("metadata", {}) or {},
+                            tier=MemoryTier(it.get("tier", MemoryTier.L2_VECTOR.value)),
+                            domain=MemoryDomain(it.get("domain", MemoryDomain.SHARED.value)),
+                        )
+                        for it in obj
+                    ]
+                # If already a list[SearchHit], just return
+                if isinstance(obj, list) and (not obj or isinstance(obj[0], SearchHit)):
+                    return obj
+            except Exception:
+                # Ignore cache parse errors
+                pass
 
         # Get Weaviate client
         weaviate_client = await self._get_weaviate()
+        if weaviate_client is None:
+            logger.warning("L2 search fallback: Weaviate unavailable; returning no results")
+            return []
 
         # Build query
         query_builder = (
@@ -391,11 +420,16 @@ class UnifiedMemoryRouter:
         results = query_builder.do()
 
         # Convert to SearchHits
-        hits = []
-        for item in results.get("data", {}).get("Get", {}).get("DocChunk", []):
+        hits: list[SearchHit] = []
+        try:
+            doc_items = (results or {}).get("data", {}).get("Get", {}).get("DocChunk") or []
+        except Exception:
+            doc_items = []
+
+        for item in doc_items:
             hit = SearchHit(
                 content=item["content"],
-                score=item.get("_additional", {}).get("score", 0.0),
+                score=(item.get("_additional", {}) or {}).get("score", 0.0),
                 source_uri=item["source_uri"],
                 metadata=json.loads(item.get("metadata", "{}")),
                 tier=MemoryTier.L2_VECTOR,
@@ -409,9 +443,22 @@ class UnifiedMemoryRouter:
         else:
             hits = hits[:k]
 
-        # Cache results
+        # Cache results in a JSON-friendly form
+        serializable_hits = [
+            {
+                "content": h.content,
+                "score": h.score,
+                "source_uri": h.source_uri,
+                "metadata": h.metadata,
+                "tier": h.tier.value,
+                "domain": h.domain.value,
+            }
+            for h in hits
+        ]
         await self.put_ephemeral(
-            f"search:{cache_key}", hits, ttl_s=self.policy["performance"]["cache"]["search_ttl"]
+            f"search:{cache_key}",
+            json.dumps(serializable_hits),
+            ttl_s=self.policy["performance"]["cache"]["search_ttl"],
         )
 
         self.metrics.record_search("L2", len(hits))
@@ -422,6 +469,11 @@ class UnifiedMemoryRouter:
     async def record_fact(self, table: str, data: dict[str, Any]) -> str:
         """Store structured fact in PostgreSQL"""
         conn = await self._get_neon()
+        if not conn:
+            logger.warning("Structured store (Neon) unavailable; skipping record_fact")
+            # Return a deterministic id without DB storage
+            fact_id = hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()[:16]
+            return fact_id
 
         # Generate fact ID
         fact_id = hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()[:16]
@@ -466,7 +518,7 @@ class UnifiedMemoryRouter:
         if not HAS_S3:
             logger.warning("S3 not available, skipping archive")
             return key
-        
+
         session = aioboto3.Session()
 
         async with session.client(
@@ -505,7 +557,7 @@ class UnifiedMemoryRouter:
         if not HAS_WEAVIATE:
             logger.warning("Weaviate not available")
             return None
-            
+
         if self._weaviate is None:
             url = get_secret("WEAVIATE_URL", "http://localhost:8080")
             api_key = get_secret("WEAVIATE_API_KEY")
@@ -523,7 +575,7 @@ class UnifiedMemoryRouter:
         if not HAS_POSTGRES:
             logger.warning("PostgreSQL not available")
             return None
-            
+
         if self._neon is None:
             dsn = get_secret("NEON_DATABASE_URL")
             if not dsn:
@@ -538,7 +590,7 @@ class UnifiedMemoryRouter:
         if not HAS_MEM0:
             logger.warning("Mem0 not available")
             return None
-            
+
         if self._mem0 is None:
             api_key = get_secret("MEM0_API_KEY")
             organization = get_secret("MEM0_ORG")
@@ -589,15 +641,15 @@ class UnifiedMemoryRouter:
 
             # Generate new embeddings
             if texts_to_embed:
-                # Use Portkey for embeddings
-                response = await self.portkey.execute_with_fallback(
-                    task_type=TaskType.EMBEDDING,
-                    messages=[{"role": "user", "content": t} for t in texts_to_embed],
-                    model="text-embedding-3-small",
-                )
-
-                # Extract embeddings from response
-                new_embeddings = []  # This would come from the actual embedding API
+                try:
+                    new_embeddings = await self.portkey.embed_texts(texts_to_embed)
+                    # Ensure pure python floats
+                    new_embeddings = [
+                        [float(x) for x in (emb or [])] for emb in (new_embeddings or [])
+                    ]
+                except Exception as e:
+                    logger.error(f"Embedding generation failed: {e}")
+                    new_embeddings = []
 
                 # Update cache and results
                 for idx, embedding in zip(cache_indices, new_embeddings):

@@ -316,6 +316,8 @@ class ChatConnectionManager:
     ):
         """Process message with neural engine"""
         try:
+            # Correlation ID for this request
+            correlation_id = str(uuid.uuid4())
             # Prepare neural engine request
             neural_request = {
                 "query": user_message.content,
@@ -330,12 +332,26 @@ class ChatConnectionManager:
             neural_url = "http://neural-gateway:8000/api/v1/inference"
 
             if neural_request["stream"]:
+                # Send status envelope (compat + new envelope)
+                await self.send_to_user(
+                    user_id,
+                    {
+                        "type": "status",
+                        "correlation_id": correlation_id,
+                        "data": {
+                            "status": "responding",
+                            "message": "Generating response...",
+                            "metadata": {"model": session.model},
+                        },
+                    },
+                )
+
                 await self.process_streaming_response(
-                    user_id, session, neural_url, neural_request
+                    user_id, session, neural_url, neural_request, correlation_id
                 )
             else:
                 await self.process_single_response(
-                    user_id, session, neural_url, neural_request
+                    user_id, session, neural_url, neural_request, correlation_id
                 )
 
         except Exception as e:
@@ -351,7 +367,7 @@ class ChatConnectionManager:
             )
 
     async def process_streaming_response(
-        self, user_id: str, session: ChatSession, url: str, request_data: dict
+        self, user_id: str, session: ChatSession, url: str, request_data: dict, correlation_id: str
     ):
         """Process streaming response from neural engine"""
         try:
@@ -374,12 +390,27 @@ class ChatConnectionManager:
                 )
 
                 full_response = ""
+                seq = 0
                 async for chunk in response.aiter_text():
                     if chunk.strip():
-                        # Send chunk to user
+                        # Send backward-compatible chunk
                         await self.send_to_user(
                             user_id, {"type": "stream_chunk", "data": {"chunk": chunk}}
                         )
+                        # Send envelope chunk with correlation/sequence
+                        await self.send_to_user(
+                            user_id,
+                            {
+                                "type": "token",
+                                "correlation_id": correlation_id,
+                                "data": {
+                                    "chunk": chunk,
+                                    "sequence": seq,
+                                    "metadata": {"model": session.model},
+                                },
+                            },
+                        )
+                        seq += 1
                         full_response += chunk
 
                 # Create assistant message
@@ -399,12 +430,37 @@ class ChatConnectionManager:
                 session.context.append(f"Assistant: {full_response}")
                 await self.save_session(session)
 
+                # Store response for potential replay (5 min TTL)
+                try:
+                    await redis_client.setex(
+                        f"stream:{correlation_id}", 300, json.dumps({
+                            "full_response": full_response,
+                            "model": session.model,
+                        })
+                    )
+                except Exception as e:
+                    logger.warning(f"Failed to cache stream for replay: {e}")
+
                 # Send completion status
                 await self.send_to_user(
                     user_id,
                     {
                         "type": "agent_status",
                         "data": {"status": "idle", "message": "Response complete"},
+                    },
+                )
+
+                # Send envelope usage/completion event
+                await self.send_to_user(
+                    user_id,
+                    {
+                        "type": "usage",
+                        "correlation_id": correlation_id,
+                        "data": {
+                            "tokens_used": None,
+                            "sequence_final": seq - 1,
+                            "status": "complete",
+                        },
                     },
                 )
 
@@ -423,7 +479,7 @@ class ChatConnectionManager:
             )
 
     async def process_single_response(
-        self, user_id: str, session: ChatSession, url: str, request_data: dict
+        self, user_id: str, session: ChatSession, url: str, request_data: dict, correlation_id: str
     ):
         """Process single response from neural engine"""
         try:
@@ -457,6 +513,44 @@ class ChatConnectionManager:
             # Send response to user
             await self.send_to_user(
                 user_id, {"type": "message", "data": assistant_message.dict()}
+            )
+
+            # Also emit envelopes for parity with streaming path
+            await self.send_to_user(
+                user_id,
+                {
+                    "type": "status",
+                    "correlation_id": correlation_id,
+                    "data": {
+                        "status": "responding",
+                        "message": "Generating response...",
+                        "metadata": {"model": session.model},
+                    },
+                },
+            )
+            await self.send_to_user(
+                user_id,
+                {
+                    "type": "token",
+                    "correlation_id": correlation_id,
+                    "data": {
+                        "chunk": assistant_message.content,
+                        "sequence": 0,
+                        "metadata": {"model": session.model},
+                    },
+                },
+            )
+            await self.send_to_user(
+                user_id,
+                {
+                    "type": "usage",
+                    "correlation_id": correlation_id,
+                    "data": {
+                        "tokens_used": assistant_message.metadata.get("tokens_used"),
+                        "sequence_final": 0,
+                        "status": "complete",
+                    },
+                },
             )
 
             # Send completion status
@@ -578,6 +672,67 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str):
                 await connection_manager.process_user_message(
                     user_id, data.get("data", {})
                 )
+            elif message_type == "replay":
+                # Client requests replay of a prior stream by correlation_id
+                cid = data.get("correlation_id")
+                if not cid:
+                    await connection_manager.send_to_user(
+                        user_id,
+                        {
+                            "type": "error",
+                            "data": {"message": "Missing correlation_id for replay"},
+                        },
+                    )
+                else:
+                    try:
+                        cached = await redis_client.get(f"stream:{cid}")
+                        if not cached:
+                            await connection_manager.send_to_user(
+                                user_id,
+                                {
+                                    "type": "error",
+                                    "data": {"message": "No cached stream for correlation_id"},
+                                },
+                            )
+                        else:
+                            payload = json.loads(cached)
+                            text = payload.get("full_response", "")
+                            seq = 0
+                            for chunk in [text]:  # simple single-chunk replay for now
+                                await connection_manager.send_to_user(
+                                    user_id,
+                                    {
+                                        "type": "token",
+                                        "correlation_id": cid,
+                                        "data": {
+                                            "chunk": chunk,
+                                            "sequence": seq,
+                                            "metadata": {"model": payload.get("model")},
+                                        },
+                                    },
+                                )
+                                seq += 1
+                            await connection_manager.send_to_user(
+                                user_id,
+                                {
+                                    "type": "usage",
+                                    "correlation_id": cid,
+                                    "data": {
+                                        "tokens_used": None,
+                                        "sequence_final": seq - 1,
+                                        "status": "complete",
+                                    },
+                                },
+                            )
+                    except Exception as e:
+                        logger.error(f"Replay error: {e}")
+                        await connection_manager.send_to_user(
+                            user_id,
+                            {
+                                "type": "error",
+                                "data": {"message": f"Replay failed: {e!s}"},
+                            },
+                        )
             elif message_type == "ping":
                 await connection_manager.send_to_user(
                     user_id, {"type": "pong", "data": {}}

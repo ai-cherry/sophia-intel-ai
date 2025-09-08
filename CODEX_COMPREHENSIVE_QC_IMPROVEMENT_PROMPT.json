@@ -311,27 +311,47 @@
           "agent_specifications": {
             "implementer": {
               "model": "x-ai/grok-code-fast-1",
-              "capabilities": ["code_generation", "bug_fixing", "feature_implementation"],
+              "capabilities": [
+                "code_generation",
+                "bug_fixing",
+                "feature_implementation"
+              ],
               "security_clearance": "beta"
             },
             "reviewer": {
               "model": "qwen/qwen3-max",
-              "capabilities": ["code_review", "security_analysis", "quality_assessment"],
+              "capabilities": [
+                "code_review",
+                "security_analysis",
+                "quality_assessment"
+              ],
               "security_clearance": "alpha"
             },
             "refactorer": {
               "model": "glm-4.5",
-              "capabilities": ["code_optimization", "architecture_improvement", "technical_debt_reduction"],
+              "capabilities": [
+                "code_optimization",
+                "architecture_improvement",
+                "technical_debt_reduction"
+              ],
               "security_clearance": "beta"
             },
             "test_smith": {
               "model": "qwen3-coder/llama-3.2",
-              "capabilities": ["test_generation", "qa_automation", "coverage_analysis"],
+              "capabilities": [
+                "test_generation",
+                "qa_automation",
+                "coverage_analysis"
+              ],
               "security_clearance": "gamma"
             },
             "visionizer": {
               "model": "flux-pro/v1.1",
-              "capabilities": ["ui_design", "visual_analysis", "diagram_generation"],
+              "capabilities": [
+                "ui_design",
+                "visual_analysis",
+                "diagram_generation"
+              ],
               "security_clearance": "beta"
             }
           }
@@ -454,3 +474,4 @@
   "validation_approach": "continuous_integration_with_comprehensive_smoke_and_load_testing",
   "documentation_requirements": "comprehensive_api_docs_deployment_guides_and_troubleshooting_runbooks"
 }
+

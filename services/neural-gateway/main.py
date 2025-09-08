@@ -29,6 +29,10 @@ REQUEST_DURATION = Histogram('neural_gateway_request_duration_seconds', 'Request
 ACTIVE_CONNECTIONS = Gauge('neural_gateway_active_connections', 'Active connections')
 CACHE_HITS = Counter('neural_gateway_cache_hits_total', 'Cache hits')
 CACHE_MISSES = Counter('neural_gateway_cache_misses_total', 'Cache misses')
+CB_STATE = Gauge('neural_gateway_cb_state', 'Circuit breaker state (0=closed,1=open,2=half_open)', ['target'])
+CB_OPEN_TOTAL = Counter('neural_gateway_cb_open_total', 'Times circuit opened', ['target'])
+CB_FAILURE_TOTAL = Counter('neural_gateway_cb_failure_total', 'Failures recorded', ['target'])
+CB_SUCCESS_TOTAL = Counter('neural_gateway_cb_success_total', 'Successes recorded', ['target'])
 
 # Global clients
 http_client: Optional[httpx.AsyncClient] = None
@@ -64,6 +68,17 @@ class NeuralGateway:
         self.start_time = time.time()
         self.neural_engine_url = "http://neural-engine:8001"
         self.asip_orchestrator_url = "http://asip-orchestrator:8100"
+        # Circuit breaker state per target
+        self._cb: dict[str, dict[str, float | int]] = {
+            # state: 0=closed,1=open,2=half_open
+            'neural_engine': {'state': 0, 'failures': 0, 'opened_at': 0.0},
+            'asip_orchestrator': {'state': 0, 'failures': 0, 'opened_at': 0.0},
+        }
+        self._cb_threshold = 3  # failures to open
+        self._cb_open_seconds = 10.0  # time to half-open
+        self._cb_half_open_max = 1  # allow 1 trial in half-open
+        CB_STATE.labels(target='neural_engine').set(0)
+        CB_STATE.labels(target='asip_orchestrator').set(0)
 
     async def initialize(self):
         """Initialize gateway components"""
@@ -186,6 +201,17 @@ class NeuralGateway:
             "use_cache": True
         }
 
+        target = 'neural_engine'
+        # Circuit breaker guard
+        now = time.time()
+        st = self._cb[target]
+        # Transition from open to half-open if window passed
+        if st['state'] == 1 and now - float(st['opened_at']) >= self._cb_open_seconds:
+            st['state'] = 2  # half-open
+            st['failures'] = 0
+            CB_STATE.labels(target=target).set(2)
+        if st['state'] == 1:
+            raise HTTPException(status_code=503, detail="Neural engine temporarily unavailable (circuit open)")
         try:
             response = await http_client.post(
                 f"{self.neural_engine_url}/neural/inference",
@@ -193,13 +219,26 @@ class NeuralGateway:
                 timeout=60.0
             )
             response.raise_for_status()
+            CB_SUCCESS_TOTAL.labels(target=target).inc()
+            # On success from half-open, close the circuit
+            if st['state'] == 2:
+                st['state'] = 0
+                st['failures'] = 0
+                CB_STATE.labels(target=target).set(0)
             return response.json()
-        except httpx.RequestError as e:
-            logger.error(f"Neural engine request error: {e}")
+        except (httpx.RequestError, httpx.HTTPStatusError) as e:
+            CB_FAILURE_TOTAL.labels(target=target).inc()
+            st['failures'] = int(st['failures']) + 1
+            # Open circuit if threshold exceeded (only if not already open)
+            if st['state'] != 1 and int(st['failures']) >= self._cb_threshold:
+                st['state'] = 1
+                st['opened_at'] = now
+                CB_OPEN_TOTAL.labels(target=target).inc()
+                CB_STATE.labels(target=target).set(1)
+            logger.error(f"Neural engine error: {e}")
+            if isinstance(e, httpx.HTTPStatusError):
+                raise HTTPException(status_code=e.response.status_code, detail="Neural engine error")
             raise HTTPException(status_code=503, detail="Neural engine unavailable")
-        except httpx.HTTPStatusError as e:
-            logger.error(f"Neural engine HTTP error: {e}")
-            raise HTTPException(status_code=e.response.status_code, detail="Neural engine error")
 
     async def _route_to_asip(self, request: ChatRequest) -> Dict[str, Any]:
         """Route request to ASIP orchestrator"""
@@ -213,6 +252,15 @@ class NeuralGateway:
             "max_tokens": request.max_tokens
         }
 
+        target = 'asip_orchestrator'
+        now = time.time()
+        st = self._cb[target]
+        if st['state'] == 1 and now - float(st['opened_at']) >= self._cb_open_seconds:
+            st['state'] = 2
+            st['failures'] = 0
+            CB_STATE.labels(target=target).set(2)
+        if st['state'] == 1:
+            raise HTTPException(status_code=503, detail="ASIP orchestrator temporarily unavailable (circuit open)")
         try:
             response = await http_client.post(
                 f"{self.asip_orchestrator_url}/chat",
@@ -220,13 +268,24 @@ class NeuralGateway:
                 timeout=60.0
             )
             response.raise_for_status()
+            CB_SUCCESS_TOTAL.labels(target=target).inc()
+            if st['state'] == 2:
+                st['state'] = 0
+                st['failures'] = 0
+                CB_STATE.labels(target=target).set(0)
             return response.json()
-        except httpx.RequestError as e:
-            logger.error(f"ASIP orchestrator request error: {e}")
+        except (httpx.RequestError, httpx.HTTPStatusError) as e:
+            CB_FAILURE_TOTAL.labels(target=target).inc()
+            st['failures'] = int(st['failures']) + 1
+            if st['state'] != 1 and int(st['failures']) >= self._cb_threshold:
+                st['state'] = 1
+                st['opened_at'] = now
+                CB_OPEN_TOTAL.labels(target=target).inc()
+                CB_STATE.labels(target=target).set(1)
+            logger.error(f"ASIP orchestrator error: {e}")
+            if isinstance(e, httpx.HTTPStatusError):
+                raise HTTPException(status_code=e.response.status_code, detail="ASIP orchestrator error")
             raise HTTPException(status_code=503, detail="ASIP orchestrator unavailable")
-        except httpx.HTTPStatusError as e:
-            logger.error(f"ASIP orchestrator HTTP error: {e}")
-            raise HTTPException(status_code=e.response.status_code, detail="ASIP orchestrator error")
 
     async def process_chat(self, request: ChatRequest) -> ChatResponse:
         """Process chat request with intelligent routing"""

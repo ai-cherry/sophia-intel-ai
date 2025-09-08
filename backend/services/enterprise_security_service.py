@@ -426,7 +426,7 @@ class EnterpriseSecurityService:
                     self.redis_client.setex(f"blacklist:{token}", ttl, "1")
 
         except JWTError:
-
+            pass
     async def _is_token_blacklisted(self, token: str) -> bool:
         """Check if token is blacklisted"""
         return bool(self.redis_client.get(f"blacklist:{token}"))

@@ -17,12 +17,26 @@ class CreateSessionRequest(BaseModel):
     repo_scope: str = "sophia"
 
 
+class ProposalChange(BaseModel):
+    capability: str = "fs"  # currently only fs
+    scope: str = "sophia"  # sophia|artemis
+    path: str
+    content: str
+
+
+class CreateProposalRequest(BaseModel):
+    changes: List[ProposalChange]
+    commit_message: str | None = None
+    auto_commit: bool = False
+
+
 @dataclass
 class ChatSession:
     id: str
     agent: str
     repo_scope: str
     messages: List[Dict[str, Any]] = field(default_factory=list)
+    proposals: Dict[str, Dict[str, Any]] = field(default_factory=dict)
 
 
 class WebUIServer:
@@ -99,6 +113,69 @@ class WebUIServer:
                 r = await client.post(url, json=params)
                 r.raise_for_status()
                 return r.json()
+
+        @app.post("/sessions/{session_id}/proposals")
+        async def create_proposal(session_id: str, req: CreateProposalRequest) -> Dict[str, Any]:
+            if session_id not in self.sessions:
+                raise HTTPException(404, detail="session not found")
+            pid = str(uuid.uuid4())
+            self.sessions[session_id].proposals[pid] = {
+                "id": pid,
+                "changes": [c.dict() for c in req.changes],
+                "commit_message": req.commit_message,
+                "auto_commit": req.auto_commit,
+                "status": "pending",
+            }
+            return {"proposal_id": pid}
+
+        @app.get("/sessions/{session_id}/proposals")
+        async def list_proposals(session_id: str) -> Dict[str, Any]:
+            if session_id not in self.sessions:
+                raise HTTPException(404, detail="session not found")
+            return {"proposals": list(self.sessions[session_id].proposals.values())}
+
+        @app.post("/sessions/{session_id}/proposals/{proposal_id}/approve")
+        async def approve_proposal(session_id: str, proposal_id: str) -> Dict[str, Any]:
+            sess = self.sessions.get(session_id)
+            if not sess:
+                raise HTTPException(404, detail="session not found")
+            prop = sess.proposals.get(proposal_id)
+            if not prop:
+                raise HTTPException(404, detail="proposal not found")
+
+            # Apply FS changes
+            async with httpx.AsyncClient(timeout=60) as client:
+                for ch in prop["changes"]:
+                    if ch["capability"] != "fs":
+                        raise HTTPException(400, detail="only fs changes supported")
+                    base = self.mcp_urls["fs_sophia" if ch.get("scope", "sophia") == "sophia" else "fs_artemis"]
+                    url = f"{base}/fs/write"
+                    payload = {"path": ch["path"], "content": ch["content"], "create_dirs": True}
+                    r = await client.post(url, json=payload)
+                    r.raise_for_status()
+
+                # Optional commit
+                if prop.get("auto_commit") and prop.get("commit_message"):
+                    repo = "sophia" if sess.repo_scope == "sophia" else "artemis"
+                    r = await client.post(
+                        f"{self.mcp_urls['git']}/git/commit",
+                        json={"repo": repo, "message": prop["commit_message"], "add_all": True},
+                    )
+                    r.raise_for_status()
+
+            prop["status"] = "approved"
+            return {"ok": True}
+
+        @app.post("/sessions/{session_id}/proposals/{proposal_id}/reject")
+        async def reject_proposal(session_id: str, proposal_id: str) -> Dict[str, Any]:
+            sess = self.sessions.get(session_id)
+            if not sess:
+                raise HTTPException(404, detail="session not found")
+            prop = sess.proposals.get(proposal_id)
+            if not prop:
+                raise HTTPException(404, detail="proposal not found")
+            prop["status"] = "rejected"
+            return {"ok": True}
             await ws.send_json({"type": "status", "message": "connected", "session_id": sid})
             try:
                 while True:

@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: help env.check env.doctor env.doctor.merge env.clean-deprecated env.source keys-check health health-infra mcp-test full-start api-build api-up api-restart dev-mcp-up dev-artemis-up mcp-rebuild nuke-fragmentation rag.start rag.test lint dev-up dev-down dev-shell logs status grok-test swarm-start memory-search mcp-status env-docs artemis-setup refactor.discovery refactor.scan-http refactor.probe refactor.check webui-health router-smoke sophia sophia-start sophia-stop sophia-health sophia-logs sophia-clean sophia-test-integrations
+.PHONY: help env.check env.doctor env.doctor.merge env.clean-deprecated env.source keys-check health health-infra mcp-test full-start api-build api-up api-restart dev-mcp-up dev-artemis-up mcp-rebuild ui-up ui-health ui-smoke nuke-fragmentation rag.start rag.test lint dev-up dev-down dev-shell logs status grok-test swarm-start memory-search mcp-status env-docs artemis-setup refactor.discovery refactor.scan-http refactor.probe refactor.check webui-health router-smoke sophia sophia-start sophia-stop sophia-health sophia-logs sophia-clean sophia-test-integrations
 
 help:
 	@echo "\033[0;36mMulti-Agent Development Environment\033[0m"
@@ -89,6 +89,19 @@ mcp-rebuild: ## Rebuild and start MCP services (memory, fs-sophia, git)
 	@curl -sf http://localhost:${MCP_MEMORY_PORT:-8081}/health >/dev/null && echo "✓ Memory MCP" || echo "✗ Memory MCP"
 	@curl -sf http://localhost:${MCP_FS_SOPHIA_PORT:-8082}/health >/dev/null && echo "✓ FS MCP (Sophia)" || echo "✗ FS MCP (Sophia)"
 	@curl -sf http://localhost:${MCP_GIT_PORT:-8084}/health >/dev/null && echo "✓ Git MCP" || echo "✗ Git MCP"
+
+ui-up: ## Start UI backend locally (http://localhost:8000)
+	@echo "Starting UI backend on http://localhost:8000"
+	@python3 -m uvicorn webui.backend.main:app --host 0.0.0.0 --port 8000
+
+ui-health: ## Check UI backend health
+	@echo "UI backend health:" && (curl -sf http://localhost:8000/health | sed -e 's/^/  /' || (echo "  not responding" && exit 1))
+
+ui-smoke: ## Basic UI tools proxy smoke (FS list in repo root)
+	@echo "Invoking FS list via UI backend /tools/invoke..."
+	@curl -s -X POST http://localhost:8000/tools/invoke \
+		-H 'Content-Type: application/json' \
+		-d '{"capability":"fs","scope":"sophia","action":"list","params":{"path":"."}}' || echo "Smoke failed"
 
 nuke-fragmentation: ## Nuclear option - force consolidation (DESTRUCTIVE)
 	@echo "\xE2\x9A\xA0\xEF\xB8\x8F  This will delete non-canonical files. Ctrl-C to abort..." && sleep 5

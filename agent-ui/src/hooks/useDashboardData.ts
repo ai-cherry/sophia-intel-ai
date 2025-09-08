@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { ApiClient, ApiError } from '@/lib/api/client';
 import { API_URL } from '@/lib/config';
+import { useUnifiedStore } from '@/lib/state/unifiedStore';
 
 type Options = {
   category?: string;
@@ -9,12 +10,8 @@ type Options = {
 };
 
 const client = new ApiClient(API_URL, (category, ms) => {
-  try { require('@/lib/state/unifiedStore'); } catch {}
   // Safe, hookless update via Zustand's getState API
-  try {
-    const { useUnifiedStore } = require('@/lib/state/unifiedStore');
-    useUnifiedStore.getState().updateLatency(category, ms);
-  } catch {}
+  try { useUnifiedStore.getState().updateLatency(category, ms); } catch {}
 });
 
 export function useDashboardData<T>(path: string, deps: unknown[] = [], opts: Options = {}) {
@@ -50,4 +47,3 @@ export function useDashboardData<T>(path: string, deps: unknown[] = [], opts: Op
 
   return useMemo(() => ({ data, loading, error, refetch }), [data, loading, error, refetch]);
 }
-

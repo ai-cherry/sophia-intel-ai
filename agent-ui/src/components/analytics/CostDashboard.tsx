@@ -124,7 +124,7 @@ const CostDashboard: React.FC = () => {
         <div className="text-center">
           <h3 className="text-lg font-medium text-white mb-2">Failed to Load Cost Data</h3>
           <p className="text-muted-foreground mb-4">{error}</p>
-          <Button onClick={() => { /* retry all */ try { (refetchSummary as any)(); (refetchDaily as any)(); (refetchModels as any)(); } catch {} }} variant="outline" size="sm">
+          <Button onClick={() => { refetchSummary(); refetchDaily(); refetchModels(); }} variant="outline" size="sm">
             <Icon type="refresh-ccw" size="xs" className="mr-2" />
             Retry
           </Button>

@@ -2,13 +2,13 @@
 
 ## 🤖 Agent Instructions
 
-You are an expert software architect. A comprehensive Phase 2 refactoring plan has been created in `PHASE2_REFACTORING_PLAN_v2.json` (supersedes v1). Your mission:
+You are an expert software architect. A comprehensive Phase 2 plan has been created in `PHASE2_REFACTORING_PLAN_v3.json` (supersedes v2). Your mission:
 
 ### 1. REVIEW AND IMPROVE
 
 **First, load and analyze the plan**:
 ```bash
-cat PHASE2_REFACTORING_PLAN_v2.json
+cat PHASE2_REFACTORING_PLAN_v3.json
 ```
 
 **Evaluate the plan for**:
@@ -38,10 +38,9 @@ cat PHASE2_REFACTORING_PLAN_v2.json
 - Maintain backward compatibility
 
 #### Task Priority
-1. **Docker Cleanup** (LOW risk, HIGH impact)
-   - Keep `docker-compose.yml` as canonical base
+1. **Docker/Infra** (LOW risk, HIGH impact)
+   - Canonical dev compose: `docker-compose.multi-agent.yml`
    - Use `docker-compose.override.yml` for local overrides
-   - Prefer profiles for optional stacks
    - Validate via Make targets and helper script
 
 2. **Large File Refactoring** (MEDIUM risk, MEDIUM impact)
@@ -53,6 +52,12 @@ cat PHASE2_REFACTORING_PLAN_v2.json
    - Canonicalize on `app/core/async_http_client.py` (httpx)
    - Add optional sync wrapper and logging hooks
    - Gradual migration from direct `requests` to AsyncHTTPClient
+
+4. **Provider Router + Streaming (Feature Track)**
+   - EnhancedProviderRouter (Portkey/OpenRouter/AIMLAPI) with budgets/fallbacks/metrics
+   - config/agents/routing.yml (task→model)
+   - WebUI backend POST /agents/complete + WS relay; minimal 6‑pane UI
+   - MCP policies (git.yml) and enforcement
 
 4. **Package Structure** (LOW risk, MEDIUM impact)
    - Improve sophia_core organization
@@ -149,12 +154,12 @@ from .factories import *  # Backward compatibility
 ### 10. BEGIN IMPLEMENTATION
 
 Start by:
-1. Reading `PHASE2_REFACTORING_PLAN_v2.json`
+1. Reading `PHASE2_REFACTORING_PLAN_v3.json`
 2. Running discovery helpers:
    - `python3 scripts/development/refactor_tools.py discover --path app --min-kb 50`
    - `python3 scripts/development/refactor_tools.py scan-http --path app`
-3. Creating your improved version if needed and confirming scope
-4. Implementing incrementally with validation
+3. Confirm Track A (refactors) + Track B (router/streaming) scope with owner
+4. Implement incrementally with validation and acceptance checks
 
 ## 🔧 Helper Commands
 
@@ -170,6 +175,9 @@ python3 scripts/development/refactor_tools.py scan-http --path app
 
 # Import probe (update MODULE as needed)
 python3 scripts/development/refactor_tools.py probe-import --module app.artemis.agent_factory
+
+# Router dry-run (example; implement router first)
+python3 scripts/unified_ai_agents.py --agent grok --mode code --task 'implement X' --dry-run
 ```
 
 **Good luck! Focus on safety, compatibility, and incremental progress.**

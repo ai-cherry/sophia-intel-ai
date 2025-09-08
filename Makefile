@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: help env.check rag.start rag.test lint dev-up dev-down dev-shell logs status grok-test swarm-start memory-search mcp-status env-docs artemis-setup refactor.discovery refactor.scan-http refactor.probe refactor.check
+.PHONY: help env.check rag.start rag.test lint dev-up dev-down dev-shell logs status grok-test swarm-start memory-search mcp-status env-docs artemis-setup refactor.discovery refactor.scan-http refactor.probe refactor.check webui-health router-smoke
 
 help:
 	@echo "\033[0;36mMulti-Agent Development Environment\033[0m"
@@ -84,6 +84,14 @@ mcp-status: ## Check MCP service health endpoints
 	@echo "MCP FS Sophia:" && (curl -sf http://localhost:8082/health | jq '.' || echo "not responding")
 	@echo "MCP FS Artemis:" && (curl -sf http://localhost:8083/health | jq '.' || echo "not responding")
 	@echo "MCP Git:      " && (curl -sf http://localhost:8084/health | jq '.' || echo "not responding")
+
+webui-health: ## Verify WebUI backend health
+	@curl -sf http://localhost:3001/health | jq '.' || (echo "WebUI not responding" && exit 1)
+
+router-smoke: ## Smoke test router via WebUI backend /agents/complete
+	@curl -s -X POST http://localhost:3001/agents/complete \
+		-H 'Content-Type: application/json' \
+		-d '{"task_type":"generation","messages":[{"role":"user","content":"Say hi in one word"}],"provider":"openrouter","model":"anthropic/claude-3.5-sonnet"}' | jq '.'
 
 clean: ## Clean up Docker resources
 	@echo "🧹 Cleaning Docker resources..."

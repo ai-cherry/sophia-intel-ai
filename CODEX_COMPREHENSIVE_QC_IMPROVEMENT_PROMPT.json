@@ -1,0 +1,456 @@
+{
+  "task": "comprehensive_qc_improvement_and_testing_system",
+  "description": "Implement comprehensive quality control, testing, and improvement framework for the ARTEMIS multi-agent system",
+  "context": {
+    "current_system": "ARTEMIS Supreme Orchestrator with tactical command center, MCP servers, provider routing, WebUI, and agent factory",
+    "priority": "resilience_first_testing_with_comprehensive_coverage",
+    "scope": "full_stack_testing_and_improvement_planning"
+  },
+  "phases": {
+    "phase_1": {
+      "name": "router_resilience_and_streaming_infrastructure",
+      "duration": "1-2_days",
+      "priority": "critical",
+      "deliverables": [
+        {
+          "component": "enhanced_provider_router",
+          "tasks": [
+            "implement_circuit_breaker_pattern_with_half_open_recovery",
+            "add_structured_error_taxonomy_for_provider_failures",
+            "implement_real_websocket_token_streaming_with_correlation_ids",
+            "add_comprehensive_prometheus_metrics_with_provider_health",
+            "create_provider_health_dashboard_endpoints"
+          ],
+          "acceptance_criteria": [
+            "circuit_breaker_triggers_on_provider_failures_and_recovers",
+            "websocket_streams_tokens_with_correlation_id_tracking",
+            "structured_errors_enable_intelligent_fallback_decisions",
+            "metrics_expose_provider_latency_success_rates_and_health"
+          ]
+        },
+        {
+          "component": "websocket_streaming_architecture",
+          "tasks": [
+            "implement_per_session_token_queues_with_backpressure",
+            "add_websocket_keepalive_and_reconnection_handling",
+            "create_token_envelope_format_with_metadata",
+            "implement_buffered_replay_on_reconnect",
+            "add_correlation_id_tracking_across_requests"
+          ],
+          "technical_specs": {
+            "envelope_format": {
+              "type": "token|status|usage|error",
+              "chunk": "token_content",
+              "correlation_id": "uuid_v4",
+              "metadata": "provider_model_task_type",
+              "sequence": "integer"
+            }
+          }
+        }
+      ]
+    },
+    "phase_2": {
+      "name": "comprehensive_mcp_and_cli_testing",
+      "duration": "2-3_days",
+      "priority": "high",
+      "deliverables": [
+        {
+          "component": "mcp_server_testing_framework",
+          "tasks": [
+            "create_comprehensive_mcp_health_check_matrix",
+            "implement_mcp_filesystem_policy_enforcement_testing",
+            "add_mcp_git_protected_branch_testing_with_pr_paths",
+            "create_mcp_memory_consistency_and_search_testing",
+            "implement_mcp_server_failover_and_recovery_testing"
+          ],
+          "test_matrix": {
+            "mcp_filesystem": [
+              "test_allowed_path_writes_succeed",
+              "test_denied_path_writes_return_actionable_errors",
+              "test_backup_creation_on_file_writes",
+              "test_large_file_handling_and_thresholds",
+              "test_concurrent_write_operations"
+            ],
+            "mcp_git": [
+              "test_protected_branch_push_denial_with_403",
+              "test_commit_template_injection_consistency",
+              "test_pr_creation_for_protected_branches",
+              "test_git_hooks_and_validation",
+              "test_branch_protection_rules"
+            ],
+            "mcp_memory": [
+              "test_redis_weaviate_hybrid_storage_consistency",
+              "test_namespace_isolation_and_security",
+              "test_search_relevance_and_pagination",
+              "test_memory_cleanup_and_expiration",
+              "test_concurrent_store_and_search_operations"
+            ]
+          }
+        },
+        {
+          "component": "cli_integration_testing",
+          "tasks": [
+            "test_unified_ai_agents_script_with_all_parameters",
+            "validate_task_type_provider_model_overrides",
+            "test_dry_run_mode_and_route_resolution",
+            "implement_cli_error_handling_and_user_feedback",
+            "create_cli_performance_benchmarks"
+          ],
+          "cli_test_scenarios": [
+            "python3_scripts_unified_ai_agents_py_task_type_generation_dry_run",
+            "python3_scripts_unified_ai_agents_py_provider_openrouter_model_grok_4",
+            "python3_scripts_unified_ai_agents_py_task_type_validation_provider_aimlapi",
+            "error_handling_for_invalid_providers_and_models",
+            "timeout_handling_for_long_running_operations"
+          ]
+        }
+      ]
+    },
+    "phase_3": {
+      "name": "ai_agents_and_swarm_testing",
+      "duration": "2-3_days",
+      "priority": "high",
+      "deliverables": [
+        {
+          "component": "artemis_agent_factory_testing",
+          "tasks": [
+            "test_individual_agent_creation_with_security_clearances",
+            "test_micro_swarm_deployment_2_4_agents_with_coordination",
+            "test_full_tactical_swarm_5_8_agents_with_mesh_topology",
+            "test_background_monitoring_agent_deployment",
+            "test_agent_lifecycle_management_and_cleanup"
+          ],
+          "agent_test_matrix": {
+            "individual_agents": [
+              "test_code_specialist_agent_creation",
+              "test_security_clearance_alpha_beta_omega_validation",
+              "test_agent_mission_parameter_configuration",
+              "test_agent_callsign_generation_and_uniqueness"
+            ],
+            "micro_swarms": [
+              "test_reconnaissance_swarm_delta_formation",
+              "test_analysis_swarm_triangular_formation",
+              "test_micro_swarm_coordination_protocols",
+              "test_micro_swarm_fault_tolerance"
+            ],
+            "full_swarms": [
+              "test_comprehensive_security_audit_swarm",
+              "test_distributed_consensus_coordination",
+              "test_command_structure_with_alpha_leader",
+              "test_tactical_network_mesh_topology"
+            ]
+          }
+        },
+        {
+          "component": "agent_communication_and_coordination",
+          "tasks": [
+            "test_agent_to_agent_communication_protocols",
+            "test_swarm_intelligence_sharing_and_caching",
+            "test_tactical_command_processing_with_grok_4",
+            "test_mission_progress_tracking_and_reporting",
+            "test_agent_error_handling_and_recovery"
+          ]
+        }
+      ]
+    },
+    "phase_4": {
+      "name": "ui_and_integration_testing",
+      "duration": "2-3_days",
+      "priority": "high",
+      "deliverables": [
+        {
+          "component": "tactical_ui_comprehensive_testing",
+          "tasks": [
+            "test_8_panel_tactical_interface_functionality",
+            "test_real_time_websocket_updates_and_streaming",
+            "test_voice_interface_speech_to_text_integration",
+            "test_provider_analytics_and_live_metrics",
+            "test_agent_deployment_ui_interactions"
+          ],
+          "ui_test_scenarios": [
+            "test_mission_briefing_panel_agent_selection",
+            "test_intel_feed_real_time_updates",
+            "test_operation_status_tactical_metrics",
+            "test_code_stream_live_execution_display",
+            "test_communications_websocket_connectivity",
+            "test_provider_analytics_cost_and_latency_display",
+            "test_diff_viewer_code_change_visualization",
+            "test_repo_explorer_navigation_functionality"
+          ]
+        },
+        {
+          "component": "integration_testing_framework",
+          "tasks": [
+            "test_business_intelligence_integrations_gong_netsuite_n8n",
+            "test_web_search_integration_tavily_exa_brave",
+            "test_voice_interface_stt_tts_integration",
+            "test_indexer_weaviate_integration_with_tombstones",
+            "test_provider_routing_with_all_configured_models"
+          ],
+          "integration_test_matrix": {
+            "business_intelligence": [
+              "test_gong_call_analytics_data_fetching",
+              "test_netsuite_revenue_analysis_integration",
+              "test_n8n_workflow_automation_triggers",
+              "test_data_synchronization_and_consistency"
+            ],
+            "web_research": [
+              "test_tavily_search_api_integration",
+              "test_exa_deep_search_capabilities",
+              "test_brave_search_api_integration",
+              "test_multi_source_synthesis_with_qwen3_max"
+            ],
+            "voice_and_multimodal": [
+              "test_whisper_speech_to_text_accuracy",
+              "test_openai_tts_voice_generation",
+              "test_flux_pro_vision_capabilities",
+              "test_multimodal_input_processing"
+            ]
+          }
+        }
+      ]
+    },
+    "phase_5": {
+      "name": "local_deployment_and_environment_testing",
+      "duration": "1-2_days",
+      "priority": "medium",
+      "deliverables": [
+        {
+          "component": "local_deployment_validation",
+          "tasks": [
+            "test_docker_compose_multi_agent_environment_startup",
+            "validate_all_service_health_checks_and_dependencies",
+            "test_environment_variable_configuration_and_validation",
+            "test_port_assignment_and_conflict_resolution",
+            "validate_local_development_workflow"
+          ],
+          "deployment_test_scenarios": [
+            "test_make_env_check_shows_found_artemis_env",
+            "test_scripts_multi_agent_docker_env_sh_up_no_prompt",
+            "test_all_mcp_servers_start_and_respond_to_health_checks",
+            "test_webui_backend_starts_and_serves_tactical_interface",
+            "test_redis_weaviate_indexer_integration"
+          ]
+        },
+        {
+          "component": "startup_process_optimization",
+          "tasks": [
+            "analyze_service_startup_dependencies_and_timing",
+            "implement_intelligent_health_check_waiting",
+            "optimize_container_startup_sequence",
+            "add_startup_validation_and_error_reporting",
+            "create_startup_performance_benchmarks"
+          ]
+        }
+      ]
+    },
+    "phase_6": {
+      "name": "ci_cd_and_observability_testing",
+      "duration": "2-3_days",
+      "priority": "medium",
+      "deliverables": [
+        {
+          "component": "comprehensive_ci_pipeline",
+          "tasks": [
+            "enhance_github_actions_workflow_with_comprehensive_testing",
+            "implement_smoke_testing_across_all_system_components",
+            "add_performance_regression_testing",
+            "implement_security_vulnerability_scanning",
+            "create_deployment_validation_pipeline"
+          ],
+          "ci_test_matrix": {
+            "smoke_tests": [
+              "docker_compose_health_verification",
+              "webui_tactical_interface_accessibility",
+              "mcp_server_endpoint_validation",
+              "provider_routing_functionality",
+              "agent_factory_basic_operations"
+            ],
+            "integration_tests": [
+              "end_to_end_agent_deployment_workflow",
+              "multi_provider_failover_scenarios",
+              "websocket_streaming_reliability",
+              "memory_consistency_across_restarts",
+              "policy_enforcement_validation"
+            ],
+            "performance_tests": [
+              "concurrent_agent_deployment_load_testing",
+              "websocket_connection_scaling",
+              "provider_response_time_benchmarks",
+              "memory_search_performance_validation",
+              "ui_responsiveness_under_load"
+            ]
+          }
+        },
+        {
+          "component": "observability_and_monitoring",
+          "tasks": [
+            "implement_comprehensive_prometheus_metrics_collection",
+            "add_structured_json_logging_with_correlation_ids",
+            "create_health_dashboard_with_real_time_metrics",
+            "implement_alerting_for_critical_system_failures",
+            "add_distributed_tracing_across_components"
+          ]
+        }
+      ]
+    },
+    "phase_7": {
+      "name": "advanced_agent_capabilities_and_cli_enhancement",
+      "duration": "3-4_days",
+      "priority": "medium",
+      "deliverables": [
+        {
+          "component": "specialized_agent_roles",
+          "tasks": [
+            "implement_implementer_agent_with_grok_code_fast_1",
+            "create_reviewer_agent_with_qwen3_max_validation",
+            "develop_refactorer_agent_with_glm_4_5",
+            "build_test_smith_agent_with_qwen3_coder",
+            "implement_visionizer_agent_with_flux_pro"
+          ],
+          "agent_specifications": {
+            "implementer": {
+              "model": "x-ai/grok-code-fast-1",
+              "capabilities": ["code_generation", "bug_fixing", "feature_implementation"],
+              "security_clearance": "beta"
+            },
+            "reviewer": {
+              "model": "qwen/qwen3-max",
+              "capabilities": ["code_review", "security_analysis", "quality_assessment"],
+              "security_clearance": "alpha"
+            },
+            "refactorer": {
+              "model": "glm-4.5",
+              "capabilities": ["code_optimization", "architecture_improvement", "technical_debt_reduction"],
+              "security_clearance": "beta"
+            },
+            "test_smith": {
+              "model": "qwen3-coder/llama-3.2",
+              "capabilities": ["test_generation", "qa_automation", "coverage_analysis"],
+              "security_clearance": "gamma"
+            },
+            "visionizer": {
+              "model": "flux-pro/v1.1",
+              "capabilities": ["ui_design", "visual_analysis", "diagram_generation"],
+              "security_clearance": "beta"
+            }
+          }
+        },
+        {
+          "component": "micro_swarm_cli_interface",
+          "tasks": [
+            "implement_make_swarm_start_task_command",
+            "create_proposal_generation_from_swarm_output",
+            "integrate_webui_approval_workflow",
+            "add_automatic_git_commit_after_approval",
+            "implement_swarm_progress_monitoring_and_reporting"
+          ]
+        }
+      ]
+    }
+  },
+  "testing_framework": {
+    "test_types": {
+      "unit_tests": {
+        "coverage_target": "85_percent",
+        "focus_areas": [
+          "provider_router_logic",
+          "mcp_server_endpoints",
+          "agent_factory_methods",
+          "websocket_message_handling"
+        ]
+      },
+      "integration_tests": {
+        "scenarios": [
+          "full_stack_agent_deployment_workflow",
+          "multi_provider_failover_chain",
+          "mcp_server_communication_protocols",
+          "websocket_streaming_reliability"
+        ]
+      },
+      "load_tests": {
+        "targets": [
+          "concurrent_agent_deployments_100_agents",
+          "websocket_connections_1000_concurrent",
+          "provider_requests_per_second_benchmarks",
+          "memory_search_operations_under_load"
+        ]
+      },
+      "security_tests": {
+        "validations": [
+          "security_clearance_enforcement",
+          "policy_denial_mechanisms",
+          "input_validation_and_sanitization",
+          "api_authentication_and_authorization"
+        ]
+      }
+    }
+  },
+  "quality_gates": {
+    "code_quality": {
+      "black_formatting": "mandatory_blocking",
+      "ruff_linting": "mandatory_blocking",
+      "type_checking": "recommended",
+      "documentation": "required_for_public_apis"
+    },
+    "performance": {
+      "response_time_p95": "under_2_seconds",
+      "websocket_latency": "under_100ms",
+      "agent_deployment_time": "under_5_seconds",
+      "memory_search_latency": "under_500ms"
+    },
+    "reliability": {
+      "uptime_target": "99_5_percent",
+      "error_rate_threshold": "under_1_percent",
+      "recovery_time": "under_30_seconds",
+      "circuit_breaker_effectiveness": "validated"
+    }
+  },
+  "risk_mitigation": {
+    "provider_instability": {
+      "mitigation": "circuit_breaker_with_intelligent_fallbacks",
+      "monitoring": "provider_health_metrics_and_alerting"
+    },
+    "websocket_fragility": {
+      "mitigation": "keepalive_bounded_queues_and_reconnection_logic",
+      "monitoring": "connection_stability_metrics"
+    },
+    "mcp_server_failures": {
+      "mitigation": "health_check_monitoring_and_automatic_recovery",
+      "monitoring": "mcp_endpoint_availability_tracking"
+    },
+    "agent_coordination_failures": {
+      "mitigation": "fault_tolerant_swarm_protocols",
+      "monitoring": "agent_health_and_communication_metrics"
+    }
+  },
+  "success_metrics": {
+    "system_reliability": [
+      "99_5_percent_uptime_achieved",
+      "under_1_percent_error_rate_sustained",
+      "circuit_breaker_prevents_cascade_failures",
+      "automatic_recovery_within_30_seconds"
+    ],
+    "user_experience": [
+      "tactical_ui_responsive_under_100ms",
+      "real_time_token_streaming_functional",
+      "voice_interface_accuracy_over_95_percent",
+      "agent_deployment_completes_under_5_seconds"
+    ],
+    "developer_experience": [
+      "local_deployment_succeeds_in_under_2_minutes",
+      "comprehensive_test_suite_runs_in_under_10_minutes",
+      "ci_pipeline_provides_clear_feedback",
+      "documentation_enables_rapid_onboarding"
+    ],
+    "operational_excellence": [
+      "comprehensive_observability_and_alerting",
+      "structured_logging_enables_rapid_debugging",
+      "performance_benchmarks_track_regression",
+      "security_policies_enforced_consistently"
+    ]
+  },
+  "implementation_priority": "phase_1_and_2_immediate_phase_3_to_7_as_capacity_allows",
+  "validation_approach": "continuous_integration_with_comprehensive_smoke_and_load_testing",
+  "documentation_requirements": "comprehensive_api_docs_deployment_guides_and_troubleshooting_runbooks"
+}

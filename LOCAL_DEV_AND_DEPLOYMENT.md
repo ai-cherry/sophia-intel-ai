@@ -29,7 +29,7 @@ MCP Endpoints (for Cursor/Cline)
 - VS Code settings are in `.vscode/settings.json` (tracked) and should work out of the box.
 
 Single Local Startup (Canonical)
-1) Start the stack
+1) Start the stack (quick)
    - `docker compose --env-file .env.local -f docker-compose.dev.yml up -d`
 2) Open a development shell
    - `docker compose -f docker-compose.dev.yml exec agent-dev bash`
@@ -69,3 +69,29 @@ Troubleshooting
 - Env not loading: `make env.doctor`, `source scripts/env.sh`, verify `~/.config/artemis/env` exists.
 - MCP endpoints unreachable: ensure `docker-compose.dev.yml` is running and ports 8081/8082/8084 are free.
 - SSH operations failing in containers: ensure `SSH_AUTH_SOCK` is set and your agent has keys (`ssh-add -l`).
+
+Complete Startup Sequence (with verification)
+1) Start infrastructure
+- `docker compose -f docker-compose.dev.yml up -d redis postgres weaviate`
+2) Verify infrastructure
+- `make health-infra`
+3) Start MCP servers
+- `docker compose -f docker-compose.dev.yml up -d mcp-memory mcp-filesystem-sophia mcp-git`
+4) Verify MCP servers
+- `curl -sf http://localhost:8081/health`
+- `curl -sf http://localhost:8082/health`
+- `curl -sf http://localhost:8084/health`
+5) Start Sophia dev shell
+- `docker compose -f docker-compose.dev.yml up -d agent-dev`
+- `docker compose -f docker-compose.dev.yml exec agent-dev bash`
+6) Optional: Connect Artemis sidecar
+- Local sidecar:
+  - `export ARTEMIS_PATH=/absolute/path/to/artemis-cli`
+  - `docker compose -f docker-compose.dev.yml --profile artemis up -d`
+- Remote Artemis (HTTP):
+  - Set `ARTEMIS_URL=http://artemis-host:8090` (HTTP bridge planned; currently not integrated)
+
+MCP Integration Verification
+- Filesystem: `curl -sf http://localhost:8082/health`
+- Memory:     `curl -sf http://localhost:8081/health`
+- Git:        `curl -sf http://localhost:8084/health`

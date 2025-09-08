@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: help env.check env.doctor env.doctor.merge env.clean-deprecated env.source health nuke-fragmentation rag.start rag.test lint dev-up dev-down dev-shell logs status grok-test swarm-start memory-search mcp-status env-docs artemis-setup refactor.discovery refactor.scan-http refactor.probe refactor.check webui-health router-smoke
+.PHONY: help env.check env.doctor env.doctor.merge env.clean-deprecated env.source health health-infra mcp-test full-start nuke-fragmentation rag.start rag.test lint dev-up dev-down dev-shell logs status grok-test swarm-start memory-search mcp-status env-docs artemis-setup refactor.discovery refactor.scan-http refactor.probe refactor.check webui-health router-smoke
 
 help:
 	@echo "\033[0;36mMulti-Agent Development Environment\033[0m"
@@ -32,6 +32,35 @@ health: ## Run full health check
 	@bash scripts/check_root_docs.sh
 	@ruff check . --select F401,F841 --quiet || true
 	@echo "\xE2\x9C\x85 Health check complete"
+
+health-infra: ## Check infrastructure services (Redis, Postgres, Weaviate)
+	@echo "Checking Redis..."
+	@if command -v redis-cli >/dev/null 2>&1; then \
+		(redis-cli -h localhost ping || echo "Redis ping failed"); \
+	else \
+		(nc -z localhost 6379 >/dev/null 2>&1 && echo "Redis port 6379 open" || echo "Redis not reachable on 6379"); \
+	fi
+	@echo "Checking Postgres..."
+	@if command -v pg_isready >/dev/null 2>&1; then \
+		pg_isready -h localhost -p 5432 || true; \
+	else \
+		(nc -z localhost 5432 >/dev/null 2>&1 && echo "Postgres port 5432 open" || echo "Postgres not reachable on 5432"); \
+	fi
+	@echo "Checking Weaviate..."
+	@curl -sf http://localhost:8080/v1/.well-known/ready >/dev/null && echo "Weaviate ready" || echo "Weaviate not ready"
+
+mcp-test: ## Test MCP server connections
+	@curl -sf http://localhost:8081/health >/dev/null && echo "\xE2\x9C\x93 Memory MCP" || echo "Memory MCP not responding"
+	@curl -sf http://localhost:8082/health >/dev/null && echo "\xE2\x9C\x93 Filesystem MCP" || echo "Filesystem MCP not responding"
+	@curl -sf http://localhost:8084/health >/dev/null && echo "\xE2\x9C\x93 Git MCP" || echo "Git MCP not responding"
+
+full-start: ## Start everything in correct order
+	@docker compose -f docker-compose.dev.yml up -d redis postgres weaviate
+	@sleep 5
+	@docker compose -f docker-compose.dev.yml up -d mcp-memory mcp-filesystem-sophia mcp-git
+	@sleep 3
+	@docker compose -f docker-compose.dev.yml up -d agent-dev
+	@echo "\xE2\x9C\x93 Sophia stack running"
 
 nuke-fragmentation: ## Nuclear option - force consolidation (DESTRUCTIVE)
 	@echo "\xE2\x9A\xA0\xEF\xB8\x8F  This will delete non-canonical files. Ctrl-C to abort..." && sleep 5

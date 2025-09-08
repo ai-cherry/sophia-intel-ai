@@ -7,6 +7,7 @@ from typing import Any, Dict, List, Optional
 
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from pathlib import Path
 from fastapi.staticfiles import StaticFiles
@@ -81,6 +82,14 @@ class WebUIServer:
         static_dir = Path(__file__).resolve().parents[1] / "frontend"
         if static_dir.exists():
             app.mount("/ui", StaticFiles(directory=static_dir, html=True), name="ui")
+        
+        @app.get("/tactical")
+        async def tactical_command_center():
+            """Serve the tactical command center interface"""
+            tactical_file = Path(__file__).resolve().parents[1] / "frontend" / "tactical-command.html"
+            if tactical_file.exists():
+                return FileResponse(tactical_file)
+            raise HTTPException(404, detail="Tactical interface not found")
 
         @app.post("/sessions")
         async def create_session(req: CreateSessionRequest) -> Dict[str, str]:
@@ -146,7 +155,9 @@ class WebUIServer:
                 model_override=model,
             )
             # Future: stream tokens via per-session queue; for now, return full text
-            return {"text": text}
+            r = self.router._route_for(task_type)
+            route_meta = {"provider": provider or r.provider, "model": model or r.model}
+            return {"text": text, "route": route_meta}
 
         @app.post("/sessions/{session_id}/proposals")
         async def create_proposal(session_id: str, req: CreateProposalRequest) -> Dict[str, Any]:

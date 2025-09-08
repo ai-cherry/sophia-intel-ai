@@ -16,6 +16,7 @@ except Exception:
     load_dotenv = None
 
 from app.llm.multi_transport import MultiTransportLLM
+from app.llm.provider_router import EnhancedProviderRouter
 
 
 def load_env() -> None:
@@ -83,15 +84,24 @@ def summarize_env(llm: MultiTransportLLM) -> str:
 
 
 async def run_task(
-    agent: str, mode: str, task: str, dry_run: bool = False, provider_override: str | None = None
+    agent: str,
+    mode: str,
+    task: str,
+    dry_run: bool = False,
+    provider_override: str | None = None,
+    task_type: str | None = None,
+    model_override: str | None = None,
 ) -> None:
     llm = MultiTransportLLM()
-    provider, model = pick_model(agent, mode, llm.keys)
-    if provider_override:
-        provider = provider_override
-
-    print(f"Agent: {agent}\nMode: {mode}\nProvider: {provider}\nModel: {model}")
+    router = EnhancedProviderRouter()
+    # Resolve task type
+    tt = task_type or ("generation" if mode == "code" else "planning")
+    # Dry-run: show route selection only
     if dry_run:
+        r = router._route_for(tt)
+        provider = provider_override or r.provider
+        model = model_override or r.model
+        print(f"Agent: {agent}\nMode: {mode}\nTask-Type: {tt}\nProvider: {provider}\nModel: {model}")
         print(summarize_env(llm))
         return
 
@@ -99,13 +109,15 @@ async def run_task(
         {"role": "system", "content": f"You are a helpful {agent} {mode} assistant."},
         {"role": "user", "content": task},
     ]
-
     try:
-        resp = await llm.complete(
-            provider=provider, model=model, messages=messages, max_tokens=512, temperature=0.2
+        text = await router.complete(
+            task_type=tt,
+            messages=messages,
+            provider_override=provider_override,
+            model_override=model_override,
         )
         print("\n==== Result ====")
-        print(resp.text)
+        print(text)
     except Exception as e:
         print(f"Error executing request: {e}")
 
@@ -124,11 +136,9 @@ def main():
         "--dry-run", action="store_true", help="Print configuration without calling LLM"
     )
     parser.add_argument("--whoami", action="store_true", help="Show environment and routing info")
-    parser.add_argument(
-        "--provider",
-        choices=["xai", "openrouter", "anthropic", "openai", "groq"],
-        help="Force provider override",
-    )
+    parser.add_argument("--provider", choices=["xai", "openrouter", "anthropic", "openai", "groq", "aimlapi"], help="Force provider override")
+    parser.add_argument("--model", type=str, help="Force model override (e.g., x-ai/grok-code-fast-1)")
+    parser.add_argument("--task-type", choices=["planning", "generation", "validation", "indexing", "vision"], help="Task type for router selection")
 
     args = parser.parse_args()
 
@@ -141,7 +151,17 @@ def main():
         print("--task is required unless --dry-run or --whoami is used")
         return
 
-    asyncio.run(run_task(args.agent, args.mode, args.task or "", args.dry_run, args.provider))
+    asyncio.run(
+        run_task(
+            args.agent,
+            args.mode,
+            args.task or "",
+            args.dry_run,
+            args.provider,
+            args.task_type,
+            args.model,
+        )
+    )
 
 
 if __name__ == "__main__":

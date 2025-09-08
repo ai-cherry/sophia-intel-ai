@@ -20,3 +20,6 @@ jobs:
         run: |
           python3 scripts/env_doctor.py
 
+      - name: Artemis path guard
+        run: |
+          bash scripts/check_artemis_paths.sh

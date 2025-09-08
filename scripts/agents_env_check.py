@@ -16,10 +16,12 @@ Usage
 from __future__ import annotations
 
 import json
+import os
 import platform
 import subprocess
 import sys
 from dataclasses import asdict, dataclass, field
+from pathlib import Path
 from typing import Dict, List, Optional
 
 
@@ -163,10 +165,189 @@ def check_pydantic_core() -> List[CheckResult]:
     return results
 
 
+def check_required_dependencies() -> List[CheckResult]:
+    """Check critical runtime dependencies"""
+    results: List[CheckResult] = []
+    critical_deps = ['fastapi', 'uvicorn', 'pydantic', 'redis', 'httpx']
+    
+    for dep in critical_deps:
+        try:
+            __import__(dep)
+            results.append(CheckResult(status="ok", message=f"{dep} available", details={}))
+        except ImportError:
+            results.append(
+                CheckResult(
+                    status="fail", 
+                    message=f"{dep} not available",
+                    details={"remediation": f"pip3 install -r requirements/base.txt"}
+                )
+            )
+    
+    return results
+
+
+def check_environment_files() -> List[CheckResult]:
+    """Validate .env.* configuration consistency"""
+    results: List[CheckResult] = []
+    root = Path.cwd()
+    
+    # Check for .python-version consistency
+    python_version_file = root / ".python-version"
+    if python_version_file.exists():
+        try:
+            blessed_version = python_version_file.read_text().strip()
+            current_version = sys.version.split()[0]
+            if current_version.startswith(blessed_version[:4]):  # Match major.minor
+                results.append(CheckResult(status="ok", message=f"Python version matches .python-version ({blessed_version})", details={}))
+            else:
+                results.append(
+                    CheckResult(
+                        status="warn",
+                        message=f"Python {current_version} doesn't match .python-version ({blessed_version})",
+                        details={"remediation": "Use pyenv or update .python-version"}
+                    )
+                )
+        except Exception as e:
+            results.append(CheckResult(status="warn", message=f"Cannot read .python-version: {e}", details={}))
+    
+    # Check environment file separation
+    sophia_env = root / ".env.sophia"
+    ai_keys = ['ANTHROPIC_API_KEY', 'OPENAI_API_KEY', 'GROQ_API_KEY', 'GROK_API_KEY', 'XAI_API_KEY']
+    
+    if sophia_env.exists():
+        content = sophia_env.read_text()
+        contaminated_keys = [key for key in ai_keys if key in content]
+        if contaminated_keys:
+            results.append(
+                CheckResult(
+                    status="warn",
+                    message="AI model keys found in .env.sophia",
+                    details={
+                        "contaminated_keys": ", ".join(contaminated_keys),
+                        "remediation": "Move AI keys to Artemis CLI environment"
+                    }
+                )
+            )
+        else:
+            results.append(CheckResult(status="ok", message="Clean environment separation", details={}))
+    
+    return results
+
+
+def check_docker_availability() -> List[CheckResult]:
+    """Check Docker setup for devcontainer option"""
+    results: List[CheckResult] = []
+    
+    try:
+        subprocess.check_output(["docker", "--version"], stderr=subprocess.DEVNULL)
+        results.append(CheckResult(status="ok", message="Docker available", details={}))
+        
+        # Check if Docker is running
+        try:
+            subprocess.check_output(["docker", "info"], stderr=subprocess.DEVNULL)
+            results.append(CheckResult(status="ok", message="Docker daemon running", details={}))
+        except subprocess.CalledProcessError:
+            results.append(
+                CheckResult(
+                    status="warn",
+                    message="Docker installed but daemon not running",
+                    details={"remediation": "Start Docker Desktop or docker daemon"}
+                )
+            )
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        results.append(
+            CheckResult(
+                status="warn",
+                message="Docker not available",
+                details={
+                    "impact": "Devcontainer option unavailable",
+                    "remediation": "Install Docker Desktop for consistent cross-platform development"
+                }
+            )
+        )
+    
+    return results
+
+
+def check_wheel_architecture() -> List[CheckResult]:
+    """Deep wheel/arch validation beyond pydantic_core"""
+    results: List[CheckResult] = []
+    arch_sensitive_packages = ['uvloop', 'orjson', 'lxml']
+    
+    for package in arch_sensitive_packages:
+        try:
+            module = __import__(package)
+            module_path = getattr(module, '__file__', '')
+            if module_path and module_path.endswith(('.so', '.dylib', '.pyd')):
+                results.append(CheckResult(status="ok", message=f"{package} binary wheel loaded", details={"path": module_path}))
+            else:
+                results.append(CheckResult(status="warn", message=f"{package} may be pure Python fallback", details={}))
+        except ImportError:
+            # Package not installed, which is fine for optional deps
+            pass
+        except Exception as e:
+            results.append(
+                CheckResult(
+                    status="warn",
+                    message=f"{package} import issue",
+                    details={"error": str(e), "remediation": f"pip3 install --force-reinstall {package}"}
+                )
+            )
+    
+    return results
+
+
+def check_installation_path() -> List[CheckResult]:
+    """Recommend installation method based on platform/arch"""
+    results: List[CheckResult] = []
+    machine = platform.machine()
+    is_rosetta = detect_rosetta()
+    
+    if sys.platform == "darwin":
+        if machine == "arm64" and not is_rosetta:
+            results.append(
+                CheckResult(
+                    status="ok",
+                    message="macOS Apple Silicon - optimal setup",
+                    details={"recommendation": "Native arm64 Python with binary wheels or devcontainer"}
+                )
+            )
+        elif machine == "x86_64" and is_rosetta:
+            results.append(
+                CheckResult(
+                    status="warn",
+                    message="macOS Apple Silicon with x86_64 Python (Rosetta)",
+                    details={
+                        "impact": "Higher risk of wheel/arch mismatches",
+                        "recommended": "Use devcontainer or install native arm64 Python via pyenv"
+                    }
+                )
+            )
+        elif machine == "x86_64" and not is_rosetta:
+            results.append(
+                CheckResult(
+                    status="ok",
+                    message="macOS Intel - standard setup",
+                    details={"recommendation": "System Python or devcontainer both work well"}
+                )
+            )
+    elif sys.platform.startswith("linux"):
+        results.append(
+            CheckResult(
+                status="ok",
+                message=f"Linux {machine} - native setup recommended",
+                details={"recommendation": "System Python preferred; devcontainer optional"}
+            )
+        )
+    
+    return results
+
+
 def main() -> int:
     want_json = "--json" in sys.argv
     checks: List[CheckResult] = []
 
+    # Core Python checks
     py = check_python()
     checks.extend(py)
 
@@ -184,8 +365,17 @@ def main() -> int:
             )
         )
 
-    # pydantic_core import check (common failure)
+    # Critical dependency checks
     checks.extend(check_pydantic_core())
+    checks.extend(check_required_dependencies())
+    
+    # Environment and configuration checks
+    checks.extend(check_environment_files())
+    checks.extend(check_docker_availability())
+    
+    # Architecture-specific validation
+    checks.extend(check_wheel_architecture())
+    checks.extend(check_installation_path())
 
     report = EnvReport(
         python_version=sys.version.split()[0],
@@ -222,4 +412,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
-

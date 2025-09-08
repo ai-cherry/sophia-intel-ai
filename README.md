@@ -120,6 +120,27 @@ cd agent-ui && npm run dev
 - Agent UI: <http://localhost:3002>
 - API Documentation: <http://localhost:8000/docs>
 
+### Multi-Agent (Terminal-First) Dev Stack
+
+For a containerized, terminal-first workflow (no host Python drift):
+
+- Start the environment: `make dev-up`
+- Check status: `make status`
+- Enter shell: `make dev-shell`
+- Quick Grok verification: `make grok-test`
+
+Artifacts:
+- `docker-compose.multi-agent.yml` – canonical dev compose for agents + MCP + infra
+- `scripts/multi-agent-docker-env.sh` – compose wrapper (up/down/logs/shell/status)
+- `scripts/quick-grok-test.sh` – one-off Grok test in `python:3.11-slim`
+- `scripts/sophia_cli.py` – minimal CLI stub for swarm placeholder commands
+
+Environment separation:
+- `.env.sophia` – infra/business only (no LLM keys); see `.env.sophia.example`
+- `.env.mcp` – MCP runtime; see `.env.mcp.example`
+- `.env` – optional local CLI convenience only
+- Provider keys live in external `artemis-cli` `.env.artemis`
+
 ## 📋 Usage
 
 ### Artemis Scout CLI (Local)

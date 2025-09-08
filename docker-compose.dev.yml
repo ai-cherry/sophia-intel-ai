@@ -1,0 +1,328 @@
+version: '3.8'
+
+services:
+  # Development container for running agents without host Python
+  agent-dev:
+    image: python:3.11-slim
+    container_name: sophia-agent-dev
+    volumes:
+      # Mount both repositories
+      - ./:/workspace/sophia
+      - ../artemis-cli:/workspace/artemis
+      # SSH keys for GitHub operations
+      - ~/.ssh:/root/.ssh:ro
+      - ${SSH_AUTH_SOCK}:${SSH_AUTH_SOCK}
+    environment:
+      - SSH_AUTH_SOCK=${SSH_AUTH_SOCK}
+      - PYTHONPATH=/workspace/sophia:/workspace/artemis
+      - PYTHON_UNBUFFERED=1
+    env_file: .env
+    working_dir: /workspace/sophia
+    networks:
+      - sophia-network
+    stdin_open: true
+    tty: true
+    command: /bin/bash
+    depends_on:
+      - redis
+      - weaviate
+
+  # Redis for short-term memory and coordination
+  redis:
+    image: redis:7-alpine
+    container_name: sophia-redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - sophia-network
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # Weaviate for vector embeddings and semantic search
+  weaviate:
+    image: semitechnologies/weaviate:latest
+    container_name: sophia-weaviate
+    ports:
+      - "${WEAVIATE_REST_PORT:-8080}:8080"
+      - "${WEAVIATE_GRPC_PORT:-50051}:50051"
+    environment:
+      QUERY_DEFAULTS_LIMIT: 25
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
+      PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
+      DEFAULT_VECTORIZER_MODULE: 'none'
+      ENABLE_MODULES: 'text2vec-openai,text2vec-cohere,text2vec-huggingface'
+      CLUSTER_HOSTNAME: 'node1'
+    volumes:
+      - weaviate-data:/var/lib/weaviate
+    networks:
+      - sophia-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/v1/.well-known/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MCP Memory Server - Coordinates memory operations
+  mcp-memory:
+    build:
+      context: .
+      dockerfile: automation/docker/Dockerfile.mcp-memory
+      args:
+        - PYTHON_VERSION=3.11
+    container_name: sophia-mcp-memory
+    ports:
+      - "${MCP_MEMORY_PORT:-8081}:8000"
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - WEAVIATE_URL=http://weaviate:8080
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    depends_on:
+      - redis
+      - weaviate
+    networks:
+      - sophia-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # MCP Filesystem Server for Sophia repo
+  mcp-filesystem-sophia:
+    build:
+      context: .
+      dockerfile: automation/docker/Dockerfile.mcp-filesystem
+      args:
+        - PYTHON_VERSION=3.11
+    container_name: sophia-mcp-fs-sophia
+    environment:
+      - WORKSPACE_PATH=/workspace/sophia
+      - WORKSPACE_NAME=sophia
+      - READ_ONLY=false
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    volumes:
+      - ./:/workspace/sophia
+    networks:
+      - sophia-network
+    ports:
+      - "${MCP_FS_SOPHIA_PORT:-8082}:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # MCP Filesystem Server for Artemis repo
+  mcp-filesystem-artemis:
+    build:
+      context: .
+      dockerfile: automation/docker/Dockerfile.mcp-filesystem
+      args:
+        - PYTHON_VERSION=3.11
+    container_name: sophia-mcp-fs-artemis
+    environment:
+      - WORKSPACE_PATH=/workspace/artemis
+      - WORKSPACE_NAME=artemis
+      - READ_ONLY=false
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    volumes:
+      - ../artemis-cli:/workspace/artemis
+    networks:
+      - sophia-network
+    ports:
+      - "${MCP_FS_ARTEMIS_PORT:-8083}:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # MCP Git Server - Handles git operations with SSH forwarding
+  mcp-git:
+    build:
+      context: .
+      dockerfile: automation/docker/Dockerfile.mcp-git
+      args:
+        - PYTHON_VERSION=3.11
+    container_name: sophia-mcp-git
+    environment:
+      - SSH_AUTH_SOCK=${SSH_AUTH_SOCK}
+      - GIT_USER_NAME=${GIT_USER_NAME:-Sophia AI Agent}
+      - GIT_USER_EMAIL=${GIT_USER_EMAIL:-agent@sophia-intel.ai}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    volumes:
+      - ./:/workspace/sophia
+      - ../artemis-cli:/workspace/artemis
+      - ~/.ssh:/root/.ssh:ro
+      - ${SSH_AUTH_SOCK}:${SSH_AUTH_SOCK}
+    networks:
+      - sophia-network
+    ports:
+      - "${MCP_GIT_PORT:-8084}:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Task Router - Routes tasks to appropriate agents
+  task-router:
+    build:
+      context: .
+      dockerfile: automation/docker/Dockerfile.task-router
+      args:
+        - PYTHON_VERSION=3.11
+    container_name: sophia-task-router
+    ports:
+      - "${TASK_ROUTER_PORT:-8020}:8000"
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - MCP_MEMORY_URL=http://mcp-memory:8000
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    env_file: .env
+    depends_on:
+      - redis
+      - mcp-memory
+    networks:
+      - sophia-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Swarm Orchestrator - Coordinates multi-agent tasks
+  swarm-orchestrator:
+    build:
+      context: .
+      dockerfile: automation/docker/Dockerfile.swarm
+      args:
+        - PYTHON_VERSION=3.11
+    container_name: sophia-swarm
+    ports:
+      - "${SWARM_PORT:-8090}:8000"
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - MCP_MEMORY_URL=http://mcp-memory:8000
+      - MCP_FS_SOPHIA_URL=http://mcp-filesystem-sophia:8000
+      - MCP_FS_ARTEMIS_URL=http://mcp-filesystem-artemis:8000
+      - MCP_GIT_URL=http://mcp-git:8000
+      - TASK_ROUTER_URL=http://task-router:8000
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    env_file: .env
+    depends_on:
+      - redis
+      - mcp-memory
+      - mcp-filesystem-sophia
+      - mcp-filesystem-artemis
+      - mcp-git
+      - task-router
+    networks:
+      - sophia-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Web UI for natural language interaction
+  webui:
+    build:
+      context: .
+      dockerfile: automation/docker/Dockerfile.webui
+      args:
+        - NODE_VERSION=18
+    container_name: sophia-webui
+    ports:
+      - "${WEBUI_PORT:-3001}:3000"
+    environment:
+      - API_URL=http://swarm-orchestrator:8000
+      - WEBSOCKET_URL=ws://swarm-orchestrator:8000/ws
+      - NODE_ENV=development
+    depends_on:
+      - swarm-orchestrator
+    networks:
+      - sophia-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Optional: Neo4j for graph memory (if needed)
+  neo4j:
+    image: neo4j:5-community
+    container_name: sophia-neo4j
+    ports:
+      - "${NEO4J_HTTP_PORT:-7474}:7474"
+      - "${NEO4J_BOLT_PORT:-7687}:7687"
+    environment:
+      - NEO4J_AUTH=${NEO4J_USERNAME:-neo4j}/${NEO4J_PASSWORD:-password}
+      - NEO4J_apoc_export_file_enabled=true
+      - NEO4J_apoc_import_file_enabled=true
+      - NEO4J_apoc_import_file_use__neo4j__config=true
+      - NEO4J_PLUGINS=["apoc"]
+    volumes:
+      - neo4j-data:/data
+      - neo4j-logs:/logs
+    networks:
+      - sophia-network
+    profiles:
+      - graph
+
+  # Optional: Prometheus for metrics
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: sophia-prometheus
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    networks:
+      - sophia-network
+    profiles:
+      - monitoring
+
+  # Optional: Grafana for dashboards
+  grafana:
+    image: grafana/grafana:latest
+    container_name: sophia-grafana
+    ports:
+      - "${GRAFANA_PORT:-3000}:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+    volumes:
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - grafana-data:/var/lib/grafana
+    networks:
+      - sophia-network
+    depends_on:
+      - prometheus
+    profiles:
+      - monitoring
+
+networks:
+  sophia-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  redis-data:
+  weaviate-data:
+  neo4j-data:
+  neo4j-logs:
+  prometheus-data:
+  grafana-data:

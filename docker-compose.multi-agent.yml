@@ -1,0 +1,234 @@
+version: '3.8'
+
+services:
+  # Core development shell for terminal-first workflows
+  agent-dev:
+    image: python:3.11-slim
+    container_name: sophia-agent-dev
+    working_dir: /workspace/sophia
+    stdin_open: true
+    tty: true
+    command: /bin/bash
+    env_file:
+      - .env
+    environment:
+      - SSH_AUTH_SOCK=${SSH_AUTH_SOCK}
+      - PYTHONUNBUFFERED=1
+      - PYTHONPATH=/workspace/sophia:/workspace/artemis
+    volumes:
+      - ./:/workspace/sophia
+      - ../artemis-cli:/workspace/artemis
+      - ~/.ssh:/root/.ssh:ro
+      - ${SSH_AUTH_SOCK}:${SSH_AUTH_SOCK}
+    depends_on:
+      - redis
+      - weaviate
+    networks:
+      - multi-agent-net
+
+  # Infrastructure: Redis
+  redis:
+    image: redis:7-alpine
+    container_name: sophia-redis
+    command: redis-server --appendonly yes
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - multi-agent-net
+
+  # Infrastructure: Weaviate
+  weaviate:
+    image: semitechnologies/weaviate:latest
+    container_name: sophia-weaviate
+    ports:
+      - "${WEAVIATE_REST_PORT:-8080}:8080"
+      - "${WEAVIATE_GRPC_PORT:-50051}:50051"
+    environment:
+      QUERY_DEFAULTS_LIMIT: 25
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
+      PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
+      DEFAULT_VECTORIZER_MODULE: 'none'
+      ENABLE_MODULES: 'text2vec-openai,text2vec-cohere,text2vec-huggingface'
+      CLUSTER_HOSTNAME: 'node1'
+    volumes:
+      - weaviate-data:/var/lib/weaviate
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/v1/.well-known/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - multi-agent-net
+
+  # MCP Memory server (reuses existing Dockerfile paths from dev stack)
+  mcp-memory:
+    build:
+      context: .
+      dockerfile: automation/docker/Dockerfile.mcp-memory
+      args:
+        - PYTHON_VERSION=3.11
+    container_name: sophia-mcp-memory
+    ports:
+      - "${MCP_MEMORY_PORT:-8081}:8000"
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - WEAVIATE_URL=http://weaviate:8080
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    depends_on:
+      - redis
+      - weaviate
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - multi-agent-net
+
+  # MCP Filesystem server for this repo
+  mcp-filesystem-sophia:
+    build:
+      context: .
+      dockerfile: automation/docker/Dockerfile.mcp-filesystem
+      args:
+        - PYTHON_VERSION=3.11
+    container_name: sophia-mcp-fs-sophia
+    environment:
+      - WORKSPACE_PATH=/workspace/sophia
+      - WORKSPACE_NAME=sophia
+      - READ_ONLY=false
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    volumes:
+      - ./:/workspace/sophia
+    ports:
+      - "${MCP_FS_SOPHIA_PORT:-8082}:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - multi-agent-net
+
+  # MCP Filesystem server for Artemis repo
+  mcp-filesystem-artemis:
+    build:
+      context: .
+      dockerfile: automation/docker/Dockerfile.mcp-filesystem
+      args:
+        - PYTHON_VERSION=3.11
+    container_name: sophia-mcp-fs-artemis
+    environment:
+      - WORKSPACE_PATH=/workspace/artemis
+      - WORKSPACE_NAME=artemis
+      - READ_ONLY=false
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    volumes:
+      - ../artemis-cli:/workspace/artemis
+    ports:
+      - "${MCP_FS_ARTEMIS_PORT:-8083}:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - multi-agent-net
+
+  # MCP Git server with SSH agent forwarding
+  mcp-git:
+    build:
+      context: .
+      dockerfile: automation/docker/Dockerfile.mcp-git
+      args:
+        - PYTHON_VERSION=3.11
+    container_name: sophia-mcp-git
+    environment:
+      - SSH_AUTH_SOCK=${SSH_AUTH_SOCK}
+      - GIT_USER_NAME=${GIT_USER_NAME:-Sophia AI Agent}
+      - GIT_USER_EMAIL=${GIT_USER_EMAIL:-agent@sophia-intel.ai}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    volumes:
+      - ./:/workspace/sophia
+      - ../artemis-cli:/workspace/artemis
+      - ~/.ssh:/root/.ssh:ro
+      - ${SSH_AUTH_SOCK}:${SSH_AUTH_SOCK}
+    ports:
+      - "${MCP_GIT_PORT:-8084}:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - multi-agent-net
+
+  # Minimal Web UI placeholder (if Dockerfile exists)
+  webui:
+    build:
+      context: .
+      dockerfile: automation/docker/Dockerfile.webui
+      args:
+        - NODE_VERSION=18
+    container_name: sophia-webui
+    ports:
+      - "${WEBUI_PORT:-3001}:3000"
+    environment:
+      - API_URL=http://swarm-orchestrator:8000
+      - WEBSOCKET_URL=ws://swarm-orchestrator:8000/ws
+      - NODE_ENV=development
+    depends_on:
+      - swarm-orchestrator
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - multi-agent-net
+
+  # Swarm orchestrator placeholder (reuses existing Dockerfile)
+  swarm-orchestrator:
+    build:
+      context: .
+      dockerfile: automation/docker/Dockerfile.swarm
+      args:
+        - PYTHON_VERSION=3.11
+    container_name: sophia-swarm
+    ports:
+      - "${SWARM_PORT:-8090}:8000"
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - MCP_MEMORY_URL=http://mcp-memory:8000
+      - MCP_FS_SOPHIA_URL=http://mcp-filesystem-sophia:8000
+      - MCP_FS_ARTEMIS_URL=http://mcp-filesystem-artemis:8000
+      - MCP_GIT_URL=http://mcp-git:8000
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    depends_on:
+      - redis
+      - mcp-memory
+      - mcp-filesystem-sophia
+      - mcp-filesystem-artemis
+      - mcp-git
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - multi-agent-net
+
+networks:
+  multi-agent-net:
+    driver: bridge
+
+volumes:
+  redis-data:
+  weaviate-data:

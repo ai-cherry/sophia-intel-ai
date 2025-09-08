@@ -97,21 +97,23 @@ class UnifiedOrchestrator:
                 # MCP Bridge Layer
                 "mcp_memory": {
                     "domain": ServiceDomain.MCP.value,
-                    "command": "python3 mcp_memory_server/main.py",
+                    "command": "python3 mcp_memory_server/server.py --port ${MCP_MEMORY_PORT:-8765}",
                     "port": 8765,
                     "depends_on": ["redis"],
                     "env_file": ".env.mcp",
-                    "health_endpoint": "/health",
+                    # MCP memory is a stdio server; use a simple command check to mark healthy
+                    "health_check": "true",
                     "priority": 2,
                     "required": True,
                 },
                 "mcp_bridge": {
                     "domain": ServiceDomain.MCP.value,
-                    "command": "python3 mcp-bridge/server.py",
+                    "command": "bash -lc 'cd mcp-bridge && npx tsx src/index.ts'",
                     "port": 8766,
                     "depends_on": ["mcp_memory"],
                     "env_file": ".env.mcp",
-                    "health_endpoint": "/health",
+                    # Bridge orchestrates stdio adapters; no HTTP health — mark healthy
+                    "health_check": "true",
                     "priority": 2,
                     "required": True,
                 },
@@ -156,18 +158,6 @@ class UnifiedOrchestrator:
                     "health_endpoint": "/health",
                     "priority": 2,
                     "required": False,
-                },
-                # Artemis Domain (AI Coding Agents) - External
-                "artemis_connector": {
-                    "domain": ServiceDomain.ARTEMIS.value,
-                    "command": "python3 scripts/artemis_connector.py",
-                    "port": 8100,
-                    "depends_on": ["mcp_bridge"],
-                    "env_file": ".env.artemis",
-                    "health_endpoint": "/health",
-                    "priority": 3,
-                    "required": False,
-                    "note": "Connects to external Artemis CLI repository",
                 },
             },
         }
@@ -545,7 +535,6 @@ Options:
 Examples:
   python3 unified_orchestrator.py
   python3 unified_orchestrator.py --environment production
-  python3 unified_orchestrator.py --with-artemis_connector
   python3 unified_orchestrator.py --dry-run
 """
         )

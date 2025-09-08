@@ -9,19 +9,8 @@ export default function CallsPage() {
   const [error, setError] = useState<string>("");
 
   useEffect(() => {
-    fetchJSON<any>("/health/integrations")
-      .then((d) => {
-        const integrations = d.integrations || d;
-        const ok = integrations?.gong?.status === "healthy" || integrations?.gong?.status === "configured" || integrations?.gong?.ok;
-        setCalls(
-          ok
-            ? [
-                { id: "gong-demo-1", title: "QBR with ACME", when: new Date().toLocaleString(), risk: "MEDIUM", rep: "Taylor" },
-                { id: "gong-demo-2", title: "Demo with Globex", when: new Date().toLocaleString(), risk: "LOW", rep: "Jordan" },
-              ]
-            : []
-        );
-      })
+    fetchJSON<any>("/api/integrations/gong/calls")
+      .then((d) => setCalls(d.items || []))
       .catch((e) => setError(e.message));
   }, []);
 
@@ -49,4 +38,3 @@ export default function CallsPage() {
     </div>
   );
 }
-

@@ -18,6 +18,7 @@ from app.api.memory.memory_endpoints import router as memory_router
 from app.api.orchestration_router import router as orchestration_router
 from app.api.routers.teams import router as teams_router
 from app.api.routers.voice import router as voice_router
+from app.api.routers.sophia_integrations import router as sophia_integrations_router
 from app.api.unified_gateway import router as unified_gateway_router
 from app.api.routers.health_integrations import router as health_integrations_router
 from app.core.config import settings
@@ -98,6 +99,7 @@ def create_production_app() -> FastAPI:
     # Include routers with proper prefixes
     app.include_router(health_router, prefix="/health", tags=["health"])
     app.include_router(health_integrations_router, tags=["health"])
+    app.include_router(sophia_integrations_router, tags=["integrations"])
     app.include_router(
         orchestration_router, prefix="/api/orchestration", tags=["orchestration"]
     )

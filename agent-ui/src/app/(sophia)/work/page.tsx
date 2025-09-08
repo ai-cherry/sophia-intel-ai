@@ -9,17 +9,11 @@ export default function WorkPage() {
   const [error, setError] = useState<string>("");
 
   useEffect(() => {
-    // Placeholder: call health endpoint to detect availability
-    fetchJSON<any>("/health/integrations")
-      .then((d) => {
-        const integrations = d.integrations || d;
-        const asana = integrations?.asana?.status || (integrations?.asana?.ok ? "configured" : "unconfigured");
-        const linear = integrations?.linear?.status || (integrations?.linear?.ok ? "configured" : "unconfigured");
-        const seed: TaskItem[] = [];
-        if (asana) seed.push({ id: "asana-demo-1", title: "Follow up enterprise onboarding", assignee: "Alex", status: "stuck", source: "asana" });
-        if (linear) seed.push({ id: "linear-demo-1", title: "Fix priority billing bug", assignee: "Jamie", status: "in_progress", source: "linear" });
-        setItems(seed);
-      })
+    Promise.all([
+      fetchJSON<any>("/api/integrations/asana/tasks").catch(() => ({ items: [] })),
+      fetchJSON<any>("/api/integrations/linear/issues").catch(() => ({ items: [] })),
+    ])
+      .then(([asana, linear]) => setItems([...(asana.items || []), ...(linear.items || [])]))
       .catch((e) => setError(e.message));
   }, []);
 
@@ -46,4 +40,3 @@ export default function WorkPage() {
     </div>
   );
 }
-

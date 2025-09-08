@@ -1,0 +1,302 @@
+# __init__.py (63 duplicates)
+agents/core/__init__.py
+app/agents/personas/__init__.py
+app/api/middleware/__init__.py
+app/artemis/factories/__init__.py
+app/core/resilience/__init__.py
+app/embeddings/__init__.py
+app/factory/__init__.py
+app/foundational_knowledge/__init__.py
+app/integrations/airtable/__init__.py
+app/integrations/communications/__init__.py
+app/knowledge/__init__.py
+app/mcp/clients/__init__.py
+app/mcp/contracts/__init__.py
+app/memory/unified/__init__.py
+app/personas/__init__.py
+app/prompts/__init__.py
+app/rag/__init__.py
+app/scaffolding/__init__.py
+app/swarms/marketing/__init__.py
+app/swarms/prospecting/__init__.py
+app/websocket/__init__.py
+artemis-v2/__init__.py
+artemis-v2/core/__init__.py
+backend/__init__.py
+backend/config/__init__.py
+backend/core/__init__.py
+backend/models/__init__.py
+backend/monitoring/__init__.py
+backend/orchestration/__init__.py
+backend/rag/__init__.py
+backend/routers/__init__.py
+backend/security/__init__.py
+backend/selfhealing/__init__.py
+backend/services/__init__.py
+backend/utils/__init__.py
+mcp_servers/artemis/__init__.py
+mcp_servers/base/__init__.py
+mcp_servers/security/__init__.py
+mcp/__init__.py
+mcp/filesystem/__init__.py
+mcp/git/__init__.py
+mcp/memory/__init__.py
+packages/sophia_core/__init__.py
+packages/sophia_core/agents/__init__.py
+packages/sophia_core/config/__init__.py
+packages/sophia_core/memory/__init__.py
+packages/sophia_core/models/__init__.py
+packages/sophia_core/obs/__init__.py
+packages/sophia_core/swarms/__init__.py
+packages/sophia_core/tools/__init__.py
+packages/sophia_core/utils/__init__.py
+services/__init__.py
+services/common/__init__.py
+services/orchestrator/__init__.py
+services/performance-kit/__init__.py
+services/search-quality/__init__.py
+sophia_core/__init__.py
+sophia-v2/__init__.py
+sophia-v2/core/__init__.py
+tests/__init__.py
+tests/generators/__init__.py
+webui/__init__.py
+webui/backend/__init__.py
+
+# agent_factory.py (5 duplicates)
+app/artemis/agent_factory.py
+app/artemis/factories/agent_factory.py
+app/factory/agent_factory.py
+app/sophia/agent_factory.py
+app/swarms/artemis/agent_factory.py
+
+# agents.py (4 duplicates)
+app/swarms/coding/agents.py
+app/swarms/marketing/agents.py
+app/swarms/sales_intelligence/agents.py
+artemis/cli/agents.py
+
+# airtable_sync.py (2 duplicates)
+app/foundational_knowledge/airtable_sync.py
+app/sync/airtable_sync.py
+
+# artemis_unified.py (2 duplicates)
+app/orchestrators/artemis_unified.py
+archive/backups/backup_hybrid_20250905/artemis_unified.py
+
+# auth.py (2 duplicates)
+app/api/auth.py
+app/api/middleware/auth.py
+
+# base_factory.py (2 duplicates)
+app/artemis/factories/base_factory.py
+app/core/base_factory.py
+
+# base.py (7 duplicates)
+app/plugins/base.py
+app/swarms/patterns/base.py
+packages/sophia_core/agents/base.py
+packages/sophia_core/memory/base.py
+packages/sophia_core/models/base.py
+packages/sophia_core/swarms/base.py
+packages/sophia_core/tools/base.py
+
+# brain_training.py (2 duplicates)
+app/api/routers/brain_training.py
+app/swarms/knowledge/brain_training.py
+
+# circuit_breaker.py (3 duplicates)
+app/core/circuit_breaker.py
+app/core/resilience/circuit_breaker.py
+backend/services/circuit_breaker.py
+
+# client.py (2 duplicates)
+app/mcp/client.py
+mcp_memory_server/client.py
+
+# config.py (3 duplicates)
+app/core/config.py
+app/memory/config.py
+sophia_core/config.py
+
+# contracts.py (2 duplicates)
+app/api/contracts.py
+app/swarms/contracts.py
+
+# dashboard.py (3 duplicates)
+app/swarms/sales_intelligence/dashboard.py
+dashboard.py
+docker-manager/dashboard.py
+
+# elite_portkey_config.py (2 duplicates)
+app/elite_portkey_config.py
+archive/backups/backup_configs_20250908/portkey_configs/elite_portkey_config.py
+
+# esc_config.py (2 duplicates)
+app/core/esc_config.py
+infrastructure/pulumi/production/esc_config.py
+
+# exceptions.py (2 duplicates)
+app/core/exceptions.py
+packages/sophia_core/exceptions.py
+
+# health_check.py (2 duplicates)
+health_check.py
+scripts/monitoring/health_check.py
+
+# health.py (2 duplicates)
+app/api/health.py
+app/api/routes/health.py
+
+# incremental_indexer.py (2 duplicates)
+app/indexing/incremental_indexer.py
+app/memory/incremental_indexer.py
+
+# load-test.py (2 duplicates)
+infrastructure/alertmanager/tests/load-test.py
+infrastructure/keda/tests/load-test.py
+
+# logging_config.py (2 duplicates)
+app/core/logging_config.py
+mcp_servers/base/logging_config.py
+
+# logging.py (2 duplicates)
+backend/core/logging.py
+packages/sophia_core/obs/logging.py
+
+# main.py (12 duplicates)
+app/main.py
+backend/main.py
+indexer/main.py
+infrastructure/lambda_labs/main.py
+infrastructure/pulumi/main.py
+services/chat-service/main.py
+services/enhanced-search/main.py
+services/neural-engine/main.py
+services/neural-gateway/main.py
+services/orchestrator/main.py
+services/search-quality/main.py
+webui/backend/main.py
+
+# manager.py (2 duplicates)
+app/foundational_knowledge/manager.py
+config/manager.py
+
+# mcp_orchestrator.py (2 duplicates)
+app/mcp/mcp_orchestrator.py
+app/scaffolding/mcp_orchestrator.py
+
+# memory_integration.py (2 duplicates)
+app/swarms/memory_integration.py
+app/swarms/patterns/memory_integration.py
+
+# metrics.py (2 duplicates)
+app/observability/metrics.py
+packages/sophia_core/obs/metrics.py
+
+# models.py (10 duplicates)
+app/factory/models.py
+app/foundational_knowledge/models.py
+app/integrations/airtable/models.py
+app/integrations/communications/models.py
+app/knowledge/models.py
+app/swarms/coding/models.py
+app/swarms/marketing/models.py
+app/swarms/prospecting/models.py
+mcp_memory/models.py
+pay_ready_implementation/models.py
+
+# performance_optimizer.py (2 duplicates)
+agents/performance_optimizer.py
+app/swarms/performance_optimizer.py
+
+# persona_manager.py (2 duplicates)
+app/personas/persona_manager.py
+app/scaffolding/persona_manager.py
+
+# portkey_config.py (2 duplicates)
+app/core/portkey_config.py
+archive/backups/backup_configs_20250908/portkey_configs/portkey_config.py
+
+# portkey_loadbalance_config.py (2 duplicates)
+app/api/portkey_loadbalance_config.py
+archive/backups/backup_configs_20250908/portkey_configs/portkey_loadbalance_config.py
+
+# portkey_unified_factory.py (2 duplicates)
+app/artemis/portkey_unified_factory.py
+app/sophia/portkey_unified_factory.py
+
+# prompt_library.py (2 duplicates)
+app/api/routes/prompt_library.py
+app/prompts/prompt_library.py
+
+# reliable_provider.py (2 duplicates)
+app/core/simple/reliable_provider.py
+archive/backups/backup_hybrid_20250905/reliable_provider.py
+
+# resource_manager.py (2 duplicates)
+app/core/resource_manager.py
+app/orchestrators/resource_manager.py
+
+# response_models.py (2 duplicates)
+app/llm/response_models.py
+services/common/response_models.py
+
+# schemas.py (2 duplicates)
+app/integrations/gong_pipeline/schemas.py
+app/models/schemas.py
+
+# secrets_manager.py (2 duplicates)
+app/core/secrets_manager.py
+infrastructure/pulumi/esc/secrets_manager.py
+
+# server.py (8 duplicates)
+mcp_memory_server/server.py
+mcp_memory/server.py
+mcp_servers/business_intelligence/server.py
+mcp_servers/grok/server.py
+mcp_servers/mem0_server/server.py
+mcp/filesystem/server.py
+mcp/git/server.py
+mcp/memory/server.py
+
+# sophia_artemis_bridge.py (2 duplicates)
+app/bridges/sophia_artemis_bridge.py
+app/coordination/sophia_artemis_bridge.py
+
+# sophia_unified.py (2 duplicates)
+app/orchestrators/sophia_unified.py
+archive/backups/backup_hybrid_20250905/sophia_unified.py
+
+# storage_adapter.py (2 duplicates)
+app/knowledge/storage_adapter.py
+app/orchestrators/memory/storage_adapter.py
+
+# swarm_templates.py (2 duplicates)
+app/api/routes/swarm_templates.py
+app/swarms/templates/swarm_templates.py
+
+# test_environment.py (2 duplicates)
+scripts/testing/test_environment.py
+test_environment.py
+
+# test_infrastructure.py (2 duplicates)
+tests/test_infrastructure.py
+tests/unit/test_infrastructure.py
+
+# unified_ai_agents.py (2 duplicates)
+scripts/agents/unified_ai_agents.py
+scripts/unified_ai_agents.py
+
+# unified_factory.py (2 duplicates)
+app/artemis/unified_factory.py
+app/sophia/unified_factory.py
+
+# unified_memory.py (2 duplicates)
+app/core/unified_memory.py
+app/memory/unified_memory.py
+
+# update_models.py (2 duplicates)
+scripts/update_models.py
+update_models.py
+

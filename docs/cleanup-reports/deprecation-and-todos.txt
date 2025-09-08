@@ -1,0 +1,65 @@
+# Files containing deprecation/todo markers
+
+agent-ui/src/components/playground/ChatArea/Messages/Multimedia/Audios/Audios.tsx:55:      // TODO :: find a better way to handle the key
+agent-ui/src/components/README_DASHBOARDS.md:19:### ⚠️ DEPRECATED: SuperOrchestratorDashboard.tsx
+agent-ui/src/components/README_DASHBOARDS.md:23:- **Status**: DEPRECATED - Keep for reference only
+app/research/web_research_team.py:429:        # TODO: Add Tavily, Exa, Brave providers
+app/documentation/living_docs.py:83:    DEPRECATED = "deprecated"  # No longer relevant
+app/core/secure_websocket_factory.py:306:        # TODO: Implement actual alerting (Slack, email, webhook, etc.)
+app/core/model_approval_dashboard.py:221:                notes="DEPRECATED - Use Claude Opus 4.1 instead",
+app/core/model_approval_dashboard.py:228:                notes="DEPRECATED - Use Grok-4 series instead",
+app/memory/bus.py:6:- backend/services/memory_service.py (DEPRECATED)
+app/memory/bus.py:7:- backend/services/intelligent_cache.py (DEPRECATED)
+app/scaffolding/ai_hints.py:117:                re.compile(r"#\s*(TODO|FIXME|HACK|XXX|NOTE):", re.IGNORECASE),
+app/scaffolding/ai_hints.py:118:                "Unresolved TODO/FIXME comments indicate pending work",
+app/scaffolding/ai_hints.py:402:                f"Resolve {count} TODO/FIXME comment(s)",
+app/scaffolding/ai_hints.py:403:                "Review and address all TODO/FIXME comments by implementing the required functionality or removing obsolete comments",
+app/scaffolding/meta_tagging.py:792:        if "TODO" in content or "FIXME" in content:
+app/scaffolding/meta_tagging.py:793:            tag.optimization_opportunities.append("Contains TODO/FIXME comments")
+app/artemis/artemis_semantic_orchestrator.py:840:    # TODO: Implement based on requirements
+app/personas/prompt_templates.py:41:    DEPRECATED = "deprecated"
+app/prompts/prompt_library.py:37:    DEPRECATED = "deprecated"
+app/swarms/coding/team.py:192:# DEPRECATED: Legacy functions for backward compatibility
+app/swarms/coding/team.py:199:    DEPRECATED: Use make_coding_swarm() instead.
+app/sync/sync_scheduler.py:322:        # TODO: Implement conflict resolution strategies
+app/sync/sync_scheduler.py:340:        # TODO: Send alert to administrators
+artemis-v2/core/debugger.py:560:        # Check for TODO comments
+artemis-v2/core/debugger.py:562:            if "TODO" in line or "FIXME" in line:
+artemis-v2/core/debugger.py:569:                        description="TODO/FIXME comment found",
+artemis-v2/core/debugger.py:570:                        suggested_fix="Address the TODO item",
+artemis-v2/core/test_framework.py:285:    {chr(10).join(f'    {param} = None  # TODO: Set test value' for param in func['params'])}
+artemis-v2/core/test_framework.py:291:    assert result is not None  # TODO: Add specific assertions
+artemis-v2/core/test_framework.py:339:            {chr(10).join(f'        const {param} = undefined; // TODO: Set test value' for param in func['params'])}
+artemis-v2/core/test_framework.py:377:            want: nil, // TODO: Set expected value
+artemis-v2/core/test_framework.py:399:# TODO: Implement integration test scenarios
+artemis-v2/core/test_framework.py:412:        // TODO: Implement E2E test scenario
+artemis-v2/core/test_framework.py:427:    # TODO: Call function to test
+artemis-v2/core/test_framework.py:438:# TODO: Implement security test scenarios
+artemis-v2/core/code_generator.py:271:        return f"# Generated {language} code\n# TODO: Implement LLM integration"
+artemis-v2/core/code_generator.py:355:            if "# TODO" in code:
+artemis-v2/core/code_generator.py:356:                suggestions.append("Address TODO comments")
+backend/services/estuary_flow_pipelines.py:31:    DEPRECATED = "deprecated"
+docs/ARCHITECTURE.md:328:3. **Technical Debt**: 95 TODO/FIXME items across 49 files
+docs/CAPABILITY_GRAPH.md:552:- Technical debt reduction (95 TODO items)
+infrastructure/pulumi/esc/secrets_manager.py:34:    DEPRECATED = "deprecated"
+infrastructure/pulumi/esc/secrets_manager.py:335:                    metadata.status = SecretStatus.DEPRECATED
+schemas/weaviate/code_file.json:142:      "additions": ["TODO", "FIXME", "NOTE"]
+scripts/artemis_code_modifier_swarm.py:131:                        f"{old_line}  # TODO: Replace with aiofiles for async operation"
+scripts/doc_manager.py:31:    DEPRECATED = "deprecated"
+scripts/doc_manager.py:221:            status = DocStatus.DEPRECATED
+scripts/testing/test_llama_maverick.py:83:   - Find TODO/FIXME comments
+scripts/testing/test_gemini_direct.py:72:   - Find TODO/FIXME comments
+scripts/testing/test_gemini_and_gpt.py:84:   - Find TODO/FIXME comments
+scripts/testing/test_meta_tagging.py:70:            # TODO: Add input validation
+scripts/testing/test_meta_tagging.py:101:            # TODO: Implement rollback logic
+scripts/testing/test_meta_tagging.py:129:        # FIXME: This is inefficient - should use concurrent processing
+scripts/testing/test_meta_tagging.py:163:    password: str  # TODO: This should be hashed
+scripts/testing/test_meta_tagging.py:187:        # TODO: Add rate limiting
+scripts/testing/test_meta_tagging.py:188:        # TODO: Add request validation
+scripts/testing/test_meta_tagging.py:222:    # FIXME: Secret key should come from environment
+scripts/testing/test_meta_tagging.py:326:        TODO: Make the sensitive fields configurable
+scripts/artemis_4_scout_comparison.py:108:   - Find TODO/FIXME comments
+scripts/dev/demo_file.py:29:# TODO: Add more functions as requested by agent swarms
+sophia-v2/core/project_manager.py:28:    TODO = "todo"
+sophia-v2/core/project_manager.py:237:            status=TaskStatus.TODO,
+sophia-v2/core/project_manager.py:536:                if status == TaskStatus.TODO:

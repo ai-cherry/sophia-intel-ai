@@ -1,0 +1,3 @@
+# One-time or entrypoint-like scripts (heuristic)
+
+tests/artemis/test_data/scout_test_scenarios.py

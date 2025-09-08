@@ -1,0 +1,20 @@
+name: Weekly Repository Health
+
+on:
+  schedule:
+    - cron: '0 9 * * 1'  # Monday 09:00 UTC
+  workflow_dispatch:
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fragmentation Score
+        run: |
+          bash scripts/fragmentation_score.sh || true
+      - name: Env + Docs Guards (non-blocking report)
+        run: |
+          bash scripts/check_env_variants.sh || true
+          bash scripts/check_root_docs.sh || true
+          bash scripts/check_artemis_paths.sh || true

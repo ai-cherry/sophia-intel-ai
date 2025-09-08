@@ -1,0 +1,6 @@
+# Critical files requiring review
+.env.template @ai-cherry/platform-team
+docker-compose*.yml @ai-cherry/platform-team
+.github/workflows/* @ai-cherry/platform-team
+mcp_servers/* @ai-cherry/platform-team
+.ai/MASTER_RULES.yaml @ai-cherry/ai-team

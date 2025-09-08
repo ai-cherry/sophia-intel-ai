@@ -216,8 +216,7 @@ class TestConcurrentOperations:
                 await asyncio.sleep(0.1)  # Hold connection briefly
                 await connection_manager.release_connection(conn)
                 return True
-            except:
-                return False
+            except Exception:return False
 
         # Mock the pool's acquire method to simulate contention
         call_count = 0
@@ -398,8 +397,7 @@ class TestConcurrentOperations:
                 connection_counts[server_name] += 1
                 await connection_manager.release_connection(conn)
                 return True
-            except:
-                return False
+            except Exception:return False
 
         # Create varied load pattern
         tasks = []

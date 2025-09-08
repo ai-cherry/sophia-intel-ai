@@ -25,8 +25,7 @@ class RealIssueIdentifier:
         try:
             with open(f"{self.repo_path}/BRUTAL_AUDIT_REPORT.json") as f:
                 audit_data = json.load(f)
-        except:
-            print("❌ Cannot load audit report")
+        except Exception:print("❌ Cannot load audit report")
             return
 
         # Count secret exposures by file type
@@ -282,8 +281,7 @@ class RealIssueIdentifier:
             with open(f"{self.repo_path}/WHAT_WORKS_REPORT.json") as f:
                 test_data = json.load(f)
             working_percentage = test_data["working_percentage"]
-        except:
-            working_percentage = 50  # Default if can't load
+        except Exception:working_percentage = 50  # Default if can't load
 
         # Deduct points for major issues
         health_score = working_percentage

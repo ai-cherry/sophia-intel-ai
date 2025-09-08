@@ -190,9 +190,7 @@ class MCPServerValidator:
                             results['port'] = conn.laddr.port
                             print(f"    Listening on port: {conn.laddr.port}")
                             break
-                except:
-
-            else:
+                except Exception:else:
                 # Process died, get error output
                 stdout, stderr = await process.communicate()
                 results['error'] = stderr.decode() if stderr else "Process exited"
@@ -255,9 +253,7 @@ class MCPServerValidator:
                                     if 'jsonrpc' in str(data) or 'method' in str(data):
                                         results['mcp_protocol'] = True
                                         print(f"    🔗 MCP protocol detected")
-                                except:
-
-                            elif response.status == 404:
+                                except Exception:elif response.status == 404:
                                 pass  # Expected for non-existent endpoints
                             else:
                                 print(f"  ⚠️ {endpoint}: HTTP {response.status}")
@@ -296,9 +292,7 @@ class MCPServerValidator:
                 if process.returncode is None:
                     process.terminate()
                     print(f"  ✅ Terminated process {process.pid}")
-            except:
-
-        self.running_processes.clear()
+            except Exception:self.running_processes.clear()
 
     def validate_mcp_hub_config(self) -> Dict:
         """Validate MCP hub configuration"""

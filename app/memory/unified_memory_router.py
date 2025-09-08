@@ -282,8 +282,7 @@ class UnifiedMemoryRouter:
                 )
                 self.metrics.record_read("L1", cache_hit=True)
                 return deserialized
-            except:
-                self.metrics.record_read("L1", cache_hit=True)
+            except Exception:self.metrics.record_read("L1", cache_hit=True)
                 return value
 
         self.metrics.record_read("L1", cache_hit=False)

@@ -261,8 +261,7 @@ class EnvironmentGuardAgent(BaseAgent):
                 async with aiohttp.ClientSession() as session:
                     async with session.get(f"{qdrant_url}/health", timeout=5) as response:
                         connectivity_results["qdrant"] = response.status == 200
-            except:
-                connectivity_results["qdrant"] = False
+            except Exception:connectivity_results["qdrant"] = False
 
         # Check Redis
         redis_url = os.getenv("REDIS_URL")
@@ -270,8 +269,7 @@ class EnvironmentGuardAgent(BaseAgent):
             try:
                 await asyncio.to_thread(self.redis_client.ping)
                 connectivity_results["redis"] = True
-            except:
-                connectivity_results["redis"] = False
+            except Exception:connectivity_results["redis"] = False
 
         # Check GitHub
         try:
@@ -280,8 +278,7 @@ class EnvironmentGuardAgent(BaseAgent):
             async with aiohttp.ClientSession() as session:
                 async with session.get("https://api.github.com", timeout=5) as response:
                     connectivity_results["github"] = response.status == 200
-        except:
-            connectivity_results["github"] = False
+        except Exception:connectivity_results["github"] = False
 
         connected_services = sum(connectivity_results.values())
         total_services = len(connectivity_results)

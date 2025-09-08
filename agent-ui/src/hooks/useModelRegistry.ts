@@ -134,7 +134,6 @@ export const useModelRegistry = (): UseModelRegistryReturn => {
       wsRef.current = new WebSocket(wsUrl);
 
       wsRef.current.onopen = () => {
-        console.log('Model Registry WebSocket connected');
         setIsConnected(true);
         setError(null);
 
@@ -158,7 +157,6 @@ export const useModelRegistry = (): UseModelRegistryReturn => {
               setCostAnalytics(message.data);
               break;
             default:
-              console.log('Unknown WebSocket message type:', message.type);
           }
         } catch (err) {
           console.error('Error parsing WebSocket message:', err);
@@ -166,12 +164,10 @@ export const useModelRegistry = (): UseModelRegistryReturn => {
       };
 
       wsRef.current.onclose = () => {
-        console.log('Model Registry WebSocket disconnected');
         setIsConnected(false);
 
         // Schedule reconnection
         reconnectTimeoutRef.current = setTimeout(() => {
-          console.log('Attempting to reconnect WebSocket...');
           connectWebSocket();
         }, 5000);
       };

@@ -365,7 +365,7 @@ const OrchestratorCoordinationView: React.FC = () => {
       )}
 
       {/* Navigation Tabs */}
-      <Tabs value={selectedView} onValueChange={(value: any) => setSelectedView(value)}>
+      <Tabs value={selectedView} onValueChange={(value: unknown) => setSelectedView(value)}>
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="flow">Task Flow</TabsTrigger>

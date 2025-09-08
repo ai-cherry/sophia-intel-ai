@@ -70,8 +70,7 @@ class TechStackAnalyzer:
                             break
                 else:
                     installed[pkg] = {"current": None, "latest": latest, "status": "❌"}
-            except:
-                installed[pkg] = {"current": None, "latest": latest, "status": "❌"}
+            except Exception:installed[pkg] = {"current": None, "latest": latest, "status": "❌"}
 
         self.results["versions"]["python_packages"] = installed
 
@@ -117,8 +116,7 @@ class TechStackAnalyzer:
                 else:
                     installed[tool] = {"current": None, "latest": info["latest"], "status": "❌"}
                     logger.info(f"  ❌ {tool}: Not installed")
-            except:
-                installed[tool] = {"current": None, "latest": info["latest"], "status": "❌"}
+            except Exception:installed[tool] = {"current": None, "latest": info["latest"], "status": "❌"}
                 logger.info(f"  ❌ {tool}: Not found")
 
         self.results["versions"]["system_tools"] = installed

@@ -433,8 +433,7 @@ REDIS_URL=redis://localhost:6379
                         )
                         if response.status_code == 200:
                             return True
-                except:
-                    pass
+                except Exception:pass
 
             await asyncio.sleep(2)
 
@@ -465,8 +464,7 @@ REDIS_URL=redis://localhost:6379
             try:
                 process.terminate()
                 logger.info(f"  ⏹️  Stopped {name}")
-            except:
-                pass
+            except Exception:pass
 
         # Give processes time to cleanup
         await asyncio.sleep(2)

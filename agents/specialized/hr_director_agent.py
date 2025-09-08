@@ -454,8 +454,7 @@ class HRDirectorAgent(BaseAgent):
 
         try:
             return json.loads(response)
-        except:
-            return {"insights": response}
+        except Exception:return {"insights": response}
 
     async def _assess_performance_impact(
         self, result: dict[str, Any]

@@ -376,8 +376,7 @@ Always include:
                 line = [l for l in content.split("\n") if "CONFIDENCE:" in l][0]
                 score_str = line.split("CONFIDENCE:")[1].strip().split()[0]
                 return float(score_str)
-        except:
-            pass
+        except Exception:pass
         return 0.75  # Default confidence - improved based on empirical data
 
     def _extract_reasoning(self, content: str) -> str:
@@ -406,8 +405,7 @@ Always include:
                     .replace("REASONING:", "")
                     .strip()
                 )
-        except:
-            pass
+        except Exception:pass
         return ""
 
 
@@ -811,8 +809,7 @@ class MicroSwarmCoordinator:
                 if task.done():
                     try:
                         responses.append(task.result())
-                    except:
-                        responses.append(None)
+                    except Exception:responses.append(None)
                 else:
                     task.cancel()
                     timed_out_agents.append(list(self.agents.keys())[i].value)

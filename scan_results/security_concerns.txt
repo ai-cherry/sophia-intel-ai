@@ -1,0 +1,200 @@
+agent-ui/src/hooks/useServiceConfig.ts:69:    max_tokens_per_request: number;
+agent-ui/src/hooks/useServiceConfig.ts:216:            max_tokens_per_request: 4096,
+agent-ui/src/hooks/useModelRegistry.ts:18:  cost_per_1k_tokens: number;
+agent-ui/src/hooks/useModelRegistry.ts:26:  max_tokens: number;
+agent-ui/src/hooks/useModelRegistry.ts:36:  token_usage: Record<string, number>;
+agent-ui/src/hooks/useOrchestratorCoordination.ts:156:    const token = localStorage.getItem('auth_token');
+agent-ui/src/hooks/useOrchestratorCoordination.ts:161:        'Authorization': token ? `Bearer ${token}` : '',
+agent-ui/src/hooks/useOrchestratorCoordination.ts:335:    const token = localStorage.getItem('auth_token');
+agent-ui/src/hooks/useOrchestratorCoordination.ts:336:    const wsUrl = `${WS_BASE}/orchestrator-coordination/ws${token ? `?token=${token}` : ''}`;
+agent-ui/src/hooks/usePromptLibrary.ts:153:  // Add auth token if available
+agent-ui/src/hooks/usePromptLibrary.ts:154:  const token = localStorage.getItem('auth_token');
+agent-ui/src/hooks/usePromptLibrary.ts:155:  if (token) {
+agent-ui/src/hooks/usePromptLibrary.ts:156:    config.headers.Authorization = `Bearer ${token}`;
+agent-ui/src/hooks/usePromptLibrary.ts:169:      localStorage.removeItem('auth_token');
+agent-ui/src/hooks/useAGUIEvents.ts:27:  tokens_processed: number;
+agent-ui/src/hooks/useAGUIEvents.ts:28:  tokens_remaining?: number;
+agent-ui/src/hooks/useAGUIEvents.ts:129:  authToken?: string;
+agent-ui/src/hooks/useAGUIEvents.ts:212:    authToken,
+agent-ui/src/hooks/useAGUIEvents.ts:371:    if (authToken) params.append('token', authToken);
+agent-ui/src/hooks/useAGUIEvents.ts:429:    enableWebSocket, websocketEndpoint, sessionId, authToken, eventTypes, domains,
+agent-ui/src/components/analytics/CostDashboard.tsx:17:  total_tokens: number
+agent-ui/src/components/analytics/CostDashboard.tsx:24:  model_tokens: Record<string, number>
+agent-ui/src/components/analytics/CostDashboard.tsx:31:  total_tokens: number
+agent-ui/src/components/analytics/CostDashboard.tsx:41:  total_tokens: number
+agent-ui/src/components/analytics/CostDashboard.tsx:171:            Track LLM costs and token usage across your AI operations
+agent-ui/src/components/analytics/CostDashboard.tsx:219:              Total Tokens
+agent-ui/src/components/analytics/CostDashboard.tsx:224:              {formatNumber(summary?.total_tokens || 0)}
+agent-ui/src/components/analytics/CostDashboard.tsx:286:                      {day.requests} requests • {formatNumber(day.total_tokens)} tokens
+agent-ui/src/components/analytics/CostDashboard.tsx:361:                  <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">Tokens</th>
+agent-ui/src/components/analytics/CostDashboard.tsx:385:                        {formatNumber(model.total_tokens)}
+security_check.py:118:        "API_KEY",
+security_check.py:119:        "SECRET_KEY",
+security_check.py:120:        "PASSWORD",
+security_check.py:121:        "TOKEN",
+security_check.py:122:        "OPENAI_API_KEY",
+security_check.py:123:        "OPENROUTER_API_KEY",
+identify_real_issues.py:20:    def analyze_secret_exposure_root_cause(self):
+identify_real_issues.py:21:        """Find WHY secrets are exposed everywhere"""
+identify_real_issues.py:22:        print("🔍 ANALYZING SECRET EXPOSURE ROOT CAUSE...")
+identify_real_issues.py:32:        # Count secret exposures by file type
+identify_real_issues.py:33:        secret_issues = [
+identify_real_issues.py:36:            if issue["category"] == "EXPOSED_SECRETS"
+identify_real_issues.py:40:        for issue in secret_issues:
+identify_real_issues.py:45:        print(f"Secret exposures by file type: {dict(file_types)}")
+identify_real_issues.py:48:        if len(secret_issues) > 20:
+identify_real_issues.py:51:                    "issue": "MASSIVE SECRET EXPOSURE",
+identify_real_issues.py:52:                    "root_cause": "No centralized secret management - secrets hardcoded everywhere",
+identify_real_issues.py:53:                    "evidence": f"{len(secret_issues)} files with exposed secrets",
+identify_real_issues.py:55:                    "fix_description": "Implement proper Pulumi ESC integration and remove all hardcoded secrets",
+identify_real_issues.py:60:        md_files_with_secrets = [
+identify_real_issues.py:62:            for issue in secret_issues
+identify_real_issues.py:66:        if len(md_files_with_secrets) > 5:
+identify_real_issues.py:69:                    "issue": "DOCUMENTATION WITH SECRETS",
+identify_real_issues.py:71:                    "evidence": f"{len(md_files_with_secrets)} markdown files with secrets",
+identify_real_issues.py:73:                    "fix_description": "Replace all real secrets in docs with placeholders",
+identify_real_issues.py:81:        # Find all secret management files
+identify_real_issues.py:82:        secret_files = []
+identify_real_issues.py:87:                    for keyword in ["secret", "env", "auth", "key"]
+identify_real_issues.py:90:                        secret_files.append(os.path.join(root, file))
+identify_real_issues.py:92:        print(f"Found {len(secret_files)} secret-related files")
+identify_real_issues.py:94:        if len(secret_files) > 5:
+identify_real_issues.py:97:                    "issue": "MULTIPLE SECRET MANAGEMENT SYSTEMS",
+identify_real_issues.py:99:                    "evidence": f"{len(secret_files)} different secret management files",
+identify_real_issues.py:205:            if "*secrets*" not in gitignore_content:
+identify_real_issues.py:208:                        "issue": ".gitignore missing secret file patterns",
+identify_real_issues.py:211:                        "impact": "CRITICAL - prevents secret exposure",
+identify_real_issues.py:219:        # The biggest issue: No single source of truth for secrets
+identify_real_issues.py:222:                "issue": "NO CENTRALIZED SECRET MANAGEMENT",
+identify_real_issues.py:223:                "description": "Secrets are scattered across multiple files and systems",
+identify_real_issues.py:229:                    "1. Set up Pulumi ESC properly with GitHub org secrets",
+identify_real_issues.py:230:                    "2. Create single secret loading script",
+identify_real_issues.py:231:                    "3. Remove all hardcoded secrets from all files",
+identify_real_issues.py:375:        self.analyze_secret_exposure_root_cause()
+agent-ui/src/components/infrastructure/InfraDashboard.tsx:31:interface SecretRotation {
+agent-ui/src/components/infrastructure/InfraDashboard.tsx:59:  secret_rotations: SecretRotation[];
+agent-ui/src/components/infrastructure/InfraDashboard.tsx:122:  // Emergency secret rotation mutation
+agent-ui/src/components/infrastructure/InfraDashboard.tsx:283:      {/* Secret Rotation Status */}
+agent-ui/src/components/infrastructure/InfraDashboard.tsx:287:          <h2 className="text-xl font-semibold">Secret Rotation Schedule</h2>
+agent-ui/src/components/infrastructure/InfraDashboard.tsx:291:          {metrics?.secret_rotations.map((rotation) => (
+agent-ui/src/components/model-registry/ModelRegistryDashboard.tsx:363:                        const tokens = costAnalytics.token_usage[provider] || 0;
+agent-ui/src/components/model-registry/ModelRegistryDashboard.tsx:372:                                  {tokens.toLocaleString()} tokens
+swarms/estuary_swarm_fusion.py:36:                "max_tokens": 500,
+swarms/estuary_swarm_fusion.py:42:                "max_tokens": 300,
+swarms/estuary_swarm_fusion.py:48:                "max_tokens": 400,
+lambda_labs_ssh_setup.py:23:        self.lambda_api_key = os.getenv("LAMBDA_API_KEY")
+lambda_labs_ssh_setup.py:24:        self.pulumi_token = os.getenv("PULUMI_ACCESS_TOKEN")
+lambda_labs_ssh_setup.py:166:        if not self.lambda_api_key:
+lambda_labs_ssh_setup.py:192:            "Authorization": f"Bearer {self.lambda_api_key}",
+lambda_labs_ssh_setup.py:278:            # Connect using password authentication (if available)
+lambda_labs_ssh_setup.py:282:            # Try common default passwords or key-based auth
+lambda_labs_ssh_setup.py:284:                {"username": "ubuntu", "password": None},  # Key-based
+lambda_labs_ssh_setup.py:285:                {"username": "ubuntu", "password": "ubuntu"},  # Common default
+lambda_labs_ssh_setup.py:291:                    if auth["password"]:
+lambda_labs_ssh_setup.py:295:                            password=auth["password"],
+lambda_labs_ssh_setup.py:515:export PULUMI_ACCESS_TOKEN="{self.pulumi_token}"
+lambda_labs_ssh_setup.py:516:export LAMBDA_API_KEY="{self.lambda_api_key}"
+lambda_labs_ssh_setup.py:523:# Set Pulumi token
+lambda_labs_ssh_setup.py:524:export PULUMI_ACCESS_TOKEN="{self.pulumi_token}"
+lambda_labs_ssh_setup.py:533:export LAMBDA_API_KEY="{self.lambda_api_key}"
+sophia_error_scanner.py:43:            "hardcoded_secrets": self.scan_secrets(),
+sophia_error_scanner.py:163:        # Check for hardcoded secrets patterns
+sophia_error_scanner.py:164:        secret_patterns = [
+sophia_error_scanner.py:165:            r'password\s*=\s*["\'][^"\']+["\']',
+sophia_error_scanner.py:166:            r'api_key\s*=\s*["\'][^"\']+["\']',
+sophia_error_scanner.py:167:            r'secret\s*=\s*["\'][^"\']+["\']',
+sophia_error_scanner.py:168:            r'token\s*=\s*["\'][^"\']+["\']',
+sophia_error_scanner.py:171:            r"pul-[a-zA-Z0-9]{32,}",  # Pulumi tokens
+sophia_error_scanner.py:183:                    for pattern in secret_patterns:
+sophia_error_scanner.py:189:                                    "error": "Potential hardcoded secret detected",
+sophia_error_scanner.py:190:                                    "fix": "Move secret to environment variable",
+sophia_error_scanner.py:447:    def scan_secrets(self) -> Dict:
+sophia_error_scanner.py:448:        """Enhanced secret scanning"""
+sophia_error_scanner.py:483:        if "hardcoded secret" in error.get("error", "").lower():
+sophia_error_scanner.py:484:            return self._fix_hardcoded_secret(error)
+sophia_error_scanner.py:494:    def _fix_hardcoded_secret(self, error: Dict) -> bool:
+sophia_error_scanner.py:495:        """Fix hardcoded secrets by replacing with environment variables"""
+swarms/test_mem0_agno_self_pruning.py:172:    def mock_mem0_api_key(self):
+swarms/test_mem0_agno_self_pruning.py:174:        return "test_mem0_api_key"
+agent-ui/src/components/model-registry/ProviderCard.tsx:52:  cost_per_1k_tokens: number;
+agent-ui/src/components/model-registry/ProviderCard.tsx:60:  max_tokens: number;
+agent-ui/src/components/model-registry/ProviderCard.tsx:226:              <div className="font-medium">${provider.cost_per_1k_tokens.toFixed(4)}</div>
+agent-ui/src/components/model-registry/ProviderCard.tsx:227:              <div className="text-xs text-gray-500">Per 1K tokens</div>
+agent-ui/src/components/model-registry/ProviderCard.tsx:398:                      <label className="text-sm font-medium">Max Tokens</label>
+agent-ui/src/components/model-registry/ProviderCard.tsx:401:                        value={configForm.max_tokens}
+agent-ui/src/components/model-registry/ProviderCard.tsx:402:                        onChange={(e) => setConfigForm({ ...configForm, max_tokens: parseInt(e.target.value) })}
+test_unified_hybrid_memory.py:21:        "zep": {"url": "http://localhost:8000", "api_key": None},  # Set if required
+test_unified_hybrid_memory.py:26:            "password": "password",
+test_unified_hybrid_memory.py:29:        "qdrant": {"url": "http://localhost:6333", "api_key": None},
+test_unified_hybrid_memory.py:224:            "password": "password",
+production_launch_verifier.py:105:        required_env_vars = ["PULUMI_ACCESS_TOKEN", "LAMBDA_API_KEY", "EXA_API_KEY"]
+production_launch_verifier.py:513:admin_password = sophia123
+production_launch_verifier.py:830:                "auth_methods": ["api_key", "jwt"],
+agent-ui/src/components/model-registry/FallbackChainBuilder.tsx:53:  cost_per_1k_tokens: number;
+agent-ui/src/components/model-registry/FallbackChainBuilder.tsx:209:          weight = Math.max(10, 100 - (provider.cost_per_1k_tokens * 10000));
+agent-ui/src/components/model-registry/FallbackChainBuilder.tsx:292:      return sum + (provider ? provider.cost_per_1k_tokens * (item.weight / 100) : 0);
+agent-ui/src/components/model-registry/FallbackChainBuilder.tsx:493:                              <span>${provider.cost_per_1k_tokens.toFixed(4)}/1k tokens</span>
+agent-ui/src/components/model-registry/FallbackChainBuilder.tsx:520:                Prioritize providers with lower costs per token
+agent-ui/src/components/model-registry/FallbackChainBuilder.tsx:564:                    <div className="text-xs text-gray-500">per 1K tokens</div>
+sophia_core/orchestrator.py:15:    api_key = os.getenv("OPENROUTER_API_KEY")
+sophia_core/orchestrator.py:18:    headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+sophia_core/orchestrator.py:23:        "max_tokens": 50,
+swarms/mem0_agno_self_pruning.py:240:        api_key = os.getenv("MEM0_API_KEY")
+swarms/mem0_agno_self_pruning.py:241:        if not api_key:
+swarms/mem0_agno_self_pruning.py:242:            logger.warning("MEM0_API_KEY not found, using mock client")
+swarms/mem0_agno_self_pruning.py:244:        return MemoryClient(api_key=api_key)
+security/security_policy.py:8:import secrets
+security/security_policy.py:78:            "password_resets": {"limit": 3, "window": 3600},  # per hour
+security/security_policy.py:81:        # Password hashing context
+security/security_policy.py:91:            "api_key": re.compile(r"^[a-zA-Z0-9_-]{32,128}$"),
+security/security_policy.py:157:    def hash_password(self, password: str) -> str:
+security/security_policy.py:159:        Hash password using secure bcrypt algorithm
+security/security_policy.py:160:        Addresses weak password storage vulnerabilities
+security/security_policy.py:162:        return self.pwd_context.hash(password)
+security/security_policy.py:164:    def verify_password(self, plain_password: str, hashed_password: str) -> bool:
+security/security_policy.py:166:        Verify password against hash
+security/security_policy.py:168:        return self.pwd_context.verify(plain_password, hashed_password)
+security/security_policy.py:170:    def generate_secure_token(self, length: int = 32) -> str:
+security/security_policy.py:172:        Generate cryptographically secure random token
+security/security_policy.py:175:        return secrets.token_urlsafe(length)
+security/security_policy.py:237:    def validate_api_key(self, api_key: str) -> bool:
+security/security_policy.py:242:        if not self.validate_input(api_key, "api_key"):
+configure_gong_production_webhooks.py:16:GONG_ACCESS_KEY_SECRET = "eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjIwNTQxNTA4ODUsImFjY2Vzc0tleSI6IlRWMzNCUFo1VU40NVFLWkNaMlVDQUtSWEhRNlEzTDVOIn0.zgPvDQQIvU1kvF_9ctjcKuqC5xKhlpZo7MH5v7AYufU"
+configure_gong_production_webhooks.py:34:        auth_string = f"{GONG_ACCESS_KEY}:{GONG_ACCESS_KEY_SECRET}"
+configure_gong_production_webhooks.py:111:2. Copy the provided webhook secret
+configure_gong_production_webhooks.py:112:3. Store the secret securely for signature validation
+configure_gong_production_webhooks.py:114:#### Save Webhook Secret
+configure_gong_production_webhooks.py:117:export GONG_WEBHOOK_SECRET="<webhook_secret_from_gong>"
+configure_gong_production_webhooks.py:130:curl -H "X-N8N-API-KEY: YOUR_API_KEY" \\
+configure_gong_production_webhooks.py:161:def validate_gong_signature(payload, signature, secret):
+configure_gong_production_webhooks.py:163:        secret.encode(),
+configure_gong_production_webhooks.py:180:- [ ] Webhook secret stored securely
+configure_gong_production_webhooks.py:188:1. **Webhook Secret Management**
+configure_gong_production_webhooks.py:189:   - Store webhook secrets securely
+configure_gong_production_webhooks.py:190:   - Rotate secrets periodically
+configure_gong_production_webhooks.py:191:   - Never commit secrets to version control
+configure_gong_production_webhooks.py:218:- Ensure webhook secret is correct
+configure_gong_production_webhooks.py:274:                    print("   Check access key and secret")
+agno_core/adapters/model_factory.py:35:    max_tokens: Optional[int] = None
+agno_core/adapters/model_factory.py:48:    def __init__(self, api_key_env: str, call: PortkeyCallConfig):
+agno_core/adapters/model_factory.py:49:        self.api_key_env = api_key_env
+agno_core/adapters/model_factory.py:54:        missing = _require_env([self.api_key_env])
+agno_core/adapters/model_factory.py:73:            "portkey_api_key": os.getenv(self.api_key_env),
+agno_core/adapters/model_factory.py:91:        if self.call.max_tokens is not None:
+agno_core/adapters/model_factory.py:92:            params["max_tokens"] = self.call.max_tokens
+agno_core/adapters/model_factory.py:122:    def __init__(self, models_yaml: str = MODELS_YAML_PATH, portkey_api_env: str = "PORTKEY_API_KEY"):
+agno_core/adapters/model_factory.py:162:            cfg.max_tokens = 4096
+agno_core/adapters/model_factory.py:165:            cfg.max_tokens = 16384
+agno_core/adapters/model_factory.py:168:            cfg.max_tokens = 8192
+agno_core/adapters/model_factory.py:171:            cfg.max_tokens = 32768
+test_sophia_v33_complete.py:79:            env_manager_path = Path("/opt/sophia/secrets/env_manager.py")
+test_sophia_v33_complete.py:121:            env_manager_path = Path("/opt/sophia/secrets/env_manager.py")
+test_sophia_v33_complete.py:153:            env_manager_path = Path("/opt/sophia/secrets/env_manager.py")
+test_sophia_v33_complete.py:209:                    ("set_secret", "Secret setting capability"),
+test_sophia_v33_complete.py:210:                    ("rotate_secret", "Secret rotation capability"),
+test_sophia_v33_complete.py:211:                    ("sync_from_github_secrets", "GitHub integration"),
+test_sophia_v33_complete.py:415:            env_manager_path = Path("/opt/sophia/secrets/env_manager.py")
+test_sophia_v33_complete.py:460:            activate_script = Path("/opt/sophia/secrets/activate_env.sh")
+test_sophia_v33_complete.py:710:        # Test 1: Secrets directory permissions
+test_sophia_v33_complete.py:712:            secrets_dir = Path("/opt/sophia/secrets")
+test_sophia_v33_complete.py:713:            if secrets_dir.exists():

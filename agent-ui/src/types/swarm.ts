@@ -15,7 +15,7 @@ export interface Workflow {
 export interface ToolCall {
   name: string;
   args?: Record<string, any>;
-  result?: any;
+  result?: unknown;
 }
 
 export interface JudgeDecision {
@@ -51,7 +51,7 @@ export interface Citation {
 
 export interface StreamResponse {
   token?: string;
-  final?: any;
+  final?: unknown;
   critic?: CriticReview;
   judge?: JudgeDecision;
   tool_calls?: ToolCall[];

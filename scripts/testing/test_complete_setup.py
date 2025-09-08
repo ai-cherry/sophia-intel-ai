@@ -150,8 +150,7 @@ class CompleteSetupTester:
                     try:
                         error = response.json()
                         logger.info(f"   Error: {error}")
-                    except:
-                        pass
+                    except Exception:pass
 
         except Exception as e:
             logger.info(f"❌ Error: {e}")

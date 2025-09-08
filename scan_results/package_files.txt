@@ -1,0 +1,4 @@
+-rw-r--r--@ 1 501  staff  1588 Sep  7 21:14 agent-ui/package.json
+-rw-r--r--@ 1 501  staff    92 Sep  7 21:18 package.json
+-rw-r--r--@ 1 501  staff  7199 Sep  8 02:04 pyproject.toml
+-rw-r--r--@ 1 501  staff    25 Sep  8 01:15 requirements.txt

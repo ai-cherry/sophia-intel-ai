@@ -556,8 +556,7 @@ class TalentAcquisitionAgent(BaseAgent):
 
         try:
             return json.loads(response)
-        except:
-            return {"strategy": response}
+        except Exception:return {"strategy": response}
 
     async def _analyze_resume(
         self, candidate: Candidate, requisition: JobRequisition
@@ -591,8 +590,7 @@ class TalentAcquisitionAgent(BaseAgent):
 
         try:
             return json.loads(response)
-        except:
-            return {"analysis": response}
+        except Exception:return {"analysis": response}
 
     async def _calculate_screening_score(
         self,
@@ -655,8 +653,7 @@ class TalentAcquisitionAgent(BaseAgent):
 
         try:
             return json.loads(response)
-        except:
-            return [{"question": "Tell me about yourself", "purpose": "general"}]
+        except Exception:return [{"question": "Tell me about yourself", "purpose": "general"}]
 
     async def _load_active_requisitions(self):
         """Load active job requisitions"""

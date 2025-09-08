@@ -319,8 +319,7 @@ class OptimizedEmbeddingService:
             redis_memory = (
                 await self.redis.memory_usage("emb_v2:*") if redis_keys else 0
             )
-        except:
-            redis_keys = []
+        except Exception:redis_keys = []
             redis_memory = 0
 
         return {

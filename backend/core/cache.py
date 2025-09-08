@@ -26,8 +26,7 @@ async def check_connection():
     try:
         await redis_client.ping()
         return True
-    except:
-        return False
+    except Exception:return False
 
 
 async def get_redis():

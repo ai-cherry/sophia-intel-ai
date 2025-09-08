@@ -470,8 +470,7 @@ class SophiaV7Auditor:
                     content = f.read()
                     if "async def" in content or "await " in content:
                         async_files.append(str(py_file))
-            except:
-                continue
+            except Exception:continue
 
         # Check for existing agent patterns
         agent_patterns = {
@@ -489,8 +488,7 @@ class SophiaV7Auditor:
                     for pattern in agent_patterns:
                         if pattern in content:
                             agent_patterns[pattern] += content.count(pattern)
-            except:
-                continue
+            except Exception:continue
 
         # Calculate Agno readiness
         async_score = min(len(async_files) / 10, 3)  # Up to 3 points for async

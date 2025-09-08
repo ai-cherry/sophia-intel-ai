@@ -34,7 +34,7 @@ export interface AGUIToolCall {
   tool_id: string;
   arguments: Record<string, any>;
   status: 'pending' | 'running' | 'complete' | 'error';
-  result?: any;
+  result?: unknown;
   error?: string;
   start_time?: string;
   end_time?: string;
@@ -396,7 +396,6 @@ export function useAGUIEvents(config: UseAGUIEventsConfig = {}) {
         if (data.type && !data.metadata) {
           // This would be handled by the server-side adapter
           // but we can also do client-side conversion for fallback
-          console.log('Received legacy WebSocket event:', data);
         } else {
           handleEvent(data as AGUIEvent);
         }

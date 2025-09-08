@@ -28,7 +28,7 @@ interface PromptVersion {
   status: string;
   created_at: string;
   performance_metrics?: { [key: string]: number };
-  a_b_test_data?: { [key: string]: any };
+  a_b_test_data?: { [key: string]: unknown };
 }
 
 interface Branch {
@@ -45,7 +45,7 @@ interface DiffResult {
   from_version: string;
   to_version: string;
   content_diff: string[];
-  metadata_diff: { [key: string]: any };
+  metadata_diff: { [key: string]: unknown };
   similarity_score: number;
   change_summary: string;
 }
@@ -192,7 +192,6 @@ export const usePromptLibrary = () => {
       const ws = new WebSocket(wsUrl);
 
       ws.onopen = () => {
-        console.log('WebSocket connected for prompt library');
         setWsConnection(ws);
       };
 
@@ -206,7 +205,6 @@ export const usePromptLibrary = () => {
       };
 
       ws.onclose = () => {
-        console.log('WebSocket disconnected, attempting reconnect...');
         setWsConnection(null);
         // Reconnect after 5 seconds
         setTimeout(connectWebSocket, 5000);
@@ -227,7 +225,7 @@ export const usePromptLibrary = () => {
   }, []);
 
   // Handle WebSocket messages
-  const handleWebSocketMessage = useCallback((data: any) => {
+  const handleWebSocketMessage = useCallback((data: unknown) => {
     switch (data.type) {
       case 'prompt_updated':
         setPrompts(prev => prev.map(p =>
@@ -249,12 +247,11 @@ export const usePromptLibrary = () => {
         ));
         break;
       default:
-        console.log('Unknown WebSocket message type:', data.type);
     }
   }, []);
 
   // Error handler
-  const handleError = useCallback((error: any, context: string) => {
+  const handleError = useCallback((error: unknown, context: string) => {
     const errorMessage = error.response?.data?.detail || error.message || 'An unexpected error occurred';
     setError(`${context}: ${errorMessage}`);
     console.error(`${context}:`, error);
@@ -635,7 +632,7 @@ export const usePromptLibrary = () => {
   }, [clearError, handleError]);
 
   // Import prompts
-  const importPrompts = useCallback(async (importData: any, overwrite = false): Promise<boolean> => {
+  const importPrompts = useCallback(async (importData: unknown, overwrite = false): Promise<boolean> => {
     setLoading(true);
     clearError();
 

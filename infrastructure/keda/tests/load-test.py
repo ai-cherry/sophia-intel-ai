@@ -80,8 +80,7 @@ class KEDALoadTester:
             # Kubernetes client
             try:
                 config.load_incluster_config()
-            except:
-                config.load_kube_config()
+            except Exception:config.load_kube_config()
 
             self.k8s_apps_v1 = client.AppsV1Api()
             self.k8s_core_v1 = client.CoreV1Api()

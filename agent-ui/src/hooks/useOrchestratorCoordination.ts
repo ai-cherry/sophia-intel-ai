@@ -172,7 +172,7 @@ const useOrchestratorCoordination = (
       throw new Error(`Failed to fetch orchestrator status: ${response.statusText}`);
     }
     const data = await response.json();
-    return data.map((orch: any) => ({
+    return data.map((orch: unknown) => ({
       ...orch,
       resourceUsage: orch.resource_usage || {},
       activeTasks: orch.active_tasks,
@@ -189,7 +189,7 @@ const useOrchestratorCoordination = (
       throw new Error(`Failed to fetch task bridges: ${response.statusText}`);
     }
     const data = await response.json();
-    return data.map((bridge: any) => ({
+    return data.map((bridge: unknown) => ({
       ...bridge,
       sourceOrchestrator: bridge.source_orchestrator,
       targetOrchestrator: bridge.target_orchestrator,
@@ -247,7 +247,7 @@ const useOrchestratorCoordination = (
       throw new Error(`Failed to fetch resource allocations: ${response.statusText}`);
     }
     const data = await response.json();
-    return data.map((allocation: any) => ({
+    return data.map((allocation: unknown) => ({
       ...allocation,
       orchestratorId: allocation.orchestrator_id,
       allocatedTasks: allocation.allocated_tasks,
@@ -266,7 +266,7 @@ const useOrchestratorCoordination = (
       throw new Error(`Failed to fetch bottlenecks: ${response.statusText}`);
     }
     const data = await response.json();
-    return data.map((bottleneck: any) => ({
+    return data.map((bottleneck: unknown) => ({
       ...bottleneck,
       orchestratorAffected: bottleneck.orchestrator_affected,
       impactScore: bottleneck.impact_score,
@@ -338,7 +338,6 @@ const useOrchestratorCoordination = (
     websocketRef.current = new WebSocket(wsUrl);
 
     websocketRef.current.onopen = () => {
-      console.log('WebSocket connected to orchestrator coordination');
       setIsConnected(true);
       setConnectionAttempts(0);
       setError(null);
@@ -374,7 +373,6 @@ const useOrchestratorCoordination = (
     };
 
     websocketRef.current.onclose = () => {
-      console.log('WebSocket disconnected from orchestrator coordination');
       setIsConnected(false);
 
       if (realTimeEnabled && connectionAttempts < 5) {

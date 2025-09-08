@@ -34,7 +34,7 @@ export interface MetricsState {
 export type UnifiedState = ChatState & SwarmState & MetricsState
 
 // ---- Slices ----
-const chatSlice = (set: any): ChatState => ({
+const chatSlice = (set: unknown): ChatState => ({
   messages: [],
   sending: false,
   addMessage: (m) => set((s: ChatState) => ({ messages: [...s.messages, m] })),
@@ -42,7 +42,7 @@ const chatSlice = (set: any): ChatState => ({
   resetChat: () => set({ messages: [], sending: false }),
 })
 
-const swarmSlice = (set: any): SwarmState => ({
+const swarmSlice = (set: unknown): SwarmState => ({
   tasks: [],
   status: 'idle',
   enqueue: (t) => set((s: SwarmState) => ({ tasks: [...s.tasks, t] })),
@@ -61,7 +61,7 @@ function computeP95(samples: number[]): number {
   return Math.round(arr[idx]);
 }
 
-const metricsSlice = (set: any): MetricsState => ({
+const metricsSlice = (set: unknown): MetricsState => ({
   p95LatencyMs: {},
   vkBudgetState: {},
   updateLatency: (category, sampleMs) => set((s: MetricsState) => {

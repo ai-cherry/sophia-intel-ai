@@ -228,8 +228,7 @@ class SophiaMaxAccess:
         """Get workspace user management info (if admin)"""
         try:
             return self.client.team_info()
-        except:
-            return {"error": "Admin access required"}
+        except Exception:return {"error": "Admin access required"}
 
     # === BUSINESS INTELLIGENCE AUTOMATION ===
 
@@ -281,8 +280,7 @@ class SophiaMaxAccess:
                     channel["id"],
                     f"🚨 **EMERGENCY BROADCAST**\\n{message}"
                 )
-            except:
-                continue
+            except Exception:continue
 
     def complete_workspace_backup(self):
         """Backup all workspace data (with your permissions)"""
@@ -305,8 +303,7 @@ class SophiaMaxAccess:
             try:
                 messages = self.read_any_channel(channel["id"], limit=1000)
                 backup_data["messages"][channel["name"]] = messages["messages"]
-            except:
-                continue
+            except Exception:continue
 
         # Save backup
         with open(f'slack_backup_{datetime.now().strftime("%Y%m%d")}.json', 'w') as f:

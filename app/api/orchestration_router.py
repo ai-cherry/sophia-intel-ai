@@ -561,8 +561,7 @@ async def websocket_endpoint(websocket: WebSocket):
                     await websocket.send_json(
                         {"error": str(e), "timestamp": datetime.now().isoformat()}
                     )
-                except:
-                    break  # Connection might be closed
+                except Exception:break  # Connection might be closed
 
     except Exception as e:
         logger.error(f"WebSocket connection error: {e}")
@@ -571,8 +570,7 @@ async def websocket_endpoint(websocket: WebSocket):
         try:
             orchestrator = get_orchestrator()
             await orchestrator.disconnect_websocket(websocket)
-        except:
-            pass  # Already disconnected
+        except Exception:pass  # Already disconnected
 
 
 # ============================================

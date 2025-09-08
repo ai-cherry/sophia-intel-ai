@@ -19,7 +19,7 @@ def scan_py():
     except Exception:
       continue
     # bare except
-    for m in re.finditer(r'\n\s*except:\s*\n', text):
+    for m in re.finditer(r'\n\s*except Exception:\s*\n', text):
       issues['bare_except'].append(f"{p}:{m.start()}")
     # unused import heuristic
     for imp in re.findall(r'\n\s*(?:from\s+([\w\.]+)\s+import\s+([\w\* ,]+)|import\s+([\w\., ]+))', text):

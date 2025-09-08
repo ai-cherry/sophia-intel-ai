@@ -105,8 +105,7 @@ class ComprehensiveAPITester:
                         if len(str(response_data)) > 100
                         else str(response_data)
                     )
-                except:
-                    data_preview = (
+                except Exception:data_preview = (
                         response.text[:100] + "..."
                         if len(response.text) > 100
                         else response.text

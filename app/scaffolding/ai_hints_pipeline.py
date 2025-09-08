@@ -135,7 +135,7 @@ class AIHintsGenerator:
             ),
             (r"time\.sleep\(", "blocking_sleep", "Use async sleep in async context"),
             (r"\+ \[.*\]", "list_concatenation", "Use extend() instead of + for lists"),
-            (r"except:$", "bare_except", "Specify exception types"),
+            (r"except Exception:$", "bare_except", "Specify exception types"),
             (
                 r"if .* == True:",
                 "explicit_bool_check",

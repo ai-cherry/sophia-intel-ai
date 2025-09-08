@@ -906,8 +906,7 @@ def get_config(service: str = None, environment: str = None) -> Dict[str, Any]:
                 # Simple evaluation (be careful with this in production)
                 try:
                     config_vars[var_name] = eval(var_value)
-                except:
-                    config_vars[var_name] = var_value.strip("\"'")
+                except Exception:config_vars[var_name] = var_value.strip("\"'")
 
         except Exception as e:
             logger.warning(f"Could not extract from {py_path}: {e}")

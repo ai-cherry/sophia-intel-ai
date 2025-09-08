@@ -135,7 +135,7 @@ export const usePlaygroundStore = create<PlaygroundStore>()(
       partialize: (state) => ({
         selectedEndpoint: state.selectedEndpoint
       }),
-      migrate: (persistedState: any, version: number) => {
+      migrate: (persistedState: unknown, version: number) => {
         // Migrate from old ports to unified API on 8003
         if (version < 2 && persistedState.selectedEndpoint) {
           if (persistedState.selectedEndpoint.includes(':8000') ||

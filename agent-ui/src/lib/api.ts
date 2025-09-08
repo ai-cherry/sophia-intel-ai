@@ -14,8 +14,8 @@ export async function fetchJSON<T>(path: string, init?: RequestInit): Promise<T>
 
 export async function streamSSE(
   path: string,
-  body: any,
-  onChunk: (data: any) => void,
+  body: unknown,
+  onChunk: (data: unknown) => void,
 ): Promise<void> {
   const res = await fetch(`${API_URL}${path}`, {
     method: "POST",
@@ -56,4 +56,3 @@ export async function streamSSE(
       });
   }
 }
-

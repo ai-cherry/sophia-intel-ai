@@ -466,8 +466,7 @@ Content:
                 # Create simplified AST representation
                 structure = self._ast_to_string(tree)
                 return structure
-            except:
-                return f"STRUCTURE: {chunk.chunk_type}"
+            except Exception:return f"STRUCTURE: {chunk.chunk_type}"
 
         else:
             return chunk.content

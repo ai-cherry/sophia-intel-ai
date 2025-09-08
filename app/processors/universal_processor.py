@@ -341,8 +341,7 @@ class TextProcessor(FileProcessor):
                     list(parsed.keys()) if isinstance(parsed, dict) else []
                 )
                 metadata["json_structure"] = type(parsed).__name__
-            except:
-                pass
+            except Exception:pass
 
         elif file_type in {FileType.YAML, FileType.YML}:
             try:
@@ -351,8 +350,7 @@ class TextProcessor(FileProcessor):
                     list(parsed.keys()) if isinstance(parsed, dict) else []
                 )
                 metadata["yaml_structure"] = type(parsed).__name__
-            except:
-                pass
+            except Exception:pass
 
         return metadata
 

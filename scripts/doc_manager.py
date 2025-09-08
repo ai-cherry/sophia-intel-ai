@@ -322,8 +322,7 @@ _Auto-generated on {}_
                             first_line = f.readline()
                             if first_line.startswith("#"):
                                 title = first_line.strip("#").strip()
-                    except:
-                        pass
+                    except Exception:pass
 
                     content += f"- [{title}]({file})\n"
 

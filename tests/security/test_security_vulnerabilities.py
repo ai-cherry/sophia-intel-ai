@@ -197,8 +197,7 @@ class TestAuthenticationSecurity:
                                 timestamp=datetime.now(),
                             )
                         )
-            except:
-                # Service might not have this endpoint, which is fine
+            except Exception:# Service might not have this endpoint, which is fine
                 pass
 
         # Test 2: JWT Secret Brute Force
@@ -230,10 +229,8 @@ class TestAuthenticationSecurity:
                                         timestamp=datetime.now(),
                                     )
                                 )
-                    except:
-                        pass
-            except:
-                pass  # JWT encoding might fail
+                    except Exception:pass
+            except Exception:pass  # JWT encoding might fail
 
     @pytest.mark.asyncio
     async def test_authentication_bypass(self, security_tester):
@@ -281,8 +278,7 @@ class TestAuthenticationSecurity:
                                     timestamp=datetime.now(),
                                 )
                             )
-                except:
-                    pass
+                except Exception:pass
 
     @pytest.mark.asyncio
     async def test_session_management(self, security_tester):
@@ -342,8 +338,7 @@ class TestAuthenticationSecurity:
                                 timestamp=datetime.now(),
                             )
                         )
-            except:
-                pass
+            except Exception:pass
 
 
 class TestInputValidationSecurity:
@@ -428,8 +423,7 @@ class TestInputValidationSecurity:
                                 response,
                             )
 
-                    except:
-                        pass  # Endpoint might not exist
+                    except Exception:pass  # Endpoint might not exist
 
     async def _check_sql_injection_response(
         self, security_tester, service_name, endpoint, payload, response
@@ -475,8 +469,7 @@ class TestInputValidationSecurity:
                         )
                     )
                     break
-        except:
-            pass
+        except Exception:pass
 
     @pytest.mark.asyncio
     async def test_nosql_injection(self, security_tester):
@@ -548,8 +541,7 @@ class TestInputValidationSecurity:
                                         )
                                     )
                                     break
-                except:
-                    pass
+                except Exception:pass
 
     @pytest.mark.asyncio
     async def test_xss_vulnerabilities(self, security_tester):
@@ -608,8 +600,7 @@ class TestInputValidationSecurity:
                                 payload,
                                 response,
                             )
-                    except:
-                        pass
+                    except Exception:pass
 
     async def _check_xss_response(
         self, security_tester, service_name, endpoint, payload, response
@@ -647,8 +638,7 @@ class TestInputValidationSecurity:
                             timestamp=datetime.now(),
                         )
                     )
-        except:
-            pass
+        except Exception:pass
 
 
 class TestAPISecurityVulnerabilities:
@@ -710,8 +700,7 @@ class TestAPISecurityVulnerabilities:
                                     timestamp=datetime.now(),
                                 )
                             )
-                except:
-                    pass
+                except Exception:pass
 
     @pytest.mark.asyncio
     async def test_http_method_vulnerabilities(self, security_tester):
@@ -742,8 +731,7 @@ class TestAPISecurityVulnerabilities:
                                     timestamp=datetime.now(),
                                 )
                             )
-                except:
-                    pass
+                except Exception:pass
 
     @pytest.mark.asyncio
     async def test_rate_limiting_bypass(self, security_tester):
@@ -790,8 +778,7 @@ class TestAPISecurityVulnerabilities:
                                             )
                                         )
                             break
-            except:
-                pass
+            except Exception:pass
 
     @pytest.mark.asyncio
     async def test_api_versioning_vulnerabilities(self, security_tester):
@@ -853,8 +840,7 @@ class TestAPISecurityVulnerabilities:
                                             timestamp=datetime.now(),
                                         )
                                     )
-                    except:
-                        pass
+                    except Exception:pass
 
 
 class TestDataProtectionSecurity:
@@ -937,8 +923,7 @@ class TestDataProtectionSecurity:
                                             timestamp=datetime.now(),
                                         )
                                     )
-                except:
-                    pass
+                except Exception:pass
 
     @pytest.mark.asyncio
     async def test_encryption_weaknesses(self, security_tester):
@@ -1018,8 +1003,7 @@ class TestDataProtectionSecurity:
                                         timestamp=datetime.now(),
                                     )
                                 )
-            except:
-                pass
+            except Exception:pass
 
 
 class TestSecurityHeaders:
@@ -1112,8 +1096,7 @@ class TestSecurityHeaders:
                                         timestamp=datetime.now(),
                                     )
                                 )
-            except:
-                pass
+            except Exception:pass
 
     @pytest.mark.asyncio
     async def test_information_disclosure(self, security_tester):
@@ -1151,8 +1134,7 @@ class TestSecurityHeaders:
                                     timestamp=datetime.now(),
                                 )
                             )
-            except:
-                pass
+            except Exception:pass
 
 
 class TestComprehensiveSecurityAssessment:

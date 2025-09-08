@@ -341,8 +341,7 @@ class CacheCleaner:
             for item in path.rglob("*"):
                 if item.is_file():
                     total_size += item.stat().st_size
-        except:
-        return total_size
+        except Exception:return total_size
 
     def print_results(self):
         """Print detailed results"""

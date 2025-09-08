@@ -287,7 +287,7 @@ class PatternAnalyzer:
                 Severity.MEDIUM,
             ),
             "complex_logic_untested": (
-                re.compile(r"if\s+.*?else.*?:|try:.*?except:|for.*?in.*?:.*?if"),
+                re.compile(r"if\s+.*?else.*?:|try:.*?except Exception:|for.*?in.*?:.*?if"),
                 "Complex logic requires comprehensive testing",
                 Severity.HIGH,
             ),

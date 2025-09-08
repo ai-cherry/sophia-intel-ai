@@ -299,8 +299,7 @@ except Exception as e:
 finally:
     try:
         sock.close()
-    except:
-        pass
+    except Exception:pass
 
 print(result)
 """

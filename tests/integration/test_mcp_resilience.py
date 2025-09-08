@@ -170,8 +170,7 @@ class TestCircuitBreaker:
         for _ in range(6):
             try:
                 circuit_breaker.call(failure_function)
-            except:
-                pass
+            except Exception:pass
 
         # Circuit should be open due to failure rate
         assert circuit_breaker.state == ConnectionState.OPEN
@@ -750,8 +749,7 @@ class TestMCPConnectionManager:
             try:
                 with patch("asyncio.sleep"):  # Skip retry delays
                     await connection_manager.get_connection("artemis_filesystem")
-            except:
-                pass
+            except Exception:pass
 
         # Circuit should now be open
         assert breaker.state == ConnectionState.OPEN

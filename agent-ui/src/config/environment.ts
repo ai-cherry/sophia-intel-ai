@@ -262,7 +262,6 @@ export const voiceConfig = {
 
 // Log configuration in debug mode (but not sensitive data)
 if (config.debugMode && typeof window !== 'undefined') {
-  console.log('Environment Configuration:', {
     environment: config.environment,
     apiBaseUrl: config.apiBaseUrl,
     wsBaseUrl: config.wsBaseUrl,

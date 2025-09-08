@@ -326,8 +326,7 @@ class WebSocketConnectionPool:
         try:
             if hasattr(oldest_conn, "websocket"):
                 await oldest_conn.websocket.close()
-        except:
-            pass
+        except Exception:pass
 
         del self.connections[oldest_key]
         self.metrics["evicted_connections"] += 1

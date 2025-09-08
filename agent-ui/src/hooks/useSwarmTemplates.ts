@@ -372,7 +372,6 @@ const useSwarmTemplates = (): UseSwarmTemplatesReturn => {
       wsRef.current.onopen = () => {
         setIsConnected(true);
         setConnectionError(null);
-        console.log('WebSocket connected for deployment updates');
       };
 
       wsRef.current.onmessage = (event) => {
@@ -420,7 +419,6 @@ const useSwarmTemplates = (): UseSwarmTemplatesReturn => {
 
       wsRef.current.onclose = () => {
         setIsConnected(false);
-        console.log('WebSocket disconnected');
 
         // Attempt to reconnect after a delay
         setTimeout(() => {

@@ -22,9 +22,7 @@ def analyze_codebase():
             with open(file, 'r') as f:
                 lines = len(f.readlines())
                 total_lines += lines
-        except:
-    
-    print(f"  📊 Python files: {len(python_files)}")
+        except Exception:print(f"  📊 Python files: {len(python_files)}")
     print(f"  📊 Total lines: {total_lines}")
     
     # Check for unused imports

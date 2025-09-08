@@ -99,8 +99,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 "swarms": list(swarms.values()),
                 "timestamp": int(asyncio.get_event_loop().time())
             })
-    except:
-        pass
+    except Exception:pass
 
 @app.get("/health")
 async def health_check():

@@ -243,8 +243,7 @@ class StackUtilizationAnalyzer:
                 timeout=10,
             )
             return len(result.stdout.splitlines()) if result.returncode == 0 else 0
-        except:
-            return 0
+        except Exception:return 0
 
     def generate_recommendations(self) -> Dict[str, Any]:
         """Generate optimization recommendations"""

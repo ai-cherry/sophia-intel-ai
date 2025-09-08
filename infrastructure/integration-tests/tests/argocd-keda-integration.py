@@ -25,8 +25,7 @@ class ArgoCDKEDAIntegration:
         """Initialize test configuration"""
         try:
             config.load_incluster_config()
-        except:
-            config.load_kube_config()
+        except Exception:config.load_kube_config()
 
         self.v1 = client.CoreV1Api()
         self.apps_v1 = client.AppsV1Api()
@@ -303,8 +302,7 @@ spec:
                     )
                     if config["name"] not in creation_times:
                         creation_times[config["name"]] = datetime.now()
-                except:
-                    pass
+                except Exception:pass
 
             if len(creation_times) == len(configs):
                 break
@@ -420,8 +418,7 @@ spec:
             try:
                 async with session.post(url, headers=headers) as resp:
                     return await resp.json()
-            except:
-                # Fallback to kubectl
+            except Exception:# Fallback to kubectl
                 import subprocess
 
                 subprocess.run(
@@ -523,8 +520,7 @@ spec:
 
             # Delete test namespace
             self.v1.delete_namespace(name=self.test_namespace)
-        except:
-            pass
+        except Exception:pass
 
         logger.info("Cleanup complete")
 

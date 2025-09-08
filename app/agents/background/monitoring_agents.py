@@ -446,8 +446,7 @@ class HealthCheckAgent(BaseMonitoringAgent):
             r = redis.Redis(host="localhost", port=6379, decode_responses=True)
             r.ping()
             return True
-        except:
-            return False
+        except Exception:return False
 
     async def check_llm_providers(self) -> bool:
         """Check LLM provider availability"""

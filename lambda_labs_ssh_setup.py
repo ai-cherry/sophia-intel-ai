@@ -299,8 +299,7 @@ Host lambda-sophia-staging
                         ssh.connect(ip, username=auth["username"], timeout=10)
                     connected = True
                     break
-                except:
-                    continue
+                except Exception:continue
 
             if not connected:
                 return {"status": "failed", "error": "Could not authenticate"}

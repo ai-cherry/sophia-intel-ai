@@ -23,8 +23,7 @@ class KEDAAlertManagerIntegration:
         """Initialize test configuration"""
         try:
             config.load_incluster_config()
-        except:
-            config.load_kube_config()
+        except Exception:config.load_kube_config()
 
         self.v1 = client.CoreV1Api()
         self.apps_v1 = client.AppsV1Api()
@@ -195,8 +194,7 @@ class KEDAAlertManagerIntegration:
                 plural="scaledobjects",
                 body=invalid_scaled_object,
             )
-        except:
-            pass
+        except Exception:pass
 
         # Wait for error to be detected
         await asyncio.sleep(30)
@@ -279,8 +277,7 @@ class KEDAAlertManagerIntegration:
                     plural="scaledobjects",
                     body=scaled_object,
                 )
-            except:
-                pass
+            except Exception:pass
 
         # Generate load to trigger alerts
         await self._generate_load()
@@ -357,8 +354,7 @@ class KEDAAlertManagerIntegration:
                     "http://pushgateway.monitoring.svc.cluster.local:9091/metrics/job/test",
                     data=metrics,
                 )
-            except:
-                logger.warning("Could not push metrics to pushgateway")
+            except Exception:logger.warning("Could not push metrics to pushgateway")
 
     async def _get_active_alerts(self) -> List[Dict]:
         """Get active alerts from AlertManager"""
@@ -382,8 +378,7 @@ class KEDAAlertManagerIntegration:
 
             # Delete test namespace
             self.v1.delete_namespace(name=self.test_namespace)
-        except:
-            pass
+        except Exception:pass
 
         logger.info("Cleanup complete")
 

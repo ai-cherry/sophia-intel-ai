@@ -188,8 +188,7 @@ def get_model_rankings():
             try:
                 with open("model_rankings_cache.json", "r") as f:
                     return json.load(f)
-            except:
-                # Generate mock data if offline
+            except Exception:# Generate mock data if offline
                 return generate_mock_rankings()
     except Exception as e:
         st.warning(f"Error fetching model rankings: {e}")
@@ -423,10 +422,8 @@ async def get_repo_status():
                     score = max(0.0, score)  # Don't go below 0
                 else:
                     score = 8.5  # Default score if no valid data
-            except:
-                score = 8.5  # Default fallback score
-        except:
-            score = "N/A"
+            except Exception:score = 8.5  # Default fallback score
+        except Exception:score = "N/A"
 
         return {
             "modified_files": modified_files,

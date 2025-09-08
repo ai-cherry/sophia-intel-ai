@@ -168,8 +168,7 @@ async def health_check():
                     components["sophia_api"] = "healthy"
                 else:
                     components["sophia_api"] = "degraded"
-        except:
-            components["sophia_api"] = "unhealthy"
+        except Exception:components["sophia_api"] = "unhealthy"
 
         # Check Artemis API
         try:
@@ -178,8 +177,7 @@ async def health_check():
                     components["artemis_api"] = "healthy"
                 else:
                     components["artemis_api"] = "degraded"
-        except:
-            components["artemis_api"] = "unhealthy"
+        except Exception:components["artemis_api"] = "unhealthy"
 
         # Check dashboards
         for name, url in DASHBOARD_URLS.items():
@@ -189,8 +187,7 @@ async def health_check():
                         services[f"{name}_dashboard"] = "healthy"
                     else:
                         services[f"{name}_dashboard"] = "degraded"
-            except:
-                services[f"{name}_dashboard"] = "unhealthy"
+            except Exception:services[f"{name}_dashboard"] = "unhealthy"
 
     return HealthStatus(
         status=(

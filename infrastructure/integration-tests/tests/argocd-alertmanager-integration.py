@@ -26,8 +26,7 @@ class ArgoCDAlertManagerIntegration:
         """Initialize test configuration"""
         try:
             config.load_incluster_config()
-        except:
-            config.load_kube_config()
+        except Exception:config.load_kube_config()
 
         self.v1 = client.CoreV1Api()
         self.apps_v1 = client.AppsV1Api()
@@ -397,8 +396,7 @@ data:
                 ) as resp:
                     if resp.status != 200:
                         logger.info("AlertManager is degraded as expected")
-            except:
-                logger.info("AlertManager is unreachable - config error detected")
+            except Exception:logger.info("AlertManager is unreachable - config error detected")
 
         # Perform rollback
         await self._rollback_argocd_application(
@@ -562,8 +560,7 @@ data:
             try:
                 async with session.post(url, headers=headers) as resp:
                     return await resp.json()
-            except:
-                # Fallback to kubectl
+            except Exception:# Fallback to kubectl
                 import subprocess
 
                 subprocess.run(
@@ -688,19 +685,16 @@ data:
                     self.v1.delete_namespaced_config_map(
                         name=cm, namespace=self.alertmanager_namespace
                     )
-                except:
-                    pass
+                except Exception:pass
 
             # Clean up test secrets
             try:
                 self.v1.delete_namespaced_secret(
                     name="alertmanager-channels", namespace=self.alertmanager_namespace
                 )
-            except:
-                pass
+            except Exception:pass
 
-        except:
-            pass
+        except Exception:pass
 
         logger.info("Cleanup complete")
 

@@ -99,8 +99,7 @@ async def test_portkey_with_openrouter():
                         logger.info(
                             f"      → Error: {error.get('error', {}).get('message', 'Unknown')}"
                         )
-                    except:
-                        pass
+                    except Exception:pass
 
             except Exception as e:
                 logger.info(f"   ❌ Error: {str(e)[:100]}")

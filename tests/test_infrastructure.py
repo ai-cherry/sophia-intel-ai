@@ -224,8 +224,7 @@ class TestPortkeyManager:
                         task_type=TaskType.RESEARCH,
                         messages=[{"role": "user", "content": "test"}],
                     )
-                except:
-                    pass
+                except Exception:pass
 
             # Circuit should be open
             assert manager.circuit_breaker.current_state == "open"

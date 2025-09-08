@@ -159,7 +159,7 @@ const SophiaIntelligencePage: React.FC = () => {
     return <AlertTriangle className="w-4 h-4 text-red-500" />;
   };
 
-  const renderModuleCard = (module: any) => (
+  const renderModuleCard = (module: unknown) => (
     <Card
       key={module.id}
       className={`cursor-pointer transition-all hover:shadow-xl hover:scale-105 ${
@@ -200,7 +200,7 @@ const SophiaIntelligencePage: React.FC = () => {
           {module.description}
         </p>
         <div className="grid grid-cols-3 gap-2 text-xs">
-          {module.stats.map((stat: any, idx: number) => (
+          {module.stats.map((stat: unknown, idx: number) => (
             <div key={idx} className="text-center p-2 bg-gray-50 dark:bg-gray-800 rounded">
               <div className="font-bold">{stat.value}</div>
               <div className="text-gray-500">{stat.label}</div>

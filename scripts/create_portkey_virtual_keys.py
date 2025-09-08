@@ -80,8 +80,7 @@ class PortkeyVirtualKeyCreator:
                     try:
                         error = response.json()
                         logger.info(f"      Error: {error}")
-                    except:
-                        logger.info(f"      Response: {response.text[:200]}")
+                    except Exception:logger.info(f"      Response: {response.text[:200]}")
                     return {"success": False, "error": f"Status {response.status_code}"}
 
         except Exception as e:

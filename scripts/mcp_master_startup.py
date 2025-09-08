@@ -120,8 +120,7 @@ class MCPMasterController:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 s.bind(("", port))
                 return True
-        except:
-            return False
+        except Exception:return False
 
     def kill_process_on_port(self, port: int) -> bool:
         """Kill any process using a specific port"""
@@ -211,8 +210,7 @@ class MCPMasterController:
                     r = redis.Redis(host="localhost", port=port, decode_responses=True)
                     r.ping()
                     return True
-                except:
-                    return False
+                except Exception:return False
 
             # HTTP health check for other servers
             health_endpoint = config.get("health_endpoint", "/health")

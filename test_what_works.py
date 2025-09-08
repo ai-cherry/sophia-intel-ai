@@ -108,8 +108,7 @@ class WhatActuallyWorks:
             else:
                 self.broken.append("Docker - NOT AVAILABLE")
                 print("❌ Docker - NOT AVAILABLE")
-        except:
-            self.broken.append("Docker - NOT INSTALLED")
+        except Exception:self.broken.append("Docker - NOT INSTALLED")
             print("❌ Docker - NOT INSTALLED")
 
         # Check if Python dependencies can be installed
@@ -121,8 +120,7 @@ class WhatActuallyWorks:
             else:
                 self.broken.append("pip3 - NOT WORKING")
                 print("❌ pip3 - NOT WORKING")
-        except:
-            self.broken.append("pip3 - NOT AVAILABLE")
+        except Exception:self.broken.append("pip3 - NOT AVAILABLE")
             print("❌ pip3 - NOT AVAILABLE")
 
         # Check if git is working
@@ -136,8 +134,7 @@ class WhatActuallyWorks:
             else:
                 self.broken.append("Git repository - INVALID")
                 print("❌ Git repository - INVALID")
-        except:
-            self.broken.append("Git - NOT AVAILABLE")
+        except Exception:self.broken.append("Git - NOT AVAILABLE")
             print("❌ Git - NOT AVAILABLE")
 
     def test_api_connectivity(self):
@@ -157,8 +154,7 @@ class WhatActuallyWorks:
             else:
                 self.broken.append("Internet connectivity - FAILED")
                 print("❌ Internet connectivity - FAILED")
-        except:
-            self.broken.append("curl - NOT AVAILABLE")
+        except Exception:self.broken.append("curl - NOT AVAILABLE")
             print("❌ curl - NOT AVAILABLE")
 
         # Test if we can reach Lambda Labs API
@@ -174,8 +170,7 @@ class WhatActuallyWorks:
             else:
                 self.broken.append("Lambda Labs API - UNREACHABLE")
                 print("❌ Lambda Labs API - UNREACHABLE")
-        except:
-            self.broken.append("Lambda Labs API - TEST FAILED")
+        except Exception:self.broken.append("Lambda Labs API - TEST FAILED")
             print("❌ Lambda Labs API - TEST FAILED")
 
     def test_environment_setup(self):
@@ -192,8 +187,7 @@ class WhatActuallyWorks:
             else:
                 self.broken.append("Environment variables - NOT WORKING")
                 print("❌ Environment variables - NOT WORKING")
-        except:
-            self.broken.append("Environment variables - ERROR")
+        except Exception:self.broken.append("Environment variables - ERROR")
             print("❌ Environment variables - ERROR")
 
         # Check if we can create directories
@@ -254,8 +248,7 @@ class WhatActuallyWorks:
                 else:
                     self.broken.append(f"Python {dep} - NOT AVAILABLE")
                     print(f"❌ Python {dep} - NOT AVAILABLE")
-            except:
-                self.broken.append(f"Python {dep} - TEST ERROR")
+            except Exception:self.broken.append(f"Python {dep} - TEST ERROR")
                 print(f"❌ Python {dep} - TEST ERROR")
 
         # Test optional but important dependencies
@@ -272,8 +265,7 @@ class WhatActuallyWorks:
                 else:
                     self.broken.append(f"Python {dep} - NOT AVAILABLE (optional)")
                     print(f"⚠️ Python {dep} - NOT AVAILABLE (optional)")
-            except:
-                self.broken.append(f"Python {dep} - NOT AVAILABLE (optional)")
+            except Exception:self.broken.append(f"Python {dep} - NOT AVAILABLE (optional)")
                 print(f"⚠️ Python {dep} - NOT AVAILABLE (optional)")
 
     def generate_working_report(self):

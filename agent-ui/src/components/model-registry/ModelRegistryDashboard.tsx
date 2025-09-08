@@ -270,8 +270,6 @@ export const ModelRegistryDashboard: React.FC<ModelRegistryDashboardProps> = ({
                     provider={provider}
                     virtualKeyConfig={virtualKeys.find(vk => vk.provider === provider.provider)}
                     performanceMetrics={performanceMetrics.find(pm => pm.provider === provider.provider)}
-                    onTest={(request) => console.log('Test provider:', request)}
-                    onUpdateConfig={(config) => console.log('Update config:', config)}
                   />
                 ))}
               </div>
@@ -293,7 +291,6 @@ export const ModelRegistryDashboard: React.FC<ModelRegistryDashboardProps> = ({
                 providers={providers}
                 fallbackChains={fallbackChains}
                 routingStrategies={routingStrategies}
-                onUpdateChain={(provider, config) => console.log('Update chain:', provider, config)}
               />
             </CardContent>
           </Card>

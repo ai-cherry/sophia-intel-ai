@@ -293,8 +293,7 @@ class UnifiedEmbedderRouter:
                     self.config.balanced_model,
                     self.config.balanced_provider,
                 )
-        except:
-            # Fallback if tokenizer fails
+        except Exception:# Fallback if tokenizer fails
             return (
                 EmbedderTier.BALANCED,
                 self.config.balanced_model,

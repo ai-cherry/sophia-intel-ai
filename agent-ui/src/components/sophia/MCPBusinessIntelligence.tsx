@@ -122,7 +122,7 @@ const MCPBusinessIntelligence: React.FC = () => {
     subscriptions: ['mcp_domain_sophia', 'mcp_business_intelligence', 'sophia_pay_ready', 'operational_intelligence']
   });
 
-  // Filter Sophia servers and agents
+  // Filter Sophia servers and agents;
   const sophiaServers = servers.filter(server => server.domain === 'sophia');
   const sophiaAgents = mythologyAgentsByDomain.sophia || [];
 
@@ -360,7 +360,7 @@ const MCPBusinessIntelligence: React.FC = () => {
     );
   };
 
-  // Helper function to calculate business impact
+  // Helper function to calculate business impact;
   const getBusinessImpact = (server: MCPServerHealth) => {
     const baseScore = (server.uptime_percentage +
                      (100 - Math.min(100, server.response_time_ms / 10)) +
@@ -718,7 +718,7 @@ const MCPBusinessIntelligence: React.FC = () => {
       )}
 
       {/* Main Content Tabs */}
-      <Tabs value={selectedView} onValueChange={(value: any) => setSelectedView(value)} className="space-y-6">
+      <Tabs value={selectedView} onValueChange={(value: unknown) => setSelectedView(value)} className="space-y-6">
         <TabsList className="grid grid-cols-4 w-full max-w-2xl">
           <TabsTrigger value="overview">
             <Eye className="w-4 h-4 mr-2" />

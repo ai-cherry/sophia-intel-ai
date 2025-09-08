@@ -131,7 +131,6 @@ export const useMCPStatus = (options: UseMCPStatusOptions = {}) => {
       const ws = new WebSocket(wsUrl);
 
       ws.onopen = () => {
-        console.log('MCP Status WebSocket connected');
         setState(prev => ({ ...prev, isConnected: true, isLoading: false, error: null }));
 
         // Subscribe to requested channels
@@ -161,7 +160,6 @@ export const useMCPStatus = (options: UseMCPStatusOptions = {}) => {
       };
 
       ws.onclose = (event) => {
-        console.log('MCP Status WebSocket disconnected:', event.code, event.reason);
         setState(prev => ({ ...prev, isConnected: false }));
 
         // Attempt to reconnect unless it was a clean close
@@ -211,14 +209,13 @@ export const useMCPStatus = (options: UseMCPStatusOptions = {}) => {
     }
 
     reconnectTimeoutRef.current = setTimeout(() => {
-      console.log('Attempting to reconnect MCP Status WebSocket...');
       connect();
     }, reconnectInterval);
   }, [connect, reconnectInterval]);
 
   // ==================== MESSAGE HANDLING ====================
 
-  const handleWebSocketMessage = useCallback((message: any) => {
+  const handleWebSocketMessage = useCallback((message: unknown) => {
     setState(prev => ({ ...prev, lastUpdate: new Date() }));
 
     switch (message.type) {
@@ -227,7 +224,7 @@ export const useMCPStatus = (options: UseMCPStatusOptions = {}) => {
           setState(prev => ({
             ...prev,
             overview: message.data,
-            domainSummaries: message.data.domain_summaries?.reduce((acc: any, summary: MCPDomainSummary) => {
+            domainSummaries: message.data.domain_summaries?.reduce((acc: unknown, summary: MCPDomainSummary) => {
               acc[summary.domain] = summary;
               return acc;
             }, {}) || prev.domainSummaries,
@@ -271,11 +268,9 @@ export const useMCPStatus = (options: UseMCPStatusOptions = {}) => {
         break;
 
       case 'server_restart':
-        console.log('Server restart event:', message.server_name);
         break;
 
       case 'connected':
-        console.log('MCP Status WebSocket handshake complete');
         break;
 
       case 'pong':
@@ -283,7 +278,6 @@ export const useMCPStatus = (options: UseMCPStatusOptions = {}) => {
         break;
 
       default:
-        console.log('Unknown MCP status message type:', message.type);
     }
   }, []);
 
@@ -313,7 +307,7 @@ export const useMCPStatus = (options: UseMCPStatusOptions = {}) => {
         ...prev,
         overview,
         servers,
-        domainSummaries: overview.domain_summaries?.reduce((acc: any, summary: MCPDomainSummary) => {
+        domainSummaries: overview.domain_summaries?.reduce((acc: unknown, summary: MCPDomainSummary) => {
           acc[summary.domain] = summary;
           return acc;
         }, {}) || {},

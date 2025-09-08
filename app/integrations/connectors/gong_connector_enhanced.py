@@ -896,30 +896,26 @@ class GongConnectorEnhanced:
         try:
             response = await self._make_request(GongEndpoint.USERS_CURRENT)
             health["gong_api"] = bool(response)
-        except:
-            pass
+        except Exception:pass
 
         # Check PostgreSQL
         try:
             async with self.pg_pool.acquire() as conn:
                 await conn.fetchval("SELECT 1")
                 health["postgres"] = True
-        except:
-            pass
+        except Exception:pass
 
         # Check Redis
         try:
             await self.redis_client.ping()
             health["redis"] = True
-        except:
-            pass
+        except Exception:pass
 
         # Check Weaviate
         try:
             self.weaviate_client.schema.get()
             health["weaviate"] = True
-        except:
-            pass
+        except Exception:pass
 
         return health
 

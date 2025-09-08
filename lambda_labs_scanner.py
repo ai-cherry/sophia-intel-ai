@@ -235,8 +235,7 @@ class LambdaLabsScanner:
                 timeout=10,
             )
             connectivity["ping"] = result.returncode == 0
-        except:
-            connectivity["ping"] = False
+        except Exception:connectivity["ping"] = False
 
         # Test SSH (port 22)
         try:
@@ -246,8 +245,7 @@ class LambdaLabsScanner:
                 timeout=10,
             )
             connectivity["ssh"] = result.returncode == 0
-        except:
-            connectivity["ssh"] = False
+        except Exception:connectivity["ssh"] = False
 
         # Test HTTP ports
         for port, key in [
@@ -262,8 +260,7 @@ class LambdaLabsScanner:
                     timeout=5,
                 )
                 connectivity[key] = result.returncode == 0
-            except:
-                connectivity[key] = False
+            except Exception:connectivity[key] = False
 
         return connectivity
 

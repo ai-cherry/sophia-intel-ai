@@ -288,8 +288,7 @@ class HealthChecker:
                             data = await resp.json()
                             service_status = data.get("status", "unknown")
                             service_info = data.get("info", {})
-                        except:
-                            data = await resp.text()
+                        except Exception:data = await resp.text()
                             service_status = (
                                 "healthy" if "ok" in data.lower() else "unknown"
                             )

@@ -198,8 +198,7 @@ class CompletePortkeySetup:
                     try:
                         error = response.json()
                         logger.info(f"     Error: {error}")
-                    except:
-                        pass
+                    except Exception:pass
                     return False
         except Exception as e:
             logger.info(f"  ❌ Error: {e}")
@@ -239,8 +238,7 @@ class CompletePortkeySetup:
                     try:
                         error = response.json()
                         logger.info(f"     Error: {error}")
-                    except:
-                        pass
+                    except Exception:pass
                     return False
         except Exception as e:
             logger.info(f"  ❌ Error: {e}")

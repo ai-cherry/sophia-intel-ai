@@ -2333,8 +2333,7 @@ def main() -> int:
                             "cost_usd": metadata.get("cost_usd", 0.0),
                         }
                     )
-                except:
-                    pass
+                except Exception:pass
 
         # Sort by timestamp
         scout_runs.sort(key=lambda x: x["timestamp"], reverse=True)

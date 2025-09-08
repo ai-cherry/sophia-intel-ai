@@ -1,0 +1,128 @@
+agent-ui/src/api/playground.ts:45:  client.get('/noop', { category: 'api.playground.status' }).catch(() => {})
+agent-ui/src/api/playground.ts:65:    client.get('/noop', { category: 'api.playground.sessions' }).catch(() => {})
+agent-ui/src/api/playground.ts:89:  client.get('/noop', { category: 'api.playground.deleteSession' }).catch(() => {})
+agent-ui/src/api/playground.ts:137:  } catch (error) {
+agent-ui/src/hooks/useAIResponseStream.tsx:164:      } catch (error) {
+agent-ui/src/hooks/useChatActions.ts:146:    } catch (error) {
+agent-ui/src/hooks/useAgnoBridgeHealth.ts:26:      .catch((e: ApiError | any) => setError(e?.message || 'failed'))
+agent-ui/src/hooks/useServiceConfig.ts:135:      } catch (err) {
+agent-ui/src/hooks/useModelRegistry.ts:163:        } catch (err) {
+agent-ui/src/hooks/useModelRegistry.ts:184:    } catch (err) {
+agent-ui/src/hooks/useModelRegistry.ts:239:    } catch (err) {
+agent-ui/src/hooks/useModelRegistry.ts:267:    } catch (err) {
+agent-ui/src/hooks/useModelRegistry.ts:293:    } catch (err) {
+agent-ui/src/hooks/useModelRegistry.ts:324:    } catch (err) {
+agent-ui/src/hooks/useModelRegistry.ts:392:    } catch (err) {
+agent-ui/src/hooks/useSwarmTemplates.ts:182:        const errorData = await response.json().catch(() => ({}));
+agent-ui/src/hooks/useSwarmTemplates.ts:187:    } catch (err) {
+agent-ui/src/hooks/useSwarmTemplates.ts:219:        } catch (summaryError) {
+agent-ui/src/hooks/useSwarmTemplates.ts:224:    } catch (err) {
+agent-ui/src/hooks/useSwarmTemplates.ts:239:    } catch (err) {
+agent-ui/src/hooks/useSwarmTemplates.ts:268:    } catch (err) {
+agent-ui/src/hooks/useSwarmTemplates.ts:290:    } catch (err) {
+agent-ui/src/hooks/useSwarmTemplates.ts:317:    } catch (err) {
+agent-ui/src/hooks/useSwarmTemplates.ts:330:    } catch (err) {
+agent-ui/src/hooks/useSwarmTemplates.ts:344:    } catch (err) {
+agent-ui/src/hooks/useSwarmTemplates.ts:354:    } catch (err) {
+agent-ui/src/hooks/useSwarmTemplates.ts:411:        } catch (err) {
+agent-ui/src/hooks/useSwarmTemplates.ts:433:    } catch (err) {
+agent-ui/src/hooks/useOrchestratorCoordination.ts:312:    } catch (err) {
+agent-ui/src/hooks/useOrchestratorCoordination.ts:371:      } catch (err) {
+agent-ui/src/hooks/useOrchestratorCoordination.ts:403:    } catch (err) {
+agent-ui/src/hooks/useOrchestratorCoordination.ts:417:    } catch (err) {
+agent-ui/src/hooks/usePromptLibrary.ts:203:        } catch (error) {
+agent-ui/src/hooks/usePromptLibrary.ts:277:    } catch (error) {
+agent-ui/src/hooks/usePromptLibrary.ts:304:    } catch (error) {
+agent-ui/src/hooks/usePromptLibrary.ts:334:    } catch (error) {
+agent-ui/src/hooks/usePromptLibrary.ts:351:    } catch (error) {
+agent-ui/src/hooks/usePromptLibrary.ts:370:    } catch (error) {
+agent-ui/src/hooks/usePromptLibrary.ts:387:    } catch (error) {
+agent-ui/src/hooks/usePromptLibrary.ts:419:    } catch (error) {
+agent-ui/src/hooks/usePromptLibrary.ts:442:    } catch (error) {
+agent-ui/src/hooks/usePromptLibrary.ts:472:    } catch (error) {
+agent-ui/src/hooks/usePromptLibrary.ts:490:    } catch (error) {
+agent-ui/src/hooks/usePromptLibrary.ts:510:    } catch (error) {
+agent-ui/src/hooks/usePromptLibrary.ts:527:    } catch (error) {
+agent-ui/src/hooks/usePromptLibrary.ts:541:    } catch (error) {
+agent-ui/src/hooks/usePromptLibrary.ts:555:    } catch (error) {
+agent-ui/src/hooks/usePromptLibrary.ts:574:    } catch (error) {
+agent-ui/src/hooks/usePromptLibrary.ts:588:    } catch (error) {
+agent-ui/src/hooks/usePromptLibrary.ts:602:    } catch (error) {
+agent-ui/src/hooks/usePromptLibrary.ts:629:    } catch (error) {
+agent-ui/src/hooks/usePromptLibrary.ts:651:    } catch (error) {
+agent-ui/src/hooks/usePromptLibrary.ts:664:    } catch (error) {
+agent-ui/src/hooks/useAGUIEvents.ts:336:      } catch (error) {
+agent-ui/src/hooks/useAGUIEvents.ts:403:      } catch (error) {
+agent-ui/src/hooks/useAIStreamHandler.tsx:425:      } catch (error) {
+agent-ui/src/hooks/useMCPStatus.ts:158:        } catch (error) {
+agent-ui/src/hooks/useMCPStatus.ts:184:    } catch (error) {
+agent-ui/src/hooks/useMCPStatus.ts:324:    } catch (error) {
+agent-ui/src/hooks/useMCPStatus.ts:367:    } catch (error) {
+agent-ui/src/components/swarm-builder/SwarmTemplateSelector.tsx:211:    } catch (error) {
+agent-ui/src/components/swarm-builder/SwarmTemplateSelector.tsx:236:    } catch (error) {
+agent-ui/src/components/analytics/CostDashboard.tsx:93:    } catch (err) {
+agent-ui/src/components/model-registry/ProviderCard.tsx:157:    } catch (error) {
+agent-ui/src/components/model-registry/ProviderCard.tsx:172:    } catch (error) {
+agent-ui/src/components/model-registry/FallbackChainBuilder.tsx:257:    } catch (error) {
+agent-ui/src/components/VoiceButton.tsx:41:      } catch (e) {
+agent-ui/src/components/llm-control/ModelControlDashboard.tsx:149:    } catch (error) {
+agent-ui/src/components/llm-control/ModelControlDashboard.tsx:198:    } catch (error) {
+agent-ui/src/components/sophia/PayReadyDashboard.tsx:163:    } catch (error) {
+agent-ui/src/components/mcp/MCPServerGrid.tsx:84:    } catch (error) {
+agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx:189:    } catch (error) {
+agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx:224:    } catch (error) {
+agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx:296:    } catch (error) {
+agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx:333:    } catch (error) {
+agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx:354:    } catch (error) {
+agent-ui/src/components/prompt-library/PromptLibraryDashboard.tsx:251:      } catch (error) {
+agent-ui/src/components/prompt-library/PromptLibraryDashboard.tsx:280:    } catch (error) {
+agent-ui/src/components/prompt-library/PromptLibraryDashboard.tsx:290:    } catch (error) {
+agent-ui/src/components/prompt-library/PromptLibraryDashboard.tsx:302:    } catch (error) {
+agent-ui/src/components/dashboards/ClientHealthDashboard.tsx:172:    } catch (error) {
+agent-ui/src/components/dashboards/ClientHealthDashboard.tsx:201:    } catch (error) {
+agent-ui/src/components/dashboards/ClientHealthDashboard.tsx:263:    } catch (error) {
+agent-ui/src/components/dashboards/ClientHealthDashboard.tsx:361:    } catch (error) {
+agent-ui/src/components/dashboards/ClientHealthDashboard.tsx:372:    } catch (error) {
+agent-ui/src/components/dashboards/SalesPerformanceDashboard.tsx:163:    } catch (error) {
+agent-ui/src/components/dashboards/SalesPerformanceDashboard.tsx:192:    } catch (error) {
+agent-ui/src/components/dashboards/SalesPerformanceDashboard.tsx:248:    } catch (error) {
+agent-ui/src/components/dashboards/SalesPerformanceDashboard.tsx:287:    } catch (error) {
+mcp-bridge/src/index.ts:139:  } catch (error) {
+mcp-bridge/src/index.ts:147:  main().catch((error) => {
+agent-ui/src/app/(sophia)/work/page.tsx:13:      fetchJSON<any>("/api/integrations/asana/tasks").catch(() => ({ items: [] })),
+agent-ui/src/app/(sophia)/work/page.tsx:14:      fetchJSON<any>("/api/integrations/linear/issues").catch(() => ({ items: [] })),
+agent-ui/src/app/(sophia)/work/page.tsx:17:      .catch((e) => setError(e.message));
+agent-ui/src/components/playground/ChatArea/ChatInput/ChatInput.tsx:27:    } catch (error) {
+mcp-bridge/src/claude-adapter.ts:71:    } catch (error) {
+mcp-bridge/src/claude-adapter.ts:100:    } catch (error) {
+mcp-bridge/src/claude-adapter.ts:334:    } catch (error: any) {
+mcp-bridge/src/claude-adapter.ts:364:main().catch((error) => {
+mcp-bridge/src/roo-adapter.ts:78:    } catch (error) {
+mcp-bridge/src/roo-adapter.ts:119:    } catch (error) {
+mcp-bridge/src/roo-adapter.ts:514:    } catch (error: any) {
+mcp-bridge/src/roo-adapter.ts:592:main().catch((error) => {
+agent-ui/src/app/(sophia)/integrations/page.tsx:104:      .catch(console.error);
+mcp-bridge/src/cline-adapter.ts:96:    } catch (error) {
+mcp-bridge/src/cline-adapter.ts:147:    } catch (error) {
+mcp-bridge/src/cline-adapter.ts:975:    } catch (error: any) {
+mcp-bridge/src/cline-adapter.ts:1086:main().catch((error) => {
+agent-ui/src/app/(sophia)/dashboard/page.tsx:43:      .catch((e) => setError(e.message))
+agent-ui/src/app/(sophia)/chat/page.tsx:145:                  audio.play().catch(() => {});
+agent-ui/src/app/(sophia)/chat/page.tsx:147:              }).catch(() => {});
+agent-ui/src/app/(sophia)/chat/page.tsx:152:    } catch (e) {
+agent-ui/src/app/(sophia)/chat/page.tsx:183:    } catch (e) {
+agent-ui/src/app/(sophia)/calls/page.tsx:14:      .catch((e) => setError(e.message));
+agent-ui/src/components/playground/Sidebar/Sessions/SessionItem.tsx:89:    } catch (error) {
+agent-ui/src/app/sophia/page.tsx:81:    } catch (error) {
+pay_ready_implementation/AutomatedReportViewer.tsx:25:      } catch (err) {
+pay_ready_implementation/AutomatedReportViewer.tsx:106:      } catch (err) {
+pay_ready_implementation/AutomatedReportViewer.tsx:132:        } catch (err) {
+agent-ui/src/components/swarm/MCPStatus.tsx:89:        const data = await response.json().catch(() => ({}));
+agent-ui/src/components/swarm/MCPStatus.tsx:115:    } catch (error) {
+agent-ui/src/components/swarm/TeamWorkflowPanel.tsx:61:    } catch (e) {
+agent-ui/src/components/swarm/TeamWorkflowPanel.tsx:104:    } catch (e) {
+agent-ui/src/components/swarm/TeamWorkflowPanel.tsx:147:    } catch (e) {
+agent-ui/src/components/swarm/EndpointPicker.tsx:41:    } catch (e) {
+agent-ui/src/components/swarm/EnhancedOutput.tsx:39:        } catch (e) {
+app/swarms/artemis/components/OperationalReadinessPanel.tsx:64:      } catch (error) {
+app/swarms/artemis/components/SystemVitalsPanel.tsx:60:      } catch (error) {

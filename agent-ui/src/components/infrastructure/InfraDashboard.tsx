@@ -146,7 +146,7 @@ export const InfraDashboard: React.FC = () => {
 
   // InfraOps Swarm task execution
   const swarmTask = useMutation({
-    mutationFn: ({ type, description, context }: any) =>
+    mutationFn: ({ type, description, context }: unknown) =>
       fetch('/api/infrastructure/swarm-task', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

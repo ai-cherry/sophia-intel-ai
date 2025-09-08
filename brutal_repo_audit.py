@@ -284,8 +284,7 @@ class BrutalRepoAudit:
                             )
                             if result.returncode != 0:
                                 import_issues.append((py_file, imp))
-                        except:
-                            pass
+                        except Exception:pass
 
             except Exception:
                 pass

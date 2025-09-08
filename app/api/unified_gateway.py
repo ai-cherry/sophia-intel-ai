@@ -97,8 +97,7 @@ async def websocket_swarm_endpoint(websocket: WebSocket):
     if message_type:
         try:
             message_type = MessageType(message_type.upper())
-        except:
-            message_type = None
+        except Exception:message_type = None
 
     # Initialize message bus (using global instance)
     if "bus" not in websocket.app.state:

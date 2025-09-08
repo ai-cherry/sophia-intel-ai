@@ -95,8 +95,7 @@ class KEDAPerformanceBenchmark:
             # Load Kubernetes config
             try:
                 config.load_incluster_config()
-            except:
-                config.load_kube_config()
+            except Exception:config.load_kube_config()
 
             self.k8s_apps_v1 = client.AppsV1Api()
             self.k8s_core_v1 = client.CoreV1Api()
@@ -241,8 +240,7 @@ class KEDAPerformanceBenchmark:
             )
             state["deployments"]["artemis-worker"] = artemis.status.replicas or 0
             state["total_replicas"] += artemis.status.replicas or 0
-        except:
-            pass
+        except Exception:pass
 
         # Check Sophia deployment
         try:
@@ -251,8 +249,7 @@ class KEDAPerformanceBenchmark:
             )
             state["deployments"]["sophia-analytics"] = sophia.status.replicas or 0
             state["total_replicas"] += sophia.status.replicas or 0
-        except:
-            pass
+        except Exception:pass
 
         return state
 
@@ -484,8 +481,7 @@ class KEDAPerformanceBenchmark:
         try:
             version = self.k8s_core_v1.get_api_resources().group_version
             return version
-        except:
-            return "unknown"
+        except Exception:return "unknown"
 
     def _generate_verdict(self, analysis: Dict[str, Any]) -> Dict[str, Any]:
         """Generate pass/fail verdict"""

@@ -283,7 +283,7 @@ export const PromptLibraryDashboard: React.FC = () => {
   }, [selectedPrompt, editorContent, selectedBranch, updatePrompt]);
 
   // Create new prompt
-  const handleCreatePrompt = useCallback(async (promptData: any) => {
+  const handleCreatePrompt = useCallback(async (promptData: unknown) => {
     try {
       await createPrompt(promptData);
       setShowCreateDialog(false);
@@ -293,7 +293,7 @@ export const PromptLibraryDashboard: React.FC = () => {
   }, [createPrompt]);
 
   // Create branch
-  const handleCreateBranch = useCallback(async (branchData: any) => {
+  const handleCreateBranch = useCallback(async (branchData: unknown) => {
     if (!selectedPrompt) return;
 
     try {

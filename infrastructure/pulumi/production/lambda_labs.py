@@ -443,8 +443,7 @@ def get_system_load():
         with open('/proc/loadavg', 'r') as f:
             load = float(f.read().split()[0])
         return load
-    except:
-        return 1.0  # Default to active if can't read
+    except Exception:return 1.0  # Default to active if can't read
 
 def get_gpu_utilization():
     try:
@@ -452,8 +451,7 @@ def get_gpu_utilization():
                               capture_output=True, text=True)
         utilizations = [float(line.strip()) for line in result.stdout.strip().split('\\n')]
         return max(utilizations) if utilizations else 0
-    except:
-        return 100  # Default to active if can't read
+    except Exception:return 100  # Default to active if can't read
 
 def should_shutdown():
     load = get_system_load()

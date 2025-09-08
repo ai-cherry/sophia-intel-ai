@@ -313,8 +313,7 @@ if __name__ == "__main__":
                         metadata["functions"].append(node.name)
                     elif isinstance(node, ast.ClassDef):
                         metadata["classes"].append(node.name)
-            except:
-                pass  # Parsing failed, use basic metadata
+            except Exception:pass  # Parsing failed, use basic metadata
 
         # Merge with existing metadata
         if "metadata" in document:
@@ -387,8 +386,7 @@ if __name__ == "__main__":
                         score += 5
                     elif age_days < 7:
                         score += 2
-                except:
-                    pass
+                except Exception:pass
 
             # Test code bonus (tests are often good examples)
             if metadata.get("has_tests"):
@@ -517,7 +515,7 @@ if __name__ == "__main__":
         # Code patterns
         if "async def" in code or "await " in code:
             patterns.append("async")
-        if "try:" in code or "except:" in code:
+        if "try:" in code or "except Exception:" in code:
             patterns.append("error-handling")
         if "@cache" in code or "lru_cache" in code:
             patterns.append("caching")

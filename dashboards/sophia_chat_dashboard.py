@@ -95,8 +95,7 @@ def get_metrics() -> dict:
         response = requests.get(f"{ASIP_BRIDGE_URL}/metrics", timeout=5)
         response.raise_for_status()
         return response.json()
-    except:
-        return {"cache_size": 0, "gpu_loads": {}, "active_sessions": 0}
+    except Exception:return {"cache_size": 0, "gpu_loads": {}, "active_sessions": 0}
 
 
 # Sidebar Configuration
@@ -365,8 +364,7 @@ with tab3:
                 response = requests.get(f"{ASIP_BRIDGE_URL}/", timeout=5)
                 st.success("✅ ASIP Bridge is healthy")
                 st.json(response.json())
-            except:
-                st.error("❌ ASIP Bridge is not responding")
+            except Exception:st.error("❌ ASIP Bridge is not responding")
 
     with col2:
         if st.button("Refresh Metrics"):

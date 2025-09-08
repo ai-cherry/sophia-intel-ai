@@ -114,8 +114,7 @@ class ComprehensiveTestSuite:
                         response_times.append((end_time - start_time) * 1000)
                     else:
                         errors += 1
-                except:
-                    errors += 1
+                except Exception:errors += 1
 
         if response_times:
             return {

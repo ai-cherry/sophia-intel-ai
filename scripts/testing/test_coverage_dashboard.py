@@ -563,8 +563,7 @@ exclude_lines =
             )
             if result.returncode == 0:
                 return result.stdout.strip()
-        except:
-            pass
+        except Exception:pass
         return "unknown"
 
     def _get_build_number(self) -> str:

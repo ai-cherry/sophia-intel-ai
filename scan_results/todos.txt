@@ -1,0 +1,125 @@
+agent-ui/src/components/dev/MetricsDebugPanel.tsx:10:    const flag = process.env.NEXT_PUBLIC_SHOW_METRICS_DEBUG;
+pulumi_esc_manager.py:524:                        else "DEBUG"
+config/manager.py:174:            "DEBUG": "debug",
+infrastructure/pulumi/production/esc_config.py:262:                    "log_level": "DEBUG",
+infrastructure/pulumi/esc/audit_logger.py:27:    DEBUG = "debug"
+app/factory/agent_catalog.py:120:                AgentCapability.DEBUGGING,
+agent-ui/src/components/playground/ChatArea/Messages/Multimedia/Audios/Audios.tsx:55:      // TODO :: find a better way to handle the key
+app/factory/models.py:34:    DEBUGGING = "debugging"
+automation/scripts/config-manager.py:490:        logging.getLogger().setLevel(logging.DEBUG)
+agent-ui/src/app/(sophia)/chat/page.tsx:175:        // TODO: Send to speech-to-text endpoint
+agent-ui/src/app/artemis/page.tsx:680:                      <div className="text-blue-400">[DEBUG] Background job queue: 23 pending</div>
+agent-ui/src/app/artemis/page.tsx:683:                      <div className="text-blue-400">[DEBUG] Cache hit ratio: 94.2%</div>
+agent-ui/src/app/artemis/page.tsx:686:                      <div className="text-blue-400">[DEBUG] Active sessions: 1,247</div>
+sophia-v2/core/project_manager.py:28:    TODO = "todo"
+sophia-v2/core/project_manager.py:237:            status=TaskStatus.TODO,
+sophia-v2/core/project_manager.py:536:                if status == TaskStatus.TODO:
+sophia-v2/core/support_system.py:40:    BUG = "bug"
+backend/config/settings.py:211:        valid_levels = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+agent-ui/src/config/environment.ts:150:  debugMode: getEnvVar('DEBUG_MODE', 'false') === 'true',
+app/main.py:220:            "detail": str(exc) if os.getenv("DEBUG") else "An error occurred",
+app/sync/sync_scheduler.py:322:        # TODO: Implement conflict resolution strategies
+app/sync/sync_scheduler.py:340:        # TODO: Send alert to administrators
+packages/sophia_core/obs/logging.py:27:    DEBUG = "DEBUG"
+packages/sophia_core/obs/logging.py:165:            logging.DEBUG: LogLevel.DEBUG,
+packages/sophia_core/obs/logging.py:338:        self.log(LogLevel.DEBUG, message, **fields)
+backend/core/production_config.py:129:            log_level=os.getenv("LOG_LEVEL", "DEBUG"),
+backend/core/production_config.py:139:            agno_log_level=os.getenv("AGNO_LOG_LEVEL", "DEBUG"),
+backend/core/production_config.py:161:            log_level=os.getenv("LOG_LEVEL", "DEBUG"),
+backend/core/production_config.py:171:            agno_log_level=os.getenv("AGNO_LOG_LEVEL", "DEBUG"),
+artemis-v2/core/code_generator.py:19:    BUG_FIX = "bug_fix"
+artemis-v2/core/code_generator.py:137:        elif request.task_type == CodeTaskType.BUG_FIX:
+artemis-v2/core/code_generator.py:271:        return f"# Generated {language} code\n# TODO: Implement LLM integration"
+artemis-v2/core/code_generator.py:355:            if "# TODO" in code:
+artemis-v2/core/code_generator.py:356:                suggestions.append("Address TODO comments")
+sophia_error_scanner.py:203:            r"TODO",
+sophia_error_scanner.py:204:            r"FIXME",
+sophia_error_scanner.py:205:            r"XXX",
+sophia_error_scanner.py:206:            r"HACK",
+sophia_error_scanner.py:513:                # Remove TODO/FIXME comments
+sophia_error_scanner.py:516:                    for placeholder in ["TODO", "FIXME", "XXX", "HACK"]
+sophia_error_scanner.py:519:                        r"#\s*(TODO|FIXME|XXX|HACK).*", "", line
+artemis-v2/core/deployment_engine.py:35:    DEBUG = "debug"
+packages/sophia_core/config/helpers.py:354:            if settings.log_level == "DEBUG":
+artemis-v2/core/test_framework.py:285:    {chr(10).join(f'    {param} = None  # TODO: Set test value' for param in func['params'])}
+artemis-v2/core/test_framework.py:291:    assert result is not None  # TODO: Add specific assertions
+artemis-v2/core/test_framework.py:339:            {chr(10).join(f'        const {param} = undefined; // TODO: Set test value' for param in func['params'])}
+artemis-v2/core/test_framework.py:377:            want: nil, // TODO: Set expected value
+artemis-v2/core/test_framework.py:399:# TODO: Implement integration test scenarios
+artemis-v2/core/test_framework.py:412:        // TODO: Implement E2E test scenario
+artemis-v2/core/test_framework.py:427:    # TODO: Call function to test
+artemis-v2/core/test_framework.py:438:# TODO: Implement security test scenarios
+artemis-v2/core/debugger.py:560:        # Check for TODO comments
+artemis-v2/core/debugger.py:562:            if "TODO" in line or "FIXME" in line:
+artemis-v2/core/debugger.py:569:                        description="TODO/FIXME comment found",
+artemis-v2/core/debugger.py:570:                        suggested_fix="Address the TODO item",
+packages/sophia_core/config/env.py:159:    enable_debug_logging: bool = Field(False, env="ENABLE_DEBUG_LOGGING")
+packages/sophia_core/config/env.py:194:    debug: bool = Field(False, env="DEBUG")
+packages/sophia_core/config/env.py:225:        allowed_levels = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+app/scaffolding/meta_tagging.py:792:        if "TODO" in content or "FIXME" in content:
+app/scaffolding/meta_tagging.py:793:            tag.optimization_opportunities.append("Contains TODO/FIXME comments")
+app/llm/real_executor.py:43:    DEBUGGER = "debugger"
+app/llm/real_executor.py:348:            Role.DEBUGGER: TaskType.DEBUGGING,
+app/scaffolding/ai_hints.py:117:                re.compile(r"#\s*(TODO|FIXME|HACK|XXX|NOTE):", re.IGNORECASE),
+app/scaffolding/ai_hints.py:118:                "Unresolved TODO/FIXME comments indicate pending work",
+app/scaffolding/ai_hints.py:402:                f"Resolve {count} TODO/FIXME comment(s)",
+app/scaffolding/ai_hints.py:403:                "Review and address all TODO/FIXME comments by implementing the required functionality or removing obsolete comments",
+scripts/init_meta_tagging.py:653:        logging.getLogger().setLevel(logging.DEBUG)
+app/research/web_research_team.py:429:        # TODO: Add Tavily, Exa, Brave providers
+app/core/middleware.py:474:    # TODO: Fix ErrorHandlingMiddleware to properly implement ASGI interface
+app/core/middleware.py:478:    # TODO: Fix TimeoutMiddleware to properly implement ASGI interface
+app/core/middleware.py:482:    # TODO: Fix CircuitBreakerMiddleware to properly implement ASGI interface
+app/core/middleware.py:486:    # TODO: Fix RateLimitMiddleware to properly implement ASGI interface
+app/core/ai_logger.py:21:    DEBUG = 10
+app/core/ai_logger.py:104:            self.logger.setLevel(logging.DEBUG)
+app/core/ai_logger.py:118:            file_handler.setLevel(logging.DEBUG)
+app/core/ai_logger.py:206:        if level == LogLevel.DEBUG:
+app/core/ai_logger.py:322:        return self.log(LogLevel.DEBUG, message, context)
+scripts/migration/validate_migration.py:874:    log_level = logging.DEBUG if args.verbose else logging.INFO
+scripts/brand_audit.py:569:        logging.getLogger().setLevel(logging.DEBUG)
+scripts/config_unification.py:333:                "log_level": "DEBUG",
+scripts/config_unification.py:516:DEBUG=false
+scripts/config_unification.py:694:            "DEBUG": "debug"
+scripts/development/validate_startup_scripts.py:287:DEBUG=true
+app/main_unified.py:49:        self.debug = os.getenv("DEBUG", "false").lower() == "true"
+app/core/logging_config.py:61:        "DEBUG": "\033[36m",  # Cyan
+app/core/config.py:33:    debug: bool = Field(default=False, env="DEBUG")
+app/core/config.py:253:        allowed = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+tests/artemis/test_data/scout_test_scenarios.py:37:            "config.py": "DEBUG = True\nSECRET_KEY = 'exposed'",
+scripts/provision-fly-infrastructure.py:401:                "DEBUG": "false",
+scripts/testing/test_llama_maverick.py:83:   - Find TODO/FIXME comments
+scripts/testing/test_meta_tagging.py:70:            # TODO: Add input validation
+scripts/testing/test_meta_tagging.py:101:            # TODO: Implement rollback logic
+scripts/testing/test_meta_tagging.py:129:        # FIXME: This is inefficient - should use concurrent processing
+scripts/testing/test_meta_tagging.py:163:    password: str  # TODO: This should be hashed
+scripts/testing/test_meta_tagging.py:187:        # TODO: Add rate limiting
+scripts/testing/test_meta_tagging.py:188:        # TODO: Add request validation
+scripts/testing/test_meta_tagging.py:222:    # FIXME: Secret key should come from environment
+scripts/testing/test_meta_tagging.py:326:        TODO: Make the sensitive fields configurable
+app/core/secure_websocket_factory.py:306:        # TODO: Implement actual alerting (Slack, email, webhook, etc.)
+scripts/cleanup.py:142:DEBUG=true
+scripts/generate_documentation.py:1046:        logging.basicConfig(level=logging.DEBUG)
+scripts/startup-validator.py:707:        logging.getLogger().setLevel(logging.DEBUG)
+scripts/testing/test_esc_integration.py:1159:    log_level = logging.DEBUG if args.verbose else logging.INFO
+scripts/dev/demo_file.py:29:# TODO: Add more functions as requested by agent swarms
+scripts/testing/test_gemini_and_gpt.py:82:   - Find TODO/FIXME comments
+scripts/dev/ultra_debug_server.py:75:    print("ULTRA DEBUG: INCOMING REQUEST")
+scripts/dev/debug_consciousness_tests.py:22:    print("🔍 DEBUGGING CONSCIOUSNESS TRACKING TEST ISSUES")
+scripts/testing/test_gemini_direct.py:72:   - Find TODO/FIXME comments
+tests/security/test_security_vulnerabilities.py:722:        dangerous_methods = ["TRACE", "TRACK", "DEBUG", "PUT", "DELETE", "PATCH"]
+scripts/dev/debug_server_7777.py:78:    print("\n=== DEBUG: RAW REQUEST ===")
+app/personas/artemis_persona.py:143:    artemis.add_knowledge_area(TaskDomain.DEBUGGING.value, 0.94, learning_rate=0.09)
+app/personas/artemis_persona.py:214:        TaskDomain.DEBUGGING,
+app/swarms/core/task_router.py:23:    CODE_DEBUGGING = "code_debugging"
+app/swarms/core/task_router.py:77:            TaskType.CODE_DEBUGGING: 0.95,
+app/swarms/core/task_router.py:410:        task_type = TaskType.CODE_DEBUGGING
+app/swarms/cli/artemis_runner.py:931:        # If JSON mode, suppress INFO/DEBUG logs to keep stdout clean
+tests/conftest.py:40:    level=logging.DEBUG, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+tests/conftest.py:461:        "LOG_LEVEL": "DEBUG",
+app/personas/__init__.py:428:                if task_domain in [TaskDomain.CODE_REVIEW, TaskDomain.DEBUGGING]:
+app/personas/persona_manager.py:37:    DEBUGGING = "debugging"
+app/api/config/settings.py:211:        valid_levels = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+app/api/core/production_config.py:129:            log_level=os.getenv("LOG_LEVEL", "DEBUG"),
+app/api/core/production_config.py:139:            agno_log_level=os.getenv("AGNO_LOG_LEVEL", "DEBUG"),
+app/api/core/production_config.py:161:            log_level=os.getenv("LOG_LEVEL", "DEBUG"),
+app/api/core/production_config.py:171:            agno_log_level=os.getenv("AGNO_LOG_LEVEL", "DEBUG"),

@@ -228,7 +228,7 @@ const ProjectManagementDashboard: React.FC = () => {
     }
   };
 
-  const handleRealtimeUpdate = (data: any) => {
+  const handleRealtimeUpdate = (data: unknown) => {
     switch (data.type) {
       case 'project_update':
         setProjects(prev => prev.map(project =>
@@ -267,7 +267,7 @@ const ProjectManagementDashboard: React.FC = () => {
     }
   };
 
-  const sendCommand = (command: any) => {
+  const sendCommand = (command: unknown) => {
     if (ws.current?.readyState === WebSocket.OPEN) {
       ws.current.send(JSON.stringify(command));
     }
@@ -298,7 +298,7 @@ const ProjectManagementDashboard: React.FC = () => {
     }
   }, [voiceEnabled, selectedProject]);
 
-  const executeVoiceCommand = (result: any) => {
+  const executeVoiceCommand = (result: unknown) => {
     switch (result.action) {
       case 'filter_projects':
         setFilterStatus(result.status);

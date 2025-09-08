@@ -116,13 +116,11 @@ export const useServiceConfig = () => {
         if (data.services?.unified_api?.url) {
           const manifestUrl = data.services.unified_api.url;
           if (manifestUrl !== selectedEndpoint) {
-            console.log(`Updating endpoint from ${selectedEndpoint} to ${manifestUrl} based on manifest`);
             setSelectedEndpoint(manifestUrl);
           }
         }
 
         // Log discovered services
-        console.log('Service Manifest Loaded:', {
           environment: data.environment?.name,
           services: Object.keys(data.services || {}),
           models: {

@@ -556,8 +556,7 @@ async def get_system_status() -> dict[str, Any]:
             status["services"]["ollama"] = (
                 "running" if response.status_code == 200 else "error"
             )
-        except:
-            status["services"]["ollama"] = "offline"
+        except Exception:status["services"]["ollama"] = "offline"
 
         # Check Weaviate
         try:
@@ -567,16 +566,14 @@ async def get_system_status() -> dict[str, Any]:
             status["services"]["weaviate"] = (
                 "running" if response.status_code == 200 else "error"
             )
-        except:
-            status["services"]["weaviate"] = "offline"
+        except Exception:status["services"]["weaviate"] = "offline"
 
         # Check Redis
         try:
             r = await get_connection_manager().get_redis()
             r.ping()
             status["services"]["redis"] = "running"
-        except:
-            status["services"]["redis"] = "offline"
+        except Exception:status["services"]["redis"] = "offline"
 
         # Check n8n
         try:
@@ -584,8 +581,7 @@ async def get_system_status() -> dict[str, Any]:
             status["services"]["n8n"] = (
                 "running" if response.status_code == 200 else "error"
             )
-        except:
-            status["services"]["n8n"] = "offline"
+        except Exception:status["services"]["n8n"] = "offline"
 
         # Overall health
         offline_services = [k for k, v in status["services"].items() if v == "offline"]

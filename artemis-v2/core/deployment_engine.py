@@ -598,8 +598,7 @@ jobs:
         try:
             response = requests.get(result["url"], timeout=5)
             return response.status_code == 200
-        except:
-            return False
+        except Exception:return False
 
     def _deploy_docker(self, config: DeploymentConfig, artifact: str) -> Dict[str, Any]:
         """Deploy using Docker"""

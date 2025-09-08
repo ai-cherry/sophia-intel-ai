@@ -41,8 +41,7 @@ async def check_connection():
         async with engine.begin() as conn:
             await conn.execute("SELECT 1")
         return True
-    except:
-        return False
+    except Exception:return False
 
 
 async def get_db():

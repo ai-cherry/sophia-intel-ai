@@ -25,8 +25,7 @@ class HighLoadScenario:
         """Initialize test configuration"""
         try:
             config.load_incluster_config()
-        except:
-            config.load_kube_config()
+        except Exception:config.load_kube_config()
 
         self.v1 = client.CoreV1Api()
         self.apps_v1 = client.AppsV1Api()
@@ -717,8 +716,7 @@ ai_requests_total{{namespace="{self.test_namespace}"}} {i * 50}
                     "http://pushgateway.monitoring.svc.cluster.local:9091/metrics/job/high-load-test",
                     data=metrics,
                 )
-            except:
-                # Fallback: create metric endpoints in pods
+            except Exception:# Fallback: create metric endpoints in pods
                 pass
 
     async def _get_active_alerts(self) -> List[Dict]:
@@ -730,8 +728,7 @@ ai_requests_total{{namespace="{self.test_namespace}"}} {i * 50}
                 ) as resp:
                     data = await resp.json()
                     return data.get("data", [])
-            except:
-                return []
+            except Exception:return []
 
     async def cleanup(self):
         """Clean up test resources"""
@@ -749,8 +746,7 @@ ai_requests_total{{namespace="{self.test_namespace}"}} {i * 50}
                 plural="prometheusrules",
                 name="high-load-alerts",
             )
-        except:
-            pass
+        except Exception:pass
 
         logger.info("Cleanup complete")
 

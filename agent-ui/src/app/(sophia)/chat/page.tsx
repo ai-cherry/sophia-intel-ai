@@ -68,7 +68,7 @@ export default function ChatPage() {
   // Bridge recording state to global binder for handlers defined below
   useEffect(() => {
     (window as any).bindChatRecording?.(setIsRecording);
-    const onTranscription = (e: any) => {
+    const onTranscription = (e: unknown) => {
       const text = e?.detail?.text as string;
       if (text) {
         setInput((prev) => (prev ? prev + " " + text : text));
@@ -173,7 +173,6 @@ export default function ChatPage() {
       mediaRecorder.onstop = async () => {
         const blob = new Blob(chunks, { type: "audio/webm" });
         // TODO: Send to speech-to-text endpoint
-        console.log("Recording complete", blob.size);
         setIsRecording(false);
       };
 
@@ -417,7 +416,7 @@ async function blobToBase64(blob: Blob): Promise<string> {
   });
 }
 
-function startRecording(this: any) {
+function startRecording(this: unknown) {
   (async () => {
     try {
       // @ts-ignore
@@ -434,7 +433,7 @@ function startRecording(this: any) {
   let mediaRecorder: MediaRecorder | null = null;
   let chunks: BlobPart[] = [];
   const w = window as any;
-  w.bindChatRecording = (setIsRecordingCb: any) => { setIsRecordingFn = setIsRecordingCb; };
+  w.bindChatRecording = (setIsRecordingCb: unknown) => { setIsRecordingFn = setIsRecordingCb; };
   w.startRecording = async function startRecording() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });

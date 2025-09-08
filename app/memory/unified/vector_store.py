@@ -504,8 +504,7 @@ class VectorStore:
                     days_old = (datetime.now(timezone.utc) - created_time).days
                     recency_factor = max(0.5, 1.0 - days_old / 365)  # Decay over a year
                     score *= recency_factor
-                except:
-                    pass
+                except Exception:pass
 
             return score
 

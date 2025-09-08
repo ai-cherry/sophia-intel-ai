@@ -179,14 +179,14 @@ const SwarmTemplateSelector: React.FC = () => {
     setConfigDialogOpen(true);
   };
 
-  const handleConfigurationChange = (key: string, value: any) => {
+  const handleConfigurationChange = (key: string, value: unknown) => {
     setConfiguration(prev => ({
       ...prev,
       [key]: value
     }));
   };
 
-  const handleAgentOverride = (agentIndex: number, configKey: string, value: any) => {
+  const handleAgentOverride = (agentIndex: number, configKey: string, value: unknown) => {
     setConfiguration(prev => ({
       ...prev,
       agent_overrides: {

@@ -127,16 +127,14 @@ async def readiness_check() -> Dict[str, Any]:
         from app.api.core.database import check_connection
 
         checks["database"] = await check_connection()
-    except:
-        checks["database"] = False
+    except Exception:checks["database"] = False
 
     # Check Redis
     try:
         from app.api.core.cache import check_connection
 
         checks["redis"] = await check_connection()
-    except:
-        checks["redis"] = False
+    except Exception:checks["redis"] = False
 
     all_ready = all(checks.values()) if checks else True
 

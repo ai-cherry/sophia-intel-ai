@@ -66,8 +66,7 @@ class CodeQualityChecker:
                     if imp not in content.replace(f"import {imp}", ""):
                         continue  # Skip detailed unused import check for now
 
-            except:
-                pass  # Skip import analysis if AST parsing fails
+            except Exception:pass  # Skip import analysis if AST parsing fails
 
         except Exception as e:
             issues["errors"].append(f"File reading error: {str(e)}")

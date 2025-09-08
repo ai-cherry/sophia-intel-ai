@@ -1353,8 +1353,7 @@ class PredictivePersonalityEngine(BasePersonalityAnalyzer):
                     try:
                         post_time = datetime.fromisoformat(post["timestamp"])
                         post_times.append(post_time.hour)
-                    except:
-                        continue
+                    except Exception:continue
 
             if post_times:
                 # Find peak activity hours

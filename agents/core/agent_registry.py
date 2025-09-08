@@ -316,8 +316,7 @@ class AgentRegistry:
                     for i, part in enumerate(version_parts[:3])
                 )
                 score += version_score * 0.01
-            except:
-                pass
+            except Exception:pass
             return score
 
         return max(candidates, key=score_agent)

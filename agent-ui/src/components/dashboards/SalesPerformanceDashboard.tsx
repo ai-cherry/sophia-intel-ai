@@ -104,24 +104,24 @@ interface TeamMetrics {
 // ==================== HERMES SALES DASHBOARD ====================
 
 const SalesPerformanceDashboard: React.FC = () => {
-  // Core State
+  // Core State;
   const [connected, setConnected] = useState(false);
   const [loading, setLoading] = useState(false);
   const [selectedRep, setSelectedRep] = useState<SalesRep | null>(null);
   const [selectedCall, setSelectedCall] = useState<GongCall | null>(null);
 
-  // Data State
+  // Data State;
   const [salesReps, setSalesReps] = useState<SalesRep[]>([]);
   const [gongCalls, setGongCalls] = useState<GongCall[]>([]);
   const [teamMetrics, setTeamMetrics] = useState<TeamMetrics | null>(null);
 
-  // Filter & Search State
+  // Filter & Search State;
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterPerformance, setFilterPerformance] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('performance_score');
 
-  // UI State
+  // UI State;
   const [activeTab, setActiveTab] = useState('overview');
   const [playingCall, setPlayingCall] = useState<string | null>(null);
   const [voiceEnabled, setVoiceEnabled] = useState(false);
@@ -196,7 +196,7 @@ const SalesPerformanceDashboard: React.FC = () => {
     }
   };
 
-  const handleRealtimeUpdate = (data: any) => {
+  const handleRealtimeUpdate = (data: unknown) => {
     switch (data.type) {
       case 'rep_update':
         setSalesReps(prev => prev.map(rep =>
@@ -219,7 +219,7 @@ const SalesPerformanceDashboard: React.FC = () => {
     }
   };
 
-  const sendCommand = (command: any) => {
+  const sendCommand = (command: unknown) => {
     if (ws.current?.readyState === WebSocket.OPEN) {
       ws.current.send(JSON.stringify(command));
     }
@@ -250,7 +250,7 @@ const SalesPerformanceDashboard: React.FC = () => {
     }
   }, [voiceEnabled, selectedRep]);
 
-  const executeVoiceCommand = (result: any) => {
+  const executeVoiceCommand = (result: unknown) => {
     switch (result.action) {
       case 'filter_reps':
         setFilterPerformance(result.filter);

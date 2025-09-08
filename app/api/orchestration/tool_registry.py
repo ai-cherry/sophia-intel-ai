@@ -55,8 +55,7 @@ class MCPToolAdapter:
         try:
             response = await self.client.get(f"{self.base_url}/health")
             return response.status_code == 200
-        except:
-            return False
+        except Exception:return False
 
     async def list_tools(self) -> list[dict[str, Any]]:
         """List available tools on the MCP server"""

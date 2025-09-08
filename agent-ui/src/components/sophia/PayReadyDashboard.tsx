@@ -13,7 +13,7 @@ import {
   BarChart3, PieChart, Calendar, MessageCircle
 } from 'lucide-react';
 
-// WebSocket hook for real-time updates
+// WebSocket hook for real-time updates;
 const useWebSocketConnection = (url: string) => {
   const [socket, setSocket] = useState<WebSocket | null>(null);
   const [connected, setConnected] = useState(false);
@@ -76,7 +76,7 @@ interface OperationalIntelligence {
   confidence: number;
   impact_score: number;
   recommendations: string[];
-  data: any;
+  data: unknown;
 }
 
 const PayReadyDashboard: React.FC = () => {
@@ -158,7 +158,6 @@ const PayReadyDashboard: React.FC = () => {
 
       if (response.ok) {
         const result = await response.json();
-        console.log('Swarm deployment initiated:', result);
       }
     } catch (error) {
       console.error('Failed to deploy swarm:', error);

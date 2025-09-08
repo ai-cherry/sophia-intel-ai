@@ -186,8 +186,7 @@ class DevContainerValidator:
                 )
                 if result.returncode == 0:
                     gpu_info = {"gpus": result.stdout.strip().split("\n")}
-            except:
-                pass
+            except Exception:pass
 
         # Check Docker GPU support
         docker_gpu_support = False
@@ -207,8 +206,7 @@ class DevContainerValidator:
                 timeout=30,
             )
             docker_gpu_support = result.returncode == 0
-        except:
-            pass
+        except Exception:pass
 
         return {
             "valid": nvidia_available and docker_gpu_support,
@@ -288,8 +286,7 @@ class DevContainerValidator:
                         if result.stdout
                         else "unknown"
                     )
-            except:
-                pass
+            except Exception:pass
 
         # Check Docker Compose
         compose_available = (
@@ -355,8 +352,7 @@ class DevContainerValidator:
                 timeout=10,
             )
             internet_available = result.returncode == 0
-        except:
-            pass
+        except Exception:pass
 
         # Check DNS resolution
         dns_working = False
@@ -365,8 +361,7 @@ class DevContainerValidator:
                 ["nslookup", "github.com"], capture_output=True, timeout=5
             )
             dns_working = result.returncode == 0
-        except:
-            pass
+        except Exception:pass
 
         return {
             "valid": internet_available and dns_working,
@@ -486,8 +481,7 @@ class DevContainerValidator:
                         if re.search(pattern, content, re.IGNORECASE):
                             hardcoded_secrets_found = True
                             break
-                except:
-                    pass
+                except Exception:pass
 
         if hardcoded_secrets_found:
             security_issues.append("hardcoded_secrets")
@@ -516,16 +510,14 @@ class DevContainerValidator:
                 total_mem_gb = int(mem_match.group(1)) / 1024 / 1024
                 if total_mem_gb < 16:
                     optimization_issues.append("insufficient_memory")
-        except:
-            pass
+        except Exception:pass
 
         # Check CPU cores
         try:
             cpu_count = os.cpu_count()
             if cpu_count < 4:
                 optimization_issues.append("insufficient_cpu")
-        except:
-            pass
+        except Exception:pass
 
         return {
             "valid": len(optimization_issues) == 0,

@@ -21,8 +21,7 @@ class DeploymentScenario:
         """Initialize test configuration"""
         try:
             config.load_incluster_config()
-        except:
-            config.load_kube_config()
+        except Exception:config.load_kube_config()
 
         self.v1 = client.CoreV1Api()
         self.apps_v1 = client.AppsV1Api()
@@ -131,14 +130,12 @@ class DeploymentScenario:
                 plural="applications",
                 name="deployment-test-app",
             )
-        except:
-            pass
+        except Exception:pass
 
         try:
             # Delete test namespace
             self.v1.delete_namespace(name=self.test_namespace)
-        except:
-            pass
+        except Exception:pass
 
         logger.info("Cleanup complete")
 

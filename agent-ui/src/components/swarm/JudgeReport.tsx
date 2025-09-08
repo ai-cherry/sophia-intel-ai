@@ -9,7 +9,7 @@ interface JudgeReportProps {
   data: JudgeDecision | string | any;
 }
 
-const allowed = (j: any): boolean => {
+const allowed = (j: unknown): boolean => {
   return (
     j &&
     ['accept', 'merge'].includes(j.decision) &&
@@ -150,7 +150,7 @@ export function JudgeReport({ data }: JudgeReportProps) {
   );
 }
 
-function safe(s: string): any {
+function safe(s: string): unknown {
   try {
     return JSON.parse(s);
   } catch {

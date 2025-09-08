@@ -270,8 +270,7 @@ if __name__ == "__main__":
                         score += 3
                     elif age_days < 30:
                         score += 1
-                except:
-                    pass
+                except Exception:pass
 
             # Source reliability bonus
             source = result.get("source", "").lower()

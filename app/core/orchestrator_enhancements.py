@@ -480,8 +480,7 @@ class RealTimeMonitor:
         for subscriber in self.subscribers:
             try:
                 await subscriber.send_json(update)
-            except:
-                self.subscribers.discard(subscriber)
+            except Exception:self.subscribers.discard(subscriber)
 
     def subscribe(self, websocket):
         """Subscribe to monitoring updates"""

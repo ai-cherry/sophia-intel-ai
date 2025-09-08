@@ -353,8 +353,7 @@ async def get_factory_integration_status() -> dict[str, Any]:
                 list(research_swarm.research_agents.keys()) if research_swarm else []
             ),
         }
-    except:
-        return {"integrated": False, "error": "Could not check factory integration"}
+    except Exception:return {"integrated": False, "error": "Could not check factory integration"}
 
 
 @router.delete("/shutdown")

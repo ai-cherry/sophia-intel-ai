@@ -581,8 +581,7 @@ class SemanticClassifier:
                 and isinstance(tree.body[0].value.value, str)
             ):
                 contexts[AnalysisContext.MODULE_DOCSTRING] = tree.body[0].value.value
-        except:
-            contexts[AnalysisContext.MODULE_DOCSTRING] = ""
+        except Exception:contexts[AnalysisContext.MODULE_DOCSTRING] = ""
 
         # Extract import statements
         contexts[AnalysisContext.IMPORT_STATEMENTS] = self._extract_imports(content)

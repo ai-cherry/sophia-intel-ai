@@ -775,8 +775,7 @@ class AutoTagger:
                         dependencies.add(alias.name.split(".")[0])
                 elif isinstance(node, ast.ImportFrom) and node.module:
                     dependencies.add(node.module.split(".")[0])
-        except:
-            # Fallback to regex if AST parsing fails
+        except Exception:# Fallback to regex if AST parsing fails
             import_pattern = r"(?:from\s+(\w+)|import\s+(\w+))"
             matches = re.findall(import_pattern, content)
             for match in matches:

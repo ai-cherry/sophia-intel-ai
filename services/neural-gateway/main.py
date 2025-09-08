@@ -347,8 +347,7 @@ class NeuralGateway:
                 services["neural_engine"] = "healthy" if response.status_code == 200 else "unhealthy"
             else:
                 services["neural_engine"] = "not_initialized"
-        except:
-            services["neural_engine"] = "unreachable"
+        except Exception:services["neural_engine"] = "unreachable"
 
         # Check ASIP orchestrator
         try:
@@ -357,8 +356,7 @@ class NeuralGateway:
                 services["asip_orchestrator"] = "healthy" if response.status_code == 200 else "unhealthy"
             else:
                 services["asip_orchestrator"] = "not_initialized"
-        except:
-            services["asip_orchestrator"] = "unreachable"
+        except Exception:services["asip_orchestrator"] = "unreachable"
 
         # Check cache
         cache_connected = False
@@ -366,9 +364,7 @@ class NeuralGateway:
             try:
                 await cache_client.ping()
                 cache_connected = True
-            except:
-
-        # Determine overall status
+            except Exception:# Determine overall status
         healthy_services = sum(1 for status in services.values() if status == "healthy")
         total_services = len(services)
 

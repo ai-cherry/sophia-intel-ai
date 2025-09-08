@@ -31,9 +31,9 @@ interface DomainMetrics {
 
 interface MCPServerGridProps {
   domain: 'artemis' | 'sophia' | 'shared';
-  servers: any[];
+  servers: unknown[];
   mythology_agents?: MythologyAgentMapping[];
-  onServerSelect?: (server: any) => void;
+  onServerSelect?: (server: unknown) => void;
   refreshInterval?: number;
 }
 
@@ -161,7 +161,7 @@ export const MCPServerGrid: React.FC<MCPServerGridProps> = ({
 
   const metrics = calculateDomainMetrics();
 
-  const handleServerClick = (server: any) => {
+  const handleServerClick = (server: unknown) => {
     setSelectedServer(server.server_name === selectedServer ? null : server.server_name);
     onServerSelect?.(server);
   };
@@ -172,7 +172,7 @@ export const MCPServerGrid: React.FC<MCPServerGridProps> = ({
     );
   };
 
-  const renderServerGrid = (serverList: any[], title: string) => (
+  const renderServerGrid = (serverList: unknown[], title: string) => (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className={`text-lg font-semibold ${theme.text} flex items-center space-x-2`}>

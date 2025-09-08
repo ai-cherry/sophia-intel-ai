@@ -246,8 +246,7 @@ async def get_swarm_history(
                         "team_id": team_id,
                     }
                 )
-            except:
-                continue
+            except Exception:continue
 
         return history
 

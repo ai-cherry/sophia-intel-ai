@@ -68,8 +68,7 @@ async def get_tree(
                         .strip()
                     )
                     file_info["git_status"] = status.split()[0] if status else "clean"
-                except:
-                    file_info["git_status"] = "unknown"
+                except Exception:file_info["git_status"] = "unknown"
             dir_info["children"].append(file_info)
         results.append(dir_info)
     return results

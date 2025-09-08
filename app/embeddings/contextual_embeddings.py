@@ -872,8 +872,7 @@ class ContextualEmbeddings:
                         neighbor_content, EmbeddingType.CONTEXTUAL
                     )
                     neighbor_embeddings.append(neighbor_emb * rel.confidence)
-                except:
-                    pass
+                except Exception:pass
 
         for rel in context["outgoing_relationships"][:5]:  # Limit to top 5
             neighbor_content = self._extract_neighbor_context(rel.target_id)
@@ -883,8 +882,7 @@ class ContextualEmbeddings:
                         neighbor_content, EmbeddingType.CONTEXTUAL
                     )
                     neighbor_embeddings.append(neighbor_emb * rel.confidence)
-                except:
-                    pass
+                except Exception:pass
 
         # Incorporate neighbor information
         if neighbor_embeddings:

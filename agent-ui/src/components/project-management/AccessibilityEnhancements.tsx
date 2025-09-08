@@ -117,7 +117,7 @@ const AccessibilityEnhancements: React.FC = () => {
     }
   };
 
-  const updatePreference = (key: keyof AccessibilityPreferences, value: any) => {
+  const updatePreference = (key: keyof AccessibilityPreferences, value: unknown) => {
     setPreferences(prev => ({ ...prev, [key]: value }));
     announceToScreenReader(`${key} setting updated to ${value}`);
   };

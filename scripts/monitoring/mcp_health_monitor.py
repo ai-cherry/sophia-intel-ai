@@ -63,16 +63,14 @@ class MCPHealthMonitor:
             async with httpx.AsyncClient(timeout=2) as client:
                 response = await client.get(f"http://localhost:{port}{endpoint}")
                 return response.status_code in [200, 204]
-        except:
-            return False
+        except Exception:return False
 
     def check_redis(self) -> bool:
         """Check Redis health"""
         try:
             r = redis.Redis(host="localhost", port=6379, decode_responses=True)
             return r.ping()
-        except:
-            return False
+        except Exception:return False
 
     def check_process_on_port(self, port: int) -> bool:
         """Check if any process is listening on port"""
@@ -81,8 +79,7 @@ class MCPHealthMonitor:
                 ["lsof", "-i", f":{port}"], capture_output=True, text=True, timeout=2
             )
             return bool(result.stdout.strip())
-        except:
-            return False
+        except Exception:return False
 
     async def update_server_status(self):
         """Update status of all servers"""
@@ -136,8 +133,7 @@ class MCPHealthMonitor:
                         self.connections[name]["status"] = "✅"
                     else:
                         self.connections[name]["status"] = "🟡"
-            except:
-                self.connections[name]["status"] = "❌"
+            except Exception:self.connections[name]["status"] = "❌"
 
     def create_status_table(self) -> Table:
         """Create status table"""

@@ -21,8 +21,7 @@ def _client():
     try:
         # Try v4 client first
         return weaviate.connect_to_local(settings.WEAVIATE_URL)
-    except:
-        # Fallback to v3 client
+    except Exception:# Fallback to v3 client
         from weaviate import Client
 
         return Client(url=settings.WEAVIATE_URL)
@@ -69,8 +68,7 @@ def ensure_schema(collection: str, dim: int):
                         ),
                     ],
                 )
-        except:
-            # v3 client fallback
+        except Exception:# v3 client fallback
             existing_classes = {c["class"] for c in client.schema.get()["classes"]}
             if collection not in existing_classes:
                 schema = {
@@ -129,8 +127,7 @@ async def upsert_chunks_dual(ids, texts, payloads, lang=""):
                         batch.add_object(
                             properties=props, vector=vecsA[k], uuid=str(ids[i])
                         )
-            except:
-                # v3 client fallback
+            except Exception:# v3 client fallback
                 vecsA = embed_with_cache(A_txt, MODEL_A)
                 with client.batch as batch:
                     for k, i in enumerate(A_idx):
@@ -154,8 +151,7 @@ async def upsert_chunks_dual(ids, texts, payloads, lang=""):
                         batch.add_object(
                             properties=props, vector=vecsB[k], uuid=str(ids[i])
                         )
-            except:
-                # v3 client fallback
+            except Exception:# v3 client fallback
                 vecsB = embed_with_cache(B_txt, MODEL_B)
                 with client.batch as batch:
                     for k, i in enumerate(B_idx):
@@ -223,11 +219,9 @@ async def hybrid_search_merge(query: str, k: int = 8, semantic_weight: float = 0
                                 "prop": r.properties,
                             }
                         )
-                except:
-                    pass  # BM25 might not be available
+                except Exception:pass  # BM25 might not be available
 
-            except:
-                # v3 client fallback
+            except Exception:# v3 client fallback
                 result = (
                     client.query.get(
                         collection_a,
@@ -295,11 +289,9 @@ async def hybrid_search_merge(query: str, k: int = 8, semantic_weight: float = 0
                                 "prop": r.properties,
                             }
                         )
-                except:
-                    pass
+                except Exception:pass
 
-            except:
-                # v3 client fallback
+            except Exception:# v3 client fallback
                 result = (
                     client.query.get(
                         collection_b,

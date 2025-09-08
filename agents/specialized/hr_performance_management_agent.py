@@ -702,8 +702,7 @@ class PerformanceManagementAgent(BaseAgent):
 
         try:
             return json.loads(response)
-        except:
-            return {"analysis": response}
+        except Exception:return {"analysis": response}
 
     async def _generate_smart_goals(
         self, employee_data: dict, business_objectives: dict, role_expectations: dict
@@ -733,8 +732,7 @@ class PerformanceManagementAgent(BaseAgent):
 
         try:
             return json.loads(response)
-        except:
-            return [{"title": "Performance Goal", "description": "Improve performance"}]
+        except Exception:return [{"title": "Performance Goal", "description": "Improve performance"}]
 
     async def _calculate_performance_rating(
         self, performance_analysis: dict, goal_analysis: dict, peer_feedback: list[dict]

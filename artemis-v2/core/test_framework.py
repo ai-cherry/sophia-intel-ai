@@ -252,8 +252,7 @@ class TestFramework:
                                 ],
                             }
                         )
-            except:
-                pass
+            except Exception:pass
 
         return analysis
 

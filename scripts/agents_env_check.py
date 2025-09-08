@@ -16,13 +16,12 @@ Usage
 from __future__ import annotations
 
 import json
-import os
 import platform
 import subprocess
 import sys
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 
 @dataclass
@@ -169,7 +168,7 @@ def check_required_dependencies() -> List[CheckResult]:
     """Check critical runtime dependencies"""
     results: List[CheckResult] = []
     critical_deps = ['fastapi', 'uvicorn', 'pydantic', 'redis', 'httpx']
-    
+
     for dep in critical_deps:
         try:
             __import__(dep)
@@ -177,12 +176,12 @@ def check_required_dependencies() -> List[CheckResult]:
         except ImportError:
             results.append(
                 CheckResult(
-                    status="fail", 
+                    status="fail",
                     message=f"{dep} not available",
-                    details={"remediation": f"pip3 install -r requirements/base.txt"}
+                    details={"remediation": "pip3 install -r requirements/base.txt"}
                 )
             )
-    
+
     return results
 
 
@@ -190,7 +189,7 @@ def check_environment_files() -> List[CheckResult]:
     """Validate .env.* configuration consistency"""
     results: List[CheckResult] = []
     root = Path.cwd()
-    
+
     # Check for .python-version consistency
     python_version_file = root / ".python-version"
     if python_version_file.exists():
@@ -209,11 +208,11 @@ def check_environment_files() -> List[CheckResult]:
                 )
         except Exception as e:
             results.append(CheckResult(status="warn", message=f"Cannot read .python-version: {e}", details={}))
-    
+
     # Check environment file separation
     sophia_env = root / ".env.sophia"
     ai_keys = ['ANTHROPIC_API_KEY', 'OPENAI_API_KEY', 'GROQ_API_KEY', 'GROK_API_KEY', 'XAI_API_KEY']
-    
+
     if sophia_env.exists():
         content = sophia_env.read_text()
         contaminated_keys = [key for key in ai_keys if key in content]
@@ -230,18 +229,18 @@ def check_environment_files() -> List[CheckResult]:
             )
         else:
             results.append(CheckResult(status="ok", message="Clean environment separation", details={}))
-    
+
     return results
 
 
 def check_docker_availability() -> List[CheckResult]:
     """Check Docker setup for devcontainer option"""
     results: List[CheckResult] = []
-    
+
     try:
         subprocess.check_output(["docker", "--version"], stderr=subprocess.DEVNULL)
         results.append(CheckResult(status="ok", message="Docker available", details={}))
-        
+
         # Check if Docker is running
         try:
             subprocess.check_output(["docker", "info"], stderr=subprocess.DEVNULL)
@@ -265,7 +264,7 @@ def check_docker_availability() -> List[CheckResult]:
                 }
             )
         )
-    
+
     return results
 
 
@@ -273,7 +272,7 @@ def check_wheel_architecture() -> List[CheckResult]:
     """Deep wheel/arch validation beyond pydantic_core"""
     results: List[CheckResult] = []
     arch_sensitive_packages = ['uvloop', 'orjson', 'lxml']
-    
+
     for package in arch_sensitive_packages:
         try:
             module = __import__(package)
@@ -293,7 +292,7 @@ def check_wheel_architecture() -> List[CheckResult]:
                     details={"error": str(e), "remediation": f"pip3 install --force-reinstall {package}"}
                 )
             )
-    
+
     return results
 
 
@@ -302,7 +301,7 @@ def check_installation_path() -> List[CheckResult]:
     results: List[CheckResult] = []
     machine = platform.machine()
     is_rosetta = detect_rosetta()
-    
+
     if sys.platform == "darwin":
         if machine == "arm64" and not is_rosetta:
             results.append(
@@ -339,7 +338,7 @@ def check_installation_path() -> List[CheckResult]:
                 details={"recommendation": "System Python preferred; devcontainer optional"}
             )
         )
-    
+
     return results
 
 
@@ -368,11 +367,11 @@ def main() -> int:
     # Critical dependency checks
     checks.extend(check_pydantic_core())
     checks.extend(check_required_dependencies())
-    
+
     # Environment and configuration checks
     checks.extend(check_environment_files())
     checks.extend(check_docker_availability())
-    
+
     # Architecture-specific validation
     checks.extend(check_wheel_architecture())
     checks.extend(check_installation_path())

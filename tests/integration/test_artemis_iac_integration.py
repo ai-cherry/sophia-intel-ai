@@ -7,14 +7,14 @@ import asyncio
 import os
 import tempfile
 
-from artemis.orchestrator.core_orchestrator import ArtemisOrchestrator
-
 # Import the core components
 from core.clean_architecture.agents.unified_iac_agent import (
     IaCConfig,
     IaCTool,
     UnifiedIaCAgent,
 )
+
+from artemis.orchestrator.core_orchestrator import ArtemisOrchestrator
 
 
 async def test_artemis_iac_integration():

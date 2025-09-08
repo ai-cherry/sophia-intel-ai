@@ -451,7 +451,7 @@ class PulumiESCManager:
 
         except Exception as e:
             logger.error(f"❌ Error validating secrets: {e}")
-            return {secret: False for secret in required_secrets.keys()}
+            return dict.fromkeys(required_secrets.keys(), False)
 
     def create_environment_template(self) -> bool:
         """

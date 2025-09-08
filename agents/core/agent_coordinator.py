@@ -10,9 +10,9 @@ import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set
+from typing import Any
 
-from .base_agent import AgentCapability, AgentConfig, AgentStatus, BaseAgent
+from .base_agent import AgentCapability, AgentStatus, BaseAgent
 
 logger = logging.getLogger(__name__)
 

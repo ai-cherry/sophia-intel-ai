@@ -210,7 +210,7 @@ def analyze_all_logs() -> Dict[str, Any]:
 
     for model, metrics in combined_token_usage.items():
         # Try to match model name to our known costs
-        cost_key = next((k for k in model_costs.keys() if k in model.lower()), "unknown")
+        cost_key = next((k for k in model_costs if k in model.lower()), "unknown")
         cost_per_million = model_costs[cost_key]
 
         total_tokens = metrics.get("total_tokens", 0)

@@ -5,15 +5,14 @@ Provides centralized agent registration, discovery, and metadata management
 """
 
 import asyncio
-import json
 import logging
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set
+from typing import Any
 
-from .base_agent import AgentCapability, AgentStatus, BaseAgent
+from .base_agent import AgentCapability, BaseAgent
 
 logger = logging.getLogger(__name__)
 

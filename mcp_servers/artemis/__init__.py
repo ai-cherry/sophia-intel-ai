@@ -1,5 +1,7 @@
 # Auto-added by pre-commit hook
-import sys, os
+import os
+import sys
+
 try:
     sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
     from core.environment_enforcer import enforce_environment
@@ -20,17 +22,17 @@ A revolutionary coding swarm featuring:
 Built on CrewAI v0.152.0 and LangGraph v0.6.0 for advanced orchestration.
 """
 
-from .swarm_orchestrator import ArtemisSwarm
-from .agents.planner_agent import PlannerAgent
 from .agents.coder_agent import CoderAgent
-from .agents.tester_agent import TesterAgent
 from .agents.deployer_agent import DeployerAgent
 from .agents.evolver_agent import EvolverAgent
+from .agents.planner_agent import PlannerAgent
+from .agents.tester_agent import TesterAgent
+from .swarm_orchestrator import ArtemisSwarm
 
 __version__ = "2.0.0"
 __all__ = [
     "ArtemisSwarm",
-    "PlannerAgent", 
+    "PlannerAgent",
     "CoderAgent",
     "TesterAgent",
     "DeployerAgent",

@@ -17,11 +17,12 @@ import pytest
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
 try:
-    from artemis.orchestrator import ArtemisSwarmOrchestrator
     from base_mcp_server.server import BaseMCPServer
     from bi_server.server import BusinessIntelligenceServer
     from mem0_server.server import Mem0MemoryServer
     from unified_mcp_server.server import UnifiedMCPServer
+
+    from artemis.orchestrator import ArtemisSwarmOrchestrator
 except ImportError:
     # Mock the server classes if not available
     class UnifiedMCPServer:
@@ -449,7 +450,7 @@ class TestDataFlowIntegration:
             if hasattr(server, "connect"):
                 await server.connect()
             else:
-                setattr(server, "connected", True)
+                server.connected = True
 
         return servers
 

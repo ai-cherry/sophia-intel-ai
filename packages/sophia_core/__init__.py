@@ -11,8 +11,8 @@ This package provides core functionality for building AI agents and swarms inclu
 Version: 1.0.0
 """
 
-from typing import Dict, Any
 import logging
+from typing import Any, Dict
 
 __version__ = "1.0.0"
 __author__ = "Sophia Intelligence AI"
@@ -25,7 +25,7 @@ __all__ = [
     "__version__",
     "__author__",
     "config",
-    "models", 
+    "models",
     "memory",
     "tools",
     "agents",
@@ -66,5 +66,5 @@ def __getattr__(name: str) -> Any:
         elif name == "exceptions":
             from . import exceptions
             return exceptions
-    
+
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

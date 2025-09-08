@@ -7,21 +7,21 @@ including swarm coordination, task distribution, and collective intelligence.
 
 from .base import (
     BaseSwarm,
-    SwarmState,
-    SwarmConfig,
-    SwarmTopology,
-    SwarmRole,
-    SwarmMember,
-    SwarmTask,
-    SwarmMessage,
-    SwarmCoordinator,
-    SwarmExecutor,
     HierarchicalSwarm,
     PeerToPeerSwarm,
-    SwarmRegistry,
+    SwarmConfig,
+    SwarmCoordinationError,
+    SwarmCoordinator,
     SwarmError,
+    SwarmExecutor,
     SwarmInitializationError,
-    SwarmCoordinationError
+    SwarmMember,
+    SwarmMessage,
+    SwarmRegistry,
+    SwarmRole,
+    SwarmState,
+    SwarmTask,
+    SwarmTopology,
 )
 
 __all__ = [
@@ -29,25 +29,25 @@ __all__ = [
     "BaseSwarm",
     "SwarmCoordinator",
     "SwarmExecutor",
-    
+
     # Swarm types
     "HierarchicalSwarm",
     "PeerToPeerSwarm",
-    
+
     # Swarm configuration
     "SwarmState",
-    "SwarmConfig", 
+    "SwarmConfig",
     "SwarmTopology",
     "SwarmRole",
-    
+
     # Swarm components
     "SwarmMember",
     "SwarmTask",
     "SwarmMessage",
-    
+
     # Swarm management
     "SwarmRegistry",
-    
+
     # Exceptions
     "SwarmError",
     "SwarmInitializationError",

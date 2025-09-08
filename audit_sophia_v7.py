@@ -329,7 +329,7 @@ class SophiaV7Auditor:
                 "Refactor": ["refactor", "cleanup", "optimize"],
             }
 
-            commit_categories = {cat: 0 for cat in categories}
+            commit_categories = dict.fromkeys(categories, 0)
 
             for _, commit in df.iterrows():
                 message = commit["message"].lower()

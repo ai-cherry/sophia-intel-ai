@@ -8,10 +8,10 @@ import json
 
 # Import existing ASIP components
 import sys
+from collections.abc import AsyncGenerator
 from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, Optional
-from collections.abc import AsyncGenerator
 
 from fastapi import FastAPI, HTTPException, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
@@ -203,7 +203,7 @@ class GPUAwareRouter:
             "mcp_hub": {"ip": "104.171.202.117", "name": "A6000", "memory": "48GB"},
             "development": {"ip": "155.248.194.183", "name": "A10", "memory": "24GB"},
         }
-        self.current_loads = {key: 0 for key in self.gpu_instances}
+        self.current_loads = dict.fromkeys(self.gpu_instances, 0)
 
     async def route_to_gpu(self, task_type: str, complexity: float) -> Dict[str, str]:
         """Route task to appropriate GPU based on type and complexity"""

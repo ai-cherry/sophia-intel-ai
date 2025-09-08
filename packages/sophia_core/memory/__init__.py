@@ -7,16 +7,16 @@ including episodic memory, semantic memory, and working memory components.
 
 from .base import (
     BaseMemory,
+    EpisodicMemory,
     MemoryEntry,
-    MemoryType,
+    MemoryManager,
     MemoryQuery,
     MemoryResult,
+    MemorySearchStrategy,
     MemoryStats,
-    EpisodicMemory,
+    MemoryType,
     SemanticMemory,
     WorkingMemory,
-    MemoryManager,
-    MemorySearchStrategy
 )
 
 __all__ = [
@@ -25,15 +25,15 @@ __all__ = [
     "MemoryEntry",
     "MemoryType",
     "MemoryQuery",
-    "MemoryResult", 
+    "MemoryResult",
     "MemoryStats",
     "MemorySearchStrategy",
-    
+
     # Specific memory types
     "EpisodicMemory",
-    "SemanticMemory", 
+    "SemanticMemory",
     "WorkingMemory",
-    
+
     # Memory management
     "MemoryManager"
 ]

@@ -8,19 +8,19 @@ Zero-conflict architecture with existing MCP services
 import json
 import logging
 import os
+import subprocess
 from abc import ABC, abstractmethod
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import redis
-from fastapi import Depends, FastAPI, HTTPException, Security, Request
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from fastapi import Depends, FastAPI, HTTPException, Request, Security
+from fastapi.openapi.utils import get_openapi
 from fastapi.responses import JSONResponse
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field, validator
 from redis.exceptions import ConnectionError, RedisError, TimeoutError
-import subprocess
-from fastapi.openapi.utils import get_openapi
 
 # Optional Weaviate support
 try:

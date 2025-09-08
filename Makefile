@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: help env.check rag.start rag.test lint dev-up dev-down dev-shell logs status grok-test swarm-start memory-search mcp-status
+.PHONY: help env.check rag.start rag.test lint dev-up dev-down dev-shell logs status grok-test swarm-start memory-search mcp-status env-docs
 
 help:
 	@echo "\033[0;36mMulti-Agent Development Environment\033[0m"
@@ -62,3 +62,7 @@ clean: ## Clean up Docker resources
 	@echo "🧹 Cleaning Docker resources..."
 	@docker system prune -f
 	@docker volume prune -f
+
+env-docs: ## Show environment guide for SSH agent and env files
+	@echo "Environment Guide (ENVIRONMENT_GUIDE.md)" && echo "------------------------------"
+	@sed -n '1,200p' ENVIRONMENT_GUIDE.md | sed -e 's/^/  /'

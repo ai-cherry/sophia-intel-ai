@@ -1,9 +1,9 @@
 import time
 from datetime import datetime
-from typing import Dict, List, Optional, Any
+from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, HTTPException, Header, Response, status, Depends
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field
 
 from app.mcp.memory_adapter import UnifiedMemoryAdapter
@@ -15,7 +15,7 @@ security = HTTPBearer(
 )
 
 router = APIRouter(
-    prefix="/api/memory", 
+    prefix="/api/memory",
     tags=["memory"],
     responses={
         429: {
@@ -67,24 +67,24 @@ def check_rate_limit(client_id: str, endpoint: str, response: Response) -> bool:
     """Check if request exceeds rate limit and set Retry-After header if needed"""
     if endpoint not in RATE_LIMITS:
         return True
-    
+
     current_time = time.time()
     window = RATE_LIMITS[endpoint]["window"]
     max_requests = RATE_LIMITS[endpoint]["requests"]
-    
+
     # Initialize client tracking
     if client_id not in rate_limit_store:
         rate_limit_store[client_id] = {}
     if endpoint not in rate_limit_store[client_id]:
         rate_limit_store[client_id][endpoint] = []
-    
+
     # Clean old requests outside window
     requests = rate_limit_store[client_id][endpoint]
     rate_limit_store[client_id][endpoint] = [
-        req_time for req_time in requests 
+        req_time for req_time in requests
         if current_time - req_time < window
     ]
-    
+
     # Check if over limit
     if len(rate_limit_store[client_id][endpoint]) >= max_requests:
         # Calculate retry after time
@@ -92,7 +92,7 @@ def check_rate_limit(client_id: str, endpoint: str, response: Response) -> bool:
         retry_after = int(window - (current_time - oldest_request)) + 1
         response.headers["Retry-After"] = str(retry_after)
         return False
-    
+
     # Add current request
     rate_limit_store[client_id][endpoint].append(current_time)
     return True
@@ -106,8 +106,8 @@ def get_client_id(authorization: Optional[HTTPAuthorizationCredentials] = Depend
 
 
 def create_error_response(
-    error_type: str, 
-    message: str, 
+    error_type: str,
+    message: str,
     details: Optional[Dict[str, Any]] = None,
     status_code: int = 500
 ) -> HTTPException:
@@ -127,7 +127,7 @@ async def memory_health():
     try:
         # Test memory adapter connectivity
         health_status = await memory_adapter.health_check() if hasattr(memory_adapter, 'health_check') else True
-        
+
         return {
             "status": "healthy" if health_status else "degraded",
             "timestamp": datetime.now().isoformat(),
@@ -153,7 +153,7 @@ async def memory_readiness():
     try:
         # Check if service is ready to accept requests
         is_ready = hasattr(memory_adapter, 'store_conversation')
-        
+
         return {
             "ready": is_ready,
             "timestamp": datetime.now().isoformat(),
@@ -187,7 +187,7 @@ async def memory_version():
         "timestamp": datetime.now().isoformat(),
         "features": [
             "conversation_storage",
-            "memory_retrieval", 
+            "memory_retrieval",
             "rate_limiting",
             "standardized_errors",
             "health_monitoring"
@@ -211,7 +211,7 @@ async def store_memory(
                 {"limit": RATE_LIMITS["store"]["requests"], "window": RATE_LIMITS["store"]["window"]},
                 status_code=429
             )
-        
+
         # Validate request
         if not request.messages:
             raise create_error_response(
@@ -220,10 +220,10 @@ async def store_memory(
                 {"field": "messages"},
                 status_code=400
             )
-        
+
         metadata = request.metadata or {}
         result = await memory_adapter.store_conversation(request.session_id, request.messages, metadata)
-        
+
         return {
             "success": True,
             "message": "Memory stored successfully",
@@ -232,7 +232,7 @@ async def store_memory(
             "result": result,
             "timestamp": datetime.now().isoformat()
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -262,7 +262,7 @@ async def retrieve_memory(
                 {"limit": RATE_LIMITS["retrieve"]["requests"], "window": RATE_LIMITS["retrieve"]["window"]},
                 status_code=429
             )
-        
+
         # Validate parameters
         if last_n < 1 or last_n > 1000:
             raise create_error_response(
@@ -271,9 +271,9 @@ async def retrieve_memory(
                 {"field": "last_n", "value": last_n},
                 status_code=400
             )
-        
+
         result = await memory_adapter.retrieve_context(session_id, last_n, include_system)
-        
+
         return {
             "success": True,
             "session_id": session_id,
@@ -285,7 +285,7 @@ async def retrieve_memory(
             },
             "timestamp": datetime.now().isoformat()
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -308,12 +308,12 @@ async def search_memory(
         # Check rate limit
         if not check_rate_limit(client_id, "search", response):
             raise create_error_response(
-                "rate_limit", 
+                "rate_limit",
                 "Too many search requests. Please try again later.",
                 {"limit": RATE_LIMITS["search"]["requests"], "window": RATE_LIMITS["search"]["window"]},
                 status_code=429
             )
-        
+
         # Validate query
         if len(request.query.strip()) < 2:
             raise create_error_response(
@@ -322,11 +322,11 @@ async def search_memory(
                 {"field": "query", "min_length": 2},
                 status_code=400
             )
-        
+
         # Execute search (mock implementation for now)
         # In production, this would use the actual memory search functionality
         results = []
-        
+
         return {
             "success": True,
             "query": request.query,
@@ -339,7 +339,7 @@ async def search_memory(
             },
             "timestamp": datetime.now().isoformat()
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -365,7 +365,7 @@ async def delete_session_memory(
             "session_id": session_id,
             "timestamp": datetime.now().isoformat()
         }
-        
+
     except Exception as e:
         raise create_error_response(
             "server_error",
@@ -383,13 +383,13 @@ async def get_memory_stats():
         total_clients = len(rate_limit_store)
         current_time = time.time()
         active_clients = 0
-        
+
         for client_data in rate_limit_store.values():
             for endpoint_requests in client_data.values():
                 if any(current_time - req_time < 3600 for req_time in endpoint_requests):
                     active_clients += 1
                     break
-        
+
         return {
             "service": "memory_api",
             "timestamp": datetime.now().isoformat(),
@@ -405,7 +405,7 @@ async def get_memory_stats():
                 "health_checks": ["/api/memory/health", "/api/memory/ready", "/api/memory/live", "/api/memory/version"]
             }
         }
-        
+
     except Exception as e:
         raise create_error_response(
             "server_error",

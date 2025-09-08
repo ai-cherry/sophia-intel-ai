@@ -483,7 +483,7 @@ async def get_fusion_status():
         }
 
         if client:
-            for system in systems_status.keys():
+            for system in systems_status:
                 try:
                     metrics_key = f"fusion:{system}:metrics"
                     data = client.get(metrics_key)

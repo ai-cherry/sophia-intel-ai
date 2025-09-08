@@ -134,9 +134,7 @@ class CircuitBreaker:
         async with self._lock:
             self.failure_count += 1
             self.last_failure_time = time.time()
-            if self.state == "HALF_OPEN":
-                self.state = "OPEN"
-            elif self.failure_count >= self.failure_threshold:
+            if self.state == "HALF_OPEN" or self.failure_count >= self.failure_threshold:
                 self.state = "OPEN"
 
     def _should_attempt_reset(self) -> bool:

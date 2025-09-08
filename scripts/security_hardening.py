@@ -265,7 +265,7 @@ def implement_input_validation():
     """Implement comprehensive input validation"""
     print_status("Implementing input validation...")
 
-    validation_code = '''
+    validation_code = r'''
 # Input Validation Utilities
 from pydantic import BaseModel, validator, Field
 from typing import Optional, List

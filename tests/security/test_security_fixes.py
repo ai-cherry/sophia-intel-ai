@@ -58,9 +58,7 @@ class TestSecurityFixes:
             major, minor, patch = map(int, version.split("."))
 
             # wheel >= 0.38.1 required for CVE-2022-40898 fix
-            if major == 0 and minor < 38:
-                pytest.fail(f"wheel version {version} vulnerable to CVE-2022-40898")
-            elif major == 0 and minor == 38 and patch < 1:
+            if major == 0 and minor < 38 or major == 0 and minor == 38 and patch < 1:
                 pytest.fail(f"wheel version {version} vulnerable to CVE-2022-40898")
 
         except ImportError:

@@ -3,20 +3,18 @@ Neural Engine Service - DeepSeek-R1-0528 Production Deployment
 Optimized for Lambda Labs H100/H200 infrastructure with 128K context support
 """
 
-import asyncio
-import time
 import logging
-from typing import List, Optional, Dict, Any
+import time
 from contextlib import asynccontextmanager
+from typing import Any, Dict, List, Optional
 
-from fastapi import FastAPI, HTTPException, BackgroundTasks
-from pydantic import BaseModel, Field
+import redis.asyncio as redis
 import torch
-from vllm import LLM, SamplingParams
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel, Field
+from vllm import SamplingParams
 from vllm.engine.arg_utils import AsyncEngineArgs
 from vllm.engine.async_llm_engine import AsyncLLMEngine
-import redis.asyncio as redis
-import psutil
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -181,8 +179,8 @@ class NeuralEngineManager:
         try:
             import json
             await cache_client.setex(
-                cache_key, 
-                ttl, 
+                cache_key,
+                ttl,
                 json.dumps(response_data)
             )
         except Exception as e:

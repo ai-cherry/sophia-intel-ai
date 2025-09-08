@@ -8,9 +8,8 @@ Saves 20% costs without manual intervention
 import asyncio
 import logging
 import os
-import time
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional
+from datetime import datetime
+from typing import Dict, List
 
 import redis
 

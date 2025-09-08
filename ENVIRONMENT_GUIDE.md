@@ -42,3 +42,12 @@ SSH Agent Forwarding (Git MCP)
 - Verify the socket: echo $SSH_AUTH_SOCK
 - The multi-agent compose mounts SSH_AUTH_SOCK for the Git MCP container so pushes use your agent.
 - Fallback: when SSH agent is not available, you can set a temporary GitHub PAT within the agent-dev shell for ad-hoc operations (avoid persisting secrets).
+
+Personal Access Token (PAT) Fallback (Use Sparingly)
+- Create a GitHub PAT with minimal scopes (e.g., repo)
+- Inside the agent-dev shell, you can configure a one-off HTTPS remote:
+  - git remote set-url origin https://github.com/<org>/<repo>.git
+  - On push, provide PAT as password when prompted (username can be your GitHub handle)
+- After use, restore SSH remote:
+  - git remote set-url origin git@github.com:<org>/<repo>.git
+- Do not store the PAT in files or environment; avoid adding to images or compose env.

@@ -5,18 +5,16 @@ Defines abstract base classes and data structures for AI language models,
 including message handling, tool calling, and response processing.
 """
 
-import asyncio
 import logging
 from abc import ABC, abstractmethod
-from enum import Enum
-from typing import (
-    Dict, List, Optional, Any, Union, AsyncGenerator, 
-    Callable, Type, Generic, TypeVar
-)
+from collections.abc import AsyncGenerator
 from datetime import datetime
+from enum import Enum
+from typing import Any, Callable, Dict, List, Optional, TypeVar, Union
 from uuid import uuid4
 
-from pydantic import BaseModel as PydanticBaseModel, Field, validator
+from pydantic import BaseModel as PydanticBaseModel
+from pydantic import Field, validator
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +24,7 @@ T = TypeVar('T')
 class MessageRole(str, Enum):
     """Message roles in a conversation."""
     SYSTEM = "system"
-    USER = "user" 
+    USER = "user"
     ASSISTANT = "assistant"
     TOOL = "tool"
     FUNCTION = "function"  # Legacy support
@@ -44,7 +42,7 @@ class Message(PydanticBaseModel):
     tool_call_id: Optional[str] = None  # For tool response messages
     metadata: Dict[str, Any] = Field(default_factory=dict)
     timestamp: datetime = Field(default_factory=datetime.utcnow)
-    
+
     @validator('tool_calls', pre=True)
     def validate_tool_calls(cls, v, values):
         """Ensure tool_calls is only present for assistant messages."""
@@ -52,7 +50,7 @@ class Message(PydanticBaseModel):
         if v is not None and role != MessageRole.ASSISTANT:
             raise ValueError("tool_calls can only be present for assistant messages")
         return v
-    
+
     @validator('tool_call_id', pre=True)
     def validate_tool_call_id(cls, v, values):
         """Ensure tool_call_id is only present for tool messages."""
@@ -60,7 +58,7 @@ class Message(PydanticBaseModel):
         if v is not None and role != MessageRole.TOOL:
             raise ValueError("tool_call_id can only be present for tool messages")
         return v
-    
+
     class Config:
         validate_assignment = True
         use_enum_values = True
@@ -73,12 +71,12 @@ class ToolCall(PydanticBaseModel):
     id: str = Field(default_factory=lambda: str(uuid4()))
     type: str = Field(default="function")
     function: Dict[str, Any]  # Contains 'name' and 'arguments'
-    
+
     @property
     def name(self) -> str:
         """Get the function name."""
         return self.function.get('name', '')
-    
+
     @property
     def arguments(self) -> Dict[str, Any]:
         """Get parsed function arguments."""
@@ -111,7 +109,7 @@ class ModelUsage(PydanticBaseModel):
     prompt_tokens: int = 0
     completion_tokens: int = 0
     total_tokens: int = 0
-    
+
     @validator('total_tokens', always=True)
     def calculate_total_tokens(cls, v, values):
         """Auto-calculate total tokens if not provided."""
@@ -134,10 +132,10 @@ class ModelParameters(PydanticBaseModel):
     stream: bool = False
     tools: Optional[List[Dict[str, Any]]] = None
     tool_choice: Optional[Union[str, Dict[str, Any]]] = None
-    
+
     # Provider-specific parameters
     extra_params: Dict[str, Any] = Field(default_factory=dict)
-    
+
     class Config:
         validate_assignment = True
 
@@ -153,7 +151,7 @@ class ModelCapabilities(PydanticBaseModel):
     max_context_length: int = 4096
     max_output_tokens: int = 4096
     supported_formats: List[str] = Field(default_factory=lambda: ["text"])
-    
+
     # Model-specific capabilities
     supports_json_mode: bool = False
     supports_function_calling: bool = False
@@ -173,7 +171,7 @@ class ModelResponse(PydanticBaseModel):
     response_time: Optional[float] = None  # seconds
     metadata: Dict[str, Any] = Field(default_factory=dict)
     timestamp: datetime = Field(default_factory=datetime.utcnow)
-    
+
     @property
     def has_tool_calls(self) -> bool:
         """Check if response contains tool calls."""
@@ -189,12 +187,12 @@ class StreamingResponse(PydanticBaseModel):
     delta: Dict[str, Any]  # Contains the incremental content
     finish_reason: Optional[str] = None
     usage: Optional[ModelUsage] = None
-    
+
     @property
     def content_delta(self) -> Optional[str]:
         """Get content delta from the chunk."""
         return self.delta.get('content')
-    
+
     @property
     def is_complete(self) -> bool:
         """Check if this is the final chunk."""
@@ -208,7 +206,7 @@ class ConversationHistory(PydanticBaseModel):
     messages: List[Message] = Field(default_factory=list)
     max_messages: Optional[int] = None
     max_tokens: Optional[int] = None
-    
+
     def add_message(self, message: Message) -> None:
         """
         Add a message to the conversation history.
@@ -217,19 +215,19 @@ class ConversationHistory(PydanticBaseModel):
             message: Message to add
         """
         self.messages.append(message)
-        
+
         # Apply message limit
         if self.max_messages and len(self.messages) > self.max_messages:
             # Keep system messages and trim from the middle
             system_messages = [m for m in self.messages if m.role == MessageRole.SYSTEM]
             other_messages = [m for m in self.messages if m.role != MessageRole.SYSTEM]
-            
+
             if len(other_messages) > self.max_messages - len(system_messages):
                 keep_count = self.max_messages - len(system_messages)
                 other_messages = other_messages[-keep_count:]
-            
+
             self.messages = system_messages + other_messages
-    
+
     def get_messages_for_model(self) -> List[Dict[str, Any]]:
         """
         Get messages formatted for model API.
@@ -247,18 +245,18 @@ class ConversationHistory(PydanticBaseModel):
             }
             for msg in self.messages
         ]
-    
+
     def clear(self) -> None:
         """Clear all messages except system messages."""
         self.messages = [m for m in self.messages if m.role == MessageRole.SYSTEM]
-    
+
     def get_last_assistant_message(self) -> Optional[Message]:
         """Get the last assistant message."""
         for message in reversed(self.messages):
             if message.role == MessageRole.ASSISTANT:
                 return message
         return None
-    
+
     def count_tokens(self, tokenizer_func: Optional[Callable[[str], int]] = None) -> int:
         """
         Estimate token count for the conversation.
@@ -285,7 +283,7 @@ class BaseModel(ABC):
     """
     Abstract base class for language model implementations.
     """
-    
+
     def __init__(
         self,
         model_name: str,
@@ -304,7 +302,7 @@ class BaseModel(ABC):
         self.capabilities = capabilities or ModelCapabilities()
         self._config = kwargs
         logger.info(f"Initialized {self.__class__.__name__} with model {model_name}")
-    
+
     @abstractmethod
     async def generate(
         self,
@@ -327,7 +325,7 @@ class BaseModel(ABC):
             NotImplementedError: Must be implemented by subclasses
         """
         pass
-    
+
     @abstractmethod
     async def stream(
         self,
@@ -350,7 +348,7 @@ class BaseModel(ABC):
             NotImplementedError: Must be implemented by subclasses
         """
         pass
-    
+
     async def chat(
         self,
         conversation: ConversationHistory,
@@ -370,7 +368,7 @@ class BaseModel(ABC):
         """
         messages = conversation.messages
         response = await self.generate(messages, parameters, **kwargs)
-        
+
         # Add assistant response to conversation
         assistant_message = Message(
             role=MessageRole.ASSISTANT,
@@ -379,9 +377,9 @@ class BaseModel(ABC):
             metadata={"model_response_id": response.id}
         )
         conversation.add_message(assistant_message)
-        
+
         return response
-    
+
     def validate_parameters(self, parameters: ModelParameters) -> ModelParameters:
         """
         Validate and adjust parameters based on model capabilities.
@@ -401,15 +399,15 @@ class BaseModel(ABC):
                     f"adjusting to {max_allowed}"
                 )
                 parameters.max_tokens = max_allowed
-        
+
         # Validate tool support
         if parameters.tools and not self.capabilities.supports_tools:
             logger.warning(f"Model {self.model_name} does not support tools, ignoring tool parameters")
             parameters.tools = None
             parameters.tool_choice = None
-        
+
         return parameters
-    
+
     def get_system_info(self) -> Dict[str, Any]:
         """
         Get model system information.

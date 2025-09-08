@@ -255,15 +255,15 @@ class SecureEnvManager:
             # Group by category
             categories = {
                 "DEPLOYMENT": ["ENVIRONMENT", "DEPLOYMENT_ID", "INSTANCE_ID", "REGION"],
-                "LAMBDA_LABS": [k for k in env_dict.keys() if "LAMBDA" in k],
+                "LAMBDA_LABS": [k for k in env_dict if "LAMBDA" in k],
                 "DATABASE": [
                     k
-                    for k in env_dict.keys()
+                    for k in env_dict
                     if any(db in k for db in ["NEON", "QDRANT", "REDIS", "DATABASE"])
                 ],
                 "AI_PROVIDERS": [
                     k
-                    for k in env_dict.keys()
+                    for k in env_dict
                     if any(
                         ai in k
                         for ai in [
@@ -280,22 +280,22 @@ class SecureEnvManager:
                 ],
                 "SECURITY": [
                     k
-                    for k in env_dict.keys()
+                    for k in env_dict
                     if any(sec in k for sec in ["JWT", "KEY", "SECRET", "TOKEN", "AUTH"])
                 ],
                 "WORKFLOW": [
                     k
-                    for k in env_dict.keys()
+                    for k in env_dict
                     if any(wf in k for wf in ["N8N", "ESTUARY", "GITHUB", "PULUMI"])
                 ],
                 "MONITORING": [
                     k
-                    for k in env_dict.keys()
+                    for k in env_dict
                     if any(mon in k for mon in ["SENTRY", "PROMETHEUS", "GRAFANA", "DATADOG"])
                 ],
-                "MCP": [k for k in env_dict.keys() if "MCP" in k],
-                "FEATURES": [k for k in env_dict.keys() if "ENABLE_" in k],
-                "RESOURCES": [k for k in env_dict.keys() if "MAX_" in k],
+                "MCP": [k for k in env_dict if "MCP" in k],
+                "FEATURES": [k for k in env_dict if "ENABLE_" in k],
+                "RESOURCES": [k for k in env_dict if "MAX_" in k],
                 "OTHER": [],
             }
 
@@ -304,7 +304,7 @@ class SecureEnvManager:
             for category_keys in categories.values():
                 categorized_keys.update(category_keys)
 
-            categories["OTHER"] = [k for k in env_dict.keys() if k not in categorized_keys]
+            categories["OTHER"] = [k for k in env_dict if k not in categorized_keys]
 
             # Write categories
             for category, keys in categories.items():

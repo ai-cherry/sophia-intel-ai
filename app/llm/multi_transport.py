@@ -42,6 +42,12 @@ class MultiTransportLLM:
             "portkey": os.getenv("PORTKEY_API_KEY"),
         }
 
+        # Compatibility: allow GROK_API_KEY as alias for XAI_API_KEY
+        if not self.keys.get("xai"):
+            alias = os.getenv("GROK_API_KEY")
+            if alias:
+                self.keys["xai"] = alias
+
         # Portkey virtual keys
         self.portkey_vks = {
             "perplexity": os.getenv("PORTKEY_VK_PERPLEXITY"),

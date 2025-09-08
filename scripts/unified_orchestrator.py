@@ -44,6 +44,7 @@ class ServiceDomain(Enum):
     SOPHIA = "sophia"  # Business intelligence
     ARTEMIS = "artemis"  # AI coding agents
     SHARED = "shared"  # Shared services
+    RAG = "rag"  # Optional RAG memory services
 
 
 class UnifiedOrchestrator:
@@ -124,6 +125,37 @@ class UnifiedOrchestrator:
                     "health_endpoint": "/health",
                     "priority": 3,
                     "required": True,
+                },
+
+                # Optional: Grok MCP server for local development
+                "grok_agent": {
+                    "domain": ServiceDomain.ARTEMIS.value,
+                    "command": "python3 mcp_servers/grok/server.py",
+                    "port": 8002,
+                    "depends_on": ["redis"],
+                    "env_file": ".env",
+                    "health_endpoint": "/health",
+                    "priority": 3,
+                    "required": False,
+                },
+                # Optional RAG services (disabled by default; enable with --with-rag)
+                "sophia_memory": {
+                    "domain": ServiceDomain.RAG.value,
+                    "command": "python3 app/memory/sophia_memory.py",
+                    "port": 8767,
+                    "depends_on": ["redis"],
+                    "health_endpoint": "/health",
+                    "priority": 2,
+                    "required": False,
+                },
+                "artemis_memory": {
+                    "domain": ServiceDomain.RAG.value,
+                    "command": "python3 app/memory/artemis_memory.py",
+                    "port": 8768,
+                    "depends_on": ["redis"],
+                    "health_endpoint": "/health",
+                    "priority": 2,
+                    "required": False,
                 },
                 # Artemis Domain (AI Coding Agents) - External
                 "artemis_connector": {
@@ -470,6 +502,11 @@ REDIS_URL=redis://localhost:6379
             return False
         if f"--with-{name}" in sys.argv:
             return True
+        # Group toggle for RAG services
+        if "--with-rag" in sys.argv and name in {"sophia_memory", "artemis_memory"}:
+            return True
+        if "--no-rag" in sys.argv and name in {"sophia_memory", "artemis_memory"}:
+            return False
         return os.getenv(f"START_{name.upper()}", "false").lower() == "true"
 
     def _ask_confirmation(self, question: str) -> bool:
@@ -501,6 +538,8 @@ Options:
   --yes, --force      Auto-confirm all prompts
   --with-SERVICE      Start optional SERVICE
   --no-SERVICE        Skip optional SERVICE
+  --with-rag          Start all optional RAG services (sophia_memory, artemis_memory)
+  --no-rag            Disable all RAG services
   --help              Show this help message
 
 Examples:

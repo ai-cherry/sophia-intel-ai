@@ -14,11 +14,13 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import redis
-from fastapi import Depends, FastAPI, HTTPException, Security
+from fastapi import Depends, FastAPI, HTTPException, Security, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, validator
 from redis.exceptions import ConnectionError, RedisError, TimeoutError
 import subprocess
+from fastapi.openapi.utils import get_openapi
 
 # Optional Weaviate support
 try:
@@ -117,7 +119,13 @@ class BaseMemoryService(ABC):
                 if count == 1:
                     self.redis_client.expire(key, self.config.rate_limit_period)
                 if count > self.config.rate_limit_requests:
-                    raise HTTPException(status_code=429, detail="Rate limit exceeded")
+                    # Compute remaining seconds in the window for Retry-After header
+                    try:
+                        ttl = self.redis_client.ttl(key)
+                        retry_after = max(int(ttl), 1) if ttl and ttl > 0 else self.config.rate_limit_period
+                    except Exception:
+                        retry_after = self.config.rate_limit_period
+                    raise HTTPException(status_code=429, detail="Rate limit exceeded", headers={"Retry-After": str(retry_after)})
             except Exception:
                 # Fail-open on limiter errors
                 return None
@@ -130,7 +138,15 @@ class BaseMemoryService(ABC):
         self._init_weaviate()
         self._init_fallback_storage()
 
+        # Compute version metadata
+        try:
+            self._version = self._compute_version()
+        except Exception:
+            self._version = "unknown"
+
         self._setup_routes()
+        self._setup_error_handlers()
+        self._setup_openapi_security()
 
     def _init_redis(self):
         """Initialize Redis with proper error handling"""
@@ -241,7 +257,12 @@ class BaseMemoryService(ABC):
                 credentials: HTTPAuthorizationCredentials = Security(self.security),
             ):
                 if not self._validate_auth(credentials):
-                    raise HTTPException(status_code=401, detail="Invalid authentication")
+                    # Ensure clients see a WWW-Authenticate challenge per RFC 6750
+                    raise HTTPException(
+                        status_code=401,
+                        detail="Invalid authentication",
+                        headers={"WWW-Authenticate": "Bearer"},
+                    )
                 return credentials
 
             return verify_auth
@@ -484,6 +505,65 @@ class BaseMemoryService(ABC):
             return out.decode().strip()
         except Exception:
             return "unknown"
+
+    def _setup_error_handlers(self):
+        """Standardized JSON error envelope and header propagation."""
+
+        @self.app.exception_handler(HTTPException)
+        async def http_exception_handler(request: Request, exc: HTTPException):
+            # Build standardized error envelope
+            err_type = (
+                "rate_limit" if exc.status_code == 429 else
+                "auth" if exc.status_code in (401, 403) else
+                "validation" if exc.status_code in (400, 404) else
+                "server"
+            )
+            payload = {
+                "error": {
+                    "code": exc.status_code,
+                    "type": err_type,
+                    "message": exc.detail if isinstance(exc.detail, str) else str(exc.detail),
+                }
+            }
+            headers = getattr(exc, "headers", None) or {}
+            return JSONResponse(status_code=exc.status_code, content=payload, headers=headers)
+
+        @self.app.exception_handler(Exception)
+        async def unhandled_exception_handler(request: Request, exc: Exception):
+            payload = {"error": {"code": 500, "type": "server", "message": "Internal server error"}}
+            return JSONResponse(status_code=500, content=payload)
+
+    def _setup_openapi_security(self):
+        """Attach Bearer security scheme to OpenAPI when auth is enabled."""
+        if not getattr(self.config, "enable_auth", False):
+            return
+
+        def custom_openapi():
+            if self.app.openapi_schema:
+                return self.app.openapi_schema
+            openapi_schema = get_openapi(
+                title=self.app.title,
+                version=self.app.version,
+                description=self.app.description,
+                routes=self.app.routes,
+            )
+            security_scheme = {
+                "BearerAuth": {
+                    "type": "http",
+                    "scheme": "bearer",
+                    "bearerFormat": "JWT",
+                    "description": "Use Authorization: Bearer <token>",
+                }
+            }
+            components = openapi_schema.setdefault("components", {})
+            components.setdefault("securitySchemes", {}).update(security_scheme)
+
+            # Apply default security requirement across endpoints
+            openapi_schema["security"] = [{"BearerAuth": []}]
+            self.app.openapi_schema = openapi_schema
+            return self.app.openapi_schema
+
+        self.app.openapi = custom_openapi
 
     @abstractmethod
     async def search(

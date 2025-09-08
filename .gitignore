@@ -188,3 +188,4 @@ tests/**/test_reports/
 # Timestamped report files
 *20??-??-??*.md
 *20??-??-??*.json
+*.env.local

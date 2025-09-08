@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "sophia-mcp": {
+      "command": "node",
+      "args": ["./dist/claude-adapter.js"],
+      "env": {
+        "MCP_SERVER_URL": "http://localhost:8004",
+        "REDIS_URL": "redis://localhost:6379",
+        "MCP_API_KEY": "sophia-mcp-key",
+        "LOG_LEVEL": "info"
+      }
+    }
+  }
+}

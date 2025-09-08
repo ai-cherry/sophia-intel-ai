@@ -1,0 +1,11 @@
+{
+  "primary_system": "dev_mcp_unified",
+  "features": [
+    "secure_server",
+    "enhanced_memory",
+    "swarm_bridge",
+    "app_integration"
+  ],
+  "rbac_enabled": true,
+  "audit_enabled": true
+}

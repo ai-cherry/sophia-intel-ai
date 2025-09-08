@@ -1,23 +1,6 @@
 {
-  "name": "sophia-ai-frontend",
-  "version": "2.0.0",
-  "description": "Sophia AI Frontend Dashboard",
-  "main": "index.js",
-  "scripts": {
-    "build": "echo 'Using Streamlit dashboard - no React build needed'",
-    "start": "echo 'Starting Streamlit dashboard'",
-    "dev": "echo 'Development mode - using Streamlit'",
-    "test": "echo 'No tests specified'"
-  },
-  "dependencies": {
-    "serve": "^14.2.0"
-  },
-  "devDependencies": {},
-  "keywords": [
-    "sophia-ai",
-    "business-intelligence",
-    "dashboard"
-  ],
-  "author": "Sophia AI Team",
-  "license": "MIT"
+  "devDependencies": {
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.3.0"
+  }
 }

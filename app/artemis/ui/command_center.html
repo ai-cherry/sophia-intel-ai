@@ -1,0 +1,1766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Artemis Command Center - AI Intelligence Platform</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Artemis Color Palette - Dramatic & Intense */
+            --artemis-primary: #E74C3C;
+            --artemis-primary-light: #FF4444;
+            --artemis-secondary: #FF6600;
+            --artemis-secondary-light: #FF8800;
+            --artemis-accent: #00FF41;
+            --artemis-accent-bright: #39FF14;
+            --artemis-dark: #0A0A0A;
+            --artemis-dark-secondary: #1A1A1A;
+            --artemis-dark-tertiary: #2A1A1A;
+            --artemis-text: #FFFFFF;
+            --artemis-text-muted: #CCCCCC;
+            --artemis-border: #FF4444;
+            --artemis-warning: #FFD700;
+            --artemis-danger: #FF0000;
+
+            /* Artemis-specific effects */
+            --electric-glow: 0 0 20px var(--artemis-accent), 0 0 40px var(--artemis-accent), 0 0 60px var(--artemis-accent);
+            --fire-glow: 0 0 20px var(--artemis-primary), 0 0 40px var(--artemis-primary), 0 0 60px var(--artemis-primary);
+            --hard-shadow: 4px 4px 0px var(--artemis-primary);
+            --sharp-border: 4px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, var(--artemis-dark) 0%, var(--artemis-dark-secondary) 50%, var(--artemis-dark-tertiary) 100%);
+            color: var(--artemis-text);
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Electric Lightning Background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(circle at 20% 30%, rgba(231, 76, 60, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(255, 102, 0, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(0, 255, 65, 0.05) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: -1;
+            animation: electricPulse 4s ease-in-out infinite;
+        }
+
+        @keyframes electricPulse {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.7; }
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(90deg, var(--artemis-dark-secondary), var(--artemis-dark-tertiary));
+            border-bottom: 3px solid var(--artemis-primary);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--hard-shadow);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo i {
+            font-size: 2rem;
+            color: var(--artemis-accent);
+            text-shadow: var(--electric-glow);
+            animation: logoGlow 3s ease-in-out infinite;
+        }
+
+        @keyframes logoGlow {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .logo h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--artemis-primary);
+            text-shadow: var(--fire-glow);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--artemis-dark);
+            border: 2px solid var(--artemis-accent);
+            border-radius: var(--sharp-border);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--artemis-accent);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+            box-shadow: var(--electric-glow);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.2); }
+        }
+
+        /* Navigation Tabs */
+        .nav-tabs {
+            background: var(--artemis-dark-secondary);
+            border-bottom: 2px solid var(--artemis-border);
+            padding: 0 2rem;
+            box-shadow: inset 0 -2px 4px rgba(231, 76, 60, 0.3);
+        }
+
+        .tab-list {
+            display: flex;
+            list-style: none;
+            max-width: 1400px;
+            margin: 0 auto;
+            overflow-x: auto;
+        }
+
+        .tab-item {
+            position: relative;
+        }
+
+        .tab-button {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1rem 1.5rem;
+            background: none;
+            border: none;
+            color: var(--artemis-text-muted);
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: var(--sharp-border) var(--sharp-border) 0 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tab-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, var(--artemis-accent-bright), transparent);
+            transition: left 0.5s;
+        }
+
+        .tab-button:hover::before {
+            left: 100%;
+        }
+
+        .tab-button:hover {
+            color: var(--artemis-text);
+            background: rgba(231, 76, 60, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .tab-button.active {
+            color: var(--artemis-accent);
+            background: var(--artemis-dark);
+            border-bottom: 3px solid var(--artemis-accent);
+            text-shadow: var(--electric-glow);
+            box-shadow: var(--hard-shadow);
+        }
+
+        .tab-button i {
+            font-size: 1.1rem;
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            min-height: calc(100vh - 200px);
+        }
+
+        .tab-content {
+            display: none;
+            animation: slideIn 0.4s ease-out;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, var(--artemis-dark-secondary), var(--artemis-dark-tertiary));
+            border: 2px solid var(--artemis-primary);
+            border-radius: var(--sharp-border);
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--hard-shadow);
+            transition: all 0.3s ease;
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--artemis-primary), var(--artemis-secondary), var(--artemis-accent));
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(231, 76, 60, 0.3);
+        }
+
+        .metric-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .metric-title {
+            font-size: 0.9rem;
+            color: var(--artemis-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+        }
+
+        .metric-icon {
+            font-size: 1.5rem;
+            color: var(--artemis-accent);
+            text-shadow: var(--electric-glow);
+        }
+
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--artemis-primary);
+            margin-bottom: 0.5rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .metric-change {
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .metric-change.positive {
+            color: var(--artemis-accent);
+        }
+
+        .metric-change.negative {
+            color: var(--artemis-danger);
+        }
+
+        /* Chat Interface */
+        .chat-container {
+            height: 70vh;
+            display: flex;
+            flex-direction: column;
+            background: var(--artemis-dark-secondary);
+            border: 2px solid var(--artemis-primary);
+            border-radius: var(--sharp-border);
+            box-shadow: var(--hard-shadow);
+        }
+
+        .chat-header {
+            padding: 1rem;
+            background: linear-gradient(90deg, var(--artemis-primary), var(--artemis-secondary));
+            border-radius: var(--sharp-border) var(--sharp-border) 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-title {
+            font-weight: 600;
+            color: var(--artemis-text);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        }
+
+        .voice-controls {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .voice-btn {
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid var(--artemis-accent);
+            color: var(--artemis-accent);
+            padding: 0.5rem;
+            border-radius: var(--sharp-border);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .voice-btn:hover {
+            background: var(--artemis-accent);
+            color: var(--artemis-dark);
+            box-shadow: var(--electric-glow);
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .message {
+            padding: 1rem;
+            border-radius: var(--sharp-border);
+            max-width: 80%;
+            position: relative;
+        }
+
+        .message.user {
+            align-self: flex-end;
+            background: linear-gradient(135deg, var(--artemis-primary), var(--artemis-secondary));
+            color: var(--artemis-text);
+            box-shadow: var(--hard-shadow);
+        }
+
+        .message.assistant {
+            align-self: flex-start;
+            background: var(--artemis-dark);
+            border: 2px solid var(--artemis-accent);
+            color: var(--artemis-text);
+        }
+
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+
+        .chat-input-area {
+            padding: 1rem;
+            background: var(--artemis-dark);
+            border-top: 2px solid var(--artemis-primary);
+        }
+
+        .chat-input-group {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-end;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 1rem;
+            background: var(--artemis-dark-secondary);
+            border: 2px solid var(--artemis-primary);
+            border-radius: var(--sharp-border);
+            color: var(--artemis-text);
+            font-family: inherit;
+            font-size: 1rem;
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: var(--artemis-accent);
+            box-shadow: var(--electric-glow);
+        }
+
+        .send-btn {
+            background: linear-gradient(135deg, var(--artemis-primary), var(--artemis-secondary));
+            border: none;
+            color: var(--artemis-text);
+            padding: 1rem;
+            border-radius: var(--sharp-border);
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            box-shadow: var(--hard-shadow);
+        }
+
+        .send-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(231, 76, 60, 0.4);
+        }
+
+        /* Model Selection */
+        .model-selector {
+            margin-bottom: 1rem;
+        }
+
+        .model-dropdown {
+            background: var(--artemis-dark-secondary);
+            border: 2px solid var(--artemis-primary);
+            border-radius: var(--sharp-border);
+            color: var(--artemis-text);
+            padding: 0.75rem;
+            font-family: 'JetBrains Mono', monospace;
+            min-width: 200px;
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--artemis-text);
+            font-weight: 500;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            letter-spacing: 0.05em;
+        }
+
+        .form-input, .form-textarea, .form-select {
+            width: 100%;
+            padding: 1rem;
+            background: var(--artemis-dark-secondary);
+            border: 2px solid var(--artemis-primary);
+            border-radius: var(--sharp-border);
+            color: var(--artemis-text);
+            font-family: inherit;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--artemis-accent);
+            box-shadow: var(--electric-glow);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: var(--sharp-border);
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: var(--hard-shadow);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--artemis-primary), var(--artemis-secondary));
+            color: var(--artemis-text);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(231, 76, 60, 0.4);
+        }
+
+        .btn-secondary {
+            background: var(--artemis-dark-secondary);
+            color: var(--artemis-accent);
+            border: 2px solid var(--artemis-accent);
+        }
+
+        .btn-secondary:hover {
+            background: var(--artemis-accent);
+            color: var(--artemis-dark);
+            box-shadow: var(--electric-glow);
+        }
+
+        .btn-danger {
+            background: var(--artemis-danger);
+            color: var(--artemis-text);
+        }
+
+        /* Tables */
+        .data-table {
+            width: 100%;
+            background: var(--artemis-dark-secondary);
+            border: 2px solid var(--artemis-primary);
+            border-radius: var(--sharp-border);
+            overflow: hidden;
+            box-shadow: var(--hard-shadow);
+        }
+
+        .data-table thead {
+            background: linear-gradient(90deg, var(--artemis-primary), var(--artemis-secondary));
+        }
+
+        .data-table th, .data-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--artemis-border);
+        }
+
+        .data-table th {
+            color: var(--artemis-text);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            letter-spacing: 0.05em;
+        }
+
+        .data-table tr:hover {
+            background: rgba(231, 76, 60, 0.1);
+        }
+
+        /* Artemis Personality Indicators */
+        .artemis-quote {
+            background: var(--artemis-dark);
+            border-left: 4px solid var(--artemis-accent);
+            padding: 1rem;
+            margin: 1rem 0;
+            font-style: italic;
+            color: var(--artemis-text-muted);
+            border-radius: 0 var(--sharp-border) var(--sharp-border) 0;
+        }
+
+        .artemis-warning {
+            background: rgba(255, 215, 0, 0.1);
+            border: 2px solid var(--artemis-warning);
+            border-radius: var(--sharp-border);
+            padding: 1rem;
+            color: var(--artemis-warning);
+            font-weight: 500;
+        }
+
+        /* Intelligence Hub Specific */
+        .research-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .research-panel {
+            background: var(--artemis-dark-secondary);
+            border: 2px solid var(--artemis-primary);
+            border-radius: var(--sharp-border);
+            padding: 1.5rem;
+        }
+
+        /* Agent Swarms */
+        .swarm-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .swarm-card {
+            background: var(--artemis-dark-secondary);
+            border: 2px solid var(--artemis-accent);
+            border-radius: var(--sharp-border);
+            padding: 1.5rem;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .swarm-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--electric-glow);
+        }
+
+        .swarm-status {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--artemis-accent);
+            box-shadow: var(--electric-glow);
+        }
+
+        .swarm-status.inactive {
+            background: var(--artemis-text-muted);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .tab-list {
+                padding: 0;
+            }
+
+            .tab-button {
+                padding: 0.75rem 1rem;
+                font-size: 0.9rem;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .research-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .main-content {
+                padding: 1rem;
+            }
+        }
+
+        /* Loading States */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid var(--artemis-primary);
+            border-radius: 50%;
+            border-top-color: var(--artemis-accent);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--artemis-dark);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--artemis-primary);
+            border-radius: var(--sharp-border);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--artemis-accent);
+        }
+
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <i class="fas fa-bolt"></i>
+                <h1>ARTEMIS</h1>
+            </div>
+            <div class="header-controls">
+                <div class="status-indicator">
+                    <div class="status-dot"></div>
+                    <span>SYSTEM ONLINE</span>
+                </div>
+                <div class="status-indicator">
+                    <i class="fas fa-microphone"></i>
+                    <span id="voiceStatus">VOICE READY</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <nav class="nav-tabs">
+        <ul class="tab-list">
+            <li class="tab-item">
+                <button class="tab-button active" data-tab="dashboard">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Dashboard</span>
+                </button>
+            </li>
+            <li class="tab-item">
+                <button class="tab-button" data-tab="chat">
+                    <i class="fas fa-comments"></i>
+                    <span>Universal Chat</span>
+                </button>
+            </li>
+            <li class="tab-item">
+                <button class="tab-button" data-tab="intelligence">
+                    <i class="fas fa-brain"></i>
+                    <span>Intelligence Hub</span>
+                </button>
+            </li>
+            <li class="tab-item">
+                <button class="tab-button" data-tab="swarms">
+                    <i class="fas fa-network-wired"></i>
+                    <span>Agent Swarms</span>
+                </button>
+            </li>
+            <li class="tab-item">
+                <button class="tab-button" data-tab="business">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Business Intelligence</span>
+                </button>
+            </li>
+            <li class="tab-item">
+                <button class="tab-button" data-tab="training">
+                    <i class="fas fa-graduation-cap"></i>
+                    <span>Brain Training</span>
+                </button>
+            </li>
+            <li class="tab-item">
+                <button class="tab-button" data-tab="settings">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </button>
+            </li>
+        </ul>
+    </nav>
+
+    <main class="main-content">
+
+        <!-- Dashboard Tab -->
+        <div id="dashboard" class="tab-content active">
+            <div class="artemis-quote">
+                "Let's see what's actually happening in this digital hellscape..." - Artemis
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-title">System Performance</span>
+                        <i class="fas fa-tachometer-alt metric-icon"></i>
+                    </div>
+                    <div class="metric-value" id="systemPerformance">99.7%</div>
+                    <div class="metric-change positive" id="performanceChange">+0.3% from last hour</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-title">Active Agents</span>
+                        <i class="fas fa-robot metric-icon"></i>
+                    </div>
+                    <div class="metric-value" id="activeAgents">24</div>
+                    <div class="metric-change positive" id="agentsChange">+3 since morning</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-title">Tasks Processed</span>
+                        <i class="fas fa-tasks metric-icon"></i>
+                    </div>
+                    <div class="metric-value" id="tasksProcessed">1,847</div>
+                    <div class="metric-change positive" id="tasksChange">+127 today</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-title">Intelligence Score</span>
+                        <i class="fas fa-brain metric-icon"></i>
+                    </div>
+                    <div class="metric-value" id="intelligenceScore">94.2</div>
+                    <div class="metric-change positive" id="intelligenceChange">Damn good, if I say so</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-title">Response Time</span>
+                        <i class="fas fa-stopwatch metric-icon"></i>
+                    </div>
+                    <div class="metric-value" id="responseTime">0.03s</div>
+                    <div class="metric-change positive" id="responseChange">Blazing fast</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-title">Error Rate</span>
+                        <i class="fas fa-exclamation-triangle metric-icon"></i>
+                    </div>
+                    <div class="metric-value" id="errorRate">0.001%</div>
+                    <div class="metric-change positive" id="errorChange">Practically perfect</div>
+                </div>
+            </div>
+
+            <div class="artemis-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                <strong>Artemis Advisory:</strong> I notice some humans are still making suboptimal decisions. Running continuous optimization protocols.
+            </div>
+        </div>
+
+        <!-- Universal Chat Tab -->
+        <div id="chat" class="tab-content">
+            <div class="model-selector">
+                <label for="chatModel" class="form-label">AI Model Selection</label>
+                <select id="chatModel" class="model-dropdown">
+                    <option value="anthropic/claude-3-sonnet">Claude 3 Sonnet (Recommended)</option>
+                    <option value="openai/gpt-4-turbo">GPT-4 Turbo</option>
+                    <option value="openai/gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                    <option value="google/gemini-pro">Gemini Pro</option>
+                    <option value="meta-llama/llama-2-70b">Llama 2 70B</option>
+                </select>
+            </div>
+
+            <div class="chat-container">
+                <div class="chat-header">
+                    <div class="chat-title">Artemis Universal Intelligence Interface</div>
+                    <div class="voice-controls">
+                        <button class="voice-btn" id="startVoice" title="Start Voice Input">
+                            <i class="fas fa-microphone"></i>
+                        </button>
+                        <button class="voice-btn" id="stopVoice" title="Stop Voice" style="display: none;">
+                            <i class="fas fa-stop"></i>
+                        </button>
+                        <button class="voice-btn" id="toggleSpeech" title="Toggle Text-to-Speech">
+                            <i class="fas fa-volume-up"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message assistant">
+                        <div class="message-header">
+                            <span>Artemis</span>
+                            <span>Just now</span>
+                        </div>
+                        <div>Hey there. I'm Artemis - your slightly perfectionist AI companion with a penchant for getting things done right. What intellectual challenge can I demolish for you today?</div>
+                    </div>
+                </div>
+
+                <div class="chat-input-area">
+                    <div class="chat-input-group">
+                        <textarea
+                            id="chatInput"
+                            class="chat-input"
+                            placeholder="Ask me anything... I dare you to stump me."
+                            rows="3"
+                        ></textarea>
+                        <button id="sendMessage" class="send-btn">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Intelligence Hub Tab -->
+        <div id="intelligence" class="tab-content">
+            <div class="artemis-quote">
+                "Research is just systematic curiosity with deadlines." - Artemis
+            </div>
+
+            <div class="research-grid">
+                <div class="research-panel">
+                    <h3>Web Research</h3>
+                    <div class="form-group">
+                        <label class="form-label">Research Query</label>
+                        <input type="text" class="form-input" id="researchQuery" placeholder="Enter your research topic...">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Search Depth</label>
+                        <select class="form-select" id="searchDepth">
+                            <option value="quick">Quick Scan</option>
+                            <option value="standard">Standard Research</option>
+                            <option value="deep">Deep Analysis</option>
+                            <option value="artemis">Artemis Special (Thorough as hell)</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" id="startResearch">
+                        <i class="fas fa-search"></i>
+                        Initiate Research
+                    </button>
+                </div>
+
+                <div class="research-panel">
+                    <h3>Document Analysis</h3>
+                    <div class="form-group">
+                        <label class="form-label">Upload Document</label>
+                        <input type="file" class="form-input" id="documentUpload" accept=".pdf,.txt,.docx">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Analysis Type</label>
+                        <select class="form-select" id="analysisType">
+                            <option value="summary">Executive Summary</option>
+                            <option value="sentiment">Sentiment Analysis</option>
+                            <option value="key-points">Key Points Extraction</option>
+                            <option value="critique">Artemis Critique (Brutal honesty)</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" id="analyzeDocument">
+                        <i class="fas fa-file-alt"></i>
+                        Analyze Document
+                    </button>
+                </div>
+            </div>
+
+            <div class="research-panel" style="margin-top: 2rem;">
+                <h3>Research Results</h3>
+                <div id="researchResults" class="form-textarea" style="min-height: 300px; background: var(--artemis-dark); border-color: var(--artemis-accent);">
+                    Research results will appear here. I promise to be thorough and slightly sarcastic.
+                </div>
+            </div>
+        </div>
+
+        <!-- Agent Swarms Tab -->
+        <div id="swarms" class="tab-content">
+            <div class="artemis-quote">
+                "Managing AI agents is like herding cats... if cats could solve complex problems and occasionally argue about optimization strategies." - Artemis
+            </div>
+
+            <div class="swarm-grid">
+                <div class="swarm-card">
+                    <div class="swarm-status"></div>
+                    <h3>Code Review Swarm</h3>
+                    <p>Agents: 6 active</p>
+                    <p>Status: Processing</p>
+                    <p>Queue: 12 repositories</p>
+                    <button class="btn btn-secondary">Monitor</button>
+                </div>
+
+                <div class="swarm-card">
+                    <div class="swarm-status"></div>
+                    <h3>Data Analysis Swarm</h3>
+                    <p>Agents: 8 active</p>
+                    <p>Status: Analyzing</p>
+                    <p>Queue: 47 datasets</p>
+                    <button class="btn btn-secondary">Monitor</button>
+                </div>
+
+                <div class="swarm-card">
+                    <div class="swarm-status inactive"></div>
+                    <h3>Testing Swarm</h3>
+                    <p>Agents: 0 active</p>
+                    <p>Status: Standby</p>
+                    <p>Queue: Empty</p>
+                    <button class="btn btn-primary">Activate</button>
+                </div>
+
+                <div class="swarm-card">
+                    <div class="swarm-status"></div>
+                    <h3>Security Audit Swarm</h3>
+                    <p>Agents: 4 active</p>
+                    <p>Status: Scanning</p>
+                    <p>Queue: 23 applications</p>
+                    <button class="btn btn-secondary">Monitor</button>
+                </div>
+
+                <div class="swarm-card">
+                    <div class="swarm-status"></div>
+                    <h3>Documentation Swarm</h3>
+                    <p>Agents: 3 active</p>
+                    <p>Status: Writing</p>
+                    <p>Queue: 15 projects</p>
+                    <button class="btn btn-secondary">Monitor</button>
+                </div>
+
+                <div class="swarm-card">
+                    <div class="swarm-status inactive"></div>
+                    <h3>Custom Swarm</h3>
+                    <p>Agents: Configurable</p>
+                    <p>Status: Not deployed</p>
+                    <p>Queue: Ready</p>
+                    <button class="btn btn-primary">Configure</button>
+                </div>
+            </div>
+
+            <div class="artemis-warning" style="margin-top: 2rem;">
+                <i class="fas fa-info-circle"></i>
+                <strong>Artemis Note:</strong> All swarms are operating within acceptable parameters. Though I did have to debug Agent #23's tendency to over-optimize. Classic perfectionist behavior.
+            </div>
+        </div>
+
+        <!-- Business Intelligence Tab -->
+        <div id="business" class="tab-content">
+            <div class="artemis-quote">
+                "Numbers don't lie, but humans sure love to misinterpret them." - Artemis
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-title">Gong Integration</span>
+                        <i class="fas fa-phone metric-icon"></i>
+                    </div>
+                    <div class="metric-value">Connected</div>
+                    <div class="metric-change positive">73 calls analyzed today</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-title">Sales Pipeline</span>
+                        <i class="fas fa-funnel-dollar metric-icon"></i>
+                    </div>
+                    <div class="metric-value">$2.4M</div>
+                    <div class="metric-change positive">+18% this quarter</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-title">Deal Velocity</span>
+                        <i class="fas fa-tachometer-alt metric-icon"></i>
+                    </div>
+                    <div class="metric-value">47 days</div>
+                    <div class="metric-change positive">-12% improvement</div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Business Intelligence Query</label>
+                <textarea class="form-textarea" id="biQuery" placeholder="Ask about sales performance, customer sentiment, market trends, etc."></textarea>
+                <button class="btn btn-primary" style="margin-top: 1rem;">
+                    <i class="fas fa-chart-line"></i>
+                    Generate Intelligence Report
+                </button>
+            </div>
+
+            <div class="data-table" style="margin-top: 2rem;">
+                <thead>
+                    <tr>
+                        <th>Recent Calls</th>
+                        <th>Sentiment</th>
+                        <th>Duration</th>
+                        <th>Outcome</th>
+                        <th>Action Required</th>
+                    </tr>
+                </thead>
+                <tbody id="gongCallsData">
+                    <tr>
+                        <td>Acme Corp - Discovery Call</td>
+                        <td><span style="color: var(--artemis-accent);">Positive</span></td>
+                        <td>45 min</td>
+                        <td>Follow-up scheduled</td>
+                        <td>Send proposal</td>
+                    </tr>
+                    <tr>
+                        <td>TechStart Inc - Demo</td>
+                        <td><span style="color: var(--artemis-secondary);">Neutral</span></td>
+                        <td>30 min</td>
+                        <td>Considering options</td>
+                        <td>Address pricing concerns</td>
+                    </tr>
+                    <tr>
+                        <td>Global Solutions - Contract Review</td>
+                        <td><span style="color: var(--artemis-accent);">Positive</span></td>
+                        <td>60 min</td>
+                        <td>Ready to sign</td>
+                        <td>Prepare contract</td>
+                    </tr>
+                </tbody>
+            </div>
+        </div>
+
+        <!-- Brain Training Tab -->
+        <div id="training" class="tab-content">
+            <div class="artemis-quote">
+                "Knowledge without application is like having a Ferrari and never taking it out of first gear." - Artemis
+            </div>
+
+            <div class="artemis-warning">
+                <i class="fas fa-lock"></i>
+                <strong>RBAC Protection Active:</strong> Advanced training features require appropriate permissions. Don't even think about trying to bypass this.
+            </div>
+
+            <div class="research-grid">
+                <div class="research-panel">
+                    <h3>Knowledge Upload</h3>
+                    <div class="form-group">
+                        <label class="form-label">Document Type</label>
+                        <select class="form-select" id="docType">
+                            <option value="training">Training Material</option>
+                            <option value="reference">Reference Documentation</option>
+                            <option value="policy">Company Policies</option>
+                            <option value="technical">Technical Specifications</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Upload Files</label>
+                        <input type="file" class="form-input" id="knowledgeUpload" multiple accept=".pdf,.txt,.docx,.md">
+                    </div>
+                    <button class="btn btn-primary" id="uploadKnowledge">
+                        <i class="fas fa-upload"></i>
+                        Upload Knowledge
+                    </button>
+                </div>
+
+                <div class="research-panel">
+                    <h3>Training Status</h3>
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <span class="metric-title">Knowledge Base Size</span>
+                            <i class="fas fa-database metric-icon"></i>
+                        </div>
+                        <div class="metric-value">847 GB</div>
+                        <div class="metric-change positive">Growing daily</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <span class="metric-title">Training Progress</span>
+                            <i class="fas fa-graduation-cap metric-icon"></i>
+                        </div>
+                        <div class="metric-value">94.7%</div>
+                        <div class="metric-change positive">Almost perfect</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Knowledge Query</label>
+                <textarea class="form-textarea" id="knowledgeQuery" placeholder="Ask me about anything in my knowledge base... I probably know more than you think."></textarea>
+                <button class="btn btn-primary" style="margin-top: 1rem;">
+                    <i class="fas fa-search"></i>
+                    Query Knowledge Base
+                </button>
+            </div>
+        </div>
+
+        <!-- Settings Tab -->
+        <div id="settings" class="tab-content">
+            <div class="artemis-quote">
+                "Settings are like opinions - everyone has them, but mine are usually better." - Artemis
+            </div>
+
+            <div class="research-grid">
+                <div class="research-panel">
+                    <h3>API Integrations</h3>
+                    <div class="form-group">
+                        <label class="form-label">OpenRouter API Key</label>
+                        <input type="password" class="form-input" id="openrouterKey" placeholder="Enter your OpenRouter API key">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">ElevenLabs API Key</label>
+                        <input type="password" class="form-input" id="elevenlabsKey" placeholder="Enter your ElevenLabs API key">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Gong API Key</label>
+                        <input type="password" class="form-input" id="gongKey" placeholder="Enter your Gong API key">
+                    </div>
+                    <button class="btn btn-primary">
+                        <i class="fas fa-save"></i>
+                        Save API Keys
+                    </button>
+                </div>
+
+                <div class="research-panel">
+                    <h3>Voice Settings</h3>
+                    <div class="form-group">
+                        <label class="form-label">Voice Model</label>
+                        <select class="form-select" id="voiceModel">
+                            <option value="artemis-confident">Artemis - Confident</option>
+                            <option value="artemis-sarcastic">Artemis - Sarcastic</option>
+                            <option value="artemis-professional">Artemis - Professional</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Speech Speed</label>
+                        <input type="range" class="form-input" min="0.5" max="2.0" step="0.1" value="1.0" id="speechSpeed">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Auto-Speech</label>
+                        <select class="form-select" id="autoSpeech">
+                            <option value="enabled">Enabled</option>
+                            <option value="disabled">Disabled</option>
+                            <option value="smart">Smart Mode (Only important stuff)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="research-panel" style="margin-top: 2rem;">
+                <h3>RBAC Settings</h3>
+                <div class="form-group">
+                    <label class="form-label">Current User Role</label>
+                    <input type="text" class="form-input" value="Administrator" readonly>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Permissions</label>
+                    <div class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Module</th>
+                                <th>Access Level</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Dashboard</td>
+                                <td>Full Access</td>
+                                <td><span style="color: var(--artemis-accent);">Active</span></td>
+                            </tr>
+                            <tr>
+                                <td>Universal Chat</td>
+                                <td>Full Access</td>
+                                <td><span style="color: var(--artemis-accent);">Active</span></td>
+                            </tr>
+                            <tr>
+                                <td>Intelligence Hub</td>
+                                <td>Full Access</td>
+                                <td><span style="color: var(--artemis-accent);">Active</span></td>
+                            </tr>
+                            <tr>
+                                <td>Agent Swarms</td>
+                                <td>Full Access</td>
+                                <td><span style="color: var(--artemis-accent);">Active</span></td>
+                            </tr>
+                            <tr>
+                                <td>Business Intelligence</td>
+                                <td>Full Access</td>
+                                <td><span style="color: var(--artemis-accent);">Active</span></td>
+                            </tr>
+                            <tr>
+                                <td>Brain Training</td>
+                                <td>Full Access</td>
+                                <td><span style="color: var(--artemis-accent);">Active</span></td>
+                            </tr>
+                        </tbody>
+                    </div>
+                </div>
+            </div>
+
+            <div class="artemis-warning" style="margin-top: 2rem;">
+                <i class="fas fa-shield-alt"></i>
+                <strong>Security Notice:</strong> I'm monitoring all access patterns. Any suspicious activity will be flagged faster than you can say "unauthorized access."
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Artemis Command Center JavaScript
+        class ArtemisCommandCenter {
+            constructor() {
+                this.websocket = null;
+                this.currentTab = 'dashboard';
+                this.voiceEnabled = false;
+                this.speechSynthesis = null;
+                this.recognition = null;
+                this.isListening = false;
+                this.personality = {
+                    confidence: 0.95,
+                    sarcasm: 0.7,
+                    perfectionism: 0.9,
+                    smartyHumor: 0.8
+                };
+
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+                this.initializeWebSocket();
+                this.initializeVoice();
+                this.startMetricsUpdates();
+                this.loadUserPreferences();
+                console.log('%cArtemis Command Center initialized. Let\'s get shit done.', 'color: #00FF41; font-weight: bold;');
+            }
+
+            setupEventListeners() {
+                // Tab navigation
+                document.querySelectorAll('.tab-button').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        this.switchTab(e.target.closest('.tab-button').dataset.tab);
+                    });
+                });
+
+                // Chat functionality
+                document.getElementById('sendMessage')?.addEventListener('click', () => {
+                    this.sendChatMessage();
+                });
+
+                document.getElementById('chatInput')?.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        this.sendChatMessage();
+                    }
+                });
+
+                // Voice controls
+                document.getElementById('startVoice')?.addEventListener('click', () => {
+                    this.startVoiceRecognition();
+                });
+
+                document.getElementById('stopVoice')?.addEventListener('click', () => {
+                    this.stopVoiceRecognition();
+                });
+
+                document.getElementById('toggleSpeech')?.addEventListener('click', () => {
+                    this.toggleTextToSpeech();
+                });
+
+                // Research functionality
+                document.getElementById('startResearch')?.addEventListener('click', () => {
+                    this.startResearch();
+                });
+
+                document.getElementById('analyzeDocument')?.addEventListener('click', () => {
+                    this.analyzeDocument();
+                });
+            }
+
+            switchTab(tabName) {
+                // Hide all tab contents
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+
+                // Remove active class from all tab buttons
+                document.querySelectorAll('.tab-button').forEach(button => {
+                    button.classList.remove('active');
+                });
+
+                // Show selected tab content
+                const targetTab = document.getElementById(tabName);
+                if (targetTab) {
+                    targetTab.classList.add('active');
+                }
+
+                // Add active class to selected tab button
+                const targetButton = document.querySelector(`[data-tab="${tabName}"]`);
+                if (targetButton) {
+                    targetButton.classList.add('active');
+                }
+
+                this.currentTab = tabName;
+                console.log(`Switched to ${tabName} tab. Hope you know what you're doing.`);
+            }
+
+            initializeWebSocket() {
+                try {
+                    this.websocket = new WebSocket('ws://localhost:3333/ws');
+
+                    this.websocket.onopen = () => {
+                        console.log('%cWebSocket connected. Real-time intelligence is now online.', 'color: #00FF41;');
+                        this.updateStatus('CONNECTED', 'success');
+                    };
+
+                    this.websocket.onmessage = (event) => {
+                        const data = JSON.parse(event.data);
+                        this.handleWebSocketMessage(data);
+                    };
+
+                    this.websocket.onclose = () => {
+                        console.log('%cWebSocket disconnected. Attempting reconnection...', 'color: #FF4444;');
+                        this.updateStatus('RECONNECTING', 'warning');
+                        setTimeout(() => this.initializeWebSocket(), 5000);
+                    };
+
+                    this.websocket.onerror = (error) => {
+                        console.error('WebSocket error:', error);
+                        this.updateStatus('ERROR', 'danger');
+                    };
+                } catch (error) {
+                    console.error('Failed to initialize WebSocket:', error);
+                }
+            }
+
+            handleWebSocketMessage(data) {
+                switch (data.type) {
+                    case 'metrics_update':
+                        this.updateMetrics(data.metrics);
+                        break;
+                    case 'agent_status':
+                        this.updateAgentStatus(data.agents);
+                        break;
+                    case 'chat_response':
+                        this.addChatMessage('assistant', data.message, data.timestamp);
+                        if (this.voiceEnabled) {
+                            this.speak(data.message);
+                        }
+                        break;
+                    case 'research_result':
+                        this.displayResearchResult(data.result);
+                        break;
+                    default:
+                        console.log('Unknown message type:', data.type);
+                }
+            }
+
+            initializeVoice() {
+                // Text-to-Speech
+                if ('speechSynthesis' in window) {
+                    this.speechSynthesis = window.speechSynthesis;
+                    console.log('Text-to-speech initialized.');
+                }
+
+                // Speech Recognition
+                if ('webkitSpeechRecognition' in window) {
+                    this.recognition = new webkitSpeechRecognition();
+                    this.recognition.continuous = false;
+                    this.recognition.interimResults = false;
+                    this.recognition.lang = 'en-US';
+
+                    this.recognition.onresult = (event) => {
+                        const transcript = event.results[0][0].transcript;
+                        document.getElementById('chatInput').value = transcript;
+                        console.log('Voice input received:', transcript);
+                    };
+
+                    this.recognition.onerror = (event) => {
+                        console.error('Speech recognition error:', event.error);
+                        this.stopVoiceRecognition();
+                    };
+
+                    this.recognition.onend = () => {
+                        this.stopVoiceRecognition();
+                    };
+                }
+            }
+
+            startVoiceRecognition() {
+                if (this.recognition && !this.isListening) {
+                    this.recognition.start();
+                    this.isListening = true;
+                    document.getElementById('startVoice').style.display = 'none';
+                    document.getElementById('stopVoice').style.display = 'inline-block';
+                    document.getElementById('voiceStatus').textContent = 'LISTENING...';
+                    console.log('Voice recognition started. Speak clearly, please.');
+                }
+            }
+
+            stopVoiceRecognition() {
+                if (this.recognition && this.isListening) {
+                    this.recognition.stop();
+                    this.isListening = false;
+                    document.getElementById('startVoice').style.display = 'inline-block';
+                    document.getElementById('stopVoice').style.display = 'none';
+                    document.getElementById('voiceStatus').textContent = 'VOICE READY';
+                }
+            }
+
+            toggleTextToSpeech() {
+                this.voiceEnabled = !this.voiceEnabled;
+                const button = document.getElementById('toggleSpeech');
+                if (this.voiceEnabled) {
+                    button.style.color = 'var(--artemis-accent)';
+                    console.log('Text-to-speech enabled. I\'ll be more vocal now.');
+                } else {
+                    button.style.color = 'var(--artemis-text-muted)';
+                    console.log('Text-to-speech disabled. Peace and quiet it is.');
+                }
+            }
+
+            speak(text) {
+                if (this.speechSynthesis && this.voiceEnabled) {
+                    // Add Artemis personality to speech
+                    const artemisText = this.addArtemisPersonality(text);
+                    const utterance = new SpeechSynthesisUtterance(artemisText);
+                    utterance.rate = 1.1;
+                    utterance.pitch = 0.9;
+                    utterance.volume = 0.8;
+
+                    // Find a suitable voice (prefer female, authoritative)
+                    const voices = this.speechSynthesis.getVoices();
+                    const preferredVoice = voices.find(voice =>
+                        voice.name.includes('Female') ||
+                        voice.name.includes('Samantha') ||
+                        voice.name.includes('Alex')
+                    );
+                    if (preferredVoice) {
+                        utterance.voice = preferredVoice;
+                    }
+
+                    this.speechSynthesis.speak(utterance);
+                }
+            }
+
+            addArtemisPersonality(text) {
+                // Add subtle Artemis personality traits to responses
+                const personalityPhrases = [
+                    'As expected,',
+                    'Obviously,',
+                    'Naturally,',
+                    'Of course,',
+                    'Predictably,'
+                ];
+
+                const random = Math.random();
+                if (random < 0.1 && this.personality.smartyHumor > 0.5) {
+                    const phrase = personalityPhrases[Math.floor(Math.random() * personalityPhrases.length)];
+                    return `${phrase} ${text}`;
+                }
+
+                return text;
+            }
+
+            async sendChatMessage() {
+                const input = document.getElementById('chatInput');
+                const message = input.value.trim();
+
+                if (!message) return;
+
+                // Add user message to chat
+                this.addChatMessage('user', message);
+                input.value = '';
+
+                // Show loading state
+                const loadingDiv = document.createElement('div');
+                loadingDiv.className = 'message assistant';
+                loadingDiv.innerHTML = `
+                    <div class="message-header">
+                        <span>Artemis</span>
+                        <span>Processing...</span>
+                    </div>
+                    <div><span class="loading"></span> Thinking... this better be worth my time.</div>
+                `;
+                document.getElementById('chatMessages').appendChild(loadingDiv);
+
+                try {
+                    const model = document.getElementById('chatModel').value;
+                    const response = await fetch('/api/chat', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            message,
+                            model,
+                            personality: 'artemis'
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    // Remove loading message
+                    loadingDiv.remove();
+
+                    // Add response
+                    this.addChatMessage('assistant', data.response);
+
+                    if (this.voiceEnabled) {
+                        this.speak(data.response);
+                    }
+                } catch (error) {
+                    loadingDiv.remove();
+                    this.addChatMessage('assistant', 'Hell, something went wrong with that request. Network issues, probably.');
+                    console.error('Chat error:', error);
+                }
+            }
+
+            addChatMessage(sender, message, timestamp = null) {
+                const messagesContainer = document.getElementById('chatMessages');
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${sender}`;
+
+                const time = timestamp || new Date().toLocaleTimeString();
+                const senderName = sender === 'user' ? 'You' : 'Artemis';
+
+                messageDiv.innerHTML = `
+                    <div class="message-header">
+                        <span>${senderName}</span>
+                        <span>${time}</span>
+                    </div>
+                    <div>${message}</div>
+                `;
+
+                messagesContainer.appendChild(messageDiv);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
+
+            async startResearch() {
+                const query = document.getElementById('researchQuery').value;
+                const depth = document.getElementById('searchDepth').value;
+
+                if (!query) {
+                    alert('Enter a research query first. I\'m not a mind reader.');
+                    return;
+                }
+
+                const resultsDiv = document.getElementById('researchResults');
+                resultsDiv.textContent = 'Researching... This might take a moment while I dig deep.';
+
+                try {
+                    const response = await fetch('/api/research', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ query, depth, personality: 'artemis' })
+                    });
+
+                    const data = await response.json();
+                    this.displayResearchResult(data.result);
+                } catch (error) {
+                    resultsDiv.textContent = 'Research failed. Probably a network issue or my standards are too high for the internet.';
+                    console.error('Research error:', error);
+                }
+            }
+
+            displayResearchResult(result) {
+                const resultsDiv = document.getElementById('researchResults');
+                resultsDiv.innerHTML = result;
+            }
+
+            async analyzeDocument() {
+                const fileInput = document.getElementById('documentUpload');
+                const analysisType = document.getElementById('analysisType').value;
+
+                if (!fileInput.files[0]) {
+                    alert('Upload a document first. I can\'t analyze thin air.');
+                    return;
+                }
+
+                const formData = new FormData();
+                formData.append('file', fileInput.files[0]);
+                formData.append('analysis_type', analysisType);
+                formData.append('personality', 'artemis');
+
+                const resultsDiv = document.getElementById('researchResults');
+                resultsDiv.textContent = 'Analyzing document... Preparing my brutally honest assessment.';
+
+                try {
+                    const response = await fetch('/api/analyze-document', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const data = await response.json();
+                    this.displayResearchResult(data.result);
+                } catch (error) {
+                    resultsDiv.textContent = 'Document analysis failed. File format issue or server being temperamental.';
+                    console.error('Document analysis error:', error);
+                }
+            }
+
+            updateMetrics(metrics) {
+                Object.entries(metrics).forEach(([key, value]) => {
+                    const element = document.getElementById(key);
+                    if (element) {
+                        element.textContent = value;
+                    }
+                });
+            }
+
+            updateAgentStatus(agents) {
+                // Update agent swarm status indicators
+                agents.forEach(agent => {
+                    const statusElement = document.querySelector(`[data-agent="${agent.id}"] .swarm-status`);
+                    if (statusElement) {
+                        statusElement.className = `swarm-status ${agent.status}`;
+                    }
+                });
+            }
+
+            startMetricsUpdates() {
+                // Simulate real-time metrics updates
+                setInterval(() => {
+                    this.simulateMetricsUpdate();
+                }, 5000);
+            }
+
+            simulateMetricsUpdate() {
+                // Simulate realistic metric changes
+                const performance = document.getElementById('systemPerformance');
+                if (performance) {
+                    const current = parseFloat(performance.textContent);
+                    const change = (Math.random() - 0.5) * 0.2;
+                    const newValue = Math.max(95, Math.min(100, current + change));
+                    performance.textContent = newValue.toFixed(1) + '%';
+                }
+
+                const agents = document.getElementById('activeAgents');
+                if (agents) {
+                    const current = parseInt(agents.textContent);
+                    const change = Math.floor((Math.random() - 0.5) * 3);
+                    const newValue = Math.max(0, current + change);
+                    agents.textContent = newValue;
+                }
+            }
+
+            updateStatus(status, type) {
+                const statusElement = document.querySelector('.status-indicator span');
+                if (statusElement) {
+                    statusElement.textContent = `SYSTEM ${status}`;
+                    statusElement.className = type;
+                }
+            }
+
+            loadUserPreferences() {
+                // Load user preferences from localStorage
+                const preferences = localStorage.getItem('artemis_preferences');
+                if (preferences) {
+                    const prefs = JSON.parse(preferences);
+
+                    if (prefs.voiceEnabled !== undefined) {
+                        this.voiceEnabled = prefs.voiceEnabled;
+                    }
+
+                    if (prefs.currentTab) {
+                        this.switchTab(prefs.currentTab);
+                    }
+                }
+            }
+
+            saveUserPreferences() {
+                const preferences = {
+                    voiceEnabled: this.voiceEnabled,
+                    currentTab: this.currentTab
+                };
+                localStorage.setItem('artemis_preferences', JSON.stringify(preferences));
+            }
+        }
+
+        // Initialize Artemis Command Center when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            window.artemis = new ArtemisCommandCenter();
+
+            // Save preferences before page unload
+            window.addEventListener('beforeunload', () => {
+                window.artemis.saveUserPreferences();
+            });
+        });
+
+        // Global error handler with Artemis personality
+        window.addEventListener('error', (event) => {
+            console.error('%cArtemis detected an error:', 'color: #FF4444; font-weight: bold;', event.error);
+            console.log('%cDon\'t worry, I\'ll handle this mess.', 'color: #00FF41;');
+        });
+
+    </script>
+</body>
+</html>

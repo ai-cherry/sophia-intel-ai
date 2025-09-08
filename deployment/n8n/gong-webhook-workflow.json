@@ -1,0 +1,597 @@
+{
+  "name": "Gong Webhook Processing Pipeline",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "gong-webhook",
+        "responseMode": "onReceived",
+        "responseData": "allEntries",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Gong Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "gong-webhook-receiver"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Validate webhook signature\nconst crypto = require('crypto');\nconst webhookSecret = $env.GONG_WEBHOOK_SECRET;\nconst signature = $input.item.headers['x-gong-signature'];\nconst payload = JSON.stringify($input.item.json);\n\n// Verify signature\nconst expectedSignature = crypto\n  .createHmac('sha256', webhookSecret)\n  .update(payload)\n  .digest('hex');\n\nif (signature !== expectedSignature) {\n  throw new Error('Invalid webhook signature');\n}\n\n// Extract event data\nconst eventType = $input.item.json.eventType;\nconst callId = $input.item.json.callId;\nconst timestamp = $input.item.json.timestamp;\n\nreturn {\n  json: {\n    eventType,\n    callId,\n    timestamp,\n    payload: $input.item.json,\n    validated: true\n  }\n};"
+      },
+      "id": "validate-webhook",
+      "name": "Validate & Parse Webhook",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$json.eventType}}",
+              "operation": "equals",
+              "value2": "call.ended"
+            }
+          ]
+        }
+      },
+      "id": "route-call-ended",
+      "name": "If Call Ended",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [650, 200]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$json.eventType}}",
+              "operation": "equals",
+              "value2": "transcript.ready"
+            }
+          ]
+        }
+      },
+      "id": "route-transcript-ready",
+      "name": "If Transcript Ready",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [650, 400]
+    },
+    {
+      "parameters": {
+        "url": "https://api.gong.io/v2/calls/extensive",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "filter",
+              "value": "={{JSON.stringify({callIds: [$json.callId]})}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fetch-call-extensive",
+      "name": "Fetch Call Extensive Data",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [850, 200],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "gong-api-credentials",
+          "name": "Gong API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://api.gong.io/v2/calls/transcript",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "filter",
+              "value": "={{JSON.stringify({callIds: [$json.callId]})}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fetch-transcript",
+      "name": "Fetch Transcript",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [850, 400],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "gong-api-credentials",
+          "name": "Gong API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO gong_data.calls (id, gong_call_id, title, scheduled_at, duration_seconds, metadata)\nVALUES ($1, $2, $3, $4, $5, $6)\nON CONFLICT (gong_call_id) DO UPDATE SET\n  title = EXCLUDED.title,\n  metadata = EXCLUDED.metadata,\n  updated_at = NOW();",
+        "additionalFields": {
+          "queryParams": "={{$json.calls[0].id}},{{$json.calls[0].id}},{{$json.calls[0].title}},{{$json.calls[0].scheduled}},{{$json.calls[0].duration}},{{JSON.stringify($json.calls[0])}}"
+        }
+      },
+      "id": "store-call-postgres",
+      "name": "Store Call in Postgres",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1050, 200],
+      "credentials": {
+        "postgres": {
+          "id": "neon-postgres",
+          "name": "Neon PostgreSQL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Process transcript into chunks\nconst callId = $json.callTranscripts[0].callId;\nconst sentences = $json.callTranscripts[0].sentences || [];\n\nconst chunks = [];\nlet currentChunk = [];\nlet currentSpeaker = null;\nlet chunkIndex = 0;\n\nfor (const sentence of sentences) {\n  const speaker = sentence.speakerName || 'Unknown';\n  \n  if (currentSpeaker && speaker !== currentSpeaker) {\n    // Save current chunk\n    if (currentChunk.length > 0) {\n      chunks.push({\n        callId,\n        chunkId: `${callId}_${chunkIndex}`,\n        speaker: currentSpeaker,\n        text: currentChunk.map(s => s.text).join(' '),\n        startMs: currentChunk[0].start,\n        endMs: currentChunk[currentChunk.length - 1].end,\n        chunkIndex\n      });\n      chunkIndex++;\n    }\n    \n    // Start new chunk\n    currentChunk = [sentence];\n    currentSpeaker = speaker;\n  } else {\n    currentChunk.push(sentence);\n    if (!currentSpeaker) currentSpeaker = speaker;\n  }\n}\n\n// Don't forget last chunk\nif (currentChunk.length > 0) {\n  chunks.push({\n    callId,\n    chunkId: `${callId}_${chunkIndex}`,\n    speaker: currentSpeaker,\n    text: currentChunk.map(s => s.text).join(' '),\n    startMs: currentChunk[0].start,\n    endMs: currentChunk[currentChunk.length - 1].end,\n    chunkIndex\n  });\n}\n\nreturn chunks.map(chunk => ({ json: chunk }));"
+      },
+      "id": "chunk-transcript",
+      "name": "Chunk Transcript",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [1050, 400]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:8080/v1/batch/objects",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "objects",
+              "value": "={{JSON.stringify($items.map(item => ({class: 'GongTranscriptChunk', properties: item.json})))}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "store-weaviate",
+      "name": "Store in Weaviate",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1250, 400],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "weaviate-api",
+          "name": "Weaviate"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "channel": "sales-team",
+        "text": "New Gong Call Processed",
+        "attachments": [
+          {
+            "color": "#36a64f",
+            "title": "Call Details",
+            "title_link": "={{$json.calls[0].url}}",
+            "fields": {
+              "item": [
+                {
+                  "short": true,
+                  "title": "Call Title",
+                  "value": "={{$json.calls[0].title}}"
+                },
+                {
+                  "short": true,
+                  "title": "Duration",
+                  "value": "={{$json.calls[0].duration}} minutes"
+                },
+                {
+                  "short": true,
+                  "title": "Sentiment Score",
+                  "value": "={{$json.calls[0].stats.sentimentScore || 'N/A'}}"
+                },
+                {
+                  "short": true,
+                  "title": "Talk Ratio",
+                  "value": "={{$json.calls[0].stats.talkRatio || 'N/A'}}"
+                }
+              ]
+            }
+          }
+        ],
+        "otherOptions": {}
+      },
+      "id": "notify-slack",
+      "name": "Notify Slack",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [1250, 200],
+      "credentials": {
+        "slackApi": {
+          "id": "slack-webhook",
+          "name": "Slack"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "={{`gong:call:${$json.callId}`}}",
+        "value": "={{JSON.stringify($json)}}",
+        "keyType": "string",
+        "expire": true,
+        "ttl": 3600
+      },
+      "id": "cache-redis",
+      "name": "Cache in Redis",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [1450, 300],
+      "credentials": {
+        "redis": {
+          "id": "redis-cache",
+          "name": "Redis Cache"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$json.eventType}}",
+              "operation": "equals",
+              "value2": "deal.at_risk"
+            }
+          ]
+        }
+      },
+      "id": "route-deal-risk",
+      "name": "If Deal at Risk",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [650, 600]
+    },
+    {
+      "parameters": {
+        "url": "{{$env.SOPHIA_API_URL}}/api/v1/alerts/deal-risk",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "dealId",
+              "value": "={{$json.dealId}}"
+            },
+            {
+              "name": "riskLevel",
+              "value": "={{$json.riskLevel}}"
+            },
+            {
+              "name": "factors",
+              "value": "={{JSON.stringify($json.riskFactors)}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "alert-deal-risk",
+      "name": "Send Deal Risk Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [850, 600],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "sophia-api",
+          "name": "Sophia API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Generate AI insights from transcript\nconst chunks = $items.map(item => item.json);\n\n// Prepare prompt for OpenAI\nconst transcriptText = chunks.map(c => `${c.speaker}: ${c.text}`).join('\\n');\n\nconst insights = {\n  callId: chunks[0].callId,\n  summary: 'AI-generated summary placeholder',\n  keyTopics: [],\n  actionItems: [],\n  sentiment: 'neutral',\n  nextSteps: [],\n  competitorMentions: [],\n  objections: [],\n  commitments: []\n};\n\n// This would call OpenAI API in production\n// For now, return structured insights\nreturn {\n  json: insights\n};"
+      },
+      "id": "generate-insights",
+      "name": "Generate AI Insights",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [1450, 500]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO gong_data.call_insights (call_id, insight_type, category, title, description, ai_confidence)\nVALUES ($1, $2, $3, $4, $5, $6);",
+        "additionalFields": {
+          "queryParams": "={{$json.callId}},'ai_summary','analysis','Call Summary',{{$json.summary}},0.85"
+        }
+      },
+      "id": "store-insights",
+      "name": "Store Insights",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1650, 500],
+      "credentials": {
+        "postgres": {
+          "id": "neon-postgres",
+          "name": "Neon PostgreSQL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "{{$env.SOPHIA_DASHBOARD_URL}}/api/websocket/broadcast",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "channel",
+              "value": "gong_updates"
+            },
+            {
+              "name": "event",
+              "value": "transcript_processed"
+            },
+            {
+              "name": "data",
+              "value": "={{JSON.stringify({callId: $json.callId, insights: $json})}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "notify-dashboard",
+      "name": "Notify Dashboard",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1850, 400],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "sophia-api",
+          "name": "Sophia API"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "webhook-trigger": {
+      "main": [
+        [
+          {
+            "node": "validate-webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "validate-webhook": {
+      "main": [
+        [
+          {
+            "node": "route-call-ended",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "route-transcript-ready",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "route-deal-risk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "route-call-ended": {
+      "main": [
+        [
+          {
+            "node": "fetch-call-extensive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "route-transcript-ready": {
+      "main": [
+        [
+          {
+            "node": "fetch-transcript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "route-deal-risk": {
+      "main": [
+        [
+          {
+            "node": "alert-deal-risk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "fetch-call-extensive": {
+      "main": [
+        [
+          {
+            "node": "store-call-postgres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "fetch-transcript": {
+      "main": [
+        [
+          {
+            "node": "chunk-transcript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "chunk-transcript": {
+      "main": [
+        [
+          {
+            "node": "store-weaviate",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "generate-insights",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "store-call-postgres": {
+      "main": [
+        [
+          {
+            "node": "notify-slack",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "cache-redis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "store-weaviate": {
+      "main": [
+        [
+          {
+            "node": "notify-dashboard",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "generate-insights": {
+      "main": [
+        [
+          {
+            "node": "store-insights",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "alert-deal-risk": {
+      "main": [
+        [
+          {
+            "node": "cache-redis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "all",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "gong",
+      "createdAt": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "name": "webhooks",
+      "createdAt": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "name": "sales-intelligence",
+      "createdAt": "2024-01-01T00:00:00.000Z"
+    }
+  ],
+  "triggerCount": 0,
+  "updatedAt": "2024-01-01T00:00:00.000Z",
+  "versionId": "1"
+}

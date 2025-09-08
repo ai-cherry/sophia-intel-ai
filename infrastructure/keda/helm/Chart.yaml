@@ -1,0 +1,41 @@
+apiVersion: v2
+name: sophia-intel-keda
+description: KEDA autoscaling integration for Sophia Intel AI system
+type: application
+version: 1.0.0
+appVersion: "2.13.0"
+keywords:
+  - keda
+  - autoscaling
+  - ai
+  - sophia
+  - artemis
+home: https://github.com/sophia-intel-ai
+sources:
+  - https://github.com/sophia-intel-ai/infrastructure
+maintainers:
+  - name: Platform Team
+    email: platform@sophia-intel-ai.com
+
+dependencies:
+  - name: keda
+    version: 2.13.0
+    repository: https://kedacore.github.io/charts
+    condition: keda.enabled
+    tags:
+      - keda-operator
+    import-values:
+      - child: prometheus.metricServer
+        parent: prometheus.metricServer
+
+annotations:
+  # Circuit breaker configuration
+  keda.sh/circuit-breaker: "enabled"
+  keda.sh/max-scale-events-per-minute: "3"
+  # Monitoring annotations
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "8080"
+  prometheus.io/path: "/metrics"
+  # Deployment strategy
+  deployment.strategy: "staged-rollout"
+  rollback.enabled: "true"

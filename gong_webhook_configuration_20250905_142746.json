@@ -1,0 +1,9 @@
+{
+  "webhook_url": "https://scoobyjava.app.n8n.cloud/webhook/gong-webhook",
+  "timestamp": "2025-09-05T14:27:44.400199",
+  "configured_events": [],
+  "errors": [],
+  "status": "ready_for_manual_config",
+  "guide_file": "gong_webhook_configuration_guide_20250905_142746.md",
+  "test_payloads_available": true
+}

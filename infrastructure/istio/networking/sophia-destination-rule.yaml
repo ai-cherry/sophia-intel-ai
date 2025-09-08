@@ -1,0 +1,259 @@
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: sophia-orchestrator
+  namespace: sophia
+  labels:
+    app: sophia
+    system: sophia-artemis
+    mesh: istio
+spec:
+  host: sophia-orchestrator.sophia.svc.cluster.local
+  trafficPolicy:
+    # Connection pool settings
+    connectionPool:
+      tcp:
+        maxConnections: 120
+        connectTimeout: 30s
+        tcpKeepalive:
+          time: 7200s
+          interval: 75s
+          probes: 10
+      http:
+        http1MaxPendingRequests: 80
+        http2MaxRequests: 1280
+        maxRequestsPerConnection: 8 # Respecting 8 concurrent task limit
+        h2UpgradePolicy: UPGRADE
+        useClientProtocol: true
+    # Load balancer settings - LEAST_REQUEST
+    loadBalancer:
+      simple: LEAST_REQUEST
+      localityLbSetting:
+        enabled: true
+        distribute:
+          - from: region1/zone1/*
+            to:
+              "region1/zone1/*": 70
+              "region1/zone2/*": 20
+              "region2/zone1/*": 10
+        failover:
+          - from: region1
+            to: region2
+        failoverPriority:
+          - "topology.kubernetes.io/zone"
+          - "topology.kubernetes.io/region"
+    # Outlier detection for enhanced resilience
+    outlierDetection:
+      consecutiveErrors: 5
+      interval: 30s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 50
+      minHealthPercent: 30
+      splitExternalLocalOriginErrors: true
+      consecutiveLocalOriginFailures: 5
+      consecutiveGatewayErrors: 5
+      enforcingConsecutiveErrors: 100
+      enforcingConsecutiveGatewayErrors: 100
+      enforcingConsecutiveLocalOriginFailures: 100
+      detectorInterval: 10s
+      ejectionSweepInterval: 30s
+    # Circuit breaker
+    circuitBreaker:
+      simpleCb:
+        maxConnections: 100
+        httpMaxPendingRequests: 64
+        httpMaxRequests: 1024
+        sleepWindow: 15s
+        httpMaxRequestsPerConnection: 8
+        httpDetectionInterval: 30s
+        httpMaxEjectionPercent: 50
+        httpConsecutiveErrors: 5
+        httpBaseEjectionTime: 30s
+        httpMaxRetries: 3
+  # Service subsets for A/B testing and versioning
+  subsets:
+    - name: stable
+      labels:
+        version: stable
+      trafficPolicy:
+        connectionPool:
+          tcp:
+            maxConnections: 100
+          http:
+            http1MaxPendingRequests: 64
+            http2MaxRequests: 1024
+            maxRequestsPerConnection: 8
+        outlierDetection:
+          consecutiveErrors: 5
+          interval: 30s
+          baseEjectionTime: 30s
+    - name: version-a
+      labels:
+        version: v1
+        experiment: a
+      trafficPolicy:
+        connectionPool:
+          tcp:
+            maxConnections: 15
+          http:
+            http1MaxPendingRequests: 12
+            http2MaxRequests: 192
+            maxRequestsPerConnection: 8
+        outlierDetection:
+          consecutiveErrors: 3
+          interval: 20s
+          baseEjectionTime: 20s
+          maxEjectionPercent: 100
+    - name: version-b
+      labels:
+        version: v2
+        experiment: b
+      trafficPolicy:
+        connectionPool:
+          tcp:
+            maxConnections: 5
+          http:
+            http1MaxPendingRequests: 4
+            http2MaxRequests: 64
+            maxRequestsPerConnection: 8
+        outlierDetection:
+          consecutiveErrors: 2
+          interval: 15s
+          baseEjectionTime: 15s
+          maxEjectionPercent: 100
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: sophia-ai-services
+  namespace: sophia
+  labels:
+    app: sophia
+    system: sophia-artemis
+    mesh: istio
+    component: ai
+spec:
+  host: "ai-service.sophia.svc.cluster.local"
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 60
+        connectTimeout: 60s # Longer timeout for AI operations
+        tcpKeepalive:
+          time: 600s
+          interval: 60s
+          probes: 6
+      http:
+        http1MaxPendingRequests: 40
+        http2MaxRequests: 640
+        maxRequestsPerConnection: 8
+        h2UpgradePolicy: UPGRADE
+    loadBalancer:
+      simple: LEAST_REQUEST
+    outlierDetection:
+      consecutiveErrors: 3
+      interval: 60s
+      baseEjectionTime: 60s
+      maxEjectionPercent: 33
+      minHealthPercent: 50
+  subsets:
+    - name: inference
+      labels:
+        type: inference
+      trafficPolicy:
+        connectionPool:
+          tcp:
+            maxConnections: 40
+          http:
+            maxRequestsPerConnection: 8
+    - name: training
+      labels:
+        type: training
+      trafficPolicy:
+        connectionPool:
+          tcp:
+            maxConnections: 20
+          http:
+            maxRequestsPerConnection: 4
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: sophia-mcp-servers
+  namespace: sophia
+  labels:
+    app: sophia
+    system: sophia-artemis
+    mesh: istio
+    component: mcp
+spec:
+  host: "mcp-server.sophia.svc.cluster.local"
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 50
+        connectTimeout: 15s
+        tcpKeepalive:
+          time: 600s
+          interval: 60s
+          probes: 6
+      http:
+        http1MaxPendingRequests: 32
+        http2MaxRequests: 512
+        maxRequestsPerConnection: 8
+        h2UpgradePolicy: UPGRADE
+    loadBalancer:
+      simple: LEAST_REQUEST
+    outlierDetection:
+      consecutiveErrors: 5
+      interval: 30s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 50
+      minHealthPercent: 30
+  subsets:
+    - name: primary
+      labels:
+        tier: primary
+      trafficPolicy:
+        connectionPool:
+          tcp:
+            maxConnections: 35
+          http:
+            maxRequestsPerConnection: 8
+    - name: secondary
+      labels:
+        tier: secondary
+      trafficPolicy:
+        connectionPool:
+          tcp:
+            maxConnections: 15
+          http:
+            maxRequestsPerConnection: 4
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: sophia-external-services
+  namespace: sophia
+  labels:
+    app: sophia
+    system: sophia-artemis
+    mesh: istio
+spec:
+  host: "*.sophia.external"
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 60
+        connectTimeout: 10s
+      http:
+        http1MaxPendingRequests: 40
+        http2MaxRequests: 640
+        maxRequestsPerConnection: 8
+    loadBalancer:
+      simple: LEAST_REQUEST
+    outlierDetection:
+      consecutiveErrors: 10
+      interval: 60s
+      baseEjectionTime: 60s
+      maxEjectionPercent: 50

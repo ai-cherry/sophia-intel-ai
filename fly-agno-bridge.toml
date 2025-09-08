@@ -1,0 +1,116 @@
+# Fly.io Configuration for Sophia Agno Bridge (UI Compatibility Layer)
+app = "sophia-bridge"
+primary_region = "sjc"  # San Jose - closest to California
+kill_signal = "SIGINT"
+kill_timeout = "5s"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PORT = "7777"
+  PYTHONPATH = "/app"
+  PYTHONUNBUFFERED = "1"
+  LOCAL_DEV_MODE = "false"
+
+  # Internal service URLs (Fly.io internal networking)
+  UNIFIED_API_URL = "http://sophia-api.internal:8003"
+  MCP_SERVER_URL = "http://sophia-mcp.internal:8004"
+  VECTOR_STORE_URL = "http://sophia-vector.internal:8005"
+
+  # Bridge-specific configuration
+  ENABLE_CORS = "true"
+  # Restrict default CORS origins for production; override via Fly secrets if needed
+  CORS_ORIGINS = "https://sophia-ui.fly.dev,https://sophia-ui-staging.fly.dev"
+  DEBUG = "false"
+
+  # Feature flags
+  USE_REAL_APIS = "true"
+  ENABLE_API_VALIDATION = "true"
+
+[experimental]
+  auto_rollback = true
+
+[services]
+  protocol = "tcp"
+  internal_port = 7777
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+    force_https = true
+
+  [[services.ports]]
+    port = 443
+    handlers = ["tls", "http"]
+
+  [services.concurrency]
+    type = "connections"
+    hard_limit = 100
+    soft_limit = 80
+
+  [[services.tcp_checks]]
+    interval = "15s"
+    timeout = "2s"
+    grace_period = "1s"
+    restart_limit = 6
+
+  [[services.http_checks]]
+    interval = "30s"
+    grace_period = "5s"
+    method = "GET"
+    path = "/healthz"
+    protocol = "http"
+    timeout = "2s"
+    tls_skip_verify = false
+
+    [services.http_checks.headers]
+      X-Health-Check = "fly.io"
+
+# Lightweight service - minimal storage needed
+[mounts]
+  source = "bridge_logs"
+  destination = "/logs"
+  initial_size = "2gb"
+
+# Metrics endpoint for monitoring
+[metrics]
+  port = 9091
+  path = "/metrics"
+
+# Lightweight machine configuration for proxy service
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory_mb = 1024
+
+# Auto-scaling configuration - moderate scaling for bridge
+[scaling]
+  min_machines_running = 1
+  max_machines_running = 8
+
+  [[scaling.metrics]]
+    type = "cpu"
+    target = 70
+
+  [[scaling.metrics]]
+    type = "memory"
+    target = 75
+
+  [[scaling.metrics]]
+    type = "requests"
+    target = 120
+
+  [[scaling.metrics]]
+    type = "response_time"
+    target = "100ms"  # Fast response for UI bridge
+
+# Process configuration for lightweight FastAPI server
+[[processes]]
+  app = "web"
+
+[processes.web]
+  cmd = ["python", "-m", "uvicorn", "app.agno_bridge:app", "--host", "0.0.0.0", "--port", "7777", "--workers", "2"]

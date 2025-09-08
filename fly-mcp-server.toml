@@ -1,0 +1,108 @@
+# Fly.io Configuration for Sophia MCP Server
+app = "sophia-mcp"
+primary_region = "sjc"  # San Jose - closest to California
+kill_signal = "SIGINT"
+kill_timeout = "5s"
+
+[build]
+  dockerfile = "./pulumi/mcp-server/Dockerfile"
+
+[env]
+  MCP_SERVER_PORT = "8004"
+  PYTHONPATH = "/app"
+  PYTHONUNBUFFERED = "1"
+  LOCAL_DEV_MODE = "false"
+
+  # Internal service URLs (will use Fly.io internal networking)
+  WEAVIATE_URL = "http://sophia-weaviate.internal:8080"
+
+  # Public environment variables
+  REDIS_HOST = "redis-15014.fcrce172.us-east-1-1.ec2.redns.redis-cloud.com"
+  REDIS_PORT = "15014"
+  REDIS_USERNAME = "default"
+
+  # Neon PostgreSQL
+  NEON_REST_API_ENDPOINT = "https://app-sparkling-wildflower-99699121.dpl.myneon.app"
+  NEON_PROJECT_ID = "rough-union-72390895"
+  NEON_BRANCH_ID = "br-green-firefly-afykrx78"
+
+  # Feature flags
+  USE_REAL_APIS = "true"
+  ENABLE_API_VALIDATION = "true"
+  ENABLE_MCP_PROTOCOL = "true"
+
+[experimental]
+  auto_rollback = true
+
+[services]
+  protocol = "tcp"
+  internal_port = 8004
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+    force_https = true
+
+  [[services.ports]]
+    port = 443
+    handlers = ["tls", "http"]
+
+  [services.concurrency]
+    type = "connections"
+    hard_limit = 150
+    soft_limit = 100
+
+  [[services.tcp_checks]]
+    interval = "15s"
+    timeout = "3s"
+    grace_period = "1s"
+    restart_limit = 6
+
+  [[services.http_checks]]
+    interval = "30s"
+    grace_period = "5s"
+    method = "GET"
+    path = "/health"
+    protocol = "http"
+    timeout = "3s"
+    tls_skip_verify = false
+
+    [services.http_checks.headers]
+      X-Health-Check = "fly.io"
+
+# Persistent storage for memory data
+[mounts]
+  source = "mcp_data"
+  destination = "/data"
+  initial_size = "5gb"
+
+# Metrics endpoint for monitoring
+[metrics]
+  port = 9091
+  path = "/metrics"
+
+# Machine configuration optimized for memory operations
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 2
+  memory_mb = 2048
+
+# Auto-scaling configuration
+[scaling]
+  min_machines_running = 1
+  max_machines_running = 8
+
+  [[scaling.metrics]]
+    type = "cpu"
+    target = 70
+
+  [[scaling.metrics]]
+    type = "memory"
+    target = 75
+
+  [[scaling.metrics]]
+    type = "requests"
+    target = 100

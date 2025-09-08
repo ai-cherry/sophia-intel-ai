@@ -1,0 +1,31 @@
+{
+  "version": "1.0.0",
+  "application": {
+    "name": "Sophia Intelligence Platform",
+    "version": "2.0.0",
+    "description": "Dual AI orchestrator architecture with business and technical intelligence"
+  },
+  "architecture": {
+    "orchestrator": "SuperOrchestrator",
+    "mcp_system": "dev_mcp_unified",
+    "sophia_domain": "business_intelligence",
+    "artemis_domain": "technical_operations"
+  },
+  "defaults": {
+    "ports": {
+      "sophia": 9000,
+      "artemis": 8000,
+      "mcp": 3333,
+      "unified_api": 8006
+    },
+    "timeouts": {
+      "request_timeout": 30,
+      "connection_timeout": 10,
+      "read_timeout": 60
+    },
+    "logging": {
+      "level": "INFO",
+      "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    }
+  }
+}

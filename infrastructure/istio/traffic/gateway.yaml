@@ -1,0 +1,210 @@
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: artemis-gateway
+  namespace: istio-system
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+        - "artemis.sophia-artemis.local"
+        - "artemis-api.sophia-artemis.local"
+      tls:
+        httpsRedirect: true
+    - port:
+        number: 443
+        name: https
+        protocol: HTTPS
+      tls:
+        mode: SIMPLE
+        credentialName: artemis-tls-cert
+        minProtocolVersion: TLSV1_2
+        maxProtocolVersion: TLSV1_3
+        cipherSuites:
+          - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+          - TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+          - TLS_AES_256_GCM_SHA384
+          - TLS_AES_128_GCM_SHA256
+      hosts:
+        - "artemis.sophia-artemis.local"
+        - "artemis-api.sophia-artemis.local"
+---
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: sophia-gateway
+  namespace: istio-system
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+        - "sophia.sophia-artemis.local"
+        - "sophia-api.sophia-artemis.local"
+      tls:
+        httpsRedirect: true
+    - port:
+        number: 443
+        name: https
+        protocol: HTTPS
+      tls:
+        mode: SIMPLE
+        credentialName: sophia-tls-cert
+        minProtocolVersion: TLSV1_2
+        maxProtocolVersion: TLSV1_3
+        cipherSuites:
+          - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+          - TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+          - TLS_AES_256_GCM_SHA384
+          - TLS_AES_128_GCM_SHA256
+      hosts:
+        - "sophia.sophia-artemis.local"
+        - "sophia-api.sophia-artemis.local"
+---
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: shared-gateway
+  namespace: istio-system
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+        - "shared.sophia-artemis.local"
+        - "api.sophia-artemis.local"
+        - "admin.sophia-artemis.local"
+      tls:
+        httpsRedirect: true
+    - port:
+        number: 443
+        name: https
+        protocol: HTTPS
+      tls:
+        mode: SIMPLE
+        credentialName: shared-tls-cert
+        minProtocolVersion: TLSV1_2
+        maxProtocolVersion: TLSV1_3
+      hosts:
+        - "shared.sophia-artemis.local"
+        - "api.sophia-artemis.local"
+        - "admin.sophia-artemis.local"
+    - port:
+        number: 8443
+        name: https-admin
+        protocol: HTTPS
+      tls:
+        mode: MUTUAL
+        credentialName: admin-tls-cert
+        minProtocolVersion: TLSV1_2
+        maxProtocolVersion: TLSV1_3
+      hosts:
+        - "admin.sophia-artemis.local"
+---
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: monitoring-gateway
+  namespace: istio-system
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - port:
+        number: 443
+        name: https-monitoring
+        protocol: HTTPS
+      tls:
+        mode: SIMPLE
+        credentialName: monitoring-tls-cert
+        minProtocolVersion: TLSV1_2
+      hosts:
+        - "grafana.sophia-artemis.local"
+        - "prometheus.sophia-artemis.local"
+        - "tracing.sophia-artemis.local"
+        - "kiali.sophia-artemis.local"
+    - port:
+        number: 15443
+        name: https-metrics
+        protocol: HTTPS
+      tls:
+        mode: MUTUAL
+        credentialName: metrics-tls-cert
+        minProtocolVersion: TLSV1_2
+      hosts:
+        - "metrics.sophia-artemis.local"
+---
+# Egress gateway for external services
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: external-gateway
+  namespace: istio-system
+spec:
+  selector:
+    istio: egressgateway
+  servers:
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+        - "*.openai.com"
+        - "*.anthropic.com"
+        - "*.huggingface.co"
+        - "*.github.com"
+        - "*.googleapis.com"
+    - port:
+        number: 443
+        name: https
+        protocol: HTTPS
+      tls:
+        mode: PASSTHROUGH
+      hosts:
+        - "*.openai.com"
+        - "*.anthropic.com"
+        - "*.huggingface.co"
+        - "*.github.com"
+        - "*.googleapis.com"
+        - "*.amazonaws.com"
+        - "*.azure.com"
+---
+# WebSocket gateway for real-time connections
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: websocket-gateway
+  namespace: istio-system
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - port:
+        number: 8080
+        name: ws
+        protocol: HTTP
+      hosts:
+        - "ws.sophia-artemis.local"
+    - port:
+        number: 8443
+        name: wss
+        protocol: HTTPS
+      tls:
+        mode: SIMPLE
+        credentialName: websocket-tls-cert
+        minProtocolVersion: TLSV1_2
+      hosts:
+        - "wss.sophia-artemis.local"

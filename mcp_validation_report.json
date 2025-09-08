@@ -1,0 +1,58 @@
+{
+  "timestamp": 1757181847.7266371,
+  "tests": {
+    "Basic Health Checks": {
+      "Unified Server Health": {
+        "status": "passed",
+        "status_code": 200,
+        "response_size": 154
+      },
+      "MCP Health": {
+        "status": "failed",
+        "status_code": 404
+      },
+      "Hub Status": {
+        "status": "failed",
+        "status_code": 404
+      }
+    },
+    "MCP Capabilities": {
+      "status": "failed",
+      "error": "HTTP 404"
+    },
+    "Filesystem Operations": {
+      "status": "failed",
+      "error": "HTTP 404"
+    },
+    "Git Operations": {
+      "status": "failed",
+      "error": "HTTP 404"
+    },
+    "Memory Operations": {
+      "status": "failed",
+      "error": "HTTP 404"
+    },
+    "Embeddings Operations": {
+      "status": "failed",
+      "error": "HTTP 404"
+    },
+    "Server Management": {
+      "status": "failed",
+      "error": "HTTP 404"
+    },
+    "Connection Management": {
+      "status": "failed",
+      "error": "HTTP 404"
+    },
+    "Performance & Metrics": {
+      "status": "failed",
+      "error": "HTTP 404"
+    }
+  },
+  "summary": {
+    "passed": 1,
+    "failed": 10,
+    "skipped": 0,
+    "total": 9
+  }
+}

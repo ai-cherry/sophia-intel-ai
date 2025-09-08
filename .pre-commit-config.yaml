@@ -1,0 +1,246 @@
+# Pre-commit hooks for code quality
+# Install: pre-commit install
+# Run manually: pre-commit run --all-files
+# Skip hooks: git commit --no-verify
+
+default_language_version:
+  python: python3.11
+
+repos:
+  # ========================================
+  # Basic Code Quality Checks
+  # ========================================
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      # Whitespace and formatting
+      - id: trailing-whitespace
+        exclude: ^(.*\.md|.*\.mdx|.*\.snap)$
+      - id: end-of-file-fixer
+        exclude: ^(.*\.md|.*\.mdx|.*\.snap)$
+      - id: mixed-line-ending
+        args: [--fix=lf]
+
+      # File format validation
+      - id: check-yaml
+        args: [--unsafe]
+        exclude: ^(.*templates/.*|.*\.template\.yaml)$
+      - id: check-json
+        exclude: ^(.*\.ipynb|.*templates/.*)$
+      - id: check-toml
+
+      # Security and safety
+      - id: check-added-large-files
+        args: [--maxkb=1500] # Reasonable limit for code files
+      - id: check-case-conflict
+      - id: check-merge-conflict
+
+      # Python specific
+      - id: check-docstring-first
+      - id: debug-statements
+        exclude: ^(scripts/|tests/|.*debug.*)$
+      - id: requirements-txt-fixer
+
+  # ========================================
+  # Python Code Formatting
+  # ========================================
+  - repo: https://github.com/psf/black
+    rev: 25.1.0
+    hooks:
+      - id: black
+        language_version: python3.11
+        args: [--line-length=100]
+        exclude: ^(migrations/|.*\.ipynb)$
+
+  - repo: https://github.com/PyCQA/isort
+    rev: 6.0.1
+    hooks:
+      - id: isort
+        args: [--profile, black, --line-length, "100"]
+        exclude: ^(migrations/)$
+
+  # ========================================
+  # Python Code Quality
+  # ========================================
+  - repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: v0.12.12
+    hooks:
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix, --ignore, "E501"] # Only ignore line length
+        exclude: ^(migrations/|tests/fixtures/)$
+
+  # ========================================
+  # Security Scanning (Relaxed)
+  # ========================================
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        args: [--baseline, .secrets.baseline]
+        exclude: |
+          (?x)^(
+            .*\.lock|
+            .*package-lock\.json|
+            .*pnpm-lock\.yaml|
+            .*config/.*\.yaml|
+            .*test.*\.py|
+            .*example.*|
+            .*mock.*|
+            .*fixture.*|
+            .*scaffolding.*|
+            .*\.ipynb|
+            .*/templates/.*
+          )$
+
+  # Bandit - Only for critical security issues
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.8.6
+    hooks:
+      - id: bandit
+        args: ["-ll", "--skip", "B101,B601,B602,B607"] # Only high severity
+        files: ^app/.*\.py$
+        exclude: ^(app/test.*|.*test\.py|.*mock.*|.*example.*)$
+
+  # ========================================
+  # Type Checking (Optional)
+  # ========================================
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.17.1
+    hooks:
+      - id: mypy
+        additional_dependencies:
+          - pydantic>=2.5.0
+          - fastapi>=0.104.0
+          - sqlalchemy>=2.0.0
+        args: [--ignore-missing-imports, --no-strict-optional, --warn-return-any]
+        exclude: ^(tests/|scripts/|migrations/|.*test.*\.py)$
+        pass_filenames: true # Pass files to mypy
+
+  # ========================================
+  # Documentation and Markdown
+  # ========================================
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.45.0
+    hooks:
+      - id: markdownlint
+        args: [--fix, --disable, MD013, --disable, MD033, --disable, MD041]
+        exclude: ^(CHANGELOG\.md|docs/api/|.*templates/.*)$
+
+  # ========================================
+  # Other File Formats
+  # ========================================
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v4.0.0-alpha.8
+    hooks:
+      - id: prettier
+        types_or: [yaml, json]
+        exclude: ^(.*lock.*|.*\.min\.json|.*\.ipynb)$
+        args: [--print-width=100, --tab-width=2]
+
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.11.0.1
+    hooks:
+      - id: shellcheck
+        args: [--severity=error] # Only catch serious issues
+
+  # ========================================
+  # Custom Hooks (Active)
+  # ========================================
+  - repo: local
+    hooks:
+      # Check for duplicate code - useful
+      - id: check-duplicates
+        name: Check for duplicate code and components
+        entry: python scripts/check_duplicates.py
+        language: system
+        pass_filenames: false
+        stages: [pre-push] # Only on push, not every commit
+        verbose: false
+        always_run: false # Skip if no relevant files changed
+
+      # Architecture compliance - useful
+      - id: check-architecture
+        name: Check architecture compliance
+        entry: python scripts/check_architecture.py
+        language: system
+        pass_filenames: false
+        stages: [pre-push] # Only on push
+        verbose: false
+        always_run: false # Skip if no relevant files changed
+
+      # No print statements in production code
+      - id: no-print-statements
+        name: No print statements in production
+        entry: '\bprint\s*\('
+        language: pygrep
+        types: [python]
+        exclude: |
+          (?x)^(
+            scripts/.*|
+            tests/.*|
+            .*test.*\.py|
+            .*debug.*|
+            .*example.*|
+            app/scaffolding/.*|
+            .*demo.*|
+            setup\.py
+          )$
+
+      # Check for common issues
+      - id: no-breakpoints
+        name: Check for forgotten breakpoints
+        entry: 'breakpoint\(\)|import pdb|pdb\.set_trace'
+        language: pygrep
+        types: [python]
+
+      - id: no-console-log
+        name: No console.log in JavaScript
+        entry: 'console\.(log|debug|info|warn|error)'
+        language: pygrep
+        types: [javascript]
+        exclude: ^(.*test.*|.*spec.*|.*\.config\..*)$
+
+# ========================================
+# Global Configuration
+# ========================================
+exclude: |
+  (?x)^(
+    .*\.egg-info/.*|
+    \.git/.*|
+    \.mypy_cache/.*|
+    \.pytest_cache/.*|
+    \.ruff_cache/.*|
+    \.tox/.*|
+    \.venv/.*|
+    build/.*|
+    dist/.*|
+    node_modules/.*|
+    venv/.*|
+    __pycache__/.*|
+    .*\.pyc|
+    .*\.pyo|
+    .*\.pyd|
+    .*\.db|
+    .*\.sqlite|
+    .*\.log|
+    .*\.bak|
+    .*\.swp|
+    .*\.tmp|
+    \.DS_Store|
+    Thumbs\.db|
+    backup_.*|
+    archived/.*|
+    deprecated/.*
+  )$
+
+# Don't stop on first failure
+fail_fast: false
+
+# Run on both commit and push
+default_stages: [pre-commit]
+
+# Specific stage configurations
+default_install_hook_types:
+  - pre-commit
+  - pre-push
+  - commit-msg

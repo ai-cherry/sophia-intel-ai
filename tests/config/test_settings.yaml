@@ -1,0 +1,317 @@
+# Test Environment Configuration
+# Settings for test execution across different environments
+
+# Test Environment
+environment:
+  name: "test"
+  debug: true
+  log_level: "DEBUG"
+  timeout_seconds: 30
+  retry_attempts: 3
+
+# Domain Configuration
+domains:
+  artemis:
+    enabled: true
+    max_concurrent: 8
+    timeout: 60
+    personalities:
+      - "tactical_observer"
+      - "technical_specialist"
+      - "strategic_leader"
+      - "data_specialist"
+    test_data_path: "tests/data/artemis"
+
+  sophia:
+    enabled: true
+    max_concurrent: 8
+    timeout: 60
+    personalities:
+      - "wise_strategist"
+      - "swift_communicator"
+      - "visionary_prophet"
+      - "nurturing_cultivator"
+    test_data_path: "tests/data/sophia"
+
+# MCP Server Configuration for Testing
+mcp_servers:
+  # Artemis Exclusive Servers
+  filesystem:
+    type: "FILESYSTEM"
+    domain: "artemis"
+    mock_enabled: true
+    failure_rate: 0.02
+    latency_ms:
+      min: 10
+      max: 50
+    rate_limit: 100
+
+  code_analysis:
+    type: "CODE_ANALYSIS"
+    domain: "artemis"
+    mock_enabled: true
+    failure_rate: 0.05
+    latency_ms:
+      min: 50
+      max: 200
+    rate_limit: 50
+
+  # Sophia Exclusive Servers
+  web_search:
+    type: "WEB_SEARCH"
+    domain: "sophia"
+    mock_enabled: true
+    failure_rate: 0.1
+    latency_ms:
+      min: 100
+      max: 500
+    rate_limit: 30
+
+  # Shared Servers
+  database:
+    type: "DATABASE"
+    domain: "shared"
+    mock_enabled: true
+    failure_rate: 0.01
+    latency_ms:
+      min: 20
+      max: 100
+    rate_limit: 100
+    cluster_size: 3
+
+  notification:
+    type: "NOTIFICATION"
+    domain: "shared"
+    mock_enabled: true
+    failure_rate: 0.05
+    latency_ms:
+      min: 50
+      max: 150
+    rate_limit: 50
+
+# Resilience Configuration
+resilience:
+  circuit_breaker:
+    enabled: true
+    failure_threshold: 5
+    success_threshold: 2
+    timeout_seconds: 60
+    monitoring_window: 60
+
+  retry_policy:
+    enabled: true
+    max_attempts: 3
+    strategy: "exponential_backoff"
+    initial_delay_ms: 100
+    max_delay_ms: 5000
+    jitter: true
+    jitter_factor: 0.1
+
+  bulkhead:
+    enabled: true
+    max_concurrent: 10
+    max_wait_seconds: 30
+    queue_size: 100
+    type: "async_semaphore"
+
+# Test Data Configuration
+test_data:
+  # Sample repository for Artemis tests
+  sample_repository:
+    url: "https://github.com/test/sample-repo"
+    branch: "main"
+    files_count: 100
+    languages: ["Python", "JavaScript", "TypeScript"]
+    size_mb: 50
+
+  # Sample business data for Sophia tests
+  sample_business:
+    company: "Test Corporation"
+    revenue: 10000000
+    employees: 500
+    market_cap: 50000000
+    growth_rate: 0.15
+
+  # Mission templates for Artemis
+  mission_templates:
+    reconnaissance:
+      duration: 300
+      agents_required: 3
+      priority: "high"
+
+    analysis:
+      duration: 600
+      agents_required: 4
+      priority: "medium"
+
+    deployment:
+      duration: 900
+      agents_required: 5
+      priority: "critical"
+
+  # Strategy templates for Sophia
+  strategy_templates:
+    growth:
+      timeline_months: 6
+      budget: 500000
+      expected_roi: 1.5
+
+    optimization:
+      timeline_months: 3
+      budget: 200000
+      expected_roi: 1.2
+
+    transformation:
+      timeline_months: 12
+      budget: 1000000
+      expected_roi: 2.0
+
+# Performance Testing Configuration
+performance:
+  load_test:
+    enabled: true
+    concurrent_users: 100
+    ramp_up_seconds: 30
+    test_duration_seconds: 300
+
+  stress_test:
+    enabled: true
+    max_concurrent: 500
+    escalation_rate: 50
+    break_point_detection: true
+
+  spike_test:
+    enabled: false
+    spike_users: 1000
+    spike_duration_seconds: 10
+
+  soak_test:
+    enabled: false
+    steady_users: 50
+    duration_hours: 24
+
+# Monitoring Configuration
+monitoring:
+  metrics:
+    enabled: true
+    collection_interval_seconds: 5
+
+  logging:
+    enabled: true
+    format: "json"
+    include_timestamps: true
+    include_trace_id: true
+
+  tracing:
+    enabled: false
+    sample_rate: 0.1
+
+  alerts:
+    enabled: true
+    thresholds:
+      error_rate: 0.05
+      latency_p95_ms: 1000
+      memory_usage_percent: 80
+      cpu_usage_percent: 90
+
+# Test Execution Configuration
+execution:
+  parallel:
+    enabled: true
+    max_workers: 4
+
+  isolation:
+    enabled: true
+    reset_state: true
+    clean_resources: true
+
+  coverage:
+    enabled: true
+    min_percentage: 80
+    fail_under: 70
+
+  reporting:
+    enabled: true
+    formats: ["html", "xml", "json"]
+    output_dir: "test_reports"
+
+  screenshots:
+    enabled: true
+    on_failure: true
+    on_success: false
+    output_dir: "test_screenshots"
+
+# Mock Data Generation
+mock_data:
+  seed: 42 # For reproducible random data
+
+  agents:
+    min_response_time_ms: 50
+    max_response_time_ms: 500
+    failure_probability: 0.01
+
+  repositories:
+    min_files: 10
+    max_files: 1000
+    file_extensions: [".py", ".js", ".ts", ".java", ".go"]
+
+  business_metrics:
+    revenue_range: [100000, 100000000]
+    employee_range: [10, 10000]
+    growth_range: [-0.1, 0.5]
+
+# Feature Flags for Testing
+feature_flags:
+  enable_artemis_swarms: true
+  enable_sophia_swarms: true
+  enable_cross_domain: true
+  enable_mcp_routing: true
+  enable_resilience: true
+  enable_monitoring: true
+  enable_caching: false
+  enable_rate_limiting: true
+
+# Database Configuration for Tests
+database:
+  test_db:
+    type: "sqlite"
+    path: ":memory:" # In-memory for tests
+
+  fixtures:
+    load_initial_data: true
+    reset_between_tests: true
+
+# Network Configuration
+network:
+  timeout:
+    connect: 5
+    read: 30
+    write: 30
+
+  retries:
+    max_attempts: 3
+    backoff_factor: 2
+
+  proxy:
+    enabled: false
+    url: null
+
+# Security Configuration for Tests
+security:
+  authentication:
+    enabled: false # Disabled for tests
+
+  encryption:
+    enabled: false # Disabled for tests
+
+  rate_limiting:
+    enabled: true
+    requests_per_minute: 100
+
+# Cleanup Configuration
+cleanup:
+  after_each_test: true
+  after_all_tests: true
+  remove_temp_files: true
+  reset_databases: true
+  clear_caches: true

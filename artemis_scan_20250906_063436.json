@@ -1,0 +1,22 @@
+{
+  "timestamp": "2025-09-06T06:34:36.172992",
+  "swarm_type": "Artemis Microswarm",
+  "agent_count": 3,
+  "agents": [
+    {
+      "agent": "Grok Code Fast 1",
+      "error": "'EnhancedLLMRouter' object has no attribute 'create_completion_async'",
+      "timestamp": "2025-09-06T06:34:36.172946"
+    },
+    {
+      "agent": "Gemini 2.5 Flash",
+      "error": "'EnhancedLLMRouter' object has no attribute 'create_completion_async'",
+      "timestamp": "2025-09-06T06:34:36.172953"
+    },
+    {
+      "agent": "Llama-4 Scout",
+      "error": "'EnhancedLLMRouter' object has no attribute 'create_completion_async'",
+      "timestamp": "2025-09-06T06:34:36.172956"
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+[
+  {
+    "provider": "OpenAI",
+    "success": true,
+    "response_time": 3.3121731281280518,
+    "response_length": 1065,
+    "virtual_key": "openai-vk-190a60",
+    "model": "gpt-4o-mini"
+  },
+  {
+    "provider": "DeepSeek",
+    "success": true,
+    "response_time": 9.928136110305786,
+    "response_length": 519,
+    "virtual_key": "deepseek-vk-24102f",
+    "model": "deepseek-chat"
+  },
+  {
+    "provider": "Groq",
+    "success": false,
+    "error": "Error code: 400 - {'error': {'message': 'groq error: The model `llama-3.2-90b-text-preview` has been decommissioned and is no longer supported. Please refer to https://console.groq.com/docs/deprecatio",
+    "response_time": 0.5356988906860352,
+    "virtual_key": "groq-vk-6b9b52",
+    "model": "llama-3.2-90b-text-preview"
+  },
+  {
+    "provider": "Anthropic",
+    "success": true,
+    "response_time": 4.058444976806641,
+    "response_length": 223,
+    "virtual_key": "anthropic-vk-b42804",
+    "model": "claude-3-5-sonnet-20241022"
+  },
+  {
+    "provider": "Mistral",
+    "success": true,
+    "response_time": 2.258535861968994,
+    "response_length": 769,
+    "virtual_key": "mistral-vk-f92861",
+    "model": "mistral-small-latest"
+  },
+  {
+    "provider": "Together AI",
+    "success": true,
+    "response_time": 2.072319269180298,
+    "response_length": 510,
+    "virtual_key": "together-ai-670469",
+    "model": "meta-llama/Llama-3-70b-chat-hf"
+  },
+  {
+    "provider": "Cohere",
+    "success": true,
+    "response_time": 2.1338388919830322,
+    "response_length": 109,
+    "virtual_key": "cohere-vk-496fa9",
+    "model": "command-r"
+  }
+]

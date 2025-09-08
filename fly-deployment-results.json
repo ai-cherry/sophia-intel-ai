@@ -1,0 +1,177 @@
+{
+  "deployment_summary": {
+    "total_services": 6,
+    "successful_deployments": 6,
+    "total_storage_gb": 53,
+    "total_max_instances": 58,
+    "primary_region": "sjc",
+    "secondary_region": "iad",
+    "timestamp": "2025-09-01 08:31:09 UTC"
+  },
+  "services": {
+    "sophia-weaviate": {
+      "app_name": "sophia-weaviate",
+      "app_info": {
+        "name": "sophia-weaviate",
+        "status": "error",
+        "error": "404 page not found\n"
+      },
+      "volume_info": {
+        "name": "sophia_weaviate_data",
+        "size_gb": 20,
+        "region": "sjc",
+        "status": "warning"
+      },
+      "fly_toml": "fly-sophia-weaviate.toml",
+      "public_url": "https://sophia-weaviate.fly.dev",
+      "internal_url": "http://sophia-weaviate.internal:8080",
+      "status": "configured"
+    },
+    "sophia-mcp": {
+      "app_name": "sophia-mcp",
+      "app_info": {
+        "name": "sophia-mcp",
+        "status": "error",
+        "error": "404 page not found\n"
+      },
+      "volume_info": {
+        "name": "sophia_mcp_data",
+        "size_gb": 5,
+        "region": "sjc",
+        "status": "warning"
+      },
+      "fly_toml": "fly-sophia-mcp.toml",
+      "public_url": "https://sophia-mcp.fly.dev",
+      "internal_url": "http://sophia-mcp.internal:8004",
+      "status": "configured"
+    },
+    "sophia-vector": {
+      "app_name": "sophia-vector",
+      "app_info": {
+        "name": "sophia-vector",
+        "status": "error",
+        "error": "404 page not found\n"
+      },
+      "volume_info": {
+        "name": "sophia_vector_data",
+        "size_gb": 10,
+        "region": "sjc",
+        "status": "warning"
+      },
+      "fly_toml": "fly-sophia-vector.toml",
+      "public_url": "https://sophia-vector.fly.dev",
+      "internal_url": "http://sophia-vector.internal:8005",
+      "status": "configured"
+    },
+    "sophia-api": {
+      "app_name": "sophia-api",
+      "app_info": {
+        "name": "sophia-api",
+        "status": "error",
+        "error": "404 page not found\n"
+      },
+      "volume_info": {
+        "name": "sophia_api_data",
+        "size_gb": 15,
+        "region": "sjc",
+        "status": "warning"
+      },
+      "fly_toml": "fly-sophia-api.toml",
+      "public_url": "https://sophia-api.fly.dev",
+      "internal_url": "http://sophia-api.internal:8003",
+      "status": "configured"
+    },
+    "sophia-bridge": {
+      "app_name": "sophia-bridge",
+      "app_info": {
+        "name": "sophia-bridge",
+        "status": "error",
+        "error": "404 page not found\n"
+      },
+      "volume_info": {
+        "name": "sophia_bridge_data",
+        "size_gb": 2,
+        "region": "sjc",
+        "status": "warning"
+      },
+      "fly_toml": "fly-sophia-bridge.toml",
+      "public_url": "https://sophia-bridge.fly.dev",
+      "internal_url": "http://sophia-bridge.internal:7777",
+      "status": "configured"
+    },
+    "sophia-ui": {
+      "app_name": "sophia-ui",
+      "app_info": {
+        "name": "sophia-ui",
+        "status": "error",
+        "error": "404 page not found\n"
+      },
+      "volume_info": {
+        "name": "sophia_ui_data",
+        "size_gb": 1,
+        "region": "sjc",
+        "status": "warning"
+      },
+      "fly_toml": "fly-sophia-ui.toml",
+      "public_url": "https://sophia-ui.fly.dev",
+      "internal_url": "http://sophia-ui.internal:3000",
+      "status": "configured"
+    }
+  },
+  "infrastructure_specs": {
+    "sophia-weaviate": {
+      "memory_mb": 2048,
+      "cpu_cores": 2.0,
+      "min_instances": 1,
+      "max_instances": 4,
+      "volume_size_gb": 20,
+      "port": 8080,
+      "health_check_path": "/v1/.well-known/ready"
+    },
+    "sophia-mcp": {
+      "memory_mb": 2048,
+      "cpu_cores": 2.0,
+      "min_instances": 1,
+      "max_instances": 8,
+      "volume_size_gb": 5,
+      "port": 8004,
+      "health_check_path": "/health"
+    },
+    "sophia-vector": {
+      "memory_mb": 2048,
+      "cpu_cores": 2.0,
+      "min_instances": 1,
+      "max_instances": 12,
+      "volume_size_gb": 10,
+      "port": 8005,
+      "health_check_path": "/health"
+    },
+    "sophia-api": {
+      "memory_mb": 4096,
+      "cpu_cores": 4.0,
+      "min_instances": 2,
+      "max_instances": 20,
+      "volume_size_gb": 15,
+      "port": 8003,
+      "health_check_path": "/healthz"
+    },
+    "sophia-bridge": {
+      "memory_mb": 1024,
+      "cpu_cores": 1.0,
+      "min_instances": 1,
+      "max_instances": 8,
+      "volume_size_gb": 2,
+      "port": 7777,
+      "health_check_path": "/healthz"
+    },
+    "sophia-ui": {
+      "memory_mb": 1024,
+      "cpu_cores": 1.0,
+      "min_instances": 1,
+      "max_instances": 6,
+      "volume_size_gb": 1,
+      "port": 3000,
+      "health_check_path": "/"
+    }
+  }
+}

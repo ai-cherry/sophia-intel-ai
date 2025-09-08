@@ -1,0 +1,282 @@
+# Sophia Intel AI - System Configuration
+# Central configuration management for all environments
+
+# Global Settings
+global:
+  name: "sophia-intel-ai"
+  version: "1.0.0"
+  description: "Sophia Intel AI Platform - Production-Ready AI Orchestration System"
+
+# Environment Profiles
+profiles:
+  development:
+    enabled: true
+    auto_recovery: true
+    health_check_interval: 30
+    log_level: "INFO"
+    debug_mode: true
+    resource_limits:
+      cpu: "4"
+      memory: "8Gi"
+      storage: "50Gi"
+
+  testing:
+    enabled: true
+    auto_recovery: true
+    health_check_interval: 15
+    log_level: "DEBUG"
+    debug_mode: true
+    resource_limits:
+      cpu: "2"
+      memory: "4Gi"
+      storage: "20Gi"
+
+  staging:
+    enabled: true
+    auto_recovery: true
+    health_check_interval: 30
+    log_level: "INFO"
+    debug_mode: false
+    resource_limits:
+      cpu: "8"
+      memory: "16Gi"
+      storage: "100Gi"
+
+  production:
+    enabled: true
+    auto_recovery: true
+    health_check_interval: 60
+    log_level: "ERROR"
+    debug_mode: false
+    resource_limits:
+      cpu: "16"
+      memory: "32Gi"
+      storage: "500Gi"
+
+# Service Configuration Templates
+service_templates:
+  infrastructure:
+    redis:
+      image: "redis:7-alpine"
+      port: 6379
+      memory: "512Mi"
+      cpu: "250m"
+      persistence: true
+
+    postgres:
+      image: "postgres:15-alpine"
+      port: 5432
+      memory: "1Gi"
+      cpu: "500m"
+      persistence: true
+
+    weaviate:
+      image: "semitechnologies/weaviate:latest"
+      port: 8080
+      memory: "2Gi"
+      cpu: "500m"
+      persistence: true
+
+  applications:
+    unified_api:
+      port: 8000
+      replicas: 3
+      memory: "2Gi"
+      cpu: "1500m"
+      autoscaling: true
+
+    sophia_orchestrator:
+      port: 8000
+      replicas: 2
+      memory: "1Gi"
+      cpu: "1000m"
+      autoscaling: true
+
+    artemis_orchestrator:
+      port: 8000
+      replicas: 2
+      memory: "1Gi"
+      cpu: "1000m"
+      autoscaling: true
+
+  monitoring:
+    prometheus:
+      port: 9090
+      memory: "512Mi"
+      cpu: "500m"
+      retention: "15d"
+
+    grafana:
+      port: 3000
+      memory: "512Mi"
+      cpu: "250m"
+      persistence: true
+
+# Platform-Specific Settings
+platforms:
+  docker:
+    compose_version: "3.8"
+    network_driver: "bridge"
+    volume_driver: "local"
+    restart_policy: "unless-stopped"
+
+  kubernetes:
+    api_version: "v1"
+    namespace: "sophia-intel-ai"
+    storage_class: "ssd"
+    ingress_class: "nginx"
+
+  systemd:
+    service_type: "exec"
+    restart: "on-failure"
+    restart_sec: 30
+    timeout_start_sec: 300
+
+  launchd:
+    process_type: "Background"
+    keep_alive: true
+    throttle_interval: 30
+
+# Security Configuration
+security:
+  pod_security_standard: "restricted"
+  network_policies: true
+  secret_encryption: true
+  rbac_enabled: true
+
+  # TLS Configuration
+  tls:
+    enabled: true
+    cert_manager: false
+    self_signed: false
+
+  # Authentication
+  auth:
+    method: "jwt"
+    token_expiry: "24h"
+    refresh_enabled: true
+
+# Networking Configuration
+networking:
+  ingress:
+    enabled: true
+    class: "nginx"
+    ssl_redirect: true
+
+  service_mesh:
+    enabled: false
+    provider: "istio"
+
+  load_balancer:
+    type: "nginx"
+    algorithm: "round_robin"
+
+# Storage Configuration
+storage:
+  default_class: "ssd"
+  backup_enabled: true
+  backup_schedule: "0 2 * * *"
+  retention_days: 30
+
+  volumes:
+    redis_data: "10Gi"
+    postgres_data: "50Gi"
+    weaviate_data: "100Gi"
+    prometheus_data: "20Gi"
+    grafana_data: "5Gi"
+
+# Monitoring Configuration
+monitoring:
+  metrics:
+    enabled: true
+    scrape_interval: "15s"
+    retention: "15d"
+
+  alerting:
+    enabled: true
+    webhook_url: ""
+    email_enabled: false
+
+  logging:
+    level: "info"
+    format: "json"
+    aggregation: true
+
+  tracing:
+    enabled: false
+    jaeger_endpoint: ""
+
+# Auto-scaling Configuration
+autoscaling:
+  enabled: true
+  min_replicas: 2
+  max_replicas: 10
+
+  metrics:
+    cpu_threshold: 70
+    memory_threshold: 80
+    custom_metrics: []
+
+  behavior:
+    scale_up:
+      stabilization_window: "60s"
+      policies:
+        - type: "Percent"
+          value: 100
+          period: "30s"
+    scale_down:
+      stabilization_window: "300s"
+      policies:
+        - type: "Percent"
+          value: 10
+          period: "60s"
+
+# Backup Configuration
+backup:
+  enabled: true
+  schedule: "0 2 * * *" # Daily at 2 AM
+  retention: "30d"
+  compression: true
+  encryption: true
+
+  targets:
+    - postgres
+    - weaviate
+    - grafana
+
+  storage:
+    type: "s3"
+    bucket: ""
+    region: "us-west-2"
+
+# Feature Flags
+features:
+  prometheus_metrics: true
+  jaeger_tracing: false
+  istio_service_mesh: false
+  external_secrets: false
+  cert_manager: false
+  backup_operator: true
+
+# Environment Overrides
+environment_overrides:
+  development:
+    features:
+      jaeger_tracing: true
+      prometheus_metrics: true
+    monitoring:
+      alerting:
+        enabled: false
+    backup:
+      enabled: false
+
+  production:
+    features:
+      external_secrets: true
+      cert_manager: true
+      backup_operator: true
+    security:
+      pod_security_standard: "restricted"
+      network_policies: true
+    autoscaling:
+      max_replicas: 20

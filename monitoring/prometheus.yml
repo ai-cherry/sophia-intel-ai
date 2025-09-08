@@ -1,0 +1,66 @@
+# Prometheus configuration for Sophia Intel AI
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    monitor: "sophia-mcp"
+    environment: "production"
+
+# Alerting configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: [] # Add alertmanager if needed
+
+# Load rules once and periodically evaluate them
+rule_files:
+  - "alerts.yml"
+
+# Scrape configurations
+scrape_configs:
+  # Prometheus itself
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  # Node exporter for system metrics
+  - job_name: "node"
+    static_configs:
+      - targets: ["node-exporter:9100"]
+
+  # MCP Server metrics
+  - job_name: "mcp-server"
+    static_configs:
+      - targets: ["host.docker.internal:8004"]
+    metrics_path: "/metrics"
+    scrape_interval: 5s
+
+  # Unified API metrics
+  - job_name: "unified-api"
+    static_configs:
+      - targets: ["host.docker.internal:8000"]
+    metrics_path: "/metrics"
+    scrape_interval: 5s
+
+  # Redis exporter
+  - job_name: "redis"
+    static_configs:
+      - targets: ["host.docker.internal:6379"]
+
+  # PostgreSQL exporter (if configured)
+  - job_name: "postgresql"
+    static_configs:
+      - targets: ["host.docker.internal:5432"]
+
+  # Weaviate metrics
+  - job_name: "weaviate"
+    static_configs:
+      - targets: ["host.docker.internal:8080"]
+    metrics_path: "/metrics"
+
+  # Jaeger metrics
+  - job_name: "jaeger"
+    static_configs:
+      - targets: ["jaeger:14269"]
+    metrics_path: "/metrics"

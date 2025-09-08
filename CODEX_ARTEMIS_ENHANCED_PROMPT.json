@@ -1,0 +1,352 @@
+{
+  "request_type": "artemis_synthesis_enhancement",
+  "version": "4.0",
+  "timestamp": "2025-09-07",
+  "priority": "CRITICAL",
+
+  "context": {
+    "repo_path": "/Users/lynnmusil/sophia-intel-ai",
+    "current_fixes": {
+      "result_object_bug": "FIXED - artemis_runner.py now uses getattr chain",
+      "hooks_created": "TRUE - .artemis/hooks/ operational",
+      "services_running": ["weaviate", "redis"],
+      "openrouter_ready": "TRUE - via Portkey integration"
+    }
+  },
+
+  "architectural_improvements": {
+    "synthesis_orchestrator": {
+      "description": "Multi-strategy synthesis system for intelligent result aggregation",
+      "implementation": {
+        "file": "app/swarms/core/synthesis_orchestrator.py",
+        "strategies": {
+          "consensus": "Vote-based synthesis for simple agreement",
+          "hierarchical": "Tier-based synthesis for complex hierarchies",
+          "domain_expert": "Specialist synthesis for technical domains",
+          "multi_modal": "Cross-format synthesis for diverse inputs"
+        },
+        "adaptive_selection": {
+          "logic": "Select strategy based on result count, conflict detection, and domain",
+          "fallback": "consensus if strategy selection fails"
+        }
+      },
+      "feature_flags": [
+        "SCOUT_SYNTHESIZER_ENABLED=true",
+        "SCOUT_SYNTHESIS_STRATEGY=adaptive",
+        "SCOUT_SYNTHESIS_TIMEOUT_MS=30000"
+      ]
+    },
+
+    "openrouter_optimization": {
+      "description": "Optimize OpenRouter for synthesis workloads",
+      "routing_preferences": {
+        "synthesis_primary": "qwen/qwq-32b-preview",
+        "synthesis_fallback": "anthropic/claude-3.5-sonnet",
+        "cost_optimized": "meta-llama/llama-3.1-70b-instruct"
+      },
+      "implementation": {
+        "file": "app/core/portkey_manager.py",
+        "method": "Add synthesis-specific routing rules",
+        "feature_flag": "SCOUT_PREFER_OPENROUTER=true"
+      }
+    },
+
+    "memory_management": {
+      "description": "Bounded cache with LRU eviction",
+      "implementation": {
+        "file": "app/swarms/scout/cache_manager.py",
+        "class": "BoundedSynthesisCache",
+        "max_size_mb": 100,
+        "eviction_policy": "LRU",
+        "persistence": "tmp/scout_synthesis_cache.json"
+      }
+    }
+  },
+
+  "implementation_phases": [
+    {
+      "phase": "A",
+      "name": "Critical Infrastructure",
+      "priority": "P0",
+      "duration": "1 day",
+      "tasks": [
+        {
+          "task": "Create synthesis orchestrator base",
+          "files": ["app/swarms/core/synthesis_orchestrator.py"],
+          "implementation": {
+            "create_class": "SynthesisOrchestrator",
+            "methods": [
+              "select_strategy(results, context)",
+              "synthesize(results, strategy)",
+              "validate_output(synthesis, schema)"
+            ]
+          }
+        },
+        {
+          "task": "Implement adaptive strategy selection",
+          "logic": "If results <= 3: consensus; If conflicts: hierarchical; If domain=='security': domain_expert; Else: multi_modal"
+        },
+        {
+          "task": "Add synthesis to scout pipeline",
+          "file": "app/swarms/core/micro_swarm_base.py",
+          "location": "After _execute_parallel, before return",
+          "code_snippet": "if os.getenv('SCOUT_SYNTHESIZER_ENABLED', 'true').lower() == 'true': result = await self.synthesis_orchestrator.synthesize(parallel_results)"
+        }
+      ],
+      "success_criteria": [
+        "Synthesis orchestrator class created",
+        "4 synthesis strategies implemented",
+        "Scout uses synthesis when enabled"
+      ]
+    },
+
+    {
+      "phase": "B",
+      "name": "OpenRouter Integration",
+      "priority": "P1",
+      "duration": "2 days",
+      "tasks": [
+        {
+          "task": "Add synthesis-specific routing",
+          "file": "app/core/portkey_manager.py",
+          "implementation": {
+            "add_virtual_keys": {
+              "synthesis_openrouter": "vk-synthesis-or",
+              "synthesis_anthropic": "vk-synthesis-ant",
+              "synthesis_openai": "vk-synthesis-oai"
+            },
+            "routing_logic": "Prefer OpenRouter for synthesis when SCOUT_PREFER_OPENROUTER=true"
+          }
+        },
+        {
+          "task": "Configure model preferences",
+          "env_vars": [
+            "LLM_SYNTHESIZER_PROVIDER=openrouter",
+            "LLM_SYNTHESIZER_MODEL=qwen/qwq-32b-preview",
+            "LLM_SYNTHESIZER_FALLBACK=anthropic/claude-3.5-sonnet"
+          ]
+        },
+        {
+          "task": "Implement cost tracking",
+          "file": "app/swarms/core/synthesis_orchestrator.py",
+          "method": "track_synthesis_cost(provider, model, tokens)"
+        }
+      ],
+      "success_criteria": [
+        "OpenRouter prioritized for synthesis",
+        "Cost tracking operational",
+        "Fallback chain working"
+      ]
+    },
+
+    {
+      "phase": "C",
+      "name": "Memory & Performance",
+      "priority": "P1",
+      "duration": "2 days",
+      "tasks": [
+        {
+          "task": "Implement bounded cache",
+          "file": "app/swarms/scout/cache_manager.py",
+          "implementation": {
+            "class": "BoundedSynthesisCache",
+            "max_size": "100MB",
+            "eviction": "LRU when size > limit",
+            "persistence": "JSON with compression"
+          }
+        },
+        {
+          "task": "Add synthesis timeout",
+          "env_var": "SCOUT_SYNTHESIS_TIMEOUT_MS=30000",
+          "implementation": "asyncio.wait_for with partial result handling"
+        },
+        {
+          "task": "Hierarchical synthesis for large results",
+          "description": "Group similar results, synthesize groups, then final synthesis",
+          "token_savings": "O(n) instead of O(n²)"
+        }
+      ],
+      "success_criteria": [
+        "Cache never exceeds 100MB",
+        "Synthesis completes within timeout",
+        "Token usage reduced by 50%"
+      ]
+    },
+
+    {
+      "phase": "D",
+      "name": "Coding Swarm Migration",
+      "priority": "P2",
+      "duration": "3 days",
+      "tasks": [
+        {
+          "task": "Create enhanced coding swarm",
+          "file": "app/swarms/artemis/enhanced_coding.py",
+          "schema": {
+            "IMPLEMENTATION": "code changes made/proposed",
+            "TESTS": "test coverage and cases",
+            "DOCUMENTATION": "docs updates needed",
+            "QUALITY": "code quality metrics",
+            "RISKS": "potential issues identified",
+            "CONFIDENCE": "0.0-1.0"
+          },
+          "overlays": {
+            "ANALYST": "Focus on code quality, patterns, performance",
+            "STRATEGIST": "Consider architecture impact, scalability",
+            "VALIDATOR": "Verify correctness, test coverage, edge cases",
+            "SYNTHESIZER": "Integrate all perspectives into actionable plan"
+          }
+        },
+        {
+          "task": "Add coding-specific synthesis",
+          "strategy": "domain_expert",
+          "focus": "Code quality, test coverage, architectural impact"
+        },
+        {
+          "task": "Migration test",
+          "command": "./bin/artemis-run swarm --type code_review_micro --task 'Review scout implementation'"
+        }
+      ],
+      "success_criteria": [
+        "Coding swarm uses synthesis",
+        "Output follows schema",
+        "Backwards compatible"
+      ]
+    },
+
+    {
+      "phase": "E",
+      "name": "Security & Testing",
+      "priority": "P0",
+      "duration": "3 days",
+      "tasks": [
+        {
+          "task": "Security hardening",
+          "critical": true,
+          "fixes": [
+            {
+              "issue": "Hook execution vulnerability",
+              "solution": "Containerized execution with resource limits",
+              "implementation": "Docker container with 512MB limit, 30s timeout, no network"
+            },
+            {
+              "issue": "Path traversal in tool affordances",
+              "solution": "Use pathlib.Path.resolve() with jail",
+              "implementation": "Strict path validation in REQUEST_FS_READ"
+            },
+            {
+              "issue": "Memory DoS potential",
+              "solution": "Hard limits on all caches",
+              "implementation": "100MB synthesis cache, 500MB total"
+            }
+          ]
+        },
+        {
+          "task": "Comprehensive test suite",
+          "files": [
+            "tests/artemis/test_synthesis_orchestrator.py",
+            "tests/artemis/test_bounded_cache.py",
+            "tests/artemis/test_secure_hooks.py",
+            "tests/artemis/test_openrouter_routing.py"
+          ],
+          "coverage_target": "80%"
+        },
+        {
+          "task": "Performance benchmarks",
+          "metrics": [
+            "Synthesis latency < 5s",
+            "Memory usage < 500MB",
+            "Token usage reduced 50%",
+            "Cost reduced 30%"
+          ]
+        }
+      ],
+      "success_criteria": ["Security audit passed", "80% test coverage", "Performance targets met"]
+    }
+  ],
+
+  "validation_commands": [
+    {
+      "step": 1,
+      "name": "Test synthesis orchestrator",
+      "command": "pytest tests/artemis/test_synthesis_orchestrator.py -v"
+    },
+    {
+      "step": 2,
+      "name": "Run scout with synthesis",
+      "command": "SCOUT_SYNTHESIZER_ENABLED=true ./bin/artemis-run scout --json --task 'Analyze synthesis implementation'"
+    },
+    {
+      "step": 3,
+      "name": "Verify OpenRouter routing",
+      "command": "SCOUT_PREFER_OPENROUTER=true LLM_SYNTHESIZER_MODEL=qwen/qwq-32b-preview ./bin/artemis-run scout --task 'Test routing'"
+    },
+    {
+      "step": 4,
+      "name": "Check memory bounds",
+      "command": "while true; do ./bin/artemis-run scout --task 'Memory test'; du -sh tmp/scout_synthesis_cache.json; done"
+    },
+    {
+      "step": 5,
+      "name": "Security test",
+      "command": "./bin/artemis-run scout --approval suggest --task 'Security validation'"
+    }
+  ],
+
+  "risk_mitigation": {
+    "rollback_plan": {
+      "synthesis_disable": "SCOUT_SYNTHESIZER_ENABLED=false",
+      "revert_routing": "unset SCOUT_PREFER_OPENROUTER",
+      "clear_cache": "rm -rf tmp/scout_synthesis_cache.json"
+    },
+    "monitoring": {
+      "metrics_endpoint": "./bin/artemis-run metrics --recent",
+      "log_level": "export ARTEMIS_LOG_LEVEL=DEBUG",
+      "trace_synthesis": "export SCOUT_SYNTHESIS_TRACE=true"
+    },
+    "gradual_rollout": {
+      "stage_1": "Test with leader-only mode",
+      "stage_2": "Enable for scout only",
+      "stage_3": "Enable for coding swarm",
+      "stage_4": "Full production deployment"
+    }
+  },
+
+  "success_metrics": {
+    "must_achieve": [
+      "Scout runs without errors",
+      "Synthesis produces valid schema output",
+      "Security vulnerabilities fixed",
+      "80% test coverage"
+    ],
+    "target_improvements": [
+      "50% reduction in token usage",
+      "30% reduction in costs",
+      "2x faster synthesis vs sequential",
+      "100% schema compliance"
+    ],
+    "quality_gates": [
+      "No memory leaks over 24h run",
+      "Synthesis latency p99 < 10s",
+      "Zero security audit findings",
+      "All feature flags working"
+    ]
+  },
+
+  "codex_specific_instructions": {
+    "approach": "Start with synthesis orchestrator, test each phase before proceeding",
+    "testing": "Run validation commands after each phase",
+    "commits": "LOCAL ONLY - do not push to GitHub",
+    "collaboration": "Use collab emit/approve/apply for changes",
+    "documentation": "Update CODEX_IMPLEMENTATION_REQUEST.md with progress",
+    "priority_order": [
+      "Security fixes (hooks, path traversal)",
+      "Synthesis orchestrator implementation",
+      "OpenRouter optimization",
+      "Memory management",
+      "Swarm migrations"
+    ]
+  },
+
+  "immediate_action": "Implement Phase A (synthesis orchestrator) with security fixes, then validate with scout --json before proceeding to Phase B"
+}

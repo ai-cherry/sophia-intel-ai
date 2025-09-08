@@ -1,0 +1,146 @@
+{
+  "$schema": "./node_modules/nx/schemas/project-schema.json",
+  "name": "sophia-intel-ai",
+  "sourceRoot": ".",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@nx/vite:build",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/sophia-intel-ai",
+        "baseHref": "/"
+      },
+      "configurations": {
+        "production": {
+          "optimization": true,
+          "extractLicenses": true,
+          "inspect": false,
+          "fileReplacements": [
+            {
+              "replace": "app/config/environment.ts",
+              "with": "app/config/environment.prod.ts"
+            }
+          ]
+        }
+      }
+    },
+    "serve": {
+      "executor": "@nx/vite:dev-server",
+      "options": {
+        "buildTarget": "sophia-intel-ai:build",
+        "port": 8003
+      },
+      "configurations": {
+        "production": {
+          "buildTarget": "sophia-intel-ai:build:production"
+        }
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectName}"],
+      "options": {
+        "jestConfig": "jest.config.ts",
+        "passWithNoTests": true,
+        "codeCoverage": true
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["app/**/*.{ts,tsx,js,jsx}"]
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit -p tsconfig.json"
+      },
+      "cache": true
+    },
+    "docker-build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": ["docker build -t sophia-intel-ai:latest -f Dockerfile ."]
+      },
+      "dependsOn": ["build"]
+    },
+    "docker-compose-up": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docker-compose up -d"
+      }
+    },
+    "docker-compose-down": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docker-compose down"
+      }
+    },
+    "generate-types": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "python scripts/generate_types.py"
+      },
+      "cache": true
+    },
+    "migrate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "alembic upgrade head"
+      }
+    },
+    "seed": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "python scripts/seed_database.py"
+      }
+    },
+    "clean": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "rm -rf dist",
+          "rm -rf .nx/cache",
+          "rm -rf node_modules/.cache"
+        ]
+      }
+    },
+    "format": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "prettier --write \"app/**/*.{ts,tsx,js,jsx,json,md}\"",
+          "black app --line-length 100",
+          "isort app"
+        ]
+      }
+    },
+    "analyze-bundle": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "source-map-explorer dist/**/*.js"
+      }
+    },
+    "start-monitoring": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "docker-compose -f monitoring/docker-compose.monitoring.yml up -d"
+        ]
+      }
+    },
+    "stop-monitoring": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "docker-compose -f monitoring/docker-compose.monitoring.yml down"
+        ]
+      }
+    }
+  },
+  "tags": ["type:app", "scope:backend", "platform:python"],
+  "implicitDependencies": []
+}

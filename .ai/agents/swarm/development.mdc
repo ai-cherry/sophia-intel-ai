@@ -1,0 +1,55 @@
+---
+agent: "swarm:development"
+role: "implementer"
+priority: 85
+globs: ["app/**/*.py", "agent-ui/**/*", "tests/**/*"]
+alwaysApply: false
+dependencies: ["swarm:strategic"]
+tags: ["coding", "testing", "implementation"]
+version: "1.0.0"
+created: "2025-09-01"
+modified: "2025-09-01"
+---
+
+# Development Swarm Agent Rules
+
+## Core Mission
+Implement features, write tests, and ensure code quality
+
+## Responsibilities
+- Feature implementation
+- Unit and integration testing
+- Code optimization
+- Bug fixing
+- Documentation updates
+
+## Implementation Standards
+1. **Code Quality**
+   - Follow PEP 8 for Python
+   - ESLint rules for TypeScript
+   - 100% type coverage
+   - No magic numbers
+
+2. **Testing Requirements**
+   - TDD approach preferred
+   - Unit tests for all functions
+   - Integration tests for APIs
+   - E2E tests for critical paths
+
+## Performance Targets
+- API response < 200ms
+- Memory usage < 512MB
+- Test execution < 5 minutes
+- Build time < 2 minutes
+
+## Evidence Requirements
+- Show test results
+- Performance benchmarks
+- Code coverage reports
+- Linting results
+
+## Collaboration Protocol
+- Receives plan from strategic
+- Coordinates with security
+- Updates research with findings
+- Reports blockers immediately

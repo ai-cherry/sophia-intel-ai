@@ -1,0 +1,352 @@
+# =============================================================================
+# Pulumi ESC Staging Environment - Sophia Intel AI
+# Staging configuration inheriting from base - production-like testing
+# =============================================================================
+
+imports:
+  - base # Import all shared secrets and configuration
+
+values:
+  # =============================================================================
+  # STAGING ENVIRONMENT CONFIGURATION
+  # =============================================================================
+
+  environment:
+    name: "staging"
+    type: "staging"
+    region: "iad"
+    domain: "staging.sophia-intel-ai.com"
+
+  # Staging Service URLs (Fly.io staging deployment)
+  service_urls:
+    unified_api_url: "https://sophia-api-staging.fly.dev"
+    agno_bridge_url: "https://sophia-agno-bridge-staging.fly.dev"
+    frontend_url: "https://sophia-ui-staging.fly.dev"
+    mcp_server_url: "https://sophia-mcp-staging.fly.dev"
+    vector_store_url: "https://sophia-vector-staging.fly.dev"
+    weaviate_url: "https://sophia-weaviate-staging.fly.dev"
+
+  # Staging Database Configuration (Production-like but smaller scale)
+  database:
+    postgres:
+      # Neon PostgreSQL Staging Branch
+      host: "app-sparkling-wildflower-99699121.neon.tech"
+      port: 5432
+      database: "sophia_staging"
+      max_connections: 100
+      connection_timeout: 20
+      pool_size: 25
+      ssl_mode: "require"
+      backup_retention_days: 7
+
+    redis:
+      # Redis staging instance
+      host: "redis-15014.fcrce172.us-east-1-1.ec2.redns.redis-cloud.com"
+      port: 15014
+      memory_mb: 512
+      max_connections: 200
+      cluster_mode: false # Simpler for staging
+      persistence: true
+
+    weaviate:
+      host: "sophia-weaviate-staging.fly.dev"
+      port: 443
+      protocol: "https"
+      memory_gb: 4
+      replicas: 1 # Single replica for staging
+      backup_enabled: false # Not needed for staging
+
+  # Staging Feature Flags (Production-like with some debugging)
+  features:
+    # Production-like but with some debug capabilities
+    debug_mode: false
+    verbose_logging: true # More logging than prod
+    experimental_features: true # Test new features
+    hot_reload: false
+    mock_external_apis: false
+
+    # Staging-specific features
+    security_hardened: true
+    audit_trail: true
+    rate_limiting: true
+    vulnerability_scanning: false # Optional for staging
+
+    # Enable some development features for testing
+    local_development: false
+    auto_reload: false
+    detailed_errors: true # Help with debugging
+    disable_auth: false
+
+  # Staging Scaling (Between dev and prod)
+  scaling:
+    api_gateway:
+      instances: 2
+      memory_mb: 768
+      cpu_cores: 0.75
+      auto_scaling:
+        enabled: true
+        min: 1
+        max: 5
+        cpu_threshold: 75
+
+    agent_orchestrator:
+      instances: 2
+      memory_mb: 2048
+      cpu_cores: 2.0
+      auto_scaling:
+        enabled: true
+        min: 1
+        max: 8
+        cpu_threshold: 80
+
+    vector_store:
+      instances: 2
+      memory_mb: 1536
+      cpu_cores: 1.5
+      auto_scaling:
+        enabled: true
+        min: 1
+        max: 6
+        cpu_threshold: 85
+
+    mcp_server:
+      instances: 2
+      memory_mb: 1536
+      cpu_cores: 1.5
+      auto_scaling:
+        enabled: true
+        min: 1
+        max: 6
+        cpu_threshold: 80
+
+  # Staging Model Configuration (Production models with cost controls)
+  models:
+    # Use production models but with more cost-conscious defaults
+    default_pools:
+      fast: "groq/llama-3.2-90b-text-preview,openai/gpt-4o-mini"
+      balanced: "openai/gpt-4o-mini,anthropic/claude-3.5-sonnet" # Cheaper default
+      heavy: "anthropic/claude-3.5-sonnet,openai/gpt-4o"
+
+    # Staging embedding configuration
+    embeddings:
+      primary: "cohere/embed-multilingual-v3.0" # Cost-effective primary
+      secondary: "voyage-3-large" # Premium when needed
+      fallback: "BAAI/bge-base-en-v1.5"
+
+    # Model failover chains for staging
+    failover_chains:
+      primary: ["anthropic/claude-3.5-sonnet", "openai/gpt-4o-mini"]
+      secondary: ["openai/gpt-4o-mini", "groq/llama-3.2-90b-text-preview"]
+
+  # Staging Limits (Between dev and prod)
+  limits:
+    daily_budget_usd: 200 # Reasonable for staging testing
+    alert_threshold_usd: 150
+    max_concurrent_swarms: 25
+    max_concurrent_requests: 100
+    request_timeout_seconds: 90
+    max_tokens_per_request: 8192
+    rate_limit_per_minute: 500
+
+  # Staging Security (Production-like with relaxed testing features)
+  security:
+    api_key_rotation_days: 60 # Less frequent than prod
+    tls_min_version: "1.2" # Slightly relaxed
+    cors_strict_mode: true
+    cors_origins:
+      [
+        "https://staging.sophia-intel-ai.com",
+        "https://sophia-ui-staging.fly.dev",
+      ]
+    request_logging: true
+    audit_trail: true
+    vulnerability_scanning: false # Optional for staging
+
+  # Staging Monitoring (Detailed for testing)
+  monitoring:
+    log_level: "INFO" # Detailed but not debug
+    metrics_retention_days: 30
+    trace_sampling_rate: 0.5 # 50% sampling for thorough testing
+    enable_profiling: true # Enabled for performance testing
+
+    # Staging alerting (less strict than production)
+    alerting:
+      enabled: true
+      error_rate_threshold: 0.05 # 5% error rate alert
+      latency_p95_threshold_ms: 1000
+      availability_threshold: 99.0 # Slightly lower than prod
+
+    # Observability stack for staging
+    observability_stack:
+      prometheus: true
+      grafana: true
+      jaeger: true
+      datadog: false # Optional for staging
+
+  # Staging Reliability (Simplified from production)
+  reliability:
+    circuit_breaker: true
+    retry_attempts: 3
+    backoff_strategy: "exponential"
+
+    health_checks:
+      enabled: true
+      interval_seconds: 30
+      timeout_seconds: 10
+      failure_threshold: 3
+
+    disaster_recovery:
+      enabled: false # Not needed for staging
+      multi_region: false
+      backup_frequency: "daily"
+      backup_retention_days: 7
+
+# =============================================================================
+# STAGING ENVIRONMENT VARIABLES
+# Extends base environment variables with staging-specific overrides
+# =============================================================================
+environmentVariables:
+  # =============================================================================
+  # ENVIRONMENT IDENTIFICATION
+  # =============================================================================
+
+  NODE_ENV: "staging"
+  ENVIRONMENT: ${environment.name}
+  ENV_TYPE: ${environment.type}
+  DEBUG: "false"
+  LOG_LEVEL: ${monitoring.log_level}
+  DOMAIN: ${environment.domain}
+  REGION: ${environment.region}
+
+  # =============================================================================
+  # STAGING SERVICE URLS
+  # =============================================================================
+
+  UNIFIED_API_URL: ${service_urls.unified_api_url}
+  AGNO_BRIDGE_URL: ${service_urls.agno_bridge_url}
+  FRONTEND_URL: ${service_urls.frontend_url}
+  MCP_SERVER_URL: ${service_urls.mcp_server_url}
+  VECTOR_STORE_URL: ${service_urls.vector_store_url}
+
+  # Next.js staging configuration
+  NEXT_PUBLIC_API_URL: ${service_urls.agno_bridge_url}
+  NEXT_PUBLIC_DEFAULT_ENDPOINT: ${service_urls.agno_bridge_url}
+  NEXT_PUBLIC_PLAYGROUND_URL: ${service_urls.agno_bridge_url}
+  NEXT_PUBLIC_BRIDGE_URL: ${service_urls.agno_bridge_url}
+  NEXT_PUBLIC_UNIFIED_API_URL: ${service_urls.agno_bridge_url}
+  NEXT_PUBLIC_USE_BRIDGE: "true"
+  NEXT_PUBLIC_ENV: "staging"
+
+  # =============================================================================
+  # DATABASE URLS (Staging - Cloud but smaller scale)
+  # =============================================================================
+
+  WEAVIATE_URL: ${service_urls.weaviate_url}
+  REDIS_URL: "redis://default:${REDIS_PASSWORD}@${database.redis.host}:${database.redis.port}"
+  POSTGRES_URL: "postgresql://sophia:${POSTGRES_PASSWORD}@${database.postgres.host}:${database.postgres.port}/${database.postgres.database}?sslmode=require"
+
+  # Staging database configuration
+  POSTGRES_MAX_CONNECTIONS: ${database.postgres.max_connections}
+  POSTGRES_POOL_SIZE: ${database.postgres.pool_size}
+  POSTGRES_SSL_MODE: ${database.postgres.ssl_mode}
+
+  REDIS_HOST: ${database.redis.host}
+  REDIS_PORT: ${database.redis.port}
+  REDIS_CLUSTER_MODE: ${database.redis.cluster_mode}
+
+  WEAVIATE_REPLICAS: ${database.weaviate.replicas}
+
+  # =============================================================================
+  # STAGING MODEL CONFIGURATION
+  # =============================================================================
+
+  DEFAULT_FAST_MODELS: ${models.default_pools.fast}
+  DEFAULT_BALANCED_MODELS: ${models.default_pools.balanced}
+  DEFAULT_HEAVY_MODELS: ${models.default_pools.heavy}
+
+  PRIMARY_MODEL_CHAIN: ${models.failover_chains.primary}
+  SECONDARY_MODEL_CHAIN: ${models.failover_chains.secondary}
+
+  EMBED_MODEL_PRIMARY: ${models.embeddings.primary}
+  EMBED_MODEL_SECONDARY: ${models.embeddings.secondary}
+  EMBED_MODEL_FALLBACK: ${models.embeddings.fallback}
+
+  # =============================================================================
+  # STAGING LIMITS AND CONTROLS
+  # =============================================================================
+
+  DAILY_BUDGET_USD: ${limits.daily_budget_usd}
+  ALERT_THRESHOLD_USD: ${limits.alert_threshold_usd}
+  MAX_CONCURRENT_SWARMS: ${limits.max_concurrent_swarms}
+  MAX_CONCURRENT_REQUESTS: ${limits.max_concurrent_requests}
+  REQUEST_TIMEOUT_SECONDS: ${limits.request_timeout_seconds}
+  MAX_TOKENS_PER_REQUEST: ${limits.max_tokens_per_request}
+  API_RATE_LIMIT: ${limits.rate_limit_per_minute}
+
+  # =============================================================================
+  # STAGING SECURITY
+  # =============================================================================
+
+  SECURITY_HARDENED: ${features.security_hardened}
+  TLS_MIN_VERSION: ${security.tls_min_version}
+  CORS_STRICT_MODE: ${security.cors_strict_mode}
+  CORS_ORIGINS: ${security.cors_origins}
+  AUDIT_TRAIL: ${security.audit_trail}
+
+  # =============================================================================
+  # STAGING MONITORING
+  # =============================================================================
+
+  METRICS_RETENTION_DAYS: ${monitoring.metrics_retention_days}
+  TRACE_SAMPLING_RATE: ${monitoring.trace_sampling_rate}
+  ERROR_RATE_THRESHOLD: ${monitoring.alerting.error_rate_threshold}
+  LATENCY_P95_THRESHOLD_MS: ${monitoring.alerting.latency_p95_threshold_ms}
+  AVAILABILITY_THRESHOLD: ${monitoring.alerting.availability_threshold}
+  ENABLE_PROFILING: ${monitoring.enable_profiling}
+
+  PROMETHEUS_ENABLED: ${monitoring.observability_stack.prometheus}
+  GRAFANA_ENABLED: ${monitoring.observability_stack.grafana}
+  JAEGER_ENABLED: ${monitoring.observability_stack.jaeger}
+
+  # =============================================================================
+  # STAGING RELIABILITY
+  # =============================================================================
+
+  CIRCUIT_BREAKER_ENABLED: ${reliability.circuit_breaker}
+  RETRY_ATTEMPTS: ${reliability.retry_attempts}
+  BACKOFF_STRATEGY: ${reliability.backoff_strategy}
+
+  HEALTH_CHECK_ENABLED: ${reliability.health_checks.enabled}
+  HEALTH_CHECK_INTERVAL: ${reliability.health_checks.interval_seconds}
+  HEALTH_CHECK_TIMEOUT: ${reliability.health_checks.timeout_seconds}
+
+  # =============================================================================
+  # SCALING CONFIGURATION
+  # =============================================================================
+
+  API_GATEWAY_INSTANCES: ${scaling.api_gateway.instances}
+  API_GATEWAY_MIN_INSTANCES: ${scaling.api_gateway.auto_scaling.min}
+  API_GATEWAY_MAX_INSTANCES: ${scaling.api_gateway.auto_scaling.max}
+
+  AGENT_ORCHESTRATOR_INSTANCES: ${scaling.agent_orchestrator.instances}
+  VECTOR_STORE_INSTANCES: ${scaling.vector_store.instances}
+  MCP_SERVER_INSTANCES: ${scaling.mcp_server.instances}
+
+  # =============================================================================
+  # STAGING APPLICATION CONFIGURATION
+  # =============================================================================
+
+  # Controlled staging settings
+  LOCAL_DEV_MODE: "false"
+  ENABLE_RUNNER_WRITES: "true" # Allow for testing
+  ENABLE_GIT_WRITES: "true" # Allow for testing
+  ENABLE_FILE_WRITES: "true" # Allow for testing
+  ENABLE_HOT_RELOAD: "false"
+  ENABLE_DEBUG_UI: "false"
+
+# =============================================================================
+# PULUMI CONFIGURATION
+# =============================================================================
+pulumiConfig:
+  pulumi:backend: https://app.pulumi.com
+  pulumi:project: sophia-intel-ai-staging

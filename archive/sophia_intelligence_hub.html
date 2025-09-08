@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sophia Intelligence Hub - Universal Business Command Center</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            /* Sophia Intelligence Theme */
+            --sophia-primary: #4A90E2;
+            --sophia-primary-dark: #2171B5;
+            --sophia-secondary: #6BAED6;
+            --sophia-accent: #9ECAE1;
+            --sophia-wisdom: #3182BD;
+            --sophia-insight: #08519C;
+
+            /* Dark Theme Foundation */
+            --bg-primary: #0B0E14;
+            --bg-secondary: #151925;
+            --bg-tertiary: #1F2937;
+            --bg-card: #252B3D;
+            --bg-chat: #1A202C;
+            --bg-input: #2D3748;
+
+            /* Text Colors */
+            --text-primary: #FFFFFF;
+            --text-secondary: #CBD5E0;
+            --text-muted: #718096;
+            --text-accent: var(--sophia-primary);
+
+            /* Interactive Elements */
+            --border-primary: var(--sophia-primary);
+            --border-secondary: #374151;
+            --shadow-primary: rgba(74, 144, 226, 0.2);
+            --shadow-secondary: rgba(0, 0, 0, 0.3);
+            --glow-primary: 0 0 20px var(--sophia-primary);
+
+            /* Status Colors */
+            --status-online: #10B981;
+            --status-offline: #EF4444;
+            --status-warning: #F59E0B;
+
+            /* Layout */
+            --border-radius: 12px;
+            --border-radius-lg: 16px;
+            --spacing-xs: 0.5rem;
+            --spacing-sm: 1rem;
+            --spacing-md: 1.5rem;
+            --spacing-lg: 2rem;
+            --spacing-xl: 3rem;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated Background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(ellipse at 20% 30%, rgba(74, 144, 226, 0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 70%, rgba(49, 113, 181, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 40% 90%, rgba(8, 81, 156, 0.06) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+            animation: wisdomFlow 20s ease-in-out infinite;
+        }
+
+        @keyframes wisdomFlow {
+            0%, 100% { opacity: 0.4; transform: translateY(0px) scale(1); }
+            50% { opacity: 0.6; transform: translateY(-20px) scale(1.05); }
+        }
+
+        /* Header */
+        .header {
+            background: rgba(37, 43, 61, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 2px solid var(--border-primary);
+            padding: var(--spacing-md) var(--spacing-lg);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 20px var(--shadow-secondary);
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+
+        .logo i {
+            font-size: 2.5rem;
+            color: var(--sophia-primary);
+            text-shadow: var(--glow-primary);
+            animation: logoGlow 3s ease-in-out infinite;
+        }
+
+        @keyframes logoGlow {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.1) rotate(5deg); }
+        }
+
+        .logo-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--sophia-primary), var(--sophia-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .logo-subtitle {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+            padding: var(--spacing-xs) var(--spacing-sm);
+            background: var(--bg-card);
+            border: 1px solid var(--border-secondary);
+            border-radius: var(--border-radius);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .status-indicator.online {
+            border-color: var(--status-online);
+            color: var(--status-online);
+        }
+
+        .status-indicator.offline {
+            border-color: var(--status-offline);
+            color: var(--status-offline);
+        }
+
+        .status-indicator.connecting {
+            border-color: var(--status-warning);
+            color: var(--status-warning);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.online {
+            background: var(--status-online);
+            box-shadow: 0 0 10px var(--status-online);
+        }
+
+        .status-dot.offline {
+            background: var(--status-offline);
+            box-shadow: 0 0 10px var(--status-offline);
+        }
+
+        .status-dot.connecting {
+            background: var(--status-warning);
+            box-shadow: 0 0 10px var(--status-warning);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.3); }
+        }
+
+        .connection-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border-primary);
+            border-radius: var(--border-radius);
+            color: var(--text-secondary);
+            padding: var(--spacing-xs) var(--spacing-sm);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+            font-size: 0.9rem;
+        }
+
+        .connection-btn:hover {
+            background: var(--sophia-primary);
+            color: var(--text-primary);
+            box-shadow: var(--glow-primary);
+        }
+
+        /* Main Layout */
+        .main-container {
+            display: flex;
+            max-width: 1600px;
+            margin: 0 auto;
+            min-height: calc(100vh - 100px);
+        }
+
+        /* Chat Section */
+        .chat-section {
+            flex: 1;
+            padding: var(--spacing-lg);
+            max-width: 800px;
+        }
+
+        .chat-container {
+            background: var(--bg-chat);
+            border: 2px solid var(--border-primary);
+            border-radius: var(--border-radius-lg);
+            box-shadow: 0 8px 32px var(--shadow-primary);
+            height: 70vh;
+            display: flex;
+            flex-direction: column;
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, var(--sophia-primary), var(--sophia-wisdom));
+            padding: var(--spacing-md);
+            border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+        }
+
+        .chat-controls {
+            display: flex;
+            gap: var(--spacing-xs);
+        }
+
+        .chat-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: var(--border-radius);
+            color: var(--text-primary);
+            padding: var(--spacing-xs);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+        }
+
+        .chat-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: var(--spacing-md);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-md);
+        }
+
+        .message {
+            display: flex;
+            gap: var(--spacing-sm);
+            align-items: flex-start;
+            max-width: 85%;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .message.user .message-avatar {
+            background: linear-gradient(135deg, var(--sophia-secondary), var(--sophia-accent));
+            color: var(--text-primary);
+        }
+
+        .message.sophia .message-avatar {
+            background: linear-gradient(135deg, var(--sophia-primary), var(--sophia-wisdom));
+            color: var(--text-primary);
+        }
+
+        .message.system .message-avatar {
+            background: linear-gradient(135deg, #666, #888);
+            color: var(--text-primary);
+        }
+
+        .message-content {
+            background: var(--bg-card);
+            padding: var(--spacing-sm) var(--spacing-md);
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-secondary);
+            flex: 1;
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, var(--sophia-primary), var(--sophia-secondary));
+            color: var(--text-primary);
+            border-color: var(--sophia-primary);
+        }
+
+        .message.system .message-content {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.3);
+            color: #FCA5A5;
+        }
+
+        .message-time {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .message.user .message-time {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .chat-input-area {
+            padding: var(--spacing-md);
+            border-top: 1px solid var(--border-secondary);
+            background: var(--bg-card);
+        }
+
+        .chat-input-group {
+            display: flex;
+            gap: var(--spacing-sm);
+            align-items: flex-end;
+        }
+
+        .chat-input {
+            flex: 1;
+            background: var(--bg-input);
+            border: 1px solid var(--border-secondary);
+            border-radius: var(--border-radius);
+            padding: var(--spacing-sm);
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 1rem;
+            resize: vertical;
+            min-height: 50px;
+            transition: all 0.3s ease;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: var(--border-primary);
+            box-shadow: 0 0 0 3px var(--shadow-primary);
+        }
+
+        .chat-input:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .send-btn {
+            background: linear-gradient(135deg, var(--sophia-primary), var(--sophia-wisdom));
+            border: none;
+            border-radius: var(--border-radius);
+            color: var(--text-primary);
+            padding: var(--spacing-sm) var(--spacing-md);
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+        }
+
+        .send-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: var(--glow-primary);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 400px;
+            padding: var(--spacing-lg) var(--spacing-md);
+            background: rgba(37, 43, 61, 0.5);
+            border-left: 1px solid var(--border-secondary);
+            overflow-y: auto;
+        }
+
+        .sidebar-section {
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .sidebar-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-md);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+        }
+
+        .sidebar-title i {
+            color: var(--sophia-primary);
+        }
+
+        .domain-teams {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-sm);
+        }
+
+        .domain-team {
+            background: var(--bg-card);
+            border: 1px solid var(--border-secondary);
+            border-radius: var(--border-radius);
+            padding: var(--spacing-md);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .domain-team:hover {
+            border-color: var(--border-primary);
+            box-shadow: 0 4px 20px var(--shadow-primary);
+            transform: translateY(-2px);
+        }
+
+        .domain-team.active {
+            border-color: var(--border-primary);
+            background: rgba(74, 144, 226, 0.1);
+        }
+
+        .team-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .team-name {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .team-status {
+            padding: var(--spacing-xs) var(--spacing-sm);
+            border-radius: var(--border-radius);
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .team-status.online {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--status-online);
+        }
+
+        .team-status.offline {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--status-offline);
+        }
+
+        .team-description {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .team-capabilities {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--spacing-xs);
+        }
+
+        .capability-tag {
+            background: rgba(74, 144, 226, 0.2);
+            color: var(--sophia-primary);
+            padding: 2px var(--spacing-xs);
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        /* Connection Status Panel */
+        .connection-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border-secondary);
+            border-radius: var(--border-radius);
+            padding: var(--spacing-md);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .connection-details {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+        }
+
+        .connection-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--spacing-xs) 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .connection-item:last-child {
+            border-bottom: none;
+        }
+
+        .connection-value {
+            color: var(--sophia-primary);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .main-container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                border-left: none;
+                border-top: 1px solid var(--border-secondary);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: var(--spacing-sm);
+            }
+
+            .chat-section {
+                padding: var(--spacing-sm);
+            }
+
+            .sidebar {
+                padding: var(--spacing-sm);
+            }
+        }
+
+        /* Loading States */
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--sophia-primary);
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Custom Scrollbars */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--sophia-primary);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--sophia-secondary);
+        }
+
+        /* Insights Panel */
+        .insights-panel {
+            background: linear-gradient(135deg, rgba(74, 144, 226, 0.1), rgba(8, 81, 156, 0.1));
+            border: 1px solid var(--sophia-primary);
+            border-radius: var(--border-radius);
+            padding: var(--spacing-md);
+            margin: var(--spacing-lg) 0;
+            position: relative;
+        }
+
+        .insights-panel::before {
+            content: '💡';
+            position: absolute;
+            top: -10px;
+            left: 15px;
+            background: var(--bg-primary);
+            padding: 0 5px;
+            font-size: 1.2rem;
+        }
+
+        .insights-title {
+            color: var(--sophia-primary);
+            font-weight: 600;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .insights-content {
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <i class="fas fa-brain"></i>
+                <div class="logo-text">
+                    <div class="logo-title">SOPHIA</div>
+                    <div class="logo-subtitle">Intelligence Hub</div>
+                </div>
+            </div>
+            <div class="header-controls">
+                <div class="status-indicator" id="serverStatus">
+                    <div class="status-dot" id="statusDot"></div>
+                    <span id="statusText">CONNECTING...</span>
+                </div>
+                <div class="connection-btn" id="testConnectionBtn">
+                    <i class="fas fa-wifi"></i>
+                    <span>Test Connection</span>
+                </div>
+                <div class="status-indicator">
+                    <i class="fas fa-globe"></i>
+                    <span id="serverVersion">v2.0.0</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <!-- Universal Chat Interface -->
+        <section class="chat-section">
+            <div class="chat-container">
+                <div class="chat-header">
+                    <div class="chat-title">
+                        <i class="fas fa-comments"></i>
+                        Sophia Universal Intelligence
+                    </div>
+                    <div class="chat-controls">
+                        <button class="chat-btn" id="clearChatBtn" title="Clear Chat">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        <button class="chat-btn" id="settingsBtn" title="Settings">
+                            <i class="fas fa-cog"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="chat-messages" id="chatMessages">
+                    <!-- Messages will be populated here -->
+                </div>
+
+                <div class="chat-input-area">
+                    <div class="chat-input-group">
+                        <textarea
+                            id="chatInput"
+                            class="chat-input"
+                            placeholder="Ask Sophia about your business... sales performance, market trends, client insights, strategic analysis..."
+                            rows="2"
+                            disabled
+                        ></textarea>
+                        <button id="sendBtn" class="send-btn" disabled>
+                            <i class="fas fa-paper-plane"></i>
+                            Send
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="insights-panel" id="insightsPanel" style="display: none;">
+                <div class="insights-title">Sophia's Strategic Insight</div>
+                <div class="insights-content" id="insightsContent">
+                    Analyzing your business patterns and preparing strategic recommendations...
+                </div>
+            </div>
+        </section>
+
+        <!-- Domain Teams Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-section">
+                <div class="sidebar-title">
+                    <i class="fas fa-server"></i>
+                    Connection Status
+                </div>
+                <div class="connection-panel">
+                    <div class="connection-details">
+                        <div class="connection-item">
+                            <span>Server URL:</span>
+                            <span class="connection-value" id="serverUrl">localhost:9000</span>
+                        </div>
+                        <div class="connection-item">
+                            <span>Health Status:</span>
+                            <span class="connection-value" id="healthStatus">Checking...</span>
+                        </div>
+                        <div class="connection-item">
+                            <span>Orchestrator:</span>
+                            <span class="connection-value" id="orchestratorStatus">Unknown</span>
+                        </div>
+                        <div class="connection-item">
+                            <span>Response Time:</span>
+                            <span class="connection-value" id="responseTime">--</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-title">
+                    <i class="fas fa-users"></i>
+                    Business Intelligence Teams
+                </div>
+                <div class="domain-teams" id="domainTeams">
+                    <div class="domain-team active" data-team="universal">
+                        <div class="team-header">
+                            <div class="team-name">Universal Orchestrator</div>
+                            <div class="team-status online">ACTIVE</div>
+                        </div>
+                        <div class="team-description">
+                            Strategic business intelligence orchestrator with access to all specialized teams and comprehensive business data.
+                        </div>
+                        <div class="team-capabilities">
+                            <span class="capability-tag">Sales Intelligence</span>
+                            <span class="capability-tag">Pipeline Management</span>
+                            <span class="capability-tag">Client Success</span>
+                            <span class="capability-tag">Market Research</span>
+                            <span class="capability-tag">Strategic Planning</span>
+                        </div>
+                    </div>
+
+                    <div class="domain-team" data-team="sales">
+                        <div class="team-header">
+                            <div class="team-name">Sales Intelligence Team</div>
+                            <div class="team-status offline" id="salesTeamStatus">OFFLINE</div>
+                        </div>
+                        <div class="team-description">
+                            Specialized in pipeline analysis, deal velocity, revenue forecasting, and sales performance optimization.
+                        </div>
+                        <div class="team-capabilities">
+                            <span class="capability-tag">Pipeline Analysis</span>
+                            <span class="capability-tag">Deal Scoring</span>
+                            <span class="capability-tag">Revenue Forecasting</span>
+                            <span class="capability-tag">Win/Loss Analysis</span>
+                        </div>
+                    </div>
+
+                    <div class="domain-team" data-team="research">
+                        <div class="team-header">
+                            <div class="team-name">Market Research Team</div>
+                            <div class="team-status offline" id="researchTeamStatus">OFFLINE</div>
+                        </div>
+                        <div class="team-description">
+                            Market intelligence, competitive analysis, trend identification, and opportunity assessment.
+                        </div>
+                        <div class="team-capabilities">
+                            <span class="capability-tag">Market Intelligence</span>
+                            <span class="capability-tag">Competitive Analysis</span>
+                            <span class="capability-tag">Trend Analysis</span>
+                            <span class="capability-tag">Opportunity Mapping</span>
+                        </div>
+                    </div>
+
+                    <div class="domain-team" data-team="client-success">
+                        <div class="team-header">
+                            <div class="team-name">Client Success Team</div>
+                            <div class="team-status offline" id="clientTeamStatus">OFFLINE</div>
+                        </div>
+                        <div class="team-description">
+                            Customer health monitoring, retention analysis, expansion opportunities, and relationship management.
+                        </div>
+                        <div class="team-capabilities">
+                            <span class="capability-tag">Health Scoring</span>
+                            <span class="capability-tag">Retention Analysis</span>
+                            <span class="capability-tag">Expansion Planning</span>
+                            <span class="capability-tag">Relationship Mapping</span>
+                        </div>
+                    </div>
+
+                    <div class="domain-team" data-team="analytics">
+                        <div class="team-header">
+                            <div class="team-name">Business Analytics Team</div>
+                            <div class="team-status offline" id="analyticsTeamStatus">OFFLINE</div>
+                        </div>
+                        <div class="team-description">
+                            Data analysis, KPI tracking, performance metrics, and business intelligence reporting.
+                        </div>
+                        <div class="team-capabilities">
+                            <span class="capability-tag">KPI Tracking</span>
+                            <span class="capability-tag">Performance Metrics</span>
+                            <span class="capability-tag">Data Visualization</span>
+                            <span class="capability-tag">Reporting</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <script>
+        class SophiaIntelligenceHub {
+            constructor() {
+                this.baseUrl = 'http://localhost:9000';
+                this.isConnected = false;
+                this.currentTeam = 'universal';
+                this.sessionId = this.generateSessionId();
+                this.connectionCheckInterval = null;
+
+                this.init();
+            }
+
+            generateSessionId() {
+                return `sophia_hub_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+            }
+
+            init() {
+                this.setupEventListeners();
+                this.checkServerHealth();
+                this.startConnectionMonitoring();
+                this.addSystemMessage('Sophia Intelligence Hub initialized. Checking server connection...');
+                console.log('🧠 Sophia Intelligence Hub starting up...');
+            }
+
+            setupEventListeners() {
+                // Chat functionality
+                document.getElementById('sendBtn').addEventListener('click', () => {
+                    this.sendMessage();
+                });
+
+                document.getElementById('chatInput').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        this.sendMessage();
+                    }
+                });
+
+                // Controls
+                document.getElementById('clearChatBtn').addEventListener('click', () => {
+                    this.clearChat();
+                });
+
+                document.getElementById('testConnectionBtn').addEventListener('click', () => {
+                    this.testConnection();
+                });
+
+                // Team selection
+                document.querySelectorAll('.domain-team').forEach(team => {
+                    team.addEventListener('click', () => {
+                        this.selectTeam(team.dataset.team);
+                    });
+                });
+            }
+
+            async checkServerHealth() {
+                const startTime = Date.now();
+
+                try {
+                    const response = await fetch(`${this.baseUrl}/health`);
+                    const responseTime = Date.now() - startTime;
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        this.handleHealthResponse(data, responseTime);
+                    } else {
+                        throw new Error(`Server responded with status: ${response.status}`);
+                    }
+                } catch (error) {
+                    console.error('Health check failed:', error);
+                    this.handleConnectionError(error.message);
+                }
+            }
+
+            handleHealthResponse(data, responseTime) {
+                this.isConnected = true;
+                this.updateConnectionStatus('online', 'SOPHIA ONLINE');
+
+                // Update connection details
+                document.getElementById('healthStatus').textContent = data.status || 'healthy';
+                document.getElementById('orchestratorStatus').textContent = data.orchestrator?.status || 'active';
+                document.getElementById('responseTime').textContent = `${responseTime}ms`;
+                document.getElementById('serverVersion').textContent = data.version || 'v2.0.0';
+
+                // Enable chat interface
+                document.getElementById('chatInput').disabled = false;
+                document.getElementById('sendBtn').disabled = false;
+
+                // Add welcome message
+                if (document.getElementById('chatMessages').children.length <= 1) {
+                    this.addSophiaMessage(
+                        "Welcome to Sophia Intelligence Hub! I'm your strategic business partner with access to specialized intelligence teams. I can help with sales pipeline analysis, market research, client success metrics, competitive intelligence, and strategic planning. How can I drive your business forward today?"
+                    );
+                    this.showInsights("Connected to Sophia Universal Business Orchestrator. All intelligence teams are ready to assist with your business challenges.");
+                }
+
+                // Update team statuses (simulate based on orchestrator status)
+                if (data.orchestrator?.status === 'active') {
+                    this.updateTeamStatuses(true);
+                }
+            }
+
+            handleConnectionError(errorMessage) {
+                this.isConnected = false;
+                this.updateConnectionStatus('offline', 'SERVER OFFLINE');
+
+                document.getElementById('healthStatus').textContent = 'Error';
+                document.getElementById('orchestratorStatus').textContent = 'Offline';
+                document.getElementById('responseTime').textContent = '--';
+
+                // Disable chat interface
+                document.getElementById('chatInput').disabled = true;
+                document.getElementById('sendBtn').disabled = true;
+
+                this.addSystemMessage(`Connection failed: ${errorMessage}. Please check if Sophia server is running on port 9000.`);
+            }
+
+            updateConnectionStatus(status, text) {
+                const statusIndicator = document.getElementById('serverStatus');
+                const statusDot = document.getElementById('statusDot');
+                const statusText = document.getElementById('statusText');
+
+                // Remove existing status classes
+                statusIndicator.classList.remove('online', 'offline', 'connecting');
+                statusDot.classList.remove('online', 'offline', 'connecting');
+
+                // Add new status
+                statusIndicator.classList.add(status);
+                statusDot.classList.add(status);
+                statusText.textContent = text;
+            }
+
+            updateTeamStatuses(online) {
+                const teams = ['sales', 'research', 'client', 'analytics'];
+                teams.forEach(team => {
+                    const statusElement = document.getElementById(`${team}TeamStatus`);
+                    if (statusElement) {
+                        statusElement.textContent = online ? 'ONLINE' : 'OFFLINE';
+                        statusElement.classList.toggle('online', online);
+                        statusElement.classList.toggle('offline', !online);
+                    }
+                });
+            }
+
+            async testConnection() {
+                this.updateConnectionStatus('connecting', 'TESTING...');
+                this.addSystemMessage('Testing server connection...');
+
+                await this.checkServerHealth();
+
+                if (this.isConnected) {
+                    this.addSystemMessage('✅ Connection test successful! All systems operational.');
+                } else {
+                    this.addSystemMessage('❌ Connection test failed. Please verify server is running.');
+                }
+            }
+
+            startConnectionMonitoring() {
+                // Check connection every 30 seconds
+                this.connectionCheckInterval = setInterval(() => {
+                    this.checkServerHealth();
+                }, 30000);
+            }
+
+            selectTeam(teamId) {
+                // Update UI selection
+                document.querySelectorAll('.domain-team').forEach(team => {
+                    team.classList.toggle('active', team.dataset.team === teamId);
+                });
+
+                this.currentTeam = teamId;
+
+                // Add team selection message
+                const teamNames = {
+                    'universal': 'Universal Orchestrator',
+                    'sales': 'Sales Intelligence Team',
+                    'research': 'Market Research Team',
+                    'client-success': 'Client Success Team',
+                    'analytics': 'Business Analytics Team'
+                };
+
+                this.addSystemMessage(`Switched to ${teamNames[teamId]}. Your next questions will be routed to this specialized team.`);
+            }
+
+            async sendMessage() {
+                const input = document.getElementById('chatInput');
+                const message = input.value.trim();
+
+                if (!message || !this.isConnected) return;
+
+                // Add user message
+                this.addUserMessage(message);
+                input.value = '';
+
+                // Show typing indicator
+                const typingId = this.addSophiaMessage('<span class="loading"></span> Analyzing with strategic intelligence...', true);
+
+                try {
+                    const response = await this.callSophiaAPI(message);
+
+                    // Remove typing indicator and add response
+                    this.removeMessage(typingId);
+                    this.addSophiaMessage(response.response);
+
+                    // Show insights if available
+                    if (response.insights && response.insights.length > 0) {
+                        this.showInsights(response.insights.join(' '));
+                    }
+
+                } catch (error) {
+                    console.error('API call failed:', error);
+                    this.removeMessage(typingId);
+                    this.addSophiaMessage("I encountered a strategic challenge while processing your request. Let me recalibrate and try again. Please ensure the server connection is stable.");
+                    this.addSystemMessage(`API Error: ${error.message}`);
+                }
+            }
+
+            async callSophiaAPI(message) {
+                const endpoint = '/api/sophia/chat';
+                const payload = {
+                    message: message,
+                    session_id: this.sessionId,
+                    user_id: 'sophia_hub_user',
+                    include_voice: false
+                };
+
+                const response = await fetch(`${this.baseUrl}${endpoint}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API call failed: ${response.status} ${response.statusText}`);
+                }
+
+                return await response.json();
+            }
+
+            addUserMessage(content) {
+                this.addMessage('user', content, 'U');
+            }
+
+            addSophiaMessage(content, isTemporary = false) {
+                return this.addMessage('sophia', content, 'S', isTemporary);
+            }
+
+            addSystemMessage(content) {
+                this.addMessage('system', content, '!', false);
+            }
+
+            addMessage(sender, content, avatar, isTemporary = false) {
+                const messagesContainer = document.getElementById('chatMessages');
+                const messageDiv = document.createElement('div');
+                const messageId = `message_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+                messageDiv.id = messageId;
+                messageDiv.className = `message ${sender}`;
+
+                const time = new Date().toLocaleTimeString();
+
+                messageDiv.innerHTML = `
+                    <div class="message-avatar">${avatar}</div>
+                    <div class="message-content">
+                        <div class="message-time">${time}</div>
+                        <div>${content}</div>
+                    </div>
+                `;
+
+                messagesContainer.appendChild(messageDiv);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+                return isTemporary ? messageId : null;
+            }
+
+            removeMessage(messageId) {
+                if (messageId) {
+                    const element = document.getElementById(messageId);
+                    if (element) {
+                        element.remove();
+                    }
+                }
+            }
+
+            clearChat() {
+                const messagesContainer = document.getElementById('chatMessages');
+                messagesContainer.innerHTML = '';
+                this.hideInsights();
+
+                // Add initial system message
+                this.addSystemMessage('Chat cleared. Ready for new conversation.');
+            }
+
+            showInsights(content) {
+                const panel = document.getElementById('insightsPanel');
+                const contentEl = document.getElementById('insightsContent');
+
+                contentEl.textContent = content;
+                panel.style.display = 'block';
+            }
+
+            hideInsights() {
+                document.getElementById('insightsPanel').style.display = 'none';
+            }
+
+            // Cleanup on page unload
+            destroy() {
+                if (this.connectionCheckInterval) {
+                    clearInterval(this.connectionCheckInterval);
+                }
+            }
+        }
+
+        // Initialize Sophia Intelligence Hub
+        document.addEventListener('DOMContentLoaded', () => {
+            window.sophiaHub = new SophiaIntelligenceHub();
+        });
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (window.sophiaHub) {
+                window.sophiaHub.destroy();
+            }
+        });
+    </script>
+</body>
+</html>

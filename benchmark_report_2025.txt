@@ -1,0 +1,50 @@
+======================================================================
+🎯 2025 PERFORMANCE BENCHMARK REPORT
+======================================================================
+
+Total benchmarks: 4
+Passed: 3/4
+Total time: 0.19s
+
+RESULTS:
+----------------------------------------------------------------------
+
+❌ AGNO Agent Instantiation
+   Target: 2.0 μs
+   Actual: 59.06 μs
+   count: 1000
+   avg_time_us: 59.06
+   p99_time_us: 112.58
+   avg_memory_bytes: 86.89
+   total_agents: 1000
+   throughput: 16932.14
+
+✅ Vector Search Latency
+   Target: 100.0 ms
+   Actual: 0.00 ms
+   samples: 50
+   avg_latency_ms: 0.00
+   p99_latency_ms: 0.01
+   auto_vectorization: enabled
+
+✅ Concurrent Agent Execution
+   Target: 10000 agents
+   Actual: 1000.00 agents
+   agent_count: 1000
+   spawn_time_s: 0.06
+   execution_time_s: 0.00
+   throughput: 474111.58
+   memory_mb: 0.09
+
+✅ Memory Efficiency
+   Target: 3.75 KB/agent
+   Actual: 0.03 KB/agent
+   initial_memory_mb: 83.77
+   final_memory_mb: 83.80
+   memory_used_mb: 0.03
+   agents_created: 1000
+   kb_per_agent: 0.03
+
+======================================================================
+⚠️ PERFORMANCE TARGETS NOT MET:
+  - AGNO Agent Instantiation

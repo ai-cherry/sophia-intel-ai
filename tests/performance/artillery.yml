@@ -1,0 +1,29 @@
+config:
+  target: "http://localhost:8005"
+  phases:
+    - duration: 60
+      arrivalRate: 10
+  defaults:
+    headers:
+      Content-Type: "application/json"
+
+scenarios:
+  - flow:
+      - post:
+          url: "/embeddings/create"
+          json:
+            text: "Hello, world!"
+            model: "text-embedding-ada-002"
+          expect:
+            status: 200
+      - post:
+          url: "/embeddings/batch"
+          json:
+            texts: ["Hello", "world"]
+            model: "text-embedding-ada-002"
+          expect:
+            status: 200
+      - get:
+          url: "/embeddings/search?query=hello&top_k=5"
+          expect:
+            status: 200

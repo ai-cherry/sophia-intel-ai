@@ -1,0 +1,179 @@
+# Pulumi ESC (Environment as Code) Configuration
+# This file defines environment configurations for Sophia Intel AI
+# Last Updated: 2025-01-04
+
+environments:
+  # Development Environment
+  sophia-intel-ai/dev:
+    values:
+      # Core AI Services
+      openai:
+        apiKey:
+          fn::secret: "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"
+      anthropic:
+        apiKey:
+          fn::secret: "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"
+      groq:
+        apiKey:
+          fn::secret: "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"
+
+      # Business Integrations
+      integrations:
+        lattice:
+          enabled: true
+          apiKey:
+            fn::secret: "8aea9524-1849-418f-bec4-eb2d1153449f"
+          apiUrl: "https://api.latticehq.com/v1"
+
+        slack:
+          enabled: true
+          appId: "A09DJ6AUFC5"
+          clientId: "293968207940.9460214967413"
+          clientSecret:
+            fn::secret: "8e0a3bd7049edcabd398c5883c5c83d1"
+          signingSecret:
+            fn::secret: "ce5719fc0c9a48b9b49e9d5dcf815ddd"
+          userToken:
+            fn::secret: "xoxp-293968207940-294795063686-9459012047699-13c8134dd3c02d07ca8d708c7cadb147"
+
+        gong:
+          enabled: true
+          accessKey: "TCZDJU2H6QYORC4MEF4KSYJH45NLBAGD"
+          clientSecret:
+            fn::secret: "eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjIwNzIyOTQ1MjEsImFjY2Vzc0tleSI6IlRDWkRKVTJINlFZT1JDNE1FRjRLU1lKSDQ1TkxCQUdEIn0.YH4lUulx2FYO3JIIfNF4vPPGJ6g_ea85s2cHfwCRnhE"
+          apiUrl: "https://us-70092.api.gong.io"
+
+        linear:
+          enabled: true
+          apiKey:
+            fn::secret: "lin_api_gF8bCZPVYz02YKUGp1yqqkGJOnJ6XICaK2bdftIp"
+
+        asana:
+          enabled: true
+          patToken:
+            fn::secret: "2/1202141391816423/1210641884736129:b164f0c8b881738b617e46065c4b9291"
+
+        hubspot:
+          enabled: true
+          accessToken:
+            fn::secret: "pat-na1-c1671bea-646a-4a61-a2da-33bd33528dc7"
+          portalId: "44606246"
+
+        looker:
+          enabled: true
+          clientId: "jChsJPr9FDP2qSCYyyD2"
+          clientSecret:
+            fn::secret: "kXxhgscT87fstFBcPRTNj733"
+          baseUrl: "https://payready.cloud.looker.com"
+
+        airtable:
+          enabled: true
+          apiKey:
+            fn::secret: "patuojzcFCHtcwkH3.2d1b20fd467f58319534f2abb02899d32390e1db02ffa226aa08c084bd21ce5d"
+          baseId: "appBOVJqGE166onrD"
+
+        # notion: DEPRECATED - consolidated into CEO Knowledge Base (Airtable)
+
+        elevenlabs:
+          enabled: true
+          apiKey:
+            fn::secret: "sk_0b68a8ac28119888145589965bf097211889379a3da2ad41"
+
+        salesforce:
+          enabled: false
+          instanceUrl: "https://payready2-dev-ed.develop.my.salesforce.com"
+          accessToken:
+            fn::secret: "6Cel800DDn000006Cu0y888Ux0000000MrlQC4spG19TPoqHKbMqJgoE535XYy6jdku0a8STJwI45vcRKiu1gsfm4TtDKbtZKXEBchnXJbw"
+
+        googleDrive:
+          enabled: false
+          folderId: "1ay75nRk5TkZCMztLDu-wmBNCHJLrbeDw"
+
+        netsuite:
+          enabled: false
+
+        intercom:
+          enabled: false
+
+      # Memory and Vector Stores
+      memory:
+        weaviate:
+          url: "http://localhost:8080"
+        mem0:
+          apiKey:
+            fn::secret: "m0-migu5eMnfwT41nhTgVHsCnSAifVtOf3WIFz2vmQc"
+          accountId: "org_gHuEO2H7ymIIgivcWeKI2psRFHUnbZ54RQNYVb4T"
+        redis:
+          url:
+            fn::secret: "redis://default:pdM2P5F7oO269JCCtBURsrCBrSacqZmF@redis-15014.fcrce172.us-east-1-1.ec2.redns.redis-cloud.com:15014"
+
+      # Database
+      database:
+        postgres:
+          url:
+            fn::secret: "postgresql://sophia:sophia_secure_password_2024@postgres:5432/sophia"
+        neon:
+          apiKey:
+            fn::secret: "napi_r3gsuacduzw44nqdqav1u0hr2uv4bb2if48r8627jkxo7e4b2sxn92wsgf6zlxby"
+          projectId: "rough-union-72390895"
+
+      # Infrastructure
+      pulumi:
+        accessToken:
+          fn::secret: "pul-87788f4354e31ccdea51152f1cfabb129e6317cf"
+
+      # Security
+      security:
+        jwtSecret:
+          fn::secret: "sophia_super_secure_jwt_secret_key_for_production_2024_0987654321"
+        apiSecret:
+          fn::secret: "sophia_api_secret_key_2024_production_deployment"
+
+      # Environment Settings
+      environment: "development"
+      debug: true
+      logLevel: "debug"
+
+    exports:
+      environmentVariables:
+        LATTICE_API_KEY: "${integrations.lattice.apiKey}"
+        LATTICE_API_URL: "${integrations.lattice.apiUrl}"
+        SLACK_USER_TOKEN: "${integrations.slack.userToken}"
+        SLACK_CLIENT_SECRET: "${integrations.slack.clientSecret}"
+        GONG_CLIENT_SECRET: "${integrations.gong.clientSecret}"
+        LINEAR_API_KEY: "${integrations.linear.apiKey}"
+        ASANA_API_TOKEN: "${integrations.asana.patToken}"
+        HUBSPOT_ACCESS_TOKEN: "${integrations.hubspot.accessToken}"
+        LOOKER_CLIENT_SECRET: "${integrations.looker.clientSecret}"
+        AIRTABLE_API_KEY: "${integrations.airtable.apiKey}"
+        ELEVENLABS_API_KEY: "${integrations.elevenlabs.apiKey}"
+
+  # Production Environment
+  sophia-intel-ai/prod:
+    imports:
+      - sophia-intel-ai/dev
+    values:
+      environment: "production"
+      debug: false
+      logLevel: "info"
+
+      # Override with production-specific values
+      database:
+        postgres:
+          url:
+            fn::secret: "${PRODUCTION_POSTGRES_URL}"
+
+      # Production Redis
+      memory:
+        redis:
+          url:
+            fn::secret: "${PRODUCTION_REDIS_URL}"
+
+  # Staging Environment
+  sophia-intel-ai/staging:
+    imports:
+      - sophia-intel-ai/dev
+    values:
+      environment: "staging"
+      debug: true
+      logLevel: "info"

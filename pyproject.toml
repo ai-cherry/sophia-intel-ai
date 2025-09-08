@@ -1,0 +1,273 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sophia-intel-ai"
+version = "2.0.0"
+description = "Production-ready AI agent orchestration platform with MCP servers and swarm intelligence"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "AI Cherry", email = "contact@ai-cherry.com"}
+]
+maintainers = [
+    {name = "Sophia Intel AI Team", email = "team@sophia-intel.ai"}
+]
+keywords = [
+    "ai", "agents", "swarm-intelligence", "mcp", "orchestration",
+    "llm", "gpt", "claude", "memory", "rag", "graphrag"
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+requires-python = ">=3.9"
+
+dependencies = [
+    # Core
+    "fastapi>=0.104.0",
+    "uvicorn[standard]>=0.24.0",
+    "pydantic>=2.5.0",
+    "pydantic-settings>=2.0.0",
+
+    # AI/ML
+    "openai>=1.0.0",
+    "anthropic>=0.8.0",
+    "agno>=1.8.0",
+    "portkey-ai>=1.0.0",
+    "together>=0.2.0",
+
+    # Storage
+    "sqlalchemy>=2.0.0",
+    "sqlmodel>=0.0.14",
+    "weaviate-client>=4.0.0",
+    "redis>=5.0.0",
+    "asyncpg>=0.29.0",
+
+    # Task Queue
+    "celery[redis]>=5.3.0",
+
+    # Monitoring
+    "prometheus-client>=0.19.0",
+    "opentelemetry-api>=1.21.0",
+    "opentelemetry-sdk>=1.21.0",
+    "opentelemetry-instrumentation-fastapi>=0.43b0",
+
+    # Rate Limiting
+    "slowapi>=0.1.9",
+    "circuitbreaker>=2.0.0",
+
+    # Utilities
+    "httpx>=0.25.0",
+    "python-multipart>=0.0.6",
+    "python-dotenv>=1.0.0",
+    "pyyaml>=6.0",
+    "cryptography>=41.0.0",
+    "click>=8.1.0",
+    "rich>=13.7.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.1.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+    "mypy>=1.7.0",
+    "pre-commit>=3.5.0",
+    "ipython>=8.17.0",
+]
+
+test = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.1.0",
+    "pytest-mock>=3.12.0",
+    "faker>=20.0.0",
+    "factory-boy>=3.3.0",
+    "httpx>=0.25.0",
+]
+
+docs = [
+    "mkdocs>=1.5.0",
+    "mkdocs-material>=9.4.0",
+    "mkdocstrings[python]>=0.24.0",
+]
+
+monitoring = [
+    "sentry-sdk[fastapi]>=1.38.0",
+    "elastic-apm>=6.19.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/ai-cherry/sophia-intel-ai"
+Documentation = "https://docs.sophia-intel.ai"
+Repository = "https://github.com/ai-cherry/sophia-intel-ai.git"
+Issues = "https://github.com/ai-cherry/sophia-intel-ai/issues"
+Changelog = "https://github.com/ai-cherry/sophia-intel-ai/blob/main/CHANGELOG.md"
+
+[project.scripts]
+sophia = "sophia_intel_ai.cli:main"
+sophia-server = "sophia_intel_ai.api.server:main"
+sophia-worker = "sophia_intel_ai.tasks.worker:main"
+sophia-index = "sophia_intel_ai.cli.indexing:main"
+
+[project.entry-points."sophia.plugins"]
+filesystem = "sophia_intel_ai.plugins.filesystem:FilesystemPlugin"
+git = "sophia_intel_ai.plugins.git:GitPlugin"
+memory = "sophia_intel_ai.plugins.memory:MemoryPlugin"
+
+[tool.setuptools]
+packages = ["sophia_intel_ai"]
+package-dir = {"sophia_intel_ai" = "app"}
+
+[tool.setuptools.package-data]
+sophia_intel_ai = [
+    "*.yml",
+    "*.yaml",
+    "*.json",
+    "templates/*",
+    "static/*",
+]
+
+# ============================================
+# Tool Configuration
+# ============================================
+
+[tool.black]
+line-length = 100
+target-version = ["py39", "py310", "py311", "py312"]
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+    \.git
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+  | migrations
+)/
+'''
+
+[tool.ruff]
+target-version = "py39"
+line-length = 100
+
+[tool.ruff.lint]
+select = [
+    "E",     # pycodestyle errors
+    "W",     # pycodestyle warnings
+    "F",     # pyflakes
+    "I",     # isort
+    "B",     # flake8-bugbear
+    "C4",    # flake8-comprehensions
+    "UP",    # pyupgrade
+    "ARG",   # flake8-unused-arguments
+    "SIM",   # flake8-simplify
+]
+ignore = [
+    "E501",  # line too long (handled by black)
+    "B008",  # do not perform function calls in argument defaults
+    "W191",  # indentation contains tabs
+]
+exclude = [
+    ".git",
+    ".mypy_cache",
+    ".ruff_cache",
+    ".tox",
+    ".venv",
+    "venv",
+    "__pycache__",
+    "build",
+    "dist",
+    "node_modules",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401", "F403"]
+"tests/*" = ["ARG"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["sophia_intel_ai", "app"]
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_any_unimported = false
+no_implicit_optional = true
+check_untyped_defs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+strict_optional = true
+strict_equality = true
+
+[[tool.mypy.overrides]]
+module = [
+    "weaviate.*",
+    "agno.*",
+    "portkey_ai.*",
+    "together.*",
+    "celery.*",
+    "redis.*",
+    "circuitbreaker.*",
+]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = [
+    "-ra",
+    "--strict-markers",
+    "--cov=sophia_intel_ai",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+    "--cov-report=xml",
+    "--asyncio-mode=auto",
+]
+markers = [
+    "unit: Unit tests",
+    "integration: Integration tests",
+    "e2e: End-to-end tests",
+    "slow: Slow tests",
+    "requires_api_key: Tests requiring API keys",
+]
+
+[tool.coverage.run]
+source = ["sophia_intel_ai"]
+omit = [
+    "*/tests/*",
+    "*/test_*.py",
+    "*/__pycache__/*",
+    "*/migrations/*",
+]
+
+[tool.coverage.report]
+precision = 2
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "def __str__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "if typing.TYPE_CHECKING:",
+]

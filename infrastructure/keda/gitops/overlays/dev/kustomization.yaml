@@ -1,0 +1,123 @@
+# Development Environment Overlay for KEDA
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: keda-system
+
+# Base configuration
+resources:
+  - ../../
+
+# Development-specific labels
+commonLabels:
+  environment: dev
+  tier: development
+
+# Development-specific annotations
+commonAnnotations:
+  environment: development
+  testing.enabled: "true"
+  debug.enabled: "true"
+
+# Patches for development environment
+patches:
+  # Reduce resource requirements for dev
+  - patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/cpu
+        value: 500m
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/memory
+        value: 512Mi
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/cpu
+        value: 50m
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/memory
+        value: 64Mi
+    target:
+      kind: Deployment
+      name: ".*"
+
+  # Enable debug logging
+  - patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: KEDA_LOG_LEVEL
+          value: debug
+    target:
+      kind: Deployment
+      labelSelector: "app=keda-operator"
+
+  # Reduce replica counts for dev
+  - patch: |-
+      - op: replace
+        path: /spec/minReplicaCount
+        value: 1
+      - op: replace
+        path: /spec/maxReplicaCount
+        value: 10
+    target:
+      kind: ScaledObject
+      name: artemis-scaler
+
+  - patch: |-
+      - op: replace
+        path: /spec/minReplicaCount
+        value: 1
+      - op: replace
+        path: /spec/maxReplicaCount
+        value: 15
+    target:
+      kind: ScaledObject
+      name: sophia-scaler
+
+# ConfigMap overrides for dev
+configMapGenerator:
+  - name: keda-config
+    namespace: keda-system
+    behavior: merge
+    literals:
+      - environment=dev
+      - scaling.time.target=15 # Relaxed target for dev
+      - circuit.breaker.enabled=false # Disable circuit breaker in dev
+      - circuit.breaker.max.events=10
+      - testing.mode=true
+      - debug.verbose=true
+
+# Use test secrets in dev
+secretGenerator:
+  - name: redis-credentials
+    namespace: artemis-system
+    type: Opaque
+    literals:
+      - password=dev-redis-password
+      - username=default
+
+  - name: prometheus-credentials
+    namespace: sophia-system
+    type: Opaque
+    literals:
+      - bearer-token=dev-prometheus-token
+
+# Helm values override for dev
+helmCharts:
+  - name: keda
+    repo: https://kedacore.github.io/charts
+    version: 2.13.0
+    releaseName: sophia-intel-keda-dev
+    namespace: keda-system
+    valuesFile: ../../../helm/values-dev.yaml
+
+# Replacements for dev-specific values
+replacements:
+  - source:
+      kind: ConfigMap
+      name: keda-config
+      fieldPath: data.testing.mode
+    targets:
+      - select:
+          kind: ScaledObject
+        fieldPaths:
+          - metadata.annotations.[testing.enabled]

@@ -1,0 +1,165 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: artemis-orchestrator
+  namespace: artemis
+  labels:
+    app: artemis
+    system: sophia-artemis
+    mesh: istio
+spec:
+  hosts:
+    - artemis.sophia-artemis.local
+    - artemis-orchestrator
+    - artemis-orchestrator.artemis.svc.cluster.local
+  gateways:
+    - mesh
+    - istio-system/artemis-gateway
+  http:
+    - name: "artemis-canary"
+      match:
+        - headers:
+            x-canary:
+              exact: "true"
+        - headers:
+            x-version:
+              exact: "canary"
+      route:
+        - destination:
+            host: artemis-orchestrator
+            subset: canary
+          weight: 100
+      timeout: 30s
+      retries:
+        attempts: 3
+        perTryTimeout: 10s
+        retryOn: "5xx,reset,connect-failure,refused-stream"
+        retryRemoteLocalities: true
+    - name: "artemis-production"
+      match:
+        - uri:
+            prefix: "/api/v1/artemis"
+        - uri:
+            prefix: "/artemis"
+      route:
+        - destination:
+            host: artemis-orchestrator
+            subset: stable
+          weight: 90
+        - destination:
+            host: artemis-orchestrator
+            subset: canary
+          weight: 10
+      timeout: 30s
+      retries:
+        attempts: 3
+        perTryTimeout: 10s
+        retryOn: "5xx,reset,connect-failure,refused-stream"
+        retryRemoteLocalities: true
+      corsPolicy:
+        allowOrigins:
+          - exact: "https://sophia.sophia-artemis.local"
+          - exact: "https://artemis.sophia-artemis.local"
+          - regex: "^https://.*\\.sophia-artemis\\.local$"
+        allowMethods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - OPTIONS
+          - PATCH
+        allowHeaders:
+          - authorization
+          - content-type
+          - x-request-id
+          - x-trace-id
+          - x-b3-traceid
+          - x-b3-spanid
+          - x-b3-parentspanid
+          - x-b3-sampled
+          - x-b3-flags
+          - x-ot-span-context
+          - x-canary
+          - x-version
+        exposeHeaders:
+          - x-request-id
+          - x-trace-id
+        maxAge: "24h"
+        allowCredentials: true
+    - name: "artemis-health"
+      match:
+        - uri:
+            exact: "/health"
+        - uri:
+            exact: "/healthz"
+        - uri:
+            exact: "/ready"
+        - uri:
+            exact: "/metrics"
+      route:
+        - destination:
+            host: artemis-orchestrator
+            subset: stable
+      timeout: 5s
+      retries:
+        attempts: 2
+        perTryTimeout: 2s
+        retryOn: "5xx,reset,connect-failure,refused-stream"
+    - name: "artemis-websocket"
+      match:
+        - headers:
+            upgrade:
+              exact: "websocket"
+      route:
+        - destination:
+            host: artemis-orchestrator
+            subset: stable
+      timeout: 0s # No timeout for WebSocket connections
+    - name: "artemis-default"
+      route:
+        - destination:
+            host: artemis-orchestrator
+            subset: stable
+          weight: 100
+      timeout: 30s
+      retries:
+        attempts: 3
+        perTryTimeout: 10s
+        retryOn: "5xx,reset,connect-failure,refused-stream"
+        retryRemoteLocalities: true
+      fault:
+        delay:
+          percentage:
+            value: 0.1
+          fixedDelay: 5s
+        abort:
+          percentage:
+            value: 0.01
+          httpStatus: 503
+---
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: artemis-gateway
+  namespace: istio-system
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+        - artemis.sophia-artemis.local
+      tls:
+        httpsRedirect: true
+    - port:
+        number: 443
+        name: https
+        protocol: HTTPS
+      hosts:
+        - artemis.sophia-artemis.local
+      tls:
+        mode: SIMPLE
+        credentialName: artemis-tls-cert

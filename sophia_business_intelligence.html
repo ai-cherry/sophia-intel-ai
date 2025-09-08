@@ -1,0 +1,1548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SOPHIA Business Intelligence Platform</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            /* Sophia Business Theme - Professional Blue Wisdom */
+            --sophia-primary: #4A90E2;
+            --sophia-primary-dark: #2171B5;
+            --sophia-secondary: #6BAED6;
+            --sophia-accent: #9ECAE1;
+            --sophia-wisdom: #3182BD;
+            --sophia-insight: #08519C;
+
+            /* Dark Theme Foundation */
+            --bg-primary: #0B0E14;
+            --bg-secondary: #151925;
+            --bg-tertiary: #1F2937;
+            --bg-card: #252B3D;
+            --bg-chat: #1A202C;
+            --bg-input: #2D3748;
+
+            /* Text Colors */
+            --text-primary: #FFFFFF;
+            --text-secondary: #CBD5E0;
+            --text-muted: #718096;
+            --text-accent: var(--sophia-primary);
+
+            /* Interactive Elements */
+            --border-primary: var(--sophia-primary);
+            --border-secondary: #374151;
+            --shadow-primary: rgba(74, 144, 226, 0.2);
+            --shadow-secondary: rgba(0, 0, 0, 0.3);
+            --glow-primary: 0 0 20px var(--sophia-primary);
+
+            /* Layout */
+            --border-radius: 12px;
+            --border-radius-lg: 16px;
+            --spacing-xs: 0.5rem;
+            --spacing-sm: 1rem;
+            --spacing-md: 1.5rem;
+            --spacing-lg: 2rem;
+            --spacing-xl: 3rem;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated Background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(ellipse at 20% 30%, rgba(74, 144, 226, 0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 70%, rgba(49, 113, 181, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 40% 90%, rgba(8, 81, 156, 0.06) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+            animation: wisdomFlow 20s ease-in-out infinite;
+        }
+
+        @keyframes wisdomFlow {
+            0%, 100% { opacity: 0.4; transform: translateY(0px) scale(1); }
+            50% { opacity: 0.6; transform: translateY(-20px) scale(1.05); }
+        }
+
+        /* Header */
+        .header {
+            background: rgba(37, 43, 61, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 2px solid var(--border-primary);
+            padding: var(--spacing-md) var(--spacing-lg);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 20px var(--shadow-secondary);
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+
+        .logo i {
+            font-size: 2.5rem;
+            color: var(--sophia-primary);
+            text-shadow: var(--glow-primary);
+            animation: logoGlow 3s ease-in-out infinite;
+        }
+
+        @keyframes logoGlow {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.1) rotate(5deg); }
+        }
+
+        .logo-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--sophia-primary), var(--sophia-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .logo-subtitle {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+            padding: var(--spacing-xs) var(--spacing-sm);
+            background: var(--bg-card);
+            border: 1px solid var(--border-primary);
+            border-radius: var(--border-radius);
+            color: var(--sophia-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--sophia-primary);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+            box-shadow: var(--glow-primary);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.3); }
+        }
+
+        .voice-toggle {
+            background: var(--bg-card);
+            border: 1px solid var(--border-primary);
+            border-radius: var(--border-radius);
+            color: var(--text-secondary);
+            padding: var(--spacing-xs) var(--spacing-sm);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+        }
+
+        .voice-toggle:hover {
+            background: var(--sophia-primary);
+            color: var(--text-primary);
+            box-shadow: var(--glow-primary);
+        }
+
+        .voice-toggle.active {
+            background: var(--sophia-primary);
+            color: var(--text-primary);
+            box-shadow: var(--glow-primary);
+        }
+
+        /* Main Layout */
+        .main-container {
+            display: flex;
+            max-width: 1600px;
+            margin: 0 auto;
+            min-height: calc(100vh - 100px);
+        }
+
+        /* Chat Section - Primary Focus */
+        .chat-section {
+            flex: 1;
+            padding: var(--spacing-lg);
+            max-width: 800px;
+        }
+
+        .chat-container {
+            background: var(--bg-chat);
+            border: 2px solid var(--border-primary);
+            border-radius: var(--border-radius-lg);
+            box-shadow: 0 8px 32px var(--shadow-primary);
+            height: 70vh;
+            display: flex;
+            flex-direction: column;
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, var(--sophia-primary), var(--sophia-wisdom));
+            padding: var(--spacing-md);
+            border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+        }
+
+        .orchestrator-badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: var(--spacing-xs) var(--spacing-sm);
+            border-radius: var(--border-radius);
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .chat-controls {
+            display: flex;
+            gap: var(--spacing-xs);
+        }
+
+        .chat-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: var(--border-radius);
+            color: var(--text-primary);
+            padding: var(--spacing-xs);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+        }
+
+        .chat-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: var(--spacing-md);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-md);
+        }
+
+        .message {
+            display: flex;
+            gap: var(--spacing-sm);
+            align-items: flex-start;
+            max-width: 85%;
+        }
+
+        .message.user {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .message.user .message-avatar {
+            background: linear-gradient(135deg, var(--sophia-secondary), var(--sophia-accent));
+            color: var(--text-primary);
+        }
+
+        .message.sophia .message-avatar {
+            background: linear-gradient(135deg, var(--sophia-primary), var(--sophia-wisdom));
+            color: var(--text-primary);
+        }
+
+        .message-content {
+            background: var(--bg-card);
+            padding: var(--spacing-sm) var(--spacing-md);
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-secondary);
+            flex: 1;
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, var(--sophia-primary), var(--sophia-secondary));
+            color: var(--text-primary);
+            border-color: var(--sophia-primary);
+        }
+
+        .message-time {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .chat-input-area {
+            padding: var(--spacing-md);
+            border-top: 1px solid var(--border-secondary);
+            background: var(--bg-card);
+        }
+
+        .chat-input-group {
+            display: flex;
+            gap: var(--spacing-sm);
+            align-items: flex-end;
+        }
+
+        .chat-input {
+            flex: 1;
+            background: var(--bg-input);
+            border: 1px solid var(--border-secondary);
+            border-radius: var(--border-radius);
+            padding: var(--spacing-sm);
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 1rem;
+            resize: vertical;
+            min-height: 50px;
+            transition: all 0.3s ease;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: var(--border-primary);
+            box-shadow: 0 0 0 3px var(--shadow-primary);
+        }
+
+        .send-btn {
+            background: linear-gradient(135deg, var(--sophia-primary), var(--sophia-wisdom));
+            border: none;
+            border-radius: var(--border-radius);
+            color: var(--text-primary);
+            padding: var(--spacing-sm) var(--spacing-md);
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+        }
+
+        .send-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--glow-primary);
+        }
+
+        /* Widgets Sidebar */
+        .widgets-sidebar {
+            width: 400px;
+            padding: var(--spacing-lg) var(--spacing-md);
+            background: rgba(37, 43, 61, 0.5);
+            border-left: 1px solid var(--border-secondary);
+            overflow-y: auto;
+        }
+
+        .widget-section {
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .widget-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-md);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+        }
+
+        .widget-title i {
+            color: var(--sophia-primary);
+        }
+
+        .widget-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-secondary);
+            border-radius: var(--border-radius);
+            padding: var(--spacing-md);
+            margin-bottom: var(--spacing-md);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .widget-card:hover {
+            border-color: var(--border-primary);
+            box-shadow: 0 4px 20px var(--shadow-primary);
+            transform: translateY(-2px);
+        }
+
+        .metric-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .metric-label {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 500;
+        }
+
+        .metric-icon {
+            color: var(--sophia-primary);
+            font-size: 1.2rem;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--sophia-primary);
+            margin-bottom: var(--spacing-xs);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .metric-change {
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .metric-change.positive {
+            color: #10B981;
+        }
+
+        .metric-change.negative {
+            color: #EF4444;
+        }
+
+        .drill-down-btn {
+            background: rgba(74, 144, 226, 0.1);
+            border: 1px solid var(--sophia-primary);
+            border-radius: var(--border-radius);
+            color: var(--sophia-primary);
+            padding: var(--spacing-xs) var(--spacing-sm);
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            margin-top: var(--spacing-sm);
+            width: 100%;
+        }
+
+        .drill-down-btn:hover {
+            background: var(--sophia-primary);
+            color: var(--text-primary);
+        }
+
+        /* Business Intelligence Specific Widgets */
+        .sales-pipeline-widget {
+            border-left: 4px solid #10B981;
+        }
+
+        .client-health-widget {
+            border-left: 4px solid #F59E0B;
+        }
+
+        .research-insights-widget {
+            border-left: 4px solid #8B5CF6;
+        }
+
+        .bi-dashboard-widget {
+            border-left: 4px solid #EC4899;
+        }
+
+        /* Progress Bars */
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: var(--bg-secondary);
+            border-radius: 3px;
+            margin: var(--spacing-xs) 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--sophia-primary), var(--sophia-secondary));
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+
+        /* Sophia Insight Box */
+        .sophia-insight {
+            background: linear-gradient(135deg, rgba(74, 144, 226, 0.1), rgba(8, 81, 156, 0.1));
+            border: 1px solid var(--sophia-primary);
+            border-radius: var(--border-radius);
+            padding: var(--spacing-md);
+            margin: var(--spacing-lg) 0;
+            position: relative;
+        }
+
+        .sophia-insight::before {
+            content: '💡';
+            position: absolute;
+            top: -10px;
+            left: 15px;
+            background: var(--bg-primary);
+            padding: 0 5px;
+            font-size: 1.2rem;
+        }
+
+        .insight-title {
+            color: var(--sophia-primary);
+            font-weight: 600;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        /* Loading States */
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--sophia-primary);
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .main-container {
+                flex-direction: column;
+            }
+
+            .widgets-sidebar {
+                width: 100%;
+                border-left: none;
+                border-top: 1px solid var(--border-secondary);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: var(--spacing-sm);
+            }
+
+            .chat-section {
+                padding: var(--spacing-sm);
+            }
+
+            .widgets-sidebar {
+                padding: var(--spacing-sm);
+            }
+        }
+
+        /* Custom Scrollbars */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--sophia-primary);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--sophia-secondary);
+        }
+
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <i class="fas fa-brain"></i>
+                <div class="logo-text">
+                    <div class="logo-title">SOPHIA</div>
+                    <div class="logo-subtitle">Business Intelligence</div>
+                </div>
+            </div>
+            <div class="header-controls">
+                <div class="status-indicator">
+                    <div class="status-dot"></div>
+                    <span>ORCHESTRATOR ONLINE</span>
+                </div>
+                <div class="voice-toggle" id="voiceToggle">
+                    <i class="fas fa-microphone"></i>
+                    <span>Voice Ready</span>
+                </div>
+                <div class="status-indicator">
+                    <i class="fas fa-users"></i>
+                    <span>BI Suite Active</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <!-- Universal Chat Interface - Primary Focus -->
+        <section class="chat-section">
+            <div class="chat-container">
+                <div class="chat-header">
+                    <div class="chat-title">
+                        <i class="fas fa-comments"></i>
+                        Universal Chat Interface
+                        <span class="orchestrator-badge">Sophia Orchestrator</span>
+                    </div>
+                    <div class="chat-controls">
+                        <button class="chat-btn" id="voiceInputBtn" title="Voice Input">
+                            <i class="fas fa-microphone"></i>
+                        </button>
+                        <button class="chat-btn" id="settingsBtn" title="Chat Settings">
+                            <i class="fas fa-cog"></i>
+                        </button>
+                        <button class="chat-btn" id="clearChatBtn" title="Clear Chat">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message sophia">
+                        <div class="message-avatar">S</div>
+                        <div class="message-content">
+                            <div class="message-time">Just now</div>
+                            <div>Welcome to Sophia Business Intelligence! I'm your strategic AI partner, here to provide deep insights across sales, customer analytics, market research, and business intelligence. I have access to your complete business data ecosystem and can orchestrate complex analyses across multiple AI agents. What business challenge shall we tackle today?</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chat-input-area">
+                    <div class="chat-input-group">
+                        <textarea
+                            id="chatInput"
+                            class="chat-input"
+                            placeholder="Ask me anything about your business... sales performance, market trends, customer insights, strategic analysis..."
+                            rows="2"
+                        ></textarea>
+                        <button id="sendBtn" class="send-btn">
+                            <i class="fas fa-paper-plane"></i>
+                            Send
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sophia-insight">
+                <div class="insight-title">Sophia's Strategic Insight</div>
+                <div>Your Q3 performance metrics show a 23% improvement in deal velocity. The correlation between Gong call scores and close rates suggests we should scale our best discovery techniques across the entire sales team. I'm monitoring 47 active opportunities and can provide real-time competitive intelligence on any prospect.</div>
+            </div>
+        </section>
+
+        <!-- Business Intelligence Widgets Sidebar -->
+        <aside class="widgets-sidebar">
+            <div class="widget-section">
+                <div class="widget-title">
+                    <i class="fas fa-chart-line"></i>
+                    Sales Metrics
+                </div>
+
+                <div class="widget-card sales-pipeline-widget" onclick="drillDownSales()">
+                    <div class="metric-header">
+                        <div class="metric-label">Pipeline Value</div>
+                        <i class="fas fa-funnel-dollar metric-icon"></i>
+                    </div>
+                    <div class="metric-value" data-metric="pipeline-value">Loading...</div>
+                    <div class="metric-change" data-metric="pipeline-change">Calculating...</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" data-progress="pipeline-progress" style="width: 0%;"></div>
+                    </div>
+                    <button class="drill-down-btn">View Pipeline Details</button>
+                </div>
+
+                <div class="widget-card sales-pipeline-widget" onclick="drillDownWinRate()">
+                    <div class="metric-header">
+                        <div class="metric-label">Win Rate</div>
+                        <i class="fas fa-trophy metric-icon"></i>
+                    </div>
+                    <div class="metric-value" data-metric="win-rate">Loading...</div>
+                    <div class="metric-change" data-metric="win-rate-change">Calculating...</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" data-progress="pipeline-progress" style="width: 0%;"></div>
+                    </div>
+                    <button class="drill-down-btn">Analyze Win/Loss Factors</button>
+                </div>
+            </div>
+
+            <div class="widget-section">
+                <div class="widget-title">
+                    <i class="fas fa-phone"></i>
+                    Gong Intelligence
+                </div>
+
+                <div class="widget-card client-health-widget" onclick="drillDownGongCalls()">
+                    <div class="metric-header">
+                        <div class="metric-label">Calls Analyzed Today</div>
+                        <i class="fas fa-phone-alt metric-icon"></i>
+                    </div>
+                    <div class="metric-value" data-metric="calls-analyzed">Loading...</div>
+                    <div class="metric-change" data-metric="avg-score">Calculating...</div>
+                    <div>
+                        <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 8px;">
+                            Top Keywords: Budget (23), Timeline (18), Decision (15)
+                        </div>
+                    </div>
+                    <button class="drill-down-btn">View Call Analytics</button>
+                </div>
+
+                <div class="widget-card client-health-widget" onclick="drillDownSentiment()">
+                    <div class="metric-header">
+                        <div class="metric-label">Customer Sentiment</div>
+                        <i class="fas fa-heart metric-icon"></i>
+                    </div>
+                    <div class="metric-value" data-metric="sentiment-score">Loading...</div>
+                    <div class="metric-change" data-metric="sentiment-trend">Calculating...</div>
+                    <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 8px;">
+                        🟢 Positive: 67% | 🟡 Neutral: 20% | 🔴 Negative: 13%
+                    </div>
+                    <button class="drill-down-btn">Sentiment Deep Dive</button>
+                </div>
+            </div>
+
+            <div class="widget-section">
+                <div class="widget-title">
+                    <i class="fas fa-lightbulb"></i>
+                    Research Insights
+                </div>
+
+                <div class="widget-card research-insights-widget" onclick="drillDownMarketIntel()">
+                    <div class="metric-header">
+                        <div class="metric-label">Market Intelligence</div>
+                        <i class="fas fa-globe metric-icon"></i>
+                    </div>
+                    <div class="metric-value" data-metric="market-insights">Loading...</div>
+                    <div class="metric-change" data-metric="insights-trend">Calculating...</div>
+                    <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 8px;">
+                        🔥 Trending: AI adoption in healthcare, fintech consolidation
+                    </div>
+                    <button class="drill-down-btn">Explore Market Trends</button>
+                </div>
+
+                <div class="widget-card research-insights-widget" onclick="drillDownCompetitive()">
+                    <div class="metric-header">
+                        <div class="metric-label">Competitive Analysis</div>
+                        <i class="fas fa-chess metric-icon"></i>
+                    </div>
+                    <div class="metric-value" data-metric="competitive-coverage">Loading...</div>
+                    <div class="metric-change" data-metric="coverage-status">Calculating...</div>
+                    <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 8px;">
+                        Monitoring 23 competitors, 8 new product launches detected
+                    </div>
+                    <button class="drill-down-btn">View Competitor Intel</button>
+                </div>
+            </div>
+
+            <div class="widget-section">
+                <div class="widget-title">
+                    <i class="fas fa-chart-pie"></i>
+                    BI Dashboard
+                </div>
+
+                <div class="widget-card bi-dashboard-widget" onclick="drillDownCustomerHealth()">
+                    <div class="metric-header">
+                        <div class="metric-label">Client Health Score</div>
+                        <i class="fas fa-heartbeat metric-icon"></i>
+                    </div>
+                    <div class="metric-value" data-metric="client-health">Loading...</div>
+                    <div class="metric-change" data-metric="health-trend">Calculating...</div>
+                    <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 8px;">
+                        <span data-metric="health-breakdown">Loading health breakdown...</span>
+                    </div>
+                    <button class="drill-down-btn">Client Health Analysis</button>
+                </div>
+
+                <div class="widget-card bi-dashboard-widget" onclick="drillDownRevenueForecast()">
+                    <div class="metric-header">
+                        <div class="metric-label">Revenue Forecast</div>
+                        <i class="fas fa-chart-area metric-icon"></i>
+                    </div>
+                    <div class="metric-value" data-metric="revenue-forecast">Loading...</div>
+                    <div class="metric-change" data-metric="forecast-trend">Calculating...</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" data-progress="revenue-progress" style="width: 0%;"></div>
+                    </div>
+                    <button class="drill-down-btn">View Revenue Model</button>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <script>
+        class SophiaBusinessIntelligence {
+            constructor() {
+                this.websocket = null;
+                this.voiceEnabled = false;
+                this.recognition = null;
+                this.speechSynthesis = null;
+                this.isListening = false;
+                this.drillDownMode = false;
+
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+                this.initializeVoice();
+                this.connectWebSocket();
+                this.startRealTimeUpdates();
+                this.loadWelcomeMessage();
+
+                // Add cleanup on page unload
+                window.addEventListener('beforeunload', () => this.destroy());
+                window.addEventListener('unload', () => this.destroy());
+
+                console.log('🧠 Sophia Business Intelligence Platform initialized');
+            }
+
+            destroy() {
+                // Cleanup to prevent memory leaks
+                if (this.metricsInterval) {
+                    clearInterval(this.metricsInterval);
+                    this.metricsInterval = null;
+                }
+
+                if (this.websocket) {
+                    this.websocket.close();
+                    this.websocket = null;
+                }
+
+                if (this.recognition) {
+                    this.recognition.abort();
+                }
+
+                console.log('🧹 Sophia Business Intelligence cleanup completed');
+            }
+
+            setupEventListeners() {
+                // Chat functionality
+                document.getElementById('sendBtn').addEventListener('click', () => {
+                    this.sendMessage();
+                });
+
+                document.getElementById('chatInput').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        this.sendMessage();
+                    }
+                });
+
+                // Voice controls
+                document.getElementById('voiceToggle').addEventListener('click', () => {
+                    this.toggleVoice();
+                });
+
+                document.getElementById('voiceInputBtn').addEventListener('click', () => {
+                    this.startVoiceInput();
+                });
+
+                // Chat controls
+                document.getElementById('clearChatBtn').addEventListener('click', () => {
+                    this.clearChat();
+                });
+            }
+
+            async sendMessage() {
+                const input = document.getElementById('chatInput');
+                const message = input.value.trim();
+
+                if (!message) return;
+
+                // Add user message
+                this.addMessage('user', message);
+                input.value = '';
+
+                // Show typing indicator
+                const typingId = this.addMessage('sophia', '<span class="loading"></span> Analyzing with strategic intelligence...', true);
+
+                try {
+                    // Simulate Sophia's intelligent response
+                    const response = await this.generateSophiaResponse(message);
+
+                    // Remove typing indicator and add response
+                    this.removeMessage(typingId);
+                    this.addMessage('sophia', response);
+
+                    if (this.voiceEnabled) {
+                        this.speak(response);
+                    }
+                } catch (error) {
+                    this.removeMessage(typingId);
+                    this.addMessage('sophia', "I encountered an issue processing your request. Let me refocus and try a different approach to your business intelligence query.");
+                }
+            }
+
+            async generateSophiaResponse(message) {
+                // Route message to appropriate API based on content
+                const lowerMessage = message.toLowerCase();
+
+                try {
+                    if (lowerMessage.includes('sales') || lowerMessage.includes('pipeline')) {
+                        return await this.getSalesIntelligence(message);
+                    }
+
+                    if (lowerMessage.includes('customer') || lowerMessage.includes('client') || lowerMessage.includes('at risk')) {
+                        return await this.getCustomerIntelligence(message);
+                    }
+
+                    if (lowerMessage.includes('gong') || lowerMessage.includes('calls')) {
+                        return await this.getGongIntelligence(message);
+                    }
+
+                    if (lowerMessage.includes('linear') || lowerMessage.includes('tasks') || lowerMessage.includes('projects')) {
+                        return await this.getLinearIntelligence(message);
+                    }
+
+                    if (lowerMessage.includes('asana') || lowerMessage.includes('workflow')) {
+                        return await this.getAsanaIntelligence(message);
+                    }
+
+                    // Default to Sophia orchestrator for general intelligence
+                    return await this.getGeneralIntelligence(message);
+
+                } catch (error) {
+                    console.error('API call failed:', error);
+                    return `I encountered an issue accessing your business data. The systems appear to be temporarily unavailable. Please try again in a moment, or let me know what specific information you need and I'll attempt a different approach.`;
+                }
+            }
+
+            async getSalesIntelligence(message) {
+                const response = await fetch('/api/personas/sales-coach/query', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: message })
+                });
+
+                if (!response.ok) throw new Error('Sales API failed');
+                const data = await response.json();
+                return data.response || 'Sales intelligence temporarily unavailable.';
+            }
+
+            async getCustomerIntelligence(message) {
+                const response = await fetch('/api/personas/client-health/query', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: message })
+                });
+
+                if (!response.ok) throw new Error('Customer API failed');
+                const data = await response.json();
+                return data.response || 'Customer intelligence temporarily unavailable.';
+            }
+
+            async getGongIntelligence(message) {
+                const response = await fetch('/api/gong/search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: message, limit: 5 })
+                });
+
+                if (!response.ok) throw new Error('Gong API failed');
+                const data = await response.json();
+
+                if (data.results && data.results.length > 0) {
+                    return `I found ${data.count} relevant call insights:\n\n${data.results.map(r => `• ${r.summary || r.content}`).join('\n')}`;
+                }
+                return 'No relevant Gong call data found for your query.';
+            }
+
+            async getLinearIntelligence(message) {
+                const response = await fetch('/api/integrations/linear/search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: message })
+                });
+
+                if (!response.ok) throw new Error('Linear API failed');
+                const data = await response.json();
+                return data.summary || 'Linear project data temporarily unavailable.';
+            }
+
+            async getAsanaIntelligence(message) {
+                const response = await fetch('/api/integrations/asana/search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: message })
+                });
+
+                if (!response.ok) throw new Error('Asana API failed');
+                const data = await response.json();
+                return data.summary || 'Asana workflow data temporarily unavailable.';
+            }
+
+            async getGeneralIntelligence(message) {
+                const response = await fetch('/api/orchestrators/sophia/query', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: message })
+                });
+
+                if (!response.ok) throw new Error('Orchestrator API failed');
+                const data = await response.json();
+                return data.response || 'General intelligence temporarily unavailable.';
+            }
+
+            addMessage(sender, content, isTemporary = false) {
+                const messagesContainer = document.getElementById('chatMessages');
+                const messageDiv = document.createElement('div');
+                const messageId = Date.now() + Math.random();
+                messageDiv.id = `message-${messageId}`;
+                messageDiv.className = `message ${sender}`;
+
+                const time = new Date().toLocaleTimeString();
+                const avatar = sender === 'user' ? 'U' : 'S';
+
+                // Create elements safely to prevent XSS
+                const avatarDiv = document.createElement('div');
+                avatarDiv.className = 'message-avatar';
+                avatarDiv.textContent = avatar;
+
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'message-content';
+
+                const timeDiv = document.createElement('div');
+                timeDiv.className = 'message-time';
+                timeDiv.textContent = time;
+
+                const textDiv = document.createElement('div');
+                // Allow HTML for system messages (sophia), sanitize user input
+                if (sender === 'sophia' && content.includes('<')) {
+                    textDiv.innerHTML = this.sanitizeContent(content);
+                } else {
+                    textDiv.textContent = content;
+                }
+
+                contentDiv.appendChild(timeDiv);
+                contentDiv.appendChild(textDiv);
+                messageDiv.appendChild(avatarDiv);
+                messageDiv.appendChild(contentDiv);
+                messagesContainer.appendChild(messageDiv);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+                return isTemporary ? messageId : null;
+            }
+
+            sanitizeContent(content) {
+                // Basic HTML sanitization - allow safe formatting tags only
+                const allowedTags = ['b', 'i', 'strong', 'em', 'br', 'p', 'div', 'span'];
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = content;
+
+                // Remove script tags and event handlers
+                const scripts = tempDiv.querySelectorAll('script');
+                scripts.forEach(script => script.remove());
+
+                const elements = tempDiv.querySelectorAll('*');
+                elements.forEach(el => {
+                    // Remove event handler attributes
+                    Array.from(el.attributes).forEach(attr => {
+                        if (attr.name.startsWith('on')) {
+                            el.removeAttribute(attr.name);
+                        }
+                    });
+
+                    // Remove non-allowed tags
+                    if (!allowedTags.includes(el.tagName.toLowerCase())) {
+                        el.outerHTML = el.textContent;
+                    }
+                });
+
+                return tempDiv.innerHTML;
+            }
+
+            removeMessage(messageId) {
+                if (messageId) {
+                    const element = document.getElementById(`message-${messageId}`);
+                    if (element) {
+                        element.remove();
+                    }
+                }
+            }
+
+            clearChat() {
+                const messagesContainer = document.getElementById('chatMessages');
+                messagesContainer.innerHTML = '';
+                this.loadWelcomeMessage();
+            }
+
+            loadWelcomeMessage() {
+                setTimeout(() => {
+                    this.addMessage('sophia', 'Welcome to Sophia Business Intelligence! I\'m connected to your live business data including Gong recordings, pipeline analytics, customer health metrics, and market intelligence. I can provide real-time insights and orchestrate analyses across your entire business ecosystem. What would you like to analyze today?');
+                }, 500);
+            }
+
+            initializeVoice() {
+                if ('speechSynthesis' in window) {
+                    this.speechSynthesis = window.speechSynthesis;
+                }
+
+                if ('webkitSpeechRecognition' in window) {
+                    this.recognition = new webkitSpeechRecognition();
+                    this.recognition.continuous = false;
+                    this.recognition.interimResults = false;
+                    this.recognition.lang = 'en-US';
+
+                    this.recognition.onresult = (event) => {
+                        const transcript = event.results[0][0].transcript;
+                        document.getElementById('chatInput').value = transcript;
+                        this.sendMessage();
+                    };
+
+                    this.recognition.onerror = (event) => {
+                        console.error('Speech recognition error:', event.error);
+                        this.stopVoiceInput();
+                    };
+
+                    this.recognition.onend = () => {
+                        this.stopVoiceInput();
+                    };
+                }
+            }
+
+            toggleVoice() {
+                this.voiceEnabled = !this.voiceEnabled;
+                const toggle = document.getElementById('voiceToggle');
+                if (this.voiceEnabled) {
+                    toggle.classList.add('active');
+                    toggle.innerHTML = '<i class="fas fa-microphone"></i><span>Voice Active</span>';
+                } else {
+                    toggle.classList.remove('active');
+                    toggle.innerHTML = '<i class="fas fa-microphone"></i><span>Voice Ready</span>';
+                }
+            }
+
+            startVoiceInput() {
+                if (this.recognition && !this.isListening) {
+                    this.recognition.start();
+                    this.isListening = true;
+                    document.getElementById('voiceInputBtn').innerHTML = '<i class="fas fa-stop"></i>';
+                }
+            }
+
+            stopVoiceInput() {
+                if (this.recognition && this.isListening) {
+                    this.recognition.stop();
+                    this.isListening = false;
+                    document.getElementById('voiceInputBtn').innerHTML = '<i class="fas fa-microphone"></i>';
+                }
+            }
+
+            speak(text) {
+                if (this.speechSynthesis && this.voiceEnabled) {
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.rate = 1.0;
+                    utterance.pitch = 1.0;
+                    utterance.volume = 0.8;
+
+                    // Find a professional female voice
+                    const voices = this.speechSynthesis.getVoices();
+                    const preferredVoice = voices.find(voice =>
+                        voice.name.includes('Female') ||
+                        voice.name.includes('Samantha')
+                    );
+                    if (preferredVoice) {
+                        utterance.voice = preferredVoice;
+                    }
+
+                    this.speechSynthesis.speak(utterance);
+                }
+            }
+
+            connectWebSocket() {
+                try {
+                    // Use secure WebSocket protocol for production
+                    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                    this.websocket = new WebSocket(`${protocol}//${window.location.host}/ws/sophia`);
+
+                    this.websocket.onopen = () => {
+                        console.log('🔗 WebSocket connected to Sophia orchestrator');
+                        this.reconnectAttempts = 0;
+                        this.websocket.send(JSON.stringify({
+                            type: 'auth',
+                            client: 'sophia_bi_dashboard'
+                        }));
+                    };
+
+                    this.websocket.onmessage = (event) => {
+                        try {
+                            const data = JSON.parse(event.data);
+                            this.handleWebSocketMessage(data);
+                        } catch (error) {
+                            console.error('Invalid WebSocket message:', error);
+                        }
+                    };
+
+                    this.websocket.onclose = () => {
+                        console.log('🔌 WebSocket disconnected. Attempting reconnection...');
+                        this.scheduleReconnection();
+                    };
+
+                    this.websocket.onerror = (error) => {
+                        console.error('WebSocket error:', error);
+                    };
+                } catch (error) {
+                    console.error('WebSocket connection failed:', error);
+                    this.scheduleReconnection();
+                }
+            }
+
+            scheduleReconnection() {
+                if (!this.reconnectAttempts) this.reconnectAttempts = 0;
+                this.reconnectAttempts++;
+
+                // Exponential backoff: 1s, 2s, 4s, 8s, max 30s
+                const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts - 1), 30000);
+
+                setTimeout(() => {
+                    if (this.reconnectAttempts <= 10) {
+                        this.connectWebSocket();
+                    } else {
+                        console.error('Max WebSocket reconnection attempts reached');
+                    }
+                }, delay);
+            }
+
+            handleWebSocketMessage(data) {
+                switch (data.type) {
+                    case 'metric_update':
+                        this.updateMetrics(data.metrics);
+                        break;
+                    case 'chat_response':
+                        this.addMessage('sophia', data.message);
+                        break;
+                    case 'business_insight':
+                        this.showBusinessInsight(data.insight);
+                        break;
+                    default:
+                        console.log('Unknown message type:', data.type);
+                }
+            }
+
+            updateMetrics(metrics) {
+                // Update real-time metrics in widgets
+                Object.entries(metrics).forEach(([key, value]) => {
+                    const element = document.querySelector(`[data-metric="${key}"]`);
+                    if (element) {
+                        element.textContent = value;
+                    }
+                });
+            }
+
+            startRealTimeUpdates() {
+                // Load real metrics on startup
+                this.loadRealMetrics();
+
+                // Update metrics every 2 minutes
+                this.metricsInterval = setInterval(() => {
+                    this.loadRealMetrics();
+                }, 120000);
+            }
+
+            async loadRealMetrics() {
+                try {
+                    // Use Promise.allSettled for better error resilience
+                    const results = await Promise.allSettled([
+                        fetch('/api/personas/sales-coach/metrics').then(r => r.ok ? r.json() : Promise.reject(r.statusText)),
+                        fetch('/api/gong/stats').then(r => r.ok ? r.json() : Promise.reject(r.statusText)),
+                        fetch('/api/personas/client-health/metrics').then(r => r.ok ? r.json() : Promise.reject(r.statusText))
+                    ]);
+
+                    const metrics = {
+                        sales: results[0].status === 'fulfilled' ? results[0].value : null,
+                        gong: results[1].status === 'fulfilled' ? results[1].value : null,
+                        health: results[2].status === 'fulfilled' ? results[2].value : null
+                    };
+
+                    this.updateMetricsDisplay(metrics);
+
+                    // Log any failures for monitoring
+                    results.forEach((result, index) => {
+                        if (result.status === 'rejected') {
+                            const apiNames = ['Sales API', 'Gong API', 'Client Health API'];
+                            console.warn(`${apiNames[index]} failed:`, result.reason);
+                        }
+                    });
+
+                } catch (error) {
+                    console.error('Critical error loading metrics:', error);
+                    this.showMetricsError();
+                }
+            }
+
+            showMetricsError() {
+                document.querySelectorAll('[data-metric]').forEach(element => {
+                    if (element.textContent === 'Loading...') {
+                        element.textContent = 'Error';
+                        element.style.color = '#EF4444';
+                    }
+                });
+            }
+
+            updateMetricsDisplay(metrics) {
+                // Use data attributes to update specific metrics
+                const metricUpdates = {
+                    'pipeline-value': metrics.sales?.pipeline_value ? `$${(metrics.sales.pipeline_value / 1000000).toFixed(1)}M` : 'N/A',
+                    'pipeline-change': metrics.sales?.pipeline_change || 'No data',
+                    'win-rate': metrics.sales?.win_rate ? `${Math.round(metrics.sales.win_rate * 100)}%` : 'N/A',
+                    'win-rate-change': metrics.sales?.win_rate_change || 'No data',
+                    'calls-analyzed': metrics.gong?.total_chunks?.toString() || '0',
+                    'avg-score': metrics.gong?.avg_score ? `Avg Score: ${metrics.gong.avg_score}%` : 'No data',
+                    'sentiment-score': metrics.gong?.sentiment_score || 'N/A',
+                    'sentiment-trend': metrics.gong?.sentiment_trend || 'No data',
+                    'market-insights': metrics.research?.insights_count?.toString() || '0',
+                    'insights-trend': metrics.research?.insights_trend || 'No data',
+                    'competitive-coverage': metrics.competitive?.coverage_percent || 'N/A',
+                    'coverage-status': metrics.competitive?.status || 'No data',
+                    'client-health': metrics.health?.average_score ? `${metrics.health.average_score.toFixed(1)}/10` : 'N/A',
+                    'health-trend': metrics.health?.trend || 'No data',
+                    'revenue-forecast': metrics.sales?.revenue_forecast ? `$${(metrics.sales.revenue_forecast / 1000000).toFixed(1)}M` : 'N/A',
+                    'forecast-trend': metrics.sales?.forecast_trend || 'No data'
+                };
+
+                // Update each metric by data attribute
+                Object.entries(metricUpdates).forEach(([metricKey, value]) => {
+                    const element = document.querySelector(`[data-metric="${metricKey}"]`);
+                    if (element) {
+                        element.textContent = value;
+
+                        // Add positive/negative classes for changes
+                        if (metricKey.includes('change') || metricKey.includes('trend')) {
+                            element.classList.remove('positive', 'negative');
+                            if (value.includes('+') || value.includes('improvement') || value.includes('positive')) {
+                                element.classList.add('positive');
+                            } else if (value.includes('-') || value.includes('decline') || value.includes('negative')) {
+                                element.classList.add('negative');
+                            }
+                        }
+                    }
+                });
+
+                // Animate updated metrics
+                document.querySelectorAll('[data-metric]').forEach(metric => {
+                    metric.style.transform = 'scale(1.05)';
+                    metric.style.color = 'var(--sophia-primary)';
+                    setTimeout(() => {
+                        metric.style.transform = 'scale(1)';
+                        metric.style.color = '';
+                    }, 300);
+                });
+            }
+
+            showBusinessInsight(insight) {
+                const insightBox = document.querySelector('.sophia-insight div:last-child');
+                if (insightBox) {
+                    insightBox.textContent = insight;
+                    insightBox.parentElement.style.animation = 'none';
+                    setTimeout(() => {
+                        insightBox.parentElement.style.animation = 'wisdomFlow 3s ease-in-out';
+                    }, 10);
+                }
+            }
+        }
+
+        // Real drill-down functions using actual APIs
+        async function drillDownSales() {
+            const response = await fetch('/api/personas/sales-coach/pipeline-analysis', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ analysis_type: 'deep_dive' })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                window.sophia.addMessage('sophia', data.analysis || 'Pipeline analysis temporarily unavailable.');
+            } else {
+                window.sophia.addMessage('sophia', 'Unable to retrieve pipeline analysis. Please try again.');
+            }
+        }
+
+        async function drillDownWinRate() {
+            const response = await fetch('/api/personas/sales-coach/win-rate-analysis', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                window.sophia.addMessage('sophia', data.analysis || 'Win rate analysis temporarily unavailable.');
+            } else {
+                window.sophia.addMessage('sophia', 'Unable to retrieve win rate analysis. Please try again.');
+            }
+        }
+
+        async function drillDownGongCalls() {
+            const response = await fetch('/api/gong/recent-calls', {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                const summary = `📞 **Recent Gong Calls**: Found ${data.count} calls in the ${data.period}.\n\n${data.calls.map(c => `• ${c.title} (${c.duration}min) - ${c.participants.join(', ')}`).join('\n')}`;
+                window.sophia.addMessage('sophia', summary);
+            } else {
+                window.sophia.addMessage('sophia', 'Unable to retrieve Gong call data. Please try again.');
+            }
+        }
+
+        async function drillDownSentiment() {
+            const response = await fetch('/api/gong/search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query: 'customer sentiment analysis', limit: 10 })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.results && data.results.length > 0) {
+                    const summary = `💭 **Customer Sentiment Analysis**: Found ${data.count} relevant insights:\n\n${data.results.map(r => `• ${r.summary || r.content}`).slice(0, 5).join('\n')}`;
+                    window.sophia.addMessage('sophia', summary);
+                } else {
+                    window.sophia.addMessage('sophia', 'No customer sentiment data available in recent calls.');
+                }
+            } else {
+                window.sophia.addMessage('sophia', 'Unable to retrieve sentiment analysis. Please try again.');
+            }
+        }
+
+        async function drillDownMarketIntel() {
+            const response = await fetch('/api/integrations/linear/search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query: 'market research competitive intelligence' })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                window.sophia.addMessage('sophia', data.summary || 'Market intelligence data temporarily unavailable.');
+            } else {
+                window.sophia.addMessage('sophia', 'Unable to retrieve market intelligence. Please try again.');
+            }
+        }
+
+        async function drillDownCompetitive() {
+            const response = await fetch('/api/gong/search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query: 'competitor competitive analysis mentions', limit: 10 })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.results && data.results.length > 0) {
+                    const summary = `♟️ **Competitive Intelligence**: Found ${data.count} competitive mentions:\n\n${data.results.map(r => `• ${r.summary || r.content}`).slice(0, 5).join('\n')}`;
+                    window.sophia.addMessage('sophia', summary);
+                } else {
+                    window.sophia.addMessage('sophia', 'No competitive mentions found in recent calls.');
+                }
+            } else {
+                window.sophia.addMessage('sophia', 'Unable to retrieve competitive intelligence. Please try again.');
+            }
+        }
+
+        async function drillDownCustomerHealth() {
+            const response = await fetch('/api/personas/client-health/analysis', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ analysis_type: 'comprehensive' })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                window.sophia.addMessage('sophia', data.analysis || 'Customer health analysis temporarily unavailable.');
+            } else {
+                window.sophia.addMessage('sophia', 'Unable to retrieve customer health analysis. Please try again.');
+            }
+        }
+
+        async function drillDownRevenueForecast() {
+            const response = await fetch('/api/personas/sales-coach/forecast', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ forecast_type: 'revenue', period: 'Q4' })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                window.sophia.addMessage('sophia', data.forecast || 'Revenue forecast temporarily unavailable.');
+            } else {
+                window.sophia.addMessage('sophia', 'Unable to retrieve revenue forecast. Please try again.');
+            }
+        }
+
+        // Initialize Sophia Business Intelligence
+        document.addEventListener('DOMContentLoaded', () => {
+            window.sophia = new SophiaBusinessIntelligence();
+        });
+
+    </script>
+</body>
+</html>

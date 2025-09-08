@@ -1,0 +1,321 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alert-rules-artemis
+  namespace: monitoring
+  labels:
+    app: alertmanager
+    domain: artemis
+data:
+  artemis-alerts.yaml: |
+    groups:
+    - name: artemis-real-time
+      interval: 30s
+      rules:
+      # Circuit Breaker Alerts
+      - alert: CircuitBreakerOpen
+        expr: |
+          envoy_cluster_circuit_breakers_state{namespace="artemis-system",state="open"} == 1
+        for: 1m
+        labels:
+          severity: CRITICAL
+          domain: artemis
+          component: circuit-breaker
+        annotations:
+          summary: "Circuit breaker OPEN for service {{ $labels.service }}"
+          description: "Circuit breaker for {{ $labels.service }} in {{ $labels.namespace }} has been open for more than 1 minute. Requests are being rejected."
+          value: "{{ $value }}"
+          runbook_url: "https://docs.sophia-artemis.ai/runbooks/circuit-breaker-open"
+          dashboard: "https://grafana.sophia-artemis.ai/d/artemis-circuit-breaker"
+
+      - alert: CircuitBreakerHalfOpen
+        expr: |
+          envoy_cluster_circuit_breakers_state{namespace="artemis-system",state="half_open"} == 1
+        for: 5m
+        labels:
+          severity: WARNING
+          domain: artemis
+          component: circuit-breaker
+        annotations:
+          summary: "Circuit breaker HALF-OPEN for {{ $labels.service }}"
+          description: "Circuit breaker for {{ $labels.service }} has been in half-open state for more than 5 minutes, indicating recovery issues."
+
+      # Latency Alerts
+      - alert: ArtemisHighLatencyP99
+        expr: |
+          histogram_quantile(0.99,
+            sum(rate(istio_request_duration_milliseconds_bucket{
+              destination_service_namespace="artemis-system",
+              response_code!~"5.."
+            }[5m])) by (destination_service_name, le)
+          ) > 2000
+        for: 5m
+        labels:
+          severity: WARNING
+          domain: artemis
+          component: latency
+          percentile: p99
+        annotations:
+          summary: "High P99 latency for {{ $labels.destination_service_name }}"
+          description: "P99 latency for {{ $labels.destination_service_name }} is {{ $value | humanizeDuration }}, exceeding 2s threshold"
+          value: "{{ $value | humanizeDuration }}"
+
+      - alert: ArtemisHighLatencyP95
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(istio_request_duration_milliseconds_bucket{
+              destination_service_namespace="artemis-system",
+              response_code!~"5.."
+            }[5m])) by (destination_service_name, le)
+          ) > 1000
+        for: 10m
+        labels:
+          severity: WARNING
+          domain: artemis
+          component: latency
+          percentile: p95
+        annotations:
+          summary: "High P95 latency for {{ $labels.destination_service_name }}"
+          description: "P95 latency for {{ $labels.destination_service_name }} is {{ $value | humanizeDuration }}, exceeding 1s threshold"
+
+      - alert: ArtemisCriticalLatency
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(istio_request_duration_milliseconds_bucket{
+              destination_service_namespace="artemis-system"
+            }[2m])) by (destination_service_name, le)
+          ) > 5000
+        for: 2m
+        labels:
+          severity: CRITICAL
+          domain: artemis
+          component: latency
+        annotations:
+          summary: "CRITICAL: Extreme latency for {{ $labels.destination_service_name }}"
+          description: "Service {{ $labels.destination_service_name }} is experiencing extreme latency > 5s, impacting user experience"
+
+      # Error Rate Alerts
+      - alert: ArtemisHighErrorRate
+        expr: |
+          sum(rate(istio_request_total{
+            destination_service_namespace="artemis-system",
+            response_code=~"5.."
+          }[5m])) by (destination_service_name)
+          /
+          sum(rate(istio_request_total{
+            destination_service_namespace="artemis-system"
+          }[5m])) by (destination_service_name)
+          * 100 > 10
+        for: 3m
+        labels:
+          severity: WARNING
+          domain: artemis
+          component: errors
+        annotations:
+          summary: "High error rate for {{ $labels.destination_service_name }}"
+          description: "Error rate for {{ $labels.destination_service_name }} is {{ $value | humanizePercentage }}, exceeding 10% threshold"
+          value: "{{ $value | humanizePercentage }}"
+
+      - alert: ArtemisCriticalErrorRate
+        expr: |
+          sum(rate(istio_request_total{
+            destination_service_namespace="artemis-system",
+            response_code=~"5.."
+          }[2m])) by (destination_service_name)
+          /
+          sum(rate(istio_request_total{
+            destination_service_namespace="artemis-system"
+          }[2m])) by (destination_service_name)
+          * 100 > 50
+        for: 1m
+        labels:
+          severity: CRITICAL
+          domain: artemis
+          component: errors
+        annotations:
+          summary: "CRITICAL: Service {{ $labels.destination_service_name }} failing"
+          description: "Error rate for {{ $labels.destination_service_name }} is {{ $value | humanizePercentage }}, service is effectively down"
+
+      # Service Availability
+      - alert: ArtemisServiceDown
+        expr: |
+          up{namespace="artemis-system"} == 0
+        for: 2m
+        labels:
+          severity: CRITICAL
+          domain: artemis
+          component: availability
+        annotations:
+          summary: "Service {{ $labels.job }} is DOWN"
+          description: "Service {{ $labels.job }} in {{ $labels.namespace }} has been down for more than 2 minutes"
+
+      - alert: ArtemisPodCrashLooping
+        expr: |
+          rate(kube_pod_container_status_restarts_total{namespace="artemis-system"}[15m]) > 0.5
+        for: 5m
+        labels:
+          severity: WARNING
+          domain: artemis
+          component: stability
+        annotations:
+          summary: "Pod {{ $labels.pod }} is crash looping"
+          description: "Pod {{ $labels.pod }} in {{ $labels.namespace }} has restarted {{ $value | humanize }} times in the last 15 minutes"
+
+      # Request Volume Anomalies
+      - alert: ArtemisTrafficSpike
+        expr: |
+          (
+            sum(rate(istio_request_total{destination_service_namespace="artemis-system"}[5m])) by (destination_service_name)
+            /
+            sum(rate(istio_request_total{destination_service_namespace="artemis-system"}[1h] offset 1d)) by (destination_service_name)
+          ) > 3
+        for: 5m
+        labels:
+          severity: WARNING
+          domain: artemis
+          component: traffic
+        annotations:
+          summary: "Traffic spike detected for {{ $labels.destination_service_name }}"
+          description: "Traffic to {{ $labels.destination_service_name }} is {{ $value | humanize }}x higher than normal"
+
+      - alert: ArtemisTrafficDrop
+        expr: |
+          (
+            sum(rate(istio_request_total{destination_service_namespace="artemis-system"}[5m])) by (destination_service_name)
+            /
+            sum(rate(istio_request_total{destination_service_namespace="artemis-system"}[1h] offset 1d)) by (destination_service_name)
+          ) < 0.1
+        for: 10m
+        labels:
+          severity: WARNING
+          domain: artemis
+          component: traffic
+        annotations:
+          summary: "Significant traffic drop for {{ $labels.destination_service_name }}"
+          description: "Traffic to {{ $labels.destination_service_name }} has dropped by more than 90%"
+
+      # Resource Utilization
+      - alert: ArtemisHighCPUUsage
+        expr: |
+          sum(rate(container_cpu_usage_seconds_total{namespace="artemis-system"}[5m])) by (pod, container)
+          / sum(container_spec_cpu_quota{namespace="artemis-system"}/100000) by (pod, container)
+          * 100 > 80
+        for: 10m
+        labels:
+          severity: WARNING
+          domain: artemis
+          component: resources
+          resource: cpu
+        annotations:
+          summary: "High CPU usage for {{ $labels.pod }}/{{ $labels.container }}"
+          description: "CPU usage for {{ $labels.pod }}/{{ $labels.container }} is {{ $value | humanizePercentage }}"
+
+      - alert: ArtemisHighMemoryUsage
+        expr: |
+          sum(container_memory_working_set_bytes{namespace="artemis-system"}) by (pod, container)
+          / sum(container_spec_memory_limit_bytes{namespace="artemis-system"}) by (pod, container)
+          * 100 > 85
+        for: 10m
+        labels:
+          severity: WARNING
+          domain: artemis
+          component: resources
+          resource: memory
+        annotations:
+          summary: "High memory usage for {{ $labels.pod }}/{{ $labels.container }}"
+          description: "Memory usage for {{ $labels.pod }}/{{ $labels.container }} is {{ $value | humanizePercentage }}"
+
+      # Connection Pool Exhaustion
+      - alert: ArtemisConnectionPoolExhaustion
+        expr: |
+          envoy_cluster_upstream_cx_pool_overflow{namespace="artemis-system"} > 100
+        for: 5m
+        labels:
+          severity: WARNING
+          domain: artemis
+          component: connections
+        annotations:
+          summary: "Connection pool exhaustion for {{ $labels.cluster_name }}"
+          description: "Connection pool for {{ $labels.cluster_name }} has {{ $value }} overflow events"
+
+      # Retry Budget Exhaustion
+      - alert: ArtemisRetryBudgetExhausted
+        expr: |
+          sum(rate(envoy_cluster_retry_budget_exceeded{namespace="artemis-system"}[5m])) by (cluster_name) > 0.1
+        for: 5m
+        labels:
+          severity: WARNING
+          domain: artemis
+          component: resilience
+        annotations:
+          summary: "Retry budget exhausted for {{ $labels.cluster_name }}"
+          description: "Retry budget for {{ $labels.cluster_name }} is being exceeded at {{ $value | humanize }} per second"
+
+      # Queue Saturation
+      - alert: ArtemisQueueSaturation
+        expr: |
+          envoy_http_inbound_0_0_0_0_8080_downstream_rq_pending_active{namespace="artemis-system"}
+          / envoy_http_inbound_0_0_0_0_8080_downstream_rq_pending_total{namespace="artemis-system"}
+          * 100 > 75
+        for: 5m
+        labels:
+          severity: WARNING
+          domain: artemis
+          component: queue
+        annotations:
+          summary: "Request queue saturation for {{ $labels.pod }}"
+          description: "Request queue for {{ $labels.pod }} is {{ $value | humanizePercentage }} full"
+
+      # Timeout Alerts
+      - alert: ArtemisHighTimeoutRate
+        expr: |
+          sum(rate(istio_request_total{
+            destination_service_namespace="artemis-system",
+            response_flags=~".*UT.*"
+          }[5m])) by (destination_service_name)
+          /
+          sum(rate(istio_request_total{
+            destination_service_namespace="artemis-system"
+          }[5m])) by (destination_service_name)
+          * 100 > 5
+        for: 5m
+        labels:
+          severity: WARNING
+          domain: artemis
+          component: timeout
+        annotations:
+          summary: "High timeout rate for {{ $labels.destination_service_name }}"
+          description: "Timeout rate for {{ $labels.destination_service_name }} is {{ $value | humanizePercentage }}"
+
+      # Database Connection Issues
+      - alert: ArtemisDatabaseConnectionFailure
+        expr: |
+          mysql_up{namespace="artemis-system"} == 0
+          or
+          pg_up{namespace="artemis-system"} == 0
+        for: 2m
+        labels:
+          severity: CRITICAL
+          domain: artemis
+          component: database
+        annotations:
+          summary: "Database connection failure in Artemis"
+          description: "Cannot connect to database {{ $labels.instance }}"
+
+      # Cache Hit Rate
+      - alert: ArtemisLowCacheHitRate
+        expr: |
+          (
+            sum(rate(redis_hits_total{namespace="artemis-system"}[5m])) by (instance)
+            /
+            (sum(rate(redis_hits_total{namespace="artemis-system"}[5m])) by (instance) +
+             sum(rate(redis_misses_total{namespace="artemis-system"}[5m])) by (instance))
+          ) * 100 < 70
+        for: 15m
+        labels:
+          severity: WARNING
+          domain: artemis
+          component: cache
+        annotations:
+          summary: "Low cache hit rate for {{ $labels.instance }}"
+          description: "Cache hit rate for {{ $labels.instance }} is {{ $value | humanizePercentage }}, below 70% threshold"

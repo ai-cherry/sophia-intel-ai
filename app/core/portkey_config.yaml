@@ -1,0 +1,191 @@
+# Portkey Virtual Keys Configuration
+# Last Updated: 2025-01-05
+# Purpose: Centralized provider routing via Portkey Gateway
+
+virtual_keys:
+  # Primary Providers
+  deepseek:
+    vk: "deepseek-vk-24102f"
+    provider: "deepseek"
+    models: ["deepseek-chat", "deepseek-coder", "deepseek-r1"]
+    use_cases: ["code_generation", "technical_planning", "refactoring"]
+
+  openai:
+    vk: "openai-vk-190a60"
+    provider: "openai"
+    models: ["gpt-4o", "gpt-4o-mini", "gpt-5"]
+    use_cases: ["orchestration", "long_planning", "general"]
+
+  anthropic:
+    vk: "anthropic-vk-b42804"
+    provider: "anthropic"
+    models: ["claude-3-opus", "claude-3-sonnet", "claude-3-haiku"]
+    use_cases: ["code_review", "security_analysis", "writing"]
+
+  # Router & Aggregator
+  openrouter:
+    vk: "vkj-openrouter-cc4151"
+    provider: "openrouter"
+    models: ["auto", "qwen-3-coder-plus", "mixtral-8x22b"]
+    use_cases: ["fallback", "model_selection", "cost_optimization"]
+
+  # Search & Research
+  perplexity:
+    vk: "perplexity-vk-56c172"
+    provider: "perplexity"
+    models: ["sonar-small", "sonar-medium", "sonar-large"]
+    use_cases: ["web_search", "fact_checking", "real_time_data"]
+
+  # Speed Tier
+  groq:
+    vk: "groq-vk-6b9b52"
+    provider: "groq"
+    models: ["llama3-70b", "mixtral-8x7b", "gemma2-9b"]
+    use_cases: ["fast_inference", "streaming", "draft_generation"]
+
+  # Specialized Providers
+  mistral:
+    vk: "mistral-vk-f92861"
+    provider: "mistral"
+    models: ["mistral-large", "mistral-medium", "codestral"]
+    use_cases: ["european_compliance", "multilingual", "code"]
+
+  xai:
+    vk: "xai-vk-e65d0f"
+    provider: "xai"
+    models: ["grok-1", "grok-2", "grok-5"]
+    use_cases: ["real_time_news", "social_data", "trending"]
+
+  together:
+    vk: "together-ai-670469"
+    provider: "together"
+    models: ["llama-3.1-405b", "qwen-72b", "deepseek-67b"]
+    use_cases: ["open_source", "fine_tuning", "batch_processing"]
+
+  # Embedding & Search
+  cohere:
+    vk: "cohere-vk-496fa9"
+    provider: "cohere"
+    models: ["command-r-plus", "embed-v3", "rerank-v3"]
+    use_cases: ["embeddings", "reranking", "rag"]
+
+  gemini:
+    vk: "gemini-vk-3d6108"
+    provider: "google"
+    models: ["gemini-2.0-pro", "gemini-2.0-flash", "gemini-1.5-pro"]
+    use_cases: ["multimodal", "long_context", "vision"]
+
+  huggingface:
+    vk: "huggingface-vk-28240e"
+    provider: "huggingface"
+    models: ["meta-llama/Meta-Llama-3.1-405B", "mistralai/Mistral-Large-2411"]
+    use_cases: ["open_models", "custom_models", "research"]
+
+  # Vector Stores (for future use)
+  milvus:
+    vk: "milvus-vk-34fa02"
+    provider: "milvus"
+    use_cases: ["vector_storage", "similarity_search"]
+
+  qdrant:
+    vk: "qdrant-vk-d2b62a"
+    provider: "qdrant"
+    use_cases: ["vector_storage", "hybrid_search"]
+
+# Model Policy Routing
+model_policy:
+  defaults:
+    max_tokens: 6000
+    temperature: 0.2
+    cost_ceiling_usd: 0.50
+    timeout_s: 120
+
+  routes:
+    # Orchestration & Planning (GPT-5 primary as per requirement)
+    orchestration.long_planning:
+      primary:
+        vk: "openai-vk-190a60"
+        model: "gpt-5"
+      fallbacks:
+        - vk: "anthropic-vk-b42804"
+          model: "claude-3-opus"
+        - vk: "deepseek-vk-24102f"
+          model: "deepseek-r1"
+      budget:
+        cost_ceiling_usd: 2.00
+        tokens_ceiling: 200000
+
+    # Code Generation
+    code.generation:
+      primary:
+        vk: "deepseek-vk-24102f"
+        model: "deepseek-coder"
+      fallbacks:
+        - vk: "vkj-openrouter-cc4151"
+          model: "qwen-3-coder-plus"
+        - vk: "openai-vk-190a60"
+          model: "gpt-4o"
+
+    # Code Review
+    code.review:
+      primary:
+        vk: "anthropic-vk-b42804"
+        model: "claude-3-sonnet"
+      fallbacks:
+        - vk: "openai-vk-190a60"
+          model: "gpt-5"
+
+    # Web Research
+    research.web:
+      primary:
+        vk: "perplexity-vk-56c172"
+        model: "sonar-large"
+      fallbacks:
+        - vk: "gemini-vk-3d6108"
+          model: "gemini-2.0-pro"
+        - vk: "xai-vk-e65d0f"
+          model: "grok-5"
+
+    # Fast Tier (drafts, routing)
+    fast.draft:
+      primary:
+        vk: "groq-vk-6b9b52"
+        model: "llama3-70b"
+      fallbacks:
+        - vk: "openai-vk-190a60"
+          model: "gpt-4o-mini"
+        - vk: "gemini-vk-3d6108"
+          model: "gemini-2.0-flash"
+
+    # Embeddings
+    embeddings.default:
+      primary:
+        vk: "openai-vk-190a60"
+        model: "text-embedding-3-small"
+      fallbacks:
+        - vk: "cohere-vk-496fa9"
+          model: "embed-v3"
+
+    # Reranking
+    rerank.default:
+      primary:
+        vk: "cohere-vk-496fa9"
+        model: "rerank-v3"
+
+# Environment-specific overrides
+environments:
+  development:
+    cost_multiplier: 1.0
+    cache_ttl: 3600
+    allow_expensive_models: true
+
+  staging:
+    cost_multiplier: 0.5
+    cache_ttl: 7200
+    allow_expensive_models: true
+
+  production:
+    cost_multiplier: 0.3
+    cache_ttl: 86400
+    allow_expensive_models: false
+    require_approval_above_usd: 1.00

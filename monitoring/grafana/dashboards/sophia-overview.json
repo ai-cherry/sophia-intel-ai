@@ -1,0 +1,32 @@
+{
+  "dashboard": {
+    "title": "Sophia Intel AI - Production Overview",
+    "tags": ["sophia", "ai", "microservices"],
+    "panels": [
+      {
+        "title": "Service Health",
+        "type": "stat",
+        "targets": [{ "expr": "up{job=~'sophia-.*'}" }]
+      },
+      {
+        "title": "API Response Times",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))"
+          }
+        ]
+      },
+      {
+        "title": "Consensus Swarm Performance",
+        "type": "gauge",
+        "targets": [{ "expr": "consensus_swarm_success_rate" }]
+      },
+      {
+        "title": "GPU Utilization",
+        "type": "timeseries",
+        "targets": [{ "expr": "lambda_gpu_utilization_percent" }]
+      }
+    ]
+  }
+}

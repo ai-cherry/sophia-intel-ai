@@ -1,0 +1,293 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "docs/**"
+      - "*.md"
+      - ".gitignore"
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment to deploy to"
+        required: true
+        default: "production"
+        type: choice
+        options:
+          - staging
+          - production
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-asyncio pytest-cov
+
+      - name: Run tests
+        run: |
+          pytest tests/ --cov=app --cov-report=xml --cov-report=term
+
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.xml
+          fail_ci_if_error: true
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run security scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: "fs"
+          scan-ref: "."
+          format: "sarif"
+          output: "trivy-results.sarif"
+
+      - name: Upload scan results
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: "trivy-results.sarif"
+
+  build-and-push:
+    name: Build and Push Image
+    runs-on: ubuntu-latest
+    needs: [test, security-scan]
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image: ${{ steps.image.outputs.image }}
+      digest: ${{ steps.build.outputs.digest }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push image
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Output image
+        id: image
+        run: echo "image=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}" >> $GITHUB_OUTPUT
+
+  load-test:
+    name: Load Testing
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install aiohttp
+
+      - name: Start test instance
+        run: |
+          docker run -d --name test-instance \
+            -p 8000:8000 \
+            -e ENVIRONMENT=testing \
+            -e DEBUG=false \
+            ${{ needs.build-and-push.outputs.image }}
+
+          # Wait for service to be ready
+          timeout 60 bash -c 'until curl -f http://localhost:8000/health; do sleep 2; done'
+
+      - name: Run load tests
+        run: |
+          python scripts/load_testing.py \
+            --url http://localhost:8000 \
+            --users 10 \
+            --requests 50 \
+            --test-type load
+
+      - name: Run spike tests
+        run: |
+          python scripts/load_testing.py \
+            --url http://localhost:8000 \
+            --users 5 \
+            --requests 20 \
+            --test-type spike
+
+      - name: Cleanup
+        if: always()
+        run: docker rm -f test-instance
+
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [build-and-push, load-test]
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: staging
+      url: https://staging.sophia-intel.ai
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: "v1.28.0"
+
+      - name: Configure kubectl
+        run: |
+          echo "${{ secrets.KUBE_CONFIG_STAGING }}" | base64 -d > kubeconfig
+          export KUBECONFIG=kubeconfig
+
+      - name: Deploy to staging
+        run: |
+          export KUBECONFIG=kubeconfig
+
+          # Update image in deployment
+          kubectl set image deployment/sophia-intel-ai \
+            api-server=${{ needs.build-and-push.outputs.image }} \
+            -n staging
+
+          # Wait for rollout
+          kubectl rollout status deployment/sophia-intel-ai -n staging --timeout=300s
+
+          # Verify deployment
+          kubectl get pods -n staging -l app=sophia-intel-ai
+
+      - name: Run smoke tests
+        run: |
+          # Wait for service to be available
+          sleep 30
+
+          # Basic smoke tests
+          curl -f https://staging.sophia-intel.ai/health
+          curl -f https://staging.sophia-intel.ai/health/ready
+
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [build-and-push, deploy-staging]
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    environment:
+      name: production
+      url: https://api.sophia-intel.ai
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: "v1.28.0"
+
+      - name: Configure kubectl
+        run: |
+          echo "${{ secrets.KUBE_CONFIG_PROD }}" | base64 -d > kubeconfig
+          export KUBECONFIG=kubeconfig
+
+      - name: Deploy to production
+        run: |
+          export KUBECONFIG=kubeconfig
+
+          # Update image in deployment
+          kubectl set image deployment/sophia-intel-ai \
+            api-server=${{ needs.build-and-push.outputs.image }} \
+            -n production
+
+          # Wait for rollout (with longer timeout for production)
+          kubectl rollout status deployment/sophia-intel-ai -n production --timeout=600s
+
+          # Verify deployment
+          kubectl get pods -n production -l app=sophia-intel-ai
+
+      - name: Run production smoke tests
+        run: |
+          # Wait for service to be fully available
+          sleep 60
+
+          # Comprehensive smoke tests
+          curl -f https://api.sophia-intel.ai/health
+          curl -f https://api.sophia-intel.ai/health/ready
+          curl -f https://api.sophia-intel.ai/health/detailed
+
+      - name: Run post-deployment load test
+        run: |
+          python scripts/load_testing.py \
+            --url https://api.sophia-intel.ai \
+            --users 5 \
+            --requests 25 \
+            --test-type load
+
+      - name: Notify deployment success
+        if: success()
+        run: |
+          echo "🚀 Production deployment successful!"
+          echo "Image: ${{ needs.build-and-push.outputs.image }}"
+          echo "Commit: ${{ github.sha }}"
+
+  notify-failure:
+    name: Notify Failure
+    runs-on: ubuntu-latest
+    needs: [test, security-scan, build-and-push, load-test, deploy-staging, deploy-production]
+    if: failure()
+    steps:
+      - name: Notify failure
+        run: |
+          echo "❌ Deployment pipeline failed!"
+          echo "Please check the logs and fix the issues."

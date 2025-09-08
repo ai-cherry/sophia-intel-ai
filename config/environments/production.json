@@ -1,0 +1,13 @@
+{
+  "debug": false,
+  "log_level": "WARNING",
+  "database": {
+    "path": "data/production_database.db",
+    "pool_size": 20
+  },
+  "features": {
+    "hot_reload": false,
+    "debug_ui": false,
+    "mock_integrations": false
+  }
+}

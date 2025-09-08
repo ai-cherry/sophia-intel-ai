@@ -1,0 +1,52 @@
+{
+  "timestamp": "2025-09-04T16:51:47.964994",
+  "sophia_api": {
+    "passed": 5,
+    "failed": 0,
+    "details": [
+      {
+        "test": "test gong api connection",
+        "success": true,
+        "command_type": "api_test",
+        "connected": true
+      },
+      {
+        "test": "test hubspot api",
+        "success": true,
+        "command_type": "api_test",
+        "connected": true
+      },
+      {
+        "test": "check salesforce connection",
+        "success": true,
+        "command_type": "api_test",
+        "connected": false
+      },
+      {
+        "test": "validate github integration",
+        "success": true,
+        "command_type": "api_test",
+        "connected": false
+      },
+      {
+        "test": "gong api status",
+        "success": true,
+        "command_type": "api_status",
+        "connected": true
+      }
+    ]
+  },
+  "sophia_bi": {
+    "passed": 0,
+    "failed": 4
+  },
+  "artemis": {
+    "passed": 0,
+    "failed": 4
+  },
+  "health": {
+    "healthy": 3,
+    "unhealthy": 1
+  },
+  "success_rate": 47.05882352941176
+}

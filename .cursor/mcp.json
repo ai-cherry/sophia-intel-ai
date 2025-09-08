@@ -1,0 +1,10 @@
+{
+  "servers": {
+    "sophia": {
+      "command": "node",
+      "args": [
+        "/Users/lynnmusil/sophia-intel-ai/mcp-bridge/dist/roo-adapter.js"
+      ]
+    }
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "rag_embedding_models": {
+    "primary": "text-embedding-3-small",
+    "secondary": "text-embedding-ada-002",
+    "multilingual": "multilingual-e5-large"
+  },
+  "rag_reranking_models": {
+    "llama_models_for_rag_only": [
+      "meta-llama/llama-3.3-70b-instruct",
+      "meta-llama/llama-3.2-90b-vision-instruct",
+      "meta-llama/llama-3.1-405b-instruct"
+    ],
+    "purpose": "These Llama models are ONLY for RAG reranking and retrieval tasks, NOT for general LLM use"
+  },
+  "rag_configurations": {
+    "chunk_size": 1000,
+    "chunk_overlap": 200,
+    "top_k": 10,
+    "rerank_top_k": 5,
+    "use_llama_for_reranking": true,
+    "use_llama_for_query_expansion": true
+  },
+  "approved_llm_models": {
+    "note": "For ALL non-RAG LLM tasks, use ONLY these models",
+    "models": [
+      "openai/gpt-5",
+      "x-ai/grok-4",
+      "anthropic/claude-sonnet-4",
+      "x-ai/grok-code-fast-1",
+      "google/gemini-2.5-flash",
+      "google/gemini-2.5-pro",
+      "deepseek/deepseek-chat-v3-0324",
+      "deepseek/deepseek-chat-v3.1",
+      "qwen/qwen3-30b-a3b",
+      "z-ai/glm-4.5-air"
+    ]
+  }
+}

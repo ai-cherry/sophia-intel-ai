@@ -1,0 +1,190 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: "sophia-intel-ai-prod"
+    replica: "prometheus-1"
+
+rule_files:
+  - "/etc/prometheus/rules/*.yml"
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - alertmanager:9093
+
+scrape_configs:
+  # Sophia Intel AI Application Metrics
+  - job_name: "sophia-intel-ai"
+    scrape_interval: 10s
+    metrics_path: "/metrics"
+    kubernetes_sd_configs:
+      - role: pod
+        namespaces:
+          names:
+            - production
+            - staging
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+        action: keep
+        regex: true
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+        action: replace
+        target_label: __metrics_path__
+        regex: (.+)
+      - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+        action: replace
+        regex: ([^:]+)(?::\d+)?;(\d+)
+        replacement: $1:$2
+        target_label: __address__
+      - action: labelmap
+        regex: __meta_kubernetes_pod_label_(.+)
+      - source_labels: [__meta_kubernetes_namespace]
+        action: replace
+        target_label: kubernetes_namespace
+      - source_labels: [__meta_kubernetes_pod_name]
+        action: replace
+        target_label: kubernetes_pod_name
+
+  # Health Monitoring Endpoints
+  - job_name: "sophia-health-monitoring"
+    scrape_interval: 5s
+    metrics_path: "/health/metrics"
+    static_configs:
+      - targets: ["sophia-intel-ai-service.production.svc.cluster.local:80"]
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: "sophia_health_.*"
+        target_label: __tmp_artemis_category
+        replacement: "system_vitals"
+      - source_labels: [__name__]
+        regex: "sophia_orchestrator_.*"
+        target_label: __tmp_artemis_category
+        replacement: "operational_readiness"
+      - source_labels: [__name__]
+        regex: "sophia_connection_.*"
+        target_label: __tmp_artemis_category
+        replacement: "resource_deployment"
+
+  # Kubernetes System Metrics
+  - job_name: "kubernetes-nodes"
+    kubernetes_sd_configs:
+      - role: node
+    relabel_configs:
+      - action: labelmap
+        regex: __meta_kubernetes_node_label_(.+)
+      - target_label: __address__
+        replacement: kubernetes.default.svc:443
+      - source_labels: [__meta_kubernetes_node_name]
+        regex: (.+)
+        target_label: __metrics_path__
+        replacement: /api/v1/nodes/${1}/proxy/metrics
+
+  # Kubernetes Pods
+  - job_name: "kubernetes-pods"
+    kubernetes_sd_configs:
+      - role: pod
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+        action: keep
+        regex: true
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+        action: replace
+        target_label: __metrics_path__
+        regex: (.+)
+      - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+        action: replace
+        regex: ([^:]+)(?::\d+)?;(\d+)
+        replacement: $1:$2
+        target_label: __address__
+      - action: labelmap
+        regex: __meta_kubernetes_pod_label_(.+)
+
+  # Redis Metrics (if using Redis Exporter)
+  - job_name: "redis"
+    static_configs:
+      - targets: ["redis-exporter:9121"]
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: "redis_.*"
+        target_label: __tmp_artemis_category
+        replacement: "resource_deployment"
+
+  # Node Exporter for System Metrics
+  - job_name: "node-exporter"
+    kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+            - monitoring
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_endpoints_name]
+        regex: "node-exporter"
+        action: keep
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: "node_(cpu|memory|disk|load|network)_.*"
+        target_label: __tmp_artemis_category
+        replacement: "system_vitals"
+
+# Custom recording rules for Artemis dashboard
+recording_rules:
+  - name: artemis_system_vitals
+    interval: 15s
+    rules:
+      - record: artemis:system_cpu_usage_percent
+        expr: 100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)
+
+      - record: artemis:system_memory_usage_percent
+        expr: 100 * (1 - ((node_memory_MemAvailable_bytes or node_memory_MemFree_bytes) / node_memory_MemTotal_bytes))
+
+      - record: artemis:system_disk_usage_percent
+        expr: 100 - ((node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) * 100)
+
+  - name: artemis_operational_readiness
+    interval: 30s
+    rules:
+      - record: artemis:service_availability_percent
+        expr: 100 * (up{job="sophia-intel-ai"})
+
+      - record: artemis:response_time_p95_ms
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) * 1000
+
+      - record: artemis:error_rate_percent
+        expr: 100 * (rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]))
+
+      - record: artemis:throughput_rps
+        expr: rate(http_requests_total[5m])
+
+  - name: artemis_resource_deployment
+    interval: 30s
+    rules:
+      - record: artemis:active_connections
+        expr: sum(sophia_connection_active_total) by (type)
+
+      - record: artemis:connection_pool_utilization_percent
+        expr: 100 * (sophia_connection_active_total / sophia_connection_max_total)
+
+      - record: artemis:redis_operations_per_second
+        expr: rate(redis_commands_processed_total[5m])
+
+      - record: artemis:database_connection_utilization
+        expr: 100 * (sophia_db_connections_active / sophia_db_connections_max)
+
+  - name: artemis_threat_detection
+    interval: 15s
+    rules:
+      - record: artemis:anomaly_score
+        expr: |
+          (
+            (artemis:system_cpu_usage_percent > 90) * 0.3 +
+            (artemis:system_memory_usage_percent > 85) * 0.3 +
+            (artemis:error_rate_percent > 5) * 0.4
+          )
+
+      - record: artemis:security_events_per_minute
+        expr: rate(sophia_security_events_total[1m]) * 60
+
+      - record: artemis:failed_auth_attempts_per_minute
+        expr: rate(sophia_auth_failures_total[1m]) * 60

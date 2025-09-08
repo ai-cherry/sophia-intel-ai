@@ -1,0 +1,160 @@
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: artemis-orchestrator
+  namespace: artemis
+  labels:
+    app: artemis
+    system: sophia-artemis
+    mesh: istio
+spec:
+  host: artemis-orchestrator.artemis.svc.cluster.local
+  trafficPolicy:
+    # Connection pool settings
+    connectionPool:
+      tcp:
+        maxConnections: 100
+        connectTimeout: 30s
+        tcpKeepalive:
+          time: 7200s
+          interval: 75s
+          probes: 10
+      http:
+        http1MaxPendingRequests: 64
+        http2MaxRequests: 1024
+        maxRequestsPerConnection: 8 # Respecting 8 concurrent task limit
+        h2UpgradePolicy: UPGRADE
+        useClientProtocol: true
+    # Load balancer settings - ROUND_ROBIN
+    loadBalancer:
+      simple: ROUND_ROBIN
+      consistentHash:
+        httpHeaderName: "x-session-id"
+        minimumRingSize: 1024
+    # Outlier detection for resilience
+    outlierDetection:
+      consecutiveErrors: 5
+      interval: 30s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 50
+      minHealthPercent: 30
+      splitExternalLocalOriginErrors: true
+      consecutiveLocalOriginFailures: 5
+      consecutiveGatewayErrors: 5
+      enforcingConsecutiveErrors: 100
+      enforcingConsecutiveGatewayErrors: 100
+      enforcingConsecutiveLocalOriginFailures: 100
+      detectorInterval: 10s
+      ejectionSweepInterval: 30s
+  # Subset configurations for canary deployments
+  subsets:
+    - name: stable
+      labels:
+        version: stable
+      trafficPolicy:
+        connectionPool:
+          tcp:
+            maxConnections: 80
+          http:
+            http1MaxPendingRequests: 50
+            http2MaxRequests: 800
+            maxRequestsPerConnection: 8
+    - name: canary
+      labels:
+        version: canary
+      trafficPolicy:
+        connectionPool:
+          tcp:
+            maxConnections: 20
+          http:
+            http1MaxPendingRequests: 14
+            http2MaxRequests: 224
+            maxRequestsPerConnection: 8
+        outlierDetection:
+          consecutiveErrors: 3
+          interval: 20s
+          baseEjectionTime: 20s
+          maxEjectionPercent: 100
+          minHealthPercent: 0
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: artemis-external-services
+  namespace: artemis
+  labels:
+    app: artemis
+    system: sophia-artemis
+    mesh: istio
+spec:
+  host: "*.artemis.external"
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 50
+        connectTimeout: 10s
+      http:
+        http1MaxPendingRequests: 32
+        http2MaxRequests: 512
+        maxRequestsPerConnection: 8
+    loadBalancer:
+      simple: ROUND_ROBIN
+    outlierDetection:
+      consecutiveErrors: 10
+      interval: 60s
+      baseEjectionTime: 60s
+      maxEjectionPercent: 50
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: artemis-mcp-servers
+  namespace: artemis
+  labels:
+    app: artemis
+    system: sophia-artemis
+    mesh: istio
+    component: mcp
+spec:
+  host: "mcp-server.artemis.svc.cluster.local"
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 40
+        connectTimeout: 15s
+        tcpKeepalive:
+          time: 600s
+          interval: 60s
+          probes: 6
+      http:
+        http1MaxPendingRequests: 24
+        http2MaxRequests: 384
+        maxRequestsPerConnection: 8
+        h2UpgradePolicy: UPGRADE
+    loadBalancer:
+      simple: ROUND_ROBIN
+    outlierDetection:
+      consecutiveErrors: 5
+      interval: 30s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 50
+      minHealthPercent: 30
+  subsets:
+    - name: primary
+      labels:
+        tier: primary
+      trafficPolicy:
+        connectionPool:
+          tcp:
+            maxConnections: 30
+          http:
+            maxRequestsPerConnection: 8
+    - name: secondary
+      labels:
+        tier: secondary
+      trafficPolicy:
+        connectionPool:
+          tcp:
+            maxConnections: 10
+          http:
+            maxRequestsPerConnection: 4

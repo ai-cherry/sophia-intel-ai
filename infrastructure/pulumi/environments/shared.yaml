@@ -1,0 +1,69 @@
+values:
+  # Shared configuration across all environments
+  project:
+    name: sophia-intel-ai
+    version: "1.0.0"
+    region: us-west-2
+    organization: sophia-intel
+
+  # Pulumi configuration
+  pulumi:
+    api_key:
+      fn::secret: pul-f60e05d69c13efa7a73abea7a7bf09c668fbc2dc
+    organization: sophia-intel
+
+  # Common infrastructure settings
+  infrastructure:
+    redis:
+      provider: redis-cloud
+      version: "7.2"
+      ssl: true
+      persistence: true
+
+    vector_db:
+      primary: qdrant
+      secondary: weaviate
+      embedding_dimensions: 1536
+
+    monitoring:
+      enabled: true
+      metrics_retention_days: 30
+      log_level: info
+
+  # Security defaults
+  security:
+    encryption_at_rest: true
+    encryption_in_transit: true
+    key_rotation_days: 90
+    access_log_retention: 30
+    audit_enabled: true
+
+  # Application defaults
+  application:
+    websocket:
+      max_connections: 100
+      heartbeat_interval: 30
+      message_timeout: 30
+
+    api:
+      rate_limit_per_minute: 1000
+      timeout_seconds: 30
+      max_request_size_mb: 10
+
+    memory:
+      redis_max_connections: 50
+      vector_cache_size_mb: 512
+      embedding_batch_size: 100
+
+  # MCP (Model Control Protocol) configuration
+  mcp:
+    registry_enabled: true
+    max_models: 50
+    model_timeout_seconds: 60
+    health_check_interval: 30
+
+  # Swarm configuration
+  swarms:
+    max_concurrent: 10
+    orchestrator_timeout: 300
+    message_bus_retention_hours: 24

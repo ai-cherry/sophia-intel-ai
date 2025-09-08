@@ -1,0 +1,66 @@
+# CODEOWNERS - Code ownership and review requirements
+# This file defines who is responsible for different parts of the codebase
+# and ensures proper review before changes are merged
+
+# Default owners for everything
+* @lynnmusil
+
+# Core API and backend systems
+/app/api/ @lynnmusil
+/app/core/ @lynnmusil
+/app/agents/ @lynnmusil
+/app/swarms/ @lynnmusil
+
+# Frontend and UI components
+/agent-ui/ @lynnmusil
+*.jsx @lynnmusil
+*.tsx @lynnmusil
+*.css @lynnmusil
+
+# Infrastructure and deployment
+/Dockerfile* @lynnmusil
+/docker-compose*.yml @lynnmusil
+/.github/ @lynnmusil
+/scripts/ @lynnmusil
+/kubernetes/ @lynnmusil
+
+# Documentation
+*.md @lynnmusil
+/docs/ @lynnmusil
+
+# Configuration files (require careful review)
+/.architecture.yaml @lynnmusil
+/.pre-commit-config.yaml @lynnmusil
+/requirements*.txt @lynnmusil
+/package*.json @lynnmusil
+/tsconfig.json @lynnmusil
+/.env* @lynnmusil
+
+# Security-sensitive files (require extra review)
+/app/auth/ @lynnmusil
+/app/security/ @lynnmusil
+*.key @lynnmusil
+*.pem @lynnmusil
+*.cert @lynnmusil
+
+# Testing
+/tests/ @lynnmusil
+*_test.py @lynnmusil
+*.test.js @lynnmusil
+*.test.ts @lynnmusil
+
+# Database and migrations
+/migrations/ @lynnmusil
+/app/models/ @lynnmusil
+*.sql @lynnmusil
+
+# AI and ML components
+/app/evaluation/ @lynnmusil
+/app/memory/ @lynnmusil
+/app/embeddings/ @lynnmusil
+/app/indexing/ @lynnmusil
+
+# Critical system files (require multiple reviews)
+/app/api/unified_server.py @lynnmusil
+/app/api/unified_gateway.py @lynnmusil
+/app/agents/orchestrator.py @lynnmusil

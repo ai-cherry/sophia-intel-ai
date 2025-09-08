@@ -1,0 +1,273 @@
+{
+  "dispatcher": {
+    "name": "SmartCommandDispatcher",
+    "version": "1.0.0",
+    "description": "Intelligent NL command routing with swarm integration"
+  },
+
+  "complexity_thresholds": {
+    "lite": 0.3,
+    "balanced": 0.7,
+    "description": "Thresholds for determining execution mode based on task complexity"
+  },
+
+  "execution_modes": {
+    "lite": {
+      "description": "Fast, simple execution for basic commands",
+      "max_agents": 1,
+      "patterns": ["quick_nlp", "simple_execution"],
+      "timeout_seconds": 5,
+      "quality_target": 0.6
+    },
+    "balanced": {
+      "description": "Balanced speed and quality for moderate complexity",
+      "max_agents": 3,
+      "patterns": ["memory_enrichment", "orchestrator", "quality_gates"],
+      "timeout_seconds": 15,
+      "quality_target": 0.75
+    },
+    "quality": {
+      "description": "High-quality execution for complex tasks",
+      "max_agents": 7,
+      "patterns": [
+        "memory_enrichment",
+        "swarm",
+        "debate",
+        "quality_gates",
+        "consensus"
+      ],
+      "timeout_seconds": 30,
+      "quality_target": 0.9
+    }
+  },
+
+  "swarm_eligible_intents": [
+    "EXECUTE_WORKFLOW",
+    "QUERY_DATA",
+    "RUN_AGENT",
+    "SCALE_SERVICE"
+  ],
+
+  "memory_enrichment": {
+    "enabled": true,
+    "max_history": 10,
+    "include_similar": true,
+    "similarity_threshold": 0.7,
+    "cache_ttl_seconds": 300
+  },
+
+  "optimization": {
+    "auto_adjust_mode": true,
+    "performance_target_ms": 5000,
+    "quality_target": 0.8,
+    "learning_rate": 0.1,
+    "adjustment_window": 10
+  },
+
+  "circuit_breakers": {
+    "memory": {
+      "failure_threshold": 3,
+      "recovery_timeout": 30,
+      "success_threshold": 2
+    },
+    "swarm": {
+      "failure_threshold": 2,
+      "recovery_timeout": 60,
+      "success_threshold": 2
+    },
+    "orchestrator": {
+      "failure_threshold": 3,
+      "recovery_timeout": 30,
+      "success_threshold": 2
+    },
+    "n8n": {
+      "failure_threshold": 5,
+      "recovery_timeout": 20,
+      "success_threshold": 3
+    }
+  },
+
+  "fallback": {
+    "enable_graceful_degradation": true,
+    "fallback_to_simple": true,
+    "max_retry_attempts": 2,
+    "retry_delay_ms": 1000
+  },
+
+  "swarm_patterns": {
+    "debate": {
+      "enabled": true,
+      "min_complexity": 0.6,
+      "max_rounds": 3,
+      "consensus_threshold": 0.7
+    },
+    "quality_gates": {
+      "enabled": true,
+      "min_quality_threshold": 0.7,
+      "max_retry_rounds": 3,
+      "retry_strategies": {
+        "low_quality": {
+          "threshold": 0.4,
+          "action": "expand_agent_team"
+        },
+        "medium_quality": {
+          "threshold": 0.6,
+          "action": "increase_creativity"
+        }
+      }
+    },
+    "strategy_archive": {
+      "enabled": true,
+      "min_success_score": 0.8,
+      "archive_path": "tmp/strategy_archive.json",
+      "max_patterns_per_type": 10
+    },
+    "consensus": {
+      "enabled": true,
+      "agreement_threshold": 0.7,
+      "tie_breaking_methods": {
+        "small_group": {
+          "max_agents": 3,
+          "method": "judge_agent"
+        },
+        "large_group": {
+          "min_agents": 4,
+          "method": "ranked_voting"
+        }
+      }
+    },
+    "adaptive_parameters": {
+      "enabled": true,
+      "learning_rate": 0.1,
+      "history_window": 5,
+      "parameters": {
+        "temperature": {
+          "min": 0.1,
+          "max": 1.0,
+          "default": 0.7
+        },
+        "agent_count": {
+          "min": 2,
+          "max": 10,
+          "default": 3
+        },
+        "timeout_multiplier": {
+          "min": 0.5,
+          "max": 2.0,
+          "default": 1.0
+        }
+      }
+    }
+  },
+
+  "agent_roles": {
+    "researcher": {
+      "description": "Gathers information and analyzes requirements",
+      "model": "llama3.2",
+      "temperature": 0.7,
+      "max_tokens": 1000
+    },
+    "coder": {
+      "description": "Generates code implementations",
+      "model": "llama3.2",
+      "temperature": 0.5,
+      "max_tokens": 2000
+    },
+    "reviewer": {
+      "description": "Reviews and validates solutions",
+      "model": "llama3.2",
+      "temperature": 0.3,
+      "max_tokens": 1000
+    },
+    "executor": {
+      "description": "Executes workflows and tasks",
+      "model": "llama3.2",
+      "temperature": 0.2,
+      "max_tokens": 500
+    },
+    "monitor": {
+      "description": "Monitors execution and provides feedback",
+      "model": "llama3.2",
+      "temperature": 0.3,
+      "max_tokens": 500
+    }
+  },
+
+  "performance_monitoring": {
+    "enabled": true,
+    "metrics_collection_interval_seconds": 60,
+    "alert_thresholds": {
+      "error_rate": 0.1,
+      "avg_execution_time_ms": 10000,
+      "memory_usage_mb": 500,
+      "circuit_breaker_trips": 5
+    },
+    "export_metrics": true,
+    "metrics_export_path": "tmp/metrics/"
+  },
+
+  "logging": {
+    "level": "INFO",
+    "detailed_tracing": false,
+    "log_memory_operations": true,
+    "log_swarm_decisions": true,
+    "log_performance_metrics": true
+  },
+
+  "api_endpoints": {
+    "base_path": "/api/v1/nl",
+    "swarm_path": "/api/v1/swarm",
+    "enable_websocket": true,
+    "websocket_path": "/ws/swarm",
+    "cors_enabled": true,
+    "cors_origins": ["http://localhost:3000", "http://localhost:8501"]
+  },
+
+  "session_management": {
+    "default_timeout_minutes": 30,
+    "max_sessions_per_user": 5,
+    "enable_session_persistence": true,
+    "persistence_backend": "redis"
+  },
+
+  "security": {
+    "enable_api_key_auth": true,
+    "enable_rate_limiting": true,
+    "rate_limit_requests_per_minute": 60,
+    "enable_input_validation": true,
+    "max_input_length": 5000,
+    "prohibited_patterns": ["rm -rf", "sudo", "DROP TABLE", "DELETE FROM"]
+  },
+
+  "integrations": {
+    "n8n": {
+      "enabled": true,
+      "webhook_timeout_seconds": 30,
+      "retry_on_failure": true,
+      "workflow_completion_callback": true
+    },
+    "mcp_memory": {
+      "enabled": true,
+      "collection_name": "nl_interactions",
+      "max_history_size": 1000,
+      "enable_semantic_search": true
+    },
+    "prometheus": {
+      "enabled": true,
+      "metrics_port": 9090,
+      "scrape_interval_seconds": 15
+    },
+    "grafana": {
+      "enabled": true,
+      "dashboard_url": "http://localhost:3000/d/nl-swarm-dashboard"
+    }
+  },
+
+  "experimental_features": {
+    "enable_multi_modal": false,
+    "enable_streaming_responses": false,
+    "enable_function_calling": false,
+    "enable_knowledge_transfer": true,
+    "enable_auto_scaling": false
+  }
+}

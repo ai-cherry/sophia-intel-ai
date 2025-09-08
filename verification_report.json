@@ -1,0 +1,168 @@
+{
+  "timestamp": "2025-08-30T13:30:14.169207",
+  "components": {
+    "swarms": {
+      "patterns_implemented": [
+        "Adversarial Debate",
+        "Quality Gates",
+        "Strategy Archive",
+        "Safety Boundaries",
+        "Adaptive Parameters",
+        "Knowledge Transfer"
+      ],
+      "swarm_types": [
+        "Coding Team",
+        "Coding Swarm",
+        "Unified Orchestrator"
+      ],
+      "enhancements": []
+    }
+  },
+  "files": {
+    "Core API": {
+      "files": [
+        {
+          "file": "app/api/unified_server.py",
+          "exists": true,
+          "size": 21537
+        },
+        {
+          "file": "app/api/base_endpoints.py",
+          "exists": false,
+          "size": 0
+        },
+        {
+          "file": "app/api/streaming_handlers.py",
+          "exists": false,
+          "size": 0
+        }
+      ],
+      "complete": false
+    },
+    "Swarm Components": {
+      "files": [
+        {
+          "file": "app/swarms/improved_swarm.py",
+          "exists": true,
+          "size": 33793
+        },
+        {
+          "file": "app/swarms/unified_enhanced_orchestrator.py",
+          "exists": true,
+          "size": 22777
+        },
+        {
+          "file": "app/swarms/coding/team.py",
+          "exists": true,
+          "size": 11266
+        },
+        {
+          "file": "app/swarms/coding/agents.py",
+          "exists": true,
+          "size": 7565
+        },
+        {
+          "file": "app/swarms/coding/pools.py",
+          "exists": true,
+          "size": 815
+        }
+      ],
+      "complete": true
+    },
+    "Configuration": {
+      "files": [
+        {
+          "file": "swarm_config.json",
+          "exists": true,
+          "size": 3720
+        },
+        {
+          "file": "app/config/local_dev_config.py",
+          "exists": true,
+          "size": 4323
+        }
+      ],
+      "complete": true
+    },
+    "Tools": {
+      "files": [
+        {
+          "file": "app/tools/live_tools.py",
+          "exists": true,
+          "size": 12761
+        },
+        {
+          "file": "app/tools/code_search.py",
+          "exists": true,
+          "size": 7674
+        }
+      ],
+      "complete": true
+    },
+    "MCP Servers": {
+      "files": [
+        {
+          "file": "app/memory/supermemory_mcp.py",
+          "exists": true,
+          "size": 19766
+        },
+        {
+          "file": "app/memory/enhanced_mcp_server.py",
+          "exists": true,
+          "size": 10115
+        }
+      ],
+      "complete": true
+    },
+    "Documentation": {
+      "files": [
+        {
+          "file": "docs/mcp-ui/inventory.md",
+          "exists": true,
+          "size": 2143
+        },
+        {
+          "file": "README.md",
+          "exists": true,
+          "size": 4010
+        }
+      ],
+      "complete": true
+    }
+  },
+  "api": {
+    "health": {
+      "status": 200,
+      "working": true
+    },
+    "teams": {
+      "status": 200,
+      "working": true,
+      "teams": [
+        "coding-team",
+        "coding-swarm",
+        "coding-swarm-fast",
+        "coding-swarm-heavy"
+      ]
+    },
+    "workflows": {
+      "status": 200,
+      "working": true,
+      "workflows": [
+        "pr-lifecycle",
+        "code-review"
+      ]
+    },
+    "stats": {
+      "status": 200,
+      "working": true
+    }
+  },
+  "git": {
+    "branch": "main",
+    "uncommitted_files": 18,
+    "latest_commit": "c864710 Fix memory endpoint and gate validation issues",
+    "clean": false
+  },
+  "deployment_ready": false
+}

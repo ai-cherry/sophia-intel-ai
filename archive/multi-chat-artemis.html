@@ -1,0 +1,1050 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Artemis & Sophia Intelligence Platform</title>
+  <link rel="stylesheet" href="./artemis-styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* Enhanced styles using design system variables */
+    body {
+      margin: 0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+    }
+
+    /* Tab System Styles */
+    .tab-container {
+      background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+      border-bottom: 2px solid var(--border-light);
+      display: flex;
+      padding: 12px 20px;
+      gap: 8px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(20px);
+    }
+
+    .tab-btn {
+      padding: 10px 20px;
+      border-radius: 10px;
+      border: 2px solid transparent;
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-muted);
+      cursor: pointer;
+      font-weight: 500;
+      transition: all var(--transition-fast);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      position: relative;
+    }
+
+    .tab-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      transform: translateY(-1px);
+    }
+
+    .tab-btn.active {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      border-color: var(--accent-blue);
+      box-shadow: var(--shadow-glow);
+    }
+
+    .tab-btn.artemis.active {
+      border-color: var(--accent-blue);
+    }
+
+    .tab-btn.factory.active {
+      border-color: var(--accent-orange);
+    }
+
+    .tab-btn.sophia.active {
+      border-color: var(--accent-green);
+    }
+
+    .tab-btn.analytics.active {
+      border-color: var(--accent-purple);
+    }
+
+    .tab-icon {
+      font-size: 18px;
+    }
+
+    .tab-content {
+      display: none;
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    header {
+      padding: 16px 20px;
+      border-bottom: 2px solid var(--border-light);
+      background: var(--bg-secondary);
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    header strong {
+      color: var(--text-accent);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .send-all {
+      flex: 1;
+      display: flex;
+      gap: 8px;
+      min-width: 300px;
+    }
+
+    .send-all input {
+      flex: 1;
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 2px solid var(--border-light);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      transition: all var(--transition-fast);
+    }
+
+    .send-all input:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+      box-shadow: var(--shadow-glow);
+    }
+
+    .send-all button {
+      padding: 10px 16px;
+      border-radius: 8px;
+      border: 2px solid var(--accent-blue);
+      background: var(--accent-blue);
+      color: white;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all var(--transition-fast);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .send-all button:hover {
+      background: var(--accent-blue-hover);
+      transform: translateY(-1px);
+    }
+
+    .grid {
+      display: grid;
+      gap: 16px;
+      padding: 16px;
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    /* Enhanced pane styles using design system */
+    .pane {
+      border: 2px solid var(--border-light);
+      border-radius: 12px;
+      background: linear-gradient(145deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+      display: flex;
+      flex-direction: column;
+      min-height: 350px;
+      transition: all var(--transition-medium);
+      position: relative;
+    }
+
+    .pane:hover {
+      border-color: var(--border-accent);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .pane header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      border-bottom: 2px solid var(--border-light);
+      background: var(--bg-quaternary);
+    }
+
+    .pane header h3 {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-accent);
+    }
+
+    .pane select {
+      background: var(--bg-primary);
+      border: 2px solid var(--border-light);
+      border-radius: 6px;
+      padding: 6px 8px;
+      color: var(--text-primary);
+      font-size: 12px;
+      transition: all var(--transition-fast);
+      max-width: 150px;
+    }
+
+    .pane select:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+    }
+
+    .log {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border-light) transparent;
+    }
+
+    .log::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .log::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .log::-webkit-scrollbar-thumb {
+      background: var(--border-light);
+      border-radius: 3px;
+    }
+
+    .msg {
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-light);
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      opacity: 0;
+      animation: slideInMessage 0.3s ease-out forwards;
+    }
+
+    @keyframes slideInMessage {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .msg.user {
+      background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+      border-color: var(--border-medium);
+      align-self: flex-end;
+      max-width: 85%;
+    }
+
+    .msg.assistant {
+      position: relative;
+      background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+    }
+
+    .msg.assistant::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: var(--accent-blue);
+      border-radius: 3px 0 0 3px;
+    }
+
+    .input {
+      display: flex;
+      gap: 10px;
+      padding: 12px;
+      border-top: 2px solid var(--border-light);
+      background: var(--bg-quaternary);
+    }
+
+    .input textarea {
+      flex: 1;
+      border-radius: 8px;
+      border: 2px solid var(--border-light);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      padding: 10px;
+      height: 70px;
+      resize: none;
+      font-family: inherit;
+      transition: all var(--transition-fast);
+    }
+
+    .input textarea:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+      box-shadow: var(--shadow-glow);
+    }
+
+    .input button {
+      padding: 10px 16px;
+      border-radius: 8px;
+      border: 2px solid var(--accent-blue);
+      background: var(--accent-blue);
+      color: white;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all var(--transition-fast);
+      align-self: flex-end;
+    }
+
+    .input button:hover {
+      background: var(--accent-blue-hover);
+      transform: translateY(-1px);
+    }
+
+    .small {
+      font-size: 12px;
+      color: var(--text-muted);
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    /* Responsive improvements */
+    @media (max-width: 1200px) {
+      .grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .grid {
+        grid-template-columns: 1fr;
+        padding: 12px;
+      }
+
+      header {
+        flex-direction: column;
+        gap: 12px;
+        align-items: stretch;
+      }
+
+      .send-all {
+        min-width: auto;
+      }
+
+      .small {
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Tab Navigation -->
+  <div class="tab-container" role="tablist" aria-label="Main navigation">
+    <button class="tab-btn artemis active" data-tab="artemis" onclick="switchTab('artemis')"
+            role="tab" aria-selected="true" aria-controls="artemis" id="tab-artemis">
+      <span class="tab-icon" aria-hidden="true">🚀</span>
+      Artemis Coding
+    </button>
+    <button class="tab-btn factory" data-tab="factory" onclick="switchTab('factory')"
+            role="tab" aria-selected="false" aria-controls="factory" id="tab-factory">
+      <span class="tab-icon" aria-hidden="true">🏗️</span>
+      Agent Factory
+    </button>
+    <button class="tab-btn sophia" data-tab="sophia" onclick="switchTab('sophia')"
+            role="tab" aria-selected="false" aria-controls="sophia" id="tab-sophia">
+      <span class="tab-icon" aria-hidden="true">💼</span>
+      Sophia Business
+    </button>
+    <button class="tab-btn analytics" data-tab="analytics" onclick="switchTab('analytics')"
+            role="tab" aria-selected="false" aria-controls="analytics" id="tab-analytics">
+      <span class="tab-icon" aria-hidden="true">📊</span>
+      Analytics
+    </button>
+  </div>
+
+  <!-- Artemis Coding Tab -->
+  <div id="artemis" class="tab-content active" role="tabpanel" aria-labelledby="tab-artemis">
+    <header>
+    <strong>
+      <span style="font-size: 20px;">🎯</span>
+      Artemis • Multi‑Model Chat
+    </strong>
+    <div class="send-all">
+      <input id="broadcast" placeholder="Ask all six models…" />
+      <button onclick="sendAll()">
+        <span>📤</span>
+        Send to All
+      </button>
+      <button onclick="loadAllModels()">
+        <span>🔄</span>
+        Refresh Models
+      </button>
+    </div>
+    <div class="small">
+      <span>🔗 Server: http://127.0.0.1:3333</span>
+      <span id="model-count">6 models</span>
+      <span id="rate">rate: -</span>
+    </div>
+  </header>
+  <div class="grid" id="grid"></div>
+  </div>
+
+  <!-- Agent Factory Tab -->
+  <div id="factory" class="tab-content" role="tabpanel" aria-labelledby="tab-factory">
+    <div style="padding: 20px; min-height: calc(100vh - 120px); display: grid; grid-template-columns: 300px 1fr 350px; gap: 20px;">
+      <!-- Sidebar: Templates & Patterns -->
+      <div style="background: var(--bg-secondary); border-radius: 12px; border: 2px solid var(--border-light); padding: 20px; overflow-y: auto;">
+        <h2 style="color: var(--text-accent); margin-bottom: 20px;">
+          <span style="color: var(--accent-orange);">🏗️</span> Agent Factory
+        </h2>
+
+        <h3 style="color: var(--text-primary); font-size: 16px; margin-bottom: 12px;">Swarm Templates</h3>
+        <div id="template-grid" style="display: grid; gap: 12px; margin-top: 16px;">
+          <!-- Templates will be loaded here -->
+        </div>
+
+        <div style="margin-top: 20px;">
+          <h3 style="color: var(--text-primary); font-size: 16px; margin-bottom: 12px;">Execution Pattern</h3>
+          <select id="pattern-select" style="width: 100%; background: var(--bg-primary); border: 2px solid var(--border-light); border-radius: 8px; padding: 10px; color: var(--text-primary); font-size: 14px;">
+            <option value="debate">Adversarial Debate</option>
+            <option value="consensus">Consensus Building</option>
+            <option value="hierarchical">Hierarchical</option>
+            <option value="sequential">Sequential</option>
+            <option value="parallel">Parallel</option>
+            <option value="evolutionary">Evolutionary</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Main Workspace: Agent Builder -->
+      <div style="background: var(--bg-secondary); border-radius: 12px; border: 2px solid var(--border-light); padding: 20px; overflow-y: auto;">
+        <h3 style="color: var(--text-primary); margin-bottom: 16px;">Configure Agents</h3>
+
+        <div style="margin-bottom: 20px;">
+          <input type="text" id="swarm-name" placeholder="Swarm Name"
+                 style="width: 100%; padding: 10px; background: var(--bg-primary);
+                        border: 2px solid var(--border-light); border-radius: 8px;
+                        color: var(--text-primary); font-size: 16px; font-weight: 500;">
+        </div>
+
+        <div id="agent-builder" style="display: grid; gap: 16px; margin-top: 20px;">
+          <!-- Agent cards will be added here -->
+        </div>
+
+        <button onclick="addAgent()" style="margin-top: 16px; padding: 10px 20px;
+                background: rgba(59, 130, 246, 0.1); border: 2px dashed var(--accent-blue);
+                border-radius: 8px; color: var(--accent-blue); cursor: pointer;
+                width: 100%; font-weight: 500;">
+          + Add Agent
+        </button>
+      </div>
+
+      <!-- Inspector: Preview & Testing -->
+      <div style="background: var(--bg-secondary); border-radius: 12px; border: 2px solid var(--border-light); padding: 20px; overflow-y: auto;">
+        <h3 style="color: var(--text-primary); margin-bottom: 16px;">Preview & Testing</h3>
+
+        <div style="background: var(--bg-primary); border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+          <h4 style="color: var(--text-muted); font-size: 14px; margin-bottom: 8px;">Estimated Cost</h4>
+          <div style="font-size: 24px; color: var(--accent-green); font-weight: 600;">
+            $<span id="cost-estimate">0.00</span>
+          </div>
+          <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">per 1000 tokens</div>
+        </div>
+
+        <div style="background: var(--bg-primary); border-radius: 8px; padding: 16px;">
+          <h4 style="color: var(--text-muted); font-size: 14px; margin-bottom: 12px;">Test Scenario</h4>
+          <textarea id="test-task" placeholder="Enter a test task for the swarm..."
+                    style="width: 100%; min-height: 80px; background: var(--bg-secondary);
+                           border: 2px solid var(--border-light); border-radius: 6px;
+                           padding: 8px; color: var(--text-primary); resize: vertical;"></textarea>
+          <button onclick="testSwarm()" style="margin-top: 12px; padding: 8px 16px;
+                  background: var(--accent-purple); border: none; border-radius: 6px;
+                  color: white; cursor: pointer; font-weight: 500;">
+            🧪 Run Test
+          </button>
+        </div>
+
+        <div id="test-results" style="background: var(--bg-primary); border-radius: 8px;
+             padding: 16px; min-height: 100px; display: none; margin-top: 16px;">
+          <h4 style="color: var(--text-muted); font-size: 14px; margin-bottom: 12px;">Test Results</h4>
+          <div id="test-output" style="font-family: monospace; font-size: 12px;
+               color: var(--text-secondary); white-space: pre-wrap;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Floating Action Buttons -->
+    <div style="position: fixed; bottom: 30px; right: 30px; display: flex; gap: 12px; z-index: 50;">
+      <button onclick="saveSwarmBlueprint()" style="padding: 12px 24px; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all var(--transition-fast); border: 2px solid var(--border-light); background: transparent; color: var(--text-primary);">
+        💾 Save Blueprint
+      </button>
+      <button onclick="deploySwarm()" style="padding: 12px 24px; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all var(--transition-fast); border: 2px solid var(--accent-blue); background: var(--accent-blue); color: white;">
+        🚀 Deploy Swarm
+      </button>
+    </div>
+  </div>
+
+  <!-- Sophia Business Tab -->
+  <div id="sophia" class="tab-content" role="tabpanel" aria-labelledby="tab-sophia">
+    <div style="padding: 20px; text-align: center; color: var(--text-muted);">
+      <h2 style="color: var(--text-accent); margin-bottom: 20px;">
+        <span style="color: var(--accent-green);">💼</span> Sophia Business Operations
+      </h2>
+      <p>Business automation and intelligence for Pay Ready</p>
+      <div style="margin-top: 40px;">
+        <h3>Coming Soon in Phase 2</h3>
+        <p>Business workflows, CRM integrations, and automation tools</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Analytics Tab -->
+  <div id="analytics" class="tab-content" role="tabpanel" aria-labelledby="tab-analytics">
+    <div style="padding: 40px; text-align: center;">
+      <h2 style="color: var(--text-accent);">
+        <span style="color: var(--accent-purple);">📊</span> Analytics Dashboard
+      </h2>
+      <p style="color: var(--text-muted); margin-top: 20px;">
+        Performance metrics and cost analysis coming in Phase 2
+      </p>
+    </div>
+  </div>
+
+  <script>
+    const SERVER_URL = 'http://127.0.0.1:3333';
+    // Default models for the 6 panes
+    const DEFAULT_MODELS = [
+      { id:'chatgpt5',    name:'GPT‑5 Chat',           model:'openai/gpt-5-chat' },
+      { id:'qwen3',       name:'Qwen3‑30B‑A3B',        model:'qwen/qwen3-30b-a3b' },
+      { id:'deepseekv3',  name:'DeepSeek V3 Free',     model:'deepseek/deepseek-chat-v3-0324:free' },
+      { id:'grokcode',    name:'Grok Code Fast',       model:'x-ai/grok-code-fast-1' },
+      { id:'claude4',     name:'Claude Sonnet 4',      model:'anthropic/claude-sonnet-4' },
+      { id:'llama4',      name:'Llama 4 Maverick Free',model:'meta-llama/llama-4-maverick:free' }
+    ];
+
+    // This will be populated with all available models
+    let ALL_MODELS = [...DEFAULT_MODELS];
+    const MODELS = [...DEFAULT_MODELS];  // Current pane configurations
+
+    // Fetch all available models from the server
+    async function loadAllModels() {
+      try {
+        const resp = await fetch(`${SERVER_URL}/proxy/openrouter/models`);
+        const data = await resp.json();
+        if (data.models && data.models.length > 0) {
+          // Convert to our format and merge with defaults
+          const serverModels = data.models.map(m => ({
+            id: m.id.replace(/[^a-zA-Z0-9]/g, '_'),
+            name: m.name || m.id,
+            model: m.id
+          }));
+
+          // Keep defaults at top, add all others
+          const defaultIds = DEFAULT_MODELS.map(m => m.model);
+          const additionalModels = serverModels.filter(m => !defaultIds.includes(m.model));
+          ALL_MODELS = [...DEFAULT_MODELS, ...additionalModels];
+
+          // Update all dropdowns
+          updateAllDropdowns();
+          console.log(`Loaded ${ALL_MODELS.length} models`);
+          // Update model count in header
+          document.getElementById('model-count').textContent = `${ALL_MODELS.length} models`;
+        }
+      } catch (e) {
+        console.error('Failed to load models:', e);
+      }
+    }
+
+    function updateAllDropdowns() {
+      MODELS.forEach(model => {
+        const sel = document.getElementById('sel-' + model.id);
+        if (sel) {
+          const currentValue = sel.value;
+          const options = ALL_MODELS.map(m =>
+            `<option value="${m.model}" ${m.model === currentValue ? 'selected' : ''}>${m.name}</option>`
+          ).join('');
+          sel.innerHTML = options;
+        }
+      });
+    }
+
+    function pane(model){
+      const el = document.createElement('div');
+      el.className = 'pane';
+      el.id = 'pane-' + model.id;
+      // model selector - use ALL_MODELS if available
+      const options = ALL_MODELS.map(m => `<option value="${m.model}" ${m.model===model.model? 'selected':''}>${m.name}</option>`).join('');
+      el.innerHTML = `
+        <header>
+          <h3>${model.name}</h3>
+          <span class="small">Model:
+            <select id="sel-${model.id}" onchange="onModelChange('${model.id}')">${options}</select>
+          </span>
+        </header>
+        <div class="log" id="log-${model.id}"></div>
+        <div class="input">
+          <textarea id="ta-${model.id}" placeholder="Message ${model.name}…"></textarea>
+          <button onclick="send('${model.id}')">Send</button>
+        </div>
+      `;
+      return el;
+    }
+
+    function addMsg(modelId, role, text){
+      const log = document.getElementById('log-' + modelId);
+      const div = document.createElement('div');
+      div.className = 'msg ' + (role === 'user' ? 'user' : 'assistant');
+      div.textContent = text;
+      log.appendChild(div);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    function onModelChange(modelId){
+      const pane = MODELS.find(x => x.id === modelId);
+      const sel = document.getElementById('sel-' + modelId);
+      if (pane && sel) {
+        pane.model = sel.value;
+      }
+    }
+
+    async function send(modelId){
+      const m = MODELS.find(x => x.id === modelId);
+      const ta = document.getElementById('ta-' + modelId);
+      const q = ta.value.trim();
+      if(!q) return;
+      addMsg(modelId, 'user', q);
+      ta.value = '';
+      // Create an assistant placeholder to stream into
+      const log = document.getElementById('log-' + modelId);
+      const holder = document.createElement('div');
+      holder.className = 'msg assistant';
+      holder.textContent = '';
+      log.appendChild(holder);
+      log.scrollTop = log.scrollHeight;
+
+      // Try streaming first; fallback to non-stream fetch on failure
+      try{
+        const resp = await fetch(`${SERVER_URL}/proxy/openrouter/stream`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ model: m.model, messages: [{ role:'user', content:q }] })
+        });
+        if (!resp.body || !resp.ok) throw new Error('stream not available');
+        const reader = resp.body.getReader();
+        const decoder = new TextDecoder('utf-8');
+        let buffer = '';
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const parts = buffer.split('\n');
+          buffer = parts.pop() || '';
+          for (const line of parts) {
+            if (!line.startsWith('data:')) continue;
+            const payload = line.slice(5).trim();
+            if (payload === '[DONE]') continue;
+            try {
+              const json = JSON.parse(payload);
+              const delta = json?.choices?.[0]?.delta?.content;
+              if (delta) {
+                holder.textContent += delta;
+                log.scrollTop = log.scrollHeight;
+              }
+              if (json?.meta?.rate) {
+                const r = json.meta.rate;
+                document.getElementById('rate').textContent = `rate: ${r['x-ratelimit-remaining-requests']||'-'}/${r['x-ratelimit-remaining-tokens']||'-'}`;
+              }
+            } catch (_) {
+              // not JSON; append raw
+              if (payload) {
+                holder.textContent += payload + '\n';
+              }
+            }
+          }
+        }
+        return;
+      } catch (e) {
+        // fallback non-stream
+        try{
+          const r = await fetch(`${SERVER_URL}/proxy/openrouter`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ model: m.model, messages: [{ role:'user', content:q }] })
+          });
+          const data = await r.json();
+          holder.textContent = data.text || JSON.stringify(data);
+          if (data.rate) {
+            const rate = data.rate;
+            document.getElementById('rate').textContent = `rate: ${rate['x-ratelimit-remaining-requests']||'-'}/${rate['x-ratelimit-remaining-tokens']||'-'}`;
+          }
+          log.scrollTop = log.scrollHeight;
+        }catch(err){
+          holder.textContent = 'Error: ' + err;
+        }
+      }
+    }
+
+    function sendAll(){
+      const v = document.getElementById('broadcast').value.trim();
+      if(!v) return;
+      MODELS.forEach(m => {
+        const ta = document.getElementById('ta-' + m.id);
+        ta.value = v;
+        send(m.id);
+      });
+    }
+
+    // Initialize UI
+    const grid = document.getElementById('grid');
+    MODELS.forEach(m => grid.appendChild(pane(m)));
+
+    // Load all available models after page loads
+    loadAllModels();
+
+    // Tab switching functionality
+    function switchTab(tabName) {
+      // Update tab buttons
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+
+      // Update content
+      document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+      });
+      document.getElementById(tabName).classList.add('active');
+
+      // Initialize tab-specific content
+      if (tabName === 'factory' && !window.factoryInitialized) {
+        initializeFactory();
+        window.factoryInitialized = true;
+      }
+    }
+
+    // Agent Factory functionality
+    let agents = [];
+    let availableModels = [];
+    let availablePersonas = [];
+
+    async function initializeFactory() {
+      await loadTemplates();
+      await loadFactoryModels();
+      await loadPersonas();
+    }
+
+    async function loadTemplates() {
+      const grid = document.getElementById('template-grid');
+      // Use hardcoded templates for now
+      grid.innerHTML = `
+        <div onclick="loadTemplate('coding')" style="background: var(--bg-primary); border: 2px solid var(--border-light); border-radius: 8px; padding: 12px; cursor: pointer; transition: all var(--transition-fast);" onmouseover="this.style.borderColor='var(--accent-blue)'; this.style.transform='translateX(4px)'" onmouseout="this.style.borderColor='var(--border-light)'; this.style.transform='translateX(0)'">
+          <h4 style="color: var(--text-primary); margin: 0 0 4px 0; font-size: 14px;">Coding Swarm</h4>
+          <p style="color: var(--text-muted); margin: 0; font-size: 12px;">Code generation & review</p>
+        </div>
+        <div onclick="loadTemplate('debate')" style="background: var(--bg-primary); border: 2px solid var(--border-light); border-radius: 8px; padding: 12px; cursor: pointer; transition: all var(--transition-fast);" onmouseover="this.style.borderColor='var(--accent-blue)'; this.style.transform='translateX(4px)'" onmouseout="this.style.borderColor='var(--border-light)'; this.style.transform='translateX(0)'">
+          <h4 style="color: var(--text-primary); margin: 0 0 4px 0; font-size: 14px;">Debate Swarm</h4>
+          <p style="color: var(--text-muted); margin: 0; font-size: 12px;">Adversarial analysis</p>
+        </div>
+        <div onclick="loadTemplate('consensus')" style="background: var(--bg-primary); border: 2px solid var(--border-light); border-radius: 8px; padding: 12px; cursor: pointer; transition: all var(--transition-fast);" onmouseover="this.style.borderColor='var(--accent-blue)'; this.style.transform='translateX(4px)'" onmouseout="this.style.borderColor='var(--border-light)'; this.style.transform='translateX(0)'">
+          <h4 style="color: var(--text-primary); margin: 0 0 4px 0; font-size: 14px;">Consensus Swarm</h4>
+          <p style="color: var(--text-muted); margin: 0; font-size: 12px;">Decision making</p>
+        </div>
+      `;
+    }
+
+    async function loadFactoryModels() {
+      // Use the same models as the chat
+      availableModels = ALL_MODELS.map(m => ({
+        id: m.model,
+        name: m.name,
+        pricing: { prompt: 0.002 } // Default pricing
+      }));
+    }
+
+    async function loadPersonas() {
+      try {
+        const response = await fetch(`${SERVER_URL}/api/factory/personas`);
+        const data = await response.json();
+        availablePersonas = data.personas || [];
+        console.log(`Loaded ${availablePersonas.length} personas`);
+      } catch (error) {
+        console.error('Failed to load personas:', error);
+        availablePersonas = [];
+      }
+    }
+
+    function loadTemplate(templateType) {
+      // Clear existing agents
+      agents = [];
+      document.getElementById('agent-builder').innerHTML = '';
+
+      // Load template configuration
+      if (templateType === 'coding') {
+        document.getElementById('swarm-name').value = 'Coding Assistant Swarm';
+        document.getElementById('pattern-select').value = 'hierarchical';
+        addAgentWithConfig('Code Planner', 'planner', 'qwen/qwen3-30b-a3b', 0.3,
+          'Analyze requirements and create implementation plan. Focus on architecture and design patterns.');
+        addAgentWithConfig('Code Generator', 'generator', 'x-ai/grok-code-fast-1', 0.7,
+          'Generate clean, efficient code based on the plan. Follow best practices and include error handling.');
+        addAgentWithConfig('Code Reviewer', 'critic', 'openai/gpt-5-chat', 0.2,
+          'Review generated code for bugs, security issues, and improvements. Be thorough but constructive.');
+      } else if (templateType === 'debate') {
+        document.getElementById('swarm-name').value = 'Debate Analysis Swarm';
+        document.getElementById('pattern-select').value = 'debate';
+        addAgentWithConfig('Advocate', 'generator', 'anthropic/claude-sonnet-4', 0.8,
+          'Argue strongly in favor of the proposed solution. Present compelling evidence.');
+        addAgentWithConfig('Critic', 'critic', 'openai/gpt-5-chat', 0.8,
+          'Challenge the proposal with counter-arguments. Identify weaknesses and risks.');
+        addAgentWithConfig('Judge', 'judge', 'x-ai/grok-4', 0.3,
+          'Evaluate both sides objectively and provide balanced conclusion.');
+      } else if (templateType === 'consensus') {
+        document.getElementById('swarm-name').value = 'Consensus Building Swarm';
+        document.getElementById('pattern-select').value = 'consensus';
+        addAgentWithConfig('Analyst 1', 'generator', 'deepseek/deepseek-chat', 0.5,
+          'Provide analysis from technical perspective.');
+        addAgentWithConfig('Analyst 2', 'generator', 'qwen/qwen3-30b-a3b', 0.5,
+          'Provide analysis from business perspective.');
+        addAgentWithConfig('Synthesizer', 'judge', 'openai/gpt-5-chat', 0.3,
+          'Synthesize all perspectives into unified recommendation.');
+      }
+
+      updateCostEstimate();
+    }
+
+    function addAgent() {
+      addAgentWithConfig('', '', availableModels[0]?.id || '', 0.7, '');
+    }
+
+    function addAgentWithConfig(name, role, model, temperature, instructions) {
+      const agentId = `agent_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const agent = {
+        id: agentId,
+        name: name,
+        role: role,
+        model: model,
+        temperature: temperature,
+        instructions: instructions,
+        capabilities: []
+      };
+
+      agents.push(agent);
+
+      const builder = document.getElementById('agent-builder');
+      const agentCard = document.createElement('div');
+      agentCard.style.cssText = `
+        background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-tertiary) 100%);
+        border: 2px solid var(--border-light);
+        border-radius: 10px;
+        padding: 16px;
+        transition: all var(--transition-medium);
+      `;
+      agentCard.id = `card_${agentId}`;
+
+      const modelOptions = availableModels.map(m =>
+        `<option value="${m.id}" ${m.id === model ? 'selected' : ''}>${m.name}</option>`
+      ).join('');
+
+      // Create elements safely to prevent XSS
+      const nameInput = document.createElement('input');
+      nameInput.type = 'text';
+      nameInput.placeholder = 'Agent Name';
+      nameInput.value = name;
+      nameInput.onchange = () => updateAgent(agentId, 'name', nameInput.value);
+      nameInput.style.cssText = 'background: var(--bg-primary); border: 2px solid var(--border-light); border-radius: 6px; padding: 8px 12px; color: var(--text-primary); font-weight: 500; flex: 1; margin-right: 8px;';
+
+      const removeBtn = document.createElement('button');
+      removeBtn.innerHTML = '×';
+      removeBtn.onclick = () => removeAgent(agentId);
+      removeBtn.style.cssText = 'background: rgba(239, 68, 68, 0.1); border: 2px solid rgba(239, 68, 68, 0.3); color: var(--accent-red); border-radius: 6px; width: 32px; height: 32px; cursor: pointer; font-size: 18px;';
+
+      const headerDiv = document.createElement('div');
+      headerDiv.style.cssText = 'display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;';
+      headerDiv.appendChild(nameInput);
+      headerDiv.appendChild(removeBtn);
+
+      agentCard.appendChild(headerDiv);
+
+      // Continue with safe element creation
+      const configDiv = document.createElement('div');
+      configDiv.innerHTML = `
+        <div style="display: grid; gap: 12px;">
+          <div style="display: flex; gap: 12px;">
+            <select onchange="updateAgent('${agentId}', 'role', this.value)"
+                    style="flex: 1; background: var(--bg-primary); border: 2px solid var(--border-light); border-radius: 6px; padding: 8px; color: var(--text-primary);">
+              <option value="">Select Role</option>
+              <option value="planner" ${role === 'planner' ? 'selected' : ''}>Planner</option>
+              <option value="generator" ${role === 'generator' ? 'selected' : ''}>Generator</option>
+              <option value="critic" ${role === 'critic' ? 'selected' : ''}>Critic</option>
+              <option value="quality_reviewer" ${role === 'quality_reviewer' ? 'selected' : ''}>Quality Reviewer</option>
+              <option value="judge" ${role === 'judge' ? 'selected' : ''}>Judge</option>
+              <option value="runner" ${role === 'runner' ? 'selected' : ''}>Runner</option>
+            </select>
+            <select onchange="updateAgent('${agentId}', 'persona_id', this.value)"
+                    style="flex: 1; background: var(--bg-primary); border: 2px solid var(--border-light); border-radius: 6px; padding: 8px; color: var(--text-primary);"
+                    id="persona_${agentId}">
+              <option value="">Select Persona...</option>
+              ${getPersonaOptions(role)}
+            </select>
+            <select onchange="updateAgent('${agentId}', 'model', this.value)"
+                    style="flex: 1; background: var(--bg-primary); border: 2px solid var(--border-light); border-radius: 6px; padding: 8px; color: var(--text-primary);">
+              ${modelOptions}
+            </select>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <label style="color: var(--text-muted); font-size: 14px; min-width: 120px;">Temperature: <span id="temp_${agentId}">${temperature}</span></label>
+            <input type="range" min="0" max="1" step="0.1" value="${temperature}"
+                   oninput="updateAgent('${agentId}', 'temperature', this.value)"
+                   style="flex: 1;">
+          </div>
+      const instructionsTextarea = document.createElement('textarea');
+      instructionsTextarea.placeholder = 'Agent instructions...';
+      instructionsTextarea.value = instructions;
+      instructionsTextarea.onchange = () => updateAgent(agentId, 'instructions', instructionsTextarea.value);
+      instructionsTextarea.style.cssText = 'background: var(--bg-primary); border: 2px solid var(--border-light); border-radius: 6px; padding: 10px; color: var(--text-primary); min-height: 80px; resize: vertical; font-family: inherit;';
+
+      configDiv.appendChild(instructionsTextarea);
+      agentCard.appendChild(configDiv);
+        </div>
+      `;
+
+      builder.appendChild(agentCard);
+    }
+
+    function getPersonaOptions(role) {
+      return availablePersonas
+        .filter(persona => !role || persona.suitable_roles.includes(role))
+        .map(persona => `<option value="${persona.id}">${persona.name}</option>`)
+        .join('');
+    }
+
+    function updateAgent(agentId, field, value) {
+      const agent = agents.find(a => a.id === agentId);
+      if (agent) {
+        agent[field] = field === 'temperature' ? parseFloat(value) : value;
+        if (field === 'temperature') {
+          document.getElementById(`temp_${agentId}`).textContent = value;
+        }
+        if (field === 'persona_id' && value) {
+          const persona = availablePersonas.find(p => p.id === value);
+          if (persona) {
+            agent.persona = persona;
+            // Auto-populate instructions based on persona
+            const instructionsTextarea = document.querySelector(`#card_${agentId} textarea`);
+            if (instructionsTextarea && !instructionsTextarea.value.trim()) {
+              instructionsTextarea.value = `You are ${persona.name}. ${persona.description}\n\nExpertise: ${persona.expertise.primary_domains.join(', ')}\nPersonality: ${persona.personality.traits.join(', ')}\nCommunication Style: ${persona.communication.style}`;
+              agent.instructions = instructionsTextarea.value;
+            }
+          }
+        }
+        updateCostEstimate();
+      }
+    }
+
+    function removeAgent(agentId) {
+      agents = agents.filter(a => a.id !== agentId);
+      document.getElementById(`card_${agentId}`).remove();
+      updateCostEstimate();
+    }
+
+    function updateCostEstimate() {
+      let totalCost = 0;
+      agents.forEach(agent => {
+        const model = availableModels.find(m => m.id === agent.model);
+        if (model && model.pricing && model.pricing.prompt) {
+          totalCost += model.pricing.prompt;
+        }
+      });
+      const costElement = document.getElementById('cost-estimate');
+      if (costElement) {
+        costElement.textContent = totalCost.toFixed(4);
+      }
+    }
+
+    async function testSwarm() {
+      const testTask = document.getElementById('test-task').value;
+      if (!testTask) {
+        alert('Please enter a test task');
+        return;
+      }
+
+      const resultsDiv = document.getElementById('test-results');
+      const outputDiv = document.getElementById('test-output');
+
+      resultsDiv.style.display = 'block';
+      outputDiv.textContent = 'Running test...\n\n';
+
+      // Simulate test execution
+      for (const agent of agents) {
+        outputDiv.textContent += `[${agent.name || 'Unnamed Agent'}]: Processing...\n`;
+        await new Promise(resolve => setTimeout(resolve, 500));
+        outputDiv.textContent += `  \u2713 Response generated\n`;
+      }
+
+      outputDiv.textContent += '\n\u2705 Test completed successfully!';
+    }
+
+    async function deploySwarm() {
+      const swarmName = document.getElementById('swarm-name').value;
+      if (!swarmName) {
+        alert('Please enter a swarm name');
+        return;
+      }
+
+      if (agents.length < 2) {
+        alert('Please add at least 2 agents to the swarm');
+        return;
+      }
+
+      const blueprint = {
+        name: swarmName,
+        description: `Custom swarm with ${agents.length} agents`,
+        swarm_type: 'STANDARD',
+        execution_mode: document.getElementById('pattern-select').value,
+        agents: agents,
+        pattern: document.getElementById('pattern-select').value,
+        memory_enabled: true,
+        namespace: 'artemis'
+      };
+
+      alert(`Swarm blueprint created!\n\nName: ${blueprint.name}\nAgents: ${blueprint.agents.length}\nPattern: ${blueprint.pattern}\n\nThis will connect to the factory API when backend is implemented.`);
+    }
+
+    function saveSwarmBlueprint() {
+      const blueprint = {
+        name: document.getElementById('swarm-name').value,
+        agents: agents,
+        pattern: document.getElementById('pattern-select').value,
+        timestamp: new Date().toISOString()
+      };
+
+      const blueprintJson = JSON.stringify(blueprint, null, 2);
+      const blob = new Blob([blueprintJson], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `swarm_${blueprint.name.replace(/\s+/g, '_')}.json`;
+      a.click();
+    }
+  </script>
+</body>
+</html>

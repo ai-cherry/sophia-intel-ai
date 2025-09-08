@@ -1,0 +1,101 @@
+# Staging environment overrides
+replicaCount: 2
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 256Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+
+persistence:
+  enabled: true
+  storageClass: fast-ssd
+  size: 5Gi
+
+clustering:
+  enabled: true
+  peers:
+    - alertmanager-0.alertmanager-headless.monitoring.svc.cluster.local:9094
+    - alertmanager-1.alertmanager-headless.monitoring.svc.cluster.local:9094
+
+oauth2Proxy:
+  enabled: true
+  emailDomain: sophia-artemis.ai
+
+externalService:
+  enabled: true
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: alertmanager-staging.sophia-artemis.ai
+
+config:
+  global:
+    resolve_timeout: 3m
+  route:
+    group_wait: 20s
+    group_interval: 3m
+    repeat_interval: 2h
+
+# Standard network policy for staging
+networkPolicy:
+  enabled: true
+
+# Limited PDB in staging
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+# Enable ML integration with lower thresholds
+mlIntegration:
+  enabled: true
+  falsePositiveClassifier:
+    confidenceThreshold: 0.75
+    autoSuppress: false
+
+# Staging notification channels
+domains:
+  artemis:
+    groupWait: 20s
+    groupInterval: 3m
+    repeatInterval: 2h
+    criticalChannels:
+      - slack-staging
+      - email
+    warningChannels:
+      - slack-staging
+  sophia:
+    groupWait: 30s
+    groupInterval: 5m
+    repeatInterval: 3h
+    criticalChannels:
+      - slack-staging
+      - email
+    warningChannels:
+      - slack-staging
+  infrastructure:
+    groupWait: 10s
+    groupInterval: 2m
+    repeatInterval: 1h
+    criticalChannels:
+      - slack-staging
+      - teams
+    warningChannels:
+      - slack-staging
+
+# Enable limited testing
+testing:
+  enabled: true
+  loadTest:
+    enabled: false
+  chaosTest:
+    enabled: true
+    experiments:
+      - pod-failure
+
+# Staging-specific annotations
+podAnnotations:
+  environment: staging
+  team: platform
+  cost-center: engineering
+  testing: enabled

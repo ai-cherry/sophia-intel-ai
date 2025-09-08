@@ -1,0 +1,263 @@
+name: Architecture Monitoring
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+
+jobs:
+  duplicate-detection:
+    name: Detect Duplicates
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyyaml
+
+      - name: Run duplicate detection
+        run: |
+          python scripts/check_duplicates.py
+        continue-on-error: true
+
+      - name: Upload duplicate report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: duplicate-report
+          path: duplicate-report.json
+          retention-days: 30
+
+  architecture-compliance:
+    name: Check Architecture Compliance
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyyaml
+
+      - name: Run architecture check
+        run: |
+          python scripts/check_architecture.py
+        continue-on-error: true
+
+      - name: Upload compliance report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: architecture-report
+          path: architecture-report.json
+          retention-days: 30
+
+  code-complexity:
+    name: Analyze Code Complexity
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install analysis tools
+        run: |
+          pip install radon lizard flake8 pylint
+
+      - name: Run complexity analysis
+        run: |
+          echo "## Cyclomatic Complexity" > complexity-report.md
+          radon cc app/ -s -j >> complexity-data.json || true
+
+          echo "## Maintainability Index" >> complexity-report.md
+          radon mi app/ -s >> complexity-report.md || true
+
+          echo "## Code Complexity (Lizard)" >> complexity-report.md
+          lizard app/ --csv > lizard-report.csv || true
+
+      - name: Upload complexity reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: complexity-reports
+          path: |
+            complexity-report.md
+            complexity-data.json
+            lizard-report.csv
+          retention-days: 30
+
+  dependency-check:
+    name: Check Dependencies
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Check for outdated dependencies
+        run: |
+          pip install pip-outdated safety
+
+          echo "## Outdated Dependencies" > dependency-report.md
+          pip list --outdated >> dependency-report.md || true
+
+          echo "## Security Vulnerabilities" >> dependency-report.md
+          safety check --json > safety-report.json || true
+
+      - name: Upload dependency reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-reports
+          path: |
+            dependency-report.md
+            safety-report.json
+          retention-days: 30
+
+  generate-dashboard:
+    name: Generate Health Dashboard
+    runs-on: ubuntu-latest
+    needs:
+      [
+        duplicate-detection,
+        architecture-compliance,
+        code-complexity,
+        dependency-check,
+      ]
+    if: always()
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: reports/
+
+      - name: Generate dashboard
+        run: |
+          cat > architecture-health.md << 'EOF'
+          # Architecture Health Dashboard
+
+          Generated: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+
+          ## Summary
+
+          | Check | Status | Details |
+          |-------|--------|---------|
+          | Duplicate Detection | ${{ needs.duplicate-detection.result }} | [View Report](reports/duplicate-report/) |
+          | Architecture Compliance | ${{ needs.architecture-compliance.result }} | [View Report](reports/architecture-report/) |
+          | Code Complexity | ${{ needs.code-complexity.result }} | [View Report](reports/complexity-reports/) |
+          | Dependency Check | ${{ needs.dependency-check.result }} | [View Report](reports/dependency-reports/) |
+
+          ## Metrics Trend
+
+          ![Architecture Health](https://img.shields.io/badge/Health-Monitoring-blue)
+
+          ## Action Items
+
+          - [ ] Review duplicate code findings
+          - [ ] Address architecture violations
+          - [ ] Refactor high-complexity modules
+          - [ ] Update outdated dependencies
+
+          EOF
+
+      - name: Upload dashboard
+        uses: actions/upload-artifact@v4
+        with:
+          name: architecture-dashboard
+          path: architecture-health.md
+          retention-days: 90
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const dashboard = fs.readFileSync('architecture-health.md', 'utf8');
+
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: dashboard
+            });
+
+  alert-on-violations:
+    name: Alert on Critical Violations
+    runs-on: ubuntu-latest
+    needs: [duplicate-detection, architecture-compliance]
+    if: failure()
+
+    steps:
+      - name: Create issue for violations
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = '🚨 Architecture Violations Detected';
+            const body = `
+            ## Architecture monitoring detected violations
+
+            **Run:** [${context.runId}](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})
+            **Branch:** ${context.ref}
+            **Commit:** ${context.sha}
+
+            ### Checks Failed:
+            - Duplicate Detection: ${{ needs.duplicate-detection.result }}
+            - Architecture Compliance: ${{ needs.architecture-compliance.result }}
+
+            ### Action Required:
+            1. Review the detailed reports in the workflow artifacts
+            2. Fix the violations in your local environment
+            3. Run pre-commit hooks before pushing: \`pre-commit run --all-files\`
+
+            ### Prevention:
+            - Install pre-commit hooks: \`pre-commit install\`
+            - Run checks locally: \`python scripts/check_duplicates.py\`
+            `;
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: title,
+              body: body,
+              labels: ['architecture', 'automation', 'technical-debt']
+            });

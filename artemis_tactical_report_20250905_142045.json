@@ -1,0 +1,88 @@
+{
+  "timestamp": "2025-09-05T14:20:30.738379",
+  "artemis_deployment": "active",
+  "tests": [
+    {
+      "name": "n8n_webhook_basic_test",
+      "success": true,
+      "details": "Status: 200, Response: {\"message\":\"Workflow was started\"}",
+      "agent": "Artemis Webhook Testing Specialist",
+      "timestamp": "2025-09-05T14:20:31.484775"
+    },
+    {
+      "name": "n8n_webhook_gong_call_ended",
+      "success": true,
+      "details": "Status: 200, Response: {\"message\":\"Workflow was started\"}",
+      "agent": "Artemis Webhook Testing Specialist",
+      "timestamp": "2025-09-05T14:20:33.039108"
+    },
+    {
+      "name": "n8n_webhook_deal_at_risk",
+      "success": true,
+      "details": "Status: 200, Response: {\"message\":\"Workflow was started\"}",
+      "agent": "Artemis Webhook Testing Specialist",
+      "timestamp": "2025-09-05T14:20:34.261429"
+    },
+    {
+      "name": "sophia_health_check",
+      "success": true,
+      "details": "Services: {'api': 'running', 'database': 'connected', 'cache': 'connected'}",
+      "agent": "Artemis Integration Flow Analyst",
+      "timestamp": "2025-09-05T14:20:35.280268"
+    },
+    {
+      "name": "memory_integration",
+      "success": false,
+      "details": "Status: 404",
+      "agent": "Artemis Integration Flow Analyst",
+      "timestamp": "2025-09-05T14:20:35.290421"
+    },
+    {
+      "name": "webhook_endpoint_security",
+      "success": true,
+      "details": "Security validation passed",
+      "agent": "Artemis Security Audit Specialist",
+      "timestamp": "2025-09-05T14:20:35.290582"
+    },
+    {
+      "name": "api_authentication",
+      "success": true,
+      "details": "Security validation passed",
+      "agent": "Artemis Security Audit Specialist",
+      "timestamp": "2025-09-05T14:20:35.298452"
+    },
+    {
+      "name": "data_transmission_security",
+      "success": true,
+      "details": "Security validation passed",
+      "agent": "Artemis Security Audit Specialist",
+      "timestamp": "2025-09-05T14:20:35.298485"
+    },
+    {
+      "name": "webhook_performance",
+      "success": true,
+      "details": "Avg: 0.608s, Max: 0.665s",
+      "agent": "Artemis Performance Assessment Agent",
+      "timestamp": "2025-09-05T14:20:38.633448"
+    },
+    {
+      "name": "e2e_flow_sales_call_completion",
+      "success": true,
+      "details": "Complete flow validation successful",
+      "agent": "Artemis Tactical Team",
+      "timestamp": "2025-09-05T14:20:42.016955"
+    },
+    {
+      "name": "e2e_flow_deal_risk_detection",
+      "success": true,
+      "details": "Complete flow validation successful",
+      "agent": "Artemis Tactical Team",
+      "timestamp": "2025-09-05T14:20:45.676948"
+    }
+  ],
+  "summary": {
+    "total": 11,
+    "passed": 10,
+    "failed": 1
+  }
+}

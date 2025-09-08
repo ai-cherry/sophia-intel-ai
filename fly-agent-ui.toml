@@ -1,0 +1,132 @@
+# Fly.io Configuration for Sophia Agent UI (Next.js Frontend)
+app = "sophia-ui"
+primary_region = "sjc"  # San Jose - closest to California
+kill_signal = "SIGINT"
+kill_timeout = "5s"
+
+[build]
+  dockerfile = "./agent-ui/Dockerfile"
+
+[env]
+  NODE_ENV = "production"
+  PORT = "3000"
+
+  # Backend service URLs (internal networking)
+  NEXT_PUBLIC_API_URL = "https://sophia-api.fly.dev"
+  NEXT_PUBLIC_BRIDGE_URL = "https://sophia-bridge.fly.dev"
+  NEXT_PUBLIC_DEFAULT_ENDPOINT = "https://sophia-api.fly.dev"
+  NEXT_PUBLIC_PLAYGROUND_URL = "https://sophia-api.fly.dev"
+
+  # UI-specific configuration
+  NEXT_PUBLIC_USE_BRIDGE = "true"
+  NEXT_PUBLIC_ENABLE_ANALYTICS = "true"
+  NEXT_PUBLIC_ENVIRONMENT = "production"
+
+  # Feature flags
+  NEXT_PUBLIC_ENABLE_CONSENSUS_UI = "true"
+  NEXT_PUBLIC_ENABLE_MEMORY_DEDUP_UI = "true"
+  NEXT_PUBLIC_ENABLE_SWARM_MONITORING = "true"
+
+[experimental]
+  auto_rollback = true
+
+[services]
+  protocol = "tcp"
+  internal_port = 3000
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+    force_https = true
+
+  [[services.ports]]
+    port = 443
+    handlers = ["tls", "http"]
+
+  [services.concurrency]
+    type = "connections"
+    hard_limit = 150
+    soft_limit = 100
+
+  [[services.tcp_checks]]
+    interval = "15s"
+    timeout = "2s"
+    grace_period = "1s"
+    restart_limit = 6
+
+  [[services.http_checks]]
+    interval = "30s"
+    grace_period = "5s"
+    method = "GET"
+    path = "/"
+    protocol = "http"
+    timeout = "3s"
+    tls_skip_verify = false
+
+    [services.http_checks.headers]
+      X-Health-Check = "fly.io"
+
+# Static file optimization
+[[statics]]
+  guest_path = "/app/.next/static"
+  url_prefix = "/_next/static/"
+
+# Minimal storage for frontend
+[mounts]
+  source = "ui_logs"
+  destination = "/logs"
+  initial_size = "1gb"
+
+# Metrics endpoint for monitoring
+[metrics]
+  port = 9091
+  path = "/metrics"
+
+# Optimized machine configuration for Next.js
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory_mb = 1024
+
+# Auto-scaling configuration for frontend
+[scaling]
+  min_machines_running = 1
+  max_machines_running = 6
+
+  [[scaling.metrics]]
+    type = "cpu"
+    target = 75
+
+  [[scaling.metrics]]
+    type = "memory"
+    target = 80
+
+  [[scaling.metrics]]
+    type = "requests"
+    target = 200
+
+  [[scaling.metrics]]
+    type = "response_time"
+    target = "500ms"
+
+# Process configuration for Next.js production server
+[[processes]]
+  app = "web"
+
+[processes.web]
+  cmd = ["npm", "start"]
+
+# CDN and caching optimizations
+[http_service]
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ["web"]
+
+  [[http_service.checks]]
+    interval = "30s"
+    timeout = "3s"
+    path = "/"

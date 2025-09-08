@@ -1,0 +1,160 @@
+import { create } from 'zustand'
+import { persist, createJSONStorage } from 'zustand/middleware'
+
+import {
+  type PlaygroundChatMessage,
+  type SessionEntry
+} from '@/types/playground'
+
+interface Agent {
+  value: string
+  label: string
+  model: {
+    provider: string
+  }
+  storage?: boolean
+}
+
+export interface Team {
+  value: string
+  label: string
+  model: {
+    provider: string
+  }
+  storage?: boolean
+}
+
+interface PlaygroundStore {
+  hydrated: boolean
+  setHydrated: () => void
+  streamingErrorMessage: string
+  setStreamingErrorMessage: (streamingErrorMessage: string) => void
+  endpoints: {
+    endpoint: string
+    id_playground_endpoint: string
+  }[]
+  setEndpoints: (
+    endpoints: {
+      endpoint: string
+      id_playground_endpoint: string
+    }[]
+  ) => void
+  isStreaming: boolean
+  setIsStreaming: (isStreaming: boolean) => void
+  isEndpointActive: boolean
+  setIsEndpointActive: (isActive: boolean) => void
+  isEndpointLoading: boolean
+  setIsEndpointLoading: (isLoading: boolean) => void
+  messages: PlaygroundChatMessage[]
+  setMessages: (
+    messages:
+      | PlaygroundChatMessage[]
+      | ((prevMessages: PlaygroundChatMessage[]) => PlaygroundChatMessage[])
+  ) => void
+  hasStorage: boolean
+  setHasStorage: (hasStorage: boolean) => void
+  chatInputRef: React.RefObject<HTMLTextAreaElement | null>
+  selectedEndpoint: string
+  setSelectedEndpoint: (selectedEndpoint: string) => void
+  agents: Agent[]
+  setAgents: (agents: Agent[]) => void
+  teams: Team[]
+  setTeams: (teams: Team[]) => void
+  selectedModel: string
+  setSelectedModel: (model: string) => void
+  selectedTeamId: string | null
+  setSelectedTeamId: (teamId: string | null) => void
+  mode: 'agent' | 'team'
+  setMode: (mode: 'agent' | 'team') => void
+  sessionsData: SessionEntry[] | null
+  setSessionsData: (
+    sessionsData:
+      | SessionEntry[]
+      | ((prevSessions: SessionEntry[] | null) => SessionEntry[] | null)
+  ) => void
+  isSessionsLoading: boolean
+  setIsSessionsLoading: (isSessionsLoading: boolean) => void
+}
+
+export const usePlaygroundStore = create<PlaygroundStore>()(
+  persist(
+    (set) => ({
+      hydrated: false,
+      setHydrated: () => set({ hydrated: true }),
+      streamingErrorMessage: '',
+      setStreamingErrorMessage: (streamingErrorMessage) =>
+        set(() => ({ streamingErrorMessage })),
+      endpoints: [],
+      setEndpoints: (endpoints) => set(() => ({ endpoints })),
+      isStreaming: false,
+      setIsStreaming: (isStreaming) => set(() => ({ isStreaming })),
+      isEndpointActive: false,
+      setIsEndpointActive: (isActive) =>
+        set(() => ({ isEndpointActive: isActive })),
+      isEndpointLoading: true,
+      setIsEndpointLoading: (isLoading) =>
+        set(() => ({ isEndpointLoading: isLoading })),
+      messages: [],
+      setMessages: (messages) =>
+        set((state) => ({
+          messages:
+            typeof messages === 'function' ? messages(state.messages) : messages
+        })),
+      hasStorage: false,
+      setHasStorage: (hasStorage) => set(() => ({ hasStorage })),
+      chatInputRef: { current: null },
+      selectedEndpoint: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8003',
+      setSelectedEndpoint: (selectedEndpoint) =>
+        set(() => ({ selectedEndpoint })),
+      agents: [],
+      setAgents: (agents) => set({ agents }),
+      teams: [],
+      setTeams: (teams) => set({ teams }),
+      selectedModel: '',
+      setSelectedModel: (selectedModel) => set(() => ({ selectedModel })),
+      selectedTeamId: null,
+      setSelectedTeamId: (teamId) => set(() => ({ selectedTeamId: teamId })),
+      mode: 'team',
+      setMode: (mode) => set(() => ({ mode })),
+      sessionsData: null,
+      setSessionsData: (sessionsData) =>
+        set((state) => ({
+          sessionsData:
+            typeof sessionsData === 'function'
+              ? sessionsData(state.sessionsData)
+              : sessionsData
+        })),
+      isSessionsLoading: false,
+      setIsSessionsLoading: (isSessionsLoading) =>
+        set(() => ({ isSessionsLoading }))
+    }),
+    {
+      name: 'endpoint-storage',
+      version: 2, // Bump version to trigger migration
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({
+        selectedEndpoint: state.selectedEndpoint
+      }),
+      migrate: (persistedState: any, version: number) => {
+        // Migrate from old ports to unified API on 8003
+        if (version < 2 && persistedState.selectedEndpoint) {
+          if (persistedState.selectedEndpoint.includes(':8000') ||
+              persistedState.selectedEndpoint.includes(':7777') ||
+              persistedState.selectedEndpoint.includes(':8005')) {
+            persistedState.selectedEndpoint = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8003';
+          }
+        }
+        return persistedState;
+      },
+      onRehydrateStorage: () => (state) => {
+        // Clean up legacy storage key
+        try {
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('swarm-endpoint');
+          }
+        } catch {}
+        state?.setHydrated?.()
+      }
+    }
+  )
+)

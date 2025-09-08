@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: help env.check env.doctor env.doctor.merge env.clean-deprecated env.source keys-check health health-infra mcp-test full-start api-build api-up api-restart dev-mcp-up dev-artemis-up nuke-fragmentation rag.start rag.test lint dev-up dev-down dev-shell logs status grok-test swarm-start memory-search mcp-status env-docs artemis-setup refactor.discovery refactor.scan-http refactor.probe refactor.check webui-health router-smoke
+.PHONY: help env.check env.doctor env.doctor.merge env.clean-deprecated env.source keys-check health health-infra mcp-test full-start api-build api-up api-restart dev-mcp-up dev-artemis-up mcp-rebuild nuke-fragmentation rag.start rag.test lint dev-up dev-down dev-shell logs status grok-test swarm-start memory-search mcp-status env-docs artemis-setup refactor.discovery refactor.scan-http refactor.probe refactor.check webui-health router-smoke sophia sophia-start sophia-stop sophia-health sophia-logs sophia-clean sophia-test-integrations
 
 help:
 	@echo "\033[0;36mMulti-Agent Development Environment\033[0m"
@@ -81,6 +81,14 @@ api-up: ## Start API service (prod compose)
 api-restart: ## Rebuild and start API (prod compose)
 	@$(MAKE) api-build
 	@$(MAKE) api-up
+
+mcp-rebuild: ## Rebuild and start MCP services (memory, fs-sophia, git)
+	@docker compose -f docker-compose.dev.yml build mcp-memory mcp-filesystem-sophia mcp-git
+	@docker compose -f docker-compose.dev.yml up -d mcp-memory mcp-filesystem-sophia mcp-git
+	@echo "Checking MCP health..."
+	@curl -sf http://localhost:${MCP_MEMORY_PORT:-8081}/health >/dev/null && echo "✓ Memory MCP" || echo "✗ Memory MCP"
+	@curl -sf http://localhost:${MCP_FS_SOPHIA_PORT:-8082}/health >/dev/null && echo "✓ FS MCP (Sophia)" || echo "✗ FS MCP (Sophia)"
+	@curl -sf http://localhost:${MCP_GIT_PORT:-8084}/health >/dev/null && echo "✓ Git MCP" || echo "✗ Git MCP"
 
 nuke-fragmentation: ## Nuclear option - force consolidation (DESTRUCTIVE)
 	@echo "\xE2\x9A\xA0\xEF\xB8\x8F  This will delete non-canonical files. Ctrl-C to abort..." && sleep 5
@@ -197,5 +205,56 @@ refactor.probe: ## Probe import (use: make refactor.probe MODULE=app.pkg.mod)
 
 refactor.check: ## Quick refactor sanity (env.check + sample probes)
 	@$(MAKE) env.check
+
+# === SOPHIA BUSINESS INTELLIGENCE TARGETS ===
+
+sophia: sophia-start ## Alias for sophia-start
+
+sophia-start: ## Start Sophia Business Intelligence (one command)
+	@chmod +x scripts/sophia-start.sh
+	@bash scripts/sophia-start.sh
+
+sophia-stop: ## Stop all Sophia services
+	@echo "🛑 Stopping Sophia services..."
+	@pkill -f "uvicorn.*8003" 2>/dev/null || true
+	@pkill -f "next.*dev" 2>/dev/null || true
+	@docker-compose -f docker-compose.dev.yml stop redis postgres weaviate 2>/dev/null || true
+	@echo "✅ Sophia stopped"
+
+sophia-health: ## Check Sophia health and integration status
+	@echo "🏥 Sophia Health Check:"
+	@echo ""
+	@echo "API Health:"
+	@curl -sf http://localhost:8003/health | jq '.' 2>/dev/null || echo "  API not responding"
+	@echo ""
+	@echo "Integration Health:"
+	@curl -sf http://localhost:8003/health/integrations | jq '.integrations | to_entries | .[] | "\(.key): \(.value.status)"' 2>/dev/null || echo "  Integration health not available"
+	@echo ""
+	@echo "Overall Status:"
+	@curl -sf http://localhost:8003/health/integrations | jq '{"overall": .overall, "healthy": .healthy_count, "total": .total_integrations}' 2>/dev/null || echo "  Status not available"
+
+sophia-logs: ## View Sophia logs (API and UI)
+	@echo "📋 Sophia Logs:"
+	@echo ""
+	@echo "=== API Logs (last 20 lines) ==="
+	@tail -n 20 logs/sophia-api.log 2>/dev/null || echo "No API logs found"
+	@echo ""
+	@echo "=== UI Logs (last 20 lines) ==="
+	@tail -n 20 logs/sophia-ui.log 2>/dev/null || echo "No UI logs found"
+	@echo ""
+	@echo "For continuous logs: tail -f logs/sophia-*.log"
+
+sophia-clean: sophia-stop ## Clean Sophia data and logs
+	@echo "🧹 Cleaning Sophia..."
+	@docker-compose -f docker-compose.dev.yml down -v 2>/dev/null || true
+	@rm -rf logs/sophia-*.log
+	@rm -rf data/
+	@rm -rf agent-ui/.next 2>/dev/null || true
+	@rm -rf agent-ui/node_modules 2>/dev/null || true
+	@echo "✅ Sophia cleaned"
+
+sophia-test-integrations: ## Test Sophia integration connections
+	@echo "🧪 Testing Sophia integrations..."
+	@python3 -c "from app.api.routers.health_integrations import *; import asyncio; asyncio.run(get_integration_health())" | jq '.' 2>/dev/null || echo "Test failed - make sure API is running"
 	@python3 scripts/development/refactor_tools.py probe-import --module app.artemis.agent_factory || true
 	@python3 scripts/development/refactor_tools.py scan-http --path app | head -n 40

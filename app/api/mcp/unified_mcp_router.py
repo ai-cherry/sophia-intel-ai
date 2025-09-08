@@ -4,7 +4,7 @@ Unified MCP Router
 
 FastAPI router that provides MCP capabilities through the existing unified server.
 This integrates the optimized MCP orchestrator with the unified server architecture,
-providing a single endpoint for all AI assistants to access MCP capabilities.
+providing a single endpoint for MCP-capable clients (e.g., Claude Desktop) to access capabilities.
 
 Features:
 - RESTful API endpoints for all MCP capabilities
@@ -12,7 +12,7 @@ Features:
 - Health monitoring and status reporting
 - Connection management and load balancing
 - Support for streaming responses
-- Compatible with Claude, Cursor, Cline, and other AI assistants
+- Compatible with Claude Desktop and other MCP-capable clients
 """
 
 import contextlib

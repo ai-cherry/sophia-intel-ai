@@ -2,7 +2,7 @@
 **Date**: September 7, 2025  
 **Scope**: CLI Setup Analysis for Grok, Claude Coder, Codex + MCP Integration Issues
 
-## 🚨 CRITICAL FINDINGS
+## 🚨 CRITICAL FINDINGS (Original)
 
 ### 1. Virtual Environment Proliferation (HIGH PRIORITY)
 **Issue**: Multiple scripts create/manage separate virtual environments, violating single-environment principle.
@@ -133,7 +133,7 @@ priority_models = ['gpt-4', 'claude-3-opus', 'grok-beta']
 
 **Risk**: Configuration drift, deployment confusion, maintenance overhead.
 
-## 🔧 REMEDIATION PLAN
+## 🔧 REMEDIATION PLAN (Original)
 
 ### Phase 1: Environment Consolidation (IMMEDIATE)
 1. **Remove Virtual Environment Scripts**:
@@ -181,7 +181,7 @@ priority_models = ['gpt-4', 'claude-3-opus', 'grok-beta']
    # Archive: All other docker-compose-*.yml files
    ```
 
-## 📋 SPECIFIC ACTIONS REQUIRED
+## 📋 SPECIFIC ACTIONS REQUIRED (Original)
 
 ### 1. Remove Virtual Environment References
 **Files to Modify**:
@@ -209,14 +209,22 @@ priority_models = ['gpt-4', 'claude-3-opus', 'grok-beta']
 - Remove duplicate/conflicting model definitions
 - Create single routing system
 
-## 🎯 SUCCESS METRICS
+## ✅ Post-Remediation Status (September 2025)
 
-### Before Remediation:
-- ❌ 4+ virtual environment management scripts
-- ❌ Dedicated Roo/Cline MCP bridges (60+ lines)
-- ❌ No standardized AI agent CLI interfaces  
-- ❌ 15+ requirements files
-- ❌ 6+ docker-compose configurations
+- Single shared environment for all agents (system Python; no in-repo venvs)
+- Unified AI Agent CLI: `scripts/unified_ai_agents.py` (+ `grok_agent.py`, `claude_coder_agent.py`, `codex_agent.py`)
+- Roo/Cline/Cursor integrations removed from active code paths; MCP standardized
+- Canonical requirements: `requirements.txt` (infra-scoped `pulumi/*/requirements.txt` retained)
+- Docker Compose reduced to two canonical files: `docker-compose.yml`, `docker-compose.enhanced.yml`
+- Single startup entrypoint: `./start.sh`
+
+### Usage
+
+```bash
+./start.sh
+python3 scripts/unified_ai_agents.py --whoami
+python3 scripts/grok_agent.py --mode code --task "hello"
+```
 
 ### After Remediation:
 - ✅ Single shared environment for all agents

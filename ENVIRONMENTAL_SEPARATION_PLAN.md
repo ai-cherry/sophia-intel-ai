@@ -123,9 +123,9 @@ services:
 - scripts/deploy.sh (venv creation)
 ```
 
-### Roo/Cline Contamination
+### Legacy IDE-Specific Integrations
 ```bash
-# Remove from mcp-bridge/config/connections.json
+# Remove any legacy IDE-specific sections from configs (Cursor/Cline/Roo)
 - roo_cursor section (lines 104-193)
 - cline section (lines 195-277)
 - ide_specific_overrides mentioning roo/cline (lines 349-361)
@@ -286,7 +286,7 @@ services:
 
 ### Phase 1: Environment Cleanup (TODAY)
 - [ ] Remove all venv references from scripts
-- [ ] Delete Roo/Cline sections from connections.json
+- [ ] Delete legacy IDE-specific sections from configs
 - [ ] Archive old startup scripts
 - [ ] Create .env.sophia, .env.artemis, .env.mcp files
 

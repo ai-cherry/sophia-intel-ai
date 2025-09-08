@@ -26,10 +26,9 @@ Scope of changes
 
 Operational guidance
 
-- Installing environments (examples):
-  - uv venv .venv && uv pip sync -r requirements.lock
-  - uv venv app/.venv && uv pip sync -r app/requirements.lock
-  - uv venv .venv-2025 && uv pip sync -r requirements-2025.lock
+- Installing dependencies (examples, system Python; no in-repo venvs):
+  - uv pip sync -r requirements.lock
+  - or: pip3 install -r requirements.txt
 
 Compatibility notes
 

@@ -335,23 +335,10 @@ sequenceDiagram
 }
 ```
 
-#### Roo/Cursor Configuration
-```json
-{
-  "mcp.servers": [
-    {
-      "name": "artemis-codebase",
-      "endpoint": "ws://localhost:8001/mcp",
-      "capabilities": ["code", "refactor", "analyze"]
-    },
-    {
-      "name": "shared-indexing",
-      "endpoint": "ws://localhost:8002/mcp",
-      "capabilities": ["search", "retrieve"]
-    }
-  ]
-}
-```
+"""
+Note: Roo/Cursor specific configurations have been removed. Use the unified MCP
+registry and Claude Desktop setup exclusively for IDE integration.
+"""
 
 ### 4.3 Optimal Connection Patterns
 
@@ -359,8 +346,6 @@ sequenceDiagram
 graph TB
     subgraph IDE Clients
         CD[Claude Desktop]
-        RC[Roo/Cursor]
-        CL[Cline]
     end
     
     subgraph MCP Routers

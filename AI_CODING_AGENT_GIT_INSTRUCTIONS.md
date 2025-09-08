@@ -62,8 +62,8 @@ cd /Users/lynnmusil/sophia-intel-ai
 ls -la mcp_memory_server/server.py
 ls -la mcp_servers/
 
-# 2. Test MCP server startup (should NOT create virtual environments)
-python mcp_memory_server/server.py --test-mode
+# 2. Start MCP server via bootstrap (no virtualenvs)
+bash scripts/mcp_bootstrap.sh
 
 # 3. Verify embedding and memory systems
 ls -la app/memory/
@@ -76,8 +76,8 @@ ls -la sophia*/
 
 ### AI Agent Environment Verification:
 ```bash
-# Test environment for: Codex, Claude Coder, Cline, Cursor, Grok
-# ALL should work in the SAME environment without creating virtual envs
+# Test environment for: Grok, Claude Coder, Codex
+# ALL work in the SAME environment without creating virtual envs
 
 # 1. Check system Python (recommended approach)
 which python3

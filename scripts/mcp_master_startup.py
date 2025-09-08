@@ -62,7 +62,7 @@ class MCPMasterController:
                 "port": 8003,
                 "command": ["python3", "-m", "app.memory.supermemory_mcp"],
                 "health_endpoint": "/health",
-                "required_for": ["sophia", "artemis", "claude-coder"],
+                "required_for": ["sophia", "artemis", "unified-agent-cli"],
                 "capabilities": ["store_memory", "retrieve_memory", "semantic_search"],
             },
             "embeddings": {
@@ -78,7 +78,7 @@ class MCPMasterController:
                 "port": 8003,
                 "command": ["python3", "app/api/unified_server.py"],
                 "health_endpoint": "/healthz",
-                "required_for": ["sophia", "artemis", "claude-coder"],
+                "required_for": ["sophia", "artemis", "unified-agent-cli"],
                 "capabilities": ["orchestration", "routing", "team_execution"],
             },
             "websocket": {

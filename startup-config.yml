@@ -39,10 +39,34 @@ services:
     critical: true
     startup_delay: 3
     
+  rag_sophia:
+    command: ["python", "-m", "app.memory.sophia_memory"]
+    health_check: "http://localhost:8767/health"
+    dependencies: ["redis"]
+    timeout: 30
+    retries: 3
+    environment:
+      REDIS_URL: "${REDIS_URL}"
+      PYTHONPATH: "${SOPHIA_HOME}"
+    critical: false
+    startup_delay: 3
+    
+  rag_artemis:
+    command: ["python", "-m", "app.memory.artemis_memory"]
+    health_check: "http://localhost:8768/health"
+    dependencies: ["redis"]
+    timeout: 30
+    retries: 3
+    environment:
+      REDIS_URL: "${REDIS_URL}"
+      PYTHONPATH: "${SOPHIA_HOME}"
+    critical: false
+    startup_delay: 3
+    
   artemis:
     command: ["python", "-m", "artemis.orchestrator.main"]
     health_check: "${SOPHIA_API_ENDPOINT}/health"
-    dependencies: ["api", "redis"]
+    dependencies: ["api", "redis", "rag_artemis"]
     timeout: 60
     retries: 3
     environment:

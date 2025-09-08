@@ -79,7 +79,7 @@ WEAVIATE_URL=http://localhost:8080
 REDIS_URL=redis://localhost:6379/1
 ```
 
-3. Install Python dependencies:
+3. Install Python dependencies (system Python; no virtualenvs in repo):
 
 ```bash
 pip3 install -r requirements.txt
@@ -94,25 +94,29 @@ cd ../agent-ui && npm install
 
 ### Quick Start
 
-1. Start the main API server:
+1. Start core services (API + MCP memory):
 
 ```bash
-python3 -m app.api.unified_server
+./start.sh
 ```
 
-2. Start the UI development servers:
+2. Use the Unified AI Agents CLI:
 
 ```bash
-# Main UI (port 3000)
-cd ui && npm run dev
+python3 scripts/unified_ai_agents.py --whoami           # Inspect environment
+python3 scripts/grok_agent.py --mode code --task "create a REST API"
+python3 scripts/claude_coder_agent.py --mode code --task "refactor this function"
+python3 scripts/codex_agent.py --mode code --task "write unit tests"
+```
 
-# Agent UI (port 3002)
+3. Optional: Start UI development servers:
+
+```bash
 cd agent-ui && npm run dev
 ```
 
-3. Access the applications:
+4. Access:
 
-- Main UI: <http://localhost:3000>
 - Agent UI: <http://localhost:3002>
 - API Documentation: <http://localhost:8000/docs>
 
@@ -525,12 +529,8 @@ graph TB
 git clone https://github.com/yourusername/sophia-intel-ai.git
 cd sophia-intel-ai
 
-# Create virtual environment
-python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
+# Install dependencies (system Python; no virtualenvs in repo)
+pip3 install -r requirements.txt
 ```
 
 ### 2. Configure API Keys
@@ -820,3 +820,10 @@ MIT License - See [LICENSE](LICENSE) file
 ---
 
 Built with ❤️ using Agno, Portkey, OpenRouter, and Weaviate
+## 🔒 Unified Environment
+
+- Single shared Python runtime (system Python 3.10+). No virtual environments inside the repo.
+- One canonical dependency manifest: `requirements.txt` (infra-specific `pulumi/*/requirements.txt` remain).
+- Unified startup: `./start.sh` launches API and MCP memory server.
+- Unified AI Agents CLI: `scripts/unified_ai_agents.py` with thin wrappers for Grok/Claude/Codex.
+- MCP integrations standardized (no Roo/Cline/Cursor special bridges).

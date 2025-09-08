@@ -21,15 +21,12 @@ Comprehensive guide for developers contributing to Sophia Intel AI, covering set
 git clone https://github.com/ai-cherry/sophia-intel-ai.git
 cd sophia-intel-ai
 
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+# Install Python dependencies (system Python; no virtualenvs in repo)
+pip3 install -r requirements.txt
 
-# Install in development mode
-pip install -e ".[dev]"
-
-# Install pre-commit hooks
-pre-commit install
+# Optional: install dev tooling and pre-commit hooks
+if [ -f requirements-dev.txt ]; then pip3 install -r requirements-dev.txt; fi
+command -v pre-commit >/dev/null 2>&1 && pre-commit install || true
 
 # Setup environment
 cp .env.example .env
@@ -91,12 +88,10 @@ git checkout -b feature/your-feature-name
 ### 2. Make Changes
 
 ```bash
-# Run development servers
-./scripts/dev.sh
+# Start core services
+./start.sh
 
-# Or manually:
-python -m app.api.unified_server &
-python -m app.agno_bridge &
+# UI (if needed)
 cd agent-ui && npm run dev &
 ```
 
@@ -124,7 +119,7 @@ def test_add_memory(memory_store):
 
 ```bash
 # Run all tests
-pytest
+pytest -q
 
 # Run with coverage
 pytest --cov=app --cov-report=html

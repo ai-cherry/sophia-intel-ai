@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-"""Grok Agent - Wrapper for unified AI agent CLI"""
 import sys
-import os
-sys.path.insert(0, os.path.dirname(__file__))
-from unified_ai_agents import main
+import subprocess
+from pathlib import Path
 
-# Inject grok as the agent
-sys.argv.insert(1, "--agent")
-sys.argv.insert(2, "grok")
+def main():
+    cli = Path(__file__).parent / "unified_ai_agents.py"
+    cmd = [sys.executable, str(cli), "--agent", "grok"] + sys.argv[1:]
+    raise SystemExit(subprocess.call(cmd))
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()
+

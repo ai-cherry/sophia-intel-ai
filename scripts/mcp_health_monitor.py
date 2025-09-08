@@ -43,7 +43,7 @@ class MCPHealthMonitor:
                 "status": "❓",
                 "config": "~/Library/Application Support/Claude/claude_desktop_config.json",
             },
-            "Cursor/Cline": {"status": "❓", "config": ".vscode/settings.json"},
+            "IDE Client": {"status": "❓", "config": ".vscode/settings.json"},
             "Sophia Swarm": {"status": "❓", "endpoint": "http://localhost:8003/teams"},
             "Artemis Swarm": {"status": "❓", "endpoint": "http://localhost:8003/artemis"},
         }
@@ -108,16 +108,16 @@ class MCPHealthMonitor:
         else:
             self.connections["Claude Desktop"]["status"] = "❌"
 
-        # Check VS Code settings
+        # Check optional IDE settings
         if os.path.exists(".vscode/settings.json"):
             with open(".vscode/settings.json") as f:
                 settings = json.load(f)
                 if "mcp.servers" in settings:
-                    self.connections["Cursor/Cline"]["status"] = "✅"
+                    self.connections["IDE Client"]["status"] = "✅"
                 else:
-                    self.connections["Cursor/Cline"]["status"] = "⚠️"
+                    self.connections["IDE Client"]["status"] = "⚠️"
         else:
-            self.connections["Cursor/Cline"]["status"] = "❌"
+            self.connections["IDE Client"]["status"] = "❌"
 
         # Check Sophia/Artemis endpoints
         for name in ["Sophia Swarm", "Artemis Swarm"]:

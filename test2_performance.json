@@ -1,9 +1,0 @@
-{
-  "task": "Identify I/O, N+1, caching, concurrency hotspots\n\nProject Instructions:\n# Scout Project Instructions\n\nFocus on:\n- AI integration points\n- Service architecture  \n- Swarm patterns\n- External dependencies\n\nIgnore:\n- Test files\n- Documentation\n- Cache directories\n",
-  "findings": [],
-  "integrations": [],
-  "risks": [],
-  "recommendations": [],
-  "metrics": { "files_analyzed": 0, "execution_time": 0.0, "confidence": 1.0 },
-  "success": false
-}

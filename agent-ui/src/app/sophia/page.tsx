@@ -280,6 +280,15 @@ const SophiaIntelligencePage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-blue-950">
+      {/* Deprecated notice */}
+      <div className="bg-amber-50 dark:bg-amber-900/30 border-b border-amber-200 dark:border-amber-800">
+        <div className="container mx-auto px-6 py-3 text-amber-900 dark:text-amber-200 text-sm flex items-center justify-between">
+          <span>
+            Heads up: This Sophia Hub view is deprecated. Use the unified dashboard instead.
+          </span>
+          <a href="/dashboard" className="underline font-medium">Go to /dashboard →</a>
+        </div>
+      </div>
       {/* Header */}
       <div className="border-b bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg">
         <div className="container mx-auto px-6 py-6">

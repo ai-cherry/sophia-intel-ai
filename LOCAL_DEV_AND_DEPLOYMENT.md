@@ -35,8 +35,8 @@ Single Local Startup (Canonical)
 2) Start the Sophia API (another terminal)
    - `make api-dev` (http://localhost:8003)
 3) Open the UI
-   - Dashboard: http://localhost:3000/(sophia)/dashboard
-   - Chat:      http://localhost:3000/(sophia)/chat
+   - Dashboard: http://localhost:3000/dashboard
+   - Chat:      http://localhost:3000/chat
 4) If CORS errors occur
    - Set `CORS_ORIGINS=http://localhost:3000` in your env and restart the API.
 

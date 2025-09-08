@@ -1,9 +1,0 @@
-{
-  "task": "Analyze authentication and authorization implementation for security vulnerabilities\n\nProject Instructions:\n# Scout Project Instructions\n\nFocus on:\n- AI integration points\n- Service architecture  \n- Swarm patterns\n- External dependencies\n\nIgnore:\n- Test files\n- Documentation\n- Cache directories\n",
-  "findings": [],
-  "integrations": [],
-  "risks": [],
-  "recommendations": [],
-  "metrics": { "files_analyzed": 0, "execution_time": 2297.85, "confidence": 0.0 },
-  "success": false
-}

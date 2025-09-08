@@ -1,9 +1,0 @@
-{
-  "task": "Find and analyze security risks in authentication code\n\nProject Instructions:\n# Scout Project Instructions\n\nFocus on:\n- AI integration points\n- Service architecture  \n- Swarm patterns\n- External dependencies\n\nIgnore:\n- Test files\n- Documentation\n- Cache directories\n",
-  "findings": [],
-  "integrations": [],
-  "risks": [],
-  "recommendations": [],
-  "metrics": { "files_analyzed": 0, "execution_time": 19556.881, "confidence": 0.85 },
-  "success": false
-}

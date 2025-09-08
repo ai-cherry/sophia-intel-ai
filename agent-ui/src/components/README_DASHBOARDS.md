@@ -16,13 +16,11 @@
   - Infrastructure monitoring
   - WebSocket port: 8000 (correct)
 
-### ⚠️ DEPRECATED: SuperOrchestratorDashboard.tsx
+### ❌ Removed: SuperOrchestratorDashboard.tsx
 
-- **Location**: `agent-ui/src/components/SuperOrchestratorDashboard.tsx`
-- **Lines**: 483
-- **Status**: DEPRECATED - Keep for reference only
-- **Note**: Simpler implementation, uses incorrect WebSocket port (8006)
-- **Action**: Consider removing after confirming UnifiedSuperDashboard works
+- Previously at: `agent-ui/src/components/SuperOrchestratorDashboard.tsx`
+- Status: Removed in favor of `UnifiedSuperDashboard.tsx`
+- Rationale: Duplicate and outdated; incorrect WebSocket settings; unified dashboard supersedes it.
 
 ## How to Use
 

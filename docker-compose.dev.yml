@@ -12,12 +12,9 @@ services:
       - ~/.ssh:/root/.ssh:ro
       - ${SSH_AUTH_SOCK}:${SSH_AUTH_SOCK}
       # Secure env vault (read-only)
-      - ~/.config/artemis:/root/.config/artemis:ro
     environment:
       - SSH_AUTH_SOCK=${SSH_AUTH_SOCK}
-      - PYTHONPATH=/workspace/sophia:/workspace/artemis
       - PYTHON_UNBUFFERED=1
-    # env_file intentionally omitted; use ~/.config/artemis/env mount or .env loader inside app
     working_dir: /workspace/sophia
     networks:
       - sophia-network
@@ -140,22 +137,16 @@ services:
       retries: 3
 
   # MCP Filesystem Server for Artemis repo
-  mcp-filesystem-artemis:
     profiles:
-      - artemis
     build:
       context: .
       dockerfile: automation/docker/Dockerfile.mcp-filesystem
       args:
         - PYTHON_VERSION=3.11
-    container_name: sophia-mcp-fs-artemis
     environment:
-      - WORKSPACE_PATH=/workspace/artemis
-      - WORKSPACE_NAME=artemis
       - READ_ONLY=false
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
     volumes:
-      - ${ARTEMIS_PATH:-/tmp}:/workspace/artemis
     networks:
       - sophia-network
     ports:
@@ -234,7 +225,6 @@ services:
       - REDIS_URL=redis://redis:6379
       - MCP_MEMORY_URL=http://mcp-memory:8000
       - MCP_FS_SOPHIA_URL=http://mcp-filesystem-sophia:8000
-      - MCP_FS_ARTEMIS_URL=http://mcp-filesystem-artemis:8000
       - MCP_GIT_URL=http://mcp-git:8000
       - TASK_ROUTER_URL=http://task-router:8000
       - LOG_LEVEL=${LOG_LEVEL:-INFO}

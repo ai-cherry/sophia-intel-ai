@@ -96,7 +96,18 @@ ui-up: ## Start UI backend locally (http://localhost:8000)
 
 next-ui-up: ## Start Next.js UI (agent-ui) on http://localhost:3000
 	@echo "🔗 Ensure NEXT_PUBLIC_API_URL=http://localhost:8003 in agent-ui/.env.local"
-	@cd agent-ui && (pnpm install || npm install) && pnpm dev
+	@cd agent-ui && \
+		( \
+		  if command -v pnpm >/dev/null 2>&1; then \
+		    echo "Using pnpm"; pnpm install && pnpm dev; \
+		  elif command -v npm >/dev/null 2>&1; then \
+		    echo "pnpm not found; falling back to npm"; npm install && npm run dev; \
+		  elif command -v yarn >/dev/null 2>&1; then \
+		    echo "pnpm/npm not found; using yarn"; yarn install && yarn dev; \
+		  else \
+		    echo "No package manager found (pnpm/npm/yarn)"; exit 1; \
+		  fi \
+		)
 
 ui-health: ## Check UI backend health
 	@echo "UI backend health:" && (curl -sf http://localhost:8000/health | sed -e 's/^/  /' || (echo "  not responding" && exit 1))
@@ -118,14 +129,15 @@ dev-all: ## Start infra+MCP and Next.js UI; auto-enable FS Artemis if present
 	else \\
 		echo "No ~/artemis-cli detected. Skipping FS Artemis."; \\
 	fi
-	@$(MAKE) next-ui-up
 	@echo "\n=== Endpoints ==="; \\
-	 echo "Memory MCP:     http://localhost:$${MCP_MEMORY_PORT:-8081}/health"; \\
+	 echo "Memory MCP:      http://localhost:$${MCP_MEMORY_PORT:-8081}/health"; \\
 	 echo "FS (Sophia) MCP: http://localhost:$${MCP_FS_SOPHIA_PORT:-8082}/health"; \\
-	 echo "Git MCP:        http://localhost:$${MCP_GIT_PORT:-8084}/health"; \\
-	 echo "Sophia UI:      http://localhost:3000/(sophia)/dashboard"; \\
-	 echo "Sophia Chat:    http://localhost:3000/(sophia)/chat"; \\
-	 if [ -d "$$HOME/artemis-cli" ]; then echo "FS (Artemis) MCP: http://localhost:$${MCP_FS_ARTEMIS_PORT:-8083}/health"; fi
+	 echo "Git MCP:         http://localhost:$${MCP_GIT_PORT:-8084}/health"; \\
+	 echo "Sophia UI:       http://localhost:3000/dashboard"; \\
+	 echo "Sophia Chat:     http://localhost:3000/chat"; \\
+	 if [ -d "$$HOME/artemis-cli" ]; then echo "FS (Artemis) MCP: http://localhost:$${MCP_FS_ARTEMIS_PORT:-8083}/health"; fi; \\
+	 echo "\n(Next.js will print \"ready on http://localhost:3000\" when up.)"
+	@$(MAKE) next-ui-up
 
 doctor-all: ## Verify keys, infra, MCP, Next.js UI, and optional Artemis chat
 	@echo "\n[doctor] Verifying keys..."; \\

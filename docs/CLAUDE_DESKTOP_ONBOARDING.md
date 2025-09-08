@@ -24,8 +24,8 @@ Steps
    - In terminal B: make api-dev   # starts FastAPI on http://localhost:8003
 
 4) Open the UI and test chat
-   - Dashboard: http://localhost:3000/(sophia)/dashboard
-   - Chat:      http://localhost:3000/(sophia)/chat
+   - Dashboard: http://localhost:3000/dashboard
+   - Chat:      http://localhost:3000/chat
 
 5) Test voice
    - TTS: POST http://localhost:8003/api/voice/synthesize (JSON: {"text":"Hello","system":"sophia","persona":"smart"})
@@ -43,7 +43,6 @@ Steps
    - Missing Artemis: make artemis.sidecar-setup
 
 Where to go after startup
-- Sophia Dashboard: http://localhost:3000/(sophia)/dashboard
-- Sophia Chat: http://localhost:3000/(sophia)/chat
+- Sophia Dashboard: http://localhost:3000/dashboard
+- Sophia Chat: http://localhost:3000/chat
 - API Health: http://localhost:8003/health and /health/integrations
-

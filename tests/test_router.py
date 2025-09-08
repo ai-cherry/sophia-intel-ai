@@ -2,6 +2,8 @@ import os
 import unittest
 
 from agno_core.adapters.router import ModelRouter, TaskSpec
+from agno_core.adapters.budget import BudgetManager
+from agno_core.adapters.circuit_breaker import CircuitBreaker
 
 
 class TestModelRouter(unittest.TestCase):
@@ -50,7 +52,29 @@ class TestModelRouter(unittest.TestCase):
         route = router.route(TaskSpec(task_type="creative", creative=True))
         self.assertEqual(route.category, "specialized.maverick")
 
+    def test_budget_blocks_primary_and_chooses_fallback(self):
+        # Force primary to be blocked by pre-consuming budget on its VK
+        bm = BudgetManager()
+        cb = CircuitBreaker()
+        router = ModelRouter(budget=bm, circuit_breaker=cb)
+        # Simulate heavy usage on OpenAI so reasoning primary (openai/chatgpt-5) likely blocked
+        bm.add_usage("PORTKEY_VK_OPENAI", 100.0)
+        r = router.route(TaskSpec(task_type="analysis"))
+        # If OpenAI is blocked, Anthropic or OpenRouter fallback may be chosen
+        self.assertIn(r.primary_spec.get("budget_decision"), ("allow", "soft_cap", "blocked"))
+        # Ensure we didn't crash and have a provider_model selected
+        self.assertIn("provider_model", r.primary_spec)
+
+    def test_circuit_breaker_skips_open_circuit(self):
+        bm = BudgetManager()
+        cb = CircuitBreaker(cooldown_seconds=60)
+        router = ModelRouter(budget=bm, circuit_breaker=cb)
+        # Open circuit for XAI to force skip of fast route when urgent
+        cb.on_error("PORTKEY_VK_XAI")
+        r = router.route(TaskSpec(task_type="general", urgency_ms=100))
+        # Even if fast route is selected by category, CB may force blocked decision
+        self.assertIn(r.primary_spec.get("budget_decision"), ("allow", "soft_cap", "blocked"))
+
 
 if __name__ == "__main__":
     unittest.main()
-

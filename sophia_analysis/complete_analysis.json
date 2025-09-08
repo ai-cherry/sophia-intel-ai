@@ -1,0 +1,3146 @@
+{
+  "summary": {
+    "scanned_files": 139,
+    "dashboards_count": 11,
+    "chat_components_count": 19,
+    "api_calls_totals": {
+      "fetch": 64,
+      "axios": 0
+    },
+    "state_hooks_totals": {
+      "useState": 327,
+      "useReducer": 0,
+      "useContext": 2,
+      "zustand": 2,
+      "redux": 0
+    },
+    "realtime_totals": {
+      "WebSocket": 142,
+      "EventSource": 2,
+      "SSE": 19,
+      "socket.io": 0,
+      "io(": 6
+    },
+    "charts_totals": {
+      "recharts": 3
+    }
+  },
+  "lists": {
+    "dashboards": [
+      "agent-ui/src/app/(sophia)/dashboard/page.tsx",
+      "agent-ui/src/components/analytics/CostDashboard.tsx",
+      "agent-ui/src/components/dashboards/ClientHealthDashboard.tsx",
+      "agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx",
+      "agent-ui/src/components/dashboards/SalesPerformanceDashboard.tsx",
+      "agent-ui/src/components/infrastructure/InfraDashboard.tsx",
+      "agent-ui/src/components/llm-control/ModelControlDashboard.tsx",
+      "agent-ui/src/components/model-registry/ModelRegistryDashboard.tsx",
+      "agent-ui/src/components/project-management/MobileProjectDashboard.tsx",
+      "agent-ui/src/components/prompt-library/PromptLibraryDashboard.tsx",
+      "agent-ui/src/components/sophia/PayReadyDashboard.tsx"
+    ],
+    "chat_components": [
+      "agent-ui/src/components/playground/ChatArea/ChatArea.tsx",
+      "agent-ui/src/components/playground/ChatArea/ChatInput/ChatInput.tsx",
+      "agent-ui/src/components/playground/ChatArea/ChatInput/index.ts",
+      "agent-ui/src/components/playground/ChatArea/MessageArea.tsx",
+      "agent-ui/src/components/playground/ChatArea/Messages/AgentThinkingLoader.tsx",
+      "agent-ui/src/components/playground/ChatArea/Messages/ChatBlankState.tsx",
+      "agent-ui/src/components/playground/ChatArea/Messages/MessageItem.tsx",
+      "agent-ui/src/components/playground/ChatArea/Messages/Messages.tsx",
+      "agent-ui/src/components/playground/ChatArea/Messages/Multimedia/Audios/Audios.tsx",
+      "agent-ui/src/components/playground/ChatArea/Messages/Multimedia/Audios/index.ts",
+      "agent-ui/src/components/playground/ChatArea/Messages/Multimedia/Images/Images.tsx",
+      "agent-ui/src/components/playground/ChatArea/Messages/Multimedia/Images/index.ts",
+      "agent-ui/src/components/playground/ChatArea/Messages/Multimedia/Videos/Videos.tsx",
+      "agent-ui/src/components/playground/ChatArea/Messages/Multimedia/Videos/index.ts",
+      "agent-ui/src/components/playground/ChatArea/Messages/index.ts",
+      "agent-ui/src/components/playground/ChatArea/ScrollToBottom.tsx",
+      "agent-ui/src/components/playground/ChatArea/index.ts",
+      "agent-ui/src/components/playground/Sidebar/NewChatButton.tsx",
+      "agent-ui/src/hooks/useChatActions.ts"
+    ],
+    "hooks": [
+      "agent-ui/src/hooks/useAGUIEvents.ts",
+      "agent-ui/src/hooks/useAIResponseStream.tsx",
+      "agent-ui/src/hooks/useAIStreamHandler.tsx",
+      "agent-ui/src/hooks/useChatActions.ts",
+      "agent-ui/src/hooks/useMCPStatus.ts",
+      "agent-ui/src/hooks/useModelRegistry.ts",
+      "agent-ui/src/hooks/useOrchestratorCoordination.ts",
+      "agent-ui/src/hooks/usePromptLibrary.ts",
+      "agent-ui/src/hooks/useServiceConfig.ts",
+      "agent-ui/src/hooks/useSessionLoader.tsx",
+      "agent-ui/src/hooks/useSwarmTemplates.ts"
+    ]
+  },
+  "top_files": {
+    "api_calls": [
+      {
+        "file": "agent-ui/src/hooks/useModelRegistry.ts",
+        "count": 9
+      },
+      {
+        "file": "agent-ui/src/api/playground.ts",
+        "count": 9
+      },
+      {
+        "file": "agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx",
+        "count": 7
+      },
+      {
+        "file": "agent-ui/src/components/infrastructure/InfraDashboard.tsx",
+        "count": 7
+      },
+      {
+        "file": "agent-ui/src/components/dashboards/ClientHealthDashboard.tsx",
+        "count": 6
+      },
+      {
+        "file": "agent-ui/src/components/dashboards/SalesPerformanceDashboard.tsx",
+        "count": 5
+      },
+      {
+        "file": "agent-ui/src/components/analytics/CostDashboard.tsx",
+        "count": 3
+      },
+      {
+        "file": "agent-ui/src/hooks/useMCPStatus.ts",
+        "count": 3
+      },
+      {
+        "file": "agent-ui/src/app/(sophia)/chat/page.tsx",
+        "count": 2
+      },
+      {
+        "file": "agent-ui/src/components/llm-control/ModelControlDashboard.tsx",
+        "count": 2
+      }
+    ],
+    "state_hooks": [
+      {
+        "file": "agent-ui/src/components/prompt-library/PromptLibraryDashboard.tsx",
+        "count": 17
+      },
+      {
+        "file": "agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx",
+        "count": 16
+      },
+      {
+        "file": "agent-ui/src/components/dashboards/ClientHealthDashboard.tsx",
+        "count": 15
+      },
+      {
+        "file": "agent-ui/src/components/dashboards/SalesPerformanceDashboard.tsx",
+        "count": 15
+      },
+      {
+        "file": "agent-ui/src/hooks/useOrchestratorCoordination.ts",
+        "count": 12
+      },
+      {
+        "file": "agent-ui/src/hooks/useModelRegistry.ts",
+        "count": 12
+      },
+      {
+        "file": "agent-ui/src/components/swarm/TeamWorkflowPanel.tsx",
+        "count": 11
+      },
+      {
+        "file": "agent-ui/src/components/sophia/PayReadyDashboard.tsx",
+        "count": 10
+      },
+      {
+        "file": "agent-ui/src/app/(sophia)/chat/page.tsx",
+        "count": 9
+      },
+      {
+        "file": "agent-ui/src/components/swarm-builder/SwarmTemplateSelector.tsx",
+        "count": 9
+      }
+    ],
+    "realtime": [
+      {
+        "file": "agent-ui/src/hooks/useAGUIEvents.ts",
+        "count": 39
+      },
+      {
+        "file": "agent-ui/src/hooks/useSwarmTemplates.ts",
+        "count": 23
+      },
+      {
+        "file": "agent-ui/src/hooks/useModelRegistry.ts",
+        "count": 18
+      },
+      {
+        "file": "agent-ui/src/hooks/useMCPStatus.ts",
+        "count": 17
+      },
+      {
+        "file": "agent-ui/src/hooks/usePromptLibrary.ts",
+        "count": 17
+      },
+      {
+        "file": "agent-ui/src/hooks/useOrchestratorCoordination.ts",
+        "count": 15
+      },
+      {
+        "file": "agent-ui/src/components/dashboards/ClientHealthDashboard.tsx",
+        "count": 7
+      },
+      {
+        "file": "agent-ui/src/components/dashboards/SalesPerformanceDashboard.tsx",
+        "count": 7
+      },
+      {
+        "file": "agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx",
+        "count": 7
+      },
+      {
+        "file": "agent-ui/src/components/sophia/PayReadyDashboard.tsx",
+        "count": 6
+      }
+    ],
+    "charts": [
+      {
+        "file": "agent-ui/src/components/prompt-library/PromptLibraryDashboard.tsx",
+        "count": 1
+      },
+      {
+        "file": "agent-ui/src/components/infrastructure/InfraDashboard.tsx",
+        "count": 1
+      },
+      {
+        "file": "agent-ui/src/components/analytics/CostDashboard.tsx",
+        "count": 1
+      }
+    ]
+  },
+  "per_file": {
+    "agent-ui/src/store.ts": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 2,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/types/playground.ts": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/types/swarm.ts": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/app/layout.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/app/page.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/app/infra/page.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/app/memory/page.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/app/artemis/page.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 7,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/app/sophia/page.tsx": {
+      "api_calls": {
+        "fetch": 1,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 5,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/app/project-management/page.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/app/(sophia)/layout.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/app/(sophia)/calls/page.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 3,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/app/(sophia)/insights/page.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 3,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/app/(sophia)/pipeline/page.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 6,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/app/(sophia)/chat/page.tsx": {
+      "api_calls": {
+        "fetch": 2,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 9,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 2,
+        "socket.io": 0,
+        "io(": 1
+      },
+      "charts": {}
+    },
+    "agent-ui/src/app/(sophia)/dashboard/page.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 5,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/app/(sophia)/integrations/page.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 4,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/app/(sophia)/work/page.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 3,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/app/(sophia)/teams/page.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 3,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/app/(sophia)/notifications/page.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 3,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/app/(sophia)/analytics/page.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 3,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/config/environment.ts": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 3,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/VoiceButton.tsx": {
+      "api_calls": {
+        "fetch": 1,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 2,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/ui/tabs.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 1,
+        "useReducer": 0,
+        "useContext": 2,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/ui/card.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/ui/progress.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/ui/scroll-area.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/ui/sonner.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/ui/alert.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/ui/dialog.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/ui/badge.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/ui/separator.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/ui/button.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/ui/select.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/ui/textarea.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 1,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/ui/input.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/ui/skeleton.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/ui/tooltip/tooltip.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/ui/tooltip/CustomTooltip.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/ui/tooltip/types.ts": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/ui/tooltip/index.ts": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/ui/typography/Paragraph/Paragraph.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/ui/typography/Paragraph/types.ts": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/ui/typography/Paragraph/constants.ts": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/ui/typography/Paragraph/index.ts": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/ui/typography/Heading/Heading.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/ui/typography/Heading/types.ts": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/ui/typography/Heading/constants.ts": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/ui/typography/Heading/index.ts": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/ui/typography/MarkdownRenderer/styles.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 2,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/ui/typography/MarkdownRenderer/types.ts": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/ui/typography/MarkdownRenderer/MarkdownRenderer.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/ui/typography/MarkdownRenderer/index.ts": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/ui/typography/MarkdownRenderer/inlineStyles.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 2,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/ui/icon/Icon.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/ui/icon/custom-icons.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/ui/icon/types.ts": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/ui/icon/constants.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/ui/icon/index.ts": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/swarm/CriticReport.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 2,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/swarm/TeamWorkflowPanel.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 11,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/swarm/JudgeReport.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 2,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/swarm/EndpointPicker.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 3,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/swarm/ToolCalls.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 2,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/swarm/EnhancedOutput.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 3,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/swarm/ConsciousnessVisualization.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 2,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/swarm/Citations.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 2,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/swarm/StreamView.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 1,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/swarm/MCPStatus.tsx": {
+      "api_calls": {
+        "fetch": 1,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 5,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/swarm/index.ts": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/swarm/UIEnhancements.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 2,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/coordination/OrchestratorCoordinationView.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 3,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/coordination/TaskFlowVisualization.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 5,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/playground/Sidebar/NewChatButton.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/playground/Sidebar/Sidebar.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 8,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/playground/Sidebar/index.ts": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/playground/Sidebar/EntitySelector.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/playground/Sidebar/ModeSelector.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/playground/Sidebar/Sessions/Sessions.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 3,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/playground/Sidebar/Sessions/DeleteSessionModal.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/playground/Sidebar/Sessions/SessionBlankState.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/playground/Sidebar/Sessions/index.ts": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/playground/Sidebar/Sessions/SessionItem.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 3,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/playground/ChatArea/ChatArea.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/playground/ChatArea/index.ts": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/playground/ChatArea/MessageArea.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/playground/ChatArea/ScrollToBottom.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/playground/ChatArea/Messages/MessageItem.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/playground/ChatArea/Messages/AgentThinkingLoader.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/playground/ChatArea/Messages/ChatBlankState.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 2,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/playground/ChatArea/Messages/Messages.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/playground/ChatArea/Messages/index.ts": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/playground/ChatArea/Messages/Multimedia/Audios/index.ts": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/playground/ChatArea/Messages/Multimedia/Audios/Audios.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 2
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/playground/ChatArea/Messages/Multimedia/Images/index.ts": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/playground/ChatArea/Messages/Multimedia/Images/Images.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/playground/ChatArea/Messages/Multimedia/Videos/Videos.tsx": {
+      "api_calls": {
+        "fetch": 1,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/playground/ChatArea/Messages/Multimedia/Videos/index.ts": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/playground/ChatArea/ChatInput/index.ts": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/playground/ChatArea/ChatInput/ChatInput.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 2,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/artemis/MCPServerVisualization.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 4,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/sophia/MCPBusinessIntelligence.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 4,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/sophia/PayReadyDashboard.tsx": {
+      "api_calls": {
+        "fetch": 1,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 10,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 6,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/project-management/MobileProjectDashboard.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 7,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/project-management/TeamPerformanceOptimizer.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 5,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/project-management/AccessibilityEnhancements.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 4,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/mcp/MCPServerCard.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 3,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/mcp/MCPServerGrid.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 7,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/prompt-library/PromptLibraryDashboard.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 17,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {
+        "recharts": 1
+      }
+    },
+    "agent-ui/src/components/prompt-library/index.ts": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/llm-control/ModelControlDashboard.tsx": {
+      "api_calls": {
+        "fetch": 2,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 5,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/streaming/AGUIStreamDisplay.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 4,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/dashboards/ClientHealthDashboard.tsx": {
+      "api_calls": {
+        "fetch": 6,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 15,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 7,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/dashboards/SalesPerformanceDashboard.tsx": {
+      "api_calls": {
+        "fetch": 5,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 15,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 7,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx": {
+      "api_calls": {
+        "fetch": 7,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 16,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 7,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/mythology/MythologyAgentWidget.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 3,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/model-registry/FallbackChainBuilder.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 7,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/model-registry/ProviderCard.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 6,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/model-registry/ModelRegistryDashboard.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 3,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/components/infrastructure/InfraDashboard.tsx": {
+      "api_calls": {
+        "fetch": 7,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 4,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {
+        "recharts": 1
+      }
+    },
+    "agent-ui/src/components/analytics/CostDashboard.tsx": {
+      "api_calls": {
+        "fetch": 3,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 7,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {
+        "recharts": 1
+      }
+    },
+    "agent-ui/src/components/swarm-builder/SwarmTemplateSelector.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 9,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/hooks/useMCPStatus.ts": {
+      "api_calls": {
+        "fetch": 3,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 2,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 17,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/hooks/useSessionLoader.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/hooks/useAIStreamHandler.tsx": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/hooks/useAGUIEvents.ts": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 2,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 22,
+        "EventSource": 2,
+        "SSE": 15,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/hooks/usePromptLibrary.ts": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 8,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 17,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/hooks/useOrchestratorCoordination.ts": {
+      "api_calls": {
+        "fetch": 1,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 12,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 15,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/hooks/useSwarmTemplates.ts": {
+      "api_calls": {
+        "fetch": 1,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 9,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 23,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/hooks/useModelRegistry.ts": {
+      "api_calls": {
+        "fetch": 9,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 12,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 18,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/hooks/useServiceConfig.ts": {
+      "api_calls": {
+        "fetch": 1,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 4,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/hooks/useChatActions.ts": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/hooks/useAIResponseStream.tsx": {
+      "api_calls": {
+        "fetch": 1,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/lib/audio.ts": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 3
+      },
+      "charts": {}
+    },
+    "agent-ui/src/lib/utils.ts": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/lib/api.ts": {
+      "api_calls": {
+        "fetch": 2,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 2,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/lib/config.ts": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/api/routes.ts": {
+      "api_calls": {
+        "fetch": 0,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    },
+    "agent-ui/src/api/playground.ts": {
+      "api_calls": {
+        "fetch": 9,
+        "axios": 0
+      },
+      "state_hooks": {
+        "useState": 0,
+        "useReducer": 0,
+        "useContext": 0,
+        "zustand": 0,
+        "redux": 0
+      },
+      "realtime": {
+        "WebSocket": 0,
+        "EventSource": 0,
+        "SSE": 0,
+        "socket.io": 0,
+        "io(": 0
+      },
+      "charts": {}
+    }
+  }
+}

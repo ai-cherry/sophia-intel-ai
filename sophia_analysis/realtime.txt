@@ -1,0 +1,163 @@
+agent-ui/src/app/(sophia)/chat/page.tsx:import { streamSSE } from "@/lib/api";
+agent-ui/src/app/(sophia)/chat/page.tsx:      await streamSSE("/api/orchestration/chat/stream", body, (chunk) => {
+agent-ui/src/app/(sophia)/chat/page.tsx:                  const audio = new Audio(`data:audio/mpeg;base64,${d.audio_base64}`);
+agent-ui/src/config/environment.ts:// Helper to build WebSocket URL
+agent-ui/src/config/environment.ts:const buildWebSocketUrl = (): string => {
+agent-ui/src/config/environment.ts:  wsBaseUrl: buildWebSocketUrl(),
+agent-ui/src/components/playground/ChatArea/Messages/Multimedia/Audios/Audios.tsx:      return decodeBase64Audio(
+agent-ui/src/components/playground/ChatArea/Messages/Multimedia/Audios/Audios.tsx:      return decodeBase64Audio(
+agent-ui/src/components/sophia/PayReadyDashboard.tsx:// WebSocket hook for real-time updates
+agent-ui/src/components/sophia/PayReadyDashboard.tsx:const useWebSocketConnection = (url: string) => {
+agent-ui/src/components/sophia/PayReadyDashboard.tsx:  const [socket, setSocket] = useState<WebSocket | null>(null);
+agent-ui/src/components/sophia/PayReadyDashboard.tsx:    const ws = new WebSocket(wsUrl);
+agent-ui/src/components/sophia/PayReadyDashboard.tsx:  const { connected, data } = useWebSocketConnection('ws://localhost:8000/ws');
+agent-ui/src/components/sophia/PayReadyDashboard.tsx:  // Handle real-time WebSocket data
+agent-ui/src/components/dashboards/ClientHealthDashboard.tsx:  const ws = useRef<WebSocket | null>(null);
+agent-ui/src/components/dashboards/ClientHealthDashboard.tsx:    connectWebSocket();
+agent-ui/src/components/dashboards/ClientHealthDashboard.tsx:  const connectWebSocket = () => {
+agent-ui/src/components/dashboards/ClientHealthDashboard.tsx:      ws.current = new WebSocket('/ws/client-health-asclepius');
+agent-ui/src/components/dashboards/ClientHealthDashboard.tsx:        setTimeout(connectWebSocket, 3000);
+agent-ui/src/components/dashboards/ClientHealthDashboard.tsx:      console.error('WebSocket connection failed:', error);
+agent-ui/src/components/dashboards/ClientHealthDashboard.tsx:    if (ws.current?.readyState === WebSocket.OPEN) {
+agent-ui/src/components/dashboards/SalesPerformanceDashboard.tsx:  const ws = useRef<WebSocket | null>(null);
+agent-ui/src/components/dashboards/SalesPerformanceDashboard.tsx:    connectWebSocket();
+agent-ui/src/components/dashboards/SalesPerformanceDashboard.tsx:  const connectWebSocket = () => {
+agent-ui/src/components/dashboards/SalesPerformanceDashboard.tsx:      ws.current = new WebSocket('/ws/sales-hermes');
+agent-ui/src/components/dashboards/SalesPerformanceDashboard.tsx:        setTimeout(connectWebSocket, 3000);
+agent-ui/src/components/dashboards/SalesPerformanceDashboard.tsx:      console.error('WebSocket connection failed:', error);
+agent-ui/src/components/dashboards/SalesPerformanceDashboard.tsx:    if (ws.current?.readyState === WebSocket.OPEN) {
+agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx:  const ws = useRef<WebSocket | null>(null);
+agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx:    connectWebSocket();
+agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx:  const connectWebSocket = () => {
+agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx:      ws.current = new WebSocket('/ws/project-mgmt-athena');
+agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx:        setTimeout(connectWebSocket, 3000);
+agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx:      console.error('WebSocket connection failed:', error);
+agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx:    if (ws.current?.readyState === WebSocket.OPEN) {
+agent-ui/src/hooks/useMCPStatus.ts: * Provides WebSocket-based live updates for MCP server health and metrics
+agent-ui/src/hooks/useMCPStatus.ts:  const wsRef = useRef<WebSocket | null>(null);
+agent-ui/src/hooks/useMCPStatus.ts:    if (wsRef.current?.readyState === WebSocket.OPEN) {
+agent-ui/src/hooks/useMCPStatus.ts:      const ws = new WebSocket(wsUrl);
+agent-ui/src/hooks/useMCPStatus.ts:        console.log('MCP Status WebSocket connected');
+agent-ui/src/hooks/useMCPStatus.ts:          handleWebSocketMessage(message);
+agent-ui/src/hooks/useMCPStatus.ts:          console.error('Failed to parse WebSocket message:', error);
+agent-ui/src/hooks/useMCPStatus.ts:        console.log('MCP Status WebSocket disconnected:', event.code, event.reason);
+agent-ui/src/hooks/useMCPStatus.ts:        console.error('MCP Status WebSocket error:', error);
+agent-ui/src/hooks/useMCPStatus.ts:          error: 'WebSocket connection failed',
+agent-ui/src/hooks/useMCPStatus.ts:      console.error('Failed to create WebSocket connection:', error);
+agent-ui/src/hooks/useMCPStatus.ts:      console.log('Attempting to reconnect MCP Status WebSocket...');
+agent-ui/src/hooks/useMCPStatus.ts:  const handleWebSocketMessage = useCallback((message: any) => {
+agent-ui/src/hooks/useMCPStatus.ts:        console.log('MCP Status WebSocket handshake complete');
+agent-ui/src/hooks/useMCPStatus.ts:    if (wsRef.current?.readyState === WebSocket.OPEN) {
+agent-ui/src/hooks/useMCPStatus.ts:    if (wsRef.current?.readyState === WebSocket.OPEN) {
+agent-ui/src/hooks/useMCPStatus.ts:    // Connect WebSocket if auto-connect is enabled
+agent-ui/src/hooks/useAGUIEvents.ts: * React hook for consuming AG-UI formatted events with WebSocket fallback
+agent-ui/src/hooks/useAGUIEvents.ts:  enableSSE?: boolean;
+agent-ui/src/hooks/useAGUIEvents.ts:  enableWebSocket?: boolean;
+agent-ui/src/hooks/useAGUIEvents.ts:    enableSSE = true,
+agent-ui/src/hooks/useAGUIEvents.ts:    enableWebSocket = true,
+agent-ui/src/hooks/useAGUIEvents.ts:  const eventSourceRef = useRef<EventSource | null>(null);
+agent-ui/src/hooks/useAGUIEvents.ts:  const websocketRef = useRef<WebSocket | null>(null);
+agent-ui/src/hooks/useAGUIEvents.ts:  // SSE connection
+agent-ui/src/hooks/useAGUIEvents.ts:  const connectSSE = useCallback(() => {
+agent-ui/src/hooks/useAGUIEvents.ts:    if (!enableSSE || eventSourceRef.current) return;
+agent-ui/src/hooks/useAGUIEvents.ts:    const eventSource = new EventSource(url);
+agent-ui/src/hooks/useAGUIEvents.ts:        console.error('Failed to parse SSE event:', error);
+agent-ui/src/hooks/useAGUIEvents.ts:        error: 'SSE connection error'
+agent-ui/src/hooks/useAGUIEvents.ts:          connectSSE();
+agent-ui/src/hooks/useAGUIEvents.ts:    enableSSE, sseEndpoint, eventTypes, domains, sessionId, userId, tenantId,
+agent-ui/src/hooks/useAGUIEvents.ts:  // WebSocket connection (fallback)
+agent-ui/src/hooks/useAGUIEvents.ts:  const connectWebSocket = useCallback(() => {
+agent-ui/src/hooks/useAGUIEvents.ts:    if (!enableWebSocket || websocketRef.current) return;
+agent-ui/src/hooks/useAGUIEvents.ts:    const ws = new WebSocket(url);
+agent-ui/src/hooks/useAGUIEvents.ts:        // Convert legacy WebSocket event to AG-UI format if needed
+agent-ui/src/hooks/useAGUIEvents.ts:          console.log('Received legacy WebSocket event:', data);
+agent-ui/src/hooks/useAGUIEvents.ts:        console.error('Failed to parse WebSocket event:', error);
+agent-ui/src/hooks/useAGUIEvents.ts:        error: 'WebSocket connection error'
+agent-ui/src/hooks/useAGUIEvents.ts:          connectWebSocket();
+agent-ui/src/hooks/useAGUIEvents.ts:    enableWebSocket, websocketEndpoint, sessionId, authToken, eventTypes, domains,
+agent-ui/src/hooks/useAGUIEvents.ts:    if (enableSSE) {
+agent-ui/src/hooks/useAGUIEvents.ts:      connectSSE();
+agent-ui/src/hooks/useAGUIEvents.ts:    } else if (enableWebSocket) {
+agent-ui/src/hooks/useAGUIEvents.ts:      connectWebSocket();
+agent-ui/src/hooks/useAGUIEvents.ts:  }, [enableSSE, enableWebSocket, connectSSE, connectWebSocket]);
+agent-ui/src/hooks/useAGUIEvents.ts:    if (websocketRef.current?.readyState === WebSocket.OPEN) {
+agent-ui/src/hooks/useAGUIEvents.ts:      console.warn('WebSocket not connected, cannot send message');
+agent-ui/src/hooks/useAGUIEvents.ts:      if (enableSSE) connectSSE();
+agent-ui/src/hooks/useAGUIEvents.ts:      else if (enableWebSocket) connectWebSocket();
+agent-ui/src/hooks/usePromptLibrary.ts:  const [wsConnection, setWsConnection] = useState<WebSocket | null>(null);
+agent-ui/src/hooks/usePromptLibrary.ts:  // WebSocket connection for real-time updates
+agent-ui/src/hooks/usePromptLibrary.ts:    const connectWebSocket = () => {
+agent-ui/src/hooks/usePromptLibrary.ts:      const ws = new WebSocket(wsUrl);
+agent-ui/src/hooks/usePromptLibrary.ts:        console.log('WebSocket connected for prompt library');
+agent-ui/src/hooks/usePromptLibrary.ts:          handleWebSocketMessage(data);
+agent-ui/src/hooks/usePromptLibrary.ts:          console.error('Failed to parse WebSocket message:', error);
+agent-ui/src/hooks/usePromptLibrary.ts:        console.log('WebSocket disconnected, attempting reconnect...');
+agent-ui/src/hooks/usePromptLibrary.ts:        setTimeout(connectWebSocket, 5000);
+agent-ui/src/hooks/usePromptLibrary.ts:        console.error('WebSocket error:', error);
+agent-ui/src/hooks/usePromptLibrary.ts:    connectWebSocket();
+agent-ui/src/hooks/usePromptLibrary.ts:  // Handle WebSocket messages
+agent-ui/src/hooks/usePromptLibrary.ts:  const handleWebSocketMessage = useCallback((data: any) => {
+agent-ui/src/hooks/usePromptLibrary.ts:        console.log('Unknown WebSocket message type:', data.type);
+agent-ui/src/hooks/usePromptLibrary.ts:      // Send WebSocket notification
+agent-ui/src/hooks/usePromptLibrary.ts:      // Send WebSocket notification
+agent-ui/src/hooks/usePromptLibrary.ts:      // Send WebSocket notification
+agent-ui/src/hooks/useOrchestratorCoordination.ts: * Provides WebSocket-based live updates for cross-orchestrator coordination
+agent-ui/src/hooks/useOrchestratorCoordination.ts:  const websocketRef = useRef<WebSocket | null>(null);
+agent-ui/src/hooks/useOrchestratorCoordination.ts:  const connectWebSocket = useCallback(() => {
+agent-ui/src/hooks/useOrchestratorCoordination.ts:    if (websocketRef.current?.readyState === WebSocket.OPEN) return;
+agent-ui/src/hooks/useOrchestratorCoordination.ts:    websocketRef.current = new WebSocket(wsUrl);
+agent-ui/src/hooks/useOrchestratorCoordination.ts:      console.log('WebSocket connected to orchestrator coordination');
+agent-ui/src/hooks/useOrchestratorCoordination.ts:        console.error('Failed to parse WebSocket message:', err);
+agent-ui/src/hooks/useOrchestratorCoordination.ts:      console.log('WebSocket disconnected from orchestrator coordination');
+agent-ui/src/hooks/useOrchestratorCoordination.ts:          connectWebSocket();
+agent-ui/src/hooks/useOrchestratorCoordination.ts:      console.error('WebSocket error:', error);
+agent-ui/src/hooks/useOrchestratorCoordination.ts:      setError('WebSocket connection failed');
+agent-ui/src/hooks/useOrchestratorCoordination.ts:        connectWebSocket();
+agent-ui/src/hooks/useOrchestratorCoordination.ts:  }, [connectWebSocket]);
+agent-ui/src/hooks/useOrchestratorCoordination.ts:        connectWebSocket();
+agent-ui/src/hooks/useOrchestratorCoordination.ts:  }, [autoConnect, realTimeEnabled, updateIntervalMs, connectWebSocket, refreshData, setUpdateInterval]);
+agent-ui/src/hooks/useSwarmTemplates.ts:  // WebSocket state
+agent-ui/src/hooks/useSwarmTemplates.ts:  const wsRef = useRef<WebSocket | null>(null);
+agent-ui/src/hooks/useSwarmTemplates.ts:  const connectWebSocket = useCallback(() => {
+agent-ui/src/hooks/useSwarmTemplates.ts:    if (wsRef.current?.readyState === WebSocket.OPEN) {
+agent-ui/src/hooks/useSwarmTemplates.ts:      wsRef.current = new WebSocket(wsUrl);
+agent-ui/src/hooks/useSwarmTemplates.ts:        console.log('WebSocket connected for deployment updates');
+agent-ui/src/hooks/useSwarmTemplates.ts:          console.error('Failed to parse WebSocket message:', err);
+agent-ui/src/hooks/useSwarmTemplates.ts:        console.error('WebSocket error:', error);
+agent-ui/src/hooks/useSwarmTemplates.ts:        setConnectionError('WebSocket connection error');
+agent-ui/src/hooks/useSwarmTemplates.ts:        console.log('WebSocket disconnected');
+agent-ui/src/hooks/useSwarmTemplates.ts:          if (wsRef.current?.readyState !== WebSocket.OPEN) {
+agent-ui/src/hooks/useSwarmTemplates.ts:            connectWebSocket();
+agent-ui/src/hooks/useSwarmTemplates.ts:      setConnectionError(err instanceof Error ? err.message : 'Failed to connect WebSocket');
+agent-ui/src/hooks/useSwarmTemplates.ts:      console.error('WebSocket connection failed:', err);
+agent-ui/src/hooks/useSwarmTemplates.ts:  const disconnectWebSocket = useCallback(() => {
+agent-ui/src/hooks/useSwarmTemplates.ts:  // Initialize templates and WebSocket connection
+agent-ui/src/hooks/useSwarmTemplates.ts:    connectWebSocket();
+agent-ui/src/hooks/useSwarmTemplates.ts:      disconnectWebSocket();
+agent-ui/src/hooks/useSwarmTemplates.ts:  }, [fetchTemplates, fetchDeployments, connectWebSocket, disconnectWebSocket]);
+agent-ui/src/hooks/useSwarmTemplates.ts:  // Cleanup WebSocket on unmount
+agent-ui/src/hooks/useSwarmTemplates.ts:      disconnectWebSocket();
+agent-ui/src/hooks/useSwarmTemplates.ts:  }, [disconnectWebSocket]);
+agent-ui/src/hooks/useModelRegistry.ts:  // WebSocket connection
+agent-ui/src/hooks/useModelRegistry.ts:  const wsRef = useRef<WebSocket | null>(null);
+agent-ui/src/hooks/useModelRegistry.ts:  // WebSocket connection management
+agent-ui/src/hooks/useModelRegistry.ts:  const connectWebSocket = useCallback(() => {
+agent-ui/src/hooks/useModelRegistry.ts:      wsRef.current = new WebSocket(wsUrl);
+agent-ui/src/hooks/useModelRegistry.ts:        console.log('Model Registry WebSocket connected');
+agent-ui/src/hooks/useModelRegistry.ts:              console.log('Unknown WebSocket message type:', message.type);
+agent-ui/src/hooks/useModelRegistry.ts:          console.error('Error parsing WebSocket message:', err);
+agent-ui/src/hooks/useModelRegistry.ts:        console.log('Model Registry WebSocket disconnected');
+agent-ui/src/hooks/useModelRegistry.ts:          console.log('Attempting to reconnect WebSocket...');
+agent-ui/src/hooks/useModelRegistry.ts:          connectWebSocket();
+agent-ui/src/hooks/useModelRegistry.ts:        console.error('Model Registry WebSocket error:', err);
+agent-ui/src/hooks/useModelRegistry.ts:        setError('WebSocket connection failed');
+agent-ui/src/hooks/useModelRegistry.ts:      console.error('Error creating WebSocket connection:', err);
+agent-ui/src/hooks/useModelRegistry.ts:    connectWebSocket();
+agent-ui/src/hooks/useModelRegistry.ts:      // Cleanup WebSocket
+agent-ui/src/hooks/useModelRegistry.ts:  }, [loadInitialData, connectWebSocket]);
+agent-ui/src/hooks/useModelRegistry.ts:  // Periodic refresh (every 5 minutes when not connected to WebSocket)
+agent-ui/src/lib/audio.ts:export function decodeBase64Audio(base64: string): Blob {
+agent-ui/src/lib/audio.ts:export async function playAudio(audioBlob: Blob): Promise<void> {
+agent-ui/src/lib/audio.ts:  const audio = new Audio(audioUrl);
+agent-ui/src/lib/api.ts:export async function streamSSE(
+agent-ui/src/lib/api.ts:    // SSE format: lines starting with 'data: '

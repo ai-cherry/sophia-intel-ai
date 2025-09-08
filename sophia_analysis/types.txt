@@ -1,0 +1,270 @@
+agent-ui/src/types/playground.ts:export interface ToolCall {
+agent-ui/src/types/playground.ts:export interface ReasoningSteps {
+agent-ui/src/types/playground.ts:export interface ReasoningStepProps {
+agent-ui/src/types/playground.ts:export interface ReasoningProps {
+agent-ui/src/types/playground.ts:export type ToolCallProps = {
+agent-ui/src/types/playground.ts:interface ModelMessage {
+agent-ui/src/types/playground.ts:export interface Model {
+agent-ui/src/types/playground.ts:export interface Agent {
+agent-ui/src/types/playground.ts:export interface Team {
+agent-ui/src/types/playground.ts:interface MessageContext {
+agent-ui/src/types/playground.ts:export interface ResponseAudio {
+agent-ui/src/types/playground.ts:export interface NewRunResponse {
+agent-ui/src/types/playground.ts:export interface RunResponseContent {
+agent-ui/src/types/playground.ts:export interface RunResponse {
+agent-ui/src/types/playground.ts:export interface AgentExtraData {
+agent-ui/src/types/playground.ts:export interface PlaygroundAgentExtraData extends AgentExtraData {
+agent-ui/src/types/playground.ts:export interface ReasoningMessage {
+agent-ui/src/types/playground.ts:export interface PlaygroundChatMessage {
+agent-ui/src/types/playground.ts:export interface ComboboxAgent {
+agent-ui/src/types/playground.ts:export interface ComboboxTeam {
+agent-ui/src/types/playground.ts:export interface ImageData {
+agent-ui/src/types/playground.ts:export interface VideoData {
+agent-ui/src/types/playground.ts:export interface AudioData {
+agent-ui/src/types/playground.ts:export interface ReferenceData {
+agent-ui/src/types/playground.ts:export interface Reference {
+agent-ui/src/types/playground.ts:export interface SessionEntry {
+agent-ui/src/types/playground.ts:export interface ChatEntry {
+agent-ui/src/types/swarm.ts:export interface Team {
+agent-ui/src/types/swarm.ts:export interface Workflow {
+agent-ui/src/types/swarm.ts:export interface ToolCall {
+agent-ui/src/types/swarm.ts:export interface JudgeDecision {
+agent-ui/src/types/swarm.ts:export interface CriticReview {
+agent-ui/src/types/swarm.ts:export interface Citation {
+agent-ui/src/types/swarm.ts:export interface StreamResponse {
+agent-ui/src/app/artemis/page.tsx:interface SystemMetric {
+agent-ui/src/app/artemis/page.tsx:interface CodebaseHealth {
+agent-ui/src/app/artemis/page.tsx:interface DeploymentStatus {
+agent-ui/src/app/(sophia)/calls/page.tsx:type CallItem = { id: string; title: string; when: string; risk?: string; rep?: string };
+agent-ui/src/app/(sophia)/insights/page.tsx:type Insight = {
+agent-ui/src/app/(sophia)/pipeline/page.tsx:type Deal = {
+agent-ui/src/app/(sophia)/chat/page.tsx:type Message = { 
+agent-ui/src/app/(sophia)/chat/page.tsx:type Persona = {
+agent-ui/src/app/(sophia)/dashboard/page.tsx:type IntegrationData = {
+agent-ui/src/app/(sophia)/dashboard/page.tsx:type MetricCard = {
+agent-ui/src/app/(sophia)/integrations/page.tsx:type Integration = {
+agent-ui/src/app/(sophia)/work/page.tsx:type TaskItem = { id: string; title: string; assignee?: string; status?: string; source: "asana" | "linear" };
+agent-ui/src/app/(sophia)/teams/page.tsx:type TeamMember = {
+agent-ui/src/app/(sophia)/notifications/page.tsx:type Notification = {
+agent-ui/src/config/environment.ts:interface EnvironmentConfig {
+agent-ui/src/config/environment.ts:interface DashboardConfig {
+agent-ui/src/components/ui/tooltip/tooltip.tsx:interface TooltipContentProps
+agent-ui/src/components/ui/tooltip/types.ts:export interface TooltipProps {
+agent-ui/src/components/ui/progress.tsx:export interface ProgressProps
+agent-ui/src/components/ui/sonner.tsx:type ToasterProps = React.ComponentProps<typeof Sonner>
+agent-ui/src/components/ui/typography/Paragraph/types.ts:type ParagraphSizes =
+agent-ui/src/components/ui/typography/Paragraph/types.ts:export interface ParagraphProps {
+agent-ui/src/components/ui/typography/Paragraph/types.ts:export type ParagraphSizeMap = {
+agent-ui/src/components/ui/typography/Heading/types.ts:type HeadingSize = 1 | 2 | 3 | 4 | 5 | 6
+agent-ui/src/components/ui/typography/Heading/types.ts:export interface HeadingProps {
+agent-ui/src/components/ui/typography/Heading/types.ts:export type HeadingSizeMap = {
+agent-ui/src/components/ui/typography/MarkdownRenderer/types.ts:interface MarkdownRendererProps {
+agent-ui/src/components/ui/typography/MarkdownRenderer/types.ts:type DefaultHTMLElement = DetailedHTMLProps<
+agent-ui/src/components/ui/typography/MarkdownRenderer/types.ts:type UnorderedListProps = DetailedHTMLProps<
+agent-ui/src/components/ui/typography/MarkdownRenderer/types.ts:type OrderedListProps = DetailedHTMLProps<
+agent-ui/src/components/ui/typography/MarkdownRenderer/types.ts:type EmphasizedTextProps = DefaultHTMLElement
+agent-ui/src/components/ui/typography/MarkdownRenderer/types.ts:type ItalicTextProps = DefaultHTMLElement
+agent-ui/src/components/ui/typography/MarkdownRenderer/types.ts:type StrongTextProps = DefaultHTMLElement
+agent-ui/src/components/ui/typography/MarkdownRenderer/types.ts:type BoldTextProps = DefaultHTMLElement
+agent-ui/src/components/ui/typography/MarkdownRenderer/types.ts:type UnderlinedTextProps = DefaultHTMLElement
+agent-ui/src/components/ui/typography/MarkdownRenderer/types.ts:type DeletedTextProps = DetailedHTMLProps<
+agent-ui/src/components/ui/typography/MarkdownRenderer/types.ts:type HorizontalRuleProps = DetailedHTMLProps<
+agent-ui/src/components/ui/typography/MarkdownRenderer/types.ts:type PreparedTextProps = DetailedHTMLProps<
+agent-ui/src/components/ui/typography/MarkdownRenderer/types.ts:type BlockquoteProps = DetailedHTMLProps<
+agent-ui/src/components/ui/typography/MarkdownRenderer/types.ts:type AnchorLinkProps = DetailedHTMLProps<
+agent-ui/src/components/ui/typography/MarkdownRenderer/types.ts:type HeadingProps = DetailedHTMLProps<
+agent-ui/src/components/ui/typography/MarkdownRenderer/types.ts:type ImgProps = DetailedHTMLProps<
+agent-ui/src/components/ui/typography/MarkdownRenderer/types.ts:type ParagraphProps = DetailedHTMLProps<
+agent-ui/src/components/ui/typography/MarkdownRenderer/types.ts:type TableProps = React.DetailedHTMLProps<
+agent-ui/src/components/ui/typography/MarkdownRenderer/types.ts:type TableBodyProps = React.DetailedHTMLProps<
+agent-ui/src/components/ui/typography/MarkdownRenderer/types.ts:type TableHeaderProps = React.DetailedHTMLProps<
+agent-ui/src/components/ui/typography/MarkdownRenderer/types.ts:type TableHeaderCellProps = DetailedHTMLProps<
+agent-ui/src/components/ui/typography/MarkdownRenderer/types.ts:type TableRowProps = DetailedHTMLProps<
+agent-ui/src/components/ui/typography/MarkdownRenderer/types.ts:type TableCellProps = DetailedHTMLProps<
+agent-ui/src/components/ui/typography/MarkdownRenderer/types.ts:export type {
+agent-ui/src/components/ui/badge.tsx:export interface BadgeProps
+agent-ui/src/components/ui/separator.tsx:export interface SeparatorProps extends React.HTMLAttributes<HTMLDivElement> {
+agent-ui/src/components/ui/icon/types.ts:export type IconType =
+agent-ui/src/components/ui/icon/types.ts:export interface IconProps {
+agent-ui/src/components/ui/icon/types.ts:export type IconTypeMap = {
+agent-ui/src/components/ui/button.tsx:export interface ButtonProps
+agent-ui/src/components/ui/textarea.tsx:type TextareaProps = React.TextareaHTMLAttributes<HTMLTextAreaElement> & {
+agent-ui/src/components/ui/textarea.tsx:export type { TextareaProps }
+agent-ui/src/components/ui/input.tsx:export interface InputProps
+agent-ui/src/components/swarm/CriticReport.tsx:interface CriticReportProps {
+agent-ui/src/components/swarm/JudgeReport.tsx:interface JudgeReportProps {
+agent-ui/src/components/swarm/ToolCalls.tsx:interface ToolCallsProps {
+agent-ui/src/components/swarm/EnhancedOutput.tsx:interface OutputPhase {
+agent-ui/src/components/swarm/EnhancedOutput.tsx:interface EnhancedOutputProps {
+agent-ui/src/components/swarm/ConsciousnessVisualization.tsx:interface ConsciousnessDimension {
+agent-ui/src/components/swarm/ConsciousnessVisualization.tsx:interface EmergenceEvent {
+agent-ui/src/components/swarm/ConsciousnessVisualization.tsx:interface BreakthroughPattern {
+agent-ui/src/components/swarm/ConsciousnessVisualization.tsx:interface ConsciousnessData {
+agent-ui/src/components/swarm/ConsciousnessVisualization.tsx:interface ConsciousnessVisualizationProps {
+agent-ui/src/components/swarm/Citations.tsx:interface CitationsProps {
+agent-ui/src/components/swarm/StreamView.tsx:interface StreamViewProps {
+agent-ui/src/components/swarm/MCPStatus.tsx:interface MCPService {
+agent-ui/src/components/swarm/MCPStatus.tsx:interface ServiceStatus {
+agent-ui/src/components/coordination/OrchestratorCoordinationView.tsx:interface OrchestratorStatus {
+agent-ui/src/components/coordination/OrchestratorCoordinationView.tsx:interface TaskBridge {
+agent-ui/src/components/coordination/OrchestratorCoordinationView.tsx:interface CoordinationMetrics {
+agent-ui/src/components/coordination/TaskFlowVisualization.tsx:interface OrchestratorStatus {
+agent-ui/src/components/coordination/TaskFlowVisualization.tsx:interface TaskBridge {
+agent-ui/src/components/coordination/TaskFlowVisualization.tsx:interface FlowPath {
+agent-ui/src/components/coordination/TaskFlowVisualization.tsx:interface TaskFlowVisualizationProps {
+agent-ui/src/components/coordination/TaskFlowVisualization.tsx:interface TaskNode {
+agent-ui/src/components/playground/Sidebar/Sessions/Sessions.tsx:interface SkeletonListProps {
+agent-ui/src/components/playground/Sidebar/Sessions/DeleteSessionModal.tsx:interface DeleteSessionModalProps {
+agent-ui/src/components/playground/Sidebar/Sessions/SessionItem.tsx:type SessionItemProps = SessionEntry & {
+agent-ui/src/components/playground/ChatArea/Messages/MessageItem.tsx:interface MessageProps {
+agent-ui/src/components/playground/ChatArea/Messages/ChatBlankState.tsx:interface ActionButtonProps {
+agent-ui/src/components/playground/ChatArea/Messages/Messages.tsx:interface MessageListProps {
+agent-ui/src/components/playground/ChatArea/Messages/Messages.tsx:interface MessageWrapperProps {
+agent-ui/src/components/playground/ChatArea/Messages/Messages.tsx:interface ReferenceProps {
+agent-ui/src/components/playground/ChatArea/Messages/Messages.tsx:interface ReferenceItemProps {
+agent-ui/src/components/artemis/MCPServerVisualization.tsx:interface MCPServerHealth {
+agent-ui/src/components/artemis/MCPServerVisualization.tsx:interface MythologyAgent {
+agent-ui/src/components/sophia/MCPBusinessIntelligence.tsx:interface MCPServerHealth {
+agent-ui/src/components/sophia/MCPBusinessIntelligence.tsx:interface MythologyAgent {
+agent-ui/src/components/sophia/MCPBusinessIntelligence.tsx:interface BusinessMetric {
+agent-ui/src/components/sophia/PayReadyDashboard.tsx:interface StuckAccount {
+agent-ui/src/components/sophia/PayReadyDashboard.tsx:interface TeamMetrics {
+agent-ui/src/components/sophia/PayReadyDashboard.tsx:interface OperationalIntelligence {
+agent-ui/src/components/project-management/MobileProjectDashboard.tsx:interface MobileMetric {
+agent-ui/src/components/project-management/MobileProjectDashboard.tsx:interface QuickAction {
+agent-ui/src/components/project-management/MobileProjectDashboard.tsx:interface MobileAlert {
+agent-ui/src/components/project-management/TeamPerformanceOptimizer.tsx:interface TeamMember {
+agent-ui/src/components/project-management/TeamPerformanceOptimizer.tsx:interface Skill {
+agent-ui/src/components/project-management/TeamPerformanceOptimizer.tsx:interface LearningProgress {
+agent-ui/src/components/project-management/TeamPerformanceOptimizer.tsx:interface Achievement {
+agent-ui/src/components/project-management/TeamPerformanceOptimizer.tsx:interface TeamOptimizationSuggestion {
+agent-ui/src/components/project-management/TeamPerformanceOptimizer.tsx:interface TeamMetrics {
+agent-ui/src/components/project-management/AccessibilityEnhancements.tsx:interface AccessibilityPreferences {
+agent-ui/src/components/project-management/AccessibilityEnhancements.tsx:interface A11yViolation {
+agent-ui/src/components/mcp/MCPServerCard.tsx:interface MCPServerMetrics {
+agent-ui/src/components/mcp/MCPServerCard.tsx:interface ConnectionPool {
+agent-ui/src/components/mcp/MCPServerCard.tsx:interface MCPServerStatus {
+agent-ui/src/components/mcp/MCPServerCard.tsx:interface MCPServerCardProps {
+agent-ui/src/components/mcp/MCPServerGrid.tsx:interface MythologyAgentMapping {
+agent-ui/src/components/mcp/MCPServerGrid.tsx:interface DomainMetrics {
+agent-ui/src/components/mcp/MCPServerGrid.tsx:interface MCPServerGridProps {
+agent-ui/src/components/prompt-library/PromptLibraryDashboard.tsx:interface PromptVersion {
+agent-ui/src/components/prompt-library/PromptLibraryDashboard.tsx:interface Branch {
+agent-ui/src/components/prompt-library/PromptLibraryDashboard.tsx:interface ABTest {
+agent-ui/src/components/llm-control/ModelControlDashboard.tsx:interface ModelInfo {
+agent-ui/src/components/llm-control/ModelControlDashboard.tsx:interface ApprovedModels {
+agent-ui/src/components/llm-control/ModelControlDashboard.tsx:interface ModelHealth {
+agent-ui/src/components/llm-control/ModelControlDashboard.tsx:interface UsageStats {
+agent-ui/src/components/llm-control/ModelControlDashboard.tsx:interface TaskRouting {
+agent-ui/src/components/llm-control/ModelControlDashboard.tsx:interface DashboardData {
+agent-ui/src/components/streaming/AGUIStreamDisplay.tsx:interface AGUIStreamDisplayProps {
+agent-ui/src/components/streaming/AGUIStreamDisplay.tsx:interface ToolCallDisplayProps {
+agent-ui/src/components/streaming/AGUIStreamDisplay.tsx:interface StateUpdateDisplayProps {
+agent-ui/src/components/streaming/AGUIStreamDisplay.tsx:interface TokenCounterProps {
+agent-ui/src/components/streaming/AGUIStreamDisplay.tsx:export type { AGUIStreamDisplayProps, ToolCallDisplayProps, StateUpdateDisplayProps };
+agent-ui/src/components/dashboards/ClientHealthDashboard.tsx:interface Client {
+agent-ui/src/components/dashboards/ClientHealthDashboard.tsx:interface ExpansionOpportunity {
+agent-ui/src/components/dashboards/ClientHealthDashboard.tsx:interface RecoveryPlan {
+agent-ui/src/components/dashboards/ClientHealthDashboard.tsx:interface RecoveryAction {
+agent-ui/src/components/dashboards/ClientHealthDashboard.tsx:interface HealthMetrics {
+agent-ui/src/components/dashboards/SalesPerformanceDashboard.tsx:interface SalesRep {
+agent-ui/src/components/dashboards/SalesPerformanceDashboard.tsx:interface CoachingAlert {
+agent-ui/src/components/dashboards/SalesPerformanceDashboard.tsx:interface GongCall {
+agent-ui/src/components/dashboards/SalesPerformanceDashboard.tsx:interface PipelineVelocity {
+agent-ui/src/components/dashboards/SalesPerformanceDashboard.tsx:interface TeamMetrics {
+agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx:interface Project {
+agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx:interface Platform {
+agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx:interface Blocker {
+agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx:interface Milestone {
+agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx:interface SprintInfo {
+agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx:interface TeamMember {
+agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx:interface CrossPlatformSync {
+agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx:interface CommunicationMetrics {
+agent-ui/src/components/mythology/MythologyAgentWidget.tsx:interface AgentMetrics {
+agent-ui/src/components/mythology/MythologyAgentWidget.tsx:interface MythologyAgent {
+agent-ui/src/components/mythology/MythologyAgentWidget.tsx:interface MythologyAgentWidgetProps {
+agent-ui/src/components/VoiceButton.tsx:type Props = {
+agent-ui/src/components/model-registry/FallbackChainBuilder.tsx:interface ProviderHealthStatus {
+agent-ui/src/components/model-registry/FallbackChainBuilder.tsx:interface FallbackChainConfig {
+agent-ui/src/components/model-registry/FallbackChainBuilder.tsx:interface RoutingStrategy {
+agent-ui/src/components/model-registry/FallbackChainBuilder.tsx:interface FallbackChainBuilderProps {
+agent-ui/src/components/model-registry/FallbackChainBuilder.tsx:interface ChainItem {
+agent-ui/src/components/model-registry/ProviderCard.tsx:interface ProviderHealthStatus {
+agent-ui/src/components/model-registry/ProviderCard.tsx:interface VirtualKeyConfig {
+agent-ui/src/components/model-registry/ProviderCard.tsx:interface PerformanceMetrics {
+agent-ui/src/components/model-registry/ProviderCard.tsx:interface ModelTestRequest {
+agent-ui/src/components/model-registry/ProviderCard.tsx:interface ProviderCardProps {
+agent-ui/src/components/model-registry/ModelRegistryDashboard.tsx:interface ModelRegistryDashboardProps {
+agent-ui/src/components/infrastructure/InfraDashboard.tsx:interface ServiceStatus {
+agent-ui/src/components/infrastructure/InfraDashboard.tsx:interface SecretRotation {
+agent-ui/src/components/infrastructure/InfraDashboard.tsx:interface PulumiStack {
+agent-ui/src/components/infrastructure/InfraDashboard.tsx:interface SwarmAgent {
+agent-ui/src/components/infrastructure/InfraDashboard.tsx:interface InfrastructureMetrics {
+agent-ui/src/components/analytics/CostDashboard.tsx:interface CostSummary {
+agent-ui/src/components/analytics/CostDashboard.tsx:interface DailyCost {
+agent-ui/src/components/analytics/CostDashboard.tsx:interface TopModel {
+agent-ui/src/components/swarm-builder/SwarmTemplateSelector.tsx:interface SwarmTemplate {
+agent-ui/src/components/swarm-builder/SwarmTemplateSelector.tsx:interface AgentTemplateConfig {
+agent-ui/src/components/swarm-builder/SwarmTemplateSelector.tsx:interface ConfigurationState {
+agent-ui/src/hooks/useMCPStatus.ts:interface MCPServerHealth {
+agent-ui/src/hooks/useMCPStatus.ts:interface MCPDomainSummary {
+agent-ui/src/hooks/useMCPStatus.ts:interface MythologyAgent {
+agent-ui/src/hooks/useMCPStatus.ts:interface MCPSystemOverview {
+agent-ui/src/hooks/useMCPStatus.ts:interface MCPStatusState {
+agent-ui/src/hooks/useMCPStatus.ts:interface UseMCPStatusOptions {
+agent-ui/src/hooks/useSessionLoader.tsx:interface SessionResponse {
+agent-ui/src/hooks/useSessionLoader.tsx:interface LoaderArgs {
+agent-ui/src/hooks/useAGUIEvents.ts:export interface AGUIEventMetadata {
+agent-ui/src/hooks/useAGUIEvents.ts:export interface AGUITextDelta {
+agent-ui/src/hooks/useAGUIEvents.ts:export interface AGUIToolCall {
+agent-ui/src/hooks/useAGUIEvents.ts:export interface AGUIStateUpdate {
+agent-ui/src/hooks/useAGUIEvents.ts:export interface AGUIEvent {
+agent-ui/src/hooks/useAGUIEvents.ts:interface UseAGUIEventsConfig {
+agent-ui/src/hooks/useAGUIEvents.ts:interface AGUIEventsState {
+agent-ui/src/hooks/usePromptLibrary.ts:interface PromptMetadata {
+agent-ui/src/hooks/usePromptLibrary.ts:interface PromptVersion {
+agent-ui/src/hooks/usePromptLibrary.ts:interface Branch {
+agent-ui/src/hooks/usePromptLibrary.ts:interface DiffResult {
+agent-ui/src/hooks/usePromptLibrary.ts:interface ABTest {
+agent-ui/src/hooks/usePromptLibrary.ts:interface ABTestResult {
+agent-ui/src/hooks/usePromptLibrary.ts:interface SearchParams {
+agent-ui/src/hooks/usePromptLibrary.ts:interface CreatePromptRequest {
+agent-ui/src/hooks/usePromptLibrary.ts:interface UpdatePromptRequest {
+agent-ui/src/hooks/usePromptLibrary.ts:interface CreateBranchRequest {
+agent-ui/src/hooks/usePromptLibrary.ts:interface MergeRequest {
+agent-ui/src/hooks/usePromptLibrary.ts:interface CreateABTestRequest {
+agent-ui/src/hooks/usePromptLibrary.ts:interface LeaderboardEntry {
+agent-ui/src/hooks/useOrchestratorCoordination.ts:interface OrchestratorStatus {
+agent-ui/src/hooks/useOrchestratorCoordination.ts:interface TaskBridge {
+agent-ui/src/hooks/useOrchestratorCoordination.ts:interface CoordinationMetrics {
+agent-ui/src/hooks/useOrchestratorCoordination.ts:interface TaskFlowAnalytics {
+agent-ui/src/hooks/useOrchestratorCoordination.ts:interface ResourceAllocation {
+agent-ui/src/hooks/useOrchestratorCoordination.ts:interface PerformanceBottleneck {
+agent-ui/src/hooks/useOrchestratorCoordination.ts:interface CoordinationUpdate {
+agent-ui/src/hooks/useOrchestratorCoordination.ts:interface UseOrchestratorCoordinationResult {
+agent-ui/src/hooks/useSwarmTemplates.ts:interface SwarmTemplate {
+agent-ui/src/hooks/useSwarmTemplates.ts:interface AgentConfig {
+agent-ui/src/hooks/useSwarmTemplates.ts:interface TemplateDetails extends SwarmTemplate {
+agent-ui/src/hooks/useSwarmTemplates.ts:interface CodeGenerationResult {
+agent-ui/src/hooks/useSwarmTemplates.ts:interface DeploymentRequest {
+agent-ui/src/hooks/useSwarmTemplates.ts:interface DeploymentResult {
+agent-ui/src/hooks/useSwarmTemplates.ts:interface SwarmStatus {
+agent-ui/src/hooks/useSwarmTemplates.ts:interface DeploymentUpdate {
+agent-ui/src/hooks/useSwarmTemplates.ts:interface TemplateSummary {
+agent-ui/src/hooks/useSwarmTemplates.ts:interface UseSwarmTemplatesReturn {
+agent-ui/src/hooks/useSwarmTemplates.ts:interface TemplateFilters {
+agent-ui/src/hooks/useSwarmTemplates.ts:interface ValidationResult {
+agent-ui/src/hooks/useSwarmTemplates.ts:interface DeploymentStatus {
+agent-ui/src/hooks/useModelRegistry.ts:interface ProviderHealthStatus {
+agent-ui/src/hooks/useModelRegistry.ts:interface VirtualKeyConfig {
+agent-ui/src/hooks/useModelRegistry.ts:interface CostAnalytics {
+agent-ui/src/hooks/useModelRegistry.ts:interface FallbackChainConfig {
+agent-ui/src/hooks/useModelRegistry.ts:interface PerformanceMetrics {
+agent-ui/src/hooks/useModelRegistry.ts:interface RoutingStrategy {
+agent-ui/src/hooks/useModelRegistry.ts:interface ModelTestRequest {
+agent-ui/src/hooks/useModelRegistry.ts:interface ModelTestResult {
+agent-ui/src/hooks/useModelRegistry.ts:interface UseModelRegistryReturn {
+agent-ui/src/hooks/useServiceConfig.ts:interface ServiceManifest {
+agent-ui/src/store.ts:interface Agent {
+agent-ui/src/store.ts:export interface Team {
+agent-ui/src/store.ts:interface PlaygroundStore {

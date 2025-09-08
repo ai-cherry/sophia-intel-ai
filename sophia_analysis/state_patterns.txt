@@ -1,0 +1,280 @@
+agent-ui/src/app/artemis/page.tsx:import React, { useState, useEffect } from 'react';
+agent-ui/src/app/artemis/page.tsx:  const [systemMetrics, setSystemMetrics] = useState<SystemMetric[]>([
+agent-ui/src/app/artemis/page.tsx:  const [codebaseHealth, setCodebaseHealth] = useState<CodebaseHealth>({
+agent-ui/src/app/artemis/page.tsx:  const [deployments, setDeployments] = useState<DeploymentStatus[]>([
+agent-ui/src/app/artemis/page.tsx:  const [connected, setConnected] = useState(true);
+agent-ui/src/app/artemis/page.tsx:  const [activeTab, setActiveTab] = useState('overview');
+agent-ui/src/app/artemis/page.tsx:  const [currentTime, setCurrentTime] = useState('');
+agent-ui/src/app/sophia/page.tsx:import React, { useState, useEffect } from 'react';
+agent-ui/src/app/sophia/page.tsx:  const [activeModule, setActiveModule] = useState('overview');
+agent-ui/src/app/sophia/page.tsx:  const [currentRole, setCurrentRole] = useState<'executive' | 'project_manager' | 'team_lead'>('executive');
+agent-ui/src/app/sophia/page.tsx:  const [systemHealth, setSystemHealth] = useState({
+agent-ui/src/app/sophia/page.tsx:  const [quickStats, setQuickStats] = useState({
+agent-ui/src/app/(sophia)/calls/page.tsx:import { useEffect, useState } from "react";
+agent-ui/src/app/(sophia)/calls/page.tsx:  const [calls, setCalls] = useState<CallItem[]>([]);
+agent-ui/src/app/(sophia)/calls/page.tsx:  const [error, setError] = useState<string>("");
+agent-ui/src/app/(sophia)/insights/page.tsx:import { useState } from "react";
+agent-ui/src/app/(sophia)/insights/page.tsx:  const [selectedType, setSelectedType] = useState<string>("all");
+agent-ui/src/app/(sophia)/insights/page.tsx:  const [selectedInsight, setSelectedInsight] = useState<Insight | null>(null);
+agent-ui/src/app/(sophia)/pipeline/page.tsx:import { useState, useEffect } from "react";
+agent-ui/src/app/(sophia)/pipeline/page.tsx:  const [deals, setDeals] = useState<Deal[]>([]);
+agent-ui/src/app/(sophia)/pipeline/page.tsx:  const [selectedStage, setSelectedStage] = useState<string | null>(null);
+agent-ui/src/app/(sophia)/pipeline/page.tsx:  const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
+agent-ui/src/app/(sophia)/pipeline/page.tsx:  const [viewMode, setViewMode] = useState<"kanban" | "list">("kanban");
+agent-ui/src/app/(sophia)/pipeline/page.tsx:  const [loading, setLoading] = useState(true);
+agent-ui/src/app/(sophia)/chat/page.tsx:import { useCallback, useEffect, useRef, useState } from "react";
+agent-ui/src/app/(sophia)/chat/page.tsx:  const [messages, setMessages] = useState<Message[]>([]);
+agent-ui/src/app/(sophia)/chat/page.tsx:  const [input, setInput] = useState("");
+agent-ui/src/app/(sophia)/chat/page.tsx:  const [streaming, setStreaming] = useState(false);
+agent-ui/src/app/(sophia)/chat/page.tsx:  const [selectedPersona, setSelectedPersona] = useState<Persona>(PERSONAS[0]);
+agent-ui/src/app/(sophia)/chat/page.tsx:  const [context, setContext] = useState<string[]>([]);
+agent-ui/src/app/(sophia)/chat/page.tsx:  const [isRecording, setIsRecording] = useState(false);
+agent-ui/src/app/(sophia)/chat/page.tsx:  const [showContext, setShowContext] = useState(false);
+agent-ui/src/app/(sophia)/chat/page.tsx:  const [ttsEnabled, setTtsEnabled] = useState(false);
+agent-ui/src/app/(sophia)/dashboard/page.tsx:import { useEffect, useState } from "react";
+agent-ui/src/app/(sophia)/dashboard/page.tsx:  const [integrations, setIntegrations] = useState<IntegrationData | null>(null);
+agent-ui/src/app/(sophia)/dashboard/page.tsx:  const [metrics, setMetrics] = useState<MetricCard[]>([]);
+agent-ui/src/app/(sophia)/dashboard/page.tsx:  const [loading, setLoading] = useState(true);
+agent-ui/src/app/(sophia)/dashboard/page.tsx:  const [error, setError] = useState<string>("");
+agent-ui/src/app/(sophia)/integrations/page.tsx:import { useState, useEffect } from "react";
+agent-ui/src/app/(sophia)/integrations/page.tsx:  const [integrations, setIntegrations] = useState(INTEGRATIONS);
+agent-ui/src/app/(sophia)/integrations/page.tsx:  const [selectedIntegration, setSelectedIntegration] = useState<Integration | null>(null);
+agent-ui/src/app/(sophia)/integrations/page.tsx:  const [loading, setLoading] = useState(false);
+agent-ui/src/app/(sophia)/work/page.tsx:import { useEffect, useState } from "react";
+agent-ui/src/app/(sophia)/work/page.tsx:  const [items, setItems] = useState<TaskItem[]>([]);
+agent-ui/src/app/(sophia)/work/page.tsx:  const [error, setError] = useState<string>("");
+agent-ui/src/app/(sophia)/teams/page.tsx:import { useState } from "react";
+agent-ui/src/app/(sophia)/teams/page.tsx:  const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
+agent-ui/src/app/(sophia)/teams/page.tsx:  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+agent-ui/src/app/(sophia)/notifications/page.tsx:import { useState } from "react";
+agent-ui/src/app/(sophia)/notifications/page.tsx:  const [notifications, setNotifications] = useState(NOTIFICATIONS);
+agent-ui/src/app/(sophia)/notifications/page.tsx:  const [filter, setFilter] = useState<"all" | "unread">("all");
+agent-ui/src/app/(sophia)/analytics/page.tsx:import { useState } from "react";
+agent-ui/src/app/(sophia)/analytics/page.tsx:  const [timeRange, setTimeRange] = useState("30d");
+agent-ui/src/app/(sophia)/analytics/page.tsx:  const [selectedMetric, setSelectedMetric] = useState("revenue");
+agent-ui/src/components/ui/tabs.tsx:  const [internalValue, setInternalValue] = React.useState(defaultValue || "")
+agent-ui/src/components/ui/tabs.tsx:  const context = React.useContext(TabsContext)
+agent-ui/src/components/ui/tabs.tsx:  const context = React.useContext(TabsContext)
+agent-ui/src/components/ui/typography/MarkdownRenderer/styles.tsx:import { FC, useState } from 'react'
+agent-ui/src/components/ui/typography/MarkdownRenderer/styles.tsx:  const [error, setError] = useState(false)
+agent-ui/src/components/ui/typography/MarkdownRenderer/inlineStyles.tsx:import { useState } from 'react'
+agent-ui/src/components/ui/typography/MarkdownRenderer/inlineStyles.tsx:  const [error, setError] = useState(false)
+agent-ui/src/components/ui/textarea.tsx:    const [showScroll, setShowScroll] = React.useState(false)
+agent-ui/src/components/swarm/CriticReport.tsx:import { useState } from 'react';
+agent-ui/src/components/swarm/CriticReport.tsx:  const [collapsed, setCollapsed] = useState(false);
+agent-ui/src/components/swarm/TeamWorkflowPanel.tsx:import { useState, useEffect } from 'react';
+agent-ui/src/components/swarm/TeamWorkflowPanel.tsx:  const [workflows, setWorkflows] = useState<Workflow[]>([]);
+agent-ui/src/components/swarm/TeamWorkflowPanel.tsx:  const [selectedWorkflow, setSelectedWorkflow] = useState<Workflow | null>(null);
+agent-ui/src/components/swarm/TeamWorkflowPanel.tsx:  const [activeTab, setActiveTab] = useState<'team' | 'workflow'>('team');
+agent-ui/src/components/swarm/TeamWorkflowPanel.tsx:  const [message, setMessage] = useState('');
+agent-ui/src/components/swarm/TeamWorkflowPanel.tsx:  const [additionalData, setAdditionalData] = useState('{}');
+agent-ui/src/components/swarm/TeamWorkflowPanel.tsx:  const [pool, setPool] = useState<'fast' | 'heavy' | 'balanced'>('balanced');
+agent-ui/src/components/swarm/TeamWorkflowPanel.tsx:  const [priority, setPriority] = useState<'low' | 'medium' | 'high' | 'critical'>('medium');
+agent-ui/src/components/swarm/TeamWorkflowPanel.tsx:  const [error, setError] = useState<string | null>(null);
+agent-ui/src/components/swarm/TeamWorkflowPanel.tsx:  const [streamContent, setStreamContent] = useState('');
+agent-ui/src/components/swarm/TeamWorkflowPanel.tsx:  const [lastResponse, setLastResponse] = useState<StreamResponse | null>(null);
+agent-ui/src/components/swarm/JudgeReport.tsx:import { useState } from 'react';
+agent-ui/src/components/swarm/JudgeReport.tsx:  const [collapsed, setCollapsed] = useState(false);
+agent-ui/src/components/swarm/EndpointPicker.tsx:import { useState, useEffect } from 'react';
+agent-ui/src/components/swarm/EndpointPicker.tsx:  const [inputValue, setInputValue] = useState(selectedEndpoint);
+agent-ui/src/components/swarm/EndpointPicker.tsx:  const [error, setError] = useState<string | null>(null);
+agent-ui/src/components/swarm/ToolCalls.tsx:import { useState } from 'react';
+agent-ui/src/components/swarm/ToolCalls.tsx:  const [expanded, setExpanded] = useState<Set<number>>(new Set());
+agent-ui/src/components/swarm/EnhancedOutput.tsx:import { useState, useEffect } from 'react';
+agent-ui/src/components/swarm/EnhancedOutput.tsx:  const [phases, setPhases] = useState<OutputPhase[]>([]);
+agent-ui/src/components/swarm/EnhancedOutput.tsx:  const [finalResult, setFinalResult] = useState<any>(null);
+agent-ui/src/components/swarm/ConsciousnessVisualization.tsx:import React, { useState } from 'react';
+agent-ui/src/components/swarm/ConsciousnessVisualization.tsx:  const [activeTab, setActiveTab] = useState('emergence');
+agent-ui/src/components/swarm/Citations.tsx:import { useState } from 'react';
+agent-ui/src/components/swarm/Citations.tsx:  const [expanded, setExpanded] = useState<Set<number>>(new Set());
+agent-ui/src/components/swarm/StreamView.tsx:import { useState, useEffect } from 'react';
+agent-ui/src/components/swarm/MCPStatus.tsx:import React, { useState, useEffect, useCallback } from 'react';
+agent-ui/src/components/swarm/MCPStatus.tsx:  const [services, setServices] = useState<Map<string, ServiceStatus>>(new Map());
+agent-ui/src/components/swarm/MCPStatus.tsx:  const [isChecking, setIsChecking] = useState(false);
+agent-ui/src/components/swarm/MCPStatus.tsx:  const [autoRefresh, setAutoRefresh] = useState(true);
+agent-ui/src/components/swarm/MCPStatus.tsx:  const [refreshInterval, setRefreshInterval] = useState(30000); // 30 seconds default
+agent-ui/src/components/swarm/UIEnhancements.tsx:import { useState } from 'react';
+agent-ui/src/components/swarm/UIEnhancements.tsx:  const [message, setMessage] = useState('');
+agent-ui/src/components/coordination/OrchestratorCoordinationView.tsx:import React, { useState, useEffect } from 'react';
+agent-ui/src/components/coordination/OrchestratorCoordinationView.tsx:  const [selectedView, setSelectedView] = useState<'overview' | 'flow' | 'metrics' | 'resources'>('overview');
+agent-ui/src/components/coordination/OrchestratorCoordinationView.tsx:  const [timeRange, setTimeRange] = useState<'1h' | '6h' | '24h' | '7d'>('1h');
+agent-ui/src/components/coordination/TaskFlowVisualization.tsx:import React, { useState, useEffect, useRef } from 'react';
+agent-ui/src/components/coordination/TaskFlowVisualization.tsx:  const [selectedNode, setSelectedNode] = useState<string | null>(null);
+agent-ui/src/components/coordination/TaskFlowVisualization.tsx:  const [flowPaths, setFlowPaths] = useState<FlowPath[]>([]);
+agent-ui/src/components/coordination/TaskFlowVisualization.tsx:  const [animationEnabled, setAnimationEnabled] = useState(true);
+agent-ui/src/components/coordination/TaskFlowVisualization.tsx:  const [viewMode, setViewMode] = useState<'flow' | 'queue' | 'performance'>('flow');
+agent-ui/src/components/playground/Sidebar/Sessions/Sessions.tsx:import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+agent-ui/src/components/playground/Sidebar/Sessions/Sessions.tsx:  const [isScrolling, setIsScrolling] = useState(false)
+agent-ui/src/components/playground/Sidebar/Sessions/Sessions.tsx:  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(
+agent-ui/src/components/playground/Sidebar/Sessions/SessionItem.tsx:import { useState } from 'react'
+agent-ui/src/components/playground/Sidebar/Sessions/SessionItem.tsx:  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+agent-ui/src/components/playground/Sidebar/Sessions/SessionItem.tsx:  const [isDeleting, setIsDeleting] = useState(false)
+agent-ui/src/components/playground/Sidebar/Sidebar.tsx:import { useState, useEffect } from 'react'
+agent-ui/src/components/playground/Sidebar/Sidebar.tsx:  const [isEditing, setIsEditing] = useState(false)
+agent-ui/src/components/playground/Sidebar/Sidebar.tsx:  const [endpointValue, setEndpointValue] = useState('')
+agent-ui/src/components/playground/Sidebar/Sidebar.tsx:  const [isMounted, setIsMounted] = useState(false)
+agent-ui/src/components/playground/Sidebar/Sidebar.tsx:  const [isHovering, setIsHovering] = useState(false)
+agent-ui/src/components/playground/Sidebar/Sidebar.tsx:  const [isRotating, setIsRotating] = useState(false)
+agent-ui/src/components/playground/Sidebar/Sidebar.tsx:  const [isCollapsed, setIsCollapsed] = useState(false)
+agent-ui/src/components/playground/Sidebar/Sidebar.tsx:  const [isMounted, setIsMounted] = useState(false)
+agent-ui/src/components/playground/ChatArea/Messages/ChatBlankState.tsx:import React, { useState } from 'react'
+agent-ui/src/components/playground/ChatArea/Messages/ChatBlankState.tsx:  const [hoveredIcon, setHoveredIcon] = useState<string | null>(null)
+agent-ui/src/components/playground/ChatArea/ChatInput/ChatInput.tsx:import { useState } from 'react'
+agent-ui/src/components/playground/ChatArea/ChatInput/ChatInput.tsx:  const [inputMessage, setInputMessage] = useState('')
+agent-ui/src/components/artemis/MCPServerVisualization.tsx:import React, { useState, useEffect, useMemo } from 'react';
+agent-ui/src/components/artemis/MCPServerVisualization.tsx:  const [selectedServer, setSelectedServer] = useState<string | null>(null);
+agent-ui/src/components/artemis/MCPServerVisualization.tsx:  const [viewMode, setViewMode] = useState<'grid' | 'list' | 'topology'>('grid');
+agent-ui/src/components/artemis/MCPServerVisualization.tsx:  const [refreshInterval, setRefreshInterval] = useState(30);
+agent-ui/src/components/sophia/MCPBusinessIntelligence.tsx:import React, { useState, useEffect, useMemo } from 'react';
+agent-ui/src/components/sophia/MCPBusinessIntelligence.tsx:  const [selectedView, setSelectedView] = useState<'overview' | 'agents' | 'operations' | 'intelligence'>('overview');
+agent-ui/src/components/sophia/MCPBusinessIntelligence.tsx:  const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
+agent-ui/src/components/sophia/MCPBusinessIntelligence.tsx:  const [alertsExpanded, setAlertsExpanded] = useState(false);
+agent-ui/src/components/sophia/PayReadyDashboard.tsx:import React, { useState, useEffect, useCallback } from 'react';
+agent-ui/src/components/sophia/PayReadyDashboard.tsx:  const [socket, setSocket] = useState<WebSocket | null>(null);
+agent-ui/src/components/sophia/PayReadyDashboard.tsx:  const [connected, setConnected] = useState(false);
+agent-ui/src/components/sophia/PayReadyDashboard.tsx:  const [data, setData] = useState<any>(null);
+agent-ui/src/components/sophia/PayReadyDashboard.tsx:  const [stuckAccounts, setStuckAccounts] = useState<StuckAccount[]>([]);
+agent-ui/src/components/sophia/PayReadyDashboard.tsx:  const [teamMetrics, setTeamMetrics] = useState<TeamMetrics[]>([]);
+agent-ui/src/components/sophia/PayReadyDashboard.tsx:  const [operationalIntelligence, setOperationalIntelligence] = useState<OperationalIntelligence[]>([]);
+agent-ui/src/components/sophia/PayReadyDashboard.tsx:  const [systemHealth, setSystemHealth] = useState(85);
+agent-ui/src/components/sophia/PayReadyDashboard.tsx:  const [swarmStatus, setSwarmStatus] = useState<'idle' | 'running' | 'completed'>('idle');
+agent-ui/src/components/sophia/PayReadyDashboard.tsx:  const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+agent-ui/src/components/project-management/MobileProjectDashboard.tsx:import React, { useState, useEffect } from 'react';
+agent-ui/src/components/project-management/MobileProjectDashboard.tsx:  const [collapsed, setCollapsed] = useState(false);
+agent-ui/src/components/project-management/MobileProjectDashboard.tsx:  const [activeSection, setActiveSection] = useState('overview');
+agent-ui/src/components/project-management/MobileProjectDashboard.tsx:  const [showNotifications, setShowNotifications] = useState(false);
+agent-ui/src/components/project-management/MobileProjectDashboard.tsx:  const [isOffline, setIsOffline] = useState(false);
+agent-ui/src/components/project-management/MobileProjectDashboard.tsx:  const [deviceType, setDeviceType] = useState<'mobile' | 'tablet' | 'desktop'>('mobile');
+agent-ui/src/components/project-management/MobileProjectDashboard.tsx:  const [isLandscape, setIsLandscape] = useState(false);
+agent-ui/src/components/project-management/TeamPerformanceOptimizer.tsx:import React, { useState, useMemo } from 'react';
+agent-ui/src/components/project-management/TeamPerformanceOptimizer.tsx:  const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
+agent-ui/src/components/project-management/TeamPerformanceOptimizer.tsx:  const [viewMode, setViewMode] = useState<'overview' | 'individual' | 'optimization'>('overview');
+agent-ui/src/components/project-management/TeamPerformanceOptimizer.tsx:  const [sortBy, setSortBy] = useState<'performance' | 'workload' | 'name'>('performance');
+agent-ui/src/components/project-management/TeamPerformanceOptimizer.tsx:  const [loading, setLoading] = useState(false);
+agent-ui/src/components/project-management/AccessibilityEnhancements.tsx:import React, { useState, useRef, useEffect } from 'react';
+agent-ui/src/components/project-management/AccessibilityEnhancements.tsx:  const [preferences, setPreferences] = useState<AccessibilityPreferences>({
+agent-ui/src/components/project-management/AccessibilityEnhancements.tsx:  const [announcements, setAnnouncements] = useState<string[]>([]);
+agent-ui/src/components/project-management/AccessibilityEnhancements.tsx:  const [focusedElement, setFocusedElement] = useState<string>('');
+agent-ui/src/components/mcp/MCPServerCard.tsx:import React, { useState, useEffect } from 'react';
+agent-ui/src/components/mcp/MCPServerCard.tsx:  const [isExpanded, setIsExpanded] = useState(false);
+agent-ui/src/components/mcp/MCPServerCard.tsx:  const [liveMetrics, setLiveMetrics] = useState(server.performance_metrics);
+agent-ui/src/components/mcp/MCPServerGrid.tsx:import React, { useState, useEffect } from 'react';
+agent-ui/src/components/mcp/MCPServerGrid.tsx:  const [servers, setServers] = useState(initialServers);
+agent-ui/src/components/mcp/MCPServerGrid.tsx:  const [selectedServer, setSelectedServer] = useState<string | null>(null);
+agent-ui/src/components/mcp/MCPServerGrid.tsx:  const [viewMode, setViewMode] = useState<'grid' | 'compact' | 'list'>('grid');
+agent-ui/src/components/mcp/MCPServerGrid.tsx:  const [filterStatus, setFilterStatus] = useState<'all' | 'operational' | 'degraded' | 'offline'>('all');
+agent-ui/src/components/mcp/MCPServerGrid.tsx:  const [isLoading, setIsLoading] = useState(false);
+agent-ui/src/components/mcp/MCPServerGrid.tsx:  const [lastRefresh, setLastRefresh] = useState(new Date());
+agent-ui/src/components/prompt-library/PromptLibraryDashboard.tsx:import React, { useState, useEffect, useMemo, useCallback } from 'react';
+agent-ui/src/components/prompt-library/PromptLibraryDashboard.tsx:  const [selectedPrompt, setSelectedPrompt] = useState<PromptVersion | null>(null);
+agent-ui/src/components/prompt-library/PromptLibraryDashboard.tsx:  const [selectedBranch, setSelectedBranch] = useState<string>('main');
+agent-ui/src/components/prompt-library/PromptLibraryDashboard.tsx:  const [currentTab, setCurrentTab] = useState(0);
+agent-ui/src/components/prompt-library/PromptLibraryDashboard.tsx:  const [editorContent, setEditorContent] = useState('');
+agent-ui/src/components/prompt-library/PromptLibraryDashboard.tsx:  const [searchQuery, setSearchQuery] = useState('');
+agent-ui/src/components/prompt-library/PromptLibraryDashboard.tsx:  const [filterDomain, setFilterDomain] = useState('');
+agent-ui/src/components/prompt-library/PromptLibraryDashboard.tsx:  const [filterAgent, setFilterAgent] = useState('');
+agent-ui/src/components/prompt-library/PromptLibraryDashboard.tsx:  const [showCreateDialog, setShowCreateDialog] = useState(false);
+agent-ui/src/components/prompt-library/PromptLibraryDashboard.tsx:  const [showBranchDialog, setShowBranchDialog] = useState(false);
+agent-ui/src/components/prompt-library/PromptLibraryDashboard.tsx:  const [showMergeDialog, setShowMergeDialog] = useState(false);
+agent-ui/src/components/prompt-library/PromptLibraryDashboard.tsx:  const [showABTestDialog, setShowABTestDialog] = useState(false);
+agent-ui/src/components/prompt-library/PromptLibraryDashboard.tsx:  const [showVersionHistory, setShowVersionHistory] = useState(false);
+agent-ui/src/components/prompt-library/PromptLibraryDashboard.tsx:  const [showDiffView, setShowDiffView] = useState(false);
+agent-ui/src/components/prompt-library/PromptLibraryDashboard.tsx:  const [diffVersions, setDiffVersions] = useState<{from: string, to: string} | null>(null);
+agent-ui/src/components/prompt-library/PromptLibraryDashboard.tsx:  const [leaderboardData, setLeaderboardData] = useState<any[]>([]);
+agent-ui/src/components/prompt-library/PromptLibraryDashboard.tsx:  const [performanceMetrics, setPerformanceMetrics] = useState<any[]>([]);
+agent-ui/src/components/llm-control/ModelControlDashboard.tsx:import React, { useState, useEffect } from 'react'
+agent-ui/src/components/llm-control/ModelControlDashboard.tsx:  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null)
+agent-ui/src/components/llm-control/ModelControlDashboard.tsx:  const [selectedTask, setSelectedTask] = useState<string>('critical_decision')
+agent-ui/src/components/llm-control/ModelControlDashboard.tsx:  const [loading, setLoading] = useState(true)
+agent-ui/src/components/llm-control/ModelControlDashboard.tsx:  const [autoRefresh, setAutoRefresh] = useState(true)
+agent-ui/src/components/streaming/AGUIStreamDisplay.tsx:import React, { useState, useEffect, useRef, useMemo } from 'react';
+agent-ui/src/components/streaming/AGUIStreamDisplay.tsx:  const [displayedText, setDisplayedText] = useState('');
+agent-ui/src/components/streaming/AGUIStreamDisplay.tsx:  const [currentIndex, setCurrentIndex] = useState(0);
+agent-ui/src/components/streaming/AGUIStreamDisplay.tsx:  const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
+agent-ui/src/components/dashboards/ClientHealthDashboard.tsx:import React, { useState, useEffect, useRef, useCallback } from 'react';
+agent-ui/src/components/dashboards/ClientHealthDashboard.tsx:  const [connected, setConnected] = useState(false);
+agent-ui/src/components/dashboards/ClientHealthDashboard.tsx:  const [loading, setLoading] = useState(false);
+agent-ui/src/components/dashboards/ClientHealthDashboard.tsx:  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+agent-ui/src/components/dashboards/ClientHealthDashboard.tsx:  const [clients, setClients] = useState<Client[]>([]);
+agent-ui/src/components/dashboards/ClientHealthDashboard.tsx:  const [recoveryPlans, setRecoveryPlans] = useState<RecoveryPlan[]>([]);
+agent-ui/src/components/dashboards/ClientHealthDashboard.tsx:  const [healthMetrics, setHealthMetrics] = useState<HealthMetrics | null>(null);
+agent-ui/src/components/dashboards/ClientHealthDashboard.tsx:  const [searchQuery, setSearchQuery] = useState('');
+agent-ui/src/components/dashboards/ClientHealthDashboard.tsx:  const [filterRisk, setFilterRisk] = useState<string>('all');
+agent-ui/src/components/dashboards/ClientHealthDashboard.tsx:  const [filterTier, setFilterTier] = useState<string>('all');
+agent-ui/src/components/dashboards/ClientHealthDashboard.tsx:  const [sortBy, setSortBy] = useState<string>('health_score');
+agent-ui/src/components/dashboards/ClientHealthDashboard.tsx:  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+agent-ui/src/components/dashboards/ClientHealthDashboard.tsx:  const [activeTab, setActiveTab] = useState('overview');
+agent-ui/src/components/dashboards/ClientHealthDashboard.tsx:  const [voiceEnabled, setVoiceEnabled] = useState(false);
+agent-ui/src/components/dashboards/ClientHealthDashboard.tsx:  const [autoRefresh, setAutoRefresh] = useState(true);
+agent-ui/src/components/dashboards/SalesPerformanceDashboard.tsx:import React, { useState, useEffect, useRef, useCallback } from 'react';
+agent-ui/src/components/dashboards/SalesPerformanceDashboard.tsx:  const [connected, setConnected] = useState(false);
+agent-ui/src/components/dashboards/SalesPerformanceDashboard.tsx:  const [loading, setLoading] = useState(false);
+agent-ui/src/components/dashboards/SalesPerformanceDashboard.tsx:  const [selectedRep, setSelectedRep] = useState<SalesRep | null>(null);
+agent-ui/src/components/dashboards/SalesPerformanceDashboard.tsx:  const [selectedCall, setSelectedCall] = useState<GongCall | null>(null);
+agent-ui/src/components/dashboards/SalesPerformanceDashboard.tsx:  const [salesReps, setSalesReps] = useState<SalesRep[]>([]);
+agent-ui/src/components/dashboards/SalesPerformanceDashboard.tsx:  const [gongCalls, setGongCalls] = useState<GongCall[]>([]);
+agent-ui/src/components/dashboards/SalesPerformanceDashboard.tsx:  const [teamMetrics, setTeamMetrics] = useState<TeamMetrics | null>(null);
+agent-ui/src/components/dashboards/SalesPerformanceDashboard.tsx:  const [searchQuery, setSearchQuery] = useState('');
+agent-ui/src/components/dashboards/SalesPerformanceDashboard.tsx:  const [filterStatus, setFilterStatus] = useState<string>('all');
+agent-ui/src/components/dashboards/SalesPerformanceDashboard.tsx:  const [filterPerformance, setFilterPerformance] = useState<string>('all');
+agent-ui/src/components/dashboards/SalesPerformanceDashboard.tsx:  const [sortBy, setSortBy] = useState<string>('performance_score');
+agent-ui/src/components/dashboards/SalesPerformanceDashboard.tsx:  const [activeTab, setActiveTab] = useState('overview');
+agent-ui/src/components/dashboards/SalesPerformanceDashboard.tsx:  const [playingCall, setPlayingCall] = useState<string | null>(null);
+agent-ui/src/components/dashboards/SalesPerformanceDashboard.tsx:  const [voiceEnabled, setVoiceEnabled] = useState(false);
+agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx:import React, { useState, useEffect, useRef, useCallback } from 'react';
+agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx:  const [connected, setConnected] = useState(false);
+agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx:  const [loading, setLoading] = useState(false);
+agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx:  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx:  const [projects, setProjects] = useState<Project[]>([]);
+agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx:  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx:  const [syncStatuses, setSyncStatuses] = useState<CrossPlatformSync[]>([]);
+agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx:  const [communicationMetrics, setCommunicationMetrics] = useState<CommunicationMetrics | null>(null);
+agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx:  const [searchQuery, setSearchQuery] = useState('');
+agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx:  const [filterStatus, setFilterStatus] = useState<string>('all');
+agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx:  const [filterPriority, setFilterPriority] = useState<string>('all');
+agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx:  const [filterPlatform, setFilterPlatform] = useState<string>('all');
+agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx:  const [sortBy, setSortBy] = useState<string>('health_score');
+agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx:  const [activeTab, setActiveTab] = useState('overview');
+agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx:  const [voiceEnabled, setVoiceEnabled] = useState(false);
+agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx:  const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
+agent-ui/src/components/mythology/MythologyAgentWidget.tsx:import React, { useState, useEffect } from 'react';
+agent-ui/src/components/mythology/MythologyAgentWidget.tsx:  const [isExpanded, setIsExpanded] = useState(false);
+agent-ui/src/components/mythology/MythologyAgentWidget.tsx:  const [liveMetrics, setLiveMetrics] = useState(metrics);
+agent-ui/src/components/VoiceButton.tsx:import { useEffect, useRef, useState } from "react";
+agent-ui/src/components/VoiceButton.tsx:  const [recording, setRecording] = useState(false);
+agent-ui/src/components/model-registry/FallbackChainBuilder.tsx:import React, { useState, useCallback, useEffect } from 'react';
+agent-ui/src/components/model-registry/FallbackChainBuilder.tsx:  const [selectedPrimary, setSelectedPrimary] = useState<string>('');
+agent-ui/src/components/model-registry/FallbackChainBuilder.tsx:  const [currentChain, setCurrentChain] = useState<ChainItem[]>([]);
+agent-ui/src/components/model-registry/FallbackChainBuilder.tsx:  const [routingStrategy, setRoutingStrategy] = useState('balanced');
+agent-ui/src/components/model-registry/FallbackChainBuilder.tsx:  const [isModified, setIsModified] = useState(false);
+agent-ui/src/components/model-registry/FallbackChainBuilder.tsx:  const [isSaving, setIsSaving] = useState(false);
+agent-ui/src/components/model-registry/FallbackChainBuilder.tsx:  const [saveMessage, setSaveMessage] = useState<string | null>(null);
+agent-ui/src/components/model-registry/ProviderCard.tsx:import React, { useState, useCallback } from 'react';
+agent-ui/src/components/model-registry/ProviderCard.tsx:  const [showConfigDialog, setShowConfigDialog] = useState(false);
+agent-ui/src/components/model-registry/ProviderCard.tsx:  const [showTestDialog, setShowTestDialog] = useState(false);
+agent-ui/src/components/model-registry/ProviderCard.tsx:  const [isTestingModel, setIsTestingModel] = useState(false);
+agent-ui/src/components/model-registry/ProviderCard.tsx:  const [testResult, setTestResult] = useState<string | null>(null);
+agent-ui/src/components/model-registry/ProviderCard.tsx:  const [configForm, setConfigForm] = useState<VirtualKeyConfig | null>(null);
+agent-ui/src/components/model-registry/ModelRegistryDashboard.tsx:import React, { useState, useCallback } from 'react';
+agent-ui/src/components/model-registry/ModelRegistryDashboard.tsx:  const [activeTab, setActiveTab] = useState('overview');
+agent-ui/src/components/model-registry/ModelRegistryDashboard.tsx:  const [refreshing, setRefreshing] = useState(false);
+agent-ui/src/components/infrastructure/InfraDashboard.tsx:import React, { useState, useEffect } from 'react';
+agent-ui/src/components/infrastructure/InfraDashboard.tsx:  const [selectedTimeRange, setSelectedTimeRange] = useState('24h');
+agent-ui/src/components/infrastructure/InfraDashboard.tsx:  const [selectedService, setSelectedService] = useState<string | null>(null);
+agent-ui/src/components/infrastructure/InfraDashboard.tsx:  const [showEmergencyRotation, setShowEmergencyRotation] = useState(false);
+agent-ui/src/components/analytics/CostDashboard.tsx:import React, { useState, useEffect, useCallback } from 'react'
+agent-ui/src/components/analytics/CostDashboard.tsx:  const [loading, setLoading] = useState(true)
+agent-ui/src/components/analytics/CostDashboard.tsx:  const [error, setError] = useState<string | null>(null)
+agent-ui/src/components/analytics/CostDashboard.tsx:  const [timeRange, setTimeRange] = useState('7')
+agent-ui/src/components/analytics/CostDashboard.tsx:  const [summary, setSummary] = useState<CostSummary | null>(null)
+agent-ui/src/components/analytics/CostDashboard.tsx:  const [dailyCosts, setDailyCosts] = useState<DailyCost[]>([])
+agent-ui/src/components/analytics/CostDashboard.tsx:  const [topModels, setTopModels] = useState<TopModel[]>([])
+agent-ui/src/components/swarm-builder/SwarmTemplateSelector.tsx:import React, { useState, useEffect, useMemo } from 'react';
+agent-ui/src/components/swarm-builder/SwarmTemplateSelector.tsx:  const [selectedTemplate, setSelectedTemplate] = useState<SwarmTemplate | null>(null);
+agent-ui/src/components/swarm-builder/SwarmTemplateSelector.tsx:  const [configDialogOpen, setConfigDialogOpen] = useState(false);
+agent-ui/src/components/swarm-builder/SwarmTemplateSelector.tsx:  const [configuration, setConfiguration] = useState<ConfigurationState>({
+agent-ui/src/components/swarm-builder/SwarmTemplateSelector.tsx:  const [activeTab, setActiveTab] = useState(0);
+agent-ui/src/components/swarm-builder/SwarmTemplateSelector.tsx:  const [generatedCode, setGeneratedCode] = useState<string>('');
+agent-ui/src/components/swarm-builder/SwarmTemplateSelector.tsx:  const [codePreviewOpen, setCodePreviewOpen] = useState(false);
+agent-ui/src/components/swarm-builder/SwarmTemplateSelector.tsx:  const [filters, setFilters] = useState({
+agent-ui/src/components/swarm-builder/SwarmTemplateSelector.tsx:  const [deploymentStatus, setDeploymentStatus] = useState<'idle' | 'deploying' | 'deployed' | 'error'>('idle');

@@ -1,0 +1,17 @@
+agent-ui/src/components/playground/Sidebar/NewChatButton.tsx
+agent-ui/src/components/playground/ChatArea/Messages/MessageItem.tsx
+agent-ui/src/components/playground/ChatArea/Messages/ChatBlankState.tsx
+agent-ui/src/components/playground/ChatArea/Messages/Messages.tsx
+agent-ui/src/components/playground/ChatArea/ChatArea.tsx
+agent-ui/src/components/playground/ChatArea/ChatInput/ChatInput.tsx
+agent-ui/src/components/playground/ChatArea/MessageArea.tsx
+agent-ui/src/components/sophia/PayReadyDashboard.tsx
+agent-ui/src/components/project-management/MobileProjectDashboard.tsx
+agent-ui/src/components/prompt-library/PromptLibraryDashboard.tsx
+agent-ui/src/components/llm-control/ModelControlDashboard.tsx
+agent-ui/src/components/dashboards/ClientHealthDashboard.tsx
+agent-ui/src/components/dashboards/SalesPerformanceDashboard.tsx
+agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx
+agent-ui/src/components/model-registry/ModelRegistryDashboard.tsx
+agent-ui/src/components/infrastructure/InfraDashboard.tsx
+agent-ui/src/components/analytics/CostDashboard.tsx

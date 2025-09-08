@@ -1,0 +1,815 @@
+agent-ui/src/types/playground.ts:export interface ToolCall {
+agent-ui/src/types/playground.ts:export interface ReasoningSteps {
+agent-ui/src/types/playground.ts:export interface ReasoningStepProps {
+agent-ui/src/types/playground.ts:export interface ReasoningProps {
+agent-ui/src/types/playground.ts:export type ToolCallProps = {
+agent-ui/src/types/playground.ts:export interface Model {
+agent-ui/src/types/playground.ts:export interface Agent {
+agent-ui/src/types/playground.ts:export interface Team {
+agent-ui/src/types/playground.ts:export enum RunEvent {
+agent-ui/src/types/playground.ts:export interface ResponseAudio {
+agent-ui/src/types/playground.ts:export interface NewRunResponse {
+agent-ui/src/types/playground.ts:export interface RunResponseContent {
+agent-ui/src/types/playground.ts:export interface RunResponse {
+agent-ui/src/types/playground.ts:export interface AgentExtraData {
+agent-ui/src/types/playground.ts:export interface PlaygroundAgentExtraData extends AgentExtraData {
+agent-ui/src/types/playground.ts:export interface ReasoningMessage {
+agent-ui/src/types/playground.ts:export interface PlaygroundChatMessage {
+agent-ui/src/types/playground.ts:export interface ComboboxAgent {
+agent-ui/src/types/playground.ts:export interface ComboboxTeam {
+agent-ui/src/types/playground.ts:export interface ImageData {
+agent-ui/src/types/playground.ts:export interface VideoData {
+agent-ui/src/types/playground.ts:export interface AudioData {
+agent-ui/src/types/playground.ts:export interface ReferenceData {
+agent-ui/src/types/playground.ts:export interface Reference {
+agent-ui/src/types/playground.ts:export interface SessionEntry {
+agent-ui/src/types/playground.ts:export interface ChatEntry {
+agent-ui/src/types/swarm.ts:export interface Team {
+agent-ui/src/types/swarm.ts:export interface Workflow {
+agent-ui/src/types/swarm.ts:export interface ToolCall {
+agent-ui/src/types/swarm.ts:export interface JudgeDecision {
+agent-ui/src/types/swarm.ts:export interface CriticReview {
+agent-ui/src/types/swarm.ts:export interface Citation {
+agent-ui/src/types/swarm.ts:export interface StreamResponse {
+agent-ui/src/app/infra/page.tsx:import React from 'react';
+agent-ui/src/app/infra/page.tsx:import { InfraQueue } from '@/components/unified/InfraQueue';
+agent-ui/src/app/infra/page.tsx:import { InfraDashboard } from '@/components/infrastructure/InfraDashboard';
+agent-ui/src/app/infra/page.tsx:export default function InfraPage() {
+agent-ui/src/app/memory/page.tsx:import React from 'react';
+agent-ui/src/app/memory/page.tsx:import { MemoryExplorer } from '@/components/unified/MemoryExplorer';
+agent-ui/src/app/memory/page.tsx:export default function MemoryPage() {
+agent-ui/src/app/artemis/page.tsx:import React, { useState, useEffect } from 'react';
+agent-ui/src/app/artemis/page.tsx:import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+agent-ui/src/app/artemis/page.tsx:import { Button } from '@/components/ui/button';
+agent-ui/src/app/artemis/page.tsx:import { Badge } from '@/components/ui/badge';
+agent-ui/src/app/artemis/page.tsx:import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+agent-ui/src/app/artemis/page.tsx:import { Progress } from '@/components/ui/progress';
+agent-ui/src/app/artemis/page.tsx:import { ScrollArea } from '@/components/ui/scroll-area';
+agent-ui/src/app/artemis/page.tsx:import MCPServerGrid from '@/components/mcp/MCPServerGrid';
+agent-ui/src/app/artemis/page.tsx:import MythologyAgentWidget from '@/components/mythology/MythologyAgentWidget';
+agent-ui/src/app/artemis/page.tsx:import {
+agent-ui/src/app/artemis/page.tsx:export default ArtemisCommandCenter;
+agent-ui/src/app/sophia/page.tsx:import React, { useState, useEffect } from 'react';
+agent-ui/src/app/sophia/page.tsx:import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+agent-ui/src/app/sophia/page.tsx:import { Button } from '@/components/ui/button';
+agent-ui/src/app/sophia/page.tsx:import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+agent-ui/src/app/sophia/page.tsx:import { Badge } from '@/components/ui/badge';
+agent-ui/src/app/sophia/page.tsx:import SalesPerformanceDashboard from '@/components/dashboards/SalesPerformanceDashboard';
+agent-ui/src/app/sophia/page.tsx:import ClientHealthDashboard from '@/components/dashboards/ClientHealthDashboard';
+agent-ui/src/app/sophia/page.tsx:import ProjectManagementDashboard from '@/components/dashboards/ProjectManagementDashboard';
+agent-ui/src/app/sophia/page.tsx:import UnifiedChatOrchestration from '@/components/dashboards/UnifiedChatOrchestration';
+agent-ui/src/app/sophia/page.tsx:import MCPServerGrid from '@/components/mcp/MCPServerGrid';
+agent-ui/src/app/sophia/page.tsx:import MythologyAgentWidget from '@/components/mythology/MythologyAgentWidget';
+agent-ui/src/app/sophia/page.tsx:import { dashboardConfig, featureFlags } from '@/config/environment';
+agent-ui/src/app/sophia/page.tsx:import {
+agent-ui/src/app/sophia/page.tsx:export default SophiaIntelligencePage;
+agent-ui/src/app/project-management/page.tsx:import ProjectManagementDashboard from '@/components/dashboards/ProjectManagementDashboard'
+agent-ui/src/app/project-management/page.tsx:export default function ProjectManagementPage() {
+agent-ui/src/app/layout.tsx:import type { Metadata } from 'next'
+agent-ui/src/app/layout.tsx:import { DM_Mono, Geist } from 'next/font/google'
+agent-ui/src/app/layout.tsx:import { NuqsAdapter } from 'nuqs/adapters/next/app'
+agent-ui/src/app/layout.tsx:import { Toaster } from '@/components/ui/sonner'
+agent-ui/src/app/layout.tsx:import './globals.css'
+agent-ui/src/app/layout.tsx:export const metadata: Metadata = {
+agent-ui/src/app/layout.tsx:export default function RootLayout({
+agent-ui/src/app/(sophia)/calls/page.tsx:import { useEffect, useState } from "react";
+agent-ui/src/app/(sophia)/calls/page.tsx:import { fetchJSON } from "@/lib/api";
+agent-ui/src/app/(sophia)/calls/page.tsx:export default function CallsPage() {
+agent-ui/src/app/(sophia)/insights/page.tsx:import { useState } from "react";
+agent-ui/src/app/(sophia)/insights/page.tsx:export default function InsightsPage() {
+agent-ui/src/app/(sophia)/pipeline/page.tsx:import { useState, useEffect } from "react";
+agent-ui/src/app/(sophia)/pipeline/page.tsx:import { fetchJSON } from "@/lib/api";
+agent-ui/src/app/(sophia)/pipeline/page.tsx:export default function PipelinePage() {
+agent-ui/src/app/(sophia)/chat/page.tsx:import { useCallback, useEffect, useRef, useState } from "react";
+agent-ui/src/app/(sophia)/chat/page.tsx:import { API_URL } from "@/lib/config";
+agent-ui/src/app/(sophia)/chat/page.tsx:import { streamSSE } from "@/lib/api";
+agent-ui/src/app/(sophia)/chat/page.tsx:export default function ChatPage() {
+agent-ui/src/app/(sophia)/dashboard/page.tsx:import { useEffect, useState } from "react";
+agent-ui/src/app/(sophia)/dashboard/page.tsx:import { fetchJSON } from "@/lib/api";
+agent-ui/src/app/(sophia)/dashboard/page.tsx:export default function Dashboard() {
+agent-ui/src/app/(sophia)/integrations/page.tsx:import { useState, useEffect } from "react";
+agent-ui/src/app/(sophia)/integrations/page.tsx:import { fetchJSON } from "@/lib/api";
+agent-ui/src/app/(sophia)/integrations/page.tsx:export default function IntegrationsPage() {
+agent-ui/src/app/(sophia)/work/page.tsx:import { useEffect, useState } from "react";
+agent-ui/src/app/(sophia)/work/page.tsx:import { fetchJSON } from "@/lib/api";
+agent-ui/src/app/(sophia)/work/page.tsx:export default function WorkPage() {
+agent-ui/src/app/(sophia)/layout.tsx:import Link from "next/link";
+agent-ui/src/app/(sophia)/layout.tsx:import { usePathname } from "next/navigation";
+agent-ui/src/app/(sophia)/layout.tsx:import { ReactNode } from "react";
+agent-ui/src/app/(sophia)/layout.tsx:export default function SophiaLayout({ children }: { children: ReactNode }) {
+agent-ui/src/app/(sophia)/teams/page.tsx:import { useState } from "react";
+agent-ui/src/app/(sophia)/teams/page.tsx:export default function TeamsPage() {
+agent-ui/src/app/(sophia)/notifications/page.tsx:import { useState } from "react";
+agent-ui/src/app/(sophia)/notifications/page.tsx:export default function NotificationsPage() {
+agent-ui/src/app/(sophia)/analytics/page.tsx:import { useState } from "react";
+agent-ui/src/app/(sophia)/analytics/page.tsx:export default function AnalyticsPage() {
+agent-ui/src/app/page.tsx:import { useEffect } from 'react';
+agent-ui/src/app/page.tsx:import { useRouter } from 'next/navigation';
+agent-ui/src/app/page.tsx:export default function Home() {
+agent-ui/src/config/environment.ts:export const config: EnvironmentConfig = {
+agent-ui/src/config/environment.ts:export const { apiBaseUrl, wsBaseUrl, debugMode, environment } = config;
+agent-ui/src/config/environment.ts:export const dashboardConfig: DashboardConfig = {
+agent-ui/src/config/environment.ts:export const featureFlags = {
+agent-ui/src/config/environment.ts:export const updateIntervals = {
+agent-ui/src/config/environment.ts:export const voiceConfig = {
+agent-ui/src/config/environment.ts:export default config;
+agent-ui/src/components/ui/tooltip/tooltip.tsx:import * as React from 'react'
+agent-ui/src/components/ui/tooltip/tooltip.tsx:import {
+agent-ui/src/components/ui/tooltip/tooltip.tsx:import * as TooltipPrimitive from '@radix-ui/react-tooltip'
+agent-ui/src/components/ui/tooltip/tooltip.tsx:import { cn } from '@/lib/utils'
+agent-ui/src/components/ui/tooltip/tooltip.tsx:export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider }
+agent-ui/src/components/ui/tooltip/CustomTooltip.tsx:import { type FC } from 'react'
+agent-ui/src/components/ui/tooltip/CustomTooltip.tsx:import {
+agent-ui/src/components/ui/tooltip/CustomTooltip.tsx:import type { TooltipProps } from '@/components/ui/tooltip/types'
+agent-ui/src/components/ui/tooltip/CustomTooltip.tsx:export default Tooltip
+agent-ui/src/components/ui/tooltip/types.ts:import type { ReactNode } from 'react'
+agent-ui/src/components/ui/tooltip/types.ts:export interface TooltipProps {
+agent-ui/src/components/ui/tooltip/index.ts:import Tooltip from './CustomTooltip'
+agent-ui/src/components/ui/tooltip/index.ts:export default Tooltip
+agent-ui/src/components/ui/tabs.tsx:import * as React from "react"
+agent-ui/src/components/ui/tabs.tsx:import { cn } from "@/lib/utils"
+agent-ui/src/components/ui/tabs.tsx:export { Tabs, TabsList, TabsTrigger, TabsContent }
+agent-ui/src/components/ui/card.tsx:import * as React from "react"
+agent-ui/src/components/ui/card.tsx:import { cn } from "@/lib/utils"
+agent-ui/src/components/ui/card.tsx:export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent }
+agent-ui/src/components/ui/progress.tsx:import * as React from "react"
+agent-ui/src/components/ui/progress.tsx:import { cn } from "@/lib/utils"
+agent-ui/src/components/ui/progress.tsx:export interface ProgressProps
+agent-ui/src/components/ui/progress.tsx:export { Progress }
+agent-ui/src/components/ui/scroll-area.tsx:import * as React from "react"
+agent-ui/src/components/ui/scroll-area.tsx:import { cn } from "@/lib/utils"
+agent-ui/src/components/ui/scroll-area.tsx:export { ScrollArea }
+agent-ui/src/components/ui/sonner.tsx:import { useTheme } from 'next-themes'
+agent-ui/src/components/ui/sonner.tsx:import { Toaster as Sonner } from 'sonner'
+agent-ui/src/components/ui/sonner.tsx:export { Toaster }
+agent-ui/src/components/ui/alert.tsx:import * as React from "react"
+agent-ui/src/components/ui/alert.tsx:import { cva, type VariantProps } from "class-variance-authority"
+agent-ui/src/components/ui/alert.tsx:import { cn } from "@/lib/utils"
+agent-ui/src/components/ui/alert.tsx:export { Alert, AlertTitle, AlertDescription }
+agent-ui/src/components/ui/typography/Paragraph/Paragraph.tsx:import { type FC } from 'react'
+agent-ui/src/components/ui/typography/Paragraph/Paragraph.tsx:import { cn } from '@/lib/utils'
+agent-ui/src/components/ui/typography/Paragraph/Paragraph.tsx:import { PARAGRAPH_SIZES } from './constants'
+agent-ui/src/components/ui/typography/Paragraph/Paragraph.tsx:import { type ParagraphProps } from './types'
+agent-ui/src/components/ui/typography/Paragraph/Paragraph.tsx:export default Paragraph
+agent-ui/src/components/ui/typography/Paragraph/types.ts:import type { ReactNode } from 'react'
+agent-ui/src/components/ui/typography/Paragraph/types.ts:export interface ParagraphProps {
+agent-ui/src/components/ui/typography/Paragraph/types.ts:export type ParagraphSizeMap = {
+agent-ui/src/components/ui/typography/Paragraph/constants.ts:import { type ParagraphSizeMap } from './types'
+agent-ui/src/components/ui/typography/Paragraph/constants.ts:export const PARAGRAPH_SIZES: ParagraphSizeMap = {
+agent-ui/src/components/ui/typography/Paragraph/index.ts:import Paragraph from './Paragraph'
+agent-ui/src/components/ui/typography/Paragraph/index.ts:export default Paragraph
+agent-ui/src/components/ui/typography/Heading/Heading.tsx:import { type FC, type JSX } from 'react'
+agent-ui/src/components/ui/typography/Heading/Heading.tsx:import { cn } from '@/lib/utils'
+agent-ui/src/components/ui/typography/Heading/Heading.tsx:import { HEADING_SIZES } from './constants'
+agent-ui/src/components/ui/typography/Heading/Heading.tsx:import { type HeadingProps } from './types'
+agent-ui/src/components/ui/typography/Heading/Heading.tsx:export default Heading
+agent-ui/src/components/ui/typography/Heading/types.ts:import { type ReactNode } from 'react'
+agent-ui/src/components/ui/typography/Heading/types.ts:import { type IconType } from '@/components/ui/icon'
+agent-ui/src/components/ui/typography/Heading/types.ts:export interface HeadingProps {
+agent-ui/src/components/ui/typography/Heading/types.ts:export type HeadingSizeMap = {
+agent-ui/src/components/ui/typography/Heading/constants.ts:import { type HeadingSizeMap } from './types'
+agent-ui/src/components/ui/typography/Heading/constants.ts:export const HEADING_SIZES: HeadingSizeMap = {
+agent-ui/src/components/ui/typography/Heading/index.ts:import Heading from './Heading'
+agent-ui/src/components/ui/typography/Heading/index.ts:export default Heading
+agent-ui/src/components/ui/typography/MarkdownRenderer/styles.tsx:import { FC, useState } from 'react'
+agent-ui/src/components/ui/typography/MarkdownRenderer/styles.tsx:import Image from 'next/image'
+agent-ui/src/components/ui/typography/MarkdownRenderer/styles.tsx:import Link from 'next/link'
+agent-ui/src/components/ui/typography/MarkdownRenderer/styles.tsx:import { cn } from '@/lib/utils'
+agent-ui/src/components/ui/typography/MarkdownRenderer/styles.tsx:import type {
+agent-ui/src/components/ui/typography/MarkdownRenderer/styles.tsx:import { HEADING_SIZES } from '../Heading/constants'
+agent-ui/src/components/ui/typography/MarkdownRenderer/styles.tsx:import { PARAGRAPH_SIZES } from '../Paragraph/constants'
+agent-ui/src/components/ui/typography/MarkdownRenderer/styles.tsx:export const components = {
+agent-ui/src/components/ui/typography/MarkdownRenderer/types.ts:import {
+agent-ui/src/components/ui/typography/MarkdownRenderer/types.ts:export type {
+agent-ui/src/components/ui/typography/MarkdownRenderer/MarkdownRenderer.tsx:import { type FC } from 'react'
+agent-ui/src/components/ui/typography/MarkdownRenderer/MarkdownRenderer.tsx:import ReactMarkdown from 'react-markdown'
+agent-ui/src/components/ui/typography/MarkdownRenderer/MarkdownRenderer.tsx:import rehypeRaw from 'rehype-raw'
+agent-ui/src/components/ui/typography/MarkdownRenderer/MarkdownRenderer.tsx:import rehypeSanitize from 'rehype-sanitize'
+agent-ui/src/components/ui/typography/MarkdownRenderer/MarkdownRenderer.tsx:import remarkGfm from 'remark-gfm'
+agent-ui/src/components/ui/typography/MarkdownRenderer/MarkdownRenderer.tsx:import { cn } from '@/lib/utils'
+agent-ui/src/components/ui/typography/MarkdownRenderer/MarkdownRenderer.tsx:import { type MarkdownRendererProps } from './types'
+agent-ui/src/components/ui/typography/MarkdownRenderer/MarkdownRenderer.tsx:import { inlineComponents } from './inlineStyles'
+agent-ui/src/components/ui/typography/MarkdownRenderer/MarkdownRenderer.tsx:import { components } from './styles'
+agent-ui/src/components/ui/typography/MarkdownRenderer/MarkdownRenderer.tsx:export default MarkdownRenderer
+agent-ui/src/components/ui/typography/MarkdownRenderer/index.ts:import MarkdownRenderer from './MarkdownRenderer'
+agent-ui/src/components/ui/typography/MarkdownRenderer/index.ts:export default MarkdownRenderer
+agent-ui/src/components/ui/typography/MarkdownRenderer/inlineStyles.tsx:import { useState } from 'react'
+agent-ui/src/components/ui/typography/MarkdownRenderer/inlineStyles.tsx:import Image from 'next/image'
+agent-ui/src/components/ui/typography/MarkdownRenderer/inlineStyles.tsx:import Link from 'next/link'
+agent-ui/src/components/ui/typography/MarkdownRenderer/inlineStyles.tsx:import { cn } from '@/lib/utils'
+agent-ui/src/components/ui/typography/MarkdownRenderer/inlineStyles.tsx:import type {
+agent-ui/src/components/ui/typography/MarkdownRenderer/inlineStyles.tsx:import { PARAGRAPH_SIZES } from '../Paragraph/constants'
+agent-ui/src/components/ui/typography/MarkdownRenderer/inlineStyles.tsx:export const inlineComponents = {
+agent-ui/src/components/ui/dialog.tsx:import * as React from 'react'
+agent-ui/src/components/ui/dialog.tsx:import * as DialogPrimitive from '@radix-ui/react-dialog'
+agent-ui/src/components/ui/dialog.tsx:import { cn } from '@/lib/utils'
+agent-ui/src/components/ui/dialog.tsx:import Icon from './icon'
+agent-ui/src/components/ui/dialog.tsx:export {
+agent-ui/src/components/ui/badge.tsx:import * as React from "react"
+agent-ui/src/components/ui/badge.tsx:import { cva, type VariantProps } from "class-variance-authority"
+agent-ui/src/components/ui/badge.tsx:import { cn } from "@/lib/utils"
+agent-ui/src/components/ui/badge.tsx:export interface BadgeProps
+agent-ui/src/components/ui/badge.tsx:export { Badge, badgeVariants }
+agent-ui/src/components/ui/separator.tsx:import * as React from "react"
+agent-ui/src/components/ui/separator.tsx:import { cn } from "@/lib/utils"
+agent-ui/src/components/ui/separator.tsx:export interface SeparatorProps extends React.HTMLAttributes<HTMLDivElement> {
+agent-ui/src/components/ui/separator.tsx:export const HorizontalSeparator: React.FC<Omit<SeparatorProps, 'orientation'>> = (props) => (
+agent-ui/src/components/ui/separator.tsx:export const VerticalSeparator: React.FC<Omit<SeparatorProps, 'orientation'>> = (props) => (
+agent-ui/src/components/ui/separator.tsx:export const GradientSeparator: React.FC<Omit<SeparatorProps, 'variant'>> = (props) => (
+agent-ui/src/components/ui/separator.tsx:export { Separator }
+agent-ui/src/components/ui/icon/Icon.tsx:import { type FC } from 'react'
+agent-ui/src/components/ui/icon/Icon.tsx:import { cn } from '@/lib/utils'
+agent-ui/src/components/ui/icon/Icon.tsx:import { ICONS } from './constants'
+agent-ui/src/components/ui/icon/Icon.tsx:import { type IconProps } from './types'
+agent-ui/src/components/ui/icon/Icon.tsx:export default Icon
+agent-ui/src/components/ui/icon/custom-icons.tsx:import { type FC } from 'react'
+agent-ui/src/components/ui/icon/custom-icons.tsx:export const AgnoIcon: FC = ({ ...props }) => {
+agent-ui/src/components/ui/icon/custom-icons.tsx:export const UserIcon: FC = ({ ...props }) => {
+agent-ui/src/components/ui/icon/custom-icons.tsx:export const AgentIcon: FC = ({ ...props }) => {
+agent-ui/src/components/ui/icon/custom-icons.tsx:export const MistralLogo: FC = ({ ...props }) => (
+agent-ui/src/components/ui/icon/custom-icons.tsx:export const GeminiLogo: FC = () => (
+agent-ui/src/components/ui/icon/custom-icons.tsx:export const AwsLogo: FC = ({ ...props }) => (
+agent-ui/src/components/ui/icon/custom-icons.tsx:export const AnthropicLogo: FC = ({ ...props }) => (
+agent-ui/src/components/ui/icon/custom-icons.tsx:export const OllamaLogo: FC = ({ ...props }) => (
+agent-ui/src/components/ui/icon/custom-icons.tsx:export const GroqLogo: FC = ({ ...props }) => (
+agent-ui/src/components/ui/icon/custom-icons.tsx:export const DeepseekLogo: FC = ({ ...props }) => (
+agent-ui/src/components/ui/icon/custom-icons.tsx:export const CohereLogo: FC = ({ ...props }) => (
+agent-ui/src/components/ui/icon/custom-icons.tsx:export const FireworksLogo: FC = ({ ...props }) => (
+agent-ui/src/components/ui/icon/custom-icons.tsx:export const AzureLogo: FC = ({ ...props }) => (
+agent-ui/src/components/ui/icon/custom-icons.tsx:export const XaiLogo: FC = ({ ...props }) => (
+agent-ui/src/components/ui/icon/custom-icons.tsx:export const OpenAILogo: FC = ({ ...props }) => (
+agent-ui/src/components/ui/icon/custom-icons.tsx:export const SheetIcon: FC = ({ ...props }) => (
+agent-ui/src/components/ui/icon/custom-icons.tsx:export const NextjsTag: FC = ({ ...props }) => (
+agent-ui/src/components/ui/icon/custom-icons.tsx:export const ShadcnTag: FC = ({ ...props }) => (
+agent-ui/src/components/ui/icon/custom-icons.tsx:export const TailwindTag: FC = ({ ...props }) => (
+agent-ui/src/components/ui/icon/custom-icons.tsx:export const AgnoTag: FC = ({ ...props }) => {
+agent-ui/src/components/ui/icon/custom-icons.tsx:export const ReasoningIcon: FC = ({ ...props }) => (
+agent-ui/src/components/ui/icon/custom-icons.tsx:export const ReferencesIcon: FC = ({ ...props }) => (
+agent-ui/src/components/ui/icon/types.ts:import { type ElementType } from 'react'
+agent-ui/src/components/ui/icon/types.ts:export type IconType =
+agent-ui/src/components/ui/icon/types.ts:export interface IconProps {
+agent-ui/src/components/ui/icon/types.ts:export type IconTypeMap = {
+agent-ui/src/components/ui/icon/constants.tsx:import {
+agent-ui/src/components/ui/icon/constants.tsx:import { IconTypeMap } from './types'
+agent-ui/src/components/ui/icon/constants.tsx:import {
+agent-ui/src/components/ui/icon/constants.tsx:import { PlusIcon } from '@radix-ui/react-icons'
+agent-ui/src/components/ui/icon/constants.tsx:export const ICONS: IconTypeMap = {
+agent-ui/src/components/ui/icon/index.ts:import Icon from './Icon'
+agent-ui/src/components/ui/icon/index.ts:export { type IconType } from './types'
+agent-ui/src/components/ui/icon/index.ts:export default Icon
+agent-ui/src/components/ui/button.tsx:import * as React from 'react'
+agent-ui/src/components/ui/button.tsx:import { Slot } from '@radix-ui/react-slot'
+agent-ui/src/components/ui/button.tsx:import { cva, type VariantProps } from 'class-variance-authority'
+agent-ui/src/components/ui/button.tsx:import { cn } from '@/lib/utils'
+agent-ui/src/components/ui/button.tsx:export interface ButtonProps
+agent-ui/src/components/ui/button.tsx:export { Button, buttonVariants }
+agent-ui/src/components/ui/select.tsx:import * as React from 'react'
+agent-ui/src/components/ui/select.tsx:import * as SelectPrimitive from '@radix-ui/react-select'
+agent-ui/src/components/ui/select.tsx:import { cn } from '@/lib/utils'
+agent-ui/src/components/ui/select.tsx:import Icon from './icon'
+agent-ui/src/components/ui/select.tsx:export {
+agent-ui/src/components/ui/textarea.tsx:import * as React from 'react'
+agent-ui/src/components/ui/textarea.tsx:import { cn } from '@/lib/utils'
+agent-ui/src/components/ui/textarea.tsx:export type { TextareaProps }
+agent-ui/src/components/ui/textarea.tsx:export { TextArea }
+agent-ui/src/components/ui/input.tsx:import * as React from "react"
+agent-ui/src/components/ui/input.tsx:import { cn } from "@/lib/utils"
+agent-ui/src/components/ui/input.tsx:export interface InputProps
+agent-ui/src/components/ui/input.tsx:export { Input }
+agent-ui/src/components/ui/skeleton.tsx:import { cn } from '@/lib/utils'
+agent-ui/src/components/ui/skeleton.tsx:export { Skeleton }
+agent-ui/src/components/swarm/CriticReport.tsx:import { useState } from 'react';
+agent-ui/src/components/swarm/CriticReport.tsx:import { CriticReview } from '@/types/swarm';
+agent-ui/src/components/swarm/CriticReport.tsx:import { cn } from '@/lib/utils';
+agent-ui/src/components/swarm/CriticReport.tsx:import { Button } from '@/components/ui/button';
+agent-ui/src/components/swarm/CriticReport.tsx:export function CriticReport({ data }: CriticReportProps) {
+agent-ui/src/components/swarm/TeamWorkflowPanel.tsx:import { useState, useEffect } from 'react';
+agent-ui/src/components/swarm/TeamWorkflowPanel.tsx:import { usePlaygroundStore } from '@/store';
+agent-ui/src/components/swarm/TeamWorkflowPanel.tsx:import { fetchJSON } from '@/lib/fetchUtils';
+agent-ui/src/components/swarm/TeamWorkflowPanel.tsx:import { streamText } from '@/lib/streamUtils';
+agent-ui/src/components/swarm/TeamWorkflowPanel.tsx:import { buildEndpointUrl } from '@/lib/endpointUtils';
+agent-ui/src/components/swarm/TeamWorkflowPanel.tsx:import { Team, Workflow, StreamResponse } from '@/types/swarm';
+agent-ui/src/components/swarm/TeamWorkflowPanel.tsx:import { Button } from '@/components/ui/button';
+agent-ui/src/components/swarm/TeamWorkflowPanel.tsx:import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+agent-ui/src/components/swarm/TeamWorkflowPanel.tsx:import { cn } from '@/lib/utils';
+agent-ui/src/components/swarm/TeamWorkflowPanel.tsx:export function TeamWorkflowPanel() {
+agent-ui/src/components/swarm/JudgeReport.tsx:import { useState } from 'react';
+agent-ui/src/components/swarm/JudgeReport.tsx:import { JudgeDecision } from '@/types/swarm';
+agent-ui/src/components/swarm/JudgeReport.tsx:import { cn } from '@/lib/utils';
+agent-ui/src/components/swarm/JudgeReport.tsx:import { Button } from '@/components/ui/button';
+agent-ui/src/components/swarm/JudgeReport.tsx:export function JudgeReport({ data }: JudgeReportProps) {
+agent-ui/src/components/swarm/EndpointPicker.tsx:import { useState, useEffect } from 'react';
+agent-ui/src/components/swarm/EndpointPicker.tsx:import { usePlaygroundStore } from '@/store';
+agent-ui/src/components/swarm/EndpointPicker.tsx:import { testEndpoint } from '@/lib/endpointUtils';
+agent-ui/src/components/swarm/EndpointPicker.tsx:import { Button } from '@/components/ui/button';
+agent-ui/src/components/swarm/EndpointPicker.tsx:import { cn } from '@/lib/utils';
+agent-ui/src/components/swarm/EndpointPicker.tsx:export function EndpointPicker() {
+agent-ui/src/components/swarm/ToolCalls.tsx:import { useState } from 'react';
+agent-ui/src/components/swarm/ToolCalls.tsx:import { ToolCall } from '@/types/swarm';
+agent-ui/src/components/swarm/ToolCalls.tsx:import { cn } from '@/lib/utils';
+agent-ui/src/components/swarm/ToolCalls.tsx:import Icon from '@/components/ui/icon';
+agent-ui/src/components/swarm/ToolCalls.tsx:export function ToolCalls({ calls = [] }: ToolCallsProps) {
+agent-ui/src/components/swarm/EnhancedOutput.tsx:import { useState, useEffect } from 'react';
+agent-ui/src/components/swarm/EnhancedOutput.tsx:import { cn } from '@/lib/utils';
+agent-ui/src/components/swarm/EnhancedOutput.tsx:export function EnhancedOutput({ streamData = '' }: EnhancedOutputProps) {
+agent-ui/src/components/swarm/ConsciousnessVisualization.tsx:import React, { useState } from 'react';
+agent-ui/src/components/swarm/ConsciousnessVisualization.tsx:import { cn } from '@/lib/utils';
+agent-ui/src/components/swarm/ConsciousnessVisualization.tsx:export function ConsciousnessVisualization({
+agent-ui/src/components/swarm/ConsciousnessVisualization.tsx:export default ConsciousnessVisualization;
+agent-ui/src/components/swarm/Citations.tsx:import { useState } from 'react';
+agent-ui/src/components/swarm/Citations.tsx:import { Citation } from '@/types/swarm';
+agent-ui/src/components/swarm/Citations.tsx:import { cn } from '@/lib/utils';
+agent-ui/src/components/swarm/Citations.tsx:import Icon from '@/components/ui/icon';
+agent-ui/src/components/swarm/Citations.tsx:export function Citations({ items = [] }: CitationsProps) {
+agent-ui/src/components/swarm/StreamView.tsx:import { useState, useEffect } from 'react';
+agent-ui/src/components/swarm/StreamView.tsx:import { usePlaygroundStore } from '@/store';
+agent-ui/src/components/swarm/StreamView.tsx:import { StreamResponse } from '@/types/swarm';
+agent-ui/src/components/swarm/StreamView.tsx:import { JudgeReport } from './JudgeReport';
+agent-ui/src/components/swarm/StreamView.tsx:import { ToolCalls } from './ToolCalls';
+agent-ui/src/components/swarm/StreamView.tsx:import { Citations } from './Citations';
+agent-ui/src/components/swarm/StreamView.tsx:import { CriticReport } from './CriticReport';
+agent-ui/src/components/swarm/StreamView.tsx:import { cn } from '@/lib/utils';
+agent-ui/src/components/swarm/StreamView.tsx:export function StreamView({
+agent-ui/src/components/swarm/MCPStatus.tsx:import React, { useState, useEffect, useCallback } from 'react';
+agent-ui/src/components/swarm/MCPStatus.tsx:import { AlertCircle, CheckCircle, XCircle, RefreshCw, Activity, Wifi, WifiOff } from 'lucide-react';
+agent-ui/src/components/swarm/MCPStatus.tsx:import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+agent-ui/src/components/swarm/MCPStatus.tsx:import { Badge } from '@/components/ui/badge';
+agent-ui/src/components/swarm/MCPStatus.tsx:import { Button } from '@/components/ui/button';
+agent-ui/src/components/swarm/MCPStatus.tsx:import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+agent-ui/src/components/swarm/MCPStatus.tsx:import { Progress } from '@/components/ui/progress';
+agent-ui/src/components/swarm/MCPStatus.tsx:export const MCPStatus: React.FC = () => {
+agent-ui/src/components/swarm/MCPStatus.tsx:export default MCPStatus;
+agent-ui/src/components/swarm/index.ts:export { Citations } from './Citations';
+agent-ui/src/components/swarm/index.ts:export { CriticReport } from './CriticReport';
+agent-ui/src/components/swarm/index.ts:export { EndpointPicker } from './EndpointPicker';
+agent-ui/src/components/swarm/index.ts:export { JudgeReport } from './JudgeReport';
+agent-ui/src/components/swarm/index.ts:export { ToolCalls } from './ToolCalls';
+agent-ui/src/components/swarm/index.ts:export { TeamWorkflowPanel } from './TeamWorkflowPanel';
+agent-ui/src/components/swarm/index.ts:export { StreamView } from './StreamView';
+agent-ui/src/components/swarm/index.ts:export { EnhancedOutput } from './EnhancedOutput';
+agent-ui/src/components/swarm/index.ts:export { ConsciousnessVisualization } from './ConsciousnessVisualization';
+agent-ui/src/components/swarm/index.ts:export {
+agent-ui/src/components/swarm/UIEnhancements.tsx:import { useState } from 'react';
+agent-ui/src/components/swarm/UIEnhancements.tsx:import { cn } from '@/lib/utils';
+agent-ui/src/components/swarm/UIEnhancements.tsx:import { Button } from '@/components/ui/button';
+agent-ui/src/components/swarm/UIEnhancements.tsx:export function SwarmVisualization({
+agent-ui/src/components/swarm/UIEnhancements.tsx:export function StreamingIndicator({ isStreaming }: { isStreaming: boolean }) {
+agent-ui/src/components/swarm/UIEnhancements.tsx:export function BasicMetrics({
+agent-ui/src/components/swarm/UIEnhancements.tsx:export function AgentStatusCard({
+agent-ui/src/components/swarm/UIEnhancements.tsx:export function SimpleTaskProgress({
+agent-ui/src/components/swarm/UIEnhancements.tsx:export function QuickMessageInput({
+agent-ui/src/components/coordination/OrchestratorCoordinationView.tsx:import React, { useState, useEffect } from 'react';
+agent-ui/src/components/coordination/OrchestratorCoordinationView.tsx:import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+agent-ui/src/components/coordination/OrchestratorCoordinationView.tsx:import { Button } from '@/components/ui/button';
+agent-ui/src/components/coordination/OrchestratorCoordinationView.tsx:import { Badge } from '@/components/ui/badge';
+agent-ui/src/components/coordination/OrchestratorCoordinationView.tsx:import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+agent-ui/src/components/coordination/OrchestratorCoordinationView.tsx:import { useOrchestratorCoordination } from '@/hooks/useOrchestratorCoordination';
+agent-ui/src/components/coordination/OrchestratorCoordinationView.tsx:import { TaskFlowVisualization } from './TaskFlowVisualization';
+agent-ui/src/components/coordination/OrchestratorCoordinationView.tsx:import {
+agent-ui/src/components/coordination/OrchestratorCoordinationView.tsx:export default OrchestratorCoordinationView;
+agent-ui/src/components/coordination/TaskFlowVisualization.tsx:import React, { useState, useEffect, useRef } from 'react';
+agent-ui/src/components/coordination/TaskFlowVisualization.tsx:import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+agent-ui/src/components/coordination/TaskFlowVisualization.tsx:import { Button } from '@/components/ui/button';
+agent-ui/src/components/coordination/TaskFlowVisualization.tsx:import { Badge } from '@/components/ui/badge';
+agent-ui/src/components/coordination/TaskFlowVisualization.tsx:import {
+agent-ui/src/components/coordination/TaskFlowVisualization.tsx:export { TaskFlowVisualization };
+agent-ui/src/components/playground/Sidebar/NewChatButton.tsx:import { Button } from '@/components/ui/button'
+agent-ui/src/components/playground/Sidebar/NewChatButton.tsx:import Icon from '@/components/ui/icon'
+agent-ui/src/components/playground/Sidebar/NewChatButton.tsx:import useChatActions from '@/hooks/useChatActions'
+agent-ui/src/components/playground/Sidebar/NewChatButton.tsx:import { usePlaygroundStore } from '@/store'
+agent-ui/src/components/playground/Sidebar/NewChatButton.tsx:export default NewChatButton
+agent-ui/src/components/playground/Sidebar/Sessions/Sessions.tsx:import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+agent-ui/src/components/playground/Sidebar/Sessions/Sessions.tsx:import dayjs from 'dayjs'
+agent-ui/src/components/playground/Sidebar/Sessions/Sessions.tsx:import utc from 'dayjs/plugin/utc'
+agent-ui/src/components/playground/Sidebar/Sessions/Sessions.tsx:import { useQueryState } from 'nuqs'
+agent-ui/src/components/playground/Sidebar/Sessions/Sessions.tsx:import { usePlaygroundStore } from '@/store'
+agent-ui/src/components/playground/Sidebar/Sessions/Sessions.tsx:import useSessionLoader from '@/hooks/useSessionLoader'
+agent-ui/src/components/playground/Sidebar/Sessions/Sessions.tsx:import SessionItem from './SessionItem'
+agent-ui/src/components/playground/Sidebar/Sessions/Sessions.tsx:import SessionBlankState from './SessionBlankState'
+agent-ui/src/components/playground/Sidebar/Sessions/Sessions.tsx:import { Skeleton } from '@/components/ui/skeleton'
+agent-ui/src/components/playground/Sidebar/Sessions/Sessions.tsx:import { cn } from '@/lib/utils'
+agent-ui/src/components/playground/Sidebar/Sessions/Sessions.tsx:export default Sessions
+agent-ui/src/components/playground/Sidebar/Sessions/DeleteSessionModal.tsx:import { type FC } from 'react'
+agent-ui/src/components/playground/Sidebar/Sessions/DeleteSessionModal.tsx:import { Button } from '@/components/ui/button'
+agent-ui/src/components/playground/Sidebar/Sessions/DeleteSessionModal.tsx:import {
+agent-ui/src/components/playground/Sidebar/Sessions/DeleteSessionModal.tsx:export default DeleteSessionModal
+agent-ui/src/components/playground/Sidebar/Sessions/SessionBlankState.tsx:import React from 'react'
+agent-ui/src/components/playground/Sidebar/Sessions/SessionBlankState.tsx:import { usePlaygroundStore } from '@/store'
+agent-ui/src/components/playground/Sidebar/Sessions/SessionBlankState.tsx:import { useQueryState } from 'nuqs'
+agent-ui/src/components/playground/Sidebar/Sessions/SessionBlankState.tsx:import Link from 'next/link'
+agent-ui/src/components/playground/Sidebar/Sessions/SessionBlankState.tsx:export default SessionBlankState
+agent-ui/src/components/playground/Sidebar/Sessions/index.ts:import Sessions from './Sessions'
+agent-ui/src/components/playground/Sidebar/Sessions/index.ts:export default Sessions
+agent-ui/src/components/playground/Sidebar/Sessions/SessionItem.tsx:import { useQueryState } from 'nuqs'
+agent-ui/src/components/playground/Sidebar/Sessions/SessionItem.tsx:import { SessionEntry } from '@/types/playground'
+agent-ui/src/components/playground/Sidebar/Sessions/SessionItem.tsx:import { Button } from '../../../ui/button'
+agent-ui/src/components/playground/Sidebar/Sessions/SessionItem.tsx:import useSessionLoader from '@/hooks/useSessionLoader'
+agent-ui/src/components/playground/Sidebar/Sessions/SessionItem.tsx:import {
+agent-ui/src/components/playground/Sidebar/Sessions/SessionItem.tsx:import { usePlaygroundStore } from '@/store'
+agent-ui/src/components/playground/Sidebar/Sessions/SessionItem.tsx:import { toast } from 'sonner'
+agent-ui/src/components/playground/Sidebar/Sessions/SessionItem.tsx:import Icon from '@/components/ui/icon'
+agent-ui/src/components/playground/Sidebar/Sessions/SessionItem.tsx:import { useState } from 'react'
+agent-ui/src/components/playground/Sidebar/Sessions/SessionItem.tsx:import DeleteSessionModal from './DeleteSessionModal'
+agent-ui/src/components/playground/Sidebar/Sessions/SessionItem.tsx:import useChatActions from '@/hooks/useChatActions'
+agent-ui/src/components/playground/Sidebar/Sessions/SessionItem.tsx:import { truncateText, cn } from '@/lib/utils'
+agent-ui/src/components/playground/Sidebar/Sessions/SessionItem.tsx:export default SessionItem
+agent-ui/src/components/playground/Sidebar/Sidebar.tsx:import { Button } from '@/components/ui/button'
+agent-ui/src/components/playground/Sidebar/Sidebar.tsx:import { ModeSelector } from '@/components/playground/Sidebar/ModeSelector'
+agent-ui/src/components/playground/Sidebar/Sidebar.tsx:import { EntitySelector } from '@/components/playground/Sidebar/EntitySelector'
+agent-ui/src/components/playground/Sidebar/Sidebar.tsx:import useChatActions from '@/hooks/useChatActions'
+agent-ui/src/components/playground/Sidebar/Sidebar.tsx:import { usePlaygroundStore } from '@/store'
+agent-ui/src/components/playground/Sidebar/Sidebar.tsx:import { motion, AnimatePresence } from 'framer-motion'
+agent-ui/src/components/playground/Sidebar/Sidebar.tsx:import { useState, useEffect } from 'react'
+agent-ui/src/components/playground/Sidebar/Sidebar.tsx:import Icon from '@/components/ui/icon'
+agent-ui/src/components/playground/Sidebar/Sidebar.tsx:import { getProviderIcon } from '@/lib/modelProvider'
+agent-ui/src/components/playground/Sidebar/Sidebar.tsx:import Sessions from './Sessions'
+agent-ui/src/components/playground/Sidebar/Sidebar.tsx:import { isValidUrl } from '@/lib/utils'
+agent-ui/src/components/playground/Sidebar/Sidebar.tsx:import { toast } from 'sonner'
+agent-ui/src/components/playground/Sidebar/Sidebar.tsx:import { useQueryState } from 'nuqs'
+agent-ui/src/components/playground/Sidebar/Sidebar.tsx:import { truncateText } from '@/lib/utils'
+agent-ui/src/components/playground/Sidebar/Sidebar.tsx:import { Skeleton } from '@/components/ui/skeleton'
+agent-ui/src/components/playground/Sidebar/Sidebar.tsx:export default Sidebar
+agent-ui/src/components/playground/Sidebar/index.ts:import Sidebar from './Sidebar'
+agent-ui/src/components/playground/Sidebar/index.ts:export default Sidebar
+agent-ui/src/components/playground/Sidebar/EntitySelector.tsx:import * as React from 'react'
+agent-ui/src/components/playground/Sidebar/EntitySelector.tsx:import {
+agent-ui/src/components/playground/Sidebar/EntitySelector.tsx:import { usePlaygroundStore } from '@/store'
+agent-ui/src/components/playground/Sidebar/EntitySelector.tsx:import { useQueryState } from 'nuqs'
+agent-ui/src/components/playground/Sidebar/EntitySelector.tsx:import Icon from '@/components/ui/icon'
+agent-ui/src/components/playground/Sidebar/EntitySelector.tsx:import { useEffect } from 'react'
+agent-ui/src/components/playground/Sidebar/EntitySelector.tsx:import useChatActions from '@/hooks/useChatActions'
+agent-ui/src/components/playground/Sidebar/EntitySelector.tsx:export function EntitySelector() {
+agent-ui/src/components/playground/Sidebar/ModeSelector.tsx:import * as React from 'react'
+agent-ui/src/components/playground/Sidebar/ModeSelector.tsx:import {
+agent-ui/src/components/playground/Sidebar/ModeSelector.tsx:import { usePlaygroundStore } from '@/store'
+agent-ui/src/components/playground/Sidebar/ModeSelector.tsx:import { useQueryState } from 'nuqs'
+agent-ui/src/components/playground/Sidebar/ModeSelector.tsx:import useChatActions from '@/hooks/useChatActions'
+agent-ui/src/components/playground/Sidebar/ModeSelector.tsx:export function ModeSelector() {
+agent-ui/src/components/playground/ChatArea/Messages/MessageItem.tsx:import Icon from '@/components/ui/icon'
+agent-ui/src/components/playground/ChatArea/Messages/MessageItem.tsx:import MarkdownRenderer from '@/components/ui/typography/MarkdownRenderer'
+agent-ui/src/components/playground/ChatArea/Messages/MessageItem.tsx:import { usePlaygroundStore } from '@/store'
+agent-ui/src/components/playground/ChatArea/Messages/MessageItem.tsx:import type { PlaygroundChatMessage } from '@/types/playground'
+agent-ui/src/components/playground/ChatArea/Messages/MessageItem.tsx:import Videos from './Multimedia/Videos'
+agent-ui/src/components/playground/ChatArea/Messages/MessageItem.tsx:import Images from './Multimedia/Images'
+agent-ui/src/components/playground/ChatArea/Messages/MessageItem.tsx:import Audios from './Multimedia/Audios'
+agent-ui/src/components/playground/ChatArea/Messages/MessageItem.tsx:import { memo } from 'react'
+agent-ui/src/components/playground/ChatArea/Messages/MessageItem.tsx:import AgentThinkingLoader from './AgentThinkingLoader'
+agent-ui/src/components/playground/ChatArea/Messages/MessageItem.tsx:export { AgentMessage, UserMessage }
+agent-ui/src/components/playground/ChatArea/Messages/AgentThinkingLoader.tsx:export default AgentThinkingLoader
+agent-ui/src/components/playground/ChatArea/Messages/Multimedia/Audios/index.ts:import Audios from './Audios'
+agent-ui/src/components/playground/ChatArea/Messages/Multimedia/Audios/index.ts:export default Audios
+agent-ui/src/components/playground/ChatArea/Messages/Multimedia/Audios/Audios.tsx:import { memo, useMemo } from 'react'
+agent-ui/src/components/playground/ChatArea/Messages/Multimedia/Audios/Audios.tsx:import { type AudioData } from '@/types/playground'
+agent-ui/src/components/playground/ChatArea/Messages/Multimedia/Audios/Audios.tsx:import { decodeBase64Audio } from '@/lib/audio'
+agent-ui/src/components/playground/ChatArea/Messages/Multimedia/Audios/Audios.tsx:export default Audios
+agent-ui/src/components/playground/ChatArea/Messages/Multimedia/Images/index.ts:import Images from './Images'
+agent-ui/src/components/playground/ChatArea/Messages/Multimedia/Images/index.ts:export default Images
+agent-ui/src/components/playground/ChatArea/Messages/Multimedia/Images/Images.tsx:import { memo } from 'react'
+agent-ui/src/components/playground/ChatArea/Messages/Multimedia/Images/Images.tsx:import { type ImageData } from '@/types/playground'
+agent-ui/src/components/playground/ChatArea/Messages/Multimedia/Images/Images.tsx:import { cn } from '@/lib/utils'
+agent-ui/src/components/playground/ChatArea/Messages/Multimedia/Images/Images.tsx:export default memo(Images)
+agent-ui/src/components/playground/ChatArea/Messages/Multimedia/Videos/Videos.tsx:import { memo } from 'react'
+agent-ui/src/components/playground/ChatArea/Messages/Multimedia/Videos/Videos.tsx:import { toast } from 'sonner'
+agent-ui/src/components/playground/ChatArea/Messages/Multimedia/Videos/Videos.tsx:import { type VideoData } from '@/types/playground'
+agent-ui/src/components/playground/ChatArea/Messages/Multimedia/Videos/Videos.tsx:import Icon from '@/components/ui/icon'
+agent-ui/src/components/playground/ChatArea/Messages/Multimedia/Videos/Videos.tsx:export default Videos
+agent-ui/src/components/playground/ChatArea/Messages/Multimedia/Videos/index.ts:import Videos from './Videos'
+agent-ui/src/components/playground/ChatArea/Messages/Multimedia/Videos/index.ts:export default Videos
+agent-ui/src/components/playground/ChatArea/Messages/ChatBlankState.tsx:import Link from 'next/link'
+agent-ui/src/components/playground/ChatArea/Messages/ChatBlankState.tsx:import { motion, Variants } from 'framer-motion'
+agent-ui/src/components/playground/ChatArea/Messages/ChatBlankState.tsx:import Icon from '@/components/ui/icon'
+agent-ui/src/components/playground/ChatArea/Messages/ChatBlankState.tsx:import { IconType } from '@/components/ui/icon/types'
+agent-ui/src/components/playground/ChatArea/Messages/ChatBlankState.tsx:import React, { useState } from 'react'
+agent-ui/src/components/playground/ChatArea/Messages/ChatBlankState.tsx:export default ChatBlankState
+agent-ui/src/components/playground/ChatArea/Messages/Messages.tsx:import type { PlaygroundChatMessage } from '@/types/playground'
+agent-ui/src/components/playground/ChatArea/Messages/Messages.tsx:import { AgentMessage, UserMessage } from './MessageItem'
+agent-ui/src/components/playground/ChatArea/Messages/Messages.tsx:import Tooltip from '@/components/ui/tooltip'
+agent-ui/src/components/playground/ChatArea/Messages/Messages.tsx:import { memo } from 'react'
+agent-ui/src/components/playground/ChatArea/Messages/Messages.tsx:import {
+agent-ui/src/components/playground/ChatArea/Messages/Messages.tsx:import React, { type FC } from 'react'
+agent-ui/src/components/playground/ChatArea/Messages/Messages.tsx:import ChatBlankState from './ChatBlankState'
+agent-ui/src/components/playground/ChatArea/Messages/Messages.tsx:import Icon from '@/components/ui/icon'
+agent-ui/src/components/playground/ChatArea/Messages/Messages.tsx:export default Messages
+agent-ui/src/components/playground/ChatArea/Messages/index.ts:import Messages from './Messages'
+agent-ui/src/components/playground/ChatArea/Messages/index.ts:export default Messages
+agent-ui/src/components/playground/ChatArea/ChatArea.tsx:import ChatInput from './ChatInput'
+agent-ui/src/components/playground/ChatArea/ChatArea.tsx:import MessageArea from './MessageArea'
+agent-ui/src/components/playground/ChatArea/ChatArea.tsx:export default ChatArea
+agent-ui/src/components/playground/ChatArea/ChatInput/index.ts:import ChatInput from './ChatInput'
+agent-ui/src/components/playground/ChatArea/ChatInput/index.ts:export default ChatInput
+agent-ui/src/components/playground/ChatArea/ChatInput/ChatInput.tsx:import { useState } from 'react'
+agent-ui/src/components/playground/ChatArea/ChatInput/ChatInput.tsx:import { toast } from 'sonner'
+agent-ui/src/components/playground/ChatArea/ChatInput/ChatInput.tsx:import { TextArea } from '@/components/ui/textarea'
+agent-ui/src/components/playground/ChatArea/ChatInput/ChatInput.tsx:import { Button } from '@/components/ui/button'
+agent-ui/src/components/playground/ChatArea/ChatInput/ChatInput.tsx:import { usePlaygroundStore } from '@/store'
+agent-ui/src/components/playground/ChatArea/ChatInput/ChatInput.tsx:import useAIChatStreamHandler from '@/hooks/useAIStreamHandler'
+agent-ui/src/components/playground/ChatArea/ChatInput/ChatInput.tsx:import { useQueryState } from 'nuqs'
+agent-ui/src/components/playground/ChatArea/ChatInput/ChatInput.tsx:import Icon from '@/components/ui/icon'
+agent-ui/src/components/playground/ChatArea/ChatInput/ChatInput.tsx:export default ChatInput
+agent-ui/src/components/playground/ChatArea/index.ts:import ChatArea from './ChatArea'
+agent-ui/src/components/playground/ChatArea/index.ts:export { ChatArea }
+agent-ui/src/components/playground/ChatArea/MessageArea.tsx:import { usePlaygroundStore } from '@/store'
+agent-ui/src/components/playground/ChatArea/MessageArea.tsx:import Messages from './Messages'
+agent-ui/src/components/playground/ChatArea/MessageArea.tsx:import ScrollToBottom from '@/components/playground/ChatArea/ScrollToBottom'
+agent-ui/src/components/playground/ChatArea/MessageArea.tsx:import { StickToBottom } from 'use-stick-to-bottom'
+agent-ui/src/components/playground/ChatArea/MessageArea.tsx:export default MessageArea
+agent-ui/src/components/playground/ChatArea/ScrollToBottom.tsx:import type React from 'react'
+agent-ui/src/components/playground/ChatArea/ScrollToBottom.tsx:import { motion, AnimatePresence } from 'framer-motion'
+agent-ui/src/components/playground/ChatArea/ScrollToBottom.tsx:import { useStickToBottomContext } from 'use-stick-to-bottom'
+agent-ui/src/components/playground/ChatArea/ScrollToBottom.tsx:import { Button } from '@/components/ui/button'
+agent-ui/src/components/playground/ChatArea/ScrollToBottom.tsx:import Icon from '@/components/ui/icon'
+agent-ui/src/components/playground/ChatArea/ScrollToBottom.tsx:export default ScrollToBottom
+agent-ui/src/components/artemis/MCPServerVisualization.tsx:import React, { useState, useEffect, useMemo } from 'react';
+agent-ui/src/components/artemis/MCPServerVisualization.tsx:import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+agent-ui/src/components/artemis/MCPServerVisualization.tsx:import { Button } from '@/components/ui/button';
+agent-ui/src/components/artemis/MCPServerVisualization.tsx:import { Badge } from '@/components/ui/badge';
+agent-ui/src/components/artemis/MCPServerVisualization.tsx:import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+agent-ui/src/components/artemis/MCPServerVisualization.tsx:import { Progress } from '@/components/ui/progress';
+agent-ui/src/components/artemis/MCPServerVisualization.tsx:import { Alert, AlertDescription } from '@/components/ui/alert';
+agent-ui/src/components/artemis/MCPServerVisualization.tsx:import { Separator } from '@/components/ui/separator';
+agent-ui/src/components/artemis/MCPServerVisualization.tsx:import { ScrollArea } from '@/components/ui/scroll-area';
+agent-ui/src/components/artemis/MCPServerVisualization.tsx:import useMCPStatus from '@/hooks/useMCPStatus';
+agent-ui/src/components/artemis/MCPServerVisualization.tsx:import {
+agent-ui/src/components/artemis/MCPServerVisualization.tsx:export default MCPServerVisualization;
+agent-ui/src/components/sophia/MCPBusinessIntelligence.tsx:import React, { useState, useEffect, useMemo } from 'react';
+agent-ui/src/components/sophia/MCPBusinessIntelligence.tsx:import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+agent-ui/src/components/sophia/MCPBusinessIntelligence.tsx:import { Button } from '@/components/ui/button';
+agent-ui/src/components/sophia/MCPBusinessIntelligence.tsx:import { Badge } from '@/components/ui/badge';
+agent-ui/src/components/sophia/MCPBusinessIntelligence.tsx:import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+agent-ui/src/components/sophia/MCPBusinessIntelligence.tsx:import { Progress } from '@/components/ui/progress';
+agent-ui/src/components/sophia/MCPBusinessIntelligence.tsx:import { Alert, AlertDescription } from '@/components/ui/alert';
+agent-ui/src/components/sophia/MCPBusinessIntelligence.tsx:import { Separator } from '@/components/ui/separator';
+agent-ui/src/components/sophia/MCPBusinessIntelligence.tsx:import { ScrollArea } from '@/components/ui/scroll-area';
+agent-ui/src/components/sophia/MCPBusinessIntelligence.tsx:import useMCPStatus from '@/hooks/useMCPStatus';
+agent-ui/src/components/sophia/MCPBusinessIntelligence.tsx:import {
+agent-ui/src/components/sophia/MCPBusinessIntelligence.tsx:export default MCPBusinessIntelligence;
+agent-ui/src/components/sophia/PayReadyDashboard.tsx:import React, { useState, useEffect, useCallback } from 'react';
+agent-ui/src/components/sophia/PayReadyDashboard.tsx:import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+agent-ui/src/components/sophia/PayReadyDashboard.tsx:import { Badge } from '@/components/ui/badge';
+agent-ui/src/components/sophia/PayReadyDashboard.tsx:import { Button } from '@/components/ui/button';
+agent-ui/src/components/sophia/PayReadyDashboard.tsx:import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+agent-ui/src/components/sophia/PayReadyDashboard.tsx:import { Progress } from '@/components/ui/progress';
+agent-ui/src/components/sophia/PayReadyDashboard.tsx:import { Alert, AlertDescription } from '@/components/ui/alert';
+agent-ui/src/components/sophia/PayReadyDashboard.tsx:import {
+agent-ui/src/components/sophia/PayReadyDashboard.tsx:export default PayReadyDashboard;
+agent-ui/src/components/project-management/MobileProjectDashboard.tsx:import React, { useState, useEffect } from 'react';
+agent-ui/src/components/project-management/MobileProjectDashboard.tsx:import {
+agent-ui/src/components/project-management/MobileProjectDashboard.tsx:import { Button } from '@/components/ui/button';
+agent-ui/src/components/project-management/MobileProjectDashboard.tsx:import { Badge } from '@/components/ui/badge';
+agent-ui/src/components/project-management/MobileProjectDashboard.tsx:import { Progress } from '@/components/ui/progress';
+agent-ui/src/components/project-management/MobileProjectDashboard.tsx:import { Alert, AlertDescription } from '@/components/ui/alert';
+agent-ui/src/components/project-management/MobileProjectDashboard.tsx:import { Separator } from '@/components/ui/separator';
+agent-ui/src/components/project-management/MobileProjectDashboard.tsx:import {
+agent-ui/src/components/project-management/MobileProjectDashboard.tsx:export default MobileProjectDashboard;
+agent-ui/src/components/project-management/TeamPerformanceOptimizer.tsx:import React, { useState, useMemo } from 'react';
+agent-ui/src/components/project-management/TeamPerformanceOptimizer.tsx:import {
+agent-ui/src/components/project-management/TeamPerformanceOptimizer.tsx:import { Button } from '@/components/ui/button';
+agent-ui/src/components/project-management/TeamPerformanceOptimizer.tsx:import { Badge } from '@/components/ui/badge';
+agent-ui/src/components/project-management/TeamPerformanceOptimizer.tsx:import { Progress } from '@/components/ui/progress';
+agent-ui/src/components/project-management/TeamPerformanceOptimizer.tsx:import { Alert, AlertDescription } from '@/components/ui/alert';
+agent-ui/src/components/project-management/TeamPerformanceOptimizer.tsx:import { Avatar } from '@/components/ui/avatar';
+agent-ui/src/components/project-management/TeamPerformanceOptimizer.tsx:import { Separator } from '@/components/ui/separator';
+agent-ui/src/components/project-management/TeamPerformanceOptimizer.tsx:import {
+agent-ui/src/components/project-management/TeamPerformanceOptimizer.tsx:export default TeamPerformanceOptimizer;
+agent-ui/src/components/project-management/AccessibilityEnhancements.tsx:import React, { useState, useRef, useEffect } from 'react';
+agent-ui/src/components/project-management/AccessibilityEnhancements.tsx:import {
+agent-ui/src/components/project-management/AccessibilityEnhancements.tsx:import { Button } from '@/components/ui/button';
+agent-ui/src/components/project-management/AccessibilityEnhancements.tsx:import { Badge } from '@/components/ui/badge';
+agent-ui/src/components/project-management/AccessibilityEnhancements.tsx:import { Progress } from '@/components/ui/progress';
+agent-ui/src/components/project-management/AccessibilityEnhancements.tsx:import { Alert, AlertDescription } from '@/components/ui/alert';
+agent-ui/src/components/project-management/AccessibilityEnhancements.tsx:import {
+agent-ui/src/components/project-management/AccessibilityEnhancements.tsx:export default AccessibilityEnhancements;
+agent-ui/src/components/mcp/MCPServerCard.tsx:import React, { useState, useEffect } from 'react';
+agent-ui/src/components/mcp/MCPServerCard.tsx:import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+agent-ui/src/components/mcp/MCPServerCard.tsx:import { Badge } from '@/components/ui/badge';
+agent-ui/src/components/mcp/MCPServerCard.tsx:import { Button } from '@/components/ui/button';
+agent-ui/src/components/mcp/MCPServerCard.tsx:import { Progress } from '@/components/ui/progress';
+agent-ui/src/components/mcp/MCPServerCard.tsx:import {
+agent-ui/src/components/mcp/MCPServerCard.tsx:export const MCPServerCard: React.FC<MCPServerCardProps> = ({
+agent-ui/src/components/mcp/MCPServerCard.tsx:export default MCPServerCard;
+agent-ui/src/components/mcp/MCPServerGrid.tsx:import React, { useState, useEffect } from 'react';
+agent-ui/src/components/mcp/MCPServerGrid.tsx:import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+agent-ui/src/components/mcp/MCPServerGrid.tsx:import { Button } from '@/components/ui/button';
+agent-ui/src/components/mcp/MCPServerGrid.tsx:import { Badge } from '@/components/ui/badge';
+agent-ui/src/components/mcp/MCPServerGrid.tsx:import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+agent-ui/src/components/mcp/MCPServerGrid.tsx:import { ScrollArea } from '@/components/ui/scroll-area';
+agent-ui/src/components/mcp/MCPServerGrid.tsx:import MCPServerCard from './MCPServerCard';
+agent-ui/src/components/mcp/MCPServerGrid.tsx:import {
+agent-ui/src/components/mcp/MCPServerGrid.tsx:export const MCPServerGrid: React.FC<MCPServerGridProps> = ({
+agent-ui/src/components/mcp/MCPServerGrid.tsx:export default MCPServerGrid;
+agent-ui/src/components/prompt-library/PromptLibraryDashboard.tsx:import React, { useState, useEffect, useMemo, useCallback } from 'react';
+agent-ui/src/components/prompt-library/PromptLibraryDashboard.tsx:import {
+agent-ui/src/components/prompt-library/PromptLibraryDashboard.tsx:import {
+agent-ui/src/components/prompt-library/PromptLibraryDashboard.tsx:import { Editor } from '@monaco-editor/react';
+agent-ui/src/components/prompt-library/PromptLibraryDashboard.tsx:import {
+agent-ui/src/components/prompt-library/PromptLibraryDashboard.tsx:import { styled } from '@mui/material/styles';
+agent-ui/src/components/prompt-library/PromptLibraryDashboard.tsx:import { usePromptLibrary } from '../../hooks/usePromptLibrary';
+agent-ui/src/components/prompt-library/PromptLibraryDashboard.tsx:export const PromptLibraryDashboard: React.FC = () => {
+agent-ui/src/components/prompt-library/index.ts:export { PromptLibraryDashboard } from './PromptLibraryDashboard';
+agent-ui/src/components/llm-control/ModelControlDashboard.tsx:import React, { useState, useEffect } from 'react'
+agent-ui/src/components/llm-control/ModelControlDashboard.tsx:import { Card } from '@/components/ui/card'
+agent-ui/src/components/llm-control/ModelControlDashboard.tsx:import { Button } from '@/components/ui/button'
+agent-ui/src/components/llm-control/ModelControlDashboard.tsx:import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+agent-ui/src/components/llm-control/ModelControlDashboard.tsx:import { Icon } from '@/components/ui/icon/Icon'
+agent-ui/src/components/llm-control/ModelControlDashboard.tsx:import { Heading } from '@/components/ui/typography/Heading/Heading'
+agent-ui/src/components/llm-control/ModelControlDashboard.tsx:import { Paragraph } from '@/components/ui/typography/Paragraph/Paragraph'
+agent-ui/src/components/llm-control/ModelControlDashboard.tsx:import { toast } from 'sonner'
+agent-ui/src/components/llm-control/ModelControlDashboard.tsx:export default ModelControlDashboard
+agent-ui/src/components/streaming/AGUIStreamDisplay.tsx:import React, { useState, useEffect, useRef, useMemo } from 'react';
+agent-ui/src/components/streaming/AGUIStreamDisplay.tsx:import { motion, AnimatePresence } from 'framer-motion';
+agent-ui/src/components/streaming/AGUIStreamDisplay.tsx:import {
+agent-ui/src/components/streaming/AGUIStreamDisplay.tsx:export default AGUIStreamDisplay;
+agent-ui/src/components/streaming/AGUIStreamDisplay.tsx:export type { AGUIStreamDisplayProps, ToolCallDisplayProps, StateUpdateDisplayProps };
+agent-ui/src/components/dashboards/ClientHealthDashboard.tsx:import React, { useState, useEffect, useRef, useCallback } from 'react';
+agent-ui/src/components/dashboards/ClientHealthDashboard.tsx:import {
+agent-ui/src/components/dashboards/ClientHealthDashboard.tsx:import { Button } from '@/components/ui/button';
+agent-ui/src/components/dashboards/ClientHealthDashboard.tsx:import { Input } from '@/components/ui/input';
+agent-ui/src/components/dashboards/ClientHealthDashboard.tsx:import { Badge } from '@/components/ui/badge';
+agent-ui/src/components/dashboards/ClientHealthDashboard.tsx:import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+agent-ui/src/components/dashboards/ClientHealthDashboard.tsx:import { ScrollArea } from '@/components/ui/scroll-area';
+agent-ui/src/components/dashboards/ClientHealthDashboard.tsx:import { Alert, AlertDescription } from '@/components/ui/alert';
+agent-ui/src/components/dashboards/ClientHealthDashboard.tsx:import { Progress } from '@/components/ui/progress';
+agent-ui/src/components/dashboards/ClientHealthDashboard.tsx:import { Separator } from '@/components/ui/separator';
+agent-ui/src/components/dashboards/ClientHealthDashboard.tsx:import {
+agent-ui/src/components/dashboards/ClientHealthDashboard.tsx:export default ClientHealthDashboard;
+agent-ui/src/components/dashboards/SalesPerformanceDashboard.tsx:import React, { useState, useEffect, useRef, useCallback } from 'react';
+agent-ui/src/components/dashboards/SalesPerformanceDashboard.tsx:import {
+agent-ui/src/components/dashboards/SalesPerformanceDashboard.tsx:import { Button } from '@/components/ui/button';
+agent-ui/src/components/dashboards/SalesPerformanceDashboard.tsx:import { Input } from '@/components/ui/input';
+agent-ui/src/components/dashboards/SalesPerformanceDashboard.tsx:import { Badge } from '@/components/ui/badge';
+agent-ui/src/components/dashboards/SalesPerformanceDashboard.tsx:import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+agent-ui/src/components/dashboards/SalesPerformanceDashboard.tsx:import { ScrollArea } from '@/components/ui/scroll-area';
+agent-ui/src/components/dashboards/SalesPerformanceDashboard.tsx:import { Alert, AlertDescription } from '@/components/ui/alert';
+agent-ui/src/components/dashboards/SalesPerformanceDashboard.tsx:import { Progress } from '@/components/ui/progress';
+agent-ui/src/components/dashboards/SalesPerformanceDashboard.tsx:import { Separator } from '@/components/ui/separator';
+agent-ui/src/components/dashboards/SalesPerformanceDashboard.tsx:import {
+agent-ui/src/components/dashboards/SalesPerformanceDashboard.tsx:export default SalesPerformanceDashboard;
+agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx:import React, { useState, useEffect, useRef, useCallback } from 'react';
+agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx:import {
+agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx:import { Button } from '@/components/ui/button';
+agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx:import { Input } from '@/components/ui/input';
+agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx:import { Badge } from '@/components/ui/badge';
+agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx:import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx:import { ScrollArea } from '@/components/ui/scroll-area';
+agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx:import { Alert, AlertDescription } from '@/components/ui/alert';
+agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx:import { Progress } from '@/components/ui/progress';
+agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx:import { Separator } from '@/components/ui/separator';
+agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx:import {
+agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx:export default ProjectManagementDashboard;
+agent-ui/src/components/mythology/MythologyAgentWidget.tsx:import React, { useState, useEffect } from 'react';
+agent-ui/src/components/mythology/MythologyAgentWidget.tsx:import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+agent-ui/src/components/mythology/MythologyAgentWidget.tsx:import { Badge } from '@/components/ui/badge';
+agent-ui/src/components/mythology/MythologyAgentWidget.tsx:import { Button } from '@/components/ui/button';
+agent-ui/src/components/mythology/MythologyAgentWidget.tsx:import { Progress } from '@/components/ui/progress';
+agent-ui/src/components/mythology/MythologyAgentWidget.tsx:import {
+agent-ui/src/components/mythology/MythologyAgentWidget.tsx:export const MythologyAgentWidget: React.FC<MythologyAgentWidgetProps> = ({
+agent-ui/src/components/mythology/MythologyAgentWidget.tsx:export default MythologyAgentWidget;
+agent-ui/src/components/VoiceButton.tsx:import { useEffect, useRef, useState } from "react";
+agent-ui/src/components/VoiceButton.tsx:export default function VoiceButton({ onTranscription, system = "sophia" }: Props) {
+agent-ui/src/components/model-registry/FallbackChainBuilder.tsx:import React, { useState, useCallback, useEffect } from 'react';
+agent-ui/src/components/model-registry/FallbackChainBuilder.tsx:import {
+agent-ui/src/components/model-registry/FallbackChainBuilder.tsx:import { Badge } from '../ui/badge';
+agent-ui/src/components/model-registry/FallbackChainBuilder.tsx:import { Button } from '../ui/button';
+agent-ui/src/components/model-registry/FallbackChainBuilder.tsx:import { Input } from '../ui/input';
+agent-ui/src/components/model-registry/FallbackChainBuilder.tsx:import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+agent-ui/src/components/model-registry/FallbackChainBuilder.tsx:import { Alert, AlertDescription } from '../ui/alert';
+agent-ui/src/components/model-registry/FallbackChainBuilder.tsx:import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
+agent-ui/src/components/model-registry/FallbackChainBuilder.tsx:import { Separator } from '../ui/separator';
+agent-ui/src/components/model-registry/FallbackChainBuilder.tsx:import {
+agent-ui/src/components/model-registry/FallbackChainBuilder.tsx:import {
+agent-ui/src/components/model-registry/FallbackChainBuilder.tsx:export const FallbackChainBuilder: React.FC<FallbackChainBuilderProps> = ({
+agent-ui/src/components/model-registry/ProviderCard.tsx:import React, { useState, useCallback } from 'react';
+agent-ui/src/components/model-registry/ProviderCard.tsx:import {
+agent-ui/src/components/model-registry/ProviderCard.tsx:import { Badge } from '../ui/badge';
+agent-ui/src/components/model-registry/ProviderCard.tsx:import { Button } from '../ui/button';
+agent-ui/src/components/model-registry/ProviderCard.tsx:import { Progress } from '../ui/progress';
+agent-ui/src/components/model-registry/ProviderCard.tsx:import {
+agent-ui/src/components/model-registry/ProviderCard.tsx:import { Input } from '../ui/input';
+agent-ui/src/components/model-registry/ProviderCard.tsx:import { Textarea } from '../ui/textarea';
+agent-ui/src/components/model-registry/ProviderCard.tsx:import { Alert, AlertDescription } from '../ui/alert';
+agent-ui/src/components/model-registry/ProviderCard.tsx:import {
+agent-ui/src/components/model-registry/ProviderCard.tsx:export const ProviderCard: React.FC<ProviderCardProps> = ({
+agent-ui/src/components/model-registry/ModelRegistryDashboard.tsx:import React, { useState, useCallback } from 'react';
+agent-ui/src/components/model-registry/ModelRegistryDashboard.tsx:import {
+agent-ui/src/components/model-registry/ModelRegistryDashboard.tsx:import { Badge } from '../ui/badge';
+agent-ui/src/components/model-registry/ModelRegistryDashboard.tsx:import { Button } from '../ui/button';
+agent-ui/src/components/model-registry/ModelRegistryDashboard.tsx:import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
+agent-ui/src/components/model-registry/ModelRegistryDashboard.tsx:import { Separator } from '../ui/separator';
+agent-ui/src/components/model-registry/ModelRegistryDashboard.tsx:import { Alert, AlertDescription } from '../ui/alert';
+agent-ui/src/components/model-registry/ModelRegistryDashboard.tsx:import { ScrollArea } from '../ui/scroll-area';
+agent-ui/src/components/model-registry/ModelRegistryDashboard.tsx:import {
+agent-ui/src/components/model-registry/ModelRegistryDashboard.tsx:import { useModelRegistry } from '../../hooks/useModelRegistry';
+agent-ui/src/components/model-registry/ModelRegistryDashboard.tsx:import { ProviderCard } from './ProviderCard';
+agent-ui/src/components/model-registry/ModelRegistryDashboard.tsx:import { FallbackChainBuilder } from './FallbackChainBuilder';
+agent-ui/src/components/model-registry/ModelRegistryDashboard.tsx:export const ModelRegistryDashboard: React.FC<ModelRegistryDashboardProps> = ({
+agent-ui/src/components/infrastructure/InfraDashboard.tsx:import React, { useState, useEffect } from 'react';
+agent-ui/src/components/infrastructure/InfraDashboard.tsx:import { useQuery, useMutation } from '@tanstack/react-query';
+agent-ui/src/components/infrastructure/InfraDashboard.tsx:import {
+agent-ui/src/components/infrastructure/InfraDashboard.tsx:import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
+agent-ui/src/components/infrastructure/InfraDashboard.tsx:export const InfraDashboard: React.FC = () => {
+agent-ui/src/components/analytics/CostDashboard.tsx:import React, { useState, useEffect, useCallback } from 'react'
+agent-ui/src/components/analytics/CostDashboard.tsx:import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+agent-ui/src/components/analytics/CostDashboard.tsx:import { Button } from '@/components/ui/button'
+agent-ui/src/components/analytics/CostDashboard.tsx:import { Skeleton } from '@/components/ui/skeleton'
+agent-ui/src/components/analytics/CostDashboard.tsx:import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+agent-ui/src/components/analytics/CostDashboard.tsx:import Icon from '@/components/ui/icon'
+agent-ui/src/components/analytics/CostDashboard.tsx:import { usePlaygroundStore } from '@/store'
+agent-ui/src/components/analytics/CostDashboard.tsx:import { APIRoutes } from '@/api/routes'
+agent-ui/src/components/analytics/CostDashboard.tsx:export default CostDashboard
+agent-ui/src/components/swarm-builder/SwarmTemplateSelector.tsx:import React, { useState, useEffect, useMemo } from 'react';
+agent-ui/src/components/swarm-builder/SwarmTemplateSelector.tsx:import {
+agent-ui/src/components/swarm-builder/SwarmTemplateSelector.tsx:import {
+agent-ui/src/components/swarm-builder/SwarmTemplateSelector.tsx:import { useSwarmTemplates } from '../../hooks/useSwarmTemplates';
+agent-ui/src/components/swarm-builder/SwarmTemplateSelector.tsx:export default SwarmTemplateSelector;
+agent-ui/src/hooks/useMCPStatus.ts:import { useState, useEffect, useRef, useCallback } from 'react';
+agent-ui/src/hooks/useMCPStatus.ts:export const useMCPStatus = (options: UseMCPStatusOptions = {}) => {
+agent-ui/src/hooks/useMCPStatus.ts:export default useMCPStatus;
+agent-ui/src/hooks/useSessionLoader.tsx:import { useCallback } from 'react'
+agent-ui/src/hooks/useSessionLoader.tsx:import {
+agent-ui/src/hooks/useSessionLoader.tsx:import { usePlaygroundStore } from '../store'
+agent-ui/src/hooks/useSessionLoader.tsx:import { toast } from 'sonner'
+agent-ui/src/hooks/useSessionLoader.tsx:import {
+agent-ui/src/hooks/useSessionLoader.tsx:import { getJsonMarkdown } from '@/lib/utils'
+agent-ui/src/hooks/useSessionLoader.tsx:export default useSessionLoader
+agent-ui/src/hooks/useAIStreamHandler.tsx:import { useCallback } from 'react'
+agent-ui/src/hooks/useAIStreamHandler.tsx:import { APIRoutes } from '@/api/routes'
+agent-ui/src/hooks/useAIStreamHandler.tsx:import useChatActions from '@/hooks/useChatActions'
+agent-ui/src/hooks/useAIStreamHandler.tsx:import { usePlaygroundStore } from '../store'
+agent-ui/src/hooks/useAIStreamHandler.tsx:import {
+agent-ui/src/hooks/useAIStreamHandler.tsx:import { constructEndpointUrl } from '@/lib/constructEndpointUrl'
+agent-ui/src/hooks/useAIStreamHandler.tsx:import useAIResponseStream from './useAIResponseStream'
+agent-ui/src/hooks/useAIStreamHandler.tsx:import { ToolCall } from '@/types/playground'
+agent-ui/src/hooks/useAIStreamHandler.tsx:import { useQueryState } from 'nuqs'
+agent-ui/src/hooks/useAIStreamHandler.tsx:import { getJsonMarkdown } from '@/lib/utils'
+agent-ui/src/hooks/useAIStreamHandler.tsx:export default useAIChatStreamHandler
+agent-ui/src/hooks/useAGUIEvents.ts:import { useState, useEffect, useCallback, useRef } from 'react';
+agent-ui/src/hooks/useAGUIEvents.ts:export interface AGUIEventMetadata {
+agent-ui/src/hooks/useAGUIEvents.ts:export interface AGUITextDelta {
+agent-ui/src/hooks/useAGUIEvents.ts:export interface AGUIToolCall {
+agent-ui/src/hooks/useAGUIEvents.ts:export interface AGUIStateUpdate {
+agent-ui/src/hooks/useAGUIEvents.ts:export interface AGUIEvent {
+agent-ui/src/hooks/useAGUIEvents.ts:export const AGUI_EVENT_TYPES = {
+agent-ui/src/hooks/useAGUIEvents.ts:export const DOMAIN_CONTEXTS = {
+agent-ui/src/hooks/useAGUIEvents.ts:export const textTransforms = {
+agent-ui/src/hooks/useAGUIEvents.ts:export function useAGUIEvents(config: UseAGUIEventsConfig = {}) {
+agent-ui/src/hooks/useAGUIEvents.ts:export function usePayReadyEvents(config: Omit<UseAGUIEventsConfig, 'domains' | 'eventTypes'> = {}) {
+agent-ui/src/hooks/useAGUIEvents.ts:export function useArtemisEvents(config: Omit<UseAGUIEventsConfig, 'domains' | 'eventTypes'> = {}) {
+agent-ui/src/hooks/useAGUIEvents.ts:export function useTextStreaming(config: Omit<UseAGUIEventsConfig, 'eventTypes'> = {}) {
+agent-ui/src/hooks/useAGUIEvents.ts:export function useToolExecution(config: Omit<UseAGUIEventsConfig, 'eventTypes'> = {}) {
+agent-ui/src/hooks/useAGUIEvents.ts:export default useAGUIEvents;
+agent-ui/src/hooks/usePromptLibrary.ts:import { useState, useEffect, useCallback, useMemo } from 'react';
+agent-ui/src/hooks/usePromptLibrary.ts:import axios, { AxiosResponse } from 'axios';
+agent-ui/src/hooks/usePromptLibrary.ts:export const usePromptLibrary = () => {
+agent-ui/src/hooks/useOrchestratorCoordination.ts:import { useState, useEffect, useRef, useCallback } from 'react';
+agent-ui/src/hooks/useOrchestratorCoordination.ts:export default useOrchestratorCoordination;
+agent-ui/src/hooks/useSwarmTemplates.ts:import { useState, useEffect, useCallback, useRef } from 'react';
+agent-ui/src/hooks/useSwarmTemplates.ts:export default useSwarmTemplates;
+agent-ui/src/hooks/useModelRegistry.ts:import { useState, useEffect, useCallback, useRef } from 'react';
+agent-ui/src/hooks/useModelRegistry.ts:export const useModelRegistry = (): UseModelRegistryReturn => {
+agent-ui/src/hooks/useServiceConfig.ts:import { useEffect, useState } from 'react';
+agent-ui/src/hooks/useServiceConfig.ts:import { APIRoutes } from '../api/routes';
+agent-ui/src/hooks/useServiceConfig.ts:import { usePlaygroundStore } from '../store';
+agent-ui/src/hooks/useServiceConfig.ts:export const useServiceConfig = () => {
+agent-ui/src/hooks/useChatActions.ts:import { useCallback } from 'react'
+agent-ui/src/hooks/useChatActions.ts:import { toast } from 'sonner'
+agent-ui/src/hooks/useChatActions.ts:import { usePlaygroundStore } from '../store'
+agent-ui/src/hooks/useChatActions.ts:import {
+agent-ui/src/hooks/useChatActions.ts:import {
+agent-ui/src/hooks/useChatActions.ts:import { useQueryState } from 'nuqs'
+agent-ui/src/hooks/useChatActions.ts:export default useChatActions
+agent-ui/src/hooks/useAIResponseStream.tsx:import { useCallback } from 'react'
+agent-ui/src/hooks/useAIResponseStream.tsx:import { type RunResponse } from '@/types/playground'
+agent-ui/src/hooks/useAIResponseStream.tsx:export default function useAIResponseStream() {
+agent-ui/src/lib/audio.ts:export function decodeBase64Audio(base64: string): Blob {
+agent-ui/src/lib/audio.ts:export function encodeAudioToBase64(blob: Blob): Promise<string> {
+agent-ui/src/lib/audio.ts:export function createAudioURL(blob: Blob): string {
+agent-ui/src/lib/audio.ts:export function revokeAudioURL(url: string): void {
+agent-ui/src/lib/audio.ts:export async function playAudio(audioBlob: Blob): Promise<void> {
+agent-ui/src/lib/audio.ts:export class AudioRecorder {
+agent-ui/src/lib/utils.ts:import { type ClassValue, clsx } from 'clsx'
+agent-ui/src/lib/utils.ts:import { twMerge } from 'tailwind-merge'
+agent-ui/src/lib/utils.ts:export function cn(...inputs: ClassValue[]) {
+agent-ui/src/lib/utils.ts:export function formatDate(date: Date | string): string {
+agent-ui/src/lib/utils.ts:export function formatTime(date: Date | string): string {
+agent-ui/src/lib/api.ts:import { API_URL } from "./config";
+agent-ui/src/lib/api.ts:export async function fetchJSON<T>(path: string, init?: RequestInit): Promise<T> {
+agent-ui/src/lib/api.ts:export async function streamSSE(
+agent-ui/src/lib/config.ts:export const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003";
+agent-ui/src/api/routes.ts:export const APIRoutes = {
+agent-ui/src/api/playground.ts:import { toast } from 'sonner'
+agent-ui/src/api/playground.ts:import { APIRoutes } from './routes'
+agent-ui/src/api/playground.ts:import {
+agent-ui/src/api/playground.ts:export const getPlaygroundAgentsAPI = async (
+agent-ui/src/api/playground.ts:export const getPlaygroundStatusAPI = async (base: string): Promise<number> => {
+agent-ui/src/api/playground.ts:export const getAllPlaygroundSessionsAPI = async (
+agent-ui/src/api/playground.ts:export const getPlaygroundSessionAPI = async (
+agent-ui/src/api/playground.ts:export const deletePlaygroundSessionAPI = async (
+agent-ui/src/api/playground.ts:export const getPlaygroundTeamsAPI = async (
+agent-ui/src/api/playground.ts:export const getPlaygroundTeamSessionsAPI = async (
+agent-ui/src/api/playground.ts:export const getPlaygroundTeamSessionAPI = async (
+agent-ui/src/api/playground.ts:export const deletePlaygroundTeamSessionAPI = async (
+agent-ui/src/store.ts:import { create } from 'zustand'
+agent-ui/src/store.ts:import { persist, createJSONStorage } from 'zustand/middleware'
+agent-ui/src/store.ts:import {
+agent-ui/src/store.ts:export interface Team {
+agent-ui/src/store.ts:export const usePlaygroundStore = create<PlaygroundStore>()(

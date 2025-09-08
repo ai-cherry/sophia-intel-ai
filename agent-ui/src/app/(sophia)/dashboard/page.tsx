@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { fetchJSON } from "@/lib/api";
+import AgnoBridgeStatus from "@/components/sophia/AgnoBridgeStatus";
 
 type IntegrationData = {
   integrations?: Record<string, any>;
@@ -69,7 +70,9 @@ export default function Dashboard() {
           <h1 className="text-3xl font-bold text-gray-900">Business Intelligence Dashboard</h1>
           <p className="text-gray-500 mt-1">Real-time insights across your revenue operations</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
+          {/* Optional Agno bridge health indicator */}
+          <AgnoBridgeStatus />
           <button className="px-4 py-2 bg-white border rounded-lg hover:bg-gray-50">
             📊 Export Report
           </button>

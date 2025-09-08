@@ -1,0 +1,341 @@
+agent-ui/src/app/infra/page.tsx:              <InfraQueue apiEndpoint="/infra/tasks" expanded={true} />
+agent-ui/src/app/sophia/page.tsx:      // This would typically fetch from your APIs
+agent-ui/src/app/sophia/page.tsx:      const response = await fetch('/api/system/health');
+agent-ui/src/app/sophia/page.tsx:                  capabilities: ['web_search', 'web_scraping', 'trend_analysis', 'market_research'],
+agent-ui/src/app/(sophia)/calls/page.tsx:import { fetchJSON } from "@/lib/api";
+agent-ui/src/app/(sophia)/calls/page.tsx:    fetchJSON<any>("/api/integrations/gong/calls")
+agent-ui/src/app/(sophia)/insights/page.tsx:            className={`px-4 py-2 capitalize font-medium transition-colors ${
+agent-ui/src/app/(sophia)/pipeline/page.tsx:import { fetchJSON } from "@/lib/api";
+agent-ui/src/app/(sophia)/chat/page.tsx:import { streamSSE } from "@/lib/api";
+agent-ui/src/app/(sophia)/chat/page.tsx:      await streamSSE("/api/orchestration/chat/stream", body, (chunk) => {
+agent-ui/src/app/(sophia)/chat/page.tsx:              fetch(`${API_URL}/api/voice/synthesize`, {
+agent-ui/src/app/(sophia)/chat/page.tsx:        // TODO: Send to speech-to-text endpoint
+agent-ui/src/app/(sophia)/chat/page.tsx:          const res = await fetch(`${API_URL}/api/voice/transcribe`, {
+agent-ui/src/app/(sophia)/dashboard/page.tsx:import { fetchJSON } from "@/lib/api";
+agent-ui/src/app/(sophia)/dashboard/page.tsx:      fetchJSON<IntegrationData>("/health/integrations"),
+agent-ui/src/app/(sophia)/dashboard/page.tsx:                    <span className="font-medium capitalize text-sm">{name}</span>
+agent-ui/src/app/(sophia)/integrations/page.tsx:import { fetchJSON } from "@/lib/api";
+agent-ui/src/app/(sophia)/integrations/page.tsx:    fetchJSON<any>("/health/integrations")
+agent-ui/src/app/(sophia)/work/page.tsx:import { fetchJSON } from "@/lib/api";
+agent-ui/src/app/(sophia)/work/page.tsx:      fetchJSON<any>("/api/integrations/asana/tasks").catch(() => ({ items: [] })),
+agent-ui/src/app/(sophia)/work/page.tsx:      fetchJSON<any>("/api/integrations/linear/issues").catch(() => ({ items: [] })),
+agent-ui/src/app/(sophia)/teams/page.tsx:                      <span className="text-sm capitalize">{member.status}</span>
+agent-ui/src/config/environment.ts:  apiBaseUrl: string;
+agent-ui/src/config/environment.ts:  apiEndpoints: {
+agent-ui/src/config/environment.ts:  const apiHost = getEnvVar('API_HOST', 'localhost');
+agent-ui/src/config/environment.ts:  const apiPort = getEnvVar('API_PORT', '8000');
+agent-ui/src/config/environment.ts:  const apiProtocol = getEnvVar('API_PROTOCOL', 'http');
+agent-ui/src/config/environment.ts:  return `${apiProtocol}://${apiHost}:${apiPort}`;
+agent-ui/src/config/environment.ts:  apiBaseUrl: buildApiBaseUrl(),
+agent-ui/src/config/environment.ts:export const { apiBaseUrl, wsBaseUrl, debugMode, environment } = config;
+agent-ui/src/config/environment.ts:  apiEndpoints: {
+agent-ui/src/config/environment.ts:      reps: `${apiBaseUrl}/api/sales/reps`,
+agent-ui/src/config/environment.ts:      gongCalls: `${apiBaseUrl}/api/sales/gong-calls`,
+agent-ui/src/config/environment.ts:      teamMetrics: `${apiBaseUrl}/api/sales/team-metrics`,
+agent-ui/src/config/environment.ts:      coaching: `${apiBaseUrl}/api/sales/coaching`
+agent-ui/src/config/environment.ts:      health: `${apiBaseUrl}/api/clients/health`,
+agent-ui/src/config/environment.ts:      recoveryPlans: `${apiBaseUrl}/api/clients/recovery-plans`,
+agent-ui/src/config/environment.ts:      metrics: `${apiBaseUrl}/api/clients/metrics`,
+agent-ui/src/config/environment.ts:      healthCheck: (id: string) => `${apiBaseUrl}/api/clients/${id}/health-check`,
+agent-ui/src/config/environment.ts:      recoveryPlan: (id: string) => `${apiBaseUrl}/api/clients/${id}/recovery-plan`
+agent-ui/src/config/environment.ts:      list: `${apiBaseUrl}/api/projects`,
+agent-ui/src/config/environment.ts:      syncStatus: `${apiBaseUrl}/api/projects/sync-status`,
+agent-ui/src/config/environment.ts:      syncAll: `${apiBaseUrl}/api/projects/sync-all`,
+agent-ui/src/config/environment.ts:      communicationMetrics: `${apiBaseUrl}/api/projects/communication-metrics`,
+agent-ui/src/config/environment.ts:        `${apiBaseUrl}/api/projects/${projectId}/blockers/${blockerId}/resolve`
+agent-ui/src/config/environment.ts:      members: `${apiBaseUrl}/api/team/members`
+agent-ui/src/config/environment.ts:      process: `${apiBaseUrl}/api/voice/process`
+agent-ui/src/config/environment.ts:      available: `${apiBaseUrl}/api/agents/available`,
+agent-ui/src/config/environment.ts:      recommend: `${apiBaseUrl}/api/agents/recommend`
+agent-ui/src/config/environment.ts:    apiKey: getEnvVar('ELEVENLABS_API_KEY', ''),
+agent-ui/src/config/environment.ts:    baseUrl: 'https://api.elevenlabs.io/v1'
+agent-ui/src/config/environment.ts:    apiBaseUrl: config.apiBaseUrl,
+agent-ui/src/components/swarm/CriticReport.tsx:                    <h5 className="text-sm font-medium text-gray-600 capitalize">
+agent-ui/src/components/swarm/TeamWorkflowPanel.tsx:import { fetchJSON } from '@/lib/fetchUtils';
+agent-ui/src/components/swarm/TeamWorkflowPanel.tsx:import { buildEndpointUrl } from '@/lib/endpointUtils';
+agent-ui/src/components/swarm/TeamWorkflowPanel.tsx:        fetchJSON<any[]>(buildEndpointUrl(selectedEndpoint, '/teams')),
+agent-ui/src/components/swarm/TeamWorkflowPanel.tsx:        fetchJSON<Workflow[]>(buildEndpointUrl(selectedEndpoint, '/workflows')),
+agent-ui/src/components/swarm/EndpointPicker.tsx:import { testEndpoint } from '@/lib/endpointUtils';
+agent-ui/src/components/swarm/MCPStatus.tsx:  endpoint: string;
+agent-ui/src/components/swarm/MCPStatus.tsx:    endpoint: '/health',
+agent-ui/src/components/swarm/MCPStatus.tsx:    endpoint: '/memory/health',
+agent-ui/src/components/swarm/MCPStatus.tsx:    endpoint: '/code-review/health',
+agent-ui/src/components/swarm/MCPStatus.tsx:    endpoint: '/v1/.well-known/ready',
+agent-ui/src/components/swarm/MCPStatus.tsx:    endpoint: '/cache/health',
+agent-ui/src/components/swarm/MCPStatus.tsx:      const response = await fetch(`${service.url}${service.endpoint}`, {
+agent-ui/src/components/coordination/OrchestratorCoordinationView.tsx:                  <span className="text-sm font-medium capitalize">
+agent-ui/src/components/coordination/OrchestratorCoordinationView.tsx:                  <span className="text-sm font-medium capitalize">
+agent-ui/src/components/playground/Sidebar/Sessions/SessionBlankState.tsx:        return 'Endpoint is not connected. Please connect the endpoint to see the history.'
+agent-ui/src/components/playground/Sidebar/Sessions/SessionBlankState.tsx:        return 'Select an endpoint to see the history.'
+agent-ui/src/components/playground/Sidebar/Sessions/SessionItem.tsx:} from '@/api/playground'
+agent-ui/src/components/playground/Sidebar/Sidebar.tsx:  const [endpointValue, setEndpointValue] = useState('')
+agent-ui/src/components/playground/Sidebar/Sidebar.tsx:    if (!isValidUrl(endpointValue)) {
+agent-ui/src/components/playground/Sidebar/Sidebar.tsx:    const cleanEndpoint = endpointValue.replace(/\/$/, '').trim()
+agent-ui/src/components/playground/Sidebar/Sidebar.tsx:            value={endpointValue}
+agent-ui/src/components/playground/Sidebar/Sidebar.tsx:                  key="endpoint-display-hover"
+agent-ui/src/components/playground/Sidebar/Sidebar.tsx:                  key="endpoint-display"
+agent-ui/src/components/playground/ChatArea/Messages/Multimedia/Videos/Videos.tsx:      const response = await fetch(videoUrl)
+agent-ui/src/components/sophia/PayReadyDashboard.tsx:      const response = await fetch('/api/swarms/artemis/deploy-sophia-enhancements', {
+agent-ui/src/components/project-management/TeamPerformanceOptimizer.tsx:                          <span className="font-medium capitalize">{suggestion.type.replace('_', ' ')}</span>
+agent-ui/src/components/llm-control/ModelControlDashboard.tsx:  const fetchDashboardData = async () => {
+agent-ui/src/components/llm-control/ModelControlDashboard.tsx:      const response = await fetch('http://localhost:8005/api/model-control/dashboard')
+agent-ui/src/components/llm-control/ModelControlDashboard.tsx:        // Use mock data if endpoint not ready
+agent-ui/src/components/llm-control/ModelControlDashboard.tsx:      console.error('Failed to fetch dashboard data:', error)
+agent-ui/src/components/llm-control/ModelControlDashboard.tsx:    fetchDashboardData()
+agent-ui/src/components/llm-control/ModelControlDashboard.tsx:      const interval = setInterval(fetchDashboardData, 5000)
+agent-ui/src/components/llm-control/ModelControlDashboard.tsx:      const response = await fetch('http://localhost:8005/api/model-control/assign', {
+agent-ui/src/components/llm-control/ModelControlDashboard.tsx:        fetchDashboardData()
+agent-ui/src/components/llm-control/ModelControlDashboard.tsx:            onClick={fetchDashboardData}
+agent-ui/src/components/dashboards/ClientHealthDashboard.tsx:        fetch('/api/clients/health'),
+agent-ui/src/components/dashboards/ClientHealthDashboard.tsx:        fetch('/api/clients/recovery-plans'),
+agent-ui/src/components/dashboards/ClientHealthDashboard.tsx:        fetch('/api/clients/metrics')
+agent-ui/src/components/dashboards/ClientHealthDashboard.tsx:      const response = await fetch('/api/voice/process', {
+agent-ui/src/components/dashboards/ClientHealthDashboard.tsx:      const response = await fetch(`/api/clients/${clientId}/recovery-plan`, {
+agent-ui/src/components/dashboards/ClientHealthDashboard.tsx:      await fetch(`/api/clients/${clientId}/health-check`, {
+agent-ui/src/components/dashboards/SalesPerformanceDashboard.tsx:        fetch('/api/sales/reps'),
+agent-ui/src/components/dashboards/SalesPerformanceDashboard.tsx:        fetch('/api/sales/gong-calls'),
+agent-ui/src/components/dashboards/SalesPerformanceDashboard.tsx:        fetch('/api/sales/team-metrics')
+agent-ui/src/components/dashboards/SalesPerformanceDashboard.tsx:      const response = await fetch('/api/voice/process', {
+agent-ui/src/components/dashboards/SalesPerformanceDashboard.tsx:      const response = await fetch(`/api/sales/gong-calls/${callId}/audio`);
+agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx:        fetch('/api/projects'),
+agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx:        fetch('/api/team/members'),
+agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx:        fetch('/api/projects/sync-status'),
+agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx:        fetch('/api/projects/communication-metrics')
+agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx:      const response = await fetch('/api/voice/process', {
+agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx:      const response = await fetch('/api/projects/sync-all', {
+agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx:      await fetch(`/api/projects/${projectId}/blockers/${blockerId}/resolve`, {
+agent-ui/src/components/dashboards/ProjectManagementDashboard.tsx:                      <CardTitle className="capitalize">{sync.platform}</CardTitle>
+agent-ui/src/components/VoiceButton.tsx:        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/voice/transcribe`, {
+agent-ui/src/components/model-registry/FallbackChainBuilder.tsx:                    <span className="capitalize">{provider.provider}</span>
+agent-ui/src/components/model-registry/FallbackChainBuilder.tsx:                                        <span className="font-medium capitalize">{item.provider}</span>
+agent-ui/src/components/model-registry/FallbackChainBuilder.tsx:                            <div className="font-medium capitalize">{provider.provider}</div>
+agent-ui/src/components/model-registry/ProviderCard.tsx:              <CardTitle className="text-lg capitalize">{provider.provider}</CardTitle>
+agent-ui/src/components/infrastructure/InfraDashboard.tsx:  const { data: metrics, isLoading, error, refetch } = useQuery<InfrastructureMetrics>({
+agent-ui/src/components/infrastructure/InfraDashboard.tsx:    queryFn: () => fetch(`/api/infrastructure/metrics?range=${selectedTimeRange}`).then(r => r.json()),
+agent-ui/src/components/infrastructure/InfraDashboard.tsx:    refetchInterval: 30000, // Refresh every 30 seconds
+agent-ui/src/components/infrastructure/InfraDashboard.tsx:      fetch('/api/infrastructure/emergency-rotation', {
+agent-ui/src/components/infrastructure/InfraDashboard.tsx:      refetch();
+agent-ui/src/components/infrastructure/InfraDashboard.tsx:      fetch('/api/infrastructure/stack-operation', {
+agent-ui/src/components/infrastructure/InfraDashboard.tsx:    onSuccess: () => refetch()
+agent-ui/src/components/infrastructure/InfraDashboard.tsx:      fetch('/api/infrastructure/swarm-task', {
+agent-ui/src/components/infrastructure/InfraDashboard.tsx:              onClick={() => refetch()}
+agent-ui/src/components/analytics/CostDashboard.tsx:import { APIRoutes } from '@/api/routes'
+agent-ui/src/components/analytics/CostDashboard.tsx:  api_call_cost: number
+agent-ui/src/components/analytics/CostDashboard.tsx:  const fetchCostData = useCallback(async () => {
+agent-ui/src/components/analytics/CostDashboard.tsx:      const summaryResponse = await fetch(
+agent-ui/src/components/analytics/CostDashboard.tsx:        throw new Error('Failed to fetch cost summary')
+agent-ui/src/components/analytics/CostDashboard.tsx:      const dailyResponse = await fetch(
+agent-ui/src/components/analytics/CostDashboard.tsx:      const modelsResponse = await fetch(
+agent-ui/src/components/analytics/CostDashboard.tsx:      console.error('Failed to fetch cost data:', err)
+agent-ui/src/components/analytics/CostDashboard.tsx:    fetchCostData()
+agent-ui/src/components/analytics/CostDashboard.tsx:  }, [selectedEndpoint, timeRange, fetchCostData])
+agent-ui/src/components/analytics/CostDashboard.tsx:    { name: 'API Calls', value: summary.api_call_cost, color: COLORS[3] }
+agent-ui/src/components/analytics/CostDashboard.tsx:          <Button onClick={fetchCostData} variant="outline" size="sm">
+agent-ui/src/components/analytics/CostDashboard.tsx:            onClick={fetchCostData}
+agent-ui/src/components/swarm-builder/SwarmTemplateSelector.tsx:                            <strong>API Calls/Min:</strong> {selectedTemplate.resource_limits.api_calls_per_minute}
+agent-ui/src/hooks/useMCPStatus.ts:      const wsUrl = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/api/mcp-status/ws/${clientId.current}`;
+agent-ui/src/hooks/useMCPStatus.ts:  const fetchInitialData = useCallback(async () => {
+agent-ui/src/hooks/useMCPStatus.ts:      const overviewResponse = await fetch('/api/mcp-status/');
+agent-ui/src/hooks/useMCPStatus.ts:        throw new Error('Failed to fetch MCP system overview');
+agent-ui/src/hooks/useMCPStatus.ts:        const serversResponse = await fetch(`/api/mcp-status/servers?domain=${domain}`);
+agent-ui/src/hooks/useMCPStatus.ts:      console.error('Failed to fetch initial MCP data:', error);
+agent-ui/src/hooks/useMCPStatus.ts:        error: error instanceof Error ? error.message : 'Failed to fetch data',
+agent-ui/src/hooks/useMCPStatus.ts:    await fetchInitialData();
+agent-ui/src/hooks/useMCPStatus.ts:  }, [fetchInitialData]);
+agent-ui/src/hooks/useMCPStatus.ts:      const response = await fetch(`/api/mcp-status/server/${serverName}/restart`, {
+agent-ui/src/hooks/useMCPStatus.ts:    fetchInitialData();
+agent-ui/src/hooks/useMCPStatus.ts:  }, [fetchInitialData, connect, disconnect, autoConnect]);
+agent-ui/src/hooks/useSessionLoader.tsx:} from '@/api/playground'
+agent-ui/src/hooks/useAIStreamHandler.tsx:import { APIRoutes } from '@/api/routes'
+agent-ui/src/hooks/useAIStreamHandler.tsx:        const endpointUrl = constructEndpointUrl(selectedEndpoint)
+agent-ui/src/hooks/useAIStreamHandler.tsx:          playgroundRunUrl = APIRoutes.TeamRun(endpointUrl, teamId)
+agent-ui/src/hooks/useAIStreamHandler.tsx:          playgroundRunUrl = APIRoutes.AgentRun(endpointUrl).replace(
+agent-ui/src/hooks/useAIStreamHandler.tsx:        // Convert FormData to JSON for team/agent endpoints
+agent-ui/src/hooks/useAIStreamHandler.tsx:          apiUrl: playgroundRunUrl,
+agent-ui/src/hooks/useAGUIEvents.ts:    sseEndpoint = '/api/agui/stream',
+agent-ui/src/hooks/usePromptLibrary.ts:import axios, { AxiosResponse } from 'axios';
+agent-ui/src/hooks/usePromptLibrary.ts:const API_BASE_URL = '/api/v1/prompts';
+agent-ui/src/hooks/usePromptLibrary.ts:const apiClient = axios.create({
+agent-ui/src/hooks/usePromptLibrary.ts:apiClient.interceptors.request.use((config) => {
+agent-ui/src/hooks/usePromptLibrary.ts:apiClient.interceptors.response.use(
+agent-ui/src/hooks/usePromptLibrary.ts:      const wsUrl = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/api/v1/prompts/ws`;
+agent-ui/src/hooks/usePromptLibrary.ts:      const response: AxiosResponse<PromptVersion[]> = await apiClient.post('/search', params);
+agent-ui/src/hooks/usePromptLibrary.ts:      const response: AxiosResponse<PromptVersion> = await apiClient.post('/create', request);
+agent-ui/src/hooks/usePromptLibrary.ts:      const response: AxiosResponse<PromptVersion> = await apiClient.put(`/${promptId}/update`, request);
+agent-ui/src/hooks/usePromptLibrary.ts:      await apiClient.delete(`/${promptId}`);
+agent-ui/src/hooks/usePromptLibrary.ts:      const response: AxiosResponse<PromptVersion> = await apiClient.get(`/${promptId}?${params}`);
+agent-ui/src/hooks/usePromptLibrary.ts:      const response: AxiosResponse<PromptVersion[]> = await apiClient.get(`/${promptId}/history${params}`);
+agent-ui/src/hooks/usePromptLibrary.ts:      const response: AxiosResponse<Branch> = await apiClient.post(`/${promptId}/branches`, request);
+agent-ui/src/hooks/usePromptLibrary.ts:      const response: AxiosResponse<Branch[]> = await apiClient.get(`/${promptId}/branches`);
+agent-ui/src/hooks/usePromptLibrary.ts:      const response: AxiosResponse<PromptVersion> = await apiClient.post(`/${promptId}/merge`, request);
+agent-ui/src/hooks/usePromptLibrary.ts:      const response: AxiosResponse<DiffResult> = await apiClient.get(`/${promptId}/diff`, {
+agent-ui/src/hooks/usePromptLibrary.ts:      const response: AxiosResponse<{ test_id: string; message: string }> = await apiClient.post('/ab-tests', request);
+agent-ui/src/hooks/usePromptLibrary.ts:      await apiClient.post(`/ab-tests/${testId}/results`, {
+agent-ui/src/hooks/usePromptLibrary.ts:      const response: AxiosResponse<{ test_id: string; results: { [versionId: string]: ABTestResult } }> = await apiClient.get(`/ab-tests/${testId}/results`);
+agent-ui/src/hooks/usePromptLibrary.ts:      const response: AxiosResponse<ABTest[]> = await apiClient.get('/ab-tests');
+agent-ui/src/hooks/usePromptLibrary.ts:      await apiClient.post(`/${versionId}/metrics`, metrics);
+agent-ui/src/hooks/usePromptLibrary.ts:      const response: AxiosResponse<LeaderboardEntry[]> = await apiClient.get(`/performance/leaderboard?${params}`);
+agent-ui/src/hooks/usePromptLibrary.ts:        await apiClient.get(`/mythology/${agentName}/context/${businessContext}`, {
+agent-ui/src/hooks/usePromptLibrary.ts:      const response: AxiosResponse<any> = await apiClient.get(`/export${params}`);
+agent-ui/src/hooks/usePromptLibrary.ts:      await apiClient.post('/import', importData, {
+agent-ui/src/hooks/usePromptLibrary.ts:      const response = await apiClient.get('/health');
+agent-ui/src/hooks/useOrchestratorCoordination.ts:  const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8001/api';
+agent-ui/src/hooks/useOrchestratorCoordination.ts:  const WS_BASE = process.env.NEXT_PUBLIC_WS_BASE || 'ws://localhost:8001/api';
+agent-ui/src/hooks/useOrchestratorCoordination.ts:  const fetchWithAuth = async (endpoint: string, options: RequestInit = {}) => {
+agent-ui/src/hooks/useOrchestratorCoordination.ts:    return fetch(`${API_BASE}${endpoint}`, {
+agent-ui/src/hooks/useOrchestratorCoordination.ts:  const fetchOrchestratorStatus = useCallback(async (): Promise<OrchestratorStatus[]> => {
+agent-ui/src/hooks/useOrchestratorCoordination.ts:    const response = await fetchWithAuth('/orchestrator-coordination/status');
+agent-ui/src/hooks/useOrchestratorCoordination.ts:      throw new Error(`Failed to fetch orchestrator status: ${response.statusText}`);
+agent-ui/src/hooks/useOrchestratorCoordination.ts:  const fetchTaskBridges = useCallback(async (): Promise<TaskBridge[]> => {
+agent-ui/src/hooks/useOrchestratorCoordination.ts:    const response = await fetchWithAuth('/orchestrator-coordination/task-bridges');
+agent-ui/src/hooks/useOrchestratorCoordination.ts:      throw new Error(`Failed to fetch task bridges: ${response.statusText}`);
+agent-ui/src/hooks/useOrchestratorCoordination.ts:  const fetchMetrics = useCallback(async (timeRange: string = '1h'): Promise<CoordinationMetrics> => {
+agent-ui/src/hooks/useOrchestratorCoordination.ts:    const response = await fetchWithAuth(`/orchestrator-coordination/metrics?time_range=${timeRange}`);
+agent-ui/src/hooks/useOrchestratorCoordination.ts:      throw new Error(`Failed to fetch coordination metrics: ${response.statusText}`);
+agent-ui/src/hooks/useOrchestratorCoordination.ts:  const fetchAnalytics = useCallback(async (timeRange: string = '1h'): Promise<TaskFlowAnalytics> => {
+agent-ui/src/hooks/useOrchestratorCoordination.ts:    const response = await fetchWithAuth(`/orchestrator-coordination/analytics?time_range=${timeRange}`);
+agent-ui/src/hooks/useOrchestratorCoordination.ts:      throw new Error(`Failed to fetch analytics: ${response.statusText}`);
+agent-ui/src/hooks/useOrchestratorCoordination.ts:  const fetchResourceAllocations = useCallback(async (): Promise<ResourceAllocation[]> => {
+agent-ui/src/hooks/useOrchestratorCoordination.ts:    const response = await fetchWithAuth('/orchestrator-coordination/resource-allocation');
+agent-ui/src/hooks/useOrchestratorCoordination.ts:      throw new Error(`Failed to fetch resource allocations: ${response.statusText}`);
+agent-ui/src/hooks/useOrchestratorCoordination.ts:  const fetchBottlenecks = useCallback(async (): Promise<PerformanceBottleneck[]> => {
+agent-ui/src/hooks/useOrchestratorCoordination.ts:    const response = await fetchWithAuth('/orchestrator-coordination/bottlenecks');
+agent-ui/src/hooks/useOrchestratorCoordination.ts:      throw new Error(`Failed to fetch bottlenecks: ${response.statusText}`);
+agent-ui/src/hooks/useOrchestratorCoordination.ts:        fetchOrchestratorStatus(),
+agent-ui/src/hooks/useOrchestratorCoordination.ts:        fetchTaskBridges(),
+agent-ui/src/hooks/useOrchestratorCoordination.ts:        fetchMetrics(),
+agent-ui/src/hooks/useOrchestratorCoordination.ts:        fetchAnalytics(),
+agent-ui/src/hooks/useOrchestratorCoordination.ts:        fetchResourceAllocations(),
+agent-ui/src/hooks/useOrchestratorCoordination.ts:        fetchBottlenecks()
+agent-ui/src/hooks/useOrchestratorCoordination.ts:    fetchOrchestratorStatus,
+agent-ui/src/hooks/useOrchestratorCoordination.ts:    fetchTaskBridges,
+agent-ui/src/hooks/useOrchestratorCoordination.ts:    fetchMetrics,
+agent-ui/src/hooks/useOrchestratorCoordination.ts:    fetchAnalytics,
+agent-ui/src/hooks/useOrchestratorCoordination.ts:    fetchResourceAllocations,
+agent-ui/src/hooks/useOrchestratorCoordination.ts:    fetchBottlenecks,
+agent-ui/src/hooks/useOrchestratorCoordination.ts:      await fetchWithAuth(`/orchestrator-coordination/bottlenecks/${bottleneckId}/acknowledge`, {
+agent-ui/src/hooks/useOrchestratorCoordination.ts:      await fetchWithAuth('/orchestrator-coordination/bridge-health-check', {
+agent-ui/src/hooks/useSwarmTemplates.ts:  fetchTemplates: (filters?: TemplateFilters) => Promise<void>;
+agent-ui/src/hooks/useSwarmTemplates.ts:  fetchTemplateDetails: (templateId: string) => Promise<void>;
+agent-ui/src/hooks/useSwarmTemplates.ts:  const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
+agent-ui/src/hooks/useSwarmTemplates.ts:      const response = await fetch(`${API_BASE}/api/swarm-templates${endpoint}`, {
+agent-ui/src/hooks/useSwarmTemplates.ts:  const fetchTemplates = useCallback(async (filters: TemplateFilters = {}) => {
+agent-ui/src/hooks/useSwarmTemplates.ts:      const endpoint = `/list${queryString ? `?${queryString}` : ''}`;
+agent-ui/src/hooks/useSwarmTemplates.ts:      const data = await apiRequest(endpoint);
+agent-ui/src/hooks/useSwarmTemplates.ts:      // Also fetch summary if we don't have it
+agent-ui/src/hooks/useSwarmTemplates.ts:          const summaryData = await apiRequest('/summary');
+agent-ui/src/hooks/useSwarmTemplates.ts:          console.warn('Failed to fetch template summary:', summaryError);
+agent-ui/src/hooks/useSwarmTemplates.ts:      setError(err instanceof Error ? err.message : 'Failed to fetch templates');
+agent-ui/src/hooks/useSwarmTemplates.ts:  const fetchTemplateDetails = useCallback(async (templateId: string) => {
+agent-ui/src/hooks/useSwarmTemplates.ts:      const data = await apiRequest(`/template/${templateId}`);
+agent-ui/src/hooks/useSwarmTemplates.ts:      setError(err instanceof Error ? err.message : 'Failed to fetch template details');
+agent-ui/src/hooks/useSwarmTemplates.ts:      const data = await apiRequest('/generate-code', {
+agent-ui/src/hooks/useSwarmTemplates.ts:      const data = await apiRequest('/validate', {
+agent-ui/src/hooks/useSwarmTemplates.ts:      const data = await apiRequest('/deploy', {
+agent-ui/src/hooks/useSwarmTemplates.ts:      fetchDeployments();
+agent-ui/src/hooks/useSwarmTemplates.ts:      const data = await apiRequest(`/deployment/${swarmId}/status`);
+agent-ui/src/hooks/useSwarmTemplates.ts:      await apiRequest(`/deployment/${deploymentId}`, {
+agent-ui/src/hooks/useSwarmTemplates.ts:      fetchDeployments();
+agent-ui/src/hooks/useSwarmTemplates.ts:  const fetchDeployments = useCallback(async () => {
+agent-ui/src/hooks/useSwarmTemplates.ts:      const data = await apiRequest('/deployments');
+agent-ui/src/hooks/useSwarmTemplates.ts:      console.error('Failed to fetch deployments:', err);
+agent-ui/src/hooks/useSwarmTemplates.ts:      const wsUrl = `${API_BASE.replace('http', 'ws')}/api/swarm-templates/ws/deployments`;
+agent-ui/src/hooks/useSwarmTemplates.ts:    fetchTemplates();
+agent-ui/src/hooks/useSwarmTemplates.ts:    fetchDeployments();
+agent-ui/src/hooks/useSwarmTemplates.ts:  }, [fetchTemplates, fetchDeployments, connectWebSocket, disconnectWebSocket]);
+agent-ui/src/hooks/useSwarmTemplates.ts:    fetchTemplates,
+agent-ui/src/hooks/useSwarmTemplates.ts:    fetchTemplateDetails,
+agent-ui/src/hooks/useModelRegistry.ts:const API_BASE = '/api/model-registry';
+agent-ui/src/hooks/useModelRegistry.ts:  const fetchProviders = async (): Promise<ProviderHealthStatus[]> => {
+agent-ui/src/hooks/useModelRegistry.ts:    const response = await fetch(`${API_BASE}/providers`);
+agent-ui/src/hooks/useModelRegistry.ts:      throw new Error(`Failed to fetch providers: ${response.statusText}`);
+agent-ui/src/hooks/useModelRegistry.ts:  const fetchVirtualKeys = async (): Promise<VirtualKeyConfig[]> => {
+agent-ui/src/hooks/useModelRegistry.ts:    const response = await fetch(`${API_BASE}/virtual-keys`);
+agent-ui/src/hooks/useModelRegistry.ts:      throw new Error(`Failed to fetch virtual keys: ${response.statusText}`);
+agent-ui/src/hooks/useModelRegistry.ts:  const fetchCostAnalytics = async (): Promise<CostAnalytics> => {
+agent-ui/src/hooks/useModelRegistry.ts:    const response = await fetch(`${API_BASE}/cost-analytics`);
+agent-ui/src/hooks/useModelRegistry.ts:      throw new Error(`Failed to fetch cost analytics: ${response.statusText}`);
+agent-ui/src/hooks/useModelRegistry.ts:  const fetchFallbackChains = async (): Promise<Record<string, FallbackChainConfig>> => {
+agent-ui/src/hooks/useModelRegistry.ts:    const response = await fetch(`${API_BASE}/fallback-chains`);
+agent-ui/src/hooks/useModelRegistry.ts:      throw new Error(`Failed to fetch fallback chains: ${response.statusText}`);
+agent-ui/src/hooks/useModelRegistry.ts:  const fetchPerformanceMetrics = async (): Promise<PerformanceMetrics[]> => {
+agent-ui/src/hooks/useModelRegistry.ts:    const response = await fetch(`${API_BASE}/performance-metrics`);
+agent-ui/src/hooks/useModelRegistry.ts:      throw new Error(`Failed to fetch performance metrics: ${response.statusText}`);
+agent-ui/src/hooks/useModelRegistry.ts:  const fetchRoutingStrategies = async (): Promise<{ strategies: RoutingStrategy[] }> => {
+agent-ui/src/hooks/useModelRegistry.ts:    const response = await fetch(`${API_BASE}/routing-strategies`);
+agent-ui/src/hooks/useModelRegistry.ts:      throw new Error(`Failed to fetch routing strategies: ${response.statusText}`);
+agent-ui/src/hooks/useModelRegistry.ts:      const newProviders = await fetchProviders();
+agent-ui/src/hooks/useModelRegistry.ts:      const response = await fetch(`${API_BASE}/virtual-keys/${provider}`, {
+agent-ui/src/hooks/useModelRegistry.ts:      const newVirtualKeys = await fetchVirtualKeys();
+agent-ui/src/hooks/useModelRegistry.ts:      const response = await fetch(`${API_BASE}/fallback-chains/${provider}`, {
+agent-ui/src/hooks/useModelRegistry.ts:      const newFallbackChains = await fetchFallbackChains();
+agent-ui/src/hooks/useModelRegistry.ts:      const response = await fetch(`${API_BASE}/test-model`, {
+agent-ui/src/hooks/useModelRegistry.ts:        fetchProviders(),
+agent-ui/src/hooks/useModelRegistry.ts:        fetchVirtualKeys(),
+agent-ui/src/hooks/useModelRegistry.ts:        fetchCostAnalytics(),
+agent-ui/src/hooks/useModelRegistry.ts:        fetchFallbackChains(),
+agent-ui/src/hooks/useModelRegistry.ts:        fetchPerformanceMetrics(),
+agent-ui/src/hooks/useModelRegistry.ts:        fetchRoutingStrategies(),
+agent-ui/src/hooks/useServiceConfig.ts:import { APIRoutes } from '../api/routes';
+agent-ui/src/hooks/useServiceConfig.ts:    unified_api: {
+agent-ui/src/hooks/useServiceConfig.ts:    api_rate_limit: number;
+agent-ui/src/hooks/useServiceConfig.ts:    api_rate_window: number;
+agent-ui/src/hooks/useServiceConfig.ts:    api: number;
+agent-ui/src/hooks/useServiceConfig.ts:    const fetchManifest = async () => {
+agent-ui/src/hooks/useServiceConfig.ts:        // Try to fetch config from the current endpoint
+agent-ui/src/hooks/useServiceConfig.ts:        const response = await fetch(configUrl);
+agent-ui/src/hooks/useServiceConfig.ts:          // If config endpoint fails, try to determine correct URL
+agent-ui/src/hooks/useServiceConfig.ts:            console.warn('Config endpoint not available, using defaults');
+agent-ui/src/hooks/useServiceConfig.ts:          throw new Error(`Failed to fetch config: ${response.status}`);
+agent-ui/src/hooks/useServiceConfig.ts:        // Auto-update endpoint if manifest suggests a different one
+agent-ui/src/hooks/useServiceConfig.ts:        if (data.services?.unified_api?.url) {
+agent-ui/src/hooks/useServiceConfig.ts:          const manifestUrl = data.services.unified_api.url;
+agent-ui/src/hooks/useServiceConfig.ts:            console.log(`Updating endpoint from ${selectedEndpoint} to ${manifestUrl} based on manifest`);
+agent-ui/src/hooks/useServiceConfig.ts:            unified_api: {
+agent-ui/src/hooks/useServiceConfig.ts:            api_rate_limit: 100,
+agent-ui/src/hooks/useServiceConfig.ts:            api_rate_window: 60
+agent-ui/src/hooks/useServiceConfig.ts:            api: 8003,
+agent-ui/src/hooks/useServiceConfig.ts:    // Fetch manifest on mount and when endpoint changes
+agent-ui/src/hooks/useServiceConfig.ts:    fetchManifest();
+agent-ui/src/hooks/useServiceConfig.ts:    const interval = setInterval(fetchManifest, 5 * 60 * 1000);
+agent-ui/src/hooks/useChatActions.ts:} from '@/api/playground'
+agent-ui/src/hooks/useChatActions.ts:      toast.error('Error fetching agents')
+agent-ui/src/hooks/useChatActions.ts:      toast.error('Error fetching teams')
+agent-ui/src/hooks/useAIResponseStream.tsx:      apiUrl: string
+agent-ui/src/hooks/useAIResponseStream.tsx:        apiUrl,
+agent-ui/src/hooks/useAIResponseStream.tsx:        const response = await fetch(apiUrl, {
+agent-ui/src/lib/api.ts:export async function fetchJSON<T>(path: string, init?: RequestInit): Promise<T> {
+agent-ui/src/lib/api.ts:  const res = await fetch(`${API_URL}${path}`, {
+agent-ui/src/lib/api.ts:  const res = await fetch(`${API_URL}${path}`, {
+agent-ui/src/api/playground.ts:  endpoint: string
+agent-ui/src/api/playground.ts:  const url = APIRoutes.GetPlaygroundAgents(endpoint)
+agent-ui/src/api/playground.ts:    const response = await fetch(url, { method: 'GET' })
+agent-ui/src/api/playground.ts:      toast.error(`Failed to fetch playground agents: ${response.statusText}`)
+agent-ui/src/api/playground.ts:    toast.error('Error fetching playground agents')
+agent-ui/src/api/playground.ts:  const response = await fetch(APIRoutes.PlaygroundStatus(base), {
+agent-ui/src/api/playground.ts:    const response = await fetch(
+agent-ui/src/api/playground.ts:      throw new Error(`Failed to fetch sessions: ${response.statusText}`)
+agent-ui/src/api/playground.ts:  const response = await fetch(
+agent-ui/src/api/playground.ts:  const response = await fetch(
+agent-ui/src/api/playground.ts:  endpoint: string
+agent-ui/src/api/playground.ts:  const url = APIRoutes.GetPlayGroundTeams(endpoint)
+agent-ui/src/api/playground.ts:    const response = await fetch(url, { method: 'GET' })
+agent-ui/src/api/playground.ts:      toast.error(`Failed to fetch playground teams: ${response.statusText}`)
+agent-ui/src/api/playground.ts:    toast.error('Error fetching playground teams')
+agent-ui/src/api/playground.ts:    const response = await fetch(
+agent-ui/src/api/playground.ts:      throw new Error(`Failed to fetch team sessions: ${response.statusText}`)
+agent-ui/src/api/playground.ts:    console.error('Error fetching team sessions:', error)
+agent-ui/src/api/playground.ts:    toast.error('Error fetching team sessions') // Inform user
+agent-ui/src/api/playground.ts:  const response = await fetch(
+agent-ui/src/api/playground.ts:    throw new Error(`Failed to fetch team session: ${response.statusText}`)
+agent-ui/src/api/playground.ts:  const response = await fetch(
+agent-ui/src/store.ts:  endpoints: {
+agent-ui/src/store.ts:    endpoint: string
+agent-ui/src/store.ts:    id_playground_endpoint: string
+agent-ui/src/store.ts:    endpoints: {
+agent-ui/src/store.ts:      endpoint: string
+agent-ui/src/store.ts:      id_playground_endpoint: string
+agent-ui/src/store.ts:      endpoints: [],
+agent-ui/src/store.ts:      setEndpoints: (endpoints) => set(() => ({ endpoints })),
+agent-ui/src/store.ts:      name: 'endpoint-storage',
+agent-ui/src/store.ts:            localStorage.removeItem('swarm-endpoint');

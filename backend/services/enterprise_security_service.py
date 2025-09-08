@@ -410,6 +410,7 @@ class EnterpriseSecurityService:
             return payload
 
         except JWTError:
+            pass
             return None
 
     async def blacklist_token(self, token: str):

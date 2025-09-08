@@ -272,6 +272,7 @@ class ConnectionPoolManager:
             try:
                 await self._health_check_task
             except asyncio.CancelledError:
+                pass
         if self.postgres_pool:
             await self.postgres_pool.close()
         if self.redis_client:

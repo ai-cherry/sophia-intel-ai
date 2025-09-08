@@ -221,6 +221,7 @@ async def cache_context():
         yield integration
     finally:
         # Context cleanup if needed
+        pass
 
 # Decorator for automatic caching
 def cache_result(cache_key_prefix: str, ttl: int = 3600):
@@ -246,4 +247,3 @@ def cache_result(cache_key_prefix: str, ttl: int = 3600):
         
         return wrapper
     return decorator
-

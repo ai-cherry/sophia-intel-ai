@@ -209,6 +209,29 @@ def check_environment_files() -> List[CheckResult]:
         except Exception as e:
             results.append(CheckResult(status="warn", message=f"Cannot read .python-version: {e}", details={}))
 
+    # Check for artemis env in secure location
+    artemis_locations = [
+        Path.home() / ".config" / "artemis" / "env",
+        root / ".env.artemis",
+        root / ".env",
+    ]
+    
+    artemis_found = False
+    for loc in artemis_locations:
+        if loc.exists():
+            results.append(CheckResult(status="ok", message=f"Found artemis env: {loc}", details={}))
+            artemis_found = True
+            break
+    
+    if not artemis_found:
+        results.append(
+            CheckResult(
+                status="warn",
+                message="No artemis env found",
+                details={"remediation": "Run: make artemis-setup"}
+            )
+        )
+
     # Check environment file separation
     sophia_env = root / ".env.sophia"
     ai_keys = ['ANTHROPIC_API_KEY', 'OPENAI_API_KEY', 'GROQ_API_KEY', 'GROK_API_KEY', 'XAI_API_KEY']
@@ -223,7 +246,7 @@ def check_environment_files() -> List[CheckResult]:
                     message="AI model keys found in .env.sophia",
                     details={
                         "contaminated_keys": ", ".join(contaminated_keys),
-                        "remediation": "Move AI keys to Artemis CLI environment"
+                        "remediation": "Move AI keys to ~/.config/artemis/env"
                     }
                 )
             )

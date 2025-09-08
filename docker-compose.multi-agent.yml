@@ -10,11 +10,13 @@ services:
     tty: true
     command: /bin/bash
     env_file:
-      - .env
+      - ${HOME}/.config/artemis/env  # Secure API keys
+      - .env.sophia                   # Infrastructure config (if exists)
     environment:
       - SSH_AUTH_SOCK=${SSH_AUTH_SOCK}
       - PYTHONUNBUFFERED=1
       - PYTHONPATH=/workspace/sophia:/workspace/artemis
+      - ARTEMIS_CONFIG_PATH=${HOME}/.config/artemis
     volumes:
       - ./:/workspace/sophia
       - ../artemis-cli:/workspace/artemis
@@ -183,6 +185,10 @@ services:
     environment:
       - API_URL=http://swarm-orchestrator:8000
       - WEBSOCKET_URL=ws://swarm-orchestrator:8000/ws
+      - MCP_FILESYSTEM_SOPHIA_URL=http://mcp-filesystem-sophia:8000
+      - MCP_FILESYSTEM_ARTEMIS_URL=http://mcp-filesystem-artemis:8000
+      - MCP_GIT_URL=http://mcp-git:8000
+      - MCP_MEMORY_URL=http://mcp-memory:8000
       - NODE_ENV=development
     depends_on:
       - swarm-orchestrator

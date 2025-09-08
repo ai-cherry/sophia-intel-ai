@@ -689,7 +689,8 @@ class SophiaMetricsCollector:
             
             if psutil.virtual_memory().percent > 85:
                 recommendations.append("💾 High system memory usage - consider scaling")
-        except:
+        except Exception:
+            pass
         
         return recommendations
     
@@ -717,4 +718,3 @@ __all__ = [
     "PerformanceProfile",
     "metrics_collector"
 ]
-

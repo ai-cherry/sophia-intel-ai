@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: help env.check rag.start rag.test lint dev-up dev-down dev-shell logs status grok-test swarm-start memory-search mcp-status env-docs
+.PHONY: help env.check rag.start rag.test lint dev-up dev-down dev-shell logs status grok-test swarm-start memory-search mcp-status env-docs artemis-setup
 
 help:
 	@echo "\033[0;36mMulti-Agent Development Environment\033[0m"
@@ -66,3 +66,17 @@ clean: ## Clean up Docker resources
 env-docs: ## Show environment guide for SSH agent and env files
 	@echo "Environment Guide (ENVIRONMENT_GUIDE.md)" && echo "------------------------------"
 	@sed -n '1,200p' ENVIRONMENT_GUIDE.md | sed -e 's/^/  /'
+
+artemis-setup: ## Set up artemis agent secure environment
+	@echo "🔐 Setting up Artemis agent environment..."
+	@mkdir -p ~/.config/artemis
+	@chmod 700 ~/.config/artemis
+	@if [ ! -f ~/.config/artemis/env ]; then \
+		echo "✅ Created ~/.config/artemis/env"; \
+		echo "📝 Edit this file and add your API keys"; \
+		echo "   Run: vi ~/.config/artemis/env"; \
+	else \
+		echo "✅ Config already exists: ~/.config/artemis/env"; \
+		echo "🔑 $(shell grep -c 'API_KEY=' ~/.config/artemis/env) API keys configured"; \
+	fi
+	@chmod 600 ~/.config/artemis/env 2>/dev/null || true

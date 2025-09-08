@@ -8,6 +8,8 @@ from typing import Any, Dict, List, Optional
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+import httpx
+import os
 
 
 class CreateSessionRequest(BaseModel):
@@ -38,6 +40,12 @@ class WebUIServer:
         )
 
         self.sessions: Dict[str, ChatSession] = {}
+        self.mcp_urls = {
+            "fs_sophia": os.getenv("MCP_FILESYSTEM_SOPHIA_URL", "http://mcp-filesystem-sophia:8000"),
+            "fs_artemis": os.getenv("MCP_FILESYSTEM_ARTEMIS_URL", "http://mcp-filesystem-artemis:8000"),
+            "git": os.getenv("MCP_GIT_URL", "http://mcp-git:8000"),
+            "memory": os.getenv("MCP_MEMORY_URL", "http://mcp-memory:8000"),
+        }
         self._routes()
 
     def _routes(self) -> None:
@@ -63,6 +71,34 @@ class WebUIServer:
                 await ws.send_json({"type": "error", "message": "session not found"})
                 await ws.close(code=4004)
                 return
+
+        @app.post("/tools/invoke")
+        async def tools_invoke(payload: Dict[str, Any]) -> Dict[str, Any]:
+            """Proxy minimal tool calls to MCP services.
+            Expected payload:
+              {"capability":"fs|git|memory", "scope":"sophia|artemis", "action":"list|read|write|...", "params":{...}}
+            """
+            capability = payload.get("capability")
+            action = payload.get("action")
+            params = payload.get("params", {})
+            scope = payload.get("scope", "sophia")
+
+            if capability == "fs":
+                base = self.mcp_urls["fs_sophia" if scope == "sophia" else "fs_artemis"]
+                url = f"{base}/fs/{action}"
+            elif capability == "git":
+                base = self.mcp_urls["git"]
+                url = f"{base}/git/{action}"
+            elif capability == "memory":
+                base = self.mcp_urls["memory"]
+                url = f"{base}/memory/{action}"
+            else:
+                raise HTTPException(400, detail="unknown capability")
+
+            async with httpx.AsyncClient(timeout=30) as client:
+                r = await client.post(url, json=params)
+                r.raise_for_status()
+                return r.json()
             await ws.send_json({"type": "status", "message": "connected", "session_id": sid})
             try:
                 while True:
@@ -76,4 +112,3 @@ class WebUIServer:
 
 server = WebUIServer()
 app = server.app
-

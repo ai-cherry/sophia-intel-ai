@@ -31,6 +31,7 @@ except ImportError:
     # Mock classes for when Qdrant is not available
     class QdrantClient:
         def __init__(self, *args, **kwargs):
+            pass
 
         def get_collections(self):
             return []
@@ -49,9 +50,11 @@ except ImportError:
 
     class VectorParams:
         def __init__(self, *args, **kwargs):
+            pass
 
     class PointStruct:
         def __init__(self, *args, **kwargs):
+            pass
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

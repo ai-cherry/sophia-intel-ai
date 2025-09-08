@@ -64,20 +64,17 @@ git clone https://github.com/yourusername/sophia-intel-ai.git
 cd sophia-intel-ai
 ```
 
-2. Set up environment variables:
+2. **NEW**: Set up secure API key environment:
 
 ```bash
-# Copy and edit the environment file
-cp .env.example .env
+# Set up secure artemis environment (RECOMMENDED)
+make artemis-setup
 
-# Required API keys
-VK_OPENROUTER=your_openrouter_virtual_key
-VK_TOGETHER=your_together_virtual_key
-
-# Optional services
-WEAVIATE_URL=http://localhost:8080
-REDIS_URL=redis://localhost:6379/1
+# Validate configuration
+make env.check
 ```
+
+**IMPORTANT**: All API keys are now stored securely at `~/.config/artemis/env` (outside git repository). See `ENVIRONMENT_GUIDE.md` for complete setup instructions.
 
 3. Install Python dependencies (system Python; no virtualenvs in repo):
 
@@ -135,11 +132,11 @@ Artifacts:
 - `scripts/quick-grok-test.sh` – one-off Grok test in `python:3.11-slim`
 - `scripts/sophia_cli.py` – minimal CLI stub for swarm placeholder commands
 
-Environment separation:
+**UPDATED Environment separation**:
+- `~/.config/artemis/env` – **ALL API KEYS HERE** (secure, outside git)
 - `.env.sophia` – infra/business only (no LLM keys); see `.env.sophia.example`
 - `.env.mcp` – MCP runtime; see `.env.mcp.example`
-- `.env` – optional local CLI convenience only
-- Provider keys live in external `artemis-cli` `.env.artemis`
+- `.env` – **DEPRECATED** (Docker now uses secure location)
 
 ## 📋 Usage
 

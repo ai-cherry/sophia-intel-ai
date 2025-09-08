@@ -129,6 +129,7 @@ class WorkflowMonitor:
             memory_bytes = process.memory_info().rss
             self.memory_usage.set(memory_bytes)
         except ImportError:
+            pass
 
     async def start_metrics_updater(
         self, interval: int = 120, smart_polling: bool = True

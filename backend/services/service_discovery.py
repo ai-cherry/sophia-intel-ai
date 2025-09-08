@@ -59,6 +59,7 @@ class ServiceDiscovery:
             try:
                 await self._health_check_task
             except asyncio.CancelledError:
+                pass
 
     async def register_service(self, service_info: ServiceInfo) -> bool:
         """Register a service"""

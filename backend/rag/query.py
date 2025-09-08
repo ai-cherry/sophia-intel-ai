@@ -36,6 +36,7 @@ class HybridRAGRetriever:
                 await self.embedding_service.embed_text(query)
             else:
                 # Mock embedding for now
+                pass
 
             # Mock semantic search results
             results = [

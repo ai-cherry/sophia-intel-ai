@@ -1,0 +1,47 @@
+model_routing:
+  fast_operations:
+    primary: x-ai/grok-code-fast-1
+    virtual_key: PORTKEY_VK_XAI
+    use_cases: [quick_responses, code_completion, syntax_checks]
+    
+  reasoning:
+    primary: openai/chatgpt-5
+    fallback_chain:
+      - anthropic/claude-opus-4.1
+      - openrouter/sonoma-sky-alpha
+    virtual_keys: 
+      - PORTKEY_VK_OPENAI
+      - PORTKEY_VK_ANTHROPIC
+      - PORTKEY_VK_OPENROUTER
+    use_cases: [complex_analysis, architecture, decision_making]
+    
+  advanced_context:
+    primary: google/gemini-2.5-flash
+    virtual_key: PORTKEY_VK_GOOGLE
+    context_window: 2048000
+    use_cases: [large_codebase_analysis, document_processing, multi_file_reasoning]
+    
+  coding:
+    primary: deepseek/deepseek-chat-v3-0324
+    secondary: qwen/qwen3-coder
+    virtual_keys:
+      - PORTKEY_VK_DEEPSEEK
+      - PORTKEY_VK_QWEN
+    use_cases: [code_generation, refactoring, optimization]
+    
+  general:
+    primary: x-ai/grok-4
+    fallback: openai/gpt-4.1-mini
+    virtual_keys:
+      - PORTKEY_VK_XAI
+      - PORTKEY_VK_OPENAI
+    use_cases: [general_tasks, documentation, communication]
+    
+  specialized:
+    scout: meta/llama-4-scout
+    maverick: meta/llama-4-maverick
+    virtual_key: PORTKEY_VK_META
+    use_cases:
+      scout: [exploration, research, discovery]
+      maverick: [creative_solutions, unconventional_approaches]
+

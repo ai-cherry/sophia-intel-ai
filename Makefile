@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: help env.check env.doctor env.doctor.merge env.clean-deprecated env.source keys-check health health-infra mcp-test full-start api-build api-up api-restart dev-mcp-up dev-artemis-up mcp-rebuild ui-up ui-health ui-smoke dev-all nuke-fragmentation rag.start rag.test lint dev-up dev-down dev-shell logs status grok-test swarm-start memory-search mcp-status env-docs artemis-setup refactor.discovery refactor.scan-http refactor.probe refactor.check webui-health router-smoke sophia sophia-start sophia-stop sophia-health sophia-logs sophia-clean sophia-test-integrations next-ui-up doctor-all artemis.sidecar-setup api-dev
+.PHONY: help env.check env.doctor env.doctor.merge env.clean-deprecated env.source keys-check health health-infra mcp-test full-start api-build api-up api-restart dev-mcp-up dev-artemis-up mcp-rebuild ui-up ui-health ui-smoke dev-all nuke-fragmentation rag.start rag.test lint dev-up dev-down dev-shell logs status grok-test swarm-start memory-search mcp-status env-docs artemis-setup refactor.discovery refactor.scan-http refactor.probe refactor.check webui-health router-smoke sophia sophia-start sophia-stop sophia-health sophia-logs sophia-clean sophia-test-integrations next-ui-up doctor-all artemis.sidecar-setup api-dev phase1.setup phase1.health phase1.verify
 
 help:
 	@echo "\033[0;36mMulti-Agent Development Environment\033[0m"
@@ -160,6 +160,20 @@ artemis.sidecar-setup: ## One-time: clone Artemis sidecar repo to ~/artemis-cli 
 
 api-dev: ## Run Sophia production server locally on port 8003
 	uvicorn app.api.production_server:create_production_app --host 0.0.0.0 --port 8003
+
+phase1.setup: ## Create Phase 1 scaffolding (storage/, logs/)
+	@mkdir -p storage logs || true
+	@touch storage/.gitkeep logs/.gitkeep
+	@echo "✓ Phase 1 directories ready (storage/, logs/)"
+
+phase1.health: ## Run Phase 1 health checker
+	@source scripts/env.sh --quiet >/dev/null 2>&1 || true; python3 scripts/phase1_health.py || true
+
+phase1.verify: ## Verify env, infra, MCP, and Phase 1 health
+	@$(MAKE) -s env.check || true
+	@$(MAKE) -s health-infra || true
+	@$(MAKE) -s mcp-test || true
+	@$(MAKE) -s phase1.health || true
 
 nuke-fragmentation: ## Nuclear option - force consolidation (DESTRUCTIVE)
 	@echo "\xE2\x9A\xA0\xEF\xB8\x8F  This will delete non-canonical files. Ctrl-C to abort..." && sleep 5

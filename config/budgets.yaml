@@ -1,0 +1,38 @@
+vk_budgets:
+  # Per-VK daily budgets in USD. Router can honor soft/hard caps when telemetry is wired.
+  PORTKEY_VK_OPENAI:
+    soft_cap_usd: 50
+    hard_cap_usd: 100
+  PORTKEY_VK_ANTHROPIC:
+    soft_cap_usd: 75
+    hard_cap_usd: 150
+  PORTKEY_VK_XAI:
+    soft_cap_usd: 25
+    hard_cap_usd: 50
+  PORTKEY_VK_GOOGLE:
+    soft_cap_usd: 40
+    hard_cap_usd: 80
+  PORTKEY_VK_DEEPSEEK:
+    soft_cap_usd: 30
+    hard_cap_usd: 60
+  PORTKEY_VK_QWEN:
+    soft_cap_usd: 20
+    hard_cap_usd: 40
+  PORTKEY_VK_OPENROUTER:
+    soft_cap_usd: 20
+    hard_cap_usd: 40
+  PORTKEY_VK_META:
+    soft_cap_usd: 10
+    hard_cap_usd: 20
+
+latency_targets_ms:
+  fast_operations_p95: 150
+  coding_p95: 1500
+  reasoning_p95: 2000
+  general_p95: 800
+  advanced_context_p95: 5000
+
+escalation_policy:
+  attempts_before_escalation: 2
+  cooldown_seconds_on_error: 120
+

@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Logs
+*.log
+logs/
+
+# Environment
+.env
+.env.local
+*.env
+
+# Test coverage
+htmlcov/
+.coverage
+.pytest_cache/
+
+# Build
+build/
+dist/
+*.egg-info/
+
+# Backup files
+*.backup
+*.old
+*_backup.py
+*_old.py

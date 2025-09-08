@@ -1,0 +1,84 @@
+{
+  "security_rules": {
+    "input_validation": {
+      "description": "OWASP A03:2021 - Injection",
+      "rules": [
+        "Always validate and sanitize user inputs",
+        "Use parameterized queries for database operations",
+        "Implement proper data type validation",
+        "Escape special characters in outputs"
+      ]
+    },
+    "authentication": {
+      "description": "OWASP A01:2021 - Broken Access Control",
+      "rules": [
+        "Never hardcode API keys or credentials",
+        "Use environment variables for sensitive data",
+        "Implement proper session management",
+        "Use secure authentication mechanisms"
+      ]
+    },
+    "sensitive_data": {
+      "description": "OWASP A02:2021 - Cryptographic Failures",
+      "rules": [
+        "Never log sensitive information",
+        "Use HTTPS for all communications",
+        "Encrypt sensitive data at rest",
+        "Implement proper key management"
+      ]
+    },
+    "security_misconfiguration": {
+      "description": "OWASP A05:2021 - Security Misconfiguration",
+      "rules": [
+        "Keep all dependencies updated",
+        "Remove default accounts and passwords",
+        "Disable unnecessary features and services",
+        "Implement proper error handling"
+      ]
+    },
+    "vulnerable_components": {
+      "description": "OWASP A06:2021 - Vulnerable and Outdated Components",
+      "rules": [
+        "Regularly update dependencies",
+        "Use dependency scanning tools",
+        "Monitor for security advisories",
+        "Remove unused dependencies"
+      ]
+    }
+  },
+  "sophia_ai_specific": {
+    "mcp_servers": [
+      "All MCP servers must validate inputs",
+      "Use proper authentication for MCP endpoints",
+      "Implement rate limiting",
+      "Log security events"
+    ],
+    "agents": [
+      "Validate all agent inputs and outputs",
+      "Use secure communication channels",
+      "Implement proper access controls",
+      "Monitor agent behavior"
+    ],
+    "databases": [
+      "Use parameterized queries only",
+      "Implement proper connection security",
+      "Use least privilege access",
+      "Encrypt sensitive data"
+    ]
+  },
+  "forbidden_patterns": [
+    "hardcoded passwords",
+    "string interpolation in SQL queries",
+    "hardcoded API keys",
+    "unvalidated user inputs",
+    "logging sensitive data"
+  ],
+  "required_headers": {
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "X-XSS-Protection": "1; mode=block",
+    "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+    "Content-Security-Policy": "default-src 'self'"
+  }
+}
+

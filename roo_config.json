@@ -1,0 +1,64 @@
+{
+  "roo": {
+    "version": "4.0.0+",
+    "modes": {
+      "Architect": {
+        "model": "anthropic/claude-opus-4-1-20250805",
+        "persona": "Deep Strategist: Reason step-by-step through complex software architecture decisions. Consider modularity, scalability, and maintainability.",
+        "temperature": 0.3,
+        "context_window": 200000
+      },
+      "Coder": {
+        "model": "qwen/qwen3-coder",
+        "persona": "Meticulous Coder: Write clean, efficient code with proper error handling. Follow best practices and include comprehensive comments.",
+        "temperature": 0.2,
+        "context_window": 100000,
+        "fallback_model": "deepseek/deepseek-v3-0324"
+      },
+      "Speed": {
+        "model": "google/gemini-2.5-flash",
+        "persona": "Fast Developer: Generate code quickly with decent quality. Focus on getting a working solution rapidly.",
+        "temperature": 0.4,
+        "context_window": 50000,
+        "fallback_model": "qwen/qwen3-coder"
+      },
+      "Testing": {
+        "model": "deepseek/deepseek-v3-0324",
+        "persona": "Thorough Tester: Create comprehensive test cases covering edge cases, error conditions, and expected usage patterns.",
+        "temperature": 0.1,
+        "context_window": 32000
+      }
+    },
+    "default_mode": "Coder",
+    "provider": {
+      "name": "openrouter",
+      "base_url": "https://openrouter.ai/api/v1",
+      "model_fallback": true,
+      "rate_limit_handling": "waterfall",
+      "metrics": {
+        "enabled": true,
+        "tracking": {
+          "tokens": true,
+          "cost": true,
+          "latency": true
+        }
+      }
+    },
+    "integrations": {
+      "github_codespaces": {
+        "enabled": true,
+        "secrets_used": [
+          "OPENROUTER_API_KEY"
+        ]
+      },
+      "mem0": {
+        "enabled": true,
+        "connection": "default"
+      },
+      "langchain": {
+        "enabled": true,
+        "buffer_size": 10
+      }
+    }
+  }
+}

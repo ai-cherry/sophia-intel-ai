@@ -1,0 +1,92 @@
+groups:
+  - name: sophia_secret_management
+    rules:
+      # Secret Health Alerts
+      - alert: SecretHealthLow
+        expr: secret_health_score < 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Secret health score is low"
+          description: "Secret health score is {{ $value }}%, which is below the 80% threshold"
+
+      - alert: SecretHealthCritical
+        expr: secret_health_score < 60
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Secret health score is critical"
+          description: "Secret health score is {{ $value }}%, which is critically low"
+
+      # API Validation Errors
+      - alert: SecretValidationErrors
+        expr: rate(secret_validation_errors_total[5m]) > 0.1
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High secret validation error rate"
+          description: "Secret validation error rate is {{ $value }} errors/second"
+
+      # Authentication Failures
+      - alert: AuthenticationFailures
+        expr: rate(authentication_attempts_total{status="failure"}[5m]) > 0.05
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High authentication failure rate"
+          description: "Authentication failure rate is {{ $value }} failures/second"
+
+      # Rate Limiting
+      - alert: RateLimitHits
+        expr: rate(rate_limit_hits_total[5m]) > 1
+        for: 5m
+        labels:
+          severity: info
+        annotations:
+          summary: "High rate limit hits"
+          description: "Rate limit hit rate is {{ $value }} hits/second"
+
+      # API Latency
+      - alert: HighAPILatency
+        expr: histogram_quantile(0.95, rate(api_latency_seconds_bucket[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High API latency"
+          description: "95th percentile API latency is {{ $value }}s"
+
+      # Database Connection
+      - alert: DatabaseConnectionDown
+        expr: up{job="postgres"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Database connection is down"
+          description: "PostgreSQL database is not responding"
+
+      # Redis Connection
+      - alert: RedisConnectionDown
+        expr: up{job="redis"} == 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Redis connection is down"
+          description: "Redis cache is not responding"
+
+      # Environment Switch Failures
+      - alert: EnvironmentSwitchFailures
+        expr: rate(environment_switches_total[10m]) == 0 and increase(environment_switches_total[1h]) > 0
+        for: 10m
+        labels:
+          severity: info
+        annotations:
+          summary: "Environment switches may be failing"
+          description: "No successful environment switches in the last 10 minutes"
+

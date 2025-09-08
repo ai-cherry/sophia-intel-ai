@@ -1,0 +1,417 @@
+# Sophia AI Optimized Production Configuration
+# Cloud-first + AI-agent-first architecture with performance patterns
+
+version: '3.8'
+
+services:
+  # Core Orchestration Layer
+  orchestrator:
+    build:
+      context: ./services/orchestrator
+      dockerfile: Dockerfile
+    container_name: sophia-orchestrator
+    ports:
+      - "8002:8002"
+    environment:
+      - NEURAL_ENGINE_URL=http://neural-engine:8001
+      - ENHANCED_SEARCH_URL=http://enhanced-search:8004
+      - CHAT_SERVICE_URL=http://chat-service:8003
+      - REDIS_HOT_URL=redis://redis-hot:6379
+      - REDIS_WARM_URL=redis://redis-warm:6379
+      - POSTGRES_URL=postgresql://sophia:${POSTGRES_PASSWORD}@postgres:5432/sophia_ai
+      - QDRANT_URL=http://qdrant:6333
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:14268/api/traces
+    depends_on:
+      - postgres
+      - redis-hot
+      - redis-warm
+      - qdrant
+    networks:
+      - sophia-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
+        reservations:
+          memory: 1G
+          cpus: '0.5'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Neural Inference Engine (GPU-optimized)
+  neural-engine:
+    build:
+      context: ./services/neural-engine
+      dockerfile: Dockerfile
+    container_name: sophia-neural-engine
+    ports:
+      - "8001:8001"
+    environment:
+      - MODEL_NAME=deepseek-r1-0528
+      - GPU_MEMORY_FRACTION=0.8
+      - MAX_BATCH_SIZE=32
+      - VLLM_WORKER_USE_RAY=true
+      - CUDA_VISIBLE_DEVICES=0
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:14268/api/traces
+    volumes:
+      - neural-models:/app/models
+      - neural-cache:/app/cache
+    networks:
+      - sophia-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 16G
+          cpus: '4.0'
+        reservations:
+          memory: 8G
+          cpus: '2.0'
+      # GPU support (uncomment for GPU deployment)
+      # reservations:
+      #   devices:
+      #     - driver: nvidia
+      #       count: 1
+      #       capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 60s
+      timeout: 30s
+      retries: 3
+      start_period: 120s
+
+  # Enhanced Search Service
+  enhanced-search:
+    build:
+      context: ./services/enhanced-search
+      dockerfile: Dockerfile
+    container_name: sophia-enhanced-search
+    ports:
+      - "8004:8004"
+    environment:
+      - SERPER_API_KEY=${SERPER_API_KEY}
+      - PERPLEXITY_API_KEY=${PERPLEXITY_API_KEY}
+      - BRAVE_API_KEY=${BRAVE_API_KEY}
+      - EXA_API_KEY=${EXA_API_KEY}
+      - TAVILY_API_KEY=${TAVILY_API_KEY}
+      - REDIS_HOT_URL=redis://redis-hot:6379
+      - REDIS_WARM_URL=redis://redis-warm:6379
+      - QDRANT_URL=http://qdrant:6333
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:14268/api/traces
+    depends_on:
+      - redis-hot
+      - redis-warm
+      - qdrant
+    networks:
+      - sophia-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+          cpus: '2.0'
+        reservations:
+          memory: 2G
+          cpus: '1.0'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8004/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Chat Service (WebSocket + HTTP)
+  chat-service:
+    build:
+      context: ./services/chat-service
+      dockerfile: Dockerfile
+    container_name: sophia-chat-service
+    ports:
+      - "8003:8003"
+    environment:
+      - ORCHESTRATOR_URL=http://orchestrator:8002
+      - REDIS_HOT_URL=redis://redis-hot:6379
+      - POSTGRES_URL=postgresql://sophia:${POSTGRES_PASSWORD}@postgres:5432/sophia_ai
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:14268/api/traces
+    depends_on:
+      - postgres
+      - redis-hot
+      - orchestrator
+    networks:
+      - sophia-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
+        reservations:
+          memory: 1G
+          cpus: '0.5'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8003/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Data Layer - PostgreSQL (Primary Database)
+  postgres:
+    image: postgres:15-alpine
+    container_name: sophia-postgres
+    environment:
+      - POSTGRES_DB=sophia_ai
+      - POSTGRES_USER=sophia
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_INITDB_ARGS=--auth-host=scram-sha-256
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./infrastructure/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - sophia-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+          cpus: '2.0'
+        reservations:
+          memory: 2G
+          cpus: '1.0'
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sophia -d sophia_ai"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Cache Layer - Redis Hot (In-Memory)
+  redis-hot:
+    image: redis:7-alpine
+    container_name: sophia-redis-hot
+    command: redis-server --maxmemory 2gb --maxmemory-policy allkeys-lru --save ""
+    volumes:
+      - redis-hot-data:/data
+    networks:
+      - sophia-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 2.5G
+          cpus: '1.0'
+        reservations:
+          memory: 2G
+          cpus: '0.5'
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Cache Layer - Redis Warm (Persistent)
+  redis-warm:
+    image: redis:7-alpine
+    container_name: sophia-redis-warm
+    command: redis-server --maxmemory 4gb --maxmemory-policy allkeys-lru --save 900 1 --save 300 10 --save 60 10000
+    volumes:
+      - redis-warm-data:/data
+    networks:
+      - sophia-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 4.5G
+          cpus: '1.0'
+        reservations:
+          memory: 4G
+          cpus: '0.5'
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Vector Database - Qdrant
+  qdrant:
+    image: qdrant/qdrant:v1.7.4
+    container_name: sophia-qdrant
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant-data:/qdrant/storage
+    environment:
+      - QDRANT__SERVICE__HTTP_PORT=6333
+      - QDRANT__SERVICE__GRPC_PORT=6334
+    networks:
+      - sophia-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+          cpus: '2.0'
+        reservations:
+          memory: 2G
+          cpus: '1.0'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6333/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Load Balancer - Nginx
+  nginx:
+    image: nginx:alpine
+    container_name: sophia-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./infrastructure/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./infrastructure/nginx/conf.d:/etc/nginx/conf.d
+      - nginx-cache:/var/cache/nginx
+      - ssl-certs:/etc/ssl/certs
+    depends_on:
+      - orchestrator
+      - enhanced-search
+      - chat-service
+    networks:
+      - sophia-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Monitoring - Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: sophia-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.enable-lifecycle'
+    networks:
+      - sophia-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
+        reservations:
+          memory: 1G
+          cpus: '0.5'
+
+  # Monitoring - Grafana
+  grafana:
+    image: grafana/grafana:latest
+    container_name: sophia-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
+    depends_on:
+      - prometheus
+    networks:
+      - sophia-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '0.5'
+        reservations:
+          memory: 512M
+          cpus: '0.25'
+
+  # Tracing - Jaeger
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: sophia-jaeger
+    ports:
+      - "16686:16686"
+      - "14268:14268"
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    volumes:
+      - jaeger-data:/tmp
+    networks:
+      - sophia-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '0.5'
+        reservations:
+          memory: 512M
+          cpus: '0.25'
+
+# Networks
+networks:
+  sophia-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+# Volumes
+volumes:
+  postgres-data:
+    driver: local
+  redis-hot-data:
+    driver: local
+  redis-warm-data:
+    driver: local
+  qdrant-data:
+    driver: local
+  neural-models:
+    driver: local
+  neural-cache:
+    driver: local
+  nginx-cache:
+    driver: local
+  ssl-certs:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local
+  jaeger-data:
+    driver: local
+

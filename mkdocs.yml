@@ -1,0 +1,81 @@
+site_name: Sophia AI Platform
+site_description: Enterprise AI Orchestration Platform
+site_url: https://sophia-ai.dev
+
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - search.highlight
+    - search.share
+    - content.code.copy
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Quick Start: getting-started/quick-start.md
+    - Installation: getting-started/installation.md
+    - Configuration: getting-started/configuration.md
+  - Architecture:
+    - Overview: architecture/overview.md
+    - Components: architecture/components.md
+    - Data Flow: architecture/data-flow.md
+  - Development:
+    - Setup: development/setup.md
+    - Guidelines: development/guidelines.md
+    - Testing: development/testing.md
+  - Deployment:
+    - Production: deployment/production.md
+    - Docker: deployment/docker.md
+    - Kubernetes: deployment/kubernetes.md
+  - API Reference:
+    - REST API: api/rest.md
+    - MCP Servers: api/mcp.md
+    - Integrations: api/integrations.md
+  - Guides:
+    - Business Intelligence: guides/business-intelligence.md
+    - Agent Development: guides/agent-development.md
+    - Troubleshooting: guides/troubleshooting.md
+
+plugins:
+  - search
+  - mermaid2
+  - awesome-pages
+
+markdown_extensions:
+  - pymdownx.mermaid
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - admonition
+  - pymdownx.details
+  - pymdownx.tabbed:
+      alternate_style: true
+  - attr_list
+  - md_in_html
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/sophia-intel/sophia-main

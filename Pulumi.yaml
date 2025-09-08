@@ -1,0 +1,20 @@
+name: sophia-ai
+runtime:
+  name: python
+  options:
+    toolchain: uv
+    virtualenv: .venv
+description: Sophia AI - Enterprise AI Orchestrator Infrastructure
+
+config:
+  aws:region: lambda-labs-us-west
+  kubernetes:enableServerSideApply: true
+
+template:
+  config:
+    aws:region:
+      description: The AWS region to deploy to
+      default: lambda-labs-us-west
+    environment:
+      description: The deployment environment (dev, staging, prod)
+      default: prod

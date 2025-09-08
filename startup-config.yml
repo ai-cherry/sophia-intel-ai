@@ -1,0 +1,63 @@
+services:
+  redis:
+    command: ["redis-server", "--port", "6379", "--daemonize", "no"]
+    health_check: "tcp://localhost:6379"
+    dependencies: []
+    timeout: 30
+    retries: 3
+    critical: true
+    startup_delay: 0
+    
+  qdrant:
+    command: ["docker", "run", "--rm", "--name", "qdrant", "-p", "6333:6333", "-p", "6334:6334", "qdrant/qdrant"]
+    health_check: "http://localhost:6333/health"
+    dependencies: []
+    timeout: 45
+    retries: 3
+    critical: false
+    startup_delay: 2
+    
+  api:
+    command: ["python", "-m", "uvicorn", "backend.app.main:app", "--host", "${BIND_IP}", "--port", "8000", "--reload"]
+    health_check: "http://localhost:8000/health"
+    dependencies: ["redis"]
+    timeout: 60
+    retries: 5
+    environment:
+      REDIS_URL: "${REDIS_URL}"
+      ENVIRONMENT: "development"
+      PYTHONPATH: "/workspaces/sophia-main"
+    critical: true
+    startup_delay: 5
+    
+  dashboard:
+    command: ["streamlit", "run", "dashboard/main.py", "--server.port", "8501", "--server.address", "${BIND_IP}", "--server.headless", "true"]
+    health_check: "http://localhost:8501"
+    dependencies: ["api"]
+    timeout: 45
+    retries: 3
+    critical: true
+    startup_delay: 3
+    
+  artemis:
+    command: ["python", "-m", "artemis.orchestrator.main"]
+    health_check: "${SOPHIA_API_ENDPOINT}/health"
+    dependencies: ["api", "redis"]
+    timeout: 60
+    retries: 3
+    environment:
+      ARTEMIS_MODE: "development"
+      REDIS_URL: "${REDIS_URL}"
+      PYTHONPATH: "/workspaces/sophia-main"
+    critical: false
+    startup_delay: 8
+    
+  langroid_dashboard:
+    command: ["python", "-m", "streamlit", "run", "dashboard/langroid_dashboard.py", "--server.port", "8502", "--server.address", "${BIND_IP}"]
+    health_check: "http://localhost:8502"
+    dependencies: ["api", "redis"]
+    timeout: 45
+    retries: 3
+    critical: false
+    startup_delay: 10
+

@@ -1,0 +1,25 @@
+{
+  "deployment": {
+    "primary_instance": {
+      "id": "eb24fa66e6fe49769011b77bff329a1e",
+      "name": "sophia-production-instance",
+      "public_ip": "104.171.202.103",
+      "private_ip": "unknown",
+      "instance_type": "gpu_1x_rtx6000",
+      "region": "us-south-1"
+    },
+    "endpoints": {
+      "dashboard": "http://104.171.202.103:8080",
+      "grafana": "http://104.171.202.103:3000",
+      "prometheus": "http://104.171.202.103:9090",
+      "ssh": "ssh ubuntu@104.171.202.103"
+    },
+    "ssh_command": "ssh ubuntu@104.171.202.103",
+    "deployment_commands": [
+      "ssh ubuntu@104.171.202.103",
+      "git clone https://github.com/ai-cherry/sophia-main.git",
+      "cd sophia-main",
+      "./install_auto_login.sh && ./create_system_service.sh"
+    ]
+  }
+}

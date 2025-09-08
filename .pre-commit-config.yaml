@@ -11,4 +11,13 @@ repos:
         entry: scripts/check_root_docs.sh
         language: script
         pass_filenames: false
-
+      - id: block-artemis-in-sophia
+        name: Block Artemis paths in Sophia repo
+        entry: scripts/check_artemis_paths.sh
+        language: script
+        pass_filenames: false
+      - id: allow-temporary-override
+        name: Emergency override (use sparingly)
+        entry: bash -c 'echo "⚠️  Use: git commit --no-verify to bypass hooks (manual only)"'
+        language: system
+        stages: [manual]

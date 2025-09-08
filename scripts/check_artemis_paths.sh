@@ -5,7 +5,7 @@ violations=()
 if rg -n "^app/artemis/" -S --hidden --no-heading >/dev/null 2>&1; then
   violations+=("app/artemis/** detected in repo (not allowed)")
 fi
-if rg -n "artemis_server_standalone\.py|bin/artemis-" -S --hidden --no-heading >/dev/null 2>&1; then
+if rg -n "artemis_server_standalone\.py|bin/artemis-|scripts/(artemis_|.*_artemis)" -S --hidden --no-heading >/dev/null 2>&1; then
   violations+=("Artemis server binaries detected (not allowed)")
 fi
 
@@ -16,4 +16,3 @@ if (( ${#violations[@]} > 0 )); then
 fi
 
 echo "✅ No Artemis-specific code paths detected"
-

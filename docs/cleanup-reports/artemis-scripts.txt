@@ -1,0 +1,16 @@
+scripts/artemis_4_scout_comparison.py
+scripts/artemis_code_modifier_swarm.py
+scripts/artemis_collaboration_demo.py
+scripts/artemis_final_working_swarm.py
+scripts/artemis_military_swarm_direct.py
+scripts/artemis_military_swarm.py
+scripts/artemis_parallel_swarm.py
+scripts/artemis_real_scan_swarm.py
+scripts/artemis_repository_scan.py
+scripts/artemis_swarm_comparative.py
+scripts/artemis_swarm_final.py
+scripts/artemis_working_swarm.py
+scripts/deploy_artemis_simple.py
+scripts/deploy_artemis_swarm.py
+scripts/monitoring/monitor_artemis_swarm.py
+scripts/testing/test_artemis_agents.py

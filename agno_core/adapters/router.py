@@ -89,12 +89,17 @@ class ModelRouter:
         # Remaining allowed candidates become fallbacks (preserve order)
         fallbacks_filtered = [e for e in evaluated if e.get("budget_decision") in ("allow", "soft_cap")]
 
+        # Telemetry for compatibility: include flat keys and nested data
         self.telemetry.emit({
             "type": "route_decision",
             "category": category if subkey is None else f"{category}.{subkey}",
             "primary_provider_model": chosen.get("provider_model"),
             "primary_vk_env": chosen.get("selected_vk_env"),
             "fallback_count": len(fallbacks_filtered),
+            "data": {
+                "primary": chosen.get("provider_model"),
+                "fallbacks": [fb.get("provider_model") for fb in fallbacks_filtered if fb.get("provider_model")],
+            },
         })
 
         return SelectedRoute(category if subkey is None else f"{category}.{subkey}", chosen, fallbacks_filtered)

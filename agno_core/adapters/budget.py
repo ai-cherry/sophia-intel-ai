@@ -66,3 +66,15 @@ class BudgetManager:
             return "soft_cap"
         self.add_usage(vk_env, estimated_cost_usd)
         return "allow"
+
+    def check_status(self, vk_env: str) -> str:
+        """Non-reserving budget status for a VK: 'allow' | 'soft_cap' | 'blocked'."""
+        limit = self.limits.get(vk_env)
+        if not limit:
+            return "allow"
+        current = self.get_usage(vk_env)
+        if current > limit.hard_cap_usd:
+            return "blocked"
+        if current > limit.soft_cap_usd:
+            return "soft_cap"
+        return "allow"

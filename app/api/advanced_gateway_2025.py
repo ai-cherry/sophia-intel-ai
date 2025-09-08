@@ -12,12 +12,12 @@ from enum import Enum
 from typing import Any, Optional
 
 import httpx
-from dotenv import load_dotenv
+from app.core.env import load_env_once
 
 from app.core.circuit_breaker import with_circuit_breaker
 
 # Load environment variables
-load_dotenv(".env.local")
+load_env_once()
 
 logger = logging.getLogger(__name__)
 

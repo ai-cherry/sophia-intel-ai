@@ -5,9 +5,9 @@ import asyncio
 import os
 
 import aiohttp
-from dotenv import load_dotenv
+from app.core.env import load_env_once
 
-load_dotenv()
+load_env_once()
 
 
 async def run_simple_test():

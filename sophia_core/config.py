@@ -4,9 +4,9 @@
 import os
 from enum import Enum
 
-from dotenv import load_dotenv
+from app.core.env import load_env_once
 
-load_dotenv()
+load_env_once()
 
 # API Keys
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")

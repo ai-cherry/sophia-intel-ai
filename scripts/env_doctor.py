@@ -90,6 +90,7 @@ def merge_to_env_local(sources: List[Tuple[str, Path, Dict[str, str]]]) -> str:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--merge", action="store_true", help="Write merged .env.local from all sources")
+    ap.add_argument("--backup", action="store_true", help="Backup existing .env.local before writing")
     args = ap.parse_args()
 
     sources = collect_sources()
@@ -129,9 +130,47 @@ def main() -> int:
             print(f"  - {k}: {values}")
         print("  Merge will resolve by priority: secure_vault > .env.local > .env > deprecated > template")
 
+    # Security and format checks
+    print("\nSecurity checks:")
+    suspicious = []
+    secret_patterns = [
+        ("OPENAI_API_KEY", r"^sk-[A-Za-z0-9]{20,}"),
+        ("ANTHROPIC_API_KEY", r"^sk-ant-[A-Za-z0-9\-]{10,}"),
+        ("GROK_API_KEY", r"^(gsk|xai|grok)[A-Za-z0-9_\-]{6,}"),
+        ("GITHUB_PAT", r"^(ghp_|github_pat_)[A-Za-z0-9_]{10,}"),
+    ]
+    import re
+    for key, pattern in secret_patterns:
+        for lbl, _p, d in sources:
+            if key in d and d[key] and not re.match(pattern, d[key]):
+                suspicious.append((key, lbl))
+    if suspicious:
+        for key, lbl in suspicious:
+            print(f"  ⚠️  {key} value in {lbl} doesn't match expected format")
+    else:
+        print("  ✅ No obvious key format issues detected")
+
+    print("\nService URL checks:")
+    def url_ok(val: str, prefix: str) -> bool:
+        return bool(val and val.startswith(prefix))
+    merged_view = {}
+    for _lbl, _p, d in sources:
+        merged_view.update(d)
+    r_ok = url_ok(merged_view.get("REDIS_URL", ""), "redis://")
+    p_ok = url_ok(merged_view.get("POSTGRES_URL", ""), "postgresql://")
+    w_ok = url_ok(merged_view.get("WEAVIATE_URL", ""), "http")
+    print(f"  REDIS_URL:     {'OK' if r_ok else 'MISSING/INVALID'}")
+    print(f"  POSTGRES_URL:  {'OK' if p_ok else 'MISSING/INVALID'}")
+    print(f"  WEAVIATE_URL:  {'OK' if w_ok else 'MISSING/INVALID'}")
+
     if args.merge:
         merged = merge_to_env_local(sources)
         out = ROOT / ".env.local"
+        if args.backup and out.exists():
+            import time
+            backup = ROOT / f".env.local.bak.{int(time.time())}"
+            backup.write_text(out.read_text())
+            print(f"📦 Backed up existing .env.local to {backup}")
         out.write_text(merged)
         print(f"\n💾 Wrote merged .env.local with {len(merged.splitlines())} lines")
         return 0
@@ -142,4 +181,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

@@ -11,9 +11,9 @@ from app.security.input_validator import validate_api_key
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 # Configuration from environment
-from dotenv import load_dotenv
+from app.core.env import load_env_once
 
-load_dotenv(".env.local")
+load_env_once()
 
 # Use environment variables directly
 SECRET_KEY = os.getenv("JWT_SECRET_KEY", "default-secret-key-change-in-production")

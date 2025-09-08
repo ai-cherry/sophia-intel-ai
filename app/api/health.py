@@ -9,11 +9,11 @@ from datetime import datetime
 from typing import Any
 
 import httpx
-from dotenv import load_dotenv
+from app.core.env import load_env_once
 from fastapi import APIRouter, HTTPException
 
 # Load environment variables
-load_dotenv(".env.local")
+load_env_once()
 
 try:
     from .gateway import get_api_gateway

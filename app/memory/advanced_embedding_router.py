@@ -12,12 +12,12 @@ from enum import Enum
 from typing import Any
 
 import numpy as np
-from dotenv import load_dotenv
+from app.core.env import load_env_once
 
 from app.core.ai_logger import logger
 
 # Load environment variables
-load_dotenv(".env.milvus")
+load_env_once()
 
 logger = logging.getLogger(__name__)
 

@@ -5,11 +5,11 @@ Uses direct OpenAI client integration.
 
 import os
 
-from dotenv import load_dotenv
+from app.core.env import load_env_once
 from openai import OpenAI
 
 # Load environment variables
-load_dotenv(".env.local")
+load_env_once()
 
 # Role→Model mappings
 ROLE_MODELS = {

@@ -5,15 +5,15 @@ import os
 from datetime import datetime
 from typing import Any, Optional
 
-from dotenv import load_dotenv
+from app.core.env import load_env_once
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-# Load environment variables from .env file
-load_dotenv()
+# Load environment variables using unified loader
+load_env_once()
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)

@@ -4,14 +4,14 @@ import { toast } from 'sonner'
 import { TextArea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { usePlaygroundStore } from '@/store'
-import useAIChatStreamHandler from '@/hooks/useAIStreamHandler'
+import useUnifiedStream from '@/hooks/useUnifiedStream'
 import { useQueryState } from 'nuqs'
 import Icon from '@/components/ui/icon'
 
 const ChatInput = () => {
   const { chatInputRef } = usePlaygroundStore()
 
-  const { handleStreamResponse } = useAIChatStreamHandler()
+  const { handleStreamResponse } = useUnifiedStream()
   const [selectedAgent] = useQueryState('agent')
   const [teamId] = useQueryState('team')
   const [inputMessage, setInputMessage] = useState('')

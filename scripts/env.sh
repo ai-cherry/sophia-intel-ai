@@ -1,24 +1,31 @@
-#!/bin/bash
-# Shared environment loader for Sophia Intel AI scripts
+#!/usr/bin/env bash
+# shellcheck shell=bash
+# Unified environment loader for local shells and CI
+# Usage: source scripts/env.sh [--quiet]
+
 set -euo pipefail
+QUIET=${1:-}
 
-# Colors
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m'
+root_dir() {
+  cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P
+}
 
-log_info() { echo -e "${GREEN}[INFO]${NC} $1"; }
-log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
-log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
-log_success() { echo -e "${GREEN}✅${NC} $1"; }
+ROOT="$(root_dir)"
 
-# Load .env if present
-if [ -f ".env" ]; then
-  # export variables set in .env
-  set -a
-  . ./.env
-  set +a
-  log_info ".env loaded"
-fi
+load_file() {
+  local f="$1"
+  [[ -f "$f" ]] || return 0
+  while IFS= read -r line; do
+    [[ -z "$line" || "$line" =~ ^# || "$line" != *"="* ]] && continue
+    key="${line%%=*}"; val="${line#*=}"
+    export "$key"="$val"
+  done < "$f"
+  [[ -n "$QUIET" ]] || echo "+ loaded: $f"
+}
+
+load_file "$HOME/.config/artemis/env"
+load_file "$ROOT/.env"
+load_file "$ROOT/.env.local"
+
+[[ -n "$QUIET" ]] || echo "Environment loaded. Keys now available in this shell."
 

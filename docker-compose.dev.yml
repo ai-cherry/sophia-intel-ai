@@ -6,9 +6,8 @@ services:
     image: python:3.11-slim
     container_name: sophia-agent-dev
     volumes:
-      # Mount both repositories
+      # Mount single repository (canonical workspace)
       - ./:/workspace/sophia
-      - ../artemis-cli:/workspace/artemis
       # SSH keys for GitHub operations
       - ~/.ssh:/root/.ssh:ro
       - ${SSH_AUTH_SOCK}:${SSH_AUTH_SOCK}
@@ -120,6 +119,8 @@ services:
 
   # MCP Filesystem Server for Artemis repo
   mcp-filesystem-artemis:
+    profiles:
+      - artemis
     build:
       context: .
       dockerfile: automation/docker/Dockerfile.mcp-filesystem
@@ -132,7 +133,7 @@ services:
       - READ_ONLY=false
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
     volumes:
-      - ../artemis-cli:/workspace/artemis
+      - ${ARTEMIS_PATH}:/workspace/artemis
     networks:
       - sophia-network
     ports:
@@ -158,7 +159,6 @@ services:
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
     volumes:
       - ./:/workspace/sophia
-      - ../artemis-cli:/workspace/artemis
       - ~/.ssh:/root/.ssh:ro
       - ${SSH_AUTH_SOCK}:${SSH_AUTH_SOCK}
     networks:

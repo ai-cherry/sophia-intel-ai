@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: help env.check rag.start rag.test lint dev-up dev-down dev-shell logs status grok-test swarm-start memory-search mcp-status env-docs artemis-setup refactor.discovery refactor.scan-http refactor.probe refactor.check webui-health router-smoke
+.PHONY: help env.check env.doctor env.doctor.merge env.clean-deprecated env.source rag.start rag.test lint dev-up dev-down dev-shell logs status grok-test swarm-start memory-search mcp-status env-docs artemis-setup refactor.discovery refactor.scan-http refactor.probe refactor.check webui-health router-smoke
 
 help:
 	@echo "\033[0;36mMulti-Agent Development Environment\033[0m"
@@ -9,6 +9,21 @@ help:
 
 env.check: ## Run environment preflight checks
 	python3 scripts/agents_env_check.py || true
+
+env.doctor: ## Diagnose env fragmentation and conflicts
+	python3 scripts/env_doctor.py
+
+env.doctor.merge: ## Merge sources into .env.local
+	python3 scripts/env_doctor.py --merge
+
+env.clean-deprecated: ## Remove deprecated env examples (keeps .env.template authoritative)
+	@for f in .env.example .env.mcp.example .env.sophia.example; do \
+		if [ -f $$f ]; then echo "Removing $$f" && rm -f $$f; fi; \
+	done; \
+	echo "Deprecated env examples removed. Use .env.template + ~/.config/artemis/env"
+
+env.source: ## Source unified environment in current shell (bash/zsh: `source <(make env.source)`)
+	@cat scripts/env.sh
 
 rag.start: ## Start unified API with optional RAG
 	./unified-start.sh --with-rag

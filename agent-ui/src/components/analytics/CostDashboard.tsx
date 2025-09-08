@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import Icon from '@/components/ui/icon'
 import { usePlaygroundStore } from '@/store'
 import { APIRoutes } from '@/api/routes'
+import { useDashboardData } from '@/hooks/useDashboardData'
 // import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts'
 
 interface CostSummary {
@@ -53,54 +54,25 @@ const CostDashboard: React.FC = () => {
   const [dailyCosts, setDailyCosts] = useState<DailyCost[]>([])
   const [topModels, setTopModels] = useState<TopModel[]>([])
 
-  const fetchCostData = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError(null)
+  // Shared dashboard hooks per endpoint
+  const summaryUrl = `${APIRoutes.GetCostSummary(selectedEndpoint)}?days=${timeRange}`
+  const dailyUrl = `${APIRoutes.GetDailyCosts(selectedEndpoint)}?days=${timeRange}`
+  const modelsUrl = `${APIRoutes.GetTopModels(selectedEndpoint)}?limit=10`
 
-      // Fetch cost summary
-      const summaryResponse = await fetch(
-        `${APIRoutes.GetCostSummary(selectedEndpoint)}?days=${timeRange}`
-      )
+  const { data: summaryResp, loading: loadingSummary, error: errSummary, refetch: refetchSummary } =
+    useDashboardData<{ summary: CostSummary }>(summaryUrl, [selectedEndpoint, timeRange], { category: 'api.costs.summary' })
+  const { data: dailyResp, loading: loadingDaily, error: errDaily, refetch: refetchDaily } =
+    useDashboardData<{ daily_costs: DailyCost[] }>(dailyUrl, [selectedEndpoint, timeRange], { category: 'api.costs.daily' })
+  const { data: modelsResp, loading: loadingModels, error: errModels, refetch: refetchModels } =
+    useDashboardData<{ top_models: TopModel[] }>(modelsUrl, [selectedEndpoint, timeRange], { category: 'api.costs.topModels' })
 
-      if (!summaryResponse.ok) {
-        throw new Error('Failed to fetch cost summary')
-      }
-
-      const summaryData = await summaryResponse.json()
-      setSummary(summaryData.summary)
-
-      // Fetch daily costs
-      const dailyResponse = await fetch(
-        `${APIRoutes.GetDailyCosts(selectedEndpoint)}?days=${timeRange}`
-      )
-
-      if (dailyResponse.ok) {
-        const dailyData = await dailyResponse.json()
-        setDailyCosts(dailyData.daily_costs)
-      }
-
-      // Fetch top models
-      const modelsResponse = await fetch(
-        `${APIRoutes.GetTopModels(selectedEndpoint)}?limit=10`
-      )
-
-      if (modelsResponse.ok) {
-        const modelsData = await modelsResponse.json()
-        setTopModels(modelsData.top_models)
-      }
-
-    } catch (err) {
-      console.error('Failed to fetch cost data:', err)
-      setError(err instanceof Error ? err.message : 'Unknown error')
-    } finally {
-      setLoading(false)
-    }
-  }, [selectedEndpoint, timeRange])
-
-  useEffect(() => {
-    fetchCostData()
-  }, [selectedEndpoint, timeRange, fetchCostData])
+  React.useEffect(() => {
+    setLoading(loadingSummary || loadingDaily || loadingModels)
+    setError(errSummary || errDaily || errModels || null)
+    if (summaryResp?.summary) setSummary(summaryResp.summary)
+    if (dailyResp?.daily_costs) setDailyCosts(dailyResp.daily_costs)
+    if (modelsResp?.top_models) setTopModels(modelsResp.top_models)
+  }, [loadingSummary, loadingDaily, loadingModels, errSummary, errDaily, errModels, summaryResp, dailyResp, modelsResp])
 
   const formatCurrency = (amount: number) => {
     if (amount === 0) return '$0.00'
@@ -152,7 +124,7 @@ const CostDashboard: React.FC = () => {
         <div className="text-center">
           <h3 className="text-lg font-medium text-white mb-2">Failed to Load Cost Data</h3>
           <p className="text-muted-foreground mb-4">{error}</p>
-          <Button onClick={fetchCostData} variant="outline" size="sm">
+          <Button onClick={() => { /* retry all */ try { (refetchSummary as any)(); (refetchDaily as any)(); (refetchModels as any)(); } catch {} }} variant="outline" size="sm">
             <Icon type="refresh-ccw" size="xs" className="mr-2" />
             Retry
           </Button>

@@ -42,10 +42,14 @@ export default function useUnifiedStream() {
   const handleStreamResponse = useCallback(
     async (input: string | FormData) => {
       setSending(true);
+      const t0 = (typeof performance !== 'undefined' ? performance.now() : Date.now());
       try {
         await handleAIStream(input);
       } finally {
         setSending(false);
+        const t1 = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+        // Record unified chat stream timing
+        useUnifiedStore.getState().updateLatency('chat.stream', t1 - t0);
       }
     },
     [handleAIStream, setSending]

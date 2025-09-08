@@ -15,5 +15,20 @@ Environment
 - `NEXT_PUBLIC_API_URL` defaults to `http://localhost:8003`
 - `NEXT_PUBLIC_ENABLE_AGNO_BRIDGE` toggles the bridge status indicator
 
-No secrets in repo. Configure runtime via env or your local config manager.
+Telemetry and feature flags
+- ApiClient timings: pass a `category` in request options; timings feed `useUnifiedStore().updateLatency(category, ms)`.
+- Unified stream timing: `useUnifiedStream` measures end-to-end chat stream and records `chat.stream` latency.
+- Debug panel: set `NEXT_PUBLIC_SHOW_METRICS_DEBUG=1|true` to render a latency/budget panel.
+- RealtimeManager trial: set `NEXT_PUBLIC_USE_REALTIME_MANAGER=1|true` to enable flagged widgets.
+- Unified chat reader (planned): `NEXT_PUBLIC_USE_UNIFIED_CHAT=1|true` to read chat from `unifiedStore`.
 
+Example (ApiClient with timings)
+```ts
+import { ApiClient } from '@/lib/api/client'
+import { useUnifiedStore } from '@/lib/state/unifiedStore'
+
+const client = new ApiClient('', (cat, ms) => useUnifiedStore.getState().updateLatency(cat, ms))
+const data = await client.get('/api/model-registry/providers', { category: 'api.modelRegistry.providers' })
+```
+
+No secrets in repo. Configure runtime via env or your local config manager.

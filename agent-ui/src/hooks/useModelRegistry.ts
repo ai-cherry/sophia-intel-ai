@@ -4,6 +4,8 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { ApiClient } from '@/lib/api/client';
+import { useUnifiedStore } from '@/lib/state/unifiedStore';
 
 // Types
 interface ProviderHealthStatus {
@@ -187,19 +189,13 @@ export const useModelRegistry = (): UseModelRegistryReturn => {
 
   // API functions
   const fetchProviders = async (): Promise<ProviderHealthStatus[]> => {
-    const response = await fetch(`${API_BASE}/providers`);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch providers: ${response.statusText}`);
-    }
-    return response.json();
+    const client = new ApiClient('', (cat, ms) => useUnifiedStore.getState().updateLatency(cat, ms));
+    return client.get<ProviderHealthStatus[]>(`${API_BASE}/providers`, { category: 'api.modelRegistry.providers' });
   };
 
   const fetchVirtualKeys = async (): Promise<VirtualKeyConfig[]> => {
-    const response = await fetch(`${API_BASE}/virtual-keys`);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch virtual keys: ${response.statusText}`);
-    }
-    return response.json();
+    const client = new ApiClient('', (cat, ms) => useUnifiedStore.getState().updateLatency(cat, ms));
+    return client.get<VirtualKeyConfig[]>(`${API_BASE}/virtual-keys`, { category: 'api.modelRegistry.virtualKeys' });
   };
 
   const fetchCostAnalytics = async (): Promise<CostAnalytics> => {

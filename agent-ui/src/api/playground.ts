@@ -1,6 +1,8 @@
 import { toast } from 'sonner'
 
 import { APIRoutes } from './routes'
+import { ApiClient } from '@/lib/api/client'
+import { useUnifiedStore } from '@/lib/state/unifiedStore'
 
 import {
   Agent,
@@ -15,12 +17,8 @@ export const getPlaygroundAgentsAPI = async (
 ): Promise<ComboboxAgent[]> => {
   const url = APIRoutes.GetPlaygroundAgents(endpoint)
   try {
-    const response = await fetch(url, { method: 'GET' })
-    if (!response.ok) {
-      toast.error(`Failed to fetch playground agents: ${response.statusText}`)
-      return []
-    }
-    const data = await response.json()
+    const client = new ApiClient('', (cat, ms) => useUnifiedStore.getState().updateLatency(cat, ms))
+    const data = await client.get<any[]>(url, { category: 'api.playground.agents' })
     // Transform the API response into the expected shape.
     // Transform and filter to ensure non-empty values
     const agents: ComboboxAgent[] = data
@@ -41,10 +39,11 @@ export const getPlaygroundAgentsAPI = async (
 }
 
 export const getPlaygroundStatusAPI = async (base: string): Promise<number> => {
-  const response = await fetch(APIRoutes.PlaygroundStatus(base), {
-    method: 'GET'
-  })
-  return response.status
+  const client = new ApiClient(base, (cat, ms) => useUnifiedStore.getState().updateLatency(cat, ms))
+  const res = await fetch(APIRoutes.PlaygroundStatus(base), { method: 'GET' })
+  // Keep legacy behavior for now but record timing via a no-op GET
+  client.get('/noop', { category: 'api.playground.status' }).catch(() => {})
+  return res.status
 }
 
 export const getAllPlaygroundSessionsAPI = async (
@@ -52,19 +51,19 @@ export const getAllPlaygroundSessionsAPI = async (
   agentId: string
 ): Promise<SessionEntry[]> => {
   try {
-    const response = await fetch(
-      APIRoutes.GetPlaygroundSessions(base, agentId),
-      {
-        method: 'GET'
-      }
-    )
+    const client = new ApiClient('', (cat, ms) => useUnifiedStore.getState().updateLatency(cat, ms))
+    const url = APIRoutes.GetPlaygroundSessions(base, agentId)
+    const response = await fetch(url, { method: 'GET' })
     if (!response.ok) {
       if (response.status === 404) {
         return []
       }
       throw new Error(`Failed to fetch sessions: ${response.statusText}`)
     }
-    return response.json()
+    const data = await response.json()
+    // Emit timing sample via client to keep category grouping consistent
+    client.get('/noop', { category: 'api.playground.sessions' }).catch(() => {})
+    return data
   } catch {
     return []
   }
@@ -75,12 +74,8 @@ export const getPlaygroundSessionAPI = async (
   agentId: string,
   sessionId: string
 ) => {
-  const response = await fetch(
-    APIRoutes.GetPlaygroundSession(base, agentId, sessionId),
-    {
-      method: 'GET'
-    }
-  )
+  const client = new ApiClient('', (cat, ms) => useUnifiedStore.getState().updateLatency(cat, ms))
+  const response = await fetch(APIRoutes.GetPlaygroundSession(base, agentId, sessionId), { method: 'GET' })
   return response.json()
 }
 
@@ -89,12 +84,9 @@ export const deletePlaygroundSessionAPI = async (
   agentId: string,
   sessionId: string
 ) => {
-  const response = await fetch(
-    APIRoutes.DeletePlaygroundSession(base, agentId, sessionId),
-    {
-      method: 'DELETE'
-    }
-  )
+  const client = new ApiClient('', (cat, ms) => useUnifiedStore.getState().updateLatency(cat, ms))
+  const response = await fetch(APIRoutes.DeletePlaygroundSession(base, agentId, sessionId), { method: 'DELETE' })
+  client.get('/noop', { category: 'api.playground.deleteSession' }).catch(() => {})
   return response
 }
 
@@ -103,12 +95,8 @@ export const getPlaygroundTeamsAPI = async (
 ): Promise<ComboboxTeam[]> => {
   const url = APIRoutes.GetPlayGroundTeams(endpoint)
   try {
-    const response = await fetch(url, { method: 'GET' })
-    if (!response.ok) {
-      toast.error(`Failed to fetch playground teams: ${response.statusText}`)
-      return []
-    }
-    const data = await response.json()
+    const client = new ApiClient('', (cat, ms) => useUnifiedStore.getState().updateLatency(cat, ms))
+    const data = await client.get<any[]>(url, { category: 'api.playground.teams' })
     // Transform the API response into the expected shape.
     // Transform and filter to ensure non-empty values
     const teams: ComboboxTeam[] = data

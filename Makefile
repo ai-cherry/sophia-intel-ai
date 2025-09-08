@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: help env.check env.doctor env.doctor.merge env.clean-deprecated env.source health health-infra mcp-test full-start nuke-fragmentation rag.start rag.test lint dev-up dev-down dev-shell logs status grok-test swarm-start memory-search mcp-status env-docs artemis-setup refactor.discovery refactor.scan-http refactor.probe refactor.check webui-health router-smoke
+.PHONY: help env.check env.doctor env.doctor.merge env.clean-deprecated env.source keys-check health health-infra mcp-test full-start api-build api-up api-restart dev-mcp-up dev-artemis-up nuke-fragmentation rag.start rag.test lint dev-up dev-down dev-shell logs status grok-test swarm-start memory-search mcp-status env-docs artemis-setup refactor.discovery refactor.scan-http refactor.probe refactor.check webui-health router-smoke
 
 help:
 	@echo "\033[0;36mMulti-Agent Development Environment\033[0m"
@@ -24,6 +24,9 @@ env.clean-deprecated: ## Remove deprecated env examples (keeps .env.template aut
 
 env.source: ## Source unified environment in current shell (bash/zsh: `source <(make env.source)`)
 	@cat scripts/env.sh
+
+keys-check: ## Verify required keys present (local or container)
+	@python3 scripts/env_doctor.py | sed -n '/Required keys status:/,/Optional keys/p'
 
 health: ## Run full health check
 	@echo "\xF0\x9F\x8F\xA5 Running health check..."
@@ -62,6 +65,23 @@ full-start: ## Start everything in correct order
 	@docker compose -f docker-compose.dev.yml up -d agent-dev
 	@echo "\xE2\x9C\x93 Sophia stack running"
 
+dev-mcp-up: ## Start only MCP servers (dev)
+	@docker compose -f docker-compose.dev.yml up -d mcp-memory mcp-filesystem-sophia mcp-git
+
+dev-artemis-up: ## Enable Artemis profile (requires ARTEMIS_PATH)
+	@if [ -z "$(ARTEMIS_PATH)" ]; then echo "ARTEMIS_PATH not set"; exit 1; fi
+	@docker compose -f docker-compose.dev.yml --profile artemis up -d
+
+api-build: ## Build API image (prod compose)
+	@docker compose -f docker-compose.yml build api --no-cache
+
+api-up: ## Start API service (prod compose)
+	@docker compose -f docker-compose.yml up -d api
+
+api-restart: ## Rebuild and start API (prod compose)
+	@$(MAKE) api-build
+	@$(MAKE) api-up
+
 nuke-fragmentation: ## Nuclear option - force consolidation (DESTRUCTIVE)
 	@echo "\xE2\x9A\xA0\xEF\xB8\x8F  This will delete non-canonical files. Ctrl-C to abort..." && sleep 5
 	@python3 scripts/nuke_fragmentation.py --confirm
@@ -97,15 +117,7 @@ ci.smoke: ## CI-friendly smoke: env, compose lint, compile key packages
 	@echo "🔎 Running CI smoke checks..."; \
 	$(MAKE) env.check; \
 	$(MAKE) compose.lint; \
-	python3 - <<'PY'
-import compileall
-ok = True
-for path in ('app','backend','mcp'):
-    res = compileall.compile_dir(path, quiet=1)
-    ok = ok and res
-print('compileall:', 'OK' if ok else 'FAILED')
-import sys; sys.exit(0 if ok else 1)
-PY
+	python3 -c "import compileall,sys; ok=all(compileall.compile_dir(p, quiet=1) for p in ('app','backend','mcp')); print('compileall:', 'OK' if ok else 'FAILED'); sys.exit(0 if ok else 1)"
 
 # Terminal-first multi-agent stack (docker-compose.multi-agent.yml)
 dev-up: ## Start multi-agent environment

@@ -79,7 +79,8 @@ start_environment() {
         echo -e "${GREEN}✅ .env file found${NC}"
     fi
     
-    echo -e "${CYAN}🔧 Starting infrastructure services...${NC}"
+    echo -e "${CYAN}🔧 Building and starting infrastructure services...${NC}"
+    docker compose -f "$COMPOSE_FILE" build redis weaviate >/dev/null 2>&1 || true
     docker compose -f "$COMPOSE_FILE" up -d redis weaviate
     
     echo -e "${CYAN}⏳ Waiting for infrastructure to be healthy...${NC}"
@@ -89,8 +90,9 @@ start_environment() {
     read -p "Start MCP servers? (y/N): " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
-        echo -e "${CYAN}🔧 Starting MCP servers...${NC}"
-        docker compose -f "$COMPOSE_FILE" --profile mcp up -d
+        echo -e "${CYAN}🔧 Building and starting MCP servers...${NC}"
+        docker compose -f "$COMPOSE_FILE" build mcp-memory mcp-filesystem-sophia mcp-filesystem-artemis mcp-git >/dev/null 2>&1 || true
+        docker compose -f "$COMPOSE_FILE" up -d mcp-memory mcp-filesystem-sophia mcp-filesystem-artemis mcp-git
         sleep 5
     fi
     
@@ -98,8 +100,9 @@ start_environment() {
     read -p "Start Web UI? (y/N): " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
-        echo -e "${CYAN}🌐 Starting Web UI...${NC}"
-        docker compose -f "$COMPOSE_FILE" --profile ui up -d
+        echo -e "${CYAN}🌐 Building and starting Web UI...${NC}"
+        docker compose -f "$COMPOSE_FILE" build swarm-orchestrator webui >/dev/null 2>&1 || true
+        docker compose -f "$COMPOSE_FILE" up -d swarm-orchestrator webui
         sleep 3
     fi
     
@@ -107,16 +110,18 @@ start_environment() {
     read -p "Start code indexer? (y/N): " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
-        echo -e "${CYAN}🔍 Starting code indexer...${NC}"
-        docker compose -f "$COMPOSE_FILE" --profile indexer up -d
+        echo -e "${CYAN}🔍 Building and starting code indexer...${NC}"
+        docker compose -f "$COMPOSE_FILE" build indexer >/dev/null 2>&1 || true
+        docker compose -f "$COMPOSE_FILE" up -d indexer
     fi
     
     # Check if we want observability
     read -p "Start observability (Prometheus/Grafana)? (y/N): " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
-        echo -e "${CYAN}📊 Starting observability stack...${NC}"
-        docker compose -f "$COMPOSE_FILE" --profile observability up -d
+        echo -e "${CYAN}📊 Building and starting observability stack...${NC}"
+        docker compose -f "$COMPOSE_FILE" build prometheus grafana >/dev/null 2>&1 || true
+        docker compose -f "$COMPOSE_FILE" up -d prometheus grafana
     fi
     
     echo ""
@@ -147,7 +152,7 @@ stop_environment() {
     echo -e "${RED}🛑 Stopping multi-agent environment...${NC}"
     check_compose_file
     
-    docker compose -f "$COMPOSE_FILE" --profile dev --profile mcp --profile ui --profile indexer --profile observability down
+    docker compose -f "$COMPOSE_FILE" down
     
     echo -e "${GREEN}✅ Environment stopped${NC}"
 }
@@ -174,7 +179,7 @@ enter_shell() {
     # Start agent-dev service if not running
     if ! docker ps --format "table {{.Names}}" | grep -q "sophia-agent-dev"; then
         echo -e "${YELLOW}⚠️  Development container not running, starting...${NC}"
-        docker compose -f "$COMPOSE_FILE" --profile dev up -d agent-dev
+        docker compose -f "$COMPOSE_FILE" up -d agent-dev
         sleep 2
     fi
     
@@ -211,7 +216,7 @@ restart_environment() {
     echo -e "${YELLOW}🔄 Restarting multi-agent environment...${NC}"
     check_compose_file
     
-    docker compose -f "$COMPOSE_FILE" --profile dev --profile mcp --profile ui --profile indexer --profile observability restart
+    docker compose -f "$COMPOSE_FILE" restart
     
     echo -e "${GREEN}✅ Environment restarted${NC}"
 }
